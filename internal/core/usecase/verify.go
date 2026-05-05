@@ -41,6 +41,9 @@ func Verify(ctx context.Context, req Request, deps VerifyDeps) (VerifyResponse, 
 		return VerifyResponse{}, fmt.Errorf("verify: %w", err)
 	}
 
+	if deps.Runner == nil {
+		return VerifyResponse{}, errors.New("verify: deps.Runner is required")
+	}
 	if req.BeforeDir == "" {
 		return VerifyResponse{}, errors.New("verify: before observations directory is required")
 	}

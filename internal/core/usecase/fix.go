@@ -35,6 +35,12 @@ func Fix(ctx context.Context, req FixRequest, deps FixDeps) (FixResponse, error)
 		return FixResponse{}, fmt.Errorf("fix: %w", err)
 	}
 
+	if deps.Loader == nil {
+		return FixResponse{}, errors.New("fix: deps.Loader is required")
+	}
+	if req.InputPath == "" {
+		return FixResponse{}, errors.New("fix: input path cannot be empty")
+	}
 	if req.FindingRef == "" {
 		return FixResponse{}, errors.New("fix: finding selector cannot be empty")
 	}
@@ -82,6 +88,9 @@ func FixLoop(ctx context.Context, req FixLoopRequest, deps LoopDeps) (FixLoopRes
 		return FixLoopResponse{}, fmt.Errorf("fix-loop: %w", err)
 	}
 
+	if deps.Runner == nil {
+		return FixLoopResponse{}, errors.New("fix-loop: deps.Runner is required")
+	}
 	if req.BeforeDir == "" {
 		return FixLoopResponse{}, errors.New("fix-loop: before observations directory is required")
 	}

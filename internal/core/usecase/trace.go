@@ -37,11 +37,17 @@ func Trace(ctx context.Context, req TraceRequest, deps TraceDeps) (TraceResponse
 		return TraceResponse{}, fmt.Errorf("trace: %w", err)
 	}
 
+	if deps.Evaluator == nil {
+		return TraceResponse{}, errors.New("trace: deps.Evaluator is required")
+	}
 	if req.ControlID == "" {
 		return TraceResponse{}, errors.New("trace: control ID is required")
 	}
 	if req.AssetID == "" {
 		return TraceResponse{}, errors.New("trace: asset ID is required")
+	}
+	if req.ObservationPath == "" {
+		return TraceResponse{}, errors.New("trace: observation path is required")
 	}
 
 	data, err := deps.Evaluator.TraceEvaluation(ctx, req.ControlID, req.ControlsDir, req.ObservationPath, req.AssetID)

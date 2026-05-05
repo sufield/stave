@@ -67,18 +67,39 @@ func EvaluateRecurrenceForControl(
 	}
 
 	stats := RecurrenceStats{Count: count, First: first, Last: last}
-	return []*evaluation.Finding{CreateRecurrenceFinding(t, ctl, stats)}
+	f := CreateRecurrenceFinding(t, ctl, stats)
+	if f == nil {
+		// CreateRecurrenceFinding now returns nil for malformed
+		// inputs (nil control / lifecycle). Drop the empty slot
+		// rather than emitting a phantom finding the collector
+		// would have to filter out downstream.
+		return nil
+	}
+	return []*evaluation.Finding{f}
 }
 
 // CreateRecurrenceFinding generates a finding based on the frequency of unsafe exposure windows.
+//
+// Returns nil when newBaseFinding rejects nil control / lifecycle
+// inputs. Callers must propagate (see strategyDeps callers, which
+// drop nil entries from the returned slice).
 func CreateRecurrenceFinding(
 	t *asset.ExposureLifecycle,
 	ctl *policy.ControlDefinition,
 	stats RecurrenceStats,
 ) *evaluation.Finding {
+	if ctl == nil {
+		// Cannot read RecurrencePolicy off a nil control. Match
+		// newBaseFinding's nil-input contract by failing fast here
+		// instead of panicking on the policy deref below.
+		return nil
+	}
 	p := ctl.RecurrencePolicy()
 
 	f := newBaseFinding(ctl, t)
+	if f == nil {
+		return nil
+	}
 	f.Evidence = evaluation.Evidence{
 		ExposureWindowCount:   stats.Count,
 		WindowDays:            p.WindowDays,

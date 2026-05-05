@@ -47,7 +47,7 @@ import (
 // consumption. The two-branch form below is the simplest correct
 // shape; the trailing-slash test cases below pin that the
 // observable output is what operators expect.
-var messagePathRe = regexp.MustCompile(`([a-zA-Z][a-zA-Z0-9+.\-]*://[^\s]+)|/(?:[^\s:]+/)*([^\s:/]+)`)
+var messagePathRe = regexp.MustCompile(`([a-zA-Z][a-zA-Z0-9+.\-]*://[^\s]+)|/(?:[^\s:]+/)*([^\s:/]+)/?`)
 
 // Compile-time check that Sanitizer implements kernel.Sanitizer.
 var _ kernel.Sanitizer = (*Sanitizer)(nil)
@@ -151,6 +151,9 @@ func (s *Sanitizer) Path(p string) string {
 // and want full paths in error messages too"), add a separate
 // ScrubCredentialPaths flag rather than re-tying this to PathMode.
 func (s *Sanitizer) ScrubMessage(msg string) string {
+	if s == nil {
+		return msg
+	}
 	if msg == "" {
 		return msg
 	}
@@ -173,7 +176,7 @@ func (s *Sanitizer) ScrubMessage(msg string) string {
 			// denied" which loses the "this is an absolute path"
 			// signal. Relative-path matches don't reach this
 			// branch — the regex requires the leading "/".
-			//
+			trailingSlash := strings.HasSuffix(match, "/")
 			// Single-component paths (e.g. `/secret`) need explicit
 			// redaction: the basename rule would substitute them
 			// with themselves, leaving the leaked filename
@@ -182,6 +185,18 @@ func (s *Sanitizer) ScrubMessage(msg string) string {
 			// so round-tripping it verbatim defeats the
 			// scrubber's contract. Replace with a generic
 			// placeholder instead.
+			//
+			// Trailing-slash directory paths (e.g. `/run/secrets/`)
+			// also need explicit redaction: the directory name IS
+			// the secret-revealing component (mount-point names
+			// like `secrets`, `keys`, `creds` betray secret-mgmt
+			// conventions). The earlier shape kept the basename
+			// (`/secrets/`), preserving the leak; emit the
+			// redacted-with-trailing-slash form so the directory
+			// signal is preserved without leaking the name.
+			if trailingSlash {
+				return "/<redacted>/"
+			}
 			if match == "/"+groups[2] {
 				return "/<redacted>"
 			}

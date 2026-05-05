@@ -56,15 +56,22 @@ func (a *App) writeCommandError(err error, args []string) {
 	}
 	errMsg := ensureFirstRunRunHint(err.Error(), args)
 	errMsg = a.sanitizeExecuteMessage(errMsg)
-	a.writeErrorInfo(errorInfoFromError(err, errMsg))
+	a.writeErrorInfo(a.errorInfoFromError(err, errMsg))
 }
 
-func errorInfoFromError(err error, message string) *ui.ErrorInfo {
+func (a *App) errorInfoFromError(err error, message string) *ui.ErrorInfo {
 	hint := ui.SuggestForError(err)
 	docsRef := metadata.DocsRef(hint.SearchQuery)
 	suggested := ""
 	if hint.NextCommand != "" {
-		suggested = fmt.Sprintf("Try `%s`. ", hint.NextCommand)
+		// Run the suggested command through the same sanitizer that
+		// already cleaned `message`. SuggestForError can echo path
+		// fragments and asset IDs from the originating error into
+		// its NextCommand template, so without this pass an
+		// otherwise-redacted error rendering would leak the same
+		// identifier through the "Try `…`" hint line.
+		nextCmd := a.sanitizeExecuteMessage(hint.NextCommand)
+		suggested = fmt.Sprintf("Try `%s`. ", nextCmd)
 	}
 
 	return resolvePrimaryErrorSignal(err, message, suggested, docsRef)

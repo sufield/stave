@@ -78,7 +78,7 @@ func TestSentinelErrorRendering(t *testing.T) {
 			if got := ui.ExitCode(tc.err); got != tc.wantExitCode {
 				t.Errorf("ExitCode = %d, want %d", got, tc.wantExitCode)
 			}
-			info := errorInfoFromError(tc.err, tc.err.Error())
+			info := (&App{}).errorInfoFromError(tc.err, tc.err.Error())
 			if info == nil {
 				t.Fatalf("errorInfoFromError returned nil for sentinel %v", tc.err)
 			}
@@ -101,7 +101,7 @@ func TestSentinelErrorRendering(t *testing.T) {
 // templates but still needs to render correctly.
 func TestUserErrorRendering(t *testing.T) {
 	ue := &ui.UserError{Err: errors.New("missing required flag --foo")}
-	info := errorInfoFromError(ue, ue.Error())
+	info := (&App{}).errorInfoFromError(ue, ue.Error())
 	if info == nil {
 		t.Fatal("errorInfoFromError returned nil for UserError")
 	}

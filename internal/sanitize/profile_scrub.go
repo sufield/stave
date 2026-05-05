@@ -18,11 +18,21 @@ const SanitizedValue = "[SANITIZED]"
 
 // --- Credential patterns (used by bug-report log scrubbing) ---
 
-// AKIAPattern matches AWS access key IDs embedded in text.
-var AKIAPattern = regexp.MustCompile(`AKIA[0-9A-Z]{16}`)
+// AKIAPattern matches AWS access key IDs (AKIA = long-term root /
+// IAM user keys; ASIA = STS temporary credentials). The earlier
+// shape only matched AKIA, so a leaked STS session token —
+// produced by every short-lived credential path including
+// AssumeRole, federated logins, and EC2 instance roles — slipped
+// through bug-report scrubbing unchanged.
+var AKIAPattern = regexp.MustCompile(`A[KS]IA[0-9A-Z]{16}`)
 
 // URLCredPattern matches credentials embedded in URLs (user:pass@host).
-var URLCredPattern = regexp.MustCompile(`(?i)(https?://[^/\s:@]+:)[^@/\s]+@`)
+// Covers https?, ftp, sftp, ssh, and git (including git+https). The
+// earlier https-only shape let `git://user:pass@example.com/repo`
+// and `ssh://user:pass@host` slip through bug-report scrubbing,
+// even though both are common shapes for embedded credentials in
+// CI logs and `git remote -v` output.
+var URLCredPattern = regexp.MustCompile(`(?i)((?:https?|ftp|s?ftp|ssh|git(?:\+https)?)://[^/\s:@]+:)[^@/\s]+@`)
 
 // --- Sensitive flag/key detection (used by logging argument sanitization) ---
 

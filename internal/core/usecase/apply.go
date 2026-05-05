@@ -51,6 +51,9 @@ func Apply(ctx context.Context, req ApplyRequest, deps ApplyDeps) (ApplyResponse
 		return ApplyResponse{}, fmt.Errorf("apply: %w", err)
 	}
 
+	if deps.Runner == nil {
+		return ApplyResponse{}, errors.New("apply: deps.Runner is required")
+	}
 	if req.Profile != "" && req.InputFile == "" {
 		return ApplyResponse{}, errors.New("apply: --input is required when using --profile")
 	}

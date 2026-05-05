@@ -112,6 +112,15 @@ func walkNode(node parse.Node) error {
 	case *parse.WithNode:
 		return walkBranch(n.Pipe, n.List, n.ElseList)
 	case *parse.TemplateNode:
+		// Rejects both `{{template "name"}}` and `{{block "name"}}`.
+		// text/template/parse exposes no separate `*parse.BlockNode`:
+		// the parser desugars `{{block}}` into a `define` + a
+		// TemplateNode invocation, so this single case covers both
+		// forms — anything that pulls a sub-template body into the
+		// rendered output is denied. The earlier audit asked for an
+		// explicit BlockNode case; the desugar means that case
+		// would never fire and the TemplateNode reject is the
+		// effective security boundary.
 		return errors.New("{{template}} is not allowed")
 	}
 	return nil

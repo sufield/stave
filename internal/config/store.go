@@ -442,7 +442,7 @@ func ValidateName(name string) error {
 		return fmt.Errorf("context name exceeds %d characters", maxContextNameLen)
 	}
 	if strings.ContainsAny(name, "/\\\x00\n\r\t :{}[]#*&!|>'\"%") {
-		return errors.New(`context name contains forbidden characters (/, \, NUL, embedded space, whitespace control, or YAML indicators :{}[]#*&!|>'"%)`)
+		return errors.New(`context name contains forbidden characters (/, \, NUL, space, tab, newline, carriage return, or YAML indicators :{}[]#*&!|>'"%)`)
 	}
 	return nil
 }
@@ -592,6 +592,16 @@ func resolveStorePath() (string, error) {
 		// clue which lookup actually failed.
 		slog.Warn("config: os.UserConfigDir failed; falling back to UserHomeDir",
 			"error", cfgErr)
+	} else if cfgDir == "" {
+		// No error, but the platform returned an empty path. This
+		// is the documented "no config directory available" return
+		// shape on platforms where neither XDG_CONFIG_HOME nor the
+		// fallback default resolves to anything (some sandboxed
+		// environments, container images stripped of $HOME, etc.).
+		// Surface the fall-through so operators don't confuse the
+		// resulting "context file under HOME/.config" path with a
+		// platform-blessed location.
+		slog.Warn("config: os.UserConfigDir returned empty path with no error; falling back to UserHomeDir")
 	}
 
 	home, err := os.UserHomeDir()

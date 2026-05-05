@@ -228,7 +228,14 @@ func (a *App) handleExecutionError(err error, args []string) {
 	case errors.Is(err, context.DeadlineExceeded):
 		logger.Info("command interrupted by deadline", "exit_code", exitCode)
 	default:
-		logger.Debug("command failed", "error", msg, "exit_code", exitCode)
+		// Real command failures deserve warn-level visibility — the
+		// previous Debug routing meant a non-default log level
+		// dropped them entirely from operator-facing logs, so a
+		// production-mode invocation produced an exit code with no
+		// log line explaining why. Context-driven interrupts above
+		// stay at Info because they are routine (Ctrl-C, parent
+		// timeout) and not actionable.
+		logger.Warn("command failed", "error", msg, "exit_code", exitCode)
 	}
 
 	// Sentinel errors (ErrViolationsFound, ErrSecurityAuditFindings,

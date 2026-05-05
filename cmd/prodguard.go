@@ -164,11 +164,18 @@ func (g *ProductionGuard) Check(cmdName string, env Environment) error {
 	}
 
 	if g.Policy != nil && g.Policy.IsBlocked(cmdName) {
+		// Generic message: the earlier shape hard-coded a
+		// "stave snapshot archive" suggestion that only made
+		// sense when the blocked command was prune. For any other
+		// blocked command (reset, scrub, etc.) the suggestion was
+		// misleading. Keep the actionable bit ("switch to a non-
+		// production context") and let the operator find the
+		// command-specific alternative themselves.
 		return &ui.UserError{
 			Err: fmt.Errorf(
 				"command %q is blocked in production (%s): "+
-					"use `stave snapshot archive` to move snapshots without deleting them, "+
-					"or switch to a non-production context to prune",
+					"switch to a non-production context to run it, "+
+					"or use a read-only alternative if one exists",
 				cmdName, env.Source),
 		}
 	}

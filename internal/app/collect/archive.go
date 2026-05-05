@@ -119,7 +119,7 @@ func (a *Archive) WriteRun(runID string, files map[string][]byte, meta RunMetada
 	}
 	metaPath := filepath.Join(runDir, "run-metadata.json")
 	if err := os.WriteFile(metaPath, metaData, 0o644); err != nil { //nolint:gosec // metadata file
-		return err
+		return fmt.Errorf("write run-metadata.json: %w", err)
 	}
 	metaHash := sha256Hex(metaData)
 	sumLines = append(sumLines, fmt.Sprintf("sha256:%s  run-metadata.json", metaHash))
@@ -319,8 +319,19 @@ func verifyRunChecksums(runDir, runID string) (errs, warnings []string) {
 		expected[name] = hash
 	}
 
-	// Verify each listed file.
-	for name, wantHash := range expected {
+	// Verify each listed file. Iterate via a sorted name slice so the
+	// errs output (and any future log) is reproducible across runs;
+	// map iteration alone produces nondeterministic ordering, which
+	// breaks golden-file diffs and makes operator-side comparisons
+	// painful. Mirrors the sort step in the checksum-generation
+	// path above.
+	names := make([]string, 0, len(expected))
+	for name := range expected {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	for _, name := range names {
+		wantHash := expected[name]
 		filePath := filepath.Join(runDir, name)
 		fileData, readErr := os.ReadFile(filePath) //nolint:gosec // archive evidence file
 		if readErr != nil {

@@ -119,10 +119,14 @@ func TestSanitizer_ScrubMessage_TrailingSlashPath(t *testing.T) {
 		in   string
 		want string
 	}{
-		{"failed to read /run/secrets/", "failed to read /secrets/"},
-		{"mount: /var/run/keys/ is read-only", "mount: /keys/ is read-only"},
-		// Confirm the non-trailing-slash variant still matches via
-		// the basename branch.
+		// Trailing-slash directory paths redact the directory name
+		// itself: mount-point names like "secrets" or "keys" leak
+		// the secret-management convention, so the basename rule
+		// would still leak the operational signal.
+		{"failed to read /run/secrets/", "failed to read /<redacted>/"},
+		{"mount: /var/run/keys/ is read-only", "mount: /<redacted>/ is read-only"},
+		// Non-trailing-slash variant still matches via the basename
+		// branch — the file leaf is not the leak in that shape.
 		{"open /run/secrets/token", "open /token"},
 	}
 	for _, tc := range cases {

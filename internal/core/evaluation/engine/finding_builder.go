@@ -16,12 +16,21 @@ type FindingContext struct {
 
 // NewFinding creates a finding by combining control metadata, asset identity,
 // and the specific situational evidence (FindingContext).
+//
+// Returns nil when the underlying newBaseFinding rejects the inputs
+// (nil control or nil lifecycle). Callers must propagate the nil
+// rather than dereferencing — see exposure.go for the slice-append
+// pattern and the collector for the nil-tolerant RecordFindings
+// path.
 func NewFinding(
 	ctl *policy.ControlDefinition,
 	t *asset.ExposureLifecycle,
 	ctx FindingContext,
 ) *evaluation.Finding {
 	f := newBaseFinding(ctl, t)
+	if f == nil {
+		return nil
+	}
 	f.Evidence = evaluation.Evidence{
 		Misconfigurations: ctx.Misconfigs,
 		TemporalRisk:      ctx.Reason,
@@ -32,16 +41,16 @@ func NewFinding(
 }
 
 // newBaseFinding returns a Finding pre-populated with control and asset metadata.
-// A nil ExposureLifecycle (or nil control) returns a zero-value finding rather
-// than panicking on the downstream `t.Asset()` / `ctl.Metadata()` deref —
-// callers in the chain-finding and recurrence paths can be wired with
-// partially-resolved inputs, and the previous shape would crash the whole
-// evaluation rather than skip the malformed entry.
+// Returns nil when either input is nil — a zero-value finding would otherwise
+// flow into the collector with empty FindingID / AssetID, where it appeared in
+// output as a phantom "0 violations" row that operators couldn't trace back to
+// any control. The caller chain (NewFinding, CreateRecurrenceFinding,
+// CreateDurationFinding) and the collector's RecordFindings tolerate the nil.
 func newBaseFinding(ctl *policy.ControlDefinition, t *asset.ExposureLifecycle) *evaluation.Finding {
 	if t == nil || ctl == nil {
-		slog.Warn("newBaseFinding called with nil input; returning zero finding",
+		slog.Warn("newBaseFinding called with nil input; skipping finding",
 			"nil_lifecycle", t == nil, "nil_control", ctl == nil)
-		return &evaluation.Finding{}
+		return nil
 	}
 	a := t.Asset()
 	f := evaluation.NewFindingFromMetadata(ctl.Metadata())

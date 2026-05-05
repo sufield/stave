@@ -161,12 +161,21 @@ func RunStatus(opts StatusOpts) string {
 				daemonStatus = fmt.Sprintf("UNKNOWN (PID file corrupt: %v)", parseErr)
 			case pid > 0:
 				proc, findErr := os.FindProcess(pid)
-				if findErr == nil {
-					if sigErr := proc.Signal(syscall.Signal(0)); sigErr == nil {
-						daemonStatus = fmt.Sprintf("RUNNING (PID %d)", pid)
-					} else {
-						daemonStatus = fmt.Sprintf("STOPPED (stale PID %d)", pid)
-					}
+				if findErr != nil {
+					// FindProcess only fails on platforms that
+					// don't return a process handle synthetically
+					// (Windows). Surface the cause so operators
+					// can tell apart "daemon is gone" from
+					// "platform refused to look it up".
+					slog.Warn("collect daemon status: os.FindProcess failed",
+						"pid", pid, "error", findErr)
+					daemonStatus = fmt.Sprintf("UNKNOWN (FindProcess failed for PID %d: %v)", pid, findErr)
+					break
+				}
+				if sigErr := proc.Signal(syscall.Signal(0)); sigErr == nil {
+					daemonStatus = fmt.Sprintf("RUNNING (PID %d)", pid)
+				} else {
+					daemonStatus = fmt.Sprintf("STOPPED (stale PID %d)", pid)
 				}
 			}
 		}

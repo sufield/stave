@@ -183,10 +183,18 @@ func extractClassification(a asset.Asset) string {
 			if present {
 				typedTags, tagsOK := rawTags.(map[string]any)
 				if !tagsOK {
+					// Explicit fail-open: log the malformed shape
+					// and return the default classification. The
+					// early return makes the degraded path obvious
+					// to future maintainers — without it, the
+					// outer "if tags == nil" fallthrough handled
+					// both the absent and malformed cases via the
+					// same return, blurring the intent.
 					slog.Warn("extractClassification: storage.tags has unexpected type; falling back to unclassified",
 						"asset_id", string(a.ID),
 						"actual_type", fmt.Sprintf("%T", rawTags),
 					)
+					return "unclassified"
 				}
 				tags = typedTags
 			}

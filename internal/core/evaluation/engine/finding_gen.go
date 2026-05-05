@@ -67,6 +67,14 @@ func CreateDurationFinding(in DurationFindingInput) (*evaluation.Finding, error)
 	causes := DeriveRootCauses(misconfigs)
 
 	f := newBaseFinding(in.Control, in.ExposureLifecycle)
+	if f == nil {
+		// The two nil-input guards at the top of CreateDurationFinding
+		// already reject the inputs newBaseFinding screens for, but
+		// keep this defensive return so a future signature shift
+		// (additional nil-tolerant fields, etc.) cannot panic
+		// silently on the f.Evidence write below.
+		return nil, errors.New("CreateDurationFinding: newBaseFinding returned nil despite passing input guards")
+	}
 	f.Evidence = evaluation.Evidence{
 		FirstUnsafeAt:       in.ExposureLifecycle.FirstExposedAt(),
 		LastSeenUnsafeAt:    in.ExposureLifecycle.LastObservedAt(),

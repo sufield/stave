@@ -266,7 +266,9 @@ func NewApp(opts ...AppOption) (*App, error) {
 	}
 
 	app.Root.Version = fmt.Sprintf("%s (%s)", Version(), string(app.Edition))
-	wireHelpGroups(app.Root)
+	if err := wireHelpGroups(app.Root); err != nil {
+		return nil, err
+	}
 	return app, nil
 }
 

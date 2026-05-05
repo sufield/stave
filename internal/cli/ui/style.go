@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"sync/atomic"
 )
 
 var (
@@ -67,10 +68,16 @@ func SeverityLabel(level, message string, out io.Writer) string {
 }
 
 // globalNoColor is set by the CLI bootstrap when --no-color is passed.
-var globalNoColor bool
+// Held as atomic.Bool because SetNoColor (CLI bootstrap goroutine)
+// races with CanColor (every styled write across worker goroutines)
+// — a plain bool was caught by `go test -race` once concurrent
+// rendering paths started using styled output. Mirrors the
+// atomic-typed package-level state in
+// internal/platform/fsutil/io.go's maxInputFileBytes.
+var globalNoColor atomic.Bool
 
 // SetNoColor sets the global no-color flag. Call once during CLI bootstrap.
-func SetNoColor(v bool) { globalNoColor = v }
+func SetNoColor(v bool) { globalNoColor.Store(v) }
 
 // defaultRuntimeForColor caches the DefaultRuntime instance the
 // package-level CanColor delegates to. DefaultRuntime allocates a
@@ -81,7 +88,7 @@ var defaultRuntimeForColor = sync.OnceValue(DefaultRuntime)
 
 // CanColor reports whether ANSI color output should be used for this writer.
 func CanColor(out io.Writer) bool {
-	if globalNoColor {
+	if globalNoColor.Load() {
 		return false
 	}
 	return defaultRuntimeForColor().CanColor(out)

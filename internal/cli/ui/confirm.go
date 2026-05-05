@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log/slog"
 	"strings"
 )
 
@@ -34,6 +35,14 @@ func NewAutoConfirmPrompter(w io.Writer) *Prompter {
 // Confirm prompts the user with a y/N question and returns true only
 // if they answer "y" or "yes" (case-insensitive).
 // When auto-confirm is enabled (via --yes or non-TTY), returns true immediately.
+//
+// A scanner I/O failure (broken pipe on the stdin reader, terminal
+// closed mid-prompt) is treated as a rejection like clean EOF, but
+// the underlying error is logged at warn level so the silent
+// "rejected by user" outcome does not mask a real plumbing failure.
+// The earlier shape returned false on Scan()==false without checking
+// Err(), so a corrupted stdin and a deliberate "no" looked
+// identical to operators reading the audit log.
 func (p *Prompter) Confirm(prompt string) bool {
 	if p.autoConfirm {
 		return true
@@ -42,6 +51,10 @@ func (p *Prompter) Confirm(prompt string) bool {
 	fmt.Fprintf(p.out, "%s [y/N] ", prompt)
 
 	if !p.scanner.Scan() {
+		if scanErr := p.scanner.Err(); scanErr != nil {
+			slog.Warn("ui.Prompter: stdin scan failed; treating as rejection",
+				"error", scanErr)
+		}
 		return false
 	}
 

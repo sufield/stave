@@ -77,13 +77,22 @@ func (e *prefixEvaluator) assetExposure(
 		}
 
 		evidence := exposureResult.String()
-		findings = append(findings, *NewFinding(e.ctl, e.lifecycle, FindingContext{
+		f := NewFinding(e.ctl, e.lifecycle, FindingContext{
 			Reason: fmt.Sprintf("Protected prefix %q is publicly readable via %s.", prefix, evidence),
 			Misconfigs: []policy.Misconfiguration{
 				{Property: predicate.NewFieldPath(propExposureSource), ActualValue: evidence, Operator: predicate.OpEq, UnsafeValue: evidence},
 				{Property: predicate.NewFieldPath(propProtectedPrefix), ActualValue: string(prefix), Operator: predicate.OpEq, UnsafeValue: string(prefix)},
 			},
-		}))
+		})
+		// NewFinding returns nil when the underlying control/lifecycle
+		// is nil — newBaseFinding's contract since the zero-finding
+		// fix. Skip the empty slot so the caller doesn't append a
+		// phantom violation that the collector would otherwise have
+		// to filter out.
+		if f == nil {
+			continue
+		}
+		findings = append(findings, *f)
 	}
 
 	if len(findings) > 0 {
@@ -107,6 +116,11 @@ func (e *prefixEvaluator) configIssue(
 			{Property: predicate.NewFieldPath(propExposureSource), ActualValue: reasonCode, Operator: predicate.OpEq, UnsafeValue: reasonCode},
 		},
 	})
+	if f == nil {
+		// nil control/lifecycle wiring — return the verdict without
+		// a finding rather than panicking on the deref below.
+		return row, nil
+	}
 	return row, []evaluation.Finding{*f}
 }
 
@@ -123,6 +137,9 @@ func (e *prefixEvaluator) overlapIssue(
 			{Property: predicate.NewFieldPath(propProtectedPrefix), ActualValue: string(c.Protected), Operator: predicate.OpEq, UnsafeValue: string(c.Protected)},
 		},
 	})
+	if f == nil {
+		return row, nil
+	}
 	return row, []evaluation.Finding{*f}
 }
 

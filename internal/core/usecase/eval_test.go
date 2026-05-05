@@ -121,12 +121,16 @@ func TestFix(t *testing.T) {
 		_, err := Fix(context.Background(), FixRequest{InputPath: "e.json"}, FixDeps{Loader: &mockFindingLoader{}})
 		assertErr(t, err)
 	})
+	t.Run("empty input path", func(t *testing.T) {
+		_, err := Fix(context.Background(), FixRequest{FindingRef: "x"}, FixDeps{Loader: &mockFindingLoader{}})
+		assertErr(t, err)
+	})
 	t.Run("error", func(t *testing.T) {
-		_, err := Fix(context.Background(), FixRequest{FindingRef: "x"}, FixDeps{Loader: &mockFindingLoader{err: errors.New("fail")}})
+		_, err := Fix(context.Background(), FixRequest{InputPath: "e.json", FindingRef: "x"}, FixDeps{Loader: &mockFindingLoader{err: errors.New("fail")}})
 		assertErr(t, err)
 	})
 	t.Run("ctx", func(t *testing.T) {
-		_, err := Fix(canceled(), FixRequest{FindingRef: "x"}, FixDeps{Loader: &mockFindingLoader{}})
+		_, err := Fix(canceled(), FixRequest{InputPath: "e.json", FindingRef: "x"}, FixDeps{Loader: &mockFindingLoader{}})
 		assertCanceled(t, err)
 	})
 }
@@ -224,26 +228,30 @@ func TestGate(t *testing.T) {
 
 func TestTrace(t *testing.T) {
 	t.Run("happy", func(t *testing.T) {
-		resp, err := Trace(context.Background(), TraceRequest{ControlID: "CTL.A", AssetID: "b"}, TraceDeps{Evaluator: &mockTraceEvaluator{data: "ok"}})
+		resp, err := Trace(context.Background(), TraceRequest{ControlID: "CTL.A", AssetID: "b", ObservationPath: "obs.json"}, TraceDeps{Evaluator: &mockTraceEvaluator{data: "ok"}})
 		assertNoErr(t, err)
 		if resp.TraceData == nil {
 			t.Error("TraceData: got nil")
 		}
 	})
 	t.Run("empty control", func(t *testing.T) {
-		_, err := Trace(context.Background(), TraceRequest{AssetID: "b"}, TraceDeps{Evaluator: &mockTraceEvaluator{}})
+		_, err := Trace(context.Background(), TraceRequest{AssetID: "b", ObservationPath: "obs.json"}, TraceDeps{Evaluator: &mockTraceEvaluator{}})
 		assertErr(t, err)
 	})
 	t.Run("empty asset", func(t *testing.T) {
-		_, err := Trace(context.Background(), TraceRequest{ControlID: "CTL.A"}, TraceDeps{Evaluator: &mockTraceEvaluator{}})
+		_, err := Trace(context.Background(), TraceRequest{ControlID: "CTL.A", ObservationPath: "obs.json"}, TraceDeps{Evaluator: &mockTraceEvaluator{}})
+		assertErr(t, err)
+	})
+	t.Run("empty observation path", func(t *testing.T) {
+		_, err := Trace(context.Background(), TraceRequest{ControlID: "CTL.A", AssetID: "b"}, TraceDeps{Evaluator: &mockTraceEvaluator{}})
 		assertErr(t, err)
 	})
 	t.Run("error", func(t *testing.T) {
-		_, err := Trace(context.Background(), TraceRequest{ControlID: "CTL.A", AssetID: "b"}, TraceDeps{Evaluator: &mockTraceEvaluator{err: errors.New("fail")}})
+		_, err := Trace(context.Background(), TraceRequest{ControlID: "CTL.A", AssetID: "b", ObservationPath: "obs.json"}, TraceDeps{Evaluator: &mockTraceEvaluator{err: errors.New("fail")}})
 		assertErr(t, err)
 	})
 	t.Run("ctx", func(t *testing.T) {
-		_, err := Trace(canceled(), TraceRequest{ControlID: "CTL.A", AssetID: "b"}, TraceDeps{Evaluator: &mockTraceEvaluator{}})
+		_, err := Trace(canceled(), TraceRequest{ControlID: "CTL.A", AssetID: "b", ObservationPath: "obs.json"}, TraceDeps{Evaluator: &mockTraceEvaluator{}})
 		assertCanceled(t, err)
 	})
 }
