@@ -83,17 +83,19 @@ func TestSanitizer_ScrubMessage_PreservesURLs(t *testing.T) {
 }
 
 func TestSanitizer_ScrubMessage_SingleComponentPath(t *testing.T) {
-	// Single-component absolute paths (e.g. `/secret`) used to slip
-	// through because the regex required at least one intermediate
-	// directory. CI runners that mount secret-token files at the
-	// root surface them in error messages exactly this way.
+	// Single-component absolute paths (e.g. `/secret`) reach the
+	// basename branch but `/`+basename equals the original — so the
+	// substitution would round-trip the leaked filename verbatim.
+	// The branch detects that and emits `/<redacted>` instead. CI
+	// runners that mount secret-token files at the root surface
+	// them in error messages exactly this way.
 	baseSan := Policy{SanitizeIDs: true, PathMode: PathBase}.NewSanitizer()
 	cases := []struct {
 		in   string
 		want string
 	}{
-		{"cannot read /secret: permission denied", "cannot read /secret: permission denied"},
-		{"open /token failed", "open /token failed"},
+		{"cannot read /secret: permission denied", "cannot read /<redacted>: permission denied"},
+		{"open /token failed", "open /<redacted> failed"},
 		{"existing /home/user/data/obs.json untouched", "existing /obs.json untouched"},
 		{"empty path / not collapsed", "empty path / not collapsed"}, // bare slash, no basename
 	}

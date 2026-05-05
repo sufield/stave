@@ -96,6 +96,14 @@ func (l *ExposureLifecycle) History() ExposureHistory {
 
 // RecordCheck updates the lifecycle based on a new observation result.
 // It handles the transitions between compliant and non-compliant states.
+//
+// Returns ErrEmptyAssetID when the lifecycle's ID has been cleared
+// (a malformed observation row reached the lifecycle layer despite
+// upstream validation). The earlier shape panicked from
+// checkContracts(), which aborted the entire assessment on a single
+// bad row; surfacing the failure as an error lets callers in
+// engine/lifecycles.go log + skip the offending lifecycle and keep
+// the rest of the assessment running.
 func (l *ExposureLifecycle) RecordCheck(t time.Time, isExposed bool) error {
 	if t.IsZero() {
 		return ErrZeroTimestamp
@@ -109,8 +117,7 @@ func (l *ExposureLifecycle) RecordCheck(t time.Time, isExposed bool) error {
 	} else {
 		l.handleSecure(t)
 	}
-	l.checkContracts()
-	return nil
+	return l.checkContracts()
 }
 
 // RecordInconclusive records that an evaluation was attempted but the
@@ -430,8 +437,15 @@ func (l *ExposureLifecycle) FormatExposureSummary(threshold time.Duration, now t
 	)
 }
 
-func (l *ExposureLifecycle) checkContracts() {
+// checkContracts surfaces lifecycle-invariant violations as errors
+// rather than panicking. The earlier shape panicked on an empty ID,
+// which aborted the entire assessment when a single malformed
+// observation row slipped past upstream validation; returning
+// ErrEmptyAssetID lets the engine skip the offending lifecycle and
+// keep processing the rest of the snapshot.
+func (l *ExposureLifecycle) checkContracts() error {
 	if l.ID.IsEmpty() {
-		panic("contract violated: ExposureLifecycle.ID must be non-empty")
+		return ErrEmptyAssetID
 	}
+	return nil
 }

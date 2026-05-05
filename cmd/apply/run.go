@@ -14,10 +14,6 @@ import (
 // All CLI state has already been extracted into cs. Context flows as the
 // first parameter per Go convention.
 func runApply(ctx context.Context, deps Deps, opts *Options, cs cobraState) error {
-	if err := opts.validate(); err != nil {
-		return fmt.Errorf("validate options: %w", err)
-	}
-
 	resolver, err := projctx.NewResolver()
 	if err != nil {
 		return fmt.Errorf("resolve project context: %w", err)

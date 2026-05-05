@@ -1,6 +1,8 @@
 package engine
 
 import (
+	"fmt"
+	"log/slog"
 	"maps"
 	"strings"
 
@@ -169,9 +171,25 @@ func extractKMSKeyID(a asset.Asset) string {
 func extractClassification(a asset.Asset) string {
 	tags, ok := a.Properties["tags"].(map[string]any)
 	if !ok {
-		// Try nested storage.tags path.
+		// Try nested storage.tags path. A non-map value at
+		// `storage.tags` is treated as malformed input rather than
+		// silently dropped — the previous shape discarded the type
+		// assertion's `ok` and routed every shape mismatch into the
+		// default "unclassified" label, so an extractor bug that put
+		// a string or list there produced confidence-degrading
+		// findings with no signal back to the operator.
 		if storage, ok := a.Properties["storage"].(map[string]any); ok {
-			tags, _ = storage["tags"].(map[string]any)
+			rawTags, present := storage["tags"]
+			if present {
+				typedTags, tagsOK := rawTags.(map[string]any)
+				if !tagsOK {
+					slog.Warn("extractClassification: storage.tags has unexpected type; falling back to unclassified",
+						"asset_id", string(a.ID),
+						"actual_type", fmt.Sprintf("%T", rawTags),
+					)
+				}
+				tags = typedTags
+			}
 		}
 	}
 	if tags == nil {

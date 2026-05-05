@@ -173,6 +173,18 @@ func (s *Sanitizer) ScrubMessage(msg string) string {
 			// denied" which loses the "this is an absolute path"
 			// signal. Relative-path matches don't reach this
 			// branch — the regex requires the leading "/".
+			//
+			// Single-component paths (e.g. `/secret`) need explicit
+			// redaction: the basename rule would substitute them
+			// with themselves, leaving the leaked filename
+			// untouched. The package doc comment cites this as
+			// the exact form a CI-runner mounted secret takes,
+			// so round-tripping it verbatim defeats the
+			// scrubber's contract. Replace with a generic
+			// placeholder instead.
+			if match == "/"+groups[2] {
+				return "/<redacted>"
+			}
 			return "/" + groups[2]
 		}
 		// The two-branch regex is exhaustive over its alternation,

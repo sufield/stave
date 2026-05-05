@@ -23,6 +23,14 @@ func NewBundleLoader() *BundleLoader { return &BundleLoader{} }
 
 var _ appcontracts.SnapshotBundleLoader = (*BundleLoader)(nil)
 
+// DAEMON-UNSAFE: LoadBundle spawns a reader goroutine that cannot be
+// interrupted on ctx.Done() — Go's runtime cannot abort a blocked
+// disk read on a non-deadline-capable file descriptor, so the
+// goroutine outlives this call until the OS returns control. CLI
+// one-shot use only; long-running daemons must wrap their inbound
+// context with DaemonContext so the runtime guard below fails fast
+// instead of leaking a goroutine per invocation.
+//
 // LoadBundle reads and parses a bundle file. ctx is honoured around
 // the blocking disk read so a long-stalled read on a network mount
 // or a paused filesystem can be interrupted by the caller cancelling
@@ -31,6 +39,9 @@ var _ appcontracts.SnapshotBundleLoader = (*BundleLoader)(nil)
 func (BundleLoader) LoadBundle(ctx context.Context, path string) ([]asset.Snapshot, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
+	}
+	if isDaemonContext(ctx) {
+		return nil, ErrDaemonUnsafe
 	}
 	type result struct {
 		data []asset.Snapshot

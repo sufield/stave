@@ -59,6 +59,34 @@ checks:
 	}
 }
 
+// TestResolveControlCrosswalk_JSONIncludesFilteredKey pins that the
+// JSON envelope produced by ResolveControlCrosswalk emits the
+// "filtered" key. The earlier shape only carried FilteredChecks on
+// the in-memory CrosswalkResolution; the JSON went out without it,
+// so downstream consumers parsing the file lost track of "mapping
+// existed but every entry was framework-filtered" and conflated
+// genuine catalog gaps with operator-noise filters.
+func TestResolveControlCrosswalk_JSONIncludesFilteredKey(t *testing.T) {
+	raw := []byte(`
+version: control_crosswalk.v1
+checks:
+  SC.BUILDINFO.PRESENT:
+    - framework: soc2
+      control_id: CC7.1
+      rationale: build metadata supports evidence
+`)
+	res, err := ResolveControlCrosswalk(raw, []string{"hipaa"}, []string{"SC.BUILDINFO.PRESENT"}, time.Now().UTC())
+	if err != nil {
+		t.Fatalf("ResolveControlCrosswalk: %v", err)
+	}
+	if !strings.Contains(string(res.ResolutionJSON), `"filtered"`) {
+		t.Errorf("ResolutionJSON missing \"filtered\" key:\n%s", res.ResolutionJSON)
+	}
+	if !strings.Contains(string(res.ResolutionJSON), `"SC.BUILDINFO.PRESENT"`) {
+		t.Errorf("ResolutionJSON missing the filtered check id:\n%s", res.ResolutionJSON)
+	}
+}
+
 func TestParseFramework(t *testing.T) {
 	tests := []struct {
 		input   string

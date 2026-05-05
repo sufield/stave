@@ -67,16 +67,22 @@ func TestParseBundle_InvalidJSON(t *testing.T) {
 // StdinObservationLoader
 // ---------------------------------------------------------------------------
 
-func TestNewStdinObservationLoader_Defaults(t *testing.T) {
-	loader := NewStdinObservationLoader(nil, nil)
-	if loader == nil {
-		t.Fatal("expected non-nil loader")
+func TestNewStdinObservationLoader_NilReaderReturnsError(t *testing.T) {
+	loader, err := NewStdinObservationLoader(nil, nil)
+	if err == nil {
+		t.Fatal("expected error for nil reader")
+	}
+	if loader != nil {
+		t.Fatal("expected nil loader on error")
 	}
 }
 
 func TestStdinObservationLoader_LoadSnapshots_EmptyInput(t *testing.T) {
-	loader := NewStdinObservationLoader(nil, strings.NewReader(""))
-	_, err := loader.LoadSnapshots(context.Background(), "ignored")
+	loader, err := NewStdinObservationLoader(nil, strings.NewReader(""))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	_, err = loader.LoadSnapshots(context.Background(), "ignored")
 	if err == nil {
 		t.Fatal("expected error for empty stdin input")
 	}

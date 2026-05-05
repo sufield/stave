@@ -43,6 +43,9 @@ func ContextList(ctx context.Context, req ContextListRequest, deps ContextDeps) 
 		return ContextListResponse{}, fmt.Errorf("context-list: %w", err)
 	}
 
+	// req carries no filter or selector — ContextList returns every
+	// configured context. The parameter is kept for API-shape
+	// symmetry with the rest of the use-case package.
 	_ = req
 
 	entries, err := deps.Store.ListContexts(ctx)
@@ -76,6 +79,9 @@ func ContextShow(ctx context.Context, req ContextShowRequest, deps ContextDeps) 
 		return ContextShowResponse{}, fmt.Errorf("context-show: %w", err)
 	}
 
+	// req carries no selector — the active context is whichever the
+	// store currently records. The parameter is kept for API-shape
+	// symmetry with the rest of the use-case package.
 	_ = req
 
 	resp, err := deps.Store.ShowContext(ctx)

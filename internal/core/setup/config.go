@@ -33,6 +33,9 @@ func ConfigShow(ctx context.Context, req ConfigShowRequest, deps ConfigShowDeps)
 		return ConfigShowResponse{}, fmt.Errorf("config_show: %w", err)
 	}
 
+	// req carries no key or scope filter — ConfigShow returns the
+	// resolver's full effective view. The parameter is kept for
+	// API-shape symmetry with the rest of the use-case package.
 	_ = req
 
 	data, err := deps.Resolver.ResolveEffectiveConfig(ctx)

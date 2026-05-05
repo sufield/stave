@@ -225,6 +225,15 @@ func recordAssetObservation(
 			continue
 		}
 		if err := t.RecordCheck(snap.CapturedAt, isUnsafe); err != nil {
+			// A lifecycle with an empty ID is upstream-input malformed —
+			// the previous shape panicked here and aborted the whole
+			// assessment. Skip just this lifecycle and keep going so
+			// one bad observation row no longer blanks the entire run.
+			if errors.Is(err, asset.ErrEmptyAssetID) {
+				slog.Warn("skipping lifecycle with empty asset ID",
+					"control", ctl.ID, "asset_type", a.Type)
+				continue
+			}
 			return fmt.Errorf("record observation for control %s, asset %s: %w", ctl.ID, a.ID, err)
 		}
 		if err := t.SetAsset(a); err != nil {

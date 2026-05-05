@@ -47,6 +47,9 @@ func AliasList(ctx context.Context, req AliasListRequest, deps AliasDeps) (Alias
 		return AliasListResponse{}, fmt.Errorf("alias-list: %w", err)
 	}
 
+	// req carries no filter — AliasList returns every registered
+	// alias. The parameter is kept for API-shape symmetry with the
+	// rest of the use-case package.
 	_ = req
 
 	entries, err := deps.Store.ListAliases(ctx)

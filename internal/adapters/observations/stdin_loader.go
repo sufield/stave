@@ -19,9 +19,9 @@ package observations
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
-	"strings"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/asset"
@@ -65,18 +65,31 @@ type StdinObservationLoader struct {
 
 var _ appcontracts.ObservationRepository = (*StdinObservationLoader)(nil)
 
-// NewStdinObservationLoader creates a loader that reads from the given reader.
-func NewStdinObservationLoader(loader appcontracts.SnapshotReader, r io.Reader) *StdinObservationLoader {
+// NewStdinObservationLoader builds a stdin-style observation loader.
+//
+// Two parameters with two different contracts:
+//
+//   - loader is an OPTIONAL extension point. A nil falls back to the
+//     standard ObservationLoader, so callers that don't need a custom
+//     parser implementation can pass nil and inherit the default.
+//   - r is the REQUIRED data source. A nil reader is a terminal
+//     wiring bug — the previous shape silently substituted an empty
+//     reader, which presented as "no data" and masked the missing
+//     pipe (a forgotten os.Stdin, a misrouted dependency injection).
+//     Returning an error here forces the wiring bug to surface at
+//     constructor time instead of producing a silent empty-result
+//     run that looks like a legitimate clean evaluation.
+func NewStdinObservationLoader(loader appcontracts.SnapshotReader, r io.Reader) (*StdinObservationLoader, error) {
 	if loader == nil {
 		loader = NewObservationLoader()
 	}
 	if r == nil {
-		r = strings.NewReader("")
+		return nil, errors.New("observations: nil io.Reader provided to StdinObservationLoader")
 	}
 	return &StdinObservationLoader{
 		loader: loader,
 		reader: r,
-	}
+	}, nil
 }
 
 // LoadSnapshots implements contracts.ObservationRepository by reading from stdin.
@@ -102,6 +115,14 @@ func NewStdinObservationLoader(loader appcontracts.SnapshotReader, r io.Reader) 
 // interrupt a blocked read syscall — wrapping a timeout context here
 // is necessary but not sufficient.
 func (s *StdinObservationLoader) LoadSnapshots(ctx context.Context, _ string) (appcontracts.LoadResult, error) {
+	// DAEMON-UNSAFE: see the package doc and ErrDaemonUnsafe. The
+	// reader goroutine below cannot be interrupted on ctx
+	// cancellation, so a daemon caller invoking LoadSnapshots in a
+	// loop would accumulate leaked goroutines. Reject the call up
+	// front when the context was tagged via DaemonContext.
+	if isDaemonContext(ctx) {
+		return appcontracts.LoadResult{}, ErrDaemonUnsafe
+	}
 	// Read stdin with context cancellation support — if the upstream
 	// process hangs, the context deadline will unblock the caller.
 	//

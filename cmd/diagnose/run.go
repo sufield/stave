@@ -127,23 +127,15 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 	if err := p.RenderDetail(detail); err != nil {
 		return err
 	}
-	if isInViolationContext() && !cfg.Format.IsJSON() {
+	// runDetailMode only runs after InspectViolation has confirmed
+	// a violation (otherwise the upstream returns an error), so the
+	// detail view is always rendering a known violation — emit the
+	// gating exit code unless the operator asked for JSON, where
+	// the document itself carries the violation signal.
+	if !cfg.Format.IsJSON() {
 		return ui.ErrViolationsFound
 	}
 	return nil
-}
-
-// isInViolationContext reports whether the surrounding code is
-// rendering a detail view for a known security violation. By
-// construction, runDetailMode only runs after InspectViolation has
-// confirmed the violation (otherwise the upstream returns an
-// error), so this is unconditionally true. The helper exists so
-// the call site reads as a policy statement ("when inspecting a
-// violation, signal ErrViolationsFound for the gating exit code")
-// and so a future change that makes detail rendering reachable
-// from a non-violation path lands here as one edit.
-func isInViolationContext() bool {
-	return true
 }
 
 func (r *Runner) newDiagnosticEngine() (*appdiagnose.DiagnosticEngine, error) {

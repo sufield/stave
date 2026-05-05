@@ -100,7 +100,7 @@ func DefaultFactories() Factories {
 			return observations.NewObservationLoader(), nil
 		},
 		NewStdinObsRepo: func(r io.Reader) (appcontracts.ObservationRepository, error) {
-			return observations.NewStdinObservationLoader(observations.NewObservationLoader(), r), nil
+			return observations.NewStdinObservationLoader(observations.NewObservationLoader(), r)
 		},
 		NewCtlRepo: func() (appcontracts.ControlRepository, error) {
 			return ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(predicate.ResolverFunc())), nil

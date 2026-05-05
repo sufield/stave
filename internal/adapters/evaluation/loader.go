@@ -266,10 +266,20 @@ func parseFindings(raw []byte, depth int) ([]remediation.Finding, error) {
 	}
 
 	// Format 1: API wrapped envelope ({"ok": ..., "data": {...}})
+	// An envelope that announces itself with `ok` but omits `data` is
+	// a structurally invalid response — typically a truncated payload
+	// or a producer bug. The earlier shape silently fell through to
+	// the safety/direct-result probes, where an empty document either
+	// hit ErrNoFindings or — worse — matched the bare-findings shape
+	// with zero entries and produced a "clean run" result. Surface
+	// the malformed envelope explicitly so operators can diagnose
+	// truncated CI artefacts instead of seeing a passing run.
 	if _, hasOK := probe["ok"]; hasOK {
-		if data, hasData := probe["data"]; hasData {
-			return parseFindings(data, depth+1)
+		data, hasData := probe["data"]
+		if !hasData {
+			return nil, fmt.Errorf("malformed API envelope: 'ok' present but 'data' missing")
 		}
+		return parseFindings(data, depth+1)
 	}
 
 	// Format 2: Safety envelope ({"kind": ..., "findings": [...]})

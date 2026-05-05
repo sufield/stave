@@ -8,6 +8,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/platform/logging"
 )
 
 // AddGlobalFlags wires persistent global flags onto the provided root command.
@@ -26,31 +27,18 @@ func AddGlobalFlags(root *cobra.Command, flags *globalFlagsType) {
 	// Logging
 	p.CountVarP(&flags.Verbosity, "verbose", "v", "Increase verbosity (-v=INFO, -vv=DEBUG)")
 	p.Var(&flags.LogLevel, "log-level", "Log level: debug|info|warn|error (overrides -v)")
-	// Seed LogFormat through the pflag.Value contract by registering
-	// then calling Set("text"). Direct field assignment side-stepped
-	// pflag's bookkeeping — the value was set but pflag did not mark
-	// the flag as defaulted, so resolveGlobalFlagDefaults could not
-	// distinguish "user passed --log-format=text" from "default
-	// applied" via p.Changed(). The Set route updates both.
+	// Seed the LogFormat default by writing the typed field BEFORE
+	// p.Var binds it. pflag captures DefValue at registration via
+	// Value.String(), so an initial value present at that moment
+	// becomes the default cleanly, with Changed=false set by pflag
+	// itself. The earlier shape registered first and then called
+	// Value.Set("text"), which seeded the value but flipped
+	// Changed=true; the previous workaround patched DefValue/Changed
+	// back via direct field mutation, a known smell that depended on
+	// pflag's internals. Initialising the field before binding takes
+	// the clean public-API path.
+	flags.LogFormat = logging.FormatText
 	p.Var(&flags.LogFormat, "log-format", "Log format: text|json")
-	if err := p.Lookup("log-format").Value.Set("text"); err != nil {
-		// pflag only errors here when the Value.Set implementation
-		// rejects the string. logging.Format.Set always returns nil,
-		// so this is a structural test-time check: if a future
-		// Format.Set adds validation, fail loud at startup.
-		panic("flags: failed to seed log-format default: " + err.Error())
-	}
-	// pflag has no public API to mark a flag as "default-seeded" after
-	// Value.Set — the only path it offers is the constructor family
-	// (StringVar, etc.), which doesn't accept a pflag.Value. We seed
-	// via Value.Set above to honour the typed-Value contract on
-	// LogFormat, then patch DefValue / Changed back to the
-	// "user did not pass --log-format" state by direct field mutation.
-	// Direct mutation is normally a smell but here it's a known
-	// upstream gap; track the relevant pflag issues / consider
-	// migrating off `Value` if pflag ever exposes a SetDefault hook.
-	p.Lookup("log-format").DefValue = "text"
-	p.Lookup("log-format").Changed = false
 	p.StringVar(&flags.LogFile, cliflags.FlagLogFile, "", "Write logs to file (default: stderr)")
 	p.BoolVar(&flags.LogTimestamps, "log-timestamps", false, "Include timestamps in logs (breaks determinism)")
 	p.BoolVar(&flags.LogTimings, "log-timings", false, "Include timing information (breaks determinism)")

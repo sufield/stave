@@ -101,9 +101,7 @@ func SupportedFrameworks() []Framework {
 	for f := range supportedFrameworks {
 		out = append(out, f)
 	}
-	slices.SortFunc(out, func(a, b Framework) int {
-		return strings.Compare(string(a), string(b))
-	})
+	slices.Sort(out)
 	return out
 }
 
@@ -204,18 +202,24 @@ func ResolveControlCrosswalk(
 	for i, m := range missing {
 		missingOut[i] = string(m)
 	}
+	filteredOut := make([]string, len(filtered))
+	for i, f := range filtered {
+		filteredOut[i] = string(f)
+	}
 
 	output := struct {
 		SchemaVersion kernel.Schema           `json:"schema_version"`
 		Frameworks    []string                `json:"frameworks"`
 		Checks        map[string][]ControlRef `json:"checks"`
 		Missing       []string                `json:"missing"`
+		Filtered      []string                `json:"filtered"`
 		GeneratedAt   string                  `json:"generated_at"`
 	}{
 		SchemaVersion: kernel.SchemaCrosswalkResolution,
 		Frameworks:    FrameworkStrings(selected),
 		Checks:        checksOut,
 		Missing:       missingOut,
+		Filtered:      filteredOut,
 		GeneratedAt:   now.UTC().Format(time.RFC3339),
 	}
 

@@ -271,9 +271,29 @@ type assessmentSession struct {
 	snapshots         []asset.Snapshot
 	auditTime         time.Time
 	collector         *AssessmentCollector
-	idIndex           IdentityIndex
-	opts              AssessmentOptions
-	activeSpan        ports.AssessmentSpan // current control×asset span for strategy access; sequential-only, see type doc
+	idIndex IdentityIndex
+	opts    AssessmentOptions
+	// CONCURRENCY: activeSpan is the live control×asset span the
+	// strategy reads via sessionDeps. It is plain memory — no mutex,
+	// no atomic. Today the field is safe because applyControlInUse
+	// (the atomic.Bool below) serialises every applyControl call,
+	// giving the field a single writer at a time and a happens-before
+	// edge to the strategy's read.
+	//
+	// Any future change that parallelises applyControl (one goroutine
+	// per control, per-asset workers, etc.) MUST stop writing to this
+	// field. The fix is to pass the span as a parameter into
+	// strategy.Evaluate (or carry it on a per-call sessionDeps copy);
+	// adding a mutex around the assignment does NOT help because the
+	// strategy still reads "the wrong span" — whichever was set last,
+	// not the one for the asset it is evaluating. See the
+	// applyControl doc comment for the full contract.
+	activeSpan ports.AssessmentSpan
+	// applyControlInUse is the runtime assertion guard for the
+	// CONCURRENCY contract above. CompareAndSwap to true on entry
+	// and Store(false) on exit make the second concurrent caller
+	// observable as a panic with a clear message rather than a
+	// silent data race on activeSpan.
 	applyControlInUse atomic.Bool
 }
 
@@ -476,16 +496,18 @@ func (s *assessmentSession) applyControl(
 		//    Set the active span so strategies can record their decision steps,
 		//    then create the strategy (which captures the span via sessionDeps).
 		//
-		//    THREAD-SAFETY: this assignment MUST stay single-threaded.
-		//    `s.activeSpan` is a plain field read by the strategy via
-		//    sessionDeps — there is no mutex. The applyControlInUse
-		//    atomic on the parent assessmentSession serialises
-		//    applyControl calls today, so the write is safe; a future
-		//    parallelism patch that drops that atomic must replace
-		//    this field-store with a parameter-passed span (see the
-		//    follow-up comment on assessmentSession) or guard the
-		//    assignment with a mutex. Otherwise concurrent strategies
-		//    would race on s.activeSpan reads.
+		// CONCURRENCY: this assignment is plain-memory, single-writer.
+		// The contract that protects it lives on the assessmentSession
+		// type doc (see the activeSpan field comment) and on
+		// applyControl's doc comment. In short: applyControlInUse
+		// serialises applyControl, so writes to s.activeSpan are
+		// totally ordered with the strategy's read. A future
+		// parallelism patch that drops that atomic MUST replace
+		// this store with a parameter-passed span — adding a mutex
+		// around the assignment alone does not fix the read race,
+		// because the strategy would still see whichever span was
+		// stored last instead of the one for the asset under
+		// evaluation.
 		s.activeSpan = span
 		// Defensive nil-check: strategy.Evaluate dereferences lifecycle.
 		// A nil here would panic the assessor; record an inconclusive
@@ -618,12 +640,23 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 	}
 
 	if s.opts.GenerateEvidence && len(s.snapshots) > 0 {
-		latestSnap := &s.snapshots[len(s.snapshots)-1]
+		// Pick the semantically latest snapshot rather than the
+		// last slice element. sortSnapshots already orders the
+		// session's snapshots ascending by CapturedAt, so today the
+		// last index is correct — but the evidence pipeline reads
+		// from a session field that any future caller (a
+		// non-default ordering, an external source, a test that
+		// hand-builds a session) might populate out of order.
+		// Mirrors the explicit MaxFunc pattern referenceTime uses
+		// for the same reason.
+		latestSnap := slices.MaxFunc(s.snapshots, func(a, b asset.Snapshot) int {
+			return a.CapturedAt.Compare(b.CapturedAt)
+		})
 		report.EvidencePackage = buildEvidencePackage(
 			activeFindings,
 			snap.Checks,
 			s.assessor.Controls(),
-			latestSnap,
+			&latestSnap,
 			s.auditTime,
 		)
 	}
