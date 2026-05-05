@@ -254,10 +254,18 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 		return observation, nil
 
 	case asset.VerdictExposed:
-		span.RecordStep("threshold_check", map[string]any{
+		thresholdInputs := map[string]any{
 			"threshold_hours":  maxUnsafe.Hours(),
 			"last_seen_unsafe": t.LastObservedAt(),
-		}, map[string]any{
+		}
+		// Mirror the VerdictSecure/ReasonSecureWithinThreshold
+		// branch: a zero threshold means "any unsafe duration
+		// violates" — annotate so the trace reads as
+		// "immediate" rather than the ambiguous bare 0.
+		if maxUnsafe == 0 {
+			thresholdInputs["threshold_mode"] = "immediate"
+		}
+		span.RecordStep("threshold_check", thresholdInputs, map[string]any{
 			"exceeds_threshold": true,
 		})
 		return emitViolationFinding(s.deps, s.ctl, t, maxUnsafe, now, ids, observation)

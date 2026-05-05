@@ -5,10 +5,11 @@ import (
 	"io"
 )
 
-func renderTrendOpenMetrics(w io.Writer, r *trendReport) error { //nolint:unparam // error return for format-dispatch consistency
+func renderTrendOpenMetrics(out io.Writer, r *trendReport) error {
+	w := &trendErrWriter{w: out}
 	if len(r.Runs) == 0 {
 		fmt.Fprintln(w, "# EOF")
-		return nil
+		return w.err
 	}
 
 	latest := &r.Runs[len(r.Runs)-1]
@@ -125,5 +126,5 @@ func renderTrendOpenMetrics(w io.Writer, r *trendReport) error { //nolint:unpara
 	}
 
 	fmt.Fprintln(w, "# EOF")
-	return nil
+	return w.err
 }

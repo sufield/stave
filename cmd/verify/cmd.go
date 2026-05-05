@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	av "github.com/sufield/stave/internal/app/archiveverify"
 	"github.com/sufield/stave/internal/cli/ui"
 )
@@ -84,8 +85,8 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.OutFile, "out", "", "write attestation to file")
 	cmd.Flags().BoolVar(&opts.Strict, "strict", false, "fail on any gap regardless of size")
 
-	_ = cmd.MarkFlagRequired("archive")
-	_ = cmd.MarkFlagRequired("period")
+	cliflags.MustMarkRequired(cmd, "archive")
+	cliflags.MustMarkRequired(cmd, "period")
 
 	return cmd
 }

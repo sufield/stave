@@ -6,7 +6,29 @@ import (
 	"strings"
 )
 
-func renderTrendTable(w io.Writer, r *trendReport) error { //nolint:unparam // error return for format-dispatch consistency
+// trendErrWriter captures the first write error so subsequent
+// fmt.Fprintf calls become no-ops. Mirrors the stickyWriter pattern
+// in internal/profile/reporter/text.go so trend renders surface
+// broken-pipe failures (operator pipes stave to head, etc.) instead
+// of dropping trailing lines silently.
+type trendErrWriter struct {
+	w   io.Writer
+	err error
+}
+
+func (e *trendErrWriter) Write(p []byte) (int, error) {
+	if e.err != nil {
+		return 0, e.err
+	}
+	n, err := e.w.Write(p)
+	if err != nil {
+		e.err = err
+	}
+	return n, err
+}
+
+func renderTrendTable(out io.Writer, r *trendReport) error {
+	w := &trendErrWriter{w: out}
 	sep := strings.Repeat("-", 70)
 
 	fmt.Fprintln(w, "POSTURE TREND REPORT")
@@ -137,5 +159,5 @@ func renderTrendTable(w io.Writer, r *trendReport) error { //nolint:unparam // e
 		}
 	}
 
-	return nil
+	return w.err
 }

@@ -12,11 +12,13 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	infraSLA "github.com/sufield/stave/internal/adapters/sla"
@@ -88,7 +90,7 @@ Exit Codes:
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "live", "output format: live | json | plain")
 	cmd.Flags().BoolVar(&opts.NoColor, "no-color", false, "disable ANSI color codes")
 
-	_ = cmd.MarkFlagRequired("history")
+	cliflags.MustMarkRequired(cmd, "history")
 
 	return cmd
 }
@@ -168,7 +170,11 @@ func runLiveLoop(ctx context.Context, stdout io.Writer, opts *options, loadState
 	var fsCh <-chan fsnotify.Event
 	watcher, watchErr := fsnotify.NewWatcher()
 	if watchErr == nil {
-		defer func() { _ = watcher.Close() }()
+		defer func() {
+			if closeErr := watcher.Close(); closeErr != nil {
+				slog.Warn("watcher close failed", "error", closeErr)
+			}
+		}()
 		if addErr := watcher.Add(opts.HistoryDir); addErr != nil {
 			// Watcher creation succeeded but the directory could not be
 			// added — fall back to ticker-only refresh and tell the
@@ -270,16 +276,18 @@ func readKeys(ch chan<- byte, done <-chan struct{}) {
 // non-stdin fd (e.g. checking stdout for live-display compatibility)
 // got the wrong answer when the binary was invoked with stdin
 // redirected from a file but stdout still attached to the terminal.
+//
+// Uses syscall.Fstat directly rather than wrapping the fd in
+// os.NewFile. The wrapper attaches a finalizer that, on GC, would
+// close the underlying descriptor — for fd 0 (stdin) that meant a
+// later read from stdin returned EBADF after the wrapper was
+// reclaimed. Fstat on the raw fd has no such side effect.
 func isTerminalFd(fd uintptr) bool {
-	f := os.NewFile(fd, "")
-	if f == nil {
+	var stat syscall.Stat_t
+	if err := syscall.Fstat(int(fd), &stat); err != nil { //nolint:gosec // file descriptors fit in int on every supported platform
 		return false
 	}
-	fi, err := f.Stat()
-	if err != nil {
-		return false
-	}
-	return fi.Mode()&os.ModeCharDevice != 0
+	return stat.Mode&syscall.S_IFCHR != 0
 }
 
 func loadATTCKTactics() []appmon.TacticRow {

@@ -90,10 +90,13 @@ func splitComplianceBlock(raw map[string]any) (policy.ComplianceMapping, []strin
 	}
 	var ccm []string
 	if v, ok := raw["ccm_v4"]; ok {
+		// Preserve the nil-vs-empty distinction so a downstream
+		// reporter can tell "ccm_v4 was present but coercion
+		// failed" (nil) apart from "ccm_v4 was present and
+		// explicitly empty" ([]string{}). The previous shape
+		// collapsed both states into []string{} and hid coercion
+		// failures behind an apparently-clean empty list.
 		ccm = coerceStringList(v)
-		if ccm == nil {
-			ccm = []string{}
-		}
 	}
 	mapping := make(policy.ComplianceMapping, len(raw))
 	for k, v := range raw {
@@ -110,6 +113,20 @@ func splitComplianceBlock(raw map[string]any) (policy.ComplianceMapping, []strin
 	return mapping, ccm
 }
 
+// coerceStringList coerces a YAML node value into []string.
+//
+// Returns nil when the input is neither []string nor []any — the
+// caller in splitComplianceBlock relies on the nil-vs-non-nil
+// distinction to surface coercion failures (see ccm_v4 handling
+// above).
+//
+// Non-string elements inside a []any are SILENTLY DROPPED. This is
+// intentional: the schema validator earlier in the load pipeline
+// already rejects YAML where a list element has the wrong type,
+// so anything reaching this function with a mixed list is a test
+// fixture / programmatic call that bypassed validation. If a
+// strict mode is ever needed, gate the drop behind a flag and
+// return an error here.
 func coerceStringList(v any) []string {
 	switch s := v.(type) {
 	case []string:
@@ -122,6 +139,8 @@ func coerceStringList(v any) []string {
 			if str, ok := item.(string); ok {
 				out = append(out, str)
 			}
+			// Non-string element: silently dropped — see func
+			// docstring for the schema-validator-upstream contract.
 		}
 		return out
 	default:

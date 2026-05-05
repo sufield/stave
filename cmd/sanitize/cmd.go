@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/adapters/observations"
 	appsanitize "github.com/sufield/stave/internal/app/sanitize"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -57,8 +58,8 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.Snapshot, "snapshot", "", "path to observation snapshot JSON (required)")
 	cmd.Flags().StringVar(&opts.Rules, "rules", "", "path to custom sanitization rules YAML")
 	cmd.Flags().StringVar(&opts.OutPath, "out", "", "output file path (required)")
-	_ = cmd.MarkFlagRequired("snapshot")
-	_ = cmd.MarkFlagRequired("out")
+	cliflags.MustMarkRequired(cmd, "snapshot")
+	cliflags.MustMarkRequired(cmd, "out")
 
 	return cmd
 }

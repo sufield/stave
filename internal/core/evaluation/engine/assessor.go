@@ -475,6 +475,17 @@ func (s *assessmentSession) applyControl(
 		// 3. Evaluate the security strategy against the asset lifecycle.
 		//    Set the active span so strategies can record their decision steps,
 		//    then create the strategy (which captures the span via sessionDeps).
+		//
+		//    THREAD-SAFETY: this assignment MUST stay single-threaded.
+		//    `s.activeSpan` is a plain field read by the strategy via
+		//    sessionDeps — there is no mutex. The applyControlInUse
+		//    atomic on the parent assessmentSession serialises
+		//    applyControl calls today, so the write is safe; a future
+		//    parallelism patch that drops that atomic must replace
+		//    this field-store with a parameter-passed span (see the
+		//    follow-up comment on assessmentSession) or guard the
+		//    assignment with a mutex. Otherwise concurrent strategies
+		//    would race on s.activeSpan reads.
 		s.activeSpan = span
 		// Defensive nil-check: strategy.Evaluate dereferences lifecycle.
 		// A nil here would panic the assessor; record an inconclusive

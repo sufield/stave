@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appexempt "github.com/sufield/stave/internal/app/exempt"
 	"github.com/sufield/stave/internal/core/ports"
@@ -164,11 +165,11 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.Compensating, "compensating", "", "comma-separated compensating control IDs")
 	cmd.Flags().StringVar(&opts.File, "file", opts.File, "path to acceptance file")
 
-	_ = cmd.MarkFlagRequired("control-id")
-	_ = cmd.MarkFlagRequired("asset-id")
-	_ = cmd.MarkFlagRequired("reason")
-	_ = cmd.MarkFlagRequired("approver")
-	_ = cmd.MarkFlagRequired("expires")
+	cliflags.MustMarkRequired(cmd, "control-id")
+	cliflags.MustMarkRequired(cmd, "asset-id")
+	cliflags.MustMarkRequired(cmd, "reason")
+	cliflags.MustMarkRequired(cmd, "approver")
+	cliflags.MustMarkRequired(cmd, "expires")
 
 	return cmd
 }
@@ -230,8 +231,8 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.Reason, "reason", "", "reason for exception")
 	cmd.Flags().StringVar(&opts.File, "file", opts.File, "path to acceptance file")
 
-	_ = cmd.MarkFlagRequired("control-id")
-	_ = cmd.MarkFlagRequired("asset-id")
+	cliflags.MustMarkRequired(cmd, "control-id")
+	cliflags.MustMarkRequired(cmd, "asset-id")
 
 	return cmd
 }
@@ -288,7 +289,7 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.Reason, "reason", "", "reason for exemption")
 	cmd.Flags().StringVar(&opts.File, "file", opts.File, "path to acceptance file")
 
-	_ = cmd.MarkFlagRequired("pattern")
+	cliflags.MustMarkRequired(cmd, "pattern")
 
 	return cmd
 }
@@ -403,7 +404,7 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.ID, "id", "", "acknowledgment ID (control_id@asset_id)")
 	cmd.Flags().StringVar(&opts.File, "file", opts.File, "path to acceptance file")
 
-	_ = cmd.MarkFlagRequired("id")
+	cliflags.MustMarkRequired(cmd, "id")
 
 	return cmd
 }

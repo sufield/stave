@@ -59,15 +59,21 @@ func BuildLifecyclesPerControl(
 // the single source of truth for the vendor-applicability
 // heuristic shared with the risk pipeline.
 //
-// IMPORTANT: NOT safe for concurrent use. The current caller
-// (BuildLifecyclesPerControl) iterates snapshots sequentially on a
-// single goroutine; the `cache` map is mutated without locking and
-// concurrent readers WILL race a writer (`fatal error: concurrent
-// map writes`). If a future caller wants to parallelize:
+// SAFE for concurrent use via the internal sync.RWMutex.
+// controlsFor uses double-checked locking:
 //
-//  1. Add a sync.RWMutex to controlVendorIndex.
-//  2. Wrap cache reads in mu.RLock / mu.RUnlock.
-//  3. Wrap cache writes in mu.Lock / mu.Unlock.
+//  1. RLock + read cache. Hit → return slices.Clone, RUnlock.
+//  2. RUnlock + compute the filtered list outside the lock so a
+//     long compute doesn't block other readers.
+//  3. Lock + re-check the cache (a peer may have raced us to the
+//     same key while we computed). If still missing, store our
+//     result; otherwise discard our compute and return the peer's
+//     clone.
+//
+// The cache holds the canonical filtered list per vendor. Every
+// callsite returns a slices.Clone so a caller mutating the returned
+// slice (sort, append, swap-replace) cannot corrupt the cached
+// entry the next caller reads.
 //
 // Do NOT rely on "value receiver makes copies" — the cache map is a
 // reference type, so copies still share state. Tests that
@@ -164,6 +170,18 @@ func recordAssetObservation(
 			continue
 		}
 		lcs := lifecyclesByControl[ctl.ID]
+		if lcs == nil {
+			// BuildLifecyclesPerControl pre-registers a map for every
+			// control ID up front, so this branch only fires when the
+			// caller passed a control whose ID wasn't in the
+			// pre-registration set — typically a hand-built test
+			// fixture or a future caller that forgets the
+			// initialisation step. Skip + warn instead of panicking
+			// on the lcs[a.ID] = t write below.
+			slog.Warn("recordAssetObservation: control ID not pre-registered in lifecycles map; skipping",
+				"control", ctl.ID, "asset", a.ID)
+			continue
+		}
 
 		t, exists := lcs[a.ID]
 		if !exists {

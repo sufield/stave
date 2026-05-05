@@ -198,6 +198,16 @@ func filterResolvedChains(chains []policy.ChainDefinition, controls []policy.Con
 	resolved := make([]policy.ChainDefinition, 0, len(chains))
 	for i := range chains {
 		chain := &chains[i]
+		// Reject chains with no ControlIDs. The empty slice would
+		// otherwise leave allPresent=true (the inner loop never
+		// runs) and an empty chain would land in `resolved` —
+		// downstream chain evaluation would then trip on a chain
+		// that requires zero conditions to fire.
+		if len(chain.ControlIDs) == 0 {
+			slog.Warn("eval.buildResolvedChains: chain has empty ControlIDs; skipping",
+				"chain_id", chain.ID)
+			continue
+		}
 		allPresent := true
 		for _, ctlID := range chain.ControlIDs {
 			if !activeIDs[ctlID] {
