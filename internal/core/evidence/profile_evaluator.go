@@ -3,7 +3,21 @@ package evidence
 // EvaluateProfile evaluates an EvidencePackage against a FrameworkProfile,
 // producing a ProfileAssessment with per-requirement coverage scores.
 // It is a pure function with no side effects.
+//
+// Nil-input contract:
+//   - profile == nil: returns a zero-value *ProfileAssessment. The
+//     framework metadata fields cannot be populated without a
+//     profile, and panicking here would mask the wiring bug behind
+//     a stack trace far from the call site. Returning the zero
+//     value lets the caller render an empty assessment that
+//     surfaces "no framework configured" downstream.
+//   - pkg == nil: every requirement evaluates to NotEvaluated (no
+//     records to score against), which is the correct outcome —
+//     evaluateRequirement handles the nil-pkg case below.
 func EvaluateProfile(pkg *EvidencePackage, profile *FrameworkProfile) *ProfileAssessment {
+	if profile == nil {
+		return &ProfileAssessment{}
+	}
 	result := &ProfileAssessment{
 		FrameworkID:       profile.ID,
 		FrameworkName:     profile.Name,
@@ -35,12 +49,22 @@ func EvaluateProfile(pkg *EvidencePackage, profile *FrameworkProfile) *ProfileAs
 	return result
 }
 
+// evaluateRequirement scores a single requirement against the
+// evidence package. A nil pkg short-circuits to a NotEvaluated
+// status: there are no records to look up, so every control under
+// this requirement reads as "no signal". Mirrors the EvaluateProfile
+// nil-input contract.
 func evaluateRequirement(pkg *EvidencePackage, req *Requirement) RequirementAssessment {
 	ra := RequirementAssessment{
 		RequirementID: req.ID,
 		Description:   req.Description,
 		Section:       req.Section,
 		TotalControls: len(req.ControlIDs),
+	}
+
+	if pkg == nil {
+		ra.Status = RequirementNotEvaluated
+		return ra
 	}
 
 	for _, controlID := range req.ControlIDs {

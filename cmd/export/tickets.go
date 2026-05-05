@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/app/ticketexport"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -48,7 +49,7 @@ Exit Codes:
 	cmd.Flags().StringVar(&outputPath, "out", "", "Write output to file instead of stdout")
 	cmd.Flags().StringVar(&teamManifest, "team-manifest", "", "Path to stave-teams.yaml for team assignment")
 	cmd.Flags().StringVar(&team, "team", "", "Filter tickets to a specific team")
-	_ = cmd.MarkFlagRequired("assessment")
+	cliflags.MustMarkRequired(cmd, "assessment")
 
 	return cmd
 }

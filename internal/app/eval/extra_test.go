@@ -286,7 +286,9 @@ func TestValidateBuildDependenciesInput_EmptyPlan(t *testing.T) {
 
 func TestApplyDeps_Close(t *testing.T) {
 	d := &ApplyDeps{}
-	d.Close() // just ensure no panic
+	if err := d.Close(); err != nil {
+		t.Errorf("Close on empty ApplyDeps returned %v; want nil", err)
+	}
 }
 
 func TestValidateFilePath_Empty(t *testing.T) {

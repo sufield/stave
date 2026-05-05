@@ -250,5 +250,10 @@ type ApplyDeps struct {
 	Config AssessmentConfig
 }
 
-// Close releases assets held by ApplyDeps.
-func (d *ApplyDeps) Close() {}
+// Close releases assets held by ApplyDeps. Returns nil today
+// because the wired dependencies hold no resources that fail on
+// release. The error return reserves the contract: a future
+// Close implementation that flushes trace files, closes a tracer
+// span, or finalizes a registry must surface those failures so
+// the apply pipeline does not silently drop a tail of telemetry.
+func (d *ApplyDeps) Close() error { return nil }

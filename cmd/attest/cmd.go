@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	appatt "github.com/sufield/stave/internal/app/attest"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
@@ -83,8 +84,8 @@ Exit Codes:
 	cmd.Flags().StringVar(&keyPath, "key", "", "Path to Ed25519 private key PEM (required)")
 	cmd.Flags().StringVar(&keyID, "key-id", "", "Key identifier for the signature")
 	cmd.Flags().StringVar(&outPath, "out", "", "Write attested snapshot to file")
-	_ = cmd.MarkFlagRequired("snapshot")
-	_ = cmd.MarkFlagRequired("key")
+	cliflags.MustMarkRequired(cmd, "snapshot")
+	cliflags.MustMarkRequired(cmd, "key")
 
 	return cmd
 }
@@ -120,8 +121,8 @@ Exit Codes:
 
 	cmd.Flags().StringVar(&snapshotPath, "snapshot", "", "Path to attested snapshot JSON (required)")
 	cmd.Flags().StringVar(&keyPath, "key", "", "Path to Ed25519 public key PEM (required)")
-	_ = cmd.MarkFlagRequired("snapshot")
-	_ = cmd.MarkFlagRequired("key")
+	cliflags.MustMarkRequired(cmd, "snapshot")
+	cliflags.MustMarkRequired(cmd, "key")
 
 	return cmd
 }

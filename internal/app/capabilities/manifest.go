@@ -2,6 +2,7 @@ package capabilities
 
 import (
 	"io/fs"
+	"log/slog"
 	"slices"
 	"strings"
 	"sync"
@@ -174,9 +175,17 @@ type controlParams struct {
 
 // deriveAttackStages scans the embedded control YAMLs and returns the
 // sorted, deduplicated set of attack_stage values actually used.
+//
+// fs.WalkDir failures here can only originate from the embed.FS
+// itself — the data is compiled into the binary, so a walk error
+// signals corrupted build artifacts rather than a runtime IO
+// problem. Log at debug so the gap surfaces under -vv without
+// failing the manifest derivation: callers consume the returned
+// list as a presentation-layer hint, not a load-bearing
+// invariant.
 func deriveAttackStages() []string {
 	seen := make(map[string]struct{})
-	_ = fs.WalkDir(controldata.FS, "embedded", func(path string, d fs.DirEntry, err error) error {
+	if walkErr := fs.WalkDir(controldata.FS, "embedded", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -195,7 +204,10 @@ func deriveAttackStages() []string {
 			seen[cp.Params.AttackStage] = struct{}{}
 		}
 		return nil
-	})
+	}); walkErr != nil {
+		slog.Debug("capabilities: embed.FS walk failed (corrupted build artifact?)",
+			"error", walkErr)
+	}
 	stages := make([]string, 0, len(seen))
 	for s := range seen {
 		stages = append(stages, s)

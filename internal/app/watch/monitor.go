@@ -282,13 +282,22 @@ func (m *Monitor) emit(ctx context.Context, alert ports.WatchAlert) {
 }
 
 func (m *Monitor) closeSinks() {
+	// Take m.mu so closeSinks cannot start while any runCycle is
+	// inside its emit phase. waitForPendingAlertCycle only tracks
+	// debounce-AfterFunc cycles via m.debounceWG; ticker-triggered
+	// cycles increment running but NOT the WG, so a ticker cycle
+	// that fired just before ctx.Done can still be holding m.mu
+	// when the shutdown defer reaches us. Acquiring m.mu here
+	// blocks until that cycle's defer releases the lock, which is
+	// the same boundary runCycle uses to publish state.
+	//
+	// Errors during normal-path Emit are surfaced via slog at the
+	// call site; this path runs on shutdown only and logs sink
+	// close failures as warnings rather than blocking termination
+	// (a network sink with a half-closed peer is normal at exit).
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	for _, sink := range m.cfg.Sinks {
-		// Explicit discard: shutdown is best-effort. A sink that
-		// errors on Close (network sink with a half-closed peer,
-		// file sink whose underlying fd was already reaped) should
-		// not block the watch loop from terminating, and the watch
-		// loop is the only caller that runs Close. Errors during
-		// normal-path Emit are surfaced via slog at the call site.
 		if err := sink.Close(); err != nil && m.cfg.Logger != nil {
 			m.cfg.Logger.Warn("alert sink close error", "error", err)
 		}

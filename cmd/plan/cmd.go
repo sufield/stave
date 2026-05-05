@@ -226,10 +226,19 @@ func runPlan(stdout io.Writer, opts *options) error {
 // a compliance assessment got machine output with no warning.
 func writeComplianceFormat(w io.Writer, result *compliancepath.PathResult, format string) error {
 	switch format {
-	case "json", "text", "":
+	case "json", "":
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
 		return enc.Encode(result)
+	case "text":
+		// Compliance-path output is structurally a sparse JSON
+		// object; there is no operator-friendly text rendering for
+		// it. Earlier the "text" case fell through to JSON
+		// encoding, so `stave plan --format=text` against a
+		// compliance assessment silently emitted machine output.
+		// Reject the combination explicitly — same shape as the
+		// CSV case below.
+		return &ui.UserError{Err: errors.New("--format text is not supported in compliance-path mode (use json or md)")}
 	case "csv":
 		return &ui.UserError{Err: errors.New("--format csv is not supported in compliance-path mode (use json or md)")}
 	default:
@@ -273,13 +282,15 @@ func writeFormat(w io.Writer, p *plan.Plan, format string) error {
 		enc.SetIndent("", "  ")
 		return enc.Encode(p)
 	case "text":
-		plan.WriteText(w, p)
-		return nil
+		// Returns the first sticky write error captured by the
+		// renderer's internal errWriter. The earlier `return nil`
+		// shape silently swallowed broken-pipe / disk-full failures
+		// and the command reported success on a truncated artifact.
+		return plan.WriteText(w, p)
 	case "csv":
 		return plan.WriteCSV(w, p)
 	default:
-		plan.WriteMarkdown(w, p)
-		return nil
+		return plan.WriteMarkdown(w, p)
 	}
 }
 
@@ -317,11 +328,14 @@ func writePerTeam(dir string, p *plan.Plan, format string) error {
 		}
 		writeErr := writeFormat(f, single, format)
 		closeErr := f.Close()
-		if writeErr != nil {
-			return writeErr
-		}
-		if closeErr != nil {
-			return closeErr
+		// Surface BOTH errors when both are non-nil. The earlier
+		// shape returned writeErr first and dropped closeErr,
+		// hiding cases where an OS-level flush failure (full disk
+		// finally rejecting the buffered tail) was the actual
+		// reason for output truncation. errors.Join keeps both
+		// causes visible to the operator.
+		if joined := errors.Join(writeErr, closeErr); joined != nil {
+			return fmt.Errorf("write team plan %q: %w", path, joined)
 		}
 	}
 	return nil

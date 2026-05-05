@@ -206,6 +206,15 @@ func (a *AcknowledgedFinding) ReasonDetail() string {
 // the per-field HasRationale / HasAcknowledger / HasExpiry probe
 // chain at the renderer site so the rendering policy stays on
 // the type that owns the fields.
+//
+// Returns no error by design: callers feed this into
+// human-facing terminal renderers where a partial-flush failure
+// (broken pipe to a paged less, closed terminal) is recovered by
+// the surrounding command-loop frame and surfacing it through
+// every WriteDetails call site would force every renderer to
+// thread an error channel that ultimately gets logged once at
+// the boundary anyway. Structured / contract-bearing output
+// uses the marshaler paths in adapters/, which DO return errors.
 func (a *AcknowledgedFinding) WriteDetails(w io.Writer) {
 	if a == nil {
 		return

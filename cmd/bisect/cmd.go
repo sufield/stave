@@ -86,7 +86,7 @@ Exit Codes:
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "Output format: text or json")
 	cmd.Flags().StringVar(&opts.Now, "now", "", "Override current time (RFC3339)")
 	cmd.Flags().StringVar(&opts.ResourceARN, "resource", "", "Scope to a specific resource ARN")
-	_ = cmd.MarkFlagRequired("control-id")
+	cliflags.MustMarkRequired(cmd, "control-id")
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))
 	_ = cmd.RegisterFlagCompletionFunc("mode", cliflags.CompleteFixed("bisect", "scan"))
 

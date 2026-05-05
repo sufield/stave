@@ -18,7 +18,11 @@ import (
 )
 
 // executeEvaluation builds dependencies, runs the evaluation, and writes output.
-func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, error) {
+// retErr is named so the deferred deps.Close() closure below can
+// merge a close failure into the function's error result without
+// shadowing it. The first return slot stays anonymous because every
+// `return` in the body explicitly constructs the EvaluateResult.
+func executeEvaluation(ctx context.Context, ec evalContext) (_ EvaluateResult, retErr error) {
 	progress := ec.Runtime.BeginCountedProgress("apply controls against observations")
 	defer progress.Done()
 
@@ -50,11 +54,20 @@ func executeEvaluation(ctx context.Context, ec evalContext) (EvaluateResult, err
 	if err != nil {
 		return EvaluateResult{}, fmt.Errorf("build evaluation dependencies: %w", err)
 	}
-	// ApplyDeps.Close is currently a no-op (no error return); the
-	// defer reserves the resource-cleanup hook so a future Close
-	// implementation can flush trace files / registries without
-	// touching the call site.
-	defer deps.Close()
+	// Capture deps.Close's error through retErr only when the
+	// function is otherwise about to return cleanly. If a real
+	// failure already populated retErr, that failure is the
+	// load-bearing signal — overwriting it with a downstream
+	// close error would obscure the actual root cause. Today
+	// Close is a no-op and returns nil, but the merge contract
+	// keeps the call site correct for any future Close
+	// implementation that flushes trace files or finalizes a
+	// registry.
+	defer func() {
+		if closeErr := deps.Close(); closeErr != nil && retErr == nil {
+			retErr = fmt.Errorf("close apply deps: %w", closeErr)
+		}
+	}()
 
 	// Phase 2 cutover: route the evaluation core through pkg/stave/cliapi
 	// so library and CLI share one orchestration path. The marshaler /

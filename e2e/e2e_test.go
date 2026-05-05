@@ -214,6 +214,17 @@ func runE2ECase(t *testing.T, bin, caseDir string) {
 }
 
 // --- Assertions ---
+//
+// Failure-handling rule for the helpers below: a fixture mismatch is
+// definitively broken — there is no scenario where it makes sense to
+// keep validating the rest of the case after the binary exited with
+// the wrong code, the wrong JSON, or wrote the wrong file. Use
+// t.Fatalf so the failure aborts the subtest immediately and the
+// CI log surfaces the exact case + expected-file path instead of a
+// trailing package-level "FAIL" with no signal. Each message is
+// prefixed with the fixture's case directory AND the specific
+// expected.* file that drove the assertion so the operator can
+// inspect or regenerate the artifact directly.
 
 func checkExitCode(t *testing.T, caseDir string, got int, stdout, stderr []byte) {
 	t.Helper()
@@ -223,12 +234,12 @@ func checkExitCode(t *testing.T, caseDir string, got int, stdout, stderr []byte)
 	}
 	want := readFileTrimmed(t, path)
 	if strconv.Itoa(got) != want {
-		// Include caseDir so CI logs identify the failing fixture
-		// even when surrounded by other --- ERROR --- markers in
-		// the verbose output. Stdout / stderr show the actual stave
-		// error message instead of just "exit 2 want 0".
-		t.Errorf("case %s: exit code = %d, want %s\nstdout:\n%s\nstderr:\n%s",
-			caseDir, got, want, truncate(stdout, 4096), truncate(stderr, 4096))
+		// Include caseDir + the expected.exit path so a CI log
+		// pinpoints both the failing fixture and the file that
+		// drove the comparison. Stdout / stderr show the actual
+		// stave error message instead of just "exit 2 want 0".
+		t.Fatalf("case %s: exit code = %d, want %s (from %s)\nstdout:\n%s\nstderr:\n%s",
+			caseDir, got, want, path, truncate(stdout, 4096), truncate(stderr, 4096))
 	}
 }
 
@@ -250,7 +261,8 @@ func checkStderrPattern(t *testing.T, caseDir string, stderr string) {
 	}
 	pattern := readFileTrimmed(t, path)
 	if !strings.Contains(strings.ToLower(stderr), strings.ToLower(pattern)) {
-		t.Errorf("case %s: stderr missing pattern %q in:\n%s", caseDir, pattern, stderr)
+		t.Fatalf("case %s: stderr missing pattern %q (from %s) in:\n%s",
+			caseDir, pattern, path, stderr)
 	}
 }
 
@@ -263,7 +275,8 @@ func checkSummary(t *testing.T, caseDir string, stdout []byte) {
 	expected := canonicalJSON(t, readFileBytes(t, path))
 	actual := extractJSONPath(t, stdout, "summary")
 	if expected != actual {
-		t.Errorf("case %s: summary mismatch\nexpected: %s\nactual:   %s", caseDir, expected, actual)
+		t.Fatalf("case %s: summary mismatch against %s\nexpected: %s\nactual:   %s",
+			caseDir, path, expected, actual)
 	}
 }
 
@@ -276,7 +289,8 @@ func checkFindingsCount(t *testing.T, caseDir string, stdout []byte) {
 	want := readFileTrimmed(t, path)
 	got := countJSONArrayPath(t, stdout, "findings")
 	if strconv.Itoa(got) != want {
-		t.Errorf("case %s: findings count = %d, want %s", caseDir, got, want)
+		t.Fatalf("case %s: findings count = %d, want %s (from %s)",
+			caseDir, got, want, path)
 	}
 }
 
@@ -289,7 +303,8 @@ func checkInputHashes(t *testing.T, caseDir string, stdout []byte) {
 	expected := canonicalJSON(t, readFileBytes(t, path))
 	actual := extractJSONPath(t, stdout, "run", "input_hashes")
 	if expected != actual {
-		t.Errorf("case %s: input_hashes mismatch\nexpected: %s\nactual:   %s", caseDir, expected, actual)
+		t.Fatalf("case %s: input_hashes mismatch against %s\nexpected: %s\nactual:   %s",
+			caseDir, path, expected, actual)
 	}
 }
 
@@ -316,7 +331,8 @@ func checkSourceEvidence(t *testing.T, caseDir string, stdout []byte) {
 	}
 	actual := marshalCanonical(t, result)
 	if expected != actual {
-		t.Errorf("case %s: source_evidence mismatch\nexpected: %s\nactual:   %s", caseDir, expected, actual)
+		t.Fatalf("case %s: source_evidence mismatch against %s\nexpected: %s\nactual:   %s",
+			caseDir, path, expected, actual)
 	}
 }
 
@@ -351,7 +367,8 @@ func checkFullOutput(t *testing.T, caseDir string, stdout []byte) {
 	expected := filter(readFileBytes(t, path))
 	actual := filter(stdout)
 	if expected != actual {
-		t.Errorf("case %s: full output mismatch\nexpected: %s\nactual:   %s", caseDir, expected, actual)
+		t.Fatalf("case %s: full output mismatch against %s\nexpected: %s\nactual:   %s",
+			caseDir, path, expected, actual)
 	}
 }
 
@@ -380,7 +397,8 @@ func checkSARIF(t *testing.T, caseDir string, stdout []byte) {
 	expected := filter(readFileBytes(t, path))
 	actual := filter(stdout)
 	if expected != actual {
-		t.Errorf("case %s: SARIF output mismatch\nexpected: %s\nactual:   %s", caseDir, expected, actual)
+		t.Fatalf("case %s: SARIF output mismatch against %s\nexpected: %s\nactual:   %s",
+			caseDir, path, expected, actual)
 	}
 }
 
@@ -395,16 +413,17 @@ func checkGeneratedFile(t *testing.T, caseDir string) {
 	expectedHash := readFileTrimmed(t, hashFile)
 	genPath := filepath.Join(caseDir, relPath)
 	if _, err := os.Stat(genPath); err != nil {
-		t.Errorf("case %s: generated file missing: %s", caseDir, genPath)
-		return
+		t.Fatalf("case %s: generated file missing at %s (expected path declared in %s)",
+			caseDir, genPath, pathFile)
 	}
 	data, err := os.ReadFile(genPath)
 	if err != nil {
-		t.Fatalf("case %s: read generated file: %v", caseDir, err)
+		t.Fatalf("case %s: read generated file %s: %v", caseDir, genPath, err)
 	}
 	actualHash := fmt.Sprintf("%x", sha256.Sum256(data))
 	if actualHash != expectedHash {
-		t.Errorf("case %s: generated file hash mismatch\nexpected: %s\nactual:   %s", caseDir, expectedHash, actualHash)
+		t.Fatalf("case %s: generated file hash mismatch for %s (expected hash from %s)\nexpected: %s\nactual:   %s",
+			caseDir, genPath, hashFile, expectedHash, actualHash)
 	}
 }
 

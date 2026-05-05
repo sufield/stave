@@ -46,7 +46,15 @@ func writeTiers(ew *errWriter, plan *PlanOutput) {
 		ew.printf("\nTier: %s (older_than: %s, keep_min: %d)\n",
 			summary.Tier, summary.OlderThan, summary.KeepMin)
 
-		tw := tabwriter.NewWriter(ew.w, 0, 0, 2, ' ', 0)
+		// Wrap ew (not ew.w) so per-row Fprintf failures route
+		// through the sticky-error gate. The earlier shape passed
+		// the underlying writer, so a broken pipe inside the
+		// tabwriter loop reached fmt.Fprintf, which discarded the
+		// error — `ew.err` only saw the eventual Flush failure,
+		// hiding which row first failed and producing truncated
+		// tab-aligned output that looked correct in the
+		// `ew.err == nil` branch.
+		tw := tabwriter.NewWriter(ew, 0, 0, 2, ' ', 0)
 
 		for i := range plan.Files {
 			f := &plan.Files[i]
@@ -85,10 +93,28 @@ func writeSummary(ew *errWriter, plan *PlanOutput) {
 	ew.printf("  To %-11s %d\n", actionVerb+":", plan.TotalActions)
 }
 
-// errWriter is a sticky-error helper for multi-line writing.
+// errWriter is a sticky-error helper for multi-line writing. It
+// implements io.Writer so callers that need to hand a downstream
+// writer (e.g. tabwriter.NewWriter) the same gated stream can do so
+// without bypassing the sticky-error contract.
 type errWriter struct {
 	w   io.Writer
 	err error
+}
+
+// Write satisfies io.Writer. Once err is set every subsequent write
+// is a no-op, so a tabwriter / json.Encoder / any other consumer
+// that loops over Write calls automatically short-circuits on the
+// first failure.
+func (ew *errWriter) Write(p []byte) (int, error) {
+	if ew.err != nil {
+		return 0, ew.err
+	}
+	n, err := ew.w.Write(p)
+	if err != nil {
+		ew.err = err
+	}
+	return n, err
 }
 
 func (ew *errWriter) printf(format string, args ...any) {

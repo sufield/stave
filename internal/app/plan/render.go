@@ -10,28 +10,63 @@ import (
 	"github.com/sufield/stave/internal/util/strutil"
 )
 
-// WriteMarkdown writes the plan as a markdown document.
-func WriteMarkdown(w io.Writer, p *Plan) {
+// errWriter wraps an io.Writer and remembers the first write error
+// so the WriteMarkdown / WriteText helpers can stop emitting on the
+// first failure and surface it once at the end. The earlier shape
+// discarded every fmt.Fprintf return, so a closed pipe or a full
+// disk produced silently truncated output and the command still
+// reported success.
+type errWriter struct {
+	w   io.Writer
+	err error
+}
+
+// Write satisfies io.Writer so every existing fmt.Fprintf(ew, ...)
+// call site flows through here. Once err is sticky every subsequent
+// write becomes a no-op, so the helpers do not need to check after
+// each call.
+func (e *errWriter) Write(p []byte) (int, error) {
+	if e.err != nil {
+		return 0, e.err
+	}
+	n, err := e.w.Write(p)
+	if err != nil {
+		e.err = err
+	}
+	return n, err
+}
+
+// WriteMarkdown writes the plan as a markdown document. Returns the
+// first sticky write error (typically a closed downstream pipe or a
+// full disk); nil on a clean run.
+func WriteMarkdown(w io.Writer, p *Plan) error {
+	ew := &errWriter{w: w}
+	// fmt.Fprint return values are intentionally discarded throughout:
+	// the sticky-error gate in errWriter captures the first failure
+	// and short-circuits subsequent writes, so per-call checks would
+	// duplicate the bookkeeping. The function returns ew.err at the
+	// end as the single source of truth.
 	for i := range p.Teams {
 		if i > 0 {
-			_, _ = fmt.Fprint(w, "\n---\n\n")
+			_, _ = fmt.Fprint(ew, "\n---\n\n")
 		}
-		writeTeamMarkdown(w, &p.Teams[i], p)
+		writeTeamMarkdown(ew, &p.Teams[i], p)
 	}
 
 	if len(p.Unattributed) > 0 {
-		_, _ = fmt.Fprint(w, "\n---\n\n")
-		fmt.Fprintln(w, "## Unattributed Findings")
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "These findings could not be attributed to any team. Update team-manifest.yaml to assign ownership.")
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "| Control | Asset | Severity |")
-		fmt.Fprintln(w, "|---------|-------|----------|")
+		_, _ = fmt.Fprint(ew, "\n---\n\n")
+		fmt.Fprintln(ew, "## Unattributed Findings")
+		fmt.Fprintln(ew)
+		fmt.Fprintln(ew, "These findings could not be attributed to any team. Update team-manifest.yaml to assign ownership.")
+		fmt.Fprintln(ew)
+		fmt.Fprintln(ew, "| Control | Asset | Severity |")
+		fmt.Fprintln(ew, "|---------|-------|----------|")
 		for i := range p.Unattributed {
 			f := &p.Unattributed[i]
-			fmt.Fprintf(w, "| %s | %s | %s |\n", f.ControlID, truncate(f.AssetID, 40), strings.ToUpper(f.Severity.String()))
+			fmt.Fprintf(ew, "| %s | %s | %s |\n", f.ControlID, truncate(f.AssetID, 40), strings.ToUpper(f.Severity.String()))
 		}
 	}
+	return ew.err
 }
 
 func writeTeamMarkdown(w io.Writer, tp *TeamPlan, p *Plan) {
@@ -120,40 +155,43 @@ func writeFindingMarkdown(w io.Writer, f *PlanFinding) {
 	}
 }
 
-// WriteText writes the plan in plain text format.
-func WriteText(w io.Writer, p *Plan) {
+// WriteText writes the plan in plain text format. Returns the first
+// sticky write error captured by errWriter; nil on a clean run.
+func WriteText(w io.Writer, p *Plan) error {
+	ew := &errWriter{w: w}
 	for i := range p.Teams {
 		tp := &p.Teams[i]
 		name := tp.TeamName
 		if name == "" {
 			name = tp.TeamID
 		}
-		fmt.Fprintf(w, "REMEDIATION PLAN — %s\n", strings.ToUpper(name))
-		fmt.Fprintf(w, "Generated: %s\n", p.GeneratedAt)
+		fmt.Fprintf(ew, "REMEDIATION PLAN — %s\n", strings.ToUpper(name))
+		fmt.Fprintf(ew, "Generated: %s\n", p.GeneratedAt)
 		if tp.Contact != "" {
-			fmt.Fprintf(w, "Contact: %s\n", tp.Contact)
+			fmt.Fprintf(ew, "Contact: %s\n", tp.Contact)
 		}
-		fmt.Fprintf(w, "Open findings: %d (%d critical, %d high, %d medium)\n\n",
+		fmt.Fprintf(ew, "Open findings: %d (%d critical, %d high, %d medium)\n\n",
 			tp.Summary.Total, tp.Summary.Critical, tp.Summary.High, tp.Summary.Medium)
 
 		for j := range tp.Findings {
 			f := &tp.Findings[j]
-			fmt.Fprintf(w, "[%d] %s\n", f.Rank, f.ControlID)
+			fmt.Fprintf(ew, "[%d] %s\n", f.Rank, f.ControlID)
 			if f.ControlName != "" {
-				fmt.Fprintf(w, "    %s\n", f.ControlName)
+				fmt.Fprintf(ew, "    %s\n", f.ControlName)
 			}
-			fmt.Fprintf(w, "    Asset:    %s\n", f.AssetID)
-			fmt.Fprintf(w, "    Severity: %s\n", strings.ToUpper(f.Severity.String()))
-			fmt.Fprintf(w, "    Dwell:    %.0f hours\n", f.DwellHours)
+			fmt.Fprintf(ew, "    Asset:    %s\n", f.AssetID)
+			fmt.Fprintf(ew, "    Severity: %s\n", strings.ToUpper(f.Severity.String()))
+			fmt.Fprintf(ew, "    Dwell:    %.0f hours\n", f.DwellHours)
 			if f.SLABreached && f.OverdueHours != nil {
-				fmt.Fprintf(w, "    SLA:      BREACHED (%.0fh overdue)\n", *f.OverdueHours)
+				fmt.Fprintf(ew, "    SLA:      BREACHED (%.0fh overdue)\n", *f.OverdueHours)
 			}
 			if f.RemediationAction != "" {
-				fmt.Fprintf(w, "    Fix:\n      %s\n", strings.TrimSpace(f.RemediationAction))
+				fmt.Fprintf(ew, "    Fix:\n      %s\n", strings.TrimSpace(f.RemediationAction))
 			}
-			fmt.Fprintln(w)
+			fmt.Fprintln(ew)
 		}
 	}
+	return ew.err
 }
 
 func sevHeading(sev string) string {

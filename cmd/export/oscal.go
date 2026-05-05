@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	apposcal "github.com/sufield/stave/internal/app/oscal"
 	"github.com/sufield/stave/internal/app/oscalpoam"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -49,7 +50,7 @@ Exit Codes:
 	cmd.Flags().StringVar(&outputPath, "out", "", "write to file")
 	cmd.Flags().StringVar(&docType, "type", "assessment-results", "OSCAL document type: assessment-results, poam, ssp")
 	cmd.Flags().StringVar(&systemUUID, "system-uuid", "", "system UUID for POA&M generation")
-	_ = cmd.MarkFlagRequired("assessment")
+	cliflags.MustMarkRequired(cmd, "assessment")
 
 	return cmd
 }

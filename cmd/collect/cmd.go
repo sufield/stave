@@ -13,6 +13,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	builtinctl "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
@@ -88,7 +89,7 @@ Exit Codes:
 	// duration-based control fire on first observation.
 	cmd.Flags().DurationVar(&opts.MaxUnsafe, "max-unsafe", 168*time.Hour, "maximum tolerated unsafe duration before a finding fires (default 168h)")
 
-	_ = cmd.MarkFlagRequired("archive")
+	cliflags.MustMarkRequired(cmd, "archive")
 
 	// Status subcommand.
 	statusOpts := &statusOptions{}

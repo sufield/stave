@@ -17,6 +17,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	ui "github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
@@ -85,8 +86,8 @@ Exit Codes:
 	// itself wins when set explicitly.
 	cmd.Flags().StringVar(&opts.Now, "now", os.Getenv("STAVE_NOW"), "RFC3339 timestamp used as evaluation \"now\" for exception expiry (defaults to STAVE_NOW env, else wall clock)")
 
-	_ = cmd.MarkFlagRequired("snapshot")
-	_ = cmd.MarkFlagRequired("profile")
+	cliflags.MustMarkRequired(cmd, "snapshot")
+	cliflags.MustMarkRequired(cmd, "profile")
 
 	return cmd
 }

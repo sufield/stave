@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	appocsf "github.com/sufield/stave/internal/app/ocsf"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -38,7 +39,7 @@ Exit Codes:
 
 	cmd.Flags().StringVar(&assessmentPath, "assessment", "", "stave apply JSON output (required)")
 	cmd.Flags().StringVar(&outputPath, "output", "", "write NDJSON to file")
-	_ = cmd.MarkFlagRequired("assessment")
+	cliflags.MustMarkRequired(cmd, "assessment")
 
 	return cmd
 }

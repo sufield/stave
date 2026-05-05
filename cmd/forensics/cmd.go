@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appbisect "github.com/sufield/stave/internal/app/bisect"
 	appforensics "github.com/sufield/stave/internal/app/forensics"
@@ -59,8 +60,8 @@ Exit Codes:
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json | markdown")
 	cmd.Flags().StringVar(&opts.OutPath, "out", "", "write to file instead of stdout")
 
-	_ = cmd.MarkFlagRequired("asset")
-	_ = cmd.MarkFlagRequired("history")
+	cliflags.MustMarkRequired(cmd, "asset")
+	cliflags.MustMarkRequired(cmd, "history")
 
 	return cmd
 }

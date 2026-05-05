@@ -1267,6 +1267,14 @@ func (e *ExceptedFinding) HasExpiry() bool {
 // line: "<control> on <asset> — <reason>" with " (expires <date>)"
 // appended when an expiry is recorded. Centralises the renderer
 // so callers stop reaching into Expires / Reason directly.
+//
+// Returns no error by design (matches AcknowledgedFinding.WriteDetails):
+// the writer is a human-facing terminal renderer where partial-flush
+// failures are recovered by the surrounding command-loop frame, and
+// threading an error through every renderer call would force every
+// caller to handle an error that ultimately gets logged once at the
+// CLI boundary. Wire-format / contract-bearing output uses the
+// marshaler paths in adapters/, which DO return errors.
 func (e *ExceptedFinding) WriteText(w io.Writer) {
 	if e == nil {
 		return
