@@ -1,20 +1,33 @@
 package compliance
 
 import (
-	"encoding/json"
-	"fmt"
 	"strings"
+
+	s3policy "github.com/sufield/stave/internal/platform/providers/aws/s3/policy"
 )
 
-// PolicyStatement is a minimal representation of an S3 bucket policy statement
-// for control evaluation. It captures only the fields controls need.
+// PolicyStatement is the compliance-package view of an S3 bucket
+// policy statement. It is structurally similar to the legacy shape
+// (Sid / Effect / Action / Resource), but Principal and Condition are
+// now backed by the typed shapes from internal/platform/providers/
+// aws/s3/policy. The bridge keeps every public method consumer
+// unchanged while routing the actual decode through the canonical
+// s3/policy parser — see docs/sir-pending-discussion.md (Q1 = Bridge)
+// for the design rationale.
+//
+// Tests construct PolicyStatement literals directly (see
+// policy_helper_test.go), so the field shape is part of the public
+// surface; field types changed but field names and meanings are
+// preserved. The 13 control files in this package only invoke the
+// methods below, never the struct literal, so they pick up the
+// typed-internals win for free.
 type PolicyStatement struct {
-	Sid       string   `json:"Sid,omitempty"`
-	Effect    string   `json:"Effect"`
-	Principal any      `json:"Principal"`
-	Action    []string `json:"-"` // normalized from string or []string
-	Resource  []string `json:"-"` // normalized from string or []string
-	Condition any      `json:"Condition,omitempty"`
+	Sid       string
+	Effect    string
+	Principal s3policy.NormalizedPrincipal
+	Action    []string
+	Resource  []string
+	Condition s3policy.NormalizedCondition
 }
 
 // IsAllow reports whether this statement has Effect "Allow" (case-insensitive).
@@ -22,22 +35,23 @@ func (s PolicyStatement) IsAllow() bool {
 	return strings.EqualFold(s.Effect, "Allow")
 }
 
-// HasWildcardPrincipal reports whether the principal is "*" or includes "*".
-func (s PolicyStatement) HasWildcardPrincipal() bool {
-	switch p := s.Principal.(type) {
-	case string:
-		return p == "*"
-	case map[string]any:
-		for _, v := range p {
-			if isWildcard(v) {
-				return true
-			}
-		}
-	}
-	return false
+// IsDeny reports whether this statement has Effect "Deny" (case-insensitive).
+func (s PolicyStatement) IsDeny() bool {
+	return strings.EqualFold(s.Effect, "Deny")
 }
 
-// HasAction reports whether the statement includes the given action (case-insensitive).
+// HasWildcardPrincipal reports whether the principal is "*" or
+// includes "*" inside the AWS principal list.
+//
+// Reads the typed NormalizedPrincipal directly. The earlier shape
+// type-asserted on `any`-typed Principal at every call site; the
+// normalization at parse time made the field a single boolean check.
+func (s PolicyStatement) HasWildcardPrincipal() bool {
+	return s.Principal.Wildcard
+}
+
+// HasAction reports whether the statement includes the given action
+// (case-insensitive).
 func (s PolicyStatement) HasAction(action string) bool {
 	lower := strings.ToLower(action)
 	for _, a := range s.Action {
@@ -58,101 +72,57 @@ func (s PolicyStatement) HasWildcardAction() bool {
 	return false
 }
 
-// ParsePolicyStatements extracts policy statements from a raw policy JSON string.
-// Returns nil with no error if policyJSON is empty or not valid JSON.
+// ParsePolicyStatements extracts policy statements from a raw policy
+// JSON string. Returns nil with no error when policyJSON is empty or
+// not valid JSON — matches the legacy fail-soft contract every
+// control file relies on.
+//
+// The parse is delegated to s3/policy.Parse so the typed
+// NormalizedPrincipal and NormalizedCondition land directly on the
+// returned PolicyStatement. The earlier shape carried its own
+// raw-bytes parser (parseOneStatement) that decoded each field
+// individually; deleting that duplicate is the entire point of
+// the bridge.
 func ParsePolicyStatements(policyJSON string) ([]PolicyStatement, error) {
 	policyJSON = strings.TrimSpace(policyJSON)
 	if policyJSON == "" {
 		return nil, nil
 	}
-
-	var doc struct {
-		Statement json.RawMessage `json:"Statement"`
+	doc, err := s3policy.Parse(policyJSON)
+	if err != nil {
+		// Match the legacy "unparseable policy treated as empty"
+		// contract: every caller (the 13 compliance control files)
+		// already handles a nil-and-no-error return as "no
+		// statements to inspect". Surfacing the parse error here
+		// would change behaviour for any policy with a typo, and
+		// the existing controls intentionally treat malformed
+		// policies as a posture concern handled elsewhere
+		// (CTL.S3.POLICY.EXISTS / format validation), not as a
+		// hard failure here.
+		return nil, nil //nolint:nilerr // documented fail-soft contract
 	}
-	if err := json.Unmarshal([]byte(policyJSON), &doc); err != nil {
-		return nil, nil //nolint:nilerr // unparseable policy treated as empty
-	}
-	if doc.Statement == nil {
-		return nil, nil
-	}
-
-	// Statement can be a single object or an array.
-	var stmts []json.RawMessage
-	if len(doc.Statement) > 0 && doc.Statement[0] == '[' {
-		if err := json.Unmarshal(doc.Statement, &stmts); err != nil {
-			return nil, nil //nolint:nilerr // malformed Statement array treated as empty
-		}
-	} else {
-		stmts = []json.RawMessage{doc.Statement}
-	}
-
+	stmts := doc.Statements()
 	out := make([]PolicyStatement, 0, len(stmts))
-	for _, raw := range stmts {
-		ps, err := parseOneStatement(raw)
-		if err != nil {
-			continue
-		}
-		out = append(out, ps)
+	for i := range stmts {
+		out = append(out, fromTypedStatement(&stmts[i]))
 	}
 	return out, nil
 }
 
-func parseOneStatement(raw json.RawMessage) (PolicyStatement, error) {
-	// Use a struct with json.RawMessage for polymorphic fields.
-	var s struct {
-		Sid       string          `json:"Sid"`
-		Effect    string          `json:"Effect"`
-		Principal json.RawMessage `json:"Principal"`
-		Action    json.RawMessage `json:"Action"`
-		Resource  json.RawMessage `json:"Resource"`
-		Condition json.RawMessage `json:"Condition"`
-	}
-	if err := json.Unmarshal(raw, &s); err != nil {
-		return PolicyStatement{}, err
-	}
-
-	// Surface inner-field unmarshal errors via the existing error
-	// return rather than silently dropping. core/ doesn't log, so the
-	// caller (in app/ or adapters/) is responsible for routing the
-	// error to operator-visible diagnostics.
-	var principal any
-	if s.Principal != nil {
-		if err := json.Unmarshal(s.Principal, &principal); err != nil {
-			return PolicyStatement{}, fmt.Errorf("principal field: %w", err)
-		}
-	}
-
-	var condition any
-	if s.Condition != nil {
-		if err := json.Unmarshal(s.Condition, &condition); err != nil {
-			return PolicyStatement{}, fmt.Errorf("condition field: %w", err)
-		}
-	}
-
+// fromTypedStatement copies the typed s3/policy.Statement fields into
+// a compliance.PolicyStatement. Lives inside this package so the
+// translation rule stays next to the type that depends on it; the
+// inverse (compliance → s3/policy) doesn't exist because compliance
+// is a downstream consumer, not a producer.
+func fromTypedStatement(s *s3policy.Statement) PolicyStatement {
 	return PolicyStatement{
 		Sid:       s.Sid,
-		Effect:    s.Effect,
-		Principal: principal,
-		Action:    normalizeStringList(s.Action),
-		Resource:  normalizeStringList(s.Resource),
-		Condition: condition,
-	}, nil
-}
-
-// normalizeStringList handles the AWS "string or []string" JSON pattern.
-func normalizeStringList(raw json.RawMessage) []string {
-	if raw == nil {
-		return nil
+		Effect:    string(s.Effect),
+		Principal: s.Principal,
+		Action:    []string(s.Action),
+		Resource:  []string(s.Resource),
+		Condition: s.Condition,
 	}
-	var list []string
-	if err := json.Unmarshal(raw, &list); err == nil {
-		return list
-	}
-	var single string
-	if err := json.Unmarshal(raw, &single); err == nil {
-		return []string{single}
-	}
-	return nil
 }
 
 // IAM condition operators and keys used in policy guardrail detection.
@@ -166,52 +136,40 @@ const (
 	condKeyAuthType        = "s3:authType"
 )
 
-// conditionValue navigates the nested Condition map: Condition[operator][key].
-// Returns the value and true if both levels exist, or (nil, false) otherwise.
-func (s PolicyStatement) conditionValue(operator, key string) (any, bool) {
-	cond, ok := s.Condition.(map[string]any)
-	if !ok {
-		return nil, false
-	}
-	block, ok := cond[operator].(map[string]any)
-	if !ok {
-		return nil, false
-	}
-	val, ok := block[key]
-	return val, ok
-}
-
-// IsDeny reports whether this statement has Effect "Deny" (case-insensitive).
-func (s PolicyStatement) IsDeny() bool {
-	return strings.EqualFold(s.Effect, "Deny")
-}
-
 // IsDenyNonTLS reports whether this statement denies access when
 // aws:SecureTransport is false (i.e. enforces TLS).
+//
+// Uses the typed Condition.Lookup. The legacy shape navigated an
+// `any`-typed Condition map and tolerated both string("false") and
+// bool(false) leaves; the parse-time coerceConditionValues already
+// flattened both wire forms to the string "false", so the check
+// here is a single string-equal comparison.
 func (s PolicyStatement) IsDenyNonTLS() bool {
 	if !s.IsDeny() {
 		return false
 	}
-	val, ok := s.conditionValue(condOpBool, condKeySecureTransport)
+	values, ok := s.Condition.Lookup(condOpBool, condKeySecureTransport)
 	if !ok {
 		return false
 	}
-	switch v := val.(type) {
-	case string:
-		return v == "false"
-	case bool:
-		return !v
+	for _, v := range values {
+		if strings.EqualFold(strings.TrimSpace(v), "false") {
+			return true
+		}
 	}
 	return false
 }
 
-// HasSignatureAgeGuardrail reports whether this statement denies requests
-// where s3:signatureAge exceeds a threshold (presigned URL age limit).
+// HasSignatureAgeGuardrail reports whether this statement denies
+// requests where s3:signatureAge exceeds a threshold (presigned URL
+// age limit). Presence of the key is the gate — the threshold value
+// itself isn't validated here because AWS treats any
+// NumericGreaterThan as restrictive.
 func (s PolicyStatement) HasSignatureAgeGuardrail() bool {
 	if !s.IsDeny() {
 		return false
 	}
-	_, ok := s.conditionValue(condOpNumericGreaterThan, condKeySignatureAge)
+	_, ok := s.Condition.Lookup(condOpNumericGreaterThan, condKeySignatureAge)
 	return ok
 }
 
@@ -221,12 +179,16 @@ func (s PolicyStatement) HasAuthTypeGuardrail() bool {
 	if !s.IsDeny() {
 		return false
 	}
-	val, ok := s.conditionValue(condOpStringNotEquals, condKeyAuthType)
+	values, ok := s.Condition.Lookup(condOpStringNotEquals, condKeyAuthType)
 	if !ok {
 		return false
 	}
-	str, ok := val.(string)
-	return ok && strings.EqualFold(str, "REST-HEADER")
+	for _, v := range values {
+		if strings.EqualFold(v, "REST-HEADER") {
+			return true
+		}
+	}
+	return false
 }
 
 // RestrictsPresignedURLAccess reports whether this statement constrains
@@ -235,29 +197,15 @@ func (s PolicyStatement) RestrictsPresignedURLAccess() bool {
 	return s.HasSignatureAgeGuardrail() || s.HasAuthTypeGuardrail()
 }
 
-// IsPublicListGrant reports whether this statement allows a wildcard principal
-// to list bucket contents (s3:ListBucket). This enables full key enumeration,
-// defeating any object-key obscurity approach.
+// IsPublicListGrant reports whether this statement allows a wildcard
+// principal to list bucket contents (s3:ListBucket). This enables full
+// key enumeration, defeating any object-key obscurity approach.
 func (s PolicyStatement) IsPublicListGrant() bool {
 	return s.IsAllow() && s.HasWildcardPrincipal() && s.HasAction("s3:ListBucket")
 }
 
-// GrantsWildcardActions reports whether this statement allows wildcard actions
-// (s3:* or *), granting more permissions than intended.
+// GrantsWildcardActions reports whether this statement allows wildcard
+// actions (s3:* or *), granting more permissions than intended.
 func (s PolicyStatement) GrantsWildcardActions() bool {
 	return s.IsAllow() && s.HasWildcardAction()
-}
-
-func isWildcard(v any) bool {
-	switch val := v.(type) {
-	case string:
-		return val == "*"
-	case []any:
-		for _, item := range val {
-			if s, ok := item.(string); ok && s == "*" {
-				return true
-			}
-		}
-	}
-	return false
 }

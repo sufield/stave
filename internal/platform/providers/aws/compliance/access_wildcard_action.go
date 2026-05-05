@@ -49,7 +49,10 @@ func (ctl *accessWildcardAction) Evaluate(snap asset.Snapshot) core.Outcome {
 			return nil // no policy or unparseable — not a violation
 		}
 
-		for _, s := range stmts {
+		// Index iteration to avoid the per-iteration copy of the
+		// typed PolicyStatement (192 bytes after Subset B).
+		for i := range stmts {
+			s := &stmts[i]
 			if s.GrantsWildcardActions() {
 				sid := s.Sid
 				if sid == "" {

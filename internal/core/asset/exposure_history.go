@@ -30,6 +30,22 @@ func (h ExposureHistory) Count() int {
 	return len(h.windows)
 }
 
+// Windows returns a chronologically-ordered copy of the archived
+// exposure windows. The clone is intentional — the history's
+// invariant (windows sorted by openedAt, only resolved windows
+// archived) is enforced inside Record; callers receiving the slice
+// must not mutate the live backing array. Used by the SIR builder
+// to surface per-control dwell history without breaking the
+// no-mutation contract that the lifecycle pipeline relies on.
+func (h ExposureHistory) Windows() []ExposureWindow {
+	if len(h.windows) == 0 {
+		return nil
+	}
+	out := make([]ExposureWindow, len(h.windows))
+	copy(out, h.windows)
+	return out
+}
+
 // RecurringViolationCount returns the count of windows whose start falls
 // inside the half-open range [w.Start, w.End). The lower bound is
 // inclusive — a window opened exactly at w.Start is counted — to match

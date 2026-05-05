@@ -1,20 +1,27 @@
 package policy
 
 import (
-	"encoding/json"
 	"slices"
 
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // PrincipalScope determines the exposure level of the statement.
+//
+// Reads the parse-time-normalized Principal directly. The earlier
+// shape decoded the raw Principal bytes on every access — see the
+// Statement doc comment for why front-loading the decode is the
+// SIR-export prerequisite.
 func (s Statement) PrincipalScope() kernel.PrincipalScope {
-	return classifyPolicyPrincipalScope(s.decodeRaw(s.Principal))
+	return s.Principal.Scope()
 }
 
 // ConditionAnalysis extracts scoping information from the Condition block.
+//
+// Reads the typed NormalizedCondition directly. The earlier shape
+// re-decoded `s.Condition` on every call.
 func (s Statement) ConditionAnalysis() ConditionAnalysis {
-	return analyzeCondition(s.decodeRaw(s.Condition))
+	return analyzeCondition(s.Condition)
 }
 
 // GrantsAccess reports whether this statement contributes to the reachable
@@ -39,42 +46,28 @@ func (s Statement) HasWildcardActionsOnWildcardResources() bool {
 }
 
 // EnforcesHTTPS reports whether this is a Deny statement requiring HTTPS.
+//
+// Operates on the typed Condition: looks up Bool/aws:SecureTransport
+// directly through the map view. The earlier shape re-decoded the
+// raw Condition bytes on every call.
 func (s Statement) EnforcesHTTPS() bool {
 	if !s.Effect.IsDeny() || !s.PrincipalScope().IsPublic() {
 		return false
 	}
-	return hasSecureTransportCondition(s.Condition)
+	return hasSecureTransportFalse(s.Condition)
 }
 
 // PrincipalARNs extracts ARN strings from the Principal field.
+//
+// Returns only concrete ARNs — wildcards and empty strings are
+// dropped. Uses the typed Principal directly via ConcreteAWSARNs;
+// the earlier extractPrincipalARNs free function decoded raw JSON
+// and ran the same filter.
 func (s Statement) PrincipalARNs() []string {
-	return extractPrincipalARNs(s.decodeRaw(s.Principal))
+	return s.Principal.ConcreteAWSARNs()
 }
 
 // HasWriteActions reports whether any action in the statement is a write action.
 func (s Statement) HasWriteActions() bool {
 	return slices.ContainsFunc([]string(s.Action), isWriteAction)
-}
-
-// decodeRaw unmarshals a json.RawMessage into any, used for Principal
-// and Condition fields that have varying JSON shapes.
-//
-// Returns nil on unmarshal failure rather than an error: AGENTS.md
-// requires core/ to be side-effect-free (no logging) and threading an
-// error through every caller (PrincipalScope, ConditionAnalysis,
-// PrincipalARNs, and their callers up the chain) is heavier than the
-// contract warrants. The bytes here come from a `json.RawMessage`
-// field already validated by the outer Statement unmarshal in
-// adapters/, so a parse failure here would indicate corrupted
-// post-validation input — extremely unlikely. Callers all handle
-// `nil` cleanly: PrincipalScope returns Public-or-Restricted based
-// on the type assertion, ConditionAnalysis returns the zero analysis,
-// PrincipalARNs returns an empty slice.
-func (s Statement) decodeRaw(raw json.RawMessage) any {
-	if len(raw) == 0 {
-		return nil
-	}
-	var v any
-	_ = json.Unmarshal(raw, &v) //nolint:errcheck // see doc comment: nil-on-failure is the documented contract
-	return v
 }

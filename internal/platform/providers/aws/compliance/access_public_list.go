@@ -37,7 +37,14 @@ func (ctl *accessPublicList) Evaluate(snap asset.Snapshot) core.Outcome {
 			return nil
 		}
 
-		for _, s := range stmts {
+		// Index iteration — PolicyStatement now embeds typed
+		// NormalizedPrincipal / NormalizedCondition (192-byte
+		// struct), so range-by-value triggers a per-iteration
+		// copy gocritic legitimately flags. Walking by index keeps
+		// the call sites zero-copy while preserving the existing
+		// method-call shape.
+		for i := range stmts {
+			s := &stmts[i]
 			if s.IsPublicListGrant() {
 				sid := s.Sid
 				if sid == "" {

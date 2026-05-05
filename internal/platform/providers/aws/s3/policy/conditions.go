@@ -1,7 +1,6 @@
 package policy
 
 import (
-	"encoding/json"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/kernel"
@@ -50,27 +49,20 @@ func (k condKey) isOrgBoundary() bool {
 
 // --- Condition analysis ---
 
-// analyzeCondition reduces an AWS Condition map into a network-scope analysis.
-// AWS Condition structure: map[Operator]map[Key]Value(s).
-func analyzeCondition(raw any) ConditionAnalysis {
+// analyzeCondition reduces a normalized Condition map into a
+// network-scope analysis. Operates directly on NormalizedCondition
+// — the parse-time normalization removed the per-call type-asserts
+// the previous shape ran against `map[string]any`.
+func analyzeCondition(cond NormalizedCondition) ConditionAnalysis {
 	analysis := ConditionAnalysis{}
-
-	operators, ok := raw.(map[string]any)
-	if !ok || len(operators) == 0 {
+	if cond.IsEmpty() {
 		return analysis
 	}
 
-	for opRaw, keysRaw := range operators {
+	for opRaw, keys := range cond {
 		op := parseOperator(opRaw)
-
-		keys, ok := keysRaw.(map[string]any)
-		if !ok {
-			continue
-		}
-
-		for keyRaw, valuesRaw := range keys {
+		for keyRaw, values := range keys {
 			key := condKey(strings.ToLower(keyRaw))
-			values := NormalizeStringOrSlice(valuesRaw)
 
 			if !op.isEffective(values) {
 				continue
@@ -110,32 +102,25 @@ func (op condOperator) isEffective(values []string) bool {
 	return false
 }
 
-// hasSecureTransportCondition checks if a Condition JSON block contains
-// Bool: {aws:SecureTransport: false} — the standard HTTPS enforcement pattern.
-func hasSecureTransportCondition(condition json.RawMessage) bool {
-	if len(condition) == 0 {
-		return false
-	}
-	var cond map[string]map[string]any
-	if err := json.Unmarshal(condition, &cond); err != nil {
-		return false
-	}
-	boolCond, ok := cond[condBool]
+// hasSecureTransportFalse checks whether the normalized Condition
+// block contains Bool/aws:SecureTransport == false — the canonical
+// HTTPS enforcement pattern.
+//
+// Operates on NormalizedCondition: the parse-time coercion already
+// flattened bool false → "false" string, so this lookup is a single
+// pass over the typed map without re-running the JSON decode dance
+// the previous hasSecureTransportCondition implemented.
+func hasSecureTransportFalse(cond NormalizedCondition) bool {
+	values, ok := cond.Lookup(condBool, condSecureTransport)
 	if !ok {
 		return false
 	}
-	raw, ok := boolCond[condSecureTransport]
-	if !ok {
-		return false
+	for _, v := range values {
+		if strings.EqualFold(strings.TrimSpace(v), "false") {
+			return true
+		}
 	}
-	switch v := raw.(type) {
-	case string:
-		return strings.EqualFold(strings.TrimSpace(v), "false")
-	case bool:
-		return !v
-	default:
-		return false
-	}
+	return false
 }
 
 // ResolveNetworkScope maps condition flags to a high-level network boundary.

@@ -55,6 +55,22 @@ type Document struct {
 	statements []Statement
 }
 
+// Statements returns the parsed statements as a read-only slice.
+//
+// Exposed for downstream consumers that need to iterate the typed
+// statements without going through Assess (which collapses to a
+// single Assessment value). The compliance helper's bridge
+// (compliance.ParsePolicyStatements → s3/policy.Parse) is the
+// canonical caller — it copies the typed Principal / Condition out
+// onto its own struct shape. Returns the live backing slice;
+// callers must not mutate it.
+func (d *Document) Statements() []Statement {
+	if d == nil {
+		return nil
+	}
+	return d.statements
+}
+
 // Parse turns raw policy JSON into a typed Document.
 func Parse(policyJSON string) (*Document, error) {
 	// Empty input represents "no resource-based policy attached" or

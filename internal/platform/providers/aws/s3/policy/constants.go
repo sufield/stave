@@ -39,8 +39,6 @@ const (
 const (
 	condBool            = "Bool"
 	condSecureTransport = "aws:SecureTransport"
-	condValueFalse      = "false"
-	principalAWS        = "AWS"
 )
 
 // Condition operator prefixes and suffixes.

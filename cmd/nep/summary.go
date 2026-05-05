@@ -107,7 +107,7 @@ func runSummary(w io.Writer, opts *summaryOpts) error {
 	}
 	snap := &snaps[len(snaps)-1]
 
-	resolved, trustPolicies := resolveAllPrincipals(snap)
+	resolved, trustPolicies := iam.ResolveAllPrincipals(snap)
 
 	var summary nepSummary
 	summary.TotalPrincipals = len(resolved)
@@ -120,7 +120,7 @@ func runSummary(w io.Writer, opts *summaryOpts) error {
 			PrincipalARN:  arn,
 			ResolvedIndex: resolved,
 			TrustPolicies: trustPolicies,
-			AccountID:     extractAccountIDFromARN(arn),
+			AccountID:     iam.ExtractAccountIDFromARN(arn),
 		})
 		if iam.HasTransitiveAdmin(chains) {
 			summary.TransitiveAdmin++

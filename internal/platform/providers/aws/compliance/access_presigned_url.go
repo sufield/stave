@@ -48,8 +48,10 @@ func (ctl *accessPresignedURL) Evaluate(snap asset.Snapshot) core.Outcome {
 			return &r
 		}
 
-		for _, stmt := range stmts {
-			if stmt.RestrictsPresignedURLAccess() {
+		// Index iteration to avoid the per-iteration copy of the
+		// typed PolicyStatement (192 bytes after Subset B).
+		for i := range stmts {
+			if stmts[i].RestrictsPresignedURLAccess() {
 				return nil
 			}
 		}

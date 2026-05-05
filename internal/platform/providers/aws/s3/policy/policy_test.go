@@ -675,9 +675,9 @@ func TestCrossAccountPutWildcard(t *testing.T) {
 // Condition analysis tests
 
 func TestAnalyzeConditionIPAddress(t *testing.T) {
-	condition := map[string]any{
-		"IpAddress": map[string]any{
-			"aws:SourceIp": "10.0.0.0/8",
+	condition := NormalizedCondition{
+		"IpAddress": {
+			"aws:SourceIp": []string{"10.0.0.0/8"},
 		},
 	}
 	result := analyzeCondition(condition)
@@ -691,9 +691,9 @@ func TestAnalyzeConditionIPAddress(t *testing.T) {
 }
 
 func TestAnalyzeConditionNotIPAddress(t *testing.T) {
-	condition := map[string]any{
-		"NotIpAddress": map[string]any{
-			"aws:SourceIp": "0.0.0.0/0",
+	condition := NormalizedCondition{
+		"NotIpAddress": {
+			"aws:SourceIp": []string{"0.0.0.0/0"},
 		},
 	}
 	result := analyzeCondition(condition)
@@ -704,9 +704,9 @@ func TestAnalyzeConditionNotIPAddress(t *testing.T) {
 }
 
 func TestAnalyzeConditionVPCEndpoint(t *testing.T) {
-	condition := map[string]any{
-		"StringEquals": map[string]any{
-			"aws:sourceVpce": "vpce-1a2b3c4d",
+	condition := NormalizedCondition{
+		"StringEquals": {
+			"aws:sourceVpce": []string{"vpce-1a2b3c4d"},
 		},
 	}
 	result := analyzeCondition(condition)
@@ -720,9 +720,9 @@ func TestAnalyzeConditionVPCEndpoint(t *testing.T) {
 }
 
 func TestAnalyzeConditionSourceVPC(t *testing.T) {
-	condition := map[string]any{
-		"StringEquals": map[string]any{
-			"aws:SourceVpc": "vpc-abc123",
+	condition := NormalizedCondition{
+		"StringEquals": {
+			"aws:SourceVpc": []string{"vpc-abc123"},
 		},
 	}
 	result := analyzeCondition(condition)
@@ -733,9 +733,9 @@ func TestAnalyzeConditionSourceVPC(t *testing.T) {
 }
 
 func TestAnalyzeConditionPrincipalOrgID(t *testing.T) {
-	condition := map[string]any{
-		"StringEquals": map[string]any{
-			"aws:PrincipalOrgID": "o-abc123",
+	condition := NormalizedCondition{
+		"StringEquals": {
+			"aws:PrincipalOrgID": []string{"o-abc123"},
 		},
 	}
 	result := analyzeCondition(condition)
@@ -749,9 +749,9 @@ func TestAnalyzeConditionPrincipalOrgID(t *testing.T) {
 }
 
 func TestAnalyzeConditionPrincipalOrgIDStringEqualsIgnoreCase(t *testing.T) {
-	condition := map[string]any{
-		"StringEqualsIgnoreCase": map[string]any{
-			"aws:PrincipalOrgID": "o-abc123",
+	condition := NormalizedCondition{
+		"StringEqualsIgnoreCase": {
+			"aws:PrincipalOrgID": []string{"o-abc123"},
 		},
 	}
 	result := analyzeCondition(condition)
@@ -762,9 +762,9 @@ func TestAnalyzeConditionPrincipalOrgIDStringEqualsIgnoreCase(t *testing.T) {
 }
 
 func TestAnalyzeConditionForAnyValueSourceVPCE(t *testing.T) {
-	condition := map[string]any{
-		"ForAnyValue:StringEquals": map[string]any{
-			"aws:sourceVpce": "vpce-1a2b3c4d",
+	condition := NormalizedCondition{
+		"ForAnyValue:StringEquals": {
+			"aws:sourceVpce": []string{"vpce-1a2b3c4d"},
 		},
 	}
 	result := analyzeCondition(condition)
@@ -775,9 +775,9 @@ func TestAnalyzeConditionForAnyValueSourceVPCE(t *testing.T) {
 }
 
 func TestAnalyzeConditionForAnyValueStringEqualsIfExists(t *testing.T) {
-	condition := map[string]any{
-		"ForAnyValue:StringEqualsIfExists": map[string]any{
-			"aws:sourceVpce": "vpce-1a2b3c4d",
+	condition := NormalizedCondition{
+		"ForAnyValue:StringEqualsIfExists": {
+			"aws:sourceVpce": []string{"vpce-1a2b3c4d"},
 		},
 	}
 	result := analyzeCondition(condition)
@@ -788,9 +788,9 @@ func TestAnalyzeConditionForAnyValueStringEqualsIfExists(t *testing.T) {
 }
 
 func TestAnalyzeConditionNestedSetOperatorsIfExists(t *testing.T) {
-	condition := map[string]any{
-		"ForAnyValue:ForAllValues:ArnLikeIfExists": map[string]any{
-			"aws:SourceVpc": "vpc-*",
+	condition := NormalizedCondition{
+		"ForAnyValue:ForAllValues:ArnLikeIfExists": {
+			"aws:SourceVpc": []string{"vpc-*"},
 		},
 	}
 	result := analyzeCondition(condition)
@@ -801,13 +801,13 @@ func TestAnalyzeConditionNestedSetOperatorsIfExists(t *testing.T) {
 }
 
 func TestAnalyzeConditionMultiple(t *testing.T) {
-	condition := map[string]any{
-		"IpAddress": map[string]any{
-			"aws:SourceIp": "10.0.0.0/8",
+	condition := NormalizedCondition{
+		"IpAddress": {
+			"aws:SourceIp": []string{"10.0.0.0/8"},
 		},
-		"StringEquals": map[string]any{
-			"aws:sourceVpce":     "vpce-1a2b3c4d",
-			"aws:PrincipalOrgID": "o-abc123",
+		"StringEquals": {
+			"aws:sourceVpce":     []string{"vpce-1a2b3c4d"},
+			"aws:PrincipalOrgID": []string{"o-abc123"},
 		},
 	}
 	result := analyzeCondition(condition)
@@ -832,9 +832,9 @@ func TestAnalyzeConditionNoCondition(t *testing.T) {
 }
 
 func TestAnalyzeConditionIrrelevantKeys(t *testing.T) {
-	condition := map[string]any{
-		"Bool": map[string]any{
-			"aws:SecureTransport": "false",
+	condition := NormalizedCondition{
+		"Bool": {
+			"aws:SecureTransport": []string{"false"},
 		},
 	}
 	result := analyzeCondition(condition)
@@ -845,18 +845,28 @@ func TestAnalyzeConditionIrrelevantKeys(t *testing.T) {
 }
 
 func TestAnalyzeConditionEmptyMap(t *testing.T) {
-	condition := map[string]any{}
-	result := analyzeCondition(condition)
+	result := analyzeCondition(NormalizedCondition{})
 
 	if result.HasIPCondition || result.HasVPCCondition || result.HasOrgCondition {
 		t.Error("expected all conditions false for empty map")
 	}
 }
 
-func TestAnalyzeConditionMalformed(t *testing.T) {
-	// Condition is a string instead of a map — should not panic
-	result := analyzeCondition("not-a-map")
-
+// TestAnalyzeConditionMalformedJSON exercises the parse-time
+// fail-soft contract. The legacy analyzeCondition accepted any
+// arbitrary type and returned the zero analysis on a non-map; the
+// typed signature pushes that responsibility to UnmarshalJSON, so
+// the test now drives JSON bytes through the unmarshaller and
+// asserts the same behaviour at the new boundary.
+func TestAnalyzeConditionMalformedJSON(t *testing.T) {
+	var c NormalizedCondition
+	if err := c.UnmarshalJSON([]byte(`"not-a-map"`)); err != nil {
+		t.Fatalf("UnmarshalJSON returned err on malformed input: %v", err)
+	}
+	if !c.IsEmpty() {
+		t.Error("expected empty NormalizedCondition for malformed JSON input")
+	}
+	result := analyzeCondition(c)
 	if result.HasIPCondition || result.HasVPCCondition || result.HasOrgCondition {
 		t.Error("expected all conditions false for malformed condition")
 	}

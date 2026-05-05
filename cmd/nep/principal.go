@@ -107,12 +107,12 @@ func runPrincipal(w io.Writer, opts *principalOpts) error {
 
 	// Resolve all principals for chain analysis.
 	if opts.ShowChains {
-		resolvedIndex, trustPolicies := resolveAllPrincipals(snap)
+		resolvedIndex, trustPolicies := iam.ResolveAllPrincipals(snap)
 		chains := iam.ResolveChains(iam.RoleChainInput{
 			PrincipalARN:  opts.PrincipalARN,
 			ResolvedIndex: resolvedIndex,
 			TrustPolicies: trustPolicies,
-			AccountID:     extractAccountIDFromARN(opts.PrincipalARN),
+			AccountID:     iam.ExtractAccountIDFromARN(opts.PrincipalARN),
 		})
 		result.RoleChains = chains
 		result.HasTransitiveAdmin = iam.HasTransitiveAdmin(chains)
@@ -137,7 +137,7 @@ type identityRef struct {
 
 func (r *identityRef) toResolutionInput() iam.ResolutionInput {
 	if r.identity != nil {
-		return buildResolutionInput(r.identity)
+		return iam.BuildResolutionInput(r.identity)
 	}
 	// Build from asset properties (IAM roles in assets array).
 	return iam.ResolutionInput{
