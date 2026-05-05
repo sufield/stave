@@ -258,7 +258,7 @@ func ComputeItems(req ThresholdRequest) ThresholdItems {
 		}
 
 		threshold := ctl.EffectiveMaxUnsafeDuration(req.GlobalMaxUnsafeDuration)
-		states := computeAssetStates(*ctl, sortedSnaps, req.PredicateEval, req.Exemptions)
+		states := computeAssetStates(ctl, sortedSnaps, req.PredicateEval, req.Exemptions)
 
 		// 3. Convert states to risk items
 		for id, st := range states {
@@ -290,7 +290,7 @@ func ComputeItems(req ThresholdRequest) ThresholdItems {
 }
 
 func computeAssetStates(
-	ctl policy.ControlDefinition,
+	ctl *policy.ControlDefinition,
 	snapshots []asset.Snapshot,
 	eval policy.PredicateEval,
 	exemptions *policy.ExemptionConfig,
@@ -339,7 +339,7 @@ func computeAssetStates(
 			if eval == nil {
 				continue
 			}
-			result, evalErr := eval(ctl, a, snap.Identities)
+			result, evalErr := eval(*ctl, a, snap.Identities)
 			if evalErr != nil {
 				// Inconclusive evaluation — freeze streak, do not reset.
 				// LastObservedAt above keeps the asset in the risk

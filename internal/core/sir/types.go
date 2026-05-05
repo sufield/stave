@@ -64,13 +64,26 @@ func (s SourceRef) IsEmpty() bool {
 // captures the unsafe-predicate logic tree as an operator-neutral
 // nested structure; ThresholdHours captures the duration gate
 // (when present) for unsafe_duration controls.
+//
+// IntentRationale and ForbiddenState are the Iter 5.1 additions
+// that move controls from "field checks" to "invariant
+// enforcement". IntentRationale is human-authored prose stating
+// WHY the control exists; an external solver / AI agent uses it
+// to reason about whether a finding actually matters in the
+// system's broader security model. ForbiddenState is a logical
+// invariant that must NEVER be satisfied (distinct from the
+// unsafe-predicate, which fires per-asset on match) — solver-side
+// reasoning treats it as a hard constraint independent of the
+// per-asset evaluation outcome.
 type ControlFact struct {
-	ID             string        `json:"id"`
-	Type           string        `json:"type"`
-	Severity       string        `json:"severity"`
-	Predicate      PredicateFact `json:"predicate"`
-	ThresholdHours *float64      `json:"threshold_hours,omitempty"`
-	Source         SourceRef     `json:"source"`
+	ID              string         `json:"id"`
+	Type            string         `json:"type"`
+	Severity        string         `json:"severity"`
+	Predicate       PredicateFact  `json:"predicate"`
+	ThresholdHours  *float64       `json:"threshold_hours,omitempty"`
+	IntentRationale string         `json:"intent_rationale,omitempty"`
+	ForbiddenState  *PredicateFact `json:"forbidden_state,omitempty"`
+	Source          SourceRef      `json:"source"`
 }
 
 // PredicateFact is one node in the nested predicate tree. Logic is

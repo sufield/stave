@@ -156,8 +156,10 @@ func (m *Monitor) Run(ctx context.Context) error {
 				//     pile up — runCycle's running.CompareAndSwap
 				//     also coalesces, but the channel barrier keeps
 				//     debounce semantics tight.
-				if debounce != nil && m.pendingDone != nil {
-					prev := m.pendingDone
+				m.mu.Lock()
+				prev := m.pendingDone
+				m.mu.Unlock()
+				if debounce != nil && prev != nil {
 					if debounce.Stop() {
 						close(prev)
 					} else {
@@ -165,7 +167,9 @@ func (m *Monitor) Run(ctx context.Context) error {
 					}
 				}
 				done := make(chan struct{})
+				m.mu.Lock()
 				m.pendingDone = done
+				m.mu.Unlock()
 				debounce = time.AfterFunc(500*time.Millisecond, func() {
 					defer close(done)
 					m.runCycle(ctx)
@@ -327,10 +331,13 @@ func (m *Monitor) closeSinks() {
 // (close → receive), which the WaitGroup-based shape lacked
 // between Wait() returning and the next Add(1).
 func (m *Monitor) waitForPendingAlertCycle() {
-	if m.pendingDone == nil {
+	m.mu.Lock()
+	pending := m.pendingDone
+	m.mu.Unlock()
+	if pending == nil {
 		return
 	}
-	<-m.pendingDone
+	<-pending
 }
 
 func isObservationFile(name string) bool {

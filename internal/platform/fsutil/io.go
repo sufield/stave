@@ -373,6 +373,8 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 
 // SafeOpenAppend opens a file for appending, enforcing symlink protection
 // with post-open handle verification. Used for log files which are append-only.
+//
+// Caller must close the returned file to avoid leaking file descriptors.
 func SafeOpenAppend(path string, opts WriteOptions) (*os.File, error) {
 	if !opts.AllowSymlink {
 		if err := CheckSymlinkSafety(path); err != nil {

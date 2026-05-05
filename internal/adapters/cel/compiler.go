@@ -467,7 +467,19 @@ func resolveCrossFieldRef(r *policy.PredicateRule, val any, scopeVar string) (ac
 		}
 		return "params." + name, "true", nil
 	}
-	other := fmt.Sprint(val)
+	// Cross-field references must arrive as strings. The earlier
+	// fmt.Sprint shape silently coerced bools / numbers / nil into
+	// CEL field accesses like "true", "0", "<nil>" — none of which
+	// resolve to a real asset field, but all of which compiled
+	// cleanly and produced a runtime miss. Reject the non-string
+	// shape at compile time instead.
+	other, ok := val.(string)
+	if !ok {
+		return "", "", fmt.Errorf("cross-field reference: expected string field path, got %T (%v)", val, val)
+	}
+	if !isSafeParamName(other) {
+		return "", "", fmt.Errorf("invalid cross-field reference %q: must match [A-Za-z0-9_.]+", other)
+	}
 	return scopedFieldAccess(other, scopeVar), scopedHasField(other, scopeVar), nil
 }
 
@@ -517,8 +529,14 @@ func ruleToExprAnyMatch(r *policy.PredicateRule, val any, outerScope string, ide
 	switch v := val.(type) {
 	case *policy.UnsafePredicate:
 		nested = v
+		if nested.IsEmpty() {
+			return "", errors.New("any_match: nested predicate has no rules")
+		}
 	case policy.UnsafePredicate:
 		nested = &v
+		if nested.IsEmpty() {
+			return "", errors.New("any_match: nested predicate has no rules")
+		}
 	default:
 		parsed, err := parseNestedPredicate(val)
 		if err != nil {

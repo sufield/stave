@@ -63,6 +63,24 @@ type ControlDefinition struct {
 	// excluded from `stave expand` results. See internal/archetype.
 	Archetype kernel.ArchetypeID
 
+	// IntentRationale states WHY the control exists — the security
+	// invariant it preserves. Distinct from Description (what the
+	// control checks). Surfaces verbatim into SIR.ControlFact so an
+	// external solver / AI agent has the human-authored context for
+	// whether a triggered finding actually matters. Optional; empty
+	// rationale renders as the absent JSON field in SIR exports.
+	IntentRationale string
+
+	// ForbiddenState is a high-level invariant the control declares
+	// the system must never satisfy (e.g. principal=="*" AND
+	// network=="public"). Distinct from UnsafePredicate (which
+	// triggers a finding on match): ForbiddenState carries the
+	// authored invariant verbatim into SIR.ControlFact.ForbiddenState
+	// for solver-side invariant checking. Reuses the existing
+	// UnsafePredicate shape so authors can express forbidden states
+	// with the predicate vocabulary they already know.
+	ForbiddenState UnsafePredicate
+
 	// prepared holds pre-calculated values to optimize the evaluation
 	// hot path. Only Prepare() (in this package) writes to it; the
 	// per-attribute accessors below are the read surface for

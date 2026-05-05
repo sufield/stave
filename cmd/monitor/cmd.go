@@ -160,7 +160,7 @@ func runMonitor(ctx context.Context, stdout, _ io.Writer, opts *options) error {
 
 func runLiveLoop(ctx context.Context, stdout io.Writer, opts *options, loadState func() (*appmon.State, error)) error {
 	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, os.Interrupt)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 	defer signal.Stop(sigCh)
 
 	ticker := time.NewTicker(time.Duration(opts.Refresh) * time.Second)
@@ -208,6 +208,20 @@ func runLiveLoop(ctx context.Context, stdout io.Writer, opts *options, loadState
 		return err
 	}
 
+	// Debounce timer: fsnotify can deliver many events in quick
+	// succession (one per stat operation a writer does mid-flush).
+	// time.AfterFunc coalesces those into a single render after
+	// 200ms of quiescence, mirroring the watch monitor's
+	// implementation. The previous time.Sleep blocked the
+	// for-select loop, so a burst of events stalled signal /
+	// keyboard handling for the full sleep duration.
+	var fsDebounce *time.Timer
+	defer func() {
+		if fsDebounce != nil {
+			fsDebounce.Stop()
+		}
+	}()
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -216,13 +230,16 @@ func runLiveLoop(ctx context.Context, stdout io.Writer, opts *options, loadState
 			return nil
 		case ev, ok := <-fsCh:
 			if ok && ev.Op&fsnotify.Create != 0 && strings.HasSuffix(ev.Name, ".json") {
-				// Small delay to let file finish writing.
-				time.Sleep(200 * time.Millisecond)
-				if err := renderOnce(ctx, stdout, opts, loadState); err != nil {
-					if _, werr := fmt.Fprintf(stdout, "\nRefresh error (fsnotify): %v\n", err); werr != nil {
-						return werr
-					}
+				if fsDebounce != nil {
+					fsDebounce.Stop()
 				}
+				fsDebounce = time.AfterFunc(200*time.Millisecond, func() {
+					if err := renderOnce(ctx, stdout, opts, loadState); err != nil {
+						// Best-effort write — closure has no
+						// return path to the for-select loop.
+						_, _ = fmt.Fprintf(stdout, "\nRefresh error (fsnotify): %v\n", err)
+					}
+				})
 			}
 		case key := <-keyCh:
 			switch key {

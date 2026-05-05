@@ -252,10 +252,32 @@ func (s *Store) UnmarshalYAML(value *yaml.Node) error {
 	if err := validateContextsMap(aux.Contexts); err != nil {
 		return err
 	}
+	if err := validateActive(aux.Active, aux.Contexts); err != nil {
+		return err
+	}
 	s.Active = aux.Active
 	s.contexts = aux.Contexts
 	if s.contexts == nil {
 		s.contexts = make(map[string]Context)
+	}
+	return nil
+}
+
+// validateActive enforces two trust-boundary checks on the Active
+// field: (1) reject any path-traversal sequence so a malicious
+// config cannot reference unintended state directories via "..",
+// and (2) when non-empty, require the named context to exist in
+// the Contexts map. Empty Active is valid (matches the "no
+// context selected" state).
+func validateActive(active string, contexts map[string]Context) error {
+	if active == "" {
+		return nil
+	}
+	if strings.Contains(active, "..") {
+		return fmt.Errorf("config: active context %q contains path-traversal sequence", active)
+	}
+	if _, ok := contexts[active]; !ok {
+		return fmt.Errorf("config: active context %q is not defined under contexts", active)
 	}
 	return nil
 }

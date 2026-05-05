@@ -502,7 +502,12 @@ func (s *Sanitizer) scrubValueWithProfile(v any, profile Profile) any {
 	case float64:
 		return float64(0)
 	case json.Number:
-		return json.Number("0")
+		// "0.0" rather than "0" so a downstream schema validator
+		// expecting a float type still accepts the redacted value.
+		// json.Number("0") parses as integer-shaped; some validators
+		// reject it where the schema declares "number" with a
+		// fractional shape.
+		return json.Number("0.0")
 	case time.Time:
 		// Zero time so the redacted JSON keeps its declared type.
 		// Scrubbing a timestamp to a string sentinel would fail

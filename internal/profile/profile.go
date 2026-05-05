@@ -130,6 +130,21 @@ func (r *Result) Less(other *Result) bool {
 }
 
 // Report is the output of evaluating a profile against a snapshot.
+//
+// Counting invariants:
+//   - sum(Counts.values()) == len(Results)
+//   - sum(CompoundCounts.values()) == len(CompoundFindings)
+//   - FailCounts mirrors per-severity failure totals across BOTH
+//     Results (per-finding fail count) AND CompoundFindings (every
+//     compound is a failure by definition). Operators reading
+//     "did anything fail at Critical?" probe FailCounts; operators
+//     sizing the report at a given severity probe Counts (results)
+//     or CompoundCounts (chain findings) directly.
+//
+// The earlier shape collapsed Counts and CompoundCounts together,
+// so a chain finding made Counts.values() exceed len(Results) and
+// downstream summaries that "sized" the report off Counts
+// double-counted the compound row.
 type Report struct {
 	ProfileID        string                  `json:"profile_id"`
 	ProfileName      string                  `json:"profile_name"`
@@ -138,6 +153,7 @@ type Report struct {
 	Acknowledged     []AcknowledgedEntry     `json:"acknowledged,omitempty"`
 	Results          []Result                `json:"results"`
 	Counts           map[policy.Severity]int `json:"counts"`
+	CompoundCounts   map[policy.Severity]int `json:"compound_counts,omitempty"`
 	FailCounts       map[policy.Severity]int `json:"fail_counts"`
 }
 
@@ -254,6 +270,7 @@ func (r *Report) Recount() {
 	// other Recount callers were silently working off stale severity
 	// totals.
 	r.Counts = make(map[policy.Severity]int)
+	r.CompoundCounts = make(map[policy.Severity]int)
 	r.FailCounts = make(map[policy.Severity]int)
 	r.Pass = true
 	for i := range r.Results {
@@ -264,11 +281,13 @@ func (r *Report) Recount() {
 		}
 	}
 	for i := range r.CompoundFindings {
-		// Compound findings contribute to both views: they are
-		// failures (FailCounts) and they exist in the report
-		// (Counts), so a downstream summary that reads Counts to
-		// "size" the report sees them.
-		r.Counts[r.CompoundFindings[i].Severity]++
+		// Compound findings live in their own per-severity tally
+		// (CompoundCounts) so sum(Counts.values()) == len(Results)
+		// stays an invariant. They still contribute to FailCounts
+		// because every compound finding is a failure by definition;
+		// the per-severity breakdown is FailCounts =
+		// (failures from Results) + (every CompoundFinding).
+		r.CompoundCounts[r.CompoundFindings[i].Severity]++
 		r.FailCounts[r.CompoundFindings[i].Severity]++
 	}
 	if len(r.CompoundFindings) > 0 {
@@ -430,14 +449,25 @@ func (p *Profile) Evaluate(ctx context.Context, snap asset.Snapshot, registries 
 }
 
 // discoverControls builds the Control list by querying all
-// registries for controls that declare membership in the given profile.
+// registries for controls that declare membership in the given
+// profile. When two registries register controls with the same
+// ID (e.g. a built-in and a user override), the first registry's
+// entry wins — the dedup map prevents duplicates from inflating
+// per-profile counts and breaking downstream identity assumptions
+// (Counts.values() summing to len(Results)).
 func discoverControls(profileID string, registries []*compliance.ControlCatalog) []Control {
 	var controls []Control
+	seen := make(map[kernel.ControlID]struct{})
 	for _, reg := range registries {
 		for _, ctrl := range reg.ByProfile(profileID) {
 			def := ctrl.Def()
+			id := def.ID()
+			if _, dup := seen[id]; dup {
+				continue
+			}
+			seen[id] = struct{}{}
 			pc := Control{
-				ControlID:     def.ID(),
+				ControlID:     id,
 				ComplianceRef: def.ComplianceRefs()[profileID],
 				Rationale:     def.ProfileRationale(profileID),
 			}

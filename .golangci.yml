@@ -87,10 +87,16 @@ linters:
         - unnecessaryBlock
       settings:
         hugeParam:
-          # ControlDefinition is 520 bytes after the archetype field landed.
-          # Raising the threshold avoids a 13-callsite by-pointer rewrite of
-          # the evaluation hot path for a struct that's been near the limit.
-          sizeThreshold: 528
+          # ControlDefinition is 584 bytes after the Iter 5.1 ForbiddenState
+          # UnsafePredicate addition. Raising the threshold avoids cascading
+          # pointer rewrites across the public-API callsites that pass the
+          # struct by value to satisfy the PredicateEval signature
+          # (controldef.PredicateEval is fixed; changing it ripples through
+          # every CEL evaluator + every test stub). Hot-path internal sites
+          # (isTriggered, checkUnsafe, computeAssetStates) DO take the
+          # struct by pointer to skip the per-call copy — those are
+          # narrower internal helpers, not signature-bound boundaries.
+          sizeThreshold: 600
         rangeValCopy:
           sizeThreshold: 128
     govet:

@@ -65,7 +65,12 @@ func normalizeValue(v any) any {
 func coerceString(s string) any {
 	trimmed := strings.TrimSpace(s)
 	if trimmed == "" {
-		return s
+		// Return the trimmed (empty) value rather than the original
+		// untrimmed input. The earlier shape returned s, which let
+		// whitespace-only strings ("   ", "\t\n") survive normalization
+		// even though every downstream consumer treats whitespace-only
+		// as equivalent to absent.
+		return trimmed
 	}
 
 	switch strings.ToLower(trimmed) {

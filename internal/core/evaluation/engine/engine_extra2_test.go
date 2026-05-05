@@ -115,7 +115,7 @@ func TestCheckUnsafe_NilEvaluator(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1"}
 	snap := asset.Snapshot{}
 
-	result, err := checkUnsafe(ctl, a, snap, nil)
+	result, err := checkUnsafe(&ctl, a, snap, nil)
 	if err == nil {
 		t.Fatal("nil evaluator should return error")
 	}
@@ -133,7 +133,7 @@ func TestCheckUnsafe_EvaluatorError(t *testing.T) {
 		return true, errors.New("some error")
 	}
 
-	result, err := checkUnsafe(ctl, a, snap, eval)
+	result, err := checkUnsafe(&ctl, a, snap, eval)
 	if err == nil {
 		t.Fatal("evaluator error should propagate")
 	}

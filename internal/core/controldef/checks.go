@@ -46,7 +46,7 @@ func CheckEffectiveness(controls []ControlDefinition, snapshots []asset.Snapshot
 	var issues []diag.Finding
 	for i := range controls {
 		ctl := &controls[i]
-		if !isTriggered(*ctl, snapshots, eval) {
+		if !isTriggered(ctl, snapshots, eval) {
 			issues = append(issues, diag.NewFinding(diag.RuleControlNeverMatches).
 				Warning().
 				Remediation("Check predicate field paths or verify if all resources are currently safe.").
@@ -58,11 +58,15 @@ func CheckEffectiveness(controls []ControlDefinition, snapshots []asset.Snapshot
 }
 
 // isTriggered determines if a control matches at least one asset.
-// Short-circuits on the first match.
-func isTriggered(ctl ControlDefinition, snapshots []asset.Snapshot, eval PredicateEval) bool {
+// Short-circuits on the first match. Pointer receiver so the
+// 584-byte ControlDefinition isn't copied per call (gocritic
+// hugeParam threshold) — the eval boundary still takes the
+// struct by value because the PredicateEval signature is locked
+// by every callsite in the engine.
+func isTriggered(ctl *ControlDefinition, snapshots []asset.Snapshot, eval PredicateEval) bool {
 	for _, snap := range snapshots {
 		for _, a := range snap.Assets {
-			unsafe, err := eval(ctl, a, snap.Identities)
+			unsafe, err := eval(*ctl, a, snap.Identities)
 			if err == nil && unsafe {
 				return true
 			}

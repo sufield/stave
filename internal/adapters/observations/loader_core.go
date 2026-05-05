@@ -154,9 +154,21 @@ func (l *ObservationLoader) process(data []byte, source string) (asset.Snapshot,
 }
 
 func buildInputHashes(fileHashes map[string]string) *evaluation.InputHashes {
+	// Walk fileHashes in sorted key order so the typedFiles map is
+	// constructed deterministically. ComputeOverall already sorts
+	// internally for hashing, but a deterministic build order
+	// keeps any downstream consumer that reads the typed map
+	// before re-hashing on the same iteration sequence (relevant
+	// for trace logs that emit per-file hash lines during construction).
+	names := make([]string, 0, len(fileHashes))
+	for name := range fileHashes {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+
 	typedFiles := make(map[evaluation.FilePath]kernel.Digest, len(fileHashes))
-	for name, hash := range fileHashes {
-		typedFiles[evaluation.FilePath(name)] = kernel.Digest(hash)
+	for _, name := range names {
+		typedFiles[evaluation.FilePath(name)] = kernel.Digest(fileHashes[name])
 	}
 	return &evaluation.InputHashes{
 		Files:   typedFiles,

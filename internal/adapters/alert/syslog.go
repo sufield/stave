@@ -14,6 +14,10 @@ import (
 // SyslogSink emits WatchAlerts as RFC 5424 structured syslog messages
 // to the local syslog daemon. No network calls — the resident log
 // forwarder (Splunk UF, Filebeat, rsyslog) owns the transport.
+//
+// Construct via NewSyslogSink. A zero-value SyslogSink is NOT valid:
+// its writer is nil, and every method returns ErrSinkNotInitialized
+// rather than panicking on the nil dereference.
 type SyslogSink struct {
 	writer *syslog.Writer
 }
@@ -62,6 +66,9 @@ func ParseSyslogFacility(name string) (syslog.Priority, error) {
 // severity) so the syslog mapping table lives on the core type
 // rather than duplicated here.
 func (s *SyslogSink) Emit(_ context.Context, a ports.WatchAlert) error {
+	if s.writer == nil {
+		return ErrSinkNotInitialized
+	}
 	msg := FormatSyslog(a)
 	switch syslog.Priority(a.Transition.SyslogSeverity()) {
 	case syslog.LOG_CRIT:
@@ -75,8 +82,13 @@ func (s *SyslogSink) Emit(_ context.Context, a ports.WatchAlert) error {
 	}
 }
 
-// Close closes the syslog connection.
+// Close closes the syslog connection. Returns ErrSinkNotInitialized
+// for a zero-value receiver rather than panicking on the nil
+// dereference.
 func (s *SyslogSink) Close() error {
+	if s.writer == nil {
+		return ErrSinkNotInitialized
+	}
 	return s.writer.Close()
 }
 

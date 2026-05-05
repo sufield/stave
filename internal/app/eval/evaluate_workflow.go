@@ -129,15 +129,22 @@ func Evaluate(ctx context.Context, input EvaluateInput) (evaluation.ComplianceRe
 
 // EvaluationRequest encapsulates loaded models and runtime options for evaluation.
 type EvaluationRequest struct {
-	Controls          []policy.ControlDefinition
-	Snapshots         []asset.Snapshot
-	MaxUnsafeDuration time.Duration
-	Clock             ports.Clock
-	Hasher            ports.Digester
-	StaveVersion      string
-	PredicateParser   func(any) (*policy.UnsafePredicate, error)
-	CELEvaluator      policy.PredicateEval
-	GenerateEvidence  bool
+	Controls             []policy.ControlDefinition
+	Snapshots            []asset.Snapshot
+	MaxUnsafeDuration    time.Duration
+	Clock                ports.Clock
+	Hasher               ports.Digester
+	StaveVersion         string
+	PredicateParser      func(any) (*policy.UnsafePredicate, error)
+	CELEvaluator         policy.PredicateEval
+	GenerateEvidence     bool
+	Confidence           evaluation.ConfidenceCalculator
+	ExemptionConfig      *policy.ExemptionConfig
+	ExceptionConfig      *policy.ExceptionConfig
+	AcknowledgmentConfig *policy.AcknowledgmentConfig
+	InputHashes          *evaluation.InputHashes
+	Metadata             evaluation.Metadata
+	Tracer               ports.Tracer
 }
 
 // noopPredicateParser is the fallback parser used when EvaluationRequest
@@ -176,14 +183,21 @@ func EvaluateLoaded(ctx context.Context, req EvaluationRequest) (evaluation.Comp
 	}
 
 	return Evaluate(ctx, EvaluateInput{
-		Controls:          req.Controls,
-		Snapshots:         req.Snapshots,
-		MaxUnsafeDuration: req.MaxUnsafeDuration,
-		Clock:             req.Clock,
-		Hasher:            req.Hasher,
-		StaveVersion:      req.StaveVersion,
-		PredicateParser:   req.PredicateParser,
-		CELEvaluator:      req.CELEvaluator,
-		GenerateEvidence:  req.GenerateEvidence,
+		Controls:             req.Controls,
+		Snapshots:            req.Snapshots,
+		MaxUnsafeDuration:    req.MaxUnsafeDuration,
+		Confidence:           req.Confidence,
+		Clock:                req.Clock,
+		Hasher:               req.Hasher,
+		ExemptionConfig:      req.ExemptionConfig,
+		ExceptionConfig:      req.ExceptionConfig,
+		AcknowledgmentConfig: req.AcknowledgmentConfig,
+		StaveVersion:         req.StaveVersion,
+		InputHashes:          req.InputHashes,
+		PredicateParser:      req.PredicateParser,
+		Metadata:             req.Metadata,
+		CELEvaluator:         req.CELEvaluator,
+		Tracer:               req.Tracer,
+		GenerateEvidence:     req.GenerateEvidence,
 	})
 }

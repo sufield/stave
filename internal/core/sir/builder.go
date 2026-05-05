@@ -184,20 +184,69 @@ func buildControlFacts(controls []controldef.ControlDefinition) []ControlFact {
 	for i := range controls {
 		ctl := &controls[i]
 		fact := ControlFact{
-			ID:        string(ctl.ID),
-			Type:      ctl.Type.String(),
-			Severity:  ctl.Severity.String(),
-			Predicate: predicateFactFromTopLevel(&ctl.UnsafePredicate, string(ctl.ID)),
-			Source:    SourceRef{Kind: "control", ID: string(ctl.ID)},
+			ID:              string(ctl.ID),
+			Type:            ctl.Type.String(),
+			Severity:        ctl.Severity.String(),
+			Predicate:       predicateFactFromTopLevel(&ctl.UnsafePredicate, string(ctl.ID)),
+			IntentRationale: ctl.IntentRationale,
+			Source:          SourceRef{Kind: "control", ID: string(ctl.ID)},
 		}
 		if ctl.HasMaxUnsafeDuration() {
 			h := ctl.MaxUnsafeDuration().Hours()
 			fact.ThresholdHours = &h
 		}
+		if !ctl.ForbiddenState.IsEmpty() {
+			fb := forbiddenStateFact(&ctl.ForbiddenState, string(ctl.ID))
+			fact.ForbiddenState = &fb
+		}
 		out = append(out, fact)
 	}
 	slices.SortFunc(out, func(a, b ControlFact) int { return cmp.Compare(a.ID, b.ID) })
 	return out
+}
+
+// forbiddenStateFact translates a control's ForbiddenState
+// invariant into the SIR's nested predicate shape. Reuses the
+// same Any/All collapse logic as the unsafe-predicate path so
+// authors can express invariants with the predicate vocabulary
+// they already know. The Path prefix differs ("forbidden_state"
+// rather than "unsafe_predicate") so a SourceRef trace can tell
+// the two sources apart.
+func forbiddenStateFact(p *controldef.UnsafePredicate, controlID string) PredicateFact {
+	if p == nil || p.IsEmpty() {
+		return PredicateFact{}
+	}
+	if len(p.Any) > 0 && len(p.All) == 0 {
+		return PredicateFact{
+			Logic: "any",
+			Rules: rulesFrom(p.Any, controlID, []string{"forbidden_state", "any"}),
+		}
+	}
+	if len(p.All) > 0 && len(p.Any) == 0 {
+		return PredicateFact{
+			Logic: "all",
+			Rules: rulesFrom(p.All, controlID, []string{"forbidden_state", "all"}),
+		}
+	}
+	return PredicateFact{
+		Logic: "all",
+		Rules: []RuleFact{
+			{
+				Nested: &PredicateFact{
+					Logic: "any",
+					Rules: rulesFrom(p.Any, controlID, []string{"forbidden_state", "any"}),
+				},
+				Source: SourceRef{Kind: "control", ID: controlID, Path: []string{"forbidden_state", "any"}},
+			},
+			{
+				Nested: &PredicateFact{
+					Logic: "all",
+					Rules: rulesFrom(p.All, controlID, []string{"forbidden_state", "all"}),
+				},
+				Source: SourceRef{Kind: "control", ID: controlID, Path: []string{"forbidden_state", "all"}},
+			},
+		},
+	}
 }
 
 // predicateFactFromTopLevel collapses controldef.UnsafePredicate's

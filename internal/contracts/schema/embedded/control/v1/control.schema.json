@@ -177,6 +177,16 @@
           "title": "Archetype",
           "description": "Structural defect classification (e.g. 'ghost-reference', 'confused-deputy'). Optional; consumed by `stave expand` to surface every control sharing the same defect shape across services."
         },
+        "intent_rationale": {
+          "type": "string",
+          "title": "Intent Rationale",
+          "description": "Authored prose stating WHY this control exists — the security invariant it preserves. Distinct from `description` (what the control checks). The rationale flows into the SIR's ControlFact.intent_rationale field so an external solver / AI agent can reason about whether a violation matters in context, not just whether the predicate matched. Optional; absent rationale renders as empty in SIR exports."
+        },
+        "forbidden_state": {
+          "$ref": "#/$defs/predicate",
+          "title": "Forbidden State",
+          "description": "High-level logical condition that must NEVER be satisfied (e.g., principal=='*' AND network==public). Distinct from `unsafe_predicate`: the unsafe predicate triggers a finding when matched against an asset; the forbidden_state is an invariant the control declares the system must uphold and surfaces verbatim into SIR.ControlFact.forbidden_state for solver-side invariant checking. Reuses the same predicate shape so authors can express forbidden states with the same vocabulary they already know."
+        },
         "version": {
           "type": "string",
           "title": "Control Version",

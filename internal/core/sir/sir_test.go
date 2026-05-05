@@ -399,6 +399,93 @@ func TestBuilder_EmptyInputs(t *testing.T) {
 	}
 }
 
+func TestBuilder_IntentRationaleAndForbiddenStateSurface(t *testing.T) {
+	// Iter 5.1: control declares an intent rationale and an
+	// invariant predicate (forbidden_state). Both must flow into
+	// the SIR's ControlFact so an external solver / AI agent
+	// reads them alongside the unsafe predicate.
+	ctl := controldef.ControlDefinition{
+		ID:              kernel.ControlID("CTL.TEST.INVARIANT.001"),
+		Type:            controldef.TypeUnsafeState,
+		Severity:        controldef.SeverityHigh,
+		IntentRationale: "Public buckets violate data-residency invariants",
+		UnsafePredicate: controldef.UnsafePredicate{
+			Any: []controldef.PredicateRule{
+				{Field: predicate.NewFieldPath("properties.public"), Op: predicate.Operator("eq"), Value: controldef.Bool(true)},
+			},
+		},
+		ForbiddenState: controldef.UnsafePredicate{
+			All: []controldef.PredicateRule{
+				{Field: predicate.NewFieldPath("properties.principal"), Op: predicate.Operator("eq"), Value: controldef.Str("*")},
+				{Field: predicate.NewFieldPath("properties.network"), Op: predicate.Operator("eq"), Value: controldef.Str("public")},
+			},
+		},
+	}
+
+	b := NewBuilder()
+	doc, err := b.Build([]controldef.ControlDefinition{ctl}, nil, fixedTime)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	if len(doc.Controls) != 1 {
+		t.Fatalf("expected 1 control, got %d", len(doc.Controls))
+	}
+	got := doc.Controls[0]
+	if got.IntentRationale != "Public buckets violate data-residency invariants" {
+		t.Errorf("IntentRationale: got %q", got.IntentRationale)
+	}
+	if got.ForbiddenState == nil {
+		t.Fatalf("ForbiddenState: want non-nil")
+	}
+	if got.ForbiddenState.Logic != "all" {
+		t.Errorf("ForbiddenState.Logic: want all, got %q", got.ForbiddenState.Logic)
+	}
+	if len(got.ForbiddenState.Rules) != 2 {
+		t.Errorf("ForbiddenState.Rules: want 2, got %d", len(got.ForbiddenState.Rules))
+	}
+	// Each forbidden-state rule must source-ref the forbidden_state
+	// path so a trace can distinguish it from unsafe_predicate.
+	for i, r := range got.ForbiddenState.Rules {
+		if len(r.Source.Path) == 0 || r.Source.Path[0] != "forbidden_state" {
+			t.Errorf("ForbiddenState.Rules[%d].Source.Path[0]: want forbidden_state, got %v", i, r.Source.Path)
+		}
+	}
+}
+
+func TestBuilder_IntentRationaleAbsent_SerializesAsAbsent(t *testing.T) {
+	// When the rationale is empty and the invariant is empty, the
+	// JSON must omit both fields rather than emitting empty
+	// strings / nulls — the SIR contract says optional fields are
+	// absent, not zero.
+	ctl := controldef.ControlDefinition{
+		ID:       kernel.ControlID("CTL.TEST.NOINTENT.001"),
+		Type:     controldef.TypeUnsafeState,
+		Severity: controldef.SeverityLow,
+		UnsafePredicate: controldef.UnsafePredicate{
+			Any: []controldef.PredicateRule{
+				{Field: predicate.NewFieldPath("x"), Op: predicate.Operator("eq"), Value: controldef.Bool(true)},
+			},
+		},
+	}
+
+	b := NewBuilder()
+	doc, err := b.Build([]controldef.ControlDefinition{ctl}, nil, fixedTime)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	encoded, err := json.Marshal(doc.Controls[0])
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	body := string(encoded)
+	if strings.Contains(body, "intent_rationale") {
+		t.Errorf("empty rationale must not serialize: %s", body)
+	}
+	if strings.Contains(body, "forbidden_state") {
+		t.Errorf("empty forbidden_state must not serialize: %s", body)
+	}
+}
+
 func TestPredicateFact_BothAnyAndAll(t *testing.T) {
 	// A pathological control with both Any and All populated.
 	// Builder must wrap them in a synthetic outer "all".

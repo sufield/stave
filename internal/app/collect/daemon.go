@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"math"
 	"os"
 	"os/signal"
 	"strconv"
@@ -96,7 +97,18 @@ func acquirePIDFile(pidFile string) (func(), error) {
 
 	// 3. Acquire an exclusive non-blocking lock. If another
 	// process has the file open and locked, this fails immediately.
-	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil { //nolint:gosec // file descriptors fit in int on every supported platform
+	//
+	// Bounds-check the file descriptor before the int cast: on
+	// systems with extreme RLIMIT_NOFILE settings (or future Go
+	// changes that make Fd return a wider type) a descriptor that
+	// overflows int32 would silently truncate to a wrong value
+	// and Flock would lock the wrong fd or return ENOENT.
+	fd := f.Fd()
+	if fd > math.MaxInt32 {
+		_ = f.Close()
+		return nil, fmt.Errorf("pid file %q descriptor %d exceeds int32 range", pidFile, fd)
+	}
+	if err := syscall.Flock(int(fd), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
 		_ = f.Close()
 		if errors.Is(err, syscall.EWOULDBLOCK) {
 			return nil, fmt.Errorf("pid file %q is locked by another instance", pidFile)

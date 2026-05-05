@@ -106,15 +106,12 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts 
 		if err := runNewOnlyOutput(ctx, sio.Stdout, sio.Stderr, opts, results); err != nil {
 			return err
 		}
-		// Quiet flows from the user's --quiet flag (sio.Quiet) so
-		// new-only mode respects the same verbosity contract as
-		// every other apply path. The earlier hardcoded Quiet:
-		// true ignored the user's choice and silenced gate
-		// reporting even when -v was set.
+		// runNewOnlyOutput already rendered the signal-filtered
+		// view; calling ReportApply again would emit the standard
+		// summary on top, doubling output. We still need a
+		// Reporter for the SLA gate (its accessor lives on the
+		// type) but skip ReportApply entirely in new-only mode.
 		gate := NewReporter(sio, rt)
-		if err := gate.ReportApply(results, evaluation.EnforcementPolicy{}); err != nil {
-			return err
-		}
 		return gate.CheckSLAPolicy(SLAPolicy(opts.SLAPolicy), results)
 	}
 

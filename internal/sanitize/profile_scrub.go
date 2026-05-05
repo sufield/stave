@@ -18,13 +18,15 @@ const SanitizedValue = "[SANITIZED]"
 
 // --- Credential patterns (used by bug-report log scrubbing) ---
 
-// AKIAPattern matches AWS access key IDs (AKIA = long-term root /
-// IAM user keys; ASIA = STS temporary credentials). The earlier
-// shape only matched AKIA, so a leaked STS session token —
-// produced by every short-lived credential path including
-// AssumeRole, federated logins, and EC2 instance roles — slipped
-// through bug-report scrubbing unchanged.
-var AKIAPattern = regexp.MustCompile(`A[KS]IA[0-9A-Z]{16}`)
+// AKIAPattern matches every AWS access-key-ID prefix the IAM
+// vocabulary defines: AKIA (long-term root/user), ASIA (STS
+// session), AROA (assumed-role), AGPA (group), AIDA (user),
+// ANPA (managed policy), ANVA (managed policy version), APKA
+// (public key). The 4-char prefix (A + three uppercase letters)
+// followed by 16 base32-style characters captures all of them
+// without an explicit alternation list — additions to AWS's
+// prefix table land for free.
+var AKIAPattern = regexp.MustCompile(`A[A-Z]{3}[0-9A-Z]{16}`)
 
 // URLCredPattern matches credentials embedded in URLs (user:pass@host).
 // Covers https?, ftp, sftp, ssh, and git (including git+https). The
@@ -129,6 +131,13 @@ func AssetProfile() Profile {
 			"policy_public_statements": {},
 			"acl_grants":               {},
 			"acl_public_grantees":      {},
+			"arn":                      {},
+			"account_id":               {},
+			"owner_id":                 {},
+			"role_arn":                 {},
+			"function_name":            {},
+			"cluster_name":             {},
+			"resource_id":              {},
 		},
 		map[string]struct{}{
 			"bucket_name": {},

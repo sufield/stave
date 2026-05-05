@@ -88,7 +88,7 @@ func panicMessageFromValue(recovered any) string {
 	case string:
 		return value
 	default:
-		return fmt.Sprintf("(panic type %T)", recovered)
+		return fmt.Sprintf("(panic: %v, type %T)", recovered, recovered)
 	}
 }
 
@@ -160,7 +160,7 @@ func fallbackScrubMessage(s string) string {
 		}
 		// Octet range validation: every part must fit 0..255 to
 		// be a real IPv4.
-		for octet := range strings.SplitSeq(groups[2], ".") {
+		for _, octet := range strings.Split(groups[2], ".") {
 			n, err := strconv.Atoi(octet)
 			if err != nil || n > 255 {
 				return m

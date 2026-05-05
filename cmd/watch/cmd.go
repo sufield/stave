@@ -213,14 +213,23 @@ func buildAssessFunc(binary string, opts *options) watch.AssessFunc {
 		// error is the load-bearing signal — surface it to the
 		// watch loop instead of trusting whatever stdout happens to
 		// contain.
+		// isBinaryExecutionFailure: any non-nil runErr that is NOT an
+		// exec.ExitError is a spawn-time failure (binary not found,
+		// permission denied, fork failure, context cancellation).
+		// The earlier "exit code 0 && err non-nil" gate missed cases
+		// where runErr was a sentinel like context.DeadlineExceeded
+		// that does not satisfy errors.As(*ExitError) — those slipped
+		// through as if the assessment had succeeded.
 		exitCode := 0
+		isBinaryExecutionFailure := false
 		if runErr != nil {
 			var exitErr *exec.ExitError
 			if errors.As(runErr, &exitErr) {
 				exitCode = exitErr.ExitCode()
+			} else {
+				isBinaryExecutionFailure = true
 			}
 		}
-		isBinaryExecutionFailure := exitCode == 0 && runErr != nil
 		if isBinaryExecutionFailure {
 			// Spawn-time failure (binary not found, permission denied,
 			// fork failure). No exit code, just a Go-level error from

@@ -203,7 +203,7 @@ func recordAssetObservation(
 			lcs[a.ID] = t
 		}
 
-		isUnsafe, evalErr := checkUnsafe(*ctl, a, snap, celEval)
+		isUnsafe, evalErr := checkUnsafe(ctl, a, snap, celEval)
 		if evalErr != nil {
 			// Per AGENTS.md, core/ avoids stderr-level side effects:
 			// the inconclusive condition is the return-value channel
@@ -246,8 +246,15 @@ func recordAssetObservation(
 // checkUnsafe evaluates an asset against a control predicate using the CEL evaluator.
 // Returns (result, err). On error, the caller must NOT record the asset as safe —
 // the check is inconclusive and should be skipped.
+//
+// Pointer ctl: ControlDefinition crossed gocritic's hugeParam
+// threshold (584 bytes after Iter 5.1's ForbiddenState addition).
+// The eval boundary still receives the struct by value — the
+// PredicateEval signature is fixed by every callsite in the
+// engine — but routing into checkUnsafe by pointer avoids a
+// per-asset copy in the hot lifecycle loop.
 func checkUnsafe(
-	ctl policy.ControlDefinition,
+	ctl *policy.ControlDefinition,
 	a asset.Asset,
 	snap asset.Snapshot,
 	celEval policy.PredicateEval,
@@ -255,7 +262,7 @@ func checkUnsafe(
 	if celEval == nil {
 		return false, fmt.Errorf("%w: control %s on asset %s", ErrNilCELEvaluator, ctl.ID, a.ID)
 	}
-	result, err := celEval(ctl, a, snap.Identities)
+	result, err := celEval(*ctl, a, snap.Identities)
 	if err != nil {
 		return false, fmt.Errorf("CEL evaluation failed for control %s on asset %s: %w", ctl.ID, a.ID, err)
 	}

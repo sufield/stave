@@ -43,6 +43,15 @@ type yamlControlDefinition struct {
 	// "ghost-reference"). Optional; controls without an archetype are
 	// excluded from `stave expand` results. See internal/archetype.
 	Archetype string `yaml:"archetype,omitempty"`
+
+	// IntentRationale is the WHY-prose flowing into ControlFact.
+	// See policy.ControlDefinition.IntentRationale for full semantics.
+	IntentRationale string `yaml:"intent_rationale,omitempty"`
+
+	// ForbiddenState is the high-level invariant predicate. Reuses
+	// the same wire shape as UnsafePredicate so authors can express
+	// invariants with the same any/all + rule vocabulary.
+	ForbiddenState yamlUnsafePredicate `yaml:"forbidden_state,omitempty"`
 }
 
 // yamlAlternative is the YAML wire-format for policy.Alternative.

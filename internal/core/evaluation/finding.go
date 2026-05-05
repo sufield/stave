@@ -106,6 +106,29 @@ type Finding struct {
 	// Delta is the mechanically-derived set of fix paths. Each
 	// DeltaPath is an independent change that eliminates this finding.
 	Delta []policy.DeltaPath `json:"delta,omitempty"`
+
+	// SuggestedFix is the solver-derived "Path to Safety": a minimal
+	// set of property changes that, when applied, would make the
+	// control's invariant satisfiable. Iteration 5.2 contract — the
+	// full population pipeline depends on the Z3 solver delivered in
+	// Iteration 3 (stave-z3-solver/main.py emits a suggested_fix
+	// block; the Go bridge captures it here). Absent until the solver
+	// runs; AI agents read this when present to apply mathematically
+	// proven repairs without guessing the policy edit.
+	//
+	// Map shape rather than a typed struct because the fix vocabulary
+	// is service-specific (S3 needs different keys than IAM), and
+	// the SIR's stable-contract constraint applies to the keys the
+	// solver emits, not to a wrapper enum stave would have to
+	// pre-define.
+	SuggestedFix map[string]any `json:"suggested_fix,omitempty"`
+
+	// LogicalProof is the solver's human-readable explanation of why
+	// the unsafe predicate / forbidden-state was satisfied — the Z3
+	// counter-example surfaced as prose. Iteration 5.2 contract,
+	// gated on the Iteration 3 solver. Empty until the solver
+	// produces a model.
+	LogicalProof string `json:"logical_proof,omitempty"`
 }
 
 // findingShadow is the wire-format projection used by Finding's
