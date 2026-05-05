@@ -201,7 +201,17 @@ func loadFixture(path string) ([]asset.Asset, error) {
 func writeTrace(w io.Writer, a asset.Asset) {
 	fmt.Fprintf(w, "  Fixture asset: %s\n", a.ID)
 	if len(a.Properties) > 0 {
-		data, _ := json.MarshalIndent(a.Properties, "  ", "  ")
+		// Diagnostic-only output. A marshal failure here is non-fatal
+		// — the trace is operator-facing context, not a contract — so
+		// surface the failure inline rather than aborting the test
+		// run. The earlier blank-error shape silently substituted
+		// "null" for the properties block, which masked the
+		// underlying serialisation bug.
+		data, err := json.MarshalIndent(a.Properties, "  ", "  ")
+		if err != nil {
+			fmt.Fprintf(w, "  Properties: <marshal failed: %v>\n", err)
+			return
+		}
 		fmt.Fprintf(w, "  Properties: %s\n", data)
 	}
 }

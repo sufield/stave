@@ -43,11 +43,21 @@ func (l *ObservationLoader) LoadSnapshotFromReader(ctx context.Context, r io.Rea
 		return asset.Snapshot{}, fmt.Errorf("read from %s: %w", sourceName, err)
 	}
 
-	// Intentional discard: process() returns (snap, hash, err); the hash
-	// is recomputed by callers that need it (StdinObservationLoader hashes
-	// the raw bytes for InputHashes). Discarding here keeps the simple-
-	// reader path from forcing a hash-handling contract on every caller
-	// that only wants the snapshot.
+	// Intentional discard: process() returns (snap, hash, err) where
+	// `hash` is platformcrypto.HashBytes(data) — the same digest the
+	// caller (StdinObservationLoader.LoadSnapshots) already
+	// computes from the same `data` bytes before invoking us. The
+	// two hashes are identical by construction (same input, same
+	// digest function), so dropping the inner one here keeps the
+	// SnapshotReader interface narrow (single return, single error)
+	// without losing information; the caller's recomputation is
+	// the authoritative copy used in InputHashes.
+	//
+	// FOLLOW-UP: a future widening of SnapshotReader to return
+	// (snap, hash, err) would let StdinObservationLoader skip the
+	// upfront HashBytes call and reuse this one instead, removing
+	// the duplicate hash work. Worth doing if the hash function
+	// becomes more expensive than SHA-256.
 	snap, _, err := l.process(data, sourceName)
 	if err != nil {
 		return asset.Snapshot{}, err

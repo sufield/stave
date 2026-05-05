@@ -239,7 +239,19 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 			"verdict": "PASS",
 			"reason":  reason,
 		})
-		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
+		// Confidence derivation divides by maxUnsafe; a zero
+		// denominator is undefined. Reading the check as a domain
+		// statement rather than a math guard: "no SLA threshold
+		// means there's no coverage signal to hedge against, so
+		// the asset reads as ConfidenceHigh by policy". The
+		// earlier `maxUnsafe > 0` shape looked like a generic
+		// divide-by-zero check; the named predicate makes the
+		// policy intent explicit.
+		hasSLA := maxUnsafe > 0
+		confidence := evaluation.ConfidenceHigh
+		if hasSLA {
+			confidence = s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
+		}
 		return finalizeRow(observation, evaluation.VerdictPass, confidence), nil
 
 	case asset.VerdictInconclusive:
@@ -350,7 +362,7 @@ type unsafeRecurrenceStrategy struct {
 	ctl  *policy.ControlDefinition
 }
 
-func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time, _ IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
+func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	if s.ctl == nil {
 		return evaluation.ResourceCheck{}, nil
 	}
@@ -381,7 +393,9 @@ func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time
 	})
 
 	// 1. Violation Check
-	if findings := EvaluateRecurrenceForControl(t, s.ctl, now); len(findings) > 0 {
+	recurrenceViolations := EvaluateRecurrenceForControl(t, s.ctl, now, ids)
+	isViolatingRecurrencePolicy := len(recurrenceViolations) > 0
+	if isViolatingRecurrencePolicy {
 		// CreateRecurrenceFinding intentionally omits TemporalRisk
 		// (recurrence findings are count-based, not duration-based),
 		// but the renderers still expect the field populated for
@@ -390,17 +404,17 @@ func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time
 		// shape without routing through emitViolationFinding (which
 		// is wired for duration-style construction).
 		summary := t.FormatExposureSummary(s.ctl.MaxUnsafeDuration(), now)
-		for i := range findings {
-			if findings[i] != nil {
-				findings[i].Evidence.TemporalRisk = summary
+		for i := range recurrenceViolations {
+			if recurrenceViolations[i] != nil {
+				recurrenceViolations[i].Evidence.TemporalRisk = summary
 			}
 		}
 		span.RecordStep("recurrence_check", nil, map[string]any{
 			"exceeds_limit": true,
-			"finding_count": len(findings),
+			"finding_count": len(recurrenceViolations),
 		})
 		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), p.WindowDuration())
-		return finalizeRow(observation, evaluation.VerdictViolation, confidence), findings
+		return finalizeRow(observation, evaluation.VerdictViolation, confidence), recurrenceViolations
 	}
 
 	// 2. Coverage Check

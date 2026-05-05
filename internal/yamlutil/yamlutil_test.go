@@ -82,6 +82,34 @@ func TestQuote_EscapesC0Controls(t *testing.T) {
 	}
 }
 
+// TestQuote_EscapesC1Controls pins that the C1 control range
+// (U+0080 through U+009F) is also escaped. yaml.v3 rejects literal
+// C1 controls on parse, so a serializer that emitted them produced
+// output its own re-parser refused.
+func TestQuote_EscapesC1Controls(t *testing.T) {
+	cases := map[string]rune{
+		"PAD (U+0080)": 0x0080,
+		"NEL (U+0085)": 0x0085,
+		"CSI (U+009B)": 0x009b,
+		"APC (U+009F)": 0x009f,
+	}
+	for name, r := range cases {
+		got := Quote("a" + string(r) + "b")
+		if strings.ContainsRune(got, r) {
+			t.Errorf("%s: literal C1 control survived in %q", name, got)
+		}
+		want := "\\u" + map[rune]string{
+			0x0080: "0080",
+			0x0085: "0085",
+			0x009b: "009b",
+			0x009f: "009f",
+		}[r]
+		if !strings.Contains(got, want) {
+			t.Errorf("%s: expected %q in %q", name, want, got)
+		}
+	}
+}
+
 // TestQuote_RoundTripsThroughYAMLParser pins that what we emit, the
 // downstream YAML parser can read back. A serializer that produces
 // output its own re-parser rejects is broken.

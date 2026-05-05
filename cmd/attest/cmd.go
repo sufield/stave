@@ -194,8 +194,20 @@ func runSign(stdout io.Writer, snapshotPath, keyPath, keyID, outPath string) err
 		return &ui.UserError{Err: fmt.Errorf("parse snapshot: %w", unmarshalErr)}
 	}
 
-	// Sign assets.
-	hostname, _ := os.Hostname()
+	// Sign assets. A failed Hostname lookup is rare (typically only
+	// hits in stripped-down sandboxes / sealed containers) but the
+	// attestation must still record SOMETHING in the host slot so
+	// the audit trail can be reconstructed. Use the explicit
+	// "unknown" sentinel + a stderr warning rather than silently
+	// signing with an empty hostname — the attestation consumer
+	// reading "" cannot tell apart "real failure" from "the host
+	// was named ''".
+	hostname, hostErr := os.Hostname()
+	if hostErr != nil {
+		fmt.Fprintf(os.Stderr,
+			"Warning: os.Hostname failed (%v); recording attestation host as \"unknown\"\n", hostErr)
+		hostname = "unknown"
+	}
 	attestation, err := appatt.SignAssets(snapshot.Assets, privateKey, hostname, "stave-cli", time.Now().UTC())
 	if err != nil {
 		return fmt.Errorf("sign assets: %w", err)

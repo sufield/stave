@@ -100,12 +100,18 @@ func runAudit(ctx context.Context, stdout io.Writer, opts *auditOptions) error {
 		return errors.New("--out is required (output directory)")
 	}
 
-	// Build report JSON.
-	reportJSON, _ := json.MarshalIndent(map[string]any{
+	// Build report JSON. Match the exemption-marshal pattern below:
+	// a marshal failure on the audit summary would otherwise produce
+	// an empty bundle artifact that downstream consumers would
+	// silently treat as "no findings".
+	reportJSON, err := json.MarshalIndent(map[string]any{
 		"framework":   opts.Framework,
 		"period":      periodLabel,
 		"assessments": len(assessments),
 	}, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal audit report: %w", err)
+	}
 
 	// Build report markdown.
 	reportMD := fmt.Appendf(nil, "# %s Audit Report — %s\n\nAssessments in period: %d\n",

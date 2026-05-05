@@ -36,7 +36,16 @@ func TestApplyAcknowledgments_AssetAAckSurvivesAssetBFailure(t *testing.T) {
 		{FindingID: "f2", ControlID: "CTL.Y", AssetID: asset.ID("asset-B")}, // B fails CTL.Y
 	}
 
-	active, ackd := applyAcknowledgments(findings, nil, acks, now)
+	// CTL.Y was evaluated on asset-A (the absence of a finding for it
+	// is what we want to count as "passing"). The new "unevaluated"
+	// status fires only when a compensating control was never
+	// evaluated; EvaluationCoverage distinguishes those two cases.
+	coverage := EvaluationCoverage{
+		"asset-A": {"CTL.X": true, "CTL.Y": true},
+		"asset-B": {"CTL.Y": true},
+	}
+
+	active, ackd := applyAcknowledgments(findings, nil, acks, now, coverage)
 
 	// A's ack for CTL.X must be valid: CTL.Y passes on A.
 	if len(ackd) != 1 {
@@ -78,7 +87,11 @@ func TestApplyAcknowledgments_AckInvalidatedByOwnAssetFailure(t *testing.T) {
 		{FindingID: "f2", ControlID: "CTL.Y", AssetID: asset.ID("asset-A")}, // A's own CTL.Y fails
 	}
 
-	_, ackd := applyAcknowledgments(findings, nil, acks, now)
+	coverage := EvaluationCoverage{
+		"asset-A": {"CTL.X": true, "CTL.Y": true},
+	}
+
+	_, ackd := applyAcknowledgments(findings, nil, acks, now, coverage)
 	if len(ackd) != 1 {
 		t.Fatalf("expected 1 acknowledged record, got %d", len(ackd))
 	}

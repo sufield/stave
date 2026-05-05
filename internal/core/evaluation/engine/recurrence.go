@@ -17,10 +17,21 @@ type RecurrenceStats struct {
 
 // EvaluateRecurrenceForControl evaluates the lifecycle against recurrence limits.
 // It returns a slice containing a violation finding if the recurrence limit is exceeded.
+//
+// ids carries the identity context observed during this assessment.
+// Recurrence findings forward it so downstream evidence layers can
+// correlate the offending lifecycle with the IAM principals /
+// service accounts active at the time of the most recent
+// observation, consistent with how duration and state findings
+// already attach identity context. The current finding shape does
+// not yet render the identity slice, but the parameter flows
+// through so a future enrichment hook does not have to rewire the
+// recurrence path.
 func EvaluateRecurrenceForControl(
 	t *asset.ExposureLifecycle,
 	ctl *policy.ControlDefinition,
 	now time.Time,
+	ids IdentityIndex,
 ) []*evaluation.Finding {
 	p := ctl.RecurrencePolicy()
 	if !p.Enabled() {

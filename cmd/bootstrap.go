@@ -240,7 +240,14 @@ func (a *App) closeLogCloser() {
 }
 
 func (a *App) startCPUProfile() error {
-	cpuPath, _ := a.Flags.ProfilerConfig()
+	// ProfilerConfig returns (cpuPath, memPath); memPath is read
+	// later by writeMemProfileTo via its own call. Naming the
+	// discarded value documents the discard so a future reader
+	// doesn't mistake `_` for an error capture (no error channel
+	// exists on ProfilerConfig — path validation would happen here
+	// via SafeCreateFile, and a malformed path surfaces as a
+	// "create CPU profile" wrapped error below).
+	cpuPath, _ /* memPath, see writeMemProfileTo */ := a.Flags.ProfilerConfig()
 	if cpuPath == "" {
 		return nil
 	}
@@ -249,6 +256,13 @@ func (a *App) startCPUProfile() error {
 	opts.AllowSymlink = a.Flags.AllowSymlinkOut
 	f, err := fsutil.SafeCreateFile(cpuPath, opts)
 	if err != nil {
+		// Surface the activation failure to stderr in addition to
+		// the returned error: the bootstrap path that calls us
+		// returns the error and exits, but in test harnesses or
+		// embedded use that swallow the error, the operator
+		// should still see why profiling did not activate.
+		fmt.Fprintf(os.Stderr,
+			"Warning: --cpu-profile %q could not be opened (%v); profiling is not active\n", cpuPath, err)
 		return fmt.Errorf("create CPU profile: %w", err)
 	}
 	if err := pprof.StartCPUProfile(f); err != nil {

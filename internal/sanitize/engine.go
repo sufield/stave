@@ -381,6 +381,14 @@ func (s *Sanitizer) scrubList(list []any, profile Profile, inSanitizedScope bool
 }
 
 func (s *Sanitizer) scrubAsset(a asset.Asset) asset.Asset {
+	// Match the public-method nil-receiver pattern (ID, Asset,
+	// Value, Path, Snapshot all fail-open on nil). The unexported
+	// scrubAsset is only reached today via Snapshot, which already
+	// guards, but a future caller plumbing a nil sanitiser through
+	// must not panic mid-snapshot.
+	if s == nil {
+		return a
+	}
 	return asset.Asset{
 		ID:         asset.ID(s.ID(string(a.ID))),
 		Type:       a.Type,
@@ -391,6 +399,10 @@ func (s *Sanitizer) scrubAsset(a asset.Asset) asset.Asset {
 }
 
 func (s *Sanitizer) scrubIdentity(id asset.CloudIdentity) asset.CloudIdentity {
+	// Symmetric nil-receiver guard with scrubAsset.
+	if s == nil {
+		return id
+	}
 	return asset.CloudIdentity{
 		ID:         asset.ID(s.ID(string(id.ID))),
 		Type:       id.Type,

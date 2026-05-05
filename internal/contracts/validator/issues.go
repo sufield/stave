@@ -172,16 +172,22 @@ func (v *Validator) validateDocument(raw []byte, cfg docConfig, opts ...Option) 
 	// context) but the err was a generic string. Standardise on
 	// "diagnostics carry the user-facing failure":
 	//
-	//   - When Validate produced diagnostics, fold them into the
-	//     assessment and return (assessment, nil). A non-nil err
-	//     accompanying diagnostics is the same parse failure already
-	//     described by the diags, so dropping it is information-
-	//     preserving.
-	//   - When Validate produced no diagnostics but did return an
-	//     err, that is an infrastructure-level failure (schema-load
-	//     miss, registry lookup error) with no rendered diagnostic.
-	//     Return (nil, err) so the caller can surface the root
-	//     cause through the error channel.
+	// - Validate (schema.go) MAY return a non-nil error AND a
+	//   non-nil diagnostic list simultaneously. The only path that
+	//   does this today is the parse-failure branch, which surfaces
+	//   the failure through both channels so dual-pattern callers
+	//   can catch it via either.
+	// - validateDocument deliberately SUBSUMES that error into the
+	//   diagnostic assessment whenever diagnostics are present:
+	//   the parse failure already lives inside the assessment with
+	//   parse-position context, so a separate err return would
+	//   duplicate it with strictly less information.
+	// - This is intentional behaviour. Callers should treat the
+	//   returned *diag.Assessment as the authoritative signal in
+	//   the diagnostics-present branch; only when diagnostics are
+	//   empty does the err channel carry an infrastructure-level
+	//   failure (schema-load miss, registry lookup error) that has
+	//   no rendered diagnostic, and that case returns (nil, err).
 	if len(diags) > 0 {
 		return DiagnosticsResult(diags, cfg.DefaultAction, true, WithPrefix(o.pathPrefix)), nil
 	}

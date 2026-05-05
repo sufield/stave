@@ -584,11 +584,19 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 	// and we don't actually know its state". Treating an excepted
 	// control as passing would let an acknowledgment pretend its
 	// safety net is in place while no signal exists.
+	//
+	// coverage records every (asset, control) pair we actually
+	// evaluated this run. Acknowledgment validation consults it so
+	// a compensating control absent from the catalog (operator
+	// names CTL.X but no such control was evaluated) reads as
+	// "unevaluated" rather than silently treated as passing.
+	coverage := newEvaluationCoverage(snap.Checks)
 	activeFindings, acknowledgedFindings := applyAcknowledgments(
 		activeFindings,
 		exceptedFindings,
 		s.assessor.acknowledgments,
 		s.auditTime,
+		coverage,
 	)
 
 	// Calculate environmental risk based on pending violations.
@@ -730,11 +738,53 @@ func buildSuppressionSet(
 // counts as failing for acknowledgment purposes. The earlier shape
 // treated excepted controls as passing, which let an acknowledgment
 // quietly stand on a control that was never verified.
+// EvaluationCoverage records the (asset, control) pairs that were
+// actually evaluated during this assessment run. Acknowledgment
+// validation consults it so a compensating control that was never
+// evaluated reads as "unevaluated" instead of silently passing.
+//
+// The map-of-maps shape is hidden behind Contains so call sites
+// read as a domain question ("was this control evaluated for this
+// asset?") rather than a two-step nested lookup. Construct via
+// newEvaluationCoverage; the zero value behaves like "nothing
+// evaluated".
+type EvaluationCoverage map[asset.ID]map[kernel.ControlID]bool
+
+// Contains reports whether the (assetID, controlID) pair appears
+// in this run's recorded check set.
+func (c EvaluationCoverage) Contains(assetID asset.ID, controlID kernel.ControlID) bool {
+	if c == nil {
+		return false
+	}
+	controls, ok := c[assetID]
+	if !ok {
+		return false
+	}
+	return controls[controlID]
+}
+
+// newEvaluationCoverage indexes the recorded ResourceChecks by
+// (assetID, controlID) so the compensating-control loop can ask
+// the coverage map a domain question instead of building the
+// nested map at the call site.
+func newEvaluationCoverage(checks []evaluation.ResourceCheck) EvaluationCoverage {
+	out := make(EvaluationCoverage, len(checks))
+	for i := range checks {
+		c := &checks[i]
+		if out[c.AssetID] == nil {
+			out[c.AssetID] = make(map[kernel.ControlID]bool)
+		}
+		out[c.AssetID][c.ControlID] = true
+	}
+	return out
+}
+
 func applyAcknowledgments(
 	findings []evaluation.Finding,
 	exceptedFindings []evaluation.ExceptedFinding,
 	acks *policy.AcknowledgmentConfig,
 	now time.Time,
+	coverage EvaluationCoverage,
 ) ([]evaluation.Finding, []policy.AcknowledgedFinding) {
 	if acks == nil {
 		return findings, nil
@@ -817,6 +867,17 @@ func applyAcknowledgments(
 				allCompPassing = false
 			case assetExcepted[cc]:
 				status = "excepted"
+				allCompPassing = false
+			case !coverage.Contains(f.AssetID, cc):
+				// Compensating control not in the recorded check set
+				// for this asset — typically a typo in the
+				// acknowledgment rule or a control that was filtered
+				// out before evaluation. Treating absence as "pass"
+				// (the previous default) let an acknowledgment stand
+				// on a control that was never verified. Surface as
+				// "unevaluated" so the gap is visible and the
+				// acknowledgment is invalidated.
+				status = "unevaluated"
 				allCompPassing = false
 			default:
 				status = "pass"
@@ -901,10 +962,19 @@ func (a *Assessor) FingerprintPolicy() kernel.Digest {
 // before results are considered INCONCLUSIVE.
 const DefaultContinuityLimit = 12 * time.Hour
 
-// evaluatedState extracts the source context from the latest snapshot.
+// evaluatedState extracts the source context from the latest
+// snapshot. Picks via slices.MaxFunc on CapturedAt rather than slice
+// position so the answer is correct regardless of whether the
+// caller pre-sorted; the standard apply pipeline runs sortSnapshots
+// before calling, but a hand-built session or future caller might
+// not. Mirrors the explicit-max pattern referenceTime and
+// compileReport's evidence selection already use.
 func evaluatedState(snapshots []asset.Snapshot) string {
 	if len(snapshots) == 0 {
 		return ""
 	}
-	return string(snapshots[len(snapshots)-1].Source)
+	latest := slices.MaxFunc(snapshots, func(a, b asset.Snapshot) int {
+		return a.CapturedAt.Compare(b.CapturedAt)
+	})
+	return string(latest.Source)
 }

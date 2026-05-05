@@ -33,12 +33,14 @@ func Quote(s string) string {
 		case '\t':
 			b.WriteString(`\t`)
 		default:
-			if r < 0x20 || r == 0x7f {
-				// C0 control range plus DEL — escape via the YAML
-				// 1.2 four-digit Unicode escape \uNNNN. The earlier
-				// \xNN form was a Go fmt convention but is NOT a
-				// valid YAML 1.2 escape, so yaml.v3 rejected the
-				// output our own serializer produced.
+			if r < 0x20 || r == 0x7f || (r >= 0x80 && r <= 0x9f) {
+				// C0 control range, DEL, AND C1 control range —
+				// escape via the YAML 1.2 four-digit Unicode escape
+				// \uNNNN. The earlier shape skipped C1 (0x80-0x9F),
+				// so embedded ANSI escape sequences and other
+				// terminal control codes round-tripped verbatim;
+				// yaml.v3 then refused to parse the output its own
+				// serializer produced.
 				fmt.Fprintf(&b, `\u%04x`, r)
 				continue
 			}

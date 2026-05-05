@@ -56,7 +56,7 @@ func TestRecurrence_DisabledPolicy(t *testing.T) {
 		{base, base.Add(time.Hour)},
 	})
 
-	findings := EvaluateRecurrenceForControl(tl, ctl, base.Add(2*time.Hour))
+	findings := EvaluateRecurrenceForControl(tl, ctl, base.Add(2*time.Hour), IdentityIndex{})
 	if len(findings) != 0 {
 		t.Fatalf("disabled policy should produce 0 findings, got %d", len(findings))
 	}
@@ -72,7 +72,7 @@ func TestRecurrence_BelowLimit(t *testing.T) {
 	})
 
 	now := base.Add(48 * time.Hour)
-	findings := EvaluateRecurrenceForControl(tl, ctl, now)
+	findings := EvaluateRecurrenceForControl(tl, ctl, now, IdentityIndex{})
 	if len(findings) != 0 {
 		t.Fatalf("below limit should produce 0 findings, got %d", len(findings))
 	}
@@ -89,7 +89,7 @@ func TestRecurrence_ExceedsLimit(t *testing.T) {
 	})
 
 	now := base.Add(72 * time.Hour)
-	findings := EvaluateRecurrenceForControl(tl, ctl, now)
+	findings := EvaluateRecurrenceForControl(tl, ctl, now, IdentityIndex{})
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 recurrence finding, got %d", len(findings))
 	}
@@ -124,7 +124,7 @@ func TestRecurrence_ActiveWindowCountedTowardLimit(t *testing.T) {
 	}
 
 	now := base.Add(72 * time.Hour)
-	findings := EvaluateRecurrenceForControl(tl, ctl, now)
+	findings := EvaluateRecurrenceForControl(tl, ctl, now, IdentityIndex{})
 	if len(findings) != 1 {
 		t.Fatalf("expected 1 recurrence finding (active window should count), got %d", len(findings))
 	}
@@ -145,7 +145,7 @@ func TestRecurrence_ActiveWindowOutsideRange(t *testing.T) {
 	_ = tl.RecordCheck(base, true)
 
 	now := base.Add(30 * 24 * time.Hour)
-	findings := EvaluateRecurrenceForControl(tl, ctl, now)
+	findings := EvaluateRecurrenceForControl(tl, ctl, now, IdentityIndex{})
 	if len(findings) != 0 {
 		t.Fatalf("active window outside range should not count, got %d findings", len(findings))
 	}
@@ -199,7 +199,7 @@ func TestRecurrence_ExactlyAtLimitFires(t *testing.T) {
 		{now.AddDate(0, 0, -30), now.AddDate(0, 0, -25)},
 	})
 
-	findings := EvaluateRecurrenceForControl(lc, ctl, now)
+	findings := EvaluateRecurrenceForControl(lc, ctl, now, IdentityIndex{})
 	if len(findings) != 1 {
 		t.Errorf("limit=3 with count=3 should fire (count >= limit), got %d findings", len(findings))
 	}
@@ -217,7 +217,7 @@ func TestRecurrence_OneBelowLimitDoesNotFire(t *testing.T) {
 		{now.AddDate(0, 0, -30), now.AddDate(0, 0, -25)},
 	})
 
-	findings := EvaluateRecurrenceForControl(lc, ctl, now)
+	findings := EvaluateRecurrenceForControl(lc, ctl, now, IdentityIndex{})
 	if len(findings) != 0 {
 		t.Errorf("limit=3 with count=2 must not fire (count < limit), got %d findings", len(findings))
 	}

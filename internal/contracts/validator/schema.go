@@ -139,10 +139,20 @@ func (v *Validator) Validate(req Request) ([]Diagnostic, error) {
 
 	payload, parseDiags := req.ParsedPayload()
 	if parseDiags != nil {
-		// Surface the failure through both the diagnostic list
-		// and a standard Go error so callers using the
-		// conventional `if err != nil` pattern can't silently
-		// treat a parse failure as a clean pass.
+		// Parse failures are the only path that returns BOTH
+		// non-nil diagnostics AND a non-nil error from Validate.
+		// Surfacing through both channels lets callers using the
+		// conventional `if err != nil` pattern catch the failure
+		// while the diagnostics-aware path (validateDocument) folds
+		// the same failure into a *diag.Assessment.
+		//
+		// The receiver-side contract — see validateDocument in
+		// issues.go — deliberately subsumes the error when
+		// diagnostics are present so its callers see exactly one
+		// authoritative signal (the assessment). Editors of either
+		// side must keep these two contracts in lockstep: a
+		// diagnostic list returned alongside a non-nil error must
+		// always describe the same failure.
 		return parseDiags, Diagnostics(parseDiags).ToError()
 	}
 
