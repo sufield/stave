@@ -15,7 +15,6 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
-	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 	"github.com/sufield/stave/internal/util/sets"
 )
 
@@ -49,11 +48,12 @@ type AssessmentConfig struct {
 
 // AuditWorkflow orchestrates the end-to-end security assessment process.
 type AuditWorkflow struct {
-	ObservationRepo appcontracts.ObservationRepository
-	PolicyRepo      appcontracts.ControlRepository
-	ReportPublisher appcontracts.FindingMarshaler
-	ContextEnricher appcontracts.EnrichFunc
-	Logger          *slog.Logger
+	ObservationRepo  appcontracts.ObservationRepository
+	PolicyRepo       appcontracts.ControlRepository
+	ReportPublisher  appcontracts.FindingMarshaler
+	ContextEnricher  appcontracts.EnrichFunc
+	SnapshotEnricher appcontracts.SnapshotEnricher
+	Logger           *slog.Logger
 
 	// cacheMu guards loadedControls / loadedSnapshots. The cache is
 	// written once per PerformAssessment call and read by accessor
@@ -135,18 +135,24 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 		return evaluation.ComplianceReport{}, evaluation.StateUnknown, auditData.FirstError()
 	}
 	// Project chain-derived properties into each snapshot's
-	// IAM identities BEFORE the predicate engine runs. This is
-	// the load-bearing wiring that makes Iter 5/6 chain output
-	// (RoleChainFact.HopType lambda_invoke_existing /
-	// cfn_update_existing, RoleChainFact.ScheduledDeletionAt)
-	// visible to the ctrl.v1 controls that read
+	// IAM identities BEFORE the predicate engine runs, when an
+	// enricher is configured. This is the load-bearing wiring
+	// that makes Iter 5/6 chain output (RoleChainFact.HopType
+	// lambda_invoke_existing / cfn_update_existing,
+	// RoleChainFact.ScheduledDeletionAt) visible to the ctrl.v1
+	// controls that read
 	// `properties.identity.escalation.confused_*.present` and
 	// `properties.identity.chain.ghost_deletion.present`. The
-	// projector mutates Snapshot.Identities[i].Properties in
+	// enricher mutates Snapshot.Identities[i].Properties in
 	// place, so the cached snapshots and the ones passed to
-	// Evaluate share the augmented data.
-	for i := range auditData.Snapshots {
-		iam.ProjectChainProperties(&auditData.Snapshots[i])
+	// Evaluate share the augmented data. The composition root
+	// supplies the concrete enricher (typically iam-package
+	// projector) — this layer only sees the port to keep the
+	// hexagonal boundary between app/* and platform/*.
+	if w.SnapshotEnricher != nil {
+		for i := range auditData.Snapshots {
+			w.SnapshotEnricher.EnrichSnapshot(&auditData.Snapshots[i])
+		}
 	}
 
 	w.cacheMu.Lock()

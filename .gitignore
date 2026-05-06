@@ -4,3 +4,4 @@ stave-dev
 .claude/
 
 .stave/
+python/solver/tests/__pycache__/

@@ -1592,8 +1592,8 @@ func TestExtractResourceRoleBindings_LambdaAndCFN(t *testing.T) {
 			},
 		},
 		{
-			ID:   "arn:aws:s3:::ignored-bucket",
-			Type: "aws_s3_bucket",
+			ID:    "arn:aws:s3:::ignored-bucket",
+			Type:  "aws_s3_bucket",
 			Props: map[string]any{},
 		},
 		{

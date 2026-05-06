@@ -216,6 +216,16 @@ func (c Context) Clone() Context {
 // Store represents the persistent collection of named stave contexts.
 // The contexts map is unexported so callers cannot bypass ValidateName
 // when adding entries; use GetContext / SetContext / DeleteContext.
+//
+// Concurrency: *Store is NOT safe for concurrent use. Every accessor
+// (Save, SetContext, GetContext, DeleteContext, Load*) reads or
+// mutates the contexts map and the path field without
+// synchronization. Callers that share a *Store across goroutines
+// must serialize access externally — typically with a sync.Mutex
+// owned by the caller. This is a deliberate choice: Stave's CLI
+// usage is single-threaded, and adding internal locking without
+// auditing every accessor invites the worse failure mode where
+// some methods lock and others don't.
 type Store struct {
 	Active   string             `yaml:"active,omitempty"`
 	contexts map[string]Context `yaml:"contexts,omitempty"`

@@ -178,8 +178,9 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 		obsOpts = append(obsOpts, observations.WithIntegrityCheck(in.IntegrityManifest, in.IntegrityPublicKey))
 	}
 	wf := &appeval.AuditWorkflow{
-		ObservationRepo: observations.NewObservationLoader(obsOpts...),
-		PolicyRepo:      ctlRepo,
+		ObservationRepo:  observations.NewObservationLoader(obsOpts...),
+		PolicyRepo:       ctlRepo,
+		SnapshotEnricher: iam.NewChainPropertyEnricher(),
 	}
 
 	chainDefs, err := loadChainDefs(in.ChainsDir)

@@ -25,11 +25,11 @@ func snapshotForProjector(t *testing.T) *asset.Snapshot {
 	return &asset.Snapshot{
 		Identities: []asset.CloudIdentity{
 			{
-				ID:   asset.ID(devARN),
+				ID: asset.ID(devARN),
 				Properties: map[string]any{
 					"identity": map[string]any{
 						"scp_json": `{"Statement":[{"Effect":"Allow","Action":"*","Resource":"*"}]}`,
-					"policies_json": `{"Statement":[
+						"policies_json": `{"Statement":[
 							{"Effect":"Allow","Action":"lambda:InvokeFunction",
 							 "Resource":"` + lambdaARN + `"}
 						]}`,
@@ -41,7 +41,7 @@ func snapshotForProjector(t *testing.T) *asset.Snapshot {
 				Properties: map[string]any{
 					"identity": map[string]any{
 						"scp_json": `{"Statement":[{"Effect":"Allow","Action":"*","Resource":"*"}]}`,
-					"policies_json": `{"Statement":[
+						"policies_json": `{"Statement":[
 							{"Effect":"Allow","Action":"cloudformation:UpdateStack",
 							 "Resource":"` + stackARN + `"},
 							{"Effect":"Allow","Action":"sts:AssumeRole",
@@ -55,7 +55,7 @@ func snapshotForProjector(t *testing.T) *asset.Snapshot {
 				Properties: map[string]any{
 					"identity": map[string]any{
 						"scp_json": `{"Statement":[{"Effect":"Allow","Action":"*","Resource":"*"}]}`,
-					"policies_json": `{"Statement":[
+						"policies_json": `{"Statement":[
 							{"Effect":"Allow","Action":"*","Resource":"*"}
 						]}`,
 					},
@@ -66,7 +66,7 @@ func snapshotForProjector(t *testing.T) *asset.Snapshot {
 				Properties: map[string]any{
 					"identity": map[string]any{
 						"scp_json": `{"Statement":[{"Effect":"Allow","Action":"*","Resource":"*"}]}`,
-					"policies_json": `{"Statement":[
+						"policies_json": `{"Statement":[
 							{"Effect":"Allow","Action":"*","Resource":"*"}
 						]}`,
 					},
@@ -77,7 +77,7 @@ func snapshotForProjector(t *testing.T) *asset.Snapshot {
 				Properties: map[string]any{
 					"identity": map[string]any{
 						"scp_json": `{"Statement":[{"Effect":"Allow","Action":"*","Resource":"*"}]}`,
-					"policies_json": `{"Statement":[
+						"policies_json": `{"Statement":[
 							{"Effect":"Allow","Action":"*","Resource":"*"}
 						]}`,
 						"trust_policy_json": `{"Statement":[
@@ -196,16 +196,7 @@ func TestProjectChainProperties_NegativeIdentity(t *testing.T) {
 func TestProjectChainProperties_Idempotent(t *testing.T) {
 	snap := snapshotForProjector(t)
 	ProjectChainProperties(snap)
-	devProps1 := snap.Identities[0].Properties
-	ProjectChainProperties(snap)
-	devProps2 := snap.Identities[0].Properties
-	// Map identity comparison: we expect the SAME map (mutation
-	// in place), with the SAME values — the second pass
-	// overwrote with identical content.
-	if &devProps1 != &devProps2 {
-		// nothing — both should still be the same map reference;
-		// this branch is here as a structural reminder.
-	}
+	ProjectChainProperties(snap) // second pass — must preserve, not duplicate.
 	if !readProjectedFlag(t, snap, "arn:aws:iam::111122223333:role/dev",
 		"escalation", "confused_lambda_invoke") {
 		t.Fatalf("idempotent run lost the projection")

@@ -1,6 +1,7 @@
 package eval
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -94,14 +95,22 @@ func resolveLockPath(projectRoot string) string {
 	return filepath.Join(projectRoot, "stave.lock")
 }
 
-func populatePlanLockHash(plan *EvaluationPlan, projectRoot string, hasher appcontracts.ContentHasher) error { //nolint:unparam // error return is always nil because lock file is optional; callers still check for safety
+func populatePlanLockHash(plan *EvaluationPlan, projectRoot string, hasher appcontracts.ContentHasher) error {
 	lockPath := resolveLockPath(projectRoot)
 	if lockPath == "" || hasher == nil {
 		return nil
 	}
 	h, err := hasher.HashFile(lockPath)
 	if err != nil {
-		return nil //nolint:nilerr // lock file is optional — absence is not an error
+		// Absent lock file is a soft signal: lock files are
+		// optional. Permission, I/O, and corruption errors are
+		// hard failures the caller needs to surface — silently
+		// proceeding past them masked real misconfigurations
+		// pre-fix.
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		return fmt.Errorf("hash lock file %q: %w", lockPath, err)
 	}
 	plan.LockFile = lockPath
 	plan.LockHash = kernel.Digest(h)

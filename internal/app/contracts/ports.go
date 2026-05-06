@@ -38,6 +38,24 @@ type ControlRepository interface {
 	LoadControls(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
 }
 
+// SnapshotEnricher mutates a snapshot in place to project facts
+// derived from cross-resource analysis (transitive role chains,
+// service-resource bindings, scheduled deletions) back onto each
+// CloudIdentity's Properties. The predicate engine reads from
+// Properties directly, so any control authored against
+// chain-derived booleans (e.g.,
+// `identity.escalation.confused_lambda_invoke.present`) needs
+// this projection to fire BEFORE evaluation.
+//
+// The interface lives in app/contracts so the eval workflow can
+// consume it without importing a specific provider — the
+// hexagonal boundary forbids app/* from importing platform/*.
+// The composition root (cmd/* or applycore) wires a concrete
+// implementation (e.g. iam.ChainPropertyProjector) at startup.
+type SnapshotEnricher interface {
+	EnrichSnapshot(snap *asset.Snapshot)
+}
+
 // LoadControls loads control definitions through the given repository,
 // wrapping any error with a standard message.
 func LoadControls(ctx context.Context, repo ControlRepository, dir string) ([]policy.ControlDefinition, error) {

@@ -2,6 +2,7 @@ package eval
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
@@ -55,8 +56,16 @@ func (r IntentEvaluationResult) HasErrors() bool {
 	return r.ControlErr != nil || r.ObservationErr != nil
 }
 
-// FirstError returns the first available artifact error.
+// FirstError returns the artifact error(s) seen during preflight.
+// When both ControlErr and ObservationErr are non-nil they are
+// joined with errors.Join so callers can errors.Is / errors.As
+// against either, instead of silently dropping the second one.
+// The function name predates the join behavior; kept stable so
+// existing callers still compile.
 func (r IntentEvaluationResult) FirstError() error {
+	if r.ControlErr != nil && r.ObservationErr != nil {
+		return errors.Join(r.ControlErr, r.ObservationErr)
+	}
 	if r.ControlErr != nil {
 		return r.ControlErr
 	}

@@ -58,7 +58,10 @@ func (p *OutputPipeline) Run(ctx context.Context, w io.Writer, result *evaluatio
 	_, err = runStep(p.Logger, "write", func() (int, error) {
 		return w.Write(data)
 	})
-	return err
+	if err != nil {
+		return fmt.Errorf("write: %w", err)
+	}
+	return nil
 }
 
 // runStep executes fn with optional timing logs.

@@ -85,6 +85,14 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		Cases:          cfg.Cases,
 		SignalContains: cfg.SignalContains,
 	}.Apply(report)
+	// Guard before passing to the presenter: Filter.Apply may
+	// return nil when every issue is filtered out (or the input
+	// was nil to begin with), and RenderReport / report.Issues
+	// would otherwise nil-panic. Mirrors the sanitizer guard
+	// above. Nil here means "nothing to report" — exit 0.
+	if report == nil {
+		return nil
+	}
 
 	p := r.newPresenter(cfg)
 	if err := p.RenderReport(report); err != nil {

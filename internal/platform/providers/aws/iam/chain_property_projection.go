@@ -37,6 +37,28 @@ func ProjectChainProperties(snap *asset.Snapshot) {
 	}
 }
 
+// ChainPropertyEnricher adapts ProjectChainProperties to the
+// app-layer SnapshotEnricher port (defined in
+// internal/app/contracts). The composition root constructs one
+// of these and threads it through AuditWorkflow.SnapshotEnricher
+// — the eval package never imports this package directly, so the
+// hexagonal app→platform boundary stays intact.
+type ChainPropertyEnricher struct{}
+
+// NewChainPropertyEnricher returns a SnapshotEnricher
+// implementation backed by ProjectChainProperties. Stateless;
+// safe to construct on every call.
+func NewChainPropertyEnricher() *ChainPropertyEnricher {
+	return &ChainPropertyEnricher{}
+}
+
+// EnrichSnapshot satisfies the appcontracts.SnapshotEnricher
+// interface. Delegates to the package-level projector so the
+// implementation stays in one place.
+func (*ChainPropertyEnricher) EnrichSnapshot(snap *asset.Snapshot) {
+	ProjectChainProperties(snap)
+}
+
 // ResolveChainsBySnapshot drives the chain walker over every
 // identity in the snapshot and returns the resulting chains keyed
 // by principal ARN. Centralised so both the property projector
@@ -166,7 +188,7 @@ func (p *chainProjection) noteGhost(chain *RoleChain) {
 	}
 }
 
-func (p chainProjection) toMap(resourceField string) map[string]any {
+func (p *chainProjection) toMap(resourceField string) map[string]any {
 	out := map[string]any{"present": p.present}
 	if p.targetRole != "" {
 		out["target_role"] = p.targetRole
@@ -180,7 +202,7 @@ func (p chainProjection) toMap(resourceField string) map[string]any {
 	return out
 }
 
-func (p chainProjection) toGhostMap() map[string]any {
+func (p *chainProjection) toGhostMap() map[string]any {
 	out := map[string]any{"present": p.present}
 	if p.targetRole != "" {
 		out["target_role"] = p.targetRole

@@ -127,6 +127,14 @@ func GenerateSigningKeyPair() (privatePEM, publicPEM []byte, err error) {
 
 	privatePEM = pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privatePKCS8})
 	publicPEM = pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: publicPKIX})
+	// pem.EncodeToMemory returns nil only on a malformed Block
+	// (impossible here — both inputs were just produced by valid
+	// x509 marshallers) — but treating that as a hard error rather
+	// than handing nil bytes downstream produces a far more
+	// debuggable failure if the upstream library ever changes.
+	if privatePEM == nil || publicPEM == nil {
+		return nil, nil, errors.New("pem encoding failed: nil output")
+	}
 	return privatePEM, publicPEM, nil
 }
 

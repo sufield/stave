@@ -282,14 +282,30 @@ func TestIntentEvaluationResult_FirstError(t *testing.T) {
 		t.Fatal("empty result should return nil")
 	}
 
-	r.ControlErr = errors.New("control error")
-	r.ObservationErr = errors.New("obs error")
-	if r.FirstError().Error() != "control error" {
-		t.Fatal("should return control error first")
+	// When ONE error is set, FirstError returns it directly.
+	r = IntentEvaluationResult{ControlErr: errors.New("control only")}
+	if r.FirstError().Error() != "control only" {
+		t.Fatal("control-only path should return control error")
 	}
-
 	r = IntentEvaluationResult{ObservationErr: errors.New("obs only")}
 	if r.FirstError().Error() != "obs only" {
-		t.Fatal("should return observation error when control error is nil")
+		t.Fatal("observation-only path should return observation error")
+	}
+
+	// When BOTH errors are set, FirstError joins them so callers
+	// can errors.Is / errors.As against either; previously the
+	// observation error was silently dropped.
+	ctlErr := errors.New("control error")
+	obsErr := errors.New("obs error")
+	r = IntentEvaluationResult{ControlErr: ctlErr, ObservationErr: obsErr}
+	got := r.FirstError()
+	if got == nil {
+		t.Fatal("joined errors should yield non-nil")
+	}
+	if !errors.Is(got, ctlErr) {
+		t.Errorf("joined error must wrap ControlErr; got %v", got)
+	}
+	if !errors.Is(got, obsErr) {
+		t.Errorf("joined error must wrap ObservationErr; got %v", got)
 	}
 }
