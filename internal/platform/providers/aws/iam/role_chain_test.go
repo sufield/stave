@@ -3,6 +3,10 @@ package iam
 import (
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func buildResolvedIndex(entries map[string]ResolvedPermissions) map[string]*ResolvedPermissions {
@@ -839,4 +843,816 @@ func TestExtractServiceTrusts_ServicePrincipalShapes(t *testing.T) {
 			}
 		})
 	}
+}
+
+// trustDocAccountRootRaw produces a trust policy JSON string that
+// admits every principal in the named account via
+// `Principal: AWS: arn:aws:iam::<acct>:root`. Built using the
+// real-world AWS shape so ExtractAWSTrustedPrincipals (which
+// probes the raw bytes) recognises it. This is the load-bearing
+// test fixture for Iter 4: the iam.Statement parser drops the
+// Principal field, so a role using this trust pattern is invisible
+// to the legacy walker without the side-channel.
+func trustDocAccountRootRaw(account string) string {
+	return `{
+		"Version": "2012-10-17",
+		"Statement": [{
+			"Effect": "Allow",
+			"Principal": {"AWS": "arn:aws:iam::` + account + `:root"},
+			"Action": "sts:AssumeRole"
+		}]
+	}`
+}
+
+// TestResolveChains_AccountRootTrustExpansion pins the load-
+// bearing Iter 4 detection: a principal in account 222 reaches
+// a role in account 111 whose trust policy account-root-trusts
+// 222, even though the role's trust policy lists no specific
+// ARN. This is the cross-account compromise propagation
+// described in gap-prompt.md:16.
+func TestResolveChains_AccountRootTrustExpansion(t *testing.T) {
+	devARN := "arn:aws:iam::222222222222:role/dev"
+	crossARN := "arn:aws:iam::111111111111:role/cross-admin"
+
+	input := RoleChainInput{
+		PrincipalARN: devARN,
+		AccountID:    "222222222222",
+		ResolvedIndex: buildResolvedIndex(map[string]ResolvedPermissions{
+			devARN: {
+				EffectiveAllow: []ActionGrant{
+					{Action: "sts:AssumeRole", Resource: crossARN},
+				},
+				PrivilegeLevel: PrivilegeLevelLimited,
+			},
+			crossARN: {
+				EffectiveAllow: []ActionGrant{
+					{Action: "*", Resource: "*"},
+				},
+				PrivilegeLevel: PrivilegeLevelAdmin,
+			},
+		}),
+		// AWSPrincipalTrusts is the side-channel: the role in
+		// account 111 trusts every principal in account 222 via
+		// :root expansion. No PolicyDocument-level trust is
+		// staged — this asserts the side-channel works on its
+		// own, which is the realistic shape of any production
+		// trust policy that uses `Principal: AWS: ...`.
+		AWSPrincipalTrusts: map[string]AWSTrustedPrincipals{
+			crossARN: {AccountRoots: []string{"222222222222"}},
+		},
+	}
+
+	chains := ResolveChains(input)
+	if !HasTransitiveAdmin(chains) {
+		t.Fatalf("expected admin chain via account-root trust; got %+v", chains)
+	}
+	// Crossing accounts: the hop must be flagged so consumers can
+	// distinguish same-account assumption from cross-account.
+	found := false
+	for _, ch := range chains {
+		for _, hop := range ch.Hops {
+			if hop.ToARN == crossARN && hop.IsCrossAccount {
+				found = true
+			}
+		}
+	}
+	if !found {
+		t.Errorf("expected cross-account flag on the account-root hop")
+	}
+}
+
+// TestResolveChains_AccountRootTrustRejectsForeignAccount: the
+// negative case. A principal in account 333 must NOT reach a role
+// whose trust policy account-root-trusts only 222.
+func TestResolveChains_AccountRootTrustRejectsForeignAccount(t *testing.T) {
+	foreignARN := "arn:aws:iam::333333333333:role/dev"
+	crossARN := "arn:aws:iam::111111111111:role/cross-admin"
+
+	input := RoleChainInput{
+		PrincipalARN: foreignARN,
+		AccountID:    "333333333333",
+		ResolvedIndex: buildResolvedIndex(map[string]ResolvedPermissions{
+			foreignARN: {
+				EffectiveAllow: []ActionGrant{
+					{Action: "sts:AssumeRole", Resource: crossARN},
+				},
+				PrivilegeLevel: PrivilegeLevelLimited,
+			},
+			crossARN: {PrivilegeLevel: PrivilegeLevelAdmin},
+		}),
+		AWSPrincipalTrusts: map[string]AWSTrustedPrincipals{
+			crossARN: {AccountRoots: []string{"222222222222"}},
+		},
+	}
+
+	chains := ResolveChains(input)
+	for _, ch := range chains {
+		if ch.FinalRoleARN == crossARN && ch.TerminationReason == ChainTerminatedNormal {
+			t.Fatalf("foreign-account principal must NOT reach role: %+v", chains)
+		}
+	}
+}
+
+// TestResolveChains_ExactARNTrustViaAWSPrincipal exercises the
+// other half of the side-channel: when the trust policy admits
+// a SPECIFIC ARN via `Principal: AWS: arn:...:role/dev`, only
+// that exact principal is allowed. Verifies Iter 4's exact-ARN
+// path doesn't accidentally inherit the account-root expansion.
+func TestResolveChains_ExactARNTrustViaAWSPrincipal(t *testing.T) {
+	devARN := "arn:aws:iam::222222222222:role/dev"
+	otherARN := "arn:aws:iam::222222222222:role/other"
+	crossARN := "arn:aws:iam::111111111111:role/cross-admin"
+
+	commonResolved := buildResolvedIndex(map[string]ResolvedPermissions{
+		devARN: {
+			EffectiveAllow: []ActionGrant{{Action: "sts:AssumeRole", Resource: crossARN}},
+			PrivilegeLevel: PrivilegeLevelLimited,
+		},
+		otherARN: {
+			EffectiveAllow: []ActionGrant{{Action: "sts:AssumeRole", Resource: crossARN}},
+			PrivilegeLevel: PrivilegeLevelLimited,
+		},
+		crossARN: {
+			EffectiveAllow: []ActionGrant{{Action: "*", Resource: "*"}},
+			PrivilegeLevel: PrivilegeLevelAdmin,
+		},
+	})
+	awsTrust := map[string]AWSTrustedPrincipals{
+		crossARN: {ExactARNs: []string{devARN}},
+	}
+
+	// dev (admitted) reaches cross-admin.
+	devChains := ResolveChains(RoleChainInput{
+		PrincipalARN:       devARN,
+		AccountID:          "222222222222",
+		ResolvedIndex:      commonResolved,
+		AWSPrincipalTrusts: awsTrust,
+	})
+	if !HasTransitiveAdmin(devChains) {
+		t.Fatalf("dev must reach admin via exact-ARN trust; got %+v", devChains)
+	}
+
+	// other (NOT admitted, even in same account) does not reach.
+	otherChains := ResolveChains(RoleChainInput{
+		PrincipalARN:       otherARN,
+		AccountID:          "222222222222",
+		ResolvedIndex:      commonResolved,
+		AWSPrincipalTrusts: awsTrust,
+	})
+	if HasTransitiveAdmin(otherChains) {
+		t.Fatalf("non-listed ARN must NOT inherit access; got %+v", otherChains)
+	}
+}
+
+// TestExtractAWSTrustedPrincipals_ParsesAccountRootShapes pins
+// the raw-JSON probe: every wire shape AWS accepts for the
+// account-root pattern produces the same canonical AccountRoots
+// entry. The bare-account-number form, the :root ARN form, and
+// the list-of-roots form must all classify correctly.
+func TestExtractAWSTrustedPrincipals_ParsesAccountRootShapes(t *testing.T) {
+	cases := []struct {
+		name         string
+		json         string
+		wantRoots    []string
+		wantExacts   []string
+		wantWildcard bool
+	}{
+		{
+			name:      "single root ARN",
+			json:      trustDocAccountRootRaw("222222222222"),
+			wantRoots: []string{"222222222222"},
+		},
+		{
+			name: "bare account number",
+			json: `{
+				"Statement": [{
+					"Effect": "Allow",
+					"Action": "sts:AssumeRole",
+					"Principal": {"AWS": "222222222222"}
+				}]
+			}`,
+			wantRoots: []string{"222222222222"},
+		},
+		{
+			name: "list of roots",
+			json: `{
+				"Statement": [{
+					"Effect": "Allow",
+					"Action": "sts:AssumeRole",
+					"Principal": {"AWS": [
+						"arn:aws:iam::111111111111:root",
+						"arn:aws:iam::222222222222:root"
+					]}
+				}]
+			}`,
+			wantRoots: []string{"111111111111", "222222222222"},
+		},
+		{
+			name: "exact ARN preserved",
+			json: `{
+				"Statement": [{
+					"Effect": "Allow",
+					"Action": "sts:AssumeRole",
+					"Principal": {"AWS": "arn:aws:iam::222222222222:role/dev"}
+				}]
+			}`,
+			wantExacts: []string{"arn:aws:iam::222222222222:role/dev"},
+		},
+		{
+			name: "Deny ignored",
+			json: `{
+				"Statement": [{
+					"Effect": "Deny",
+					"Action": "sts:AssumeRole",
+					"Principal": {"AWS": "arn:aws:iam::222222222222:root"}
+				}]
+			}`,
+			// nothing — Deny statements don't grant trust.
+		},
+		{
+			name: "non-AssumeRole action ignored",
+			json: `{
+				"Statement": [{
+					"Effect": "Allow",
+					"Action": "s3:GetObject",
+					"Principal": {"AWS": "arn:aws:iam::222222222222:root"}
+				}]
+			}`,
+		},
+		{
+			name: "federated assume action accepted",
+			json: `{
+				"Statement": [{
+					"Effect": "Allow",
+					"Action": "sts:AssumeRoleWithSAML",
+					"Principal": {"AWS": "arn:aws:iam::222222222222:root"}
+				}]
+			}`,
+			wantRoots: []string{"222222222222"},
+		},
+		{
+			name: "bare wildcard string",
+			json: `{
+				"Statement": [{
+					"Effect": "Allow",
+					"Action": "sts:AssumeRole",
+					"Principal": "*"
+				}]
+			}`,
+			wantWildcard: true,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := parseAWSPrincipalsAllowingAssume(tc.json)
+			assertStringSliceEqual(t, "AccountRoots", got.AccountRoots, tc.wantRoots)
+			assertStringSliceEqual(t, "ExactARNs", got.ExactARNs, tc.wantExacts)
+			if got.Wildcard != tc.wantWildcard {
+				t.Errorf("Wildcard: want %v, got %v", tc.wantWildcard, got.Wildcard)
+			}
+		})
+	}
+}
+
+func assertStringSliceEqual(t *testing.T, label string, got, want []string) {
+	t.Helper()
+	if len(got) != len(want) {
+		t.Errorf("%s: want %v (len %d), got %v (len %d)",
+			label, want, len(want), got, len(got))
+		return
+	}
+	gotSet := map[string]struct{}{}
+	for _, g := range got {
+		gotSet[g] = struct{}{}
+	}
+	for _, w := range want {
+		if _, ok := gotSet[w]; !ok {
+			t.Errorf("%s: missing %q in %v", label, w, got)
+		}
+	}
+}
+
+// TestResolveChains_ScheduledDeletionAnnotation pins the load-
+// bearing Iter 5 (TOCTOU) detection: a chain pointing at a role
+// scheduled for future deletion gets stamped with the deletion
+// timestamp so downstream solvers can surface the future-ghost
+// reference. The chain remains reachable (the walker doesn't
+// drop it) — only the annotation is added.
+func TestResolveChains_ScheduledDeletionAnnotation(t *testing.T) {
+	devARN := "arn:aws:iam::123:role/dev"
+	doomedARN := "arn:aws:iam::123:role/doomed-admin"
+	deletionTime := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	input := RoleChainInput{
+		PrincipalARN: devARN,
+		AccountID:    "123",
+		ResolvedIndex: buildResolvedIndex(map[string]ResolvedPermissions{
+			devARN: {
+				EffectiveAllow: []ActionGrant{
+					{Action: "sts:AssumeRole", Resource: doomedARN},
+				},
+				PrivilegeLevel: PrivilegeLevelLimited,
+			},
+			doomedARN: {
+				EffectiveAllow: []ActionGrant{{Action: "*", Resource: "*"}},
+				PrivilegeLevel: PrivilegeLevelAdmin,
+			},
+		}),
+		TrustPolicies: map[string]*PolicyDocument{
+			doomedARN: trustDoc(t, devARN),
+		},
+		ScheduledDeletions: map[string]time.Time{
+			doomedARN: deletionTime,
+		},
+	}
+
+	chains := ResolveChains(input)
+	if len(chains) == 0 {
+		t.Fatal("expected at least one chain reaching doomed admin")
+	}
+	found := false
+	for _, ch := range chains {
+		if ch.FinalRoleARN == doomedARN {
+			if ch.ScheduledDeletionAt.IsZero() {
+				t.Errorf("chain to doomed role missing ScheduledDeletionAt; got zero")
+			}
+			if !ch.ScheduledDeletionAt.Equal(deletionTime) {
+				t.Errorf("ScheduledDeletionAt: want %s, got %s", deletionTime, ch.ScheduledDeletionAt)
+			}
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("no chain reached %s; got %+v", doomedARN, chains)
+	}
+}
+
+// TestResolveChains_ScheduledDeletion_TakesEarliest: when a chain
+// crosses MULTIPLE roles with scheduled deletions, the chain's
+// ScheduledDeletionAt records the EARLIEST time — that is the
+// horizon at which the chain first becomes stale. A later
+// deletion in the chain is moot once the earlier one fires.
+func TestResolveChains_ScheduledDeletion_TakesEarliest(t *testing.T) {
+	devARN := "arn:aws:iam::123:role/dev"
+	midARN := "arn:aws:iam::123:role/mid"
+	finalARN := "arn:aws:iam::123:role/final-admin"
+	earlyDel := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
+	lateDel := time.Date(2027, 6, 1, 0, 0, 0, 0, time.UTC)
+
+	input := RoleChainInput{
+		PrincipalARN: devARN,
+		AccountID:    "123",
+		ResolvedIndex: buildResolvedIndex(map[string]ResolvedPermissions{
+			devARN: {
+				EffectiveAllow: []ActionGrant{{Action: "sts:AssumeRole", Resource: midARN}},
+				PrivilegeLevel: PrivilegeLevelLimited,
+			},
+			midARN: {
+				EffectiveAllow: []ActionGrant{{Action: "sts:AssumeRole", Resource: finalARN}},
+				PrivilegeLevel: PrivilegeLevelStandard,
+			},
+			finalARN: {
+				EffectiveAllow: []ActionGrant{{Action: "*", Resource: "*"}},
+				PrivilegeLevel: PrivilegeLevelAdmin,
+			},
+		}),
+		TrustPolicies: map[string]*PolicyDocument{
+			midARN:   trustDoc(t, devARN),
+			finalARN: trustDoc(t, midARN),
+		},
+		ScheduledDeletions: map[string]time.Time{
+			midARN:   lateDel,  // mid deleted later
+			finalARN: earlyDel, // final deleted earlier
+		},
+	}
+
+	chains := ResolveChains(input)
+	for _, ch := range chains {
+		if ch.FinalRoleARN == finalARN && len(ch.Hops) >= 2 {
+			if !ch.ScheduledDeletionAt.Equal(earlyDel) {
+				t.Errorf("multi-deletion chain: want earliest %s, got %s",
+					earlyDel, ch.ScheduledDeletionAt)
+			}
+			return
+		}
+	}
+	t.Fatalf("expected multi-hop chain to %s; got %+v", finalARN, chains)
+}
+
+// TestResolveChains_NoScheduledDeletion_ZeroAnnotation: chains
+// not crossing any scheduled-for-deletion role keep the
+// annotation as zero-time. Negative case.
+func TestResolveChains_NoScheduledDeletion_ZeroAnnotation(t *testing.T) {
+	devARN := "arn:aws:iam::123:role/dev"
+	adminARN := "arn:aws:iam::123:role/admin"
+
+	input := RoleChainInput{
+		PrincipalARN: devARN,
+		AccountID:    "123",
+		ResolvedIndex: buildResolvedIndex(map[string]ResolvedPermissions{
+			devARN: {
+				EffectiveAllow: []ActionGrant{{Action: "sts:AssumeRole", Resource: adminARN}},
+				PrivilegeLevel: PrivilegeLevelLimited,
+			},
+			adminARN: {
+				EffectiveAllow: []ActionGrant{{Action: "*", Resource: "*"}},
+				PrivilegeLevel: PrivilegeLevelAdmin,
+			},
+		}),
+		TrustPolicies: map[string]*PolicyDocument{
+			adminARN: trustDoc(t, devARN),
+		},
+		// ScheduledDeletions deliberately empty.
+	}
+
+	chains := ResolveChains(input)
+	for _, ch := range chains {
+		if !ch.ScheduledDeletionAt.IsZero() {
+			t.Errorf("chain without scheduled deletion has non-zero annotation: %s",
+				ch.ScheduledDeletionAt)
+		}
+	}
+}
+
+// TestExtractScheduledDeletions_ReadsCanonicalKeys verifies the
+// extractor recognises both property-key conventions Stave's
+// collectors use: identity.lifecycle.scheduled_for_deletion_at
+// (canonical IAM) and identity.lifecycle.deletion_date (the
+// secretsmanager-shaped fallback). Both must yield the same
+// timestamp; malformed entries are silently dropped.
+func TestExtractScheduledDeletions_ReadsCanonicalKeys(t *testing.T) {
+	wantTime := time.Date(2027, 1, 15, 12, 0, 0, 0, time.UTC)
+	cases := []struct {
+		name  string
+		props map[string]any
+		want  bool
+	}{
+		{
+			name: "canonical scheduled_for_deletion_at",
+			props: map[string]any{
+				"identity": map[string]any{
+					"lifecycle": map[string]any{
+						"scheduled_for_deletion_at": "2027-01-15T12:00:00Z",
+					},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "fallback deletion_date",
+			props: map[string]any{
+				"identity": map[string]any{
+					"lifecycle": map[string]any{
+						"deletion_date": "2027-01-15T12:00:00Z",
+					},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "canonical wins over fallback",
+			props: map[string]any{
+				"identity": map[string]any{
+					"lifecycle": map[string]any{
+						"scheduled_for_deletion_at": "2027-01-15T12:00:00Z",
+						"deletion_date":             "2099-12-31T23:59:59Z",
+					},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "malformed timestamp dropped",
+			props: map[string]any{
+				"identity": map[string]any{
+					"lifecycle": map[string]any{
+						"scheduled_for_deletion_at": "tomorrow",
+					},
+				},
+			},
+			want: false,
+		},
+		{
+			name:  "no lifecycle key",
+			props: map[string]any{"identity": map[string]any{}},
+			want:  false,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := readDeletionTimestamp(tc.props)
+			if tc.want && !got.Equal(wantTime) {
+				t.Errorf("want %s, got %s", wantTime, got)
+			}
+			if !tc.want && !got.IsZero() {
+				t.Errorf("expected zero time, got %s", got)
+			}
+		})
+	}
+}
+
+// TestResolveChains_LambdaInvokeExisting_ConfusedDeputy pins the
+// load-bearing Iter 6 detection: a principal P with
+// `lambda:InvokeFunction` on a SPECIFIC existing function ARN
+// reaches the role bound to that function, even though P has no
+// iam:PassRole. This is the confused-deputy "use-existing"
+// pattern from gap-prompt.md:10 — distinct from Iter 3's
+// create-and-pass primitive.
+func TestResolveChains_LambdaInvokeExisting_ConfusedDeputy(t *testing.T) {
+	devARN := "arn:aws:iam::123:role/dev"
+	funcARN := "arn:aws:lambda:us-east-1:123:function:legacy-prod"
+	adminARN := "arn:aws:iam::123:role/legacy-prod-exec"
+
+	input := RoleChainInput{
+		PrincipalARN: devARN,
+		AccountID:    "123",
+		ResolvedIndex: buildResolvedIndex(map[string]ResolvedPermissions{
+			devARN: {
+				EffectiveAllow: []ActionGrant{
+					// CRITICAL: NO iam:PassRole anywhere. The
+					// confused-deputy path requires only the
+					// trigger action against the existing function
+					// — its role binding is already in place.
+					{Action: "lambda:InvokeFunction", Resource: funcARN},
+				},
+				PrivilegeLevel: PrivilegeLevelLimited,
+			},
+			adminARN: {
+				EffectiveAllow: []ActionGrant{{Action: "*", Resource: "*"}},
+				PrivilegeLevel: PrivilegeLevelAdmin,
+			},
+		}),
+		ResourceRoleBindings: map[string]ResourceRoleBinding{
+			funcARN: {
+				ResourceARN: funcARN,
+				RoleARN:     adminARN,
+				ServiceKind: "lambda",
+			},
+		},
+	}
+
+	chains := ResolveChains(input)
+	if !HasTransitiveAdmin(chains) {
+		t.Fatalf("expected admin chain via lambda_invoke_existing; got %+v", chains)
+	}
+	found := false
+	for _, ch := range chains {
+		for _, hop := range ch.Hops {
+			if hop.Type == HopTypeLambdaInvokeExisting && hop.ToARN == adminARN {
+				found = true
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("expected lambda_invoke_existing hop; got %+v", chains)
+	}
+}
+
+// TestResolveChains_InvokeExisting_WildcardResourceSkipped pins
+// the v1 deferral: a wildcard `lambda:InvokeFunction *` grant
+// must NOT enumerate every function in the snapshot. Wildcards
+// are caught by the catalog's broad-permission controls; the
+// confused-deputy walker stays focused on specific resource ARNs.
+func TestResolveChains_InvokeExisting_WildcardResourceSkipped(t *testing.T) {
+	devARN := "arn:aws:iam::123:role/dev"
+	funcARN := "arn:aws:lambda:us-east-1:123:function:legacy-prod"
+	adminARN := "arn:aws:iam::123:role/legacy-prod-exec"
+
+	input := RoleChainInput{
+		PrincipalARN: devARN,
+		AccountID:    "123",
+		ResolvedIndex: buildResolvedIndex(map[string]ResolvedPermissions{
+			devARN: {
+				EffectiveAllow: []ActionGrant{
+					{Action: "lambda:InvokeFunction", Resource: "*"},
+				},
+				PrivilegeLevel: PrivilegeLevelLimited,
+			},
+			adminARN: {PrivilegeLevel: PrivilegeLevelAdmin},
+		}),
+		ResourceRoleBindings: map[string]ResourceRoleBinding{
+			funcARN: {ResourceARN: funcARN, RoleARN: adminARN, ServiceKind: "lambda"},
+		},
+	}
+
+	chains := ResolveChains(input)
+	for _, ch := range chains {
+		for _, hop := range ch.Hops {
+			if hop.Type == HopTypeLambdaInvokeExisting {
+				t.Fatalf("wildcard resource must not enumerate bindings: %+v", chains)
+			}
+		}
+	}
+}
+
+// TestResolveChains_InvokeExisting_NoBinding_NoEdge: principal
+// has the trigger action on a specific ARN but the snapshot has
+// no role binding recorded for that ARN. The walker cannot
+// attribute privilege and must skip silently — no chain emitted.
+func TestResolveChains_InvokeExisting_NoBinding_NoEdge(t *testing.T) {
+	devARN := "arn:aws:iam::123:role/dev"
+	funcARN := "arn:aws:lambda:us-east-1:123:function:unknown"
+
+	input := RoleChainInput{
+		PrincipalARN: devARN,
+		AccountID:    "123",
+		ResolvedIndex: buildResolvedIndex(map[string]ResolvedPermissions{
+			devARN: {
+				EffectiveAllow: []ActionGrant{
+					{Action: "lambda:InvokeFunction", Resource: funcARN},
+				},
+				PrivilegeLevel: PrivilegeLevelLimited,
+			},
+		}),
+		// ResourceRoleBindings deliberately empty.
+	}
+
+	chains := ResolveChains(input)
+	for _, ch := range chains {
+		for _, hop := range ch.Hops {
+			if hop.Type == HopTypeLambdaInvokeExisting {
+				t.Fatalf("must NOT emit hop without binding: %+v", chains)
+			}
+		}
+	}
+}
+
+// TestResolveChains_CFNUpdateExisting exercises the second v1
+// service: cloudformation:UpdateStack on an existing stack with
+// a pre-bound execution role. The same primitive shape as
+// Lambda invoke; pins multi-service generality.
+func TestResolveChains_CFNUpdateExisting(t *testing.T) {
+	devARN := "arn:aws:iam::123:role/dev"
+	stackARN := "arn:aws:cloudformation:us-east-1:123:stack/legacy/abc"
+	cfnRoleARN := "arn:aws:iam::123:role/legacy-cfn-exec"
+
+	input := RoleChainInput{
+		PrincipalARN: devARN,
+		AccountID:    "123",
+		ResolvedIndex: buildResolvedIndex(map[string]ResolvedPermissions{
+			devARN: {
+				EffectiveAllow: []ActionGrant{
+					{Action: "cloudformation:UpdateStack", Resource: stackARN},
+				},
+				PrivilegeLevel: PrivilegeLevelLimited,
+			},
+			cfnRoleARN: {
+				EffectiveAllow: []ActionGrant{{Action: "*", Resource: "*"}},
+				PrivilegeLevel: PrivilegeLevelAdmin,
+			},
+		}),
+		ResourceRoleBindings: map[string]ResourceRoleBinding{
+			stackARN: {
+				ResourceARN: stackARN,
+				RoleARN:     cfnRoleARN,
+				ServiceKind: "cloudformation",
+			},
+		},
+	}
+
+	chains := ResolveChains(input)
+	found := false
+	for _, ch := range chains {
+		for _, hop := range ch.Hops {
+			if hop.Type == HopTypeCfnUpdateExisting && hop.ToARN == cfnRoleARN {
+				found = true
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("expected cfn_update_existing hop; got %+v", chains)
+	}
+}
+
+// TestResolveChains_InvokeExisting_ServiceKindMismatch: a
+// resource-role binding whose ServiceKind doesn't match the
+// trigger action's service must be ignored. Defends against
+// extractor bugs that classify bindings incorrectly.
+func TestResolveChains_InvokeExisting_ServiceKindMismatch(t *testing.T) {
+	devARN := "arn:aws:iam::123:role/dev"
+	stackARN := "arn:aws:cloudformation:us-east-1:123:stack/x/y"
+	roleARN := "arn:aws:iam::123:role/admin"
+
+	input := RoleChainInput{
+		PrincipalARN: devARN,
+		AccountID:    "123",
+		ResolvedIndex: buildResolvedIndex(map[string]ResolvedPermissions{
+			devARN: {
+				EffectiveAllow: []ActionGrant{
+					// Lambda action against a CFN-typed binding —
+					// nonsense pairing, must NOT fire.
+					{Action: "lambda:InvokeFunction", Resource: stackARN},
+				},
+				PrivilegeLevel: PrivilegeLevelLimited,
+			},
+			roleARN: {PrivilegeLevel: PrivilegeLevelAdmin},
+		}),
+		ResourceRoleBindings: map[string]ResourceRoleBinding{
+			stackARN: {ResourceARN: stackARN, RoleARN: roleARN, ServiceKind: "cloudformation"},
+		},
+	}
+
+	chains := ResolveChains(input)
+	for _, ch := range chains {
+		for _, hop := range ch.Hops {
+			if hop.Type == HopTypeLambdaInvokeExisting {
+				t.Fatalf("service-kind mismatch must skip: %+v", chains)
+			}
+		}
+	}
+}
+
+// TestExtractResourceRoleBindings_LambdaAndCFN exercises the
+// extractor against the v1 supported asset types. The Lambda
+// function reads from properties.compute.role_arn; the CFN stack
+// from properties.cloudformation.role_arn. Unrelated asset types
+// are silently ignored.
+func TestExtractResourceRoleBindings_LambdaAndCFN(t *testing.T) {
+	// Mock-style helper to build a snapshot inline. Using a
+	// snapshotForBindings helper to avoid pulling in the full
+	// snapshot factory; the function under test only touches
+	// snap.Assets[*].{Type, ID, Properties}.
+	snap := snapshotWithAssets(t, []bindingFixture{
+		{
+			ID:   "arn:aws:lambda:us-east-1:111:function:legacy",
+			Type: "aws_lambda_function",
+			Props: map[string]any{
+				"compute": map[string]any{
+					"role_arn": "arn:aws:iam::111:role/lambda-exec",
+				},
+			},
+		},
+		{
+			ID:   "arn:aws:cloudformation:us-east-1:111:stack/legacy/abc",
+			Type: "aws_cloudformation_stack",
+			Props: map[string]any{
+				"cloudformation": map[string]any{
+					"role_arn": "arn:aws:iam::111:role/cfn-exec",
+				},
+			},
+		},
+		{
+			ID:   "arn:aws:s3:::ignored-bucket",
+			Type: "aws_s3_bucket",
+			Props: map[string]any{},
+		},
+		{
+			ID:   "arn:aws:lambda:us-east-1:111:function:no-role",
+			Type: "aws_lambda_function",
+			Props: map[string]any{
+				"compute": map[string]any{
+					// No role_arn key — should be skipped.
+				},
+			},
+		},
+	})
+
+	got := ExtractResourceRoleBindings(snap)
+	if len(got) != 2 {
+		t.Fatalf("want 2 bindings, got %d: %+v", len(got), got)
+	}
+	lambdaARN := "arn:aws:lambda:us-east-1:111:function:legacy"
+	if b, ok := got[lambdaARN]; !ok {
+		t.Errorf("missing Lambda binding")
+	} else {
+		if b.RoleARN != "arn:aws:iam::111:role/lambda-exec" {
+			t.Errorf("Lambda role: got %q", b.RoleARN)
+		}
+		if b.ServiceKind != "lambda" {
+			t.Errorf("Lambda kind: got %q", b.ServiceKind)
+		}
+	}
+	cfnARN := "arn:aws:cloudformation:us-east-1:111:stack/legacy/abc"
+	if b, ok := got[cfnARN]; !ok {
+		t.Errorf("missing CFN binding")
+	} else {
+		if b.ServiceKind != "cloudformation" {
+			t.Errorf("CFN kind: got %q", b.ServiceKind)
+		}
+	}
+}
+
+// bindingFixture describes a single asset to inject into a
+// snapshot for the resource-binding extractor tests.
+type bindingFixture struct {
+	ID    string
+	Type  string
+	Props map[string]any
+}
+
+// snapshotWithAssets builds an asset.Snapshot containing exactly
+// the supplied fixtures. Inline rather than reaching for a
+// full-fledged snapshot builder because the extractor only
+// touches Assets[*].{ID, Type, Properties}.
+func snapshotWithAssets(t *testing.T, fixtures []bindingFixture) *asset.Snapshot {
+	t.Helper()
+	snap := &asset.Snapshot{}
+	for _, f := range fixtures {
+		snap.Assets = append(snap.Assets, asset.Asset{
+			ID:         asset.ID(f.ID),
+			Type:       kernel.AssetType(f.Type),
+			Properties: f.Props,
+		})
+	}
+	return snap
 }

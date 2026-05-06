@@ -318,6 +318,16 @@ type RoleChainFact struct {
 	FinalRoleARN      string        `json:"final_role_arn"`
 	TransitiveLevel   string        `json:"transitive_level,omitempty"`
 	TerminationReason string        `json:"termination_reason,omitempty"`
+
+	// ScheduledDeletionAt records the earliest scheduled-deletion
+	// timestamp across the chain's hops, when the snapshot
+	// indicates that one of the traversed identities is marked
+	// for deletion at a known future time. Zero / absent means no
+	// hop is scheduled for deletion. Iter 5 (TOCTOU): downstream
+	// solvers use this annotation to surface "future ghost
+	// reference" findings — chains that are reachable today but
+	// will be stale once the deletion completes.
+	ScheduledDeletionAt time.Time `json:"scheduled_deletion_at,omitempty"`
 }
 
 // TemporalFacts captures the time grid the SIR is grounded on:

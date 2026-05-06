@@ -1,7 +1,9 @@
 package iam
 
 import (
+	"slices"
 	"strings"
+	"time"
 
 	"github.com/sufield/stave/internal/util/sets"
 )
@@ -50,6 +52,15 @@ const (
 	HopTypeCodebuildExec HopType = "codebuild_exec"
 	HopTypeGlueExec      HopType = "glue_exec"
 	HopTypeCfnExec       HopType = "cfn_exec"
+
+	// Iter 6 (confused deputy): the *invoke-existing* primitive.
+	// Distinct from Iter 3's *create-and-pass*: the binding is
+	// already in place before the attack, so iam:PassRole is NOT a
+	// prerequisite. The principal needs only the trigger action on
+	// a SPECIFIC resource ARN that the snapshot reports as already
+	// bound to the target role.
+	HopTypeLambdaInvokeExisting HopType = "lambda_invoke_existing"
+	HopTypeCfnUpdateExisting    HopType = "cfn_update_existing"
 )
 
 // RoleHop is one step in a transitive role assumption chain.
@@ -72,6 +83,20 @@ type RoleChain struct {
 	FinalRoleARN      string
 	TransitiveLevel   PrivilegeLevel
 	TerminationReason ChainTerminationReason
+
+	// ScheduledDeletionAt records the EARLIEST scheduled-deletion
+	// timestamp encountered across this chain's hops. Zero value
+	// means no hop along the chain references a role that is
+	// scheduled for deletion.
+	//
+	// Iter 5 (TOCTOU): a chain reaching a role that will be deleted
+	// at time T is reachable now but unsafe at T+1; any consumer
+	// caching the reachability decision risks a stale grant. The
+	// solver / explainer uses this annotation to surface the
+	// future-ghost-reference pattern alongside the current
+	// chain — it does NOT drop the chain (the chain is still
+	// reachable today), it adds a future-deadline warning.
+	ScheduledDeletionAt time.Time
 }
 
 // RoleChainInput provides the data needed for chain resolution.
@@ -95,6 +120,41 @@ type RoleChainInput struct {
 	// or nil ServiceTrusts disables service-execution-hop emission
 	// without disabling the rest of the walker.
 	ServiceTrusts map[string][]string
+
+	// AWSPrincipalTrusts maps role ARN → AWSTrustedPrincipals (the
+	// account-roots / exact-ARNs / wildcard surface extracted from
+	// raw trust JSON). Populated by ExtractAWSTrustedPrincipals.
+	// trustPolicyAllows consults this side-channel in addition to
+	// TrustPolicies because the iam.Statement parser drops the
+	// Principal field; without this map, real-world account-root
+	// trust patterns (`Principal: AWS: arn:aws:iam::<acct>:root`)
+	// are invisible to the walker. Iter 4: closes the trust-
+	// transitivity gap so a compromised principal in account B is
+	// recognised as an assumer of any role whose trust policy
+	// account-root-trusts B.
+	AWSPrincipalTrusts map[string]AWSTrustedPrincipals
+
+	// ScheduledDeletions maps principal/role ARN → the timestamp at
+	// which the identity is scheduled to be deleted. Populated by
+	// ExtractScheduledDeletions. The walker reads this map to
+	// annotate emitted chains with the EARLIEST deletion timestamp
+	// encountered along their hops — a chain reaching a
+	// scheduled-for-deletion role is reachable today but stale
+	// after T (the TOCTOU "future ghost reference" pattern). Empty
+	// or nil disables the annotation without affecting which chains
+	// the walker emits.
+	ScheduledDeletions map[string]time.Time
+
+	// ResourceRoleBindings maps service-resource ARN (Lambda
+	// function, CFN stack, ...) → the IAM role attached to that
+	// resource. Populated by ExtractResourceRoleBindings. Iter 6
+	// (confused deputy): the invoke-existing walker reads this map
+	// to detect "principal P has trigger action T on resource R,
+	// R is already bound to admin role Q" — an indirect privesc
+	// path that requires no iam:PassRole because the binding
+	// pre-existed the attack. Empty or nil disables the walker
+	// without affecting other primitives.
+	ResourceRoleBindings map[string]ResourceRoleBinding
 
 	// AccountID of the starting principal, for cross-account detection.
 	AccountID string
@@ -126,7 +186,45 @@ func ResolveChains(input RoleChainInput) []RoleChain {
 	resolveChainRecursive(input, input.PrincipalARN, visited, 0, nil, &chains)
 	chains = append(chains, resolveTagMutationChains(input)...)
 	chains = append(chains, resolveServiceExecChains(input)...)
+	chains = append(chains, resolveExistingResourceInvocations(input)...)
+	annotateScheduledDeletions(chains, input.ScheduledDeletions)
 	return chains
+}
+
+// annotateScheduledDeletions stamps each chain with the earliest
+// scheduled-deletion timestamp encountered across its hops. Run
+// once at ResolveChains exit so each emission site stays focused
+// on chain construction. Iter 5: chains traversing a role
+// scheduled for future deletion get a ScheduledDeletionAt marker
+// so downstream consumers can surface the TOCTOU pattern without
+// re-walking the chain.
+func annotateScheduledDeletions(chains []RoleChain, deletions map[string]time.Time) {
+	if len(deletions) == 0 || len(chains) == 0 {
+		return
+	}
+	for i := range chains {
+		earliest := time.Time{}
+		// Check the starting principal too — if the assumer itself
+		// is scheduled for deletion, every chain it produces is
+		// stale on the same horizon.
+		if len(chains[i].Hops) > 0 {
+			if t, ok := deletions[chains[i].Hops[0].FromARN]; ok {
+				earliest = t
+			}
+		}
+		for _, hop := range chains[i].Hops {
+			t, ok := deletions[hop.ToARN]
+			if !ok {
+				continue
+			}
+			if earliest.IsZero() || t.Before(earliest) {
+				earliest = t
+			}
+		}
+		if !earliest.IsZero() {
+			chains[i].ScheduledDeletionAt = earliest
+		}
+	}
 }
 
 // serviceExec describes one (action-set → service-principal → hop-kind)
@@ -323,6 +421,138 @@ func roleTrustsService(serviceTrusts map[string][]string, roleARN, servicePrinci
 	return false
 }
 
+// invokeExistingPrimitive describes one (service-kind → trigger-
+// actions → hop-kind) triple for the Iter 6 invoke-existing
+// walker. Distinct from Iter 3's serviceExecPrimitives because:
+//   - Iter 3 requires iam:PassRole on the target role; the role
+//     binding is established by the attack itself.
+//   - Iter 6 needs only the trigger action on the SPECIFIC
+//     resource ARN; the binding pre-existed the attack.
+//
+// Trigger actions here are the SUBSET of Iter 3's table that
+// invoke / mutate an existing resource without re-binding its
+// role. Create-shaped actions (CreateFunction, CreateStack) are
+// EXCLUDED — those are Iter 3's territory.
+type invokeExistingPrimitive struct {
+	HopType        HopType
+	ServiceKind    string
+	TriggerActions []string
+}
+
+// invokeExistingPrimitives lists the v1 confused-deputy primitives.
+// Lambda + CloudFormation cover the gap-prompt example explicitly;
+// other services (ECS RunTask on existing task definitions,
+// CodeBuild StartBuild on existing projects, Glue StartJobRun on
+// existing jobs) follow the same pattern and can be added by
+// extending this slice plus the resourceBindingExtractors table.
+var invokeExistingPrimitives = []invokeExistingPrimitive{
+	{
+		HopType:     HopTypeLambdaInvokeExisting,
+		ServiceKind: "lambda",
+		TriggerActions: []string{
+			"lambda:InvokeFunction",
+			// UpdateFunctionCode redeploys an attacker payload
+			// against the existing role binding without changing
+			// the role.
+			"lambda:UpdateFunctionCode",
+		},
+	},
+	{
+		HopType:     HopTypeCfnUpdateExisting,
+		ServiceKind: "cloudformation",
+		TriggerActions: []string{
+			// UpdateStack against an existing stack reuses the
+			// stack's pre-bound execution role; no PassRole needed.
+			"cloudformation:UpdateStack",
+			"cloudformation:CreateChangeSet",
+			"cloudformation:ExecuteChangeSet",
+		},
+	},
+}
+
+// resolveExistingResourceInvocations scans the principal's
+// effective allows for trigger actions on SPECIFIC resource ARNs
+// whose snapshot binding names a role that is itself in the
+// snapshot. Each (principal, resource, role) triple emits a
+// single-hop chain.
+//
+// V1 contract:
+//   - Wildcard targets (Resource: "*") on the trigger action are
+//     NOT enumerated. A wildcard grant against EVERY function /
+//     stack would explode the chain count and obscures the
+//     specific resource at fault. Wildcard trigger grants surface
+//     through Iter 3's create-and-pass walker plus the catalog's
+//     broad-permission controls — different concern.
+//   - The role binding must be observable in the snapshot. If a
+//     function is bound to a role outside the snapshot, the
+//     walker has no privilege level to attribute and skips.
+//   - Multi-hop chains through invoke-existing edges are not
+//     produced. Pivoting from the bound role's permissions onto
+//     another role is the assume walker's job.
+func resolveExistingResourceInvocations(input RoleChainInput) []RoleChain {
+	resolved, ok := input.ResolvedIndex[input.PrincipalARN]
+	if !ok {
+		return nil
+	}
+	if len(input.ResourceRoleBindings) == 0 {
+		return nil
+	}
+	var chains []RoleChain
+
+	for _, primitive := range invokeExistingPrimitives {
+		for _, grant := range resolved.EffectiveAllow {
+			if !triggerActionMatches(grant.Action, primitive.TriggerActions) {
+				continue
+			}
+			if grant.Resource == "" || grant.Resource == "*" {
+				continue
+			}
+			binding, hasBinding := input.ResourceRoleBindings[grant.Resource]
+			if !hasBinding {
+				continue
+			}
+			if binding.ServiceKind != primitive.ServiceKind {
+				continue
+			}
+			targetRoleARN := binding.RoleARN
+			targetResolved, inSnapshot := input.ResolvedIndex[targetRoleARN]
+			if !inSnapshot {
+				continue
+			}
+			hop := RoleHop{
+				FromARN:        input.PrincipalARN,
+				ToARN:          targetRoleARN,
+				IsCrossAccount: !principalInAccount(targetRoleARN, input.AccountID),
+				Type:           primitive.HopType,
+			}
+			chains = append(chains, RoleChain{
+				Hops:            []RoleHop{hop},
+				FinalRoleARN:    targetRoleARN,
+				TransitiveLevel: targetResolved.PrivilegeLevel,
+			})
+		}
+	}
+	return chains
+}
+
+// triggerActionMatches reports whether grantAction (an entry in
+// the principal's resolved allows) covers any of the candidate
+// trigger actions. Honors AWS wildcard semantics for management
+// services: an exact match, the "*" total wildcard, or the
+// service-prefix `lambda:*` style wildcard all activate the
+// primitive. Centralised so the invoke-existing walker shares the
+// same matching as the create-and-pass walker without duplicating
+// the prefix dance.
+func triggerActionMatches(grantAction string, candidates []string) bool {
+	if slices.Contains(candidates, grantAction) {
+		return true
+	}
+	if grantAction == "*" {
+		return true
+	}
+	return isWildcardServicePrefix(grantAction, candidates)
+}
+
 func resolveChainRecursive(
 	input RoleChainInput,
 	currentARN string,
@@ -409,9 +639,17 @@ func resolveChainRecursive(
 			continue
 		}
 
-		// Check trust policy — target role must trust the current principal.
-		trustPolicy, hasTrust := input.TrustPolicies[targetARN]
-		if !hasTrust || !trustPolicyAllows(trustPolicy, currentARN) {
+		// Check trust policy — target role must trust the current
+		// principal. Two channels:
+		//   - PolicyDocument: principals encoded in stmt.Resource by
+		//     the test-fixture and legacy parser path.
+		//   - AWSPrincipalTrusts: the Iter-4 side-channel that probes
+		//     raw trust JSON for `Principal: AWS: ...` entries the
+		//     iam.Statement parser drops, including the account-root
+		//     pattern that admits every principal in a named account.
+		// Either channel admitting the assumer is sufficient.
+		trustPolicy := input.TrustPolicies[targetARN]
+		if !trustAllowsAssumer(trustPolicy, input.AWSPrincipalTrusts[targetARN], currentARN) {
 			continue // assumption not reciprocated
 		}
 
@@ -465,6 +703,54 @@ func trustPolicyAllows(trustPolicy *PolicyDocument, principalARN string) bool {
 		}
 	}
 	return false
+}
+
+// trustAllowsAssumer reports whether either the parsed trust
+// policy OR the side-channel AWS-principal trust expansion admits
+// principalARN as an assumer. A bare-Principal:"*" wildcard is
+// honored the same way the parsed-policy path does (Resource:"*"
+// returns true above).
+//
+// The two channels are unioned because each captures a different
+// slice of the real-world surface:
+//   - trustPolicyAllows walks stmt.Resource; that field carries
+//     principals for legacy / test-fixture trust documents
+//     constructed via the trustDoc(...) helper.
+//   - awsPrincipalTrust comes from a raw-JSON probe and captures
+//     real AWS trust shapes (`Principal: AWS: arn::root`,
+//     `Principal: AWS: <12-digit account>`, exact-ARN trust)
+//     that the Statement parser drops.
+//
+// Trust expansion in v1 covers account-root and exact-ARN
+// principals. ConditionalOrgID-bounded wildcards are left for a
+// future iteration; the bare top-level Principal:"*" wildcard
+// IS honored here because it is unambiguous.
+func trustAllowsAssumer(trustPolicy *PolicyDocument, awsPrincipalTrust AWSTrustedPrincipals, principalARN string) bool {
+	if trustPolicy != nil && trustPolicyAllows(trustPolicy, principalARN) {
+		return true
+	}
+	return awsPrincipalTrustAdmits(awsPrincipalTrust, principalARN)
+}
+
+// awsPrincipalTrustAdmits reports whether the side-channel
+// expansion alone admits principalARN. Split out so unit tests
+// can pin the side-channel logic without staging a full
+// PolicyDocument.
+func awsPrincipalTrustAdmits(t AWSTrustedPrincipals, principalARN string) bool {
+	if t.Wildcard {
+		return true
+	}
+	if slices.Contains(t.ExactARNs, principalARN) {
+		return true
+	}
+	if len(t.AccountRoots) == 0 {
+		return false
+	}
+	principalAcct := ExtractAccountIDFromARN(principalARN)
+	if principalAcct == "" {
+		return false
+	}
+	return slices.Contains(t.AccountRoots, principalAcct)
 }
 
 // HasTransitiveAdmin checks if any chain reaches admin-equivalent permissions.

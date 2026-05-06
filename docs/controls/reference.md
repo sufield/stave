@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2612
-**Pack hash:** `ca3192c93be57bb1c601cb7a2262b7fe71c4e0e9935ec39bc62345526c9edf5e`
+**Total controls:** 2615
+**Pack hash:** `bdb15a20748b75c936e61252aa1653a3576124f181895c0d35a55760d29ff59b`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 268 |
-| high | 1129 |
+| critical | 269 |
+| high | 1131 |
 | info | 16 |
 | low | 198 |
 | medium | 1001 |
@@ -26,7 +26,7 @@
 | exposure | 1184 |
 | governance | 557 |
 | hygiene | 18 |
-| identity | 399 |
+| identity | 402 |
 | lifecycle | 31 |
 | network | 32 |
 | resilience | 33 |
@@ -21277,6 +21277,21 @@ Expired SSL/TLS server certificates must be removed from IAM. Expired certificat
 
 ---
 
+### CTL.IAM.CHAIN.GHOST.DELETION.001
+
+**Role Chain Reaches a Role Scheduled for Deletion (TOCTOU)**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-2, CM-3; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: AC-2, CM-3, IR-4; pci_dss_v4.0: 7.2.1, 10.6; soc2: CC6.1, CC8.1;
+
+A principal has a transitive role-assumption chain whose target is scheduled for deletion at a known future time. The chain is reachable now, but every consumer caching the reachability decision is stale once the deletion completes — the time-of-check / time-of-use pattern. After the deletion window closes, the chain has a future-ghost reference: any policy that re-evaluated against the cached chain would assume permissions that no longer exist (or — worse — that another team has recreated under the same ARN with different intent). Same ghost-reference primitive as CTL.SECRETS.GHOST.DELETION.REFERENCED.001, lifted from per-asset to multi-hop chain analysis. The .present boolean is folded upstream from Stave's chain walker, which stamps each emitted RoleChainFact with `scheduled_deletion_at` whenever the chain crosses an identity scheduled for future deletion (the earliest such timestamp wins per chain).
+
+**Remediation:** Decide intent: (a) if the deletion is unintended, cancel it and restore the role; (b) if intentional, remove the intermediate hops that lead to this role BEFORE the deletion window closes — typically by tightening sts:AssumeRole on the trust policies of the upstream roles, or by removing iam:PassRole grants that aim at the doomed role. After the deletion completes, audit any IaC / Terraform state that references the role's ARN; recreating the role under the same name is the load-bearing TOCTOU step the attacker would race for.
+
+---
+
 ### CTL.IAM.CONSOLE.MFA.001
 
 **Console Users Must Have MFA Enabled**
@@ -21607,6 +21622,36 @@ Scope: gated on `identity.kind == "user"`. The `iam:AttachUserPolicy` AWS action
 IAM principals must have no multi-step permission chain that leads to administrative access. The extractor analyzes known escalation patterns (iam:PassRole + lambda:CreateFunction, iam:CreatePolicyVersion on self, sts:AssumeRole to admin role, etc.) and traces whether a low-privileged principal can chain permissions to reach admin. Each step is individually authorized but the composition creates a privilege escalation path that policy reviews miss.
 
 **Remediation:** Remove the weakest link in the escalation chain. Common fixes: scope iam:PassRole to specific role ARNs, restrict lambda:CreateFunction to approved execution roles, add permissions boundaries that deny IAM self-modification.
+
+---
+
+### CTL.IAM.ESCALATE.CONFUSED.CFN.UPDATE.001
+
+**Principal Must Not Escalate via Existing CloudFormation Stack (Confused Deputy)**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5), CM-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5), CM-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with cloudformation:UpdateStack, CreateChangeSet, or ExecuteChangeSet on a SPECIFIC existing stack whose attached service role exceeds the principal's own permissions can escalate via the confused-deputy pattern. The stack's execution role was bound at creation time; UpdateStack with an attacker-controlled template runs that template under the existing role, deploying arbitrary AWS resources at the role's authority level. No iam:PassRole is required at update time because the role binding pre-existed the attack — that is precisely what makes this path invisible to controls focused on the create-and-pass primitive. The .present boolean is folded upstream from Stave's chain walker, which emits hops of type `cfn_update_existing` whenever this primitive matches.
+
+**Remediation:** Scope cloudformation:UpdateStack / CreateChangeSet / ExecuteChangeSet away from this principal on the specific stack ARN, OR detach the over-privileged role from the stack via UpdateStack (--role-arn) and rebind a least-privilege role. For environments where stack updates must remain self-service, gate the action behind a Condition tying it to a specific change-set name pattern that an approval pipeline produces.
+
+---
+
+### CTL.IAM.ESCALATE.CONFUSED.LAMBDA.INVOKE.001
+
+**Principal Must Not Escalate via Existing Lambda Function (Confused Deputy)**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with lambda:InvokeFunction or lambda:UpdateFunctionCode on a SPECIFIC existing Lambda function whose execution role exceeds the principal's own permissions can escalate via the confused-deputy pattern. Distinct from the create-and-pass technique covered by CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001: this path requires NO iam:PassRole. The role binding pre-existed the attack — the principal needs only the trigger action against the specific function ARN. UpdateFunctionCode escalates by replacing the function's payload with attacker-controlled code that runs under the existing execution role; InvokeFunction escalates when the function already exposes data-exfil or privilege-mutation behavior to its caller. The .present boolean is folded upstream from Stave's chain walker, which emits hops of type `lambda_invoke_existing` whenever this primitive matches.
+
+**Remediation:** Scope lambda:InvokeFunction and lambda:UpdateFunctionCode away from this principal on the specific function ARN, OR detach the over-privileged role from the function and bind a least- privilege role instead. If the function genuinely needs the elevated role, restrict invocation to a narrow IAM principal set (e.g., a specific application role) via the function's resource-based policy.
 
 ---
 

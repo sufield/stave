@@ -1,0 +1,79 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.CONFUSED.CFN.UPDATE.001
+name: Principal Must Not Escalate via Existing CloudFormation Stack (Confused Deputy)
+description: >
+  Principals with cloudformation:UpdateStack, CreateChangeSet, or
+  ExecuteChangeSet on a SPECIFIC existing stack whose attached
+  service role exceeds the principal's own permissions can escalate
+  via the confused-deputy pattern. The stack's execution role was
+  bound at creation time; UpdateStack with an attacker-controlled
+  template runs that template under the existing role, deploying
+  arbitrary AWS resources at the role's authority level. No
+  iam:PassRole is required at update time because the role binding
+  pre-existed the attack — that is precisely what makes this path
+  invisible to controls focused on the create-and-pass primitive.
+  The .present boolean is folded upstream from Stave's chain walker,
+  which emits hops of type `cfn_update_existing` whenever this
+  primitive matches.
+domain: identity
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5), CM-3"
+  fedramp_moderate: "AC-6(5), CM-3"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16", "CCC-04"]
+scope_tags:
+  - aws
+  - iam
+  - cloudformation
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - identity.kind
+  - identity.escalation.confused_cfn_update.present
+  - identity.escalation.confused_cfn_update.stack_arn
+  - identity.escalation.confused_cfn_update.target_role
+  - identity.escalation.confused_cfn_update.permission_delta
+  - identity.escalation.confused_cfn_update.trigger_action
+remediation:
+  description: >
+    Principal has a CloudFormation confused-deputy escalation path.
+    It can update an existing stack (or its change sets) whose
+    attached service role exceeds its own effective permissions.
+    Submitting a malicious template runs that template under the
+    elevated role — the principal effectively gains the role's
+    permissions for the duration of the deployment.
+  action: >
+    Scope cloudformation:UpdateStack / CreateChangeSet /
+    ExecuteChangeSet away from this principal on the specific
+    stack ARN, OR detach the over-privileged role from the stack
+    via UpdateStack (--role-arn) and rebind a least-privilege
+    role. For environments where stack updates must remain
+    self-service, gate the action behind a Condition tying it
+    to a specific change-set name pattern that an approval
+    pipeline produces.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "confused_cfn_update": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.confused_cfn_update.present
+      op: eq
+      value: true

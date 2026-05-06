@@ -82,6 +82,20 @@ func TestE2E(t *testing.T) {
 			defer func() {
 				if t.Failed() {
 					t.Logf(">>> FAILED E2E CASE: %s", name)
+					// Mirror the failure marker to raw stderr.
+					// `t.Logf` output is associated with the
+					// subtest scope and Go's `go test` formatter
+					// may interleave it under `--- FAIL: ...` /
+					// `--- PASS: ...` headers in ways that make
+					// the failing case hard to spot when CI logs
+					// are dominated by PASS noise. Writing
+					// directly to stderr produces a line outside
+					// the subtest framing, so a CI scan for
+					// `>>> FAILED E2E CASE:` always finds the
+					// case name regardless of the surrounding
+					// PASS volume. Only emitted on failure to
+					// keep the happy-path log quiet.
+					fmt.Fprintf(os.Stderr, ">>> FAILED E2E CASE: %s\n", name)
 				} else {
 					t.Logf(">>> COMPLETED E2E CASE: %s", name)
 				}

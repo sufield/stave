@@ -11,11 +11,25 @@ const (
 	PrivilegeLevelAdmin    PrivilegeLevel = "admin"
 )
 
-// ActionGrant represents a resolved allowed action with its source.
+// ActionGrant represents a resolved allowed (or denied) action
+// with its source. Used uniformly for the Allow side
+// (EffectiveAllow) and the Deny side (ExplicitDeny) of resolution.
+//
+// Conditions carries the raw Condition block from the originating
+// statement, when present. nil means an unconditioned grant; a
+// non-empty value means the grant is scoped to a subset of
+// principals/contexts and consumers must respect that scope.
+//
+// Iter 7 (scoped Deny): the Deny-coverage check honors Conditions.
+// Pre-Iter-7 the field was unused, so existing call sites that
+// emit ActionGrant literals without it default to nil — which is
+// the correct fallback for unconditioned grants and identical to
+// pre-Iter-7 behavior.
 type ActionGrant struct {
-	Action   string
-	Resource string
-	Source   string // policy ARN or description
+	Action     string
+	Resource   string
+	Source     string // policy ARN or description
+	Conditions any    // raw Condition block from the Statement; nil = unconditioned.
 }
 
 // ResolvedPermissions is the output of the policy resolution algorithm.
@@ -243,7 +257,18 @@ func collectBoundaryCeiling(boundary *PolicyDocument) []ActionGrant {
 	return ceiling
 }
 
-// collectExplicitDenies collects all Deny statements across all policy layers.
+// collectExplicitDenies collects all Deny statements across all
+// policy layers, preserving each statement's Condition block on
+// the emitted ActionGrant tuples.
+//
+// Iter 7 (scoped Deny): conditions are now carried so the
+// coverage check (isExplicitlyDenied) can recognize a Deny that
+// is scoped to a subset of principals/contexts and decline to
+// credit it as universally protective. Pre-Iter-7 the
+// Action+Resource cross-product was emitted with no condition
+// metadata, so a Deny with `Condition: aws:PrincipalOrgID =
+// o-other-org` was treated as covering EVERY principal — false
+// negatives for any caller in our org.
 func collectExplicitDenies(input ResolutionInput) []ActionGrant {
 	var denies []ActionGrant
 
@@ -253,9 +278,10 @@ func collectExplicitDenies(input ResolutionInput) []ActionGrant {
 			for _, action := range stmt.Action {
 				for _, resource := range stmt.Resource {
 					denies = append(denies, ActionGrant{
-						Action:   action,
-						Resource: resource,
-						Source:   "identity-based deny",
+						Action:     action,
+						Resource:   resource,
+						Source:     "identity-based deny",
+						Conditions: stmt.Condition,
 					})
 				}
 			}
@@ -268,9 +294,10 @@ func collectExplicitDenies(input ResolutionInput) []ActionGrant {
 			for _, action := range stmt.Action {
 				for _, resource := range stmt.Resource {
 					denies = append(denies, ActionGrant{
-						Action:   action,
-						Resource: resource,
-						Source:   "scp deny",
+						Action:     action,
+						Resource:   resource,
+						Source:     "scp deny",
+						Conditions: stmt.Condition,
 					})
 				}
 			}
@@ -283,9 +310,10 @@ func collectExplicitDenies(input ResolutionInput) []ActionGrant {
 			for _, action := range stmt.Action {
 				for _, resource := range stmt.Resource {
 					denies = append(denies, ActionGrant{
-						Action:   action,
-						Resource: resource,
-						Source:   "boundary deny",
+						Action:     action,
+						Resource:   resource,
+						Source:     "boundary deny",
+						Conditions: stmt.Condition,
 					})
 				}
 			}
@@ -295,15 +323,69 @@ func collectExplicitDenies(input ResolutionInput) []ActionGrant {
 	return denies
 }
 
-// isExplicitlyDenied checks if a grant is covered by any explicit deny.
+// isExplicitlyDenied checks if a grant is covered by any explicit
+// deny. Action + Resource scope must match AND the Deny's
+// Condition block must not narrow the scope below "every
+// principal/context".
+//
+// Iter 7 (scoped Deny): the conservative v1 rule is that ANY
+// Condition block on a Deny disqualifies it as universally
+// protective. The reasoning mirrors Iter 1's condition encoder
+// in reverse — Iter 1 fixed the false-positive case where
+// conditioned Allows were credited as public; Iter 7 fixes the
+// false-negative case where conditioned Denies are credited as
+// blocking.
+//
+// Why conservative is correct here: the gap-closure premise per
+// gap-prompt.md:8 is that Stave hides attack paths behind
+// Denies that don't actually apply. If we cannot prove the
+// Deny's condition holds for the attacker (which we cannot for
+// principal-scoping keys like aws:PrincipalOrgID,
+// aws:PrincipalArn, aws:SourceVpce), we surface the path. False
+// positives are recoverable; false negatives let attackers slip
+// through silently.
+//
+// V2 follow-up: recognize universally-applicable condition keys
+// (aws:SecureTransport=true, certain Bool gates) and credit
+// those Denies as still protective. Out of scope for v1.
 func isExplicitlyDenied(grant ActionGrant, denies []ActionGrant) bool {
 	for _, deny := range denies {
-		if actionMatches(deny.Action, grant.Action) &&
-			resourceMatches(deny.Resource, grant.Resource) {
-			return true
+		if !actionMatches(deny.Action, grant.Action) ||
+			!resourceMatches(deny.Resource, grant.Resource) {
+			continue
 		}
+		if denyHasNarrowingConditions(deny.Conditions) {
+			// Scope-narrowed Deny: we cannot prove it covers
+			// this grant's principal context. Skip and keep
+			// looking; another Deny in the list might match
+			// unconditionally.
+			continue
+		}
+		return true
 	}
 	return false
+}
+
+// denyHasNarrowingConditions reports whether the Condition block
+// makes the Deny scope-narrowed below "every principal". Treats
+// any non-empty condition block as narrowing — the v1
+// conservative rule. The argument is `any` because the parsed
+// Statement type stores the Condition field as the raw decoded
+// JSON value (string-keyed map of operator → key → values).
+//
+// nil and empty maps return false (unconditioned Deny).
+func denyHasNarrowingConditions(raw any) bool {
+	if raw == nil {
+		return false
+	}
+	m, ok := raw.(map[string]any)
+	if !ok {
+		// Non-map shape (string, slice, etc.) on a Condition
+		// block is malformed AWS JSON. Conservative: treat as
+		// narrowing rather than crash on unexpected input.
+		return true
+	}
+	return len(m) > 0
 }
 
 // matchesCeiling checks if a grant passes through a ceiling (SCP or boundary).

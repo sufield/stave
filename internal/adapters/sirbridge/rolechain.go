@@ -71,14 +71,39 @@ func (s *AWSRoleChainSource) RoleChains(snapshots []asset.Snapshot) (map[asset.I
 		// raw trust JSON to recover the data without changing the
 		// existing iam.Statement shape.
 		serviceTrusts := iam.ExtractServiceTrusts(snap)
+		// Iter 4: same probing strategy for AWS-principal trusts —
+		// account-root (arn:aws:iam::<acct>:root) and exact-ARN
+		// trust entries that the Statement parser drops. Closes
+		// the trust-transitivity gap from gap-prompt.md so a
+		// compromised principal in a trusted account is recognised
+		// as an assumer of every role that account-root-trusts it.
+		awsPrincipalTrusts := iam.ExtractAWSTrustedPrincipals(snap)
+		// Iter 5 (TOCTOU): extract scheduled-deletion timestamps
+		// from identity properties so the chain walker can stamp
+		// chains traversing a soon-to-be-deleted role with the
+		// future-ghost-reference horizon. Per gap-prompt.md:9 — a
+		// chain reachable now but stale at T is unsafe under
+		// time-of-check / time-of-use semantics.
+		scheduledDeletions := iam.ExtractScheduledDeletions(snap)
+		// Iter 6 (confused deputy): extract resource→role bindings
+		// for Lambda functions, CFN stacks, and other service
+		// resources that have a pre-attached IAM role. The
+		// invoke-existing walker uses this map to detect privesc
+		// paths where the attacker has a trigger action on the
+		// resource but no PassRole — the binding pre-existed the
+		// attack, so the role is reused as-is. Per gap-prompt.md:10.
+		resourceRoleBindings := iam.ExtractResourceRoleBindings(snap)
 		for j := range snap.Identities {
 			id := &snap.Identities[j]
 			chains := iam.ResolveChains(iam.RoleChainInput{
-				PrincipalARN:  string(id.ID),
-				ResolvedIndex: resolved,
-				TrustPolicies: trusts,
-				ServiceTrusts: serviceTrusts,
-				AccountID:     iam.ExtractAccountIDFromARN(string(id.ID)),
+				PrincipalARN:         string(id.ID),
+				ResolvedIndex:        resolved,
+				TrustPolicies:        trusts,
+				ServiceTrusts:        serviceTrusts,
+				AWSPrincipalTrusts:   awsPrincipalTrusts,
+				ScheduledDeletions:   scheduledDeletions,
+				ResourceRoleBindings: resourceRoleBindings,
+				AccountID:            iam.ExtractAccountIDFromARN(string(id.ID)),
 			})
 			if len(chains) == 0 {
 				continue
@@ -117,10 +142,11 @@ func translateRoleChain(c iam.RoleChain) sir.RoleChainFact {
 		}
 	}
 	return sir.RoleChainFact{
-		Hops:              hops,
-		FinalRoleARN:      c.FinalRoleARN,
-		TransitiveLevel:   string(c.TransitiveLevel),
-		TerminationReason: chainTerminationLabel(c.TerminationReason),
+		Hops:                hops,
+		FinalRoleARN:        c.FinalRoleARN,
+		TransitiveLevel:     string(c.TransitiveLevel),
+		TerminationReason:   chainTerminationLabel(c.TerminationReason),
+		ScheduledDeletionAt: c.ScheduledDeletionAt,
 	}
 }
 
@@ -143,6 +169,10 @@ func hopTypeLabel(t iam.HopType) string {
 		return "glue_exec"
 	case iam.HopTypeCfnExec:
 		return "cfn_exec"
+	case iam.HopTypeLambdaInvokeExisting:
+		return "lambda_invoke_existing"
+	case iam.HopTypeCfnUpdateExisting:
+		return "cfn_update_existing"
 	case iam.HopTypeAssume, "":
 		return "assume_role"
 	default:

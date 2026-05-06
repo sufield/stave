@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.CONFUSED.LAMBDA.INVOKE.001
+name: Principal Must Not Escalate via Existing Lambda Function (Confused Deputy)
+description: >
+  Principals with lambda:InvokeFunction or lambda:UpdateFunctionCode
+  on a SPECIFIC existing Lambda function whose execution role exceeds
+  the principal's own permissions can escalate via the confused-deputy
+  pattern. Distinct from the create-and-pass technique covered by
+  CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001: this path requires NO
+  iam:PassRole. The role binding pre-existed the attack — the
+  principal needs only the trigger action against the specific
+  function ARN. UpdateFunctionCode escalates by replacing the
+  function's payload with attacker-controlled code that runs under
+  the existing execution role; InvokeFunction escalates when the
+  function already exposes data-exfil or privilege-mutation behavior
+  to its caller. The .present boolean is folded upstream from
+  Stave's chain walker, which emits hops of type
+  `lambda_invoke_existing` whenever this primitive matches.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 8
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.confused_lambda_invoke.present
+  - identity.escalation.confused_lambda_invoke.function_arn
+  - identity.escalation.confused_lambda_invoke.target_role
+  - identity.escalation.confused_lambda_invoke.permission_delta
+  - identity.escalation.confused_lambda_invoke.trigger_action
+remediation:
+  description: >
+    Principal has a Lambda confused-deputy escalation path. It can
+    invoke (or replace the code of) an existing function whose
+    execution role exceeds the principal's own effective
+    permissions. No iam:PassRole is required because the role
+    binding pre-existed the attack.
+  action: >
+    Scope lambda:InvokeFunction and lambda:UpdateFunctionCode away
+    from this principal on the specific function ARN, OR detach
+    the over-privileged role from the function and bind a least-
+    privilege role instead. If the function genuinely needs the
+    elevated role, restrict invocation to a narrow IAM principal
+    set (e.g., a specific application role) via the function's
+    resource-based policy.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "confused_lambda_invoke": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.confused_lambda_invoke.present
+      op: eq
+      value: true

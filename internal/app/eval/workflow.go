@@ -15,6 +15,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 	"github.com/sufield/stave/internal/util/sets"
 )
 
@@ -133,6 +134,21 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 	if auditData.HasErrors() {
 		return evaluation.ComplianceReport{}, evaluation.StateUnknown, auditData.FirstError()
 	}
+	// Project chain-derived properties into each snapshot's
+	// IAM identities BEFORE the predicate engine runs. This is
+	// the load-bearing wiring that makes Iter 5/6 chain output
+	// (RoleChainFact.HopType lambda_invoke_existing /
+	// cfn_update_existing, RoleChainFact.ScheduledDeletionAt)
+	// visible to the ctrl.v1 controls that read
+	// `properties.identity.escalation.confused_*.present` and
+	// `properties.identity.chain.ghost_deletion.present`. The
+	// projector mutates Snapshot.Identities[i].Properties in
+	// place, so the cached snapshots and the ones passed to
+	// Evaluate share the augmented data.
+	for i := range auditData.Snapshots {
+		iam.ProjectChainProperties(&auditData.Snapshots[i])
+	}
+
 	w.cacheMu.Lock()
 	w.loadedControls = auditData.Controls
 	w.loadedSnapshots = auditData.Snapshots
