@@ -64,12 +64,20 @@ func (s *AWSRoleChainSource) RoleChains(snapshots []asset.Snapshot) (map[asset.I
 		if len(resolved) == 0 {
 			continue
 		}
+		// Iter 3: extract service-principal trusts as a side-channel
+		// so the chain walker can recognise execution-role hops
+		// (Lambda / ECS / CFN / etc.). The iam.PolicyDocument parser
+		// drops Principal blocks; ExtractServiceTrusts probes the
+		// raw trust JSON to recover the data without changing the
+		// existing iam.Statement shape.
+		serviceTrusts := iam.ExtractServiceTrusts(snap)
 		for j := range snap.Identities {
 			id := &snap.Identities[j]
 			chains := iam.ResolveChains(iam.RoleChainInput{
 				PrincipalARN:  string(id.ID),
 				ResolvedIndex: resolved,
 				TrustPolicies: trusts,
+				ServiceTrusts: serviceTrusts,
 				AccountID:     iam.ExtractAccountIDFromARN(string(id.ID)),
 			})
 			if len(chains) == 0 {
@@ -105,6 +113,7 @@ func translateRoleChain(c iam.RoleChain) sir.RoleChainFact {
 			From:         c.Hops[i].FromARN,
 			To:           c.Hops[i].ToARN,
 			CrossAccount: c.Hops[i].IsCrossAccount,
+			HopType:      hopTypeLabel(c.Hops[i].Type),
 		}
 	}
 	return sir.RoleChainFact{
@@ -112,6 +121,32 @@ func translateRoleChain(c iam.RoleChain) sir.RoleChainFact {
 		FinalRoleARN:      c.FinalRoleARN,
 		TransitiveLevel:   string(c.TransitiveLevel),
 		TerminationReason: chainTerminationLabel(c.TerminationReason),
+	}
+}
+
+// hopTypeLabel translates iam.HopType to the SIR's stable
+// wire-format string. Empty / unrecognised input maps to
+// "assume_role" because that's the only kind the pre-Iter-2
+// walker produced; old hops constructed without a Type field
+// kept that meaning.
+func hopTypeLabel(t iam.HopType) string {
+	switch t {
+	case iam.HopTypeTagMutation:
+		return "tag_mutation"
+	case iam.HopTypeLambdaExec:
+		return "lambda_exec"
+	case iam.HopTypeEcsExec:
+		return "ecs_exec"
+	case iam.HopTypeCodebuildExec:
+		return "codebuild_exec"
+	case iam.HopTypeGlueExec:
+		return "glue_exec"
+	case iam.HopTypeCfnExec:
+		return "cfn_exec"
+	case iam.HopTypeAssume, "":
+		return "assume_role"
+	default:
+		return string(t)
 	}
 }
 

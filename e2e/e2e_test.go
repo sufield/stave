@@ -70,9 +70,23 @@ func TestE2E(t *testing.T) {
 			// expires and the log shows the *next* unstarted case
 			// rather than the one actually wedged. Visible only with
 			// -v (CI sets it; local runs without -v stay quiet).
+			//
+			// The deferred banner closes the loop on the failure side:
+			// when an assertion inside runE2ECase calls t.Errorf /
+			// t.Fatalf, CI logs otherwise show many PASSes, generic
+			// `--- ERROR ---` separators, and a package-level FAIL —
+			// with no clear indicator of WHICH fixture went red. The
+			// `>>> FAILED E2E CASE:` marker is grep-friendly and ties
+			// the failure to a specific case directory.
 			t.Logf(">>> STARTING E2E CASE: %s", name)
+			defer func() {
+				if t.Failed() {
+					t.Logf(">>> FAILED E2E CASE: %s", name)
+				} else {
+					t.Logf(">>> COMPLETED E2E CASE: %s", name)
+				}
+			}()
 			runE2ECase(t, bin, filepath.Join(root, name))
-			t.Logf(">>> COMPLETED E2E CASE: %s", name)
 		})
 	}
 }
@@ -168,6 +182,12 @@ func runE2ECase(t *testing.T, bin, caseDir string) {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	cmd.Dir = repoRoot
+
+	// Echo the exact invocation under -v so a failure in CI shows the
+	// command line without forcing the reader to derive it from the
+	// case dir. cmd.Args[0] is the binary path; [1:] is the flag set.
+	t.Logf("running case=%s cmd=%s %s",
+		filepath.Base(caseDir), bin, strings.Join(cmd.Args[1:], " "))
 
 	// Run stave in its own process group so a context-deadline kill
 	// also reaches any helpers it might fork. Without this, exec.Cmd's

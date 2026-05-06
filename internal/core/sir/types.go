@@ -285,10 +285,24 @@ type IdentityFact struct {
 // CrossAccount is true when the target ARN's account differs from
 // the source's — the AWS legal-boundary edge that the Z3 Judge
 // reasons over to detect privilege escalation across accounts.
+//
+// HopType names the AWS primitive connecting the two roles.
+// Iter 2 (gap-closure-2) values:
+//
+//	"assume_role"    — sts:AssumeRole and federated variants;
+//	                   the only kind the pre-Iter-2 walker
+//	                   produced.
+//	"tag_mutation"   — ABAC privesc: principal can self-tag the
+//	                   target role to satisfy a tag-conditional
+//	                   trust policy, then assume.
+//
+// Empty / absent on the wire means "assume_role" for backward
+// compatibility with pre-Iter-2 SIR documents.
 type RoleHopFact struct {
 	From         string `json:"from"`
 	To           string `json:"to"`
 	CrossAccount bool   `json:"cross_account,omitempty"`
+	HopType      string `json:"hop_type,omitempty"`
 }
 
 // RoleChainFact is a sequence of one or more RoleHopFact steps

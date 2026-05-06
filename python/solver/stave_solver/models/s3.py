@@ -274,14 +274,14 @@ class _FormulaBuilder:
                 continue
             if not _statement_has_sensitive_public_action(stmt):
                 continue
-            ip_check = _ip_condition_satisfied(stmt)
+            cond_check = _conditions_allow_public(stmt)
             var = z3.Bool(f"policy_stmt_{stmt.statement_index}")
             self.contributing.append(_ContributingSource(
                 var=var,
                 source=_source_ref_to_finding(stmt.source),
                 fact_kind="bucket_policy",
             ))
-            terms.append(z3.And(var, public_principal, ip_check))
+            terms.append(z3.And(var, public_principal, cond_check))
         if not terms:
             return z3.BoolVal(False)
         return z3.And(z3.Or(*terms), z3.Not(deny_active))
@@ -367,59 +367,193 @@ def _iam_statement_targets_sensitive(stmt: sir.IAMPolicyStatementFact) -> bool:
     return False
 
 
-def _ip_condition_satisfied(stmt: sir.BucketPolicyStatementFact) -> z3.BoolRef:
-    """Convert IpAddress aws:SourceIp conditions into a Z3
-    constraint expressing "this statement permits a PUBLIC
-    requester".
+def _conditions_allow_public(stmt: sir.BucketPolicyStatementFact) -> z3.BoolRef:
+    """Conjoin every condition in the statement, returning a Z3
+    BoolRef expressing "a public principal can satisfy ALL
+    conditions on this statement".
 
-    AWS IpAddress semantics: the statement matches when the
-    source IP is inside ANY of the listed CIDRs (logical OR
-    across the values list). For the public-violation
-    question we additionally require the source IP to be a
-    public-internet address (not RFC1918 / loopback / shared
-    address space).
+    Iter 1 (gap-closure-1) replaces the IpAddress-only handler
+    with a per-(operator, key) dispatch. The semantic shift:
 
-    Returns:
-      - BoolVal(True) when no aws:SourceIp condition is present
-        (the statement places no IP restriction; any public IP
-        reaches it).
-      - z3.And(in_listed_cidrs, is_public_ip) when at least one
-        listed CIDR is parseable. If every listed CIDR is
-        private, in_listed_cidrs ∧ is_public_ip is unsatisfiable
-        — i.e., the statement only permits private IPs, no
-        public violation possible.
+      - BEFORE: any condition Stave didn't understand was
+        silently dropped from the formula. A statement with
+        `Condition: StringEquals aws:PrincipalOrgID o-abc123`
+        was treated as if it had no condition at all → the
+        solver flagged org-restricted buckets as PUBLIC.
+        Active false positives.
+      - AFTER: unknown (operator, key) pairs default to FALSE.
+        The solver assumes the unknown condition restricts
+        access. Fail closed beats fail open.
 
-    IPv4 modeled as z3.Int — never BitVec, per the prompt's
-    hard rule.
+    AND semantics across the statement's condition list mirror
+    AWS evaluation: every condition block on a statement must
+    be satisfied for the statement to apply. An empty conditions
+    list returns BoolVal(True) — no restriction, statement
+    applies unconditionally.
     """
-    has_ip_constraint = False
+    if not stmt.conditions:
+        return z3.BoolVal(True)
+    parts: list[z3.BoolRef] = []
+    for cond in stmt.conditions:
+        parts.append(_evaluate_condition_for_public(cond))
+    if len(parts) == 1:
+        return parts[0]
+    return z3.And(*parts)
+
+
+def _evaluate_condition_for_public(cond: sir.ConditionFact) -> z3.BoolRef:
+    """Dispatch one ConditionFact to the matching handler.
+
+    Returns a Z3 BoolRef that is True iff a public principal
+    can satisfy the condition. Unknown (operator, key) pairs
+    fall through to FALSE — the fail-closed default that
+    distinguishes Iter 1 from the IPv4-only handler it
+    replaces.
+    """
+    op = cond.operator or ""
+    key = (cond.key or "").lower()
+
+    if op == "IpAddress" and key == "aws:sourceip":
+        return _ip_condition_in_listed_cidrs_and_public(cond.values)
+    if op == "NotIpAddress" and key == "aws:sourceip":
+        # Statement matches when source IP is OUTSIDE listed
+        # CIDRs. Public violation requires the public-internet
+        # IP to also be outside those CIDRs — typically true,
+        # so this looks SAT-friendly. Caller composes with the
+        # rest of the statement.
+        return _ip_condition_outside_listed_cidrs_and_public(cond.values)
+
+    if key == "aws:principalorgid":
+        # An anonymous "*" principal carries no org membership.
+        # StringEquals → cannot match → False.
+        # StringNotEquals → trivially holds (no org ≠ any org)
+        # → True. The latter is rare and usually means
+        # "deny except this org" wrapping a Deny statement;
+        # for an Allow, NotEquals with a public principal
+        # pattern is unusual but logically permits.
+        if op in ("StringEquals", "StringEqualsIgnoreCase", "StringEqualsIfExists"):
+            return z3.BoolVal(False)
+        if op in ("StringNotEquals", "StringNotEqualsIgnoreCase"):
+            return z3.BoolVal(True)
+        return z3.BoolVal(False)
+
+    if key == "aws:sourcevpce":
+        # VPC endpoints are private network constructs;
+        # public-internet traffic doesn't carry a SourceVpce.
+        # StringEquals → impossible for public → False.
+        if op in ("StringEquals", "StringEqualsIgnoreCase", "StringEqualsIfExists"):
+            return z3.BoolVal(False)
+        if op in ("StringNotEquals", "StringNotEqualsIgnoreCase"):
+            return z3.BoolVal(True)
+        return z3.BoolVal(False)
+
+    if key == "aws:securetransport":
+        # HTTPS or HTTP is achievable from public, so this
+        # condition does not restrict who-can-access. Model
+        # it as True regardless of the boolean value — it
+        # gates transport, not access.
+        if op in ("Bool", "BoolIfExists"):
+            return z3.BoolVal(True)
+        return z3.BoolVal(False)
+
+    if key == "aws:principalarn":
+        if op in ("StringLike", "ArnLike", "StringLikeIfExists", "ArnLikeIfExists"):
+            return _arn_pattern_allows_public(cond.values)
+        if op in ("StringNotLike", "ArnNotLike"):
+            # NotLike with any specific pattern allows the
+            # public principal "*" trivially (* doesn't match
+            # any specific ARN pattern). Conservative: True.
+            return z3.BoolVal(True)
+        if op in ("StringEquals", "ArnEquals"):
+            # Equals with literal "*" (rare) → True; any
+            # specific ARN → False.
+            for v in cond.values:
+                if v == "*":
+                    return z3.BoolVal(True)
+            return z3.BoolVal(False)
+        if op in ("StringNotEquals", "ArnNotEquals"):
+            return z3.BoolVal(True)
+        return z3.BoolVal(False)
+
+    if key in ("aws:sourcearn", "aws:sourceaccount"):
+        # Service-confused-deputy guards. A public principal
+        # carries no SourceArn / SourceAccount → equality
+        # cannot hold → False. NotEquals → trivially holds
+        # (public principal has nothing to compare against)
+        # → True. The Allow-side use of SourceArn is the
+        # standard SNS/SQS guard pattern; public access through
+        # such a statement is impossible.
+        if op in (
+            "StringEquals", "StringEqualsIfExists",
+            "ArnEquals", "ArnEqualsIfExists",
+            "StringLike", "ArnLike",
+            "StringLikeIfExists", "ArnLikeIfExists",
+        ):
+            return z3.BoolVal(False)
+        if op in ("StringNotEquals", "ArnNotEquals", "StringNotLike", "ArnNotLike"):
+            return z3.BoolVal(True)
+        return z3.BoolVal(False)
+
+    if key in ("aws:currenttime", "aws:epochtime"):
+        # Date/time conditions constrain WHEN the statement
+        # applies. For the public-access question we don't
+        # model the present time symbolically; conservatively
+        # treat as restricted.
+        return z3.BoolVal(False)
+
+    # Fail closed: any (operator, key) pair the dispatch table
+    # doesn't recognize is treated as restricting public access.
+    # The statement contributes nothing to the public-access
+    # disjunction. This is the load-bearing change of Iter 1.
+    return z3.BoolVal(False)
+
+
+def _ip_condition_in_listed_cidrs_and_public(values: list[str]) -> z3.BoolRef:
+    """IpAddress aws:SourceIp: source IP must be inside ANY
+    listed CIDR (logical OR across values) AND in public
+    internet space (NOT RFC1918 / loopback / shared)."""
     listed_cidrs: list[z3.BoolRef] = []
     source_ip = z3.Int("source_ip")
-
-    for cond in stmt.conditions:
-        if cond.operator != "IpAddress":
+    for cidr_str in values:
+        net = _parse_ipv4_network(cidr_str)
+        if net is None:
             continue
-        if cond.key.lower() != "aws:sourceip":
-            continue
-        for cidr_str in cond.values:
-            has_ip_constraint = True
-            net = _parse_ipv4_network(cidr_str)
-            if net is None:
-                continue
-            start = int(net.network_address)
-            end = start + (net.num_addresses - 1)
-            listed_cidrs.append(z3.And(source_ip >= start, source_ip <= end))
-
-    if not has_ip_constraint:
-        return z3.BoolVal(True)
+        start = int(net.network_address)
+        end = start + (net.num_addresses - 1)
+        listed_cidrs.append(z3.And(source_ip >= start, source_ip <= end))
     if not listed_cidrs:
-        # Every condition value failed to parse — conservative
-        # fallback: treat as no constraint.
         return z3.BoolVal(True)
+    return z3.And(z3.Or(*listed_cidrs), _is_public_ip_constraint(source_ip))
 
-    in_listed_cidrs = z3.Or(*listed_cidrs)
-    is_public_ip = _is_public_ip_constraint(source_ip)
-    return z3.And(in_listed_cidrs, is_public_ip)
+
+def _ip_condition_outside_listed_cidrs_and_public(values: list[str]) -> z3.BoolRef:
+    """NotIpAddress aws:SourceIp: source IP must be OUTSIDE
+    every listed CIDR AND in public internet space."""
+    listed_cidrs: list[z3.BoolRef] = []
+    source_ip = z3.Int("source_ip")
+    for cidr_str in values:
+        net = _parse_ipv4_network(cidr_str)
+        if net is None:
+            continue
+        start = int(net.network_address)
+        end = start + (net.num_addresses - 1)
+        listed_cidrs.append(z3.Or(source_ip < start, source_ip > end))
+    if not listed_cidrs:
+        return z3.BoolVal(True)
+    return z3.And(z3.And(*listed_cidrs), _is_public_ip_constraint(source_ip))
+
+
+def _arn_pattern_allows_public(values: list[str]) -> z3.BoolRef:
+    """StringLike / ArnLike on aws:PrincipalArn. A pattern that
+    is literally "*" matches every principal including the
+    anonymous wildcard. Anything more specific (account ID,
+    role-name pattern) restricts to a known principal set
+    that excludes the public wildcard.
+    """
+    for v in values:
+        if v == "*":
+            return z3.BoolVal(True)
+    return z3.BoolVal(False)
 
 
 def _is_public_ip_constraint(source_ip: z3.ArithRef) -> z3.BoolRef:
