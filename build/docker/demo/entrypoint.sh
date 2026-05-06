@@ -26,6 +26,8 @@ Usage:
   docker run stave-tutorials --hipaa --fixed         Run HIPAA profile (fully remediated)
   docker run stave-tutorials --hipaa --json          Run HIPAA profile with JSON output
   docker run stave-tutorials --risk-chains           Show the 3 built-in safety chains
+  docker run stave-tutorials --z3-walkthrough        Run the canned Z3 solver demo (S3 public exposure)
+  docker run stave-tutorials --solver                Read SIR JSON from stdin and emit findings (raw solver)
   docker run stave-tutorials --try-your-own           Run stave on your own AWS bucket
 HELP
 }
@@ -289,6 +291,86 @@ run_hipaa() {
   return "$rc"
 }
 
+# --z3-walkthrough: a canned end-to-end demo of the Z3 solver
+# pipeline. Builds a SIR document from scenario 1's bad
+# observations, pipes it through stave-solver, and renders the
+# resulting findings — all inside the running container.
+run_z3_walkthrough() {
+  local dir="$SCENARIOS_DIR/01"
+  IFS='|' read -r ctl sev name < "$dir/meta.txt"
+
+  ensure_init
+  cd "$WORK_DIR"
+  rm -f "$WORK_DIR"/observations/*.json
+  cp "$dir/bad"/*.json "$WORK_DIR/observations/"
+  write_focused_config "$ctl"
+
+  cat <<INTRO
+================================================================
+  Stave Z3 Solver — End-to-End Walkthrough
+================================================================
+
+This walkthrough exercises the full pipeline:
+
+  observations + controls
+    -> stave export-sir
+    -> SIR JSON document
+    -> stave-solver (Z3)
+    -> findings with model-extracted suggested fixes
+
+Scenario: $name ($ctl, $sev)
+
+Step 1. Produce a SIR document from the scenario:
+
+  \$ stave export-sir --observations observations \\
+                     --now 2026-03-21T12:00:00Z \\
+                     > /tmp/sir.json
+
+Step 2. Sanity-check the SIR shape:
+
+INTRO
+
+  stave export-sir --observations observations \
+                   --now 2026-03-21T12:00:00Z \
+                   > /tmp/sir.json 2>/dev/null
+
+  echo "  Controls in SIR: $(jq '.controls | length' /tmp/sir.json)"
+  echo "  Assets in SIR:   $(jq '.assets | length' /tmp/sir.json)"
+  echo ""
+
+  cat <<MID
+Step 3. Pipe the SIR through the Z3 solver:
+
+  \$ stave-solver < /tmp/sir.json | jq .
+
+Findings:
+
+MID
+
+  stave-solver < /tmp/sir.json | jq .
+
+  cat <<OUTRO
+
+Step 4. (For interactive use) compose the pipeline directly:
+
+  \$ stave export-sir --observations observations \\
+                     --now 2026-03-21T12:00:00Z \\
+  | stave-solver | jq .
+
+The 'suggested_fix' block on each finding is the Z3 backend's
+distinctive output — a model-extracted minimal change that
+flips the unsafe predicate to safe.
+================================================================
+OUTRO
+}
+
+# --solver: raw solver entrypoint. Reads SIR JSON from stdin and
+# writes Stave findings to stdout. Useful when piping output
+# from a separate \`docker compose run\` of stave export-sir.
+run_solver() {
+  exec stave-solver "$@"
+}
+
 show_try_your_own() {
   cat <<'OWN'
 Try with your own AWS data
@@ -445,6 +527,13 @@ case "${1:-}" in
   --hipaa)
     run_hipaa "$@"
     exit $?
+    ;;
+  --z3-walkthrough)
+    run_z3_walkthrough
+    ;;
+  --solver)
+    shift
+    run_solver "$@"
     ;;
   --try-your-own)
     show_try_your_own
