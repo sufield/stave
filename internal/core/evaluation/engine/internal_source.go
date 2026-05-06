@@ -69,15 +69,18 @@ func (s *InternalFindingSource) ProduceFindings(ctx context.Context, req evaluat
 	if err != nil {
 		return nil, err
 	}
-	return findingsFromReport(report), nil
+	return findingsFromReport(&report), nil
 }
 
 // findingsFromReport extracts the findings slice from a
 // ComplianceReport. ComplianceReport carries findings under
-// the Findings field of its inner Result; centralizing the
-// extraction here means a future report-shape change lands
-// once.
-func findingsFromReport(report evaluation.ComplianceReport) []evaluation.Finding {
+// the Findings field; centralizing the extraction here means
+// a future report-shape change lands once. Pointer receiver
+// avoids the 616-byte by-value copy gocritic flagged.
+func findingsFromReport(report *evaluation.ComplianceReport) []evaluation.Finding {
+	if report == nil {
+		return nil
+	}
 	return report.Findings
 }
 

@@ -198,8 +198,35 @@ func runE2ECase(t *testing.T, bin, caseDir string) {
 	checkExitCode(t, caseDir, exitCode, stdout.Bytes(), stderr.Bytes())
 	checkStderrPattern(t, caseDir, stderr.String())
 
-	out := stdout.Bytes()
+	// TrimSpace handles leading newlines / whitespace before
+	// the JSON root; without it a stray "\n" in stdout flips
+	// isJSON to false and silently skips every JSON validator
+	// below, masking the real cause when CI surfaces the case
+	// as a vague package-level FAIL.
+	out := bytes.TrimSpace(stdout.Bytes())
+
+	expectsJSON := fileExists(filepath.Join(caseDir, "expected.summary.json")) ||
+		fileExists(filepath.Join(caseDir, "expected.findings.count")) ||
+		fileExists(filepath.Join(caseDir, "expected.input_hashes.json")) ||
+		fileExists(filepath.Join(caseDir, "expected.source_evidence.json")) ||
+		fileExists(filepath.Join(caseDir, "expected.out.json")) ||
+		fileExists(filepath.Join(caseDir, "expected.out.sarif"))
+
 	isJSON := len(out) > 0 && (out[0] == '{' || out[0] == '[')
+
+	if expectsJSON && !isJSON {
+		// Turn fixture intent into a hard assertion. A case
+		// that ships expected.* JSON files but produces empty
+		// or non-JSON stdout is broken; failing here with the
+		// case path + truncated stdout/stderr makes the
+		// failing fixture obvious instead of letting the harness
+		// silently skip validation and surface a vague
+		// package-level failure later.
+		t.Fatalf(
+			"case %s: expected JSON output but got non-JSON/empty stdout\nstdout:\n%s\nstderr:\n%s",
+			caseDir, truncate(stdout.Bytes(), 4096), truncate(stderr.Bytes(), 4096),
+		)
+	}
 
 	if isJSON {
 		checkSummary(t, caseDir, out)

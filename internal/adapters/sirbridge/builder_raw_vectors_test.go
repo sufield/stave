@@ -133,15 +133,15 @@ func TestSIRContainsNoDerivedFields(t *testing.T) {
 	// block_public_acls, is_public on a TypedPrincipal) are
 	// inputs, not outputs — they pass through cleanly.
 	denyPatterns := []*regexp.Regexp{
-		regexp.MustCompile(`"effective_[a-z_]+"`),     // effective_*
-		regexp.MustCompile(`"[a-z_]+_suppressed"`),    // *_suppressed
-		regexp.MustCompile(`"suppressed"`),            // bare suppressed flag
-		regexp.MustCompile(`"is_violating"`),          // derived violation flag
-		regexp.MustCompile(`"public_via_[a-z_]+"`),    // public_via_acl
+		regexp.MustCompile(`"effective_[a-z_]+"`),      // effective_*
+		regexp.MustCompile(`"[a-z_]+_suppressed"`),     // *_suppressed
+		regexp.MustCompile(`"suppressed"`),             // bare suppressed flag
+		regexp.MustCompile(`"is_violating"`),           // derived violation flag
+		regexp.MustCompile(`"public_via_[a-z_]+"`),     // public_via_acl
 		regexp.MustCompile(`"public_through_[a-z_]+"`), // public_through_*
-		regexp.MustCompile(`"composite_[a-z_]+"`),     // composite_score, composite_principal
-		regexp.MustCompile(`"effective_permissions"`), // the retired top-level field
-		regexp.MustCompile(`"contributing_sources"`),  // EFP-era field; never a Document-level concept now
+		regexp.MustCompile(`"composite_[a-z_]+"`),      // composite_score, composite_principal
+		regexp.MustCompile(`"effective_permissions"`),  // the retired top-level field
+		regexp.MustCompile(`"contributing_sources"`),   // EFP-era field; never a Document-level concept now
 	}
 	body := string(encoded)
 	for _, pat := range denyPatterns {
