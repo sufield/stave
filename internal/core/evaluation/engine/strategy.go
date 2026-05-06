@@ -197,7 +197,11 @@ type unsafeStateStrategy struct {
 }
 
 func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
-	if s.ctl == nil {
+	if s.ctl == nil || t == nil {
+		// Mirrors prefixExposureStrategy: a session that handed
+		// us a nil lifecycle would NPE inside newControlRow /
+		// t.Asset() — surface an empty check instead so the
+		// assessor's verdict count stays consistent.
 		return evaluation.ResourceCheck{}, nil
 	}
 	observation := newControlRow(s.ctl, t)
@@ -313,7 +317,9 @@ type unsafeDurationStrategy struct {
 }
 
 func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
-	if s.ctl == nil {
+	if s.ctl == nil || t == nil {
+		// Same nil-lifecycle guard as unsafeStateStrategy and
+		// prefixExposureStrategy — newControlRow derefs t.Asset().
 		return evaluation.ResourceCheck{}, nil
 	}
 	observation := newControlRow(s.ctl, t)
@@ -380,7 +386,9 @@ type unsafeRecurrenceStrategy struct {
 }
 
 func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time, ids IdentityIndex) (evaluation.ResourceCheck, []*evaluation.Finding) {
-	if s.ctl == nil {
+	if s.ctl == nil || t == nil {
+		// Same nil-lifecycle guard as the other duration-based
+		// strategies — newControlRow derefs t.Asset().
 		return evaluation.ResourceCheck{}, nil
 	}
 	observation := newControlRow(s.ctl, t)

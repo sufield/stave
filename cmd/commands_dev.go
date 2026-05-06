@@ -12,6 +12,7 @@ import (
 	"runtime/debug"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -187,7 +188,11 @@ Examples:
 			return runner.Run(edition, verbose, verify)
 		},
 	}
-	cmd.Flags().BoolVar(&verbose, "verbose", false, "Include schema and lockfile status")
+	// `--details` rather than `--verbose`: the root command
+	// reserves `--verbose` (CountVar) for log-volume control. A
+	// local BoolVar of the same name silently shadowed the global
+	// here — passing `-vv` to the version command did nothing.
+	cmd.Flags().BoolVar(&verbose, "details", false, "Include schema and lockfile status")
 	cmd.Flags().BoolVar(&verify, "verify", false, "Print binary and policy library integrity hashes")
 	cmd.Flags().BoolVar(&sbom, "sbom", false, "Output CycloneDX JSON Software Bill of Materials")
 	return cmd
@@ -281,6 +286,11 @@ func writeSBOM(w io.Writer, _ Edition) error {
 		SpecVersion: "1.5",
 		Version:     1,
 		Metadata: sbomMetadata{
+			// CycloneDX 1.5 § "metadata/timestamp" requires a
+			// formatted timestamp. UTC + RFC 3339 matches the
+			// spec's example shape; reproducible-build users
+			// can post-process if a fixed value is required.
+			Timestamp: time.Now().UTC().Format(time.RFC3339),
 			Tools: []sbomTool{{
 				Vendor:  "sufield",
 				Name:    "stave",

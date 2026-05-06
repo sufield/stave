@@ -269,13 +269,25 @@ func (a *App) handleExecutionError(err error, args []string) {
 	// ErrInterrupted) already had their user-facing output produced
 	// by the command itself before returning, so writeCommandError
 	// would print a duplicate "Violations detected" message under
-	// the actual finding listing. Validation errors are different:
-	// the validation command often returns the sentinel without
-	// having printed anything user-facing, so the operator sees
-	// only an exit code with no explanation. Surface those
-	// explicitly via writeCommandError, keeping the silent-on-
-	// finding-sentinels behavior for the rest.
-	if !isSentinelError(err) || isValidationSentinel(err) {
+	// the actual finding listing.
+	//
+	// Validation sentinels are emitted only by commands (`stave
+	// validate-controls lint`, `stave apply --dry-run`, ...) that
+	// have already printed their diagnostic listing to stdout —
+	// duplicating with a structured stderr banner produced
+	// confusing back-to-back failure messages. The contract: any
+	// command that returns a validation sentinel must have
+	// already produced operator-actionable output. Add a
+	// validation command without that output → user sees only an
+	// exit code; that's a contract bug in the command, not the
+	// executor.
+	if !isSentinelError(err) {
+		// Non-sentinel: a command-level failure with no
+		// pre-printed user output. Surface the structured
+		// error block. Sentinels (finding + validation) skip
+		// this entirely — the originating command already
+		// printed the actionable diagnostics, so a stderr
+		// banner duplicated the message.
 		a.writeCommandError(err, args)
 	}
 

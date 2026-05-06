@@ -1,12 +1,57 @@
 package sirbridge
 
 import (
+	"log/slog"
 	"strconv"
 
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/sir"
 	"github.com/sufield/stave/internal/platform/providers/aws/s3/policy"
 )
+
+// readBucketPolicyJSON pulls the `policy_json` field from an
+// asset's properties, surfacing a warning when the field exists
+// but is the wrong type. Pre-fix the silent type assertion
+// dropped malformed values into "no policy" — bucket policies
+// stored as []byte or numbers (collector bugs in production
+// traces) silently disappeared instead of being flagged.
+func readBucketPolicyJSON(a asset.Asset) string {
+	raw, ok := a.Properties["policy_json"]
+	if !ok || raw == nil {
+		return ""
+	}
+	s, isString := raw.(string)
+	if !isString {
+		slog.Warn("bucket policy_json has unexpected type — skipping",
+			"asset_id", string(a.ID),
+			"actual_type", typeName(raw))
+		return ""
+	}
+	return s
+}
+
+// typeName produces a short type label for slog warnings without
+// pulling in reflect for hot paths.
+func typeName(v any) string {
+	switch v.(type) {
+	case string:
+		return "string"
+	case []byte:
+		return "[]byte"
+	case map[string]any:
+		return "map[string]any"
+	case []any:
+		return "[]any"
+	case bool:
+		return "bool"
+	case float64:
+		return "float64"
+	case nil:
+		return "nil"
+	default:
+		return "unknown"
+	}
+}
 
 // extractBucketPolicyStatements decodes the bucket policy JSON
 // stored at asset.Properties["policy_json"] and emits one
@@ -29,7 +74,7 @@ import (
 // suggester, the explainer) navigate to specific statements
 // via the index.
 func extractBucketPolicyStatements(a asset.Asset) []sir.BucketPolicyStatementFact {
-	policyJSON, _ := a.Properties["policy_json"].(string)
+	policyJSON := readBucketPolicyJSON(a)
 	if policyJSON == "" {
 		return nil
 	}

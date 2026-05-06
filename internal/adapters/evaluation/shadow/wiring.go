@@ -78,8 +78,14 @@ func LogPrecomputedDivergence(
 	// regardless of req; the secondary actually consumes the
 	// request and produces solver output. We discard the
 	// returned findings — the call's value is the divergence
-	// log line emitted by the decorator.
-	_, _ = shadow.ProduceFindings(ctx, req)
+	// log line emitted by the decorator. We DO surface the
+	// returned error: a shadow-pipeline failure (subprocess
+	// crash, malformed solver output) is operator-actionable
+	// even though it must NOT block the primary path.
+	if _, err := shadow.ProduceFindings(ctx, req); err != nil {
+		logger.Warn("shadow: secondary solver failed; primary findings unaffected",
+			slog.String("error", err.Error()))
+	}
 }
 
 // resolveSecondaryTimeout reads STAVE_SHADOW_TIMEOUT and returns

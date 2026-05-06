@@ -193,9 +193,20 @@ func (r *GovernanceResolver) ResolveCIFailurePolicy() PolicyValue[string] {
 // ResolveCLIOutput returns the CLI output format with provenance.
 func (r *GovernanceResolver) ResolveCLIOutput() PolicyValue[string] {
 	if r.Settings != nil {
-		v := strings.ToLower(strings.TrimSpace(r.Settings.CLIDefaults.Output))
+		raw := r.Settings.CLIDefaults.Output
+		v := strings.ToLower(strings.TrimSpace(raw))
 		if v == "json" || v == "text" {
 			return PolicyValue[string]{Value: v, Source: r.SettingsPath + ":cli_defaults.output", Layer: LayerUserConfig}
+		}
+		if v != "" {
+			// Non-empty but invalid: silently falling back to
+			// "text" hid config-file typos (e.g. "Json", "yaml")
+			// from operators. Surface the rejection so they can
+			// fix the config; default still applies.
+			slog.Warn("config: cli_defaults.output rejected; using default",
+				slog.String("invalid", raw),
+				slog.String("source", r.SettingsPath),
+				slog.String("default", "text"))
 		}
 	}
 	return PolicyValue[string]{Value: "text", Source: "default", Layer: LayerDefault}
@@ -220,9 +231,16 @@ func (r *GovernanceResolver) ResolveCLISanitize() PolicyValue[bool] {
 // ResolveCLIPathMode returns the CLI path mode with provenance.
 func (r *GovernanceResolver) ResolveCLIPathMode() PolicyValue[string] {
 	if r.Settings != nil {
-		v := strings.ToLower(strings.TrimSpace(r.Settings.CLIDefaults.PathMode))
+		raw := r.Settings.CLIDefaults.PathMode
+		v := strings.ToLower(strings.TrimSpace(raw))
 		if v == "base" || v == "full" {
 			return PolicyValue[string]{Value: v, Source: r.SettingsPath + ":cli_defaults.path_mode", Layer: LayerUserConfig}
+		}
+		if v != "" {
+			slog.Warn("config: cli_defaults.path_mode rejected; using default",
+				slog.String("invalid", raw),
+				slog.String("source", r.SettingsPath),
+				slog.String("default", "base"))
 		}
 	}
 	return PolicyValue[string]{Value: "base", Source: "default", Layer: LayerDefault}

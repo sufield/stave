@@ -136,6 +136,37 @@ type WorkspacePolicy struct {
 	BudgetFailSeverity       []string                  `yaml:"budget_fail_severity"`
 }
 
+// Validate runs the same field-level validators that
+// SetAuditValue applies on programmatic mutations, but in one
+// pass after a YAML decode. Catches invalid duration formats,
+// unknown enforcement-gate values, and bad capture cadences at
+// load time instead of letting them propagate to evaluation
+// where the failure mode is opaque (silent default fallback).
+//
+// Returns the FIRST validation error encountered; callers can
+// re-run after fixing one field to surface subsequent issues.
+// Used by callers that want the validation step explicit; the
+// existing SetAuditValue code path also reuses validateAuditSetting
+// per-field on programmatic mutations.
+func (p *WorkspacePolicy) Validate() error {
+	if p == nil {
+		return nil
+	}
+	for _, field := range []string{
+		"MaxUnsafe",
+		"SnapshotRetention",
+		"RetentionTier",
+		"CIFailurePolicy",
+		"CaptureCadence",
+		"SnapshotFilenameTemplate",
+	} {
+		if err := validateAuditSetting(p, field); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // PolicyException allows a specific resource to bypass a security control.
 // ControlID is validated at YAML load time via kernel.ControlID.UnmarshalYAML.
 // Expires uses policy.ExpiryDate so YAML loaders parse the date once at the

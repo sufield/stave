@@ -40,10 +40,21 @@ func ResolveTierForPath(relPath string, rules []retention.Rule, defaultTier stri
 }
 
 // MatchGlob handles standard filepath globs and recursive "/**" suffixes.
+// A "dir/**" pattern matches every descendant of `dir/` AND the bare
+// directory `dir` itself — the recursive form would otherwise miss
+// retention rules targeted at "snapshots/**" when the path being
+// matched is the bare "snapshots" entry (which the directory walker
+// produces during pruning).
 func MatchGlob(pattern, relPath string) (bool, error) {
 	if strings.HasSuffix(pattern, "/**") {
-		prefix := strings.TrimSuffix(pattern, "**")
-		return strings.HasPrefix(relPath, prefix), nil
+		prefix := strings.TrimSuffix(pattern, "/**")
+		// Accept both "dir" (bare directory) and any descendant
+		// "dir/whatever". TrimSuffix-of-"/" before equality so a
+		// pattern of "dir/**" matches "dir" without trailing slash.
+		if relPath == prefix {
+			return true, nil
+		}
+		return strings.HasPrefix(relPath, prefix+"/"), nil
 	}
 	return filepath.Match(pattern, relPath)
 }

@@ -169,8 +169,24 @@ func extractKMSKeyID(a asset.Asset) string {
 // extractClassification retrieves the data-classification tag.
 // Falls back to "unclassified" when missing.
 func extractClassification(a asset.Asset) string {
-	tags, ok := a.Properties["tags"].(map[string]any)
-	if !ok {
+	var tags map[string]any
+	if rawTags, present := a.Properties["tags"]; present {
+		typed, tagsOK := rawTags.(map[string]any)
+		if !tagsOK {
+			// Symmetric with the storage.tags malformed-shape
+			// warning below. Without this, an extractor bug
+			// that put a list / string at properties.tags
+			// silently produced "unclassified" with no operator
+			// signal.
+			slog.Warn("extractClassification: tags has unexpected type; falling back to unclassified",
+				"asset_id", string(a.ID),
+				"actual_type", fmt.Sprintf("%T", rawTags),
+			)
+			return "unclassified"
+		}
+		tags = typed
+	}
+	if tags == nil {
 		// Try nested storage.tags path. A non-map value at
 		// `storage.tags` is treated as malformed input rather than
 		// silently dropped — the previous shape discarded the type

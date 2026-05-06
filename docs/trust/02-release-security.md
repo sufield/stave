@@ -18,6 +18,38 @@ Checksum and signature verification can be performed offline after downloading a
 
 ---
 
+## What this release covers
+
+The Stave release pipeline produces **only the `stave` Go binary** and
+its packaging artifacts (Linux packages, Homebrew formula, Docker
+image). The binary is pure Go (`CGO_ENABLED=0`) and has no native
+library dependencies — what you download is what runs.
+
+The optional Z3 solver backend is published through a **separate
+distribution channel** with its own release cadence and supply chain.
+It is never bundled into the Stave Go binary, the Docker image, or
+any of the OS packages listed below. Operators that want the Z3
+backend install it independently — see [Enable the Z3
+Solver](../how-to/enable-z3-solver.md) for the install steps and
+the [Z3 Solver explainer](z3-solver.md) for what each backend does.
+
+This split is intentional:
+
+- The Stave binary release stays small, signature-attested, and free
+  of native-library transitive dependencies.
+- Z3 versioning and supply-chain provenance are owned by the upstream
+  `z3-solver` PyPI wheel (or the operator's own containerised solver
+  image), not by the Stave release tag.
+- Operators that don't need Z3 don't carry libz3 in their attack
+  surface or audit scope.
+
+The Z3 distribution shapes (PyPI install, container image, vendored
+mirror) are listed alongside the install steps in the how-to. Each
+shape has its own checksum / signature provenance owned by its
+upstream — Stave's release pipeline never re-signs them.
+
+---
+
 ## How Releases Are Built
 
 Every tagged release (`v*`) triggers an automated GitHub Actions workflow powered by [GoReleaser](https://goreleaser.com/) that:

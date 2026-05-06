@@ -201,15 +201,22 @@ func (m *Monitor) runCycle(ctx context.Context) {
 	}
 	defer m.running.Store(false)
 
-	// Serialize state mutation across the ticker, fsnotify-debounce
-	// timer, and initial-run paths. Held for the full cycle so two
-	// concurrent cycles produce sequential state transitions instead
-	// of interleaved ones.
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
+	// Run the assessment OUTSIDE the state mutex. Assess can be
+	// long-running (full snapshot evaluation, predicate engine,
+	// chain walker), and holding m.mu through it blocks every
+	// other observer and accessor (snapshot reader, alert
+	// emitter, status reporter) for the full duration. The
+	// `m.running` CAS above guarantees that only one cycle ever
+	// runs assessment at a time; the mutex's job is to serialise
+	// the SHORT state-transition write below.
 	state, violations, slaBreaches, maxDwell, violationIDs, err := m.cfg.Assess(ctx)
 	now := m.cfg.Clock.Now().UTC()
+
+	// Re-acquire the mutex only for the state mutation. Held just
+	// long enough to publish the new state atomically with respect
+	// to readers — typically microseconds rather than seconds.
+	m.mu.Lock()
+	defer m.mu.Unlock()
 
 	if err != nil {
 		alert := ports.WatchAlert{

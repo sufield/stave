@@ -81,6 +81,14 @@ func ResolveProjectConfig(in ProjectConfigInput) (ResolvedProjectConfig, error) 
 	if in.PackRegistry == nil {
 		return ResolvedProjectConfig{}, errors.New("pack registry is required when enabled_control_packs is set")
 	}
+	if in.BuiltinLoader == nil {
+		// Without a loader we cannot satisfy the user's
+		// `enabled_control_packs` request — fail loudly rather
+		// than silently producing zero controls (which would
+		// make every run pass with no findings, the worst
+		// possible failure mode for a security tool).
+		return ResolvedProjectConfig{}, errors.New("builtin loader is required when enabled_control_packs is set")
+	}
 	resolvedIDs, err := in.PackRegistry.ResolveEnabledPacks(packNames)
 	if err != nil {
 		return ResolvedProjectConfig{}, fmt.Errorf("resolve enabled_control_packs: %w", err)

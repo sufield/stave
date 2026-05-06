@@ -149,3 +149,36 @@ func TestResolveDefinedRetentionTiers(t *testing.T) {
 		}
 	})
 }
+
+// TestMatchGlob_RecursiveDirIncludesBareDir pins the dir-handling
+// fix: "snapshots/**" must match BOTH the bare "snapshots"
+// directory entry AND its descendants. Pre-fix, the prefix was
+// trimmed of the "**" suffix only, leaving "snapshots/" as the
+// prefix — `HasPrefix("snapshots", "snapshots/")` is FALSE, so
+// retention rules targeting "snapshots/**" silently missed the
+// directory the rule was meant to govern.
+func TestMatchGlob_RecursiveDirIncludesBareDir(t *testing.T) {
+	cases := []struct {
+		name, pattern, path string
+		want                bool
+	}{
+		{"bare dir matches recursive pattern", "snapshots/**", "snapshots", true},
+		{"descendant matches recursive pattern", "snapshots/**", "snapshots/file.json", true},
+		{"deep descendant matches recursive pattern", "snapshots/**", "snapshots/2026/01/file.json", true},
+		{"sibling does NOT match recursive pattern", "snapshots/**", "snapshots-old", false},
+		{"sibling with prefix does NOT match", "snapshots/**", "snapshotsx", false},
+		{"non-recursive glob unchanged", "*.json", "file.json", true},
+		{"non-recursive glob still misses dir", "*.json", "file.txt", false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := MatchGlob(tc.pattern, tc.path)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tc.want {
+				t.Errorf("MatchGlob(%q, %q) = %v, want %v", tc.pattern, tc.path, got, tc.want)
+			}
+		})
+	}
+}

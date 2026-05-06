@@ -269,11 +269,20 @@ func writeTarGz(files map[string][]byte) ([]byte, error) {
 		}
 	}
 
-	if err := tw.Close(); err != nil {
-		return nil, fmt.Errorf("close tar: %w", err)
-	}
-	if err := gw.Close(); err != nil {
-		return nil, fmt.Errorf("close gzip: %w", err)
+	// Close BOTH writers regardless of which one fails. Without
+	// gw.Close in the tar-failure path the gzip footer was never
+	// flushed, leaking a partial archive AND leaving the writer
+	// (and any underlying buffer pool) referenced. Combine both
+	// errors so the caller sees the complete picture.
+	tarErr := tw.Close()
+	gzipErr := gw.Close()
+	switch {
+	case tarErr != nil && gzipErr != nil:
+		return nil, fmt.Errorf("close tar: %w; close gzip: %w", tarErr, gzipErr)
+	case tarErr != nil:
+		return nil, fmt.Errorf("close tar: %w", tarErr)
+	case gzipErr != nil:
+		return nil, fmt.Errorf("close gzip: %w", gzipErr)
 	}
 	return buf.Bytes(), nil
 }

@@ -116,7 +116,10 @@ func BuildDependencies(ctx context.Context, in *BuildDependenciesInput) (BuildDe
 
 	cfg := NewConfig(in.Plan, opts...)
 
-	runner := NewAuditWorkflow(in.Adapters.ObservationLoader, in.Adapters.ControlLoader, in.Adapters.FindingMarshaler, in.Adapters.EnrichFn)
+	runner, err := NewAuditWorkflow(in.Adapters.ObservationLoader, in.Adapters.ControlLoader, in.Adapters.FindingMarshaler, in.Adapters.EnrichFn)
+	if err != nil {
+		return BuildDependenciesOutput{}, fmt.Errorf("build audit workflow: %w", err)
+	}
 	runner.Logger = in.Logger
 
 	return BuildDependenciesOutput{

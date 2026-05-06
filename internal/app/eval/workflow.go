@@ -2,6 +2,7 @@ package eval
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -101,31 +102,35 @@ func (w *AuditWorkflow) Snapshots() []asset.Snapshot {
 	return out
 }
 
-// NewAuditWorkflow initializes the workflow with required security connectors.
+// NewAuditWorkflow initializes the workflow with required
+// security connectors. Returns an error rather than panicking on
+// missing dependencies — panics on configuration errors are
+// recoverable mistakes (the calling layer typically has its own
+// retry / fallback path) and should not crash the process.
 func NewAuditWorkflow(
 	invRepo appcontracts.ObservationRepository,
 	polRepo appcontracts.ControlRepository,
 	publisher appcontracts.FindingMarshaler,
 	enricher appcontracts.EnrichFunc,
-) *AuditWorkflow {
+) (*AuditWorkflow, error) {
 	if invRepo == nil {
-		panic("AuditWorkflow: ObservationRepo is required")
+		return nil, errors.New("NewAuditWorkflow: ObservationRepo is required")
 	}
 	if polRepo == nil {
-		panic("AuditWorkflow: PolicyRepo is required")
+		return nil, errors.New("NewAuditWorkflow: PolicyRepo is required")
 	}
 	if publisher == nil {
-		panic("AuditWorkflow: ReportPublisher is required")
+		return nil, errors.New("NewAuditWorkflow: ReportPublisher is required")
 	}
 	if enricher == nil {
-		panic("AuditWorkflow: ContextEnricher is required")
+		return nil, errors.New("NewAuditWorkflow: ContextEnricher is required")
 	}
 	return &AuditWorkflow{
 		ObservationRepo: invRepo,
 		PolicyRepo:      polRepo,
 		ReportPublisher: publisher,
 		ContextEnricher: enricher,
-	}
+	}, nil
 }
 
 // PerformAssessment executes the security audit and returns the compliance report.
@@ -134,28 +139,32 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 	if auditData.HasErrors() {
 		return evaluation.ComplianceReport{}, evaluation.StateUnknown, auditData.FirstError()
 	}
-	// Project chain-derived properties into each snapshot's
-	// IAM identities BEFORE the predicate engine runs, when an
-	// enricher is configured. This is the load-bearing wiring
-	// that makes Iter 5/6 chain output (RoleChainFact.HopType
-	// lambda_invoke_existing / cfn_update_existing,
-	// RoleChainFact.ScheduledDeletionAt) visible to the ctrl.v1
-	// controls that read
-	// `properties.identity.escalation.confused_*.present` and
-	// `properties.identity.chain.ghost_deletion.present`. The
-	// enricher mutates Snapshot.Identities[i].Properties in
-	// place, so the cached snapshots and the ones passed to
-	// Evaluate share the augmented data. The composition root
-	// supplies the concrete enricher (typically iam-package
-	// projector) — this layer only sees the port to keep the
-	// hexagonal boundary between app/* and platform/*.
+	// Hold the cache lock across BOTH enrichment and
+	// publication. The enricher mutates
+	// Snapshot.Identities[i].Properties in place; if the
+	// publication happened first (the previous shape) a
+	// concurrent w.Snapshots() reader could observe a snapshot
+	// while CloudIdentity.Properties was being written to. By
+	// performing enrichment under the same lock that guards the
+	// cache write, every Snapshots() observer sees either
+	// pre-enrichment cached data from a prior cycle or fully
+	// enriched new data — never a half-mutated mid-state.
+	//
+	// Iter 5/6 wiring rationale: the enricher folds chain output
+	// (RoleChainFact.HopType lambda_invoke_existing /
+	// cfn_update_existing, RoleChainFact.ScheduledDeletionAt)
+	// into the per-identity booleans the ctrl.v1 controls read
+	// (`identity.escalation.confused_*.present`,
+	// `identity.chain.ghost_deletion.present`). The composition
+	// root supplies the concrete enricher (typically the
+	// iam-package projector); this layer only sees the port to
+	// keep the hexagonal app/platform boundary intact.
+	w.cacheMu.Lock()
 	if w.SnapshotEnricher != nil {
 		for i := range auditData.Snapshots {
 			w.SnapshotEnricher.EnrichSnapshot(&auditData.Snapshots[i])
 		}
 	}
-
-	w.cacheMu.Lock()
 	w.loadedControls = auditData.Controls
 	w.loadedSnapshots = auditData.Snapshots
 	w.cacheMu.Unlock()

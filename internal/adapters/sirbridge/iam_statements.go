@@ -1,6 +1,7 @@
 package sirbridge
 
 import (
+	"log/slog"
 	"strconv"
 	"strings"
 
@@ -110,11 +111,33 @@ func matchesAssetARN(value, bucketARN, bucketARNObjects string) bool {
 // IAM pipeline uses (identity.policies_json). Returns "" when
 // absent.
 func iamPolicyJSON(id *asset.CloudIdentity) string {
-	identityMap, _ := id.Properties["identity"].(map[string]any)
-	if identityMap == nil {
+	raw, hasIdentity := id.Properties["identity"]
+	if !hasIdentity || raw == nil {
 		return ""
 	}
-	s, _ := identityMap["policies_json"].(string)
+	identityMap, ok := raw.(map[string]any)
+	if !ok {
+		// Surface the schema mismatch instead of returning ""
+		// silently. Pre-fix, an `identity` field stored as a
+		// string or list (collector bugs) caused every IAM
+		// statement extraction for that principal to be empty
+		// with no diagnostic.
+		slog.Warn("identity property has unexpected type — skipping policy extraction",
+			"principal_id", string(id.ID),
+			"actual_type", typeName(raw))
+		return ""
+	}
+	jsonRaw, hasJSON := identityMap["policies_json"]
+	if !hasJSON || jsonRaw == nil {
+		return ""
+	}
+	s, ok := jsonRaw.(string)
+	if !ok {
+		slog.Warn("identity.policies_json has unexpected type — skipping",
+			"principal_id", string(id.ID),
+			"actual_type", typeName(jsonRaw))
+		return ""
+	}
 	return s
 }
 
