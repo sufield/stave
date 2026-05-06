@@ -1,7 +1,12 @@
 # Examples
 
-Three self-contained examples you can run on your machine. Each has
-its own observations, controls, and expected output.
+Self-contained examples you can run on your machine. Most have
+their own observations, controls, and expected output and
+exercise the `stave` CLI directly. The `z3-public-exposure`
+example is different: it is a small Go program that composes
+Stave's library API with a Go binding to libz3 to answer a
+SAT/UNSAT question over a snapshot. See its own README for
+build and run instructions.
 
 ## Prerequisites
 
@@ -63,13 +68,39 @@ threshold.
 Exit code 3 — violation found. The bucket has been publicly readable
 for 216 hours (9 days), exceeding the 12-hour threshold.
 
+## 4. Z3 public-exposure (Go example)
+
+A standalone Go program (not driven by the `stave` CLI) that
+loads an observation snapshot via Stave's library API and uses
+a Go binding to libz3 to verify a tiny S3 public-exposure
+property. Build it with cgo + libz3 — see
+[`z3-public-exposure/README.md`](z3-public-exposure/README.md)
+for the full instructions. The simplest way to run it is via
+the demo Docker image:
+
+```bash
+cd <repo-root>/stave
+docker compose build
+docker compose run --rm -T stave --z3-example
+```
+
 ## What each example contains
+
+The first three examples follow this shape:
 
 ```
 examples/<name>/
   controls/      One YAML control (the safety rule)
   observations/  Two or three JSON snapshots (the bucket state over time)
   README.md      Scenario details and expected output
+```
+
+The Go-code example follows a different shape:
+
+```
+examples/z3-public-exposure/
+  main.go        The Go program (uses Stave library + go-z3)
+  README.md      Build, run, and architectural notes
 ```
 
 ## Flags explained

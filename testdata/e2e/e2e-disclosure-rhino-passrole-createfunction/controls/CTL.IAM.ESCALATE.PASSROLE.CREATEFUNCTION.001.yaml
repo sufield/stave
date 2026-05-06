@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001
+name: Principal Must Not Escalate via Lambda CreateFunction Execution Role
+description: >
+  Principals with iam:PassRole on a role R, lambda:CreateFunction, and a
+  path to invoke the function (lambda:InvokeFunction directly, creation
+  of a function URL, or wiring to another trigger) can escalate to R's
+  permissions. The created Lambda executes under R, so any code the
+  principal uploads runs with R's authority. When R's effective
+  permissions exceed the principal's own, this is a privilege
+  escalation path. Rhino Security Labs' iam__privesc_scan and Prowler's
+  iam_policy_allows_privilege_escalation both enumerate this technique.
+  The invocation step is folded into the .present boolean upstream —
+  a CreateFunction grant without any invocation path is not an
+  escalation; the diagnostic fields expose which invocation vector
+  was observed.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - lambda
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.passrole_createfunction.present
+  - identity.escalation.passrole_createfunction.target_role
+  - identity.escalation.passrole_createfunction.permission_delta
+  - identity.escalation.passrole_createfunction.invocation_vector
+  - identity.escalation.passrole_createfunction.runtime
+remediation:
+  description: >
+    Principal has a Lambda-mediated escalation path. Its iam:PassRole
+    reaches a role whose effective permissions exceed the principal's
+    own, its lambda:CreateFunction lets it author new functions under
+    that role, and it has an invocation vector to trigger the function.
+    Any code the principal uploads runs with the target role's full
+    authority.
+  action: >
+    Scope iam:PassRole to a role whose effective permissions do not
+    exceed the principal's, or remove lambda:CreateFunction. If broader
+    function-creation is required for deployment workflows, restrict
+    iam:PassRole with a Condition
+    (`iam:PassedToService == lambda.amazonaws.com` plus a narrowly-
+    scoped Resource ARN set). Alternatively, deny
+    lambda:InvokeFunction and lambda:CreateFunctionUrlConfig on
+    non-admin principals so the created function cannot be triggered.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "passrole_createfunction": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.passrole_createfunction.present
+      op: eq
+      value: true
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 24 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 24 per-technique controls covering the aggregated Prowler check.

@@ -26,8 +26,7 @@ Usage:
   docker run stave-tutorials --hipaa --fixed         Run HIPAA profile (fully remediated)
   docker run stave-tutorials --hipaa --json          Run HIPAA profile with JSON output
   docker run stave-tutorials --risk-chains           Show the 3 built-in safety chains
-  docker run stave-tutorials --z3-walkthrough        Run the canned Z3 solver demo (S3 public exposure)
-  docker run stave-tutorials --solver                Read SIR JSON from stdin and emit findings (raw solver)
+  docker run stave-tutorials --z3-example            Run the Z3 Go example against scenario 1 observations
   docker run stave-tutorials --try-your-own           Run stave on your own AWS bucket
 HELP
 }
@@ -291,11 +290,11 @@ run_hipaa() {
   return "$rc"
 }
 
-# --z3-walkthrough: a canned end-to-end demo of the Z3 solver
-# pipeline. Builds a SIR document from scenario 1's bad
-# observations, pipes it through stave-solver, and renders the
-# resulting findings — all inside the running container.
-run_z3_walkthrough() {
+# --z3-example: run the Z3 Go example against scenario 1's bad
+# observations. The example is a separate Go binary built with
+# cgo + libz3; the main stave binary stays cgo-free. Source:
+# stave/examples/z3-public-exposure/main.go.
+run_z3_example() {
   local dir="$SCENARIOS_DIR/01"
   IFS='|' read -r ctl sev name < "$dir/meta.txt"
 
@@ -303,72 +302,32 @@ run_z3_walkthrough() {
   cd "$WORK_DIR"
   rm -f "$WORK_DIR"/observations/*.json
   cp "$dir/bad"/*.json "$WORK_DIR/observations/"
-  write_focused_config "$ctl"
 
   cat <<INTRO
 ================================================================
-  Stave Z3 Solver — End-to-End Walkthrough
+  Stave + Z3 Go Example
 ================================================================
 
-This walkthrough exercises the full pipeline:
+This example shows how a small Go program can use Stave's
+library API to load an observation snapshot, then encode a
+property in Z3 (via a Go binding to libz3) and let the solver
+verify it.
 
-  observations + controls
-    -> stave export-sir
-    -> SIR JSON document
-    -> stave-solver (Z3)
-    -> findings with model-extracted suggested fixes
+The main stave binary stays pure Go (CGO_ENABLED=0); only this
+example links libz3.
 
 Scenario: $name ($ctl, $sev)
+Source: examples/z3-public-exposure/main.go
 
-Step 1. Produce a SIR document from the scenario:
+Running the example against the scenario's observations:
 
-  \$ stave export-sir --observations observations \\
-                     --now 2026-03-21T12:00:00Z \\
-                     > /tmp/sir.json
+  \$ z3-example /work/observations
 
-Step 2. Sanity-check the SIR shape:
+Output:
 
 INTRO
 
-  stave export-sir --observations observations \
-                   --now 2026-03-21T12:00:00Z \
-                   > /tmp/sir.json 2>/dev/null
-
-  echo "  Controls in SIR: $(jq '.controls | length' /tmp/sir.json)"
-  echo "  Assets in SIR:   $(jq '.assets | length' /tmp/sir.json)"
-  echo ""
-
-  cat <<MID
-Step 3. Pipe the SIR through the Z3 solver:
-
-  \$ stave-solver < /tmp/sir.json | jq .
-
-Findings:
-
-MID
-
-  stave-solver < /tmp/sir.json | jq .
-
-  cat <<OUTRO
-
-Step 4. (For interactive use) compose the pipeline directly:
-
-  \$ stave export-sir --observations observations \\
-                     --now 2026-03-21T12:00:00Z \\
-  | stave-solver | jq .
-
-The 'suggested_fix' block on each finding is the Z3 backend's
-distinctive output — a model-extracted minimal change that
-flips the unsafe predicate to safe.
-================================================================
-OUTRO
-}
-
-# --solver: raw solver entrypoint. Reads SIR JSON from stdin and
-# writes Stave findings to stdout. Useful when piping output
-# from a separate \`docker compose run\` of stave export-sir.
-run_solver() {
-  exec stave-solver "$@"
+  z3-example /work/observations
 }
 
 show_try_your_own() {
@@ -528,12 +487,8 @@ case "${1:-}" in
     run_hipaa "$@"
     exit $?
     ;;
-  --z3-walkthrough)
-    run_z3_walkthrough
-    ;;
-  --solver)
-    shift
-    run_solver "$@"
+  --z3-example)
+    run_z3_example
     ;;
   --try-your-own)
     show_try_your_own

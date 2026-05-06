@@ -23,6 +23,27 @@ func (a *Assessment) FindingsForAsset(id AssetID) []Finding {
 	return out
 }
 
+// FindingsForControl returns every Finding fired by the named control.
+// The returned slice is a fresh copy; consumers may mutate it freely
+// without affecting the Assessment. Domain question: which assets did
+// this control flag?
+//
+// A nil receiver returns an empty (non-nil) slice so callers can range
+// over the result without a presence check, matching the nil-safe
+// pattern used by FindingsForAsset.
+func (a *Assessment) FindingsForControl(id ControlID) []Finding {
+	if a == nil {
+		return []Finding{}
+	}
+	out := make([]Finding, 0)
+	for i := range a.Findings {
+		if a.Findings[i].ControlID == id {
+			out = append(out, a.Findings[i])
+		}
+	}
+	return out
+}
+
 // ConsolidatedIssues returns every Issue that groups more than one
 // finding. The returned slice is a fresh copy. Domain question:
 // which Issues consolidate multiple findings?

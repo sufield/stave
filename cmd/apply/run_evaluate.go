@@ -9,15 +9,11 @@ import (
 
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	packs "github.com/sufield/stave/internal/adapters/controls/pack"
-	"github.com/sufield/stave/internal/adapters/evaluation/shadow"
-	"github.com/sufield/stave/internal/adapters/sirbridge"
 	"github.com/sufield/stave/internal/adapters/telemetry"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/app/exemptlapse"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/ports"
-	"github.com/sufield/stave/internal/core/sir"
 	"github.com/sufield/stave/pkg/stave/cliapi"
 )
 
@@ -93,34 +89,6 @@ func executeEvaluation(ctx context.Context, ec evalContext) (_ EvaluateResult, r
 	// proceeding. cliapi.Apply must return a complete result on
 	// success; IsIncomplete encapsulates the "all required fields
 	// populated" contract on the type itself.
-	// Shadow dark-launch hook. No-op unless STAVE_SHADOW_CMD is
-	// set; when set, invokes the configured external solver
-	// (Iter 3.1.4: typically the Python Z3 solver under
-	// python/solver/) against the same FindingRequest that
-	// produced the primary findings, logs a divergence summary
-	// at slog.LevelDebug, and discards the secondary's output.
-	// The user-visible report is unchanged regardless of shadow
-	// state.
-	if applyRes != nil && applyRes.ComplianceReport != nil {
-		// FindingRequest carries the controls the assessor used.
-		// Snapshots aren't surfaced on cliapi.ApplyResult today;
-		// the secondary therefore receives an empty observation
-		// grid and produces no SIR-derived findings — the
-		// divergence log shows the primary's full count as
-		// "missing" until cliapi exposes the loaded snapshots.
-		// This is a known limitation of the dark-launch wiring,
-		// not a solver bug; flagging it here so a future cliapi
-		// extension closes the gap.
-		shadowReq := evaluation.FindingRequest{
-			Controls: applyRes.Controls,
-			Now:      applyRes.ComplianceReport.Run.Now,
-		}
-		shadowBuilder := sir.NewBuilder(
-			sir.WithRoleChainSource(sirbridge.NewAWSRoleChainSource()),
-			sir.WithResourceFactGrouper(sirbridge.NewAWSS3FactGrouper()),
-		)
-		shadow.LogPrecomputedDivergence(ctx, ec.Logger, applyRes.ComplianceReport.Findings, shadowReq, shadowBuilder)
-	}
 
 	if applyRes.IsIncomplete() {
 		return EvaluateResult{}, fmt.Errorf("execute evaluation: result is incomplete (response=%v)", applyRes)

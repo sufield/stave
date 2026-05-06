@@ -1,0 +1,27 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2018-05-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/eve",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "attach_user_policy_self": {
+              "present": true,
+              "target_user_arn": "arn:aws:iam::111122223333:user/eve",
+              "resource_scope": "self",
+              "reachable_managed_policies": [
+                "arn:aws:iam::aws:policy/AdministratorAccess"
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

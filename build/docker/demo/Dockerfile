@@ -1,30 +1,30 @@
-# Build stage: compile stave from source
+# Build stage: compile stave (cgo-free) and the z3 example
+# (cgo, links libz3) from source.
 FROM golang:1.26-bookworm@sha256:8e8aa801e8417ef0b5c42b504dd34db3db911bb73dba933bd8bde75ed815fdbb AS builder
 ARG VERSION=edge
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libz3-dev pkg-config && \
+    rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 RUN make sync-schemas sync-controls && \
-    CGO_ENABLED=0 go build -ldflags "-s -w -X github.com/sufield/stave/internal/version.String=${VERSION}" -o /stave ./cmd/stave
+    CGO_ENABLED=0 go build -ldflags "-s -w -X github.com/sufield/stave/internal/version.String=${VERSION}" -o /stave ./cmd/stave && \
+    CGO_ENABLED=1 go build -tags z3example -ldflags "-s -w" -o /z3-example ./examples/z3-public-exposure
 
-# Runtime stage: stave Go binary + Python solver under one image.
-# python:3.11-slim is the base because stave-solver is a Python
-# package and this avoids a second apt-install layer for Python.
-FROM python:3.11-slim-bookworm
+# Runtime stage: stave Go binary + Z3 Go example. The stave
+# binary is statically linked (CGO_ENABLED=0); only the Z3
+# example links libz3 dynamically, so the runtime stage installs
+# libz3-4 and jq.
+FROM debian:bookworm-slim@sha256:f06537653ac770703bc45b4b113475bd402f451e85223f0f2837acbf89ab020a
 RUN groupadd -g 10001 stave && \
     useradd -u 10001 -g stave -m -d /work stave && \
     apt-get update && \
-    apt-get install -y --no-install-recommends jq && \
+    apt-get install -y --no-install-recommends libz3-4 jq && \
     rm -rf /var/lib/apt/lists/*
-
-# Install the Z3 solver package. Non-editable since the image is
-# read-only at runtime; this also keeps libz3 resolution simple
-# (the z3-solver wheel ships its own libz3.so).
-COPY python/solver/ /opt/stave-solver/
-RUN pip install --no-cache-dir /opt/stave-solver
-
 COPY --from=builder /stave /usr/local/bin/stave
+COPY --from=builder /z3-example /usr/local/bin/z3-example
 COPY build/docker/demo/scenarios/ /scenarios/
 COPY build/docker/demo/all_controls.txt /scenarios/all_controls.txt
 COPY build/docker/demo/entrypoint.sh /entrypoint.sh

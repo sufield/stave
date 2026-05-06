@@ -38,6 +38,42 @@ func TestFindingsForAssetReturnsDefensiveCopy(t *testing.T) {
 	}
 }
 
+func TestFindingsForControl(t *testing.T) {
+	a := &Assessment{Findings: []Finding{
+		{FindingID: "f1", AssetID: "bucket-a", ControlID: "CTL.S3.PUBLIC.001"},
+		{FindingID: "f2", AssetID: "bucket-b", ControlID: "CTL.S3.PUBLIC.001"},
+		{FindingID: "f3", AssetID: "bucket-a", ControlID: "CTL.S3.PAB.001"},
+	}}
+
+	got := a.FindingsForControl("CTL.S3.PUBLIC.001")
+	if len(got) != 2 {
+		t.Fatalf("FindingsForControl(CTL.S3.PUBLIC.001): want 2 findings, got %d", len(got))
+	}
+	if got[0].FindingID != "f1" || got[1].FindingID != "f2" {
+		t.Errorf("unexpected findings: %v", got)
+	}
+
+	if mismatch := a.FindingsForControl("CTL.X.UNKNOWN.001"); len(mismatch) != 0 {
+		t.Errorf("missing control: want empty slice, got %d findings", len(mismatch))
+	}
+
+	var nilA *Assessment
+	if got := nilA.FindingsForControl("any"); got == nil || len(got) != 0 {
+		t.Errorf("nil receiver: want empty non-nil slice, got %v", got)
+	}
+}
+
+func TestFindingsForControlReturnsDefensiveCopy(t *testing.T) {
+	a := &Assessment{Findings: []Finding{
+		{FindingID: "f1", ControlID: "CTL.S3.PUBLIC.001"},
+	}}
+	got := a.FindingsForControl("CTL.S3.PUBLIC.001")
+	got[0].FindingID = "mutated"
+	if a.Findings[0].FindingID != "f1" {
+		t.Errorf("mutation leaked to Assessment: got %q", a.Findings[0].FindingID)
+	}
+}
+
 func TestConsolidatedAndSingletonIssues(t *testing.T) {
 	a := &Assessment{Issues: []Issue{
 		{IssueID: "i1", MemberFindingIDs: []FindingID{"f1"}},

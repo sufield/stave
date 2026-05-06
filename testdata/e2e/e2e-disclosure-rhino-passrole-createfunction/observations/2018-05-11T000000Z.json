@@ -1,0 +1,30 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2018-05-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/mallory",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "passrole_createfunction": {
+              "present": true,
+              "target_role": "arn:aws:iam::111122223333:role/lambda-admin-execution-role",
+              "permission_delta": [
+                "iam:CreatePolicy",
+                "iam:AttachRolePolicy",
+                "s3:*"
+              ],
+              "invocation_vector": "lambda:InvokeFunction",
+              "runtime": "python3.12"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
