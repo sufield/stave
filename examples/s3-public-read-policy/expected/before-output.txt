@@ -1,0 +1,5 @@
+=== before (vulnerable) ===
+  status: NON_COMPLIANT   total_assets=1   violations=1
+  CTL.S3.PUBLIC.001 fired on 1 asset(s):
+    - arn:aws:s3:::acme-customer-uploads   severity=critical   exposure_score=100.00
+  assertion: fires=true (expected) ✓

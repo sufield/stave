@@ -49,21 +49,41 @@ func main() {
 		log.Fatalf("parse fixed now: %v", err)
 	}
 
-	beforeOK := runScenario(ctx, scenario{
-		label:       "before (vulnerable)",
-		dir:         filepath.Join(root, "fixtures/before/observations"),
-		now:         now,
-		expectFires: true,
-	})
-	fmt.Println()
-	afterOK := runScenario(ctx, scenario{
-		label:       "after  (remediated)",
-		dir:         filepath.Join(root, "fixtures/after/observations"),
-		now:         now,
-		expectFires: false,
-	})
+	// Phase selection lets each phase's stdout be captured to its
+	// own expected/<phase>-output.txt so the article can show the
+	// before / after blocks independently. Default ("both") runs
+	// both for the standalone demo.
+	phase := "both"
+	if len(os.Args) > 1 {
+		phase = os.Args[1]
+	}
 
-	if !beforeOK || !afterOK {
+	allOK := true
+	if phase == "before" || phase == "both" {
+		ok := runScenario(ctx, scenario{
+			label:       "before (vulnerable)",
+			dir:         filepath.Join(root, "fixtures/before/observations"),
+			controlsDir: filepath.Join(root, "controls"),
+			now:         now,
+			expectFires: true,
+		})
+		allOK = allOK && ok
+	}
+	if phase == "both" {
+		fmt.Println()
+	}
+	if phase == "after" || phase == "both" {
+		ok := runScenario(ctx, scenario{
+			label:       "after  (remediated)",
+			dir:         filepath.Join(root, "fixtures/after/observations"),
+			controlsDir: filepath.Join(root, "controls"),
+			now:         now,
+			expectFires: false,
+		})
+		allOK = allOK && ok
+	}
+
+	if !allOK {
 		os.Exit(1)
 	}
 }
@@ -71,6 +91,7 @@ func main() {
 type scenario struct {
 	label       string
 	dir         string
+	controlsDir string
 	now         time.Time
 	expectFires bool
 }
@@ -82,6 +103,7 @@ type scenario struct {
 func runScenario(ctx context.Context, s scenario) bool {
 	cfg := stave.Config{
 		SnapshotsDir:      s.dir,
+		ControlsDir:       s.controlsDir,
 		MaxUnsafe:         maxUnsafe,
 		Now:               s.now,
 		AllowUnknownInput: true,
