@@ -26,8 +26,6 @@ Usage:
   docker run stave-tutorials --hipaa --fixed         Run HIPAA profile (fully remediated)
   docker run stave-tutorials --hipaa --json          Run HIPAA profile with JSON output
   docker run stave-tutorials --risk-chains           Show the 3 built-in safety chains
-  docker run stave-tutorials --export-rego           Export S3 controls to OPA Rego format
-  docker run stave-tutorials --export-rego --all     Export all 243 controls to Rego
   docker run stave-tutorials --try-your-own           Run stave on your own AWS bucket
 HELP
 }
@@ -291,60 +289,6 @@ run_hipaa() {
   return "$rc"
 }
 
-run_export_rego() {
-  local scope="${1:-s3}"
-
-  cat <<'INTRO'
-================================================================
-  Stave → OPA Rego Export
-================================================================
-
-Stave controls are YAML with unsafe_predicate logic. This command
-translates them to OPA Rego deny[msg] rules — same security checks,
-portable to Conftest, OPA, or Gatekeeper.
-
-INTRO
-
-  local controls_dir
-  if [ "$scope" = "all" ]; then
-    echo "Exporting ALL controls to Rego..."
-    echo ""
-    echo '$ stave export --format rego --controls controls/'
-    echo ""
-    controls_dir="/usr/local/share/stave/controls"
-    if [ ! -d "$controls_dir" ]; then
-      controls_dir="$WORK_DIR/controls"
-    fi
-  else
-    echo "Exporting S3 controls to Rego..."
-    echo ""
-    echo '$ stave export --format rego --controls controls/s3'
-    echo ""
-    controls_dir="$WORK_DIR/controls/s3"
-    ensure_init
-  fi
-
-  stave export --format rego --controls "$controls_dir" 2>/dev/null
-
-  echo ""
-  echo "================================================================"
-  echo "  How to use this output"
-  echo "================================================================"
-  echo ""
-  echo "  1. Save to a file:"
-  echo "     stave export --format rego --controls controls/s3 > policy/stave.rego"
-  echo ""
-  echo "  2. Test with Conftest:"
-  echo "     conftest test terraform.json --policy policy/"
-  echo ""
-  echo "  3. Evaluate with OPA:"
-  echo "     opa eval --data stave.rego --input obs.json 'data.stave.deny'"
-  echo ""
-  echo "  4. Custom package name:"
-  echo "     stave export --format rego --package myorg.cloud --controls controls/"
-  echo "================================================================"
-}
-
 show_try_your_own() {
   cat <<'OWN'
 Try with your own AWS data
@@ -501,13 +445,6 @@ case "${1:-}" in
   --hipaa)
     run_hipaa "$@"
     exit $?
-    ;;
-  --export-rego)
-    scope="s3"
-    if [ "${2:-}" = "--all" ]; then
-      scope="all"
-    fi
-    run_export_rego "$scope"
     ;;
   --try-your-own)
     show_try_your_own

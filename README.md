@@ -202,7 +202,6 @@ Full reference: [Control reference](docs/controls/reference.md)
 | [Authoring controls](docs/controls/authoring.md) | Write custom YAML controls |
 | [Pre-commit hook](docs/integrations/pre-commit.md) | Block unsafe configs before commit |
 | [Atlantis integration](docs/integrations/atlantis.md) | Evaluate Terraform plans before apply |
-| [OPA Rego export](docs/integrations/opa-export.md) | Export controls to OPA/Conftest |
 | [Risk reasoning](docs/risk-reasoning.md) | Compound risk scoring and safety chains |
 | [Identity blast radius](docs/identity-blast-radius.md) | Credential compromise reach analysis |
 | [Unauthenticated reachability](docs/unauthenticated-reachability.md) | Anonymous access path detection |

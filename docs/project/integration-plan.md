@@ -285,17 +285,6 @@ workflows:
 
 ## Priority 5: Policy Engine Alignment (future)
 
-### OPA / Conftest
-
-**What**: Export stave controls as Rego policies for OPA/Conftest users.
-
-**Approach**: Build a `stave export --format rego` command that
-translates `ctrl.v1` YAML predicates to equivalent Rego rules. This
-lets teams that already use OPA adopt stave's control logic without
-switching tools.
-
-**Effort**: New `export` subcommand. Medium code change.
-
 ### driftctl Complement
 
 **What**: driftctl detects IaC-to-live drift. Stave evaluates the live

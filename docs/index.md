@@ -49,7 +49,6 @@
 - [Supply Chain Extractor Guide](extractor-supply-chain.md) — OIDC trust policy analysis
 - [Pre-Commit Hook](integrations/pre-commit.md) — Block unsafe configs before commit
 - [Atlantis Post-Plan](integrations/atlantis.md) — Evaluate Terraform plans before apply
-- [OPA Rego Export](integrations/opa-export.md) — Export controls to OPA/Conftest Rego format
 - [Sanitization](sanitization.md) — Scrubbing sensitive data from output
 - [Offline and Air-Gapped Operation](offline-airgapped.md) — Running without network access
 

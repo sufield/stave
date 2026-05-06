@@ -55,7 +55,6 @@ All commands ship in the standard `stave` binary. No build tags are required.
 | Command | Purpose | Input | Output | When to use |
 |---|---|---|---|---|
 | `telemetry` | Emit structured NDJSON from assessment | stdin or `--in` assessment JSON | One NDJSON line per finding | Feeding Splunk, Grafana, Elastic, or compliance trending pipelines |
-| `export` | Export controls to OPA Rego format | `--controls` dir | Rego policy file | Integrating Stave controls with Conftest or OPA |
 
 Telemetry supports `--severity` and `--resource` filters. Output is append-safe (NDJSON) and air-gap compatible.
 

@@ -93,22 +93,6 @@ Each chain defines which controls form a compound risk when co-failing,
 the escalation threshold, and the blast radius multiplier. Explains
 the three-layer scoring model: Environmental x Chain Escalation x Blast.
 
-## Export to OPA Rego
-
-```bash
-docker compose run --rm -T stave --export-rego
-```
-
-Translates S3 controls to OPA Rego `deny[msg]` rules. Output is valid
-Rego that works with Conftest, OPA, or Gatekeeper. Shows how the same
-controls run in two different policy engines.
-
-```bash
-docker compose run --rm -T stave --export-rego --all
-```
-
-Exports all 246 controls across all 29 domains.
-
 ## Try with your own bucket
 
 ```bash

@@ -26,7 +26,7 @@ type Renderer interface {
 // resolved asset, and the snapshot context, produce a renderable
 // trace plus the boolean evaluation outcome. The CEL
 // implementation lives in internal/adapters/cel.Tracer; future
-// predicate engines (Rego, native Go) implement the same contract.
+// predicate engines implement the same contract.
 //
 // ctl is `any` rather than *controldef.ControlDefinition because
 // core/controldef already imports core/predicate — using the
