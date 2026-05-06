@@ -44,7 +44,8 @@
         "window_days": 90,
         "recurrence_threshold": 2,
         "first_exposure_window_at": "2026-01-01T00:00:00Z",
-        "last_exposure_window_at": "2026-01-11T00:00:00Z"
+        "last_exposure_window_at": "2026-01-11T00:00:00Z",
+        "temporal_risk": "Asset non-compliant for 24 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "intermittent",
@@ -229,7 +230,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "158f429f5c7a3ca0224008ca44cc83c188762967",
+      "head_commit": "531ba73cd3c72d2c4eedd85f6d95f67389bab31c",
       "dirty": false
     }
   }
