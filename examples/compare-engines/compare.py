@@ -48,6 +48,7 @@ FIXTURES = [
             "clingo": "cognito-writeup",
             "pysat": "cognito-writeup",
             "souffle": "Cognito writeup-config",
+            "risk": "Cognito writeup-config",
             "prolog": "Cognito writeup-config",
         },
     },
@@ -62,6 +63,7 @@ FIXTURES = [
             "clingo": "cognito-remediated",
             "pysat": "cognito-remediated",
             "souffle": "Cognito remediated",
+            "risk": "Cognito remediated",
             "prolog": "Cognito remediated",
         },
     },
@@ -76,6 +78,7 @@ FIXTURES = [
             "clingo": "multi-hop-vulnerable",
             "pysat": None,
             "souffle": "Multi-hop vulnerable",
+            "risk": "Multi-hop vulnerable",
             "prolog": "Multi-hop vulnerable",
         },
     },
@@ -90,6 +93,7 @@ FIXTURES = [
             "clingo": "multi-hop-remediated",
             "pysat": None,
             "souffle": "Multi-hop remediated",
+            "risk": "Multi-hop remediated",
             "prolog": "Multi-hop remediated",
         },
     },
@@ -104,6 +108,7 @@ FIXTURES = [
             "clingo": "rhino-vulnerable",
             "pysat": "rhino-vulnerable",
             "souffle": "Rhino vulnerable",
+            "risk": "Rhino vulnerable",
             "prolog": "Rhino vulnerable",
         },
     },
@@ -118,6 +123,7 @@ FIXTURES = [
             "clingo": "rhino-remediated",
             "pysat": "rhino-remediated",
             "souffle": "Rhino remediated",
+            "risk": "Rhino remediated",
             "prolog": None,
         },
     },
@@ -132,6 +138,7 @@ FIXTURES = [
             "clingo": "bybit-before",
             "pysat": None,
             "souffle": "Bybit before",
+            "risk": "Bybit before",
             "prolog": None,
         },
     },
@@ -146,6 +153,7 @@ FIXTURES = [
             "clingo": "bybit-after",
             "pysat": None,
             "souffle": "Bybit after",
+            "risk": "Bybit after",
             "prolog": None,
         },
     },
@@ -234,6 +242,16 @@ def run_pysat() -> str:
         cwd=STAVE_ROOT,
         capture_output=True, text=True, timeout=180,
         env={**os.environ, "PYSAT_VENV": str(REPO_ROOT / ".tools-venv")},
+    )
+    return result.stdout
+
+
+def run_risk() -> str:
+    script = EXAMPLES_DIR / "prism-risk-prioritization" / "run.sh"
+    result = subprocess.run(
+        ["bash", str(script)],
+        cwd=STAVE_ROOT,
+        capture_output=True, text=True, timeout=180,
     )
     return result.stdout
 
@@ -386,6 +404,27 @@ def parse_prolog(output: str, label: str) -> str:
     return "INCONCLUSIVE"
 
 
+def parse_risk(output: str, label: str) -> str:
+    """UNSAFE iff P(exploitation) > 10% on this fixture.
+
+    The risk model emits per-fixture sections delimited by
+    60-char `===...===` rules (same convention as Prolog),
+    so we reuse split_prolog_fixtures. The verdict line is
+    `P(exploitation) = XX.X%`; the harness threshold treats
+    anything above 10% as UNSAFE (matches the model's
+    MEDIUM rating boundary).
+    """
+    fixtures = split_prolog_fixtures(output)
+    body = fixtures.get(label)
+    if body is None:
+        return "INCONCLUSIVE"
+    m = re.search(r"P\(exploitation\)\s*=\s*([\d.]+)%", body)
+    if not m:
+        return "INCONCLUSIVE"
+    pct = float(m.group(1))
+    return "UNSAFE" if pct > 10.0 else "SAFE"
+
+
 def parse_souffle(output: str, label: str) -> str:
     """UNSAFE iff any unsafe-pattern relation has rows > 0.
 
@@ -499,6 +538,11 @@ def evaluate_fixture(fixture: dict, engines: list[dict],
             results.append({"engine": name, "status": "ok",
                             "verdict": parse_prolog(output, engine_label),
                             "time_ms": batch.time("prolog")})
+        elif name == "risk":
+            output = batch.get("risk", run_risk)
+            results.append({"engine": name, "status": "ok",
+                            "verdict": parse_risk(output, engine_label),
+                            "time_ms": batch.time("risk")})
     return {"fixture": fixture, "engines": results}
 
 

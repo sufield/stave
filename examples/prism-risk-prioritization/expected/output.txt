@@ -1,0 +1,152 @@
+
+============================================================
+  Cognito writeup-config
+============================================================
+
+  Configuration:
+    unauthenticated access enabled : YES
+    self-registration open         : YES
+    sensitive data tagged          : no
+    can_assume edges               : 0
+    overperm + compute-trust roles : 0
+
+  Applicable attack shapes:
+    cognito_unauth          P = 41.2%  [########------------]
+      step: Discover endpoint                                 0.80
+      step: Acquire unauth creds                              0.95
+      step: Assume role                                       0.95
+      step: Reach resource                                    0.95
+      step: Exfiltrate                                        0.60
+    cognito_self_reg        P = 36.8%  [#######-------------]
+      step: Discover endpoint                                 0.80
+      step: Self-register, confirm email                      0.85
+      step: Assume role                                       0.95
+      step: Reach resource                                    0.95
+      step: Exfiltrate                                        0.60
+    wildcard_resource       P = 40.0%  [########------------]
+      step: Wildcard action on wildcard resource              0.40
+
+  P(exploitation) = 41.2%
+  risk            : CRITICAL — immediate remediation required
+
+============================================================
+  Cognito remediated
+============================================================
+
+  Configuration:
+    unauthenticated access enabled : no
+    self-registration open         : no
+    sensitive data tagged          : no
+    can_assume edges               : 0
+    overperm + compute-trust roles : 0
+
+  No modeled attack shape applies to this fixture.
+
+  P(exploitation) = 0.0%
+  risk            : NONE — no modeled attack shape applies
+
+============================================================
+  Multi-hop vulnerable
+============================================================
+
+  Configuration:
+    unauthenticated access enabled : no
+    self-registration open         : no
+    sensitive data tagged          : no
+    can_assume edges               : 3
+    overperm + compute-trust roles : 0
+
+  Applicable attack shapes:
+    multi_hop_chain         P = 72.9%  [###############-----]
+      step: Multi-hop privesc chain (depth 3)                 0.73
+    wildcard_resource       P = 40.0%  [########------------]
+      step: Wildcard action on wildcard resource              0.40
+
+  P(exploitation) = 72.9%
+  risk            : CRITICAL — immediate remediation required
+
+============================================================
+  Multi-hop remediated
+============================================================
+
+  Configuration:
+    unauthenticated access enabled : no
+    self-registration open         : no
+    sensitive data tagged          : no
+    can_assume edges               : 2
+    overperm + compute-trust roles : 0
+
+  Applicable attack shapes:
+    wildcard_resource       P = 40.0%  [########------------]
+      step: Wildcard action on wildcard resource              0.40
+
+  P(exploitation) = 40.0%
+  risk            : CRITICAL — immediate remediation required
+
+============================================================
+  Rhino vulnerable
+============================================================
+
+  Configuration:
+    unauthenticated access enabled : no
+    self-registration open         : no
+    sensitive data tagged          : no
+    can_assume edges               : 0
+    overperm + compute-trust roles : 3
+
+  Applicable attack shapes:
+    overperm_compute        P = 65.0%  [#############-------]
+      step: Overpermissioned role + compute trust (×3)        0.65
+
+  P(exploitation) = 65.0%
+  risk            : CRITICAL — immediate remediation required
+
+============================================================
+  Rhino remediated
+============================================================
+
+  Configuration:
+    unauthenticated access enabled : no
+    self-registration open         : no
+    sensitive data tagged          : no
+    can_assume edges               : 0
+    overperm + compute-trust roles : 1
+
+  Applicable attack shapes:
+    overperm_compute        P = 65.0%  [#############-------]
+      step: Overpermissioned role + compute trust (×1)        0.65
+
+  P(exploitation) = 65.0%
+  risk            : CRITICAL — immediate remediation required
+
+============================================================
+  Bybit before
+============================================================
+
+  Configuration:
+    unauthenticated access enabled : no
+    self-registration open         : no
+    sensitive data tagged          : YES
+    can_assume edges               : 0
+    overperm + compute-trust roles : 0
+
+  No modeled attack shape applies to this fixture.
+
+  P(exploitation) = 0.0%
+  risk            : NONE — no modeled attack shape applies
+
+============================================================
+  Bybit after
+============================================================
+
+  Configuration:
+    unauthenticated access enabled : no
+    self-registration open         : no
+    sensitive data tagged          : YES
+    can_assume edges               : 0
+    overperm + compute-trust roles : 0
+
+  No modeled attack shape applies to this fixture.
+
+  P(exploitation) = 0.0%
+  risk            : NONE — no modeled attack shape applies

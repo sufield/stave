@@ -55,6 +55,12 @@
       "description": "SWI-Prolog proof-tree explanatory reasoning",
       "type": "batch",
       "available_check": "command -v swipl"
+    },
+    {
+      "name": "risk",
+      "description": "Probabilistic attack-path prioritisation",
+      "type": "batch",
+      "available_check": "command -v python3"
     }
   ]
 }
