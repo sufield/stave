@@ -16,7 +16,6 @@ package exportsir
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -54,7 +53,7 @@ func NewCmd(newCtlRepo compose.CtlRepoFactory, newObsRepo compose.ObsRepoFactory
 		Use:   "export-sir",
 		Short: "Export the Stave Intermediate Representation as JSON",
 		Long: `Export the Stave Intermediate Representation (SIR) for the configured
-controls and observations as a deterministic JSON document.
+controls and observations as a deterministic document.
 
 The SIR is the vendor-neutral fact set the Z3 solver consumes for compound
 risk reasoning. It carries every control fact, asset, identity (with
@@ -62,14 +61,26 @@ transitive role chains), effective-permission edge, and exposure window
 that the engine's evaluation pipeline produces — but stripped of
 infrastructure noise (file paths, git metadata, tool versions).
 
+Three output formats are supported:
+
+  json    — full nested SIR document (default).
+  jsonl   — one (subject, predicate, object) triple per line. Lossy
+            projection optimised for Datalog/Soufflé and ASP/Clingo
+            consumers that prefer flat predicate(s, o) facts.
+  smt2    — SMT-LIB v2 declarations + assertions. The output contains
+            facts only — no (check-sat), no queries — so any SMT solver
+            (Z3, cvc5, Yices) reads the same file. Reasoning programs
+            append their own query to the file before invoking the
+            solver.
+
 Inputs:
   --controls, -i      Control definitions directory (default: controls)
   --observations, -o  Observation snapshots directory (default: observations)
-  --format, -f        Output format: json (default: json)
+  --format, -f        Output format: json | jsonl | smt2 (default: json)
   --now               RFC3339 timestamp for deterministic output
 
 Outputs:
-  stdout: SIR JSON document.
+  stdout: SIR document in the requested format.
   stderr: errors and progress (when stderr is a TTY).
 
 Exit codes:
@@ -85,7 +96,14 @@ Exit codes:
   stave export-sir --now 2026-05-01T12:00:00Z > sir.json
 
   # Pretty-print for inspection
-  stave export-sir | jq .`,
+  stave export-sir | jq .
+
+  # Triple form for Datalog / ASP consumers
+  stave export-sir --format jsonl > facts.jsonl
+
+  # SMT-LIB v2 facts; append a query before piping into z3 / cvc5
+  stave export-sir --format smt2 > facts.smt2
+  cat facts.smt2 query.smt2 | z3 -in`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -97,7 +115,7 @@ Exit codes:
 	flags := cmd.Flags()
 	flags.StringVarP(&opts.ControlsDir, cliflags.FlagControls, cliflags.FlagControlsShort, "controls", "control definitions directory")
 	flags.StringVarP(&opts.ObservationsDir, flagObservations, "o", "observations", "observation snapshots directory")
-	flags.StringVarP(&opts.Format, cliflags.FlagFormat, "f", "json", "output format: json")
+	flags.StringVarP(&opts.Format, cliflags.FlagFormat, "f", "json", "output format: json | jsonl | smt2")
 	flags.StringVar(&opts.Now, flagNow, "", "override current time (RFC3339) for deterministic output")
 
 	return cmd
@@ -108,8 +126,12 @@ Exit codes:
 // fall through to exit code 4 (ExitInternal) — that's the
 // convention the rest of the cmd/ tree follows.
 func run(ctx context.Context, w io.Writer, opts *options, newCtlRepo compose.CtlRepoFactory, newObsRepo compose.ObsRepoFactory, newCELEvaluator compose.CELEvaluatorFactory) error {
-	if !strings.EqualFold(opts.Format, "json") {
-		return &ui.UserError{Err: errors.New("--format must be json (only supported format today)")}
+	format := strings.ToLower(strings.TrimSpace(opts.Format))
+	switch format {
+	case "", "json", "jsonl", "smt2":
+		// supported
+	default:
+		return &ui.UserError{Err: fmt.Errorf("--format must be one of json | jsonl | smt2 (got %q)", opts.Format)}
 	}
 
 	now, err := resolveNow(opts.Now)
@@ -143,12 +165,27 @@ func run(ctx context.Context, w io.Writer, opts *options, newCtlRepo compose.Ctl
 		return fmt.Errorf("build SIR: %w", err)
 	}
 
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	if encErr := enc.Encode(doc); encErr != nil {
-		return fmt.Errorf("encode SIR: %w", encErr)
+	switch format {
+	case "jsonl":
+		facts := extractFacts(doc)
+		if encErr := serializeJSONL(facts, w); encErr != nil {
+			return fmt.Errorf("encode jsonl: %w", encErr)
+		}
+		return nil
+	case "smt2":
+		facts := extractFacts(doc)
+		if encErr := serializeSMT2(facts, w); encErr != nil {
+			return fmt.Errorf("encode smt2: %w", encErr)
+		}
+		return nil
+	default:
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "  ")
+		if encErr := enc.Encode(doc); encErr != nil {
+			return fmt.Errorf("encode SIR: %w", encErr)
+		}
+		return nil
 	}
-	return nil
 }
 
 // resolveNow returns the parsed --now value or, when --now is

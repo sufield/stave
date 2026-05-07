@@ -129,14 +129,14 @@ func TestRun_EmitsSIRJSONWithCrossAccountRoleHops(t *testing.T) {
 	}
 }
 
-func TestRun_RejectsNonJSONFormat(t *testing.T) {
+func TestRun_RejectsUnknownFormat(t *testing.T) {
 	var buf bytes.Buffer
 	err := run(t.Context(), &buf, &options{Format: "yaml"},
 		ctlFactory(nil), obsFactory(nil), celFactory())
 	if err == nil {
-		t.Fatalf("expected error for non-json format")
+		t.Fatalf("expected error for unknown format")
 	}
-	if !strings.Contains(err.Error(), "--format must be json") {
+	if !strings.Contains(err.Error(), "--format must be one of") {
 		t.Errorf("error should explain format: got %q", err.Error())
 	}
 }

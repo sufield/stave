@@ -1,0 +1,2 @@
+before        expected=sat    z3=sat    cvc5=sat    OK
+after         expected=unsat  z3=unsat  cvc5=unsat  OK
