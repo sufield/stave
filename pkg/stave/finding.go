@@ -177,7 +177,10 @@ type Finding struct {
 // reporting?" rather than checking three fields individually.
 // Adding a new temporal field later is a one-line update here
 // instead of a hunt across every consumer.
-func (f *Finding) HasTemporalEvidence() bool {
+//
+// Value receiver to match the existing Frameworks() convention on
+// this type — recvcheck flags mixed receivers.
+func (f Finding) HasTemporalEvidence() bool {
 	return !f.FirstUnsafeAt.IsZero() ||
 		!f.LastSeenUnsafeAt.IsZero() ||
 		f.UnsafeDurationHours > 0

@@ -48,9 +48,9 @@ const (
 	methodToolsCall  = "tools/call"
 
 	// Tool names we publish to the agent.
-	toolVerify      = "stave.verify"
-	toolExplain     = "stave.explain"
-	toolSuggestFix  = "stave.suggest_fix"
+	toolVerify     = "stave.verify"
+	toolExplain    = "stave.explain"
+	toolSuggestFix = "stave.suggest_fix"
 
 	// JSON-RPC 2.0 standard error codes.
 	errParseError     = -32700
@@ -383,4 +383,3 @@ func wrapToolResult(v any) (any, error) {
 		},
 	}, nil
 }
-
