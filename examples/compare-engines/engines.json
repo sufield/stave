@@ -1,0 +1,54 @@
+{
+  "comment": [
+    "Engine registry for the multi-engine comparison harness.",
+    "",
+    "Each engine is run once per session; its output is parsed",
+    "to extract per-fixture verdicts. Adding a new engine = add",
+    "an entry here + register a parser in compare.py.",
+    "",
+    "available_check: shell snippet that exits 0 when the engine",
+    "  is usable. The harness skips engines whose check fails.",
+    "",
+    "type:",
+    "  - per_fixture: invoked once per fixture (stave-cel)",
+    "  - batch: run.sh produces output for all fixtures it covers"
+  ],
+  "engines": [
+    {
+      "name": "stave-cel",
+      "description": "Stave CEL predicate evaluation",
+      "type": "per_fixture",
+      "available_check": "test -x stave"
+    },
+    {
+      "name": "z3",
+      "description": "Z3 SMT solver (per-shape examples)",
+      "type": "batch",
+      "available_check": "command -v z3"
+    },
+    {
+      "name": "cvc5",
+      "description": "cvc5 SMT solver (cross-check Z3, same batch)",
+      "type": "batch",
+      "available_check": "command -v cvc5"
+    },
+    {
+      "name": "clingo",
+      "description": "Clingo ASP constraint enumeration",
+      "type": "batch",
+      "available_check": "test -d ${REPO_ROOT}/.tools-venv && ${REPO_ROOT}/.tools-venv/bin/python3 -c 'import clingo'"
+    },
+    {
+      "name": "pysat",
+      "description": "PySAT boolean compound regression",
+      "type": "batch",
+      "available_check": "test -d ${REPO_ROOT}/.tools-venv && ${REPO_ROOT}/.tools-venv/bin/python3 -c 'from pysat.solvers import Glucose3'"
+    },
+    {
+      "name": "souffle",
+      "description": "Soufflé Datalog blast-radius enumeration",
+      "type": "batch",
+      "available_check": "command -v souffle"
+    }
+  ]
+}

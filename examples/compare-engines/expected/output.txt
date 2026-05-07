@@ -1,0 +1,89 @@
+Engine availability:
+  stave-cel     available
+  z3            available
+  cvc5          available
+  clingo        available
+  pysat         available
+  souffle       available
+
+
+=== Cognito self-register (writeup)  (expected UNSAFE) ===
+  [ok]  stave-cel     UNSAFE       
+  [ok]  z3            UNSAFE       
+  [ok]  cvc5          UNSAFE       
+  [ok]  clingo        UNSAFE       
+  [ok]  pysat         UNSAFE       
+  [ok]  souffle       UNSAFE       
+  == CONSENSUS: UNSAFE (6 engine(s))
+
+=== Cognito self-register (remediated)  (expected SAFE) ===
+  [ok]  stave-cel     SAFE         
+  [ok]  z3            SAFE         
+  [ok]  cvc5          SAFE         
+  [ok]  clingo        SAFE         
+  [ok]  pysat         SAFE         
+  [ok]  souffle       SAFE         
+  == CONSENSUS: SAFE (6 engine(s))
+
+=== Multi-hop can_assume (vulnerable)  (expected UNSAFE) ===
+  [ok]  stave-cel     SAFE         
+  [ok]  z3            UNSAFE       
+  [ok]  cvc5          UNSAFE       
+  [ok]  clingo        UNSAFE       
+  [--]  pysat         no example covers this fixture
+  [ok]  souffle       UNSAFE       
+  != DISAGREEMENT: clingo=UNSAFE; cvc5=UNSAFE; souffle=UNSAFE; stave-cel=SAFE; z3=UNSAFE
+
+=== Multi-hop can_assume (remediated)  (expected SAFE) ===
+  [ok]  stave-cel     SAFE         
+  [ok]  z3            SAFE         
+  [ok]  cvc5          SAFE         
+  [ok]  clingo        SAFE         
+  [--]  pysat         no example covers this fixture
+  [ok]  souffle       UNSAFE       
+  != DISAGREEMENT: clingo=SAFE; cvc5=SAFE; souffle=UNSAFE; stave-cel=SAFE; z3=SAFE
+
+=== Rhino privesc (vulnerable)  (expected UNSAFE) ===
+  [ok]  stave-cel     UNSAFE       
+  [ok]  z3            UNSAFE       
+  [??]  cvc5          INCONCLUSIVE 
+  [ok]  clingo        SAFE         
+  [ok]  pysat         UNSAFE       
+  [ok]  souffle       UNSAFE       
+  != DISAGREEMENT: clingo=SAFE; pysat=UNSAFE; souffle=UNSAFE; stave-cel=UNSAFE; z3=UNSAFE
+
+=== Rhino privesc (remediated)  (expected SAFE) ===
+  [ok]  stave-cel     SAFE         
+  [ok]  z3            SAFE         
+  [ok]  cvc5          SAFE         
+  [ok]  clingo        SAFE         
+  [ok]  pysat         SAFE         
+  [ok]  souffle       UNSAFE       
+  != DISAGREEMENT: clingo=SAFE; cvc5=SAFE; pysat=SAFE; souffle=UNSAFE; stave-cel=SAFE; z3=SAFE
+
+=== Bybit wildcard (before)  (expected UNSAFE) ===
+  [ok]  stave-cel     SAFE         
+  [ok]  z3            UNSAFE       
+  [ok]  cvc5          UNSAFE       
+  [ok]  clingo        SAFE         
+  [--]  pysat         no example covers this fixture
+  [ok]  souffle       SAFE         
+  != DISAGREEMENT: clingo=SAFE; cvc5=UNSAFE; souffle=SAFE; stave-cel=SAFE; z3=UNSAFE
+
+=== Bybit wildcard (after)  (expected SAFE) ===
+  [ok]  stave-cel     SAFE         
+  [ok]  z3            SAFE         
+  [ok]  cvc5          SAFE         
+  [ok]  clingo        SAFE         
+  [--]  pysat         no example covers this fixture
+  [ok]  souffle       SAFE         
+  == CONSENSUS: SAFE (5 engine(s))
+
+============================================================
+  Total fixtures:    8
+  Consensus:         3
+  Disagreements:     5
+  Inconclusive:      0
+  Matching expected: 3/8
+
+  5 disagreement(s) — see README for blind-spot interpretation.
