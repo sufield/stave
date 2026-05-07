@@ -173,6 +173,18 @@ script-test: sync-schemas sync-controls sync-alternatives
 clig-check:
 	$(GOTEST) ./cmd/ -run "TestCligCompliance|TestCligGlobalFlags" -count=1
 
+## parallelize: Insert t.Parallel() into every Test* in PKG=<dir>
+## (skips files that touch t.Setenv / os.Setenv / os.Chdir).
+## Used to roll out parallelism to a new hot package; see commit
+## 4c7170cf0 for the original 6-package rollout (10.6× speedup
+## on enginetest).
+parallelize:
+	@if [ -z "$(PKG)" ]; then \
+		echo "usage: make parallelize PKG=<directory>"; \
+		exit 2; \
+	fi
+	bash scripts/add-parallel.sh $(PKG)
+
 ## lint: Run golangci-lint (v2.8.0)
 lint:
 	$(GOLINT) run ./...
