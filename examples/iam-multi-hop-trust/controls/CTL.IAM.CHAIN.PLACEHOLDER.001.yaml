@@ -1,0 +1,21 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.CHAIN.PLACEHOLDER.001
+name: Multi-Hop Chain Placeholder
+description: >
+  Placeholder control so the example loads. The fixture's purpose is the SMT
+  facts.smt2 export of can_assume edges; this control exists only to satisfy
+  the controls-directory requirement of `stave export-sir`. The actual
+  reasoning lives in the sibling z3-multi-hop-can-assume example's query.smt2.
+domain: exposure
+scope_tags:
+  - aws
+  - iam
+severity: low
+type: unsafe_state
+classification: state_assertion
+params: {}
+unsafe_predicate:
+  any:
+    - field: properties.identity.kind
+      op: eq
+      value: "this-value-never-appears-in-fixtures"

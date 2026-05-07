@@ -472,6 +472,181 @@ func TestTrustPolicyFacts_EmitsServicePrincipals(t *testing.T) {
 	}
 }
 
+// TestTagFacts_EmitsKeyEqualsValue confirms the binary
+// has_tag encoding: each (key, value) pair in any depth-2
+// tags block becomes one fact with object "key=value". The
+// concatenation lets a binary serializer carry tag data
+// without ternary support; queries write
+// (has_tag bucket "environment=production").
+func TestTagFacts_EmitsKeyEqualsValue(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{
+			{
+				ID:   "arn:aws:s3:::prod-bucket",
+				Type: "aws_s3_bucket",
+				Properties: map[string]any{
+					"bucket": map[string]any{
+						"tags": map[string]any{
+							"environment":         "production",
+							"data_classification": "confidential",
+						},
+					},
+				},
+			},
+		},
+	}
+	want := map[string]bool{
+		"environment=production":           false,
+		"data_classification=confidential": false,
+	}
+	for _, f := range extractFacts(doc) {
+		if f.Predicate != "has_tag" {
+			continue
+		}
+		if _, ok := want[f.Object]; ok {
+			want[f.Object] = true
+		}
+	}
+	for k, found := range want {
+		if !found {
+			t.Errorf("missing has_tag fact %q", k)
+		}
+	}
+}
+
+// TestTagFacts_WalksMultipleBlockNames confirms the extractor
+// catches tags regardless of which top-level property block
+// holds them. The bybit fixture uses properties.bucket.tags;
+// older S3 controls use properties.storage.tags; IAM uses
+// properties.identity.tags. One scan, all conventions.
+func TestTagFacts_WalksMultipleBlockNames(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{{
+			ID:   "weird-asset",
+			Type: "aws_s3_bucket",
+			Properties: map[string]any{
+				"bucket":   map[string]any{"tags": map[string]any{"in_bucket": "yes"}},
+				"storage":  map[string]any{"tags": map[string]any{"in_storage": "yes"}},
+				"identity": map[string]any{"tags": map[string]any{"in_identity": "yes"}},
+			},
+		}},
+	}
+	want := map[string]bool{
+		"in_bucket=yes":   false,
+		"in_storage=yes":  false,
+		"in_identity=yes": false,
+	}
+	for _, f := range extractFacts(doc) {
+		if f.Predicate != "has_tag" {
+			continue
+		}
+		if _, ok := want[f.Object]; ok {
+			want[f.Object] = true
+		}
+	}
+	for k, found := range want {
+		if !found {
+			t.Errorf("missing has_tag fact %q from multi-block walk", k)
+		}
+	}
+}
+
+// TestTagFacts_DeterministicOrder asserts the same SIR
+// document yields byte-identical has_tag facts across runs.
+// Go map iteration is randomised; the extractor sorts keys
+// before emission so external goldens stay stable.
+func TestTagFacts_DeterministicOrder(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{{
+			ID:   "asset",
+			Type: "aws_s3_bucket",
+			Properties: map[string]any{
+				"bucket": map[string]any{
+					"tags": map[string]any{
+						"zzz": "1", "aaa": "2", "mmm": "3", "kkk": "4",
+					},
+				},
+			},
+		}},
+	}
+	var seq1, seq2 []string
+	for _, f := range extractFacts(doc) {
+		if f.Predicate == "has_tag" {
+			seq1 = append(seq1, f.Object)
+		}
+	}
+	for _, f := range extractFacts(doc) {
+		if f.Predicate == "has_tag" {
+			seq2 = append(seq2, f.Object)
+		}
+	}
+	if len(seq1) != len(seq2) {
+		t.Fatalf("len mismatch: %d vs %d", len(seq1), len(seq2))
+	}
+	for i := range seq1 {
+		if seq1[i] != seq2[i] {
+			t.Errorf("non-deterministic tag order at %d: %q vs %q", i, seq1[i], seq2[i])
+		}
+	}
+}
+
+// TestCognitoUserPoolFacts_EmitsUnsafeOnly confirms the
+// extractor's polarity: it emits self_registration_unrestricted
+// ONLY when the source `self_registration_restricted` is false
+// (the unsafe state), and stays silent when restricted=true or
+// the field is absent. The closed-world axiom then correctly
+// reports the predicate false on every pool that doesn't
+// explicitly admit self-registration.
+func TestCognitoUserPoolFacts_EmitsUnsafeOnly(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{
+			{
+				ID:   "pool-unsafe",
+				Type: "aws_cognito_user_pool",
+				Properties: map[string]any{
+					"identity": map[string]any{
+						"governance": map[string]any{
+							"self_registration_restricted": false,
+						},
+					},
+				},
+			},
+			{
+				ID:   "pool-safe",
+				Type: "aws_cognito_user_pool",
+				Properties: map[string]any{
+					"identity": map[string]any{
+						"governance": map[string]any{
+							"self_registration_restricted": true,
+						},
+					},
+				},
+			},
+			{
+				ID:   "pool-no-governance",
+				Type: "aws_cognito_user_pool",
+				Properties: map[string]any{
+					"identity": map[string]any{},
+				},
+			},
+		},
+	}
+	facts := extractFacts(doc)
+	var subjects []string
+	for _, f := range facts {
+		if f.Predicate == "self_registration_unrestricted" {
+			subjects = append(subjects, f.Subject)
+		}
+	}
+	if len(subjects) != 1 || subjects[0] != "pool-unsafe" {
+		t.Errorf("self_registration_unrestricted facts = %v, want exactly [pool-unsafe]", subjects)
+	}
+}
+
 // TestTrustPolicyFacts_SkipsNonRoleAssets asserts the
 // extractor only fires on aws_iam_role. A bucket or Lambda
 // function with a stray "trusted_services" key shouldn't
@@ -526,6 +701,206 @@ func TestIAMPolicyFacts_SkipsDeny(t *testing.T) {
 	for _, f := range extractFacts(doc) {
 		if f.Predicate == "has_action" || f.Predicate == "has_resource" {
 			t.Errorf("Deny statement leaked into has_action/has_resource: %+v", f)
+		}
+	}
+}
+
+// TestAssumeEdgeFacts_EmitsWhenBothSidesAgree pins the both-sides
+// requirement: a `can_assume(from, to)` fact emerges only when
+// the assumer's policy grants sts:AssumeRole on the target AND
+// the target's trust_policy_json admits the assumer. Either side
+// alone is insufficient — that's the IAM resolver's contract,
+// preserved here so SMT-side reasoning matches kernel-side
+// reasoning.
+func TestAssumeEdgeFacts_EmitsWhenBothSidesAgree(t *testing.T) {
+	t.Parallel()
+	const userARN = "arn:aws:iam::111122223333:user/dev"
+	const roleARN = "arn:aws:iam::111122223333:role/onboarding"
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{
+			{
+				ID:   userARN,
+				Type: "aws_iam_user",
+				Properties: map[string]any{
+					"identity": map[string]any{
+						"policies": map[string]any{
+							"attached_policies": []any{
+								map[string]any{
+									"statements": []any{
+										map[string]any{
+											"Effect":   "Allow",
+											"Action":   "sts:AssumeRole",
+											"Resource": roleARN,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				ID:   roleARN,
+				Type: "aws_iam_role",
+				Properties: map[string]any{
+					"identity": map[string]any{
+						"trust_policy_json": `{"Statement":[{"Effect":"Allow","Action":"sts:AssumeRole","Principal":{"AWS":"` + userARN + `"}}]}`,
+					},
+				},
+			},
+		},
+	}
+	var found bool
+	for _, f := range extractFacts(doc) {
+		if f.Predicate == "can_assume" && f.Subject == userARN && f.Object == roleARN {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected can_assume(%s, %s); not emitted", userARN, roleARN)
+	}
+}
+
+// TestAssumeEdgeFacts_AsymmetricNoEmit pins the negative path:
+// when the target's trust policy does NOT admit the assumer, no
+// can_assume fact emerges, even if the assumer's policy grants
+// sts:AssumeRole on the target. Mirrors the IAM resolver's
+// requirement for reciprocal trust.
+func TestAssumeEdgeFacts_AsymmetricNoEmit(t *testing.T) {
+	t.Parallel()
+	const userARN = "arn:aws:iam::111122223333:user/dev"
+	const roleARN = "arn:aws:iam::111122223333:role/onboarding"
+	const otherARN = "arn:aws:iam::111122223333:user/someone-else"
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{
+			{
+				ID:   userARN,
+				Type: "aws_iam_user",
+				Properties: map[string]any{
+					"identity": map[string]any{
+						"policies": map[string]any{
+							"attached_policies": []any{
+								map[string]any{
+									"statements": []any{
+										map[string]any{
+											"Effect":   "Allow",
+											"Action":   "sts:AssumeRole",
+											"Resource": roleARN,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				ID:   roleARN,
+				Type: "aws_iam_role",
+				Properties: map[string]any{
+					"identity": map[string]any{
+						// Trust admits a different principal — assumer is unauthorized.
+						"trust_policy_json": `{"Statement":[{"Effect":"Allow","Action":"sts:AssumeRole","Principal":{"AWS":"` + otherARN + `"}}]}`,
+					},
+				},
+			},
+		},
+	}
+	for _, f := range extractFacts(doc) {
+		if f.Predicate == "can_assume" && f.Subject == userARN && f.Object == roleARN {
+			t.Errorf("can_assume should NOT be emitted without reciprocal trust; got %+v", f)
+		}
+	}
+}
+
+// TestAssumeEdgeFacts_MultiHopChain pins the load-bearing case
+// for multi-hop reasoning: a 3-hop A→B→C→D chain produces three
+// independent can_assume edges. Transitive reachability is the
+// SMT solver's job, not the extractor's; the extractor emits
+// flat per-hop edges.
+func TestAssumeEdgeFacts_MultiHopChain(t *testing.T) {
+	t.Parallel()
+	const a = "arn:aws:iam::111122223333:user/a"
+	const b = "arn:aws:iam::111122223333:role/b"
+	const c = "arn:aws:iam::111122223333:role/c"
+	const d = "arn:aws:iam::111122223333:role/d"
+	mkUser := func(id, target string) sir.AssetFact {
+		return sir.AssetFact{
+			ID:   id,
+			Type: "aws_iam_user",
+			Properties: map[string]any{
+				"identity": map[string]any{
+					"policies": map[string]any{
+						"attached_policies": []any{
+							map[string]any{
+								"statements": []any{
+									map[string]any{
+										"Effect":   "Allow",
+										"Action":   "sts:AssumeRole",
+										"Resource": target,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+	}
+	mkRole := func(id, target, trustedAssumer string) sir.AssetFact {
+		props := map[string]any{
+			"identity": map[string]any{
+				"trust_policy_json": `{"Statement":[{"Effect":"Allow","Action":"sts:AssumeRole","Principal":{"AWS":"` + trustedAssumer + `"}}]}`,
+				"policies": map[string]any{
+					"attached_policies": []any{
+						map[string]any{
+							"statements": []any{
+								map[string]any{
+									"Effect":   "Allow",
+									"Action":   "sts:AssumeRole",
+									"Resource": target,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+		return sir.AssetFact{ID: id, Type: "aws_iam_role", Properties: props}
+	}
+	mkLeaf := func(id, trustedAssumer string) sir.AssetFact {
+		return sir.AssetFact{
+			ID:   id,
+			Type: "aws_iam_role",
+			Properties: map[string]any{
+				"identity": map[string]any{
+					"trust_policy_json": `{"Statement":[{"Effect":"Allow","Action":"sts:AssumeRole","Principal":{"AWS":"` + trustedAssumer + `"}}]}`,
+				},
+			},
+		}
+	}
+	doc := &sir.Document{Assets: []sir.AssetFact{
+		mkUser(a, b),
+		mkRole(b, c, a),
+		mkRole(c, d, b),
+		mkLeaf(d, c),
+	}}
+	want := map[[2]string]bool{
+		{a, b}: false,
+		{b, c}: false,
+		{c, d}: false,
+	}
+	for _, f := range extractFacts(doc) {
+		if f.Predicate != "can_assume" {
+			continue
+		}
+		if _, ok := want[[2]string{f.Subject, f.Object}]; ok {
+			want[[2]string{f.Subject, f.Object}] = true
+		}
+	}
+	for edge, ok := range want {
+		if !ok {
+			t.Errorf("missing can_assume edge: %s -> %s", edge[0], edge[1])
 		}
 	}
 }

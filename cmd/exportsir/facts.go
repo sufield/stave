@@ -60,8 +60,11 @@ func extractFacts(doc *sir.Document) []Fact {
 	facts = append(facts, controlFacts(doc.Controls)...)
 	facts = append(facts, assetFacts(doc.Assets)...)
 	facts = append(facts, cognitoMappingFacts(doc.Assets)...)
+	facts = append(facts, cognitoUserPoolFacts(doc.Assets)...)
 	facts = append(facts, iamPolicyFacts(doc.Assets)...)
+	facts = append(facts, tagFacts(doc.Assets)...)
 	facts = append(facts, trustPolicyFacts(doc.Assets)...)
+	facts = append(facts, assumeEdgeFacts(doc.Assets)...)
 	facts = append(facts, identityFacts(doc.Identities)...)
 	facts = append(facts, exposureFacts(doc.Temporal.Windows)...)
 	return facts
@@ -208,6 +211,49 @@ func cognitoMappingFacts(assets []sir.AssetFact) []Fact {
 	return out
 }
 
+// cognitoUserPoolFacts walks Cognito user-pool assets and emits
+// `self_registration_unrestricted(pool, "true")` exactly when the
+// pool's governance settings allow self-sign-up — the gate
+// step in the Cognito self-register-to-AWS-creds chain.
+//
+// The fact is named after the UNSAFE state, not the source
+// boolean: the source is `governance.self_registration_restricted`
+// (true == safe; false == unsafe), so we emit the predicate only
+// when the source is false. The closed-world axiom restricts the
+// predicate to false everywhere it isn't asserted, which gives
+// the chain query the right semantics: SAT iff at least one pool
+// is unrestricted.
+//
+// Property path:
+//
+//	properties.identity.governance.self_registration_restricted (bool)
+//
+// A pool with restricted=true (or absent governance block)
+// produces no positive fact, and queries asking "is any pool
+// unrestricted?" correctly return UNSAT.
+func cognitoUserPoolFacts(assets []sir.AssetFact) []Fact {
+	var out []Fact
+	for i := range assets {
+		a := &assets[i]
+		if a.Type != "aws_cognito_user_pool" {
+			continue
+		}
+		gov, ok := navMap(a.Properties, "identity", "governance")
+		if !ok {
+			continue
+		}
+		restricted, ok := gov["self_registration_restricted"].(bool)
+		if !ok || restricted {
+			continue
+		}
+		out = append(out, Fact{
+			Subject: a.ID, Predicate: "self_registration_unrestricted", Object: "true",
+			Source: "cognito", Evidence: fmt.Sprintf("assets[%d].properties.identity.governance.self_registration_restricted", i),
+		})
+	}
+	return out
+}
+
 // iamPolicyFacts walks IAM role / IAM user attached_policies and
 // emits one (principal, has_action, action) and (principal,
 // has_resource, resource) per Allow statement. Deny statements
@@ -283,6 +329,88 @@ func iamPolicyFacts(assets []sir.AssetFact) []Fact {
 	return out
 }
 
+// tagFacts walks every asset and emits one `has_tag` per
+// (key, value) pair in the asset's tags blocks. Tags can sit
+// at any depth-2 path under properties — different services
+// nest differently:
+//
+//	S3 (bybit fixture):  properties.bucket.tags.<key>
+//	S3 (other controls): properties.storage.tags.<key>
+//	IAM:                 properties.identity.tags.<key>
+//	API Gateway:         properties.api.tags.<key>
+//	CloudFront:          properties.cdn.tags.<key>
+//
+// Rather than hard-code the per-service path list, the
+// extractor scans every top-level property block for a
+// `tags` sub-map. This catches the bybit convention
+// (properties.bucket.tags) and the older convention
+// (properties.storage.tags) and any new asset type that
+// follows the same shallow shape, with no per-service plumbing.
+//
+// The has_tag predicate is BINARY:
+//
+//	has_tag(asset_id, "key=value")
+//
+// rather than ternary (subject, key, value). The current
+// SMT-LIB serializer assumes binary predicates throughout;
+// supporting a ternary `has_tag` would require multi-arity
+// declare-fun + closed-world axiom support across every
+// other predicate. Encoding "key=value" as a single object
+// string keeps the serializer simple at a small cost in
+// query ergonomics: callers write
+//
+//	(has_tag bucket "environment=production")
+//
+// instead of (has_tag bucket "environment" "production").
+// The semantic is identical — the asserted tuple uniquely
+// identifies the (asset, key, value) triple.
+//
+// Determinism: tag map iteration order is randomised in Go;
+// the slice of (key, value) pairs is sorted before emission
+// so the same SIR document yields byte-identical output
+// across runs.
+func tagFacts(assets []sir.AssetFact) []Fact {
+	var out []Fact
+	for i := range assets {
+		a := &assets[i]
+		// Stable order across the asset's property blocks.
+		blockNames := make([]string, 0, len(a.Properties))
+		for name := range a.Properties {
+			blockNames = append(blockNames, name)
+		}
+		sort.Strings(blockNames)
+		for _, blockName := range blockNames {
+			block, ok := a.Properties[blockName].(map[string]any)
+			if !ok {
+				continue
+			}
+			tags, ok := block["tags"].(map[string]any)
+			if !ok {
+				continue
+			}
+			keys := make([]string, 0, len(tags))
+			for k := range tags {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			for _, k := range keys {
+				value, ok := tags[k].(string)
+				if !ok || value == "" {
+					continue
+				}
+				out = append(out, Fact{
+					Subject:   a.ID,
+					Predicate: "has_tag",
+					Object:    k + "=" + value,
+					Source:    "tag",
+					Evidence:  fmt.Sprintf("assets[%d].properties.%s.tags.%s", i, blockName, k),
+				})
+			}
+		}
+	}
+	return out
+}
+
 // trustPolicyFacts walks IAM role assets and emits one
 // `trusts_service` fact per service principal in
 // `properties.identity.trusted_services`. The fact answers
@@ -329,6 +457,188 @@ func trustPolicyFacts(assets []sir.AssetFact) []Fact {
 			})
 		}
 	}
+	return out
+}
+
+// assumeEdgeFacts emits one `can_assume(from, to)` fact per
+// reciprocal sts:AssumeRole edge between IAM principals in the
+// snapshot. The edge requires both halves of the IAM contract:
+//
+//  1. The assumer's policies grant Allow + sts:AssumeRole on the
+//     target ARN (read from properties.identity.policies.attached_policies).
+//  2. The target role's trust_policy_json admits the assumer
+//     under Allow + sts:AssumeRole (read from properties.identity.trust_policy_json).
+//
+// The kernel's IAM resolver enforces the same contract; this
+// extractor shadows it on the SMT side because the obs.v0.1
+// loader does not populate snap.Identities, so the kernel
+// resolver never runs against on-disk fixtures and IdentityFact-
+// sourced can_assume facts never appear. Authoring this
+// extractor here keeps the SMT export self-contained against
+// the obs.v0.1 wire shape.
+//
+// Multi-hop reachability is the SMT solver's job. The extractor
+// emits flat per-hop edges; transitive closure is left to the
+// query (existential quantification over intermediate nodes).
+type assumeRequest struct {
+	assumer string
+	target  string
+	evid    string
+}
+
+// scanAssumeGrants walks one identity's attached_policies and
+// returns every (assumer, target) pair where the policy grants
+// Allow + sts:AssumeRole on a specific target ARN. Wildcard
+// resources are skipped — they don't ground a witness.
+func scanAssumeGrants(assetIdx int, assumerID string, identity map[string]any) []assumeRequest {
+	policies, ok := identity["policies"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	attached, ok := policies["attached_policies"].([]any)
+	if !ok {
+		return nil
+	}
+	var out []assumeRequest
+	for pi, p := range attached {
+		policy, ok := p.(map[string]any)
+		if !ok {
+			continue
+		}
+		stmts, ok := policy["statements"].([]any)
+		if !ok {
+			continue
+		}
+		for si, s := range stmts {
+			out = append(out, scanAssumeStatement(assetIdx, pi, si, assumerID, s)...)
+		}
+	}
+	return out
+}
+
+func scanAssumeStatement(assetIdx, policyIdx, stmtIdx int, assumerID string, raw any) []assumeRequest {
+	stmt, ok := raw.(map[string]any)
+	if !ok {
+		return nil
+	}
+	if effect, _ := stmt["Effect"].(string); effect != "Allow" {
+		return nil
+	}
+	hasAssume := false
+	for _, act := range coerceStringList(stmt["Action"]) {
+		if act == "sts:AssumeRole" || act == "sts:*" || act == "*" {
+			hasAssume = true
+			break
+		}
+	}
+	if !hasAssume {
+		return nil
+	}
+	var out []assumeRequest
+	for _, target := range coerceStringList(stmt["Resource"]) {
+		if target == "*" || target == "" {
+			continue
+		}
+		out = append(out, assumeRequest{
+			assumer: assumerID,
+			target:  target,
+			evid:    fmt.Sprintf("assets[%d].policies.attached_policies[%d].statements[%d]", assetIdx, policyIdx, stmtIdx),
+		})
+	}
+	return out
+}
+
+func assumeEdgeFacts(assets []sir.AssetFact) []Fact {
+	var requests []assumeRequest
+	trustAdmits := make(map[string]map[string]string) // target → assumer → evid
+	for i := range assets {
+		a := &assets[i]
+		if a.Type != "aws_iam_user" && a.Type != "aws_iam_role" {
+			continue
+		}
+		identity, ok := a.Properties["identity"].(map[string]any)
+		if !ok {
+			continue
+		}
+		// Assumer side: scan attached_policies for sts:AssumeRole grants.
+		requests = append(requests, scanAssumeGrants(i, a.ID, identity)...)
+		// Target side: parse trust_policy_json for admitted principals.
+		if a.Type != "aws_iam_role" {
+			continue
+		}
+		trustJSON, _ := identity["trust_policy_json"].(string)
+		trimmed := strings.TrimSpace(trustJSON)
+		if trimmed == "" {
+			continue
+		}
+		var doc struct {
+			Statement []struct {
+				Effect    string `json:"Effect"`
+				Action    any    `json:"Action"`
+				Principal any    `json:"Principal"`
+			} `json:"Statement"`
+		}
+		if err := json.Unmarshal([]byte(trimmed), &doc); err != nil {
+			continue
+		}
+		evidBase := fmt.Sprintf("assets[%d].properties.identity.trust_policy_json", i)
+		admitted := trustAdmits[a.ID]
+		if admitted == nil {
+			admitted = make(map[string]string)
+		}
+		for si, stmt := range doc.Statement {
+			if !strings.EqualFold(stmt.Effect, "Allow") {
+				continue
+			}
+			hasAssume := false
+			for _, act := range coerceStringList(stmt.Action) {
+				if act == "sts:AssumeRole" || act == "sts:*" || act == "*" {
+					hasAssume = true
+					break
+				}
+			}
+			if !hasAssume {
+				continue
+			}
+			pmap, ok := stmt.Principal.(map[string]any)
+			if !ok {
+				continue
+			}
+			for _, principal := range coerceStringList(pmap["AWS"]) {
+				if principal == "" || principal == "*" {
+					continue
+				}
+				admitted[principal] = fmt.Sprintf("%s.Statement[%d]", evidBase, si)
+			}
+		}
+		if len(admitted) > 0 {
+			trustAdmits[a.ID] = admitted
+		}
+	}
+	// Cross-reference: emit only when both sides agree.
+	var out []Fact
+	for _, req := range requests {
+		admit, ok := trustAdmits[req.target]
+		if !ok {
+			continue
+		}
+		if _, admitted := admit[req.assumer]; !admitted {
+			continue
+		}
+		out = append(out, Fact{
+			Subject:   req.assumer,
+			Predicate: "can_assume",
+			Object:    req.target,
+			Source:    "trust_edge",
+			Evidence:  req.evid,
+		})
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		if out[i].Subject != out[j].Subject {
+			return out[i].Subject < out[j].Subject
+		}
+		return out[i].Object < out[j].Object
+	})
 	return out
 }
 
@@ -422,6 +732,7 @@ var baselineSMT2Predicates = []string{
 	"has_privilege_level",
 	"has_resource",
 	"has_severity",
+	"has_tag",
 	"has_type",
 	"has_vendor",
 	"is_decommissioned",
@@ -429,6 +740,7 @@ var baselineSMT2Predicates = []string{
 	"last_seen_at",
 	"maps_auth_to",
 	"maps_unauth_to",
+	"self_registration_unrestricted",
 	"trusts_service",
 }
 

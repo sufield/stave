@@ -1,0 +1,7 @@
+=== auth-chain (anyone authenticated reaches S3) ===
+  writeup-config      expected=sat    z3=sat    cvc5=sat    OK
+  remediated-config   expected=sat    z3=sat    cvc5=sat    OK
+
+=== self-register-chain (anonymous reaches S3 by registering) ===
+  writeup-config      expected=sat    z3=sat    cvc5=sat    OK
+  remediated-config   expected=unsat  z3=unsat  cvc5=unsat  OK

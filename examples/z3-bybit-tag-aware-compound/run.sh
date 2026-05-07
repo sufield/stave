@@ -1,15 +1,21 @@
 #!/usr/bin/env bash
-# Rhino Pattern 1 (self-mutation) reachability against the
-# iter-15 fixture. SAT on rhino-vulnerable iff any principal
-# in the snapshot has at least one Pattern 1 action on a
-# wildcard resource. UNSAT on remediated.
+# Bybit tag-aware compound — does any developer's wildcard
+# resource pattern prefix-match a production-tagged S3 bucket?
 #
-# This is the second compound query against the SMT-LIB
-# pipeline — the first (z3-compound-overperm-assumable)
-# combined a finding with a trust relationship. This one
-# combines an action-set membership with a resource-scope
-# constraint, demonstrating a different compound shape.
-# Both shapes use only existing baseline predicates.
+# Vulnerable fixture (`bybit-pattern-before`):
+#   developer-frontend user has Resource: company-frontend-* on
+#   PutObject. The wildcard incidentally matches the production
+#   frontend bucket (tagged environment=production).
+#   → SAT with witness naming all four chain elements.
+#
+# Remediated fixture (`bybit-pattern-after`):
+#   developer's policy is split into specific ARNs (no wildcard
+#   pattern remains for full read/write). Object-prefix globs
+#   like company-frontend-prod/* don't prefix-match the bucket
+#   ARN itself.
+#   → UNSAT.
+#
+# Cross-checked with cvc5 when available.
 
 set -euo pipefail
 
@@ -17,7 +23,7 @@ script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)
 stave_root=$(cd "$example_root/.." && pwd)
 stave_bin=${STAVE_BIN:-$stave_root/stave}
-fixture_root="$example_root/iam-21-privesc-5-patterns"
+fixture_root="$example_root/iam-overpermission-wildcard"
 query="$script_dir/query.smt2"
 control_dir="$fixture_root/controls"
 work_dir=$(mktemp -d)
@@ -44,14 +50,12 @@ solve_with_z3() {
 
 solve_with_cvc5() {
     local facts=$1
-    # cvc5's quantifier instantiation scales poorly on the
-    # large `has_action` closed-world disjunction this fixture
-    # produces (~50 actions on the rhino-attacker user).
-    # --tlimit caps cvc5 at 10s so it returns cleanly instead
-    # of hanging; the runner treats "interrupted by timeout"
-    # as best-effort skipped, not a verdict mismatch.
+    # The query uses str.++ / str.suffixof / str.prefixof —
+    # cvc5's finite-model-find handles them in our fixture
+    # size; tlimit is set to 30s as a safety net for larger
+    # tag fact sets.
     local out
-    out=$(cat "$facts" "$query" | cvc5 --lang smt2 --finite-model-find --produce-models --tlimit 10000 2>&1)
+    out=$(cat "$facts" "$query" | cvc5 --lang smt2 --finite-model-find --produce-models --tlimit 30000 2>&1)
     if echo "$out" | grep -q "interrupted by timeout"; then
         echo "(timeout)"
         return
@@ -76,7 +80,7 @@ run_one() {
 
     if (( have_cvc5 )); then
         cvc5_verdict=$(solve_with_cvc5 "$facts")
-        printf '%-22s  expected=%-5s  z3=%-5s  cvc5=%-5s' "$label" "$expected" "$z3_verdict" "$cvc5_verdict"
+        printf '%-22s  expected=%-5s  z3=%-5s  cvc5=%-9s' "$label" "$expected" "$z3_verdict" "$cvc5_verdict"
     else
         cvc5_verdict="(skipped)"
         printf '%-22s  expected=%-5s  z3=%-5s  cvc5=%-9s' "$label" "$expected" "$z3_verdict" "$cvc5_verdict"
@@ -105,8 +109,8 @@ run_one() {
 }
 
 failures=0
-run_one "rhino-vulnerable" "$fixture_root/fixtures/rhino-vulnerable/observations" "sat"   || failures=$((failures+1))
-run_one "remediated"       "$fixture_root/fixtures/remediated/observations"       "unsat" || failures=$((failures+1))
+run_one "bybit-pattern-before" "$fixture_root/fixtures/bybit-pattern-before/observations" "sat"   || failures=$((failures+1))
+run_one "bybit-pattern-after"  "$fixture_root/fixtures/bybit-pattern-after/observations"  "unsat" || failures=$((failures+1))
 
 if (( have_cvc5 == 0 )); then
     echo

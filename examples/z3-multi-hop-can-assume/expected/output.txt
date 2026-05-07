@@ -1,0 +1,2 @@
+vulnerable    expected=sat    z3=sat    cvc5=sat        OK
+remediated    expected=unsat  z3=unsat  cvc5=unsat      OK

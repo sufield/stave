@@ -1,0 +1,2 @@
+rhino-vulnerable        expected=sat    z3=sat    cvc5=(timeout)  OK (cvc5 inconclusive, z3 decides)
+remediated              expected=unsat  z3=unsat  cvc5=unsat  OK
