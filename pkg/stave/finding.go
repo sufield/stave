@@ -1,6 +1,8 @@
 package stave
 
 import (
+	"time"
+
 	"github.com/sufield/stave/internal/core/evaluation"
 )
 
@@ -123,6 +125,62 @@ type Finding struct {
 	// when the finding has been overdue for a multiple of its
 	// deadline. Empty when no escalation applied.
 	SLAEscalatedSeverity Severity
+
+	// FirstUnsafeAt is the snapshot timestamp at which the engine
+	// first observed this asset in an unsafe state. Zero-valued
+	// when the engine hasn't computed lifecycle data (typically
+	// when only a single snapshot was loaded). Mirrors the
+	// internal Evidence.FirstUnsafeAt field; surfaced here so
+	// solver-facing exports (GraphExport.FindingNode) can reason
+	// about exposure dwell time without re-reading evaluation
+	// internals.
+	FirstUnsafeAt time.Time
+
+	// LastSeenUnsafeAt is the snapshot timestamp at which the
+	// engine most recently observed the asset still in an unsafe
+	// state. Zero when no lifecycle data is available. Equal to
+	// FirstUnsafeAt when only one unsafe snapshot was observed.
+	LastSeenUnsafeAt time.Time
+
+	// UnsafeDurationHours is the elapsed time (in hours) between
+	// FirstUnsafeAt and the evaluation's `now`. Zero when no
+	// lifecycle data is available. The same value the engine
+	// uses to compare against `--max-unsafe`.
+	UnsafeDurationHours float64
+
+	// SuggestedFix is the solver-derived structured fix when one
+	// is available. Distinct from Delta (which carries
+	// per-property prose actions): SuggestedFix carries a typed
+	// replacement value an AI agent can apply directly. Nil when
+	// no solver-derived fix has been produced — fall back to
+	// Delta (and Remediation) for prose guidance. The internal
+	// engine populates this from the Z3 unsat-core when the
+	// solver runs; CEL-only evaluation leaves it nil.
+	SuggestedFix *SuggestedFix
+
+	// LogicalProof is the solver's human-readable explanation of
+	// why the unsafe predicate / forbidden-state was satisfied —
+	// the Z3 counter-example surfaced as prose. Empty when the
+	// engine ran without a solver, the solver did not produce a
+	// model, or the control has no forbidden_state authored.
+	LogicalProof string
+}
+
+// HasTemporalEvidence reports whether the finding carries any
+// historical context — non-zero FirstUnsafeAt / LastSeenUnsafeAt,
+// or a positive UnsafeDurationHours. False means the finding is
+// a single point-in-time observation with no dwell-time data.
+//
+// Centralising the zero-check here lets export builders (and
+// downstream solver code reasoning about transient vs persistent
+// findings) ask the high-level question "is this lifecycle worth
+// reporting?" rather than checking three fields individually.
+// Adding a new temporal field later is a one-line update here
+// instead of a hunt across every consumer.
+func (f *Finding) HasTemporalEvidence() bool {
+	return !f.FirstUnsafeAt.IsZero() ||
+		!f.LastSeenUnsafeAt.IsZero() ||
+		f.UnsafeDurationHours > 0
 }
 
 // Reachability is the IAM-graph context for a finding. Carries the
@@ -147,6 +205,35 @@ type DeltaPath struct {
 	PropertyPath  string // raw observation path
 	CurrentValue  string // observed value from snapshot
 	FixAction     string // change needed to eliminate finding
+}
+
+// SuggestedFix is the solver-derived structured replacement for
+// an unsafe configuration. Distinct from DeltaPath (which carries
+// per-property prose actions): SuggestedFix carries the typed
+// before/after values an AI agent or programmatic consumer can
+// apply directly. Populated by the Z3 / SMT pipeline; nil for
+// CEL-only findings.
+//
+// FixType classifies the kind of change:
+//
+//	policy_replacement — the asset's policy document needs replacement
+//	config_change      — a non-policy field (e.g. mfa_configuration) needs a new value
+//	delete_resource    — the asset itself should be removed (no replacement)
+//
+// Confidence is "high", "medium", or "low". A high-confidence fix
+// is a direct negation of the failing predicate — applying it
+// resolves the finding mechanically. Medium-confidence fixes
+// resolve the finding but may have side effects (e.g. removing a
+// public principal that downstream callers depend on).
+// Low-confidence fixes are advisory; they require human review
+// because the engine cannot guarantee the replacement is complete.
+type SuggestedFix struct {
+	FixType          string `json:"fix_type"`
+	Description      string `json:"description"`
+	Current          any    `json:"current,omitempty"`
+	Replacement      any    `json:"replacement,omitempty"`
+	Confidence       string `json:"confidence"`
+	ConfidenceReason string `json:"confidence_reason,omitempty"`
 }
 
 // Remediation is the catalog-authored remediation guidance for a

@@ -198,6 +198,11 @@ func convertFinding(f *evaluation.Finding) Finding {
 		SLADeadlineHours:     f.SLADeadlinePtr(),
 		SLAOverdueHours:      f.SLAOverduePtr(),
 		SLAEscalatedSeverity: Severity(f.SLAEscalatedSeverityValue().String()),
+		FirstUnsafeAt:        f.Evidence.FirstUnsafeAt,
+		LastSeenUnsafeAt:     f.Evidence.LastSeenUnsafeAt,
+		UnsafeDurationHours:  f.Evidence.UnsafeDurationHours,
+		SuggestedFix:         convertSuggestedFix(f.SuggestedFix),
+		LogicalProof:         f.LogicalProof,
 	}
 	if f.HasReachability() {
 		out.Reachability = &Reachability{
@@ -270,6 +275,34 @@ func remediationSpecFor(f *evaluation.Finding) policy.RemediationSpec {
 		return *f.ControlRemediation
 	}
 	return policy.DefaultRemediationForClass(f.ControlID.Classify())
+}
+
+// convertSuggestedFix lifts the internal solver-derived map into
+// the typed SuggestedFix surface. Returns nil when the engine
+// produced no fix — typical for CEL-only evaluation. Recognised
+// keys: fix_type, description, current, replacement, confidence,
+// confidence_reason. Unknown keys are silently dropped to keep
+// the public surface stable as the internal schema evolves.
+func convertSuggestedFix(raw map[string]any) *SuggestedFix {
+	if len(raw) == 0 {
+		return nil
+	}
+	out := &SuggestedFix{}
+	if v, ok := raw["fix_type"].(string); ok {
+		out.FixType = v
+	}
+	if v, ok := raw["description"].(string); ok {
+		out.Description = v
+	}
+	if v, ok := raw["confidence"].(string); ok {
+		out.Confidence = v
+	}
+	if v, ok := raw["confidence_reason"].(string); ok {
+		out.ConfidenceReason = v
+	}
+	out.Current = raw["current"]
+	out.Replacement = raw["replacement"]
+	return out
 }
 
 // buildCoverage builds the per-tool, per-domain coverage posture

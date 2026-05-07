@@ -2,6 +2,7 @@ package stave_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/sufield/stave/pkg/stave"
 )
@@ -169,5 +170,78 @@ func TestExportGraph_EdgesAreSortedDeterministically(t *testing.T) {
 		if prev.Relationship > cur.Relationship {
 			t.Errorf("relationship out of order: %q > %q", prev.Relationship, cur.Relationship)
 		}
+	}
+}
+
+// TestExportGraph_LifecycleHydratedFromFinding asserts that when
+// the public Finding carries non-zero temporal evidence
+// (FirstUnsafeAt / LastSeenUnsafeAt / UnsafeDurationHours), the
+// projected FindingNode.Lifecycle reflects those values verbatim.
+// This is the data path Z3 / SMT consumers reading export-graph
+// rely on for dwell-time reasoning without re-walking
+// observation snapshots.
+func TestExportGraph_LifecycleHydratedFromFinding(t *testing.T) {
+	t.Parallel()
+	first := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	last := time.Date(2026, 1, 8, 0, 0, 0, 0, time.UTC)
+	a := &stave.Assessment{
+		Findings: []stave.Finding{
+			{
+				FindingID:           "fid-temporal",
+				ControlID:           "CTL.S3.ACCESS.001",
+				AssetID:             "arn:aws:s3:::data-bucket",
+				AssetType:           "aws_s3_bucket",
+				Severity:            "high",
+				ExposureScore:       7.5,
+				FirstUnsafeAt:       first,
+				LastSeenUnsafeAt:    last,
+				UnsafeDurationHours: 168,
+			},
+		},
+	}
+	g := stave.ExportGraph(a)
+	if len(g.Findings) != 1 {
+		t.Fatalf("Findings = %d, want 1", len(g.Findings))
+	}
+	lc := g.Findings[0].Lifecycle
+	if lc == nil {
+		t.Fatal("Lifecycle should be populated when Finding carries temporal evidence")
+	}
+	if !lc.FirstUnsafeAt.Equal(first) {
+		t.Errorf("FirstUnsafeAt = %v, want %v", lc.FirstUnsafeAt, first)
+	}
+	if !lc.LastSeenUnsafeAt.Equal(last) {
+		t.Errorf("LastSeenUnsafeAt = %v, want %v", lc.LastSeenUnsafeAt, last)
+	}
+	if lc.UnsafeDurationHours != 168 {
+		t.Errorf("UnsafeDurationHours = %v, want 168", lc.UnsafeDurationHours)
+	}
+}
+
+// TestExportGraph_LifecycleNilWhenNoTemporalEvidence guards the
+// negative case: a Finding with no lifecycle data (e.g. a single-
+// snapshot evaluation) projects to a FindingNode whose Lifecycle
+// pointer is nil. Consumers can safely branch on the pointer
+// rather than checking three zero-valued fields individually.
+func TestExportGraph_LifecycleNilWhenNoTemporalEvidence(t *testing.T) {
+	t.Parallel()
+	a := &stave.Assessment{
+		Findings: []stave.Finding{
+			{
+				FindingID: "fid-no-time",
+				ControlID: "CTL.S3.ACCESS.001",
+				AssetID:   "arn:aws:s3:::data-bucket",
+				AssetType: "aws_s3_bucket",
+				Severity:  "high",
+			},
+		},
+	}
+	g := stave.ExportGraph(a)
+	if len(g.Findings) != 1 {
+		t.Fatalf("Findings = %d, want 1", len(g.Findings))
+	}
+	if g.Findings[0].Lifecycle != nil {
+		t.Errorf("Lifecycle should be nil when Finding has no temporal evidence; got %+v",
+			g.Findings[0].Lifecycle)
 	}
 }

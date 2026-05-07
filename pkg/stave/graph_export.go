@@ -3,6 +3,7 @@ package stave
 import (
 	"slices"
 	"sort"
+	"time"
 )
 
 // GraphExport is the cross-service relationship view of an
@@ -43,6 +44,17 @@ type AssetNode struct {
 // reasoning trace and remediation prose are intentionally omitted;
 // callers that need them go to the originating [Finding] via
 // FindingID.
+//
+// Lifecycle carries the engine's exposure-window evidence —
+// FirstUnsafeAt, LastSeenUnsafeAt, UnsafeDurationHours — so
+// solver consumers reasoning about dwell time, recurrence, or
+// SLA breach do not have to re-derive timestamps from the
+// originating snapshots. Nil when the engine produced no
+// lifecycle data for the finding (typically when only a single
+// snapshot was loaded). The data mirrors what `--max-unsafe`
+// compares against on the CLI side, so a Z3 query asking "has
+// this asset been unsafe long enough to violate the SLA?" can
+// read FindingNode.Lifecycle.UnsafeDurationHours directly.
 type FindingNode struct {
 	FindingID     FindingID
 	ControlID     ControlID
@@ -50,6 +62,19 @@ type FindingNode struct {
 	Severity      Severity
 	ExposureScore float64
 	IsChainMember bool
+	Lifecycle     *FindingLifecycle
+}
+
+// FindingLifecycle is the temporal envelope around a finding's
+// unsafe state — the same data the engine surfaces internally
+// via Evidence.FirstUnsafeAt / LastSeenUnsafeAt /
+// UnsafeDurationHours. Pointer-typed on FindingNode so the
+// JSON form omits the block entirely when no lifecycle data
+// is available rather than emitting a zero-valued struct.
+type FindingLifecycle struct {
+	FirstUnsafeAt       time.Time `json:"first_unsafe_at,omitzero"`
+	LastSeenUnsafeAt    time.Time `json:"last_seen_unsafe_at,omitzero"`
+	UnsafeDurationHours float64   `json:"unsafe_duration_hours,omitempty"`
 }
 
 // ChainNode is the graph-projection of one [ChainFinding]. Members
@@ -93,6 +118,7 @@ func ExportGraph(assessment *Assessment) *GraphExport {
 			Severity:      f.Severity,
 			ExposureScore: f.ExposureScore,
 			IsChainMember: len(f.ChainMembership) > 0,
+			Lifecycle:     buildLifecycle(f),
 		})
 		out.Edges = append(out.Edges, AssetEdge{
 			FromAssetID:  string(f.FindingID),
@@ -124,6 +150,26 @@ func ExportGraph(assessment *Assessment) *GraphExport {
 	out.Assets = assets.sorted()
 	sortGraphEdges(out.Edges)
 	return out
+}
+
+// buildLifecycle materialises the per-finding lifecycle envelope
+// when the finding carries historical context. Pointer-typed
+// return so the FindingNode JSON form omits the block entirely
+// rather than emitting a zero-valued struct that downstream
+// solvers might mistake for "duration zero". The
+// "is there anything to report?" question is delegated to
+// [Finding.HasTemporalEvidence] — adding a new temporal field
+// to the lifecycle envelope is a one-line change there, no
+// builder edits required.
+func buildLifecycle(f *Finding) *FindingLifecycle {
+	if !f.HasTemporalEvidence() {
+		return nil
+	}
+	return &FindingLifecycle{
+		FirstUnsafeAt:       f.FirstUnsafeAt,
+		LastSeenUnsafeAt:    f.LastSeenUnsafeAt,
+		UnsafeDurationHours: f.UnsafeDurationHours,
+	}
 }
 
 // chainMembersFromFindings collects the FindingIDs of findings that

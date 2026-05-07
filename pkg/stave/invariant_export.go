@@ -41,16 +41,35 @@ type InvariantExport struct {
 // authored prose; for solvers that emit human-readable output the
 // description is what surfaces in proof reports.
 //
+// IntentRationale carries the authored "why" prose — distinct
+// from Description (which states what the control checks).
+// AI agents and reasoning traces use IntentRationale to decide
+// whether a triggered finding actually matters in context.
+// Empty when the control YAML does not author it.
+//
+// ForbiddenState is the high-level invariant the control declares
+// must never hold. The Z3 / SMT compiler reads it as a
+// satisfiability conjecture: SAT means a configuration exists that
+// violates the invariant; UNSAT proves the invariant safe.
+// Distinct from Predicate (the per-asset CEL match expression):
+// ForbiddenState carries the same predicate vocabulary but is
+// authored as a system-level claim rather than a per-asset trigger.
+// IsLeaf() on the zero PredicateExport returns true; consumers
+// can branch on Combine == "" to detect "no forbidden_state
+// authored on this control".
+//
 // Assets lists the asset types the control declares as applicable.
 // An empty Assets means "applies to all asset types" — the
 // catalog's legacy default.
 type InvariantDefinition struct {
-	ID          ControlID
-	Description string
-	Severity    Severity
-	Scope       InvariantScope
-	Predicate   PredicateExport
-	Assets      []AssetConstraint
+	ID              ControlID
+	Description     string
+	IntentRationale string
+	Severity        Severity
+	Scope           InvariantScope
+	Predicate       PredicateExport
+	ForbiddenState  PredicateExport
+	Assets          []AssetConstraint
 }
 
 // InvariantScope classifies how the predicate reaches across the
@@ -177,11 +196,13 @@ func loadInvariantControls(ctx context.Context, dir string) ([]controldef.Contro
 // stay consistent with the [Finding] surface.
 func projectControl(ctl *controldef.ControlDefinition) InvariantDefinition {
 	def := InvariantDefinition{
-		ID:          ctl.ID,
-		Description: strings.TrimSpace(ctl.Description),
-		Severity:    Severity(ctl.Severity.String()),
-		Scope:       ScopeSingleAsset,
-		Predicate:   projectPredicate(ctl.UnsafePredicate),
+		ID:              ctl.ID,
+		Description:     strings.TrimSpace(ctl.Description),
+		IntentRationale: strings.TrimSpace(ctl.IntentRationale),
+		Severity:        Severity(ctl.Severity.String()),
+		Scope:           ScopeSingleAsset,
+		Predicate:       projectPredicate(ctl.UnsafePredicate),
+		ForbiddenState:  projectPredicate(ctl.ForbiddenState),
 	}
 	if len(ctl.ApplicableAssetTypes) > 0 {
 		def.Assets = make([]AssetConstraint, len(ctl.ApplicableAssetTypes))

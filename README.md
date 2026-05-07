@@ -44,7 +44,7 @@ Every score is a **deterministic, traceable reasoning chain**. Compound scores s
 
 ## Features
 
-- **2589 built-in controls across 74 domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, ECR, EKS, CloudTrail, CloudWatch, KMS, OpenSearch, Redshift, Neptune, DocumentDB, Glue, CodeBuild, SageMaker, Bedrock, Cognito, API Gateway, EMR, Kinesis, MSK, EFS, Route53, DMS, SSM, ACM, WAF, Shield, Network Firewall, EventBridge, Config, Backup, and [38 more](docs/controls/reference.md)
+- **2590 built-in controls across 74 domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, ECR, EKS, CloudTrail, CloudWatch, KMS, OpenSearch, Redshift, Neptune, DocumentDB, Glue, CodeBuild, SageMaker, Bedrock, Cognito, API Gateway, EMR, Kinesis, MSK, EFS, Route53, DMS, SSM, ACM, WAF, Shield, Network Firewall, EventBridge, Config, Backup, and [38 more](docs/controls/reference.md)
 - **23 ghost reference controls** — cross-inventory reasoning detects dangling references to deleted resources across IAM policies, resource policies, event triggers, compute dependencies, network infrastructure, cross-account trust, and temporal confirmation. Detection no per-resource scanner can perform.
 - **30+ compound chain definitions** — detect multi-step attack paths across data protection, identity, detection, recovery, sovereignty, supply chain, cryptographic concentration, WAF safety envelope, ghost resource exfiltration, and silent monitoring collapse
 - **7-control WAF safety envelope** — presence, enforcement, OWASP coverage, logging, origin lockdown, parser overflow protection, evasion observability
@@ -152,15 +152,15 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-2589 controls across 74 domains:
+2590 controls across 74 domains:
 
-### AWS S3 (111 controls)
+### AWS S3 (112 controls)
 
 | Category | Count | What they detect |
 |----------|:---:|-----------------|
 | `public` | 18 | Public read/write/list, website hosting, prefix exposure, CloudFront bypass |
 | `acl` | 4 | ACL escalation, reconnaissance, FULL_CONTROL grants |
-| `access` | 13 | Cross-account, wildcard actions, presigned URLs, Access Grants, policy disclosure |
+| `access` | 14 | Cross-account, wildcard actions, presigned URLs, Access Grants, policy disclosure |
 | `encrypt` | 6 | Missing encryption at rest/in transit, KMS for PHI |
 | `network` | 11 | VPC/IP conditions, VPC endpoint policy, Multi-Region Access Point PAB |
 | `versioning` | 3 | Disabled versioning, missing MFA delete |

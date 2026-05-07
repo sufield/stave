@@ -3,14 +3,14 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2616
-**Pack hash:** `f423227024014ba1784a09df71fb5f233c1ff97defd6eef7f175f4b4289e1674`
+**Total controls:** 2617
+**Pack hash:** `b4afc6a2a5225e14071821da77db154ba2b35919d636e44ec553a15daa35ea4b`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 269 |
+| critical | 270 |
 | high | 1131 |
 | info | 16 |
 | low | 198 |
@@ -23,7 +23,7 @@
 | capacity | 3 |
 | detection | 133 |
 | encryption | 113 |
-| exposure | 1184 |
+| exposure | 1185 |
 | governance | 558 |
 | hygiene | 18 |
 | identity | 402 |
@@ -32394,6 +32394,21 @@ Bucket policy evaluates as effectively public under AWS PolicyStatus.IsPublic se
    policy change is in flight. PAB does not fix the underlying
    broad Allow — it only suppresses its effect at the network
    boundary, leaving the exposure latent rather than active.
+
+---
+
+### CTL.S3.ACCESS.EXTERNAL.ORG.001
+
+**PHI Buckets Must Not Be Reachable by External Principals**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.3;
+
+S3 buckets tagged data-classification=phi must not have policy statements granting access to principals outside the AWS Organization. The control reads the engine-derived external_account_ids list (set when bucket policy Principals or Conditions admit any non-org account); a non-empty list paired with a phi data-classification tag is an HIPAA-reportable breach exposure regardless of which specific S3 actions are allowed.
+
+**Remediation:** 1) Review the bucket policy and remove any statement whose Principal lists an external AWS account ID. 2) If cross-org access is intentional (e.g., a sanctioned BAA partner), scope the Allow with aws:PrincipalOrgID matching the partner's organization ID and aws:PrincipalArn restricting to the specific partner role. 3) Tag the bucket with `phi_external_intended: <baa-id>` to suppress this control only after the legal/compliance review is on file.
 
 ---
 
