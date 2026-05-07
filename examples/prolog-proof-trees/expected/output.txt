@@ -1,0 +1,294 @@
+============================================================
+  Cognito writeup-config
+============================================================
+
+=== Anonymous Access Chains ===
+
+anonymous reaches arn:aws:s3:::app-public-assets via s3:GetObject:
+arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[allows_unauthenticated]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_unauth_to]--> arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
+    arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[grants]--> s3:GetObject
+      arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[on_resource]--> arn:aws:s3:::app-public-assets
+
+anonymous reaches arn:aws:s3:::app-public-assets/* via s3:GetObject:
+arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[allows_unauthenticated]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_unauth_to]--> arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
+    arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[grants]--> s3:GetObject
+      arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[on_resource]--> arn:aws:s3:::app-public-assets/*
+
+anonymous reaches arn:aws:dynamodb:us-east-1:111122223333:table/app-data via s3:GetObject:
+arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[allows_unauthenticated]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_unauth_to]--> arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
+    arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[grants]--> s3:GetObject
+      arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[on_resource]--> arn:aws:dynamodb:us-east-1:111122223333:table/app-data
+
+anonymous reaches arn:aws:s3:::app-public-assets via s3:ListBucket:
+arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[allows_unauthenticated]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_unauth_to]--> arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
+    arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[grants]--> s3:ListBucket
+      arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[on_resource]--> arn:aws:s3:::app-public-assets
+
+anonymous reaches arn:aws:s3:::app-public-assets/* via s3:ListBucket:
+arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[allows_unauthenticated]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_unauth_to]--> arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
+    arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[grants]--> s3:ListBucket
+      arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[on_resource]--> arn:aws:s3:::app-public-assets/*
+
+anonymous reaches arn:aws:dynamodb:us-east-1:111122223333:table/app-data via s3:ListBucket:
+arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[allows_unauthenticated]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_unauth_to]--> arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
+    arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[grants]--> s3:ListBucket
+      arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[on_resource]--> arn:aws:dynamodb:us-east-1:111122223333:table/app-data
+
+anonymous reaches arn:aws:s3:::app-public-assets via dynamodb:GetItem:
+arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[allows_unauthenticated]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_unauth_to]--> arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
+    arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[grants]--> dynamodb:GetItem
+      arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[on_resource]--> arn:aws:s3:::app-public-assets
+
+anonymous reaches arn:aws:s3:::app-public-assets/* via dynamodb:GetItem:
+arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[allows_unauthenticated]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_unauth_to]--> arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
+    arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[grants]--> dynamodb:GetItem
+      arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[on_resource]--> arn:aws:s3:::app-public-assets/*
+
+anonymous reaches arn:aws:dynamodb:us-east-1:111122223333:table/app-data via dynamodb:GetItem:
+arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[allows_unauthenticated]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_unauth_to]--> arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
+    arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[grants]--> dynamodb:GetItem
+      arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[on_resource]--> arn:aws:dynamodb:us-east-1:111122223333:table/app-data
+
+anonymous reaches arn:aws:s3:::app-public-assets via dynamodb:Query:
+arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[allows_unauthenticated]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_unauth_to]--> arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
+    arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[grants]--> dynamodb:Query
+      arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[on_resource]--> arn:aws:s3:::app-public-assets
+
+anonymous reaches arn:aws:s3:::app-public-assets/* via dynamodb:Query:
+arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[allows_unauthenticated]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_unauth_to]--> arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
+    arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[grants]--> dynamodb:Query
+      arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[on_resource]--> arn:aws:s3:::app-public-assets/*
+
+anonymous reaches arn:aws:dynamodb:us-east-1:111122223333:table/app-data via dynamodb:Query:
+arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[allows_unauthenticated]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_unauth_to]--> arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
+    arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[grants]--> dynamodb:Query
+      arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[on_resource]--> arn:aws:dynamodb:us-east-1:111122223333:table/app-data
+
+=== Self-Registration Chains ===
+
+self-register reaches * via s3:*:
+arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool --[self_registration_unrestricted]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_auth_to]--> arn:aws:iam::111122223333:role/Cognito_appAuth_Role
+    arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[grants]--> s3:*
+      arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[on_resource]--> *
+
+self-register reaches arn:aws:dynamodb:us-east-1:111122223333:table/* via s3:*:
+arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool --[self_registration_unrestricted]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_auth_to]--> arn:aws:iam::111122223333:role/Cognito_appAuth_Role
+    arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[grants]--> s3:*
+      arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[on_resource]--> arn:aws:dynamodb:us-east-1:111122223333:table/*
+
+self-register reaches arn:aws:lambda:us-east-1:111122223333:function:* via s3:*:
+arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool --[self_registration_unrestricted]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_auth_to]--> arn:aws:iam::111122223333:role/Cognito_appAuth_Role
+    arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[grants]--> s3:*
+      arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[on_resource]--> arn:aws:lambda:us-east-1:111122223333:function:*
+
+self-register reaches * via dynamodb:*:
+arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool --[self_registration_unrestricted]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_auth_to]--> arn:aws:iam::111122223333:role/Cognito_appAuth_Role
+    arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[grants]--> dynamodb:*
+      arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[on_resource]--> *
+
+self-register reaches arn:aws:dynamodb:us-east-1:111122223333:table/* via dynamodb:*:
+arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool --[self_registration_unrestricted]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_auth_to]--> arn:aws:iam::111122223333:role/Cognito_appAuth_Role
+    arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[grants]--> dynamodb:*
+      arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[on_resource]--> arn:aws:dynamodb:us-east-1:111122223333:table/*
+
+self-register reaches arn:aws:lambda:us-east-1:111122223333:function:* via dynamodb:*:
+arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool --[self_registration_unrestricted]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_auth_to]--> arn:aws:iam::111122223333:role/Cognito_appAuth_Role
+    arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[grants]--> dynamodb:*
+      arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[on_resource]--> arn:aws:lambda:us-east-1:111122223333:function:*
+
+self-register reaches * via lambda:InvokeFunction:
+arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool --[self_registration_unrestricted]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_auth_to]--> arn:aws:iam::111122223333:role/Cognito_appAuth_Role
+    arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[grants]--> lambda:InvokeFunction
+      arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[on_resource]--> *
+
+self-register reaches arn:aws:dynamodb:us-east-1:111122223333:table/* via lambda:InvokeFunction:
+arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool --[self_registration_unrestricted]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_auth_to]--> arn:aws:iam::111122223333:role/Cognito_appAuth_Role
+    arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[grants]--> lambda:InvokeFunction
+      arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[on_resource]--> arn:aws:dynamodb:us-east-1:111122223333:table/*
+
+self-register reaches arn:aws:lambda:us-east-1:111122223333:function:* via lambda:InvokeFunction:
+arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool --[self_registration_unrestricted]--> true
+  arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool --[maps_auth_to]--> arn:aws:iam::111122223333:role/Cognito_appAuth_Role
+    arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[grants]--> lambda:InvokeFunction
+      arn:aws:iam::111122223333:role/Cognito_appAuth_Role --[on_resource]--> arn:aws:lambda:us-east-1:111122223333:function:*
+
+=== Exploitable Overpermissioned Roles ===
+(none)
+
+=== Privilege Escalation Paths ===
+(none)
+
+============================================================
+  Cognito remediated
+============================================================
+
+=== Anonymous Access Chains ===
+(none)
+
+=== Self-Registration Chains ===
+(none)
+
+=== Exploitable Overpermissioned Roles ===
+(none)
+
+=== Privilege Escalation Paths ===
+(none)
+
+============================================================
+  Multi-hop vulnerable
+============================================================
+
+=== Anonymous Access Chains ===
+(none)
+
+=== Self-Registration Chains ===
+(none)
+
+=== Exploitable Overpermissioned Roles ===
+(none)
+
+=== Privilege Escalation Paths ===
+
+privesc arn:aws:iam::444455556666:role/onboarding-role -> arn:aws:iam::444455556666:role/operator-role:
+arn:aws:iam::444455556666:role/onboarding-role --[assumes]--> arn:aws:iam::444455556666:role/operator-role
+
+privesc arn:aws:iam::444455556666:role/operator-role -> arn:aws:iam::444455556666:role/admin-role:
+arn:aws:iam::444455556666:role/operator-role --[assumes]--> arn:aws:iam::444455556666:role/admin-role
+
+privesc arn:aws:iam::444455556666:user/developer -> arn:aws:iam::444455556666:role/onboarding-role:
+arn:aws:iam::444455556666:user/developer --[assumes]--> arn:aws:iam::444455556666:role/onboarding-role
+
+privesc arn:aws:iam::444455556666:role/onboarding-role -> arn:aws:iam::444455556666:role/admin-role:
+arn:aws:iam::444455556666:role/onboarding-role --[assumes]--> arn:aws:iam::444455556666:role/operator-role
+  arn:aws:iam::444455556666:role/operator-role --[assumes]--> arn:aws:iam::444455556666:role/admin-role
+
+privesc arn:aws:iam::444455556666:user/developer -> arn:aws:iam::444455556666:role/operator-role:
+arn:aws:iam::444455556666:user/developer --[assumes]--> arn:aws:iam::444455556666:role/onboarding-role
+  arn:aws:iam::444455556666:role/onboarding-role --[assumes]--> arn:aws:iam::444455556666:role/operator-role
+
+privesc arn:aws:iam::444455556666:user/developer -> arn:aws:iam::444455556666:role/admin-role:
+arn:aws:iam::444455556666:user/developer --[assumes]--> arn:aws:iam::444455556666:role/onboarding-role
+  arn:aws:iam::444455556666:role/onboarding-role --[assumes]--> arn:aws:iam::444455556666:role/operator-role
+    arn:aws:iam::444455556666:role/operator-role --[assumes]--> arn:aws:iam::444455556666:role/admin-role
+
+============================================================
+  Multi-hop remediated
+============================================================
+
+=== Anonymous Access Chains ===
+(none)
+
+=== Self-Registration Chains ===
+(none)
+
+=== Exploitable Overpermissioned Roles ===
+(none)
+
+=== Privilege Escalation Paths ===
+
+privesc arn:aws:iam::444455556666:role/operator-role -> arn:aws:iam::444455556666:role/admin-role:
+arn:aws:iam::444455556666:role/operator-role --[assumes]--> arn:aws:iam::444455556666:role/admin-role
+
+privesc arn:aws:iam::444455556666:user/developer -> arn:aws:iam::444455556666:role/onboarding-role:
+arn:aws:iam::444455556666:user/developer --[assumes]--> arn:aws:iam::444455556666:role/onboarding-role
+
+============================================================
+  Rhino vulnerable
+============================================================
+
+=== Anonymous Access Chains ===
+(none)
+
+=== Self-Registration Chains ===
+(none)
+
+=== Exploitable Overpermissioned Roles ===
+
+exploitable role arn:aws:iam::111122223333:role/admin-ec2-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: ec2.amazonaws.com):
+arn:aws:iam::111122223333:role/admin-ec2-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
+  arn:aws:iam::111122223333:role/admin-ec2-role --[trusts_compute]--> ec2.amazonaws.com
+    therefore arn:aws:iam::111122223333:role/admin-ec2-role :: exploitable_via_passrole
+
+exploitable role arn:aws:iam::111122223333:role/admin-lambda-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: lambda.amazonaws.com):
+arn:aws:iam::111122223333:role/admin-lambda-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
+  arn:aws:iam::111122223333:role/admin-lambda-role --[trusts_compute]--> lambda.amazonaws.com
+    therefore arn:aws:iam::111122223333:role/admin-lambda-role :: exploitable_via_passrole
+
+exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: ec2.amazonaws.com):
+arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
+  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> ec2.amazonaws.com
+    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
+
+exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: lambda.amazonaws.com):
+arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
+  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> lambda.amazonaws.com
+    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
+
+exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: ecs-tasks.amazonaws.com):
+arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
+  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> ecs-tasks.amazonaws.com
+    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
+
+exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: glue.amazonaws.com):
+arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
+  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> glue.amazonaws.com
+    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
+
+exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: cloudformation.amazonaws.com):
+arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
+  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> cloudformation.amazonaws.com
+    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
+
+exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: codebuild.amazonaws.com):
+arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
+  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> codebuild.amazonaws.com
+    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
+
+exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: sagemaker.amazonaws.com):
+arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
+  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> sagemaker.amazonaws.com
+    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
+
+exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: batch.amazonaws.com):
+arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
+  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> batch.amazonaws.com
+    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
+
+exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: states.amazonaws.com):
+arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
+  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> states.amazonaws.com
+    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
+
+exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: apprunner.amazonaws.com):
+arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
+  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> apprunner.amazonaws.com
+    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
+
+exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: datapipeline.amazonaws.com):
+arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
+  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> datapipeline.amazonaws.com
+    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
+
+=== Privilege Escalation Paths ===
+(none)
+

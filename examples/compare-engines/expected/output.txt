@@ -5,6 +5,7 @@ Engine availability:
   clingo        available
   pysat         available
   souffle       available
+  prolog        available
 
 
 === Cognito self-register (writeup)  (expected UNSAFE) ===
@@ -14,7 +15,8 @@ Engine availability:
   [ok]  clingo        UNSAFE       
   [ok]  pysat         UNSAFE       
   [ok]  souffle       UNSAFE       
-  == CONSENSUS: UNSAFE (6 engine(s))
+  [ok]  prolog        UNSAFE       
+  == CONSENSUS: UNSAFE (7 engine(s))
 
 === Cognito self-register (remediated)  (expected SAFE) ===
   [ok]  stave-cel     SAFE         
@@ -23,7 +25,8 @@ Engine availability:
   [ok]  clingo        SAFE         
   [ok]  pysat         SAFE         
   [ok]  souffle       SAFE         
-  == CONSENSUS: SAFE (6 engine(s))
+  [ok]  prolog        SAFE         
+  == CONSENSUS: SAFE (7 engine(s))
 
 === Multi-hop can_assume (vulnerable)  (expected UNSAFE) ===
   [ok]  stave-cel     SAFE         
@@ -32,7 +35,8 @@ Engine availability:
   [ok]  clingo        UNSAFE       
   [--]  pysat         no example covers this fixture
   [ok]  souffle       UNSAFE       
-  != DISAGREEMENT: clingo=UNSAFE; cvc5=UNSAFE; souffle=UNSAFE; stave-cel=SAFE; z3=UNSAFE
+  [ok]  prolog        UNSAFE       
+  != DISAGREEMENT: clingo=UNSAFE; cvc5=UNSAFE; prolog=UNSAFE; souffle=UNSAFE; stave-cel=SAFE; z3=UNSAFE
 
 === Multi-hop can_assume (remediated)  (expected SAFE) ===
   [ok]  stave-cel     SAFE         
@@ -41,7 +45,8 @@ Engine availability:
   [ok]  clingo        SAFE         
   [--]  pysat         no example covers this fixture
   [ok]  souffle       UNSAFE       
-  != DISAGREEMENT: clingo=SAFE; cvc5=SAFE; souffle=UNSAFE; stave-cel=SAFE; z3=SAFE
+  [ok]  prolog        UNSAFE       
+  != DISAGREEMENT: clingo=SAFE; cvc5=SAFE; prolog=UNSAFE; souffle=UNSAFE; stave-cel=SAFE; z3=SAFE
 
 === Rhino privesc (vulnerable)  (expected UNSAFE) ===
   [ok]  stave-cel     UNSAFE       
@@ -50,7 +55,8 @@ Engine availability:
   [ok]  clingo        SAFE         
   [ok]  pysat         UNSAFE       
   [ok]  souffle       UNSAFE       
-  != DISAGREEMENT: clingo=SAFE; pysat=UNSAFE; souffle=UNSAFE; stave-cel=UNSAFE; z3=UNSAFE
+  [ok]  prolog        UNSAFE       
+  != DISAGREEMENT: clingo=SAFE; prolog=UNSAFE; pysat=UNSAFE; souffle=UNSAFE; stave-cel=UNSAFE; z3=UNSAFE
 
 === Rhino privesc (remediated)  (expected SAFE) ===
   [ok]  stave-cel     SAFE         
@@ -59,6 +65,7 @@ Engine availability:
   [ok]  clingo        SAFE         
   [ok]  pysat         SAFE         
   [ok]  souffle       UNSAFE       
+  [--]  prolog        no example covers this fixture
   != DISAGREEMENT: clingo=SAFE; cvc5=SAFE; pysat=SAFE; souffle=UNSAFE; stave-cel=SAFE; z3=SAFE
 
 === Bybit wildcard (before)  (expected UNSAFE) ===
@@ -68,6 +75,7 @@ Engine availability:
   [ok]  clingo        SAFE         
   [--]  pysat         no example covers this fixture
   [ok]  souffle       SAFE         
+  [--]  prolog        no example covers this fixture
   != DISAGREEMENT: clingo=SAFE; cvc5=UNSAFE; souffle=SAFE; stave-cel=SAFE; z3=UNSAFE
 
 === Bybit wildcard (after)  (expected SAFE) ===
@@ -77,6 +85,7 @@ Engine availability:
   [ok]  clingo        SAFE         
   [--]  pysat         no example covers this fixture
   [ok]  souffle       SAFE         
+  [--]  prolog        no example covers this fixture
   == CONSENSUS: SAFE (5 engine(s))
 
 ============================================================

@@ -30,7 +30,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version: '1.26'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
       - name: Regenerate goldens and sync
@@ -62,7 +62,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version: '1.26'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
       - name: Sync embeds
@@ -97,7 +97,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version: '1.26'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
 
@@ -141,7 +141,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version: '1.26'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
       - name: Download regenerated goldens
@@ -170,7 +170,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version: '1.26'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
       - name: Install golangci-lint from source
@@ -187,20 +187,21 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version: '1.26'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
       - name: Verify Go version
-        # Hard-fail if setup-go installed the known-vulnerable
-        # 1.26.2 patch release. We pin `go-version: '1.26'` plus
-        # `check-latest: true` so the runner picks the newest
-        # available 1.26.x patch; this gate catches the case
-        # where the runner manifest hasn't updated past 1.26.2 yet
-        # and the install would silently re-introduce
-        # GO-2026-4971 (`net@<go1.26.3`).
+        # Positive assertion: setup-go must install exactly the
+        # patch release `go.mod`'s toolchain directive specifies
+        # (currently go1.26.3, which patches GO-2026-4971 in
+        # `net`). A negative-only check would silently pass on
+        # any other patch — including an older vulnerable one —
+        # so we assert intent here. If the runner manifest is
+        # too stale to install 1.26.3 directly, this step fails
+        # loudly rather than letting a fallback through.
         run: |
           go version
-          ! go version | grep -q 'go1.26.2'
+          go version | grep -q 'go1.26.3'
       - uses: golang/govulncheck-action@b625fbe08f3bccbe446d94fbf87fcc875a4f50ee # v1
         with:
           go-version-file: 'go.mod'
@@ -214,7 +215,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version: '1.26'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
       - name: Install go-licenses
@@ -256,7 +257,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version: '1.26'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
       - name: Build and run E2E tests
@@ -301,7 +302,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version: '1.26'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
       - name: Check README freshness

@@ -48,6 +48,7 @@ FIXTURES = [
             "clingo": "cognito-writeup",
             "pysat": "cognito-writeup",
             "souffle": "Cognito writeup-config",
+            "prolog": "Cognito writeup-config",
         },
     },
     {
@@ -61,6 +62,7 @@ FIXTURES = [
             "clingo": "cognito-remediated",
             "pysat": "cognito-remediated",
             "souffle": "Cognito remediated",
+            "prolog": "Cognito remediated",
         },
     },
     {
@@ -74,6 +76,7 @@ FIXTURES = [
             "clingo": "multi-hop-vulnerable",
             "pysat": None,
             "souffle": "Multi-hop vulnerable",
+            "prolog": "Multi-hop vulnerable",
         },
     },
     {
@@ -87,6 +90,7 @@ FIXTURES = [
             "clingo": "multi-hop-remediated",
             "pysat": None,
             "souffle": "Multi-hop remediated",
+            "prolog": "Multi-hop remediated",
         },
     },
     {
@@ -100,6 +104,7 @@ FIXTURES = [
             "clingo": "rhino-vulnerable",
             "pysat": "rhino-vulnerable",
             "souffle": "Rhino vulnerable",
+            "prolog": "Rhino vulnerable",
         },
     },
     {
@@ -113,6 +118,7 @@ FIXTURES = [
             "clingo": "rhino-remediated",
             "pysat": "rhino-remediated",
             "souffle": "Rhino remediated",
+            "prolog": None,
         },
     },
     {
@@ -126,6 +132,7 @@ FIXTURES = [
             "clingo": "bybit-before",
             "pysat": None,
             "souffle": "Bybit before",
+            "prolog": None,
         },
     },
     {
@@ -139,6 +146,7 @@ FIXTURES = [
             "clingo": "bybit-after",
             "pysat": None,
             "souffle": "Bybit after",
+            "prolog": None,
         },
     },
 ]
@@ -226,6 +234,16 @@ def run_pysat() -> str:
         cwd=STAVE_ROOT,
         capture_output=True, text=True, timeout=180,
         env={**os.environ, "PYSAT_VENV": str(REPO_ROOT / ".tools-venv")},
+    )
+    return result.stdout
+
+
+def run_prolog() -> str:
+    script = EXAMPLES_DIR / "prolog-proof-trees" / "run.sh"
+    result = subprocess.run(
+        ["bash", str(script)],
+        cwd=STAVE_ROOT,
+        capture_output=True, text=True, timeout=180,
     )
     return result.stdout
 
@@ -318,6 +336,52 @@ def parse_pysat(output: str, label: str) -> str:
     if "UNSAFE" in body and "compound(s) fire" in body:
         return "UNSAFE"
     if "SAFE" in body:
+        return "SAFE"
+    return "INCONCLUSIVE"
+
+
+def split_prolog_fixtures(output: str) -> dict[str, str]:
+    """Split Prolog batch output into per-fixture bodies.
+
+    The Prolog runner prints fixture headers as
+    `============================================================`
+    above and below the label, distinct from the `=== ... ===`
+    convention the other engines use.
+    """
+    sections: dict[str, str] = {}
+    lines = output.splitlines()
+    i = 0
+    sep = "============================================================"
+    while i < len(lines):
+        if lines[i].rstrip() == sep and i + 1 < len(lines):
+            header = lines[i + 1].strip()
+            j = i + 3  # skip the closing separator
+            buf: list[str] = []
+            while j < len(lines) and lines[j].rstrip() != sep:
+                buf.append(lines[j])
+                j += 1
+            sections[header] = "\n".join(buf)
+            i = j
+        else:
+            i += 1
+    return sections
+
+
+def parse_prolog(output: str, label: str) -> str:
+    """UNSAFE iff any of the four sub-sections has a proof tree.
+
+    A proof tree is rendered as `subject --[verb]--> object`
+    lines under one of the section headers. An empty section
+    prints `(none)` instead. The fixture is SAFE only when
+    every section is `(none)`.
+    """
+    fixtures = split_prolog_fixtures(output)
+    body = fixtures.get(label)
+    if body is None:
+        return "INCONCLUSIVE"
+    if "--[" in body:
+        return "UNSAFE"
+    if "(none)" in body:
         return "SAFE"
     return "INCONCLUSIVE"
 
@@ -430,6 +494,11 @@ def evaluate_fixture(fixture: dict, engines: list[dict],
             results.append({"engine": name, "status": "ok",
                             "verdict": parse_souffle(output, engine_label),
                             "time_ms": batch.time("souffle")})
+        elif name == "prolog":
+            output = batch.get("prolog", run_prolog)
+            results.append({"engine": name, "status": "ok",
+                            "verdict": parse_prolog(output, engine_label),
+                            "time_ms": batch.time("prolog")})
     return {"fixture": fixture, "engines": results}
 
 

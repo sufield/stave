@@ -49,6 +49,12 @@
       "description": "Soufflé Datalog blast-radius enumeration",
       "type": "batch",
       "available_check": "command -v souffle"
+    },
+    {
+      "name": "prolog",
+      "description": "SWI-Prolog proof-tree explanatory reasoning",
+      "type": "batch",
+      "available_check": "command -v swipl"
     }
   ]
 }

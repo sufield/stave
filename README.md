@@ -1,46 +1,40 @@
 # Stave
 
-A deterministic cloud security intelligence engine. Evaluates invariants against local infrastructure snapshots to produce compound attack path analysis, compliance evidence packages, and identity-centric risk rankings — air-gapped, traceable, no cloud credentials required.
+Stave is a static analysis tool that performs model checking over cloud infrastructure configurations — verifying system invariants via predicate evaluation (CEL) and formal verification (Z3/cvc5/Yices) against air-gapped snapshots, with no cloud credentials required.
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/sufield/stave?v=1)](https://goreportcard.com/report/github.com/sufield/stave)
 [![codecov](https://codecov.io/gh/sufield/stave/graph/badge.svg?token=OQ72PYGVPZ)](https://codecov.io/gh/sufield/stave)
 
 ## What is Stave?
 
-Stave detects compound attack paths in cloud infrastructure by evaluating invariants against local snapshots — no cloud credentials, no live API calls. It produces compliance evidence packages, SLA-tracked remediation guidance, identity blast radius rankings, and a standards-based security graph exportable to JSON-LD, GraphML, STIX, SIEM platforms, and GRC tools — consumable by any graph data science library (Neo4j GDS, igraph, NetworkX, Spark GraphX, Gephi). The same snapshot that detects misconfigurations produces HIPAA audit evidence, MITRE ATT&CK-annotated findings, and OCSF-compliant graph exports
+Stave is a static analysis tool that performs model checking over cloud infrastructure configurations. It takes observation snapshots representing infrastructure state and verifies safety properties (system invariants) expressed as predicates over that model.
 
-## Why this exists
+The verification core is designed for soundness: a passing verdict constitutes a proof of safety within the bounds of the provided model and invariant catalog. When a violation is detected, the solver produces a constructive counterexample — the specific principal, action, and resource tuple that demonstrates the failure.
 
-Scanners produce disconnected lists: "this bucket is public, that key is unrotated, logging is disabled." The auditor must reason about how they combine. Stave automates that reasoning.
+The system performs three classes of verification:
 
-### Example: what reasoning looks like
+- **Property checking** — evaluates concrete predicates against concrete state via [CEL](https://github.com/google/cel-go). A decidable problem answered in linear time.
+- **Compound safety verification** — evaluates whether co-occurring failures across multiple resources constitute a reachable attack path. A graph reachability problem.
+- **Configuration compatibility verification** — via external SMT solvers (Z3, cvc5, Yices), determines whether multiple policy documents are jointly satisfiable. Produces mathematical proofs or counterexamples.
 
-A scanner reports three independent findings:
+## Reasoning engines
 
-```
-[high]     CTL.S3.PUBLIC.001   — bucket is publicly readable
-[high]     CTL.S3.ENCRYPT.001  — bucket is not encrypted
-[medium]   CTL.S3.LOG.001      — access logging is disabled
-```
+Six reasoning engines consume the same fact export, each answering a different kind of question:
 
-Three items in a list. The analyst must figure out which matter.
+| Engine | Question |
+|---|---|
+| **CEL** | Does this snapshot violate this rule? |
+| **Z3 / cvc5 / Yices** | Can an unsafe state exist? (satisfiability proof) |
+| **Soufflé** | What is the full blast radius? (reachability enumeration) |
+| **Clingo** | What configurations violate constraints? (violation enumeration) |
+| **PySAT** | Which control combinations are unsafe? (boolean regression) |
+| **Prolog** | Why is this path reachable? (proof tree derivation) |
 
-Stave sees the same three findings, then reasons:
+See [`examples/`](examples/) for runnable harnesses per engine and the [`compare-engines/`](examples/compare-engines/) cross-engine consensus harness that surfaces blind spots when engines disagree.
 
-```
-[CRITICAL] Chain: public_phi_exposure
-  This bucket holds PHI (sensitivity: 3.0x), is publicly readable
-  (exposure: 2.0x), is unencrypted, and has no audit trail.
+## Operating model
 
-  Safety envelope: COLLAPSED (3 of 4 layers failed)
-  Compound score:  150.0
-  Fix any of:      CTL.CLOUDTRAIL.DATAREAD.001
-  Attack stages:   initial_access, exfiltration, detection_evasion
-```
-
-Same data. Different output. The scanner says "three things are wrong." Stave says "the safety envelope around PHI data has collapsed — this is a total exposure with no audit trail, and enabling CloudTrail would be the cheapest fix to start restoring the envelope."
-
-Every score is a **deterministic, traceable reasoning chain**. Compound scores show their full factor breakdown (severity x duration x blast radius x exposure). Chain findings list which controls failed and which fixes break the chain. Given the same inputs, the same ranking is always produced — every step auditable, every conclusion reproducible. Define safety controls in YAML, compile them to [CEL](https://github.com/google/cel-go), evaluate JSON snapshots locally. Any vendor, any asset type, air-gapped by design.
+Stave operates on static snapshots with no cloud credentials, no network access, and no runtime instrumentation — fully air-gapped by design. Findings are deterministic, traceable, and inspectable: same inputs produce the same outputs, every conclusion carries the evidence chain that derived it, and every step is reviewable end-to-end.
 
 ## Features
 
