@@ -202,9 +202,16 @@ jobs:
         run: |
           go version
           go version | grep -q 'go1.26.3'
-      - uses: golang/govulncheck-action@b625fbe08f3bccbe446d94fbf87fcc875a4f50ee # v1
-        with:
-          go-version-file: 'go.mod'
+      - name: Install govulncheck
+        # Run govulncheck directly instead of golang/govulncheck-action
+        # so we use the Go installed by the explicit setup-go above
+        # (1.26.3). The wrapper action invokes its own internal
+        # setup-go with `go-version: stable` and silently overrides
+        # any `go-version-file` we pass — that's how 1.26.2 was being
+        # reinstalled into this job and re-flagging GO-2026-4971.
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+      - name: Run govulncheck
+        run: govulncheck ./...
 
   license:
     name: License compliance
