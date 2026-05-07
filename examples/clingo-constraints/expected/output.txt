@@ -1,0 +1,33 @@
+=== multi-hop-vulnerable ===
+  violation: privesc_chain_2hop  (2)
+    arn:aws:iam::444455556666:role/onboarding-role  ->  arn:aws:iam::444455556666:role/operator-role
+    arn:aws:iam::444455556666:user/developer  ->  arn:aws:iam::444455556666:role/onboarding-role
+
+=== multi-hop-remediated ===
+  (clean)
+
+=== rhino-vulnerable ===
+  latent_risk  (3)
+    arn:aws:iam::111122223333:role/admin-ec2-role  (compute_trust_no_finding)
+    arn:aws:iam::111122223333:role/admin-lambda-role  (compute_trust_no_finding)
+    arn:aws:iam::111122223333:role/admin-multi-trust-role  (compute_trust_no_finding)
+
+=== rhino-remediated ===
+  latent_risk  (1)
+    arn:aws:iam::111122223333:role/data-team-job-role  (compute_trust_no_finding)
+
+=== cognito-writeup ===
+  violation: unauth_cognito_s3_read  (1)
+    arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool  ->  arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
+  violation: wildcard_action_resource  (1)
+    arn:aws:iam::111122223333:role/Cognito_appAuth_Role  ->  s3:*
+
+=== cognito-remediated ===
+  (clean)
+
+=== bybit-before ===
+  (clean)
+
+=== bybit-after ===
+  (clean)
+

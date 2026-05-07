@@ -1,0 +1,64 @@
+=== Cognito writeup-config ===
+  reachable:                 42
+  anonymous_reachable:       12
+  self_register_reachable:   9
+  production_reachable:      0
+  exploitable_overperm:      0
+  privesc_chain:             0
+
+=== Cognito remediated ===
+  reachable:                 12
+  anonymous_reachable:       0
+  self_register_reachable:   0
+  production_reachable:      0
+  exploitable_overperm:      0
+  privesc_chain:             0
+
+=== Multi-hop vulnerable ===
+  reachable:                 10
+  anonymous_reachable:       0
+  self_register_reachable:   0
+  production_reachable:      0
+  exploitable_overperm:      0
+  privesc_chain:             6
+
+=== Multi-hop remediated ===
+  reachable:                 6
+  anonymous_reachable:       0
+  self_register_reachable:   0
+  production_reachable:      0
+  exploitable_overperm:      0
+  privesc_chain:             2
+
+=== Rhino vulnerable ===
+  reachable:                 58
+  anonymous_reachable:       0
+  self_register_reachable:   0
+  production_reachable:      0
+  exploitable_overperm:      13
+  privesc_chain:             0
+
+=== Rhino remediated ===
+  reachable:                 9
+  anonymous_reachable:       0
+  self_register_reachable:   0
+  production_reachable:      0
+  exploitable_overperm:      1
+  privesc_chain:             0
+
+=== Bybit before ===
+  reachable:                 8
+  anonymous_reachable:       0
+  self_register_reachable:   0
+  production_reachable:      0
+  exploitable_overperm:      0
+  privesc_chain:             0
+
+=== Bybit after ===
+  reachable:                 16
+  anonymous_reachable:       0
+  self_register_reachable:   0
+  production_reachable:      4
+  exploitable_overperm:      0
+  privesc_chain:             0
+

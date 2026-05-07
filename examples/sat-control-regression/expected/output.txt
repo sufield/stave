@@ -1,0 +1,31 @@
+=== rhino-vulnerable ===
+  UNSAFE: 1 compound(s) fire
+    - rhino_passrole_with_role_hygiene_gap
+        fired: CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001
+        fired: CTL.IAM.ROLE.INTENTTAG.001
+
+=== rhino-remediated ===
+  SAFE: no compound rule fires on this fixture
+
+=== cognito-writeup ===
+  UNSAFE: 2 compound(s) fire
+    - cognito_anon_to_aws_2of3
+        fired: CTL.COGNITO.SELFREG.001
+        fired: CTL.COGNITO.MFA.001
+    - cognito_full_id_bypass_3of3
+        fired: CTL.COGNITO.SELFREG.001
+        fired: CTL.COGNITO.MFA.001
+        fired: CTL.COGNITO.ADVANCED.SECURITY.001
+
+=== cognito-remediated ===
+  SAFE: no compound rule fires on this fixture
+
+=== rhino-remediated-what-if ===
+=== rhino-remediated-what-if (current verdicts) ===
+  SAFE: no compound rule fires on this fixture
+
+=== what-if: smallest tip-into-unsafe extension ===
+  Adding 1 finding(s) tips configuration into UNSAFE:
+    + CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001
+  Compound(s) triggered: rhino_passrole_with_role_hygiene_gap
+

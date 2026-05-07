@@ -30,7 +30,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version-file: 'go.mod'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
       - name: Regenerate goldens and sync
@@ -62,7 +62,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version-file: 'go.mod'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
       - name: Sync embeds
@@ -97,7 +97,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version-file: 'go.mod'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
 
@@ -141,7 +141,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version-file: 'go.mod'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
       - name: Download regenerated goldens
@@ -170,7 +170,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version-file: 'go.mod'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
       - name: Install golangci-lint from source
@@ -187,9 +187,17 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version-file: 'go.mod'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
+      - name: Verify Go version
+        # Hard-fail if setup-go silently fell back to a vulnerable
+        # 1.26.x patch release. govulncheck inherits the runner's Go,
+        # so a fallback hides the toolchain bump and re-flags
+        # GO-2026-4971 (`net@<go1.26.3`).
+        run: |
+          go version
+          go version | grep -q 'go1.26.3'
       - uses: golang/govulncheck-action@b625fbe08f3bccbe446d94fbf87fcc875a4f50ee # v1
         with:
           go-version-file: 'go.mod'
@@ -203,7 +211,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version-file: 'go.mod'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
       - name: Install go-licenses
@@ -245,7 +253,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version-file: 'go.mod'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
       - name: Build and run E2E tests
@@ -290,7 +298,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
         with:
-          go-version-file: 'go.mod'
+          go-version: '1.26.3'
           check-latest: true
           cache: true
       - name: Check README freshness
