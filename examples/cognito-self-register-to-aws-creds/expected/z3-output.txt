@@ -1,0 +1,93 @@
+====================================================================
+== writeup-config (vulnerable on all four stages)
+====================================================================
+--- Finding 1: self-registration possible ---
+  self_reg_restricted:        false
+  app_client_has_secret:      false   (public client: true)
+  pre_signup_lambda_present:  false
+  verdict:                    SAT — anyone with the public client_id
+                              can call cognito-idp:SignUp; no Lambda
+                              validates the request before account creation
+
+--- Finding 2: sensitive attribute self-modification ---
+  writable attributes:         [email custom:role name custom:is_premium]
+  sensitive (writable):        3
+    email                  → account_takeover
+    custom:role            → privilege_escalation
+    custom:is_premium      → privilege_escalation
+  pre_token_lambda_validates:  false
+  verdict:                     SAT — at least one sensitive attribute is
+                               writable AND no Lambda validates the change
+
+--- Finding 3: identity-pool credentials reach sensitive resources ---
+  Path A — unauthenticated:
+    allow_unauthenticated:    true
+    unauth role:              arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
+    has sensitive access:     true
+  Path B — self-registered + authenticated:
+    auth role:                arn:aws:iam::111122223333:role/Cognito_appAuth_Role
+    has sensitive access:     true
+  verdict:                    SAT — at least one credential path reaches sensitive AWS
+
+--- Finding 4: complete compound chain ---
+  stage 1 (self-register):       true
+  stage 2 (self-promote attr):   true
+  stage 3 (creds → sensitive):   true
+  verdict:                       SAT — 4 CLI commands from anonymous to AWS:
+                                 cognito-idp:SignUp →
+                                 cognito-idp:UpdateUserAttributes →
+                                 cognito-identity:GetCredentialsForIdentity →
+                                 (use auth role's permissions on AWS resources)
+
+--- Finding 5: choke-point analysis ---
+  question: which single configuration change flips the chain to UNSAT?
+  testing 5 candidate fixes...
+
+  [CLOSED] set allow_admin_create_user_only=true
+           stage 1 closed — no self-registration
+  [CLOSED] remove sensitive attrs from app client write_attributes
+           stage 2 closed — no self-promotion
+  [CLOSED] configure pre-token-generation Lambda validator
+           stage 2 closed — attribute changes validated
+  [OPEN  ] set allow_unauthenticated_identities=false
+           path A of stage 3 closed (path B remains)
+  [OPEN  ] scope authenticated role to non-sensitive resources
+           path B of stage 3 closed
+
+  3 single-change fixes break the chain:
+    • set allow_admin_create_user_only=true
+    • remove sensitive attrs from app client write_attributes
+    • configure pre-token-generation Lambda validator
+  the cheapest is the first listed (one boolean flip in user-pool config).
+
+====================================================================
+== remediated-config (least-privilege)
+====================================================================
+--- Finding 1: self-registration possible ---
+  self_reg_restricted:        true
+  app_client_has_secret:      false   (public client: true)
+  pre_signup_lambda_present:  true
+  verdict:                    UNSAT — self-registration closed (admin-only or validated)
+
+--- Finding 2: sensitive attribute self-modification ---
+  writable attributes:         [name]
+  sensitive (writable):        0
+  pre_token_lambda_validates:  true
+  verdict:                     UNSAT — no sensitive writable attribute, or trigger validates
+
+--- Finding 3: identity-pool credentials reach sensitive resources ---
+  Path A — unauthenticated:
+    allow_unauthenticated:    false
+  Path B — self-registered + authenticated:
+    auth role:                arn:aws:iam::111122223333:role/Cognito_appAuth_Role
+    has sensitive access:     true
+  verdict:                    SAT — at least one credential path reaches sensitive AWS
+
+--- Finding 4: complete compound chain ---
+  stage 1 (self-register):       true
+  stage 2 (self-promote attr):   true
+  stage 3 (creds → sensitive):   false
+  verdict:                       UNSAT — chain broken
+
+--- Finding 5: choke-point analysis ---
+  no chain to analyse on remediated config

@@ -17,6 +17,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/sufield/stave/pkg/stave"
@@ -139,24 +140,14 @@ func runScenario(ctx context.Context, s scenario) bool {
 	return true
 }
 
-// exampleRoot returns the directory containing this main.go.
-// Walks up from the current working directory looking for a
-// fixtures/ child so the binary can be invoked from anywhere
-// inside the example tree.
+// exampleRoot returns the directory containing this main.go,
+// derived from runtime.Caller so the binary works regardless of
+// invocation cwd: `go run ./examples/...` from stave/ and
+// `cd examples/... && go run .` both resolve to the same root.
 func exampleRoot() (string, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return "", err
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		return "", fmt.Errorf("runtime.Caller(0) unavailable")
 	}
-	dir := cwd
-	for {
-		if fi, err := os.Stat(filepath.Join(dir, "fixtures")); err == nil && fi.IsDir() {
-			return dir, nil
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return "", fmt.Errorf("fixtures/ not found at or above %q", cwd)
-		}
-		dir = parent
-	}
+	return filepath.Dir(file), nil
 }

@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.APIGATEWAY.NETWORK.PRIVATE.POLICY.001
+name: Private API Resource Policy Does Not Restrict VPC Access
+description: >
+  REST API uses the PRIVATE endpoint type but has a resource policy
+  that does not restrict access to specific VPC endpoints or source
+  VPCs. A Private API is reachable only through VPC endpoints — not
+  from the public internet — but the "only through VPC endpoints"
+  guarantee says nothing about whose VPC. Any AWS account in any
+  region that creates a VPC endpoint for the execute-api service can
+  invoke this API. Without an aws:sourceVpce or aws:sourceVpc
+  condition in the resource policy, the PRIVATE designation provides
+  no meaningful access boundary. Operators frequently mistake PRIVATE
+  for "internal to my organization" — it is not. Internal-only
+  reachability requires the resource policy to enumerate the allowed
+  VPC endpoint IDs or source VPC IDs.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.4.2"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["IVS-03", "IVS-09"]
+scope_tags:
+  - aws
+  - apigateway
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Private REST API has no VPC endpoint or source-VPC restriction in
+    its resource policy. Any AWS account with an execute-api VPC
+    endpoint can reach the API.
+  action: >
+    Add a condition block to the resource policy restricting access
+    to specific aws:sourceVpce values (the VPC endpoint IDs your
+    consumers use) or specific aws:sourceVpc values (the source VPCs
+    your consumers run in). For multi-account architectures, list
+    every consumer endpoint explicitly — wildcards defeat the
+    purpose. Verify by attempting to invoke the API from an unrelated
+    AWS account's VPC endpoint and confirming the request is denied.
+  example: |
+    {
+      "api": {
+        "kind": "rest_api",
+        "network": {
+          "endpoint_type": "PRIVATE",
+          "is_private": true,
+          "resource_policy_restricts_vpc": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: rest_api
+    - field: properties.api.network.endpoint_type
+      op: eq
+      value: PRIVATE
+    - field: properties.api.network.resource_policy_restricts_vpc
+      op: eq
+      value: false

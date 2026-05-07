@@ -1,0 +1,5 @@
+=== before (s3:* on *) ===
+  status: NON_COMPLIANT   total_assets=1   violations=1
+  CTL.IAM.POLICY.RESOURCE.WILDCARD.001 fired on 1 asset(s):
+    - arn:aws:iam::111122223333:role/DataProcessorLambdaRole   severity=high   exposure_score=76.64
+  assertion: fires=true (expected) ✓

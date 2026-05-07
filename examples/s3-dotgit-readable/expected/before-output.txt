@@ -1,0 +1,5 @@
+=== before (.git/ exposed) ===
+  status: NON_COMPLIANT   total_assets=1   violations=1
+  CTL.S3.REPO.ARTIFACT.001 fired on 1 asset(s):
+    - arn:aws:s3:::acme-marketing-site   severity=medium   exposure_score=51.10
+  assertion: fires=true (expected) ✓

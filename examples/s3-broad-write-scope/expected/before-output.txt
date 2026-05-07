@@ -1,0 +1,5 @@
+=== before (prefix-mode) ===
+  status: NON_COMPLIANT   total_assets=2   violations=1
+  CTL.S3.WRITE.SCOPE.001 fired on 1 asset(s):
+    - acme-uploads-signed-policy   severity=high   exposure_score=100.00
+  assertion: fires=true (expected) ✓

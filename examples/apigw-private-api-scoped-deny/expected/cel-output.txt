@@ -1,0 +1,17 @@
+=== writeup-config (sourceVpc + identical Resource patterns) ===
+  status: COMPLIANT   total_assets=1   violations=0
+  CTL.APIGATEWAY.NETWORK.PRIVATE.POLICY.001: no findings
+
+=== broadened-allow (developer widens Allow) ===
+  status: COMPLIANT   total_assets=1   violations=0
+  CTL.APIGATEWAY.NETWORK.PRIVATE.POLICY.001: no findings
+
+=== remediated-config (sourceVpce + aligned + IAM auth) ===
+  status: COMPLIANT   total_assets=1   violations=0
+  CTL.APIGATEWAY.NETWORK.PRIVATE.POLICY.001: no findings
+
+note: this CEL run is a foil — the gaps live in shapes the
+      catalogue's CTL.APIGATEWAY.NETWORK.PRIVATE.POLICY.001
+      does not catch (the control fires only when the API has
+      no VPC restriction at all). Run z3prove/ for the formal
+      proofs.

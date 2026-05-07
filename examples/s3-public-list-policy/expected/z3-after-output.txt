@@ -1,0 +1,6 @@
+=== after  (scoped Principal) ===
+  policy statements: 1
+    [0] Effect=Allow Principal=map[AWS:arn:aws:iam::111122223333:role/AcmeArchiveReader] Action=s3:ListBucket Resource=arn:aws:s3:::acme-public-archive
+  admitted requests: 1 / 4
+  intended scope:    [arn:aws:iam::111122223333:role/AcmeArchiveReader s3:ListBucket arn:aws:s3:::acme-public-archive]
+  verdict: UNSAT — no anonymous list admitted outside the intended scope

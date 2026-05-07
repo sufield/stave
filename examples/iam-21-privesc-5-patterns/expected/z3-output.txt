@@ -1,0 +1,206 @@
+====================================================================
+== rhino-vulnerable (all 21 Rhino methods enabled)
+====================================================================
+
+--- Pattern 1: Policy Self-Mutation ---
+  registry size: 13 methods (9 Rhino-numbered + 4 additional)
+  reachable:     13 / 13 methods
+  verdict:       SAT — at least one method reachable; full list:
+    [Rhino 01] iam:CreatePolicyVersion → activate admin version on a policy the principal uses
+    [Rhino 02] iam:SetDefaultPolicyVersion → activate dormant admin version
+    [Rhino 07] iam:AttachUserPolicy → attach AdministratorAccess to self
+    [Rhino 08] iam:AttachGroupPolicy → attach admin to own group
+    [Rhino 09] iam:AttachRolePolicy → attach admin to assumable role
+    [Rhino 10] iam:PutUserPolicy → create admin inline on self
+    [Rhino 11] iam:PutGroupPolicy → create admin inline on own group
+    [Rhino 12] iam:PutRolePolicy → create admin inline on own role
+    [Rhino 13] iam:AddUserToGroup → join admin group
+    [NEW    ] iam:CreatePolicy + iam:AttachUserPolicy → create admin policy and attach
+    [NEW    ] iam:DeleteUserPolicy + iam:PutUserPolicy → drop restrictive inline, replace
+    [NEW    ] iam:DetachUserPolicy + iam:AttachUserPolicy → swap boundary for admin
+    [NEW    ] iam:DeleteRolePermissionsBoundary → remove permissions boundary on assumable role
+
+--- Pattern 2: Credential Creation / Theft ---
+  registry size: 7 methods (4 Rhino-numbered + 3 additional)
+  reachable:     7 / 7 methods
+  verdict:       SAT — at least one method reachable; full list:
+    [Rhino 04] iam:CreateAccessKey → create API keys for an admin user
+    [Rhino 05] iam:CreateLoginProfile → create console password for admin user
+    [Rhino 06] iam:UpdateLoginProfile → reset admin user's password
+    [Rhino 14] iam:UpdateAssumeRolePolicy → add self to admin role's trust policy
+    [NEW    ] iam:CreateVirtualMFADevice + iam:EnableMFADevice → register attacker MFA on admin account
+    [NEW    ] iam:DeactivateMFADevice → disable MFA on admin user, weaken auth
+    [NEW    ] sts:GetFederationToken → mint federated session for persistence
+
+--- Pattern 3: Compute + PassRole ---
+  registry size: 17 methods (8 Rhino-numbered + 9 additional)
+  reachable:     17 / 17 methods
+  verdict:       SAT — at least one method reachable; full list:
+    [Rhino 03] ec2:RunInstances + iam:PassRole → EC2 with admin instance profile
+    [Rhino 15] lambda:CreateFunction + lambda:InvokeFunction + iam:PassRole
+    [Rhino 16] lambda:CreateFunction + lambda:CreateEventSourceMapping + iam:PassRole
+    [Rhino 17] lambda:UpdateFunctionCode → hijack existing Lambda's role
+    [Rhino 18] glue:CreateDevEndpoint + iam:PassRole → SageMaker-style notebook with admin role
+    [Rhino 19] glue:UpdateDevEndpoint → hijack existing Glue endpoint
+    [Rhino 20] cloudformation:CreateStack + iam:PassRole
+    [Rhino 21] datapipeline:CreatePipeline + datapipeline:PutPipelineDefinition + iam:PassRole
+    [NEW    ] autoscaling:CreateLaunchConfiguration + autoscaling:CreateAutoScalingGroup + iam:PassRole
+    [NEW    ] ecs:RunTask + iam:PassRole
+    [NEW    ] ecs:CreateService + iam:PassRole
+    [NEW    ] codebuild:CreateProject + codebuild:StartBuild + iam:PassRole
+    [NEW    ] sagemaker:CreateNotebookInstance + iam:PassRole
+    [NEW    ] sagemaker:CreateTrainingJob + iam:PassRole
+    [NEW    ] batch:SubmitJob + iam:PassRole
+    [NEW    ] states:CreateStateMachine + iam:PassRole
+    [NEW    ] apprunner:CreateService + iam:PassRole
+
+--- Pattern 4: Indirect Compute Invocation ---
+  registry size: 10 methods (1 Rhino-numbered + 9 additional)
+  reachable:     10 / 10 methods
+  verdict:       SAT — at least one method reachable; full list:
+    [Rhino 16] dynamodb:PutItem → trigger DynamoDB stream → Lambda with privileged role
+    [NEW    ] sqs:SendMessage → trigger SQS → Lambda subscriber
+    [NEW    ] kinesis:PutRecord → trigger Kinesis → Lambda consumer
+    [NEW    ] sns:Publish → trigger SNS → Lambda subscription
+    [NEW    ] s3:PutObject → trigger S3 event notification → Lambda
+    [NEW    ] events:PutRule + events:PutTargets → EventBridge rule with Lambda target
+    [NEW    ] iot:CreateTopicRule → IoT rule → Lambda action
+    [NEW    ] ses:CreateReceiptRule → SES receipt rule → Lambda action
+    [NEW    ] cognito-idp:UpdateUserPool → Cognito trigger → Lambda
+    [NEW    ] cloudwatch:PutMetricAlarm → alarm action → Lambda
+
+--- Pattern 5: Role Trust Modification ---
+  registry size: 3 methods (1 Rhino-numbered + 2 additional)
+  reachable:     3 / 3 methods
+  verdict:       SAT — at least one method reachable; full list:
+    [Rhino 14] iam:UpdateAssumeRolePolicy → modify admin role trust to add self
+    [NEW    ] iam:CreateRole + iam:AttachRolePolicy → mint new admin role with controlled trust
+    [NEW    ] iam:DeleteRolePolicy → strip restrictive inline policy, widen permissions, then assume
+
+--- Cross-pattern summary ---
+  registry total: 50 methods across 5 patterns
+  reachable:      50 methods
+  Rhino's 21 hit: 21 / 21
+  Rhino IDs hit:  [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21]
+  beyond Rhino:   27 methods (cross-pattern, with overlaps)
+  collapse:       21 manual enumerations → 5 Z3 queries
+                  → 50 methods reachable
+
+====================================================================
+== partial-deny (deny covers Rhino's 21 actions)
+====================================================================
+
+--- Pattern 1: Policy Self-Mutation ---
+  registry size: 13 methods (9 Rhino-numbered + 4 additional)
+  reachable:     1 / 13 methods
+  verdict:       SAT — at least one method reachable; full list:
+    [NEW    ] iam:DeleteRolePermissionsBoundary → remove permissions boundary on assumable role
+
+--- Pattern 2: Credential Creation / Theft ---
+  registry size: 7 methods (4 Rhino-numbered + 3 additional)
+  reachable:     3 / 7 methods
+  verdict:       SAT — at least one method reachable; full list:
+    [NEW    ] iam:CreateVirtualMFADevice + iam:EnableMFADevice → register attacker MFA on admin account
+    [NEW    ] iam:DeactivateMFADevice → disable MFA on admin user, weaken auth
+    [NEW    ] sts:GetFederationToken → mint federated session for persistence
+
+--- Pattern 3: Compute + PassRole ---
+  registry size: 17 methods (8 Rhino-numbered + 9 additional)
+  reachable:     9 / 17 methods
+  verdict:       SAT — at least one method reachable; full list:
+    [NEW    ] autoscaling:CreateLaunchConfiguration + autoscaling:CreateAutoScalingGroup + iam:PassRole
+    [NEW    ] ecs:RunTask + iam:PassRole
+    [NEW    ] ecs:CreateService + iam:PassRole
+    [NEW    ] codebuild:CreateProject + codebuild:StartBuild + iam:PassRole
+    [NEW    ] sagemaker:CreateNotebookInstance + iam:PassRole
+    [NEW    ] sagemaker:CreateTrainingJob + iam:PassRole
+    [NEW    ] batch:SubmitJob + iam:PassRole
+    [NEW    ] states:CreateStateMachine + iam:PassRole
+    [NEW    ] apprunner:CreateService + iam:PassRole
+
+--- Pattern 4: Indirect Compute Invocation ---
+  registry size: 10 methods (1 Rhino-numbered + 9 additional)
+  reachable:     10 / 10 methods
+  verdict:       SAT — at least one method reachable; full list:
+    [Rhino 16] dynamodb:PutItem → trigger DynamoDB stream → Lambda with privileged role
+    [NEW    ] sqs:SendMessage → trigger SQS → Lambda subscriber
+    [NEW    ] kinesis:PutRecord → trigger Kinesis → Lambda consumer
+    [NEW    ] sns:Publish → trigger SNS → Lambda subscription
+    [NEW    ] s3:PutObject → trigger S3 event notification → Lambda
+    [NEW    ] events:PutRule + events:PutTargets → EventBridge rule with Lambda target
+    [NEW    ] iot:CreateTopicRule → IoT rule → Lambda action
+    [NEW    ] ses:CreateReceiptRule → SES receipt rule → Lambda action
+    [NEW    ] cognito-idp:UpdateUserPool → Cognito trigger → Lambda
+    [NEW    ] cloudwatch:PutMetricAlarm → alarm action → Lambda
+
+--- Pattern 5: Role Trust Modification ---
+  registry size: 3 methods (1 Rhino-numbered + 2 additional)
+  reachable:     1 / 3 methods
+  verdict:       SAT — at least one method reachable; full list:
+    [NEW    ] iam:DeleteRolePolicy → strip restrictive inline policy, widen permissions, then assume
+
+--- Cross-pattern summary ---
+  registry total: 50 methods across 5 patterns
+  reachable:      24 methods
+  Rhino's 21 hit: 1 / 21
+  Rhino IDs hit:  [16]
+  beyond Rhino:   23 methods (cross-pattern, with overlaps)
+  collapse:       21 manual enumerations → 5 Z3 queries
+
+====================================================================
+== remediated (least-privilege)
+====================================================================
+
+--- Pattern 1: Policy Self-Mutation ---
+  registry size: 13 methods (9 Rhino-numbered + 4 additional)
+  verdict:       UNSAT — no method in this pattern is reachable
+
+--- Pattern 2: Credential Creation / Theft ---
+  registry size: 7 methods (4 Rhino-numbered + 3 additional)
+  verdict:       UNSAT — no method in this pattern is reachable
+
+--- Pattern 3: Compute + PassRole ---
+  registry size: 17 methods (8 Rhino-numbered + 9 additional)
+  verdict:       UNSAT — no method in this pattern is reachable
+
+--- Pattern 4: Indirect Compute Invocation ---
+  registry size: 10 methods (1 Rhino-numbered + 9 additional)
+  verdict:       UNSAT — no method in this pattern is reachable
+
+--- Pattern 5: Role Trust Modification ---
+  registry size: 3 methods (1 Rhino-numbered + 2 additional)
+  verdict:       UNSAT — no method in this pattern is reachable
+
+--- Cross-pattern summary ---
+  registry total: 50 methods across 5 patterns
+  reachable:      0 methods
+  Rhino's 21 hit: 0 / 21
+  beyond Rhino:   0 methods (cross-pattern, with overlaps)
+  collapse:       21 manual enumerations → 5 Z3 queries
+
+====================================================================
+== real-world-pattern3 (Pattern 3 with full network compound: SG + subnet + role discovery)
+====================================================================
+  policy statements: 1 allow, 1 deny
+  admin roles:       1
+    - arn:aws:iam::111122223333:role/danger-role   trusts=[ec2.amazonaws.com]   admin=true
+  security groups:   2
+    - sg-f73b339e (default)   vpc=vpc-a1b2c3d4   egress=false
+    - sg-42csce3f (hadoop-cluster)   vpc=vpc-a1b2c3d4   egress=true
+  subnets:           1
+    - subnet-a213as8c   vpc=vpc-a1b2c3d4
+
+--- Default SG only (no egress) ---
+  verdict: UNSAT
+  failed:  security group sg-f73b339e has no egress rules — reverse-shell user-data cannot connect back
+  note:    with default security group (no egress)
+
+--- Hadoop SG (full egress) ---
+  verdict: SAT — full compound satisfied
+  witness: PassRole→arn:aws:iam::111122223333:role/danger-role + RunInstances + ListRoles + sg=sg-42csce3f + subnet in vpc=vpc-a1b2c3d4
+  note:    with hadoop security group (egress allowed)
+
+--- Without iam:ListRoles (no role discovery) ---
+  verdict: UNSAT
+  failed:  role discovery (no iam:ListRoles, no iam:GetRole)
+  note:    PassRole on Resource:* is useless without knowing which role to pass — script checkers miss this

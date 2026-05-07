@@ -1,0 +1,57 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-08T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:s3:::acme-uploads",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "acme-uploads",
+          "id": "aws:s3:::acme-uploads",
+          "access": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": true,
+            "read_via_resource": false,
+            "list_via_identity": true,
+            "list_via_resource": false,
+            "latent_public_read": false,
+            "latent_public_list": false
+          },
+          "controls": {
+            "public_access_fully_blocked": true,
+            "account_public_access_fully_blocked": true,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          },
+          "tags": {
+            "data_classification": "confidential"
+          }
+        }
+      }
+    },
+    {
+      "id": "acme-uploads-signed-policy",
+      "type": "s3_upload_policy",
+      "vendor": "aws",
+      "properties": {
+        "type": "s3_upload_policy",
+        "s3_upload": {
+          "bucket": "acme-uploads",
+          "operation": "write",
+          "allowed_key_mode": "prefix",
+          "allowed_prefix": "files/"
+        }
+      }
+    }
+  ]
+}

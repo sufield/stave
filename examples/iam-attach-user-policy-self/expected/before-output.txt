@@ -1,0 +1,5 @@
+=== before (self-attach allowed) ===
+  status: NON_COMPLIANT   total_assets=1   violations=1
+  CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001 fired on 1 asset(s):
+    - arn:aws:iam::111122223333:user/eve   severity=critical   exposure_score=100.00
+  assertion: fires=true (expected) ✓

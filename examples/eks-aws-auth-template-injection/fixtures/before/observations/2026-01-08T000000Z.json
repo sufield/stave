@@ -1,0 +1,26 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-08T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "acme-eks-cluster",
+      "type": "k8s_cluster",
+      "vendor": "kubernetes",
+      "properties": {
+        "auth": {
+          "kind": "cluster",
+          "webhook": {
+            "provider": "aws-iam-authenticator",
+            "identity_mapping": {
+              "uses_access_key_id": true,
+              "templates": [
+                "user:{{AccessKeyID}}"
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

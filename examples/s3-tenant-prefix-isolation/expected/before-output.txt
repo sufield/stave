@@ -1,0 +1,5 @@
+=== before (signer permissive) ===
+  status: NON_COMPLIANT   total_assets=1   violations=1
+  CTL.S3.TENANT.ISOLATION.001 fired on 1 asset(s):
+    - acme-tenant-data   severity=high   exposure_score=76.64
+  assertion: fires=true (expected) ✓

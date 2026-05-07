@@ -1,0 +1,4 @@
+=== data-events-after  (data events scoped to sensitive buckets) ===
+  status: COMPLIANT   total_assets=5   violations=0
+  CTL.CLOUDTRAIL.STOP.DETECT.001: no findings
+  assertion: fires=false (expected) ✓

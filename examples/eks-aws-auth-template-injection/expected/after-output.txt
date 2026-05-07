@@ -1,0 +1,4 @@
+=== after  ({{SessionName}} + role ARN) ===
+  status: COMPLIANT   total_assets=1   violations=0
+  CTL.K8S.AUTH.ACCESSKEYMAP.001: no findings
+  assertion: fires=false (expected) ✓

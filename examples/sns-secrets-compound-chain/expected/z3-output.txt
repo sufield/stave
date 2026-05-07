@@ -1,0 +1,113 @@
+========== writeup-config (cg-sns-user policy + bare topic + key-only API) ==========
+--- Finding 1: SNS topic subscribable, publishes credential ---
+  query:    can the user subscribe to a topic that publishes
+            sensitive content?
+  subscribable + sensitive topics: 1 / 1
+  verdict:  SAT — witness: arn:aws:sns:us-east-1:676206926638:public-topic-cgidxi93qpes3g
+            (publishes api_key targeting arn:aws:apigateway:us-east-1::/restapis/x93anl9mj7)
+
+--- Finding 2: apigateway:GET Deny coverage gap ---
+  query:    among 24 known API Gateway management paths, is
+            any path effectively reachable (Allow ∧ ¬Deny)?
+  reachable paths: 21 / 24
+  verdict:  SAT — witness path: /restapis/{id}/stages/{stage}
+            (Allow on Resource:* admits this path; Deny does not
+             cover it; the principal can enumerate API structure)
+
+--- Finding 3: data-flow credential chain (5 hops) ---
+  hop 1 (principal can subscribe to topic):                 true
+  hop 2 (topic publishes credential):                       true
+  hop 3 (API Gateway accepts credential, no IAM auth):      true
+  hop 4 (API Gateway integrates with downstream function):  true
+  hop 5 (function reads Secrets Manager):                   true
+  verdict:  SAT — full credential-flow chain is reachable
+            (zero direct Secrets Manager permissions; access via
+             credential value flowing through SNS → API GW → Lambda)
+
+--- Finding 4: full compound escalation path ---
+  F1 (subscribe + sensitive topic):  true
+  F2 (apigw enumeration reachable):  true
+  F3 (credential-flow chain):        true
+  verdict:  SAT — 7-call compound path:
+            sns:ListTopics → sns:Subscribe → receive API key →
+            apigateway:GET /restapis* (enumerate) → curl with key →
+            API GW invokes Lambda → Lambda reads Secrets Manager
+
+--- API Gateway Deny coverage analysis ---
+  OPEN      : /restapis
+  OPEN      : /restapis/{id}
+  OPEN      : /restapis/{id}/resources
+  OPEN      : /restapis/{id}/resources/{resource_id}
+  OPEN      : /restapis/{id}/resources/{resource_id}/methods/{method}
+  BLOCKED  : /restapis/{id}/resources/{resource_id}/methods/{method}/integration
+  OPEN      : /restapis/{id}/stages
+  OPEN      : /restapis/{id}/stages/{stage}
+  OPEN      : /restapis/{id}/deployments
+  OPEN      : /restapis/{id}/deployments/{deployment_id}
+  OPEN      : /restapis/{id}/models
+  OPEN      : /restapis/{id}/authorizers
+  OPEN      : /restapis/{id}/gatewayresponses
+  OPEN      : /restapis/{id}/requestvalidators
+  OPEN      : /restapis/{id}/documentation
+  BLOCKED  : /apikeys
+  BLOCKED  : /apikeys/{key_id}
+  OPEN      : /usageplans
+  OPEN      : /usageplans/{plan_id}
+  OPEN      : /usageplans/{plan_id}/keys
+  OPEN      : /domainnames
+  OPEN      : /vpclinks
+  OPEN      : /clientcertificates
+  OPEN      : /account
+
+========== remediated-config (sns:Subscribe scoped + topic policy + IAM auth) ==========
+--- Finding 1: SNS topic subscribable, publishes credential ---
+  query:    can the user subscribe to a topic that publishes
+            sensitive content?
+  subscribable + sensitive topics: 0 / 1
+  verdict:  UNSAT — no subscribable credential-publishing topic
+
+--- Finding 2: apigateway:GET Deny coverage gap ---
+  query:    among 24 known API Gateway management paths, is
+            any path effectively reachable (Allow ∧ ¬Deny)?
+  reachable paths: 0 / 24
+  verdict:  UNSAT — every path is denied or apigateway:GET is gone
+
+--- Finding 3: data-flow credential chain (5 hops) ---
+  hop 1 (principal can subscribe to topic):                 false
+  hop 2 (topic publishes credential):                       false
+  hop 3 (API Gateway accepts credential, no IAM auth):      false
+  hop 4 (API Gateway integrates with downstream function):  true
+  hop 5 (function reads Secrets Manager):                   true
+  verdict:  UNSAT — chain broken at hop 1
+
+--- Finding 4: full compound escalation path ---
+  F1 (subscribe + sensitive topic):  false
+  F2 (apigw enumeration reachable):  false
+  F3 (credential-flow chain):        false
+  verdict:  UNSAT — at least one precondition fails; chain is closed
+
+--- API Gateway Deny coverage analysis ---
+  OPEN      : /restapis
+  OPEN      : /restapis/{id}
+  OPEN      : /restapis/{id}/resources
+  OPEN      : /restapis/{id}/resources/{resource_id}
+  OPEN      : /restapis/{id}/resources/{resource_id}/methods/{method}
+  OPEN      : /restapis/{id}/resources/{resource_id}/methods/{method}/integration
+  OPEN      : /restapis/{id}/stages
+  OPEN      : /restapis/{id}/stages/{stage}
+  OPEN      : /restapis/{id}/deployments
+  OPEN      : /restapis/{id}/deployments/{deployment_id}
+  OPEN      : /restapis/{id}/models
+  OPEN      : /restapis/{id}/authorizers
+  OPEN      : /restapis/{id}/gatewayresponses
+  OPEN      : /restapis/{id}/requestvalidators
+  OPEN      : /restapis/{id}/documentation
+  OPEN      : /apikeys
+  OPEN      : /apikeys/{key_id}
+  OPEN      : /usageplans
+  OPEN      : /usageplans/{plan_id}
+  OPEN      : /usageplans/{plan_id}/keys
+  OPEN      : /domainnames
+  OPEN      : /vpclinks
+  OPEN      : /clientcertificates
+  OPEN      : /account

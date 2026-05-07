@@ -1,0 +1,70 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-08T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/developer-frontend",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "has_resource_wildcard_on_sensitive": false,
+            "attached_policies": [
+              {
+                "name": "DeveloperFrontendBucketAccess",
+                "statements": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "s3:GetObject",
+                      "s3:PutObject",
+                      "s3:DeleteObject",
+                      "s3:ListBucket"
+                    ],
+                    "Resource": [
+                      "arn:aws:s3:::company-frontend-*",
+                      "arn:aws:s3:::company-frontend-*/*"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::company-frontend-prod",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "bucket": {
+          "name": "company-frontend-prod",
+          "tags": {
+            "environment": "production",
+            "data_classification": "public",
+            "integrity": "critical",
+            "served_via": "cloudfront"
+          },
+          "objects_indicative": ["app.js", "vendor.js", "index.html"]
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::company-frontend-dev",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "bucket": {
+          "name": "company-frontend-dev",
+          "tags": {
+            "environment": "development"
+          }
+        }
+      }
+    }
+  ]
+}

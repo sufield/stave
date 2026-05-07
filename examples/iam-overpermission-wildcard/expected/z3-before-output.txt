@@ -1,0 +1,8 @@
+=== before (s3:* on *) ===
+  policy statements: 2
+    [0] Effect=Allow Action=s3:* Resource=*
+    [1] Effect=Allow Action=[logs:CreateLogGroup logs:CreateLogStream logs:PutLogEvents] Resource=arn:aws:logs:us-east-1:111122223333:*
+  admitted requests: 5 / 5
+  intended scope:    [s3:GetObject → app-data-production/input/file.csv s3:PutObject → app-data-production/output/result.json]
+  dangerous set:     [s3:PutBucketPolicy → customer-pii-bucket s3:DeleteObject → billing-archives/jan-2026.csv s3:PutBucketAcl → audit-logs-bucket]
+  verdict: SAT — witness: s3:PutBucketPolicy on customer-pii-bucket

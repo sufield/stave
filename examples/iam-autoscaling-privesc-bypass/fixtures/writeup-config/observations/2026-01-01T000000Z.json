@@ -1,0 +1,118 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/demo-DataScientist",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "passrole_autoscaling": {
+              "present": true,
+              "target_role": "arn:aws:iam::111122223333:role/demo-EC2Admin",
+              "permission_delta": ["*"],
+              "via_path": "autoscaling:CreateLaunchConfiguration + autoscaling:CreateAutoScalingGroup"
+            }
+          },
+          "policies": {
+            "attached_policies": [
+              {
+                "name": "DataScientist",
+                "statements": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "autoscaling:*",
+                      "cloudformation:CreateStack",
+                      "cloudformation:UpdateStack",
+                      "ec2:RunInstances",
+                      "lambda:Create*",
+                      "lambda:Update*",
+                      "lambda:InvokeFunction",
+                      "ecs:RunTask",
+                      "ecs:CreateService",
+                      "codebuild:CreateProject",
+                      "codebuild:StartBuild",
+                      "glue:CreateJob",
+                      "sagemaker:CreateNotebookInstance",
+                      "iam:ListRoles",
+                      "ec2:DescribeSubnets",
+                      "ec2:DescribeSecurityGroups",
+                      "ec2:DescribeImages"
+                    ],
+                    "Resource": "*"
+                  }
+                ]
+              },
+              {
+                "name": "AmazonElasticMapReduceFullAccess",
+                "statements": [
+                  {
+                    "Effect": "Allow",
+                    "Action": "iam:PassRole",
+                    "Resource": "*",
+                    "Condition": {
+                      "StringEquals": {
+                        "iam:PassedToService": [
+                          "elasticmapreduce.amazonaws.com",
+                          "ec2.amazonaws.com"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "name": "DemoDenyPrivEscs",
+                "statements": [
+                  {
+                    "Effect": "Deny",
+                    "Action": [
+                      "cloudformation:CreateStack",
+                      "cloudformation:UpdateStack",
+                      "ec2:RunInstances",
+                      "lambda:Create*",
+                      "lambda:Update*",
+                      "lambda:InvokeFunction"
+                    ],
+                    "Resource": "*"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/demo-EC2Admin",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "name": "demo-EC2Admin",
+          "trusted_services": ["ec2.amazonaws.com"],
+          "policies": {
+            "attached_policies": [
+              {
+                "name": "AdministratorAccess",
+                "statements": [
+                  {
+                    "Effect": "Allow",
+                    "Action": "*",
+                    "Resource": "*"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

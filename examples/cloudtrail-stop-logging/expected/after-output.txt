@@ -1,0 +1,4 @@
+=== after  (trail re-started) ===
+  status: COMPLIANT   total_assets=1   violations=0
+  CTL.CLOUDTRAIL.STOP.DETECT.001: no findings
+  assertion: fires=false (expected) ✓

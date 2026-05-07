@@ -1,0 +1,14 @@
+=== writeup-config (DataScientist + EMR + DenyPrivEscs) ===
+  status: NON_COMPLIANT   total_assets=2   violations=1
+  CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001 fired on 1 asset(s):
+    - arn:aws:iam::111122223333:user/demo-DataScientist   severity=high
+
+=== remediated-config (deny expanded to all known compute-launch vectors) ===
+  status: COMPLIANT   total_assets=2   violations=0
+  CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001: no findings
+
+note: the CEL side checks one specific technique. The Z3 prover
+      enumerates 9 known compute-launch vectors and proves the
+      deny coverage gap explicitly, plus a residual finding the
+      remediated config does not close. Run z3prove/ for the full
+      verdict trail.

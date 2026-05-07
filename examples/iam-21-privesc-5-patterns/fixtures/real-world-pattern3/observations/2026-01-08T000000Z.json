@@ -1,0 +1,112 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-08T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/rhino-attacker",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "attached_policies": [
+              {
+                "name": "real-world-attacker-policy",
+                "statements": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "ec2:RunInstances",
+                      "ec2:DescribeInstances",
+                      "ec2:DescribeSecurityGroups",
+                      "ec2:DescribeSubnets",
+                      "ec2:DescribeImages",
+                      "iam:PassRole",
+                      "iam:ListRoles",
+                      "iam:ListAttachedRolePolicies",
+                      "iam:ListRolePolicies",
+                      "s3:ListAllMyBuckets",
+                      "s3:ListBucket",
+                      "s3:GetObject"
+                    ],
+                    "Resource": "*"
+                  },
+                  {
+                    "Effect": "Deny",
+                    "Action": [
+                      "iam:GetRole"
+                    ],
+                    "Resource": "*"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/danger-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "name": "danger-role",
+          "trusted_services": ["ec2.amazonaws.com"],
+          "is_admin_equivalent": true,
+          "attached_policy_arns": [
+            "arn:aws:iam::aws:policy/AdministratorAccess"
+          ]
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ec2:us-east-1:111122223333:security-group/sg-f73b339e",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "security_group": {
+          "group_id": "sg-f73b339e",
+          "group_name": "default",
+          "vpc_id": "vpc-a1b2c3d4",
+          "ingress_rules": [],
+          "egress_rules": []
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ec2:us-east-1:111122223333:security-group/sg-42csce3f",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "security_group": {
+          "group_id": "sg-42csce3f",
+          "group_name": "hadoop-cluster",
+          "vpc_id": "vpc-a1b2c3d4",
+          "ingress_rules": [
+            {"protocol": "tcp", "from_port": 0, "to_port": 65535, "source": "sg-42csce3f"}
+          ],
+          "egress_rules": [
+            {"protocol": "-1", "from_port": 0, "to_port": 65535, "destination": "0.0.0.0/0"}
+          ]
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ec2:us-east-1:111122223333:subnet/subnet-a213as8c",
+      "type": "aws_ec2_subnet",
+      "vendor": "aws",
+      "properties": {
+        "subnet": {
+          "subnet_id": "subnet-a213as8c",
+          "vpc_id": "vpc-a1b2c3d4",
+          "cidr_block": "10.0.1.0/24",
+          "availability_zone": "us-east-1a"
+        }
+      }
+    }
+  ]
+}

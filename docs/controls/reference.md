@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2615
-**Pack hash:** `bdb15a20748b75c936e61252aa1653a3576124f181895c0d35a55760d29ff59b`
+**Total controls:** 2616
+**Pack hash:** `f423227024014ba1784a09df71fb5f233c1ff97defd6eef7f175f4b4289e1674`
 
 ## Summary
 
@@ -14,7 +14,7 @@
 | high | 1131 |
 | info | 16 |
 | low | 198 |
-| medium | 1001 |
+| medium | 1002 |
 
 | Domain | Count |
 |--------|-------|
@@ -24,7 +24,7 @@
 | detection | 133 |
 | encryption | 113 |
 | exposure | 1184 |
-| governance | 557 |
+| governance | 558 |
 | hygiene | 18 |
 | identity | 402 |
 | lifecycle | 31 |
@@ -26299,6 +26299,21 @@ Lambda functions tagged with data-classification phi or pii, or functions whose 
 Lambda functions configured to run in a VPC must use private subnets with no direct route to an internet gateway. A function in a public subnet retains direct internet egress despite VPC enrollment — negating the network isolation that VPC membership is intended to provide. This is the complement to CTL.LAMBDA.VPC.SENSITIVE.001: VPC enrollment plus private subnet enforcement together close the network isolation requirement.
 
 **Remediation:** Move the function to private subnets. Use a NAT gateway in a public subnet for outbound access.
+
+---
+
+### CTL.LIFECYCLE.STAGING.STALE.001
+
+**Stale Non-Production Resource Detected**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2; owasp_nhi: NHI1; soc2: CC8.1;
+
+A resource tagged for non-production use (staging, dev, test, qa, sandbox, demo) is dormant or unused beyond the staleness threshold. Per-service dormancy controls (CTL.CLOUDFRONT.LIFECYCLE.DORMANT.001, CTL.APIGATEWAY.ORPHAN.API.001, etc.) fire on the lifecycle signal alone — environment-agnostic. This control adds the environment-tag dimension: a dormant resource that explicitly identifies as non-production is a higher-confidence cleanup target than a generic dormant resource. Production dormancy may be a routine artifact (warm standby, seasonal capacity); non-production dormancy is almost always abandoned shadow infrastructure. The same lifecycle fields existing per-service controls already populate (`is_dormant`, `appears_unused`, `last_request_days`, `last_deployment_days`) provide the dormancy evidence; this control filters by tag, it does not redefine staleness.
+
+**Remediation:** 1) If no longer needed: decommission the resource — delete the asset, remove associated DNS records, remove or scope down any IAM roles attached to it, and remove any references from CI/CD pipelines or downstream consumers. 2) If still needed but intentionally idle (sprint demo retained for review, ephemeral QA harness): tag the resource with `reviewed_at: <RFC3339>` and document the expected idle duration. 3) Verify whether the resource is publicly reachable (CTL.LIFECYCLE.STAGING.EXPOSED.001 will fire if so) — public exposure on stale non-production infrastructure is the canonical NHI-offboarding failure mode.
 
 ---
 

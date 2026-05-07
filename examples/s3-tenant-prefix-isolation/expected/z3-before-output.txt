@@ -1,0 +1,6 @@
+=== before (signer permissive) ===
+  signer purpose: signs_uploads;enforce_prefix=false;allow_traversal=true
+  flags: enforce_prefix=false   allow_traversal=true
+  admitted set: [tenant=A → tenants/A/photo.png tenant=A → tenants/B/photo.png tenant=A → tenants/A/../B/secret.json]
+  intended set: ["tenant=A → tenants/A/photo.png"]
+  verdict: SAT — witness request: tenant=A → tenants/B/photo.png

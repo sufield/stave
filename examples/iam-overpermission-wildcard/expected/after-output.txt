@@ -1,0 +1,4 @@
+=== after  (scoped actions + ARNs) ===
+  status: COMPLIANT   total_assets=1   violations=0
+  CTL.IAM.POLICY.RESOURCE.WILDCARD.001: no findings
+  assertion: fires=false (expected) ✓

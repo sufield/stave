@@ -1,0 +1,14 @@
+=== writeup-config (self-register + writable role attribute + unauth IDP + s3:* auth role) ===
+  status: NON_COMPLIANT   total_assets=5   violations=1
+  CTL.COGNITO.SELFREG.001 fired on 1 asset(s):
+    - arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool   severity=medium
+
+=== remediated-config (admin-only create + scoped attrs + auth-only IDP + scoped roles) ===
+  status: COMPLIANT   total_assets=4   violations=0
+  CTL.COGNITO.SELFREG.001: no findings
+
+note: this CEL run is one technique-level signal. The Z3
+      prover at z3prove/ runs the full four-stage chain
+      across user pool + app client + identity pool + IAM,
+      plus a choke-point analysis showing which single fix
+      collapses the entire chain.

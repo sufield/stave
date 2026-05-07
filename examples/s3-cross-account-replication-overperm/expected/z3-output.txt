@@ -1,0 +1,44 @@
+========== writeup-config ==========
+--- Finding 1: non-replication principal access ---
+  query:    is there a principal in 111122223333 that is NOT arn:aws:iam::111122223333:role/bucket-replication-role
+            but CAN perform s3:ReplicateObject on the destination?
+  admitted: 4 / 4 witnesses
+  verdict:  SAT — witness: arn:aws:iam::111122223333:user/intern-developer
+            (account-root in the policy admits ANY principal in the account)
+
+--- Finding 2: excess actions via s3:Get* wildcard ---
+  query:    among 30 s3:Get* actions, is any one
+            (a) not in replication's required set, AND
+            (b) permitted by the destination bucket policy?
+  admitted: 30 / 30 excess witnesses
+  verdict:  SAT — witness: s3:GetObjectVersionTagging
+            (the policy's Action: "s3:Get*" admits this action;
+             replication never calls it)
+
+--- Finding 3: KMS Resource:* scope check ---
+  query:    does the destination KMS key policy admit
+            kms:Encrypt on a key OTHER than arn:aws:kms:us-west-2:444455556666:key/dest-cmk-id?
+  admitted: 1 / 3 witnesses (only the key policy's own key matches)
+  verdict:  UNSAT — KMS Resource:* scopes to the key itself only
+            (suspicion REFUTED; author got this right)
+
+========== remediated-config ==========
+--- Finding 1: non-replication principal access ---
+  query:    is there a principal in 111122223333 that is NOT arn:aws:iam::111122223333:role/bucket-replication-role
+            but CAN perform s3:ReplicateObject on the destination?
+  admitted: 1 / 4 witnesses
+  verdict:  UNSAT — only the replication role is admitted
+
+--- Finding 2: excess actions via s3:Get* wildcard ---
+  query:    among 30 s3:Get* actions, is any one
+            (a) not in replication's required set, AND
+            (b) permitted by the destination bucket policy?
+  admitted: 0 / 30 excess witnesses
+  verdict:  UNSAT — no excess s3:Get* action is admitted
+
+--- Finding 3: KMS Resource:* scope check ---
+  query:    does the destination KMS key policy admit
+            kms:Encrypt on a key OTHER than arn:aws:kms:us-west-2:444455556666:key/dest-cmk-id?
+  admitted: 1 / 3 witnesses (only the key policy's own key matches)
+  verdict:  UNSAT — KMS Resource:* scopes to the key itself only
+            (suspicion REFUTED; author got this right)

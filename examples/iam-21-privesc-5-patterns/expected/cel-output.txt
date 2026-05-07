@@ -1,0 +1,23 @@
+=== rhino-vulnerable (all 21 Rhino methods enabled) ===
+  status: NON_COMPLIANT   total_assets=4   violations=1
+  CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001 fired on 1 asset(s):
+    - arn:aws:iam::111122223333:user/rhino-attacker   severity=high
+
+=== partial-deny (deny covers Rhino's 21 actions) ===
+  status: NON_COMPLIANT   total_assets=2   violations=1
+  CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001 fired on 1 asset(s):
+    - arn:aws:iam::111122223333:user/rhino-attacker   severity=high
+
+=== remediated (least-privilege) ===
+  status: COMPLIANT   total_assets=2   violations=0
+  CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001: no findings
+
+=== real-world-pattern3 (PassRole + RunInstances + compound network constraints) ===
+  status: COMPLIANT   total_assets=5   violations=0
+  CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001: no findings
+
+note: this CEL run is a foil — it scopes to one of Stave's
+      44+ per-technique IAM escalation controls. Each control
+      catches one method. The Z3 prover at z3prove/ recasts
+      Rhino's 21 manual enumerations as 5 structural queries
+      and finds methods Rhino didn't enumerate.

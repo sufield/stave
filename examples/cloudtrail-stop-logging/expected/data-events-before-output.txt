@@ -1,0 +1,4 @@
+=== data-events-before (mgmt logging on, data events off) ===
+  status: COMPLIANT   total_assets=5   violations=0
+  CTL.CLOUDTRAIL.STOP.DETECT.001: no findings
+  assertion: fires=false (expected) ✓

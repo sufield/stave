@@ -1,0 +1,40 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-08T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/eve",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "attach_user_policy_self": {
+              "present": false
+            }
+          },
+          "policies": {
+            "attached_policies": [
+              {
+                "name": "EveSelfReadInline",
+                "statements": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "iam:GetUser",
+                      "iam:ListAttachedUserPolicies",
+                      "iam:ChangePassword"
+                    ],
+                    "Resource": "arn:aws:iam::111122223333:user/eve"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

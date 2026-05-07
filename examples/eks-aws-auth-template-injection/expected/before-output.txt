@@ -1,0 +1,5 @@
+=== before ({{AccessKeyID}} template) ===
+  status: NON_COMPLIANT   total_assets=1   violations=1
+  CTL.K8S.AUTH.ACCESSKEYMAP.001 fired on 1 asset(s):
+    - acme-eks-cluster   severity=high   exposure_score=76.64
+  assertion: fires=true (expected) ✓

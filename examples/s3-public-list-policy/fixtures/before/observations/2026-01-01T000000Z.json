@@ -1,0 +1,44 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:s3:::acme-public-archive",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "acme-public-archive",
+          "id": "aws:s3:::acme-public-archive",
+          "access": {
+            "public_read": false,
+            "public_list": true,
+            "public_write": false,
+            "read_via_identity": true,
+            "read_via_resource": false,
+            "list_via_identity": true,
+            "list_via_resource": true,
+            "latent_public_read": false,
+            "latent_public_list": false
+          },
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": true,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          },
+          "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"PublicList\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"s3:ListBucket\",\"Resource\":\"arn:aws:s3:::acme-public-archive\"}]}",
+          "tags": {
+            "data_classification": "internal"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-management-trail",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "trail": {
+          "name": "org-management-trail",
+          "is_logging": true,
+          "is_multi_region_trail": true,
+          "include_global_service_events": true,
+          "log_file_validation_enabled": true,
+          "event_selectors": [
+            {
+              "read_write_type": "All",
+              "include_management_events": true,
+              "data_resources": []
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::company-frontend-prod",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "bucket": {
+          "name": "company-frontend-prod",
+          "tags": {
+            "environment": "production",
+            "data_classification": "public",
+            "integrity": "critical",
+            "served_via": "cloudfront"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::customer-data-prod",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "bucket": {
+          "name": "customer-data-prod",
+          "tags": {
+            "environment": "production",
+            "data_classification": "pii"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::financial-records",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "bucket": {
+          "name": "financial-records",
+          "tags": {
+            "data_classification": "financial",
+            "environment": "production"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::company-frontend-dev",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "bucket": {
+          "name": "company-frontend-dev",
+          "tags": {
+            "environment": "development"
+          }
+        }
+      }
+    }
+  ]
+}

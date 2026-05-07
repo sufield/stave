@@ -1,0 +1,13 @@
+=== writeup-config (cg-sns-user policy + bare topic + key-only API) ===
+  status: COMPLIANT   total_assets=1   violations=0
+  CTL.SNS.POLICY.SUBSCRIBE.BROAD.001: no findings
+
+=== remediated-config (sns:Subscribe scoped + topic policy + IAM auth) ===
+  status: COMPLIANT   total_assets=1   violations=0
+  CTL.SNS.POLICY.SUBSCRIBE.BROAD.001: no findings
+
+note: this CEL run is a foil — the existing SNS topic-policy
+      control fires only when the topic itself has a broad
+      Subscribe grant. The writeup config has no topic policy
+      at all; the IAM identity policy admits the subscription.
+      The four-service chain is at z3prove/.

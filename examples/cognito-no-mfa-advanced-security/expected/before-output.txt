@@ -1,0 +1,5 @@
+=== before (MFA off, advanced security off) ===
+  status: NON_COMPLIANT   total_assets=1   violations=1
+  CTL.COGNITO.MFA.001 fired on 1 asset(s):
+    - arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_acmeApp   severity=high   exposure_score=76.64
+  assertion: fires=true (expected) ✓

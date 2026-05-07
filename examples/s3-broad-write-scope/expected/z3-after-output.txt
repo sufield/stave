@@ -1,0 +1,5 @@
+=== after  (exact-mode) ===
+  policy mode: exact   exemplar: files/abc-uuid/photo.png
+  admitted set: [files/abc-uuid/photo.png]
+  intended set: ["files/abc-uuid/photo.png"]
+  verdict: UNSAT — every admitted key is intended

@@ -1,0 +1,51 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:s3:::acme-marketing-site",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "acme-marketing-site",
+          "id": "aws:s3:::acme-marketing-site",
+          "access": {
+            "public_read": true,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": true,
+            "read_via_resource": true,
+            "list_via_identity": false,
+            "latent_public_read": false,
+            "latent_public_list": false
+          },
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          },
+          "content": {
+            "exposed_repo_artifacts": true,
+            "exposed_paths": [
+              ".git/HEAD",
+              ".git/config",
+              ".git/objects/pack/pack-abc123.pack",
+              ".env"
+            ]
+          },
+          "tags": {
+            "purpose": "static_site"
+          }
+        }
+      }
+    }
+  ]
+}

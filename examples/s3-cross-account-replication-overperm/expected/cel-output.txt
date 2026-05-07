@@ -1,0 +1,11 @@
+=== writeup-config (account-root principal, s3:Get*/s3:List* wildcards) ===
+  status: COMPLIANT   total_assets=4   violations=0
+  no findings — Stave's built-in catalogue reports clean
+
+=== remediated-config (scoped Principal, AllowRead removed) ===
+  status: COMPLIANT   total_assets=4   violations=0
+  no findings — Stave's built-in catalogue reports clean
+
+note: this CEL run is a foil — the over-permissions live
+      in shapes Stave's built-in catalogue does not catch.
+      Run z3prove/ for the formal proofs.

@@ -1,0 +1,4 @@
+=== after  (signer enforced) ===
+  status: COMPLIANT   total_assets=1   violations=0
+  CTL.S3.TENANT.ISOLATION.001: no findings
+  assertion: fires=false (expected) ✓

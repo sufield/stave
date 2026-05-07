@@ -1,0 +1,5 @@
+=== before (trail stopped) ===
+  status: NON_COMPLIANT   total_assets=1   violations=1
+  CTL.CLOUDTRAIL.STOP.DETECT.001 fired on 1 asset(s):
+    - arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail   severity=critical   exposure_score=100.00
+  assertion: fires=true (expected) ✓

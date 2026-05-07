@@ -1,0 +1,26 @@
+id: staging_endpoint_exposed
+description: >
+  A non-production resource (staging, dev, test, qa, sandbox, demo)
+  is dormant AND publicly reachable. The compound is the canonical
+  NHI-offboarding failure mode: forgotten ephemeral infrastructure
+  retained on the internet, beyond active maintenance, accumulating
+  configuration drift. Stave's per-service public-access controls
+  fire on each individual exposure dimension (S3 bucket policy,
+  EC2 SG ingress, API Gateway resource policy, ALB topology); the
+  staleness control fires on the lifecycle-plus-environment-tag
+  combination. Either alone is a finding; both on the same asset
+  is the shadow-infrastructure crisis the writeups in
+  channels/devto/ describe.
+controls:
+  - CTL.LIFECYCLE.STAGING.STALE.001
+  - CTL.S3.PUBLIC.005
+  - CTL.S3.PUBLIC.LIST.002
+  - CTL.EC2.SG.INGRESS.CIDR.001
+  - CTL.APIGATEWAY.NETWORK.PRIVATE.POLICY.001
+  - CTL.ELB.NETWORK.INTERNAL.PUBLICSUBNET.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - s3_data_access

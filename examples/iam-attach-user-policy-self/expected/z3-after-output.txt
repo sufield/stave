@@ -1,0 +1,7 @@
+=== after  (self-attach removed) ===
+  user: arn:aws:iam::111122223333:user/eve
+  policy statements: 1
+    [0] Effect=Allow Action=[iam:GetUser iam:ListAttachedUserPolicies iam:ChangePassword] Resource=arn:aws:iam::111122223333:user/eve
+  iam:AttachUserPolicy on self admitted: false
+  dangerous witnesses: [arn:aws:iam::aws:policy/AdministratorAccess arn:aws:iam::aws:policy/IAMFullAccess arn:aws:iam::aws:policy/PowerUserAccess]
+  verdict: UNSAT — no admin-granting policy is attachable

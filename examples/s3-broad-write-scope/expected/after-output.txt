@@ -1,0 +1,4 @@
+=== after  (exact-mode) ===
+  status: COMPLIANT   total_assets=2   violations=0
+  CTL.S3.WRITE.SCOPE.001: no findings
+  assertion: fires=false (expected) ✓

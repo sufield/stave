@@ -1,0 +1,6 @@
+=== before (Principal:*) ===
+  policy statements: 1
+    [0] Effect=Allow Principal=* Action=s3:GetObject Resource=arn:aws:s3:::acme-customer-uploads/*
+  admitted requests: 4 / 4
+  intended scope:    [arn:aws:iam::111122223333:role/AcmeUploadsApp s3:GetObject arn:aws:s3:::acme-customer-uploads/intended-input.csv]
+  verdict: SAT — witness: Principal="*"  Action=s3:GetObject  Resource=arn:aws:s3:::acme-customer-uploads/customer-data.csv

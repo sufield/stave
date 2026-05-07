@@ -1,0 +1,144 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user_pool",
+          "user_pool": {
+            "name": "app-user-pool"
+          },
+          "auth": {
+            "mfa_enforced": false,
+            "mfa_configuration": "OFF"
+          },
+          "advanced_security": {
+            "enabled": false
+          },
+          "governance": {
+            "self_registration_restricted": false
+          },
+          "lambda_config": {
+            "pre_sign_up": "",
+            "pre_token_generation": "",
+            "post_confirmation": ""
+          },
+          "auto_verified_attributes": []
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool/client/abc123def456",
+      "type": "aws_cognito_app_client",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "app_client",
+          "app_client": {
+            "name": "web-app-client",
+            "client_id": "abc123def456",
+            "has_secret": false,
+            "explicit_auth_flows": [
+              "ALLOW_USER_PASSWORD_AUTH",
+              "ALLOW_REFRESH_TOKEN_AUTH"
+            ],
+            "read_attributes": ["email", "custom:role", "name"],
+            "write_attributes": ["email", "custom:role", "name", "custom:is_premium"],
+            "allowed_oauth_flows": ["implicit", "code"],
+            "callback_urls": [
+              "https://app.example.com/callback",
+              "http://localhost:3000/callback"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool",
+      "type": "aws_cognito_identity_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "identity_pool",
+          "identity_pool": {
+            "name": "app-identity-pool",
+            "allow_unauthenticated_identities": true,
+            "unauthenticated_role_arn": "arn:aws:iam::111122223333:role/Cognito_appUnauth_Role",
+            "authenticated_role_arn": "arn:aws:iam::111122223333:role/Cognito_appAuth_Role",
+            "role_mapping_configured": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/Cognito_appUnauth_Role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "name": "Cognito_appUnauth_Role",
+          "policies": {
+            "attached_policies": [
+              {
+                "name": "Cognito_appUnauth_Policy",
+                "statements": [
+                  {
+                    "Effect": "Allow",
+                    "Action": ["s3:GetObject", "s3:ListBucket"],
+                    "Resource": ["arn:aws:s3:::app-public-assets", "arn:aws:s3:::app-public-assets/*"]
+                  },
+                  {
+                    "Effect": "Allow",
+                    "Action": ["dynamodb:GetItem", "dynamodb:Query"],
+                    "Resource": "arn:aws:dynamodb:us-east-1:111122223333:table/app-data"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/Cognito_appAuth_Role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "name": "Cognito_appAuth_Role",
+          "policies": {
+            "attached_policies": [
+              {
+                "name": "Cognito_appAuth_Policy",
+                "statements": [
+                  {
+                    "Effect": "Allow",
+                    "Action": "s3:*",
+                    "Resource": "*"
+                  },
+                  {
+                    "Effect": "Allow",
+                    "Action": "dynamodb:*",
+                    "Resource": "arn:aws:dynamodb:us-east-1:111122223333:table/*"
+                  },
+                  {
+                    "Effect": "Allow",
+                    "Action": "lambda:InvokeFunction",
+                    "Resource": "arn:aws:lambda:us-east-1:111122223333:function:*"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

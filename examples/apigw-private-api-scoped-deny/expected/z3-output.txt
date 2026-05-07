@@ -1,0 +1,74 @@
+========== writeup-config (sourceVpc + identical Resource patterns) ==========
+--- Finding 1a: Allow/Deny resource pattern alignment ---
+  query:    is there a witness the Allow admits but the Deny does not?
+  Allow Resource: [execute-api:/prod/GET/*]
+  Deny  Resource: [execute-api:/prod/GET/*]
+  admitted by Allow: 1 / 5   blocked by Deny: 1 / 5
+  verdict:  UNSAT — every witness the Allow admits is also blocked by the Deny
+            (patterns are currently aligned; this becomes a SAT the
+             moment either pattern is changed independently — see the
+             broadened-allow variant below)
+
+--- Finding 2: aws:sourceVpc vs aws:sourceVpce ---
+  query:    is there a non-intended VPC endpoint in vpc that the
+            policy still admits (Deny does not apply)?
+  endpoints not blocked by Deny: 4 / 4
+  verdict:  SAT — witness: vpce-0999888777666555 (in vpc-0b52ca08e7db8531f, NOT vpce-0abc123def456789)
+            (Deny condition uses aws:sourceVpc which matches every
+             endpoint in the VPC, not just the intended one)
+
+--- Finding 3: no authorization + VPC-wide access (compound) ---
+  query:    is there a request that reaches the API with no auth
+            check AND from a non-intended VPC endpoint?
+  authorization_type: NONE
+  verdict:  SAT — witness: vpce-0999888777666555 reaches the API with auth=NONE
+            (no IAM/Lambda authorizer to catch the resource-policy gap)
+
+========== broadened-allow (developer widens Allow) ==========
+--- Finding 1b: Allow/Deny resource pattern alignment ---
+  query:    is there a witness the Allow admits but the Deny does not?
+  Allow Resource: [execute-api:/*]
+  Deny  Resource: [execute-api:/prod/GET/*]
+  admitted by Allow: 5 / 5   blocked by Deny: 1 / 5
+  verdict:  SAT — witness: stage=prod method=POST resource=execute-api:/prod/POST/users
+            (Allow widened to execute-api:/* — Deny still scoped
+             to /prod/GET/*, so this resource is allowed without
+             any VPC restriction)
+
+--- Finding 2: aws:sourceVpc vs aws:sourceVpce ---
+  query:    is there a non-intended VPC endpoint in vpc that the
+            policy still admits (Deny does not apply)?
+  endpoints not blocked by Deny: 4 / 4
+  verdict:  SAT — witness: vpce-0999888777666555 (in vpc-0b52ca08e7db8531f, NOT vpce-0abc123def456789)
+            (Deny condition uses aws:sourceVpc which matches every
+             endpoint in the VPC, not just the intended one)
+
+--- Finding 3: no authorization + VPC-wide access (compound) ---
+  query:    is there a request that reaches the API with no auth
+            check AND from a non-intended VPC endpoint?
+  authorization_type: NONE
+  verdict:  SAT — witness: vpce-0999888777666555 reaches the API with auth=NONE
+            (no IAM/Lambda authorizer to catch the resource-policy gap)
+
+========== remediated-config (sourceVpce + aligned + IAM auth) ==========
+--- Finding 1a: Allow/Deny resource pattern alignment ---
+  query:    is there a witness the Allow admits but the Deny does not?
+  Allow Resource: [execute-api:/*]
+  Deny  Resource: [execute-api:/*]
+  admitted by Allow: 5 / 5   blocked by Deny: 5 / 5
+  verdict:  UNSAT — every witness the Allow admits is also blocked by the Deny
+
+--- Finding 2: aws:sourceVpc vs aws:sourceVpce ---
+  query:    is there a non-intended VPC endpoint in vpc that the
+            policy still admits (Deny does not apply)?
+  endpoints not blocked by Deny: 1 / 4
+  verdict:  UNSAT — only the intended endpoint reaches the API
+            (Deny condition uses aws:sourceVpce, scoping to the
+             specific endpoint ID)
+
+--- Finding 3: no authorization + VPC-wide access (compound) ---
+  query:    is there a request that reaches the API with no auth
+            check AND from a non-intended VPC endpoint?
+  authorization_type: AWS_IAM
+  verdict:  UNSAT — authorization requires SigV4-signed callers
+            (the resource policy is no longer the sole control)

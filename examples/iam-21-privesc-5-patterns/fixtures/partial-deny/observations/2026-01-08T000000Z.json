@@ -1,0 +1,144 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-08T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/rhino-attacker",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "passrole_autoscaling": {"present": true}
+          },
+          "policies": {
+            "attached_policies": [
+              {
+                "name": "rhino-vulnerable-policy",
+                "statements": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "iam:CreatePolicyVersion",
+                      "iam:SetDefaultPolicyVersion",
+                      "iam:CreatePolicy",
+                      "iam:AttachUserPolicy",
+                      "iam:AttachGroupPolicy",
+                      "iam:AttachRolePolicy",
+                      "iam:DetachUserPolicy",
+                      "iam:DetachRolePolicy",
+                      "iam:PutUserPolicy",
+                      "iam:PutGroupPolicy",
+                      "iam:PutRolePolicy",
+                      "iam:DeleteUserPolicy",
+                      "iam:DeleteRolePolicy",
+                      "iam:DeleteRolePermissionsBoundary",
+                      "iam:AddUserToGroup",
+                      "iam:CreateAccessKey",
+                      "iam:CreateLoginProfile",
+                      "iam:UpdateLoginProfile",
+                      "iam:UpdateAssumeRolePolicy",
+                      "iam:CreateRole",
+                      "iam:CreateVirtualMFADevice",
+                      "iam:EnableMFADevice",
+                      "iam:DeactivateMFADevice",
+                      "iam:PassRole",
+                      "sts:AssumeRole",
+                      "sts:GetFederationToken",
+                      "ec2:RunInstances",
+                      "lambda:CreateFunction",
+                      "lambda:InvokeFunction",
+                      "lambda:UpdateFunctionCode",
+                      "lambda:CreateEventSourceMapping",
+                      "glue:CreateDevEndpoint",
+                      "glue:UpdateDevEndpoint",
+                      "cloudformation:CreateStack",
+                      "datapipeline:CreatePipeline",
+                      "datapipeline:PutPipelineDefinition",
+                      "autoscaling:CreateLaunchConfiguration",
+                      "autoscaling:CreateAutoScalingGroup",
+                      "ecs:RunTask",
+                      "ecs:CreateService",
+                      "codebuild:CreateProject",
+                      "codebuild:StartBuild",
+                      "sagemaker:CreateNotebookInstance",
+                      "sagemaker:CreateTrainingJob",
+                      "batch:SubmitJob",
+                      "states:CreateStateMachine",
+                      "apprunner:CreateService",
+                      "dynamodb:PutItem",
+                      "sqs:SendMessage",
+                      "kinesis:PutRecord",
+                      "sns:Publish",
+                      "s3:PutObject",
+                      "events:PutRule",
+                      "events:PutTargets",
+                      "iot:CreateTopicRule",
+                      "ses:CreateReceiptRule",
+                      "cognito-idp:UpdateUserPool",
+                      "cloudwatch:PutMetricAlarm"
+                    ],
+                    "Resource": "*"
+                  },
+                  {
+                    "Effect": "Deny",
+                    "Action": [
+                      "iam:CreatePolicyVersion",
+                      "iam:SetDefaultPolicyVersion",
+                      "iam:AttachUserPolicy",
+                      "iam:AttachGroupPolicy",
+                      "iam:AttachRolePolicy",
+                      "iam:PutUserPolicy",
+                      "iam:PutGroupPolicy",
+                      "iam:PutRolePolicy",
+                      "iam:AddUserToGroup",
+                      "iam:CreateAccessKey",
+                      "iam:CreateLoginProfile",
+                      "iam:UpdateLoginProfile",
+                      "iam:UpdateAssumeRolePolicy",
+                      "ec2:RunInstances",
+                      "lambda:CreateFunction",
+                      "lambda:UpdateFunctionCode",
+                      "lambda:CreateEventSourceMapping",
+                      "glue:CreateDevEndpoint",
+                      "glue:UpdateDevEndpoint",
+                      "cloudformation:CreateStack",
+                      "datapipeline:CreatePipeline"
+                    ],
+                    "Resource": "*"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/admin-multi-trust-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "name": "admin-multi-trust-role",
+          "trusted_services": [
+            "ec2.amazonaws.com",
+            "lambda.amazonaws.com",
+            "ecs-tasks.amazonaws.com",
+            "glue.amazonaws.com",
+            "cloudformation.amazonaws.com",
+            "codebuild.amazonaws.com",
+            "sagemaker.amazonaws.com",
+            "batch.amazonaws.com",
+            "states.amazonaws.com",
+            "apprunner.amazonaws.com"
+          ],
+          "is_admin_equivalent": true
+        }
+      }
+    }
+  ]
+}

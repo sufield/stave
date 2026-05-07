@@ -1,0 +1,17 @@
+=== bybit-pattern-after  (developer split: read-only on prod, full on dev) ===
+  policy statements: 2
+    [0] Effect=Allow Action=[s3:GetObject s3:PutObject s3:DeleteObject s3:ListBucket] Resource=[arn:aws:s3:::company-frontend-dev arn:aws:s3:::company-frontend-dev/*]
+    [1] Effect=Allow Action=[s3:GetObject s3:ListBucket] Resource=[arn:aws:s3:::company-frontend-prod arn:aws:s3:::company-frontend-prod/*]
+  buckets observed:  2
+    - company-frontend-prod   environment=production   served_via=cloudfront
+    - company-frontend-dev   environment=development   served_via=
+
+  --- Bybit Pattern: Developer Write to Production S3 ---
+  verdict: UNSAT
+  rationale: no production bucket admitted by s3:PutObject
+
+  --- Compound: Undetectable Production Write ---
+  verdict: UNSAT
+  rationale: write_access=false   no_mfa=true   no_ip=true   no_logging=true
+
+  assertion: compound=false (expected) OK

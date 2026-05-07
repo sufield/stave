@@ -1,0 +1,4 @@
+=== bybit-pattern-after  (read-only on prod, full on dev) ===
+  status: COMPLIANT   total_assets=3   violations=0
+  CTL.IAM.POLICY.RESOURCE.WILDCARD.001: no findings
+  assertion: fires=false (expected) ✓

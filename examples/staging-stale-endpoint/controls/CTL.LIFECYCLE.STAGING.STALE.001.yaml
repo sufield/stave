@@ -1,0 +1,164 @@
+dsl_version: ctrl.v1
+id: CTL.LIFECYCLE.STAGING.STALE.001
+name: Stale Non-Production Resource Detected
+description: >
+  A resource tagged for non-production use (staging, dev, test, qa,
+  sandbox, demo) is dormant or unused beyond the staleness threshold.
+  Per-service dormancy controls (CTL.CLOUDFRONT.LIFECYCLE.DORMANT.001,
+  CTL.APIGATEWAY.ORPHAN.API.001, etc.) fire on the lifecycle signal
+  alone — environment-agnostic. This control adds the environment-tag
+  dimension: a dormant resource that explicitly identifies as
+  non-production is a higher-confidence cleanup target than a generic
+  dormant resource. Production dormancy may be a routine artifact
+  (warm standby, seasonal capacity); non-production dormancy is
+  almost always abandoned shadow infrastructure. The same lifecycle
+  fields existing per-service controls already populate
+  (`is_dormant`, `appears_unused`, `last_request_days`,
+  `last_deployment_days`) provide the dormancy evidence; this control
+  filters by tag, it does not redefine staleness.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-2"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-04", "DSP-01"]
+  owasp_nhi: "NHI1"
+scope_tags:
+  - multicloud
+  - lifecycle
+  - hygiene
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Non-production resource is inactive beyond the staleness threshold
+    and should be reviewed for decommissioning.
+  action: >
+    1) If no longer needed: decommission the resource — delete the
+    asset, remove associated DNS records, remove or scope down any
+    IAM roles attached to it, and remove any references from CI/CD
+    pipelines or downstream consumers. 2) If still needed but
+    intentionally idle (sprint demo retained for review, ephemeral
+    QA harness): tag the resource with `reviewed_at: <RFC3339>` and
+    document the expected idle duration. 3) Verify whether the
+    resource is publicly reachable (CTL.LIFECYCLE.STAGING.EXPOSED.001
+    will fire if so) — public exposure on stale non-production
+    infrastructure is the canonical NHI-offboarding failure mode.
+  example: |
+    {
+      "api": {
+        "kind": "rest_api",
+        "tags": {
+          "environment": "production"
+        },
+        "lifecycle": {
+          "appears_unused": true,
+          "last_deployment_days": 120
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - any:
+        - field: properties.api.tags.environment
+          op: in
+          value:
+            - staging
+            - dev
+            - development
+            - test
+            - testing
+            - qa
+            - sandbox
+            - demo
+            - temp
+            - tmp
+            - poc
+            - prototype
+        - field: properties.cdn.tags.environment
+          op: in
+          value:
+            - staging
+            - dev
+            - development
+            - test
+            - testing
+            - qa
+            - sandbox
+            - demo
+            - temp
+            - tmp
+            - poc
+            - prototype
+        - field: properties.storage.tags.environment
+          op: in
+          value:
+            - staging
+            - dev
+            - development
+            - test
+            - testing
+            - qa
+            - sandbox
+            - demo
+            - temp
+            - tmp
+            - poc
+            - prototype
+        - field: properties.identity.tags.environment
+          op: in
+          value:
+            - staging
+            - dev
+            - development
+            - test
+            - testing
+            - qa
+            - sandbox
+            - demo
+            - temp
+            - tmp
+            - poc
+            - prototype
+        - field: properties.compute.tags.environment
+          op: in
+          value:
+            - staging
+            - dev
+            - development
+            - test
+            - testing
+            - qa
+            - sandbox
+            - demo
+            - temp
+            - tmp
+            - poc
+            - prototype
+    - any:
+        - field: properties.api.lifecycle.appears_unused
+          op: eq
+          value: true
+        - field: properties.api.lifecycle.last_deployment_days
+          op: gt
+          value: 30
+        - field: properties.cdn.cloudfront.is_dormant
+          op: eq
+          value: true
+        - field: properties.cdn.cloudfront.last_request_days
+          op: gt
+          value: 30
+        - field: properties.storage.lifecycle.appears_unused
+          op: eq
+          value: true
+        - field: properties.storage.lifecycle.last_request_days
+          op: gt
+          value: 30
+        - field: properties.compute.lifecycle.is_dormant
+          op: eq
+          value: true
+        - field: properties.compute.lifecycle.last_invocation_days
+          op: gt
+          value: 30

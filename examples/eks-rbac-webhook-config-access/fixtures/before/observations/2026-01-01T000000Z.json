@@ -1,0 +1,31 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "acme-platform-controller",
+      "type": "k8s_cluster_role",
+      "vendor": "kubernetes",
+      "properties": {
+        "k8s": {
+          "kind": "cluster_role",
+          "name": "acme-platform-controller",
+          "rbac": {
+            "has_webhook_config_access": true,
+            "rules": [
+              {
+                "apiGroups": ["admissionregistration.k8s.io"],
+                "resources": ["mutatingwebhookconfigurations"],
+                "verbs": ["create", "update", "patch", "delete"]
+              }
+            ]
+          },
+          "bound_subjects": [
+            "ServiceAccount/platform/acme-platform"
+          ]
+        }
+      }
+    }
+  ]
+}

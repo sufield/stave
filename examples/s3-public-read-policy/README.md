@@ -130,10 +130,58 @@ After:
 }
 ```
 
+## Z3 prover (companion binary)
+
+Sibling Go module under `z3prove/` — a Z3 SAT solver that
+reads the same fixture's `storage.policy_json` and enumerates
+specific (principal, action, resource) requests the policy
+admits outside the application's intended scope. CEL detects
+the unsafe state ("public_read is true"); Z3 names the
+concrete witness.
+
+Prerequisites (Ubuntu): `sudo apt install libz3-dev pkg-config`.
+
+```bash
+cd stave/examples/s3-public-read-policy/z3prove
+go mod tidy
+CGO_ENABLED=1 go run . before     # SAT with witness
+CGO_ENABLED=1 go run . after      # UNSAT
+```
+
+Captured output for `before` (`expected/z3-before-output.txt`):
+
+```
+=== before (Principal:*) ===
+  policy statements: 1
+    [0] Effect=Allow Principal=* Action=s3:GetObject Resource=arn:aws:s3:::acme-customer-uploads/*
+  admitted requests: 4 / 4
+  intended scope:    [arn:aws:iam::111122223333:role/AcmeUploadsApp s3:GetObject arn:aws:s3:::acme-customer-uploads/intended-input.csv]
+  verdict: SAT — witness: Principal="*"  Action=s3:GetObject  Resource=arn:aws:s3:::acme-customer-uploads/customer-data.csv
+```
+
+`Principal: "*"` admits every witness in the search set; the
+solver returns `customer-data.csv` as the first
+dangerous-and-unintended one. After the policy is scoped:
+
+```
+=== after  (scoped Principal) ===
+  ...
+  admitted requests: 1 / 4
+  ...
+  verdict: UNSAT — no anonymous read admitted outside the intended scope
+```
+
+The Z3 binary lives in a sibling Go module so its libz3 link
+stays out of Stave's main vendored tree (Stave's own binary
+is `CGO_ENABLED=0`).
+
 ## Where this fits
 
-This is **Iteration 1, Phase B** of the examples roadmap. Phase A
+This is **Iteration 1** of the examples roadmap. Phase A
 documented the `pkg/stave` API surface and shipped the
 `Assessment.FindingsForControl` helper this example uses. Phase C
 is the article (`channels/devto/`) that builds the business
-narrative around the captured before/after output.
+narrative around the captured before/after output. The Z3
+prover was added in a follow-up commit so the reachability
+verdict could appear alongside the CEL state assertion in the
+article — same shape as iter-4, iter-5, iter-7a, iter-7.

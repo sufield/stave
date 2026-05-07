@@ -1,0 +1,5 @@
+=== before (prefix-mode) ===
+  policy mode: prefix   exemplar: files/*
+  admitted set: [files/abc-uuid/photo.png files/admin.html files/../etc/passwd]
+  intended set: ["files/abc-uuid/photo.png"]
+  verdict: SAT — witness key "files/admin.html" is admitted but unintended

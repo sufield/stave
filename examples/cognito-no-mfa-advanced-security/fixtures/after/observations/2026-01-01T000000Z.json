@@ -1,0 +1,35 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_acmeApp",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user_pool",
+          "user_pool": {
+            "name": "acme-customer-portal-pool",
+            "alias_attributes": ["email"]
+          },
+          "auth": {
+            "mfa_enforced": true,
+            "mfa_configuration": "ON",
+            "software_token_mfa_enabled": true
+          },
+          "advanced_security": {
+            "enabled": true,
+            "mode": "ENFORCED"
+          },
+          "password_policy": {
+            "is_weak": false,
+            "minimum_length": 12,
+            "require_symbols": true
+          }
+        }
+      }
+    }
+  ]
+}

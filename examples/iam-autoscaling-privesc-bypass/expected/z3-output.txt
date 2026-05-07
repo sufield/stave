@@ -1,0 +1,75 @@
+========== writeup-config (DataScientist + EMR + DenyPrivEscs) ==========
+--- Finding 1: deny coverage gap ---
+  query:    among 9 known compute-launch vectors, is any one
+            effectively permitted (Allow ∧ ¬Deny)?
+  vectors available: 1 / 9
+  verdict:  SAT — witness: autoscaling — Auto Scaling launch config + group with instance profile
+            actions: [autoscaling:CreateLaunchConfiguration autoscaling:CreateAutoScalingGroup]
+            (deny does not cover these actions; the path is open)
+
+--- Finding 2: PassRole reaches an admin-equivalent role ---
+  query:    is there an admin role whose trust matches the principal's
+            PassRole `iam:PassedToService` condition?
+  reachable admin roles: 1 / 1
+  verdict:  SAT — witness: arn:aws:iam::111122223333:role/demo-EC2Admin
+            (trusts [ec2.amazonaws.com]; has AdministratorAccess; PassRole condition
+             admits any role trusting one of those services)
+
+--- Finding 3: complete privesc chain ---
+  query:    is there an available compute-launch vector + an admin
+            role + a trust relationship that all line up?
+  compound paths: 1
+  verdict:  SAT — witness: vector=autoscaling role=arn:aws:iam::111122223333:role/demo-EC2Admin
+            chain: [autoscaling:CreateLaunchConfiguration autoscaling:CreateAutoScalingGroup] → role with AdministratorAccess assumed by EC2 →
+            principal reads IMDS credentials → admin
+
+--- Deny coverage analysis ---
+  ec2             BLOCKED    : Direct EC2 launch with instance profile
+  lambda          BLOCKED    : Create Lambda with execution role
+  lambda          BLOCKED    : Update existing Lambda to use different execution role
+  cloudformation  BLOCKED    : Create CloudFormation stack with execution role
+  autoscaling     NOT BLOCKED : Auto Scaling launch config + group with instance profile
+  ecs             NOT BLOCKED : Run ECS task with task role
+  codebuild       NOT BLOCKED : Create and start CodeBuild project with service role
+  glue            NOT BLOCKED : Create Glue job with execution role
+  sagemaker       NOT BLOCKED : Create SageMaker notebook with execution role
+
+========== remediated-config (deny expanded to all 9 known vectors) ==========
+--- Finding 1: deny coverage gap ---
+  query:    among 9 known compute-launch vectors, is any one
+            effectively permitted (Allow ∧ ¬Deny)?
+  vectors available: 0 / 9
+  verdict:  UNSAT — every known compute-launch vector is denied
+            (the expanded deny list covers all 9 known vectors today;
+             see Finding 2 for the residual structural risk)
+
+--- Finding 2: PassRole reaches an admin-equivalent role ---
+  query:    is there an admin role whose trust matches the principal's
+            PassRole `iam:PassedToService` condition?
+  reachable admin roles: 1 / 1
+  verdict:  SAT — witness: arn:aws:iam::111122223333:role/demo-EC2Admin
+            (trusts [ec2.amazonaws.com]; has AdministratorAccess; PassRole condition
+             admits any role trusting one of those services)
+            **RESIDUAL** — the remediated config closes today's launch
+            vectors but does not scope PassRole by role ARN. Any new
+            compute service AWS adds becomes an immediate exploit
+            path until the deny list is expanded.
+
+--- Finding 3: complete privesc chain ---
+  query:    is there an available compute-launch vector + an admin
+            role + a trust relationship that all line up?
+  compound paths: 0
+  verdict:  UNSAT — no compound privesc path open
+            (Finding 1 closed all launch vectors; without one of those,
+             the PassRole reachability in Finding 2 has nowhere to land)
+
+--- Deny coverage analysis ---
+  ec2             BLOCKED    : Direct EC2 launch with instance profile
+  lambda          BLOCKED    : Create Lambda with execution role
+  lambda          BLOCKED    : Update existing Lambda to use different execution role
+  cloudformation  BLOCKED    : Create CloudFormation stack with execution role
+  autoscaling     BLOCKED    : Auto Scaling launch config + group with instance profile
+  ecs             BLOCKED    : Run ECS task with task role
+  codebuild       BLOCKED    : Create and start CodeBuild project with service role
+  glue            BLOCKED    : Create Glue job with execution role
+  sagemaker       BLOCKED    : Create SageMaker notebook with execution role

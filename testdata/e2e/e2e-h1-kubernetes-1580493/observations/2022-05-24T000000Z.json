@@ -5,7 +5,7 @@
     {
       "id": "gaf-cluster",
       "type": "k8s_cluster",
-      "vendor": "aws",
+      "vendor": "kubernetes",
       "properties": {
         "auth": {
           "kind": "cluster",

@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.K8S.AUTH.ACCESSKEYMAP.001
+name: K8s Clusters Must Not Map Identity via AccessKeyID
+description: >
+  Kubernetes clusters using AWS IAM Authenticator must not use
+  {{AccessKeyID}} in identity mapping templates. The AccessKeyID
+  is extracted from client-supplied presigned URL query parameters,
+  not from the STS response, making it vulnerable to parameter
+  injection via case-variant duplication.
+domain: identity
+severity: high
+compliance:
+  cis_k8s_v1.8.0: "3.1.1"
+  soc2: "CC6.1"
+  nist_800_53_r5: "IA-2"
+  ccm_v4: ["IAM-14", "IAM-16"]
+scope_tags:
+  - kubernetes
+  - auth
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Kubernetes cluster uses {{AccessKeyID}} in an identity mapping
+    template. An attacker with any valid AWS credentials can inject
+    an arbitrary AccessKeyID to impersonate other users.
+  action: >
+    Replace {{AccessKeyID}} with {{SessionName}} or use ARN-based
+    mapping (userARN matching) without template substitution. ARN
+    and SessionName come from the STS GetCallerIdentity response
+    and cannot be manipulated by the client.
+  example: |
+    {
+      "auth": {
+        "kind": "cluster",
+        "webhook": {
+          "provider": "aws-iam-authenticator",
+          "identity_mapping": {
+            "uses_access_key_id": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.auth.kind
+      op: eq
+      value: cluster
+    - field: properties.auth.webhook.identity_mapping.uses_access_key_id
+      op: eq
+      value: true

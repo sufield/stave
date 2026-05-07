@@ -1,0 +1,9 @@
+=== after  (scoped actions + ARNs) ===
+  policy statements: 3
+    [0] Effect=Allow Action=s3:GetObject Resource=arn:aws:s3:::app-data-production/input/*
+    [1] Effect=Allow Action=s3:PutObject Resource=arn:aws:s3:::app-data-production/output/*
+    [2] Effect=Allow Action=[logs:CreateLogGroup logs:CreateLogStream logs:PutLogEvents] Resource=arn:aws:logs:us-east-1:111122223333:*
+  admitted requests: 2 / 5
+  intended scope:    [s3:GetObject → app-data-production/input/file.csv s3:PutObject → app-data-production/output/result.json]
+  dangerous set:     [s3:PutBucketPolicy → customer-pii-bucket s3:DeleteObject → billing-archives/jan-2026.csv s3:PutBucketAcl → audit-logs-bucket]
+  verdict: UNSAT — no dangerous action admitted outside intended scope

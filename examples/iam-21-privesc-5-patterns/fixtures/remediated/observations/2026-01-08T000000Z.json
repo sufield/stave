@@ -1,0 +1,60 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-08T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/rhino-attacker",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "passrole_autoscaling": {"present": false}
+          },
+          "policies": {
+            "attached_policies": [
+              {
+                "name": "scoped-data-access-policy",
+                "statements": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "s3:GetObject",
+                      "s3:ListBucket"
+                    ],
+                    "Resource": [
+                      "arn:aws:s3:::data-team-bucket",
+                      "arn:aws:s3:::data-team-bucket/*"
+                    ]
+                  },
+                  {
+                    "Effect": "Allow",
+                    "Action": "iam:PassRole",
+                    "Resource": [
+                      "arn:aws:iam::111122223333:role/data-team-job-role"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/data-team-job-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "name": "data-team-job-role",
+          "trusted_services": ["glue.amazonaws.com"],
+          "is_admin_equivalent": false
+        }
+      }
+    }
+  ]
+}

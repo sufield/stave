@@ -1,0 +1,18 @@
+=== bybit-pattern-before (developer with s3:PutObject on company-frontend-*) ===
+  policy statements: 1
+    [0] Effect=Allow Action=[s3:GetObject s3:PutObject s3:DeleteObject s3:ListBucket] Resource=[arn:aws:s3:::company-frontend-* arn:aws:s3:::company-frontend-*/*]
+  buckets observed:  2
+    - company-frontend-prod   environment=production   served_via=cloudfront
+    - company-frontend-dev   environment=development   served_via=
+
+  --- Bybit Pattern: Developer Write to Production S3 ---
+  verdict: SAT
+  witness: s3:PutObject on arn:aws:s3:::company-frontend-prod/app.js   (resource pattern matches both dev and prod)
+  rationale: environment=production, served_via=cloudfront — modifying app.js is a supply chain attack via CloudFront
+
+  --- Compound: Undetectable Production Write ---
+  verdict: SAT
+  witness: developer can write to production S3 from any IP, without MFA, with no CloudTrail data-event record
+  rationale: write_access=true   no_mfa=true   no_ip=true   no_logging=true
+
+  assertion: compound=true (expected) OK

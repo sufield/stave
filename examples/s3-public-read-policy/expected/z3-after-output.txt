@@ -1,0 +1,6 @@
+=== after  (scoped Principal) ===
+  policy statements: 1
+    [0] Effect=Allow Principal=map[AWS:arn:aws:iam::111122223333:role/AcmeUploadsApp] Action=s3:GetObject Resource=arn:aws:s3:::acme-customer-uploads/*
+  admitted requests: 1 / 4
+  intended scope:    [arn:aws:iam::111122223333:role/AcmeUploadsApp s3:GetObject arn:aws:s3:::acme-customer-uploads/intended-input.csv]
+  verdict: UNSAT — no anonymous read admitted outside the intended scope

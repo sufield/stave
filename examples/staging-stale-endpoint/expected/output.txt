@@ -1,0 +1,26 @@
+=== stale-staging        (env=staging, appears_unused=true, last_deployment_days=247) ===
+  status: NON_COMPLIANT   total_assets=1   violations=1
+  CTL.LIFECYCLE.STAGING.STALE.001: 1 finding(s)
+    - arn:aws:apigateway:us-east-1::/restapis/sprint-42-demo   severity=medium
+  CTL.S3.PUBLIC.LIST.002:    0 finding(s)
+  assertions: stale=true public=false chain_triggered=false ✓
+
+=== active-staging       (env=staging, appears_unused=false, last_deployment_days=8) ===
+  status: COMPLIANT   total_assets=1   violations=0
+  CTL.LIFECYCLE.STAGING.STALE.001: 0 finding(s)
+  CTL.S3.PUBLIC.LIST.002:    0 finding(s)
+  assertions: stale=false public=false chain_triggered=false ✓
+
+=== prod-dormant         (env=production, appears_unused=true, last_deployment_days=247) ===
+  status: COMPLIANT   total_assets=1   violations=0
+  CTL.LIFECYCLE.STAGING.STALE.001: 0 finding(s)
+  CTL.S3.PUBLIC.LIST.002:    0 finding(s)
+  assertions: stale=false public=false chain_triggered=false ✓
+
+=== stale-staging-public (env=demo, appears_unused=true, public_list=true) ===
+  status: NON_COMPLIANT   total_assets=1   violations=2
+  CTL.LIFECYCLE.STAGING.STALE.001: 1 finding(s)
+    - arn:aws:s3:::demo-q3-screenshots   severity=medium
+  CTL.S3.PUBLIC.LIST.002:    1 finding(s)
+    - arn:aws:s3:::demo-q3-screenshots   severity=high
+  assertions: stale=true public=true chain_triggered=true ✓

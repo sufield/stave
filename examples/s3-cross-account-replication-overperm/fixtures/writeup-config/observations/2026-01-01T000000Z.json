@@ -1,0 +1,119 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:s3:::source-bucket-replication-2023",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "source-bucket-replication-2023",
+          "id": "aws:s3:::source-bucket-replication-2023",
+          "account": "111122223333",
+          "region": "us-east-1",
+          "access": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false
+          },
+          "versioning": {"enabled": true},
+          "replication": {
+            "enabled": true,
+            "role_arn": "arn:aws:iam::111122223333:role/bucket-replication-role",
+            "destination_bucket": "arn:aws:s3:::destination-bucket-replication-2023"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::destination-bucket-replication-2023",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "destination-bucket-replication-2023",
+          "id": "aws:s3:::destination-bucket-replication-2023",
+          "account": "444455556666",
+          "region": "us-west-2",
+          "access": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false
+          },
+          "versioning": {"enabled": true},
+          "policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"AllowReplication\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::111122223333:root\"},\"Action\":[\"s3:GetBucketVersioning\",\"s3:PutBucketVersioning\",\"s3:ReplicateObject\",\"s3:ReplicateDelete\",\"s3:ObjectOwnerOverrideToBucketOwner\"],\"Resource\":[\"arn:aws:s3:::destination-bucket-replication-2023\",\"arn:aws:s3:::destination-bucket-replication-2023/*\"]},{\"Sid\":\"AllowRead\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::111122223333:root\"},\"Action\":[\"s3:List*\",\"s3:Get*\"],\"Resource\":[\"arn:aws:s3:::destination-bucket-replication-2023\",\"arn:aws:s3:::destination-bucket-replication-2023/*\"]}]}"
+        }
+      }
+    },
+    {
+      "id": "arn:aws:kms:us-west-2:444455556666:key/dest-cmk-id",
+      "type": "aws_kms_key",
+      "vendor": "aws",
+      "properties": {
+        "encryption": {
+          "kind": "key",
+          "key_arn": "arn:aws:kms:us-west-2:444455556666:key/dest-cmk-id",
+          "account": "444455556666",
+          "region": "us-west-2",
+          "key_policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"Enable IAM User Permissions\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::444455556666:root\"},\"Action\":\"kms:*\",\"Resource\":\"*\"},{\"Sid\":\"Enable cross account encrypt access for S3 Cross Region Replication\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::111122223333:role/bucket-replication-role\"},\"Action\":[\"kms:Encrypt\"],\"Resource\":\"*\"}]}"
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/bucket-replication-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "trusted_services": ["s3.amazonaws.com"],
+          "policies": {
+            "has_resource_wildcard_on_sensitive": false,
+            "attached_policies": [
+              {
+                "name": "BucketReplicationPolicy",
+                "statements": [
+                  {
+                    "Effect": "Allow",
+                    "Action": ["s3:GetReplicationConfiguration", "s3:ListBucket"],
+                    "Resource": "arn:aws:s3:::source-bucket-replication-2023"
+                  },
+                  {
+                    "Effect": "Allow",
+                    "Action": ["s3:GetObjectVersionForReplication", "s3:GetObjectVersionAcl"],
+                    "Resource": "arn:aws:s3:::source-bucket-replication-2023/*"
+                  },
+                  {
+                    "Effect": "Allow",
+                    "Action": ["s3:ReplicateObject", "s3:ReplicateDelete", "s3:ReplicateTags"],
+                    "Resource": "arn:aws:s3:::destination-bucket-replication-2023/*"
+                  },
+                  {
+                    "Effect": "Allow",
+                    "Action": ["kms:Decrypt"],
+                    "Resource": "arn:aws:kms:us-east-1:111122223333:key/source-cmk-id",
+                    "Condition": {
+                      "StringLike": {"kms:ViaService": "s3.us-east-1.amazonaws.com"}
+                    }
+                  },
+                  {
+                    "Effect": "Allow",
+                    "Action": ["kms:Encrypt"],
+                    "Resource": "arn:aws:kms:us-west-2:444455556666:key/dest-cmk-id",
+                    "Condition": {
+                      "StringLike": {"kms:ViaService": "s3.us-west-2.amazonaws.com"}
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

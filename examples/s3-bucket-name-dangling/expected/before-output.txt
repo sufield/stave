@@ -1,0 +1,5 @@
+=== before (dangling) ===
+  status: NON_COMPLIANT   total_assets=1   violations=1
+  CTL.S3.BUCKET.TAKEOVER.001 fired on 1 asset(s):
+    - acme-cdn-origin-assets   severity=critical   exposure_score=100.00
+  assertion: fires=true (expected) ✓

@@ -1,0 +1,6 @@
+=== after  (signer enforced) ===
+  signer purpose: signs_uploads;enforce_prefix=true;allow_traversal=false
+  flags: enforce_prefix=true   allow_traversal=false
+  admitted set: [tenant=A → tenants/A/photo.png]
+  intended set: ["tenant=A → tenants/A/photo.png"]
+  verdict: UNSAT — every admitted request is intended

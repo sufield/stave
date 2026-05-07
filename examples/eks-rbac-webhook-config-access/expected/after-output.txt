@@ -1,0 +1,4 @@
+=== after  (read-only) ===
+  status: COMPLIANT   total_assets=1   violations=0
+  CTL.K8S.RBAC.WEBHOOK.001: no findings
+  assertion: fires=false (expected) ✓

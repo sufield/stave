@@ -1,0 +1,109 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-08T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::676206926638:user/cg-sns-user-cgidxi93qpes3g",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "attached_policies": [
+              {
+                "name": "cg-sns-user-policy",
+                "statements": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "sns:Subscribe",
+                      "sns:Receive",
+                      "sns:ListSubscriptionsByTopic",
+                      "sns:ListTopics",
+                      "sns:GetTopicAttributes",
+                      "iam:ListGroupsForUser",
+                      "iam:ListUserPolicies",
+                      "iam:GetUserPolicy",
+                      "iam:ListAttachedUserPolicies",
+                      "apigateway:GET"
+                    ],
+                    "Resource": "*"
+                  },
+                  {
+                    "Effect": "Deny",
+                    "Action": "apigateway:GET",
+                    "Resource": [
+                      "arn:aws:apigateway:us-east-1::/apikeys",
+                      "arn:aws:apigateway:us-east-1::/apikeys/*",
+                      "arn:aws:apigateway:us-east-1::/restapis/*/resources/*/methods/GET",
+                      "arn:aws:apigateway:us-east-1::/restapis/*/methods/GET",
+                      "arn:aws:apigateway:us-east-1::/restapis/*/resources/*/integration",
+                      "arn:aws:apigateway:us-east-1::/restapis/*/integration",
+                      "arn:aws:apigateway:us-east-1::/restapis/*/resources/*/methods/*/integration"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sns:us-east-1:676206926638:public-topic-cgidxi93qpes3g",
+      "type": "aws_sns_topic",
+      "vendor": "aws",
+      "properties": {
+        "messaging": {
+          "kind": "topic",
+          "name": "public-topic-cgidxi93qpes3g",
+          "sns": {
+            "has_topic_policy": false,
+            "subscribe_broadly_granted": false,
+            "publishes_credential_type": "api_key",
+            "publishes_credential_target_service": "apigateway",
+            "publishes_credential_target_arn": "arn:aws:apigateway:us-east-1::/restapis/x93anl9mj7"
+          },
+          "subscriptions": []
+        }
+      }
+    },
+    {
+      "id": "arn:aws:apigateway:us-east-1::/restapis/x93anl9mj7",
+      "type": "aws_apigateway_rest_api",
+      "vendor": "aws",
+      "properties": {
+        "api": {
+          "kind": "rest_api",
+          "name": "secrets-api",
+          "id": "x93anl9mj7",
+          "stages": ["prod-cgidxi93qpes3g"],
+          "auth": {
+            "kind": "method",
+            "auth_type": "API_KEY_ONLY",
+            "iam_auth_required": false
+          },
+          "integration": {
+            "kind": "lambda",
+            "function_arn": "arn:aws:lambda:us-east-1:676206926638:function:cg-secrets-lambda",
+            "function_reads_secrets_manager": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:secretsmanager:us-east-1:676206926638:secret:cg-flag-cgidxi93qpes3g",
+      "type": "aws_secretsmanager_secret",
+      "vendor": "aws",
+      "properties": {
+        "secret": {
+          "kind": "secret",
+          "name": "cg-flag-cgidxi93qpes3g",
+          "accessed_by": ["arn:aws:lambda:us-east-1:676206926638:function:cg-secrets-lambda"]
+        }
+      }
+    }
+  ]
+}

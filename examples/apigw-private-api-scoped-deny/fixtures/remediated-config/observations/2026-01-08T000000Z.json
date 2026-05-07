@@ -1,0 +1,27 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-08T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:apigateway:us-east-1::/restapis/timegateway-id",
+      "type": "aws_apigateway_rest_api",
+      "vendor": "aws",
+      "properties": {
+        "api": {
+          "kind": "rest_api",
+          "name": "TimeGateway",
+          "network": {
+            "endpoint_type": "PRIVATE",
+            "is_private": true,
+            "resource_policy_restricts_vpc": true,
+            "vpc_endpoint_ids": ["vpce-0abc123def456789"],
+            "resource_policy_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Deny\",\"Principal\":\"*\",\"Action\":\"execute-api:Invoke\",\"Resource\":\"execute-api:/*\",\"Condition\":{\"StringNotEquals\":{\"aws:sourceVpce\":\"vpce-0abc123def456789\"}}},{\"Effect\":\"Allow\",\"Principal\":\"*\",\"Action\":\"execute-api:Invoke\",\"Resource\":\"execute-api:/*\"}]}",
+            "default_authorization_type": "AWS_IAM"
+          },
+          "stages": ["prod"]
+        }
+      }
+    }
+  ]
+}

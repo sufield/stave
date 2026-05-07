@@ -1,0 +1,42 @@
+=== data-events-before (mgmt logging on, data events off) ===
+  trails observed:  1
+    - org-management-trail   is_logging=true   data_resource_patterns=0
+  buckets observed: 4
+    - company-frontend-prod   environment=production   data_classification=public   sensitive=true
+    - customer-data-prod   environment=production   data_classification=pii   sensitive=true
+    - financial-records   environment=production   data_classification=financial   sensitive=true
+    - company-frontend-dev   environment=development   data_classification=   sensitive=false
+
+  --- S3 Data Event Logging Gap ---
+  verdict: SAT
+  witness: arn:aws:s3:::company-frontend-prod   (sensitive=true, classification=public, environment=production, data_event_coverage=NONE)
+  rationale: 3 of 3 sensitive buckets fall outside every trail's data_resources
+
+  --- Compound: Write Access + No Audit Trail ---
+  verdict: SAT
+  witness: any principal with s3:PutObject on the gap bucket can modify objects without a CloudTrail data-event record
+  rationale: this iter-8 example doesn't enumerate IAM policies; iter-7a's bybit-pattern prover discharges the write_admitted side of the conjunction on a real fixture
+
+  assertion: gap=true (expected) OK
+
+=== data-events-after  (data events scoped to sensitive buckets) ===
+  trails observed:  1
+    - org-management-trail   is_logging=true   data_resource_patterns=3
+        coverage: arn:aws:s3:::company-frontend-prod/
+        coverage: arn:aws:s3:::customer-data-prod/
+        coverage: arn:aws:s3:::financial-records/
+  buckets observed: 4
+    - company-frontend-prod   environment=production   data_classification=public   sensitive=true
+    - customer-data-prod   environment=production   data_classification=pii   sensitive=true
+    - financial-records   environment=production   data_classification=financial   sensitive=true
+    - company-frontend-dev   environment=development   data_classification=   sensitive=false
+
+  --- S3 Data Event Logging Gap ---
+  verdict: UNSAT
+  rationale: every sensitive bucket is covered by at least one trail's data_resources
+
+  --- Compound: Write Access + No Audit Trail ---
+  verdict: UNSAT
+  rationale: no logging gap → compound trivially UNSAT
+
+  assertion: gap=false (expected) OK
