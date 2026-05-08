@@ -85,7 +85,7 @@ Then run any example from the codespace shell:
 
 ```bash
 # 1. CEL — public bucket detection (exits 3 on violation)
-./cmd/stave/stave apply \
+./stave apply \
   --controls examples/public-bucket/controls \
   --observations examples/public-bucket/observations \
   --max-unsafe 12h --now 2026-01-02T00:00:00Z --allow-unknown-input

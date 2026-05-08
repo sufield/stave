@@ -21,7 +21,7 @@ echo "[stave devcontainer] building stave binary"
 ( cd "$stave_root" && make build )
 
 echo "[stave devcontainer] verifying engine availability"
-"$stave_root/cmd/stave/stave" --version || true
+"$stave_root/stave" --version || true
 z3 --version
 cvc5 --version | head -1
 swipl --version

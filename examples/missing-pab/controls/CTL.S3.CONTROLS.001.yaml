@@ -11,6 +11,7 @@ scope_tags:
   - aws
   - s3
 type: unsafe_state
+classification: absence_check
 params: {}
 remediation:
   description: >
