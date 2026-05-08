@@ -19,7 +19,7 @@ The system performs three classes of verification:
 
 ## Reasoning engines
 
-Six reasoning engines consume the same fact export, each answering a different kind of question:
+Nine reasoning engines consume the same fact export, each answering a different kind of question:
 
 | Engine | Question |
 |---|---|
@@ -29,8 +29,15 @@ Six reasoning engines consume the same fact export, each answering a different k
 | **Clingo** | What configurations violate constraints? (violation enumeration) |
 | **PySAT** | Which control combinations are unsafe? (boolean regression) |
 | **Prolog** | Why is this path reachable? (proof tree derivation) |
+| **Probabilistic risk** | How likely is exploitation? (P(exploitation) per attack shape) |
+| **TLA+ / temporal** | How far from unsafe is the current snapshot? (drift margin in valid configuration changes) |
+| **Game theory** | What does the attack cost, and which remediation has the best ROI? |
 
-See [`examples/`](examples/) for runnable harnesses per engine and the [`compare-engines/`](examples/compare-engines/) cross-engine consensus harness that surfaces blind spots when engines disagree.
+Eight engine examples ship under [`examples/`](examples/), each with a runnable `run.sh`, a captured golden output, and an explanatory README. The [`compare-engines/`](examples/compare-engines/) harness runs every available engine across the same fixture set and reports per-fixture consensus or disagreement — disagreement is the signal that one engine's model is incomplete.
+
+The [`compliance-evidence/`](examples/compliance-evidence/) translator turns the engine outputs into auditor-facing evidence packets: per-control evidence chain (Markdown), GRC-import spreadsheet (CSV), and board-level posture summary (Markdown). Mapping from regulatory control to Stave control is derived at run time from each control's existing `compliance:` metadata block — no hand-curated mapping files.
+
+End-to-end pipelines composing every engine + the compliance translator live under [`demos/`](demos/) — the [NODES 2026](demos/nodes-2026/) demo runs the full nine-engine pipeline against the Capital One credential-bypass pattern; the [fwd:cloudsec 2026](demos/fwd-cloudsec-2026/) submission package reuses the same demo through symlinks.
 
 ## Operating model
 
