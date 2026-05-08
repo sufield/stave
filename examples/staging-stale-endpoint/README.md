@@ -7,6 +7,23 @@ the existing per-service dormancy controls
 `CTL.APIGATEWAY.ORPHAN.API.001`, etc.) without replacing
 them.
 
+## Prerequisites
+
+This example's `z3prove/` binary links against libz3 via CGO.
+Install the development headers before running:
+
+| OS | Command |
+|---|---|
+| Ubuntu 22.04 / 24.04 | `sudo apt-get install -y libz3-dev pkg-config` |
+| macOS (Homebrew) | `brew install z3 pkg-config` |
+
+Then build with `CGO_ENABLED=1 go run .` from inside `z3prove/`.
+The Stave binary itself has no libz3 dependency; only the
+per-example Z3 prover does. See [`../PREREQUISITES.md`](../PREREQUISITES.md)
+for other platforms (Fedora, Arch, nix, Debian) and for the
+prerequisites of the SMT CLI / Soufflé / Prolog / Python-venv
+examples.
+
 ## The gap this control closes
 
 Per-service dormancy controls fire on the lifecycle

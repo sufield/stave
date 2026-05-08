@@ -1,39 +1,37 @@
 # Stave
 
-Stave is a static analysis tool that performs model checking over cloud infrastructure configurations — verifying system invariants via predicate evaluation (CEL) and formal verification (Z3/cvc5/Yices) against air-gapped snapshots, with no cloud credentials required.
+Stave is a static analysis tool that evaluates cloud infrastructure configuration snapshots against system invariants via CEL predicates and exports standardized facts (JSONL, SMT-LIB) for consumption by external reasoning engines — all from air-gapped snapshots with no cloud credentials required.
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/sufield/stave?v=1)](https://goreportcard.com/report/github.com/sufield/stave)
 [![codecov](https://codecov.io/gh/sufield/stave/graph/badge.svg?token=OQ72PYGVPZ)](https://codecov.io/gh/sufield/stave)
 
 ## What is Stave?
 
-Stave is a static analysis tool that performs model checking over cloud infrastructure configurations. It takes observation snapshots representing infrastructure state and verifies safety properties (system invariants) expressed as predicates over that model.
+Stave is a static analysis tool that evaluates cloud infrastructure configurations against a catalog of 2590+ system invariants using [CEL](https://github.com/google/cel-go) predicate evaluation. It operates on observation snapshots representing infrastructure state — no cloud credentials, no API calls, no network access.
 
-The verification core is designed for soundness: a passing verdict constitutes a proof of safety within the bounds of the provided model and invariant catalog. When a violation is detected, the solver produces a constructive counterexample — the specific principal, action, and resource tuple that demonstrates the failure.
+Stave's second function is **fact export**. It projects normalized configuration facts into standardized formats (JSONL triples, SMT-LIB v2) that external reasoning engines consume independently. Stave exports facts. External programs own rules.
 
-The system performs three classes of verification:
-
-- **Property checking** — evaluates concrete predicates against concrete state via [CEL](https://github.com/google/cel-go). A decidable problem answered in linear time.
-- **Compound safety verification** — evaluates whether co-occurring failures across multiple resources constitute a reachable attack path. A graph reachability problem.
-- **Configuration compatibility verification** — via external SMT solvers (Z3, cvc5, Yices), determines whether multiple policy documents are jointly satisfiable. Produces mathematical proofs or counterexamples.
+Stave does two things: **evaluate** (CEL) and **export** (facts). Everything else is delegated to purpose-built external tools that read Stave's output as files. No subprocess calls from Stave to solvers. No plugin loading. Files are the language boundary.
 
 ## Reasoning engines
 
-Nine reasoning engines consume the same fact export, each answering a different kind of question:
+Nine reasoning engines consume Stave's outputs, each answering a different kind of question:
 
-| Engine | Question |
-|---|---|
-| **CEL** | Does this snapshot violate this rule? |
-| **Z3 / cvc5 / Yices** | Can an unsafe state exist? (satisfiability proof) |
-| **Soufflé** | What is the full blast radius? (reachability enumeration) |
-| **Clingo** | What configurations violate constraints? (violation enumeration) |
-| **PySAT** | Which control combinations are unsafe? (boolean regression) |
-| **Prolog** | Why is this path reachable? (proof tree derivation) |
-| **Probabilistic risk** | How likely is exploitation? (P(exploitation) per attack shape) |
-| **TLA+ / temporal** | How far from unsafe is the current snapshot? (drift margin in valid configuration changes) |
-| **Game theory** | What does the attack cost, and which remediation has the best ROI? |
+| Engine | Question | Stave's role |
+|---|---|---|
+| **CEL** (built-in) | Does this snapshot violate this rule? | evaluates directly |
+| **Z3 / cvc5 / Yices** | Can an unsafe state exist? | exports SMT-LIB facts |
+| **Soufflé** | What is the full blast radius? | exports JSONL triples |
+| **Clingo** | What configurations violate constraints? | exports JSONL triples |
+| **PySAT** | Which control combinations are unsafe? | exports JSONL triples |
+| **Prolog** | Why is this path reachable? | exports JSONL triples |
+| **Probabilistic risk** | How likely is exploitation? | exports JSONL triples |
+| **TLA+ / temporal** | How far from unsafe after remediation? | exports JSONL triples |
+| **Game theory** | What does the attack cost, what's the fix ROI? | exports JSONL triples |
 
-Eight engine examples ship under [`examples/`](examples/), each with a runnable `run.sh`, a captured golden output, and an explanatory README. The [`compare-engines/`](examples/compare-engines/) harness runs every available engine across the same fixture set and reports per-fixture consensus or disagreement — disagreement is the signal that one engine's model is incomplete.
+Eight engine examples ship under [`examples/`](examples/) — each is a runnable `run.sh` that consumes the JSONL or SMT-LIB output via standard solver / interpreter CLIs. None of them invokes Stave subprocesses; Stave wrote the file, the engine reads it, and the boundary is the on-disk format.
+
+The [`compare-engines/`](examples/compare-engines/) harness runs every available engine across the same fixture set and reports per-fixture consensus or disagreement — disagreement is the signal that one engine's model is incomplete.
 
 The [`compliance-evidence/`](examples/compliance-evidence/) translator turns the engine outputs into auditor-facing evidence packets: per-control evidence chain (Markdown), GRC-import spreadsheet (CSV), and board-level posture summary (Markdown). Mapping from regulatory control to Stave control is derived at run time from each control's existing `compliance:` metadata block — no hand-curated mapping files.
 
