@@ -1,197 +1,126 @@
 # Stave Tutorial Demo
 
-44 S3 security scenarios in Docker. No AWS credentials required.
+7 curated S3 misconfiguration scenarios in Docker. No AWS credentials required.
 
-Stave ships with 246 controls across 29 domains and 10 compliance
-profiles. This Docker demo covers the S3 domain (67 controls) through
-44 curated scenarios that progress from beginner to advanced.
+Stave ships with 2590 controls across 74 domains. This Docker demo
+covers the S3 domain (112 controls) through 7 curated scenarios that
+each exercise a distinct misconfiguration pattern.
 
-## Install
+## Build
 
 ```bash
 git clone https://github.com/sufield/stave.git
 cd stave
-docker compose build
+docker build -f docs-content/demo/Dockerfile -t stave-demo .
 ```
 
 ## Detect a misconfiguration
 
 ```bash
-docker compose run --rm -T stave --scenario 1
+docker run --rm stave-demo
 ```
 
-The output shows:
-1. The observation — a bucket with `public_read: true`
+Runs the default `public-read` scenario. The output shows:
+1. The observation — a bucket with a public bucket policy + missing PAB
 2. The stave command
-3. The violation — CTL.S3.PUBLIC.001 detected public read access
+3. The findings — three S3 controls fire (public read, missing PAB, ACL exposure)
 
-## See the fix
+## See all scenarios
 
 ```bash
-docker compose run --rm -T stave --scenario 1 --fixed
+docker run --rm stave-demo --list
 ```
 
-The output shows:
-1. The observation — the same bucket with `public_read: false`
-2. The same stave command
-3. No violations — exit code 0
-
-## See all 44 scenarios
+Run any of them by name:
 
 ```bash
-docker compose run --rm -T stave --list
+docker run --rm stave-demo --scenario public-read
+docker run --rm stave-demo --scenario hipaa-compliance
 ```
 
-Pick any number from 1 to 44.
-
-## HIPAA compliance profile
+## Compare safe vs unsafe
 
 ```bash
-docker compose run --rm -T stave --hipaa
+# Default — one violation (publicly exposed bucket)
+docker run --rm stave-demo
+
+# Same engine, properly secured bucket — zero violations
+docker run --rm stave-demo demo --fixture known-good
 ```
 
-A PHI bucket with no Block Public Access, AWS-managed KMS key, no
-logging, no versioning, and a wildcard policy. Stave reports CRITICAL
-findings with HIPAA Security Rule citations and compound risks.
+## Save the report locally
+
+The demo writes `stave-report.json` inside the container. Mount your
+working directory to keep it:
 
 ```bash
-docker compose run --rm -T stave --hipaa --fixed
+docker run --rm -v "$PWD":/work stave-demo
+cat stave-report.json
 ```
 
-The same bucket with Block Public Access on, customer-managed CMK,
-server and object-level logging, versioning, COMPLIANCE Object Lock,
-VPC-only access, and ACLs disabled. All HIPAA-mapped S3 controls pass.
+Without `-v "$PWD":/work`, the report is discarded on container exit.
 
-## Compound risk detection (primary demo)
+## Try with your own data
 
 ```bash
-docker compose run --rm -T stave --compound-risks
+docker run --rm -v "$PWD":/work stave-demo --quickstart
 ```
 
-Detects dangerous combinations that individual checks miss. The pattern
-that caused the $190M Capital One breach — public access + wildcard IAM
-policy — is COMPOUND.001. Each finding is medium individually. Together
-they're critical. No checklist tool can detect this because they evaluate
-settings in isolation.
+Quickstart auto-detects observation snapshots in `/work`,
+`/work/stave.snapshot/`, or `/work/observations/`. Falls back to the
+built-in fixture if none are found.
 
-## Trusted Advisor blind spots
+## Pass-through to stave
 
-```bash
-docker compose run --rm -T stave --blind-spots
-```
-
-Three S3 risks that AWS Trusted Advisor cannot detect.
-
-## Risk reasoning chains
+Any unrecognised arguments are forwarded to the `stave` binary inside
+the container:
 
 ```bash
-docker compose run --rm -T stave --risk-chains
-```
-
-Shows the 3 built-in safety chains that power the risk reasoning engine.
-Each chain defines which controls form a compound risk when co-failing,
-the escalation threshold, and the blast radius multiplier. Explains
-the three-layer scoring model: Environmental x Chain Escalation x Blast.
-
-## Try with your own bucket
-
-```bash
-docker compose run --rm -T stave --try-your-own
-```
-
-Prints step-by-step instructions to capture a real S3 bucket with
-the AWS CLI and evaluate it.
-
-## Rebuild from scratch
-
-```bash
-docker compose down --rmi all
-docker compose build
+docker run --rm stave-demo --version
+docker run --rm stave-demo doctor
+docker run --rm stave-demo capabilities
 ```
 
 ## Scenario reference
 
-### Beginner (1-8)
+| Scenario | Findings | What it demonstrates |
+|----------|---------:|----------------------|
+| `public-read` | 3 | Public bucket via policy + ACL + missing PAB |
+| `acl-write` | 3 | Write access granted through ACL |
+| `acl-escalation` | 5 | ACL privilege-escalation chain |
+| `tool-blind-spot` | 2 | Misconfigurations missed by other tools |
+| `hipaa-compliance` | 8 | PHI bucket with multiple HIPAA failures |
+| `data-governance` | 5 | Data classification and lifecycle gaps |
+| `upload-hardening` | 3 | Upload path security controls |
 
-| # | Control | Severity | Name |
-|---|---------|----------|------|
-| 1 | CTL.S3.PUBLIC.001 | critical | No Public S3 Bucket Read |
-| 2 | CTL.S3.CONTROLS.001 | high | Public Access Block Must Be Enabled |
-| 3 | CTL.S3.ENCRYPT.001 | high | Encryption at Rest Required |
-| 4 | CTL.S3.LOG.001 | medium | Access Logging Required |
-| 5 | CTL.S3.VERSION.001 | medium | Versioning Required |
-| 6 | CTL.S3.VERSION.002 | medium | Backup Buckets Must Have MFA Delete Enabled |
-| 7 | CTL.S3.GOVERNANCE.001 | low | Data Classification Tag Required |
-| 8 | CTL.S3.INCOMPLETE.001 | low | Complete Data Required for Safety Assessment |
-
-### Intermediate (9-27)
-
-| # | Control | Severity | Name |
-|---|---------|----------|------|
-| 9 | CTL.S3.ENCRYPT.002 | high | Transport Encryption Required |
-| 10 | CTL.S3.PUBLIC.007 | critical | No Public Read via Policy |
-| 11 | CTL.S3.PUBLIC.003 | critical | No Public Write Access |
-| 12 | CTL.S3.ACCESS.002 | high | No Wildcard Action Policies |
-| 13 | CTL.S3.ACCESS.003 | high | No External Write Access |
-| 14 | CTL.S3.NETWORK.001 | high | Public-Principal Policies Must Have Network Conditions |
-| 15 | CTL.S3.PUBLIC.004 | medium | No Public Read via ACL |
-| 16 | CTL.S3.ACL.FULLCONTROL.001 | critical | No FULL_CONTROL ACL Grants to Public |
-| 17 | CTL.S3.ACL.RECON.001 | high | No Public ACL Readability |
-| 18 | CTL.S3.ACL.ESCALATION.001 | high | No Public ACL Modification |
-| 19 | CTL.S3.AUTH.READ.001 | high | No Authenticated-Users Read Access |
-| 20 | CTL.S3.AUTH.WRITE.001 | high | No Authenticated-Users Write Access |
-| 21 | CTL.S3.PUBLIC.LIST.001 | high | No Public S3 Bucket Listing |
-| 22 | CTL.S3.PUBLIC.LIST.002 | high | Anonymous S3 Listing Must Be Explicitly Intended |
-| 23 | CTL.S3.PUBLIC.005 | medium | No Latent Public Read Exposure |
-| 24 | CTL.S3.PUBLIC.006 | critical | No Latent Public Bucket Listing |
-| 25 | CTL.S3.ACCESS.001 | high | No Unauthorized Cross-Account Access |
-| 26 | CTL.S3.PUBLIC.002 | critical | No Public S3 Buckets With Sensitive Data |
-| 27 | CTL.S3.PUBLIC.PREFIX.001 | high | Protected Prefixes Must Not Be Publicly Readable |
-
-### Advanced (28-43)
-
-| # | Control | Severity | Name |
-|---|---------|----------|------|
-| 28 | CTL.S3.ENCRYPT.003 | high | PHI Buckets Must Use SSE-KMS with Customer-Managed Key |
-| 29 | CTL.S3.ENCRYPT.004 | high | Sensitive Data Requires KMS Encryption |
-| 30 | CTL.S3.LIFECYCLE.001 | medium | Retention-Tagged Buckets Must Have Lifecycle Rules |
-| 31 | CTL.S3.LIFECYCLE.002 | medium | PHI Buckets Must Not Expire Data Before Minimum Retention |
-| 32 | CTL.S3.LOCK.001 | medium | Compliance-Tagged Buckets Must Have Object Lock Enabled |
-| 33 | CTL.S3.LOCK.003 | medium | PHI Object Lock Retention Must Meet Minimum Period |
-| 34 | CTL.S3.LOCK.002 | medium | PHI Buckets Must Use COMPLIANCE Mode Object Lock |
-| 35 | CTL.S3.PUBLIC.008 | critical | No Public List via Policy |
-| 36 | CTL.S3.WEBSITE.PUBLIC.001 | critical | No Public Website Hosting with Public Read |
-| 37 | CTL.S3.REPO.ARTIFACT.001 | medium | Public Buckets Must Not Expose VCS Artifacts |
-| 38 | CTL.S3.WRITE.SCOPE.001 | high | S3 Signed Upload Must Bind To Exact Object Key |
-| 39 | CTL.S3.WRITE.CONTENT.001 | high | S3 Signed Upload Must Restrict Content Types |
-| 40 | CTL.S3.TENANT.ISOLATION.001 | high | Shared-Bucket Tenant Isolation Must Enforce Prefix |
-| 41 | CTL.S3.BUCKET.TAKEOVER.001 | critical | Referenced S3 Buckets Must Exist And Be Owned |
-| 42 | CTL.S3.DANGLING.ORIGIN.001 | high | CDN S3 Origins Must Not Be Dangling |
-| 43 | CTL.S3.ACL.WRITE.001 | critical | No Public Write via ACL |
-
-### Capstone (44)
-
-| # | Control | Severity | Name |
-|---|---------|----------|------|
-| 44 | All 67 S3 controls | all | Full S3 Hardening Audit |
+Each scenario runs the same control engine with a different observation
+fixture. The fixtures live under
+[`docs-content/demo/scenarios/`](../docs-content/demo/scenarios/) — each
+has `observations/` (snapshot) and `expected.txt` (golden output).
 
 ## Beyond S3: the full catalog
 
-This demo covers S3. Stave evaluates 246 controls across 29 domains:
+This demo covers S3. Stave evaluates 2590 controls across 74 domains.
+Outside Docker, point `stave apply --profile` at any built-in pack with
+a bundled observation file:
 
 ```bash
-# Compliance profiles — same engine, different framework lens
-stave apply --profile hipaa --input observations.json --include-all
-stave apply --profile cis-aws-v3.0 --input observations.json --include-all
-stave apply --profile soc2 --input observations.json --include-all
-stave apply --profile pci-dss-v4.0 --input observations.json --include-all
+# Domain packs
+stave apply --profile aws-s3   --input observations.json
+stave apply --profile aws-iam  --input observations.json
+stave apply --profile aws-efs  --input observations.json
+stave apply --profile gcp-gcs  --input observations.json
+
+# Compliance frameworks — same engine, different framework lens
+stave apply --profile hipaa          --input observations.json
+stave apply --profile soc2           --input observations.json
+stave apply --profile cis-aws-v3.0   --input observations.json
+stave apply --profile pci-dss-v4.0   --input observations.json
 # Also: nist-800-53, fedramp, gdpr, ffiec, iso-27001, nist-csf-2.0
 ```
 
-Domains: S3, IAM, VPC, EC2, RDS, ELB, K8s, CloudTrail, CloudWatch, KMS,
-Config, Secrets Manager, DynamoDB, SQS, SNS, Backup, API Gateway,
-ElastiCache, Cognito, GuardDuty, Security Hub, CloudFormation,
-Auto Scaling, Route 53, GCS, DNS.
+The full domain breakdown ships in [`README.md`](README.md) and the
+generated catalog at [`docs/controls/reference.md`](docs/controls/reference.md).
 
 ## How stave works
 
@@ -211,6 +140,5 @@ By working through these scenarios you have:
 - **Read a finding** — control ID, severity, affected asset, evidence of the misconfiguration, and concrete remediation steps
 - **Verified a fix** — the same command on a remediated observation produces zero violations (exit code 0)
 - **Understood exit codes** — 0 means safe, 3 means violations found
-- **Seen compound risks** — how dangerous combinations of individually medium findings create critical attack paths
-- **Used your own data** — captured a real S3 bucket with the AWS CLI and evaluated it with stave
-- **The same engine works across all 29 domains and 10 compliance frameworks** — this demo is the S3 subset
+- **Used your own data** — mounted a directory with `--quickstart` so stave evaluates your real snapshots
+- **Seen that the same engine spans 74 domains and the full compliance-profile set** — this demo is the S3 subset

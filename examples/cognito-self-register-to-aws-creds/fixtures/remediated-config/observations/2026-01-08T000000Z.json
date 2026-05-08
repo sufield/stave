@@ -29,7 +29,9 @@
             "pre_token_generation": "arn:aws:lambda:us-east-1:111122223333:function:validate-claims",
             "post_confirmation": ""
           },
-          "auto_verified_attributes": ["email"]
+          "auto_verified_attributes": [
+            "email"
+          ]
         }
       }
     },
@@ -48,10 +50,19 @@
               "ALLOW_USER_SRP_AUTH",
               "ALLOW_REFRESH_TOKEN_AUTH"
             ],
-            "read_attributes": ["email", "name"],
-            "write_attributes": ["name"],
-            "allowed_oauth_flows": ["code"],
-            "callback_urls": ["https://app.example.com/callback"]
+            "read_attributes": [
+              "email",
+              "name"
+            ],
+            "write_attributes": [
+              "name"
+            ],
+            "allowed_oauth_flows": [
+              "code"
+            ],
+            "callback_urls": [
+              "https://app.example.com/callback"
+            ]
           }
         }
       }
@@ -92,7 +103,10 @@
                   },
                   {
                     "Effect": "Allow",
-                    "Action": ["dynamodb:GetItem", "dynamodb:PutItem"],
+                    "Action": [
+                      "dynamodb:GetItem",
+                      "dynamodb:PutItem"
+                    ],
                     "Resource": "arn:aws:dynamodb:us-east-1:111122223333:table/app-user-data",
                     "Condition": {
                       "ForAllValues:StringEquals": {
@@ -103,6 +117,9 @@
                 ]
               }
             ]
+          },
+          "tags": {
+            "role-type": "cognito-auth"
           }
         }
       }

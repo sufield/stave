@@ -8,7 +8,7 @@ Stave is a static analysis tool that evaluates cloud infrastructure configuratio
 
 ## What is Stave?
 
-Stave is a static analysis tool that evaluates cloud infrastructure configurations against a catalog of 2590+ system invariants using [CEL](https://github.com/google/cel-go) predicate evaluation. It operates on observation snapshots representing infrastructure state — no cloud credentials, no API calls, no network access.
+Stave is a static analysis tool that evaluates cloud infrastructure configurations against a catalog of 2591+ system invariants using [CEL](https://github.com/google/cel-go) predicate evaluation. It operates on observation snapshots representing infrastructure state — no cloud credentials, no API calls, no network access.
 
 Stave's second function is **fact export**. It projects normalized configuration facts into standardized formats (JSONL triples, SMT-LIB v2) that external reasoning engines consume independently. Stave exports facts. External programs own rules.
 
@@ -44,7 +44,7 @@ Stave operates on static snapshots with no cloud credentials, no network access,
 
 ## Features
 
-- **2590 built-in controls across 74 domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, ECR, EKS, CloudTrail, CloudWatch, KMS, OpenSearch, Redshift, Neptune, DocumentDB, Glue, CodeBuild, SageMaker, Bedrock, Cognito, API Gateway, EMR, Kinesis, MSK, EFS, Route53, DMS, SSM, ACM, WAF, Shield, Network Firewall, EventBridge, Config, Backup, and [38 more](docs/controls/reference.md)
+- **2591 built-in controls across 74 domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, ECR, EKS, CloudTrail, CloudWatch, KMS, OpenSearch, Redshift, Neptune, DocumentDB, Glue, CodeBuild, SageMaker, Bedrock, Cognito, API Gateway, EMR, Kinesis, MSK, EFS, Route53, DMS, SSM, ACM, WAF, Shield, Network Firewall, EventBridge, Config, Backup, and [38 more](docs/controls/reference.md)
 - **23 ghost reference controls** — cross-inventory reasoning detects dangling references to deleted resources across IAM policies, resource policies, event triggers, compute dependencies, network infrastructure, cross-account trust, and temporal confirmation. Detection no per-resource scanner can perform.
 - **30+ compound chain definitions** — detect multi-step attack paths across data protection, identity, detection, recovery, sovereignty, supply chain, cryptographic concentration, WAF safety envelope, ghost resource exfiltration, and silent monitoring collapse
 - **7-control WAF safety envelope** — presence, enforcement, OWASP coverage, logging, origin lockdown, parser overflow protection, evasion observability
@@ -64,46 +64,70 @@ Stave operates on static snapshots with no cloud credentials, no network access,
 - **CI/CD ready** — exit codes, SARIF output, baseline tracking, policy gating
 - **Extensible by design** — new properties and controls are additive and backward-compatible
 
-## Install
+## Getting started
+
+Stave ships in **three progressive tiers**. Each tier adds capability on top of the previous one — they are not alternatives. Most adopters live in Tier 1 with occasional Tier 2 when they need a proof for an auditor or a breach investigation. Tier 3 is the demo stage.
+
+### Pick your tier
+
+| Goal | Tier | Install |
+|---|---|---|
+| Scan my AWS configurations | **1** | `go install` or `make build` |
+| Formal proofs / risk quantification / blast-radius counts | **2** | Open the Codespace, or `brew install` engines individually |
+| Full demo with graph visualisation | **3** | `docker compose up` adds Neo4j on top of Tier 2 |
+
+### Tier 1 — Stave standalone
+
+The Go binary. No dependencies beyond Go itself. Does CEL evaluation against 2591+ controls and fact export (JSONL, SMT-LIB).
 
 ```bash
-brew tap sufield/tap && brew install stave
-```
-
-Or build from source:
-
-```bash
+go install github.com/sufield/stave@latest
+# or build from source:
 git clone https://github.com/sufield/stave.git
 cd stave && make build
 ```
 
-## Try it in Codespaces
-
-Click the **Open in GitHub Codespaces** badge above. The container provisions Go 1.26.3, Z3, cvc5, SWI-Prolog, Soufflé, libz3-dev, and a Python venv with `clingo` / `python-sat` / `pyyaml` — then runs `make build`. Wait for the **postCreate** task to finish in the terminal pane (look for `[stave devcontainer] ready`).
-
-Then run any example from the codespace shell:
-
 ```bash
-# 1. CEL — public bucket detection (exits 3 on violation)
-./stave apply \
-  --controls examples/public-bucket/controls \
-  --observations examples/public-bucket/observations \
-  --max-unsafe 12h --now 2026-01-02T00:00:00Z --allow-unknown-input
-
-# 2. Z3 + cvc5 — multi-hop role-assumption reachability
-bash examples/z3-multi-hop-can-assume/run.sh
-
-# 3. Soufflé — blast-radius reachability over JSONL facts
-bash examples/souffle-reachability/run.sh
-
-# 4. Prolog — derivation tree for a privesc path
-bash examples/prolog-proof-trees/run.sh
-
-# 5. The full nine-engine consensus harness
-bash examples/compare-engines/run.sh
+stave apply        --observations ./snapshots
+stave export-sir   --format jsonl --observations ./snapshots
 ```
 
-Each example's `README.md` has the full description and expected output. See [`examples/`](examples/) for the catalog and [`examples/PREREQUISITES.md`](examples/PREREQUISITES.md) for running these examples outside Codespaces.
+This is what early adopters install first. Everything an adopter needs to detect compound misconfigurations and export facts. No Docker, no Python, no solvers — one binary.
+
+### Tier 2 — Stave + reasoning engines
+
+Tier 1 plus external solvers. Use this when you want formal proofs (Z3 / cvc5 / Yices), blast-radius enumeration (Soufflé), constraint enumeration (Clingo), derivation trees (Prolog), risk quantification (PySAT, probabilistic models), or attacker-cost ROI (game-theory model).
+
+**Batteries-included** — click the **Open in GitHub Codespaces** badge above. The devcontainer pre-installs Z3, cvc5, SWI-Prolog, Soufflé, libz3-dev, and a Python venv with `clingo` / `python-sat` / `pyyaml`, then runs `make build`. Wait for `[stave devcontainer] ready` and run any example.
+
+**Pick what you need** — install only the engines whose question shape you need:
+
+```bash
+brew install z3 cvc5 swi-prolog clingo
+pip install python-sat pyyaml
+
+stave export-sir --format smt2 --observations ./snapshots > facts.smt2
+echo '(check-sat)' >> facts.smt2
+z3 facts.smt2
+
+bash examples/souffle-reachability/run.sh
+bash examples/compare-engines/run.sh   # nine-engine consensus
+```
+
+Both paths consume the same `stave export-sir` output — files are the language boundary. See [`examples/`](examples/) for the catalog and [`examples/PREREQUISITES.md`](examples/PREREQUISITES.md) for OS-specific install commands.
+
+### Tier 3 — Stave + visualisation
+
+Tier 2 plus **Neo4j** for graph visualisation. The demo / presentation tier — not daily use.
+
+```bash
+cd demos/nodes-2026
+docker compose up -d        # Neo4j 5
+make demo                   # ten-step walkthrough, all nine engines + graph import
+make teardown
+```
+
+The conference demos at [`demos/nodes-2026/`](demos/nodes-2026/) and [`demos/fwd-cloudsec-2026/`](demos/fwd-cloudsec-2026/) drive the same fixture through every engine and import the resulting graph into Neo4j for the killer-slide visualisation.
 
 ## Quick start
 
@@ -180,7 +204,7 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-2590 controls across 74 domains:
+2591 controls across 74 domains:
 
 ### AWS S3 (112 controls)
 
@@ -203,7 +227,7 @@ New observation properties are additive and backward-compatible. Existing contro
 | `cors` | 1 | Wildcard origin CORS on non-public-by-design buckets |
 | `misc` | 8 | Incomplete data, completeness checks |
 
-### AWS IAM (164 controls)
+### AWS IAM (165 controls)
 
 Root account MFA and access keys, console user MFA, credential rotation, password policy, privilege escalation (self-modify, PassRole, AssumeRole), permissions boundaries, break-glass persistence, cross-environment access, inactive accounts, blast-radius thresholds for roles and users. CIS AWS Benchmark aligned.
 
