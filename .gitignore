@@ -5,3 +5,4 @@ stave-dev
 
 .stave/
 python/solver/tests/__pycache__/
+../.tools-venv/

@@ -1,0 +1,145 @@
+
+============================================================
+  Cognito writeup-config
+============================================================
+
+  initial state: {unauth_enabled, self_reg_open, auth_role_broad}
+  initial violations (3): NoSelfRegBroadAccessWithoutMFA, NoBroadAccessWithoutLogging, NoBroadAccessWithoutSCP
+
+  reachable states (depth <= 7): 128
+  unsafe states                 : 71
+  safe states                   : 57
+
+  drift margin (min hops to a NEW invariant violation):
+    NoAnonBroadAccess                     1 hop(s)
+
+  verdict: UNSAFE — invariants violated in the current snapshot
+
+============================================================
+  Cognito remediated
+============================================================
+
+  initial state: {}
+  initial violations: none — invariants hold today
+
+  reachable states (depth <= 7): 128
+  unsafe states                 : 71
+  safe states                   : 57
+
+  drift margin (min hops to a NEW invariant violation):
+    NoAnonBroadAccess                     2 hop(s)
+    NoBroadAccessWithoutLogging           1 hop(s)
+    NoBroadAccessWithoutSCP               1 hop(s)
+    NoSelfRegBroadAccessWithoutMFA        2 hop(s)
+
+  verdict: AT_RISK — drift margin <= 2 hops
+
+============================================================
+  Multi-hop vulnerable
+============================================================
+
+  initial state: {auth_role_broad}
+  initial violations (2): NoBroadAccessWithoutLogging, NoBroadAccessWithoutSCP
+
+  reachable states (depth <= 7): 128
+  unsafe states                 : 71
+  safe states                   : 57
+
+  drift margin (min hops to a NEW invariant violation):
+    NoAnonBroadAccess                     2 hop(s)
+    NoSelfRegBroadAccessWithoutMFA        1 hop(s)
+
+  verdict: UNSAFE — invariants violated in the current snapshot
+
+============================================================
+  Multi-hop remediated
+============================================================
+
+  initial state: {auth_role_broad}
+  initial violations (2): NoBroadAccessWithoutLogging, NoBroadAccessWithoutSCP
+
+  reachable states (depth <= 7): 128
+  unsafe states                 : 71
+  safe states                   : 57
+
+  drift margin (min hops to a NEW invariant violation):
+    NoAnonBroadAccess                     2 hop(s)
+    NoSelfRegBroadAccessWithoutMFA        1 hop(s)
+
+  verdict: UNSAFE — invariants violated in the current snapshot
+
+============================================================
+  Rhino vulnerable
+============================================================
+
+  initial state: {}
+  initial violations: none — invariants hold today
+
+  reachable states (depth <= 7): 128
+  unsafe states                 : 71
+  safe states                   : 57
+
+  drift margin (min hops to a NEW invariant violation):
+    NoAnonBroadAccess                     2 hop(s)
+    NoBroadAccessWithoutLogging           1 hop(s)
+    NoBroadAccessWithoutSCP               1 hop(s)
+    NoSelfRegBroadAccessWithoutMFA        2 hop(s)
+
+  verdict: AT_RISK — drift margin <= 2 hops
+
+============================================================
+  Rhino remediated
+============================================================
+
+  initial state: {}
+  initial violations: none — invariants hold today
+
+  reachable states (depth <= 7): 128
+  unsafe states                 : 71
+  safe states                   : 57
+
+  drift margin (min hops to a NEW invariant violation):
+    NoAnonBroadAccess                     2 hop(s)
+    NoBroadAccessWithoutLogging           1 hop(s)
+    NoBroadAccessWithoutSCP               1 hop(s)
+    NoSelfRegBroadAccessWithoutMFA        2 hop(s)
+
+  verdict: AT_RISK — drift margin <= 2 hops
+
+============================================================
+  Bybit before
+============================================================
+
+  initial state: {}
+  initial violations: none — invariants hold today
+
+  reachable states (depth <= 7): 128
+  unsafe states                 : 71
+  safe states                   : 57
+
+  drift margin (min hops to a NEW invariant violation):
+    NoAnonBroadAccess                     2 hop(s)
+    NoBroadAccessWithoutLogging           1 hop(s)
+    NoBroadAccessWithoutSCP               1 hop(s)
+    NoSelfRegBroadAccessWithoutMFA        2 hop(s)
+
+  verdict: AT_RISK — drift margin <= 2 hops
+
+============================================================
+  Bybit after
+============================================================
+
+  initial state: {}
+  initial violations: none — invariants hold today
+
+  reachable states (depth <= 7): 128
+  unsafe states                 : 71
+  safe states                   : 57
+
+  drift margin (min hops to a NEW invariant violation):
+    NoAnonBroadAccess                     2 hop(s)
+    NoBroadAccessWithoutLogging           1 hop(s)
+    NoBroadAccessWithoutSCP               1 hop(s)
+    NoSelfRegBroadAccessWithoutMFA        2 hop(s)
+
+  verdict: AT_RISK — drift margin <= 2 hops

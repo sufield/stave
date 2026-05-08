@@ -61,6 +61,18 @@
       "description": "Probabilistic attack-path prioritisation",
       "type": "batch",
       "available_check": "command -v python3"
+    },
+    {
+      "name": "temporal",
+      "description": "Temporal state-space search (TLA+ logic, Python runner)",
+      "type": "batch",
+      "available_check": "command -v python3"
+    },
+    {
+      "name": "cost",
+      "description": "Game-theoretic cost-to-compromise + remediation ROI",
+      "type": "batch",
+      "available_check": "command -v python3"
     }
   ]
 }

@@ -1,0 +1,56 @@
+# SOC 2 Common Criteria — control titles only.
+#
+# The mapping from regulatory control to Stave control is NOT
+# hand-curated here; it is derived at run time from each Stave
+# control's `compliance.soc2:` metadata. Any new Stave control
+# that declares `compliance.soc2: "CC6.1"` automatically
+# contributes to CC6.1's evidence stream — no manual update
+# needed in this file.
+#
+# To add a regulatory control to the assessed set, add an entry
+# to `controls:` with its title and description. The generator
+# walks the Stave catalog and assembles the rest.
+framework: SOC 2 Type II
+version: "2017"
+metadata_field: soc2
+controls:
+  CC6.1:
+    title: Logical and Physical Access Controls
+    description: >
+      The entity implements logical access security software,
+      infrastructure, and architectures over protected
+      information assets to protect them from security events to
+      meet the entity's objectives.
+    cross_reference: "NIST AC-3, AC-6"
+  CC6.3:
+    title: Role-Based Access and Least Privilege
+    description: >
+      The entity authorizes, modifies, or removes access to
+      data, software, functions, and other protected
+      information assets based on roles, responsibilities, or
+      the system design and changes.
+    cross_reference: "NIST AC-2, AC-5, AC-6"
+  CC6.6:
+    title: System Boundary Protection
+    description: >
+      The entity implements logical access security measures to
+      protect against threats from sources outside its system
+      boundaries.
+    cross_reference: "NIST SC-7"
+  CC7.1:
+    title: System Component Detection
+    description: >
+      To meet its objectives, the entity uses detection and
+      monitoring procedures to identify (1) changes to
+      configurations that result in the introduction of new
+      vulnerabilities, and (2) susceptibilities to newly
+      discovered vulnerabilities.
+    cross_reference: "NIST CM-3, RA-5"
+  CC7.2:
+    title: System Monitoring
+    description: >
+      The entity monitors system components and the operation
+      of those components for anomalies that are indicative of
+      malicious acts, natural disasters, and errors affecting
+      the entity's ability to meet its objectives.
+    cross_reference: "NIST AU-2, AU-3, AU-6"

@@ -7,6 +7,8 @@ Engine availability:
   souffle       available
   prolog        available
   risk          available
+  temporal      available
+  cost          available
 
 
 === Cognito self-register (writeup)  (expected UNSAFE) ===
@@ -18,7 +20,9 @@ Engine availability:
   [ok]  souffle       UNSAFE       
   [ok]  prolog        UNSAFE       
   [ok]  risk          UNSAFE       
-  == CONSENSUS: UNSAFE (8 engine(s))
+  [ok]  temporal      UNSAFE       
+  [ok]  cost          UNSAFE       
+  == CONSENSUS: UNSAFE (10 engine(s))
 
 === Cognito self-register (remediated)  (expected SAFE) ===
   [ok]  stave-cel     SAFE         
@@ -29,7 +33,9 @@ Engine availability:
   [ok]  souffle       SAFE         
   [ok]  prolog        SAFE         
   [ok]  risk          SAFE         
-  == CONSENSUS: SAFE (8 engine(s))
+  [ok]  temporal      SAFE         
+  [ok]  cost          SAFE         
+  == CONSENSUS: SAFE (10 engine(s))
 
 === Multi-hop can_assume (vulnerable)  (expected UNSAFE) ===
   [ok]  stave-cel     SAFE         
@@ -40,7 +46,9 @@ Engine availability:
   [ok]  souffle       UNSAFE       
   [ok]  prolog        UNSAFE       
   [ok]  risk          UNSAFE       
-  != DISAGREEMENT: clingo=UNSAFE; cvc5=UNSAFE; prolog=UNSAFE; risk=UNSAFE; souffle=UNSAFE; stave-cel=SAFE; z3=UNSAFE
+  [ok]  temporal      UNSAFE       
+  [ok]  cost          UNSAFE       
+  != DISAGREEMENT: clingo=UNSAFE; cost=UNSAFE; cvc5=UNSAFE; prolog=UNSAFE; risk=UNSAFE; souffle=UNSAFE; stave-cel=SAFE; temporal=UNSAFE; z3=UNSAFE
 
 === Multi-hop can_assume (remediated)  (expected SAFE) ===
   [ok]  stave-cel     SAFE         
@@ -51,7 +59,9 @@ Engine availability:
   [ok]  souffle       UNSAFE       
   [ok]  prolog        UNSAFE       
   [ok]  risk          UNSAFE       
-  != DISAGREEMENT: clingo=SAFE; cvc5=SAFE; prolog=UNSAFE; risk=UNSAFE; souffle=UNSAFE; stave-cel=SAFE; z3=SAFE
+  [ok]  temporal      UNSAFE       
+  [ok]  cost          UNSAFE       
+  != DISAGREEMENT: clingo=SAFE; cost=UNSAFE; cvc5=SAFE; prolog=UNSAFE; risk=UNSAFE; souffle=UNSAFE; stave-cel=SAFE; temporal=UNSAFE; z3=SAFE
 
 === Rhino privesc (vulnerable)  (expected UNSAFE) ===
   [ok]  stave-cel     UNSAFE       
@@ -62,7 +72,9 @@ Engine availability:
   [ok]  souffle       UNSAFE       
   [ok]  prolog        UNSAFE       
   [ok]  risk          UNSAFE       
-  != DISAGREEMENT: clingo=SAFE; prolog=UNSAFE; pysat=UNSAFE; risk=UNSAFE; souffle=UNSAFE; stave-cel=UNSAFE; z3=UNSAFE
+  [ok]  temporal      SAFE         
+  [ok]  cost          UNSAFE       
+  != DISAGREEMENT: clingo=SAFE; cost=UNSAFE; prolog=UNSAFE; pysat=UNSAFE; risk=UNSAFE; souffle=UNSAFE; stave-cel=UNSAFE; temporal=SAFE; z3=UNSAFE
 
 === Rhino privesc (remediated)  (expected SAFE) ===
   [ok]  stave-cel     SAFE         
@@ -73,7 +85,9 @@ Engine availability:
   [ok]  souffle       UNSAFE       
   [--]  prolog        no example covers this fixture
   [ok]  risk          UNSAFE       
-  != DISAGREEMENT: clingo=SAFE; cvc5=SAFE; pysat=SAFE; risk=UNSAFE; souffle=UNSAFE; stave-cel=SAFE; z3=SAFE
+  [ok]  temporal      SAFE         
+  [ok]  cost          UNSAFE       
+  != DISAGREEMENT: clingo=SAFE; cost=UNSAFE; cvc5=SAFE; pysat=SAFE; risk=UNSAFE; souffle=UNSAFE; stave-cel=SAFE; temporal=SAFE; z3=SAFE
 
 === Bybit wildcard (before)  (expected UNSAFE) ===
   [ok]  stave-cel     SAFE         
@@ -84,7 +98,9 @@ Engine availability:
   [ok]  souffle       SAFE         
   [--]  prolog        no example covers this fixture
   [ok]  risk          SAFE         
-  != DISAGREEMENT: clingo=SAFE; cvc5=UNSAFE; risk=SAFE; souffle=SAFE; stave-cel=SAFE; z3=UNSAFE
+  [ok]  temporal      SAFE         
+  [ok]  cost          SAFE         
+  != DISAGREEMENT: clingo=SAFE; cost=SAFE; cvc5=UNSAFE; risk=SAFE; souffle=SAFE; stave-cel=SAFE; temporal=SAFE; z3=UNSAFE
 
 === Bybit wildcard (after)  (expected SAFE) ===
   [ok]  stave-cel     SAFE         
@@ -95,7 +111,9 @@ Engine availability:
   [ok]  souffle       SAFE         
   [--]  prolog        no example covers this fixture
   [ok]  risk          SAFE         
-  == CONSENSUS: SAFE (6 engine(s))
+  [ok]  temporal      SAFE         
+  [ok]  cost          SAFE         
+  == CONSENSUS: SAFE (8 engine(s))
 
 ============================================================
   Total fixtures:    8

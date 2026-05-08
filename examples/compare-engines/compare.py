@@ -49,6 +49,8 @@ FIXTURES = [
             "pysat": "cognito-writeup",
             "souffle": "Cognito writeup-config",
             "risk": "Cognito writeup-config",
+            "temporal": "Cognito writeup-config",
+            "cost": "Cognito writeup-config",
             "prolog": "Cognito writeup-config",
         },
     },
@@ -64,6 +66,8 @@ FIXTURES = [
             "pysat": "cognito-remediated",
             "souffle": "Cognito remediated",
             "risk": "Cognito remediated",
+            "temporal": "Cognito remediated",
+            "cost": "Cognito remediated",
             "prolog": "Cognito remediated",
         },
     },
@@ -79,6 +83,8 @@ FIXTURES = [
             "pysat": None,
             "souffle": "Multi-hop vulnerable",
             "risk": "Multi-hop vulnerable",
+            "temporal": "Multi-hop vulnerable",
+            "cost": "Multi-hop vulnerable",
             "prolog": "Multi-hop vulnerable",
         },
     },
@@ -94,6 +100,8 @@ FIXTURES = [
             "pysat": None,
             "souffle": "Multi-hop remediated",
             "risk": "Multi-hop remediated",
+            "temporal": "Multi-hop remediated",
+            "cost": "Multi-hop remediated",
             "prolog": "Multi-hop remediated",
         },
     },
@@ -109,6 +117,8 @@ FIXTURES = [
             "pysat": "rhino-vulnerable",
             "souffle": "Rhino vulnerable",
             "risk": "Rhino vulnerable",
+            "temporal": "Rhino vulnerable",
+            "cost": "Rhino vulnerable",
             "prolog": "Rhino vulnerable",
         },
     },
@@ -124,6 +134,8 @@ FIXTURES = [
             "pysat": "rhino-remediated",
             "souffle": "Rhino remediated",
             "risk": "Rhino remediated",
+            "temporal": "Rhino remediated",
+            "cost": "Rhino remediated",
             "prolog": None,
         },
     },
@@ -139,6 +151,8 @@ FIXTURES = [
             "pysat": None,
             "souffle": "Bybit before",
             "risk": "Bybit before",
+            "temporal": "Bybit before",
+            "cost": "Bybit before",
             "prolog": None,
         },
     },
@@ -154,6 +168,8 @@ FIXTURES = [
             "pysat": None,
             "souffle": "Bybit after",
             "risk": "Bybit after",
+            "temporal": "Bybit after",
+            "cost": "Bybit after",
             "prolog": None,
         },
     },
@@ -242,6 +258,26 @@ def run_pysat() -> str:
         cwd=STAVE_ROOT,
         capture_output=True, text=True, timeout=180,
         env={**os.environ, "PYSAT_VENV": str(REPO_ROOT / ".tools-venv")},
+    )
+    return result.stdout
+
+
+def run_cost() -> str:
+    script = EXAMPLES_DIR / "game-theory-cost" / "run.sh"
+    result = subprocess.run(
+        ["bash", str(script)],
+        cwd=STAVE_ROOT,
+        capture_output=True, text=True, timeout=180,
+    )
+    return result.stdout
+
+
+def run_temporal() -> str:
+    script = EXAMPLES_DIR / "tlaplus-temporal-safety" / "run.sh"
+    result = subprocess.run(
+        ["bash", str(script)],
+        cwd=STAVE_ROOT,
+        capture_output=True, text=True, timeout=180,
     )
     return result.stdout
 
@@ -404,6 +440,75 @@ def parse_prolog(output: str, label: str) -> str:
     return "INCONCLUSIVE"
 
 
+def parse_cost(output: str, label: str) -> str:
+    """UNSAFE iff a viable attack path exists (verdict != MINIMAL).
+
+    The cost runner emits per-fixture sections delimited by
+    70-char `===...===` rules with the label between (not the
+    60-char form Prolog/risk/temporal use, so we extend
+    split_prolog_fixtures' tolerance). The verdict line is
+    `verdict: <CRITICAL|HIGH|MEDIUM|LOW|MINIMAL — ...>`.
+    Anything but MINIMAL means an attacker can reach the
+    target under the modeled shapes — UNSAFE.
+    """
+    fixtures = split_cost_fixtures(output)
+    body = fixtures.get(label)
+    if body is None:
+        return "INCONCLUSIVE"
+    if "verdict: MINIMAL" in body:
+        return "SAFE"
+    if "verdict:" in body:
+        return "UNSAFE"
+    return "INCONCLUSIVE"
+
+
+def split_cost_fixtures(output: str) -> dict[str, str]:
+    """Split 70-char `===...===` sectioned output into a dict."""
+    sections: dict[str, str] = {}
+    lines = output.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i].rstrip()
+        # Treat any run of >= 60 '=' as a separator rule; the
+        # cost runner uses 70 and Prolog uses 60.
+        if line and line == "=" * len(line) and len(line) >= 60 and i + 1 < len(lines):
+            header = lines[i + 1].strip()
+            j = i + 3  # skip the closing rule
+            buf: list[str] = []
+            while j < len(lines):
+                nxt = lines[j].rstrip()
+                if nxt and nxt == "=" * len(nxt) and len(nxt) >= 60:
+                    break
+                buf.append(lines[j])
+                j += 1
+            sections[header] = "\n".join(buf)
+            i = j
+        else:
+            i += 1
+    return sections
+
+
+def parse_temporal(output: str, label: str) -> str:
+    """UNSAFE iff initial state violates any invariant.
+
+    The temporal runner emits per-fixture sections delimited
+    the same way Prolog and risk model do (60-char ===...===
+    rules with the label in between). The verdict line is
+    `verdict: <UNSAFE|AT_RISK|SAFE>`. The harness threshold
+    treats AT_RISK as SAFE (drift margin is informational, not
+    a current-state failure).
+    """
+    fixtures = split_prolog_fixtures(output)
+    body = fixtures.get(label)
+    if body is None:
+        return "INCONCLUSIVE"
+    if "verdict: UNSAFE" in body:
+        return "UNSAFE"
+    if "verdict: AT_RISK" in body or "verdict: SAFE" in body:
+        return "SAFE"
+    return "INCONCLUSIVE"
+
+
 def parse_risk(output: str, label: str) -> str:
     """UNSAFE iff P(exploitation) > 10% on this fixture.
 
@@ -543,6 +648,16 @@ def evaluate_fixture(fixture: dict, engines: list[dict],
             results.append({"engine": name, "status": "ok",
                             "verdict": parse_risk(output, engine_label),
                             "time_ms": batch.time("risk")})
+        elif name == "temporal":
+            output = batch.get("temporal", run_temporal)
+            results.append({"engine": name, "status": "ok",
+                            "verdict": parse_temporal(output, engine_label),
+                            "time_ms": batch.time("temporal")})
+        elif name == "cost":
+            output = batch.get("cost", run_cost)
+            results.append({"engine": name, "status": "ok",
+                            "verdict": parse_cost(output, engine_label),
+                            "time_ms": batch.time("cost")})
     return {"fixture": fixture, "engines": results}
 
 
