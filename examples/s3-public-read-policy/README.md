@@ -1,8 +1,7 @@
 # Example — S3 Public Read Policy
 
 Demonstrates the `s3-public-read-policy` pattern using Stave's
-library API. Pattern P1 in
-[`examples-plan.md`](../../../examples-plan.md), grounded in
+library API, grounded in
 **11** of the 35 H1/disclosure fixtures catalogued in
 [`h1-stages.md`](../../../h1-stages.md): the same configuration
 defect appears across Greenhouse, Mapbox, Mozilla, Omise, Slack,
@@ -35,9 +34,9 @@ This program embeds **two** observation fixtures and evaluates
 each against `CTL.S3.PUBLIC.001` using `pkg/stave`:
 
 - `fixtures/before/` — bucket policy admits Principal `*` for
-  `s3:GetObject`. The control fires.
-- `fixtures/after/`  — policy scoped to a single IAM role, full
-  Public Access Block on. The control is silent.
+ `s3:GetObject`. The control fires.
+- `fixtures/after/` — policy scoped to a single IAM role, full
+ Public Access Block on. The control is silent.
 
 Output is captured into `expected/before-output.txt` and
 `expected/after-output.txt`. The article in
@@ -49,9 +48,9 @@ quotes those files verbatim.
 From the repo's `stave/` directory:
 
 ```bash
-go run ./examples/s3-public-read-policy           # both phases
-go run ./examples/s3-public-read-policy before    # vulnerable only
-go run ./examples/s3-public-read-policy after     # remediated only
+go run ./examples/s3-public-read-policy # both phases
+go run ./examples/s3-public-read-policy before # vulnerable only
+go run ./examples/s3-public-read-policy after # remediated only
 ```
 
 You can also build the binary and invoke it from the example
@@ -68,15 +67,15 @@ cd examples/s3-public-read-policy
 
 ```
 === before (vulnerable) ===
-  status: NON_COMPLIANT   total_assets=1   violations=1
-  CTL.S3.PUBLIC.001 fired on 1 asset(s):
-    - arn:aws:s3:::acme-customer-uploads   severity=critical   exposure_score=100.00
-  assertion: fires=true (expected) ✓
+ status: NON_COMPLIANT total_assets=1 violations=1
+ CTL.S3.PUBLIC.001 fired on 1 asset(s):
+ - arn:aws:s3:::acme-customer-uploads severity=critical exposure_score=100.00
+ assertion: fires=true (expected) ✓
 
-=== after  (remediated) ===
-  status: COMPLIANT   total_assets=1   violations=0
-  CTL.S3.PUBLIC.001: no findings
-  assertion: fires=false (expected) ✓
+=== after (remediated) ===
+ status: COMPLIANT total_assets=1 violations=0
+ CTL.S3.PUBLIC.001: no findings
+ assertion: fires=false (expected) ✓
 ```
 
 The example exits 0 when both assertions hold; non-zero otherwise.
@@ -92,17 +91,17 @@ examples/s3-public-read-policy/
 ├── README.md
 ├── main.go
 ├── controls/
-│   └── CTL.S3.PUBLIC.001.yaml         # scoped to one invariant
+│ └── CTL.S3.PUBLIC.001.yaml # scoped to one invariant
 ├── fixtures/
-│   ├── before/observations/
-│   │   ├── 2026-01-01T000000Z.json    # public_read=true
-│   │   └── 2026-01-08T000000Z.json    # still unsafe (>168h)
-│   └── after/observations/
-│       ├── 2026-01-01T000000Z.json    # public_read=false, full PAB
-│       └── 2026-01-08T000000Z.json    # still safe
+│ ├── before/observations/
+│ │ ├── 2026-01-01T000000Z.json # public_read=true
+│ │ └── 2026-01-08T000000Z.json # still unsafe (>168h)
+│ └── after/observations/
+│ ├── 2026-01-01T000000Z.json # public_read=false, full PAB
+│ └── 2026-01-08T000000Z.json # still safe
 └── expected/
-    ├── before-output.txt
-    └── after-output.txt
+ ├── before-output.txt
+ └── after-output.txt
 ```
 
 Each fixture ships **two** snapshots a week apart. Stave's
@@ -114,21 +113,21 @@ not be enough to fire the control.
 
 The observation carries the raw policy under
 `properties.storage.policy_json` so `pkg/stave/ExportPolicies`
-can surface it for downstream solver work (Iter 4 — broad write
+can surface it for downstream solver work (this — broad write
 scope — will use this path).
 
 Before:
 
 ```json
 {
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Sid": "PublicRead",
-    "Effect": "Allow",
-    "Principal": "*",
-    "Action": "s3:GetObject",
-    "Resource": "arn:aws:s3:::acme-customer-uploads/*"
-  }]
+ "Version": "2012-10-17",
+ "Statement": [{
+ "Sid": "PublicRead",
+ "Effect": "Allow",
+ "Principal": "*",
+ "Action": "s3:GetObject",
+ "Resource": "arn:aws:s3:::acme-customer-uploads/*"
+ }]
 }
 ```
 
@@ -136,14 +135,14 @@ After:
 
 ```json
 {
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Sid": "AppRoleOnly",
-    "Effect": "Allow",
-    "Principal": {"AWS": "arn:aws:iam::111122223333:role/AcmeUploadsApp"},
-    "Action": "s3:GetObject",
-    "Resource": "arn:aws:s3:::acme-customer-uploads/*"
-  }]
+ "Version": "2012-10-17",
+ "Statement": [{
+ "Sid": "AppRoleOnly",
+ "Effect": "Allow",
+ "Principal": {"AWS": "arn:aws:iam::111122223333:role/AcmeUploadsApp"},
+ "Action": "s3:GetObject",
+ "Resource": "arn:aws:s3:::acme-customer-uploads/*"
+ }]
 }
 ```
 
@@ -161,19 +160,19 @@ Prerequisites (Ubuntu): `sudo apt install libz3-dev pkg-config`.
 ```bash
 cd stave/examples/s3-public-read-policy/z3prove
 go mod tidy
-CGO_ENABLED=1 go run . before     # SAT with witness
-CGO_ENABLED=1 go run . after      # UNSAT
+CGO_ENABLED=1 go run . before # SAT with witness
+CGO_ENABLED=1 go run . after # UNSAT
 ```
 
 Captured output for `before` (`expected/z3-before-output.txt`):
 
 ```
 === before (Principal:*) ===
-  policy statements: 1
-    [0] Effect=Allow Principal=* Action=s3:GetObject Resource=arn:aws:s3:::acme-customer-uploads/*
-  admitted requests: 4 / 4
-  intended scope:    [arn:aws:iam::111122223333:role/AcmeUploadsApp s3:GetObject arn:aws:s3:::acme-customer-uploads/intended-input.csv]
-  verdict: SAT — witness: Principal="*"  Action=s3:GetObject  Resource=arn:aws:s3:::acme-customer-uploads/customer-data.csv
+ policy statements: 1
+ [0] Effect=Allow Principal=* Action=s3:GetObject Resource=arn:aws:s3:::acme-customer-uploads/*
+ admitted requests: 4 / 4
+ intended scope: [arn:aws:iam::111122223333:role/AcmeUploadsApp s3:GetObject arn:aws:s3:::acme-customer-uploads/intended-input.csv]
+ verdict: SAT — witness: Principal="*" Action=s3:GetObject Resource=arn:aws:s3:::acme-customer-uploads/customer-data.csv
 ```
 
 `Principal: "*"` admits every witness in the search set; the
@@ -181,11 +180,11 @@ solver returns `customer-data.csv` as the first
 dangerous-and-unintended one. After the policy is scoped:
 
 ```
-=== after  (scoped Principal) ===
-  ...
-  admitted requests: 1 / 4
-  ...
-  verdict: UNSAT — no anonymous read admitted outside the intended scope
+=== after (scoped Principal) ===
+ ...
+ admitted requests: 1 / 4
+ ...
+ verdict: UNSAT — no anonymous read admitted outside the intended scope
 ```
 
 The Z3 binary lives in a sibling Go module so its libz3 link
@@ -194,11 +193,11 @@ is `CGO_ENABLED=0`).
 
 ## Where this fits
 
-This is **Iteration 1** of the examples roadmap. Phase A
+Phase A
 documented the `pkg/stave` API surface and shipped the
 `Assessment.FindingsForControl` helper this example uses. Phase C
 is the article (`channels/devto/`) that builds the business
 narrative around the captured before/after output. The Z3
-prover was added in a follow-up commit so the reachability
+prover was added so the reachability
 verdict could appear alongside the CEL state assertion in the
-article — same shape as iter-4, iter-5, iter-7a, iter-7.
+article — same shape as this example, this example, this example, this example.

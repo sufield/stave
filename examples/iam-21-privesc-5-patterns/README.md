@@ -71,19 +71,19 @@ patterns.
 ## Three fixtures
 
 - **rhino-vulnerable** — a principal with permissions
-  enabling every method across every pattern. The
-  worst-case "data scientist" or "developer" role that
-  accumulated permissions over time.
+ enabling every method across every pattern. The
+ worst-case "data scientist" or "developer" role that
+ accumulated permissions over time.
 
 - **partial-deny** — same principal, plus an explicit
-  Deny statement listing all 21 Rhino actions. This is
-  the "informed defender" baseline. Z3 still finds 24
-  reachable methods.
+ Deny statement listing all 21 Rhino actions. This is
+ the "informed defender" baseline. Z3 still finds 24
+ reachable methods.
 
 - **remediated** — least-privilege: scoped `iam:PassRole`
-  on one role ARN, no self-mutation actions, no
-  credential-modification actions. All 5 Z3 patterns
-  return UNSAT.
+ on one role ARN, no self-mutation actions, no
+ credential-modification actions. All 5 Z3 patterns
+ return UNSAT.
 
 ## CEL side — `main.go`
 
@@ -117,24 +117,24 @@ The cross-pattern summary on the writeup config:
 
 ```
 --- Cross-pattern summary ---
-  registry total: 50 methods across 5 patterns
-  reachable:      50 methods
-  Rhino's 21 hit: 21 / 21
-  Rhino IDs hit:  [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21]
-  beyond Rhino:   27 methods (cross-pattern, with overlaps)
-  collapse:       21 manual enumerations → 5 Z3 queries
-                  → 50 methods reachable
+ registry total: 50 methods across 5 patterns
+ reachable: 50 methods
+ Rhino's 21 hit: 21 / 21
+ Rhino IDs hit: [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21]
+ beyond Rhino: 27 methods (cross-pattern, with overlaps)
+ collapse: 21 manual enumerations → 5 Z3 queries
+ → 50 methods reachable
 ```
 
 The cross-pattern summary on partial-deny:
 
 ```
-  registry total: 50 methods across 5 patterns
-  reachable:      24 methods
-  Rhino's 21 hit: 1 / 21
-  Rhino IDs hit:  [16]
-  beyond Rhino:   23 methods (cross-pattern, with overlaps)
-  collapse:       21 manual enumerations → 5 Z3 queries
+ registry total: 50 methods across 5 patterns
+ reachable: 24 methods
+ Rhino's 21 hit: 1 / 21
+ Rhino IDs hit: [16]
+ beyond Rhino: 23 methods (cross-pattern, with overlaps)
+ collapse: 21 manual enumerations → 5 Z3 queries
 ```
 
 The deny blocks 20 of Rhino's 21 (Rhino 16's
@@ -146,9 +146,9 @@ methods remain. Net: 24 reachable methods.
 The cross-pattern summary on remediated:
 
 ```
-  reachable:      0 methods
-  Rhino's 21 hit: 0 / 21
-  beyond Rhino:   0 methods
+ reachable: 0 methods
+ Rhino's 21 hit: 0 / 21
+ beyond Rhino: 0 methods
 ```
 
 Least-privilege closes everything.
@@ -192,20 +192,20 @@ beat enumeration as the API surface grows."
 ```
 examples/iam-21-privesc-5-patterns/
 ├── README.md
-├── main.go                     # CEL foil
+├── main.go # CEL foil
 ├── controls/
-│   └── CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001.yaml
+│ └── CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001.yaml
 ├── fixtures/
-│   ├── rhino-vulnerable/observations/{T1,T2}.json
-│   ├── partial-deny/observations/{T1,T2}.json
-│   └── remediated/observations/{T1,T2}.json
+│ ├── rhino-vulnerable/observations/{T1,T2}.json
+│ ├── partial-deny/observations/{T1,T2}.json
+│ └── remediated/observations/{T1,T2}.json
 ├── z3prove/
-│   ├── go.mod
-│   ├── patterns.go             # 5 method registries
-│   └── main.go                 # 5 queries × 3 configs + summary
+│ ├── go.mod
+│ ├── patterns.go # 5 method registries
+│ └── main.go # 5 queries × 3 configs + summary
 └── expected/
-    ├── cel-output.txt
-    └── z3-output.txt
+ ├── cel-output.txt
+ └── z3-output.txt
 ```
 
 ## Source
@@ -218,30 +218,30 @@ match the original numbering.
 
 ## Where this fits
 
-This is **Iteration 15** of the examples roadmap. The
+The
 climactic example. Three notable structural beats:
 
 - **Pattern collapse**: 21 manual enumerations → 5
-  structural queries, with mathematically equivalent
-  coverage of the original list plus extension to
-  methods Rhino didn't enumerate.
+ structural queries, with mathematically equivalent
+ coverage of the original list plus extension to
+ methods Rhino didn't enumerate.
 
 - **Deny-list refutation**: a Deny policy that blocks
-  every Rhino action still leaves 24 methods open. The
-  partial-deny fixture is the formal counterexample.
+ every Rhino action still leaves 24 methods open. The
+ partial-deny fixture is the formal counterexample.
 
 - **The stat for the talk**: *Rhino found 21. Z3 found
-  50. 24 of those still work after blocking everything
-  Rhino listed.* That's six sentences, two numbers, and
-  a refutation of the dominant industry approach to
-  IAM privesc prevention.
+ 50. 24 of those still work after blocking everything
+ Rhino listed.* That's six sentences, two numbers, and
+ a refutation of the dominant industry approach to
+ IAM privesc prevention.
 
 The cumulative encoder template now spans IAM identity
-policies (iter-7 family), bucket policies (iter-1, 2,
-11), KMS key policies (iter-11), API Gateway resource
-policies (iter-12), Allow-and-Deny effective-permission
-resolution with `iam:PassedToService` (iter-13),
-cross-service data-flow conjunctions (iter-14), and
+policies (this example family), bucket policies (this example, 2,
+11), KMS key policies, API Gateway resource
+policies, Allow-and-Deny effective-permission
+resolution with `iam:PassedToService`,
+cross-service data-flow conjunctions, and
 **registry-based exhaustive method enumeration** (this
-iter — extending iter-13's compute-launch idea to all
+iter — extending this example's compute-launch idea to all
 five Rhino patterns).

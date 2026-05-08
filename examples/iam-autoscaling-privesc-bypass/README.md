@@ -86,13 +86,13 @@ Captured output (`expected/cel-output.txt`):
 
 ```
 === writeup-config (DataScientist + EMR + DenyPrivEscs) ===
-  status: NON_COMPLIANT   total_assets=2   violations=1
-  CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001 fired on 1 asset(s):
-    - arn:aws:iam::111122223333:user/demo-DataScientist   severity=high
+ status: NON_COMPLIANT total_assets=2 violations=1
+ CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001 fired on 1 asset(s):
+ - arn:aws:iam::111122223333:user/demo-DataScientist severity=high
 
 === remediated-config (deny expanded to all known compute-launch vectors) ===
-  status: COMPLIANT   total_assets=2   violations=0
-  CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001: no findings
+ status: COMPLIANT total_assets=2 violations=0
+ CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001: no findings
 ```
 
 The CEL control covers the autoscaling technique
@@ -118,15 +118,15 @@ coverage table on the writeup config:
 
 ```
 --- Deny coverage analysis ---
-  ec2             BLOCKED    : Direct EC2 launch with instance profile
-  lambda          BLOCKED    : Create Lambda with execution role
-  lambda          BLOCKED    : Update existing Lambda to use different execution role
-  cloudformation  BLOCKED    : Create CloudFormation stack with execution role
-  autoscaling     NOT BLOCKED : Auto Scaling launch config + group with instance profile
-  ecs             NOT BLOCKED : Run ECS task with task role
-  codebuild       NOT BLOCKED : Create and start CodeBuild project with service role
-  glue            NOT BLOCKED : Create Glue job with execution role
-  sagemaker       NOT BLOCKED : Create SageMaker notebook with execution role
+ ec2 BLOCKED : Direct EC2 launch with instance profile
+ lambda BLOCKED : Create Lambda with execution role
+ lambda BLOCKED : Update existing Lambda to use different execution role
+ cloudformation BLOCKED : Create CloudFormation stack with execution role
+ autoscaling NOT BLOCKED : Auto Scaling launch config + group with instance profile
+ ecs NOT BLOCKED : Run ECS task with task role
+ codebuild NOT BLOCKED : Create and start CodeBuild project with service role
+ glue NOT BLOCKED : Create Glue job with execution role
+ sagemaker NOT BLOCKED : Create SageMaker notebook with execution role
 ```
 
 Five vectors not covered by the writeup's deny. After
@@ -193,24 +193,24 @@ no compute service to assume into.
 ## The matcher additions for this iteration
 
 This iteration extends the IAM matcher template
-established in iter-7a / iter-7 with two new pieces:
+established in this example / this example with two new pieces:
 
 1. **Allow + Deny effective-permission resolution**.
-   Previous IAM iterations checked whether one Allow
-   admitted a specific action. This iteration walks
-   *both* statement sets — Allow first, then Deny —
-   and reports the action as effectively allowed only
-   when it appears in some Allow and no Deny. Live in
-   `actionEffectivelyAllowed` /
-   `actionsAllDenied`.
+ Previous IAM iterations checked whether one Allow
+ admitted a specific action. This iteration walks
+ *both* statement sets — Allow first, then Deny —
+ and reports the action as effectively allowed only
+ when it appears in some Allow and no Deny. Live in
+ `actionEffectivelyAllowed` /
+ `actionsAllDenied`.
 
 2. **`iam:PassedToService` condition handling**. The
-   `extractPassedToServices` helper reads the
-   `Condition.StringEquals.iam:PassedToService` block
-   from a PassRole statement and returns the service
-   list. `passRoleAdmitsTrust` checks whether any
-   candidate trusted service is in the condition's
-   admitted list.
+ `extractPassedToServices` helper reads the
+ `Condition.StringEquals.iam:PassedToService` block
+ from a PassRole statement and returns the service
+ list. `passRoleAdmitsTrust` checks whether any
+ candidate trusted service is in the condition's
+ admitted list.
 
 Both helpers are documented inline. The
 compute-launch registry (`registry.go`) is
@@ -222,19 +222,19 @@ is a struct entry.
 ```
 examples/iam-autoscaling-privesc-bypass/
 ├── README.md
-├── main.go                     # CEL — fires on writeup, silent on remediated
+├── main.go # CEL — fires on writeup, silent on remediated
 ├── controls/
-│   └── CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001.yaml
+│ └── CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001.yaml
 ├── fixtures/
-│   ├── writeup-config/observations/{T1,T2}.json
-│   └── remediated-config/observations/{T1,T2}.json
+│ ├── writeup-config/observations/{T1,T2}.json
+│ └── remediated-config/observations/{T1,T2}.json
 ├── z3prove/
-│   ├── go.mod
-│   ├── registry.go             # 9 known compute-launch vectors
-│   └── main.go                 # 3 queries × 2 configs + coverage table
+│ ├── go.mod
+│ ├── registry.go # 9 known compute-launch vectors
+│ └── main.go # 3 queries × 2 configs + coverage table
 └── expected/
-    ├── cel-output.txt
-    └── z3-output.txt
+ ├── cel-output.txt
+ └── z3-output.txt
 ```
 
 ## Source
@@ -246,19 +246,19 @@ are paraphrased from the article with synthetic ARNs.
 
 ## Where this fits
 
-This is **Iteration 13** of the examples roadmap. Adds
+Adds
 two structural beats:
 
 - **Allow ∧ ¬Deny effective-permission resolution** in
-  the matcher template — used here for nine vectors,
-  reusable for any future deny-list-vs-allow analysis.
+ the matcher template — used here for nine vectors,
+ reusable for any future deny-list-vs-allow analysis.
 - **Architectural-residual finding**: a query that
-  returns SAT *both before and after* the
-  remediation, because the remediation does not
-  address the underlying architectural issue. This
-  isn't a "fix didn't work" — the fix did its job.
-  It's "the underlying shape is fragile; the fix
-  buys time, not safety."
+ returns SAT *both before and after* the
+ remediation, because the remediation does not
+ address the underlying architectural issue. This
+ isn't a "fix didn't work" — the fix did its job.
+ It's "the underlying shape is fragile; the fix
+ buys time, not safety."
 
 The remediated config's residual SAT on Finding 2 is
 the deepest insight in the iteration series: formal

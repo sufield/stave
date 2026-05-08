@@ -60,52 +60,52 @@ matrix:
 Two read-thrus:
 
 1. **Cognito writeup → remediated: 41.2% → 0.0%.** Disabling
-   unauthenticated access and closing self-registration drops
-   `P(exploitation)` to zero. Other engines say
-   UNSAFE→SAFE; the model says "we removed 41 points of
-   exploitation probability" — a financial metric a CISO can
-   put in a slide.
+ unauthenticated access and closing self-registration drops
+ `P(exploitation)` to zero. Other engines say
+ UNSAFE→SAFE; the model says "we removed 41 points of
+ exploitation probability" — a financial metric a CISO can
+ put in a slide.
 
 2. **Multi-hop vulnerable → remediated: 72.9% → 40.0%.**
-   Cutting the middle trust admit collapses the 3-hop chain
-   to disconnected 1-hops; `multi_hop_chain` shape no longer
-   applies (it requires depth ≥ 2). The residual 40% comes
-   from `wildcard_resource` — admin-role still holds `s3:*`
-   on `*` because it's an admin role, by design. The
-   reduction (33 points) is the chain-cut value; the residual
-   is the latent role-design risk.
+ Cutting the middle trust admit collapses the 3-hop chain
+ to disconnected 1-hops; `multi_hop_chain` shape no longer
+ applies (it requires depth ≥ 2). The residual 40% comes
+ from `wildcard_resource` — admin-role still holds `s3:*`
+ on `*` because it's an admin role, by design. The
+ reduction (33 points) is the chain-cut value; the residual
+ is the latent role-design risk.
 
 ## Honest limitations
 
 - **Probabilities are calibration starting points.** The
-  shipped constants reflect rough industry intuition; an org
-  with its own threat-intel should tune them. The model's
-  *value* is in ranking paths against each other; absolute
-  numbers should not be quoted as predictions.
+ shipped constants reflect rough industry intuition; an org
+ with its own threat-intel should tune them. The model's
+ *value* is in ranking paths against each other; absolute
+ numbers should not be quoted as predictions.
 
 - **Shape catalogue is not exhaustive.** Five shapes capture
-  the threats the existing fixtures exercise. Real risk
-  modelling needs more shapes (cross-account, KMS misuse,
-  CloudTrail tampering with logging-data joints, etc.) and
-  a way to compose them when multiple paths contribute to
-  the same target. This is a foundation, not a finished
-  catalogue.
+ the threats the existing fixtures exercise. Real risk
+ modelling needs more shapes (cross-account, KMS misuse,
+ CloudTrail tampering with logging-data joints, etc.) and
+ a way to compose them when multiple paths contribute to
+ the same target. This is a foundation, not a finished
+ catalogue.
 
 - **Bybit's literal-wildcard miss.** The wildcard_resource
-  shape requires the resource literal to be `"*"`. The bybit
-  fixture's developer policy uses `arn:aws:s3:::company-
-  frontend-*` (a prefix wildcard pattern, not `"*"`), so the
-  shape misses it. Z3's SMT string theory catches the prefix
-  pattern; the comparison harness routes the bybit case
-  there.
+ shape requires the resource literal to be `"*"`. The bybit
+ fixture's developer policy uses `arn:aws:s3:::company-
+ frontend-*` (a prefix wildcard pattern, not `"*"`), so the
+ shape misses it. Z3's SMT string theory catches the prefix
+ pattern; the comparison harness routes the bybit case
+ there.
 
 - **Rhino remediated doesn't drop.** Both rhino fixtures
-  show 65% because `overperm_compute` fires whenever any
-  control + service-trust overlap on a role, and the full
-  Stave catalog includes hygiene controls that fire on every
-  role lacking attribution tags. This is the same Soufflé
-  blind-spot the comparison harness already documents — the
-  shape doesn't weight controls by severity.
+ show 65% because `overperm_compute` fires whenever any
+ control + service-trust overlap on a role, and the full
+ Stave catalog includes hygiene controls that fire on every
+ role lacking attribution tags. This is the same Soufflé
+ blind-spot the comparison harness already documents — the
+ shape doesn't weight controls by severity.
 
 ## Why this isn't PRISM (yet)
 
@@ -115,12 +115,12 @@ parametric transitions and PCTL temporal-property
 verification. PRISM brings:
 
 - **Steady-state analysis** — long-run probability of
-  detection vs successful exfiltration.
+ detection vs successful exfiltration.
 - **Eventually-detected** properties — `P=? [F detected]` —
-  even when the chain succeeds, what's the probability the
-  attacker is eventually caught?
+ even when the chain succeeds, what's the probability the
+ attacker is eventually caught?
 - **Conditional expectations** — `R{"detection_time"}=?` —
-  expected time to detection given exfiltration occurs.
+ expected time to detection given exfiltration occurs.
 
 These require a Java runtime + PRISM binary (~200MB) and
 the verification has more ceremony than a CISO triage
@@ -148,19 +148,19 @@ per fixture.
 ## What this is not
 
 - **Not an actuarial model.** The probabilities are
-  ordinal rankings, not insurance-grade predictions.
+ ordinal rankings, not insurance-grade predictions.
 
 - **Not a substitute for the boolean engines.** A SAFE
-  Z3 verdict doesn't imply 0% risk under every model; this
-  shape catalogue might miss the actual exploitation path.
-  Use the comparison harness to triangulate.
+ Z3 verdict doesn't imply 0% risk under every model; this
+ shape catalogue might miss the actual exploitation path.
+ Use the comparison harness to triangulate.
 
 - **Not a remediation prioritiser by itself.** P(exploitation)
-  ranks paths; it does not estimate fix cost. Pair the
-  output with cost-of-fix data for full ROI ranking.
+ ranks paths; it does not estimate fix cost. Pair the
+ output with cost-of-fix data for full ROI ranking.
 
 - **Not a temporal model.** Time-to-detection, detection
-  recovery rate, and persistent-attacker scenarios are
-  PRISM territory; the multiplicative model here is a
-  point-in-time estimate of "given the attacker tries
-  today, what's the chance the chain completes?"
+ recovery rate, and persistent-attacker scenarios are
+ PRISM territory; the multiplicative model here is a
+ point-in-time estimate of "given the attacker tries
+ today, what's the chance the chain completes?"

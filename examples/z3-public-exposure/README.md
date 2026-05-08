@@ -7,10 +7,10 @@ pipeline:
 
 ```
 observations dir
-  -> Stave loader (library API)
-  -> []asset.Snapshot
-  -> per-bucket Z3 model
-  -> Z3 solver SAT/UNSAT verdict
+ -> Stave loader (library API)
+ -> []asset.Snapshot
+ -> per-bucket Z3 model
+ -> Z3 solver SAT/UNSAT verdict
 ```
 
 The main `stave` binary is built with `CGO_ENABLED=0` and has no
@@ -98,7 +98,7 @@ Sample output:
 
 ```
 UNSAFE arn:aws:s3:::demo-public-bucket — public read is provably possible (policy_public=true, pab=false)
-SAFE   arn:aws:s3:::demo-private-bucket — public read is provably impossible under this model
+SAFE arn:aws:s3:::demo-private-bucket — public read is provably impossible under this model
 ```
 
 ## Inputs the example reads
@@ -119,14 +119,14 @@ abstracts that parsing work to keep the Z3 mechanics legible.
 ## What the example does NOT cover
 
 - **Cross-resource composition** — the Z3 model here is one
-  bucket at a time. Real solver work would compose bucket
-  policy + IAM policy + PAB + ACL into one constraint system.
+ bucket at a time. Real solver work would compose bucket
+ policy + IAM policy + PAB + ACL into one constraint system.
 - **Suggested-fix extraction** — Z3 can return the satisfying
-  assignment that proves the bucket unsafe; the example only
-  prints SAT/UNSAT.
+ assignment that proves the bucket unsafe; the example only
+ prints SAT/UNSAT.
 - **Other service domains** — IAM authorization beyond S3
-  reach, KMS key policies, VPC endpoint policies. Each would
-  be its own model.
+ reach, KMS key policies, VPC endpoint policies. Each would
+ be its own model.
 
 The point of this example is to show how to compose the Stave
 library and a Go Z3 binding inside a small program. Extending

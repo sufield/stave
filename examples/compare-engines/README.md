@@ -26,10 +26,10 @@ one of them. The disagreement IS the finding.
 ```bash
 cd stave
 make build
-bash examples/compare-engines/run.sh             # human output (with timings)
+bash examples/compare-engines/run.sh # human output (with timings)
 bash examples/compare-engines/run.sh --no-timing # stable for golden capture
-bash examples/compare-engines/run.sh --json      # machine-readable
-bash examples/compare-engines/run.sh --strict    # exit 1 on any disagreement (CI gating)
+bash examples/compare-engines/run.sh --json # machine-readable
+bash examples/compare-engines/run.sh --strict # exit 1 on any disagreement (CI gating)
 ```
 
 The wrapper activates `.tools-venv` (Clingo + pysat) and
@@ -45,22 +45,22 @@ its verdict; the row marked `==` is consensus; `!=` is
 disagreement.
 
 ```
-=== Cognito self-register (writeup)  (expected UNSAFE) ===
-  [ok]  stave-cel     UNSAFE
-  [ok]  z3            UNSAFE
-  [--]  cvc5          no example covers this fixture
-  [ok]  clingo        UNSAFE
-  [ok]  pysat         UNSAFE
-  [ok]  souffle       UNSAFE
-  == CONSENSUS: UNSAFE (5 engine(s))
+=== Cognito self-register (writeup) (expected UNSAFE) ===
+ [ok] stave-cel UNSAFE
+ [ok] z3 UNSAFE
+ [--] cvc5 no example covers this fixture
+ [ok] clingo UNSAFE
+ [ok] pysat UNSAFE
+ [ok] souffle UNSAFE
+ == CONSENSUS: UNSAFE (5 engine(s))
 
-=== Multi-hop can_assume (vulnerable)  (expected UNSAFE) ===
-  [ok]  stave-cel     SAFE
-  [ok]  z3            UNSAFE
-  [ok]  clingo        UNSAFE
-  [--]  pysat         no example covers this fixture
-  [ok]  souffle       UNSAFE
-  != DISAGREEMENT: clingo=UNSAFE; souffle=UNSAFE; stave-cel=SAFE; z3=UNSAFE
+=== Multi-hop can_assume (vulnerable) (expected UNSAFE) ===
+ [ok] stave-cel SAFE
+ [ok] z3 UNSAFE
+ [ok] clingo UNSAFE
+ [--] pysat no example covers this fixture
+ [ok] souffle UNSAFE
+ != DISAGREEMENT: clingo=UNSAFE; souffle=UNSAFE; stave-cel=SAFE; z3=UNSAFE
 ```
 
 Full expected output is in `expected/output.txt`.
@@ -107,7 +107,7 @@ refinement, not a harness bug.
 Clingo's `constraints.lp` rule V1
 (`exploitable_overperm`) requires `contributed_by(R, _)`
 AND `trusts_service(R, _)` on the **same** subject. The
-iter-15 rhino fixture attaches `contributed_by` to the
+the rhino fixture attaches `contributed_by` to the
 `rhino-attacker` *user* (the privesc primitive holder),
 while `trusts_service` is on the *roles* the attacker
 escalates to. Different subjects → no violation atom
@@ -169,12 +169,12 @@ output, not the failure. Pass `--strict` to flip the
 semantics for CI gating:
 
 - `bash run.sh` — exits 0 on successful end-to-end run
-  regardless of disagreements (default; informational).
+ regardless of disagreements (default; informational).
 - `bash run.sh --strict` — exits 1 if any disagreement
-  remains. Use this only after you've reconciled known
-  blind-spots (e.g., resolving each disagreement as either
-  "engine X has a known gap" or "engine X needs to be
-  fixed").
+ remains. Use this only after you've reconciled known
+ blind-spots (e.g., resolving each disagreement as either
+ "engine X has a known gap" or "engine X needs to be
+ fixed").
 
 The `expected/output.txt` golden is captured with
 `--no-timing` so it stays byte-stable across runs.
@@ -182,15 +182,15 @@ The `expected/output.txt` golden is captured with
 ## Adding a new engine
 
 1. Add an entry to `engines.json` with `name`, `type`
-   (`per_fixture` or `batch`), and `available_check`.
+ (`per_fixture` or `batch`), and `available_check`.
 2. Add a parser function in `compare.py` that takes the
-   engine's batch output + a fixture's `engine_label` and
-   returns one of {SAFE, UNSAFE, INCONCLUSIVE}.
-3. Wire the parser into `evaluate_fixture()` next to the
-   other engines.
+ engine's batch output + a fixture's `engine_label` and
+ returns one of {SAFE, UNSAFE, INCONCLUSIVE}.
+3. Wire the parser into `evaluate_fixture` next to the
+ other engines.
 4. Add the engine's label key to each fixture's
-   `engine_labels` (or set to `None` where the engine has
-   no example covering that fixture).
+ `engine_labels` (or set to `None` where the engine has
+ no example covering that fixture).
 5. Re-run with `--no-timing` and capture the new golden.
 
 Engines like Yices, Bitwuzla, or Prolog would slot in
@@ -200,22 +200,22 @@ shape is "run a batch, parse per-fixture verdict, compare."
 ## What this is not
 
 - **Not a CI gate by default.** Use `--strict` if you want
-  to fail builds on disagreement. The default is reporting.
+ to fail builds on disagreement. The default is reporting.
 
 - **Not a substitute for individual engines' golden tests.**
-  Each engine's example folder has its own `expected/output.txt`
-  asserting that engine's behavior on its own fixtures. The
-  harness adds cross-engine consensus on top — orthogonal
-  signal.
+ Each engine's example folder has its own `expected/output.txt`
+ asserting that engine's behavior on its own fixtures. The
+ harness adds cross-engine consensus on top — orthogonal
+ signal.
 
 - **Not a forcing function for engine convergence.** When
-  engines disagree, the answer is usually "they're modeling
-  different aspects of the same configuration." The
-  harness's job is to surface the disagreement; choosing
-  which engine to trust per case is the user's job (often
-  routing each case to the engine that scales for it).
+ engines disagree, the answer is usually "they're modeling
+ different aspects of the same configuration." The
+ harness's job is to surface the disagreement; choosing
+ which engine to trust per case is the user's job (often
+ routing each case to the engine that scales for it).
 
 - **Not a benchmarking tool.** The timing fields are
-  approximate (subprocess overhead dominates the small
-  fixtures used here). For real benchmarking, run each
-  engine in isolation on larger inputs.
+ approximate (subprocess overhead dominates the small
+ fixtures used here). For real benchmarking, run each
+ engine in isolation on larger inputs.

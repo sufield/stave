@@ -6,7 +6,7 @@ modifies a role's trust policy to admit self-assumption — or
 creates a new role whose trust the principal controls.
 
 Rhino's named method 14: `iam:UpdateAssumeRolePolicy` on an
-admin role. The iter-15 prover added the create-and-assume
+admin role. The this example prover added the create-and-assume
 pair (`iam:CreateRole + iam:AttachRolePolicy` on a fresh
 role) and the strip-and-assume flow (`iam:DeleteRolePolicy`
 to widen, then `sts:AssumeRole`).
@@ -22,7 +22,7 @@ way to assume what it couldn't before.
 | Fixture | Z3 | cvc5 | Witness |
 |---|---|---|---|
 | `rhino-vulnerable` | **sat** | `(timeout)` | `rhino-attacker` user with `iam:UpdateAssumeRolePolicy` on `*` |
-| `remediated`       | **unsat** | unsat | n/a |
+| `remediated` | **unsat** | unsat | n/a |
 
 ## Run
 
@@ -35,6 +35,6 @@ bash examples/z3-rhino-pattern5-trust-modification/run.sh
 ## See also
 
 - `z3-rhino-pattern1-self-mutation/` — same template
-- iter-15 prover at
-  `examples/iam-21-privesc-5-patterns/z3prove/patterns.go`
-  — pattern5Methods registry
+- this example prover at
+ `examples/iam-21-privesc-5-patterns/z3prove/patterns.go`
+ — pattern5Methods registry

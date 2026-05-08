@@ -1,9 +1,7 @@
 # Example — CloudTrail Stop Logging
 
 Demonstrates the `cloudtrail-stop-logging` pattern using
-Stave's library API. Pattern P9 in
-[`examples-plan.md`](../../../examples-plan.md), grounded
-in **MITRE ATT&CK T1562.008** (*Disable or Modify Cloud
+Stave's library API, grounded in **MITRE ATT&CK T1562.008** (*Disable or Modify Cloud
 Logs*) and the established AWS incident-response pattern
 where the first action after a successful compromise is
 `StopLogging` on the management trail.
@@ -50,37 +48,37 @@ forensic question the team will later try to answer.
 From `stave/`:
 
 ```bash
-go run ./examples/cloudtrail-stop-logging           # both phases
-go run ./examples/cloudtrail-stop-logging before    # trail stopped only
-go run ./examples/cloudtrail-stop-logging after     # trail running only
+go run ./examples/cloudtrail-stop-logging # both phases
+go run ./examples/cloudtrail-stop-logging before # trail stopped only
+go run ./examples/cloudtrail-stop-logging after # trail running only
 ```
 
 ## Expected output
 
 ```
 === before (trail stopped) ===
-  status: NON_COMPLIANT   total_assets=1   violations=1
-  CTL.CLOUDTRAIL.STOP.DETECT.001 fired on 1 asset(s):
-    - arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail   severity=critical   exposure_score=100.00
-  assertion: fires=true (expected) ✓
+ status: NON_COMPLIANT total_assets=1 violations=1
+ CTL.CLOUDTRAIL.STOP.DETECT.001 fired on 1 asset(s):
+ - arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail severity=critical exposure_score=100.00
+ assertion: fires=true (expected) ✓
 
-=== after  (trail re-started) ===
-  status: COMPLIANT   total_assets=1   violations=0
-  CTL.CLOUDTRAIL.STOP.DETECT.001: no findings
-  assertion: fires=false (expected) ✓
+=== after (trail re-started) ===
+ status: COMPLIANT total_assets=1 violations=0
+ CTL.CLOUDTRAIL.STOP.DETECT.001: no findings
+ assertion: fires=false (expected) ✓
 ```
 
 ## The Predicate
 
 ```yaml
 unsafe_predicate:
-  any:
-    - field: properties.trail.is_logging
-      op: eq
-      value: false
-    - field: properties.trail.is_multi_region_trail
-      op: eq
-      value: false
+ any:
+ - field: properties.trail.is_logging
+ op: eq
+ value: false
+ - field: properties.trail.is_multi_region_trail
+ op: eq
+ value: false
 ```
 
 `any` — either condition fires the control. The first
@@ -114,10 +112,10 @@ incident-response team does:
 
 ```json
 "trail": {
-  "is_logging": false,
-  "is_multi_region_trail": true,
-  "stopped_at": "2026-01-01T00:00:00Z",
-  "stopped_by": "arn:aws:sts::111122223333:assumed-role/incident-actor/session"
+ "is_logging": false,
+ "is_multi_region_trail": true,
+ "stopped_at": "2026-01-01T00:00:00Z",
+ "stopped_by": "arn:aws:sts::111122223333:assumed-role/incident-actor/session"
 }
 ```
 
@@ -134,18 +132,17 @@ examples/cloudtrail-stop-logging/
 ├── README.md
 ├── main.go
 ├── controls/
-│   └── CTL.CLOUDTRAIL.STOP.DETECT.001.yaml
+│ └── CTL.CLOUDTRAIL.STOP.DETECT.001.yaml
 ├── fixtures/
-│   ├── before/observations/{T1,T2}.json   # is_logging=false × 2 weeks
-│   └── after/observations/{T1,T2}.json    # is_logging=true × 2 weeks
+│ ├── before/observations/{T1,T2}.json # is_logging=false × 2 weeks
+│ └── after/observations/{T1,T2}.json # is_logging=true × 2 weeks
 └── expected/
-    ├── before-output.txt
-    └── after-output.txt
+ ├── before-output.txt
+ └── after-output.txt
 ```
 
 ## Where this fits
 
-This is **Iteration 8, Phase B** of the examples roadmap.
 No new `pkg/stave` API was needed. Phase C is the
 article, framed as the defense-evasion stage of a
 post-compromise campaign — the trail looks fine to a

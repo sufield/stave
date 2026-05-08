@@ -1,7 +1,7 @@
 # Example — EKS aws-auth Template Injection
 
 Demonstrates the `eks-aws-auth-template-injection`
-pattern using Stave's library API. Companion to iter-9
+pattern using Stave's library API. Companion to this example
 (`eks-rbac-webhook-config-access`); this iteration
 revives the originally-planned target after the
 underlying engine issue turned out to be a fixture
@@ -45,28 +45,27 @@ examples.
 
 ## Plan-correction trail (recorded for traceability)
 
-- The original `examples-plan.md` listed iter-9 as
-  `eks-aws-auth-ghost-role`. The actual disclosed bug
-  is template injection, not ghost role.
-- During iter-9 Phase A, the existing
-  `e2e-h1-kubernetes-1580493` fixture appeared to
-  silently drop the `k8s_cluster` asset (total_assets=0),
-  which was filed as a Stave engine gap. iter-9
-  pivoted to a working K8s control
-  (`CTL.K8S.RBAC.WEBHOOK.001`) so the iteration could
-  ship.
+The actual disclosed bug
+ is template injection, not ghost role.
+- During this example Phase A, the existing
+ `e2e-h1-kubernetes-1580493` fixture appeared to
+ silently drop the `k8s_cluster` asset (total_assets=0),
+ which was filed as a Stave engine gap. this example
+ pivoted to a working K8s control
+ (`CTL.K8S.RBAC.WEBHOOK.001`) so the iteration could
+ ship.
 - A subsequent investigation showed the "engine gap"
-  was actually a **fixture vendor mismatch**: the
-  fixture used `vendor: "aws"` but the K8s control's
-  `scope_tags: [kubernetes, auth]` excluded
-  AWS-vendored assets via the
-  `kernel.AppliesToVendor` heuristic. With
-  `vendor: "kubernetes"`, the asset loads and the
-  control's predicate evaluates correctly.
+ was actually a **fixture vendor mismatch**: the
+ fixture used `vendor: "aws"` but the K8s control's
+ `scope_tags: [kubernetes, auth]` excluded
+ AWS-vendored assets via the
+ `kernel.AppliesToVendor` heuristic. With
+ `vendor: "kubernetes"`, the asset loads and the
+ control's predicate evaluates correctly.
 - The fixture was corrected
-  (`testdata/e2e/e2e-h1-kubernetes-1580493/`) and its
-  goldens regenerated in the same change that shipped
-  this example.
+ (`testdata/e2e/e2e-h1-kubernetes-1580493/`) and its
+ goldens regenerated in the same change that shipped
+ this example.
 
 ## What it does
 
@@ -82,37 +81,37 @@ is silent on the second.
 From `stave/`:
 
 ```bash
-go run ./examples/eks-aws-auth-template-injection           # both phases
-go run ./examples/eks-aws-auth-template-injection before    # template-injection only
-go run ./examples/eks-aws-auth-template-injection after     # remediated only
+go run ./examples/eks-aws-auth-template-injection # both phases
+go run ./examples/eks-aws-auth-template-injection before # template-injection only
+go run ./examples/eks-aws-auth-template-injection after # remediated only
 ```
 
 ## Expected output
 
 ```
 === before ({{AccessKeyID}} template) ===
-  status: NON_COMPLIANT   total_assets=1   violations=1
-  CTL.K8S.AUTH.ACCESSKEYMAP.001 fired on 1 asset(s):
-    - acme-eks-cluster   severity=high   exposure_score=76.64
-  assertion: fires=true (expected) ✓
+ status: NON_COMPLIANT total_assets=1 violations=1
+ CTL.K8S.AUTH.ACCESSKEYMAP.001 fired on 1 asset(s):
+ - acme-eks-cluster severity=high exposure_score=76.64
+ assertion: fires=true (expected) ✓
 
-=== after  ({{SessionName}} + role ARN) ===
-  status: COMPLIANT   total_assets=1   violations=0
-  CTL.K8S.AUTH.ACCESSKEYMAP.001: no findings
-  assertion: fires=false (expected) ✓
+=== after ({{SessionName}} + role ARN) ===
+ status: COMPLIANT total_assets=1 violations=0
+ CTL.K8S.AUTH.ACCESSKEYMAP.001: no findings
+ assertion: fires=false (expected) ✓
 ```
 
 ## The Predicate
 
 ```yaml
 unsafe_predicate:
-  all:
-    - field: properties.auth.kind
-      op: eq
-      value: cluster
-    - field: properties.auth.webhook.identity_mapping.uses_access_key_id
-      op: eq
-      value: true
+ all:
+ - field: properties.auth.kind
+ op: eq
+ value: cluster
+ - field: properties.auth.webhook.identity_mapping.uses_access_key_id
+ op: eq
+ value: true
 ```
 
 `uses_access_key_id` is the engine's verdict — true
@@ -164,21 +163,21 @@ examples/eks-aws-auth-template-injection/
 ├── README.md
 ├── main.go
 ├── controls/
-│   └── CTL.K8S.AUTH.ACCESSKEYMAP.001.yaml
+│ └── CTL.K8S.AUTH.ACCESSKEYMAP.001.yaml
 ├── fixtures/
-│   ├── before/observations/{T1,T2}.json   # uses_access_key_id=true × 2 weeks
-│   └── after/observations/{T1,T2}.json    # uses_access_key_id=false × 2 weeks
+│ ├── before/observations/{T1,T2}.json # uses_access_key_id=true × 2 weeks
+│ └── after/observations/{T1,T2}.json # uses_access_key_id=false × 2 weeks
 └── expected/
-    ├── before-output.txt
-    └── after-output.txt
+ ├── before-output.txt
+ └── after-output.txt
 ```
 
 ## Where this fits
 
 This is **Iteration 9b** of the examples roadmap —
 the originally-planned EKS target, revived after the
-fixture-vendor correction. iter-9
-(`eks-rbac-webhook-config-access`) and iter-9b
+fixture-vendor correction. this example
+(`eks-rbac-webhook-config-access`) and this example
 (this example) ship together as the EKS pair: one is
 RBAC-shaped, one is auth-template-shaped, both fire
 on the same `kubernetes`-vendored asset class.

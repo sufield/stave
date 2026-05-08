@@ -1,9 +1,7 @@
 # Example — Cognito MFA + Advanced Security
 
 Demonstrates the `cognito-no-mfa-advanced-security`
-pattern using Stave's library API. Pattern P10 in
-[`examples-plan.md`](../../../examples-plan.md), grounded
-in **HackerOne report
+pattern using Stave's library API, grounded in **HackerOne report
 [bomma](https://hackerone.com/reports/bomma)** (a Cognito
 account-takeover via email-alias trust + no MFA).
 
@@ -53,37 +51,37 @@ on the same fixture if the example pulled it in.
 From `stave/`:
 
 ```bash
-go run ./examples/cognito-no-mfa-advanced-security           # both phases
-go run ./examples/cognito-no-mfa-advanced-security before    # MFA-off only
-go run ./examples/cognito-no-mfa-advanced-security after     # remediated only
+go run ./examples/cognito-no-mfa-advanced-security # both phases
+go run ./examples/cognito-no-mfa-advanced-security before # MFA-off only
+go run ./examples/cognito-no-mfa-advanced-security after # remediated only
 ```
 
 ## Expected output
 
 ```
 === before (MFA off, advanced security off) ===
-  status: NON_COMPLIANT   total_assets=1   violations=1
-  CTL.COGNITO.MFA.001 fired on 1 asset(s):
-    - arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_acmeApp   severity=high   exposure_score=76.64
-  assertion: fires=true (expected) ✓
+ status: NON_COMPLIANT total_assets=1 violations=1
+ CTL.COGNITO.MFA.001 fired on 1 asset(s):
+ - arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_acmeApp severity=high exposure_score=76.64
+ assertion: fires=true (expected) ✓
 
-=== after  (MFA enforced, advanced security on) ===
-  status: COMPLIANT   total_assets=1   violations=0
-  CTL.COGNITO.MFA.001: no findings
-  assertion: fires=false (expected) ✓
+=== after (MFA enforced, advanced security on) ===
+ status: COMPLIANT total_assets=1 violations=0
+ CTL.COGNITO.MFA.001: no findings
+ assertion: fires=false (expected) ✓
 ```
 
 ## The Predicate
 
 ```yaml
 unsafe_predicate:
-  all:
-    - field: properties.identity.kind
-      op: eq
-      value: user_pool
-    - field: properties.identity.auth.mfa_enforced
-      op: eq
-      value: false
+ all:
+ - field: properties.identity.kind
+ op: eq
+ value: user_pool
+ - field: properties.identity.auth.mfa_enforced
+ op: eq
+ value: false
 ```
 
 Two leaf clauses: the asset is a user pool, and MFA is
@@ -96,7 +94,7 @@ not on a confirmed compromise.
 ## Why Z3 doesn't help
 
 Same answer as the other presence-check iterations
-(iter-3, iter-6, iter-8, iter-9): the collector observes
+(this example, this example, this example, this example): the collector observes
 two booleans (`mfa_enforced`, `advanced_security.enabled`)
 and emits them. CEL's predicate is a leaf check. There's
 no logical search space, no quantification.
@@ -115,20 +113,18 @@ examples/cognito-no-mfa-advanced-security/
 ├── README.md
 ├── main.go
 ├── controls/
-│   └── CTL.COGNITO.MFA.001.yaml
+│ └── CTL.COGNITO.MFA.001.yaml
 ├── fixtures/
-│   ├── before/observations/{T1,T2}.json   # mfa_enforced=false × 2 weeks
-│   └── after/observations/{T1,T2}.json    # mfa_enforced=true × 2 weeks
+│ ├── before/observations/{T1,T2}.json # mfa_enforced=false × 2 weeks
+│ └── after/observations/{T1,T2}.json # mfa_enforced=true × 2 weeks
 └── expected/
-    ├── before-output.txt
-    └── after-output.txt
+ ├── before-output.txt
+ └── after-output.txt
 ```
 
 ## Where this fits
 
-This is **Iteration 10, Phase B** of the examples
-roadmap — and the closing iteration of the planned first
-ten. No new `pkg/stave` API was needed. Phase C is the
+No new `pkg/stave` API was needed. Phase C is the
 article in `channels/devto/`, framing Cognito as the
 identity perimeter and MFA + Advanced Security as the
 two settings whose default-off posture turns

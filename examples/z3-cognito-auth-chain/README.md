@@ -1,7 +1,7 @@
 # z3-cognito-auth-chain
 
 Two queries in one example. Together they isolate the
-registration gate as the choke point in the iter-16 Cognito
+registration gate as the choke point in the Cognito
 self-register-to-AWS-creds chain — and reveal that the
 remediation didn't actually fix the auth role's permissions.
 
@@ -22,12 +22,12 @@ admin approval.
 
 ```
 === auth-chain (anyone authenticated reaches S3) ===
-  writeup-config      expected=sat    z3=sat    cvc5=sat    OK
-  remediated-config   expected=sat    z3=sat    cvc5=sat    OK
+ writeup-config expected=sat z3=sat cvc5=sat OK
+ remediated-config expected=sat z3=sat cvc5=sat OK
 
 === self-register-chain (anonymous reaches S3 by registering) ===
-  writeup-config      expected=sat    z3=sat    cvc5=sat    OK
-  remediated-config   expected=unsat  z3=unsat  cvc5=unsat  OK
+ writeup-config expected=sat z3=sat cvc5=sat OK
+ remediated-config expected=unsat z3=unsat cvc5=unsat OK
 ```
 
 ## The pedagogical reveal — auth-chain stays SAT on remediated
@@ -37,9 +37,9 @@ The auth-chain is SAT on BOTH fixtures. Z3's witnesses show why:
 **writeup-config** (the unsafe state):
 ```
 identity_pool = arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool
-auth_role     = arn:aws:iam::111122223333:role/Cognito_appAuth_Role
-action        = s3:*
-resource      = *
+auth_role = arn:aws:iam::111122223333:role/Cognito_appAuth_Role
+action = s3:*
+resource = *
 ```
 
 The auth role grants every S3 action on every bucket.
@@ -47,9 +47,9 @@ The auth role grants every S3 action on every bucket.
 **remediated-config** (the supposedly fixed state):
 ```
 identity_pool = arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool
-auth_role     = arn:aws:iam::111122223333:role/Cognito_appAuth_Role
-action        = s3:GetObject
-resource      = arn:aws:s3:::app-user-data/${cognito-identity.amazonaws.com:sub}/*
+auth_role = arn:aws:iam::111122223333:role/Cognito_appAuth_Role
+action = s3:GetObject
+resource = arn:aws:s3:::app-user-data/${cognito-identity.amazonaws.com:sub}/*
 ```
 
 The auth role STILL grants S3 access — narrowed to per-user
@@ -76,7 +76,7 @@ false` — i.e. anyone-can-sign-up.
 - writeup-config: pool admits self-registration → SAT
 - remediated-config: pool restricts self-registration → UNSAT
 
-The self-register chain is what the iter-16 article calls the
+The self-register chain is what the article calls the
 exploitable case: **anonymous → register → authenticated →
 auth role → S3**. Closing the registration gate breaks the
 chain at step 2; the auth role's permissions can stay broken
@@ -99,12 +99,12 @@ Expected output (also captured in `expected/output.txt`):
 
 ```
 === auth-chain (anyone authenticated reaches S3) ===
-  writeup-config      expected=sat    z3=sat    cvc5=sat    OK
-  remediated-config   expected=sat    z3=sat    cvc5=sat    OK
+ writeup-config expected=sat z3=sat cvc5=sat OK
+ remediated-config expected=sat z3=sat cvc5=sat OK
 
 === self-register-chain (anonymous reaches S3 by registering) ===
-  writeup-config      expected=sat    z3=sat    cvc5=sat    OK
-  remediated-config   expected=unsat  z3=unsat  cvc5=unsat  OK
+ writeup-config expected=sat z3=sat cvc5=sat OK
+ remediated-config expected=unsat z3=unsat cvc5=unsat OK
 ```
 
 Requires:
@@ -116,29 +116,10 @@ Cognito fact set is small (~30 assertions). The
 `--finite-model-find` strategy that times out on the larger
 Rhino fixture works fine here.
 
-## What this commit added to the projection
-
-One new fact extractor:
-
-| Predicate | Source SIR field | Polarity |
-|---|---|---|
-| `self_registration_unrestricted` | `properties.identity.governance.self_registration_restricted` (bool, on `aws_cognito_user_pool` assets) | Emitted exactly when source is `false` (the unsafe state). |
-
-The polarity inverts the source field name on purpose. Source
-is `restricted` (true == safe); predicate is `unrestricted`
-(true == unsafe). Emitting only the unsafe case keeps the
-closed-world axiom semantically correct: a pool with
-restriction enabled produces no positive fact, and a query
-asking "is any pool unrestricted?" returns UNSAT — which is
-what the safe-fixture verdict requires.
-
-Added to the SMT-LIB baseline so queries reference the
-predicate portably across fixtures.
-
 ## Three Cognito chains, one attack surface
 
 Together with `z3-cognito-unauth-chain`, this example covers
-the full Cognito attack surface from the iter-16 article:
+the full Cognito attack surface from the article:
 
 | Chain | Visitor enters via | Step-1 predicate |
 |---|---|---|
@@ -156,22 +137,22 @@ the (narrowed) auth role.
 ## What this is not
 
 - **Not a full attack-path validator.** SAT means the chain
-  shape exists in the snapshot; not that an attacker
-  necessarily executed it. The application code that wires
-  the user pool to the identity pool, and the social-
-  engineering or phishing path that gets the attacker to
-  the sign-up page, are out of scope.
+ shape exists in the snapshot; not that an attacker
+ necessarily executed it. The application code that wires
+ the user pool to the identity pool, and the social-
+ engineering or phishing path that gets the attacker to
+ the sign-up page, are out of scope.
 
-- **Not a replacement for the iter-16 example's Z3 prover.**
-  That prover (via `aclements/go-z3`) does the choke-point
-  analysis the article describes — toggling each candidate
-  fix, finding which ones break the chain. This SMT-LIB
-  pair makes the same composition expressible through
-  file-as-language-boundary so any solver consumes it; the
-  iterative choke-point flow stays in the per-example
-  go-z3 prover.
+- **Not a replacement for the example's Z3 prover.**
+ That prover (via `aclements/go-z3`) does the choke-point
+ analysis the article describes — toggling each candidate
+ fix, finding which ones break the chain. This SMT-LIB
+ pair makes the same composition expressible through
+ file-as-language-boundary so any solver consumes it; the
+ iterative choke-point flow stays in the per-example
+ go-z3 prover.
 
 - **Not a determinism issue.** The auth-chain witnesses
-  differ across fixtures (`s3:* / *` vs `s3:GetObject /
-  per-user-prefix`) because the FIXTURES differ, not because
-  the solver is non-deterministic. Same input, same output.
+ differ across fixtures (`s3:* / *` vs `s3:GetObject /
+ per-user-prefix`) because the FIXTURES differ, not because
+ the solver is non-deterministic. Same input, same output.

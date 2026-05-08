@@ -11,10 +11,10 @@ A bucket named `example-no-pab` has `public_access_fully_blocked: false` in both
 ```
 missing-pab/
 ├── observations/
-│   ├── 2026-01-01T000000Z.json   # Snapshot 1: PAB disabled
-│   └── 2026-01-02T000000Z.json   # Snapshot 2: PAB still disabled
+│ ├── 2026-01-01T000000Z.json # Snapshot 1: PAB disabled
+│ └── 2026-01-02T000000Z.json # Snapshot 2: PAB still disabled
 ├── controls/
-│   └── CTL.S3.CONTROLS.001.yaml     # Public Access Block Must Be Enabled
+│ └── CTL.S3.CONTROLS.001.yaml # Public Access Block Must Be Enabled
 └── README.md
 ```
 
@@ -24,17 +24,17 @@ missing-pab/
 cd stave
 
 ./stave apply --dry-run \
-  --controls examples/missing-pab/controls \
-  --observations examples/missing-pab/observations \
-  --max-unsafe 12h \
-  --now 2026-01-02T00:00:00Z
+ --controls examples/missing-pab/controls \
+ --observations examples/missing-pab/observations \
+ --max-unsafe 12h \
+ --now 2026-01-02T00:00:00Z
 
 ./stave apply \
-  --controls examples/missing-pab/controls \
-  --observations examples/missing-pab/observations \
-  --max-unsafe 12h \
-  --now 2026-01-02T00:00:00Z \
-  --allow-unknown-input
+ --controls examples/missing-pab/controls \
+ --observations examples/missing-pab/observations \
+ --max-unsafe 12h \
+ --now 2026-01-02T00:00:00Z \
+ --allow-unknown-input
 ```
 
 ## Expected Result

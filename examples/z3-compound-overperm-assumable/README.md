@@ -12,20 +12,20 @@ conjunction. SMT asks it directly. Witnesses name the role.
 ## The compound
 
 ```
-Fact 1:  contributed_by(role, "CTL.IAM.POLICY.RESOURCE.WILDCARD.001")
-              → role triggered the overpermission control
-Fact 2:  trusts_service(role, "lambda.amazonaws.com")
-              OR ec2.amazonaws.com
-              OR ecs-tasks.amazonaws.com
-              OR codebuild / glue / sagemaker / states / cloudformation
-              → role admits a compute / control-plane principal
+Fact 1: contributed_by(role, "CTL.IAM.POLICY.RESOURCE.WILDCARD.001")
+ → role triggered the overpermission control
+Fact 2: trusts_service(role, "lambda.amazonaws.com")
+ OR ec2.amazonaws.com
+ OR ecs-tasks.amazonaws.com
+ OR codebuild / glue / sagemaker / states / cloudformation
+ → role admits a compute / control-plane principal
 
 Conjunction (Fact 1 ∧ Fact 2):
-              → role is the canonical PassRole exploit shape:
-                an attacker with iam:PassRole + the matching
-                service's launch action becomes that role's
-                full permission set on the next instance /
-                function / task.
+ → role is the canonical PassRole exploit shape:
+ an attacker with iam:PassRole + the matching
+ service's launch action becomes that role's
+ full permission set on the next instance /
+ function / task.
 ```
 
 ## Verdicts
@@ -33,7 +33,7 @@ Conjunction (Fact 1 ∧ Fact 2):
 | Fixture | Z3 | cvc5 | Witness |
 |---|---|---|---|
 | `iam-overpermission-wildcard/before` | **sat** | **sat** | `arn:aws:iam::111122223333:role/DataProcessorLambdaRole` |
-| `iam-overpermission-wildcard/after`  | **unsat** | **unsat** | n/a |
+| `iam-overpermission-wildcard/after` | **unsat** | **unsat** | n/a |
 
 Both solvers agree on both fixtures and pick the same witness
 on `before`. The witness is the actual offending role — Z3
@@ -45,11 +45,11 @@ satisfying both conjuncts.
 CEL evaluates per-asset, per-control:
 
 - `CTL.IAM.POLICY.RESOURCE.WILDCARD.001` fires on
-  `DataProcessorLambdaRole` because the role's policy has
-  `s3:*` on `*`. CEL emits one finding.
+ `DataProcessorLambdaRole` because the role's policy has
+ `s3:*` on `*`. CEL emits one finding.
 - A separate per-asset check on the role's trust policy could
-  emit a "Lambda-trusted role" finding. CEL would emit a
-  second finding.
+ emit a "Lambda-trusted role" finding. CEL would emit a
+ second finding.
 
 What CEL does NOT do: ask whether the same asset triggered
 both findings AND those findings TOGETHER constitute a
@@ -73,65 +73,42 @@ bash examples/z3-compound-overperm-assumable/run.sh
 Expected (also captured in `expected/output.txt`):
 
 ```
-before        expected=sat    z3=sat    cvc5=sat    OK
-after         expected=unsat  z3=unsat  cvc5=unsat  OK
+before expected=sat z3=sat cvc5=sat OK
+after expected=unsat z3=unsat cvc5=unsat OK
 ```
 
 Requires:
 - `z3` 4.x on PATH (required)
 - `cvc5` 1.3+ on PATH (optional cross-check)
 
-## What this commit added to the projection
-
-One new fact extractor:
-
-| Predicate | Source SIR field | Why |
-|---|---|---|
-| `trusts_service` | `properties.identity.trusted_services` (string array on `aws_iam_role` assets) | The compound query's second conjunct. Without it, every PassRole-style query is silent. |
-
-Added to the SMT-LIB baseline so queries reference it
-portably; closed-world axiom restricts it to false on roles
-without a `trusted_services` block.
-
-`trusts_service` is distinct from `can_assume`:
-- `can_assume(roleA, roleB)` — A→B sts:AssumeRole hops in the
-  SIR's role-chain graph (used for transitive cross-account
-  reachability)
-- `trusts_service(role, service)` — service principal is in
-  the role's trust policy (used for compute-launch
-  PassRole exposure)
-
-Both predicates coexist; queries pick whichever matches the
-shape of the question.
-
 ## What this is not
 
 - **Not a definitive PassRole exploit detector.** SAT means
-  the compound shape exists, not that the attacker
-  necessarily has `iam:PassRole`. A real exploit also
-  requires the attacker's principal to hold the launch
-  action (`lambda:CreateFunction`, `ec2:RunInstances`, etc.)
-  and `iam:PassRole` on the target role. Adding those
-  conjuncts is the next iteration of this query — they're
-  expressible with `has_action` (already a baseline
-  predicate); the existing iter-7a Z3 prover already does
-  this end-to-end via the go-z3 binding. The SMT-LIB version
-  shipped here proves the same composition is expressible
-  through file-as-language-boundary.
+ the compound shape exists, not that the attacker
+ necessarily has `iam:PassRole`. A real exploit also
+ requires the attacker's principal to hold the launch
+ action (`lambda:CreateFunction`, `ec2:RunInstances`, etc.)
+ and `iam:PassRole` on the target role. Adding those
+ conjuncts is the next iteration of this query — they're
+ expressible with `has_action` (already a baseline
+ predicate); the existing Z3 prover already does
+ this end-to-end via the go-z3 binding. The SMT-LIB version
+ shipped here proves the same composition is expressible
+ through file-as-language-boundary.
 
 - **Not a finding by itself.** The output is "a role with the
-  shape." Whether that shape constitutes a violation depends
-  on intent (compute roles legitimately trust their service
-  principals). This query produces a list to triage — same
-  contract as every other Z3 query against this export.
+ shape." Whether that shape constitutes a violation depends
+ on intent (compute roles legitimately trust their service
+ principals). This query produces a list to triage — same
+ contract as every other Z3 query against this export.
 
 - **Not the only compound.** Three predicates tested in this
-  commit are a subset of what `query.smt2` can ask. Adding
-  conditions for resource sensitivity (e.g.
-  `has_resource(role, sensitive_arn)`) tightens the
-  precision; adding conditions for absence of MFA or IP
-  conditions extends coverage. Each is a one-line edit to
-  the disjunction list — no Stave changes needed.
+ commit are a subset of what `query.smt2` can ask. Adding
+ conditions for resource sensitivity (e.g.
+ `has_resource(role, sensitive_arn)`) tightens the
+ precision; adding conditions for absence of MFA or IP
+ conditions extends coverage. Each is a one-line edit to
+ the disjunction list — no Stave changes needed.
 
 ## What's next
 

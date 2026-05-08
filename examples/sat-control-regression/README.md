@@ -46,8 +46,8 @@ control-firing flags. Each is an unsafe shape that holds
 
 | Rule | Conjuncts | Catches |
 |---|---|---|
-| `rhino_passrole_with_role_hygiene_gap` | `IAM.ESCALATE.PASSROLE.AUTOSCALING.001` ∧ `IAM.ROLE.INTENTTAG.001` | The iter-13 deny-list bypass on a fixture without role-attribution tagging — the lateral targets aren't reviewable. |
-| `cognito_anon_to_aws_2of3` | `COGNITO.SELFREG.001` ∧ `COGNITO.MFA.001` | Self-register + no MFA — the iter-16 anonymous-to-AWS-credentials path. |
+| `rhino_passrole_with_role_hygiene_gap` | `IAM.ESCALATE.PASSROLE.AUTOSCALING.001` ∧ `IAM.ROLE.INTENTTAG.001` | The this example deny-list bypass on a fixture without role-attribution tagging — the lateral targets aren't reviewable. |
+| `cognito_anon_to_aws_2of3` | `COGNITO.SELFREG.001` ∧ `COGNITO.MFA.001` | Self-register + no MFA — the anonymous-to-AWS-credentials path. |
 | `cognito_full_id_bypass_3of3` | `COGNITO.SELFREG.001` ∧ `COGNITO.MFA.001` ∧ `COGNITO.ADVANCED.SECURITY.001` | Strict variant: the complete identity-bypass cascade — no rate-limit, no second factor, no anomaly detection. |
 
 The 2-of-3 and 3-of-3 are deliberately stratified — the
@@ -59,29 +59,29 @@ wants both views.
 
 ```
 === rhino-vulnerable ===
-  UNSAFE: 1 compound(s) fire
-    - rhino_passrole_with_role_hygiene_gap
-        fired: CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001
-        fired: CTL.IAM.ROLE.INTENTTAG.001
+ UNSAFE: 1 compound(s) fire
+ - rhino_passrole_with_role_hygiene_gap
+ fired: CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001
+ fired: CTL.IAM.ROLE.INTENTTAG.001
 
 === rhino-remediated ===
-  SAFE: no compound rule fires on this fixture
+ SAFE: no compound rule fires on this fixture
 
 === cognito-writeup ===
-  UNSAFE: 2 compound(s) fire
-    - cognito_anon_to_aws_2of3
-    - cognito_full_id_bypass_3of3
+ UNSAFE: 2 compound(s) fire
+ - cognito_anon_to_aws_2of3
+ - cognito_full_id_bypass_3of3
 
 === cognito-remediated ===
-  SAFE: no compound rule fires on this fixture
+ SAFE: no compound rule fires on this fixture
 
 === rhino-remediated-what-if (current verdicts) ===
-  SAFE: no compound rule fires on this fixture
+ SAFE: no compound rule fires on this fixture
 
 === what-if: smallest tip-into-unsafe extension ===
-  Adding 1 finding(s) tips configuration into UNSAFE:
-    + CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001
-  Compound(s) triggered: rhino_passrole_with_role_hygiene_gap
+ Adding 1 finding(s) tips configuration into UNSAFE:
+ + CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001
+ Compound(s) triggered: rhino_passrole_with_role_hygiene_gap
 ```
 
 The cognito writeup-config triggers two stratified
@@ -96,17 +96,17 @@ firing on this fixture without re-reviewing."
 ## Why SAT not Z3 / Clingo
 
 - **Z3** carries policy semantics — string theory, integer
-  arithmetic, function symbols. Overkill when the question
-  is "AND over boolean flags."
+ arithmetic, function symbols. Overkill when the question
+ is "AND over boolean flags."
 - **Clingo** does default negation and disjunctive
-  enumeration but its solve cost grows with rule complexity.
-  Boolean conjunction over flags is below ASP's complexity
-  floor.
+ enumeration but its solve cost grows with rule complexity.
+ Boolean conjunction over flags is below ASP's complexity
+ floor.
 - **SAT** is the *natural* language for "given these flags,
-  is the formula satisfied?" — and modern SAT solvers
-  (Glucose, Cadical) handle millions of variables in
-  seconds. When the control catalog reaches 2,100+, only
-  SAT runs in CI-time.
+ is the formula satisfied?" — and modern SAT solvers
+ (Glucose, Cadical) handle millions of variables in
+ seconds. When the control catalog reaches 2,100+, only
+ SAT runs in CI-time.
 
 The three engines compose. CEL produces the per-asset
 verdicts; SAT regression-checks the verdicts against
@@ -140,27 +140,27 @@ control fire — no compound ever satisfied.
 ## What this is not
 
 - **Not a policy engine.** Compound rules don't replace
-  CEL's per-asset reasoning. They compose its outputs.
-  When CEL's verdict on a control changes, the compound
-  check re-runs; the underlying control YAML is unchanged.
+ CEL's per-asset reasoning. They compose its outputs.
+ When CEL's verdict on a control changes, the compound
+ check re-runs; the underlying control YAML is unchanged.
 
 - **Not a unified solver.** Some compounds need
-  cross-asset string matching (bybit) or transitive closure
-  (multi-hop privesc). Those belong in SMT or Datalog. The
-  compound ruleset is deliberately narrow: only patterns
-  expressible as boolean-AND over already-evaluated
-  findings.
+ cross-asset string matching (bybit) or transitive closure
+ (multi-hop privesc). Those belong in SMT or Datalog. The
+ compound ruleset is deliberately narrow: only patterns
+ expressible as boolean-AND over already-evaluated
+ findings.
 
 - **Not a fixture-coverage tool.** A SAFE verdict means "no
-  compound rule fires on this fixture under these
-  verdicts." It does NOT mean the fixture is policy-clean —
-  individual findings can still be present. The compound
-  layer adds an *additional* gate, not a substitute for the
-  per-finding gate.
+ compound rule fires on this fixture under these
+ verdicts." It does NOT mean the fixture is policy-clean —
+ individual findings can still be present. The compound
+ layer adds an *additional* gate, not a substitute for the
+ per-finding gate.
 
 - **Not a min-cut analyzer.** The what-if mode finds *a*
-  minimal trigger set, not *the* minimum (it's whichever
-  the solver returns first). For genuinely-minimum
-  enumeration, switch to MaxSAT / hitting-set reasoning.
-  The current shape is sufficient for "show me one path
-  to unsafe" — the regression alert.
+ minimal trigger set, not *the* minimum (it's whichever
+ the solver returns first). For genuinely-minimum
+ enumeration, switch to MaxSAT / hitting-set reasoning.
+ The current shape is sufficient for "show me one path
+ to unsafe" — the regression alert.

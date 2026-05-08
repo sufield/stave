@@ -25,10 +25,10 @@ attack against a Cognito-protected application using
 nothing but the AWS CLI:
 
 ```
-Stage 1:  aws cognito-idp sign-up                       (self-register)
-Stage 2:  aws cognito-idp update-user-attributes        (self-promote)
-Stage 3:  aws cognito-identity get-credentials-for-identity  (creds)
-Stage 4:  AWS API call with the temporary credentials   (resource access)
+Stage 1: aws cognito-idp sign-up (self-register)
+Stage 2: aws cognito-idp update-user-attributes (self-promote)
+Stage 3: aws cognito-identity get-credentials-for-identity (creds)
+Stage 4: AWS API call with the temporary credentials (resource access)
 ```
 
 Four CLI commands. Zero starting credentials. On the
@@ -58,15 +58,15 @@ points.
 
 ```
 [CLOSED] set allow_admin_create_user_only=true
-         stage 1 closed — no self-registration
+ stage 1 closed — no self-registration
 [CLOSED] remove sensitive attrs from app client write_attributes
-         stage 2 closed — no self-promotion
+ stage 2 closed — no self-promotion
 [CLOSED] configure pre-token-generation Lambda validator
-         stage 2 closed — attribute changes validated
-[OPEN  ] set allow_unauthenticated_identities=false
-         path A of stage 3 closed (path B remains)
-[OPEN  ] scope authenticated role to non-sensitive resources
-         path B of stage 3 closed
+ stage 2 closed — attribute changes validated
+[OPEN ] set allow_unauthenticated_identities=false
+ path A of stage 3 closed (path B remains)
+[OPEN ] scope authenticated role to non-sensitive resources
+ path B of stage 3 closed
 ```
 
 Three of five collapse the chain individually. The
@@ -108,16 +108,16 @@ attributes that imply privilege escalation or account
 takeover when writable:
 
 ```go
-"custom:role":           "privilege_escalation",
-"custom:admin":          "privilege_escalation",
-"custom:is_admin":       "privilege_escalation",
-"custom:is_premium":     "privilege_escalation",
-"custom:debug_mode":     "privilege_escalation",
-"custom:permissions":    "privilege_escalation",
-"custom:access_level":   "privilege_escalation",
-"email":                 "account_takeover",
-"email_verified":        "verification_bypass",
-"phone_number":          "mfa_bypass",
+"custom:role": "privilege_escalation",
+"custom:admin": "privilege_escalation",
+"custom:is_admin": "privilege_escalation",
+"custom:is_premium": "privilege_escalation",
+"custom:debug_mode": "privilege_escalation",
+"custom:permissions": "privilege_escalation",
+"custom:access_level": "privilege_escalation",
+"email": "account_takeover",
+"email_verified": "verification_bypass",
+"phone_number": "mfa_bypass",
 "phone_number_verified": "mfa_bypass",
 ```
 
@@ -125,38 +125,23 @@ When an organisation adds custom attributes, they add
 them to this registry. Z3 immediately checks the new
 attribute against every fixture.
 
-## What this iteration adds
-
-1. **Compound chain encoding across four service
-   boundaries** — user pool → app client → identity
-   pool → IAM. Same multi-asset composition pattern as
-   iter-14 (SNS Secrets), applied to the auth stack.
-
-2. **Choke-point analysis as a separate query.** This
-   is the operationally most useful Z3 output:
-   *which one change collapses the chain?* The prover
-   enumerates and reports.
-
-3. **Sensitive-attribute registry** — extension point
-   for organisations adopting custom attribute schemas.
-
 ## Layout
 
 ```
 examples/cognito-self-register-to-aws-creds/
 ├── README.md
-├── main.go                     # CEL foil
+├── main.go # CEL foil
 ├── controls/
-│   └── CTL.COGNITO.SELFREG.001.yaml
+│ └── CTL.COGNITO.SELFREG.001.yaml
 ├── fixtures/
-│   ├── writeup-config/observations/{T1,T2}.json
-│   └── remediated-config/observations/{T1,T2}.json
+│ ├── writeup-config/observations/{T1,T2}.json
+│ └── remediated-config/observations/{T1,T2}.json
 ├── z3prove/
-│   ├── go.mod
-│   └── main.go                 # 5 queries × 2 configs + choke point
+│ ├── go.mod
+│ └── main.go # 5 queries × 2 configs + choke point
 └── expected/
-    ├── cel-output.txt
-    └── z3-output.txt
+ ├── cel-output.txt
+ └── z3-output.txt
 ```
 
 ## Source
@@ -166,7 +151,6 @@ Medium, June 2023, by Serj Novoselov.
 
 ## Where this fits
 
-This is **Iteration 16** of the examples roadmap.
 Three notable structural beats: compound chain across
 four Cognito boundaries, choke-point analysis as a
 new query pattern, and the sensitive-attribute

@@ -6,7 +6,7 @@ creates or hijacks credentials for a more privileged
 principal **without modifying any policy** — Rhino's named
 methods 4, 5, 6, 14 (CreateAccessKey, CreateLoginProfile,
 UpdateLoginProfile, UpdateAssumeRolePolicy), plus the
-MFA-virtual-device and federated-token methods the iter-15
+MFA-virtual-device and federated-token methods the example
 prover added.
 
 ## Verdicts
@@ -14,7 +14,7 @@ prover added.
 | Fixture | Z3 | cvc5 | Witness |
 |---|---|---|---|
 | `rhino-vulnerable` | **sat** | `(timeout)` | `rhino-attacker` user with `iam:EnableMFADevice` on `*` |
-| `remediated`       | **unsat** | unsat | n/a |
+| `remediated` | **unsat** | unsat | n/a |
 
 cvc5 times out on rhino-vulnerable (~115 assertions, large
 disjunction in the `has_action` closed-world axiom). Z3 alone
@@ -34,8 +34,8 @@ Expected output is in `expected/output.txt`.
 ## See also
 
 - `z3-rhino-pattern1-self-mutation/` — same template, policy-
-  mutation actions. The shared README pattern carries.
-- iter-15 prover at
-  `examples/iam-21-privesc-5-patterns/z3prove/patterns.go`
-  enumerates the canonical method registry this disjunction
-  mirrors.
+ mutation actions. The shared README pattern carries.
+- this example prover at
+ `examples/iam-21-privesc-5-patterns/z3prove/patterns.go`
+ enumerates the canonical method registry this disjunction
+ mirrors.

@@ -92,18 +92,18 @@ byte-for-byte determinism.
 
 ```
 examples/staging-stale-endpoint/
-├── README.md                    # this file
-├── main.go                      # 4-scenario runner + assertions
-├── controls/                    # local copy of the two relevant controls
-│   ├── CTL.LIFECYCLE.STAGING.STALE.001.yaml
-│   └── CTL.S3.PUBLIC.LIST.002.yaml
+├── README.md # this file
+├── main.go # 4-scenario runner + assertions
+├── controls/ # local copy of the two relevant controls
+│ ├── CTL.LIFECYCLE.STAGING.STALE.001.yaml
+│ └── CTL.S3.PUBLIC.LIST.002.yaml
 ├── fixtures/
-│   ├── stale-staging/observations/{T1,T2}.json
-│   ├── active-staging/observations/{T1,T2}.json
-│   ├── prod-dormant/observations/{T1,T2}.json
-│   └── stale-staging-public/observations/{T1,T2}.json
+│ ├── stale-staging/observations/{T1,T2}.json
+│ ├── active-staging/observations/{T1,T2}.json
+│ ├── prod-dormant/observations/{T1,T2}.json
+│ └── stale-staging-public/observations/{T1,T2}.json
 └── expected/
-    └── output.txt               # captured golden
+ └── output.txt # captured golden
 ```
 
 ## Compliance
@@ -117,16 +117,16 @@ change management).
 ## What this control is NOT
 
 - **NOT a replacement for per-service dormancy
-  controls.** Those still fire on production dormant
-  resources where the response is "investigate."
+ controls.** Those still fire on production dormant
+ resources where the response is "investigate."
 - **NOT a new staleness detector.** The lifecycle
-  signals (`is_dormant`, `appears_unused`, `last_*_days`)
-  are already populated by extractors and consumed by
-  per-service controls. This control only adds the
-  environment-tag filter.
+ signals (`is_dormant`, `appears_unused`, `last_*_days`)
+ are already populated by extractors and consumed by
+ per-service controls. This control only adds the
+ environment-tag filter.
 - **NOT compound-severity by itself.** Severity is
-  MEDIUM; the chain is what escalates to HIGH when the
-  stale non-prod resource is also publicly reachable.
+ MEDIUM; the chain is what escalates to HIGH when the
+ stale non-prod resource is also publicly reachable.
 
 ## Extension points
 

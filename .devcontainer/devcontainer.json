@@ -1,0 +1,21 @@
+{
+    "name": "Stave reasoning engines",
+    "build": { "dockerfile": "Dockerfile" },
+    "features": {
+        "ghcr.io/devcontainers/features/go:1": {
+            "version": "1.26.3"
+        }
+    },
+    "postCreateCommand": "bash ${containerWorkspaceFolder}/.devcontainer/post-create.sh",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "golang.go",
+                "ms-python.python",
+                "arrterian.nix-env-selector",
+                "starkwang.souffle-syntax-highlighting"
+            ]
+        }
+    },
+    "remoteUser": "vscode"
+}

@@ -11,10 +11,10 @@ A bucket named `example-public-bucket` has `public_read: true` in both snapshots
 ```
 public-bucket/
 ├── observations/
-│   ├── 2026-01-01T000000Z.json   # Snapshot 1: public_read=true
-│   └── 2026-01-02T000000Z.json   # Snapshot 2: public_read=true
+│ ├── 2026-01-01T000000Z.json # Snapshot 1: public_read=true
+│ └── 2026-01-02T000000Z.json # Snapshot 2: public_read=true
 ├── controls/
-│   └── CTL.S3.PUBLIC.001.yaml       # No Public S3 Buckets
+│ └── CTL.S3.PUBLIC.001.yaml # No Public S3 Buckets
 └── README.md
 ```
 
@@ -24,17 +24,17 @@ public-bucket/
 cd stave
 
 ./stave apply --dry-run \
-  --controls examples/public-bucket/controls \
-  --observations examples/public-bucket/observations \
-  --max-unsafe 12h \
-  --now 2026-01-02T00:00:00Z
+ --controls examples/public-bucket/controls \
+ --observations examples/public-bucket/observations \
+ --max-unsafe 12h \
+ --now 2026-01-02T00:00:00Z
 
 ./stave apply \
-  --controls examples/public-bucket/controls \
-  --observations examples/public-bucket/observations \
-  --max-unsafe 12h \
-  --now 2026-01-02T00:00:00Z \
-  --allow-unknown-input
+ --controls examples/public-bucket/controls \
+ --observations examples/public-bucket/observations \
+ --max-unsafe 12h \
+ --now 2026-01-02T00:00:00Z \
+ --allow-unknown-input
 ```
 
 ## Expected Result

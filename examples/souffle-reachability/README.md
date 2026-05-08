@@ -1,8 +1,6 @@
 # souffle-reachability
 
 Soufflé Datalog reachability over Stave's JSONL fact export.
-The fourth reasoning engine on top of the same fact base.
-
 ## What this answers that the other engines don't
 
 Z3 finds **one witness** per query (SAT/UNSAT).
@@ -20,32 +18,32 @@ is the quantified impact of the remediation.
 
 ```
 === Cognito writeup-config ===
-  reachable:                 42
-  anonymous_reachable:       12
-  self_register_reachable:   9
-  ...
+ reachable: 42
+ anonymous_reachable: 12
+ self_register_reachable: 9
+ ...
 
 === Cognito remediated ===
-  reachable:                 12
-  anonymous_reachable:       0
-  self_register_reachable:   0
-  ...
+ reachable: 12
+ anonymous_reachable: 0
+ self_register_reachable: 0
+ ...
 
 === Multi-hop vulnerable ===
-  reachable:                 10
-  privesc_chain:             6
+ reachable: 10
+ privesc_chain: 6
 
 === Multi-hop remediated ===
-  reachable:                 6
-  privesc_chain:             2
+ reachable: 6
+ privesc_chain: 2
 
 === Rhino vulnerable ===
-  reachable:                 58
-  exploitable_overperm:      13
+ reachable: 58
+ exploitable_overperm: 13
 
 === Rhino remediated ===
-  reachable:                 9
-  exploitable_overperm:      1
+ reachable: 9
+ exploitable_overperm: 1
 ```
 
 The delta is the value:
@@ -77,9 +75,9 @@ get empty files, which Soufflé treats as empty relations
 |---|---|
 | `reachable` | Every (principal, resource, action) — direct grants, identity-pool mediated, and transitive role chains. |
 | `anonymous_reachable` | Subset where the principal enters via an unauthenticated identity pool (`allows_unauthenticated="true"`). |
-| `self_register_reachable` | Subset where any user pool admits self-registration AND the identity pool maps an authenticated principal (the iter-16 conservative join — see below). |
+| `self_register_reachable` | Subset where any user pool admits self-registration AND the identity pool maps an authenticated principal (the conservative join — see below). |
 | `production_reachable` | Subset where the resource has tag `environment=production`. Limited by literal join (see Bybit caveat below). |
-| `exploitable_overperm` | Roles with both a CEL finding (`contributed_by`) AND a compute-service trust (`trusts_service`). The iter-13/15 PassRole-on-compute compound. |
+| `exploitable_overperm` | Roles with both a CEL finding (`contributed_by`) AND a compute-service trust (`trusts_service`). The this example/15 PassRole-on-compute compound. |
 | `privesc_chain` | Multi-hop assume chains with hop count, capped at depth 10 (matches the kernel's `MaxChainDepth`). |
 
 ## The cross-pool join in `self_register_reachable`
@@ -93,16 +91,16 @@ link between them.
 
 The conservative reading is: if *any* user pool admits
 self-registration, the linked identity pool's
-authenticated mapping is fair game (the iter-16 reveal —
+authenticated mapping is fair game (the architectural reveal —
 identity pools accept any token from any linked user
 pool). The Datalog rule joins on existence:
 
 ```prolog
 self_register_reachable(P, R, A) :-
-    self_registration_unrestricted(_, "true"),
-    maps_auth_to(P, Role),
-    has_action(Role, A),
-    has_resource(Role, R).
+ self_registration_unrestricted(_, "true"),
+ maps_auth_to(P, Role),
+ has_action(Role, A),
+ has_resource(Role, R).
 ```
 
 This fires on the writeup fixture (9 triples — 3 actions
@@ -111,7 +109,7 @@ remediated. A future Stave projection could emit a
 `pool_link(user_pool, identity_pool)` edge that would let
 the rule join precisely; today the conservative form is
 correct for security (it overcounts rather than missing
-the iter-16 attack chain).
+the attack chain).
 
 ## The Bybit caveat: literal joins don't expand wildcards
 
@@ -164,27 +162,27 @@ exploitable_overperm.
 ## What this is not
 
 - **Not a security-policy engine.** Reachable counts
-  describe the configuration's reach surface, not its
-  policy compliance. CEL controls evaluate compliance;
-  Soufflé measures reach. The two compose: CEL produces
-  `contributed_by` edges; Soufflé enumerates the reach
-  surface that intersects them.
+ describe the configuration's reach surface, not its
+ policy compliance. CEL controls evaluate compliance;
+ Soufflé measures reach. The two compose: CEL produces
+ `contributed_by` edges; Soufflé enumerates the reach
+ surface that intersects them.
 
 - **Not a wildcard policy evaluator.** AWS resource
-  wildcards (`arn:aws:s3:::*`,
-  `arn:aws:s3:::company-frontend-*`) are literal strings
-  in the SIR. Soufflé does literal joins. To reason about
-  wildcard expansion, switch to SMT (string theory) or
-  pre-expand wildcards in a different projection layer.
+ wildcards (`arn:aws:s3:::*`,
+ `arn:aws:s3:::company-frontend-*`) are literal strings
+ in the SIR. Soufflé does literal joins. To reason about
+ wildcard expansion, switch to SMT (string theory) or
+ pre-expand wildcards in a different projection layer.
 
 - **Not unbounded transitive closure.** `privesc_chain` is
-  capped at depth 10 (matches the kernel's
-  `MaxChainDepth`). For unbounded reachability, declare
-  `transitive_role` without a depth bound — Soufflé will
-  compute it but the hop-count annotation goes away.
+ capped at depth 10 (matches the kernel's
+ `MaxChainDepth`). For unbounded reachability, declare
+ `transitive_role` without a depth bound — Soufflé will
+ compute it but the hop-count annotation goes away.
 
 - **Not a comparison-harness substitute.** The five
-  engines' counts must agree on the questions they share
-  (e.g., does a multi-hop chain exist?). Disagreement is
-  the harness's job to flag, not Soufflé's. This example
-  ships counts; the harness ships parity checks.
+ engines' counts must agree on the questions they share
+ (e.g., does a multi-hop chain exist?). Disagreement is
+ the harness's job to flag, not Soufflé's. This example
+ ships counts; the harness ships parity checks.

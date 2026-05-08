@@ -26,23 +26,23 @@ Manager retrieves a secret through a four-service
 credential-flow chain:
 
 ```
-    IAM user (cg-sns-user)
-        │
-        ├─ sns:Subscribe to public-topic-cgidxi93qpes3g
-        │       (no topic policy → IAM-only gate; subscription succeeds)
-        │
-        ▼
-    SNS topic publishes message containing API key
-        │
-        │  (the credential value flows here, not a permission)
-        ▼
-    API Gateway accepts API key, no IAM auth
-        │
-        ▼
-    Lambda integration reads Secrets Manager
-        │
-        ▼
-    secret value returned to user
+ IAM user (cg-sns-user)
+ │
+ ├─ sns:Subscribe to public-topic-cgidxi93qpes3g
+ │ (no topic policy → IAM-only gate; subscription succeeds)
+ │
+ ▼
+ SNS topic publishes message containing API key
+ │
+ │ (the credential value flows here, not a permission)
+ ▼
+ API Gateway accepts API key, no IAM auth
+ │
+ ▼
+ Lambda integration reads Secrets Manager
+ │
+ ▼
+ secret value returned to user
 ```
 
 This is the first iteration where the bug lives in the
@@ -91,12 +91,12 @@ Captured output:
 
 ```
 === writeup-config (cg-sns-user policy + bare topic + key-only API) ===
-  status: COMPLIANT   total_assets=1   violations=0
-  CTL.SNS.POLICY.SUBSCRIBE.BROAD.001: no findings
+ status: COMPLIANT total_assets=1 violations=0
+ CTL.SNS.POLICY.SUBSCRIBE.BROAD.001: no findings
 
 === remediated-config (sns:Subscribe scoped + topic policy + IAM auth) ===
-  status: COMPLIANT   total_assets=1   violations=0
-  CTL.SNS.POLICY.SUBSCRIBE.BROAD.001: no findings
+ status: COMPLIANT total_assets=1 violations=0
+ CTL.SNS.POLICY.SUBSCRIBE.BROAD.001: no findings
 ```
 
 The catalogue's existing controls each check a single
@@ -122,30 +122,30 @@ article's centrepiece evidence:
 
 ```
 --- API Gateway Deny coverage analysis ---
-  OPEN      : /restapis
-  OPEN      : /restapis/{id}
-  OPEN      : /restapis/{id}/resources
-  OPEN      : /restapis/{id}/resources/{resource_id}
-  OPEN      : /restapis/{id}/resources/{resource_id}/methods/{method}
-  BLOCKED   : /restapis/{id}/resources/{resource_id}/methods/{method}/integration
-  OPEN      : /restapis/{id}/stages
-  OPEN      : /restapis/{id}/stages/{stage}
-  OPEN      : /restapis/{id}/deployments
-  OPEN      : /restapis/{id}/deployments/{deployment_id}
-  OPEN      : /restapis/{id}/models
-  OPEN      : /restapis/{id}/authorizers
-  OPEN      : /restapis/{id}/gatewayresponses
-  OPEN      : /restapis/{id}/requestvalidators
-  OPEN      : /restapis/{id}/documentation
-  BLOCKED   : /apikeys
-  BLOCKED   : /apikeys/{key_id}
-  OPEN      : /usageplans
-  OPEN      : /usageplans/{plan_id}
-  OPEN      : /usageplans/{plan_id}/keys
-  OPEN      : /domainnames
-  OPEN      : /vpclinks
-  OPEN      : /clientcertificates
-  OPEN      : /account
+ OPEN : /restapis
+ OPEN : /restapis/{id}
+ OPEN : /restapis/{id}/resources
+ OPEN : /restapis/{id}/resources/{resource_id}
+ OPEN : /restapis/{id}/resources/{resource_id}/methods/{method}
+ BLOCKED : /restapis/{id}/resources/{resource_id}/methods/{method}/integration
+ OPEN : /restapis/{id}/stages
+ OPEN : /restapis/{id}/stages/{stage}
+ OPEN : /restapis/{id}/deployments
+ OPEN : /restapis/{id}/deployments/{deployment_id}
+ OPEN : /restapis/{id}/models
+ OPEN : /restapis/{id}/authorizers
+ OPEN : /restapis/{id}/gatewayresponses
+ OPEN : /restapis/{id}/requestvalidators
+ OPEN : /restapis/{id}/documentation
+ BLOCKED : /apikeys
+ BLOCKED : /apikeys/{key_id}
+ OPEN : /usageplans
+ OPEN : /usageplans/{plan_id}
+ OPEN : /usageplans/{plan_id}/keys
+ OPEN : /domainnames
+ OPEN : /vpclinks
+ OPEN : /clientcertificates
+ OPEN : /account
 ```
 
 The writeup's deny lists 7 patterns. They cover 3 of 24
@@ -175,20 +175,20 @@ The user's policy:
 
 ```json
 {
-  "Allow": "apigateway:GET",
-  "Resource": "*"
+ "Allow": "apigateway:GET",
+ "Resource": "*"
 },
 {
-  "Deny": "apigateway:GET",
-  "Resource": [
-    "/apikeys",
-    "/apikeys/*",
-    "/restapis/*/resources/*/methods/GET",
-    "/restapis/*/methods/GET",
-    "/restapis/*/resources/*/integration",
-    "/restapis/*/integration",
-    "/restapis/*/resources/*/methods/*/integration"
-  ]
+ "Deny": "apigateway:GET",
+ "Resource": [
+ "/apikeys",
+ "/apikeys/*",
+ "/restapis/*/resources/*/methods/GET",
+ "/restapis/*/methods/GET",
+ "/restapis/*/resources/*/integration",
+ "/restapis/*/integration",
+ "/restapis/*/resources/*/methods/*/integration"
+ ]
 }
 ```
 
@@ -213,12 +213,12 @@ This is the iteration's distinguishing feature. The Z3
 program computes five booleans from the fixture:
 
 ```
-hop 1: principal can subscribe to topic     (true)
-hop 2: topic publishes credential            (true)
+hop 1: principal can subscribe to topic (true)
+hop 2: topic publishes credential (true)
 hop 3: API Gateway accepts credential
-       (auth_type=API_KEY_ONLY, no IAM)      (true)
-hop 4: API Gateway integrates with function  (true)
-hop 5: function reads Secrets Manager        (true)
+ (auth_type=API_KEY_ONLY, no IAM) (true)
+hop 4: API Gateway integrates with function (true)
+hop 5: function reads Secrets Manager (true)
 ```
 
 All five must be true for the chain to be reachable.
@@ -242,50 +242,24 @@ writeup config means: a low-privileged user can reach
 the secret in seven API calls without holding a single
 permission on Secrets Manager.
 
-## What the matcher needed beyond iter-13
-
-This iteration extends the matcher template established
-in iter-13 with two pieces:
-
-1. **Glob with embedded `*` in resource patterns.**
-   The API-Gateway management ARNs use patterns with
-   `*` between segments
-   (e.g. `/restapis/*/resources/*/integration`). The
-   `resourceMatches` function in this iteration adds a
-   small glob matcher that splits on `*` and checks each
-   fragment in order. Reusable for any future
-   pattern-with-wildcard-segments matching.
-
-2. **Cross-service data-flow facts on observation
-   assets.** The fixture's
-   `messaging.sns.publishes_credential_type` and
-   `api.integration.function_reads_secrets_manager`
-   are not standard observation fields — they are
-   data-flow annotations the demo carries on the
-   asset. This iteration is the first one where the
-   matcher reads not just permission facts but also
-   *what data flows where*. A production data-flow
-   collector would derive these from message template
-   inspection or Lambda code analysis.
-
 ## Layout
 
 ```
 examples/sns-secrets-compound-chain/
 ├── README.md
-├── main.go                     # CEL foil
+├── main.go # CEL foil
 ├── controls/
-│   └── CTL.SNS.POLICY.SUBSCRIBE.BROAD.001.yaml
+│ └── CTL.SNS.POLICY.SUBSCRIBE.BROAD.001.yaml
 ├── fixtures/
-│   ├── writeup-config/observations/{T1,T2}.json
-│   └── remediated-config/observations/{T1,T2}.json
+│ ├── writeup-config/observations/{T1,T2}.json
+│ └── remediated-config/observations/{T1,T2}.json
 ├── z3prove/
-│   ├── go.mod
-│   ├── apigw_paths.go          # 24 known management API paths
-│   └── main.go                 # 4 queries × 2 configs + coverage table
+│ ├── go.mod
+│ ├── apigw_paths.go # 24 known management API paths
+│ └── main.go # 4 queries × 2 configs + coverage table
 └── expected/
-    ├── cel-output.txt
-    └── z3-output.txt
+ ├── cel-output.txt
+ └── z3-output.txt
 ```
 
 ## Source
@@ -298,25 +272,24 @@ walkthrough with synthetic identifiers.
 
 ## Where this fits
 
-This is **Iteration 14** of the examples roadmap.
 Three notable beats:
 
-- The CEL foil pattern from iter-11/12/13 is reused —
-  the existing per-service control is silent on both
-  fixtures because it checks the wrong layer.
-- The deny-coverage matrix from iter-13 returns,
-  scaled up: the writeup's deny list covers 3 of 24
-  known paths.
+- The CEL foil pattern from this example/12/13 is reused —
+ the existing per-service control is silent on both
+ fixtures because it checks the wrong layer.
+- The deny-coverage matrix from this example returns,
+ scaled up: the writeup's deny list covers 3 of 24
+ known paths.
 - **Cross-service data-flow modeling.** The
-  iteration's distinguishing feature is reasoning
-  about credential value flowing through SNS, not
-  permission edges. This is the first example where
-  the answer is "permission analysis says no access;
-  data analysis says yes access."
+ iteration's distinguishing feature is reasoning
+ about credential value flowing through SNS, not
+ permission edges. This is the first example where
+ the answer is "permission analysis says no access;
+ data analysis says yes access."
 
 The cumulative encoder template now spans IAM
-identity policies (iter-7 family), bucket policies
-(iter-1, 2, 11), KMS key policies (iter-11), API
-Gateway resource policies (iter-12), Allow-and-Deny
-effective-permission resolution (iter-13), and now
-**cross-service data-flow conjunctions** (iter-14).
+identity policies (this example family), bucket policies
+(this example, 2, 11), KMS key policies, API
+Gateway resource policies, Allow-and-Deny
+effective-permission resolution, and now
+**cross-service data-flow conjunctions**.

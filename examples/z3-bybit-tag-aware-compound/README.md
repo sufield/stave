@@ -1,7 +1,6 @@
 # z3-bybit-tag-aware-compound
 
-The fifth distinct SMT query shape: **permission + resource
-classification**. Asks whether any developer's wildcard
+Asks whether any developer's wildcard
 resource pattern prefix-matches a production-tagged bucket —
 the configuration that enabled the March 2025
 Bybit / Safe{WALLET} $1.5B ETH heist.
@@ -26,20 +25,20 @@ the specific (developer, wildcard, bucket) triple.
 
 ```
 Fact 1: developer is an IAM user with PutObject capability
-        has_action(developer, "s3:PutObject")
+ has_action(developer, "s3:PutObject")
 Fact 2: developer has a resource pattern ending in "*"
-        has_resource(developer, wildcard_pattern)
-        str.suffixof("*", wildcard_pattern)
+ has_resource(developer, wildcard_pattern)
+ str.suffixof("*", wildcard_pattern)
 Fact 3: a production-tagged S3 bucket exists
-        has_type(prod_bucket, "aws_s3_bucket")
-        has_tag(prod_bucket, "environment=production")
+ has_type(prod_bucket, "aws_s3_bucket")
+ has_tag(prod_bucket, "environment=production")
 Fact 4: the wildcard pattern's stripped prefix is a prefix
-        of the production bucket's ARN
-        wildcard_pattern = prefix_part ++ "*"
-        str.prefixof(prefix_part, prod_bucket)
+ of the production bucket's ARN
+ wildcard_pattern = prefix_part ++ "*"
+ str.prefixof(prefix_part, prod_bucket)
 
 Conjunction → bybit shape: developer can write to a
-              production-tagged bucket they shouldn't access.
+ production-tagged bucket they shouldn't access.
 ```
 
 ## Verdicts
@@ -47,15 +46,15 @@ Conjunction → bybit shape: developer can write to a
 | Fixture | Z3 | cvc5 | Witness |
 |---|---|---|---|
 | `bybit-pattern-before` | **sat** | **sat** | (see below) |
-| `bybit-pattern-after`  | **unsat** | **unsat** | n/a |
+| `bybit-pattern-after` | **unsat** | **unsat** | n/a |
 
 Z3 + cvc5 witness on `bybit-pattern-before`:
 
 ```
-developer        = arn:aws:iam::111122223333:user/developer-frontend
+developer = arn:aws:iam::111122223333:user/developer-frontend
 wildcard_pattern = arn:aws:s3:::company-frontend-*
-prod_bucket      = arn:aws:s3:::company-frontend-prod
-prefix_part      = arn:aws:s3:::company-frontend-
+prod_bucket = arn:aws:s3:::company-frontend-prod
+prefix_part = arn:aws:s3:::company-frontend-
 ```
 
 The four-element witness is the actual bybit attack chain:
@@ -69,9 +68,9 @@ configuration anomaly, named by Z3.
 CEL evaluates per-asset, per-control:
 
 - A wildcard-policy control fires on the developer for using
-  prefix `*` (one finding)
+ prefix `*` (one finding)
 - A production-bucket-tag control might exist for
-  governance — separate finding
+ governance — separate finding
 
 What CEL can't ask: "does the developer's specific wildcard
 pattern, given its specific prefix, prefix-match a bucket
@@ -97,37 +96,15 @@ bash examples/z3-bybit-tag-aware-compound/run.sh
 Expected output (also captured in `expected/output.txt`):
 
 ```
-bybit-pattern-before    expected=sat    z3=sat    cvc5=sat        OK
-bybit-pattern-after     expected=unsat  z3=unsat  cvc5=unsat      OK
+bybit-pattern-before expected=sat z3=sat cvc5=sat OK
+bybit-pattern-after expected=unsat z3=unsat cvc5=unsat OK
 ```
 
 Requires:
 - `z3` 4.x on PATH (required)
 - `cvc5` 1.3+ on PATH (decisive on this fixture; the bybit
-  fact set is small enough that `--finite-model-find` doesn't
-  need timeout fallback)
-
-## What this commit added to the projection
-
-One new fact extractor:
-
-| Predicate | Source SIR field | Encoding |
-|---|---|---|
-| `has_tag` | Any depth-2 `tags` block under `properties.<svc>.tags.<key>` (walks `bucket`, `storage`, `identity`, `api`, `cdn`, …) | Binary `(subject, "key=value")`. Each (key, value) pair becomes one fact with `key=value` concatenated as the object string. |
-
-The extractor scans every top-level property block for a
-`tags` sub-map rather than enumerating per-service paths,
-so it catches the bybit convention (`properties.bucket.tags`)
-and the older S3 convention (`properties.storage.tags`) and
-any new asset type that follows the same shape — no
-per-service plumbing.
-
-Determinism: tag map iteration order is randomised in Go;
-the extractor sorts block names and tag keys before emission
-so the same SIR yields byte-identical output across runs.
-
-`has_tag` added to the SMT-LIB baseline so queries reference
-it portably across fixtures.
+ fact set is small enough that `--finite-model-find` doesn't
+ need timeout fallback)
 
 ## Why binary `has_tag(s, "k=v")` instead of ternary `has_tag(s, k, v)`
 
@@ -164,24 +141,24 @@ when a consumer demonstrates need.
 ## What this is not
 
 - **Not a complete bybit detector.** SAT means "the developer
-  has a wildcard that prefix-matches a production bucket."
-  That's the configuration anomaly; whether it constitutes
-  an active threat depends on whether the developer's
-  credentials are compromised, which is out of scope. The
-  query produces the configuration list to triage.
+ has a wildcard that prefix-matches a production bucket."
+ That's the configuration anomaly; whether it constitutes
+ an active threat depends on whether the developer's
+ credentials are compromised, which is out of scope. The
+ query produces the configuration list to triage.
 
-- **Not a replacement for the iter-7a bybit go-z3 prover.**
-  That prover (via `aclements/go-z3`) does the full attack
-  reconstruction the article describes — modeling the
-  CloudFront integration, the user count, the supply chain
-  amplification. This SMT-LIB query is the existential
-  reachability check that grounds the broader analysis.
+- **Not a replacement for the bybit go-z3 prover.**
+ That prover (via `aclements/go-z3`) does the full attack
+ reconstruction the article describes — modeling the
+ CloudFront integration, the user count, the supply chain
+ amplification. This SMT-LIB query is the existential
+ reachability check that grounds the broader analysis.
 
 - **Not action↔resource bound.** The current `has_action` /
-  `has_resource` projection emits actions and resources as
-  separate predicates per principal. The bybit query gets
-  away with this because the defect is the WILDCARD PATTERN
-  ITSELF, not the action↔resource pairing. Other patterns
-  (e.g., "does developer have PutObject specifically on the
-  prod bucket?") would need a ternary `statement_grants`
-  predicate; that's a follow-up serializer extension.
+ `has_resource` projection emits actions and resources as
+ separate predicates per principal. The bybit query gets
+ away with this because the defect is the WILDCARD PATTERN
+ ITSELF, not the action↔resource pairing. Other patterns
+ (e.g., "does developer have PutObject specifically on the
+ prod bucket?") would need a ternary `statement_grants`
+ predicate; that's a follow-up serializer extension.

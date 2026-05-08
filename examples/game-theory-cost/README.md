@@ -105,33 +105,33 @@ load-bearing.
 ## What this is not
 
 - **Not a precise cost predictor.** The dollar values are
-  RELATIVE rankings. "$300 vs $18,000" means "60× harder,"
-  not literal dollars. Calibrate the constants per
-  organisation; the model's value is the ordering, not the
-  absolute number.
+ RELATIVE rankings. "$300 vs $18,000" means "60× harder,"
+ not literal dollars. Calibrate the constants per
+ organisation; the model's value is the ordering, not the
+ absolute number.
 
 - **Not a single-attacker model.** Real environments face
-  multiple attackers with different cost tolerances (script
-  kiddie, pentester, APT). This version assumes one rational
-  actor; multi-persona modelling (where each persona has its
-  own cost weights) is a separate iteration.
+ multiple attackers with different cost tolerances (script
+ kiddie, pentester, APT). This version assumes one rational
+ actor; multi-persona modelling (where each persona has its
+ own cost weights) is a future extension.
 
 - **Not a literal Nash equilibrium.** Two-player simultaneous
-  games with mixed strategies need `nashpy`'s linear-program
-  or vertex-enumeration solvers. The current ranking is a
-  one-step maximin: best defender response to the cheapest
-  attacker path. Iterating both sides to fixed-point is the
-  follow-up when multi-step defender plans matter.
+ games with mixed strategies need `nashpy`'s linear-program
+ or vertex-enumeration solvers. The current ranking is a
+ one-step maximin: best defender response to the cheapest
+ attacker path. Iterating both sides to fixed-point is the
+ follow-up when multi-step defender plans matter.
 
 - **Not a substitute for the boolean engines.** A SAFE
-  attacker-cost verdict (no path under modeled shapes) does
-  not imply zero risk. Bybit's wildcard prefix-match misses
-  here for the same reason it misses the wildcard_resource
-  shape in the risk model — string-prefix reasoning is SMT
-  territory. Use the comparison harness to triangulate.
+ attacker-cost verdict (no path under modeled shapes) does
+ not imply zero risk. Bybit's wildcard prefix-match misses
+ here for the same reason it misses the wildcard_resource
+ shape in the risk model — string-prefix reasoning is SMT
+ territory. Use the comparison harness to triangulate.
 
 - **Not a budget tool.** ROI ranking shows which remediation
-  buys the most attacker-cost increase per defender dollar.
-  It does NOT account for organisational priority, regulatory
-  requirements, or stakeholder politics. Pair it with those
-  external constraints; don't replace them.
+ buys the most attacker-cost increase per defender dollar.
+ It does NOT account for organisational priority, regulatory
+ requirements, or stakeholder politics. Pair it with those
+ external constraints; don't replace them.

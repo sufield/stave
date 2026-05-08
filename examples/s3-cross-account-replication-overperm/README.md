@@ -26,17 +26,17 @@ expected. Three policy choices in the published walkthrough
 suggest excess permission, though:
 
 1. The destination bucket policy uses
-   `Principal: "arn:aws:iam::SOURCE_ACCOUNT:root"` —
-   account-root delegates to the source account's IAM
-   layer, which means *any* IAM principal in the source
-   account can perform the bucket policy's actions if its
-   own IAM grants them.
+ `Principal: "arn:aws:iam::SOURCE_ACCOUNT:root"` —
+ account-root delegates to the source account's IAM
+ layer, which means *any* IAM principal in the source
+ account can perform the bucket policy's actions if its
+ own IAM grants them.
 2. The destination bucket policy grants `s3:Get*` and
-   `s3:List*` — wildcard action sets that admit dozens
-   of actions replication never calls.
+ `s3:List*` — wildcard action sets that admit dozens
+ of actions replication never calls.
 3. The destination KMS key policy grants `kms:Encrypt`
-   on `Resource: "*"` — visually alarming, but **KMS key
-   policies scope `*` to the key itself**, not to all keys.
+ on `Resource: "*"` — visually alarming, but **KMS key
+ policies scope `*` to the key itself**, not to all keys.
 
 Z3 runs three queries — one per claim — against the exact
 policy documents from the walkthrough and a remediated
@@ -75,16 +75,16 @@ Captured output (`expected/cel-output.txt`):
 
 ```
 === writeup-config (account-root principal, s3:Get*/s3:List* wildcards) ===
-  status: COMPLIANT   total_assets=4   violations=0
-  no findings — Stave's built-in catalogue reports clean
+ status: COMPLIANT total_assets=4 violations=0
+ no findings — Stave's built-in catalogue reports clean
 
 === remediated-config (scoped Principal, AllowRead removed) ===
-  status: COMPLIANT   total_assets=4   violations=0
-  no findings — Stave's built-in catalogue reports clean
+ status: COMPLIANT total_assets=4 violations=0
+ no findings — Stave's built-in catalogue reports clean
 
 note: this CEL run is a foil — the over-permissions live
-      in shapes Stave's built-in catalogue does not catch.
-      Run z3prove/ for the formal proofs.
+ in shapes Stave's built-in catalogue does not catch.
+ Run z3prove/ for the formal proofs.
 ```
 
 Both fixtures report `COMPLIANT/0` against
@@ -111,17 +111,17 @@ Excerpt for the writeup config:
 ```
 ========== writeup-config ==========
 --- Finding 1: non-replication principal access ---
-  ...
-  verdict:  SAT — witness: arn:aws:iam::111122223333:user/intern-developer
+ ...
+ verdict: SAT — witness: arn:aws:iam::111122223333:user/intern-developer
 
 --- Finding 2: excess actions via s3:Get* wildcard ---
-  ...
-  verdict:  SAT — witness: s3:GetObjectVersionTagging
+ ...
+ verdict: SAT — witness: s3:GetObjectVersionTagging
 
 --- Finding 3: KMS Resource:* scope check ---
-  ...
-  verdict:  UNSAT — KMS Resource:* scopes to the key itself only
-            (suspicion REFUTED; author got this right)
+ ...
+ verdict: UNSAT — KMS Resource:* scopes to the key itself only
+ (suspicion REFUTED; author got this right)
 ```
 
 For the remediated config: all three queries return
@@ -191,48 +191,24 @@ admitted; the destination key is the only one in the
 admitted set, but the query excludes it. The suspicion
 that `Resource: "*"` is over-broad is *refuted*.
 
-## What the matcher needed beyond iter-7a
-
-Iter-7a / iter-7's IAM matcher handled action wildcards
-(`*`, `s3:*`) and resource ARNs with trailing-`/*`. This
-iteration adds three rules:
-
-1. **Account-root principal** — `matchesAccountRoot` —
-   recognises that `arn:aws:iam::ACCOUNT:root` in a
-   resource policy admits every principal in that
-   account.
-2. **Mid-name action wildcard** — `s3:Get*` glob expansion
-   so `s3:GetBucketPolicy` matches even though the
-   wildcard isn't at the end of the service name.
-3. **KMS key-policy resource semantic** —
-   `kmsResourceMatches` recognises that `Resource: "*"`
-   in a KMS key policy means "this key" not "all keys."
-   Without this rule, the matcher would falsely report
-   Finding 3 as SAT.
-
-Each rule lives in a single function with a comment
-documenting the AWS semantic it encodes. The rules are
-copy-paste candidates for any future cross-account /
-KMS / bucket-policy iteration.
-
 ## Layout
 
 ```
 examples/s3-cross-account-replication-overperm/
 ├── README.md
-├── main.go                     # CEL foil
+├── main.go # CEL foil
 ├── controls/
-│   └── CTL.S3.POLICY.SCOPING.001.yaml   # closest existing control
+│ └── CTL.S3.POLICY.SCOPING.001.yaml # closest existing control
 ├── fixtures/
-│   ├── writeup-config/observations/{T1,T2}.json
-│   └── remediated-config/observations/{T1,T2}.json
+│ ├── writeup-config/observations/{T1,T2}.json
+│ └── remediated-config/observations/{T1,T2}.json
 ├── z3prove/
-│   ├── go.mod                  # separate module — CGO/libz3 stays out of stave/
-│   ├── main.go                 # three queries, two configs, six verdicts
-│   └── actions.go              # static S3 Get* action registry
+│ ├── go.mod # separate module — CGO/libz3 stays out of stave/
+│ ├── main.go # three queries, two configs, six verdicts
+│ └── actions.go # static S3 Get* action registry
 └── expected/
-    ├── cel-output.txt
-    └── z3-output.txt
+ ├── cel-output.txt
+ └── z3-output.txt
 ```
 
 The fixture's `policy_json` and `key_policy_json` strings
@@ -254,12 +230,12 @@ configuration source and runs formal queries against it.
 
 ## Where this fits
 
-This is **Iteration 11** of the examples roadmap. Closes
-the prefix-quantification arc (iter-4, iter-5) by adding
+Closes
+the prefix-quantification arc (this example, this example) by adding
 a third bucket-policy reachability example with two new
 twists: cross-account principals (account-root in
 resource policies) and KMS-specific resource semantics.
 The matcher template now covers IAM identity policies
-(iter-7a, iter-7), bucket policies with wildcard
-principals (iter-1, iter-2), and resource policies with
+(this example, this example), bucket policies with wildcard
+principals (this example, this example), and resource policies with
 account-root principals (this iteration).

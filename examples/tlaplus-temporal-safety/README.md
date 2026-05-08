@@ -18,15 +18,15 @@ drift margin from "safe today" to "unsafe in N API calls."
 Three questions the other engines don't:
 
 1. **Initial-state safety.** Does the current snapshot
-   already violate any invariant?
+ already violate any invariant?
 2. **Drift margin.** If the snapshot is safe today, how
-   many configuration toggles separate it from the nearest
-   invariant violation?
+ many configuration toggles separate it from the nearest
+ invariant violation?
 3. **State-space topology.** Of the reachable states, how
-   many are unsafe? (This is fixture-independent under the
-   simple "any single knob may flip" transition relation,
-   so the count itself is constant — but the per-invariant
-   nearest-distance is not.)
+ many are unsafe? (This is fixture-independent under the
+ simple "any single knob may flip" transition relation,
+ so the count itself is constant — but the per-invariant
+ nearest-distance is not.)
 
 The engine doesn't replace Z3 / Soufflé / etc. on the
 single-snapshot question; it *extends* them with a
@@ -130,23 +130,23 @@ install.
 state machine in TLA+. Two reasons to switch to TLC:
 
 1. **Temporal-logic properties.** TLC handles `[]` (always),
-   `<>` (eventually), and fairness assumptions natively.
-   Questions like "if the system reaches an unsafe state, is
-   it eventually detected?" are ergonomic in TLA+ and
-   awkward in Python.
+ `<>` (eventually), and fairness assumptions natively.
+ Questions like "if the system reaches an unsafe state, is
+ it eventually detected?" are ergonomic in TLA+ and
+ awkward in Python.
 
 2. **Larger state spaces.** Beyond ~20 boolean variables
-   Python BFS becomes slow. TLC has decades of optimisation
-   (symmetry reduction, partial-order reduction, parallel
-   workers) and runs comfortably on millions of states.
+ Python BFS becomes slow. TLC has decades of optimisation
+ (symmetry reduction, partial-order reduction, parallel
+ workers) and runs comfortably on millions of states.
 
 To run TLC against the same model:
 
 ```bash
 curl -fsSL -o tla2tools.jar \
-  https://github.com/tlaplus/tlaplus/releases/latest/download/tla2tools.jar
+ https://github.com/tlaplus/tlaplus/releases/latest/download/tla2tools.jar
 java -cp tla2tools.jar tlc2.TLC \
-  CognitoSafety.tla -config CognitoSafety.cfg -workers auto
+ CognitoSafety.tla -config CognitoSafety.cfg -workers auto
 ```
 
 The Python and TLC results agree on the safety-invariant
@@ -158,25 +158,25 @@ reaches a violating state.
 ## What this is not
 
 - **Not a full AWS API model.** Seven booleans can't
-  capture every configuration knob. The model is
-  intentionally narrow — adding knobs doubles state space
-  per knob, and at some point switching to TLC's symmetry
-  reduction is the right move.
+ capture every configuration knob. The model is
+ intentionally narrow — adding knobs doubles state space
+ per knob, and at some point switching to TLC's symmetry
+ reduction is the right move.
 
 - **Not a substitute for the boolean engines.** A SAFE
-  initial state under this model only means the seven knobs
-  here don't currently violate the four invariants here. A
-  fuller threat picture needs the other engines composing.
+ initial state under this model only means the seven knobs
+ here don't currently violate the four invariants here. A
+ fuller threat picture needs the other engines composing.
 
 - **Not a temporal-logic verifier.** This Python runner
-  enumerates reachable states and checks safety invariants
-  at each. Liveness (`<>P`), fairness (`WF_v(A)`), and other
-  temporal-logic properties require TLC. The `.tla` file
-  ships those concerns to TLC when needed.
+ enumerates reachable states and checks safety invariants
+ at each. Liveness (`<>P`), fairness (`WF_v(A)`), and other
+ temporal-logic properties require TLC. The `.tla` file
+ ships those concerns to TLC when needed.
 
 - **Not a drift detector.** Stave already has `stave drift`
-  for diffing two snapshots. This engine answers a
-  forward-looking *what-if*: given the current snapshot,
-  which legitimate flips break safety? Drift detection is
-  *post-hoc* (this changed); drift margin is *prospective*
-  (this can change).
+ for diffing two snapshots. This engine answers a
+ forward-looking *what-if*: given the current snapshot,
+ which legitimate flips break safety? Drift detection is
+ *post-hoc* (this changed); drift margin is *prospective*
+ (this can change).

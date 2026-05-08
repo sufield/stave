@@ -1,8 +1,7 @@
 # Example — S3 Bucket Name Dangling
 
 Demonstrates the `s3-bucket-name-dangling` (bucket-takeover)
-pattern using Stave's library API. Pattern P2 in
-[`examples-plan.md`](../../../examples-plan.md), grounded in
+pattern using Stave's library API, grounded in
 **8** of the 35 H1/disclosure fixtures catalogued in
 [`h1-stages.md`](../../../h1-stages.md): Bime, Brave (twice — for
 their APT and RPM package channels), DoD, HackerOne, IBM, Khan
@@ -39,12 +38,12 @@ This program embeds two observation fixtures and evaluates each
 against `CTL.S3.BUCKET.TAKEOVER.001` using `pkg/stave`:
 
 - `fixtures/before/` — a CloudFront origin references the
-  bucket `acme-cdn-assets`; the bucket does not exist in the
-  account (`bucket_exists: false`, `bucket_owned: false`). The
-  control fires.
-- `fixtures/after/`  — same reference, but the bucket has been
-  claimed (`bucket_exists: true`, `bucket_owned: true`). The
-  control is silent.
+ bucket `acme-cdn-assets`; the bucket does not exist in the
+ account (`bucket_exists: false`, `bucket_owned: false`). The
+ control fires.
+- `fixtures/after/` — same reference, but the bucket has been
+ claimed (`bucket_exists: true`, `bucket_owned: true`). The
+ control is silent.
 
 Output is captured into `expected/before-output.txt` and
 `expected/after-output.txt`. The article in
@@ -56,24 +55,24 @@ iteration 3) quotes those files verbatim.
 From the repo's `stave/` directory:
 
 ```bash
-go run ./examples/s3-bucket-name-dangling           # both phases
-go run ./examples/s3-bucket-name-dangling before    # dangling only
-go run ./examples/s3-bucket-name-dangling after     # claimed only
+go run ./examples/s3-bucket-name-dangling # both phases
+go run ./examples/s3-bucket-name-dangling before # dangling only
+go run ./examples/s3-bucket-name-dangling after # claimed only
 ```
 
 ## Expected output
 
 ```
 === before (dangling) ===
-  status: NON_COMPLIANT   total_assets=1   violations=1
-  CTL.S3.BUCKET.TAKEOVER.001 fired on 1 asset(s):
-    - acme-cdn-origin-assets   severity=critical   exposure_score=100.00
-  assertion: fires=true (expected) ✓
+ status: NON_COMPLIANT total_assets=1 violations=1
+ CTL.S3.BUCKET.TAKEOVER.001 fired on 1 asset(s):
+ - acme-cdn-origin-assets severity=critical exposure_score=100.00
+ assertion: fires=true (expected) ✓
 
-=== after  (claimed) ===
-  status: COMPLIANT   total_assets=1   violations=0
-  CTL.S3.BUCKET.TAKEOVER.001: no findings
-  assertion: fires=false (expected) ✓
+=== after (claimed) ===
+ status: COMPLIANT total_assets=1 violations=0
+ CTL.S3.BUCKET.TAKEOVER.001: no findings
+ assertion: fires=false (expected) ✓
 ```
 
 Severity is `critical` — bucket takeover lets an attacker serve
@@ -84,23 +83,23 @@ reference.
 ## Asset modelling
 
 The asset is a `s3_bucket_reference`, **not** an `aws_s3_bucket`.
-This is the key difference from iter-1 (`s3-public-read-policy`)
-and iter-2 (`s3-public-list-policy`):
+This is the key difference from the `s3-public-read-policy` example
+and the `s3-public-list-policy` example:
 
 ```json
 {
-  "id": "acme-cdn-origin-assets",
-  "type": "s3_bucket_reference",
-  "vendor": "aws",
-  "properties": {
-    "s3_ref": {
-      "reference_kind": "cloudfront_origin",
-      "endpoint": "assets.acme.example",
-      "bucket": "acme-cdn-assets",
-      "bucket_exists": false,
-      "bucket_owned": false
-    }
-  }
+ "id": "acme-cdn-origin-assets",
+ "type": "s3_bucket_reference",
+ "vendor": "aws",
+ "properties": {
+ "s3_ref": {
+ "reference_kind": "cloudfront_origin",
+ "endpoint": "assets.acme.example",
+ "bucket": "acme-cdn-assets",
+ "bucket_exists": false,
+ "bucket_owned": false
+ }
+ }
 }
 ```
 
@@ -114,12 +113,12 @@ evaluate.
 
 ## Why Z3 doesn't help here
 
-Iter-1, iter-2, iter-4, and iter-5 are *reachability* questions
+this, this example, this example, and this example are *reachability* questions
 ("can a public principal reach this bucket?"). This one is a
 **name lookup** — does the referenced bucket name resolve to a
 bucket the account owns? That's a discrete equality check, not
 a logic question; CEL is the right tool. The plan
-(`examples-plan.md`) marks this pattern explicitly as
+(the catalog) marks this pattern explicitly as
 not-Z3-suited.
 
 ## Layout
@@ -129,20 +128,20 @@ examples/s3-bucket-name-dangling/
 ├── README.md
 ├── main.go
 ├── controls/
-│   └── CTL.S3.BUCKET.TAKEOVER.001.yaml    # scoped to one invariant
+│ └── CTL.S3.BUCKET.TAKEOVER.001.yaml # scoped to one invariant
 ├── fixtures/
-│   ├── before/observations/{T1,T2}.json   # bucket_exists=false × 2 weeks
-│   └── after/observations/{T1,T2}.json    # bucket_exists=true × 2 weeks
+│ ├── before/observations/{T1,T2}.json # bucket_exists=false × 2 weeks
+│ └── after/observations/{T1,T2}.json # bucket_exists=true × 2 weeks
 └── expected/
-    ├── before-output.txt
-    └── after-output.txt
+ ├── before-output.txt
+ └── after-output.txt
 ```
 
 ## Where this fits
 
-This is **Iteration 3, Phase B** of the examples roadmap. No
+No
 new `pkg/stave` API was needed — `FindingsForControl` from
-iter-1 still does the work; the only change is that the asset
+this example still does the work; the only change is that the asset
 type is `s3_bucket_reference` instead of `aws_s3_bucket`. The
 predicate's field paths (`properties.s3_ref.*`) are observation-
 schema concerns, transparent to the library API.

@@ -63,9 +63,9 @@ Snippet (cognito writeup, anonymous chain):
 
 anonymous reaches arn:aws:s3:::app-public-assets via s3:GetObject:
 arn:aws:cognito-identity:...:identitypool/us-east-1:abc-app-pool --[allows_unauthenticated]--> true
-  arn:aws:cognito-identity:...:identitypool/us-east-1:abc-app-pool --[maps_unauth_to]--> arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
-    arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[grants]--> s3:GetObject
-      arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[on_resource]--> arn:aws:s3:::app-public-assets
+ arn:aws:cognito-identity:...:identitypool/us-east-1:abc-app-pool --[maps_unauth_to]--> arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
+ arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[grants]--> s3:GetObject
+ arn:aws:iam::111122223333:role/Cognito_appUnauth_Role --[on_resource]--> arn:aws:s3:::app-public-assets
 ```
 
 Multi-hop privesc (vulnerable fixture, 3-hop chain):
@@ -75,8 +75,8 @@ Multi-hop privesc (vulnerable fixture, 3-hop chain):
 
 privesc developer -> admin-role:
 developer --[assumes]--> onboarding-role
-  onboarding-role --[assumes]--> operator-role
-    operator-role --[assumes]--> admin-role
+ onboarding-role --[assumes]--> operator-role
+ operator-role --[assumes]--> admin-role
 ```
 
 Six total privesc proofs on the vulnerable fixture: three
@@ -110,11 +110,11 @@ permits under its current vocabulary.
 
 ## Comparison harness integration
 
-Added to `examples/compare-engines/engines.json` and the
-fixture matrix. Prolog's verdict:
+Verdict in the comparison harness:
+Prolog's verdict:
 
 - **UNSAFE** if any of the four sections produces a proof
-  tree (any `--[` line)
+ tree (any `--[` line)
 - **SAFE** if every section prints `(none)`
 
 Prolog covers the Cognito + Multi-hop + Rhino-vulnerable
@@ -127,28 +127,28 @@ from.
 ## What this is not
 
 - **Not a meta-interpreter.** Standard SWI-Prolog
-  backtracking does the work; the proof tree is built by
-  passing a list accumulator through the rule heads. No
-  `solve/2` definition, no clause-walker. If a future
-  iteration needs a meta-interpreter (e.g., to expose
-  *why-not* proofs alongside successes), that's a separate
-  exercise.
+ backtracking does the work; the proof tree is built by
+ passing a list accumulator through the rule heads. No
+ `solve/2` definition, no clause-walker. If a future
+ iteration needs a meta-interpreter (e.g., to expose
+ *why-not* proofs alongside successes), that's a separate
+ exercise.
 
 - **Not a counter.** Soufflé already counts paths; Prolog
-  enumerates proofs. The two compose: Soufflé tells you
-  there are 12 anonymous-reach triples; Prolog renders each
-  one as a derivation an auditor can read. Use both.
+ enumerates proofs. The two compose: Soufflé tells you
+ there are 12 anonymous-reach triples; Prolog renders each
+ one as a derivation an auditor can read. Use both.
 
 - **Not a unsoundness detector.** A Prolog proof witnesses
-  *a* derivation, not *the* derivation, and not *all*
-  derivations. The SIR's binary projection of action and
-  resource means some proofs are the cartesian artifact
-  rather than a real AWS-policy match. Treat each proof as
-  "the SIR permits this composition under its current
-  vocabulary" — not "AWS would actually allow this call."
+ *a* derivation, not *the* derivation, and not *all*
+ derivations. The SIR's binary projection of action and
+ resource means some proofs are the cartesian artifact
+ rather than a real AWS-policy match. Treat each proof as
+ "the SIR permits this composition under its current
+ vocabulary" — not "AWS would actually allow this call."
 
 - **Not a tabled-evaluation example.** The privesc walker
-  uses a depth bound + visited list for cycle prevention.
-  For genuinely deep chains or graphs with cycles, switch
-  to `:- table privesc_path/3.` (SWI-Prolog tabling) — the
-  existing rules support it without modification.
+ uses a depth bound + visited list for cycle prevention.
+ For genuinely deep chains or graphs with cycles, switch
+ to `:- table privesc_path/3.` (SWI-Prolog tabling) — the
+ existing rules support it without modification.
