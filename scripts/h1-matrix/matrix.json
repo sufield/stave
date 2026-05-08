@@ -1,0 +1,3302 @@
+{
+  "fixtures": [
+    {
+      "label": "apigw-private-api-scoped-deny/broadened-allow",
+      "example": "apigw-private-api-scoped-deny",
+      "fixture": "broadened-allow",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 71
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 6
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.98
+    },
+    {
+      "label": "apigw-private-api-scoped-deny/remediated-config",
+      "example": "apigw-private-api-scoped-deny",
+      "fixture": "remediated-config",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 71
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 6
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.72
+    },
+    {
+      "label": "apigw-private-api-scoped-deny/writeup-config",
+      "example": "apigw-private-api-scoped-deny",
+      "fixture": "writeup-config",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 71
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 6
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.58
+    },
+    {
+      "label": "cloudtrail-stop-logging/after",
+      "example": "cloudtrail-stop-logging",
+      "fixture": "after",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 71
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 6
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.85
+    },
+    {
+      "label": "cloudtrail-stop-logging/before",
+      "example": "cloudtrail-stop-logging",
+      "fixture": "before",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.CLOUDTRAIL.STOP.DETECT.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 73
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 8
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.87
+    },
+    {
+      "label": "cloudtrail-stop-logging/data-events-after",
+      "example": "cloudtrail-stop-logging",
+      "fixture": "data-events-after",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 96
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 31
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.84
+    },
+    {
+      "label": "cloudtrail-stop-logging/data-events-before",
+      "example": "cloudtrail-stop-logging",
+      "fixture": "data-events-before",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 96
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 31
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.41
+    },
+    {
+      "label": "cognito-no-mfa-advanced-security/after",
+      "example": "cognito-no-mfa-advanced-security",
+      "fixture": "after",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 71
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 6
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 5.05
+    },
+    {
+      "label": "cognito-no-mfa-advanced-security/before",
+      "example": "cognito-no-mfa-advanced-security",
+      "fixture": "before",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.COGNITO.MFA.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 73
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 8
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.64
+    },
+    {
+      "label": "cognito-self-register-to-aws-creds/remediated-config",
+      "example": "cognito-self-register-to-aws-creds",
+      "fixture": "remediated-config",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 90
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 25
+      },
+      "smt_queries": [
+        {
+          "query": "z3-cognito-unauth-chain/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-cognito-auth-chain/query-auth-chain",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "sat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-cognito-auth-chain/query-self-register-chain",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 12,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 5.66
+    },
+    {
+      "label": "cognito-self-register-to-aws-creds/writeup-config",
+      "example": "cognito-self-register-to-aws-creds",
+      "fixture": "writeup-config",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.COGNITO.SELFREG.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 106
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 41
+      },
+      "smt_queries": [
+        {
+          "query": "z3-cognito-unauth-chain/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "sat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-cognito-auth-chain/query-auth-chain",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "sat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-cognito-auth-chain/query-self-register-chain",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "sat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 12,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 42,
+          "self_register_reachable": 9
+        }
+      },
+      "clingo": {
+        "verdict": "ok",
+        "violations": [
+          "unauth_cognito_s3_read",
+          "wildcard_action_resource"
+        ],
+        "count": 2
+      },
+      "prolog": {
+        "verdict": "ok",
+        "proof_steps": 84
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "CRITICAL",
+        "p_exploit_pct": 41.2
+      },
+      "tla": {
+        "verdict": "UNSAFE",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "$300",
+        "cost": 300
+      },
+      "elapsed_s": 9.13
+    },
+    {
+      "label": "eks-aws-auth-template-injection/after",
+      "example": "eks-aws-auth-template-injection",
+      "fixture": "after",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 71
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 6
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 3.93
+    },
+    {
+      "label": "eks-aws-auth-template-injection/before",
+      "example": "eks-aws-auth-template-injection",
+      "fixture": "before",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.K8S.AUTH.ACCESSKEYMAP.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 73
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 8
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 5.21
+    },
+    {
+      "label": "eks-rbac-webhook-config-access/after",
+      "example": "eks-rbac-webhook-config-access",
+      "fixture": "after",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 71
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 6
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.46
+    },
+    {
+      "label": "eks-rbac-webhook-config-access/before",
+      "example": "eks-rbac-webhook-config-access",
+      "fixture": "before",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.K8S.RBAC.WEBHOOK.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 73
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 8
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.55
+    },
+    {
+      "label": "iam-21-privesc-5-patterns/partial-deny",
+      "example": "iam-21-privesc-5-patterns",
+      "fixture": "partial-deny",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 146
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 81
+      },
+      "smt_queries": [
+        {
+          "query": "z3-rhino-pattern1-self-mutation/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "error",
+            "detail": "(timeout)"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-rhino-pattern2-credential-creation/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "error",
+            "detail": "(timeout)"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-rhino-pattern3-passrole-compute/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "error",
+            "detail": "(timeout)"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-rhino-pattern4-indirect-invoke/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "error",
+            "detail": "(timeout)"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-rhino-pattern5-trust-modification/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "error",
+            "detail": "(timeout)"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 58,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "$1100",
+        "cost": 1100
+      },
+      "elapsed_s": 169.74
+    },
+    {
+      "label": "iam-21-privesc-5-patterns/real-world-pattern3",
+      "example": "iam-21-privesc-5-patterns",
+      "fixture": "real-world-pattern3",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 101
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 36
+      },
+      "smt_queries": [
+        {
+          "query": "z3-rhino-pattern1-self-mutation/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-rhino-pattern2-credential-creation/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-rhino-pattern3-passrole-compute/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "sat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-rhino-pattern4-indirect-invoke/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-rhino-pattern5-trust-modification/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 12,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 6.17
+    },
+    {
+      "label": "iam-21-privesc-5-patterns/remediated",
+      "example": "iam-21-privesc-5-patterns",
+      "fixture": "remediated",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 82
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 17
+      },
+      "smt_queries": [
+        {
+          "query": "z3-rhino-pattern1-self-mutation/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-rhino-pattern2-credential-creation/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-rhino-pattern3-passrole-compute/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-rhino-pattern4-indirect-invoke/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-rhino-pattern5-trust-modification/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 9,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.91
+    },
+    {
+      "label": "iam-21-privesc-5-patterns/rhino-vulnerable",
+      "example": "iam-21-privesc-5-patterns",
+      "fixture": "rhino-vulnerable",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 157
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 92
+      },
+      "smt_queries": [
+        {
+          "query": "z3-rhino-pattern1-self-mutation/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "error",
+            "detail": "(timeout)"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-rhino-pattern2-credential-creation/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "error",
+            "detail": "(timeout)"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-rhino-pattern3-passrole-compute/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "error",
+            "detail": "(timeout)"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-rhino-pattern4-indirect-invoke/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "error",
+            "detail": "(timeout)"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-rhino-pattern5-trust-modification/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "error",
+            "detail": "(timeout)"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 58,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "$1100",
+        "cost": 1100
+      },
+      "elapsed_s": 173.23
+    },
+    {
+      "label": "iam-attach-user-policy-self/after",
+      "example": "iam-attach-user-policy-self",
+      "fixture": "after",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 75
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 10
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 3,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.52
+    },
+    {
+      "label": "iam-attach-user-policy-self/before",
+      "example": "iam-attach-user-policy-self",
+      "fixture": "before",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 78
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 13
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 3,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.78
+    },
+    {
+      "label": "iam-autoscaling-privesc-bypass/remediated-config",
+      "example": "iam-autoscaling-privesc-bypass",
+      "fixture": "remediated-config",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 98
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 33
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 19,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "CRITICAL",
+        "p_exploit_pct": 40.0
+      },
+      "tla": {
+        "verdict": "UNSAFE",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.6
+    },
+    {
+      "label": "iam-autoscaling-privesc-bypass/writeup-config",
+      "example": "iam-autoscaling-privesc-bypass",
+      "fixture": "writeup-config",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 100
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 35
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 19,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "CRITICAL",
+        "p_exploit_pct": 40.0
+      },
+      "tla": {
+        "verdict": "UNSAFE",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "$900",
+        "cost": 900
+      },
+      "elapsed_s": 4.48
+    },
+    {
+      "label": "iam-multi-hop-trust/remediated",
+      "example": "iam-multi-hop-trust",
+      "fixture": "remediated",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 93
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 28
+      },
+      "smt_queries": [
+        {
+          "query": "z3-multi-hop-can-assume/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 2,
+          "production_reachable": 0,
+          "reachable": 6,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "ok",
+        "proof_steps": 2
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "CRITICAL",
+        "p_exploit_pct": 40.0
+      },
+      "tla": {
+        "verdict": "UNSAFE",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "$1500",
+        "cost": 1500
+      },
+      "elapsed_s": 4.94
+    },
+    {
+      "label": "iam-multi-hop-trust/vulnerable",
+      "example": "iam-multi-hop-trust",
+      "fixture": "vulnerable",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 94
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 29
+      },
+      "smt_queries": [
+        {
+          "query": "z3-multi-hop-can-assume/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "sat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 6,
+          "production_reachable": 0,
+          "reachable": 10,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "ok",
+        "violations": [
+          "privesc_chain_2hop"
+        ],
+        "count": 1
+      },
+      "prolog": {
+        "verdict": "ok",
+        "proof_steps": 10
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "CRITICAL",
+        "p_exploit_pct": 72.9
+      },
+      "tla": {
+        "verdict": "UNSAFE",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "$2300",
+        "cost": 2300
+      },
+      "elapsed_s": 5.4
+    },
+    {
+      "label": "iam-overpermission-wildcard/after",
+      "example": "iam-overpermission-wildcard",
+      "fixture": "after",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 80
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 15
+      },
+      "smt_queries": [
+        {
+          "query": "z3-overpermission-fixture/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-bybit-tag-aware-compound/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-compound-overperm-assumable/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 15,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.87
+    },
+    {
+      "label": "iam-overpermission-wildcard/before",
+      "example": "iam-overpermission-wildcard",
+      "fixture": "before",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.IAM.POLICY.RESOURCE.WILDCARD.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 80
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 15
+      },
+      "smt_queries": [
+        {
+          "query": "z3-overpermission-fixture/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "sat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-bybit-tag-aware-compound/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-compound-overperm-assumable/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "sat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 1,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 8,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "ok",
+        "violations": [
+          "exploitable_overperm",
+          "wildcard_action_resource"
+        ],
+        "count": 2
+      },
+      "prolog": {
+        "verdict": "ok",
+        "proof_steps": 2
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "CRITICAL",
+        "p_exploit_pct": 65.0
+      },
+      "tla": {
+        "verdict": "UNSAFE",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "$900",
+        "cost": 900
+      },
+      "elapsed_s": 5.35
+    },
+    {
+      "label": "iam-overpermission-wildcard/bybit-pattern-after",
+      "example": "iam-overpermission-wildcard",
+      "fixture": "bybit-pattern-after",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 94
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 29
+      },
+      "smt_queries": [
+        {
+          "query": "z3-overpermission-fixture/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-bybit-tag-aware-compound/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-compound-overperm-assumable/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 4,
+          "reachable": 16,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 5.12
+    },
+    {
+      "label": "iam-overpermission-wildcard/bybit-pattern-before",
+      "example": "iam-overpermission-wildcard",
+      "fixture": "bybit-pattern-before",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 90
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 25
+      },
+      "smt_queries": [
+        {
+          "query": "z3-overpermission-fixture/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-bybit-tag-aware-compound/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "sat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        },
+        {
+          "query": "z3-compound-overperm-assumable/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 8,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 5.51
+    },
+    {
+      "label": "s3-broad-write-scope/after",
+      "example": "s3-broad-write-scope",
+      "fixture": "after",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 76
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 11
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.38
+    },
+    {
+      "label": "s3-broad-write-scope/before",
+      "example": "s3-broad-write-scope",
+      "fixture": "before",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.S3.WRITE.SCOPE.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 78
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 13
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 5.04
+    },
+    {
+      "label": "s3-bucket-name-dangling/after",
+      "example": "s3-bucket-name-dangling",
+      "fixture": "after",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 71
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 6
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.73
+    },
+    {
+      "label": "s3-bucket-name-dangling/before",
+      "example": "s3-bucket-name-dangling",
+      "fixture": "before",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.S3.BUCKET.TAKEOVER.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 73
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 8
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.22
+    },
+    {
+      "label": "s3-cross-account-replication-overperm/remediated-config",
+      "example": "s3-cross-account-replication-overperm",
+      "fixture": "remediated-config",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 98
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 33
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 45,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 5.27
+    },
+    {
+      "label": "s3-cross-account-replication-overperm/writeup-config",
+      "example": "s3-cross-account-replication-overperm",
+      "fixture": "writeup-config",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 98
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 33
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 45,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.99
+    },
+    {
+      "label": "s3-dotgit-readable/after",
+      "example": "s3-dotgit-readable",
+      "fixture": "after",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 72
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 7
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.99
+    },
+    {
+      "label": "s3-dotgit-readable/before",
+      "example": "s3-dotgit-readable",
+      "fixture": "before",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.S3.REPO.ARTIFACT.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 74
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 9
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 5.27
+    },
+    {
+      "label": "s3-public-list-policy/after",
+      "example": "s3-public-list-policy",
+      "fixture": "after",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 72
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 7
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.68
+    },
+    {
+      "label": "s3-public-list-policy/before",
+      "example": "s3-public-list-policy",
+      "fixture": "before",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.S3.PUBLIC.LIST.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 74
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 9
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 5.11
+    },
+    {
+      "label": "s3-public-read-policy/after",
+      "example": "s3-public-read-policy",
+      "fixture": "after",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 72
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 7
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.65
+    },
+    {
+      "label": "s3-public-read-policy/before",
+      "example": "s3-public-read-policy",
+      "fixture": "before",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.S3.PUBLIC.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 74
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 9
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 5.25
+    },
+    {
+      "label": "s3-tenant-prefix-isolation/after",
+      "example": "s3-tenant-prefix-isolation",
+      "fixture": "after",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 73
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 8
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.64
+    },
+    {
+      "label": "s3-tenant-prefix-isolation/before",
+      "example": "s3-tenant-prefix-isolation",
+      "fixture": "before",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.S3.TENANT.ISOLATION.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 75
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 10
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.85
+    },
+    {
+      "label": "sns-secrets-compound-chain/remediated-config",
+      "example": "sns-secrets-compound-chain",
+      "fixture": "remediated-config",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 94
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 29
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 18,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.89
+    },
+    {
+      "label": "sns-secrets-compound-chain/writeup-config",
+      "example": "sns-secrets-compound-chain",
+      "fixture": "writeup-config",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 94
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 29
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 10,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.97
+    },
+    {
+      "label": "staging-stale-endpoint/active-staging",
+      "example": "staging-stale-endpoint",
+      "fixture": "active-staging",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 75
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 10
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 5.09
+    },
+    {
+      "label": "staging-stale-endpoint/prod-dormant",
+      "example": "staging-stale-endpoint",
+      "fixture": "prod-dormant",
+      "cel": {
+        "verdict": "COMPLIANT",
+        "findings": 0,
+        "controls": []
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 76
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 11
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 5.17
+    },
+    {
+      "label": "staging-stale-endpoint/stale-staging",
+      "example": "staging-stale-endpoint",
+      "fixture": "stale-staging",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.LIFECYCLE.STAGING.STALE.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 78
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 13
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 4.89
+    },
+    {
+      "label": "staging-stale-endpoint/stale-staging-public",
+      "example": "staging-stale-endpoint",
+      "fixture": "stale-staging-public",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 2,
+        "controls": [
+          "CTL.LIFECYCLE.STAGING.STALE.001",
+          "CTL.S3.PUBLIC.LIST.002"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 80
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 15
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "empty",
+        "violations": [],
+        "count": 0
+      },
+      "prolog": {
+        "verdict": "empty",
+        "proof_steps": 0
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 5.12
+    }
+  ],
+  "z3_runners": {
+    "cognito-self-register-to-aws-creds": [
+      [
+        "z3-cognito-unauth-chain",
+        "query.smt2"
+      ],
+      [
+        "z3-cognito-auth-chain",
+        "query-auth-chain.smt2"
+      ],
+      [
+        "z3-cognito-auth-chain",
+        "query-self-register-chain.smt2"
+      ]
+    ],
+    "iam-overpermission-wildcard": [
+      [
+        "z3-overpermission-fixture",
+        "query.smt2"
+      ],
+      [
+        "z3-bybit-tag-aware-compound",
+        "query.smt2"
+      ],
+      [
+        "z3-compound-overperm-assumable",
+        "query.smt2"
+      ]
+    ],
+    "iam-multi-hop-trust": [
+      [
+        "z3-multi-hop-can-assume",
+        "query.smt2"
+      ]
+    ],
+    "iam-21-privesc-5-patterns": [
+      [
+        "z3-rhino-pattern1-self-mutation",
+        "query.smt2"
+      ],
+      [
+        "z3-rhino-pattern2-credential-creation",
+        "query.smt2"
+      ],
+      [
+        "z3-rhino-pattern3-passrole-compute",
+        "query.smt2"
+      ],
+      [
+        "z3-rhino-pattern4-indirect-invoke",
+        "query.smt2"
+      ],
+      [
+        "z3-rhino-pattern5-trust-modification",
+        "query.smt2"
+      ]
+    ]
+  }
+}
