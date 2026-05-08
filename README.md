@@ -77,6 +77,34 @@ git clone https://github.com/sufield/stave.git
 cd stave && make build
 ```
 
+## Try it in Codespaces
+
+Click the **Open in GitHub Codespaces** badge above. The container provisions Go 1.26.3, Z3, cvc5, SWI-Prolog, Soufflé, libz3-dev, and a Python venv with `clingo` / `python-sat` / `pyyaml` — then runs `make build`. Wait for the **postCreate** task to finish in the terminal pane (look for `[stave devcontainer] ready`).
+
+Then run any example from the codespace shell:
+
+```bash
+# 1. CEL — public bucket detection (exits 3 on violation)
+./cmd/stave/stave apply \
+  --controls examples/public-bucket/controls \
+  --observations examples/public-bucket/observations \
+  --max-unsafe 12h --now 2026-01-02T00:00:00Z --allow-unknown-input
+
+# 2. Z3 + cvc5 — multi-hop role-assumption reachability
+bash examples/z3-multi-hop-can-assume/run.sh
+
+# 3. Soufflé — blast-radius reachability over JSONL facts
+bash examples/souffle-reachability/run.sh
+
+# 4. Prolog — derivation tree for a privesc path
+bash examples/prolog-proof-trees/run.sh
+
+# 5. The full nine-engine consensus harness
+bash examples/compare-engines/run.sh
+```
+
+Each example's `README.md` has the full description and expected output. See [`examples/`](examples/) for the catalog and [`examples/PREREQUISITES.md`](examples/PREREQUISITES.md) for running these examples outside Codespaces.
+
 ## Quick start
 
 ```bash
