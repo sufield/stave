@@ -261,7 +261,7 @@ func validateAndReport(
 // some downstream code branches on whether time was pinned.
 type constantClock struct{ now time.Time }
 
-func (c constantClock) Now() time.Time      { return c.now }
+func (c constantClock) Now() time.Time       { return c.now }
 func (c constantClock) IsUserProvided() bool { return true }
 
 // resolveNow returns the parsed --now value or, when --now is

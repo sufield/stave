@@ -810,8 +810,8 @@ func stringifiedPolicyFacts(assets []sir.AssetFact) []Fact {
 			}
 			var raw any = block
 			for _, k := range rule.keys {
-				m, ok := raw.(map[string]any)
-				if !ok {
+				m, mok := raw.(map[string]any)
+				if !mok {
 					raw = nil
 					break
 				}
@@ -1501,15 +1501,15 @@ func serializeSMT2(facts []Fact, w io.Writer) error {
 		// read these. fact_id leads the block because it's the
 		// canonical correlation key.
 		if f.FactID != "" {
-			bw.writeLine(fmt.Sprintf(";; fact_id: %s", f.FactID))
+			bw.writeLine(";; fact_id: " + f.FactID)
 		}
 		if f.Provenance != nil {
-			bw.writeLine(fmt.Sprintf(";; projector: %s", f.Provenance.Projector))
+			bw.writeLine(";; projector: " + f.Provenance.Projector)
 			if f.Provenance.PropertyPath != "" {
-				bw.writeLine(fmt.Sprintf(";; path: %s", f.Provenance.PropertyPath))
+				bw.writeLine(";; path: " + f.Provenance.PropertyPath)
 			}
 			if f.Provenance.CapturedAt != "" {
-				bw.writeLine(fmt.Sprintf(";; captured: %s", f.Provenance.CapturedAt))
+				bw.writeLine(";; captured: " + f.Provenance.CapturedAt)
 			}
 		}
 		bw.writeLine(fmt.Sprintf("(assert (%s %s %s))", f.Predicate, smt2Quote(f.Subject), smt2Quote(f.Object)))

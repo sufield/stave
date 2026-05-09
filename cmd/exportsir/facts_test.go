@@ -1127,12 +1127,12 @@ func TestPropertyFacts_EmitsAllowlistedLeaves(t *testing.T) {
 	}
 	facts := ExtractFacts(doc)
 	want := map[string]string{
-		"has_public_read|arn:aws:s3:::public-bucket":                 "true",
-		"has_public_list|arn:aws:s3:::public-bucket":                 "false",
-		"has_read_via_resource|arn:aws:s3:::public-bucket":           "true",
-		"has_public_access_blocked|arn:aws:s3:::public-bucket":       "false",
-		"has_exposed_repo_artifacts|arn:aws:s3:::public-bucket":      "true",
-		"has_mfa_enforced|arn:aws:cognito-idp:::userpool/p1":         "false",
+		"has_public_read|arn:aws:s3:::public-bucket":                      "true",
+		"has_public_list|arn:aws:s3:::public-bucket":                      "false",
+		"has_read_via_resource|arn:aws:s3:::public-bucket":                "true",
+		"has_public_access_blocked|arn:aws:s3:::public-bucket":            "false",
+		"has_exposed_repo_artifacts|arn:aws:s3:::public-bucket":           "true",
+		"has_mfa_enforced|arn:aws:cognito-idp:::userpool/p1":              "false",
 		"has_advanced_security_enabled|arn:aws:cognito-idp:::userpool/p1": "false",
 	}
 	got := map[string]string{}
