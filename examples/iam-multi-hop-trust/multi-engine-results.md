@@ -18,8 +18,8 @@ against each fixture's observation snapshots.
 - **TLA+** — UNSAFE
 - **Game theory** — $1500
 
-- *fact export*: `jsonl` 28 lines / `smt2` 93 lines
-- *runtime*: 4.94s
+- *fact export*: `jsonl` 28 lines / `smt2` 239 lines
+- *runtime*: 1.53s
 
 ### `vulnerable`
 
@@ -33,8 +33,8 @@ against each fixture's observation snapshots.
 - **TLA+** — UNSAFE
 - **Game theory** — $2300
 
-- *fact export*: `jsonl` 29 lines / `smt2` 94 lines
-- *runtime*: 5.4s
+- *fact export*: `jsonl` 29 lines / `smt2` 244 lines
+- *runtime*: 1.91s
 
 ## Reading the matrix
 

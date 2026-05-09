@@ -9,7 +9,7 @@ against each fixture's observation snapshots.
 ### `after`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — —
+- **SMT (Z3 / cvc5 / Yices)** — query: unsat
 - **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
@@ -18,14 +18,14 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 7 lines / `smt2` 72 lines
-- *runtime*: 4.99s
+- *fact export*: `jsonl` 12 lines / `smt2` 159 lines
+- *runtime*: 1.72s
 
 ### `before`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.S3.REPO.ARTIFACT.001`
-- **SMT (Z3 / cvc5 / Yices)** — —
+- **SMT (Z3 / cvc5 / Yices)** — query: sat
 - **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
@@ -34,8 +34,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 9 lines / `smt2` 74 lines
-- *runtime*: 5.27s
+- *fact export*: `jsonl` 14 lines / `smt2` 169 lines
+- *runtime*: 1.82s
 
 ## Reading the matrix
 

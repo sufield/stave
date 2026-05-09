@@ -292,6 +292,18 @@
           "current_value": "users/{user_id}/{date}/",
           "fix_action": "remove this property from the configuration"
         }
+      ],
+      "contributing_fact_ids": [
+        "89c8449e81e5",
+        "faa595d9e5e7",
+        "bc8e8853f4c0",
+        "cea089eb650b",
+        "dab29b562d79",
+        "4670f9e493f9",
+        "28e13196086b",
+        "ee970a4c49b3",
+        "1336fe62750f",
+        "bc65b90d74da"
       ]
     },
     {
@@ -464,6 +476,15 @@
           "current_value": "write",
           "fix_action": "change from \"write\" to any other value, or remove"
         }
+      ],
+      "contributing_fact_ids": [
+        "f838e24d6547",
+        "7fb8af60d93c",
+        "c1112b8b3be9",
+        "a3331e7115ff",
+        "3923833bd361",
+        "f159d7d7a326",
+        "5ff98a624653"
       ]
     }
   ],
@@ -661,7 +682,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
+      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
       "dirty": false
     }
   }

@@ -279,6 +279,38 @@
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "f476e0b4489c",
+        "c907a8f19bc1",
+        "7d5b02ad060e",
+        "4982d73c60ce",
+        "b098c5a65f88",
+        "2edee9806cf8",
+        "40bee262fa57",
+        "057c5c18415f",
+        "387b2e9c86d8",
+        "d112d11f5d06",
+        "584fccefe597",
+        "f1c6731e7956",
+        "584fccefe597",
+        "2bf18ef4b3c9",
+        "584fccefe597",
+        "d2aec4e9cb9f",
+        "584fccefe597",
+        "59f7828735ff",
+        "584fccefe597",
+        "0b78c040109e",
+        "584fccefe597",
+        "82452ac8026f",
+        "584fccefe597",
+        "7ba8c251a1de",
+        "584fccefe597",
+        "d75d0a5c7d11",
+        "584fccefe597",
+        "62973eb9ffc3",
+        "584fccefe597",
+        "397b787ee6dd"
       ]
     },
     {
@@ -547,6 +579,38 @@
           "current_value": "phi",
           "fix_action": "change from \"pii\" to any other value, or remove"
         }
+      ],
+      "contributing_fact_ids": [
+        "f476e0b4489c",
+        "c907a8f19bc1",
+        "7d5b02ad060e",
+        "4982d73c60ce",
+        "b098c5a65f88",
+        "2edee9806cf8",
+        "40bee262fa57",
+        "057c5c18415f",
+        "387b2e9c86d8",
+        "d112d11f5d06",
+        "584fccefe597",
+        "f1c6731e7956",
+        "584fccefe597",
+        "2bf18ef4b3c9",
+        "584fccefe597",
+        "d2aec4e9cb9f",
+        "584fccefe597",
+        "59f7828735ff",
+        "584fccefe597",
+        "0b78c040109e",
+        "584fccefe597",
+        "82452ac8026f",
+        "584fccefe597",
+        "7ba8c251a1de",
+        "584fccefe597",
+        "d75d0a5c7d11",
+        "584fccefe597",
+        "62973eb9ffc3",
+        "584fccefe597",
+        "397b787ee6dd"
       ]
     },
     {
@@ -687,6 +751,38 @@
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "f476e0b4489c",
+        "c907a8f19bc1",
+        "7d5b02ad060e",
+        "4982d73c60ce",
+        "b098c5a65f88",
+        "2edee9806cf8",
+        "40bee262fa57",
+        "057c5c18415f",
+        "387b2e9c86d8",
+        "d112d11f5d06",
+        "584fccefe597",
+        "f1c6731e7956",
+        "584fccefe597",
+        "2bf18ef4b3c9",
+        "584fccefe597",
+        "d2aec4e9cb9f",
+        "584fccefe597",
+        "59f7828735ff",
+        "584fccefe597",
+        "0b78c040109e",
+        "584fccefe597",
+        "82452ac8026f",
+        "584fccefe597",
+        "7ba8c251a1de",
+        "584fccefe597",
+        "d75d0a5c7d11",
+        "584fccefe597",
+        "62973eb9ffc3",
+        "584fccefe597",
+        "397b787ee6dd"
       ]
     },
     {
@@ -827,6 +923,38 @@
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "f476e0b4489c",
+        "c907a8f19bc1",
+        "7d5b02ad060e",
+        "4982d73c60ce",
+        "b098c5a65f88",
+        "2edee9806cf8",
+        "40bee262fa57",
+        "057c5c18415f",
+        "387b2e9c86d8",
+        "d112d11f5d06",
+        "584fccefe597",
+        "f1c6731e7956",
+        "584fccefe597",
+        "2bf18ef4b3c9",
+        "584fccefe597",
+        "d2aec4e9cb9f",
+        "584fccefe597",
+        "59f7828735ff",
+        "584fccefe597",
+        "0b78c040109e",
+        "584fccefe597",
+        "82452ac8026f",
+        "584fccefe597",
+        "7ba8c251a1de",
+        "584fccefe597",
+        "d75d0a5c7d11",
+        "584fccefe597",
+        "62973eb9ffc3",
+        "584fccefe597",
+        "397b787ee6dd"
       ]
     },
     {
@@ -967,6 +1095,38 @@
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "f476e0b4489c",
+        "c907a8f19bc1",
+        "7d5b02ad060e",
+        "4982d73c60ce",
+        "b098c5a65f88",
+        "2edee9806cf8",
+        "40bee262fa57",
+        "057c5c18415f",
+        "387b2e9c86d8",
+        "d112d11f5d06",
+        "584fccefe597",
+        "f1c6731e7956",
+        "584fccefe597",
+        "2bf18ef4b3c9",
+        "584fccefe597",
+        "d2aec4e9cb9f",
+        "584fccefe597",
+        "59f7828735ff",
+        "584fccefe597",
+        "0b78c040109e",
+        "584fccefe597",
+        "82452ac8026f",
+        "584fccefe597",
+        "7ba8c251a1de",
+        "584fccefe597",
+        "d75d0a5c7d11",
+        "584fccefe597",
+        "62973eb9ffc3",
+        "584fccefe597",
+        "397b787ee6dd"
       ]
     },
     {
@@ -1193,6 +1353,38 @@
           "current_value": "",
           "fix_action": "set to true"
         }
+      ],
+      "contributing_fact_ids": [
+        "f476e0b4489c",
+        "c907a8f19bc1",
+        "7d5b02ad060e",
+        "4982d73c60ce",
+        "b098c5a65f88",
+        "2edee9806cf8",
+        "40bee262fa57",
+        "057c5c18415f",
+        "387b2e9c86d8",
+        "d112d11f5d06",
+        "584fccefe597",
+        "f1c6731e7956",
+        "584fccefe597",
+        "2bf18ef4b3c9",
+        "584fccefe597",
+        "d2aec4e9cb9f",
+        "584fccefe597",
+        "59f7828735ff",
+        "584fccefe597",
+        "0b78c040109e",
+        "584fccefe597",
+        "82452ac8026f",
+        "584fccefe597",
+        "7ba8c251a1de",
+        "584fccefe597",
+        "d75d0a5c7d11",
+        "584fccefe597",
+        "62973eb9ffc3",
+        "584fccefe597",
+        "397b787ee6dd"
       ]
     },
     {
@@ -1344,6 +1536,20 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "contributing_fact_ids": [
+        "1f358b89a30e",
+        "810eca630a78",
+        "5c4ffe908dd0",
+        "ebc6b3b1ff00",
+        "c44adbd467bc",
+        "ac7d4c3a8921",
+        "9df379d01046",
+        "044b9027d84f",
+        "9f24afae98bb",
+        "84ad99d719df",
+        "9f24afae98bb",
+        "3052f250d9e0"
       ]
     },
     {
@@ -1495,6 +1701,38 @@
       "scope_tags": [
         "aws",
         "s3"
+      ],
+      "contributing_fact_ids": [
+        "f476e0b4489c",
+        "c907a8f19bc1",
+        "7d5b02ad060e",
+        "4982d73c60ce",
+        "b098c5a65f88",
+        "2edee9806cf8",
+        "40bee262fa57",
+        "057c5c18415f",
+        "387b2e9c86d8",
+        "d112d11f5d06",
+        "584fccefe597",
+        "f1c6731e7956",
+        "584fccefe597",
+        "2bf18ef4b3c9",
+        "584fccefe597",
+        "d2aec4e9cb9f",
+        "584fccefe597",
+        "59f7828735ff",
+        "584fccefe597",
+        "0b78c040109e",
+        "584fccefe597",
+        "82452ac8026f",
+        "584fccefe597",
+        "7ba8c251a1de",
+        "584fccefe597",
+        "d75d0a5c7d11",
+        "584fccefe597",
+        "62973eb9ffc3",
+        "584fccefe597",
+        "397b787ee6dd"
       ]
     },
     {
@@ -1645,6 +1883,38 @@
           "current_value": "false",
           "fix_action": "set to true (enable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "f476e0b4489c",
+        "c907a8f19bc1",
+        "7d5b02ad060e",
+        "4982d73c60ce",
+        "b098c5a65f88",
+        "2edee9806cf8",
+        "40bee262fa57",
+        "057c5c18415f",
+        "387b2e9c86d8",
+        "d112d11f5d06",
+        "584fccefe597",
+        "f1c6731e7956",
+        "584fccefe597",
+        "2bf18ef4b3c9",
+        "584fccefe597",
+        "d2aec4e9cb9f",
+        "584fccefe597",
+        "59f7828735ff",
+        "584fccefe597",
+        "0b78c040109e",
+        "584fccefe597",
+        "82452ac8026f",
+        "584fccefe597",
+        "7ba8c251a1de",
+        "584fccefe597",
+        "d75d0a5c7d11",
+        "584fccefe597",
+        "62973eb9ffc3",
+        "584fccefe597",
+        "397b787ee6dd"
       ]
     },
     {
@@ -1823,6 +2093,38 @@
           "current_value": "phi",
           "fix_action": "change from \"phi\" to any other value, or remove"
         }
+      ],
+      "contributing_fact_ids": [
+        "f476e0b4489c",
+        "c907a8f19bc1",
+        "7d5b02ad060e",
+        "4982d73c60ce",
+        "b098c5a65f88",
+        "2edee9806cf8",
+        "40bee262fa57",
+        "057c5c18415f",
+        "387b2e9c86d8",
+        "d112d11f5d06",
+        "584fccefe597",
+        "f1c6731e7956",
+        "584fccefe597",
+        "2bf18ef4b3c9",
+        "584fccefe597",
+        "d2aec4e9cb9f",
+        "584fccefe597",
+        "59f7828735ff",
+        "584fccefe597",
+        "0b78c040109e",
+        "584fccefe597",
+        "82452ac8026f",
+        "584fccefe597",
+        "7ba8c251a1de",
+        "584fccefe597",
+        "d75d0a5c7d11",
+        "584fccefe597",
+        "62973eb9ffc3",
+        "584fccefe597",
+        "397b787ee6dd"
       ]
     },
     {
@@ -2047,6 +2349,38 @@
           "current_value": "phi",
           "fix_action": "remove this property from the configuration"
         }
+      ],
+      "contributing_fact_ids": [
+        "f476e0b4489c",
+        "c907a8f19bc1",
+        "7d5b02ad060e",
+        "4982d73c60ce",
+        "b098c5a65f88",
+        "2edee9806cf8",
+        "40bee262fa57",
+        "057c5c18415f",
+        "387b2e9c86d8",
+        "d112d11f5d06",
+        "584fccefe597",
+        "f1c6731e7956",
+        "584fccefe597",
+        "2bf18ef4b3c9",
+        "584fccefe597",
+        "d2aec4e9cb9f",
+        "584fccefe597",
+        "59f7828735ff",
+        "584fccefe597",
+        "0b78c040109e",
+        "584fccefe597",
+        "82452ac8026f",
+        "584fccefe597",
+        "7ba8c251a1de",
+        "584fccefe597",
+        "d75d0a5c7d11",
+        "584fccefe597",
+        "62973eb9ffc3",
+        "584fccefe597",
+        "397b787ee6dd"
       ]
     },
     {
@@ -2182,6 +2516,20 @@
           "current_value": "",
           "fix_action": "populate this property in the configuration"
         }
+      ],
+      "contributing_fact_ids": [
+        "1f358b89a30e",
+        "810eca630a78",
+        "5c4ffe908dd0",
+        "ebc6b3b1ff00",
+        "c44adbd467bc",
+        "ac7d4c3a8921",
+        "9df379d01046",
+        "044b9027d84f",
+        "9f24afae98bb",
+        "84ad99d719df",
+        "9f24afae98bb",
+        "3052f250d9e0"
       ]
     }
   ],
@@ -2718,7 +3066,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "5fb1c1381fd7e85b9540ceeda6027b7bec5bfc19",
+      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
       "dirty": false
     }
   }

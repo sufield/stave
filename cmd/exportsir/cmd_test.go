@@ -107,7 +107,7 @@ func TestRun_EmitsSIRJSONWithCrossAccountRoleHops(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	err := run(t.Context(), &buf, &options{
+	err := run(t.Context(), &buf, &bytes.Buffer{}, &options{
 		ControlsDir:     "controls",
 		ObservationsDir: "observations",
 		Format:          "json",
@@ -131,7 +131,7 @@ func TestRun_EmitsSIRJSONWithCrossAccountRoleHops(t *testing.T) {
 
 func TestRun_RejectsUnknownFormat(t *testing.T) {
 	var buf bytes.Buffer
-	err := run(t.Context(), &buf, &options{Format: "yaml"},
+	err := run(t.Context(), &buf, &bytes.Buffer{}, &options{Format: "yaml"},
 		ctlFactory(nil), obsFactory(nil), celFactory())
 	if err == nil {
 		t.Fatalf("expected error for unknown format")
@@ -143,7 +143,7 @@ func TestRun_RejectsUnknownFormat(t *testing.T) {
 
 func TestRun_RejectsMalformedNow(t *testing.T) {
 	var buf bytes.Buffer
-	err := run(t.Context(), &buf, &options{Format: "json", Now: "not-a-time"},
+	err := run(t.Context(), &buf, &bytes.Buffer{}, &options{Format: "json", Now: "not-a-time"},
 		ctlFactory(nil), obsFactory(nil), celFactory())
 	if err == nil {
 		t.Fatalf("expected error for malformed --now")
@@ -175,7 +175,7 @@ func TestRun_ProducesByteIdenticalOutputAcrossRuns(t *testing.T) {
 
 	var first, second bytes.Buffer
 	for _, w := range []*bytes.Buffer{&first, &second} {
-		if err := run(t.Context(), w, &options{
+		if err := run(t.Context(), w, &bytes.Buffer{}, &options{
 			Format: "json",
 			Now:    "2026-05-01T12:00:00Z",
 		}, ctlFactory(nil), obsFactory([]asset.Snapshot{snap}), celFactory()); err != nil {

@@ -85,7 +85,7 @@ func fixtureDoc() *sir.Document {
 // kinds land they should produce new triples here.
 func TestExtractFacts_CoversAllCategories(t *testing.T) {
 	t.Parallel()
-	facts := extractFacts(fixtureDoc())
+	facts := ExtractFacts(fixtureDoc())
 
 	categories := make(map[string]int)
 	for _, f := range facts {
@@ -103,7 +103,7 @@ func TestExtractFacts_CoversAllCategories(t *testing.T) {
 // triple — Datalog/ASP consumers can branch on it directly.
 func TestExtractFacts_EmitsCrossAccountTriple(t *testing.T) {
 	t.Parallel()
-	facts := extractFacts(fixtureDoc())
+	facts := ExtractFacts(fixtureDoc())
 	for _, f := range facts {
 		if f.Predicate == "cross_account_assumes" &&
 			f.Subject == "arn:aws:iam::111122223333:role/AppRole" &&
@@ -118,7 +118,7 @@ func TestExtractFacts_EmitsCrossAccountTriple(t *testing.T) {
 // every line decodes to a Fact and the count matches the slice.
 func TestSerializeJSONL_OneFactPerLine(t *testing.T) {
 	t.Parallel()
-	facts := extractFacts(fixtureDoc())
+	facts := ExtractFacts(fixtureDoc())
 	var buf bytes.Buffer
 	if err := serializeJSONL(facts, &buf); err != nil {
 		t.Fatalf("serializeJSONL: %v", err)
@@ -143,8 +143,8 @@ func TestSerializeJSONL_OneFactPerLine(t *testing.T) {
 // outputs across snapshots; non-determinism breaks that.
 func TestSerializeJSONL_Deterministic(t *testing.T) {
 	t.Parallel()
-	a := extractFacts(fixtureDoc())
-	b := extractFacts(fixtureDoc())
+	a := ExtractFacts(fixtureDoc())
+	b := ExtractFacts(fixtureDoc())
 	var bufA, bufB bytes.Buffer
 	if err := serializeJSONL(a, &bufA); err != nil {
 		t.Fatalf("a: %v", err)
@@ -164,7 +164,7 @@ func TestSerializeJSONL_Deterministic(t *testing.T) {
 // solver-agnostic.
 func TestSerializeSMT2_FactsOnlyNoQueries(t *testing.T) {
 	t.Parallel()
-	facts := extractFacts(fixtureDoc())
+	facts := ExtractFacts(fixtureDoc())
 	var buf bytes.Buffer
 	if err := serializeSMT2(facts, &buf); err != nil {
 		t.Fatalf("serializeSMT2: %v", err)
@@ -182,7 +182,7 @@ func TestSerializeSMT2_FactsOnlyNoQueries(t *testing.T) {
 // (declare-fun ... Bool). SMT solvers reject undeclared symbols.
 func TestSerializeSMT2_DeclaresEachPredicate(t *testing.T) {
 	t.Parallel()
-	facts := extractFacts(fixtureDoc())
+	facts := ExtractFacts(fixtureDoc())
 	var buf bytes.Buffer
 	if err := serializeSMT2(facts, &buf); err != nil {
 		t.Fatalf("serializeSMT2: %v", err)
@@ -240,7 +240,7 @@ func TestSerializeSMT2_DeclaresBaselinePredicates(t *testing.T) {
 // open-world default would be trivially SAT.
 func TestSerializeSMT2_ClosedWorldAxiomsPresent(t *testing.T) {
 	t.Parallel()
-	facts := extractFacts(fixtureDoc())
+	facts := ExtractFacts(fixtureDoc())
 	var buf bytes.Buffer
 	if err := serializeSMT2(facts, &buf); err != nil {
 		t.Fatalf("serializeSMT2: %v", err)
@@ -340,7 +340,7 @@ func cognitoFixture() *sir.Document {
 // expressible.
 func TestCognitoMappingFacts_EmitsChainEdges(t *testing.T) {
 	t.Parallel()
-	facts := extractFacts(cognitoFixture())
+	facts := ExtractFacts(cognitoFixture())
 	want := map[string]string{
 		"allows_unauthenticated": "true",
 		"maps_unauth_to":         "arn:aws:iam::111122223333:role/UnauthRole",
@@ -381,7 +381,7 @@ func TestCognitoMappingFacts_OmitsNegativeCase(t *testing.T) {
 			},
 		}},
 	}
-	for _, f := range extractFacts(doc) {
+	for _, f := range ExtractFacts(doc) {
 		if f.Predicate == "allows_unauthenticated" {
 			t.Errorf("unexpected positive allows_unauthenticated fact when source is false: %+v", f)
 		}
@@ -396,7 +396,7 @@ func TestCognitoMappingFacts_OmitsNegativeCase(t *testing.T) {
 // without action↔resource binding.
 func TestIAMPolicyFacts_EmitsActionsAndResources(t *testing.T) {
 	t.Parallel()
-	facts := extractFacts(cognitoFixture())
+	facts := ExtractFacts(cognitoFixture())
 	wantActions := map[string]bool{"s3:GetObject": false, "s3:ListBucket": false}
 	wantResources := map[string]bool{
 		"arn:aws:s3:::app-data":   false,
@@ -452,7 +452,7 @@ func TestTrustPolicyFacts_EmitsServicePrincipals(t *testing.T) {
 			},
 		}},
 	}
-	facts := extractFacts(doc)
+	facts := ExtractFacts(doc)
 	want := map[string]bool{
 		"lambda.amazonaws.com":    false,
 		"ecs-tasks.amazonaws.com": false,
@@ -500,7 +500,7 @@ func TestTagFacts_EmitsKeyEqualsValue(t *testing.T) {
 		"environment=production":           false,
 		"data_classification=confidential": false,
 	}
-	for _, f := range extractFacts(doc) {
+	for _, f := range ExtractFacts(doc) {
 		if f.Predicate != "has_tag" {
 			continue
 		}
@@ -538,7 +538,7 @@ func TestTagFacts_WalksMultipleBlockNames(t *testing.T) {
 		"in_storage=yes":  false,
 		"in_identity=yes": false,
 	}
-	for _, f := range extractFacts(doc) {
+	for _, f := range ExtractFacts(doc) {
 		if f.Predicate != "has_tag" {
 			continue
 		}
@@ -573,12 +573,12 @@ func TestTagFacts_DeterministicOrder(t *testing.T) {
 		}},
 	}
 	var seq1, seq2 []string
-	for _, f := range extractFacts(doc) {
+	for _, f := range ExtractFacts(doc) {
 		if f.Predicate == "has_tag" {
 			seq1 = append(seq1, f.Object)
 		}
 	}
-	for _, f := range extractFacts(doc) {
+	for _, f := range ExtractFacts(doc) {
 		if f.Predicate == "has_tag" {
 			seq2 = append(seq2, f.Object)
 		}
@@ -635,7 +635,7 @@ func TestCognitoUserPoolFacts_EmitsUnsafeOnly(t *testing.T) {
 			},
 		},
 	}
-	facts := extractFacts(doc)
+	facts := ExtractFacts(doc)
 	var subjects []string
 	for _, f := range facts {
 		if f.Predicate == "self_registration_unrestricted" {
@@ -664,7 +664,7 @@ func TestTrustPolicyFacts_SkipsNonRoleAssets(t *testing.T) {
 			},
 		}},
 	}
-	for _, f := range extractFacts(doc) {
+	for _, f := range ExtractFacts(doc) {
 		if f.Predicate == "trusts_service" {
 			t.Errorf("trusts_service fact leaked from non-role asset: %+v", f)
 		}
@@ -698,7 +698,7 @@ func TestIAMPolicyFacts_SkipsDeny(t *testing.T) {
 			},
 		}},
 	}
-	for _, f := range extractFacts(doc) {
+	for _, f := range ExtractFacts(doc) {
 		if f.Predicate == "has_action" || f.Predicate == "has_resource" {
 			t.Errorf("Deny statement leaked into has_action/has_resource: %+v", f)
 		}
@@ -751,7 +751,7 @@ func TestAssumeEdgeFacts_EmitsWhenBothSidesAgree(t *testing.T) {
 		},
 	}
 	var found bool
-	for _, f := range extractFacts(doc) {
+	for _, f := range ExtractFacts(doc) {
 		if f.Predicate == "can_assume" && f.Subject == userARN && f.Object == roleARN {
 			found = true
 		}
@@ -806,7 +806,7 @@ func TestAssumeEdgeFacts_AsymmetricNoEmit(t *testing.T) {
 			},
 		},
 	}
-	for _, f := range extractFacts(doc) {
+	for _, f := range ExtractFacts(doc) {
 		if f.Predicate == "can_assume" && f.Subject == userARN && f.Object == roleARN {
 			t.Errorf("can_assume should NOT be emitted without reciprocal trust; got %+v", f)
 		}
@@ -890,7 +890,7 @@ func TestAssumeEdgeFacts_MultiHopChain(t *testing.T) {
 		{b, c}: false,
 		{c, d}: false,
 	}
-	for _, f := range extractFacts(doc) {
+	for _, f := range ExtractFacts(doc) {
 		if f.Predicate != "can_assume" {
 			continue
 		}
@@ -902,5 +902,773 @@ func TestAssumeEdgeFacts_MultiHopChain(t *testing.T) {
 		if !ok {
 			t.Errorf("missing can_assume edge: %s -> %s", edge[0], edge[1])
 		}
+	}
+}
+
+// TestDenyPolicyFacts_EmitsDenyActions confirms Deny statements
+// in attached_policies project to has_deny_action / has_deny_resource
+// facts so external solvers can compute Allow ∩ ¬Deny.
+func TestDenyPolicyFacts_EmitsDenyActions(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{{
+			ID:   "arn:aws:iam::111122223333:user/data-scientist",
+			Type: "aws_iam_user",
+			Properties: map[string]any{
+				"identity": map[string]any{
+					"policies": map[string]any{
+						"attached_policies": []any{
+							map[string]any{
+								"statements": []any{
+									map[string]any{
+										"Effect":   "Deny",
+										"Action":   []any{"autoscaling:CreateAutoScalingGroup", "ecs:RunTask"},
+										"Resource": "*",
+									},
+									map[string]any{
+										"Effect":   "Allow",
+										"Action":   "s3:GetObject",
+										"Resource": "arn:aws:s3:::data-bucket/*",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}},
+	}
+	facts := ExtractFacts(doc)
+	wantDenyActions := map[string]bool{
+		"autoscaling:CreateAutoScalingGroup": false,
+		"ecs:RunTask":                        false,
+	}
+	wantDenyResource := false
+	wantAllowAction := false
+	for _, f := range facts {
+		if f.Predicate == "has_deny_action" {
+			if _, ok := wantDenyActions[f.Object]; ok {
+				wantDenyActions[f.Object] = true
+			}
+		}
+		if f.Predicate == "has_deny_resource" && f.Object == "*" {
+			wantDenyResource = true
+		}
+		if f.Predicate == "has_action" && f.Object == "s3:GetObject" {
+			wantAllowAction = true
+		}
+	}
+	for action, hit := range wantDenyActions {
+		if !hit {
+			t.Errorf("missing has_deny_action(%s)", action)
+		}
+	}
+	if !wantDenyResource {
+		t.Errorf("missing has_deny_resource(\"*\")")
+	}
+	if !wantAllowAction {
+		t.Errorf("Allow statement still emits has_action; deny extraction did not displace it")
+	}
+}
+
+// TestConditionFacts_EmitsOperatorKeyPairs confirms each Condition
+// operator/key combination projects to one has_condition fact with
+// "<operator>:<key>" as the binary object encoding.
+func TestConditionFacts_EmitsOperatorKeyPairs(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{{
+			ID:   "arn:aws:iam::111122223333:user/scoped",
+			Type: "aws_iam_user",
+			Properties: map[string]any{
+				"identity": map[string]any{
+					"policies": map[string]any{
+						"attached_policies": []any{
+							map[string]any{
+								"statements": []any{
+									map[string]any{
+										"Effect":   "Allow",
+										"Action":   "iam:PassRole",
+										"Resource": "*",
+										"Condition": map[string]any{
+											"StringEquals": map[string]any{
+												"iam:PassedToService": []any{"ec2.amazonaws.com"},
+											},
+											"StringLike": map[string]any{
+												"aws:RequestTag/team": "data-*",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}},
+	}
+	facts := ExtractFacts(doc)
+	want := map[string]bool{
+		"StringEquals:iam:PassedToService": false,
+		"StringLike:aws:RequestTag/team":   false,
+	}
+	for _, f := range facts {
+		if f.Predicate != "has_condition" {
+			continue
+		}
+		if _, ok := want[f.Object]; ok {
+			want[f.Object] = true
+		}
+	}
+	for obj, hit := range want {
+		if !hit {
+			t.Errorf("missing has_condition(%s)", obj)
+		}
+	}
+}
+
+// TestDataEventLoggingFacts_EmitsPerBucket confirms a CloudTrail
+// trail's event_selectors[].data_resources[].values[] project to
+// one has_data_event_logging(bucket, "true") fact per bucket ARN,
+// trimming the trailing slash so the bucket subject matches
+// has_type(bucket, "aws_s3_bucket") downstream.
+func TestDataEventLoggingFacts_EmitsPerBucket(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{{
+			ID:   "arn:aws:cloudtrail:us-east-1:111122223333:trail/audit-trail",
+			Type: "aws_cloudtrail_trail",
+			Properties: map[string]any{
+				"trail": map[string]any{
+					"event_selectors": []any{
+						map[string]any{
+							"data_resources": []any{
+								map[string]any{
+									"type": "AWS::S3::Object",
+									"values": []any{
+										"arn:aws:s3:::confidential-data/",
+										"arn:aws:s3:::pii-records/",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}},
+	}
+	facts := ExtractFacts(doc)
+	want := map[string]bool{
+		"arn:aws:s3:::confidential-data": false,
+		"arn:aws:s3:::pii-records":       false,
+	}
+	for _, f := range facts {
+		if f.Predicate != "has_data_event_logging" {
+			continue
+		}
+		if f.Object != "true" {
+			t.Errorf("has_data_event_logging emitted with object=%q (expected \"true\")", f.Object)
+		}
+		if _, ok := want[f.Subject]; ok {
+			want[f.Subject] = true
+		}
+	}
+	for bucket, hit := range want {
+		if !hit {
+			t.Errorf("missing has_data_event_logging(%s)", bucket)
+		}
+	}
+}
+
+// TestPropertyFacts_EmitsAllowlistedLeaves walks a synthetic asset
+// shaped like the s3-public-read fixture's storage block and
+// confirms the propertyAllowlist projects each leaf as has_<leaf>
+// with the verbatim string value. Asset-type filter is honoured;
+// non-matching asset types skip the rule.
+func TestPropertyFacts_EmitsAllowlistedLeaves(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{
+			{
+				ID:   "arn:aws:s3:::public-bucket",
+				Type: "aws_s3_bucket",
+				Properties: map[string]any{
+					"storage": map[string]any{
+						"access": map[string]any{
+							"public_read":       true,
+							"public_list":       false,
+							"read_via_resource": true,
+						},
+						"controls": map[string]any{
+							"public_access_fully_blocked": false,
+						},
+						"content": map[string]any{
+							"exposed_repo_artifacts": true,
+						},
+					},
+				},
+			},
+			{
+				// Non-S3 asset; should not pick up the S3-typed rules.
+				ID:   "arn:aws:cognito-idp:::userpool/p1",
+				Type: "aws_cognito_user_pool",
+				Properties: map[string]any{
+					"identity": map[string]any{
+						"auth": map[string]any{
+							"mfa_enforced": false,
+						},
+						"advanced_security": map[string]any{
+							"enabled": false,
+						},
+					},
+				},
+			},
+		},
+	}
+	facts := ExtractFacts(doc)
+	want := map[string]string{
+		"has_public_read|arn:aws:s3:::public-bucket":                 "true",
+		"has_public_list|arn:aws:s3:::public-bucket":                 "false",
+		"has_read_via_resource|arn:aws:s3:::public-bucket":           "true",
+		"has_public_access_blocked|arn:aws:s3:::public-bucket":       "false",
+		"has_exposed_repo_artifacts|arn:aws:s3:::public-bucket":      "true",
+		"has_mfa_enforced|arn:aws:cognito-idp:::userpool/p1":         "false",
+		"has_advanced_security_enabled|arn:aws:cognito-idp:::userpool/p1": "false",
+	}
+	got := map[string]string{}
+	for _, f := range facts {
+		if !strings.HasPrefix(f.Predicate, "has_") {
+			continue
+		}
+		key := f.Predicate + "|" + f.Subject
+		if _, ok := want[key]; ok {
+			got[key] = f.Object
+		}
+	}
+	for k, v := range want {
+		if got[k] != v {
+			t.Errorf("missing or wrong: %s = %q (got %q)", k, v, got[k])
+		}
+	}
+	// Asset-type filter sanity: the cognito asset should NOT have S3 facts.
+	for _, f := range facts {
+		if f.Subject == "arn:aws:cognito-idp:::userpool/p1" &&
+			(f.Predicate == "has_public_read" || f.Predicate == "has_public_list") {
+			t.Errorf("S3-typed rule fired on cognito asset: %s", f.Predicate)
+		}
+	}
+}
+
+// TestPropertyFacts_SkipsNestedNonScalar confirms that when an
+// allowlist path lands on a map or slice (not a scalar), no fact
+// is emitted. Prevents accidental "true" / "false" emissions for
+// {"key": "value"} structures.
+func TestPropertyFacts_SkipsNestedNonScalar(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{{
+			ID:   "arn:aws:s3:::nested-test",
+			Type: "aws_s3_bucket",
+			Properties: map[string]any{
+				"storage": map[string]any{
+					"access": map[string]any{
+						// Wrong shape — public_read should be a scalar but is a map here.
+						"public_read": map[string]any{"nested": true},
+					},
+				},
+			},
+		}},
+	}
+	facts := ExtractFacts(doc)
+	for _, f := range facts {
+		if f.Predicate == "has_public_read" {
+			t.Errorf("emitted has_public_read on a non-scalar value: %v", f.Object)
+		}
+	}
+}
+
+// TestProvenance_AnnotatesAllFacts confirms every fact emitted by
+// ExtractFacts carries a non-nil Provenance with a populated
+// projector name and an observation-relative property_path.
+// Asset-bound facts also carry captured_at when the asset has a
+// lifecycle.last_seen timestamp.
+func TestProvenance_AnnotatesAllFacts(t *testing.T) {
+	t.Parallel()
+	doc := fixtureDoc()
+	facts := ExtractFacts(doc)
+	if len(facts) == 0 {
+		t.Fatalf("no facts produced from fixtureDoc")
+	}
+	for i, f := range facts {
+		if f.Provenance == nil {
+			t.Errorf("facts[%d] (%s/%s/%s) has nil Provenance", i, f.Subject, f.Predicate, f.Object)
+			continue
+		}
+		if f.Provenance.Projector == "" {
+			t.Errorf("facts[%d] empty projector", i)
+		}
+		if f.Provenance.PropertyPath == "" {
+			t.Errorf("facts[%d] empty property_path", i)
+		}
+		// PropertyPath should be observation-relative — no leading "assets[N]." prefix.
+		if strings.HasPrefix(f.Provenance.PropertyPath, "assets[") {
+			t.Errorf("facts[%d] property_path still has assets[N] prefix: %s", i, f.Provenance.PropertyPath)
+		}
+	}
+}
+
+// TestStripIndexPrefix covers the path-rewriting helper.
+func TestStripIndexPrefix(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		in, want string
+	}{
+		{"assets[0].properties.identity.kind", "properties.identity.kind"},
+		{"controls[3].severity", "severity"},
+		{"identities[1].role_chains[0].hops[2]", "role_chains[0].hops[2]"},
+		{"temporal.windows[0].asset_id", "asset_id"},
+		// No prefix → unchanged
+		{"properties.foo.bar", "properties.foo.bar"},
+		{"", ""},
+	}
+	for _, c := range cases {
+		got := stripIndexPrefix(c.in)
+		if got != c.want {
+			t.Errorf("stripIndexPrefix(%q) = %q, want %q", c.in, got, c.want)
+		}
+	}
+}
+
+// TestFactID_Deterministic confirms the same (subject, predicate,
+// object) triple always produces the same 12-hex-character ID,
+// across calls and across runs.
+func TestFactID_Deterministic(t *testing.T) {
+	t.Parallel()
+	id1 := factID("arn:aws:iam::111122223333:role/X", "has_action", "s3:*")
+	id2 := factID("arn:aws:iam::111122223333:role/X", "has_action", "s3:*")
+	if id1 != id2 {
+		t.Errorf("non-deterministic fact_id: %s vs %s", id1, id2)
+	}
+	if len(id1) != 12 {
+		t.Errorf("fact_id length = %d, want 12", len(id1))
+	}
+	// Different content → different ID
+	id3 := factID("arn:aws:iam::111122223333:role/X", "has_action", "s3:GetObject")
+	if id1 == id3 {
+		t.Errorf("fact_id collision on different objects: %s == %s", id1, id3)
+	}
+}
+
+// TestFactID_AppearsOnEveryFact confirms ExtractFacts stamps a
+// fact_id on every fact, never empty, always 12 chars.
+func TestFactID_AppearsOnEveryFact(t *testing.T) {
+	t.Parallel()
+	doc := fixtureDoc()
+	facts := ExtractFacts(doc)
+	for i, f := range facts {
+		if f.FactID == "" {
+			t.Errorf("facts[%d] (%s/%s) has empty fact_id", i, f.Subject, f.Predicate)
+		}
+		if len(f.FactID) != 12 {
+			t.Errorf("facts[%d] fact_id length=%d, want 12: %q", i, len(f.FactID), f.FactID)
+		}
+	}
+}
+
+// TestFactID_StableAcrossRuns confirms two ExtractFacts calls on
+// the same fixture produce identical fact_id sequences.
+func TestFactID_StableAcrossRuns(t *testing.T) {
+	t.Parallel()
+	doc := fixtureDoc()
+	first := ExtractFacts(doc)
+	second := ExtractFacts(doc)
+	if len(first) != len(second) {
+		t.Fatalf("fact count drift: %d vs %d", len(first), len(second))
+	}
+	for i := range first {
+		if first[i].FactID != second[i].FactID {
+			t.Errorf("facts[%d] fact_id drift: %s vs %s", i, first[i].FactID, second[i].FactID)
+		}
+	}
+}
+
+// TestConditionFacts_EmitsValuesAlongsideKeys confirms each
+// Condition operator/key/value triple projects to BOTH a
+// has_condition (key presence) fact AND a has_condition_value
+// (key=value) fact. Array-valued conditions emit one fact per
+// value.
+func TestConditionFacts_EmitsValuesAlongsideKeys(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{{
+			ID:   "arn:aws:iam::111122223333:role/scoped",
+			Type: "aws_iam_role",
+			Properties: map[string]any{
+				"identity": map[string]any{
+					"policies": map[string]any{
+						"attached_policies": []any{
+							map[string]any{
+								"statements": []any{
+									map[string]any{
+										"Effect":   "Allow",
+										"Action":   "iam:PassRole",
+										"Resource": "*",
+										"Condition": map[string]any{
+											"StringEquals": map[string]any{
+												"iam:PassedToService": []any{"ec2.amazonaws.com", "lambda.amazonaws.com"},
+											},
+											"StringLike": map[string]any{
+												"aws:RequestTag/team": "data-*",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}},
+	}
+	facts := ExtractFacts(doc)
+	wantKeys := map[string]bool{
+		"StringEquals:iam:PassedToService": false,
+		"StringLike:aws:RequestTag/team":   false,
+	}
+	wantValues := map[string]bool{
+		"StringEquals:iam:PassedToService=ec2.amazonaws.com":    false,
+		"StringEquals:iam:PassedToService=lambda.amazonaws.com": false,
+		"StringLike:aws:RequestTag/team=data-*":                 false,
+	}
+	for _, f := range facts {
+		if f.Predicate == "has_condition" {
+			if _, ok := wantKeys[f.Object]; ok {
+				wantKeys[f.Object] = true
+			}
+		}
+		if f.Predicate == "has_condition_value" {
+			if _, ok := wantValues[f.Object]; ok {
+				wantValues[f.Object] = true
+			}
+		}
+	}
+	for k, hit := range wantKeys {
+		if !hit {
+			t.Errorf("missing has_condition(%s)", k)
+		}
+	}
+	for v, hit := range wantValues {
+		if !hit {
+			t.Errorf("missing has_condition_value(%s)", v)
+		}
+	}
+}
+
+// TestStringifiedPolicyFacts_ParsesAPIGWResourcePolicy walks the
+// stringified resource_policy_json field on an API Gateway asset
+// and confirms the parser lifts the StringNotEquals condition
+// keys/values into has_condition / has_condition_value facts.
+// Without this projector, the structured-map walker can't see
+// inside the JSON string, and apigw-style fixtures stay
+// SIR-identical between vulnerable and remediated.
+func TestStringifiedPolicyFacts_ParsesAPIGWResourcePolicy(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{{
+			ID:   "arn:aws:apigateway:us-east-1::/restapis/api1",
+			Type: "aws_apigateway_rest_api",
+			Properties: map[string]any{
+				"api": map[string]any{
+					"network": map[string]any{
+						"resource_policy_json": `{"Version":"2012-10-17","Statement":[{"Effect":"Deny","Principal":"*","Action":"execute-api:Invoke","Resource":"*","Condition":{"StringNotEquals":{"aws:sourceVpce":"vpce-abc"}}}]}`,
+					},
+				},
+			},
+		}},
+	}
+	facts := ExtractFacts(doc)
+	wantCond := "StringNotEquals:aws:sourceVpce"
+	wantVal := "StringNotEquals:aws:sourceVpce=vpce-abc"
+	var sawCond, sawVal bool
+	for _, f := range facts {
+		if f.Predicate == "has_condition" && f.Object == wantCond && f.Source == "stringified_policy" {
+			sawCond = true
+		}
+		if f.Predicate == "has_condition_value" && f.Object == wantVal && f.Source == "stringified_policy" {
+			sawVal = true
+		}
+	}
+	if !sawCond {
+		t.Errorf("missing has_condition(%s) from parsed resource_policy_json", wantCond)
+	}
+	if !sawVal {
+		t.Errorf("missing has_condition_value(%s) from parsed resource_policy_json", wantVal)
+	}
+}
+
+// TestStringifiedPolicyFacts_SilentOnInvalidJSON confirms a
+// malformed policy_json string produces zero facts and no error.
+// Some fixtures may carry non-JSON strings under the same field
+// name on a different asset; the parser must not log or error.
+func TestStringifiedPolicyFacts_SilentOnInvalidJSON(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{{
+			ID:   "arn:aws:apigateway:us-east-1::/restapis/api2",
+			Type: "aws_apigateway_rest_api",
+			Properties: map[string]any{
+				"api": map[string]any{
+					"network": map[string]any{
+						"resource_policy_json": "not valid JSON {",
+					},
+				},
+			},
+		}},
+	}
+	facts := ExtractFacts(doc)
+	for _, f := range facts {
+		if f.Source == "stringified_policy" {
+			t.Errorf("invalid JSON produced fact: %+v", f)
+		}
+	}
+}
+
+// TestStringifiedPolicyFacts_SilentOnMissingField confirms a
+// fixture without the configured field produces zero
+// stringified_policy facts.
+func TestStringifiedPolicyFacts_SilentOnMissingField(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{{
+			ID:   "arn:aws:apigateway:us-east-1::/restapis/api3",
+			Type: "aws_apigateway_rest_api",
+			// No api.network.resource_policy_json present.
+			Properties: map[string]any{
+				"api": map[string]any{
+					"network": map[string]any{
+						"vpc_endpoint_ids": []any{"vpce-xyz"},
+					},
+				},
+			},
+		}},
+	}
+	facts := ExtractFacts(doc)
+	for _, f := range facts {
+		if f.Source == "stringified_policy" {
+			t.Errorf("missing field produced fact: %+v", f)
+		}
+	}
+}
+
+// TestStringifiedPolicyFacts_AssetTypeGate confirms the parser
+// only fires on the configured asset types — an S3 bucket
+// happening to carry an api.network.resource_policy_json field
+// would not be parsed (the allowlist's assetTypes filter holds).
+func TestStringifiedPolicyFacts_AssetTypeGate(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{{
+			ID:   "arn:aws:s3:::my-bucket",
+			Type: "aws_s3_bucket", // not aws_apigateway_rest_api
+			Properties: map[string]any{
+				"api": map[string]any{
+					"network": map[string]any{
+						"resource_policy_json": `{"Statement":[{"Condition":{"StringEquals":{"aws:tag":"v"}}}]}`,
+					},
+				},
+			},
+		}},
+	}
+	facts := ExtractFacts(doc)
+	for _, f := range facts {
+		if f.Source == "stringified_policy" {
+			t.Errorf("type gate breached: %+v", f)
+		}
+	}
+}
+
+// TestStringifiedPolicyFacts_DeterministicOrder confirms the
+// projector sorts operators and keys so identical input
+// produces byte-identical output across runs (Go map iteration
+// is randomised).
+func TestStringifiedPolicyFacts_DeterministicOrder(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{{
+			ID:   "arn:aws:apigateway:us-east-1::/restapis/api4",
+			Type: "aws_apigateway_rest_api",
+			Properties: map[string]any{
+				"api": map[string]any{
+					"network": map[string]any{
+						"resource_policy_json": `{"Statement":[{"Condition":{"StringNotEquals":{"aws:sourceVpc":"vpc-1","aws:sourceVpce":"vpce-1"},"StringEquals":{"aws:tag":"v"}}}]}`,
+					},
+				},
+			},
+		}},
+	}
+	var first []string
+	for run := 0; run < 5; run++ {
+		facts := ExtractFacts(doc)
+		var order []string
+		for _, f := range facts {
+			if f.Source == "stringified_policy" && f.Predicate == "has_condition" {
+				order = append(order, f.Object)
+			}
+		}
+		if run == 0 {
+			first = order
+			continue
+		}
+		if len(order) != len(first) {
+			t.Fatalf("run %d: length differs (%d vs %d)", run, len(order), len(first))
+		}
+		for i := range order {
+			if order[i] != first[i] {
+				t.Errorf("run %d: order differs at %d: %q vs %q", run, i, order[i], first[i])
+			}
+		}
+	}
+}
+
+// TestStringifiedPolicyFacts_EmitsResourcePolicyPrincipal walks
+// a parsed S3 bucket policy with a Statement.Principal map of
+// {"AWS": "arn:..."} and confirms PR 5's resource_policy_principal
+// projection produces the expected fact. The same projector also
+// handles the array form below.
+func TestStringifiedPolicyFacts_EmitsResourcePolicyPrincipal(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{{
+			ID:   "arn:aws:s3:::dest-bucket",
+			Type: "aws_s3_bucket",
+			Properties: map[string]any{
+				"storage": map[string]any{
+					"policy_json": `{"Statement":[{"Effect":"Allow","Principal":{"AWS":"arn:aws:iam::111122223333:root"},"Action":["s3:Get*","s3:List*"],"Resource":"*"}]}`,
+				},
+			},
+		}},
+	}
+	facts := ExtractFacts(doc)
+	want := map[string]bool{
+		`resource_policy_principal=arn:aws:iam::111122223333:root`: false,
+		`resource_policy_action=s3:Get*`:                           false,
+		`resource_policy_action=s3:List*`:                          false,
+	}
+	for _, f := range facts {
+		if f.Source == "stringified_policy" {
+			key := f.Predicate + "=" + f.Object
+			if _, ok := want[key]; ok {
+				want[key] = true
+			}
+		}
+	}
+	for k, hit := range want {
+		if !hit {
+			t.Errorf("missing %s from parsed bucket policy", k)
+		}
+	}
+}
+
+// TestExtractResourcePolicyPrincipals_StringForm checks the
+// "Principal":"*" wildcard form (a public-read shape).
+func TestExtractResourcePolicyPrincipals_StringForm(t *testing.T) {
+	t.Parallel()
+	got := extractResourcePolicyPrincipals("*")
+	if len(got) != 1 || got[0] != "*" {
+		t.Errorf("string form: got %v, want [*]", got)
+	}
+}
+
+// TestExtractResourcePolicyPrincipals_ArrayForm checks the
+// {"AWS": ["arn:1", "arn:2"]} form where multiple principals
+// share the same prefix key. The projector flattens the values
+// into a deterministic sorted list so SMT facts are stable
+// across runs.
+func TestExtractResourcePolicyPrincipals_ArrayForm(t *testing.T) {
+	t.Parallel()
+	in := map[string]any{
+		"AWS": []any{"arn:aws:iam::222:root", "arn:aws:iam::111:root"},
+	}
+	got := extractResourcePolicyPrincipals(in)
+	want := []string{"arn:aws:iam::111:root", "arn:aws:iam::222:root"}
+	if len(got) != len(want) {
+		t.Fatalf("array form: length differs (%d vs %d)", len(got), len(want))
+	}
+	for i := range got {
+		if got[i] != want[i] {
+			t.Errorf("array form: got[%d] = %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
+// TestExtractResourcePolicyPrincipals_MixedKeys confirms that
+// {"AWS": "arn:...", "Service": "ec2.amazonaws.com"} flattens
+// both prefix-keyed values into a single deterministically
+// sorted list. The flattening is intentional — the SMT
+// serialiser is binary and re-emitting per prefix-key would
+// require ternary predicates.
+func TestExtractResourcePolicyPrincipals_MixedKeys(t *testing.T) {
+	t.Parallel()
+	in := map[string]any{
+		"Service": "ec2.amazonaws.com",
+		"AWS":     "arn:aws:iam::123:root",
+	}
+	got := extractResourcePolicyPrincipals(in)
+	wantSet := map[string]bool{
+		"arn:aws:iam::123:root": false,
+		"ec2.amazonaws.com":     false,
+	}
+	for _, v := range got {
+		wantSet[v] = true
+	}
+	for k, hit := range wantSet {
+		if !hit {
+			t.Errorf("missing principal value %q", k)
+		}
+	}
+	// Determinism: sorted output.
+	for i := 1; i < len(got); i++ {
+		if got[i-1] > got[i] {
+			t.Errorf("output not sorted: %v", got)
+		}
+	}
+}
+
+// TestStringifiedPolicyFacts_EmitsActionAndPrincipalWithoutCondition
+// confirms PR 5's extraction fires on Statements that have NO
+// Condition block. PR 4's projector skipped these statements
+// at the early-continue; PR 5 must still emit Principal/Action
+// facts for them.
+func TestStringifiedPolicyFacts_EmitsActionAndPrincipalWithoutCondition(t *testing.T) {
+	t.Parallel()
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{{
+			ID:   "arn:aws:s3:::dest",
+			Type: "aws_s3_bucket",
+			Properties: map[string]any{
+				"storage": map[string]any{
+					"policy_json": `{"Statement":[{"Effect":"Allow","Principal":{"AWS":"arn:aws:iam::111:root"},"Action":"s3:GetObject","Resource":"*"}]}`,
+				},
+			},
+		}},
+	}
+	facts := ExtractFacts(doc)
+	var sawPrincipal, sawAction bool
+	for _, f := range facts {
+		if f.Source != "stringified_policy" {
+			continue
+		}
+		if f.Predicate == "resource_policy_principal" && f.Object == "arn:aws:iam::111:root" {
+			sawPrincipal = true
+		}
+		if f.Predicate == "resource_policy_action" && f.Object == "s3:GetObject" {
+			sawAction = true
+		}
+	}
+	if !sawPrincipal {
+		t.Error("missing resource_policy_principal on no-condition Statement")
+	}
+	if !sawAction {
+		t.Error("missing resource_policy_action on no-condition Statement")
 	}
 }

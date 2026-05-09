@@ -101,6 +101,14 @@ func toEvalSLAConfig(c *SLAConfig) *evaluation.SLAConfig {
 //
 // SLABreaches is computed by counting findings with SLABreached set.
 // FrameworkReadiness is mirrored from the report's summary.
+//
+// Each Finding's [Finding.ContributingFactIDs] is copied from the
+// internal evaluation.Finding when present. applycore.Run stamps
+// those ids post-evaluation by building the SIR projection for
+// the same controls/snapshots/now the evaluator consumed; callers
+// that construct a ComplianceReport themselves may leave the
+// internal field empty (the public Finding's slice will be nil)
+// without breaking the call.
 func BuildAssessment(report *evaluation.ComplianceReport, controls []policy.ControlDefinition) *Assessment {
 	if report == nil {
 		return nil
@@ -203,6 +211,7 @@ func convertFinding(f *evaluation.Finding) Finding {
 		UnsafeDurationHours:  f.Evidence.UnsafeDurationHours,
 		SuggestedFix:         convertSuggestedFix(f.SuggestedFix),
 		LogicalProof:         f.LogicalProof,
+		ContributingFactIDs:  f.ContributingFactIDs,
 	}
 	if f.HasReachability() {
 		out.Reachability = &Reachability{

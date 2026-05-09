@@ -232,6 +232,16 @@
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "41a752e7e7e8",
+        "80dd9746b35b",
+        "5d526c95b78b",
+        "cfb6b597a25f",
+        "548dbc17c180",
+        "bec01ffb3d98",
+        "548dbc17c180",
+        "c04095c3fd6c"
       ]
     },
     {
@@ -351,6 +361,14 @@
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "42a5c3f52386",
+        "e18c0e6d550f",
+        "05208c02e71e",
+        "28ca70f0c857",
+        "d69b1744c6d2",
+        "7ea11fec75da"
       ]
     },
     {
@@ -470,6 +488,16 @@
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "41a752e7e7e8",
+        "80dd9746b35b",
+        "5d526c95b78b",
+        "cfb6b597a25f",
+        "548dbc17c180",
+        "bec01ffb3d98",
+        "548dbc17c180",
+        "c04095c3fd6c"
       ]
     },
     {
@@ -616,6 +644,14 @@
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "30c73531e071",
+        "0aa5745e6807",
+        "628a31406de4",
+        "e6f337f63d56",
+        "957f86225517",
+        "d77ea4e7f4b6"
       ]
     },
     {
@@ -762,6 +798,14 @@
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "62b29453da7e",
+        "bce7b6c0e47a",
+        "317bd9e7e2ea",
+        "16785c85e48b",
+        "f2945b5953c7",
+        "415155fc99b2"
       ]
     },
     {
@@ -908,6 +952,14 @@
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "eda4dc9a67e9",
+        "50a4152ce071",
+        "2b87d95ab249",
+        "6c81a1fca71a",
+        "25e68c3df65f",
+        "4562acfb780c"
       ]
     },
     {
@@ -1054,6 +1106,14 @@
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "c98b7ccb91d8",
+        "60f609e61fec",
+        "27fd0f78adad",
+        "d8d58e287fe6",
+        "e523a3f808dd",
+        "127c91250884"
       ]
     },
     {
@@ -1200,6 +1260,14 @@
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "cb0700036b4e",
+        "e5b3490462c2",
+        "acd265df2b9a",
+        "054b2ac8d375",
+        "aee0eafbfb2f",
+        "b93c3645280d"
       ]
     },
     {
@@ -1346,6 +1414,14 @@
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "d195d687168d",
+        "4626028085aa",
+        "9f3c765eefb5",
+        "10787a47a969",
+        "49678070c207",
+        "4ba3e0b85d95"
       ]
     }
   ],
@@ -1850,7 +1926,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "5fb1c1381fd7e85b9540ceeda6027b7bec5bfc19",
+      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
       "dirty": false
     }
   }

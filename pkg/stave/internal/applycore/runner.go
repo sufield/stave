@@ -16,12 +16,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/sufield/stave/cmd/exportsir"
 	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	"github.com/sufield/stave/internal/adapters/controls/pack"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
 	builtinpredicate "github.com/sufield/stave/internal/adapters/predicate"
+	"github.com/sufield/stave/internal/adapters/sirbridge"
 	appcapabilities "github.com/sufield/stave/internal/app/capabilities"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
@@ -31,6 +33,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/internal/core/sir"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/providers/aws"
 	"github.com/sufield/stave/internal/platform/providers/aws/iam"
@@ -106,7 +109,12 @@ type Inputs struct {
 
 // Result is the engine's output: the full ComplianceReport plus the
 // active controls (which may differ from what the caller passed if
-// the workflow loaded controls from disk).
+// the workflow loaded controls from disk). When SIR projection
+// succeeded post-evaluation, each Report.Findings[i] is annotated
+// with ContributingFactIDs by applycore before returning — callers
+// don't need to run the projection themselves. SIR build failures
+// are best-effort: findings ship un-annotated rather than blocking
+// the report.
 type Result struct {
 	Report   *evaluation.ComplianceReport
 	Controls []policy.ControlDefinition
@@ -230,7 +238,64 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 
 	annotateReachability(report.Findings, wf.Snapshots())
 
-	return &Result{Report: &report, Controls: controls}, nil
+	annotateContributingFactIDs(report.Findings, controls, wf.Snapshots(), clock.Now(), celEval)
+
+	return &Result{
+		Report:   &report,
+		Controls: controls,
+	}, nil
+}
+
+// annotateContributingFactIDs builds the SIR document for the same
+// (controls, snapshots, now) the evaluation just consumed and
+// stamps each finding's ContributingFactIDs from the resulting
+// fact_ids whose Subject equals the finding's AssetID. The
+// annotation closes the trace from a CEL finding to the
+// `stave export-sir` outputs that describe the same asset.
+//
+// Best-effort: a SIR builder failure is silent — findings ship
+// un-annotated rather than blocking the report. The omitempty
+// json tag on ContributingFactIDs preserves the prior wire shape
+// for consumers that don't read the new field.
+//
+// Determinism: [exportsir.ExtractFacts] sorts its inner walks;
+// per-subject grouping here preserves projection emission order.
+// Subjects with zero facts (control IDs that never produced a
+// fact, or principals not represented as assets) leave the
+// finding's slice nil — callers must treat absence as "no facts"
+// rather than an error.
+func annotateContributingFactIDs(
+	findings []evaluation.Finding,
+	controls []policy.ControlDefinition,
+	snapshots []asset.Snapshot,
+	now time.Time,
+	celEval policy.PredicateEval,
+) {
+	if len(findings) == 0 {
+		return
+	}
+	builder := sir.NewBuilder(
+		sir.WithRoleChainSource(sirbridge.NewAWSRoleChainSource()),
+		sir.WithLifecycleSource(sirbridge.NewEngineLifecycleSource(celEval)),
+		sir.WithResourceFactGrouper(sirbridge.NewAWSS3FactGrouper()),
+	)
+	doc, err := builder.Build(controls, snapshots, now)
+	if err != nil || doc == nil {
+		return
+	}
+	facts := exportsir.ExtractFacts(doc)
+	bySubject := make(map[string][]string, len(facts))
+	for _, f := range facts {
+		if f.Subject == "" || f.FactID == "" {
+			continue
+		}
+		bySubject[f.Subject] = append(bySubject[f.Subject], f.FactID)
+	}
+	for i := range findings {
+		if ids, ok := bySubject[string(findings[i].AssetID)]; ok && len(ids) > 0 {
+			findings[i].ContributingFactIDs = ids
+		}
+	}
 }
 
 // resolveControls loads the control set used by the evaluation.

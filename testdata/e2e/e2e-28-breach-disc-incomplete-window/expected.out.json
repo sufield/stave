@@ -85,7 +85,17 @@
         },
         "action": "Review the misconfigured properties and revert to compliant values."
       },
-      "classification": "aggregate_check"
+      "classification": "aggregate_check",
+      "contributing_fact_ids": [
+        "a712aabe8c02",
+        "1a578b15e7c6",
+        "5cb3c8d5ef46",
+        "da0e0c6ff021",
+        "9a0040bd3dff",
+        "698c5f5bb726",
+        "9a0040bd3dff",
+        "698c5f5bb726"
+      ]
     }
   ],
   "issues": [
@@ -230,7 +240,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "531ba73cd3c72d2c4eedd85f6d95f67389bab31c",
+      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
       "dirty": false
     }
   }

@@ -233,6 +233,14 @@
       "items": {
         "$ref": "#/$defs/deltaPath"
       }
+    },
+    "contributing_fact_ids": {
+      "type": "array",
+      "title": "Contributing Fact IDs",
+      "description": "SIR fact_ids whose Subject equals this finding's asset_id. Each id matches the `fact_id` in `stave export-sir --format jsonl` and the `;; fact_id:` comment in `stave export-sir --format smt2`, providing a grep-traceable link from a CEL finding back to the specific observation properties and SMT-LIB assertions that describe the same asset.",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "$defs": {

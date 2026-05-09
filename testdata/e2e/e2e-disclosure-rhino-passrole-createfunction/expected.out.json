@@ -166,6 +166,14 @@
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "c9983f77dd2b",
+        "b8ea4ffd96ff",
+        "c4a10d8e3b15",
+        "9cd57a893619",
+        "bcc68d65d019",
+        "598b2c025a85"
       ]
     }
   ],
@@ -312,11 +320,8 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "f21f14a722643f71c2780934404fb36ddc1e2a81",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-disclosure-rhino-passrole-createfunction/controls/"
-      ]
+      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
+      "dirty": false
     }
   }
 }

@@ -66,7 +66,7 @@ doesn't already have it.
 | Fixture | Framework | Compliant | Non-compliant | Not assessed |
 |---|---|---:|---:|---:|
 | Cognito writeup | SOC 2 | 3 | 2 | 0 |
-| Cognito remediated | SOC 2 | 4 | 1 | 0 |
+| Cognito remediated | SOC 2 | 5 | 0 | 0 |
 | Cognito writeup | HIPAA | 5 | 1 | 0 |
 | Cognito remediated | HIPAA | 6 | 0 | 0 |
 

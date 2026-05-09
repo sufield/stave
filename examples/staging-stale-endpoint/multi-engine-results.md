@@ -18,8 +18,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 10 lines / `smt2` 75 lines
-- *runtime*: 5.09s
+- *fact export*: `jsonl` 10 lines / `smt2` 147 lines
+- *runtime*: 1.71s
 
 ### `prod-dormant`
 
@@ -33,8 +33,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 11 lines / `smt2` 76 lines
-- *runtime*: 5.17s
+- *fact export*: `jsonl` 11 lines / `smt2` 152 lines
+- *runtime*: 1.69s
 
 ### `stale-staging`
 
@@ -49,8 +49,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 13 lines / `smt2` 78 lines
-- *runtime*: 4.89s
+- *fact export*: `jsonl` 13 lines / `smt2` 162 lines
+- *runtime*: 1.7s
 
 ### `stale-staging-public`
 
@@ -65,8 +65,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 15 lines / `smt2` 80 lines
-- *runtime*: 5.12s
+- *fact export*: `jsonl` 16 lines / `smt2` 177 lines
+- *runtime*: 1.7s
 
 ## Reading the matrix
 

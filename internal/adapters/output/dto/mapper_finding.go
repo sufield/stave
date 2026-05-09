@@ -45,6 +45,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 		Failure:            f.Failure,
 		Archetype:          f.Archetype.String(),
 		Delta:              fromDeltaPaths(f.Delta),
+		ContributingFactIDs: f.ContributingFactIDs,
 	}
 
 	if f.HasSource() {

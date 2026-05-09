@@ -21,6 +21,8 @@
 package exportsir
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -30,6 +32,28 @@ import (
 	"github.com/sufield/stave/internal/core/sir"
 )
 
+// factID returns a deterministic 12-hex-character correlation ID
+// for a (subject, predicate, object) triple. The ID is the first
+// 6 bytes of SHA-256 over a pipe-joined canonical form.
+//
+// Properties:
+//   - Deterministic — same input always produces the same ID.
+//   - Stable across projector refactors — depends on the fact's
+//     content, not which Go function emitted it.
+//   - Collision-resistant — 48 bits ≈ 281 trillion buckets;
+//     negligible collision probability for a single export.
+//   - Greppable — short enough to copy-paste, no special chars.
+//
+// One ID flows through every layer: JSONL triple, SMT-LIB
+// assertion comment, CEL finding's contributing_fact_ids,
+// per-engine output row → enabling end-to-end traceability
+// from a Z3 witness back to the originating observation
+// property without ad-hoc grep recipes.
+func factID(subject, predicate, object string) string {
+	h := sha256.Sum256([]byte(subject + "|" + predicate + "|" + object))
+	return hex.EncodeToString(h[:6])
+}
+
 // Fact is one (subject, predicate, object) triple plus
 // provenance fields for engines that want to trace back to
 // the originating SIR slot. Source names the SIR fact category
@@ -37,36 +61,132 @@ import (
 // (e.g. "controls[0].id", "identities[0].role_chains[0]") so
 // downstream code can correlate triples back to the nested
 // document without a separate index.
-type Fact struct {
-	Subject   string `json:"subject"`
-	Predicate string `json:"predicate"`
-	Object    string `json:"object"`
-	Source    string `json:"source"`
-	Evidence  string `json:"evidence"`
+// Provenance carries machine-readable origin metadata for one
+// fact. Additive over Evidence; new consumers should prefer
+// Provenance because property_path is observation-relative (no
+// "assets[N]." prefix) and is greppable directly against the
+// raw observation JSON.
+//
+//	{
+//	  "property_path": "properties.identity.policies.attached_policies[0].statements[0].Action",
+//	  "captured_at":   "2026-01-08T00:00:00Z",
+//	  "projector":     "iamPolicyFacts"
+//	}
+//
+// observation_file (a per-property source-file reference) is not
+// populated this iteration — the SIR loader merges multiple
+// snapshots into a single AssetFact and does not track per-
+// property file origin. Adding it would require an SIR schema
+// extension and is left as future work. Downstream consumers
+// that need file origin can correlate captured_at with the
+// snapshot directory's filenames.
+type Provenance struct {
+	PropertyPath string `json:"property_path"`
+	CapturedAt   string `json:"captured_at,omitempty"`
+	Projector    string `json:"projector"`
 }
 
-// extractFacts projects a SIR document into the flat triple
+type Fact struct {
+	// FactID is a deterministic 12-hex-character correlation ID
+	// derived from sha256(subject|predicate|object). One ID flows
+	// through every export layer (JSONL triple, SMT-LIB comment,
+	// CEL finding's contributing_fact_ids, per-engine output) so
+	// a Z3 witness traces back to the originating observation
+	// property in one grep. Set at the ExtractFacts boundary —
+	// individual projector functions don't compute it.
+	FactID     string      `json:"fact_id"`
+	Subject    string      `json:"subject"`
+	Predicate  string      `json:"predicate"`
+	Object     string      `json:"object"`
+	Source     string      `json:"source"`
+	Evidence   string      `json:"evidence"`
+	Provenance *Provenance `json:"provenance,omitempty"`
+}
+
+// stripIndexPrefix turns a SIR-relative path like
+// "assets[2].properties.identity.kind" into the observation-
+// relative "properties.identity.kind" by removing a leading
+// indexed-collection prefix. Recognised forms:
+//
+//	assets[N].             →  ""
+//	controls[N].           →  ""
+//	identities[N].         →  ""
+//	temporal.windows[N].   →  ""  (note: the prefix contains a dot)
+//
+// Strategy: find the first "]." substring; everything up to and
+// including it is the prefix. Falls back to the original path
+// when no bracketed index is present.
+func stripIndexPrefix(p string) string {
+	if i := strings.Index(p, "]."); i >= 0 {
+		return p[i+2:]
+	}
+	return p
+}
+
+// annotateProvenance walks a slice of facts produced by one
+// projector and stamps Provenance on each. captured_at is
+// looked up from assetByID by Subject equality; non-asset
+// subjects (control IDs, principal IDs) leave it empty. This
+// keeps the per-projector code free of provenance plumbing —
+// they emit Fact{Evidence: ...} as before; provenance is
+// applied at the boundary.
+func annotateProvenance(facts []Fact, projector string, assetByID map[string]*sir.AssetFact) []Fact {
+	for i := range facts {
+		var capturedAt string
+		if a := assetByID[facts[i].Subject]; a != nil && a.Lifecycle != nil && !a.Lifecycle.LastSeen.IsZero() {
+			capturedAt = a.Lifecycle.LastSeen.UTC().Format("2006-01-02T15:04:05Z")
+		}
+		facts[i].Provenance = &Provenance{
+			PropertyPath: stripIndexPrefix(facts[i].Evidence),
+			CapturedAt:   capturedAt,
+			Projector:    projector,
+		}
+		// Stamp the deterministic correlation ID in the same
+		// boundary pass; per-projector code is unaffected.
+		if facts[i].FactID == "" {
+			facts[i].FactID = factID(facts[i].Subject, facts[i].Predicate, facts[i].Object)
+		}
+	}
+	return facts
+}
+
+// ExtractFacts projects a SIR document into the flat triple
 // form. The mapping is intentionally lossy: rich SIR fields
 // like nested predicate trees and per-rule source refs are
 // summarised as boolean flags ("has_forbidden_state=true")
 // rather than serialised verbatim, because triple consumers
 // — Datalog and ASP especially — work in flat namespaces.
 // Consumers who need the full nesting use --format json.
-func extractFacts(doc *sir.Document) []Fact {
+func ExtractFacts(doc *sir.Document) []Fact {
 	if doc == nil {
 		return nil
 	}
+	// Pre-build the asset lookup so each annotateProvenance call is
+	// a constant-time map probe rather than O(N) over the asset
+	// slice. The projector name is the Go function name as it
+	// appears in source — easy to grep when a fact's provenance
+	// points at a wrong projector.
+	assetByID := make(map[string]*sir.AssetFact, len(doc.Assets))
+	for i := range doc.Assets {
+		assetByID[doc.Assets[i].ID] = &doc.Assets[i]
+	}
+
 	var facts []Fact
-	facts = append(facts, controlFacts(doc.Controls)...)
-	facts = append(facts, assetFacts(doc.Assets)...)
-	facts = append(facts, cognitoMappingFacts(doc.Assets)...)
-	facts = append(facts, cognitoUserPoolFacts(doc.Assets)...)
-	facts = append(facts, iamPolicyFacts(doc.Assets)...)
-	facts = append(facts, tagFacts(doc.Assets)...)
-	facts = append(facts, trustPolicyFacts(doc.Assets)...)
-	facts = append(facts, assumeEdgeFacts(doc.Assets)...)
-	facts = append(facts, identityFacts(doc.Identities)...)
-	facts = append(facts, exposureFacts(doc.Temporal.Windows)...)
+	facts = append(facts, annotateProvenance(controlFacts(doc.Controls), "controlFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(assetFacts(doc.Assets), "assetFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(cognitoMappingFacts(doc.Assets), "cognitoMappingFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(cognitoUserPoolFacts(doc.Assets), "cognitoUserPoolFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(iamPolicyFacts(doc.Assets), "iamPolicyFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(denyPolicyFacts(doc.Assets), "denyPolicyFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(conditionFacts(doc.Assets), "conditionFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(stringifiedPolicyFacts(doc.Assets), "stringifiedPolicyFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(dataEventLoggingFacts(doc.Assets), "dataEventLoggingFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(propertyFacts(doc.Assets), "propertyFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(tagFacts(doc.Assets), "tagFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(trustPolicyFacts(doc.Assets), "trustPolicyFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(assumeEdgeFacts(doc.Assets), "assumeEdgeFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(identityFacts(doc.Identities), "identityFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(exposureFacts(doc.Temporal.Windows), "exposureFacts", assetByID)...)
 	return facts
 }
 
@@ -321,6 +441,535 @@ func iamPolicyFacts(assets []sir.AssetFact) []Fact {
 					out = append(out, Fact{
 						Subject: a.ID, Predicate: "has_resource", Object: resource,
 						Source: "iam_policy", Evidence: evid + ".Resource",
+					})
+				}
+			}
+		}
+	}
+	return out
+}
+
+// propertyPath is one entry in the propertyAllowlist. It declares
+// a per-asset configuration property whose value is projected as
+// a flat fact triple. The encoding is intentionally raw — bool
+// values become "true" / "false", strings pass through verbatim.
+// External engines decide which value is unsafe; this projector
+// stays value-neutral.
+type propertyPath struct {
+	blockKey      string   // top-level key under properties: "storage", "identity", "k8s", "auth", "trail", "s3_ref", "s3_upload"
+	keys          []string // remaining path segments to the leaf scalar
+	predicateName string   // SMT predicate (must start with "has_")
+	assetTypes    []string // asset.Type allowlist; empty = all
+}
+
+// propertyAllowlist enumerates per-asset configuration properties
+// to project as has_<leaf>(asset, value) triples. Each entry is
+// added explicitly — this is governance, not a kitchen sink.
+//
+// Convention: predicate name = "has_" + leaf-property-name.
+// One predicate per leaf (no overlaps with the hand-written
+// projectors below).
+//
+// To add a new entry, populate the four fields and append to the
+// slice; remember to register the predicate name in
+// baselineSMT2Predicates so the closed-world axiom is emitted.
+var propertyAllowlist = []propertyPath{
+	// S3 bucket access booleans (public-read, public-list policy fixtures)
+	{blockKey: "storage", keys: []string{"access", "public_read"}, predicateName: "has_public_read", assetTypes: []string{"aws_s3_bucket"}},
+	{blockKey: "storage", keys: []string{"access", "public_list"}, predicateName: "has_public_list", assetTypes: []string{"aws_s3_bucket"}},
+	{blockKey: "storage", keys: []string{"access", "read_via_resource"}, predicateName: "has_read_via_resource", assetTypes: []string{"aws_s3_bucket"}},
+	{blockKey: "storage", keys: []string{"access", "list_via_resource"}, predicateName: "has_list_via_resource", assetTypes: []string{"aws_s3_bucket"}},
+	{blockKey: "storage", keys: []string{"controls", "public_access_fully_blocked"}, predicateName: "has_public_access_blocked", assetTypes: []string{"aws_s3_bucket"}},
+	// S3 .git / repo-artifact exposure (s3-dotgit-readable fixture)
+	{blockKey: "storage", keys: []string{"content", "exposed_repo_artifacts"}, predicateName: "has_exposed_repo_artifacts", assetTypes: []string{"aws_s3_bucket"}},
+	// S3 dangling-bucket reference (s3-bucket-name-dangling fixture)
+	{blockKey: "s3_ref", keys: []string{"bucket_exists"}, predicateName: "has_bucket_exists"},
+	{blockKey: "s3_ref", keys: []string{"bucket_owned"}, predicateName: "has_bucket_owned"},
+	// S3 upload-scope mode (s3-broad-write-scope fixture)
+	{blockKey: "s3_upload", keys: []string{"allowed_key_mode"}, predicateName: "has_upload_key_mode"},
+	// Cognito user-pool MFA + advanced security (cognito-no-mfa-advanced-security)
+	{blockKey: "identity", keys: []string{"auth", "mfa_enforced"}, predicateName: "has_mfa_enforced", assetTypes: []string{"aws_cognito_user_pool"}},
+	{blockKey: "identity", keys: []string{"advanced_security", "enabled"}, predicateName: "has_advanced_security_enabled", assetTypes: []string{"aws_cognito_user_pool"}},
+	// EKS RBAC webhook-config write access (eks-rbac-webhook-config-access)
+	{blockKey: "k8s", keys: []string{"rbac", "has_webhook_config_access"}, predicateName: "has_webhook_config_access"},
+	// EKS aws-auth ConfigMap template-injection vector (eks-aws-auth-template-injection)
+	{blockKey: "auth", keys: []string{"webhook", "identity_mapping", "uses_access_key_id"}, predicateName: "has_uses_access_key_id"},
+	// CloudTrail trail logging state (cloudtrail-stop-logging mgmt-events fixtures)
+	{blockKey: "trail", keys: []string{"is_logging"}, predicateName: "has_logging_enabled", assetTypes: []string{"aws_cloudtrail_trail"}},
+}
+
+// propertyFacts walks the propertyAllowlist for every asset and
+// emits one has_<leaf>(asset, value) fact per matching rule. The
+// projector is value-neutral: a bool emits "true" or "false", a
+// string emits its value verbatim. The query decides which value
+// is the unsafe one; closed-world axioms make absence-of-fact
+// equivalent to "this property was not present" — distinct from
+// "this property was present and false".
+//
+// Determinism: the allowlist order is fixed in source; iteration
+// over assets follows the SIR document's asset order; no map
+// iteration drives the output.
+func propertyFacts(assets []sir.AssetFact) []Fact {
+	var out []Fact
+	for i := range assets {
+		a := &assets[i]
+		for _, rule := range propertyAllowlist {
+			if len(rule.assetTypes) > 0 {
+				match := false
+				for _, t := range rule.assetTypes {
+					if a.Type == t {
+						match = true
+						break
+					}
+				}
+				if !match {
+					continue
+				}
+			}
+			block, ok := a.Properties[rule.blockKey].(map[string]any)
+			if !ok {
+				continue
+			}
+			var value any = block
+			for _, k := range rule.keys {
+				m, ok := value.(map[string]any)
+				if !ok {
+					value = nil
+					break
+				}
+				value = m[k]
+			}
+			if value == nil {
+				continue
+			}
+			// Reject nested maps / slices — only scalars project.
+			switch value.(type) {
+			case map[string]any, []any:
+				continue
+			}
+			obj := fmt.Sprintf("%v", value)
+			if obj == "" {
+				continue
+			}
+			evid := fmt.Sprintf("assets[%d].properties.%s.%s", i, rule.blockKey, strings.Join(rule.keys, "."))
+			out = append(out, Fact{
+				Subject: a.ID, Predicate: rule.predicateName, Object: obj,
+				Source: "property", Evidence: evid,
+			})
+		}
+	}
+	return out
+}
+
+// denyPolicyFacts walks IAM Deny statements on role / user
+// attached_policies and emits has_deny_action / has_deny_resource.
+// iamPolicyFacts intentionally only walks Allow statements
+// (the chain queries' Allow surface); this projector adds the
+// Deny side so external solvers can compute effective
+// Allow ∩ ¬Deny without re-reading the raw policy JSON.
+//
+// Property path: properties.identity.policies.attached_policies
+//
+//	[]{ statements: []{ Effect="Deny", Action, Resource } }
+//
+// Statements without Effect="Deny" are skipped; absence of any
+// Deny on a principal yields no facts and the closed-world axiom
+// reports has_deny_action(p, a) = false for every (p, a).
+func denyPolicyFacts(assets []sir.AssetFact) []Fact {
+	var out []Fact
+	for i := range assets {
+		a := &assets[i]
+		if a.Type != "aws_iam_role" && a.Type != "aws_iam_user" {
+			continue
+		}
+		policies, ok := navMap(a.Properties, "identity", "policies")
+		if !ok {
+			continue
+		}
+		attached, ok := policies["attached_policies"].([]any)
+		if !ok {
+			continue
+		}
+		for pi, p := range attached {
+			policy, ok := p.(map[string]any)
+			if !ok {
+				continue
+			}
+			stmts, ok := policy["statements"].([]any)
+			if !ok {
+				continue
+			}
+			for si, s := range stmts {
+				stmt, ok := s.(map[string]any)
+				if !ok {
+					continue
+				}
+				if effect, _ := stmt["Effect"].(string); effect != "Deny" {
+					continue
+				}
+				evid := fmt.Sprintf("assets[%d].policies.attached_policies[%d].statements[%d]", i, pi, si)
+				for _, action := range coerceStringList(stmt["Action"]) {
+					out = append(out, Fact{
+						Subject: a.ID, Predicate: "has_deny_action", Object: action,
+						Source: "iam_policy", Evidence: evid + ".Action",
+					})
+				}
+				for _, resource := range coerceStringList(stmt["Resource"]) {
+					out = append(out, Fact{
+						Subject: a.ID, Predicate: "has_deny_resource", Object: resource,
+						Source: "iam_policy", Evidence: evid + ".Resource",
+					})
+				}
+			}
+		}
+	}
+	return out
+}
+
+// conditionFacts walks IAM policy statements (Allow OR Deny) and
+// emits one has_condition per (principal, "operator:key") pair
+// for any statement that carries a Condition block. The encoding
+// is binary with a colon-joined object so existing SMT-LIB
+// serialization works without ternary-arity support:
+//
+//	has_condition(principal, "StringEquals:iam:PassedToService")
+//	has_condition(principal, "StringLike:s3:RequestObjectTagKeys")
+//
+// Statements without a Condition block emit nothing; closed-world
+// axioms then report "is principal P scoped by some condition?"
+// as false everywhere absence holds.
+//
+// Property path:
+//
+//	properties.identity.policies.attached_policies[].statements[].Condition
+//
+// Determinism: operator and key iteration are sorted before
+// emission so the same SIR document yields byte-identical output.
+func conditionFacts(assets []sir.AssetFact) []Fact {
+	var out []Fact
+	for i := range assets {
+		a := &assets[i]
+		if a.Type != "aws_iam_role" && a.Type != "aws_iam_user" {
+			continue
+		}
+		policies, ok := navMap(a.Properties, "identity", "policies")
+		if !ok {
+			continue
+		}
+		attached, ok := policies["attached_policies"].([]any)
+		if !ok {
+			continue
+		}
+		for pi, p := range attached {
+			policy, ok := p.(map[string]any)
+			if !ok {
+				continue
+			}
+			stmts, ok := policy["statements"].([]any)
+			if !ok {
+				continue
+			}
+			for si, s := range stmts {
+				stmt, ok := s.(map[string]any)
+				if !ok {
+					continue
+				}
+				cond, ok := stmt["Condition"].(map[string]any)
+				if !ok || len(cond) == 0 {
+					continue
+				}
+				evid := fmt.Sprintf("assets[%d].policies.attached_policies[%d].statements[%d].Condition", i, pi, si)
+				ops := make([]string, 0, len(cond))
+				for op := range cond {
+					ops = append(ops, op)
+				}
+				sort.Strings(ops)
+				for _, op := range ops {
+					keys, ok := cond[op].(map[string]any)
+					if !ok {
+						continue
+					}
+					keyNames := make([]string, 0, len(keys))
+					for k := range keys {
+						keyNames = append(keyNames, k)
+					}
+					sort.Strings(keyNames)
+					for _, k := range keyNames {
+						out = append(out, Fact{
+							Subject: a.ID, Predicate: "has_condition", Object: op + ":" + k,
+							Source: "iam_policy", Evidence: evid,
+						})
+						// Ternary (asset, key, value) compressed into the
+						// binary "<op>:<key>=<value>" form. Same key=value
+						// concatenation pattern as has_tag — `=` is not a
+						// valid character in IAM condition keys, so the
+						// split point is unambiguous. Emits one fact per
+						// value (conditions can carry array values).
+						for _, val := range coerceStringList(keys[k]) {
+							out = append(out, Fact{
+								Subject: a.ID, Predicate: "has_condition_value",
+								Object: op + ":" + k + "=" + val,
+								Source: "iam_policy", Evidence: evid,
+							})
+						}
+					}
+				}
+			}
+		}
+	}
+	return out
+}
+
+// stringifiedPolicyPath names one observation property whose
+// scalar value is a stringified JSON policy document. AWS APIs
+// commonly return resource policies (API Gateway resource
+// policies, S3 bucket policies, KMS key policies) as JSON
+// strings rather than parsed structures; the structured-map
+// projectors above can't cross that string boundary, so a
+// dedicated parser re-emits each statement's Condition block
+// through has_condition / has_condition_value.
+//
+// Adding a new path is governance, not a kitchen sink — only
+// fields confirmed in real fixtures belong here. The parser
+// fails silently on invalid JSON (some scalar string fields
+// happen to share a name with a real policy field on a
+// different asset type).
+type stringifiedPolicyPath struct {
+	blockKey   string // top-level key under properties
+	keys       []string
+	dotPath    string   // human-readable joined path for evidence
+	assetTypes []string // empty = all asset types
+}
+
+var stringifiedPolicyAllowlist = []stringifiedPolicyPath{
+	// API Gateway resource policy (apigw-private-api-scoped-deny):
+	// the aws:sourceVpc / aws:sourceVpce condition lives here.
+	{
+		blockKey: "api", keys: []string{"network", "resource_policy_json"},
+		dotPath:    "api.network.resource_policy_json",
+		assetTypes: []string{"aws_apigateway_rest_api"},
+	},
+	// S3 bucket resource policy (s3-cross-account-replication-overperm
+	// and similar). Most cross-account fixtures express their
+	// discriminating Conditions here.
+	{
+		blockKey: "storage", keys: []string{"policy_json"},
+		dotPath:    "storage.policy_json",
+		assetTypes: []string{"aws_s3_bucket"},
+	},
+	// KMS key policy.
+	{
+		blockKey: "encryption", keys: []string{"key_policy_json"},
+		dotPath:    "encryption.key_policy_json",
+		assetTypes: []string{"aws_kms_key"},
+	},
+}
+
+// stringifiedPolicyFacts parses JSON strings embedded in
+// observation properties and re-emits their Condition blocks
+// through has_condition / has_condition_value. The parser walks
+// the same statement → Condition → operator → key → value
+// shape that conditionFacts walks for structured policies; the
+// only difference is the json.Unmarshal step that bridges the
+// string boundary.
+//
+// Determinism: operators and keys are sorted before emission;
+// values are emitted in source order (the policy author's
+// chosen order is the canonical order). Statement order
+// follows the parsed JSON's array index — Go's encoding/json
+// preserves array order.
+//
+// Failure modes that produce zero facts (and no error):
+//   - Field is absent on the asset.
+//   - Field is present but not a string (schema variation).
+//   - Field is a string but not valid JSON.
+//   - Parsed JSON has no Statement[] or no Condition blocks.
+//
+// These are all expected on fixtures where the path doesn't
+// apply; raising errors would noise the export with non-issues.
+func stringifiedPolicyFacts(assets []sir.AssetFact) []Fact {
+	var out []Fact
+	for i := range assets {
+		a := &assets[i]
+		for _, rule := range stringifiedPolicyAllowlist {
+			if len(rule.assetTypes) > 0 {
+				match := false
+				for _, t := range rule.assetTypes {
+					if a.Type == t {
+						match = true
+						break
+					}
+				}
+				if !match {
+					continue
+				}
+			}
+			block, ok := a.Properties[rule.blockKey].(map[string]any)
+			if !ok {
+				continue
+			}
+			var raw any = block
+			for _, k := range rule.keys {
+				m, ok := raw.(map[string]any)
+				if !ok {
+					raw = nil
+					break
+				}
+				raw = m[k]
+			}
+			jsonStr, ok := raw.(string)
+			if !ok || jsonStr == "" {
+				continue
+			}
+			var policy map[string]any
+			if err := json.Unmarshal([]byte(jsonStr), &policy); err != nil {
+				continue
+			}
+			stmts, ok := policy["Statement"].([]any)
+			if !ok {
+				continue
+			}
+			for si, sRaw := range stmts {
+				stmt, ok := sRaw.(map[string]any)
+				if !ok {
+					continue
+				}
+				stmtBase := fmt.Sprintf("assets[%d].properties.%s → (parsed JSON) → Statement[%d]",
+					i, rule.dotPath, si)
+				// Resource-policy principal + action extraction
+				// (PR 5). Emitted regardless of whether the
+				// Statement carries a Condition block. The
+				// "resource_policy_*" predicate names are
+				// distinct from has_action / has_resource so a
+				// reader can tell which trust model produced the
+				// fact (resource policy attached to the bucket
+				// vs. identity policy attached to the role).
+				if p, hasP := stmt["Principal"]; hasP {
+					for _, principal := range extractResourcePolicyPrincipals(p) {
+						out = append(out, Fact{
+							Subject: a.ID, Predicate: "resource_policy_principal",
+							Object: principal, Source: "stringified_policy",
+							Evidence: stmtBase + ".Principal",
+						})
+					}
+				}
+				for _, action := range coerceStringList(stmt["Action"]) {
+					out = append(out, Fact{
+						Subject: a.ID, Predicate: "resource_policy_action",
+						Object: action, Source: "stringified_policy",
+						Evidence: stmtBase + ".Action",
+					})
+				}
+				// Condition extraction (PR 4 behavior).
+				cond, ok := stmt["Condition"].(map[string]any)
+				if !ok || len(cond) == 0 {
+					continue
+				}
+				evid := stmtBase + ".Condition"
+				ops := make([]string, 0, len(cond))
+				for op := range cond {
+					ops = append(ops, op)
+				}
+				sort.Strings(ops)
+				for _, op := range ops {
+					keys, ok := cond[op].(map[string]any)
+					if !ok {
+						continue
+					}
+					keyNames := make([]string, 0, len(keys))
+					for k := range keys {
+						keyNames = append(keyNames, k)
+					}
+					sort.Strings(keyNames)
+					for _, k := range keyNames {
+						out = append(out, Fact{
+							Subject: a.ID, Predicate: "has_condition", Object: op + ":" + k,
+							Source: "stringified_policy", Evidence: evid,
+						})
+						for _, val := range coerceStringList(keys[k]) {
+							out = append(out, Fact{
+								Subject: a.ID, Predicate: "has_condition_value",
+								Object: op + ":" + k + "=" + val,
+								Source: "stringified_policy", Evidence: evid,
+							})
+						}
+					}
+				}
+			}
+		}
+	}
+	return out
+}
+
+// dataEventLoggingFacts walks CloudTrail trail assets and emits
+// has_data_event_logging(bucket_arn, "true") for every S3 bucket
+// listed in event_selectors[].data_resources[].values[]. The
+// trailing "/" in CloudTrail's data-resource ARN form (e.g.
+// "arn:aws:s3:::my-bucket/") is stripped so the subject matches
+// has_type(bucket, "aws_s3_bucket") downstream.
+//
+// CEL evaluates per-bucket coverage at runtime by walking the
+// same nested structure; this projector makes the per-bucket
+// boolean visible to external SMT solvers so queries like
+//
+//	"is there a bucket tagged confidential WITHOUT data event
+//	 logging?" — has_tag(b, "data_classification=...") AND NOT
+//	             has_data_event_logging(b, "true")
+//
+// are expressible. Closed-world axioms make the absence side
+// (no positive fact for an uncovered bucket) report false
+// without an explicit "is_logging_disabled" projector.
+//
+// Property path:
+//
+//	properties.trail.event_selectors[].data_resources[].values[]
+//
+// Trails without data-event coverage produce no facts; trails
+// with empty event_selectors / data_resources also produce
+// nothing.
+func dataEventLoggingFacts(assets []sir.AssetFact) []Fact {
+	var out []Fact
+	for i := range assets {
+		a := &assets[i]
+		if a.Type != "aws_cloudtrail_trail" {
+			continue
+		}
+		trail, ok := a.Properties["trail"].(map[string]any)
+		if !ok {
+			continue
+		}
+		selectors, ok := trail["event_selectors"].([]any)
+		if !ok {
+			continue
+		}
+		for ei, sel := range selectors {
+			s, ok := sel.(map[string]any)
+			if !ok {
+				continue
+			}
+			dr, ok := s["data_resources"].([]any)
+			if !ok {
+				continue
+			}
+			for di, raw := range dr {
+				resource, ok := raw.(map[string]any)
+				if !ok {
+					continue
+				}
+				values, ok := resource["values"].([]any)
+				if !ok {
+					continue
+				}
+				evid := fmt.Sprintf("assets[%d].properties.trail.event_selectors[%d].data_resources[%d].values", i, ei, di)
+				for _, v := range values {
+					bucketARN, ok := v.(string)
+					if !ok || bucketARN == "" {
+						continue
+					}
+					bucketARN = strings.TrimSuffix(bucketARN, "/")
+					out = append(out, Fact{
+						Subject: bucketARN, Predicate: "has_data_event_logging", Object: "true",
+						Source: "cloudtrail", Evidence: evid,
 					})
 				}
 			}
@@ -658,6 +1307,38 @@ func navMap(props map[string]any, keys ...string) (map[string]any, bool) {
 	return cur, true
 }
 
+// extractResourcePolicyPrincipals normalises the four shapes a
+// resource-policy Statement.Principal value can take into a
+// flat, deterministically ordered list of principal ARNs (or
+// service names, or "*"):
+//
+//	"*"                                         → ["*"]
+//	"arn:aws:iam::123:root"                     → ["arn:aws:iam::123:root"]
+//	{"AWS": "arn:..."}                          → ["arn:..."]
+//	{"AWS": ["arn:1", "arn:2"], "Service":"ec2"}→ ["arn:1", "arn:2", "ec2"]
+//
+// The ARN-prefix-by-key form ({"AWS": ...}, {"Service": ...},
+// {"Federated": ...}, {"CanonicalUser": ...}) is flattened —
+// the principal value is what matters for trust-scope queries;
+// re-emitting per-key would require either ternary predicates
+// or a per-key prefix encoding, neither of which the existing
+// SMT serializer supports cleanly. Determinism is enforced
+// with sort.Strings.
+func extractResourcePolicyPrincipals(principal any) []string {
+	switch v := principal.(type) {
+	case string:
+		return []string{v}
+	case map[string]any:
+		var result []string
+		for _, val := range v {
+			result = append(result, coerceStringList(val)...)
+		}
+		sort.Strings(result)
+		return result
+	}
+	return nil
+}
+
 // coerceStringList accepts the IAM-policy convention where a
 // list-typed field can be either a single string or an array of
 // strings. JSON-parsed values arrive as []any when arrays;
@@ -694,7 +1375,7 @@ func exposureFacts(windows []sir.ExposureWindow) []Fact {
 }
 
 // serializeJSONL writes one JSON object per line. The order
-// reflects extractFacts' deterministic walk of the SIR document.
+// reflects ExtractFacts' deterministic walk of the SIR document.
 func serializeJSONL(facts []Fact, w io.Writer) error {
 	enc := json.NewEncoder(w)
 	for i := range facts {
@@ -714,7 +1395,7 @@ func serializeJSONL(facts []Fact, w io.Writer) error {
 // window fired would error with "unknown function" before
 // reasoning ever started.
 //
-// Adding a new predicate to extractFacts means adding it here.
+// Adding a new predicate to ExtractFacts means adding it here.
 // The compile-time list is intentional: the SMT contract is
 // stable, not implicit.
 var baselineSMT2Predicates = []string{
@@ -724,22 +1405,43 @@ var baselineSMT2Predicates = []string{
 	"cross_account_assumes",
 	"first_seen_at",
 	"has_action",
+	"has_advanced_security_enabled",
+	"has_bucket_exists",
+	"has_bucket_owned",
+	"has_condition",
+	"has_condition_value",
+	"has_data_event_logging",
+	"has_deny_action",
+	"has_deny_resource",
+	"has_exposed_repo_artifacts",
 	"has_exposure_window",
 	"has_forbidden_state",
 	"has_intent_rationale",
+	"has_list_via_resource",
+	"has_logging_enabled",
+	"has_mfa_enforced",
 	"has_permission_action",
 	"has_permission_resource",
 	"has_privilege_level",
+	"has_public_access_blocked",
+	"has_public_list",
+	"has_public_read",
+	"has_read_via_resource",
 	"has_resource",
 	"has_severity",
 	"has_tag",
 	"has_type",
+	"has_upload_key_mode",
+	"has_uses_access_key_id",
 	"has_vendor",
+	"has_webhook_config_access",
 	"is_decommissioned",
 	"is_provisioned",
 	"last_seen_at",
 	"maps_auth_to",
 	"maps_unauth_to",
+	"resource_policy_action",
+	"resource_policy_principal",
 	"self_registration_unrestricted",
 	"trusts_service",
 }
@@ -793,6 +1495,23 @@ func serializeSMT2(facts []Fact, w io.Writer) error {
 
 	bw.writeLine("; --- Facts ---")
 	for _, f := range facts {
+		// Correlation comments — the solver ignores `;` lines, so
+		// verdicts are unaffected. Humans and tooling tracing a
+		// witness back to its originating fact / projector / file
+		// read these. fact_id leads the block because it's the
+		// canonical correlation key.
+		if f.FactID != "" {
+			bw.writeLine(fmt.Sprintf(";; fact_id: %s", f.FactID))
+		}
+		if f.Provenance != nil {
+			bw.writeLine(fmt.Sprintf(";; projector: %s", f.Provenance.Projector))
+			if f.Provenance.PropertyPath != "" {
+				bw.writeLine(fmt.Sprintf(";; path: %s", f.Provenance.PropertyPath))
+			}
+			if f.Provenance.CapturedAt != "" {
+				bw.writeLine(fmt.Sprintf(";; captured: %s", f.Provenance.CapturedAt))
+			}
+		}
 		bw.writeLine(fmt.Sprintf("(assert (%s %s %s))", f.Predicate, smt2Quote(f.Subject), smt2Quote(f.Object)))
 	}
 

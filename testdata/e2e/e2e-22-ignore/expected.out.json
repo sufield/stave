@@ -133,7 +133,15 @@
       "classification": "state_assertion",
       "defect": "A RoleBinding or ClusterRoleBinding grants permissions to the built-in system:unauthenticated group, which represents any request made without a valid bearer token or client certificate. The binding makes the referenced Role or ClusterRole accessible to anonymous callers reaching the API server.\n",
       "infection": "Any network endpoint that can reach the Kubernetes API server — a misconfigured LoadBalancer, an exposed NodePort, a bastion reachable from unintended networks, or a pod with host-network access — can exercise the bound permissions without authenticating. Since system:unauthenticated is distinct from authenticated service accounts, cluster auditors often miss it: RBAC audits filtering on named users or service accounts skip these bindings entirely. When paired with a ClusterRole that grants read of secrets or write to workloads, anonymous API access turns into cluster-wide read or takeover.\n",
-      "failure": "Anonymous access to cluster resources bound by the binding. If the referenced role is cluster-admin or equivalent, the result is full cluster compromise reachable by any network path to the API server. If the role is narrower, the failure scopes to whatever the bound permissions grant, but the absence of authentication is almost always an authoring mistake — very few legitimate workflows need system:unauthenticated access.\n"
+      "failure": "Anonymous access to cluster resources bound by the binding. If the referenced role is cluster-admin or equivalent, the result is full cluster compromise reachable by any network path to the API server. If the role is narrower, the failure scopes to whatever the bound permissions grant, but the absence of authentication is almost always an authoring mistake — very few legitimate workflows need system:unauthenticated access.\n",
+      "contributing_fact_ids": [
+        "e14ce3066def",
+        "8f52459e44b3",
+        "2ffabc64bb48",
+        "8862c6dbc589",
+        "1547cb078728",
+        "a7e38dafd2b4"
+      ]
     }
   ],
   "issues": [
@@ -287,7 +295,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0780f8b55b472972c48a6816e5e86b04fbb55bb0",
+      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
       "dirty": false
     }
   }

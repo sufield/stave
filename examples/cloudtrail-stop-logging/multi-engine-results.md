@@ -9,7 +9,7 @@ against each fixture's observation snapshots.
 ### `after`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — —
+- **SMT (Z3 / cvc5 / Yices)** — query-data-events: unsat; query-mgmt: unsat
 - **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
@@ -18,14 +18,14 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 6 lines / `smt2` 71 lines
-- *runtime*: 4.85s
+- *fact export*: `jsonl` 7 lines / `smt2` 134 lines
+- *runtime*: 1.45s
 
 ### `before`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.CLOUDTRAIL.STOP.DETECT.001`
-- **SMT (Z3 / cvc5 / Yices)** — —
+- **SMT (Z3 / cvc5 / Yices)** — query-data-events: unsat; query-mgmt: sat
 - **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
@@ -34,13 +34,13 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 8 lines / `smt2` 73 lines
-- *runtime*: 4.87s
+- *fact export*: `jsonl` 9 lines / `smt2` 144 lines
+- *runtime*: 1.61s
 
 ### `data-events-after`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — —
+- **SMT (Z3 / cvc5 / Yices)** — query-data-events: unsat; query-mgmt: unsat
 - **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
@@ -49,13 +49,13 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 31 lines / `smt2` 96 lines
-- *runtime*: 4.84s
+- *fact export*: `jsonl` 35 lines / `smt2` 274 lines
+- *runtime*: 1.48s
 
 ### `data-events-before`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — —
+- **SMT (Z3 / cvc5 / Yices)** — query-data-events: sat; query-mgmt: unsat
 - **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
@@ -64,8 +64,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 31 lines / `smt2` 96 lines
-- *runtime*: 4.41s
+- *fact export*: `jsonl` 32 lines / `smt2` 259 lines
+- *runtime*: 1.8s
 
 ## Reading the matrix
 

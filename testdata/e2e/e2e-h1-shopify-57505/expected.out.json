@@ -260,6 +260,22 @@
           "current_value": "",
           "fix_action": "set to true"
         }
+      ],
+      "contributing_fact_ids": [
+        "ea96599d82ce",
+        "c629d2563516",
+        "c805993f0d7d",
+        "379f1dba9968",
+        "c71db2e6ee8f",
+        "41a689af3214",
+        "c9d06e20b973",
+        "54c431c96754",
+        "26285845b21d",
+        "3d6891671b96",
+        "d63ed9acb870",
+        "9e9e7feb0e0d",
+        "759266e81e2a",
+        "7e39547e61e6"
       ]
     }
   ],
@@ -437,7 +453,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
+      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
       "dirty": false
     }
   }

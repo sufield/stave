@@ -18,8 +18,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 6 lines / `smt2` 71 lines
-- *runtime*: 4.98s
+- *fact export*: `jsonl` 6 lines / `smt2` 129 lines
+- *runtime*: 1.46s
 
 ### `remediated-config`
 
@@ -33,8 +33,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 6 lines / `smt2` 71 lines
-- *runtime*: 4.72s
+- *fact export*: `jsonl` 6 lines / `smt2` 129 lines
+- *runtime*: 1.37s
 
 ### `writeup-config`
 
@@ -48,8 +48,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 6 lines / `smt2` 71 lines
-- *runtime*: 4.58s
+- *fact export*: `jsonl` 6 lines / `smt2` 129 lines
+- *runtime*: 1.43s
 
 ## Reading the matrix
 

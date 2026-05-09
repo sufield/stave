@@ -65,7 +65,8 @@ run_one() {
         --findings "$findings" \
         --facts "$facts" \
         --catalog "$catalog" \
-        --output "$out"
+        --output "$out" \
+        --now 2026-01-09T00:00:00Z
     echo
 }
 

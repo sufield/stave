@@ -199,6 +199,25 @@
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "5228bf5c0a50",
+        "e85f643bdb4a",
+        "0a371cbbc689",
+        "cb783a27fec8",
+        "5daa917b877e",
+        "dd5947fd165a",
+        "3ff2b83f7b3c",
+        "28f5f6ebc2f4",
+        "1f41a1e21e4c",
+        "1955902db277",
+        "4452cfb07632",
+        "36633413e994",
+        "3dbb20419133",
+        "a3efb38b35be",
+        "f1becb760959",
+        "a3efb38b35be",
+        "0a631c86331f"
       ]
     },
     {
@@ -349,6 +368,25 @@
           "current_value": "false",
           "fix_action": "set to true (enable)"
         }
+      ],
+      "contributing_fact_ids": [
+        "5228bf5c0a50",
+        "e85f643bdb4a",
+        "0a371cbbc689",
+        "cb783a27fec8",
+        "5daa917b877e",
+        "dd5947fd165a",
+        "3ff2b83f7b3c",
+        "28f5f6ebc2f4",
+        "1f41a1e21e4c",
+        "1955902db277",
+        "4452cfb07632",
+        "36633413e994",
+        "3dbb20419133",
+        "a3efb38b35be",
+        "f1becb760959",
+        "a3efb38b35be",
+        "0a631c86331f"
       ]
     }
   ],
@@ -570,7 +608,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8d599570679a4299770ec5ced2aefc5b344d61cd",
+      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
       "dirty": false
     }
   }

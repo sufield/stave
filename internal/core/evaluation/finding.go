@@ -129,6 +129,17 @@ type Finding struct {
 	// gated on the Iteration 3 solver. Empty until the solver
 	// produces a model.
 	LogicalProof string `json:"logical_proof,omitempty"`
+
+	// ContributingFactIDs lists the SIR fact_ids that describe the
+	// asset this finding fired on. Each id matches the `fact_id`
+	// emitted by `stave export-sir --format jsonl` and the
+	// `;; fact_id:` annotation in `stave export-sir --format smt2`,
+	// closing the trace from a CEL finding back to the specific
+	// observation property and engine assertion that share the same
+	// asset. Populated post-evaluation by applycore when SIR
+	// projection succeeds; empty otherwise (omitempty preserves
+	// the prior wire shape for consumers that don't read it).
+	ContributingFactIDs []string `json:"contributing_fact_ids,omitempty"`
 }
 
 // findingShadow is the wire-format projection used by Finding's

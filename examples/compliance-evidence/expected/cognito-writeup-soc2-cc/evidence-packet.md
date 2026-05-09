@@ -1,6 +1,6 @@
 # SOC 2 Type II Compliance Evidence Packet
 
-- Generated: 2026-05-08T01:07:15Z
+- Generated: 2026-01-09T00:00:00Z
 - Framework: SOC 2 Type II (2017)
 - Tool: Stave (proof-to-evidence translator)
 
@@ -22,7 +22,7 @@
 
 _The entity implements logical access security software, infrastructure, and architectures over protected information assets to protect them from security events to meet the entity's objectives._
 
-**Stave coverage:** 1017 control(s) (1015 clean, 2 fired).
+**Stave coverage:** 1018 control(s) (1016 clean, 2 fired).
 
 **Findings (this fixture):**
 - FAIL `CTL.COGNITO.MFA.001` [unknown] on `arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool` — (no summary)

@@ -1,6 +1,6 @@
 # SOC 2 Type II — Executive Summary
 
-- Date: 2026-05-08
+- Date: 2026-01-09
 - Compliance posture: **3 of 5 controls compliant (60%)**
 
 ## Non-compliant controls

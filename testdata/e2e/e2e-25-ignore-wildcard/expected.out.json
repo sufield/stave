@@ -129,7 +129,15 @@
       "classification": "state_assertion",
       "defect": "A ClusterRoleBinding references the built-in cluster-admin ClusterRole, which grants every verb on every resource across every namespace. The binding's subject (user, group, or service account) holds unconstrained authority over the cluster.\n",
       "infection": "Any actor using the bound identity — a compromised service account token, a stolen user credential, a misconfigured continuous-delivery runner — exercises cluster-admin authority without further authorization checks. A single `kubectl` invocation or API call can modify every workload, read every secret, or schedule workloads that tunnel through the cluster's networking to reach adjacent infrastructure.\n",
-      "failure": "Cluster compromise. The entire Kubernetes workload — every namespace, every pod, every stored secret, every cluster-scoped configuration — is accessible to whoever reaches the bound identity. Containment usually requires full cluster recreation because the cluster-admin authority could have rewritten its own audit trail.\n"
+      "failure": "Cluster compromise. The entire Kubernetes workload — every namespace, every pod, every stored secret, every cluster-scoped configuration — is accessible to whoever reaches the bound identity. Containment usually requires full cluster recreation because the cluster-admin authority could have rewritten its own audit trail.\n",
+      "contributing_fact_ids": [
+        "3577b5c1fee7",
+        "ec3bb1e4215e",
+        "8707d2d8d560",
+        "253d6560c074",
+        "f4615c492069",
+        "bac68dbd4f7d"
+      ]
     }
   ],
   "issues": [
@@ -288,7 +296,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0780f8b55b472972c48a6816e5e86b04fbb55bb0",
+      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
       "dirty": false
     }
   }

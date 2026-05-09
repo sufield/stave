@@ -164,6 +164,24 @@ type Finding struct {
 	// engine ran without a solver, the solver did not produce a
 	// model, or the control has no forbidden_state authored.
 	LogicalProof string
+
+	// ContributingFactIDs lists the SIR fact_ids that describe the
+	// configuration properties of this finding's asset. Use these
+	// to grep from a CEL finding back to the specific JSONL triples
+	// and SMT-LIB assertions emitted by `stave export-sir`, closing
+	// the trace from finding → fact → property → engine verdict.
+	//
+	// Populated when the apply pipeline can build a SIR document
+	// alongside the evaluation report. Empty when SIR-extraction
+	// was skipped (the field is omitempty in JSON output, so
+	// downstream consumers that ignore it see no schema change).
+	//
+	// Today the correlation key is asset_id — every fact whose
+	// Subject equals AssetID is included, regardless of which CEL
+	// predicate referenced which property. A future iteration may
+	// narrow the set to facts whose property_path matches the
+	// control's predicate references.
+	ContributingFactIDs []string `json:"contributing_fact_ids,omitempty"`
 }
 
 // HasTemporalEvidence reports whether the finding carries any

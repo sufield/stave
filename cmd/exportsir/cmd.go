@@ -26,7 +26,10 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/sirbridge"
+	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/sir"
 )
 
@@ -40,6 +43,7 @@ type options struct {
 	ObservationsDir string
 	Format          string
 	Now             string
+	Validate        bool
 }
 
 // NewCmd constructs the export-sir command. Dependencies are
@@ -108,7 +112,7 @@ Exit codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return run(cmd.Context(), cmd.OutOrStdout(), opts, newCtlRepo, newObsRepo, newCELEvaluator)
+			return run(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), opts, newCtlRepo, newObsRepo, newCELEvaluator)
 		},
 	}
 
@@ -117,6 +121,9 @@ Exit codes:
 	flags.StringVarP(&opts.ObservationsDir, flagObservations, "o", "observations", "observation snapshots directory")
 	flags.StringVarP(&opts.Format, cliflags.FlagFormat, "f", "json", "output format: json | jsonl | smt2")
 	flags.StringVar(&opts.Now, flagNow, "", "override current time (RFC3339) for deterministic output")
+	flags.BoolVar(&opts.Validate, "validate", false,
+		"check SIR coverage against CEL controls and warn on stderr about projection gaps "+
+			"(controls that fire in CEL but evaluate properties not projected as SIR facts)")
 
 	return cmd
 }
@@ -125,7 +132,7 @@ Exit codes:
 // problems (mapped to exit code 2 by ui.ExitCode); plain errors
 // fall through to exit code 4 (ExitInternal) — that's the
 // convention the rest of the cmd/ tree follows.
-func run(ctx context.Context, w io.Writer, opts *options, newCtlRepo compose.CtlRepoFactory, newObsRepo compose.ObsRepoFactory, newCELEvaluator compose.CELEvaluatorFactory) error {
+func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options, newCtlRepo compose.CtlRepoFactory, newObsRepo compose.ObsRepoFactory, newCELEvaluator compose.CELEvaluatorFactory) error {
 	format := strings.ToLower(strings.TrimSpace(opts.Format))
 	switch format {
 	case "", "json", "jsonl", "smt2":
@@ -165,15 +172,29 @@ func run(ctx context.Context, w io.Writer, opts *options, newCtlRepo compose.Ctl
 		return fmt.Errorf("build SIR: %w", err)
 	}
 
+	// Extract facts once if either the format or --validate needs
+	// them. The JSON format path does not consume facts (it
+	// serialises the nested SIR document directly), but --validate
+	// always does — so the conditional avoids the work for the
+	// no-validate JSON case.
+	var facts []Fact
+	if format != "json" || opts.Validate {
+		facts = ExtractFacts(doc)
+	}
+
+	if opts.Validate {
+		if vErr := validateAndReport(ctx, errW, controls, snapshots, celEval, now, facts); vErr != nil {
+			return fmt.Errorf("validate SIR: %w", vErr)
+		}
+	}
+
 	switch format {
 	case "jsonl":
-		facts := extractFacts(doc)
 		if encErr := serializeJSONL(facts, w); encErr != nil {
 			return fmt.Errorf("encode jsonl: %w", encErr)
 		}
 		return nil
 	case "smt2":
-		facts := extractFacts(doc)
 		if encErr := serializeSMT2(facts, w); encErr != nil {
 			return fmt.Errorf("encode smt2: %w", encErr)
 		}
@@ -187,6 +208,61 @@ func run(ctx context.Context, w io.Writer, opts *options, newCtlRepo compose.Ctl
 		return nil
 	}
 }
+
+// validateAndReport runs a lightweight evaluation pass against
+// the loaded controls and snapshots to discover which controls
+// fired, then compares each finding's predicate field paths
+// against the SIR fact provenance for the same asset. The
+// emitted warnings (one per uncovered path) flow to stderr; the
+// JSONL/SMT-LIB/JSON output on stdout is untouched.
+//
+// We use appeval.EvaluateLoaded — the lower-level evaluation
+// entry point that takes pre-loaded controls + snapshots —
+// rather than pkg/stave.Apply because pkg/stave/internal/applycore
+// imports cmd/exportsir (for ExtractFacts), so importing
+// pkg/stave from this package would form a cycle. appeval has no
+// such dependency.
+func validateAndReport(
+	ctx context.Context,
+	errW io.Writer,
+	controls []policy.ControlDefinition,
+	snapshots []asset.Snapshot,
+	celEval policy.PredicateEval,
+	now time.Time,
+	facts []Fact,
+) error {
+	clock := constantClock{now: now.UTC()}
+	report, err := appeval.EvaluateLoaded(ctx, appeval.EvaluationRequest{
+		Controls:     controls,
+		Snapshots:    snapshots,
+		Clock:        clock,
+		CELEvaluator: celEval,
+	})
+	if err != nil {
+		return fmt.Errorf("evaluate for validation: %w", err)
+	}
+
+	warnings := ValidateSIRCompleteness(report.Findings, facts, controls)
+	if len(warnings) == 0 {
+		fmt.Fprintln(errW, "SIR validation: all CEL-evaluated properties are projected. No gaps.")
+		return nil
+	}
+	renderValidationWarnings(errW, warnings)
+	return nil
+}
+
+// constantClock pins the wall clock to a specific instant for
+// validation. Reuses the same `now` the SIR builder consumed so
+// CEL evaluation evaluates against the same temporal context.
+//
+// IsUserProvided returns true so the engine treats the time as
+// an explicit override (which it is — `--now` flowed through to
+// here) rather than a wall-clock read. This matters because
+// some downstream code branches on whether time was pinned.
+type constantClock struct{ now time.Time }
+
+func (c constantClock) Now() time.Time      { return c.now }
+func (c constantClock) IsUserProvided() bool { return true }
 
 // resolveNow returns the parsed --now value or, when --now is
 // empty, the current wall-clock time. The empty case is the

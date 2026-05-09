@@ -332,10 +332,23 @@ def generate(args: argparse.Namespace) -> int:
         summary["total"] += 1
         summary[ctrl["status"]] = summary.get(ctrl["status"], 0) + 1
 
+    # Pin the report timestamp via --now when supplied so golden
+    # comparisons against the expected/ directory stay byte-stable
+    # across days. Wall-clock fallback for ad-hoc runs.
+    if args.now:
+        try:
+            generated_at = datetime.strptime(args.now, "%Y-%m-%dT%H:%M:%SZ")
+        except ValueError as e:
+            sys.stderr.write(f"--now must be RFC3339 UTC (got {args.now!r}): {e}\n")
+            return 2
+        generated_at_str = generated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+    else:
+        generated_at_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
     report = {
         "framework": framework.get("framework", args.framework),
         "version": framework.get("version", ""),
-        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_at": generated_at_str,
         "summary": summary,
         "controls": rows,
     }
@@ -362,6 +375,12 @@ def main() -> int:
     parser.add_argument("--catalog", required=True, help="path to the Stave control catalog directory")
     parser.add_argument("--output", required=True, help="output directory for evidence artefacts")
     parser.add_argument("--consensus", help="optional path to harness consensus JSON")
+    parser.add_argument("--now",
+                        help="RFC3339 UTC timestamp pinning the report's generated_at "
+                             "field (e.g. 2026-01-09T00:00:00Z). Without this flag, "
+                             "wall-clock UTC is used; goldens drift daily. With this "
+                             "flag, the executive summary's date and the JSON's "
+                             "generated_at are byte-stable across runs.")
     args = parser.parse_args()
     return generate(args)
 

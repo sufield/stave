@@ -226,6 +226,20 @@
           "current_value": "phi",
           "fix_action": "change from \"phi\" to any other value, or remove"
         }
+      ],
+      "contributing_fact_ids": [
+        "fca61e58a472",
+        "b635ea6b7230",
+        "0f8b80523eed",
+        "affdca44bd07",
+        "fefde660036c",
+        "5f1581802436",
+        "72d439f9e36a",
+        "bb5f77a31b2f",
+        "e4d05f771198",
+        "6d5e608283fc",
+        "21c0af0768fb",
+        "d2336a06624a"
       ]
     },
     {
@@ -408,6 +422,20 @@
           "current_value": "phi",
           "fix_action": "change from \"phi\" to any other value, or remove"
         }
+      ],
+      "contributing_fact_ids": [
+        "63ea02be73b4",
+        "d4cf208e5c57",
+        "98f7fc9bb802",
+        "c4ab2efaeb71",
+        "bcb4eafbb119",
+        "b46b2f5a80fa",
+        "8c938e5a564f",
+        "b6529d91ca5b",
+        "6b87ec80c209",
+        "1f1a0ce0aec4",
+        "1ea32b65951b",
+        "e7bdd2cd0245"
       ]
     }
   ],
@@ -608,7 +636,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "937d0d809b24d21433502f33693edd3f8021dfac",
+      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
       "dirty": false
     }
   }

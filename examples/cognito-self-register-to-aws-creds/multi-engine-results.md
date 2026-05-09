@@ -18,8 +18,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 25 lines / `smt2` 90 lines
-- *runtime*: 5.66s
+- *fact export*: `jsonl` 28 lines / `smt2` 239 lines
+- *runtime*: 1.98s
 
 ### `writeup-config`
 
@@ -34,8 +34,8 @@ against each fixture's observation snapshots.
 - **TLA+** — UNSAFE
 - **Game theory** — $300
 
-- *fact export*: `jsonl` 41 lines / `smt2` 106 lines
-- *runtime*: 9.13s
+- *fact export*: `jsonl` 43 lines / `smt2` 314 lines
+- *runtime*: 3.87s
 
 ## Reading the matrix
 

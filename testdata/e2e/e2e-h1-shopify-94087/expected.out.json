@@ -268,6 +268,23 @@
           "current_value": "merchant_pii",
           "fix_action": "remove this property from the configuration"
         }
+      ],
+      "contributing_fact_ids": [
+        "f882b817f267",
+        "ad469c9729de",
+        "4ff713327c87",
+        "d5cdb22e9117",
+        "5ad0495d2edf",
+        "c5762172fd7d",
+        "a6106180d405",
+        "5b9b957f16c8",
+        "c809f28b4693",
+        "4801652b7dd1",
+        "94b22d5a6dfc",
+        "527490cc4c06",
+        "cfee8310bcb5",
+        "527490cc4c06",
+        "2dff71fe5cb7"
       ]
     },
     {
@@ -516,6 +533,23 @@
           "current_value": "shops/{shop_id}/",
           "fix_action": "remove this property from the configuration"
         }
+      ],
+      "contributing_fact_ids": [
+        "f882b817f267",
+        "ad469c9729de",
+        "4ff713327c87",
+        "d5cdb22e9117",
+        "5ad0495d2edf",
+        "c5762172fd7d",
+        "a6106180d405",
+        "5b9b957f16c8",
+        "c809f28b4693",
+        "4801652b7dd1",
+        "94b22d5a6dfc",
+        "527490cc4c06",
+        "cfee8310bcb5",
+        "527490cc4c06",
+        "2dff71fe5cb7"
       ]
     }
   ],
@@ -702,7 +736,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "5fb1c1381fd7e85b9540ceeda6027b7bec5bfc19",
+      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
       "dirty": false
     }
   }

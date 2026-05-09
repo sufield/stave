@@ -45,6 +45,14 @@ type FindingDTO struct {
 	Failure              string                    `json:"failure,omitempty"`
 	Archetype            string                    `json:"archetype,omitempty"`
 	Delta                []DeltaPathDTO            `json:"delta,omitempty"`
+	// ContributingFactIDs links a CEL finding to the SIR fact_ids
+	// that describe the same asset. Each id matches the `fact_id`
+	// emitted by `stave export-sir --format jsonl` and the
+	// `;; fact_id:` comment in `stave export-sir --format smt2`.
+	// Populated when applycore could build the SIR projection
+	// post-evaluation; empty (omitted from JSON) when SIR build
+	// failed or the field was never stamped on the source finding.
+	ContributingFactIDs []string `json:"contributing_fact_ids,omitempty"`
 }
 
 // DeltaPathDTO represents one independent fix path in JSON output.

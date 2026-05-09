@@ -80,25 +80,25 @@ through for full per-fixture detail.
 
 | Example | CEL | SMT | Soufflé | Risk | Game |
 |---|---|---|---|---|---|
-| [apigw-private-api-scoped-deny](apigw-private-api-scoped-deny/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
-| [cloudtrail-stop-logging](cloudtrail-stop-logging/multi-engine-results.md) | 1 | — | 0 anon, 0 total | P=0% | no-path |
-| [cognito-no-mfa-advanced-security](cognito-no-mfa-advanced-security/multi-engine-results.md) | 1 | — | 0 anon, 0 total | P=0% | no-path |
+| [apigw-private-api-scoped-deny](apigw-private-api-scoped-deny/multi-engine-results.md) | 0 | sat | 0 anon, 0 total | P=0% | no-path |
+| [cloudtrail-stop-logging](cloudtrail-stop-logging/multi-engine-results.md) | 1 | sat (some) | 0 anon, 0 total | P=0% | no-path |
+| [cognito-no-mfa-advanced-security](cognito-no-mfa-advanced-security/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
 | [cognito-self-register-to-aws-creds](cognito-self-register-to-aws-creds/multi-engine-results.md) | 1 | sat | 12 anon, 42 total | P=41% | $300 |
-| [eks-aws-auth-template-injection](eks-aws-auth-template-injection/multi-engine-results.md) | 1 | — | 0 anon, 0 total | P=0% | no-path |
-| [eks-rbac-webhook-config-access](eks-rbac-webhook-config-access/multi-engine-results.md) | 1 | — | 0 anon, 0 total | P=0% | no-path |
+| [eks-aws-auth-template-injection](eks-aws-auth-template-injection/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
+| [eks-rbac-webhook-config-access](eks-rbac-webhook-config-access/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
 | [iam-21-privesc-5-patterns](iam-21-privesc-5-patterns/multi-engine-results.md) | 1 | sat | 0 anon, 58 total | P=0% | $1100 |
-| [iam-attach-user-policy-self](iam-attach-user-policy-self/multi-engine-results.md) | 1 | — | 0 anon, 3 total | P=0% | no-path |
-| [iam-autoscaling-privesc-bypass](iam-autoscaling-privesc-bypass/multi-engine-results.md) | 1 | — | 0 anon, 19 total | P=40% | $900 |
+| [iam-attach-user-policy-self](iam-attach-user-policy-self/multi-engine-results.md) | 1 | sat | 0 anon, 3 total | P=0% | no-path |
+| [iam-autoscaling-privesc-bypass](iam-autoscaling-privesc-bypass/multi-engine-results.md) | 1 | sat | 0 anon, 19 total | P=40% | $900 |
 | [iam-multi-hop-trust](iam-multi-hop-trust/multi-engine-results.md) | 0 | sat | 0 anon, 10 total | P=73% | $2300 |
 | [iam-overpermission-wildcard](iam-overpermission-wildcard/multi-engine-results.md) | 1 | sat (some) | 0 anon, 8 total | P=65% | $900 |
-| [s3-broad-write-scope](s3-broad-write-scope/multi-engine-results.md) | 1 | — | 0 anon, 0 total | P=0% | no-path |
-| [s3-bucket-name-dangling](s3-bucket-name-dangling/multi-engine-results.md) | 1 | — | 0 anon, 0 total | P=0% | no-path |
-| [s3-cross-account-replication-overperm](s3-cross-account-replication-overperm/multi-engine-results.md) | 0 | — | 0 anon, 45 total | P=0% | no-path |
-| [s3-dotgit-readable](s3-dotgit-readable/multi-engine-results.md) | 1 | — | 0 anon, 0 total | P=0% | no-path |
-| [s3-public-list-policy](s3-public-list-policy/multi-engine-results.md) | 1 | — | 0 anon, 0 total | P=0% | no-path |
-| [s3-public-read-policy](s3-public-read-policy/multi-engine-results.md) | 1 | — | 0 anon, 0 total | P=0% | no-path |
+| [s3-broad-write-scope](s3-broad-write-scope/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
+| [s3-bucket-name-dangling](s3-bucket-name-dangling/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
+| [s3-cross-account-replication-overperm](s3-cross-account-replication-overperm/multi-engine-results.md) | 0 | sat | 0 anon, 45 total | P=0% | no-path |
+| [s3-dotgit-readable](s3-dotgit-readable/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
+| [s3-public-list-policy](s3-public-list-policy/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
+| [s3-public-read-policy](s3-public-read-policy/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
 | [s3-tenant-prefix-isolation](s3-tenant-prefix-isolation/multi-engine-results.md) | 1 | — | 0 anon, 0 total | P=0% | no-path |
-| [sns-secrets-compound-chain](sns-secrets-compound-chain/multi-engine-results.md) | 0 | — | 0 anon, 18 total | P=0% | no-path |
+| [sns-secrets-compound-chain](sns-secrets-compound-chain/multi-engine-results.md) | 0 | sat | 0 anon, 10 total | P=0% | no-path |
 | [staging-stale-endpoint](staging-stale-endpoint/multi-engine-results.md) | 2 | — | 0 anon, 0 total | P=0% | no-path |
 
 ## Quick Start for Your Own Environment
@@ -143,3 +143,38 @@ fixture's predicate shape.
 Regenerate this catalog with `python3 scripts/h1-matrix/run.py`
 followed by `python3 scripts/h1-matrix/render.py` (see
 [`scripts/h1-matrix/README.md`](../scripts/h1-matrix/README.md)).
+
+## Lineage: H1 vs InfoSec writeup origins
+
+The 20 scenarios above came from two streams of work:
+
+- **H1 / HackerOne validation** — each scenario reverse-engineers
+  a published HackerOne disclosure or technique to demonstrate
+  what Stave detects on the same configuration shape.
+- **InfoSec writeup iterations** — Iter 11 through Iter 16 plus
+  the Ext A / Ext B / iter-15-ext extensions. Each iteration
+  produced a fixture pair, the corresponding control(s), and a
+  Dev.to article (`channels/devto/<scenario>.md`).
+
+[`INFOSEC-VALIDATION.md`](INFOSEC-VALIDATION.md) maps each
+InfoSec iteration to its on-disk example directory.
+
+## SMT query coverage
+
+**18 of 20** scenarios have a paired `query.smt2` after PR 5
+(resource-policy Principal/Action projector) landed. The 2
+remaining gaps are not projector-blocked — they're query-shape
+gaps:
+
+- `s3-tenant-prefix-isolation` — discriminator is a structured
+  string (`signs_uploads;enforce_prefix=true;allow_traversal=false`)
+  inside a single property; needs either a substring-extracting
+  projector or a query-side string-equality match.
+- `staging-stale-endpoint` — four fixtures modeling distinct
+  states rather than a vulnerable/remediated pair; the matrix
+  harness needs explicit pair selection per query.
+
+18/20 is the practical ceiling without substring SMT theory
+queries or matrix tooling changes. See
+[`SMT-QUERY-GAPS.md`](SMT-QUERY-GAPS.md) for the per-fixture
+rationale and the projector-to-fixture mapping.
