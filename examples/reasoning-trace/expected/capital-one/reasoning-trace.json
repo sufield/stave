@@ -1,0 +1,957 @@
+{
+  "generated_at": "2026-01-09T00:00:00Z",
+  "fixture": "capital-one/capital-one",
+  "consensus": "UNSAFE",
+  "engines_reporting": 7,
+  "engine_verdicts": {
+    "cel": {
+      "verdict": "non_compliant",
+      "findings_count": 5
+    },
+    "z3": {
+      "queries": [
+        {
+          "name": "choke-point",
+          "z3": "unsat",
+          "cvc5": "unsat",
+          "yices": "(skipped)"
+        },
+        {
+          "name": "compound-chain",
+          "z3": "sat",
+          "cvc5": "sat",
+          "yices": "(skipped)"
+        },
+        {
+          "name": "reachability",
+          "z3": "sat",
+          "cvc5": "sat",
+          "yices": "(skipped)"
+        }
+      ],
+      "verdict": "sat"
+    },
+    "souffle": {
+      "verdict": "63 reachable rows",
+      "counts": {
+        "reachable": 42,
+        "anonymous_reachable": 12,
+        "self_register_reachable": 9,
+        "production_reachable": 0,
+        "exploitable_overperm": 0,
+        "privesc_chain": 0
+      }
+    },
+    "clingo": {
+      "verdict": "2 violation(s)",
+      "atoms": [
+        "unauth_cognito_s3_read",
+        "wildcard_action_resource"
+      ]
+    },
+    "risk": {
+      "verdict": "P=41.2%",
+      "probability": 0.412
+    },
+    "game_theory": {
+      "verdict": "$300 attack",
+      "cheapest_path": {
+        "label": "Unauthenticated -> S3",
+        "cost": 300,
+        "steps": [
+          {
+            "cost": 100,
+            "name": "discover_endpoint"
+          },
+          {
+            "cost": 50,
+            "name": "unauthenticated_access"
+          },
+          {
+            "cost": 100,
+            "name": "broad_action_exploitation"
+          },
+          {
+            "cost": 50,
+            "name": "wildcard_resource"
+          },
+          {
+            "cost": 0,
+            "name": "evade_no_logging"
+          },
+          {
+            "cost": 0,
+            "name": "evade_no_scp"
+          }
+        ]
+      },
+      "next_cheapest_path": {
+        "cost": 950,
+        "label": "Self-register -> auth role -> S3"
+      },
+      "top_remediation": {
+        "name": "disable_unauth",
+        "defender_cost": 50,
+        "effect": "BLOCKS path",
+        "attacker_cost_increase": "INFINITY",
+        "roi": "INFINITY"
+      }
+    },
+    "contrast": {
+      "rows": [
+        {
+          "engine": "CEL",
+          "before": "5 finding(s)",
+          "after": "0 finding(s)"
+        },
+        {
+          "engine": "Z3 (choke-point)",
+          "before": "unsat",
+          "after": "unsat"
+        },
+        {
+          "engine": "Z3 (compound-chain)",
+          "before": "sat",
+          "after": "unsat"
+        },
+        {
+          "engine": "Z3 (reachability)",
+          "before": "sat",
+          "after": "unsat"
+        },
+        {
+          "engine": "Risk model",
+          "before": "P=41%",
+          "after": "P=0% (no viable path)"
+        },
+        {
+          "engine": "Game theory",
+          "before": "$300 attack",
+          "after": "no viable path"
+        }
+      ],
+      "config_changes": [
+        "allow_unauthenticated_identities = false",
+        "Trust policy: removed cognito-identity.amazonaws.com",
+        "IAM policy: added aws:SourceVpce condition",
+        "Encryption: switched to SSE-KMS with customer key",
+        "CloudTrail: data events enabled for sensitive bucket"
+      ],
+      "total_defender_cost": 50
+    }
+  },
+  "findings": [
+    {
+      "control_id": "CTL.CLOUDTRAIL.DATAEVENTS.S3.001",
+      "control_name": "CloudTrail Data Events Not Enabled for Sensitive S3 Buckets",
+      "asset_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/management-only",
+      "control_severity": "high",
+      "classification": "state_assertion",
+      "contributing_facts": [
+        {
+          "fact_id": "965b894bbebb",
+          "predicate": "has_type",
+          "object": "aws_cloudtrail",
+          "provenance": {
+            "property_path": "type",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "592bc0505aff",
+          "predicate": "has_vendor",
+          "object": "aws",
+          "provenance": {
+            "property_path": "vendor",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "d0e20bfa7ced",
+          "predicate": "first_seen_at",
+          "object": "2026-01-01T00:00:00Z",
+          "provenance": {
+            "property_path": "lifecycle.first_seen",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "a95cc4563ab7",
+          "predicate": "last_seen_at",
+          "object": "2026-01-08T00:00:00Z",
+          "provenance": {
+            "property_path": "lifecycle.last_seen",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "dad4c3cc5570",
+          "predicate": "has_exposure_window",
+          "object": "true",
+          "provenance": {
+            "property_path": "temporal.windows[0]",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "exposureFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "8f370671aca8",
+          "predicate": "contributed_by",
+          "object": "CTL.CLOUDTRAIL.DATAEVENTS.S3.001",
+          "provenance": {
+            "property_path": "contributing_controls",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "exposureFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        }
+      ]
+    },
+    {
+      "control_id": "CTL.COGNITO.IDPOOL.UNAUTH.S3.001",
+      "control_name": "Cognito Identity Pool Unauthenticated Role Has S3 Access",
+      "asset_id": "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool",
+      "control_severity": "critical",
+      "classification": "state_assertion",
+      "contributing_facts": [
+        {
+          "fact_id": "01b4b7bbd9ff",
+          "predicate": "has_type",
+          "object": "aws_cognito_identity_pool",
+          "provenance": {
+            "property_path": "type",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "e9d790167d31",
+          "predicate": "has_vendor",
+          "object": "aws",
+          "provenance": {
+            "property_path": "vendor",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "e8849d5bebc6",
+          "predicate": "first_seen_at",
+          "object": "2026-01-01T00:00:00Z",
+          "provenance": {
+            "property_path": "lifecycle.first_seen",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "59048e681d60",
+          "predicate": "last_seen_at",
+          "object": "2026-01-08T00:00:00Z",
+          "provenance": {
+            "property_path": "lifecycle.last_seen",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "7129070baf74",
+          "predicate": "allows_unauthenticated",
+          "object": "true",
+          "provenance": {
+            "property_path": "properties.identity.identity_pool.allow_unauthenticated_identities",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "cognitoMappingFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "002786e0c264",
+          "predicate": "maps_unauth_to",
+          "object": "arn:aws:iam::111122223333:role/Cognito_appUnauth_Role",
+          "provenance": {
+            "property_path": "properties.identity.identity_pool.unauthenticated_role_arn",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "cognitoMappingFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "6e8166017a11",
+          "predicate": "maps_auth_to",
+          "object": "arn:aws:iam::111122223333:role/Cognito_appAuth_Role",
+          "provenance": {
+            "property_path": "properties.identity.identity_pool.authenticated_role_arn",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "cognitoMappingFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "d4e54d62a4ae",
+          "predicate": "has_exposure_window",
+          "object": "true",
+          "provenance": {
+            "property_path": "temporal.windows[1]",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "exposureFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "90fc98964735",
+          "predicate": "contributed_by",
+          "object": "CTL.COGNITO.IDPOOL.UNAUTH.S3.001",
+          "provenance": {
+            "property_path": "contributing_controls",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "exposureFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        }
+      ]
+    },
+    {
+      "control_id": "CTL.IAM.TRUST.DUAL.001",
+      "control_name": "IAM Role Trust Must Not Combine Compute and Identity Federation Without Scoping",
+      "asset_id": "arn:aws:iam::111122223333:role/Cognito_appAuth_Role",
+      "control_severity": "high",
+      "classification": "state_assertion",
+      "contributing_facts": [
+        {
+          "fact_id": "294376949c6d",
+          "predicate": "has_type",
+          "object": "aws_iam_role",
+          "provenance": {
+            "property_path": "type",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "9a34aad2da9d",
+          "predicate": "has_vendor",
+          "object": "aws",
+          "provenance": {
+            "property_path": "vendor",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "7cc74b8c2d15",
+          "predicate": "first_seen_at",
+          "object": "2026-01-01T00:00:00Z",
+          "provenance": {
+            "property_path": "lifecycle.first_seen",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "0a6a5ca056ed",
+          "predicate": "last_seen_at",
+          "object": "2026-01-08T00:00:00Z",
+          "provenance": {
+            "property_path": "lifecycle.last_seen",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "24ef525b771f",
+          "predicate": "has_action",
+          "object": "s3:*",
+          "provenance": {
+            "property_path": "policies.attached_policies[0].statements[0].Action",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "iamPolicyFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "00f6de79e35a",
+          "predicate": "has_resource",
+          "object": "*",
+          "provenance": {
+            "property_path": "policies.attached_policies[0].statements[0].Resource",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "iamPolicyFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "1decf9430e57",
+          "predicate": "has_action",
+          "object": "dynamodb:*",
+          "provenance": {
+            "property_path": "policies.attached_policies[0].statements[1].Action",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "iamPolicyFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "09ff7f92ab13",
+          "predicate": "has_resource",
+          "object": "arn:aws:dynamodb:us-east-1:111122223333:table/*",
+          "provenance": {
+            "property_path": "policies.attached_policies[0].statements[1].Resource",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "iamPolicyFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "cd6c0eaa39ed",
+          "predicate": "has_action",
+          "object": "lambda:InvokeFunction",
+          "provenance": {
+            "property_path": "policies.attached_policies[0].statements[2].Action",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "iamPolicyFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "a64200555d47",
+          "predicate": "has_resource",
+          "object": "arn:aws:lambda:us-east-1:111122223333:function:*",
+          "provenance": {
+            "property_path": "policies.attached_policies[0].statements[2].Resource",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "iamPolicyFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "c35df74a28cc",
+          "predicate": "has_exposure_window",
+          "object": "true",
+          "provenance": {
+            "property_path": "temporal.windows[3]",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "exposureFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "e21901a8568b",
+          "predicate": "contributed_by",
+          "object": "CTL.IAM.TRUST.DUAL.001",
+          "provenance": {
+            "property_path": "contributing_controls",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "exposureFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        }
+      ]
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.003",
+      "control_name": "PHI Buckets Must Use SSE-KMS with Customer-Managed Key",
+      "asset_id": "arn:aws:s3:::capital-one-sensitive-data",
+      "control_severity": "high",
+      "classification": "state_assertion",
+      "contributing_facts": [
+        {
+          "fact_id": "8ee12c5809ef",
+          "predicate": "has_type",
+          "object": "aws_s3_bucket",
+          "provenance": {
+            "property_path": "type",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "9cba22c14e94",
+          "predicate": "has_vendor",
+          "object": "aws",
+          "provenance": {
+            "property_path": "vendor",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "08094d5f3a7d",
+          "predicate": "first_seen_at",
+          "object": "2026-01-01T00:00:00Z",
+          "provenance": {
+            "property_path": "lifecycle.first_seen",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "ab68d3f76725",
+          "predicate": "last_seen_at",
+          "object": "2026-01-08T00:00:00Z",
+          "provenance": {
+            "property_path": "lifecycle.last_seen",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "f23c19022c24",
+          "predicate": "has_tag",
+          "object": "data-classification=phi",
+          "provenance": {
+            "property_path": "properties.storage.tags.data-classification",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "tagFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "20a372b18d1e",
+          "predicate": "has_exposure_window",
+          "object": "true",
+          "provenance": {
+            "property_path": "temporal.windows[4]",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "exposureFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "165b4c69331e",
+          "predicate": "contributed_by",
+          "object": "CTL.S3.ENCRYPT.003",
+          "provenance": {
+            "property_path": "contributing_controls",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "exposureFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        }
+      ]
+    },
+    {
+      "control_id": "CTL.COGNITO.SELFREG.001",
+      "control_name": "Cognito User Pools Must Disable Unrestricted Self-Registration",
+      "asset_id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool",
+      "control_severity": "medium",
+      "classification": "state_assertion",
+      "contributing_facts": [
+        {
+          "fact_id": "b93ab280e756",
+          "predicate": "has_type",
+          "object": "aws_cognito_user_pool",
+          "provenance": {
+            "property_path": "type",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "3b93cec14736",
+          "predicate": "has_vendor",
+          "object": "aws",
+          "provenance": {
+            "property_path": "vendor",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "4954b53f5563",
+          "predicate": "first_seen_at",
+          "object": "2026-01-01T00:00:00Z",
+          "provenance": {
+            "property_path": "lifecycle.first_seen",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "14f20479f854",
+          "predicate": "last_seen_at",
+          "object": "2026-01-08T00:00:00Z",
+          "provenance": {
+            "property_path": "lifecycle.last_seen",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "assetFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "8bf76b03b87f",
+          "predicate": "self_registration_unrestricted",
+          "object": "true",
+          "provenance": {
+            "property_path": "properties.identity.governance.self_registration_restricted",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "cognitoUserPoolFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "7827f69c9868",
+          "predicate": "has_mfa_enforced",
+          "object": "false",
+          "provenance": {
+            "property_path": "properties.identity.auth.mfa_enforced",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "propertyFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "7379034e55c8",
+          "predicate": "has_advanced_security_enabled",
+          "object": "false",
+          "provenance": {
+            "property_path": "properties.identity.advanced_security.enabled",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "propertyFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "2c0b6bd4c92c",
+          "predicate": "has_exposure_window",
+          "object": "true",
+          "provenance": {
+            "property_path": "temporal.windows[2]",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "exposureFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        },
+        {
+          "fact_id": "8dcee2e0ca2e",
+          "predicate": "contributed_by",
+          "object": "CTL.COGNITO.SELFREG.001",
+          "provenance": {
+            "property_path": "contributing_controls",
+            "captured_at": "2026-01-08T00:00:00Z",
+            "projector": "exposureFacts"
+          },
+          "freshness": {
+            "captured_at": "2026-01-08T00:00:00Z",
+            "age_seconds": 86400
+          }
+        }
+      ]
+    }
+  ],
+  "attack_chain": {
+    "steps": [
+      {
+        "step": 1,
+        "description": "Identity pool allows unauthenticated access",
+        "fact_id": "7129070baf74",
+        "predicate": "allows_unauthenticated",
+        "object": "true",
+        "subject": "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool",
+        "property_path": "properties.identity.identity_pool.allow_unauthenticated_identities"
+      },
+      {
+        "step": 2,
+        "description": "User pool allows self-registration",
+        "fact_id": "8bf76b03b87f",
+        "predicate": "self_registration_unrestricted",
+        "object": "true",
+        "subject": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool",
+        "property_path": "properties.identity.governance.self_registration_restricted"
+      },
+      {
+        "step": 3,
+        "description": "Pool maps unauthenticated users to IAM role",
+        "fact_id": "002786e0c264",
+        "predicate": "maps_unauth_to",
+        "object": "arn:aws:iam::111122223333:role/Cognito_appUnauth_Role",
+        "subject": "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool",
+        "property_path": "properties.identity.identity_pool.unauthenticated_role_arn"
+      },
+      {
+        "step": 4,
+        "description": "Pool maps authenticated users to IAM role",
+        "fact_id": "6e8166017a11",
+        "predicate": "maps_auth_to",
+        "object": "arn:aws:iam::111122223333:role/Cognito_appAuth_Role",
+        "subject": "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool",
+        "property_path": "properties.identity.identity_pool.authenticated_role_arn"
+      },
+      {
+        "step": 5,
+        "description": "Role has action grant",
+        "fact_id": "24ef525b771f",
+        "predicate": "has_action",
+        "object": "s3:*",
+        "subject": "arn:aws:iam::111122223333:role/Cognito_appAuth_Role",
+        "property_path": "policies.attached_policies[0].statements[0].Action"
+      },
+      {
+        "step": 6,
+        "description": "Role has action grant",
+        "fact_id": "1decf9430e57",
+        "predicate": "has_action",
+        "object": "dynamodb:*",
+        "subject": "arn:aws:iam::111122223333:role/Cognito_appAuth_Role",
+        "property_path": "policies.attached_policies[0].statements[1].Action"
+      },
+      {
+        "step": 7,
+        "description": "Role has action grant",
+        "fact_id": "cd6c0eaa39ed",
+        "predicate": "has_action",
+        "object": "lambda:InvokeFunction",
+        "subject": "arn:aws:iam::111122223333:role/Cognito_appAuth_Role",
+        "property_path": "policies.attached_policies[0].statements[2].Action"
+      },
+      {
+        "step": 8,
+        "description": "Role has action grant",
+        "fact_id": "5b472a74bc01",
+        "predicate": "has_action",
+        "object": "s3:GetObject",
+        "subject": "arn:aws:iam::111122223333:role/Cognito_appUnauth_Role",
+        "property_path": "policies.attached_policies[0].statements[0].Action"
+      },
+      {
+        "step": 9,
+        "description": "Role has action grant",
+        "fact_id": "f8b7b6aa2a31",
+        "predicate": "has_action",
+        "object": "s3:ListBucket",
+        "subject": "arn:aws:iam::111122223333:role/Cognito_appUnauth_Role",
+        "property_path": "policies.attached_policies[0].statements[0].Action"
+      },
+      {
+        "step": 10,
+        "description": "Role has action grant",
+        "fact_id": "7c8ae645a306",
+        "predicate": "has_action",
+        "object": "dynamodb:GetItem",
+        "subject": "arn:aws:iam::111122223333:role/Cognito_appUnauth_Role",
+        "property_path": "policies.attached_policies[0].statements[1].Action"
+      },
+      {
+        "step": 11,
+        "description": "Role has action grant",
+        "fact_id": "abfa1d57af9f",
+        "predicate": "has_action",
+        "object": "dynamodb:Query",
+        "subject": "arn:aws:iam::111122223333:role/Cognito_appUnauth_Role",
+        "property_path": "policies.attached_policies[0].statements[1].Action"
+      },
+      {
+        "step": 12,
+        "description": "Role can access resource",
+        "fact_id": "00f6de79e35a",
+        "predicate": "has_resource",
+        "object": "*",
+        "subject": "arn:aws:iam::111122223333:role/Cognito_appAuth_Role",
+        "property_path": "policies.attached_policies[0].statements[0].Resource"
+      },
+      {
+        "step": 13,
+        "description": "Role can access resource",
+        "fact_id": "09ff7f92ab13",
+        "predicate": "has_resource",
+        "object": "arn:aws:dynamodb:us-east-1:111122223333:table/*",
+        "subject": "arn:aws:iam::111122223333:role/Cognito_appAuth_Role",
+        "property_path": "policies.attached_policies[0].statements[1].Resource"
+      },
+      {
+        "step": 14,
+        "description": "Role can access resource",
+        "fact_id": "a64200555d47",
+        "predicate": "has_resource",
+        "object": "arn:aws:lambda:us-east-1:111122223333:function:*",
+        "subject": "arn:aws:iam::111122223333:role/Cognito_appAuth_Role",
+        "property_path": "policies.attached_policies[0].statements[2].Resource"
+      },
+      {
+        "step": 15,
+        "description": "Role can access resource",
+        "fact_id": "a507769a4c35",
+        "predicate": "has_resource",
+        "object": "arn:aws:s3:::app-public-assets",
+        "subject": "arn:aws:iam::111122223333:role/Cognito_appUnauth_Role",
+        "property_path": "policies.attached_policies[0].statements[0].Resource"
+      },
+      {
+        "step": 16,
+        "description": "Role can access resource",
+        "fact_id": "53ab43e30e31",
+        "predicate": "has_resource",
+        "object": "arn:aws:s3:::app-public-assets/*",
+        "subject": "arn:aws:iam::111122223333:role/Cognito_appUnauth_Role",
+        "property_path": "policies.attached_policies[0].statements[0].Resource"
+      },
+      {
+        "step": 17,
+        "description": "Role can access resource",
+        "fact_id": "b826a5187de6",
+        "predicate": "has_resource",
+        "object": "arn:aws:dynamodb:us-east-1:111122223333:table/app-data",
+        "subject": "arn:aws:iam::111122223333:role/Cognito_appUnauth_Role",
+        "property_path": "policies.attached_policies[0].statements[1].Resource"
+      }
+    ]
+  },
+  "quantification": {
+    "exploitation_probability": 0.412,
+    "attacker_cost": 300,
+    "remediation_cost": 50,
+    "remediation_roi": "INFINITY",
+    "anonymous_reachable": 12,
+    "total_reachable": 42
+  }
+}

@@ -20,6 +20,10 @@ func (e *stubEnricher) EnrichFindings(*evaluation.ComplianceReport) []remediatio
 	return e.findings
 }
 
+func (e *stubEnricher) EnrichMarkerFindings(*evaluation.ComplianceReport) []remediation.Finding {
+	return nil
+}
+
 // TestEnrich_SanitizesReasoningTraceAndDelta verifies that
 // ReasoningTrace observed values and DeltaPath current values flow
 // through the per-field Sanitizer when --sanitize is on. Without

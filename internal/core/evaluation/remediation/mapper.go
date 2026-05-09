@@ -9,8 +9,15 @@ import (
 )
 
 // FindingEnricher enriches raw evaluation findings with remediation guidance.
+//
+// EnrichFindings handles the violation pipeline (report.Findings).
+// EnrichMarkerFindings handles fact-recording marker findings
+// (report.MarkerFindings). Markers usually carry no remediation —
+// they record a fact, not a fix — but the contract surfaces the
+// hook so a marker that DOES author a suppression flow gets it.
 type FindingEnricher interface {
 	EnrichFindings(*evaluation.ComplianceReport) []Finding
+	EnrichMarkerFindings(*evaluation.ComplianceReport) []Finding
 }
 
 // Finding pairs a raw violation with its associated remediation guidance.

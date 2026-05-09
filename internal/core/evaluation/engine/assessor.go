@@ -575,9 +575,15 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 		return cmp.Compare(a.AssetID, b.AssetID)
 	})
 
+	// Split marker (fact-recording) findings off the violation
+	// pipeline before exceptions / acknowledgments / risk signals
+	// see them. Marker findings contribute to chain detection but
+	// never to Summary.Violations / SecurityState / exit codes.
+	violationCandidates, markerFindings := partitionMarkerFindings(snap.Findings, s.assessor.controls)
+
 	// Filter findings through active security exceptions.
 	activeFindings, exceptedFindings := partitionFindings(
-		snap.Findings,
+		violationCandidates,
 		s.assessor.exceptions,
 		s.auditTime,
 	)
@@ -644,6 +650,7 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 		SecurityState:        posture,
 		RiskSignals:          riskSignals,
 		Findings:             activeFindings,
+		MarkerFindings:       markerFindings,
 		ExceptedFindings:     exceptedFindings,
 		AcknowledgedFindings: acknowledgedFindings,
 		SkippedControls:      snap.SkippedControls,
@@ -674,6 +681,42 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 	}
 
 	return report
+}
+
+// partitionMarkerFindings splits raw findings into violation
+// candidates (everything that should flow through the existing
+// exception / acknowledgment / risk pipeline) and marker findings
+// (fact-recording findings emitted by TypeMarker controls). The
+// caller routes the two slices to different downstream stages so
+// markers never count toward Summary.Violations or SecurityState.
+//
+// The split uses an O(n + m) pass over findings + controls: build
+// a small set of marker control IDs once, then route each finding
+// by lookup.
+func partitionMarkerFindings(
+	findings []evaluation.Finding,
+	controls []policy.ControlDefinition,
+) (violations, markers []evaluation.Finding) {
+	markerIDs := make(map[kernel.ControlID]struct{})
+	for i := range controls {
+		if controls[i].IsMarker() {
+			markerIDs[controls[i].ID] = struct{}{}
+		}
+	}
+	if len(markerIDs) == 0 {
+		// Common path — most catalogs have zero marker controls.
+		// Skip the per-finding lookup and return the input as-is.
+		return findings, nil
+	}
+	for i := range findings {
+		f := &findings[i]
+		if _, ok := markerIDs[f.ControlID]; ok {
+			markers = append(markers, *f)
+		} else {
+			violations = append(violations, *f)
+		}
+	}
+	return violations, markers
 }
 
 // partitionFindings separates violations into active findings and accepted exceptions.

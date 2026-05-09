@@ -19,6 +19,13 @@ controls:
   - CTL.COGNITO.GHOST.VERIFYAUTH.001
 escalation_threshold: 2
 compound_severity: critical
+# Each Cognito ghost-trigger predicate filters on properties.identity.cognito.trigger_type,
+# forcing one logical user pool to surface as N distinct Stave assets (one per
+# trigger). Without scope_field, the chain engine's per-asset.ID grouping would
+# never see >=2 of these controls firing on a single asset.ID. Grouping by the
+# user_pool_id reunites the per-trigger findings into the compound the chain
+# author intended.
+scope_field: properties.identity.cognito.user_pool_id
 preconditions:
   - ungoverned_operation
 postconditions:

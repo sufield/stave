@@ -245,7 +245,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	}
 
 	// Enrich with risk reasoning (chains, attack stages, exposure ranking).
-	appeval.EnrichReport(&result, controls, chains)
+	appeval.EnrichReport(&result, controls, chains, filtered)
 
 	if err := r.writeResults(ctx, cfg, &result, controls); err != nil {
 		return fmt.Errorf("write findings: %w", err)

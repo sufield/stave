@@ -212,7 +212,7 @@ func assessAccount(
 	}
 
 	// Enrich with chains.
-	appeval.EnrichReport(&result, controls, chainDefs)
+	appeval.EnrichReport(&result, controls, chainDefs, acct.Snapshots)
 
 	// Annotate SLA.
 	if slaCfg != nil {

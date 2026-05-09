@@ -51,9 +51,30 @@ func (p *Planner) EnrichFindings(result *evaluation.ComplianceReport) []Finding 
 	if result == nil {
 		return nil
 	}
-	enriched := make([]Finding, len(result.Findings))
-	for i := range result.Findings {
-		f := &result.Findings[i]
+	return p.enrichSlice(result.Findings)
+}
+
+// EnrichMarkerFindings is the same shape as EnrichFindings but
+// processes the report's MarkerFindings slice. Markers typically
+// carry no remediation (they record a fact, not a fix), but the
+// planner is invoked anyway so any marker that DOES author a
+// suppression or annotation flow gets it surfaced.
+func (p *Planner) EnrichMarkerFindings(result *evaluation.ComplianceReport) []Finding {
+	if result == nil {
+		return nil
+	}
+	return p.enrichSlice(result.MarkerFindings)
+}
+
+// enrichSlice is the shared core: walks a slice of evaluation.Findings
+// and projects each into a remediation.Finding with spec + plan
+// resolved + command parameterized. Used by both the violation
+// (EnrichFindings) and marker (EnrichMarkerFindings) paths so the
+// per-element transformation stays in one place.
+func (p *Planner) enrichSlice(findings []evaluation.Finding) []Finding {
+	enriched := make([]Finding, len(findings))
+	for i := range findings {
+		f := &findings[i]
 		findingWithPlan := Finding{
 			Finding:         *f,
 			RemediationSpec: resolveSpec(f),

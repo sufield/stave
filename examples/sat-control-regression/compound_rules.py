@@ -60,4 +60,99 @@ COMPOUND_RULES: list[dict[str, object]] = [
             "CTL.COGNITO.ADVANCED.SECURITY.001",
         ],
     },
+
+    # =====================================================
+    # Expansion: IAM, S3, and cross-service compounds.
+    #
+    # Each rule references control IDs that real fixtures
+    # actually emit (verified against the in-tree examples'
+    # contributed_by edges). Compound semantics: every
+    # conjunct must fire on the same fixture's facts; the SAT
+    # encoding is unchanged from the existing rules above.
+    #
+    # Matrix-coverage caveat: scripts/h1-matrix/run.py loads
+    # each fixture with its example's local controls/ directory
+    # rather than the full catalog. Most in-tree examples ship
+    # a single control, so multi-control compounds only fire
+    # when PySAT is invoked against the FULL catalog (this
+    # example's run.sh path) or against a fixture whose
+    # example carries multiple controls (the demos/nodes-2026
+    # capital-one fixture, which fires five controls
+    # simultaneously, is the primary demonstration target for
+    # these new rules).
+    # =====================================================
+    {
+        "name": "cognito_anon_then_self_register",
+        "description": (
+            "Identity-pool unauthenticated access AND user-pool "
+            "self-registration both fire on the same fixture. "
+            "Either gate alone admits abuse; together the attacker "
+            "has the full credential-issuance surface — anonymous "
+            "S3 read PLUS cheap-to-create authenticated identities."
+        ),
+        "controls": [
+            "CTL.COGNITO.IDPOOL.UNAUTH.S3.001",
+            "CTL.COGNITO.SELFREG.001",
+        ],
+    },
+    {
+        "name": "weak_encryption_no_data_event_audit",
+        "description": (
+            "S3 server-side encryption is not customer-managed AND "
+            "CloudTrail is not configured for data-event logging on "
+            "the same bucket. The S3 control flags the cryptographic "
+            "weakness; the CloudTrail control flags the lack of an "
+            "audit trail. Together they're the post-breach scenario "
+            "from the Capital One reconstruction: weak crypto, no "
+            "tamper-evident log of who read what."
+        ),
+        "controls": [
+            "CTL.S3.ENCRYPT.003",
+            "CTL.CLOUDTRAIL.DATAEVENTS.S3.001",
+        ],
+    },
+    {
+        "name": "anonymous_compute_trust_no_audit",
+        "description": (
+            "Three controls fire simultaneously: the identity pool "
+            "admits anonymous users, an IAM role mounts a dual "
+            "compute-and-iam trust, and CloudTrail data-event "
+            "coverage is missing. The full Capital One "
+            "reconstruction in three-control form."
+        ),
+        "controls": [
+            "CTL.COGNITO.IDPOOL.UNAUTH.S3.001",
+            "CTL.IAM.TRUST.DUAL.001",
+            "CTL.CLOUDTRAIL.DATAEVENTS.S3.001",
+        ],
+    },
+    {
+        "name": "iam_overperm_with_compute_trust",
+        "description": (
+            "Policy resource-wildcard finding fires on the same "
+            "role that the autoscaling-PassRole privesc primitive "
+            "flags. Wildcard = breadth, PassRole-bypass = vector. "
+            "Combined: any compute service the role trusts becomes "
+            "a privesc launcher. Mirrors the iter-13 article."
+        ),
+        "controls": [
+            "CTL.IAM.POLICY.RESOURCE.WILDCARD.001",
+            "CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001",
+        ],
+    },
+    {
+        "name": "iam_overperm_and_iam_self_attach",
+        "description": (
+            "A wildcard-resource finding AND the "
+            "iam:AttachUserPolicy self-mutation primitive on the "
+            "same fixture. Wildcard hands broad current authority; "
+            "self-attach hands future authority — any user in the "
+            "principal set can grant themselves arbitrary policy "
+            "attachments without ever asking IAM."
+        ),
+        "controls": [
+            "CTL.IAM.POLICY.RESOURCE.WILDCARD.001",
+            "CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001",
+        ],
+    },
 ]

@@ -1,0 +1,31 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-09T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:99999999-aaaa-bbbb-cccc-dddddddddddd",
+      "type": "aws_cognito_identity_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_identity_pool",
+          "access": {
+            "allow_unauthenticated": false
+          },
+          "cognito": {
+            "identity_pool_id": "us-east-1:99999999-aaaa-bbbb-cccc-dddddddddddd",
+            "auth_role_arn": "arn:aws:iam::111122223333:role/Cognito_acmeAuth_Role",
+            "auth_role_broad": true,
+            "auth_role_has_passrole": true,
+            "auth_role_can_escalate_via_assume": true,
+            "auth_role_has_cross_account": true,
+            "has_role_mapping": false,
+            "allow_classic_flow": true,
+            "provider_validates_audience": false
+          }
+        }
+      }
+    }
+  ]
+}

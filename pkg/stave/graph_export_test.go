@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sufield/stave/internal/core/sir"
 	"github.com/sufield/stave/pkg/stave"
 )
 
@@ -243,5 +244,196 @@ func TestExportGraph_LifecycleNilWhenNoTemporalEvidence(t *testing.T) {
 	if g.Findings[0].Lifecycle != nil {
 		t.Errorf("Lifecycle should be nil when Finding has no temporal evidence; got %+v",
 			g.Findings[0].Lifecycle)
+	}
+}
+
+// TestExportGraph_NoOptionsBackwardCompat confirms zero-arg
+// callers see the same shape they always did — no
+// TransitiveReachability, no AssetNode.Lifecycle. The variadic
+// rollout from PR-7 must not regress existing consumers.
+func TestExportGraph_NoOptionsBackwardCompat(t *testing.T) {
+	t.Parallel()
+	a := &stave.Assessment{
+		Findings: []stave.Finding{{
+			FindingID:     "fid-1",
+			ControlID:     "CTL.X.001",
+			AssetID:       "arn:aws:s3:::b",
+			AssetType:     "aws_s3_bucket",
+			Severity:      "high",
+			ExposureScore: 5,
+		}},
+	}
+	g := stave.ExportGraph(a)
+	if g == nil {
+		t.Fatal("nil graph")
+	}
+	if g.TransitiveReachability != nil {
+		t.Errorf("zero-arg call must not populate TransitiveReachability, got %d entries",
+			len(g.TransitiveReachability))
+	}
+	for i := range g.Assets {
+		if g.Assets[i].Lifecycle != nil {
+			t.Errorf("Assets[%d].Lifecycle should be nil without WithSIRDocument", i)
+		}
+	}
+}
+
+// TestExportGraph_WithSIRDocumentHydratesReachability surfaces
+// transitive role chains from the SIR document into
+// TransitiveReachability. Predicate-driven check: a SIR doc with
+// one IdentityFact carrying a 2-hop chain produces one
+// ReachabilityPath with two hops.
+func TestExportGraph_WithSIRDocumentHydratesReachability(t *testing.T) {
+	t.Parallel()
+	a := &stave.Assessment{
+		Findings: []stave.Finding{{
+			FindingID: "fid-1",
+			AssetID:   "arn:aws:iam::111:role/admin",
+			AssetType: "aws_iam_role",
+		}},
+	}
+	doc := &sir.Document{
+		Identities: []sir.IdentityFact{{
+			PrincipalID: "arn:aws:iam::111:user/dev",
+			RoleChains: []sir.RoleChainFact{{
+				Hops: []sir.RoleHopFact{
+					{From: "arn:aws:iam::111:user/dev", To: "arn:aws:iam::111:role/onboarding"},
+					{From: "arn:aws:iam::111:role/onboarding", To: "arn:aws:iam::111:role/admin", CrossAccount: true, HopType: "sts:AssumeRole"},
+				},
+				FinalRoleARN:    "arn:aws:iam::111:role/admin",
+				TransitiveLevel: "admin",
+			}},
+		}},
+	}
+	g := stave.ExportGraph(a, stave.WithSIRDocument(doc))
+	if got := len(g.TransitiveReachability); got != 1 {
+		t.Fatalf("TransitiveReachability len = %d, want 1", got)
+	}
+	p := g.TransitiveReachability[0]
+	if p.FromPrincipal != "arn:aws:iam::111:user/dev" {
+		t.Errorf("FromPrincipal = %q", p.FromPrincipal)
+	}
+	if p.FinalRole != "arn:aws:iam::111:role/admin" {
+		t.Errorf("FinalRole = %q", p.FinalRole)
+	}
+	if !p.CrossAccountHop {
+		t.Errorf("CrossAccountHop should be true (any hop is cross-account)")
+	}
+	if got := len(p.Hops); got != 2 {
+		t.Errorf("Hops len = %d, want 2", got)
+	}
+	if p.TransitiveLevel != "admin" {
+		t.Errorf("TransitiveLevel = %q", p.TransitiveLevel)
+	}
+}
+
+// TestExportGraph_WithSIRDocumentHydratesAssetLifecycle attaches
+// the AssetFact.Lifecycle envelope to the matching AssetNode.
+// AssetNodes whose ID has no SIR AssetFact match get nil
+// lifecycle (the omitempty behaviour callers rely on).
+func TestExportGraph_WithSIRDocumentHydratesAssetLifecycle(t *testing.T) {
+	t.Parallel()
+	first := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	last := time.Date(2026, 1, 8, 0, 0, 0, 0, time.UTC)
+	a := &stave.Assessment{
+		Findings: []stave.Finding{{
+			FindingID: "fid-1",
+			AssetID:   "arn:aws:s3:::lifecycle-bucket",
+			AssetType: "aws_s3_bucket",
+		}},
+	}
+	doc := &sir.Document{
+		Assets: []sir.AssetFact{{
+			ID:   "arn:aws:s3:::lifecycle-bucket",
+			Type: "aws_s3_bucket",
+			Lifecycle: &sir.AssetLifecycleFact{
+				Provisioned: true,
+				FirstSeen:   first,
+				LastSeen:    last,
+			},
+		}},
+	}
+	g := stave.ExportGraph(a, stave.WithSIRDocument(doc))
+	if len(g.Assets) != 1 {
+		t.Fatalf("Assets len = %d, want 1", len(g.Assets))
+	}
+	lc := g.Assets[0].Lifecycle
+	if lc == nil {
+		t.Fatal("Asset.Lifecycle is nil; should be populated from SIR")
+	}
+	if !lc.Provisioned {
+		t.Errorf("Provisioned = false, want true")
+	}
+	if !lc.FirstSeen.Equal(first) {
+		t.Errorf("FirstSeen = %v", lc.FirstSeen)
+	}
+	if !lc.LastSeen.Equal(last) {
+		t.Errorf("LastSeen = %v", lc.LastSeen)
+	}
+}
+
+// TestExportGraph_WithSIRDocumentNilDocIsNoOp confirms passing
+// a nil SIR doc behaves like the zero-options call (no
+// hydration, no panic). Lets callers thread the option
+// unconditionally without a nil-guard.
+func TestExportGraph_WithSIRDocumentNilDocIsNoOp(t *testing.T) {
+	t.Parallel()
+	a := &stave.Assessment{
+		Findings: []stave.Finding{{
+			FindingID: "fid-1",
+			AssetID:   "arn:aws:s3:::b",
+			AssetType: "aws_s3_bucket",
+		}},
+	}
+	g := stave.ExportGraph(a, stave.WithSIRDocument(nil))
+	if g == nil {
+		t.Fatal("nil graph from valid assessment")
+	}
+	if g.TransitiveReachability != nil {
+		t.Errorf("nil SIR doc populated TransitiveReachability: %+v", g.TransitiveReachability)
+	}
+}
+
+// TestExportGraph_WithSIRDocumentDeterministic confirms
+// (assessment, sir.Document) input produces byte-stable
+// TransitiveReachability ordering across runs. Path slice is
+// sorted by (FromPrincipal, FinalRole) per the WithSIRDocument
+// contract.
+func TestExportGraph_WithSIRDocumentDeterministic(t *testing.T) {
+	t.Parallel()
+	a := &stave.Assessment{
+		Findings: []stave.Finding{{FindingID: "fid", AssetID: "arn:aws:s3:::b"}},
+	}
+	doc := &sir.Document{
+		Identities: []sir.IdentityFact{
+			{PrincipalID: "z-user", RoleChains: []sir.RoleChainFact{{FinalRoleARN: "z-role"}}},
+			{PrincipalID: "a-user", RoleChains: []sir.RoleChainFact{
+				{FinalRoleARN: "z-role"},
+				{FinalRoleARN: "a-role"},
+			}},
+		},
+	}
+	first := stave.ExportGraph(a, stave.WithSIRDocument(doc))
+	for run := 0; run < 5; run++ {
+		next := stave.ExportGraph(a, stave.WithSIRDocument(doc))
+		if len(first.TransitiveReachability) != len(next.TransitiveReachability) {
+			t.Fatalf("run %d: count differs", run)
+		}
+		for i := range first.TransitiveReachability {
+			a, b := &first.TransitiveReachability[i], &next.TransitiveReachability[i]
+			if a.FromPrincipal != b.FromPrincipal || a.FinalRole != b.FinalRole {
+				t.Errorf("run %d: paths[%d] (Principal,Role) differs: %v vs %v",
+					run, i, *a, *b)
+			}
+		}
+	}
+	// Sorted by (FromPrincipal, FinalRole): a-user/a-role,
+	// a-user/z-role, z-user/z-role.
+	want := []string{"a-user|a-role", "a-user|z-role", "z-user|z-role"}
+	for i, p := range first.TransitiveReachability {
+		got := p.FromPrincipal + "|" + p.FinalRole
+		if got != want[i] {
+			t.Errorf("paths[%d] = %q, want %q", i, got, want[i])
+		}
 	}
 }

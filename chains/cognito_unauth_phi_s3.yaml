@@ -1,0 +1,30 @@
+id: cognito_unauth_phi_s3
+description: >
+  Cognito identity pool admits anonymous AWS
+  credentials AND its unauthenticated role
+  carries S3 actions AND the action target is
+  an S3 bucket tagged data-classification=phi.
+  The compound describes an internet-to-PHI
+  data path that no individual control catches:
+  UNAUTH.S3 alone fires on any S3 access
+  (over-broad signal); the PHI marker alone is
+  the desired state. Their conjunction over a
+  shared bucket ARN — surfaced via scope_field
+  on the bucket's identity — is the
+  HIPAA-reportable shape.
+controls:
+  - CTL.COGNITO.IDPOOL.UNAUTH.S3.001
+  - CTL.S3.MARKER.PHI.001
+escalation_threshold: 2
+compound_severity: critical
+# The Cognito side stamps a target_bucket_arn on the identity-pool
+# asset (the bucket the unauth role can reach); the S3 side's scope
+# is its own ARN (asset.ID). The resolver returns the property
+# value on cognito assets and the asset.ID on s3 buckets — see
+# risk.NewScopeResolverFromSnapshots and the _self synthetic path
+# the catalog uses for asset-self references.
+scope_field: properties.identity.cognito.target_bucket_arn
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_access

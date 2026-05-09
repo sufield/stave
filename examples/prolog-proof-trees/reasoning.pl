@@ -91,6 +91,100 @@ privesc_path_(Current, End, Visited, Depth, [step(Current, assumes, Mid) | Rest]
     privesc_path_(Mid, End, [Mid | Visited], NextDepth, Rest).
 
 % ===========================================================
+% Expansion: per-asset boolean derivations.
+%
+% Each rule turns a per-asset boolean (the propertyFacts
+% projector / PR-1-etc emit `has_X(asset, "true"|"false")`)
+% into a one-step proof tree the renderer prints alongside
+% the multi-step Cognito and IAM chains. Predicates referenced
+% here match what real fixtures emit; transform-to-pl.sh
+% declares them discontiguous so SWI-Prolog stays quiet on
+% fixtures that don't mention all of them.
+% ===========================================================
+
+% Public S3 bucket — read or list.
+public_bucket(B, [
+    step(B, has_public_read, "true"),
+    conclusion(B, public_read_enabled)
+]) :-
+    has_public_read(B, "true").
+
+public_bucket(B, [
+    step(B, has_public_list, "true"),
+    conclusion(B, public_list_enabled)
+]) :-
+    has_public_list(B, "true").
+
+% Cognito MFA / advanced-security gap.
+mfa_gap(P, [
+    step(P, has_mfa_enforced, "false"),
+    conclusion(P, mfa_disabled)
+]) :-
+    has_mfa_enforced(P, "false").
+
+mfa_gap(P, [
+    step(P, has_advanced_security_enabled, "false"),
+    conclusion(P, advanced_security_off)
+]) :-
+    has_advanced_security_enabled(P, "false").
+
+% CloudTrail logging gap (mgmt or data events).
+logging_gap(T, [
+    step(T, has_logging_enabled, "false"),
+    conclusion(T, logging_disabled)
+]) :-
+    has_logging_enabled(T, "false").
+
+logging_gap(B, [
+    step(B, has_data_event_logging, "false"),
+    conclusion(B, data_event_logging_missing)
+]) :-
+    has_data_event_logging(B, "false").
+
+% Dangling bucket reference — a reference to a bucket the
+% account doesn't own / doesn't exist. Either signal alone is
+% enough for takeover risk.
+dangling_bucket(R, [
+    step(R, has_bucket_owned, "false"),
+    conclusion(R, bucket_takeover_risk)
+]) :-
+    has_bucket_owned(R, "false").
+
+dangling_bucket(R, [
+    step(R, has_bucket_exists, "false"),
+    conclusion(R, bucket_takeover_risk)
+]) :-
+    has_bucket_exists(R, "false").
+
+% Exposed repository artefacts (.git, .svn, .DS_Store).
+exposed_repo(B, [
+    step(B, has_exposed_repo_artifacts, "true"),
+    conclusion(B, repo_metadata_publicly_accessible)
+]) :-
+    has_exposed_repo_artifacts(B, "true").
+
+% EKS RBAC webhook-config write access.
+webhook_admin(C, [
+    step(C, has_webhook_config_access, "true"),
+    conclusion(C, cluster_admin_via_webhook_config)
+]) :-
+    has_webhook_config_access(C, "true").
+
+% EKS aws-auth ConfigMap template-injection vector.
+aws_auth_injection(M, [
+    step(M, has_uses_access_key_id, "true"),
+    conclusion(M, identity_mapped_by_access_key)
+]) :-
+    has_uses_access_key_id(M, "true").
+
+% Resource-policy broad-trust shape.
+broad_resource_policy(R, [
+    step(R, resource_policy_principal, "*"),
+    conclusion(R, broad_trust_via_resource_policy)
+]) :-
+    resource_policy_principal(R, "*").
+
+% ===========================================================
 % Proof tree formatting.
 % ===========================================================
 print_proof(Proof) :- print_proof(Proof, 0).
@@ -145,6 +239,46 @@ run_privesc :-
           print_proof(Proof) )
     ).
 
+run_public_bucket :-
+    forall(public_bucket(B, Proof),
+        ( format("~npublic bucket ~w:~n", [B]),
+          print_proof(Proof) )).
+
+run_mfa :-
+    forall(mfa_gap(P, Proof),
+        ( format("~nMFA / advanced-security gap on ~w:~n", [P]),
+          print_proof(Proof) )).
+
+run_logging :-
+    forall(logging_gap(T, Proof),
+        ( format("~nlogging gap on ~w:~n", [T]),
+          print_proof(Proof) )).
+
+run_dangling :-
+    forall(dangling_bucket(R, Proof),
+        ( format("~ndangling bucket reference ~w:~n", [R]),
+          print_proof(Proof) )).
+
+run_exposed_repo :-
+    forall(exposed_repo(B, Proof),
+        ( format("~nexposed repo artefacts on ~w:~n", [B]),
+          print_proof(Proof) )).
+
+run_webhook :-
+    forall(webhook_admin(C, Proof),
+        ( format("~nwebhook admin access on ~w:~n", [C]),
+          print_proof(Proof) )).
+
+run_aws_auth :-
+    forall(aws_auth_injection(M, Proof),
+        ( format("~naws-auth template injection on ~w:~n", [M]),
+          print_proof(Proof) )).
+
+run_broad_policy :-
+    forall(broad_resource_policy(R, Proof),
+        ( format("~nbroad resource policy on ~w:~n", [R]),
+          print_proof(Proof) )).
+
 run_queries :-
     run_section("Anonymous Access Chains",
                 anonymous_access(_, _, _, _), run_anonymous),
@@ -153,4 +287,20 @@ run_queries :-
     run_section("Exploitable Overpermissioned Roles",
                 exploitable_role(_, _, _, _), run_exploitable),
     run_section("Privilege Escalation Paths",
-                privesc_path(_, _, _), run_privesc).
+                privesc_path(_, _, _), run_privesc),
+    run_section("Public S3 Buckets",
+                public_bucket(_, _), run_public_bucket),
+    run_section("Cognito MFA / Advanced-Security Gaps",
+                mfa_gap(_, _), run_mfa),
+    run_section("CloudTrail Logging Gaps",
+                logging_gap(_, _), run_logging),
+    run_section("Dangling Bucket References",
+                dangling_bucket(_, _), run_dangling),
+    run_section("Exposed Repository Artefacts",
+                exposed_repo(_, _), run_exposed_repo),
+    run_section("EKS Webhook Admin Access",
+                webhook_admin(_, _), run_webhook),
+    run_section("EKS aws-auth Template Injection",
+                aws_auth_injection(_, _), run_aws_auth),
+    run_section("Broad Resource Policy",
+                broad_resource_policy(_, _), run_broad_policy).

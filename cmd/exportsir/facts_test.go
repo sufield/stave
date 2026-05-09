@@ -1672,3 +1672,130 @@ func TestStringifiedPolicyFacts_EmitsActionAndPrincipalWithoutCondition(t *testi
 		t.Error("missing resource_policy_action on no-condition Statement")
 	}
 }
+
+// TestFreshness_PopulatedFromProvenance confirms AnnotateFreshness
+// reads Provenance.CapturedAt (RFC3339 string), parses it back to
+// a time.Time, and computes age_seconds against the supplied now.
+// Facts without a CapturedAt receive no Freshness — preserving
+// the omitempty contract on the field.
+func TestFreshness_PopulatedFromProvenance(t *testing.T) {
+	t.Parallel()
+	facts := []Fact{
+		{
+			Subject:   "asset/with-time",
+			Predicate: "has_type",
+			Object:    "x",
+			Provenance: &Provenance{
+				CapturedAt: "2026-01-08T00:00:00Z",
+				Projector:  "assetFacts",
+			},
+		},
+		{
+			Subject:    "asset/no-time",
+			Predicate:  "has_severity",
+			Object:     "high",
+			Provenance: &Provenance{Projector: "controlFacts"},
+		},
+	}
+	now, _ := time.Parse(time.RFC3339, "2026-05-06T00:00:00Z")
+	AnnotateFreshness(facts, now)
+
+	if facts[0].Freshness == nil {
+		t.Fatalf("first fact should have freshness")
+	}
+	want := int64(10195200) // 118 days * 86400
+	if got := facts[0].Freshness.AgeSeconds; got != want {
+		t.Errorf("AgeSeconds = %d, want %d", got, want)
+	}
+	if facts[1].Freshness != nil {
+		t.Errorf("second fact has no CapturedAt; Freshness should be nil, got %+v", facts[1].Freshness)
+	}
+}
+
+// TestFreshness_ClampsNegativeAgeToZero confirms a CapturedAt
+// after `now` (clock skew between collector and export host)
+// reports age 0 rather than a negative duration.
+func TestFreshness_ClampsNegativeAgeToZero(t *testing.T) {
+	t.Parallel()
+	facts := []Fact{{
+		Subject: "asset/future",
+		Provenance: &Provenance{
+			CapturedAt: "2026-12-01T00:00:00Z",
+		},
+	}}
+	now, _ := time.Parse(time.RFC3339, "2026-05-06T00:00:00Z")
+	AnnotateFreshness(facts, now)
+
+	if facts[0].Freshness == nil {
+		t.Fatal("freshness should still be populated even when clamped")
+	}
+	if got := facts[0].Freshness.AgeSeconds; got != 0 {
+		t.Errorf("negative age should clamp to 0, got %d", got)
+	}
+	// CapturedAt must still reflect the parsed value, not be zeroed.
+	if facts[0].Freshness.CapturedAt.Year() != 2026 {
+		t.Errorf("CapturedAt should preserve original time, got %v", facts[0].Freshness.CapturedAt)
+	}
+}
+
+// TestFreshness_SilentOnInvalidCapturedAt — a malformed timestamp
+// in Provenance.CapturedAt produces no Freshness rather than an
+// error. The provenance field is informational; a parse failure
+// shouldn't fail the export.
+func TestFreshness_SilentOnInvalidCapturedAt(t *testing.T) {
+	t.Parallel()
+	facts := []Fact{{
+		Provenance: &Provenance{CapturedAt: "not-a-timestamp"},
+	}}
+	now := time.Now()
+	AnnotateFreshness(facts, now)
+	if facts[0].Freshness != nil {
+		t.Errorf("invalid CapturedAt produced freshness: %+v", facts[0].Freshness)
+	}
+}
+
+// TestFreshness_DeterministicAcrossRuns — same (facts, now)
+// input produces byte-identical Freshness values. The function
+// has no internal map iteration or wall-clock read after `now`
+// is captured, so this is a safety net against future drift.
+func TestFreshness_DeterministicAcrossRuns(t *testing.T) {
+	t.Parallel()
+	now, _ := time.Parse(time.RFC3339, "2026-05-06T00:00:00Z")
+	mk := func() []Fact {
+		return []Fact{
+			{Provenance: &Provenance{CapturedAt: "2026-01-08T00:00:00Z"}},
+			{Provenance: &Provenance{CapturedAt: "2026-04-30T12:30:00Z"}},
+			{Provenance: &Provenance{CapturedAt: "2026-05-05T23:59:59Z"}},
+		}
+	}
+	first := mk()
+	AnnotateFreshness(first, now)
+	for run := 0; run < 5; run++ {
+		next := mk()
+		AnnotateFreshness(next, now)
+		for i := range first {
+			if first[i].Freshness.AgeSeconds != next[i].Freshness.AgeSeconds {
+				t.Errorf("run %d: facts[%d].AgeSeconds = %d, first run = %d",
+					run, i, next[i].Freshness.AgeSeconds, first[i].Freshness.AgeSeconds)
+			}
+			if !first[i].Freshness.CapturedAt.Equal(next[i].Freshness.CapturedAt) {
+				t.Errorf("run %d: facts[%d].CapturedAt drifts", run, i)
+			}
+		}
+	}
+}
+
+// TestFreshness_SkipsFactsWithoutProvenance — facts with nil
+// Provenance produce no Freshness. Rare in practice (every
+// projector goes through annotateProvenance), but the API contract
+// holds for ad-hoc callers building Fact slices manually.
+func TestFreshness_SkipsFactsWithoutProvenance(t *testing.T) {
+	t.Parallel()
+	facts := []Fact{
+		{Subject: "x", Predicate: "y", Object: "z"},
+	}
+	AnnotateFreshness(facts, time.Now())
+	if facts[0].Freshness != nil {
+		t.Errorf("nil provenance produced freshness: %+v", facts[0].Freshness)
+	}
+}

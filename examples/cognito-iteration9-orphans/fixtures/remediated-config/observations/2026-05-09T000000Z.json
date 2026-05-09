@@ -1,0 +1,75 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-09T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_activePool",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user_pool",
+          "user_pool": {
+            "name": "active-pool",
+            "user_pool_id": "us-east-1_activePool"
+          },
+          "cognito": {
+            "has_app_clients": true,
+            "is_user_pool_dormant": false,
+            "has_orphan_triggers": false,
+            "estimated_number_of_users": 4200
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_activePool/client/9livecli12345",
+      "type": "aws_cognito_user_pool_client",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_app_client",
+          "cognito": {
+            "client_id": "9livecli12345",
+            "user_pool_id": "us-east-1_activePool",
+            "is_app_client_dormant": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:77777777-aaaa-bbbb-cccc-ffffffffffff",
+      "type": "aws_cognito_identity_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_identity_pool",
+          "cognito": {
+            "identity_pool_id": "us-east-1:77777777-aaaa-bbbb-cccc-ffffffffffff",
+            "has_identity_providers": true,
+            "cognito_identity_providers": [
+              {"provider_name": "cognito-idp.us-east-1.amazonaws.com/us-east-1_activePool"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_activePool/resource-server/acme-active-rs",
+      "type": "aws_cognito_resource_server",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_resource_server",
+          "cognito": {
+            "resource_server_identifier": "acme-active-rs",
+            "user_pool_id": "us-east-1_activePool",
+            "is_resource_server_orphan": false,
+            "referenced_by_clients": ["9livecli12345"]
+          }
+        }
+      }
+    }
+  ]
+}

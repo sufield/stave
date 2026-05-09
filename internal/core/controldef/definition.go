@@ -166,11 +166,11 @@ func (ctl *ControlDefinition) HasType() bool {
 
 // RequiresCELValidation reports whether the control is one of the
 // types whose UnsafePredicate must compile under the CEL evaluator
-// at lint time. Currently only TypeUnsafeState carries a CEL-evaluated
-// predicate; types that lift their decision out of the predicate
-// (Recurrence, PrefixExposure) skip the compile check.
+// at lint time. TypeUnsafeState and TypeMarker both carry a
+// CEL-evaluated predicate; types that lift their decision out of the
+// predicate (Recurrence, PrefixExposure) skip the compile check.
 func (ctl *ControlDefinition) RequiresCELValidation() bool {
-	return ctl != nil && ctl.Type == TypeUnsafeState
+	return ctl != nil && (ctl.Type == TypeUnsafeState || ctl.Type == TypeMarker)
 }
 
 // OneLineSummary returns the first human-readable label that callers
@@ -658,7 +658,17 @@ func EvaluatableTypes() []ControlType {
 		TypeUnsafeDuration,
 		TypeUnsafeRecurrence,
 		TypePrefixExposure,
+		TypeMarker,
 	}
+}
+
+// IsMarker reports whether the control is a fact-recording marker.
+// Marker findings do not count toward violations / SecurityState /
+// exit codes; they exist so chains can compose facts that aren't
+// individually unsafe (e.g. data-classification tags) with
+// violation findings on related assets.
+func (ctl *ControlDefinition) IsMarker() bool {
+	return ctl != nil && ctl.Type == TypeMarker
 }
 
 // IsEvaluatable reports whether the evaluator can process this control type.

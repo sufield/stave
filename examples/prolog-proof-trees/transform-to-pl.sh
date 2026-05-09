@@ -35,6 +35,29 @@ OUTPUT_FILE=$2
     echo ":- discontiguous self_registration_unrestricted/2."
     echo ":- discontiguous is_provisioned/2."
     echo ":- discontiguous is_decommissioned/2."
+    # Per-asset boolean projectors used by the expansion rules in
+    # reasoning.pl. Discontiguous declarations keep the SWI-Prolog
+    # warning channel clean when a fixture's JSONL only mentions a
+    # subset of these predicates.
+    echo ":- discontiguous has_public_read/2."
+    echo ":- discontiguous has_public_list/2."
+    echo ":- discontiguous has_public_access_blocked/2."
+    echo ":- discontiguous has_mfa_enforced/2."
+    echo ":- discontiguous has_advanced_security_enabled/2."
+    echo ":- discontiguous has_logging_enabled/2."
+    echo ":- discontiguous has_data_event_logging/2."
+    echo ":- discontiguous has_bucket_exists/2."
+    echo ":- discontiguous has_bucket_owned/2."
+    echo ":- discontiguous has_exposed_repo_artifacts/2."
+    echo ":- discontiguous has_webhook_config_access/2."
+    echo ":- discontiguous has_uses_access_key_id/2."
+    echo ":- discontiguous has_upload_key_mode/2."
+    echo ":- discontiguous resource_policy_principal/2."
+    echo ":- discontiguous resource_policy_action/2."
+    echo ":- discontiguous has_condition/2."
+    echo ":- discontiguous has_condition_value/2."
+    echo ":- discontiguous has_deny_action/2."
+    echo ":- discontiguous has_deny_resource/2."
     echo ""
     jq -r '"\(.predicate)(\"\(.subject | gsub("\\\\"; "\\\\\\\\") | gsub("\""; "\\\""))\", \"\(.object | gsub("\\\\"; "\\\\\\\\") | gsub("\""; "\\\""))\")."' \
         "$JSONL_FILE"

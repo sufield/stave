@@ -21,6 +21,7 @@ func FromEvaluation(e *report.Assessment) ResultDTO {
 		SecurityState:     e.Status,
 		RiskSignals:       fromAtRiskItems(e.RiskSignals),
 		Findings:          fromFindings(e.Findings),
+		MarkerFindings:    fromFindings(e.MarkerFindings),
 		ChainFindings:     e.ChainFindings,
 		Issues:            fromIssues(e.Issues),
 		ExceptedFindings:  fromExceptedFindings(e.ExceptedFindings),

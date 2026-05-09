@@ -1,0 +1,18 @@
+=== Forbidden State: Auto-Generated Z3 Queries ===
+  N invariants exported
+  1 with forbidden_state blocks
+
+  compiled: CTL.S3.ACCESS.EXTERNAL.ORG.001 → CTL.S3.ACCESS.EXTERNAL.ORG.001.query.smt2
+
+1 forbidden_state block(s) compiled to <work-dir>/queries/
+
+  wrote 3 fact assertions to <work-dir>/writeup-config.facts.smt2
+--- fixture: writeup-config
+  CTL.S3.ACCESS.EXTERNAL.ORG.001                VIOLATION   forbidden state is reachable
+
+  wrote 3 fact assertions to <work-dir>/remediated-config.facts.smt2
+--- fixture: remediated-config
+  CTL.S3.ACCESS.EXTERNAL.ORG.001                SAFE        forbidden state is impossible
+
+Each query was auto-generated from the control's forbidden_state YAML block.
+No hand-written query.smt2 needed.

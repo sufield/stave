@@ -18,7 +18,8 @@
         "justification_required",
         "ownership_required",
         "visibility_required",
-        "prefix_exposure"
+        "prefix_exposure",
+        "marker"
       ]
     },
     "predicateRule": {

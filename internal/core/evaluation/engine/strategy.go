@@ -180,6 +180,14 @@ var strategyRegistry = map[policy.ControlType]StrategyFactory{
 	policy.TypePrefixExposure: func(_ strategyDeps, ctl *policy.ControlDefinition) strategy {
 		return &prefixExposureStrategy{ctl: ctl}
 	},
+	// Marker controls reuse the unsafe-state strategy: same CEL
+	// predicate evaluation against the asset's properties. The
+	// downstream split into MarkerFindings vs Findings happens in
+	// compileReport (see partitionFindings) — at the strategy
+	// layer a marker firing is identical to a violation firing.
+	policy.TypeMarker: func(deps strategyDeps, ctl *policy.ControlDefinition) strategy {
+		return &unsafeStateStrategy{deps: deps, ctl: ctl}
+	},
 }
 
 func buildStrategy(deps strategyDeps, ctl *policy.ControlDefinition) strategy {

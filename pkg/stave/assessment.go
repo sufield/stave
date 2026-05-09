@@ -28,6 +28,15 @@ type Assessment struct {
 	// by ExposureScore descending with deterministic tiebreakers.
 	Findings []Finding
 
+	// MarkerFindings are fact-recording findings emitted by
+	// TypeMarker controls (e.g. "this S3 bucket is tagged
+	// data-classification=phi"). They participate in chain
+	// detection so cross-resource compounds can compose them with
+	// violation findings, but never count toward Status,
+	// Summary.Violations, or exit codes. Empty when the catalog
+	// has no marker controls.
+	MarkerFindings []Finding
+
 	// Issues consolidates findings that share a root cause. One
 	// underlying misconfiguration produces one Issue regardless
 	// of how many controls fire on it. Every finding is a member

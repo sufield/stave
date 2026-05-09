@@ -28,6 +28,7 @@ func BuildAssessmentFromEnriched(enriched *appcontracts.EnrichedResult) *report.
 		SecurityState:        enriched.Result.SecurityState,
 		RiskSignals:          enriched.Result.RiskSignals,
 		Findings:             findings,
+		MarkerFindings:       toRemediationFindings(enriched.MarkerFindings),
 		SkippedControls:      enriched.Result.SkippedControls,
 		ExemptedAssets:       enriched.ExemptedAssets,
 		ExceptedFindings:     enriched.Result.ExceptedFindings,

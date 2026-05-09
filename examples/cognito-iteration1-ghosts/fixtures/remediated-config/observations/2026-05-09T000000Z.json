@@ -1,0 +1,209 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-09T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_acmeApp",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_user_pool",
+          "cognito": {
+            "user_pool_id": "us-east-1_acmeApp",
+            "trigger_type": "pre_authentication",
+            "trigger_lambda_arn": "arn:aws:lambda:us-east-1:111122223333:function:acme-preauth",
+            "trigger_lambda_exists": true,
+            "has_ghost_trigger": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_acmeApp_postauth",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_user_pool",
+          "cognito": {
+            "user_pool_id": "us-east-1_acmeApp_postauth",
+            "trigger_type": "post_authentication",
+            "trigger_lambda_exists": true,
+            "has_ghost_trigger": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_acmeApp_custommsg",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_user_pool",
+          "cognito": {
+            "user_pool_id": "us-east-1_acmeApp_custommsg",
+            "trigger_type": "custom_message",
+            "trigger_lambda_exists": true,
+            "has_ghost_trigger": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_acmeApp_postconfirm",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_user_pool",
+          "cognito": {
+            "user_pool_id": "us-east-1_acmeApp_postconfirm",
+            "trigger_type": "post_confirmation",
+            "trigger_lambda_exists": true,
+            "has_ghost_trigger": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_acmeApp_defineauth",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_user_pool",
+          "cognito": {
+            "user_pool_id": "us-east-1_acmeApp_defineauth",
+            "trigger_type": "define_auth_challenge",
+            "trigger_lambda_exists": true,
+            "has_ghost_trigger": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_acmeApp_createauth",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_user_pool",
+          "cognito": {
+            "user_pool_id": "us-east-1_acmeApp_createauth",
+            "trigger_type": "create_auth_challenge",
+            "trigger_lambda_exists": true,
+            "has_ghost_trigger": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_acmeApp_verifyauth",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_user_pool",
+          "cognito": {
+            "user_pool_id": "us-east-1_acmeApp_verifyauth",
+            "trigger_type": "verify_auth_challenge_response",
+            "trigger_lambda_exists": true,
+            "has_ghost_trigger": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_acmeApp_pretoken",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_user_pool",
+          "cognito": {
+            "user_pool_id": "us-east-1_acmeApp_pretoken",
+            "trigger_type": "pre_token_generation",
+            "trigger_lambda_exists": true,
+            "has_ghost_trigger": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_acmeApp_usermigrate",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_user_pool",
+          "cognito": {
+            "user_pool_id": "us-east-1_acmeApp_usermigrate",
+            "trigger_type": "user_migration",
+            "trigger_lambda_exists": true,
+            "has_ghost_trigger": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abcdef-acme",
+      "type": "aws_cognito_identity_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_identity_pool",
+          "cognito": {
+            "identity_pool_id": "us-east-1:abcdef-acme",
+            "linked_user_pool_id": "us-east-1_acmeApp",
+            "linked_user_pool_exists": true,
+            "has_ghost_user_pool": false,
+            "allow_unauthenticated_identities": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_acmeApp_idchain",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_user_pool",
+          "cognito": {
+            "user_pool_id": "us-east-1_acmeApp_idchain",
+            "saml_metadata_url": "https://idp.acme.example/saml/metadata.xml",
+            "saml_metadata_reachable": true,
+            "has_ghost_saml_metadata": false,
+            "domain_cert_arn": "arn:aws:acm:us-east-1:111122223333:certificate/live-cert",
+            "domain_cert_exists": true,
+            "has_ghost_domain_cert": false,
+            "custom_domain": "auth.acme.example",
+            "custom_domain_dns_resolves": true,
+            "has_ghost_domain_dns": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_acmeApp_idchain/client/3rd1abc",
+      "type": "aws_cognito_user_pool_client",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_user_pool_client",
+          "cognito": {
+            "client_id": "3rd1abc",
+            "user_pool_id": "us-east-1_acmeApp_idchain",
+            "allowed_o_auth_scopes": ["acme-rs/read"],
+            "resource_server_identifier": "acme-rs",
+            "resource_server_exists": true,
+            "has_ghost_resource_server": false
+          }
+        }
+      }
+    }
+  ]
+}

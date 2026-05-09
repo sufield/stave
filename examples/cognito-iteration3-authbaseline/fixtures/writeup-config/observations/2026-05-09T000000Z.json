@@ -1,0 +1,45 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-09T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_weakAuthPool",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user_pool",
+          "user_pool": {
+            "name": "weak-auth-pool",
+            "user_pool_id": "us-east-1_weakAuthPool"
+          },
+          "auth": {
+            "mfa_enforced": false,
+            "mfa_configuration": "OFF"
+          },
+          "mfa": {
+            "enforced": false
+          },
+          "password_policy": {
+            "is_weak": true,
+            "strong": false,
+            "minimum_length": 6,
+            "require_uppercase": false,
+            "require_lowercase": false,
+            "require_numbers": false,
+            "require_symbols": false,
+            "temporary_password_validity_days": 14
+          },
+          "cognito": {
+            "has_brute_force_protection": false,
+            "advanced_security_mode": "OFF"
+          },
+          "governance": {
+            "self_registration_restricted": false
+          }
+        }
+      }
+    }
+  ]
+}

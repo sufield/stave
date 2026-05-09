@@ -4,6 +4,8 @@ import (
 	"slices"
 	"sort"
 	"time"
+
+	"github.com/sufield/stave/internal/core/sir"
 )
 
 // GraphExport is the cross-service relationship view of an
@@ -18,11 +20,58 @@ import (
 // data. Neo4j and similar visualisers consume Assets + Edges
 // directly; SMT solvers consume Findings + Chains as conjectures
 // to discharge against the asset graph.
+//
+// TransitiveReachability is non-empty when [ExportGraph] was
+// called with [WithSIRDocument]. The SIR builder computes
+// multi-hop sts:AssumeRole paths in IdentityFact.RoleChains; this
+// field surfaces them in flat per-path form so Z3 reachability
+// queries can read the same edges the projector already emits as
+// can_assume(from, to) JSONL triples — without rebuilding the
+// transitive closure from direct edges.
 type GraphExport struct {
-	Assets   []AssetNode
-	Edges    []AssetEdge
-	Findings []FindingNode
-	Chains   []ChainNode
+	Assets                 []AssetNode
+	Edges                  []AssetEdge
+	Findings               []FindingNode
+	Chains                 []ChainNode
+	TransitiveReachability []ReachabilityPath
+}
+
+// ReachabilityPath is one transitive role-assumption path the SIR
+// builder traced from a principal to a final role. Every Hop is
+// one (from, to) edge along the path; HopTypes mirrors the
+// `sts:AssumeRole` / `lambda_exec` / `tag_mutation` labels the SIR
+// emits. CrossAccountHop is true when any hop crosses an account
+// boundary — useful for quickly filtering paths that involve
+// external trust.
+//
+// Determinism: paths are emitted in (FromPrincipal, FinalRole)
+// sort order, hop sequences in source order. Same SIR document
+// produces byte-identical paths across runs.
+type ReachabilityPath struct {
+	FromPrincipal     string   `json:"from_principal"`
+	FinalRole         string   `json:"final_role"`
+	Hops              []string `json:"hops"`
+	HopTypes          []string `json:"hop_types"`
+	CrossAccountHop   bool     `json:"cross_account_hop,omitempty"`
+	TransitiveLevel   string   `json:"transitive_level,omitempty"`
+	TerminationReason string   `json:"termination_reason,omitempty"`
+}
+
+// AssetLifecycleInfo is the SIR-derived per-asset existence
+// envelope. Provisioned and Decommissioned are the same booleans
+// the projector emits as is_provisioned / is_decommissioned JSONL
+// triples; FirstSeen / LastSeen mirror the snapshot timestamps
+// the SIR builder captured.
+//
+// Distinct from FindingNode.Lifecycle (the per-finding unsafe
+// envelope). This block describes the asset's existence boundary
+// across the observation set; the finding block describes how
+// long the asset has been in violation.
+type AssetLifecycleInfo struct {
+	Provisioned    bool      `json:"provisioned,omitempty"`
+	Decommissioned bool      `json:"decommissioned,omitempty"`
+	FirstSeen      time.Time `json:"first_seen,omitzero"`
+	LastSeen       time.Time `json:"last_seen,omitzero"`
 }
 
 // AssetNode is one asset referenced by the assessment. Identity
@@ -33,10 +82,18 @@ type GraphExport struct {
 // HasFinding is true when at least one finding fired on the asset;
 // it is convenient for visualisers that want to highlight
 // "exposed" assets without re-walking the Findings slice.
+//
+// Lifecycle is non-nil when [ExportGraph] was called with
+// [WithSIRDocument] AND the SIR document carries an AssetFact for
+// this asset whose Lifecycle envelope is populated. The fields
+// mirror the AssetFact.Lifecycle SIR shape so a downstream Z3
+// query asking "was this asset newly provisioned in the latest
+// snapshot?" reads the booleans directly.
 type AssetNode struct {
 	ID         AssetID
 	Type       AssetType
 	HasFinding bool
+	Lifecycle  *AssetLifecycleInfo `json:"lifecycle,omitempty"`
 }
 
 // FindingNode is the graph-projection of one [Finding]. The fields
@@ -99,7 +156,14 @@ type ChainNode struct {
 //
 // Returns nil for a nil assessment so callers can chain through
 // optional pipelines without nil-guarding.
-func ExportGraph(assessment *Assessment) *GraphExport {
+//
+// Variadic [GraphOption] arguments enrich the export with data
+// not derivable from the [Assessment] alone. Existing zero-arg
+// callers see byte-identical output to the pre-options shape;
+// adopters who want transitive role chains and per-asset
+// lifecycle pass [WithSIRDocument] using the SIR doc applycore
+// already built for fact-id correlation.
+func ExportGraph(assessment *Assessment, opts ...GraphOption) *GraphExport {
 	if assessment == nil {
 		return nil
 	}
@@ -149,7 +213,127 @@ func ExportGraph(assessment *Assessment) *GraphExport {
 
 	out.Assets = assets.sorted()
 	sortGraphEdges(out.Edges)
+
+	// Apply options last so they see the fully built graph and can
+	// hydrate Asset / TransitiveReachability fields without
+	// fighting the populator above. Options ordering matters only
+	// when multiple modifiers touch the same field; the supplied
+	// [WithSIRDocument] is the single hydrator today.
+	for _, opt := range opts {
+		opt(out)
+	}
 	return out
+}
+
+// GraphOption mutates a freshly built [GraphExport] before it is
+// returned. The variadic shape on [ExportGraph] preserves
+// backward compatibility — zero-arg callers see the same output
+// they always saw.
+type GraphOption func(*GraphExport)
+
+// WithSIRDocument hydrates the GraphExport with transitive role
+// chains and per-asset lifecycle envelopes drawn from the SIR
+// document the same applycore pass already built for fact-id
+// correlation. This is plumbing, not new computation: the SIR
+// builder already runs IdentityFact.RoleChains[] and
+// AssetFact.Lifecycle; this option surfaces them through the
+// public graph API instead of having every consumer rebuild the
+// projection from raw observations.
+//
+// nil doc is a no-op. Idempotent — calling it twice with the same
+// document produces the same output.
+//
+// Determinism: TransitiveReachability is sorted by
+// (FromPrincipal, FinalRole). AssetNode.Lifecycle attachment
+// follows the existing AssetNode order set above. Same
+// (assessment, sir.Document) input produces byte-identical
+// output across runs.
+func WithSIRDocument(doc *sir.Document) GraphOption {
+	return func(g *GraphExport) {
+		if g == nil || doc == nil {
+			return
+		}
+		hydrateGraphFromSIR(g, doc)
+	}
+}
+
+// hydrateGraphFromSIR projects the SIR document's transitive
+// role-chain hops and per-asset lifecycle envelopes into the
+// supplied GraphExport. Reads only — does not recompute. The SIR
+// builder is the single source of truth for both fields.
+func hydrateGraphFromSIR(g *GraphExport, doc *sir.Document) {
+	// Per-asset lifecycle: iterate AssetNodes (already sorted)
+	// and look up each by ID in the SIR's AssetFact slice. Two
+	// passes through a small slice rather than a map because
+	// AssetFact slices are typically O(10s); the constant-factor
+	// improvement isn't worth a map allocation per call.
+	for i := range g.Assets {
+		assetID := string(g.Assets[i].ID)
+		for j := range doc.Assets {
+			af := &doc.Assets[j]
+			if af.ID != assetID {
+				continue
+			}
+			if af.Lifecycle == nil {
+				break
+			}
+			lc := af.Lifecycle
+			// Skip the block when nothing's worth reporting —
+			// the omitempty contract on the json tag relies on
+			// nil here, not on a zero-valued struct.
+			if !lc.Provisioned && !lc.Decommissioned &&
+				lc.FirstSeen.IsZero() && lc.LastSeen.IsZero() {
+				break
+			}
+			g.Assets[i].Lifecycle = &AssetLifecycleInfo{
+				Provisioned:    lc.Provisioned,
+				Decommissioned: lc.Decommissioned,
+				FirstSeen:      lc.FirstSeen,
+				LastSeen:       lc.LastSeen,
+			}
+			break
+		}
+	}
+
+	// Transitive reachability: every IdentityFact's RoleChains is
+	// one path from the principal to a final role. Hops are
+	// already in source order; the path walker captures them
+	// verbatim plus the per-path metadata (cross-account,
+	// transitive-level, termination-reason).
+	for i := range doc.Identities {
+		id := &doc.Identities[i]
+		for j := range id.RoleChains {
+			ch := &id.RoleChains[j]
+			hops := make([]string, 0, len(ch.Hops))
+			hopTypes := make([]string, 0, len(ch.Hops))
+			anyCrossAccount := false
+			for k := range ch.Hops {
+				h := &ch.Hops[k]
+				hops = append(hops, h.To)
+				hopTypes = append(hopTypes, h.HopType)
+				if h.CrossAccount {
+					anyCrossAccount = true
+				}
+			}
+			g.TransitiveReachability = append(g.TransitiveReachability, ReachabilityPath{
+				FromPrincipal:     id.PrincipalID,
+				FinalRole:         ch.FinalRoleARN,
+				Hops:              hops,
+				HopTypes:          hopTypes,
+				CrossAccountHop:   anyCrossAccount,
+				TransitiveLevel:   ch.TransitiveLevel,
+				TerminationReason: ch.TerminationReason,
+			})
+		}
+	}
+
+	sort.Slice(g.TransitiveReachability, func(i, j int) bool {
+		a, b := &g.TransitiveReachability[i], &g.TransitiveReachability[j]
+		if a.FromPrincipal != b.FromPrincipal {
+			return a.FromPrincipal < b.FromPrincipal
+		}
+		return a.FinalRole < b.FinalRole
+	})
 }
 
 // buildLifecycle materialises the per-finding lifecycle envelope

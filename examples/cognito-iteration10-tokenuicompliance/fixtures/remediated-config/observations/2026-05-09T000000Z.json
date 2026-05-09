@@ -1,0 +1,79 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-09T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_iter10Good",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user_pool",
+          "user_pool": {
+            "name": "iter10-good",
+            "user_pool_id": "us-east-1_iter10Good"
+          },
+          "cognito": {
+            "auth_log_retention_compliant": true,
+            "uses_cmk_encryption": true,
+            "tags_complete": true,
+            "in_approved_region": true,
+            "trigger_lambda_cross_account": false,
+            "oidc_issuer_cross_account": false,
+            "saml_idp_trusted": true,
+            "uses_default_domain": false,
+            "allow_admin_create_only": true,
+            "hosted_ui_allows_signup": false,
+            "uses_oauth_flows": true,
+            "has_resource_servers": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_iter10Good#cors",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_user_pool",
+          "cognito": {
+            "user_pool_id": "us-east-1_iter10Good",
+            "oauth_cors_wildcard": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_iter10Good/client/Aiter10good1",
+      "type": "aws_cognito_user_pool_client",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_app_client",
+          "cognito": {
+            "client_id": "Aiter10good1",
+            "user_pool_id": "us-east-1_iter10Good",
+            "refresh_token_rotation_enabled": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_iter10Good/resource-server/iter10-good-rs",
+      "type": "aws_cognito_resource_server",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_resource_server",
+          "cognito": {
+            "resource_server_identifier": "iter10-good-rs",
+            "user_pool_id": "us-east-1_iter10Good",
+            "resource_server_broad_scope": false
+          }
+        }
+      }
+    }
+  ]
+}

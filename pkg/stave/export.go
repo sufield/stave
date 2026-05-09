@@ -5,6 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 	"github.com/sufield/stave/pkg/stave/internal/policyexport"
 )
 
@@ -21,6 +23,15 @@ import (
 type ExportConfig struct {
 	SnapshotsDir      string
 	AllowUnknownInput bool
+
+	// EffectivePermissionResolver computes the post-aggregation
+	// permission set for every principal in each loaded
+	// snapshot. nil leaves the resolver default — the AWS
+	// implementation that wraps internal/platform/providers/aws/iam.
+	// Pass a stub here for tests that need deterministic
+	// per-principal grants without exercising the full IAM
+	// resolution algorithm.
+	EffectivePermissionResolver ports.EffectivePermissionResolver
 }
 
 // PolicyExport is the structured projection of a snapshot's
@@ -44,7 +55,33 @@ type PolicyExport struct {
 	TrustPolicies      []TrustDocument
 	KMSKeyPolicies     []PolicyDocument
 	AssetRelationships []AssetEdge
+
+	// EffectivePermissions is the post-aggregation permission set
+	// computed by the [ports.EffectivePermissionResolver] the
+	// caller wired into ExportConfig — one entry per
+	// (principal, action, resource) tuple after SCP ceiling,
+	// permission boundary, identity-based allows, and explicit
+	// denies have been applied.
+	//
+	// Empty when no resolver was configured. The default
+	// [ExportPolicies] path attaches the AWS resolver
+	// automatically; advanced callers (custom providers, tests
+	// that pin a stub) override via
+	// [ExportConfig.EffectivePermissionResolver].
+	//
+	// Distinct from the raw policy documents above: those are
+	// what the cloud said; this is what the cloud's own evaluator
+	// would actually allow. A Z3 reachability query asking "can
+	// principal X take action Y on resource Z?" reads this slice
+	// directly instead of re-deriving the answer from raw
+	// statements.
+	EffectivePermissions []EffectivePermission
 }
+
+// EffectivePermission is one aggregated grant — the public alias
+// for the port-level type so consumers don't need to pull the
+// internal/core/ports import path.
+type EffectivePermission = ports.EffectivePermission
 
 // PolicyDocument is a parsed AWS-style policy document keyed to
 // the asset that owns it. PolicyType disambiguates the source path
@@ -97,18 +134,29 @@ func ExportPolicies(ctx context.Context, cfg ExportConfig) (*PolicyExport, error
 	if cfg.SnapshotsDir == "" {
 		return nil, errors.New("stave.ExportPolicies: ExportConfig.SnapshotsDir is required")
 	}
+	resolver := cfg.EffectivePermissionResolver
+	if resolver == nil {
+		// Default to the AWS implementation. Other providers
+		// register their own here when they ship one; for now
+		// the only supported cloud is AWS, so the unconditional
+		// default mirrors the rest of the export path's
+		// AWS-only assumptions.
+		resolver = iam.NewEffectivePermissionResolver()
+	}
 	r, err := policyexport.Run(ctx, policyexport.Config{
-		SnapshotsDir:      cfg.SnapshotsDir,
-		AllowUnknownInput: cfg.AllowUnknownInput,
+		SnapshotsDir:         cfg.SnapshotsDir,
+		AllowUnknownInput:    cfg.AllowUnknownInput,
+		EffectivePermissions: resolver,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &PolicyExport{
-		GeneratedAt:        r.GeneratedAt,
-		ResourcePolicies:   r.ResourcePolicies,
-		TrustPolicies:      r.TrustPolicies,
-		KMSKeyPolicies:     r.KMSKeyPolicies,
-		AssetRelationships: r.AssetRelationships,
+		GeneratedAt:          r.GeneratedAt,
+		ResourcePolicies:     r.ResourcePolicies,
+		TrustPolicies:        r.TrustPolicies,
+		KMSKeyPolicies:       r.KMSKeyPolicies,
+		AssetRelationships:   r.AssetRelationships,
+		EffectivePermissions: r.EffectivePermissions,
 	}, nil
 }

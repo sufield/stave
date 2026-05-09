@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-09T00:00:00Z",
+  "source": "deployed",
+  "vendor": "aws",
+  "assets": [
+    {
+      "id": "arn:aws:s3:::phi-records",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "tags": {
+            "data-classification": "phi"
+          },
+          "access": {
+            "external_account_ids": ["222233334444"]
+          }
+        }
+      }
+    }
+  ]
+}

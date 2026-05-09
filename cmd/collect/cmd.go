@@ -221,7 +221,7 @@ func runCollect(ctx context.Context, stdout, stderr io.Writer, opts *options) er
 	}
 
 	// Enrich with chains.
-	appeval.EnrichReport(&result, controls, chains)
+	appeval.EnrichReport(&result, controls, chains, snapshots)
 
 	// Serialize assessment output.
 	assessmentData, err := json.MarshalIndent(result, "", "  ")

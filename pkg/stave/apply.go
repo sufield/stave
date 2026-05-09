@@ -134,11 +134,12 @@ func BuildAssessment(report *evaluation.ComplianceReport, controls []policy.Cont
 			Violations:         report.Summary.Violations,
 			FrameworkReadiness: convertFrameworkReadiness(report.Summary.FrameworkReadiness),
 		},
-		Findings:      convertFindings(report.Findings),
-		Issues:        report.Issues,
-		Coverage:      buildCoverage(controls),
-		ChainFindings: convertChainFindings(report.ChainFindings),
-		SLABreaches:   slaBreaches,
+		Findings:       convertFindings(report.Findings),
+		MarkerFindings: convertFindings(report.MarkerFindings),
+		Issues:         report.Issues,
+		Coverage:       buildCoverage(controls),
+		ChainFindings:  convertChainFindings(report.ChainFindings),
+		SLABreaches:    slaBreaches,
 	}
 }
 

@@ -138,6 +138,37 @@ arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool --[self_re
 === Privilege Escalation Paths ===
 (none)
 
+=== Public S3 Buckets ===
+(none)
+
+=== Cognito MFA / Advanced-Security Gaps ===
+
+MFA / advanced-security gap on arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool:
+arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool --[has_mfa_enforced]--> false
+  therefore arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool :: mfa_disabled
+
+MFA / advanced-security gap on arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool:
+arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool --[has_advanced_security_enabled]--> false
+  therefore arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool :: advanced_security_off
+
+=== CloudTrail Logging Gaps ===
+(none)
+
+=== Dangling Bucket References ===
+(none)
+
+=== Exposed Repository Artefacts ===
+(none)
+
+=== EKS Webhook Admin Access ===
+(none)
+
+=== EKS aws-auth Template Injection ===
+(none)
+
+=== Broad Resource Policy ===
+(none)
+
 ============================================================
   Cognito remediated
 ============================================================
@@ -152,6 +183,30 @@ arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool --[self_re
 (none)
 
 === Privilege Escalation Paths ===
+(none)
+
+=== Public S3 Buckets ===
+(none)
+
+=== Cognito MFA / Advanced-Security Gaps ===
+(none)
+
+=== CloudTrail Logging Gaps ===
+(none)
+
+=== Dangling Bucket References ===
+(none)
+
+=== Exposed Repository Artefacts ===
+(none)
+
+=== EKS Webhook Admin Access ===
+(none)
+
+=== EKS aws-auth Template Injection ===
+(none)
+
+=== Broad Resource Policy ===
 (none)
 
 ============================================================
@@ -191,6 +246,30 @@ arn:aws:iam::444455556666:user/developer --[assumes]--> arn:aws:iam::44445555666
   arn:aws:iam::444455556666:role/onboarding-role --[assumes]--> arn:aws:iam::444455556666:role/operator-role
     arn:aws:iam::444455556666:role/operator-role --[assumes]--> arn:aws:iam::444455556666:role/admin-role
 
+=== Public S3 Buckets ===
+(none)
+
+=== Cognito MFA / Advanced-Security Gaps ===
+(none)
+
+=== CloudTrail Logging Gaps ===
+(none)
+
+=== Dangling Bucket References ===
+(none)
+
+=== Exposed Repository Artefacts ===
+(none)
+
+=== EKS Webhook Admin Access ===
+(none)
+
+=== EKS aws-auth Template Injection ===
+(none)
+
+=== Broad Resource Policy ===
+(none)
+
 ============================================================
   Multi-hop remediated
 ============================================================
@@ -211,6 +290,30 @@ arn:aws:iam::444455556666:role/operator-role --[assumes]--> arn:aws:iam::4444555
 
 privesc arn:aws:iam::444455556666:user/developer -> arn:aws:iam::444455556666:role/onboarding-role:
 arn:aws:iam::444455556666:user/developer --[assumes]--> arn:aws:iam::444455556666:role/onboarding-role
+
+=== Public S3 Buckets ===
+(none)
+
+=== Cognito MFA / Advanced-Security Gaps ===
+(none)
+
+=== CloudTrail Logging Gaps ===
+(none)
+
+=== Dangling Bucket References ===
+(none)
+
+=== Exposed Repository Artefacts ===
+(none)
+
+=== EKS Webhook Admin Access ===
+(none)
+
+=== EKS aws-auth Template Injection ===
+(none)
+
+=== Broad Resource Policy ===
+(none)
 
 ============================================================
   Rhino vulnerable
@@ -290,5 +393,29 @@ arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM
     therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
 
 === Privilege Escalation Paths ===
+(none)
+
+=== Public S3 Buckets ===
+(none)
+
+=== Cognito MFA / Advanced-Security Gaps ===
+(none)
+
+=== CloudTrail Logging Gaps ===
+(none)
+
+=== Dangling Bucket References ===
+(none)
+
+=== Exposed Repository Artefacts ===
+(none)
+
+=== EKS Webhook Admin Access ===
+(none)
+
+=== EKS aws-auth Template Injection ===
+(none)
+
+=== Broad Resource Policy ===
 (none)
 

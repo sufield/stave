@@ -1,0 +1,47 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-09T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_acmePool/client/4allbad12345",
+      "type": "aws_cognito_user_pool_client",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_app_client",
+          "auth": {
+            "token_revocation_enabled": false
+          },
+          "security": {
+            "prevent_user_existence_errors": false
+          },
+          "cognito": {
+            "client_id": "4allbad12345",
+            "user_pool_id": "us-east-1_acmePool",
+            "is_public_client": false,
+            "has_client_secret": false,
+            "allows_implicit_flow": true,
+            "allows_all_flows": true,
+            "allows_all_scopes": true,
+            "mixes_user_and_m2m": true,
+            "client_attribute_rw_all": true,
+            "callback_has_http": true,
+            "callback_has_localhost": true,
+            "callback_has_wildcard": true,
+            "has_logout_url": false,
+            "access_token_too_long": true,
+            "id_token_too_long": true,
+            "refresh_token_too_long": true,
+            "callback_urls": [
+              "http://app.acme.example/callback",
+              "http://localhost:3000/callback",
+              "https://*.acme.example/callback"
+            ],
+            "logout_urls": []
+          }
+        }
+      }
+    }
+  ]
+}

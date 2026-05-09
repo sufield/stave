@@ -37,6 +37,7 @@ import (
 	staveexempt "github.com/sufield/stave/cmd/exempt"
 	"github.com/sufield/stave/cmd/expand"
 	staveexport "github.com/sufield/stave/cmd/export"
+	staveexportinvariants "github.com/sufield/stave/cmd/exportinvariants"
 	staveexportsir "github.com/sufield/stave/cmd/exportsir"
 	staveforensics "github.com/sufield/stave/cmd/forensics"
 	staveforge "github.com/sufield/stave/cmd/forge"
@@ -158,6 +159,7 @@ func WireCommands(app *App) error {
 
 	// Export & Interop
 	root.AddCommand(staveexport.NewCmd(f.NewCtlRepo, f.NewCELEvaluator))
+	root.AddCommand(staveexportinvariants.NewCmd())
 	root.AddCommand(staveexportsir.NewCmd(f.NewCtlRepo, f.NewObsRepo, f.NewCELEvaluator))
 
 	// Data & Artifacts

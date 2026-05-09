@@ -30,7 +30,7 @@ type InvariantExportConfig struct {
 // relationships): together they form Stave's complete projection
 // of "what is", "what reaches what", and "what should not be".
 type InvariantExport struct {
-	Invariants []InvariantDefinition
+	Invariants []InvariantDefinition `json:"invariants"`
 }
 
 // InvariantDefinition is one solver-ready security property
@@ -62,14 +62,14 @@ type InvariantExport struct {
 // An empty Assets means "applies to all asset types" — the
 // catalog's legacy default.
 type InvariantDefinition struct {
-	ID              ControlID
-	Description     string
-	IntentRationale string
-	Severity        Severity
-	Scope           InvariantScope
-	Predicate       PredicateExport
-	ForbiddenState  PredicateExport
-	Assets          []AssetConstraint
+	ID              ControlID         `json:"id"`
+	Description     string            `json:"description,omitempty"`
+	IntentRationale string            `json:"intent_rationale,omitempty"`
+	Severity        Severity          `json:"severity"`
+	Scope           InvariantScope    `json:"scope"`
+	Predicate       PredicateExport   `json:"predicate"`
+	ForbiddenState  PredicateExport   `json:"forbidden_state"`
+	Assets          []AssetConstraint `json:"assets,omitempty"`
 }
 
 // InvariantScope classifies how the predicate reaches across the
@@ -90,7 +90,7 @@ const (
 
 // AssetConstraint names an asset type the invariant applies to.
 type AssetConstraint struct {
-	Type AssetType
+	Type AssetType `json:"type"`
 }
 
 // PredicateExport is the structured form of a control's
@@ -110,25 +110,25 @@ type AssetConstraint struct {
 // the leaf fields are valid.
 type PredicateExport struct {
 	// Combine is "all", "any", or "" (leaf).
-	Combine string
+	Combine string `json:"combine,omitempty"`
 
 	// Children is populated when Combine != "".
-	Children []PredicateExport
+	Children []PredicateExport `json:"children,omitempty"`
 
 	// Property is the observation field path for a leaf, e.g.
 	// "properties.storage.access.policy_is_effectively_public".
-	Property string
+	Property string `json:"property,omitempty"`
 
 	// Operator is the leaf's comparison operator (eq, ne, gt,
 	// present, contains, etc.) — the wire form a CEL or external
 	// engine recognises.
-	Operator string
+	Operator string `json:"operator,omitempty"`
 
 	// Expected is the value the leaf compares against. For
 	// param-bound leaves this is the parameter reference string
 	// (e.g. "params.allowed_accounts"); for literal leaves it is
 	// the literal value.
-	Expected any
+	Expected any `json:"expected,omitempty"`
 }
 
 // IsLeaf reports whether the node carries a leaf comparison

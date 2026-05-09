@@ -28,6 +28,7 @@ import (
 	"io"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/sufield/stave/internal/core/sir"
 )
@@ -100,7 +101,31 @@ type Fact struct {
 	Object     string      `json:"object"`
 	Source     string      `json:"source"`
 	Evidence   string      `json:"evidence"`
+	Freshness  *Freshness  `json:"freshness,omitempty"`
 	Provenance *Provenance `json:"provenance,omitempty"`
+}
+
+// Freshness annotates a fact with the snapshot timestamp it was
+// projected from and the elapsed time since that snapshot was
+// captured. Surfaces what is buried in Provenance.CapturedAt as
+// a top-level, sortable field so consumers can filter by recency
+// without parsing the provenance object:
+//
+//	jq 'select(.freshness.age_seconds < 86400)' facts.jsonl
+//	jq -s 'sort_by(.freshness.age_seconds) | .[]' facts.jsonl
+//
+// AgeSeconds is computed against an export-time `now` supplied
+// by the caller (export-sir's --now flag, falling back to the
+// system clock). Pinning --now produces byte-stable freshness
+// fields across runs — required for golden tests and CI diffs.
+//
+// Negative ages (captured_at after now — clock skew between the
+// snapshot collector and the export host) clamp to zero rather
+// than reporting a negative duration; the field is informational,
+// not a clock-correctness assertion.
+type Freshness struct {
+	CapturedAt time.Time `json:"captured_at"`
+	AgeSeconds int64     `json:"age_seconds"`
 }
 
 // stripIndexPrefix turns a SIR-relative path like
@@ -188,6 +213,46 @@ func ExtractFacts(doc *sir.Document) []Fact {
 	facts = append(facts, annotateProvenance(identityFacts(doc.Identities), "identityFacts", assetByID)...)
 	facts = append(facts, annotateProvenance(exposureFacts(doc.Temporal.Windows), "exposureFacts", assetByID)...)
 	return facts
+}
+
+// AnnotateFreshness stamps a Freshness block on every fact whose
+// Provenance.CapturedAt is non-empty. The captured_at string in
+// Provenance is RFC3339 (formatted at annotateProvenance time
+// from the asset's Lifecycle.LastSeen); this pass parses it back
+// into a time.Time and computes age = now - captured_at,
+// clamping negative ages (clock skew) to zero.
+//
+// Kept as a separate boundary pass rather than folded into
+// ExtractFacts so callers that don't surface freshness — e.g.
+// pkg/stave/internal/applycore building fact-id correlations —
+// don't pay the parse cost. The export-sir command runs both;
+// applycore runs only ExtractFacts.
+//
+// Determinism: when --now is pinned, all facts produce
+// byte-stable AgeSeconds across runs. Without --now the
+// system clock supplies `now` and AgeSeconds drifts by the
+// elapsed wall-clock time between exports, but CapturedAt
+// stays stable.
+func AnnotateFreshness(facts []Fact, now time.Time) {
+	nowUTC := now.UTC()
+	for i := range facts {
+		p := facts[i].Provenance
+		if p == nil || p.CapturedAt == "" {
+			continue
+		}
+		captured, err := time.Parse(time.RFC3339, p.CapturedAt)
+		if err != nil {
+			continue
+		}
+		age := nowUTC.Sub(captured)
+		if age < 0 {
+			age = 0
+		}
+		facts[i].Freshness = &Freshness{
+			CapturedAt: captured.UTC(),
+			AgeSeconds: int64(age.Seconds()),
+		}
+	}
 }
 
 func controlFacts(controls []sir.ControlFact) []Fact {
@@ -490,6 +555,13 @@ var propertyAllowlist = []propertyPath{
 	// Cognito user-pool MFA + advanced security (cognito-no-mfa-advanced-security)
 	{blockKey: "identity", keys: []string{"auth", "mfa_enforced"}, predicateName: "has_mfa_enforced", assetTypes: []string{"aws_cognito_user_pool"}},
 	{blockKey: "identity", keys: []string{"advanced_security", "enabled"}, predicateName: "has_advanced_security_enabled", assetTypes: []string{"aws_cognito_user_pool"}},
+	// Cognito user-pool Lambda trigger ghost references (CTL.COGNITO.GHOST.* family).
+	// trigger_type carries the trigger name (pre_sign_up, pre_authentication, …)
+	// so a single SMT-LIB predicate covers all 10 trigger variants; the query
+	// disambiguates with (= (trigger_type asset) "pre_sign_up").
+	{blockKey: "identity", keys: []string{"cognito", "trigger_type"}, predicateName: "has_trigger_type", assetTypes: []string{"aws_cognito_user_pool"}},
+	{blockKey: "identity", keys: []string{"cognito", "trigger_lambda_exists"}, predicateName: "has_trigger_lambda_exists", assetTypes: []string{"aws_cognito_user_pool"}},
+	{blockKey: "identity", keys: []string{"cognito", "has_ghost_trigger"}, predicateName: "has_ghost_trigger", assetTypes: []string{"aws_cognito_user_pool"}},
 	// EKS RBAC webhook-config write access (eks-rbac-webhook-config-access)
 	{blockKey: "k8s", keys: []string{"rbac", "has_webhook_config_access"}, predicateName: "has_webhook_config_access"},
 	// EKS aws-auth ConfigMap template-injection vector (eks-aws-auth-template-injection)
@@ -1416,6 +1488,7 @@ var baselineSMT2Predicates = []string{
 	"has_exposed_repo_artifacts",
 	"has_exposure_window",
 	"has_forbidden_state",
+	"has_ghost_trigger",
 	"has_intent_rationale",
 	"has_list_via_resource",
 	"has_logging_enabled",
@@ -1430,6 +1503,8 @@ var baselineSMT2Predicates = []string{
 	"has_resource",
 	"has_severity",
 	"has_tag",
+	"has_trigger_lambda_exists",
+	"has_trigger_type",
 	"has_type",
 	"has_upload_key_mode",
 	"has_uses_access_key_id",
@@ -1511,6 +1586,13 @@ func serializeSMT2(facts []Fact, w io.Writer) error {
 			if f.Provenance.CapturedAt != "" {
 				bw.writeLine(";; captured: " + f.Provenance.CapturedAt)
 			}
+		}
+		if f.Freshness != nil {
+			// Two integer specifiers, so Sprintf is the natural
+			// fit (perfsprint flags the single-%s case, not
+			// multi-arg formatters).
+			days := f.Freshness.AgeSeconds / 86400
+			bw.writeLine(fmt.Sprintf(";; age: %ds (%dd)", f.Freshness.AgeSeconds, days))
 		}
 		bw.writeLine(fmt.Sprintf("(assert (%s %s %s))", f.Predicate, smt2Quote(f.Subject), smt2Quote(f.Object)))
 	}

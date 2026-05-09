@@ -19,6 +19,22 @@ type ChainDefinition struct {
 	CompoundSeverity    Severity           `yaml:"compound_severity"   json:"compound_severity"`
 	Preconditions       []string           `yaml:"preconditions,omitempty"  json:"preconditions,omitempty"`
 	Postconditions      []string           `yaml:"postconditions,omitempty" json:"postconditions,omitempty"`
+
+	// ScopeField is the optional property path used to group failing
+	// controls before threshold detection. When empty (the default),
+	// chains group by asset.ID — the legacy behaviour. When set
+	// (e.g. "properties.identity.cognito.user_pool_id"), the chain
+	// engine resolves the value at that path on each failing asset and
+	// uses it as the grouping key. Two failing controls on different
+	// asset.IDs that share a scope value count as co-failures on the
+	// same logical scope.
+	//
+	// Use this when a chain's member predicates force one logical
+	// resource to surface as multiple Stave assets (e.g., per-trigger
+	// Cognito ghost predicates). Each Lambda trigger fires on its own
+	// asset.ID, but the chain semantically lives at the user-pool
+	// level — scope_field reunites them.
+	ScopeField string `yaml:"scope_field,omitempty" json:"scope_field,omitempty"`
 }
 
 // CapabilityRegistry is the contract for resolving whether a capability

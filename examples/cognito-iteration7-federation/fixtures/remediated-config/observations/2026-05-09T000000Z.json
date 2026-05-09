@@ -1,0 +1,34 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-09T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_fedGoodPool",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_user_pool",
+          "cognito": {
+            "user_pool_id": "us-east-1_fedGoodPool",
+            "saml_metadata_url": "https://idp.acme.example/metadata.xml",
+            "saml_metadata_expired": false,
+            "saml_metadata_static": false,
+            "saml_assertion_signed": true,
+            "saml_assertion_encrypted": true,
+            "saml_signing_cert_expired": false,
+            "saml_attribute_mapping_complete": true,
+            "oidc_issuer": "https://oidc.acme.example/",
+            "oidc_issuer_reachable": true,
+            "oidc_secret_rotation_overdue": false,
+            "oidc_scopes_broad": false,
+            "social_uses_test_credentials": false,
+            "social_email_marked_verified": true,
+            "social_allows_any_domain": false
+          }
+        }
+      }
+    }
+  ]
+}

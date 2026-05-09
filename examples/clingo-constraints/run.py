@@ -29,6 +29,21 @@ LIFTED_PREDICATES = {
     "can_assume", "has_tag",
     "allows_unauthenticated", "maps_unauth_to", "maps_auth_to",
     "self_registration_unrestricted",
+    # Per-asset boolean projectors (PRs 1, 4, 5). Each one is
+    # anchored to a fact predicate that real fixtures already
+    # emit. Adding a name here lifts the predicate into Clingo
+    # facts; the matching rules live in constraints.lp.
+    "has_public_read", "has_public_list",
+    "has_public_access_blocked",
+    "has_mfa_enforced", "has_advanced_security_enabled",
+    "has_logging_enabled", "has_data_event_logging",
+    "has_bucket_exists", "has_bucket_owned",
+    "has_exposed_repo_artifacts",
+    "has_webhook_config_access", "has_uses_access_key_id",
+    "has_upload_key_mode",
+    "resource_policy_principal", "resource_policy_action",
+    "has_condition", "has_condition_value",
+    "has_deny_action", "has_deny_resource",
 }
 
 

@@ -1,0 +1,31 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-09T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cognito::111122223333:account/us-east-1",
+      "type": "aws_cognito_account",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_account",
+          "cognito": {
+            "account_id": "111122223333",
+            "region": "us-east-1",
+            "alarm_admin_create_user": false,
+            "alarm_admin_set_user_password": false,
+            "alarm_create_identity_pool_unauth": false,
+            "alarm_delete_user_pool": false,
+            "alarm_failed_auth_spike": false,
+            "alarm_mfa_failure_spike": false,
+            "alarm_registration_spike": false,
+            "alarm_set_risk_config": false,
+            "alarm_update_user_pool": false,
+            "metrics_logins_tracked": false
+          }
+        }
+      }
+    }
+  ]
+}

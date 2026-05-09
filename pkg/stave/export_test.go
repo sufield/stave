@@ -6,6 +6,11 @@ import (
 	"path/filepath"
 	"testing"
 
+	"fmt"
+	"strings"
+
+	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/pkg/stave"
 )
 
@@ -184,5 +189,127 @@ func TestExportPolicies_GeneratedAtMatchesLatestSnapshot(t *testing.T) {
 	}
 	if out.GeneratedAt.IsZero() {
 		t.Error("GeneratedAt should be populated from snapshot CapturedAt")
+	}
+}
+
+// stubResolver is a deterministic stand-in for the AWS resolver
+// — returns whatever permissions the test pre-loads. Lets the
+// plumbing test exercise the wiring without depending on the
+// snapshot's IAM resolution semantics.
+type stubResolver struct {
+	perms []ports.EffectivePermission
+}
+
+func (s stubResolver) ResolveSnapshot(_ *asset.Snapshot) []ports.EffectivePermission {
+	return s.perms
+}
+
+// TestExportPolicies_EffectivePermissionsWiring confirms a
+// resolver supplied via ExportConfig flows through to the
+// resulting PolicyExport.EffectivePermissions slice, with the
+// dedup + sort guarantees the policyexport contract promises.
+func TestExportPolicies_EffectivePermissionsWiring(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "snap.obs.json"),
+		[]byte(snapshot), 0o600); err != nil {
+		t.Fatalf("write snap: %v", err)
+	}
+
+	resolver := stubResolver{
+		perms: []ports.EffectivePermission{
+			// Out-of-order on purpose; expect sort by
+			// (PrincipalID, Source, Action, Resource).
+			{PrincipalID: "user/b", Action: "s3:GetObject", Resource: "arn:aws:s3:::z", Source: "identity_policy"},
+			{PrincipalID: "user/a", Action: "s3:PutObject", Resource: "arn:aws:s3:::y", Source: "identity_policy"},
+			{PrincipalID: "user/a", Action: "s3:GetObject", Resource: "arn:aws:s3:::y", Source: "resource_policy"},
+			{PrincipalID: "user/a", Action: "s3:GetObject", Resource: "arn:aws:s3:::x", Source: "identity_policy"},
+		},
+	}
+
+	out, err := stave.ExportPolicies(context.Background(), stave.ExportConfig{
+		SnapshotsDir:                dir,
+		AllowUnknownInput:           true,
+		EffectivePermissionResolver: resolver,
+	})
+	if err != nil {
+		t.Fatalf("ExportPolicies: %v", err)
+	}
+	if got := len(out.EffectivePermissions); got != 4 {
+		t.Fatalf("EffectivePermissions len = %d, want 4", got)
+	}
+	want := [][3]string{
+		// (PrincipalID, Source, Action) tuple in expected order.
+		{"user/a", "identity_policy", "s3:GetObject"},
+		{"user/a", "identity_policy", "s3:PutObject"},
+		{"user/a", "resource_policy", "s3:GetObject"},
+		{"user/b", "identity_policy", "s3:GetObject"},
+	}
+	for i, p := range out.EffectivePermissions {
+		got := [3]string{p.PrincipalID, p.Source, p.Action}
+		if got != want[i] {
+			t.Errorf("perm[%d] = %v, want %v", i, got, want[i])
+		}
+	}
+}
+
+// TestExportPolicies_EffectivePermissionsDedupAcrossSnapshots
+// confirms the same (PrincipalID, Source, Action, Resource)
+// observed across multiple snapshots produces ONE entry, not N.
+func TestExportPolicies_EffectivePermissionsDedupAcrossSnapshots(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	// Two snapshot files — same observation content, different
+	// captured_at — exercise the dedup path.
+	for i, ts := range []string{"2026-05-01T00:00:00Z", "2026-05-08T00:00:00Z"} {
+		obs := strings.Replace(snapshot, "2026-05-03T00:00:00Z", ts, 1)
+		if err := os.WriteFile(
+			filepath.Join(dir, fmt.Sprintf("snap-%d.obs.json", i)),
+			[]byte(obs), 0o600,
+		); err != nil {
+			t.Fatalf("write snap %d: %v", i, err)
+		}
+	}
+
+	// The stub returns the same permission on each call. Dedup
+	// must collapse it to a single entry in the output.
+	resolver := stubResolver{
+		perms: []ports.EffectivePermission{
+			{PrincipalID: "p", Action: "s3:GetObject", Resource: "r", Source: "identity_policy"},
+		},
+	}
+	out, err := stave.ExportPolicies(context.Background(), stave.ExportConfig{
+		SnapshotsDir:                dir,
+		AllowUnknownInput:           true,
+		EffectivePermissionResolver: resolver,
+	})
+	if err != nil {
+		t.Fatalf("ExportPolicies: %v", err)
+	}
+	if got := len(out.EffectivePermissions); got != 1 {
+		t.Errorf("dedup failed: len = %d, want 1", got)
+	}
+}
+
+// TestExportPolicies_NilResolverDefaultsToAWS confirms a nil
+// EffectivePermissionResolver in ExportConfig falls back to the
+// AWS implementation rather than skipping permission
+// resolution entirely. The snapshot constant carries an IAM
+// role with a trust policy; the AWS resolver runs over it
+// without panic and produces (possibly empty) output.
+func TestExportPolicies_NilResolverDefaultsToAWS(t *testing.T) {
+	t.Parallel()
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "snap.obs.json"),
+		[]byte(snapshot), 0o600); err != nil {
+		t.Fatalf("write snap: %v", err)
+	}
+	// Resolver field intentionally omitted — tests the default
+	// wiring path.
+	if _, err := stave.ExportPolicies(context.Background(), stave.ExportConfig{
+		SnapshotsDir:      dir,
+		AllowUnknownInput: true,
+	}); err != nil {
+		t.Fatalf("ExportPolicies with nil resolver: %v", err)
 	}
 }

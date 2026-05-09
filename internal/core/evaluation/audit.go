@@ -293,12 +293,23 @@ type SkippedControl struct {
 }
 
 // ComplianceReport is the root aggregate of an evaluation execution.
+//
+// Findings carries violations only — the items that count toward
+// Summary.Violations, flip SecurityState, and trigger exit code 3.
+//
+// MarkerFindings carries findings emitted by TypeMarker controls:
+// fact-recording predicates that are NOT violations in isolation
+// (e.g. "this S3 bucket is tagged data-classification=phi"). They
+// participate in chain detection so cross-resource compounds can
+// compose them with violation findings, but never affect posture
+// or exit codes on their own.
 type ComplianceReport struct {
 	Run                  RunInfo                       `json:"run"`
 	Summary              ComplianceSummary             `json:"summary"`
 	SecurityState        SecurityState                 `json:"security_state"`
 	RiskSignals          risk.ThresholdItems           `json:"risk_signals,omitempty"`
 	Findings             []Finding                     `json:"findings"`
+	MarkerFindings       []Finding                     `json:"marker_findings,omitempty"`
 	Issues               []Issue                       `json:"issues,omitempty"`
 	ChainFindings        []risk.CompoundFinding        `json:"chain_findings,omitempty"`
 	AttackStageSummary   map[kernel.AttackStage]string `json:"attack_stage_summary,omitempty"`

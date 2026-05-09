@@ -1,0 +1,48 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-09T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_advSecOn",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user_pool",
+          "user_pool": {
+            "name": "advsec-on-pool",
+            "user_pool_id": "us-east-1_advSecOn"
+          },
+          "advanced_security": {
+            "enabled": true,
+            "mode": "ENFORCED"
+          },
+          "cognito": {
+            "device_tracking_enabled": true,
+            "email_auto_verified": true,
+            "phone_auto_verified": true,
+            "mfa_sms_enabled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_domainGood",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_user_pool",
+          "cognito": {
+            "user_pool_id": "us-east-1_domainGood",
+            "custom_domain": "auth.acme.example",
+            "domain_enforces_https": true,
+            "custom_domain_cert_expired": false,
+            "domain_cert_arn": "arn:aws:acm:us-east-1:111122223333:certificate/live"
+          }
+        }
+      }
+    }
+  ]
+}

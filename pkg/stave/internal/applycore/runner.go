@@ -115,9 +115,17 @@ type Inputs struct {
 // don't need to run the projection themselves. SIR build failures
 // are best-effort: findings ship un-annotated rather than blocking
 // the report.
+//
+// SIRDocument is the raw projection the same applycore pass already
+// built for fact-id correlation. Surfacing it on Result lets
+// downstream consumers — pkg/stave.ExportGraph in particular — read
+// transitive role chains and per-asset lifecycle without rebuilding
+// the document. nil when SIR construction failed (the report is
+// still returned).
 type Result struct {
-	Report   *evaluation.ComplianceReport
-	Controls []policy.ControlDefinition
+	Report      *evaluation.ComplianceReport
+	Controls    []policy.ControlDefinition
+	SIRDocument *sir.Document
 }
 
 // Run executes the evaluation pipeline: resolve controls, build the
@@ -238,11 +246,12 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 
 	annotateReachability(report.Findings, wf.Snapshots())
 
-	annotateContributingFactIDs(report.Findings, controls, wf.Snapshots(), clock.Now(), celEval)
+	sirDoc := annotateContributingFactIDs(report.Findings, controls, wf.Snapshots(), clock.Now(), celEval)
 
 	return &Result{
-		Report:   &report,
-		Controls: controls,
+		Report:      &report,
+		Controls:    controls,
+		SIRDocument: sirDoc,
 	}, nil
 }
 
@@ -270,9 +279,9 @@ func annotateContributingFactIDs(
 	snapshots []asset.Snapshot,
 	now time.Time,
 	celEval policy.PredicateEval,
-) {
+) *sir.Document {
 	if len(findings) == 0 {
-		return
+		return nil
 	}
 	builder := sir.NewBuilder(
 		sir.WithRoleChainSource(sirbridge.NewAWSRoleChainSource()),
@@ -281,7 +290,7 @@ func annotateContributingFactIDs(
 	)
 	doc, err := builder.Build(controls, snapshots, now)
 	if err != nil || doc == nil {
-		return
+		return nil
 	}
 	facts := exportsir.ExtractFacts(doc)
 	bySubject := make(map[string][]string, len(facts))
@@ -296,6 +305,7 @@ func annotateContributingFactIDs(
 			findings[i].ContributingFactIDs = ids
 		}
 	}
+	return doc
 }
 
 // resolveControls loads the control set used by the evaluation.

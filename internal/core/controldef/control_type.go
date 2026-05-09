@@ -21,6 +21,24 @@ const (
 	TypeOwnershipRequired                 // 7
 	TypeVisibilityRequired                // 8
 	TypePrefixExposure                    // 9
+	// TypeMarker is a fact-recording control: the predicate
+	// evaluates the same way as TypeUnsafeState (a CEL expression
+	// over the asset's properties) but the resulting finding is
+	// classified as informational rather than a violation.
+	//
+	// Marker findings:
+	//   - DO emit (so chain detection can compose them as members)
+	//   - DO NOT count toward Summary.Violations
+	//   - DO NOT flip SecurityState to NON_COMPLIANT
+	//   - DO NOT trigger exit code 3
+	//
+	// Use markers to encode facts about resources that aren't
+	// violations in isolation but matter as ingredients in a
+	// cross-resource compound. Example: an S3 bucket being tagged
+	// data-classification=phi is not a misconfiguration; it
+	// becomes one when combined with an over-privileged Cognito
+	// unauth role finding on the same bucket ARN.
+	TypeMarker // 10
 )
 
 // typeToName is the single source of truth for type↔string mapping.
@@ -34,6 +52,7 @@ var typeToName = map[ControlType]string{
 	TypeOwnershipRequired:     "ownership_required",
 	TypeVisibilityRequired:    "visibility_required",
 	TypePrefixExposure:        "prefix_exposure",
+	TypeMarker:                "marker",
 }
 
 // nameToType provides reverse lookup for parsing.

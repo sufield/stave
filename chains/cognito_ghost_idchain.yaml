@@ -17,6 +17,13 @@ controls:
   - CTL.COGNITO.GHOST.DOMAINDNS.001
 escalation_threshold: 2
 compound_severity: high
+# IDPOOL fires on aws_cognito_identity_pool while SAMLMETA / DOMAINCERT /
+# DOMAINDNS fire on aws_cognito_user_pool — different asset.IDs even when
+# the identity pool's linked_user_pool_id matches the user pool. Group by
+# user_pool_id so the identity-pool finding (whose property block carries
+# linked_user_pool_id) and the user-pool findings (carrying user_pool_id)
+# bucket together when the chain is semantically over the same logical pool.
+scope_field: properties.identity.cognito.user_pool_id
 preconditions:
   - ungoverned_operation
 postconditions:

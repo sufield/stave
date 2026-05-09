@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.S3.MARKER.PHI.001
+name: S3 Bucket Tagged data-classification=phi (Marker)
+description: >
+  Fact-recording marker for S3 buckets tagged
+  data-classification=phi. Emits an informational
+  finding (NOT a violation) on every PHI-tagged
+  bucket so cross-resource chains can compose it
+  with violation findings on related identities
+  or resources. Examples: a Cognito unauth role
+  with s3:GetObject targeting a PHI bucket; an
+  IAM role outside the covered entity that can
+  AssumeRole to a principal that reaches a PHI
+  bucket. PHI tagging on its own is the desired
+  state — never a finding to triage. The marker
+  exists so the chain engine can join "violation
+  on the access side" with "data classification
+  on the storage side" without forcing the
+  collector to denormalise every join shape into
+  a per-asset boolean.
+domain: governance
+severity: low
+type: marker
+classification: state_assertion
+compliance:
+  hipaa: "164.312(c)(1)"
+scope_tags:
+  - aws
+  - s3
+  - hipaa
+remediation:
+  description: >
+    No remediation. PHI tagging is the desired state.
+  action: >
+    None. This marker exists as a chain-detection
+    ingredient. To suppress noise on dashboards,
+    filter findings by control_id when rendering
+    Findings — markers should appear in a
+    separate "facts" panel rather than the
+    violation list.
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.tags.data-classification
+      op: eq
+      value: phi
+tests:
+  - name: phi-tagged bucket fires marker
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::phi-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          tags:
+            data-classification: phi
+  - name: untagged bucket passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::regular-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          tags:
+            data-classification: public

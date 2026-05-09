@@ -20,25 +20,41 @@ import (
 
 	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/util/props"
 )
 
 // Config configures snapshot loading for the export.
+//
+// EffectivePermissions, when supplied, runs the resolver against
+// every loaded snapshot and aggregates the results into
+// Result.EffectivePermissions. nil resolver leaves the field
+// nil — preserving the prior wire shape for callers that don't
+// opt in to permission resolution.
 type Config struct {
-	SnapshotsDir      string
-	AllowUnknownInput bool
+	SnapshotsDir         string
+	AllowUnknownInput    bool
+	EffectivePermissions ports.EffectivePermissionResolver
 }
 
 // Result is the structured policy data extracted from one or more
 // snapshots. Per-asset duplicates are kept — a single asset can
 // have a resource policy, a key policy, and act as the source of
 // an asset edge, so consumers see every shape independently.
+//
+// EffectivePermissions is non-nil only when Config carried an
+// EffectivePermissionResolver. The slice is the union across
+// every snapshot the loader saw; deduplication runs at the
+// (PrincipalID, Source, Action, Resource) tuple so the same
+// principal observed in multiple snapshots produces one entry,
+// not N.
 type Result struct {
-	GeneratedAt        time.Time
-	ResourcePolicies   []PolicyDocument
-	TrustPolicies      []TrustDocument
-	KMSKeyPolicies     []PolicyDocument
-	AssetRelationships []AssetEdge
+	GeneratedAt          time.Time
+	ResourcePolicies     []PolicyDocument
+	TrustPolicies        []TrustDocument
+	KMSKeyPolicies       []PolicyDocument
+	AssetRelationships   []AssetEdge
+	EffectivePermissions []ports.EffectivePermission
 }
 
 // PolicyDocument is a parsed AWS-style policy document keyed to
@@ -160,6 +176,17 @@ func Run(ctx context.Context, cfg Config) (*Result, error) {
 		for j := range snap.Identities {
 			r.processIdentity(&snap.Identities[j])
 		}
+		// Resolve effective permissions for this snapshot if a
+		// resolver is configured. We feed the resolver the
+		// snapshot in its loaded shape rather than the post-
+		// extraction PolicyDocument list because the resolver
+		// expects raw asset.Snapshot to access SCP / boundary /
+		// identity policies the same way the engine does.
+		if cfg.EffectivePermissions != nil {
+			for _, perm := range cfg.EffectivePermissions.ResolveSnapshot(snap) {
+				r.recordEffectivePermission(perm)
+			}
+		}
 	}
 	// Fall back to wall-clock when no snapshots were loaded so
 	// GeneratedAt is always populated. A zero time renders as
@@ -175,19 +202,32 @@ func Run(ctx context.Context, cfg Config) (*Result, error) {
 type resultBuilder struct {
 	latestAt time.Time
 
-	resourcePolicies map[string]PolicyDocument
-	trustPolicies    map[string]TrustDocument
-	kmsKeyPolicies   map[string]PolicyDocument
-	edges            map[string]AssetEdge
+	resourcePolicies     map[string]PolicyDocument
+	trustPolicies        map[string]TrustDocument
+	kmsKeyPolicies       map[string]PolicyDocument
+	edges                map[string]AssetEdge
+	effectivePermissions map[string]ports.EffectivePermission
 }
 
 func newResultBuilder() *resultBuilder {
 	return &resultBuilder{
-		resourcePolicies: map[string]PolicyDocument{},
-		trustPolicies:    map[string]TrustDocument{},
-		kmsKeyPolicies:   map[string]PolicyDocument{},
-		edges:            map[string]AssetEdge{},
+		resourcePolicies:     map[string]PolicyDocument{},
+		trustPolicies:        map[string]TrustDocument{},
+		kmsKeyPolicies:       map[string]PolicyDocument{},
+		edges:                map[string]AssetEdge{},
+		effectivePermissions: map[string]ports.EffectivePermission{},
 	}
+}
+
+// recordEffectivePermission deduplicates by
+// (PrincipalID, Source, Action, Resource). The same principal
+// observed across multiple snapshots produces the same key and
+// the latter assignment overwrites the earlier — last-write-wins
+// is fine because the resolver is a pure function: same input,
+// same output.
+func (r *resultBuilder) recordEffectivePermission(p ports.EffectivePermission) {
+	key := p.PrincipalID + "|" + p.Source + "|" + p.Action + "|" + p.Resource
+	r.effectivePermissions[key] = p
 }
 
 func (r *resultBuilder) processAsset(a *asset.Asset) {
@@ -265,12 +305,42 @@ func (r *resultBuilder) recordEdge(e AssetEdge) {
 
 func (r *resultBuilder) finalize() *Result {
 	return &Result{
-		GeneratedAt:        r.latestAt,
-		ResourcePolicies:   sortedDocs(r.resourcePolicies),
-		KMSKeyPolicies:     sortedDocs(r.kmsKeyPolicies),
-		TrustPolicies:      sortedTrustDocs(r.trustPolicies),
-		AssetRelationships: sortedEdges(r.edges),
+		GeneratedAt:          r.latestAt,
+		ResourcePolicies:     sortedDocs(r.resourcePolicies),
+		KMSKeyPolicies:       sortedDocs(r.kmsKeyPolicies),
+		TrustPolicies:        sortedTrustDocs(r.trustPolicies),
+		AssetRelationships:   sortedEdges(r.edges),
+		EffectivePermissions: sortedPermissions(r.effectivePermissions),
 	}
+}
+
+// sortedPermissions flattens the dedup map into a slice ordered
+// by (PrincipalID, Source, Action, Resource). Mirrors the
+// resolver's per-snapshot ordering so a multi-snapshot run
+// produces the same shape as a single-snapshot one — only the
+// dedup logic differs.
+func sortedPermissions(m map[string]ports.EffectivePermission) []ports.EffectivePermission {
+	if len(m) == 0 {
+		return nil
+	}
+	out := make([]ports.EffectivePermission, 0, len(m))
+	for _, v := range m {
+		out = append(out, v)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		a, b := &out[i], &out[j]
+		if a.PrincipalID != b.PrincipalID {
+			return a.PrincipalID < b.PrincipalID
+		}
+		if a.Source != b.Source {
+			return a.Source < b.Source
+		}
+		if a.Action != b.Action {
+			return a.Action < b.Action
+		}
+		return a.Resource < b.Resource
+	})
+	return out
 }
 
 func sortedDocs(m map[string]PolicyDocument) []PolicyDocument {

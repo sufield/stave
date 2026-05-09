@@ -191,7 +191,7 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 
 	// Run the risk reasoning engine: detect chain-based compound findings
 	// and build an attack stage summary from the evaluation results.
-	w.enrichWithRiskReasoning(&report, auditData.Controls, cfg.ChainDefs)
+	w.enrichWithRiskReasoning(&report, auditData.Controls, cfg.ChainDefs, auditData.Snapshots)
 
 	// Annotate findings with SLA deadline data.
 	if cfg.SLAConfig != nil {
@@ -253,19 +253,35 @@ func (w *AuditWorkflow) prepareAuditData(ctx context.Context, cfg ObservationCon
 // an attack stage summary from the evaluation results. This is the
 // inference layer — it transforms individual findings into compound
 // risk assessments.
+//
+// snapshots feeds the [risk.ScopeResolver] used when a chain
+// declares scope_field. Without snapshots, scope_field-bearing
+// chains silently fall back to asset.ID grouping.
 func (w *AuditWorkflow) enrichWithRiskReasoning(
 	report *evaluation.ComplianceReport,
 	controls []policy.ControlDefinition,
 	chainDefs []policy.ChainDefinition,
+	snapshots []asset.Snapshot,
 ) {
-	if len(report.Findings) == 0 {
+	if len(report.Findings) == 0 && len(report.MarkerFindings) == 0 {
 		return
 	}
 
-	// Build per-asset failure list for asset-aware chain and attack-stage analysis.
-	failures := make([]risk.FailingControl, len(report.Findings))
+	// Build per-asset failure list for asset-aware chain and
+	// attack-stage analysis. Marker findings join the failure list
+	// for chain detection — chains can compose marker findings
+	// (e.g. "bucket is tagged phi") with violation findings (e.g.
+	// "Cognito unauth role grants S3 access") into cross-resource
+	// compounds. Markers stay out of the attack-stage summary so
+	// they don't invent kill-chain stages from informational
+	// signal.
+	failures := make([]risk.FailingControl, 0, len(report.Findings)+len(report.MarkerFindings))
 	for i := range report.Findings {
-		failures[i] = report.Findings[i].ToFailingControl()
+		failures = append(failures, report.Findings[i].ToFailingControl())
+	}
+	violationCount := len(failures)
+	for i := range report.MarkerFindings {
+		failures = append(failures, report.MarkerFindings[i].ToFailingControl())
 	}
 
 	controlLookup := make(map[kernel.ControlID]*policy.ControlDefinition, len(controls))
@@ -275,12 +291,14 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 
 	// Detect chain-based compound findings.
 	if len(chainDefs) > 0 {
-		report.ChainFindings = risk.DetectChains(failures, chainDefs, controlLookup)
+		scopeResolver := risk.NewScopeResolverFromSnapshots(snapshots)
+		report.ChainFindings = risk.DetectChains(failures, chainDefs, controlLookup, scopeResolver)
 		annotateChainMembership(report)
 	}
 
-	// Build attack stage summary.
-	report.AttackStageSummary = risk.BuildAttackStageSummary(failures, controlLookup)
+	// Build attack stage summary from violation failures only —
+	// marker findings carry no attack-stage semantics on their own.
+	report.AttackStageSummary = risk.BuildAttackStageSummary(failures[:violationCount], controlLookup)
 
 	// Rank findings by exposure score (silent killer detection).
 	// ChainMembership must be annotated before this loop runs so the
@@ -367,18 +385,35 @@ func annotateChainMembership(report *evaluation.ComplianceReport) {
 			}
 		}
 	}
+	// Marker findings can be chain members too (cross-resource
+	// compounds compose markers with violations). Annotate them so
+	// downstream consumers see "this informational fact is one
+	// link in chain X" — same shape as violations.
+	for i := range report.MarkerFindings {
+		f := &report.MarkerFindings[i]
+		for _, ce := range chainEntries {
+			if ce.controlIDs.Contains(f.ControlID) {
+				f.AddChainMembership(ce.membership)
+			}
+		}
+	}
 }
 
 // EnrichReport applies risk reasoning (chains, attack stages, exposure
 // ranking) to an evaluation report. Exported for use by the profile
 // runner which bypasses the standard assessment workflow.
 //
+// snapshots feeds the chain-engine [risk.ScopeResolver] used by chains
+// that declare scope_field. Callers that do not retain snapshots can
+// pass nil; chain detection then falls back to asset.ID grouping for
+// every chain (the legacy semantics).
+//
 // Seeds the workflow with slog.Default() so enrichWithRiskReasoning's
 // Logger.Warn calls (and any future logger reads) never fire on a
 // nil receiver. The previous shape constructed an AuditWorkflow{}
 // with Logger==nil; the current call sites guard with `if w.Logger
 // != nil` but a future reader would silently drop diagnostic output.
-func EnrichReport(report *evaluation.ComplianceReport, controls []policy.ControlDefinition, chainDefs []policy.ChainDefinition) {
+func EnrichReport(report *evaluation.ComplianceReport, controls []policy.ControlDefinition, chainDefs []policy.ChainDefinition, snapshots []asset.Snapshot) {
 	w := &AuditWorkflow{Logger: slog.Default()}
-	w.enrichWithRiskReasoning(report, controls, chainDefs)
+	w.enrichWithRiskReasoning(report, controls, chainDefs, snapshots)
 }

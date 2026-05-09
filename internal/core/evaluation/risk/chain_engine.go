@@ -18,16 +18,28 @@ type FailingControl struct {
 
 // CompoundFinding represents a chain-detected compound risk — multiple
 // co-failing controls that together create a risk greater than their sum.
+//
+// AssetID is one representative contributing asset (deterministic — the
+// lowest asset.ID under string sort among the assets that fed the
+// chain). When the chain uses ScopeField, multiple distinct assets may
+// have contributed; ScopeID carries the shared scope value, ScopeField
+// records which property path produced it, and ContributingAssets lists
+// every asset.ID that fed the chain. When ScopeField is empty (default),
+// ScopeID is empty and ContributingAssets contains the single asset
+// whose failures triggered the chain — preserving the legacy shape.
 type CompoundFinding struct {
-	ChainID           kernel.ChainID       `json:"chain"`
-	AssetID           asset.ID             `json:"asset_id,omitempty"`
-	Description       string               `json:"description,omitempty"`
-	ControlsFailing   []kernel.ControlID   `json:"controls_failing"`
-	MissingSafeguards []kernel.ControlID   `json:"missing_safeguards,omitempty"`
-	CompoundScore     float64              `json:"compound_score"`
-	Severity          policy.Severity      `json:"severity"`
-	Narrative         string               `json:"narrative"`
-	AttackStages      []kernel.AttackStage `json:"attack_stages,omitempty"`
+	ChainID            kernel.ChainID       `json:"chain"`
+	AssetID            asset.ID             `json:"asset_id,omitempty"`
+	ScopeID            string               `json:"scope_id,omitempty"`
+	ScopeField         string               `json:"scope_field,omitempty"`
+	ContributingAssets []asset.ID           `json:"contributing_assets,omitempty"`
+	Description        string               `json:"description,omitempty"`
+	ControlsFailing    []kernel.ControlID   `json:"controls_failing"`
+	MissingSafeguards  []kernel.ControlID   `json:"missing_safeguards,omitempty"`
+	CompoundScore      float64              `json:"compound_score"`
+	Severity           policy.Severity      `json:"severity"`
+	Narrative          string               `json:"narrative"`
+	AttackStages       []kernel.AttackStage `json:"attack_stages,omitempty"`
 }
 
 // SeverityLabel returns the canonical lowercase severity string
@@ -41,38 +53,87 @@ func (c *CompoundFinding) SeverityLabel() string {
 	return c.Severity.String()
 }
 
-// DetectChains checks each chain definition per asset: a chain fires only
-// when a single asset has enough of the chain's controls failing. This
-// prevents a control failing on asset A from triggering compound risk for
-// an unrelated asset B.
+// ScopeResolver returns the value at the given property path on the
+// asset identified by assetID. The second return is false when the
+// asset is unknown or the path resolves to an empty / non-scalar
+// value. The chain engine treats false the same as ScopeField unset
+// for that one (asset, chain) pair: the failing control falls back to
+// asset.ID grouping.
+type ScopeResolver func(assetID asset.ID, path string) (string, bool)
+
+// DetectChains checks each chain definition: a chain fires only when
+// enough of its member controls fail within a single grouping bucket.
+// The grouping bucket is asset.ID by default; when the chain declares
+// ScopeField, it is the resolved value of that property path on each
+// failing asset (e.g. user_pool_id reuniting per-trigger Cognito
+// ghost findings that surface on distinct asset.IDs).
 //
 // failures is the set of (control, asset) pairs with active violations.
 // chains is the catalog of chain definitions to check.
-// controlLookup maps control IDs to their definitions (for attack stage).
+// controlLookup maps control IDs to their definitions (attack stage,
+// blast multiplier).
+// scopeResolver may be nil; when nil, every chain falls back to
+// asset.ID grouping regardless of ScopeField.
 func DetectChains(
 	failures []FailingControl,
 	chains []policy.ChainDefinition,
 	controlLookup map[kernel.ControlID]*policy.ControlDefinition,
+	scopeResolver ScopeResolver,
 ) []CompoundFinding {
-	// Group failing control IDs by asset.
-	byAsset := make(map[asset.ID]map[kernel.ControlID]bool)
-	for i := range failures {
-		f := &failures[i]
-		if byAsset[f.AssetID] == nil {
-			byAsset[f.AssetID] = make(map[kernel.ControlID]bool)
-		}
-		byAsset[f.AssetID][f.ControlID] = true
-	}
-
 	var findings []CompoundFinding
 
 	for i := range chains {
 		chain := &chains[i]
-		for assetID, assetFailing := range byAsset {
+
+		// chainMembers is a set of the chain's member control IDs so we
+		// can ignore failures of unrelated controls when bucketing.
+		chainMembers := make(map[kernel.ControlID]bool, len(chain.ControlIDs))
+		for _, cid := range chain.ControlIDs {
+			chainMembers[cid] = true
+		}
+
+		// Group failing controls by either asset.ID (default) or the
+		// resolved scope value. The chain-local map mirrors the legacy
+		// per-asset map, plus a parallel map of scope -> contributing
+		// asset IDs so the compound finding can surface every asset
+		// that fed the chain. resolvedByScope tracks whether AT LEAST
+		// one member of a bucket resolved via scope_field — used at
+		// emission to decide whether to populate ScopeID/ScopeField on
+		// the output. A bucket where every member fell back to asset.ID
+		// is a pure asset.ID bucket (legacy semantics) even when
+		// chain.ScopeField is set.
+		//
+		// Only failures whose ControlID is one of the chain's members
+		// participate. A user-pool client with RESOURCESRV failing in
+		// the same scope as IDCHAIN's user-pool-side findings would
+		// otherwise inflate contributing_assets with an asset that
+		// fired no chain control — surface noise that misrepresents
+		// what the chain actually saw.
+		byScope := make(map[string]map[kernel.ControlID]bool)
+		assetsByScope := make(map[string]map[asset.ID]bool)
+		resolvedByScope := make(map[string]bool)
+		for j := range failures {
+			f := &failures[j]
+			if !chainMembers[f.ControlID] {
+				continue
+			}
+			scope, resolved := groupingKey(chain, f.AssetID, scopeResolver)
+			if byScope[scope] == nil {
+				byScope[scope] = make(map[kernel.ControlID]bool)
+				assetsByScope[scope] = make(map[asset.ID]bool)
+			}
+			byScope[scope][f.ControlID] = true
+			assetsByScope[scope][f.AssetID] = true
+			if resolved {
+				resolvedByScope[scope] = true
+			}
+		}
+
+		for scope, scopeFailing := range byScope {
 			var failing []kernel.ControlID
 			var holding []kernel.ControlID
 			for _, cid := range chain.ControlIDs {
-				if assetFailing[cid] {
+				if scopeFailing[cid] {
 					failing = append(failing, cid)
 				} else {
 					holding = append(holding, cid)
@@ -117,9 +178,10 @@ func DetectChains(
 
 			narrative := buildNarrative(chain, failing)
 
-			findings = append(findings, CompoundFinding{
+			contributing := sortedAssetIDs(assetsByScope[scope])
+			finding := CompoundFinding{
 				ChainID:           chain.ID,
-				AssetID:           assetID,
+				AssetID:           contributing[0], // representative; deterministic via sort
 				Description:       chain.Description,
 				ControlsFailing:   failing,
 				MissingSafeguards: holding,
@@ -127,24 +189,69 @@ func DetectChains(
 				Severity:          chain.CompoundSeverity,
 				Narrative:         narrative,
 				AttackStages:      stages,
-			})
+			}
+			// ContributingAssets and ScopeID/ScopeField surface only on
+			// scope-grouped chains. For legacy asset.ID-grouped chains
+			// every contributing asset.ID equals AssetID, so the slice
+			// would duplicate the existing field — and adding it
+			// unconditionally would churn every chain golden in the
+			// repo. Emit only when scope_field actually drove grouping.
+			if chain.ScopeField != "" && resolvedByScope[scope] {
+				finding.ScopeID = scope
+				finding.ScopeField = chain.ScopeField
+				finding.ContributingAssets = contributing
+			}
+			findings = append(findings, finding)
 		}
 	}
 
-	// Sort by (chain id, asset id) so the output is deterministic across
-	// runs. The inner loop above iterates a map keyed by asset.ID, and Go
-	// randomizes map iteration order — without a final sort, two runs on
-	// identical input produce different chain_findings orderings, which
-	// surfaces as fixture flakes (e.g. etcd-dev-01 vs etcd-staging-01
-	// swapping positions in k8s-cis-level1's golden).
+	// Sort by (chain id, scope id, asset id) so the output is deterministic
+	// across runs. The inner loop above iterates a map keyed by scope, and
+	// Go randomizes map iteration order — without a final sort, two runs
+	// on identical input produce different chain_findings orderings, which
+	// surfaces as fixture flakes.
 	slices.SortFunc(findings, func(a, b CompoundFinding) int {
 		if c := strings.Compare(string(a.ChainID), string(b.ChainID)); c != 0 {
+			return c
+		}
+		if c := strings.Compare(a.ScopeID, b.ScopeID); c != 0 {
 			return c
 		}
 		return strings.Compare(string(a.AssetID), string(b.AssetID))
 	})
 
 	return findings
+}
+
+// groupingKey returns the scope value to use when bucketing one failing
+// control under a chain, plus a flag indicating whether the value came
+// from the resolver (true) or from the asset.ID fallback (false). When
+// the chain declares ScopeField and the resolver returns a non-empty
+// value, that value is the key and resolved=true; otherwise the
+// asset.ID is used and resolved=false. The asset.ID fallback also
+// applies when the resolver is nil — defensive for tests and any caller
+// that has no asset properties at hand.
+func groupingKey(chain *policy.ChainDefinition, assetID asset.ID, resolver ScopeResolver) (string, bool) {
+	if chain.ScopeField == "" || resolver == nil {
+		return string(assetID), false
+	}
+	if v, ok := resolver(assetID, chain.ScopeField); ok && v != "" {
+		return v, true
+	}
+	return string(assetID), false
+}
+
+// sortedAssetIDs returns the keys of the set in lexical order so chain
+// findings are deterministic across runs.
+func sortedAssetIDs(set map[asset.ID]bool) []asset.ID {
+	out := make([]asset.ID, 0, len(set))
+	for id := range set {
+		out = append(out, id)
+	}
+	slices.SortFunc(out, func(a, b asset.ID) int {
+		return strings.Compare(string(a), string(b))
+	})
+	return out
 }
 
 // baseScoreFromMembers derives the chain base score from the highest

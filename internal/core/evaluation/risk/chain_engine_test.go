@@ -47,7 +47,7 @@ func TestDetectChains(t *testing.T) {
 
 	t.Run("two controls on same asset trigger chain", func(t *testing.T) {
 		failures := failingControls("bucket-1", "CTL.S3.PUBLIC.001", "CTL.S3.ENCRYPT.001")
-		findings := DetectChains(failures, chains, lookup)
+		findings := DetectChains(failures, chains, lookup, nil)
 		if len(findings) != 1 {
 			t.Fatalf("expected 1 compound finding, got %d", len(findings))
 		}
@@ -83,7 +83,7 @@ func TestDetectChains(t *testing.T) {
 			{ControlID: "CTL.S3.PUBLIC.001", AssetID: "bucket-a"},
 			{ControlID: "CTL.S3.ENCRYPT.001", AssetID: "bucket-b"},
 		}
-		findings := DetectChains(failures, chains, lookup)
+		findings := DetectChains(failures, chains, lookup, nil)
 		if len(findings) != 0 {
 			t.Errorf("expected 0 findings for cross-asset controls, got %d", len(findings))
 		}
@@ -91,14 +91,14 @@ func TestDetectChains(t *testing.T) {
 
 	t.Run("below threshold no finding", func(t *testing.T) {
 		failures := failingControls("bucket-1", "CTL.S3.PUBLIC.001")
-		findings := DetectChains(failures, chains, lookup)
+		findings := DetectChains(failures, chains, lookup, nil)
 		if len(findings) != 0 {
 			t.Errorf("expected 0 findings below threshold, got %d", len(findings))
 		}
 	})
 
 	t.Run("no failing controls", func(t *testing.T) {
-		findings := DetectChains(nil, chains, lookup)
+		findings := DetectChains(nil, chains, lookup, nil)
 		if len(findings) != 0 {
 			t.Errorf("expected 0 findings, got %d", len(findings))
 		}
@@ -112,7 +112,7 @@ func TestDetectChains(t *testing.T) {
 			{ControlID: "CTL.IAM.ROOT.MFA.001", AssetID: "account-root"},
 			{ControlID: "CTL.IAM.ROOT.ACCESSKEY.001", AssetID: "account-root"},
 		}
-		findings := DetectChains(failures, chains, lookup)
+		findings := DetectChains(failures, chains, lookup, nil)
 		if len(findings) != 2 {
 			t.Errorf("expected 2 compound findings, got %d", len(findings))
 		}
@@ -141,7 +141,7 @@ func TestDetectChains(t *testing.T) {
 			"CTL.GUARDDUTY.001":  blastCtl,
 		}
 		failures := failingControls("account", "CTL.CLOUDTRAIL.001", "CTL.GUARDDUTY.001")
-		findings := DetectChains(failures, detectionChain, detectionLookup)
+		findings := DetectChains(failures, detectionChain, detectionLookup, nil)
 		if len(findings) != 1 {
 			t.Fatalf("expected 1 finding, got %d", len(findings))
 		}
@@ -185,6 +185,7 @@ func TestDetectChains(t *testing.T) {
 			failingControls("asset-1", "A", "B"),
 			chain,
 			map[kernel.ControlID]*policy.ControlDefinition{"A": resourceCtl, "B": resourceCtl},
+			nil,
 		)
 
 		// Account-scoped: effective = 2.0 (no attenuation)
@@ -192,6 +193,7 @@ func TestDetectChains(t *testing.T) {
 			failingControls("asset-1", "A", "B"),
 			chain,
 			map[kernel.ControlID]*policy.ControlDefinition{"A": accountCtl, "B": accountCtl},
+			nil,
 		)
 
 		if len(resourceFindings) != 1 || len(accountFindings) != 1 {
@@ -206,6 +208,113 @@ func TestDetectChains(t *testing.T) {
 		t.Logf("account=%f resource=%f",
 			accountFindings[0].CompoundScore, resourceFindings[0].CompoundScore)
 	})
+}
+
+// TestDetectChains_ScopeFieldGroupsAcrossAssets exercises the
+// scope_field path: two failing controls on different asset.IDs that
+// share a scope value bucket together and trip the chain threshold.
+// Mirrors the cognito_ghost_authflow shape — per-trigger predicates
+// force one logical user pool to surface as N distinct assets.
+func TestDetectChains_ScopeFieldGroupsAcrossAssets(t *testing.T) {
+	chains := []policy.ChainDefinition{{
+		ID:                  "scoped",
+		ControlIDs:          []kernel.ControlID{"CTL.A", "CTL.B"},
+		EscalationThreshold: 2,
+		CompoundSeverity:    policy.SeverityHigh,
+		ScopeField:          "properties.identity.cognito.user_pool_id",
+	}}
+	lookup := map[kernel.ControlID]*policy.ControlDefinition{
+		"CTL.A": {Params: policy.NewParams(map[string]any{"attack_stage": "initial_access"})},
+		"CTL.B": {Params: policy.NewParams(map[string]any{"attack_stage": "exfiltration"})},
+	}
+	failures := []FailingControl{
+		{ControlID: "CTL.A", AssetID: "asset-trigger-A"},
+		{ControlID: "CTL.B", AssetID: "asset-trigger-B"},
+	}
+	resolver := func(id asset.ID, _ string) (string, bool) {
+		// Both assets resolve to the same logical pool.
+		return "shared-pool", true
+	}
+
+	findings := DetectChains(failures, chains, lookup, resolver)
+	if len(findings) != 1 {
+		t.Fatalf("expected 1 finding (chain reunites across asset.IDs via scope_field), got %d", len(findings))
+	}
+	f := findings[0]
+	if f.ScopeID != "shared-pool" {
+		t.Errorf("ScopeID = %q, want shared-pool", f.ScopeID)
+	}
+	if f.ScopeField == "" {
+		t.Errorf("ScopeField should be populated when chain.ScopeField is set")
+	}
+	if len(f.ContributingAssets) != 2 {
+		t.Errorf("ContributingAssets = %v, want 2 (both contributing assets)", f.ContributingAssets)
+	}
+	// AssetID is the deterministic representative — lowest under string sort.
+	if f.AssetID != "asset-trigger-A" {
+		t.Errorf("AssetID = %q, want asset-trigger-A (lowest contributing)", f.AssetID)
+	}
+}
+
+// TestDetectChains_ScopeFieldFallsBackOnUnresolved confirms that a
+// chain with ScopeField set but a resolver that fails to read the
+// path falls back to asset.ID grouping for that one (asset, chain)
+// pair. Same fixture as the legacy test — same outcome.
+func TestDetectChains_ScopeFieldFallsBackOnUnresolved(t *testing.T) {
+	chain := []policy.ChainDefinition{{
+		ID:                  "fallback",
+		ControlIDs:          []kernel.ControlID{"X", "Y"},
+		EscalationThreshold: 2,
+		CompoundSeverity:    policy.SeverityHigh,
+		ScopeField:          "properties.identity.cognito.user_pool_id",
+	}}
+	lookup := map[kernel.ControlID]*policy.ControlDefinition{
+		"X": {Params: policy.NewParams(map[string]any{})},
+		"Y": {Params: policy.NewParams(map[string]any{})},
+	}
+	// Resolver returns false for every lookup → all failures fall back to asset.ID.
+	resolver := func(_ asset.ID, _ string) (string, bool) { return "", false }
+
+	// Both controls fail on the SAME asset.ID — should still trip the chain
+	// because the fallback is asset.ID, identical to the legacy semantics.
+	findings := DetectChains(failingControls("only-asset", "X", "Y"), chain, lookup, resolver)
+	if len(findings) != 1 {
+		t.Fatalf("expected 1 finding (fallback to asset.ID grouping), got %d", len(findings))
+	}
+	if findings[0].AssetID != "only-asset" {
+		t.Errorf("AssetID = %q, want only-asset", findings[0].AssetID)
+	}
+	if findings[0].ScopeID != "" {
+		t.Errorf("ScopeID = %q, want empty when resolver returned false", findings[0].ScopeID)
+	}
+}
+
+// TestDetectChains_ScopeFieldNilResolverFallsBack confirms that a
+// chain declaring ScopeField with a nil resolver passed to
+// DetectChains still groups by asset.ID. Production callers may
+// legitimately pass a nil resolver when they have no asset
+// properties at hand (e.g. a downstream tool that consumes the
+// FailingControl slice from a serialized output).
+func TestDetectChains_ScopeFieldNilResolverFallsBack(t *testing.T) {
+	chain := []policy.ChainDefinition{{
+		ID:                  "nilres",
+		ControlIDs:          []kernel.ControlID{"X", "Y"},
+		EscalationThreshold: 2,
+		CompoundSeverity:    policy.SeverityHigh,
+		ScopeField:          "properties.x.y",
+	}}
+	lookup := map[kernel.ControlID]*policy.ControlDefinition{
+		"X": {Params: policy.NewParams(map[string]any{})},
+		"Y": {Params: policy.NewParams(map[string]any{})},
+	}
+	failures := []FailingControl{
+		{ControlID: "X", AssetID: "a-1"},
+		{ControlID: "Y", AssetID: "a-2"},
+	}
+	findings := DetectChains(failures, chain, lookup, nil)
+	if len(findings) != 0 {
+		t.Errorf("expected 0 findings (nil resolver → asset.ID grouping, no asset has both)", )
+	}
 }
 
 func TestScopeAdjustedBlast_MultiplierAtOne(t *testing.T) {

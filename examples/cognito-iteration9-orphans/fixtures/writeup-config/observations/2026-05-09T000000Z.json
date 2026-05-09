@@ -1,0 +1,75 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-09T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_dormantPool",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user_pool",
+          "user_pool": {
+            "name": "dormant-pool",
+            "user_pool_id": "us-east-1_dormantPool"
+          },
+          "cognito": {
+            "has_app_clients": false,
+            "is_user_pool_dormant": true,
+            "has_orphan_triggers": true,
+            "estimated_number_of_users": 0,
+            "last_login_at": null
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_otherPool/client/9unusedabc12",
+      "type": "aws_cognito_user_pool_client",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_app_client",
+          "cognito": {
+            "client_id": "9unusedabc12",
+            "user_pool_id": "us-east-1_otherPool",
+            "is_app_client_dormant": true,
+            "last_used_at": null
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:88888888-aaaa-bbbb-cccc-eeeeeeeeeeee",
+      "type": "aws_cognito_identity_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_identity_pool",
+          "cognito": {
+            "identity_pool_id": "us-east-1:88888888-aaaa-bbbb-cccc-eeeeeeeeeeee",
+            "has_identity_providers": false,
+            "cognito_identity_providers": []
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_otherPool/resource-server/acme-deleted-rs",
+      "type": "aws_cognito_resource_server",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_resource_server",
+          "cognito": {
+            "resource_server_identifier": "acme-deleted-rs",
+            "user_pool_id": "us-east-1_otherPool",
+            "is_resource_server_orphan": true,
+            "referenced_by_clients": []
+          }
+        }
+      }
+    }
+  ]
+}

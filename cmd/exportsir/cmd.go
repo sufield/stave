@@ -180,6 +180,11 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options, newCtl
 	var facts []Fact
 	if format != "json" || opts.Validate {
 		facts = ExtractFacts(doc)
+		// Stamp freshness using the same `now` the SIR builder
+		// consumed. With --now pinned, AgeSeconds is byte-stable
+		// across runs (golden-friendly); without --now it drifts
+		// by elapsed wall-clock time between exports.
+		AnnotateFreshness(facts, now)
 	}
 
 	if opts.Validate {

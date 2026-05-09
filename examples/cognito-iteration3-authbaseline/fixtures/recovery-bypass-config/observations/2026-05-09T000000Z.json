@@ -1,0 +1,47 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-09T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_recoveryGapPool",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user_pool",
+          "user_pool": {
+            "name": "recovery-gap-pool",
+            "user_pool_id": "us-east-1_recoveryGapPool"
+          },
+          "auth": {
+            "mfa_enforced": true,
+            "mfa_configuration": "ON"
+          },
+          "mfa": {
+            "enforced": true
+          },
+          "password_policy": {
+            "is_weak": false,
+            "strong": true,
+            "minimum_length": 14,
+            "require_uppercase": true,
+            "require_lowercase": true,
+            "require_numbers": true,
+            "require_symbols": true,
+            "temporary_password_validity_days": 1
+          },
+          "cognito": {
+            "has_brute_force_protection": true,
+            "advanced_security_mode": "ENFORCED",
+            "mfa_sms_only": true,
+            "recovery_bypasses_mfa": true
+          },
+          "governance": {
+            "self_registration_restricted": true
+          }
+        }
+      }
+    }
+  ]
+}

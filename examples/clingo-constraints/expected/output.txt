@@ -17,6 +17,10 @@
     arn:aws:iam::111122223333:role/data-team-job-role  (compute_trust_no_finding)
 
 === cognito-writeup ===
+  violation: advanced_security_off  (1)
+    arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool  ->  false
+  violation: mfa_disabled  (1)
+    arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool  ->  false
   violation: unauth_cognito_s3_read  (1)
     arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool  ->  arn:aws:iam::111122223333:role/Cognito_appUnauth_Role
   violation: wildcard_action_resource  (1)

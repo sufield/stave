@@ -90,9 +90,16 @@ type EnrichedFinding struct {
 // and fully-sanitized metadata. Boundary type between the "enrich" and
 // "marshal" pipeline steps. Marshalers should read ExemptedAssets and Run
 // from this struct (not from Result) because they are pre-sanitized.
+//
+// MarkerFindings carries findings from TypeMarker controls. They share
+// the EnrichedFinding shape (so renderers can reuse the violation
+// formatter) but the assessment envelope routes them to a separate
+// JSON field so they never count toward Status / Summary.Violations
+// / exit codes. Empty when the catalog has no marker controls.
 type EnrichedResult struct {
 	Result          evaluation.ComplianceReport
 	Findings        []EnrichedFinding
+	MarkerFindings  []EnrichedFinding
 	ExemptedAssets  []asset.ExemptedAsset
 	Run             evaluation.RunInfo
 	CoveragePosture *coverage.CoverageIndex

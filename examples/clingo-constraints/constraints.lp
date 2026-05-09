@@ -90,5 +90,83 @@ latent_risk(R, "compute_trust_no_finding") :-
     trusts_service(R, _),
     not contributed_by(R, _).
 
+% =============================================================
+% Expansion — per-asset boolean violations.
+%
+% Each rule is anchored to a predicate that real fixtures emit;
+% the matching predicate is also added to LIFTED_PREDICATES in
+% run.py (without that list entry the lifter drops the JSONL
+% triple and the rule body never matches). Target fixtures are
+% named in each rule's comment.
+% =============================================================
+
+% V7: S3 bucket has public read enabled.
+% Targets: s3-public-read-policy, s3-broad-write-scope,
+%          s3-dotgit-readable, s3-public-list-policy,
+%          s3-tenant-prefix-isolation,
+%          s3-cross-account-replication-overperm.
+violation(B, "public_read", "true") :-
+    has_public_read(B, "true").
+
+% V8: S3 bucket has public list enabled.
+% Targets: same set as V7.
+violation(B, "public_list", "true") :-
+    has_public_list(B, "true").
+
+% V9: Cognito user pool has MFA disabled. Anchored to the
+% propertyFacts projector's `has_mfa_enforced(pool, "false")`
+% emission. Targets: cognito-no-mfa-advanced-security,
+% cognito-self-register-to-aws-creds.
+violation(P, "mfa_disabled", "false") :-
+    has_mfa_enforced(P, "false").
+
+% V10: Cognito user pool has advanced-security disabled.
+% Targets: cognito-no-mfa-advanced-security.
+violation(P, "advanced_security_off", "false") :-
+    has_advanced_security_enabled(P, "false").
+
+% V11: CloudTrail trail has logging disabled.
+% Targets: cloudtrail-stop-logging.
+violation(T, "logging_disabled", "false") :-
+    has_logging_enabled(T, "false").
+
+% V12: S3 bucket reference points at a non-owned / non-existent
+% bucket — either signal alone is enough to flag the
+% dangling-takeover risk. Targets: s3-bucket-name-dangling.
+violation(R, "bucket_not_owned", "false") :-
+    has_bucket_owned(R, "false").
+
+violation(R, "bucket_not_exists", "false") :-
+    has_bucket_exists(R, "false").
+
+% V13: Repository artefacts (.git, .svn, .DS_Store) accessible
+% from the bucket. Targets: s3-dotgit-readable.
+violation(B, "exposed_repo_artifacts", "true") :-
+    has_exposed_repo_artifacts(B, "true").
+
+% V14: EKS cluster role exposes webhook-config write access.
+% Targets: eks-rbac-webhook-config-access.
+violation(C, "webhook_config_access", "true") :-
+    has_webhook_config_access(C, "true").
+
+% V15: EKS aws-auth ConfigMap admits identity by access-key id
+% — the template-injection vector. Targets:
+% eks-aws-auth-template-injection.
+violation(M, "access_key_template_injection", "true") :-
+    has_uses_access_key_id(M, "true").
+
+% V16: Resource policy grants access to a wildcard principal —
+% the apigw / public-read / cross-account family's broad-trust
+% shape. Targets: apigw-private-api-scoped-deny,
+% s3-cross-account-replication-overperm,
+% s3-public-list-policy, s3-public-read-policy.
+violation(A, "broad_resource_policy_principal", "*") :-
+    resource_policy_principal(A, "*").
+
+% V17: CloudTrail data-event coverage missing for an S3 bucket.
+% Targets: cloudtrail-stop-logging (data-events fixture pair).
+violation(B, "data_event_logging_missing", "false") :-
+    has_data_event_logging(B, "false").
+
 #show violation/3.
 #show latent_risk/2.

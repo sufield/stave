@@ -151,6 +151,34 @@ func TestValidateChainRefs_EmptyInput(t *testing.T) {
 	}
 }
 
+// TestChainDefinition_ScopeFieldOptional confirms that ScopeField
+// is optional — a chain with the field unset still passes
+// structural validation. (The field is purely additive: when empty,
+// the chain engine groups by asset.ID; when set, by the resolved
+// property value.)
+func TestChainDefinition_ScopeFieldOptional(t *testing.T) {
+	withoutScope := ChainDefinition{
+		ID:                  "no_scope",
+		ControlIDs:          []kernel.ControlID{"A", "B"},
+		EscalationThreshold: 2,
+		CompoundSeverity:    SeverityHigh,
+	}
+	if err := withoutScope.Validate(); err != nil {
+		t.Errorf("chain without scope_field should validate: %v", err)
+	}
+
+	withScope := ChainDefinition{
+		ID:                  "with_scope",
+		ControlIDs:          []kernel.ControlID{"A", "B"},
+		EscalationThreshold: 2,
+		CompoundSeverity:    SeverityHigh,
+		ScopeField:          "properties.identity.cognito.user_pool_id",
+	}
+	if err := withScope.Validate(); err != nil {
+		t.Errorf("chain with scope_field should validate: %v", err)
+	}
+}
+
 func containsStr(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || s != "" && containsSubstring(s, substr))
 }

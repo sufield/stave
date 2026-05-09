@@ -22,6 +22,7 @@ func Enrich(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, re
 	if err != nil {
 		return appcontracts.EnrichedResult{}, err
 	}
+	markers := PrepareMarkerFindings(enricher, sanitizer, result)
 	skippedAssets := result.ExemptedAssets
 	run := result.Run
 	resultCopy := *result
@@ -33,9 +34,26 @@ func Enrich(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, re
 	return appcontracts.EnrichedResult{
 		Result:         resultCopy,
 		Findings:       findings,
+		MarkerFindings: markers,
 		ExemptedAssets: skippedAssets,
 		Run:            run,
 	}, nil
+}
+
+// PrepareMarkerFindings is the marker counterpart to PrepareFindings.
+// Routes report.MarkerFindings through the enricher and (optionally)
+// the sanitizer so renderers reuse the violation field semantics for
+// asset-id masking, etc. Returns nil when the report has no marker
+// findings (the common path in catalogs without marker controls).
+func PrepareMarkerFindings(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, result *evaluation.ComplianceReport) []appcontracts.EnrichedFinding {
+	if enricher == nil || result == nil || len(result.MarkerFindings) == 0 {
+		return nil
+	}
+	findings := enricher.EnrichMarkerFindings(result)
+	if sanitizer != nil {
+		findings = SanitizeFindings(sanitizer, findings)
+	}
+	return toEnrichedFindings(findings)
 }
 
 // sanitizeResultSidecars masks asset identifiers and resolved paths
