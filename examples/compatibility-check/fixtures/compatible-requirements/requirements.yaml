@@ -1,0 +1,37 @@
+name: compatible-requirements
+description: |
+  Same HIPAA boundary plus a business requirement that doesn't
+  contradict it: marketing content is served publicly through
+  CloudFront, not direct S3 public access. The two requirements
+  scope to different mechanisms (S3 ACL vs CDN cache) so they
+  coexist.
+
+declarations:
+  - "(declare-const phi_bucket String)"
+  - "(declare-const marketing_bucket String)"
+  - "(declare-fun has_tag (String String) Bool)"
+  - "(declare-fun has_public_read (String) Bool)"
+  - "(declare-fun served_via_cloudfront (String) Bool)"
+
+premises:
+  - id: PHI_BUCKET_EXISTS
+    smt: '(assert (has_tag phi_bucket "data_classification:phi"))'
+  - id: BUCKETS_DISTINCT
+    smt: "(assert (not (= phi_bucket marketing_bucket)))"
+
+requirements:
+  - id: PHI_MUST_NOT_BE_PUBLIC
+    source: HIPAA
+    description: |
+      PHI buckets must never allow anonymous read.
+    smt: |
+      (assert (=> (has_tag phi_bucket "data_classification:phi")
+                  (not (has_public_read phi_bucket))))
+
+  - id: MARKETING_PUBLIC_VIA_CDN
+    source: business
+    description: |
+      Marketing content must be publicly servable, but the
+      mechanism is CloudFront — the bucket policy stays
+      private; CloudFront's origin-access identity reads it.
+    smt: "(assert (served_via_cloudfront marketing_bucket))"

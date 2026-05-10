@@ -1,0 +1,58 @@
+name: contradictory-requirements
+description: |
+  Three independently-defensible requirements that cannot all
+  hold simultaneously when the PHI bucket and the marketing
+  bucket live in the same account.
+
+# Variables and uninterpreted functions referenced by the
+# premises and the requirements. The compiler emits one
+# (declare-...) per entry into the combined SMT query.
+declarations:
+  - "(declare-const phi_bucket String)"
+  - "(declare-const marketing_bucket String)"
+  - "(declare-fun has_tag (String String) Bool)"
+  - "(declare-fun has_public_read (String) Bool)"
+  - "(declare-fun pab_setting (String) String)"
+  - "(declare-fun account_of (String) String)"
+
+# Premises stamp the scenario context every requirement is
+# evaluated against. Without these, the solver may discharge
+# requirements trivially (e.g., no bucket exists → no
+# requirement applies). With these, the contradiction is
+# real-world relevant.
+premises:
+  - id: PHI_BUCKET_EXISTS
+    smt: '(assert (has_tag phi_bucket "data_classification:phi"))'
+  - id: SAME_ACCOUNT
+    smt: "(assert (= (account_of phi_bucket) (account_of marketing_bucket)))"
+  - id: BUCKETS_DISTINCT
+    smt: "(assert (not (= phi_bucket marketing_bucket)))"
+
+requirements:
+  - id: PHI_MUST_NOT_BE_PUBLIC
+    source: HIPAA
+    description: |
+      PHI buckets must never allow anonymous read.
+    # Negation of "phi-tagged AND publicly-read"; the requirement
+    # holds when the conjunction is false for every PHI bucket.
+    smt: |
+      (assert (=> (has_tag phi_bucket "data_classification:phi")
+                  (not (has_public_read phi_bucket))))
+
+  - id: MARKETING_MUST_BE_PUBLIC
+    source: business
+    description: |
+      Marketing bucket must serve public web content.
+    smt: "(assert (has_public_read marketing_bucket))"
+
+  - id: IDENTICAL_PAB
+    source: ops
+    description: |
+      All buckets in the account must have identical PAB
+      settings (operations simplification — one configuration to
+      review for the whole account). PAB transitively decides
+      whether a bucket can serve anonymous reads, so identical
+      PAB means identical public-read status.
+    smt: |
+      (assert (and (= (pab_setting phi_bucket) (pab_setting marketing_bucket))
+                   (= (has_public_read phi_bucket) (has_public_read marketing_bucket))))

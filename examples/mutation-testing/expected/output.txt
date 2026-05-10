@@ -1,0 +1,50 @@
+=== Mutation testing ===
+  baseline: <stave-root>/examples/cognito-iteration2-unauth/fixtures/remediated-config/observations
+
+Generating mutations ...
+  generated 7 mutations → <work-dir>
+
+Running stave apply on each mutation ...
+  baseline: 1 findings
+  7 mutations: 1 killed, 6 survived, score 0.14
+
+=== Summary ===
+{
+  "baseline_findings": 1,
+  "total_mutations": 7,
+  "killed": 1,
+  "survived": 6,
+  "mutation_score": 0.1429
+}
+
+=== Surviving mutations (coverage gaps) ===
+{
+  "path": "assets.0.properties.identity.cognito.unauth_role_broad",
+  "before": false,
+  "after": true
+}
+{
+  "path": "assets.0.properties.identity.cognito.unauth_role_has_iam",
+  "before": false,
+  "after": true
+}
+{
+  "path": "assets.0.properties.identity.cognito.unauth_role_has_s3",
+  "before": false,
+  "after": true
+}
+{
+  "path": "assets.0.properties.identity.cognito.unauth_role_has_ddb",
+  "before": false,
+  "after": true
+}
+{
+  "path": "assets.0.properties.identity.cognito.unauth_role_has_lambda",
+  "before": false,
+  "after": true
+}
+{
+  "path": "assets.0.properties.identity.cognito.is_unauth_unused",
+  "before": false,
+  "after": true
+}

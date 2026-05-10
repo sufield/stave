@@ -1,0 +1,33 @@
+=== compatible-requirements ===
+  compiled: compatible-requirements (5 decls, 2 premises, 2 requirements)
+  COMPATIBLE — compatible-requirements
+    All requirements hold simultaneously in at least one model.
+    Z3 produced a satisfying assignment; the requirements
+    describe a configuration the system can in principle reach.
+  
+=== contradictory-requirements ===
+  compiled: contradictory-requirements (6 decls, 3 premises, 3 requirements)
+  CONTRADICTORY — contradictory-requirements
+  
+    3 requirements cannot all be satisfied under the listed premises:
+  
+    • PHI_MUST_NOT_BE_PUBLIC (HIPAA)
+        PHI buckets must never allow anonymous read.
+    • MARKETING_MUST_BE_PUBLIC (business)
+        Marketing bucket must serve public web content.
+    • IDENTICAL_PAB (ops)
+        All buckets in the account must have identical PAB
+        settings (operations simplification — one configuration to
+        review for the whole account). PAB transitively decides
+        whether a bucket can serve anonymous reads, so identical
+        PAB means identical public-read status.
+  
+    Scenario premises that activated the contradiction:
+    • PHI_BUCKET_EXISTS: (assert (has_tag phi_bucket "data_classification:phi"))
+  
+    Resolution requires dropping or weakening at least one of the
+    requirements above. Common patterns: scope a requirement to a
+    subset (different accounts / different bucket classes), serve
+    the public-read need through a different mechanism (CloudFront
+    origin-access identity), or relax the symmetry constraint.
+  

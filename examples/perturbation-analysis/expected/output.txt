@@ -1,0 +1,37 @@
+=== Perturbation analysis ===
+  before: <stave-root>/examples/z3-forbidden-state/fixtures/writeup-config (PHI bucket + external account)
+  after:  <stave-root>/examples/z3-forbidden-state/fixtures/remediated-config (PHI bucket, external account removed)
+
+Exporting SIR fact JSONL (before / after) ...
+  N before / N after
+
+Computing fact-set delta ...
+  N → N facts (+0/-2, N unchanged)
+
+Exporting invariant catalog ...
+
+Running queries against before / after observations ...
+  1 queries: 0 regressions, 1 improvements, 0 unchanged
+
+=== Delta summary ===
+{
+  "added": 0,
+  "removed": 2,
+  "unchanged": N
+}
+
+=== Impact summary ===
+{
+  "queries_evaluated": 1,
+  "regressions": 0,
+  "improvements": 1,
+  "no_change": 0
+}
+
+=== Resolved unsafe states ===
+{
+  "query": "CTL.S3.ACCESS.EXTERNAL.ORG.001.query.smt2",
+  "before": "sat",
+  "after": "unsat",
+  "removed_fact_count": 2
+}
