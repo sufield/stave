@@ -1,0 +1,5 @@
+{"fact_id":"good00000001","subject":"arn:aws:s3:::prod-phi","predicate":"has_type","object":"aws_s3_bucket","source":"asset","provenance":{"property_path":"type","projector":"assetFacts"}}
+{"fact_id":"good00000002","subject":"arn:aws:s3:::prod-phi","predicate":"has_vendor","object":"aws","source":"asset","provenance":{"property_path":"vendor","projector":"assetFacts"}}
+{"fact_id":"good00000003","subject":"arn:aws:s3:::prod-phi","predicate":"has_public_read","object":"true","source":"asset","provenance":{"property_path":"properties.storage.access.public_read","projector":"propertyFacts"}}
+{"fact_id":"good00000004","subject":"arn:aws:s3:::prod-phi","predicate":"has_public_access_blocked","object":"false","source":"asset","provenance":{"property_path":"properties.storage.controls.public_access_fully_blocked","projector":"propertyFacts"}}
+{"fact_id":"good00000005","subject":"arn:aws:s3:::prod-phi","predicate":"has_tag","object":"data-classification=phi","source":"tag","provenance":{"property_path":"properties.storage.tags.data-classification","projector":"tagFacts"}}

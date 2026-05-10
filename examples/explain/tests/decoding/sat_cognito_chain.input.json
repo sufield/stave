@@ -1,0 +1,43 @@
+{
+  "verdict": "sat",
+  "query": "cognito_unauth_phi_s3.smt2",
+  "invariant": {
+    "id": "cognito_unauth_phi_s3",
+    "name": "Cognito unauth role grants S3 access on a PHI bucket",
+    "description": "An anonymous internet user can read PHI data from the prod-phi bucket through the Cognito identity pool.",
+    "remediation": "Disable unauthenticated access on the identity pool.",
+    "remediation_cost": "$0",
+    "remediation_time": "30 seconds",
+    "remediation_effect": "Breaks the chain at step 1. Z3 confirms the forbidden state becomes unreachable."
+  },
+  "contributing_facts": [
+    {
+      "predicate": "allows_unauthenticated",
+      "object": "true",
+      "subject": "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/abc",
+      "evidence": "assets[0].properties.identity.access.allow_unauthenticated",
+      "provenance": {"property_path": "properties.identity.access.allow_unauthenticated"}
+    },
+    {
+      "predicate": "maps_unauth_to",
+      "object": "arn:aws:iam::111122223333:role/AppUnauthRole",
+      "subject": "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/abc",
+      "evidence": "assets[0].properties.identity.cognito.unauth_role_arn",
+      "provenance": {"property_path": "properties.identity.cognito.unauth_role_arn"}
+    },
+    {
+      "predicate": "has_action",
+      "object": "s3:GetObject",
+      "subject": "arn:aws:iam::111122223333:role/AppUnauthRole",
+      "evidence": "assets[1].policies.attached_policies[0].Action",
+      "provenance": {"property_path": "policies.attached_policies[0].Action"}
+    },
+    {
+      "predicate": "has_tag",
+      "object": "data-classification=phi",
+      "subject": "arn:aws:s3:::prod-phi",
+      "evidence": "assets[2].properties.storage.tags.data-classification",
+      "provenance": {"property_path": "properties.storage.tags.data-classification"}
+    }
+  ]
+}

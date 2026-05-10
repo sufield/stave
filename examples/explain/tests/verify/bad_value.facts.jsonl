@@ -1,0 +1,3 @@
+{"fact_id":"badval0000001","subject":"arn:aws:s3:::prod-phi","predicate":"has_type","object":"aws_s3_bucket","source":"asset","provenance":{"property_path":"type","projector":"assetFacts"}}
+{"fact_id":"badval0000002","subject":"arn:aws:s3:::prod-phi","predicate":"has_public_read","object":"false","source":"asset","provenance":{"property_path":"properties.storage.access.public_read","projector":"propertyFacts"}}
+{"fact_id":"badval0000003","subject":"arn:aws:s3:::prod-phi","predicate":"has_tag","object":"data-classification=public","source":"tag","provenance":{"property_path":"properties.storage.tags.data-classification","projector":"tagFacts"}}

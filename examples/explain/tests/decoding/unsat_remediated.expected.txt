@@ -1,0 +1,5 @@
+SAFE: S3 buckets tagged data-classification=phi must not have policy statements granting access to principals outside the AWS Organization.
+  PHI Buckets Must Not Be Reachable by External Principals
+
+This forbidden state is impossible in the current configuration.
+  Z3 verified that no observation property combination admits the forbidden_state predicate. Subsequent perturbations are needed to introduce it.

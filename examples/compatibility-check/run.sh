@@ -15,6 +15,10 @@ example_root=$(cd "$script_dir/.." && pwd)
 
 # shellcheck source=../lib/format.sh
 source "$example_root/lib/format.sh"
+# shellcheck source=../lib/raw_flag.sh
+source "$example_root/lib/raw_flag.sh"
+parse_raw_flag "$@"
+set -- "${RAW_FLAG_ARGS[@]}"
 
 if ! command -v z3 >/dev/null 2>&1; then
     echo "z3 not found on PATH (sudo apt install z3 | brew install z3)"
@@ -30,9 +34,17 @@ run_one() {
     result=$(mktemp)
     trap 'rm -f "$query" "$result"' RETURN
 
-    fmt_block_header "Scenario — $label"
-    python3 "$script_dir/compile_requirements.py" "$req_file" "$query" 2>&1 | sed 's/^/  /'
+    python3 "$script_dir/compile_requirements.py" "$req_file" "$query" 2>/dev/null
     z3 "$query" > "$result" 2>&1 || true
+
+    if [[ "$FMT_RAW" == "1" ]]; then
+        printf '### scenario: %s\n' "$label"
+        cat "$result"
+        echo ""
+        return
+    fi
+
+    fmt_block_header "Scenario — $label"
 
     local verdict
     verdict=$(head -1 "$result" | tr -d '[:space:]')
@@ -61,10 +73,16 @@ run_one() {
 }
 
 if [[ $# -eq 0 ]]; then
-    fmt_section "Compatibility Check — contradictory-requirements detection via Z3 unsat core"
+    if [[ "$FMT_RAW" != "1" ]]; then
+        fmt_section "Compatibility Check — contradictory-requirements detection via Z3 unsat core"
+    fi
 
     run_one "$script_dir/fixtures/compatible-requirements/requirements.yaml"
     run_one "$script_dir/fixtures/contradictory-requirements/requirements.yaml"
+
+    if [[ "$FMT_RAW" == "1" ]]; then
+        exit 0
+    fi
 
     fmt_interpretation <<'EOF'
 The compatibility-check tool answers "can these requirements
@@ -102,6 +120,8 @@ can coexist; the model is a witness configuration the
 implementation can target.
 EOF
 else
-    fmt_section "Compatibility Check"
+    if [[ "$FMT_RAW" != "1" ]]; then
+        fmt_section "Compatibility Check"
+    fi
     run_one "$1"
 fi

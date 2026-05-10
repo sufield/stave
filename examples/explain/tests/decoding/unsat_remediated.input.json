@@ -1,0 +1,11 @@
+{
+  "verdict": "unsat",
+  "query": "CTL.S3.ACCESS.EXTERNAL.ORG.001.query.smt2",
+  "invariant": {
+    "id": "CTL.S3.ACCESS.EXTERNAL.ORG.001",
+    "name": "PHI Buckets Must Not Be Reachable by External Principals",
+    "description": "S3 buckets tagged data-classification=phi must not have policy statements granting access to principals outside the AWS Organization.",
+    "remediation": "Add a Deny statement with aws:PrincipalOrgID condition restricting access to the organization."
+  },
+  "contributing_facts": []
+}

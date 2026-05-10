@@ -1,0 +1,16 @@
+Encoding mismatch: 2 of 3 verifiable fact(s) do NOT match the observations they claim to come from
+
+  Property path absent from observation  (2 fact(s))
+    likely cause: Stale projector — the property moved or the path was hand-edited.
+    • has_public_read  fact_id: badpath00000
+        Expected (from fact): true
+        Actual (from observation): (path absent from observation)
+        Path: properties.storage.visibility.public_read
+        File: phi-bucket.obs.json
+        Projector: propertyFacts
+    • has_tag  fact_id: badpath00000
+        Expected (from fact): data-classification=phi
+        Actual (from observation): (provenance path names tag 'environment', fact names 'data-classification')
+        Path: properties.storage.tags.environment
+        File: phi-bucket.obs.json
+        Projector: tagFacts

@@ -1,0 +1,11 @@
+{
+  "verdict": "unknown",
+  "query": "complex_iam_chain.smt2",
+  "invariant": {
+    "id": "CTL.IAM.CHAIN.UNREACHABLE.001",
+    "name": "Multi-hop IAM chain reachability",
+    "description": "Verify that no role-assumption chain from this principal reaches the admin policy.",
+    "remediation": "Review the role trust chain manually if the solver cannot decide."
+  },
+  "contributing_facts": []
+}

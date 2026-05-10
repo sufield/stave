@@ -1,0 +1,16 @@
+Encoding mismatch: 2 of 3 verifiable fact(s) do NOT match the observations they claim to come from
+
+  Value at the path differs from the fact object  (2 fact(s))
+    likely cause: Type coercion bug, case-folding drift, or a stale denormalisation.
+    • has_public_read  fact_id: badval000000
+        Expected (from fact): false
+        Actual (from observation): true
+        Path: properties.storage.access.public_read
+        File: phi-bucket.obs.json
+        Projector: propertyFacts
+    • has_tag  fact_id: badval000000
+        Expected (from fact): data-classification=public
+        Actual (from observation): phi
+        Path: properties.storage.tags.data-classification
+        File: phi-bucket.obs.json
+        Projector: tagFacts

@@ -18,6 +18,10 @@ trap 'rm -rf "$work_dir"' EXIT
 
 # shellcheck source=../lib/format.sh
 source "$example_root/lib/format.sh"
+# shellcheck source=../lib/raw_flag.sh
+source "$example_root/lib/raw_flag.sh"
+parse_raw_flag "$@"
+set -- "${RAW_FLAG_ARGS[@]}"
 
 if [[ ! -x "$stave_bin" ]]; then
     echo "stave binary not found at $stave_bin"
@@ -31,11 +35,12 @@ fi
 
 now=2026-05-09T12:00:00Z
 
-fmt_section "Perturbation Analysis — before/after fact-set diff + verdict flips"
-
-fmt_kv "before fixture" "z3-forbidden-state/writeup-config (PHI + external account)"
-fmt_kv "after fixture"  "z3-forbidden-state/remediated-config (external account cleared)"
-echo ""
+if [[ "$FMT_RAW" != "1" ]]; then
+    fmt_section "Perturbation Analysis — before/after fact-set diff + verdict flips"
+    fmt_kv "before fixture" "z3-forbidden-state/writeup-config (PHI + external account)"
+    fmt_kv "after fixture"  "z3-forbidden-state/remediated-config (external account cleared)"
+    echo ""
+fi
 
 "$stave_bin" export-sir --format jsonl \
     --observations "$fixtures/writeup-config/observations" --now "$now" \
@@ -51,6 +56,14 @@ python3 "$script_dir/impact.py" \
     "$fixtures/remediated-config/observations" \
     "$work_dir/invariants.json" \
     "$work_dir/delta.json" "$work_dir/impact.json" >/dev/null 2>&1
+
+if [[ "$FMT_RAW" == "1" ]]; then
+    printf '### delta.json\n'
+    cat "$work_dir/delta.json"
+    printf '\n### impact.json\n'
+    cat "$work_dir/impact.json"
+    exit 0
+fi
 
 # --- Diff layer ------------------------------------------------
 total_before=$(jq '.total_before' "$work_dir/delta.json")
@@ -99,6 +112,18 @@ fi
 if [[ "$no_change" -gt 0 ]]; then
     printf '  %s· %s unchanged verdict(s)%s\n' "$FMT_DIM" "$no_change" "$FMT_RESET"
 fi
+echo ""
+
+# --- Verify the encoding (Iteration 3 hook) -----------------
+fmt_block_header "Encoding verifier — does each emitted fact match its observation?"
+echo ""
+python3 "$example_root/explain/verify_encoding.py" \
+    "$work_dir/before.jsonl" \
+    "$fixtures/writeup-config/observations" || true
+echo ""
+python3 "$example_root/explain/verify_encoding.py" \
+    "$work_dir/after.jsonl" \
+    "$fixtures/remediated-config/observations" || true
 echo ""
 
 fmt_interpretation <<EOF

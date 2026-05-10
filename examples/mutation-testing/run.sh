@@ -14,12 +14,16 @@ script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)
 stave_root=$(cd "$example_root/.." && pwd)
 stave_bin=${STAVE_BIN:-$stave_root/stave}
-safe_dir=${1:-$stave_root/examples/cognito-iteration2-unauth/fixtures/remediated-config/observations}
 work_dir=$(mktemp -d)
 trap 'rm -rf "$work_dir"' EXIT
 
 # shellcheck source=../lib/format.sh
 source "$example_root/lib/format.sh"
+# shellcheck source=../lib/raw_flag.sh
+source "$example_root/lib/raw_flag.sh"
+parse_raw_flag "$@"
+set -- "${RAW_FLAG_ARGS[@]}"
+safe_dir=${1:-$stave_root/examples/cognito-iteration2-unauth/fixtures/remediated-config/observations}
 
 if [[ ! -x "$stave_bin" ]]; then
     echo "stave binary not found at $stave_bin (run: cd $stave_root && make build)"
@@ -30,16 +34,24 @@ if [[ ! -d "$safe_dir" ]]; then
     exit 2
 fi
 
-fmt_section "Mutation Testing — detection coverage on Cognito remediated baseline"
-
-fmt_kv "safe baseline" "$safe_dir"
+if [[ "$FMT_RAW" != "1" ]]; then
+    fmt_section "Mutation Testing — detection coverage on Cognito remediated baseline"
+    fmt_kv "safe baseline" "$safe_dir"
+fi
 
 python3 "$script_dir/mutate.py" "$safe_dir" "$work_dir/mutations" 2>/dev/null
 total_mutations=$(jq 'length' "$work_dir/mutations/manifest.json")
-fmt_kv "mutations generated" "$total_mutations (one per boolean leaf)"
-echo ""
+if [[ "$FMT_RAW" != "1" ]]; then
+    fmt_kv "mutations generated" "$total_mutations (one per boolean leaf)"
+    echo ""
+fi
 
 python3 "$script_dir/verify.py" "$stave_bin" "$safe_dir" "$work_dir/mutations" "$work_dir/report.json" 2>/dev/null
+
+if [[ "$FMT_RAW" == "1" ]]; then
+    cat "$work_dir/report.json"
+    exit 0
+fi
 
 baseline=$(jq '.baseline_findings' "$work_dir/report.json")
 killed=$(jq '.killed' "$work_dir/report.json")

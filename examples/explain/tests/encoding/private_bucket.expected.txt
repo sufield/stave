@@ -1,0 +1,13 @@
+Configuration Summary: 1 asset(s), 5 encoded fact(s) (non-control records from the SIR)
+
+Asset: arn:aws:s3:::prod-phi (aws_s3_bucket)
+  ├── Asset type: aws_s3_bucket  fact_id: f1f2f3f4f501
+  │     Source: assets[0].type (path: type)
+  ├── Cloud vendor: aws  fact_id: f1f2f3f4f502
+  │     Source: assets[0].vendor (path: vendor)
+  ├── PublicAccessBlock fully enforced: ENABLED  fact_id: f1f2f3f4f504
+  │     Source: assets[0].properties.storage.controls.public_access_fully_blocked (path: properties.storage.controls.public_access_fully_blocked)
+  ├── Public read access: DISABLED  fact_id: f1f2f3f4f503
+  │     Source: assets[0].properties.storage.access.public_read (path: properties.storage.access.public_read)
+  └── Tag: data-classification=phi  fact_id: f1f2f3f4f505
+        Source: assets[0].properties.storage.tags.data-classification (path: properties.storage.tags.data-classification)

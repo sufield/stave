@@ -46,6 +46,14 @@ cognito_demo_run() {
     local control_regex=$2
     shift 2
 
+    # FMT_RAW=1 (set by the caller after parsing --raw via
+    # examples/lib/raw_flag.sh) routes the output through
+    # `stave apply --format json` for every fixture without
+    # the human-readable framing — tools that consume the
+    # demo output programmatically can skip the rendering
+    # layer this way.
+    local raw_mode=${FMT_RAW:-0}
+
     local fixtures=()
     while [[ $# -gt 0 ]]; do
         fixtures+=("$1")
@@ -63,18 +71,14 @@ cognito_demo_run() {
         return 1
     fi
 
-    fmt_section "$title"
+    if [[ "$raw_mode" != "1" ]]; then
+        fmt_section "$title"
+    fi
 
     local fixture
     for fixture in "${fixtures[@]}"; do
         local label kind obs_dir
         IFS=':' read -r label kind obs_dir <<<"$fixture"
-
-        case "$kind" in
-            before) fmt_before "$label" ;;
-            after)  fmt_after "$label" ;;
-            *)      fmt_block_header "$(echo "${kind^}") — $label" ;;
-        esac
 
         local out
         out=$("$stave_bin" apply \
@@ -83,10 +87,26 @@ cognito_demo_run() {
             --allow-unknown-input \
             --format json 2>/dev/null) || true
 
-        # Project findings to the {id, name, description} triples
-        # the renderer consumes. Dedupe by control_id so multiple
-        # findings on different assets for the same control collapse
-        # into one row — the description is identical across them.
+        if [[ "$raw_mode" == "1" ]]; then
+            # Raw mode: emit one JSON document per fixture
+            # delimited by a header comment line. Downstream
+            # consumers split on the marker.
+            printf '### fixture: %s (%s)\n' "$label" "$kind"
+            printf '%s\n' "$out"
+            continue
+        fi
+
+        case "$kind" in
+            before) fmt_before "$label" ;;
+            after)  fmt_after "$label" ;;
+            *)      fmt_block_header "$(echo "${kind^}") — $label" ;;
+        esac
+
+        # Project findings to the {id, name, description, fix}
+        # quads the renderer consumes. Dedupe by control_id so
+        # multiple findings on different assets for the same
+        # control collapse into one row — the description and
+        # remediation are identical across them.
         local findings_json
         findings_json=$(jq --arg re "$control_regex" '
             [.findings[]
@@ -95,6 +115,7 @@ cognito_demo_run() {
                   id: .control_id,
                   name: (.control_name // ""),
                   description: ((.control_description // "") | gsub("^\\s+|\\s+$"; "")),
+                  fix: ((.remediation.action // .remediation_action // "") | gsub("^\\s+|\\s+$"; "")),
                 }]
             | group_by(.id) | map(.[0])
             | sort_by(.id)
@@ -118,6 +139,12 @@ cognito_demo_run() {
 
         fmt_findings "$count" "matching control finding(s)"
         if [[ "$count" -gt 0 ]]; then
+            # fmt_findings_with_descriptions emits the
+            # remediation.action carried on each finding's .fix
+            # field as a "Fix:" callout immediately after the
+            # description — the iteration plan's 6-step pattern
+            # presents Encode/Solve/Explain/Fix interleaved per
+            # control, not as a separate trailer.
             fmt_findings_with_descriptions "$FMT_RED" "$findings_json"
         fi
 
@@ -128,9 +155,15 @@ cognito_demo_run() {
         echo ""
     done
 
-    # Pipe stdin into the interpretation block. If no stdin is
-    # provided the function silently emits nothing further.
+    # Pipe stdin into the interpretation block. In --raw mode
+    # the stdin (interpretation prose) is consumed silently so
+    # the heredoc the caller passes doesn't leak into the
+    # script's output stream as raw text.
     if [[ ! -t 0 ]]; then
-        fmt_interpretation
+        if [[ "$raw_mode" == "1" ]]; then
+            cat > /dev/null
+        else
+            fmt_interpretation
+        fi
     fi
 }

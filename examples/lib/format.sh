@@ -204,12 +204,30 @@ fmt_findings_with_descriptions() {
     fi
     local i
     for ((i = 0; i < count; i++)); do
-        local id name description
+        local id name description fix
         id=$(jq -r ".[$i].id // \"\"" <<<"$json")
         name=$(jq -r ".[$i].name // \"\"" <<<"$json")
         description=$(jq -r ".[$i].description // \"\"" <<<"$json")
+        fix=$(jq -r ".[$i].fix // \"\"" <<<"$json")
         fmt_finding_detail "$color" "$id" "$name" "$description"
+        if [[ -n "$fix" && "$fix" != "null" ]]; then
+            fmt_fix "$fix"
+        fi
     done
+}
+
+# fmt_fix "<remediation prose>"
+# One-line "Fix:" callout in cyan. Used after a violation
+# block to surface the YAML's remediation.action — the
+# cloud-domain answer to "what should the operator do?".
+# A leading [ID] tag is preserved so multi-finding outputs
+# can attribute each fix to the control that needs it.
+fmt_fix() {
+    local action=$1
+    if [[ -z "$action" ]]; then
+        return
+    fi
+    printf '      %sFix:%s %s\n' "$FMT_BOLD$FMT_CYAN" "$FMT_RESET" "$action"
 }
 
 # fmt_verdict <"sat"|"unsat"|"unknown"> [extra...]

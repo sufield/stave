@@ -4,6 +4,9 @@ script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)
 # shellcheck source=../lib/cognito_demo.sh
 source "$example_root/lib/cognito_demo.sh"
+source "$example_root/lib/raw_flag.sh"
+parse_raw_flag "$@"
+set -- "${RAW_FLAG_ARGS[@]}"
 
 cognito_demo_run \
     "Cognito Iteration 6 — 6 advanced-security / verify / domain controls" \

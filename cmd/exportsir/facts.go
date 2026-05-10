@@ -555,6 +555,11 @@ var propertyAllowlist = []propertyPath{
 	// Cognito user-pool MFA + advanced security (cognito-no-mfa-advanced-security)
 	{blockKey: "identity", keys: []string{"auth", "mfa_enforced"}, predicateName: "has_mfa_enforced", assetTypes: []string{"aws_cognito_user_pool"}},
 	{blockKey: "identity", keys: []string{"advanced_security", "enabled"}, predicateName: "has_advanced_security_enabled", assetTypes: []string{"aws_cognito_user_pool"}},
+	// Tri-state mode (OFF | AUDIT | ENFORCED). Enabled alone collapses
+	// AUDIT and ENFORCED into one bucket; mode preserves the
+	// "visibility without enforcement" distinction the AUDITONLY
+	// control flags.
+	{blockKey: "identity", keys: []string{"advanced_security", "mode"}, predicateName: "has_advanced_security_mode", assetTypes: []string{"aws_cognito_user_pool"}},
 	// Cognito user-pool Lambda trigger ghost references (CTL.COGNITO.GHOST.* family).
 	// trigger_type carries the trigger name (pre_sign_up, pre_authentication, …)
 	// so a single SMT-LIB predicate covers all 10 trigger variants; the query
@@ -1478,6 +1483,7 @@ var baselineSMT2Predicates = []string{
 	"first_seen_at",
 	"has_action",
 	"has_advanced_security_enabled",
+	"has_advanced_security_mode",
 	"has_bucket_exists",
 	"has_bucket_owned",
 	"has_condition",

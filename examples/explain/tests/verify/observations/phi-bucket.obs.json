@@ -1,0 +1,28 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-09T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:s3:::prod-phi",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "tags": {
+            "data-classification": "phi",
+            "owner": "data-platform"
+          },
+          "access": {
+            "public_read": true,
+            "public_list": false
+          },
+          "controls": {
+            "public_access_fully_blocked": false
+          }
+        }
+      }
+    }
+  ]
+}

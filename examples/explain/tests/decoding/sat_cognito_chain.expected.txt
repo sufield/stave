@@ -1,0 +1,20 @@
+UNSAFE: An anonymous internet user can read PHI data from the prod-phi bucket through the Cognito identity pool.
+  Cognito unauth role grants S3 access on a PHI bucket
+
+The forbidden state is reachable because:
+  1. Unauthenticated (guest) access: ENABLED
+     on arn:aws:cognito-identity:us-east-1:111122223333:identitypool/abc
+     (properties.identity.access.allow_unauthenticated)
+  2. Maps unauthenticated users to: arn:aws:iam::111122223333:role/AppUnauthRole
+     on arn:aws:cognito-identity:us-east-1:111122223333:identitypool/abc
+     (properties.identity.cognito.unauth_role_arn)
+  3. IAM action allowed: s3:GetObject
+     on arn:aws:iam::111122223333:role/AppUnauthRole
+     (policies.attached_policies[0].Action)
+  4. Tag: data-classification=phi
+     on arn:aws:s3:::prod-phi
+     (properties.storage.tags.data-classification)
+
+Fix: Disable unauthenticated access on the identity pool.
+     Cost: $0  Time: 30 seconds
+     Effect: Breaks the chain at step 1. Z3 confirms the forbidden state becomes unreachable.

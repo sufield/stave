@@ -1,0 +1,10 @@
+INCONCLUSIVE: Verify that no role-assumption chain from this principal reaches the admin policy.
+  the solver could not decide — likely an encoding issue or timeout
+
+Possible causes:
+  • Encoding bug — the SMT-LIB the formatter sends to the solver does not
+    correctly express the forbidden_state predicate.
+  • Solver timeout — the focused fact binding may have too many free variables.
+  • Vendor extension — the query uses a logic this solver does not handle.
+
+  Run the encoding report (examples/explain/format_facts.py) to verify the encoding before re-running the solver.

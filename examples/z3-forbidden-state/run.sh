@@ -19,6 +19,10 @@ trap 'rm -rf "$work_dir"' EXIT
 
 # shellcheck source=../lib/format.sh
 source "$example_root/lib/format.sh"
+# shellcheck source=../lib/raw_flag.sh
+source "$example_root/lib/raw_flag.sh"
+parse_raw_flag "$@"
+set -- "${RAW_FLAG_ARGS[@]}"
 
 if [[ ! -x "$stave_bin" ]]; then
     echo "stave binary not found at $stave_bin"
@@ -31,7 +35,9 @@ if ! command -v z3 >/dev/null 2>&1; then
     exit 1
 fi
 
-fmt_section "Forbidden State — auto-generated Z3 invariants from YAML"
+if [[ "$FMT_RAW" != "1" ]]; then
+    fmt_section "Forbidden State — auto-generated Z3 invariants from YAML"
+fi
 
 invariants="$work_dir/invariants.json"
 queries_dir="$work_dir/queries"
@@ -39,9 +45,11 @@ queries_dir="$work_dir/queries"
 "$stave_bin" export-invariants --format json > "$invariants" 2>/dev/null
 total=$(jq '.invariants | length' "$invariants")
 fs_count=$(jq '[.invariants[] | select((.forbidden_state.combine // "") != "")] | length' "$invariants")
-fmt_kv "invariants exported" "$total"
-fmt_kv "with forbidden_state" "$fs_count"
-echo ""
+if [[ "$FMT_RAW" != "1" ]]; then
+    fmt_kv "invariants exported" "$total"
+    fmt_kv "with forbidden_state" "$fs_count"
+    echo ""
+fi
 
 if [[ "$fs_count" -eq 0 ]]; then
     echo "No forbidden_state blocks found. Add one to a control YAML first."
@@ -49,17 +57,21 @@ if [[ "$fs_count" -eq 0 ]]; then
 fi
 
 python3 "$script_dir/compile.py" "$invariants" "$queries_dir" >&2
-echo ""
+if [[ "$FMT_RAW" != "1" ]]; then
+    echo ""
+fi
 
 run_one() {
     local label=$1
     local obs_dir=$2
     local block_kind=$3   # "before" or "after"
 
-    case "$block_kind" in
-        before) fmt_before "$label" ;;
-        after)  fmt_after "$label" ;;
-    esac
+    if [[ "$FMT_RAW" != "1" ]]; then
+        case "$block_kind" in
+            before) fmt_before "$label" ;;
+            after)  fmt_after "$label" ;;
+        esac
+    fi
 
     local facts="$work_dir/$label.facts.smt2"
     python3 "$script_dir/obs_to_facts.py" "$invariants" "$obs_dir" "$facts" >/dev/null 2>&1
@@ -73,6 +85,10 @@ run_one() {
         control_id=$(basename "$query" .query.smt2)
         local verdict
         verdict=$( { cat "$query" "$facts"; echo '(check-sat)'; } | z3 -in 2>&1 | head -1)
+        if [[ "$FMT_RAW" == "1" ]]; then
+            printf '### %s %s\n%s\n' "$label" "$control_id" "$verdict"
+            continue
+        fi
         # Pull the catalog's human-readable name + description for
         # this control from the invariants export so the output
         # explains what the control IS, not just its ID.
@@ -102,6 +118,9 @@ run_one() {
                 ;;
         esac
     done
+    if [[ "$FMT_RAW" == "1" ]]; then
+        return
+    fi
     fmt_findings "$violation_count" "violation(s)"
     if [[ ${#violations_jsonl[@]} -gt 0 ]]; then
         local arr
@@ -118,6 +137,10 @@ run_one() {
 
 run_one "writeup-config"    "$script_dir/fixtures/writeup-config/observations"    before
 run_one "remediated-config" "$script_dir/fixtures/remediated-config/observations" after
+
+if [[ "$FMT_RAW" == "1" ]]; then
+    exit 0
+fi
 
 fmt_interpretation <<'EOF'
 The reference control CTL.S3.ACCESS.EXTERNAL.ORG.001 carries a

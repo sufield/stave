@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-unit test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives gofixer imports imports-check sync-public fuzz bench docker-demo demo-check readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check
+.PHONY: all build build-dev test test-unit test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-e2e regenerate-goldens-strict readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check
 # Binary name
 BINARY=stave
 
@@ -548,7 +548,9 @@ docker-demo: build
 		-f ../docs-content/demo/Dockerfile \
 		-t stave-demo ..
 
-## demo-check: Verify demo scenarios produce expected finding counts
+## demo-check: Verify demo scenarios produce expected finding counts AND
+##             encoding correctness (no projector emits a fact that drifts
+##             from the underlying observation).
 demo-check: build
 	@echo "Checking demo scenarios..."
 	@fail=0; \
@@ -571,6 +573,73 @@ demo-check: build
 	done; \
 	if [ "$$fail" -eq 1 ]; then exit 1; fi; \
 	echo "All demo scenarios match expected counts"
+	@$(MAKE) --no-print-directory verify-encoding-demos
+
+## verify-encoding-demos: Run examples/explain/verify_encoding.py --strict
+##                       against every demo scenario. Catches projector
+##                       regressions (wrong path, wrong value, type
+##                       coercion drift) at demo-check time so a faulty
+##                       projector fails the build on every developer
+##                       machine — no manual step required.
+verify-encoding-demos: build
+	@echo "Verifying encoding correctness for demo scenarios..."
+	@fail=0; tmp=$$(mktemp); \
+	for scenario in ../docs-content/demo/scenarios/*/; do \
+		name="$$(basename "$$scenario")"; \
+		[ -d "$$scenario/observations" ] || continue; \
+		./stave export-sir --format jsonl \
+			--observations "$$scenario/observations" \
+			--now 2026-01-15T00:00:00Z > "$$tmp" 2>/dev/null || true; \
+		out="$$(NO_COLOR=1 python3 examples/explain/verify_encoding.py --strict \
+			"$$tmp" "$$scenario/observations" 2>&1)"; \
+		if [ $$? -ne 0 ]; then \
+			echo "FAIL: $$name encoding verification:"; \
+			echo "$$out" | sed 's/^/    /'; \
+			fail=1; \
+		else \
+			echo "  OK: $$name — $$(echo "$$out" | head -1 | sed 's/Encoding verified: //')"; \
+		fi; \
+	done; \
+	rm -f "$$tmp"; \
+	if [ "$$fail" -eq 1 ]; then exit 1; fi; \
+	echo "All demo scenario encodings verified"
+
+## verify-encoding-e2e: Run verify_encoding.py --strict against every
+##                     testdata/e2e/<fixture>/observations directory.
+##                     Hooked from regenerate-goldens-strict so a regen
+##                     that produces drifted encoding fails fast.
+verify-encoding-e2e: build
+	@echo "Verifying encoding correctness for e2e fixtures..."
+	@fail=0; tmp=$$(mktemp); checked=0; \
+	for obs in testdata/e2e/*/observations; do \
+		name="$$(basename "$$(dirname "$$obs")")"; \
+		[ -d "$$obs" ] || continue; \
+		if ! ls "$$obs"/*.json >/dev/null 2>&1; then continue; fi; \
+		./stave export-sir --format jsonl \
+			--observations "$$obs" \
+			--now 2026-01-15T00:00:00Z > "$$tmp" 2>/dev/null || continue; \
+		[ -s "$$tmp" ] || continue; \
+		out="$$(NO_COLOR=1 python3 examples/explain/verify_encoding.py --strict \
+			"$$tmp" "$$obs" 2>&1)"; \
+		if [ $$? -ne 0 ]; then \
+			echo "FAIL: $$name encoding verification:"; \
+			echo "$$out" | sed 's/^/    /'; \
+			fail=1; \
+		fi; \
+		checked=$$((checked + 1)); \
+	done; \
+	rm -f "$$tmp"; \
+	if [ "$$fail" -eq 1 ]; then exit 1; fi; \
+	echo "$$checked e2e fixture(s) — encoding verified"
+
+## regenerate-goldens-strict: Wrap regenerate-goldens with encoding
+##                           verification. Use this in CI so a regen
+##                           that produces drifted encoding fails.
+##                           regenerate-goldens itself stays
+##                           unchanged so day-to-day local regen
+##                           is unaffected.
+regenerate-goldens-strict: regenerate-goldens verify-encoding-e2e
+	@echo "Goldens regenerated AND encoding verified."
 
 # ── Public repo sync ──────────────────────────────────────────────
 # Syncs the stave project to a separate public repository, excluding

@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ADVANCED.SECURITY.AUDITONLY.001
+name: Cognito Advanced Security in AUDIT Mode (Visibility Without Enforcement)
+description: >
+  Cognito Advanced Security Features is set to AUDIT mode. In
+  AUDIT mode Cognito collects risk metrics for each sign-in
+  attempt — device fingerprint, IP reputation, impossible-travel
+  signals — but does NOT enforce adaptive authentication.
+  Compromised accounts are scored but not blocked. MFA challenges
+  are not triggered for suspicious sign-ins. The security team
+  sees risk scores in the Cognito console while the application
+  continues to authenticate suspicious requests without
+  additional verification. This is the "MFA is theatre" pattern
+  applied to ASF — the control is visible in the console but
+  doesn't protect against the attack path it was designed to
+  block.
+intent_rationale: >
+  AUDIT mode creates false confidence — operators see metrics
+  and believe ASF is protecting them, but no enforcement
+  occurs. Existing CTL.COGNITO.ADVANCED.SECURITY.001 fires only
+  when ASF is fully OFF (advanced_security.enabled == false);
+  it stays silent on AUDIT mode because enabled is true. This
+  control closes the gap by reading the advanced_security.mode
+  tri-state directly. Treating AUDIT and ENFORCED as
+  equivalent (because both have enabled == true) collapses a
+  meaningful security distinction into a binary.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  aws_security_hub: "Cognito.2"
+  hipaa: "164.312(d)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-14", "IVS-09", "LOG-03"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Cognito user pool has Advanced Security Features in AUDIT
+    mode — risk metrics are collected but adaptive auth is not
+    enforced. Compromised accounts are scored but not blocked.
+  action: >
+    aws cognito-idp update-user-pool --user-pool-id <id>
+    --user-pool-add-ons AdvancedSecurityMode=ENFORCED.
+    The pricing is identical between AUDIT and ENFORCED ($0.050
+    per MAU); only OFF is free. Once ENFORCED, configure the
+    risk-based actions (block / MFA challenge / allow) for each
+    risk level under the user pool's "Advanced security"
+    settings — Compromised Credentials and Adaptive
+    Authentication.
+  example: |
+    {
+      "identity": {
+        "kind": "user_pool",
+        "advanced_security": {
+          "enabled": true,
+          "mode": "ENFORCED"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user_pool
+    - field: properties.identity.advanced_security.mode
+      op: eq
+      value: AUDIT
+tests:
+  - name: AUDIT mode fires the control
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_auditPool"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          advanced_security:
+            enabled: true
+            mode: AUDIT
+  - name: ENFORCED mode passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_enforcedPool"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          advanced_security:
+            enabled: true
+            mode: ENFORCED
+  - name: OFF mode passes (caught by separate ADVANCED.SECURITY.001 control)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_offPool"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: user_pool
+          advanced_security:
+            enabled: false
+            mode: OFF
