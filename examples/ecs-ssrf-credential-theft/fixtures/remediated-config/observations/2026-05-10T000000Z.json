@@ -1,0 +1,40 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-10T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ecs:us-east-1:111122223333:task-definition/payments-api:8",
+      "type": "aws_ecs_task_definition_container",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "task_definition",
+          "task_role": {
+            "arn": "arn:aws:iam::111122223333:role/payments-task-role-scoped",
+            "is_overprivileged": false
+          },
+          "metadata": {
+            "credential_scoping_enabled": true
+          },
+          "env": {
+            "has_plaintext_secrets": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ec2:us-east-1:111122223333:security-group/sg-0abcd1234ef567",
+      "type": "aws_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "egress": {
+            "unrestricted_all_ports": false
+          }
+        }
+      }
+    }
+  ]
+}

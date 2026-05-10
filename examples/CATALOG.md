@@ -8,6 +8,27 @@ Every scenario ships a vulnerable fixture and a remediated
 fixture. The matrix below shows what each engine reveals.
 Pick the scenario closest to your environment and adapt it.
 
+## Demo Scenarios (Start Here)
+
+Entry-level S3 misconfiguration walkthroughs migrated from the
+legacy `docs-content/demo/` Docker surface. Every demo runs in
+the Codespaces devcontainer with `bash run.sh` — no Docker
+image to build, no separate launcher.
+
+- **[demo-s3-public-read](demo-s3-public-read/)** — Bucket policy with `Principal: "*"` + Public Access Block disabled
+- **[demo-s3-acl-escalation](demo-s3-acl-escalation/)** — ACL grants broader access than the bucket policy admits
+- **[demo-s3-acl-write](demo-s3-acl-write/)** — Public write via ACL misconfiguration
+- **[demo-s3-hipaa-compliance](demo-s3-hipaa-compliance/)** — Multi-violation PHI bucket against the HIPAA profile
+- **[demo-s3-upload-hardening](demo-s3-upload-hardening/)** — Unrestricted upload surface
+- **[demo-s3-data-governance](demo-s3-data-governance/)** — Data classification + lifecycle hygiene
+- **[demo-s3-tool-blind-spot](demo-s3-tool-blind-spot/)** — What single-resource scanners miss
+
+These are the first stops for an early adopter — a single
+asset, a clear violation, encoding-verified output. Once the
+shape is familiar, the multi-engine examples below show how
+external reasoning engines (Z3, Soufflé, Clingo, PySAT) score
+the same fact base.
+
 ## By Attack Pattern
 
 ### Anonymous Access via Identity Pools

@@ -98,7 +98,7 @@ This is what early adopters install first. Everything an adopter needs to detect
 
 Tier 1 plus external solvers. Use this when you want formal proofs (Z3 / cvc5 / Yices), blast-radius enumeration (Soufflé), constraint enumeration (Clingo), derivation trees (Prolog), risk quantification (PySAT, probabilistic models), or attacker-cost ROI (game-theory model).
 
-**Batteries-included** — click the **Open in GitHub Codespaces** badge above. The devcontainer pre-installs Z3, cvc5, SWI-Prolog, Soufflé, libz3-dev, and a Python venv with `clingo` / `python-sat` / `pyyaml`, then runs `make build`. Wait for `[stave devcontainer] ready` and run any example.
+**Batteries-included** — click the **Open in GitHub Codespaces** badge above. The devcontainer pre-installs Z3, cvc5, SWI-Prolog, Soufflé, libz3-dev, and a Python venv with `clingo` / `python-sat` / `pyyaml`, then runs `make build`. Wait for `[stave devcontainer] ready` and run any example. Entry-level S3 walkthroughs live under [`examples/demo-s3-*/`](examples/CATALOG.md#demo-scenarios-start-here) — `bash examples/demo-s3-public-read/run.sh` is a one-line first run.
 
 **Pick what you need** — install only the engines whose question shape you need:
 

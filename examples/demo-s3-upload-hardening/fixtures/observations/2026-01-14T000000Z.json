@@ -1,0 +1,53 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-14T00:00:00Z",
+  "assets": [
+    {
+      "id": "upload-api-user-avatars",
+      "type": "s3_upload_policy",
+      "vendor": "aws",
+      "properties": {
+        "type": "s3_upload_policy",
+        "s3_upload": {
+          "bucket": "user-avatars",
+          "operation": "write",
+          "allowed_key_mode": "prefix",
+          "content_type_restricted": false
+        }
+      }
+    },
+    {
+      "id": "upload-api-document-inbox",
+      "type": "s3_upload_policy",
+      "vendor": "aws",
+      "properties": {
+        "type": "s3_upload_policy",
+        "s3_upload": {
+          "bucket": "document-inbox",
+          "operation": "write",
+          "allowed_key_mode": "exact",
+          "content_type_restricted": false
+        }
+      }
+    },
+    {
+      "id": "upload-api-profile-photos",
+      "type": "s3_upload_policy",
+      "vendor": "aws",
+      "properties": {
+        "type": "s3_upload_policy",
+        "s3_upload": {
+          "bucket": "profile-photos",
+          "operation": "write",
+          "allowed_key_mode": "exact",
+          "content_type_restricted": true,
+          "allowed_content_types": [
+            "image/jpeg",
+            "image/png"
+          ]
+        }
+      }
+    }
+  ],
+  "source": "deployed"
+}

@@ -1,0 +1,16 @@
+{
+  "summary": {
+    "total_assets": 2,
+    "exposed_resources": 2,
+    "violations": 8
+  },
+  "status": "NON_COMPLIANT",
+  "findings_count": 8,
+  "controls": [
+    "CTL.S3.ACCOUNT.PAB.001",
+    "CTL.S3.INCOMPLETE.001",
+    "CTL.S3.OWNERSHIP.001",
+    "CTL.S3.PUBLIC.005",
+    "CTL.S3.PUBLIC.PREFIX.001"
+  ]
+}

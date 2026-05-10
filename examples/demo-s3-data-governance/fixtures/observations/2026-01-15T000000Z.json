@@ -1,0 +1,50 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-15T00:00:00Z",
+  "assets": [
+    {
+      "id": "backup-compliance-archive",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "backup-compliance-archive",
+          "access": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "public_read_via_policy": false,
+            "public_read_via_acl": false,
+            "public_list_via_policy": false,
+            "latent_public_read": false,
+            "latent_public_list": false
+          },
+          "id": "aws:s3:::backup-compliance-archive",
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          },
+          "versioning": {
+            "enabled": false,
+            "mfa_delete_enabled": false
+          },
+          "lifecycle": {
+            "rules_configured": false
+          },
+          "tags": {
+            "backup": "true",
+            "data-retention": "7-years"
+          }
+        }
+      }
+    }
+  ],
+  "source": "deployed"
+}

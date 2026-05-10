@@ -1,0 +1,42 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-14T00:00:00Z",
+  "assets": [
+    {
+      "id": "corp-analytics-exports",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "corp-analytics-exports",
+          "access": {
+            "public_read": true,
+            "public_list": false,
+            "public_write": false,
+            "public_read_via_policy": true,
+            "public_read_via_acl": true,
+            "public_list_via_policy": false,
+            "latent_public_read": false,
+            "latent_public_list": false
+          },
+          "id": "aws:s3:::corp-analytics-exports",
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          },
+          "tags": {
+            "data-classification": "non-sensitive"
+          }
+        }
+      }
+    }
+  ],
+  "source": "deployed"
+}

@@ -1,0 +1,56 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-14T00:00:00Z",
+  "assets": [
+    {
+      "id": "patient-records-east",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "patient-records-east",
+          "access": {
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "public_read_via_policy": false,
+            "public_read_via_acl": false,
+            "public_list_via_policy": false,
+            "latent_public_read": false,
+            "latent_public_list": false
+          },
+          "id": "aws:s3:::patient-records-east",
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": false,
+            "in_transit_enforced": false
+          },
+          "logging": {
+            "enabled": false
+          },
+          "versioning": {
+            "enabled": false
+          },
+          "object_lock": {
+            "enabled": false
+          },
+          "tags": {
+            "data-classification": "phi",
+            "compliance": "hipaa"
+          }
+        }
+      }
+    }
+  ],
+  "source": "deployed"
+}
