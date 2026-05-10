@@ -4,19 +4,19 @@
   "source": "deployed",
   "assets": [
     {
-      "id": "arn:aws:ec2:us-east-1:111122223333:instance/i-0capitalonepattern",
+      "id": "arn:aws:ec2:us-east-1:111122223333:instance/i-0hardenedwebtier",
       "type": "aws_ec2_instance",
       "vendor": "aws",
       "properties": {
         "compute": {
           "kind": "instance",
           "network": {
-            "imdsv2_required": false,
-            "imds_hop_limit": 2
+            "imdsv2_required": true,
+            "imds_hop_limit": 1
           },
           "ec2": {
-            "imds_hop_limit_excessive": true,
-            "instance_profile_arn": "arn:aws:iam::111122223333:instance-profile/web-tier"
+            "imds_hop_limit_excessive": false,
+            "instance_profile_arn": "arn:aws:iam::111122223333:instance-profile/web-tier-scoped"
           },
           "encryption": {
             "ebs_encrypted": true

@@ -47,6 +47,11 @@ the same fact base.
 - **[iam-multi-hop-trust](iam-multi-hop-trust/multi-engine-results.md)** — 2 fixture(s): remediated, vulnerable. CEL findings — remediated: 0, vulnerable: 0.
 - **[sns-secrets-compound-chain](sns-secrets-compound-chain/multi-engine-results.md)** — 2 fixture(s): remediated-config, writeup-config. CEL findings — remediated-config: 0, writeup-config: 0.
 
+### SSRF → Credential Theft Chains
+
+- **[ecs-ssrf-credential-theft](ecs-ssrf-credential-theft/multi-engine-results.md)** — 2 fixture(s): remediated-config, writeup-config. ECS task-metadata variant of the SSRF credential-theft pattern; chain fires when 2 of `{TASKMETADATA.001, METADATA.CREDENTIAL.001, VPC.SG.EGRESS.001}` are set. CEL findings — remediated-config: 0, writeup-config: 3.
+- **[imds-ssrf-chain](imds-ssrf-chain/multi-engine-results.md)** — 2 fixture(s): remediated-config, writeup-config. EC2-instance variant — Capital One breach pattern (IMDSv1 + hop > 1). Chain fires when 2 of `{IMDSV2.001, IMDSV2.002, IMDS.HOPLIMIT.001}` are set. CEL findings — remediated-config: 0, writeup-config: 2.
+
 ### S3 Exposure & Tenant Boundaries
 
 - **[s3-public-read-policy](s3-public-read-policy/multi-engine-results.md)** — 2 fixture(s): after, before. CEL findings — after: 0, before: 1.
