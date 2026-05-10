@@ -15,6 +15,7 @@ domain: identity
 severity: high
 archetype: false-protection
 compliance:
+  owasp_nhi: "NHI4"
   cis_aws_v3.0: "1.5"
   soc2: "CC6.1, CC6.6"
   nist_800_53_r5: "IA-2, IA-5, AC-7"

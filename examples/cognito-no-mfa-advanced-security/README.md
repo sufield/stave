@@ -102,9 +102,9 @@ no logical search space, no quantification.
 A different question — "given this user pool's
 auth-factor configuration plus its app client list and
 their `ExplicitAuthFlows`, can a session bypass MFA via a
-non-MFA flow?" — *would* be reachability-shaped. That's
-the territory of `CTL.COGNITO.MFA.ENFORCE.001` (which
-checks app-client flow configuration); not in scope here.
+non-MFA flow?" — *would* be reachability-shaped. That
+would require a new app-client flow control reasoning
+across user-pool + app-client assets; not in scope here.
 
 ## Layout
 

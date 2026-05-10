@@ -15,6 +15,7 @@ description: >
 domain: detection
 severity: medium
 compliance:
+  owasp_nhi: "NHI7"
   nist_800_53_r5: "SI-4"
   fedramp_moderate: "SI-4"
   pci_dss_v4.0: "10.4.1"

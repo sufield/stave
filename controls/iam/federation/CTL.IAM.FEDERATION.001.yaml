@@ -18,6 +18,7 @@ description: >
 domain: exposure
 severity: low
 compliance:
+  owasp_nhi: "NHI3"
   nist_800_53_r5: "IA-2"
   cis_aws: "1.21"
   ccm_v4: ["IAM-03", "IAM-16"]

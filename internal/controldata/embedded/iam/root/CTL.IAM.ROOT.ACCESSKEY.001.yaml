@@ -8,6 +8,7 @@ description: >
 domain: identity
 severity: critical
 compliance:
+  owasp_nhi: "NHI2"
   cis_aws_v1.4.0: "1.4"
   cis_aws_v3.0: "1.4"
   hipaa: "164.312(a)(1)"

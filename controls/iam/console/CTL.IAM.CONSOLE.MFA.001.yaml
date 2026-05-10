@@ -8,6 +8,7 @@ description: >
 domain: identity
 severity: high
 compliance:
+  owasp_nhi: "NHI4"
   cis_aws_v1.4.0: "1.10"
   cis_aws_v3.0: "1.10"
   hipaa: "164.312(d)"

@@ -16,6 +16,7 @@ description: >
 domain: exposure
 severity: high
 compliance:
+  owasp_nhi: "NHI7"
   cis_aws_v3.0: "2.1.5"
   nist_800_53_r5: "SC-12, SC-17"
   fedramp_moderate: "SC-12, SC-17"

@@ -1,0 +1,79 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "now": "2026-05-09T00:00:00Z",
+    "snapshots": 1,
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 3,
+    "exposed_resources": 2,
+    "violations": 7
+  },
+  "status": "NON_COMPLIANT",
+  "findings": [
+    {
+      "control_id": "CTL.COGNITO.PASSWORD.001",
+      "control_severity": "medium",
+      "asset_id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_demo",
+      "asset_type": "aws_cognito_user_pool"
+    },
+    {
+      "control_id": "CTL.COGNITO.MFA.001",
+      "control_severity": "high",
+      "asset_id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_demo",
+      "asset_type": "aws_cognito_user_pool"
+    },
+    {
+      "control_id": "CTL.COGNITO.LOCKOUT.NONE.001",
+      "control_severity": "medium",
+      "asset_id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_demo",
+      "asset_type": "aws_cognito_user_pool"
+    },
+    {
+      "control_id": "CTL.S3.PUBLIC.001",
+      "control_severity": "critical",
+      "asset_id": "arn:aws:s3:::demo-public",
+      "asset_type": "aws_s3_bucket"
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.001",
+      "control_severity": "high",
+      "asset_id": "arn:aws:s3:::demo-public",
+      "asset_type": "aws_s3_bucket"
+    },
+    {
+      "control_id": "CTL.S3.LOGGING.001",
+      "control_severity": "medium",
+      "asset_id": "arn:aws:s3:::demo-public",
+      "asset_type": "aws_s3_bucket"
+    },
+    {
+      "control_id": "CTL.IAM.POLICY.ADMIN.001",
+      "control_severity": "high",
+      "asset_id": "arn:aws:iam::111122223333:role/AppRole",
+      "asset_type": "aws_iam_role"
+    }
+  ],
+  "compound_findings": [
+    {
+      "chain_id": "cognito_weakauth",
+      "severity": "critical",
+      "controls_failing": [
+        "CTL.COGNITO.PASSWORD.001",
+        "CTL.COGNITO.MFA.001",
+        "CTL.COGNITO.LOCKOUT.NONE.001"
+      ]
+    },
+    {
+      "chain_id": "s3_phi_exposure",
+      "severity": "critical",
+      "controls_failing": [
+        "CTL.S3.PUBLIC.001",
+        "CTL.S3.ENCRYPT.001",
+        "CTL.S3.LOGGING.001"
+      ]
+    }
+  ]
+}

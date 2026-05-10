@@ -14,6 +14,7 @@ description: >
 domain: encryption
 severity: high
 compliance:
+  owasp_nhi: "NHI7"
   soc2: "CC7.4, A1.2"
   nist_800_53_r5: "SC-12, SC-17"
   fedramp_moderate: "SC-12, SC-17"

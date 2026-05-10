@@ -7,21 +7,19 @@ controls plus the two compound chains. Single asset type
 iteration in the gap-closure plan.
 
 ```
-8 individual controls   (6 fire on writeup, 2 fire on recovery-bypass; remediated = 0)
+6 individual controls   (4 fire on writeup, 2 fire on recovery-bypass; remediated = 0)
 2 compound chains       (cognito_weakauth, cognito_recoverybypass)
 ```
 
 ## Controls covered
 
-All 8 fire on a single `aws_cognito_user_pool` asset. Compound
+All 6 fire on a single `aws_cognito_user_pool` asset. Compound
 chains compose them via legacy `asset.ID` grouping.
 
 | Control | Predicate signal |
 |---|---|
 | `CTL.COGNITO.PASSWORD.001`         | `password_policy.is_weak == true` |
-| `CTL.COGNITO.PASSWORD.POLICY.001`  | `password_policy.strong == false` |
 | `CTL.COGNITO.MFA.001`              | `auth.mfa_enforced == false` |
-| `CTL.COGNITO.MFA.ENFORCE.001`      | `mfa.enforced == false` |
 | `CTL.COGNITO.MFA.SMSONLY.001`      | `cognito.mfa_sms_only == true` |
 | `CTL.COGNITO.RECOVERY.NOMFA.001`   | `auth.mfa_enforced == true AND cognito.recovery_bypasses_mfa == true` |
 | `CTL.COGNITO.LOCKOUT.NONE.001`     | `cognito.has_brute_force_protection == false` |
@@ -70,60 +68,38 @@ make build
 Expected:
 
 ```
-writeup           → ctls: [PASSWORD.001, PASSWORD.POLICY.001, MFA.001, MFA.ENFORCE.001, LOCKOUT.NONE.001, SELFREG.001], chains: [cognito_weakauth]
+writeup           → ctls: [PASSWORD.001, MFA.001, LOCKOUT.NONE.001, SELFREG.001], chains: [cognito_weakauth]
 recovery-bypass   → ctls: [MFA.SMSONLY.001, RECOVERY.NOMFA.001], chains: [cognito_recoverybypass]
 remediated        → ctls: 0, chains: 0
 ```
 
 ## Catalog observations
 
-### 1. Rolled-up booleans
+### Rolled-up booleans (intentional)
 
-The plan called for 12 controls; the catalog ships 8 because
-the password and MFA shapes fold the plan's specific checks
-into pre-computed boolean rollups:
+The original Iteration 3 plan called for 12 controls; the
+catalog ships 6 because password and MFA properties are
+pre-computed boolean rollups by design:
 
 | Plan asked for | Catalog ships |
 |---|---|
-| PASSWORD.MINLENGTH, PASSWORD.UPPERCASE, PASSWORD.LOWERCASE, PASSWORD.NUMBERS, PASSWORD.SYMBOLS | `PASSWORD.001` (single `is_weak` rollup) + `PASSWORD.POLICY.001` (single `strong` rollup) |
+| PASSWORD.MINLENGTH, PASSWORD.UPPERCASE, PASSWORD.LOWERCASE, PASSWORD.NUMBERS, PASSWORD.SYMBOLS | `PASSWORD.001` (single `is_weak` rollup) |
 | MFA.DISABLED, MFA.OPTIONAL | `MFA.001` (single `mfa_enforced == false`) — does not distinguish OFF vs OPTIONAL |
-| PASSWORD.TEMPEXPIRY | (not in catalog) |
+| PASSWORD.TEMPEXPIRY | `TEMPPASSWORD.001` (`temp_password_valid_days_exceeded`) |
 
 This is the same denormalisation pattern Iteration 2's
 `unauth_role_has_s3` boolean uses. The collector evaluates the
 specific conditions and stamps a rollup; Stave reads the
-rollup. **It works, but loses granularity:** an operator looking
-at a `PASSWORD.001` finding can't tell whether the bucket is
-short / weak / non-symbol / something else without consulting
-the observation. To restore granularity, either expand the
-catalog with the 5 char-class controls (each reading
-`require_uppercase`, etc.) OR add evidence to the existing
-controls' `Misconfigurations` so the renderer surfaces which
-specific check failed.
-
-Out of scope here; flagged for the auth-baseline content
-review.
-
-### 2. Apparent control duplicates
-
-Two pairs of controls cover the same condition with different
-property paths:
-
-| Pair | Both paths read | Effect on writeup fixture |
-|---|---|---|
-| `PASSWORD.001` ↔ `PASSWORD.POLICY.001` | `is_weak` vs `strong` | both fire when password is weak |
-| `MFA.001` ↔ `MFA.ENFORCE.001` | `auth.mfa_enforced` vs `mfa.enforced` | both fire when MFA is off |
-
-The fixture populates both paths so both members of each pair
-match. In production this requires the collector to write to
-both paths, which is wasteful. One of each pair should be
-retired and the chain definitions updated. The tradeoff is
-catalog churn vs. observation-shape churn — the choice belongs
-with the catalog content review.
+rollup. **The tradeoff is intentional:** simpler catalog (one
+control fires on weak-password configs of any shape), at the
+cost of triage granularity (the finding doesn't say *which*
+char-class is missing — operators inspect the observation's
+`password_policy` object directly). The decision is documented
+in `CTL.COGNITO.PASSWORD.001`'s description.
 
 ## What this iteration shipped
 
-- **8 individual controls** fire end-to-end on realistic
+- **6 individual controls** fire end-to-end on realistic
   observation data, no engine changes required. Compound
   chains use legacy asset.ID grouping (no scope_field).
 - **WEAKAUTH compound** is the marketing-grade headline: "MFA
@@ -134,10 +110,9 @@ with the catalog content review.
   on its own is theatre when the recovery flow bypasses it —
   the second-most-reported authentication misconfiguration in
   identity audits.
-- **Two granularity gaps documented** (rolled-up booleans
-  hiding which specific check failed; duplicate predicates
-  with different paths). Both are content-review issues, not
-  engine gaps — Iteration 3 ships P1 without blocking on them.
 
 No Stave engine changes needed. Iteration 3 closes purely on
-catalog content + fixtures.
+catalog content + fixtures. The originally-flagged duplicates
+(`PASSWORD.POLICY.001`, `MFA.ENFORCE.001`) were retired in a
+follow-up; canonical paths are `password_policy.is_weak` and
+`auth.mfa_enforced`.

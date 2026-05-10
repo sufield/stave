@@ -1,0 +1,20 @@
+# Chain definitions used by the counterfactual simulator.
+# Format mirrors the Stave catalog's chain shape (members,
+# escalation_threshold, severity).
+
+chains:
+  - id: cognito_weakauth
+    severity: critical
+    escalation_threshold: 2
+    members:
+      - CTL.COGNITO.PASSWORD.001
+      - CTL.COGNITO.MFA.001
+      - CTL.COGNITO.LOCKOUT.NONE.001
+
+  - id: s3_phi_exposure
+    severity: critical
+    escalation_threshold: 2
+    members:
+      - CTL.S3.PUBLIC.001
+      - CTL.S3.ENCRYPT.001
+      - CTL.S3.LOGGING.001

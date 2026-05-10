@@ -1,0 +1,107 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "now": "2026-04-07T00:00:00Z",
+    "snapshots": 1,
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 20,
+    "exposed_resources": 9,
+    "violations": 9
+  },
+  "status": "NON_COMPLIANT",
+  "findings": [
+    {
+      "control_id": "CTL.IAM.POLICY.ADMIN.001",
+      "control_severity": "high",
+      "asset_id": "arn:aws:demo:us-east-1:111122223333:resource/r002",
+      "asset_type": "aws_demo_resource",
+      "evidence": {
+        "first_unsafe_at": "2026-04-06T12:00:00Z",
+        "unsafe_duration_hours": 48
+      }
+    },
+    {
+      "control_id": "CTL.S3.LOGGING.001",
+      "control_severity": "medium",
+      "asset_id": "arn:aws:demo:us-east-1:111122223333:resource/r002",
+      "asset_type": "aws_demo_resource",
+      "evidence": {
+        "first_unsafe_at": "2026-04-06T12:00:00Z",
+        "unsafe_duration_hours": 48
+      }
+    },
+    {
+      "control_id": "CTL.IAM.POLICY.SHADOW.001",
+      "control_severity": "medium",
+      "asset_id": "arn:aws:demo:us-east-1:111122223333:resource/r003",
+      "asset_type": "aws_demo_resource",
+      "evidence": {
+        "first_unsafe_at": "2026-04-06T12:00:00Z",
+        "unsafe_duration_hours": 48
+      }
+    },
+    {
+      "control_id": "CTL.S3.OWNERSHIP.001",
+      "control_severity": "medium",
+      "asset_id": "arn:aws:demo:us-east-1:111122223333:resource/r004",
+      "asset_type": "aws_demo_resource",
+      "evidence": {
+        "first_unsafe_at": "2026-04-06T12:00:00Z",
+        "unsafe_duration_hours": 48
+      }
+    },
+    {
+      "control_id": "CTL.S3.LIFECYCLE.001",
+      "control_severity": "low",
+      "asset_id": "arn:aws:demo:us-east-1:111122223333:resource/r002",
+      "asset_type": "aws_demo_resource",
+      "evidence": {
+        "first_unsafe_at": "2026-04-06T12:00:00Z",
+        "unsafe_duration_hours": 48
+      }
+    },
+    {
+      "control_id": "CTL.IAM.PASSWORD.ROTATION.001",
+      "control_severity": "low",
+      "asset_id": "arn:aws:demo:us-east-1:111122223333:resource/r003",
+      "asset_type": "aws_demo_resource",
+      "evidence": {
+        "first_unsafe_at": "2026-04-06T12:00:00Z",
+        "unsafe_duration_hours": 48
+      }
+    },
+    {
+      "control_id": "CTL.S3.METRICS.001",
+      "control_severity": "low",
+      "asset_id": "arn:aws:demo:us-east-1:111122223333:resource/r004",
+      "asset_type": "aws_demo_resource",
+      "evidence": {
+        "first_unsafe_at": "2026-04-06T12:00:00Z",
+        "unsafe_duration_hours": 48
+      }
+    },
+    {
+      "control_id": "CTL.IAM.IDENTITY.USERS.EXCESSIVE.001",
+      "control_severity": "low",
+      "asset_id": "arn:aws:demo:us-east-1:111122223333:resource/r005",
+      "asset_type": "aws_demo_resource",
+      "evidence": {
+        "first_unsafe_at": "2026-04-06T12:00:00Z",
+        "unsafe_duration_hours": 48
+      }
+    },
+    {
+      "control_id": "CTL.IAM.SESSION.DURATION.001",
+      "control_severity": "low",
+      "asset_id": "arn:aws:demo:us-east-1:111122223333:resource/r006",
+      "asset_type": "aws_demo_resource",
+      "evidence": {
+        "first_unsafe_at": "2026-04-06T12:00:00Z",
+        "unsafe_duration_hours": 48
+      }
+    }
+  ]
+}

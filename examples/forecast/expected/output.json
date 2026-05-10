@@ -1,0 +1,34 @@
+{
+  "current": {
+    "posture_score": 55.0
+  },
+  "projected": {
+    "horizon_days": 30,
+    "posture_score": 0.0,
+    "score_slope_per_day": -4.881
+  },
+  "sla_projections": [
+    {
+      "severity": "high",
+      "current_mttr_hours": 24.0,
+      "projected_mttr_hours": 24.0,
+      "sla_deadline_hours": 72.0,
+      "status": "ON_TRACK"
+    },
+    {
+      "severity": "medium",
+      "current_mttr_hours": 24.0,
+      "projected_mttr_hours": 24.0,
+      "sla_deadline_hours": 168.0,
+      "status": "ON_TRACK"
+    },
+    {
+      "severity": "low",
+      "current_mttr_hours": 24.0,
+      "projected_mttr_hours": 24.0,
+      "sla_deadline_hours": 720.0,
+      "status": "ON_TRACK"
+    }
+  ],
+  "model_note": "Linear projection from 8 days of history. Accuracy decreases beyond 30-day horizon. Rerun weekly for updated projections."
+}

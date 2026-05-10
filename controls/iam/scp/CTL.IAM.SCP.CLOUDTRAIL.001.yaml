@@ -10,6 +10,7 @@ description: >
 domain: identity
 severity: high
 compliance:
+  owasp_nhi: "NHI6"
   nist_800_53_r5: "AU-2"
   soc2: "CC6.1"
   ccm_v4: ["LOG-01"]

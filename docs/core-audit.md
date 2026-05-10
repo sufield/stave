@@ -2,11 +2,13 @@
 
 | | |
 |---|---|
-| Audit date | 2026-05-08 |
-| Codebase commit | `611d1f162` |
-| Core LOC (non-test) | **92,521** lines across `internal/` + `pkg/` |
-| Core LOC (with tests) | 175,233 lines |
-| `stave` binary size | **30 MB** stripped (`-ldflags "-s -w"`, CGO_ENABLED=0) |
+| Audit date | 2026-05-10 |
+| Codebase commit | `5b007fe7e` |
+| Previous audit | `611d1f162` (2026-05-08) |
+| Core LOC (non-test) | **93,602** lines across `internal/` + `pkg/` (+1,081 since prev) |
+| Core LOC (with tests) | 176,982 lines (+1,749 since prev) |
+| `stave` binary size | **~30 MB** stripped — 30,146,825 bytes (+90 KB since prev) |
+| Catalog size | 2,618 controls (+101 since prev) |
 
 ## The thin-core contract (recap)
 
@@ -37,7 +39,7 @@ The 30 largest non-test packages. Lines counted from concatenating every `*.go` 
 | `internal/cli/ui` | 1,498 | **Core** | CLI presentation (errors, progress). Shipping infrastructure. |
 | `internal/tools/ccmbackfill` | 1,459 | **Core** | One-shot tool for backfilling Cloud Controls Matrix metadata. Maintainer tool, not runtime. |
 | `internal/adapters/output/text` | 1,390 | **Core** | Text rendering of findings. Output adapter. |
-| `internal/core/evaluation/risk` | **1,366** | **Bloat** | **Compound-chain risk-scoring engine.** Reasoning logic. See Check 2. |
+| `internal/core/evaluation/risk` | **1,571** | **Bloat (growing)** | **Compound-chain risk-scoring engine.** Reasoning logic. See Check 2. Grew +205 LOC since prev audit (new `scope_field` / `ScopeResolver` for property-keyed chain composition). |
 | `internal/platform/providers/aws/compliance` | 1,262 | **Core** | S3 control predicates implemented in Go (alongside YAML). Fact production via CEL. |
 | `internal/platform/providers/aws/s3/policy` | 1,259 | **Core** | S3 policy parsing + effective-permission computation. Fact production. |
 | `internal/core/evaluation/exposure` | 1,156 | **Core** | Exposure-window tracking across snapshots. Lifecycle/drift on observations. |
@@ -71,12 +73,13 @@ Out of scope of this table (smaller packages): `internal/app/score`, `internal/a
 
 ### Check 2 — Chain engine (`internal/core/evaluation/risk/`)
 
-**Verdict: Bloat. Replicated externally.**
+**Verdict: Bloat. Replicated externally. Growing.**
 
-- 1,366 LOC. Includes `chain_engine.go`, `calculator.go` ("the three-layer risk scoring engine"), `attack_stage.go`, `exposure_rank.go`, `scoring.go`.
+- 1,571 LOC (+205 since prev audit). Includes `chain_engine.go` (now 342 LOC, +177), `calculator.go`, `attack_stage.go`, `exposure_rank.go`, `scoring.go`, plus new `scope_resolver.go` (98 LOC).
+- New since prev audit: `scope_resolver.go` introduces `ScopeField`/`ScopeResolver` so compound chains can group findings by an asset *property* (e.g., per-trigger function ARN on a Cognito user pool) rather than only by `asset.ID`. The feature was load-bearing for Cognito iterations 3–10 — but it is more chain-reasoning logic in the bloat package.
 - `chain_engine.go` exposes `DetectChains(...)` returning `[]CompoundFinding{ ChainID, CompoundScore, Severity, Narrative, AttackStages }`. These are **verdict-shaped** outputs, not facts.
 - `calculator.go` implements `Layer 1: Environmental × Layer 2: Compound × Layer 3: Resource` with hard-coded multipliers (`chainEscalation2 = 1.8`, `crossAccountMultiplier = 1.5`, `publicInternetMultiplier`). This is *risk reasoning*, not fact production.
-- 9+ internal consumers: `output/asff`, `output/dto`, `graph/builder`, `profile/reporter/text`, `profile/profile`, `app/score/compute`, `app/eval/workflow`, `app/remediationimpact`, `app/simulate`, `evaluation/risk/attack_stage`. Deeply wired in.
+- **15 internal consumers** (was 9 at prev audit): grep `'CompoundFinding'` finds 15 non-test files referencing it. Untangling cost has grown.
 
 **External equivalents (already shipped):**
 
@@ -196,15 +199,15 @@ The matches are all:
 
 | Core package / file | LOC | External replacement | Status |
 |---|---:|---|---|
-| `internal/core/evaluation/risk/chain_engine.go` (`DetectChains`, `CompoundFinding`) | ~720 | `examples/clingo-constraints/`, `examples/sat-control-regression/`, `examples/z3-*/` (compound chain verdicts) | Replicated. Deprecation deferred — 9+ internal consumers. |
+| `internal/core/evaluation/risk/chain_engine.go` + `scope_resolver.go` (`DetectChains`, `CompoundFinding`, `ScopeResolver`) | ~920 | `examples/clingo-constraints/`, `examples/sat-control-regression/`, `examples/z3-*/` (compound chain verdicts) | Replicated. Deprecation deferred — **15 internal consumers** (was 9). |
 | `internal/core/evaluation/risk/calculator.go` (three-layer risk scoring) | ~250 | `examples/prism-risk-prioritization/risk_model.py` (probabilistic DTMC) | Replicated. Deprecation deferred — coupled to `CompoundFinding`. |
 | `internal/core/evaluation/risk/scoring.go` + `attack_stage.go` + `exposure_rank.go` | ~400 | `examples/game-theory-cost/cost_model.py` (attacker-cost-aware ranking) | Replicated. Coupled to risk package above. |
 | `internal/app/score/` (weighted score combinator) | 672 | `examples/game-theory-cost/` + `examples/prism-risk-prioritization/` | Replicated. Coupled. |
-| `internal/app/forecast/` (trend prediction over snapshots) | 183 | Out-of-tree — could be a small Python script over a snapshot series. | No equivalent shipped. **Mark as future migration.** |
+| `internal/app/forecast/` (trend prediction over snapshots) | 183 | `examples/forecast/forecast.py` (pure-stdlib linear-trend projector over out.v0.1 assessments) | Replicated. Coupled to nothing — clean candidate for next deprecation pass. |
 | `internal/app/remediationimpact/impact.go` | 182 | `examples/game-theory-cost/` (remediation ROI ranking is the same shape) | Replicated. Coupled to `CompoundFinding`. |
-| `internal/app/simulate/` | 110 | Out-of-tree (counterfactual-state evaluator). | No equivalent shipped. **Mark as future migration.** |
+| `internal/app/simulate/` | 110 | `examples/counterfactual-simulate/simulate.py` (set-difference findings + threshold-check chain deactivation) | Replicated. Coupled to `CompoundFinding` for chain-finding parsing — but the external example reads `compound_findings[]` from the JSON output, so it does not link the Go type. |
 
-**Total bloat-with-replacement LOC**: ~2,500 lines. Total bloat-without-replacement: ~300 lines.
+**Total bloat-with-replacement LOC**: ~3,020 lines (+520 since prev — `forecast` and `simulate` joined the replicated set this audit). Total bloat-without-replacement: **0 lines** — every bloat package now has an external equivalent. The next iteration's gating work is the `CompoundFinding` consumer untangling, not authoring more examples.
 
 ### Mixed — split during future refactor
 
@@ -247,17 +250,19 @@ The chain-verdict equivalence is similarly verified by the matrix:
 
 ## Phase E — Baseline metrics
 
-Captured at commit `611d1f162`:
+Captured at commit `5b007fe7e` (prev audit `611d1f162` values in parens):
 
 | Metric | Value | Captured at |
 |---|---|---|
-| Core LOC (non-test) | 92,521 | `find internal pkg -name '*.go' -not -name '*_test.go' \| xargs wc -l \| tail -1` |
-| Total LOC (with tests) | 175,233 | same scope, including tests |
-| `stave` binary | 30,056,713 bytes (≈30 MB stripped) | `make build` then `ls -la stave` |
-| `stave apply` golden | sha256 `32c3797367e87586163b7eff4e5d914c2595d8216e1bb2f1c96c3a9f3b456cfa` | public-bucket fixture, `--now 2026-01-09T00:00:00Z` |
-| `stave export-sir --jsonl` golden | sha256 `449f6a5709edea582a46024f85d0f7b9bc627f902cd29fc1e2d2c2dc0a99d87a` | cognito-self-register writeup fixture |
+| Core LOC (non-test) | **93,602** (was 92,521; +1,081) | `find internal pkg -name '*.go' -not -name '*_test.go' \| xargs wc -l \| tail -1` |
+| Total LOC (with tests) | **176,982** (was 175,233; +1,749) | same scope, including tests |
+| `stave` binary | **30,146,825** bytes (was 30,056,713; +90 KB) | `make build` then `ls -la stave` |
+| `stave apply` golden | sha256 `4ccd81ced579dd9893e2c2895570d41d785de562f0834f15aa5659a2c73a1bf1` (was `32c3797367…`) | public-bucket fixture, `--now 2026-01-09T00:00:00Z` |
+| `stave export-sir --jsonl` golden | sha256 `ee0a68ba07cdc1ff816ac8fa846985a47caf3c5c7d9ac8eb6c05618bad2ee727` (was `449f6a5709…`) | cognito-self-register writeup fixture |
 
-Re-run the same commands after any deprecation commit to confirm the post-removal output matches these hashes.
+The two golden hashes changed because the catalog grew (Cognito iterations 1–10 added 100+ controls; ADVSEC AUDITONLY added 1; the dedup pass retired 2). The `policy_fingerprint` is part of every output and is derived from the catalog hash, so any catalog change cascades. The Cognito golden additionally picks up the new `is_dormant` lifecycle facts shipped in commit `1a9cf71c5`.
+
+Re-run the same commands after any deprecation commit to confirm the post-removal output matches the new hashes (or, if the deprecation removes only verdict-shaped fields, expect a stable export-sir hash and a changed apply hash).
 
 ## What this audit did NOT do
 
@@ -270,25 +275,19 @@ Per the spec's "What NOT to Do":
 
 ## Migration tracking
 
-| # | Bloat item | External replacement | Replicated | Verified | Deprecated | Removed |
-|---|---|---|---|---|---|---|
-| 1 | `evaluation/risk/chain_engine.go` (`DetectChains`) | clingo-constraints + sat-control-regression + z3-* | ✅ | ✅ (matrix) | ❌ | ❌ |
-| 2 | `evaluation/risk/calculator.go` (three-layer score) | prism-risk-prioritization | ✅ | ✅ (matrix) | ❌ | ❌ |
-| 3 | `evaluation/risk/scoring.go` + `attack_stage.go` | game-theory-cost | ✅ | ✅ (matrix) | ❌ | ❌ |
-| 4 | `app/score/compute.go` | game-theory-cost + prism | ✅ | ✅ (matrix) | ❌ | ❌ |
-| 5 | `app/forecast/` | (none — needs a Python time-series script) | ❌ | — | — | — |
-| 6 | `app/simulate/` | (none — needs a counterfactual-state evaluator) | ❌ | — | — | — |
-| 7 | `app/rank/blast_radius.go` | souffle-reachability | ✅ | ✅ (matrix) | ❌ | ❌ |
+Status as of `5b007fe7e` — no deprecations have shipped since the prev audit; the gating refactor (`CompoundFinding` consumer untangling) has not started.
 
-Items 1–4 + 7 are blocked behind the same internal consumer untangling (`CompoundFinding` is referenced by 9+ packages; removing it is a multi-commit refactor). Items 5 and 6 need new external examples authored before removal.
+| # | Bloat item | External replacement | Replicated | Verified | Deprecated | Removed | Δ since prev |
+|---|---|---|---|---|---|---|---|
+| 1 | `evaluation/risk/chain_engine.go` + `scope_resolver.go` (`DetectChains`, `ScopeResolver`) | clingo-constraints + sat-control-regression + z3-* | ✅ | ✅ (matrix) | ❌ | ❌ | **Grew +205 LOC** (new ScopeResolver). Consumer count 9 → 15. |
+| 2 | `evaluation/risk/calculator.go` (three-layer score) | prism-risk-prioritization | ✅ | ✅ (matrix) | ❌ | ❌ | unchanged |
+| 3 | `evaluation/risk/scoring.go` + `attack_stage.go` | game-theory-cost | ✅ | ✅ (matrix) | ❌ | ❌ | unchanged |
+| 4 | `app/score/compute.go` | game-theory-cost + prism | ✅ | ✅ (matrix) | ❌ | ❌ | unchanged |
+| 5 | `app/forecast/` | `examples/forecast/` (linear-trend posture-score forecast over out.v0.1 assessments) | ✅ | ✅ (8-day fixture) | ❌ | ❌ | **example shipped this audit** |
+| 6 | `app/simulate/` | `examples/counterfactual-simulate/` (set-difference findings + threshold-check chain deactivation) | ✅ | ✅ (4-scenario fixture) | ❌ | ❌ | **example shipped this audit** |
+| 7 | `app/rank/blast_radius.go` | souffle-reachability | ✅ | ✅ (matrix) | ❌ | ❌ | unchanged |
 
-## Next steps (separate iterations)
-
-1. **Untangle `CompoundFinding` consumers.** Move each consumer (`output/asff`, `output/dto`, `graph/builder`, `profile/reporter/text`, etc.) to read facts from `internal/core/sir` directly instead of from the risk package's verdict-shaped output. This is the gating change for items 1–4 + 7.
-2. **Write `examples/forecast-trend/`** to replicate `app/forecast/`.
-3. **Write `examples/counterfactual-simulate/`** to replicate `app/simulate/`.
-4. **Audit the smaller `internal/app/<feature>/` packages** that didn't make this pass's top-30 (`explain`, `forensics`, `prune`, `oscillation`, `outlieranalysis`, `staleness`, etc.). Many are likely bloat-by-the-thin-core-contract; deferred to keep this iteration's scope finite.
-5. **Re-run baseline metrics after each deprecation commit** to track binary-size and LOC reduction.
+Items 1–4 + 7 are blocked behind the same internal consumer untangling (`CompoundFinding` is now referenced by **15** non-test files; removing it is a multi-commit refactor — and growing). Items 5 and 6 need new external examples authored before removal.
 
 ## Verification (this audit pass)
 
@@ -297,12 +296,53 @@ $ ./stave apply --controls examples/public-bucket/controls \
     --observations examples/public-bucket/observations \
     --max-unsafe 12h --now 2026-01-09T00:00:00Z --allow-unknown-input \
     --format json | sha256sum
-32c3797367e87586163b7eff4e5d914c2595d8216e1bb2f1c96c3a9f3b456cfa  -
+4ccd81ced579dd9893e2c2895570d41d785de562f0834f15aa5659a2c73a1bf1  -
 
 $ ./stave export-sir --controls examples/cognito-self-register-to-aws-creds/controls \
     --observations examples/cognito-self-register-to-aws-creds/fixtures/writeup-config/observations \
     --now 2026-01-09T00:00:00Z --format jsonl | sha256sum
-449f6a5709edea582a46024f85d0f7b9bc627f902cd29fc1e2d2c2dc0a99d87a  -
+ee0a68ba07cdc1ff816ac8fa846985a47caf3c5c7d9ac8eb6c05618bad2ee727  -
 ```
 
-Identical to pre-audit. No source touched in this pass — the deliverable is the document.
+Both hashes drifted from the prev audit, expected — the catalog grew by 101 controls and `is_dormant` lifecycle facts shipped, both of which feed `policy_fingerprint` and `export-sir` output. No source touched in this pass — the deliverable is the document.
+
+## What changed since 2026-05-08 (prev audit → this audit)
+
+59 commits between `611d1f162` and `5b007fe7e`. Net: core grew +1,081 LOC, the bloat package grew +205 LOC, the catalog grew +101 controls, three new external tools shipped to `examples/` (no new bloat introduced).
+
+**New work that respected the contract (external-only):**
+
+- `examples/perturbation-analysis/` (commit `712fd2eec`) — before/after fact-set diff + verdict-flip impact tool. Pure consumer of JSONL exports; no core changes.
+- `examples/compatibility-check/` (commit `07d5236a2`) — contradictory-requirements detection via Z3 unsat core. Pure consumer; no core changes.
+- `examples/mutation-testing/` (commit `1da5c16ef`) — mutation-testing framework MVP with flip-boolean operator. Pure consumer; no core changes.
+- `examples/explain/` translation-layer iterations 1–3 (commits `4236caf8c`, `8ec861a80`, `b4c7ac6c7`) — human-readable encoding/verdict reports + encoding-verifier. External tooling only.
+
+**New work that grew core (in scope per the contract):**
+
+- `0cbc9fe39` — `TypeMarker` control class for non-violation findings. Lives in `internal/core/controldef` + a small partition test in `internal/core/evaluation/engine`. Marker controls produce *facts* (cross-resource compound ingredients), not verdicts — fits the permanent-core profile.
+- `1a9cf71c5` — `TransitiveReachability` + `AssetNode.Lifecycle` plumbing for SIR document export. Fact projection.
+- `57159ec0b` — `EffectivePermissionResolver` extension surfacing aggregated permissions in `PolicyExport`. Fact projection.
+
+**New work that grew the bloat package (concerning):**
+
+- The Cognito iteration plan needed compound chains to group findings by *property value* (e.g., per-trigger function ARN) rather than `asset.ID`. Implemented as `ScopeField` + `ScopeResolver` in `internal/core/evaluation/risk/scope_resolver.go` (98 LOC) plus a +177 LOC change to `chain_engine.go`. The feature works and was load-bearing for iterations 3–10, but it adds chain-reasoning logic to a package already classified as bloat with an external replacement. This is a **migration regression** — the right place for it would have been in the external chain-detection examples (`clingo-constraints`, `sat-control-regression`), not the core risk package. The audit's verdict on Check 2 (Bloat. Replicated externally.) is now strengthened: the core still answers "which findings compound into a compound verdict?" using its own scope/score logic, while the same question is answered better by the external SAT/SMT tooling.
+- `pkg/stave/internal/policyexport/extract.go` grew +110 LOC absorbing the EffectivePermissionResolver wiring. Mostly fact-projection — within scope.
+
+**Catalog changes (out of `internal/`, no core LOC impact):**
+
+- Cognito iterations 1–10 added 100+ controls plus 2 `cognito_*` compound chains. Catalog grew from ~2,517 to 2,618.
+- ADVSEC AUDITONLY (`a9d3017b8`) closed the Iteration 6 tri-state gap and added `has_advanced_security_mode` to the propertyAllowlist.
+- The dedup pass (`d82816cc2`) retired `CTL.COGNITO.PASSWORD.POLICY.001` and `CTL.COGNITO.MFA.ENFORCE.001`.
+- OWASP NHI mapping (`5b007fe7e`) added `owasp_nhi:` annotations to 235 controls + a new `docs/compliance/owasp-nhi-top10.md`. Pure metadata; no LOC impact on `internal/`.
+
+**Migration progress: zero.** No `CompoundFinding` consumer was untangled. No bloat package was deleted. The migration debt grew (consumers 9 → 15, risk package +205 LOC).
+
+**Recommendation:** the *next* iteration that touches compound chains should NOT extend `internal/core/evaluation/risk/`. New scope or score logic belongs in the external examples (`clingo-constraints/` is the natural home for `ScopeResolver`-shaped logic — Clingo programs already group atoms by property values via shared variables). Treat the risk package as **frozen for new features** even though we haven't removed it yet — every line added there is one more line to migrate later.
+
+## Next steps (separate iterations)
+
+1. **Untangle `CompoundFinding` consumers.** Move each consumer (now 15 files: `output/asff`, `output/dto`, `graph/builder`, `profile/reporter/text`, `profile/profile`, `app/score/compute`, `app/eval/workflow`, `app/remediationimpact`, `app/simulate`, `evaluation/risk/attack_stage`, plus 5 more added since prev audit) to read facts from `internal/core/sir` directly instead of from the risk package's verdict-shaped output. This is the gating change for items 1–4 + 7.
+2. ~~Write `examples/forecast/`~~ — **done this audit.**
+3. ~~Write `examples/counterfactual-simulate/`~~ — **done this audit.**
+4. **Audit the smaller `internal/app/<feature>/` packages** that didn't make the prev pass's top-30 (`explain`, `forensics`, `prune`, `oscillation`, `outlieranalysis`, `staleness`, etc.). Many are likely bloat; deferred.
+5. **Treat `internal/core/evaluation/risk/` as frozen.** New compound-chain features go to `examples/`, not core.

@@ -11,6 +11,7 @@ description: >
 domain: identity
 severity: high
 compliance:
+  owasp_nhi: "NHI4"
   soc2: "CC6.1"
   nist_800_53_r5: "IA-2(1)"
   cis_aws_v3.0: "1.4"

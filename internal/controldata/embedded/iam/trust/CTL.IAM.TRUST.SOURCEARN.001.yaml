@@ -12,6 +12,7 @@ description: >
 domain: identity
 severity: high
 compliance:
+  owasp_nhi: "NHI4"
   nist_800_53_r5: "AC-3, AC-6"
   fedramp_moderate: "AC-3"
   pci_dss_v4.0: "7.2.1"

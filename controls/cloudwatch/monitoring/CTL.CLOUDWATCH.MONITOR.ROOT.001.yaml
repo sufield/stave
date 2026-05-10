@@ -7,6 +7,7 @@ description: >
 domain: exposure
 severity: high
 compliance:
+  owasp_nhi: "NHI8"
   cis_aws_v3.0: "4.3"
   soc2: "CC7.1"
   ccm_v4: ["LOG-03"]

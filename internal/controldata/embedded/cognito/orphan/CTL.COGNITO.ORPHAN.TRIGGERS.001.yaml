@@ -15,6 +15,7 @@ domain: governance
 severity: low
 archetype: dormant-resource
 compliance:
+  owasp_nhi: "NHI1"
   soc2: "CC8.1"
   nist_800_53_r5: "CM-2, CM-8, SA-22"
   iso_27001_2022: "A.5.9, A.8.10"

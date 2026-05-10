@@ -9,6 +9,7 @@ description: >
 domain: exposure
 severity: medium
 compliance:
+  owasp_nhi: "NHI8"
   cis_aws_v3.0: "4.4"
   nist_800_53_r5: "AU-6"
   soc2: "CC7.2"

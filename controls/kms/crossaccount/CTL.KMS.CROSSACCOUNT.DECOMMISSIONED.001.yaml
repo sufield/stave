@@ -23,6 +23,7 @@ description: >
 domain: exposure
 severity: medium
 compliance:
+  owasp_nhi: "NHI1"
   soc2: "CC6.1, CC8.1"
   nist_800_53_r5: "AC-2, AC-3"
   pci_dss_v4.0: "3.5, 7.2.4"

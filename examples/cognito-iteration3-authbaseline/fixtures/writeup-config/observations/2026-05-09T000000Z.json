@@ -18,12 +18,8 @@
             "mfa_enforced": false,
             "mfa_configuration": "OFF"
           },
-          "mfa": {
-            "enforced": false
-          },
           "password_policy": {
             "is_weak": true,
-            "strong": false,
             "minimum_length": 6,
             "require_uppercase": false,
             "require_lowercase": false,

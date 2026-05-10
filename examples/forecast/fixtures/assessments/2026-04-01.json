@@ -1,0 +1,47 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "now": "2026-04-01T00:00:00Z",
+    "snapshots": 1,
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 20,
+    "exposed_resources": 3,
+    "violations": 3
+  },
+  "status": "NON_COMPLIANT",
+  "findings": [
+    {
+      "control_id": "CTL.S3.LOGGING.001",
+      "control_severity": "medium",
+      "asset_id": "arn:aws:demo:us-east-1:111122223333:resource/r000",
+      "asset_type": "aws_demo_resource",
+      "evidence": {
+        "first_unsafe_at": "2026-03-31T12:00:00Z",
+        "unsafe_duration_hours": 12
+      }
+    },
+    {
+      "control_id": "CTL.S3.LIFECYCLE.001",
+      "control_severity": "low",
+      "asset_id": "arn:aws:demo:us-east-1:111122223333:resource/r000",
+      "asset_type": "aws_demo_resource",
+      "evidence": {
+        "first_unsafe_at": "2026-03-31T12:00:00Z",
+        "unsafe_duration_hours": 12
+      }
+    },
+    {
+      "control_id": "CTL.IAM.PASSWORD.ROTATION.001",
+      "control_severity": "low",
+      "asset_id": "arn:aws:demo:us-east-1:111122223333:resource/r001",
+      "asset_type": "aws_demo_resource",
+      "evidence": {
+        "first_unsafe_at": "2026-03-31T12:00:00Z",
+        "unsafe_duration_hours": 12
+      }
+    }
+  ]
+}

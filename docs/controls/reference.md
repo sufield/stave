@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2617
-**Pack hash:** `b4afc6a2a5225e14071821da77db154ba2b35919d636e44ec553a15daa35ea4b`
+**Total controls:** 2618
+**Pack hash:** `8fa609e3250f11749a47144aef44e73c5c20aaab28fbb226325a0de0a854de75`
 
 ## Summary
 
@@ -13,7 +13,7 @@
 | critical | 270 |
 | high | 1131 |
 | info | 16 |
-| low | 198 |
+| low | 199 |
 | medium | 1002 |
 
 | Domain | Count |
@@ -21,12 +21,12 @@
 | access | 9 |
 | audit | 88 |
 | capacity | 3 |
-| detection | 133 |
+| detection | 134 |
 | encryption | 113 |
 | exposure | 1185 |
-| governance | 558 |
+| governance | 559 |
 | hygiene | 18 |
-| identity | 402 |
+| identity | 401 |
 | lifecycle | 31 |
 | network | 32 |
 | resilience | 33 |
@@ -42,7 +42,7 @@
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: SC-12; hipaa: 164.312(e)(2)(ii); nist_800_53_r5: SC-12; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+- **Compliance:** fedramp_moderate: SC-12; hipaa: 164.312(e)(2)(ii); nist_800_53_r5: SC-12; owasp_nhi: NHI7; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
 
 SSL/TLS certificates imported into ACM must not be within 30 days of expiry or already expired. ACM automatically renews certificates it provisions (AMAZON_ISSUED) but does not renew imported certificates. Imported certificates expire silently on their expiry date with no enforcement mechanism — services continue serving traffic on an expired certificate until clients reject it. An expired certificate on a production load balancer or CloudFront distribution causes TLS negotiation failures for all clients that enforce certificate validity. For HIPAA and PCI-DSS environments, serving traffic on an expired certificate is a direct compliance violation. This control evaluates only IMPORTED certificates — AMAZON_ISSUED certificates are auto-renewed and out of scope.
 
@@ -132,7 +132,7 @@ The built-in Guest account must be disabled in Active Directory. An enabled Gues
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_ad: 5.4;
+- **Compliance:** cis_ad: 5.4; owasp_nhi: NHI7;
 
 Privileged accounts must not have the password-never-expires flag set. Non-expiring passwords on admin accounts create persistent credential risks.
 
@@ -177,7 +177,7 @@ No accounts should have the "Store password using reversible encryption" flag se
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_ad: 5.1;
+- **Compliance:** cis_ad: 5.1; owasp_nhi: NHI1;
 
 There must be no inactive admin accounts in Active Directory. Admin accounts that have not logged in for an extended period are dormant backdoors. Attackers target stale privileged accounts because they are less likely to be monitored and their compromise may go unnoticed indefinitely.
 
@@ -372,7 +372,7 @@ Service accounts that are members of privileged groups (Domain Admins, Enterpris
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: IA-5;
+- **Compliance:** nist_800_53_r5: IA-5; owasp_nhi: NHI7;
 
 The KRBTGT account password must be changed at least every 180 days. A stale KRBTGT enables Golden Ticket attacks indefinitely — any attacker who once obtained the KRBTGT hash can forge tickets forever.
 
@@ -522,7 +522,7 @@ Active Directory domain password policy must remember at least 24 previous passw
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_ad: 1.1.3;
+- **Compliance:** cis_ad: 1.1.3; owasp_nhi: NHI7;
 
 Password maximum age must not exceed 90 days to limit the window of exposure for compromised credentials.
 
@@ -642,7 +642,7 @@ SMB signing must be required on all domain controllers and member servers. Witho
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_ad: 5.1;
+- **Compliance:** cis_ad: 5.1; owasp_nhi: NHI1;
 
 Privileged groups must not contain members with no logon in over 90 days. Stale admin accounts are dormant backdoors.
 
@@ -1092,7 +1092,7 @@ REST or HTTP API serves traffic that includes browser-origin requests (the API h
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: SC-8, SC-12, SC-17; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: SC-8, SC-12, SC-17; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7, CC8.1;
+- **Compliance:** fedramp_moderate: SC-8, SC-12, SC-17; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: SC-8, SC-12, SC-17; owasp_nhi: NHI7; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7, CC8.1;
 
 Custom domain certificate is approaching expiry. ACM-issued certificates auto-renew when they're attached to a supported AWS service and DNS validation records remain valid; imported certificates do not — the operator is responsible for re-importing before expiry. The 30-day window catches both auto-renewal failures (DNS records changed, validation broke) and imported-cert renewal oversights. Expired certificates produce hard TLS failures the moment the expiration timestamp passes — clients see certificate-not-valid errors, every API call fails, and the operator finds out from customer reports.
 
@@ -1616,7 +1616,7 @@ API Gateway REST API stages should configure a client certificate for mutual TLS
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: IA-5; hipaa: 164.312(d); nist_800_53_r5: IA-5; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: IA-5; hipaa: 164.312(d); nist_800_53_r5: IA-5; owasp_nhi: NHI7; soc2: CC6.1;
 
 REST API stage has a client certificate configured for backend authentication, but the certificate has expired. Backends that validate the API Gateway client certificate to distinguish legitimate API Gateway traffic from direct connections will reject every request once the certificate expires. The stage configuration reports mTLS-to-backend as enabled, but the certificate it presents is no longer trustworthy. Distinct from CTL.APIGATEWAY.MTLS.001, which checks whether a client certificate is configured at all — this control fires when one IS configured but has expired (or is within the imminent-expiry window).
 
@@ -3340,7 +3340,7 @@ Privileged Entra ID roles must use PIM for just-in-time activation rather than p
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: IA-5; owasp_nhi: NHI7; soc2: CC6.1;
 
 Service principal credentials (certificates or secrets) must not be approaching expiration. Expired credentials cause authentication failures for automated services.
 
@@ -3370,7 +3370,7 @@ Service principals must use certificate-based credentials instead of client secr
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-2; owasp_nhi: NHI1; soc2: CC6.1;
 
 Users inactive for over 90 days must not retain active RBAC role assignments. Dormant accounts with active permissions are exploitation targets — the account owner isn't monitoring activity.
 
@@ -3400,7 +3400,7 @@ Key Vault access policy grants key, secret, or certificate permissions to a prin
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** encryption
-- **Compliance:** cis_azure_v2: 8.1; nist_800_53_r5: SC-12; soc2: CC6.1;
+- **Compliance:** cis_azure_v2: 8.1; nist_800_53_r5: SC-12; owasp_nhi: NHI7; soc2: CC6.1;
 
 Keys without expiration dates persist indefinitely. No forced rotation — a compromised key remains valid forever.
 
@@ -3490,7 +3490,7 @@ Key Vault uses vault access policies instead of Azure RBAC. Access policies are 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** encryption
-- **Compliance:** cis_azure_v2: 8.3; nist_800_53_r5: SC-12; soc2: CC6.1;
+- **Compliance:** cis_azure_v2: 8.3; nist_800_53_r5: SC-12; owasp_nhi: NHI7; soc2: CC6.1;
 
 No automated key rotation policy. Keys must be rotated manually — manual processes are forgotten and keys accumulate age.
 
@@ -3505,7 +3505,7 @@ No automated key rotation policy. Keys must be rotated manually — manual proce
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** encryption
-- **Compliance:** cis_azure_v2: 8.2; nist_800_53_r5: SC-12; soc2: CC6.1;
+- **Compliance:** cis_azure_v2: 8.2; nist_800_53_r5: SC-12; owasp_nhi: NHI7; soc2: CC6.1;
 
 Secrets (passwords, API keys, connection strings) without expiration persist indefinitely without forced rotation.
 
@@ -4150,7 +4150,7 @@ Double encryption (infrastructure + service layer) not enabled. Single layer is 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_azure_v2: 3.2; nist_800_53_r5: IA-5; soc2: CC6.1;
+- **Compliance:** cis_azure_v2: 3.2; nist_800_53_r5: IA-5; owasp_nhi: NHI7; soc2: CC6.1;
 
 Access keys not rotated within 90 days. Long-lived keys increase the window of compromise if a key is leaked.
 
@@ -6758,7 +6758,7 @@ CloudFront distribution has alternate domain names (CNAMEs) that are not covered
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 2.1.5; fedramp_moderate: SC-12, SC-17; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: SC-12, SC-17; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7, CC8.1;
+- **Compliance:** cis_aws_v3.0: 2.1.5; fedramp_moderate: SC-12, SC-17; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: SC-12, SC-17; owasp_nhi: NHI7; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7, CC8.1;
 
 CloudFront distribution viewer certificate (the certificate presented to browsers / clients connecting to the distribution's CNAMEs) expires within 30 days. ACM-issued certificates auto-renew when their DNS validation records are healthy; imported certificates do not. The 30-day window catches both auto-renewal failures (DNS validation records were deleted, validation broke) and imported-cert renewal oversights. Expired certificates produce hard TLS failures the moment the timestamp passes — every viewer sees a certificate-not-valid error, every cache miss fails, and the operator finds out from customer reports.
 
@@ -6878,7 +6878,7 @@ CloudTrail trail S3 bucket is readable by too many principals. Audit logs contai
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** cis_aws_v3.0: 1.16, 4.5; fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-6, AU-9; pci_dss_v4.0: 7.1, 7.2, 10.5; soc2: CC6.1, CC6.3, CC7.1;
+- **Compliance:** cis_aws_v3.0: 1.16, 4.5; fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-6, AU-9; owasp_nhi: NHI8; pci_dss_v4.0: 7.1, 7.2, 10.5; soc2: CC6.1, CC6.3, CC7.1;
 
 IAM policies grant cloudtrail:StopLogging to non- administrative principals. StopLogging disables the audit trail — it should be restricted to a minimal set of security administrators. Each principal with StopLogging permission is a potential trail-disablement point: compromise that principal and the trail can be stopped. Counts principals reachable via explicit cloudtrail:StopLogging, cloudtrail:* (wildcard), or AdministratorAccess (grants everything including StopLogging).
 
@@ -8038,7 +8038,7 @@ CloudWatch metric filter does not have a default value configured. When no log e
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.4; nist_800_53_r5: AU-6; soc2: CC7.2;
+- **Compliance:** cis_aws_v3.0: 4.4; nist_800_53_r5: AU-6; owasp_nhi: NHI8; soc2: CC7.2;
 
 No CloudWatch metric filter and alarm for iam:CreateAccessKey events. Access key creation is a persistence mechanism — an attacker who creates access keys establishes long-lived credentials that survive password resets and session revocation.
 
@@ -8068,7 +8068,7 @@ CloudWatch alarms must detect anonymous S3 requests transiting VPC endpoints. Ev
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.4; nist_800_53_r5: SI-4; soc2: CC7.2;
+- **Compliance:** cis_aws_v3.0: 4.4; nist_800_53_r5: SI-4; owasp_nhi: NHI8; soc2: CC7.2;
 
 No CloudWatch metric filter and alarm for sts:AssumeRole events from external accounts. Cross-account role assumption is the entry point for lateral movement between accounts. Without an alarm, an external account assuming a role in this account goes unnoticed in real time.
 
@@ -8083,7 +8083,7 @@ No CloudWatch metric filter and alarm for sts:AssumeRole events from external ac
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.6; soc2: CC7.1;
+- **Compliance:** cis_aws_v3.0: 4.6; owasp_nhi: NHI8; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor console authentication failures. Failed console authentication attempts indicate brute force attacks against IAM user passwords.
 
@@ -8098,7 +8098,7 @@ A CloudWatch metric filter and alarm must monitor console authentication failure
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.4; nist_800_53_r5: AU-6; soc2: CC7.2;
+- **Compliance:** cis_aws_v3.0: 4.4; nist_800_53_r5: AU-6; owasp_nhi: NHI8; soc2: CC7.2;
 
 No CloudWatch metric filter and alarm for iam:DeleteRolePermissionsBoundary or iam:PutRolePermissionsBoundary events. Permission boundary removal expands a role's effective permissions instantly — the boundary that constrained the role is gone, all policy permissions become effective.
 
@@ -8113,7 +8113,7 @@ No CloudWatch metric filter and alarm for iam:DeleteRolePermissionsBoundary or i
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.7; soc2: CC7.1;
+- **Compliance:** cis_aws_v3.0: 4.7; owasp_nhi: NHI8; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor cmk disable or deletion. KMS key disabling or scheduled deletion renders encrypted data permanently inaccessible — a ransomware vector.
 
@@ -8143,7 +8143,7 @@ A CloudWatch metric filter and alarm must monitor aws config changes. Changes to
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AU-12; nist_800_53_r5: AU-12; soc2: CC7.1;
+- **Compliance:** fedramp_moderate: AU-12; nist_800_53_r5: AU-12; owasp_nhi: NHI8; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor sts:AssumeRole events from external accounts. Cross-account assumption is a normal operation for partner integrations and CI/CD pipelines, but unexpected external assumptions indicate compromised trust relationships or credential theft. The metric filter should match AssumeRole events where the source account is not in the organization's known account list.
 
@@ -8158,7 +8158,7 @@ A CloudWatch metric filter and alarm must monitor sts:AssumeRole events from ext
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.4; fedramp_moderate: AU-12; nist_800_53_r5: AU-12; soc2: CC7.1;
+- **Compliance:** cis_aws_v3.0: 4.4; fedramp_moderate: AU-12; nist_800_53_r5: AU-12; owasp_nhi: NHI8; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor IAM privilege escalation API calls. These are the specific API actions that enable an attacker to elevate permissions after initial access: CreatePolicyVersion, SetDefaultPolicyVersion, AttachUserPolicy, AttachRolePolicy, AttachGroupPolicy, PutUserPolicy, PutRolePolicy, PutGroupPolicy, CreateAccessKey, CreateLoginProfile, UpdateLoginProfile, UpdateAssumeRolePolicy, and PassRole (as a parameter in RunInstances, CreateFunction, CreateStack, etc.). The existing iam_policy_changes metric filter (CIS 4.4) covers general policy modifications but does not specifically surface the escalation-enabling subset. This control verifies that a dedicated escalation-focused filter and alarm exist.
 
@@ -8197,7 +8197,7 @@ A CloudWatch metric filter and alarm must monitor network gateway changes. Gatew
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.4; soc2: CC7.1;
+- **Compliance:** cis_aws_v3.0: 4.4; owasp_nhi: NHI8; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor iam policy changes. IAM policy modifications (CreatePolicy, DeletePolicy, AttachRolePolicy) are a primary persistence mechanism for attackers.
 
@@ -8212,7 +8212,7 @@ A CloudWatch metric filter and alarm must monitor iam policy changes. IAM policy
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.1;
+- **Compliance:** nist_800_53_r5: AU-12; owasp_nhi: NHI8; soc2: CC7.1;
 
 CloudWatch alarms must detect changes to EC2 instance metadata options (ModifyInstanceMetadataOptions). Without monitoring, an attacker can downgrade IMDSv2 to IMDSv1 silently.
 
@@ -8242,7 +8242,7 @@ CloudWatch alarms must be configured to detect Lambda function error spikes, thr
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.1;
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; owasp_nhi: NHI8; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor MFA device enrollment and deactivation events. MFA device changes (CreateVirtualMFADevice, EnableMFADevice, DeactivateMFADevice, DeleteVirtualMFADevice) are a persistence mechanism — an attacker who gains temporary access can enroll their own MFA device to maintain access after the victim resets their password.
 
@@ -8272,7 +8272,7 @@ A CloudWatch metric filter and alarm must monitor nacl changes. Network ACL chan
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.2; soc2: CC7.1;
+- **Compliance:** cis_aws_v3.0: 4.2; owasp_nhi: NHI8; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor console sign-in without mfa. Console sign-ins without MFA indicate either MFA is not enforced or credentials were used from a context that bypassed MFA.
 
@@ -8302,7 +8302,7 @@ A CloudWatch metric filter and alarm must monitor aws organizations changes. Org
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.4; nist_800_53_r5: SI-4; soc2: CC7.2;
+- **Compliance:** cis_aws_v3.0: 4.4; nist_800_53_r5: SI-4; owasp_nhi: NHI8; soc2: CC7.2;
 
 No CloudWatch metric filter and alarm for iam:PassRole events. PassRole is the gateway to every compute-based privilege escalation path — EC2, Lambda, Glue, SageMaker, ECS, CodeBuild, auto-scaling. Every PassRole invocation should generate an alert because it means a principal is assigning IAM permissions to a compute resource.
 
@@ -8317,7 +8317,7 @@ No CloudWatch metric filter and alarm for iam:PassRole events. PassRole is the g
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.3; soc2: CC7.1;
+- **Compliance:** cis_aws_v3.0: 4.3; owasp_nhi: NHI8; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor root account usage. Root account API activity should be near-zero. Any activity may indicate compromise or unauthorized administrative action.
 
@@ -8392,7 +8392,7 @@ A CloudWatch metric filter and alarm must monitor security group changes. Securi
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.1;
+- **Compliance:** nist_800_53_r5: AU-12; owasp_nhi: NHI8; soc2: CC7.1;
 
 CloudWatch alarms must detect STS credential usage from unexpected IP addresses or regions — indicating stolen instance role credentials being used externally.
 
@@ -8437,7 +8437,7 @@ CloudWatch alarms must detect access to the CloudTrail log bucket by principals 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.4; nist_800_53_r5: SI-4; soc2: CC7.2;
+- **Compliance:** cis_aws_v3.0: 4.4; nist_800_53_r5: SI-4; owasp_nhi: NHI8; soc2: CC7.2;
 
 No CloudWatch metric filter and alarm for iam:UpdateAssumeRolePolicy events. Trust policy modification changes who can assume a role — an attacker who modifies a trust policy adds themselves as a trusted principal. This is Rhino technique #14 (UpdateAssumeRolePolicy).
 
@@ -8452,7 +8452,7 @@ No CloudWatch metric filter and alarm for iam:UpdateAssumeRolePolicy events. Tru
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 4.1; soc2: CC7.1;
+- **Compliance:** cis_aws_v3.0: 4.1; owasp_nhi: NHI8; soc2: CC7.1;
 
 A CloudWatch metric filter and alarm must monitor unauthorized api calls. Unauthorized API calls (AccessDenied, UnauthorizedAccess) indicate credential probing or misconfigured IAM policies.
 
@@ -8817,6 +8817,21 @@ Cognito user pools with advanced security must block risky sign-in attempts at l
 Cognito Advanced Security Features detects and responds to compromised credentials, account takeover attempts, and unusual sign-in activity using adaptive authentication. It detects sign-ins from new devices, blocks credentials found in breach databases, and generates risk scores for authentication events. Without ASF, Cognito cannot detect credential stuffing using breached passwords.
 
 **Remediation:** aws cognito-idp update-user-pool --user-pool-id <id> --user-pool-add-ons AdvancedSecurityMode=ENFORCED
+
+---
+
+### CTL.COGNITO.ADVANCED.SECURITY.AUDITONLY.001
+
+**Cognito Advanced Security in AUDIT Mode (Visibility Without Enforcement)**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** aws_security_hub: Cognito.2; hipaa: 164.312(d); nist_800_53_r5: SI-4; soc2: CC6.1;
+
+Cognito Advanced Security Features is set to AUDIT mode. In AUDIT mode Cognito collects risk metrics for each sign-in attempt — device fingerprint, IP reputation, impossible-travel signals — but does NOT enforce adaptive authentication. Compromised accounts are scored but not blocked. MFA challenges are not triggered for suspicious sign-ins. The security team sees risk scores in the Cognito console while the application continues to authenticate suspicious requests without additional verification. This is the "MFA is theatre" pattern applied to ASF — the control is visible in the console but doesn't protect against the attack path it was designed to block.
+
+**Remediation:** aws cognito-idp update-user-pool --user-pool-id <id> --user-pool-add-ons AdvancedSecurityMode=ENFORCED. The pricing is identical between AUDIT and ENFORCED ($0.050 per MAU); only OFF is free. Once ENFORCED, configure the risk-based actions (block / MFA challenge / allow) for each risk level under the user pool's "Advanced security" settings — Compromised Credentials and Adaptive Authentication.
 
 ---
 
@@ -9337,7 +9352,7 @@ Cognito user pools must have deletion protection set to ACTIVE. Without protecti
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: SC-12, SC-23; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-23; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7, A1.1;
+- **Compliance:** fedramp_moderate: SC-12, SC-23; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-23; owasp_nhi: NHI7; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7, A1.1;
 
 Cognito user pool custom domain references an ACM certificate that has expired. The hosted UI fails TLS handshake; OAuth flows that route through the custom domain break. Different from GHOST.DOMAINCERT (cert deleted from ACM) — here the cert exists but is past validity.
 
@@ -9367,7 +9382,7 @@ Cognito user pool custom domain does not enforce HTTPS — the hosted UI is reac
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: CM-3, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-2; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.1;
+- **Compliance:** fedramp_moderate: CM-3, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-2; owasp_nhi: NHI1; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.1;
 
 Cognito create-auth-challenge Lambda has been deleted. The trigger that materializes the challenge payload (CAPTCHA, code, magic link) is gone — custom auth flows that pass define-auth fail immediately at challenge creation.
 
@@ -9382,7 +9397,7 @@ Cognito create-auth-challenge Lambda has been deleted. The trigger that material
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: CM-3, IA-5; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-3, IA-5; pci_dss_v4.0: 8.2; soc2: CC6.1, CC7.1, CC8.1;
+- **Compliance:** fedramp_moderate: CM-3, IA-5; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-3, IA-5; owasp_nhi: NHI1; pci_dss_v4.0: 8.2; soc2: CC6.1, CC7.1, CC8.1;
 
 Cognito custom message Lambda trigger has been deleted. Verification messages, MFA codes, and reset notifications fall back to default templates or fail entirely depending on the flow. Branded user communications break.
 
@@ -9397,7 +9412,7 @@ Cognito custom message Lambda trigger has been deleted. Verification messages, M
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: CM-3, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-2; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.1;
+- **Compliance:** fedramp_moderate: CM-3, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-2; owasp_nhi: NHI1; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.1;
 
 Cognito define-auth-challenge Lambda has been deleted while the user pool still uses custom authentication. The pool advertises CUSTOM_AUTH flows but the trigger that decides the next challenge is gone — every custom auth flow fails.
 
@@ -9412,7 +9427,7 @@ Cognito define-auth-challenge Lambda has been deleted while the user pool still 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: CM-3, SC-12; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: CM-2, CM-3, SC-12; pci_dss_v4.0: 4.2; soc2: CC6.1, CC8.1, A1.1;
+- **Compliance:** fedramp_moderate: CM-3, SC-12; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: CM-2, CM-3, SC-12; owasp_nhi: NHI1; pci_dss_v4.0: 4.2; soc2: CC6.1, CC8.1, A1.1;
 
 Cognito user pool custom domain references an ACM certificate that has been deleted or has expired. The hosted UI domain stops serving HTTPS traffic. Login flows that route through the custom domain break.
 
@@ -9427,7 +9442,7 @@ Cognito user pool custom domain references an ACM certificate that has been dele
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.5.16, A.8.2; nist_800_53_r5: CM-2, CM-3; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.1;
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.5.16, A.8.2; nist_800_53_r5: CM-2, CM-3; owasp_nhi: NHI1; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.1;
 
 Cognito user pool has a custom domain configured but the DNS CNAME no longer points at the Cognito CloudFront distribution. Users hitting auth.example.com get DNS resolution failures or are routed to a different endpoint entirely.
 
@@ -9442,7 +9457,7 @@ Cognito user pool has a custom domain configured but the DNS CNAME no longer poi
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-3, CM-3, IA-2; iso_27001_2022: A.5.16, A.8.2; nist_800_53_r5: AC-3, CM-2, CM-3, IA-2; pci_dss_v4.0: 8.3, 7.2; soc2: CC6.1, CC8.1;
+- **Compliance:** fedramp_moderate: AC-3, CM-3, IA-2; iso_27001_2022: A.5.16, A.8.2; nist_800_53_r5: AC-3, CM-2, CM-3, IA-2; owasp_nhi: NHI1; pci_dss_v4.0: 8.3, 7.2; soc2: CC6.1, CC8.1;
 
 Cognito identity pool has a Cognito identity provider entry pointing at a user pool that has been deleted. The identity pool advertises authenticated identity exchange but cannot validate tokens from a non-existent user pool. Authenticated AWS-credential exchange fails.
 
@@ -9457,7 +9472,7 @@ Cognito identity pool has a Cognito identity provider entry pointing at a user p
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** audit
-- **Compliance:** fedramp_moderate: AU-6, CM-3; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AU-6, CM-2, CM-3, SI-4; pci_dss_v4.0: 10.2; soc2: CC7.1, CC8.1;
+- **Compliance:** fedramp_moderate: AU-6, CM-3; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: AU-6, CM-2, CM-3, SI-4; owasp_nhi: NHI1; pci_dss_v4.0: 10.2; soc2: CC7.1, CC8.1;
 
 Cognito post-authentication trigger Lambda has been deleted. The login itself succeeds, but post-login processing — analytics, audit logging, session state writes — fails. Authentication succeeds; downstream side effects are silently dropped.
 
@@ -9472,7 +9487,7 @@ Cognito post-authentication trigger Lambda has been deleted. The login itself su
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** audit
-- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3; pci_dss_v4.0: 8.2; soc2: CC6.1, CC7.1, CC8.1;
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3; owasp_nhi: NHI1; pci_dss_v4.0: 8.2; soc2: CC6.1, CC7.1, CC8.1;
 
 Cognito post-confirmation Lambda trigger has been deleted. Confirmation succeeds (the user is verified) but post-confirmation processing — user provisioning, group assignment, downstream account creation — fails silently.
 
@@ -9487,7 +9502,7 @@ Cognito post-confirmation Lambda trigger has been deleted. Confirmation succeeds
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: CM-3, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-2; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.1, A1.2;
+- **Compliance:** fedramp_moderate: CM-3, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-2; owasp_nhi: NHI1; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.1, A1.2;
 
 Cognito user pool has a pre-authentication Lambda trigger configured but the Lambda has been deleted. Every login attempt invokes a function that doesn't exist; the authentication call returns an error. The most disruptive trigger ghost — login is the most-used pool operation.
 
@@ -9502,7 +9517,7 @@ Cognito user pool has a pre-authentication Lambda trigger configured but the Lam
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: CM-3, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-2; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.2;
+- **Compliance:** fedramp_moderate: CM-3, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-2; owasp_nhi: NHI1; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.2;
 
 Cognito user pool has a pre-sign-up Lambda trigger configured but the Lambda function has been deleted. Every user signup attempt fails because the trigger Lambda invocation errors. The pool appears configured; the signup flow is broken.
 
@@ -9517,7 +9532,7 @@ Cognito user pool has a pre-sign-up Lambda trigger configured but the Lambda fun
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: CM-3, IA-5; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-5; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+- **Compliance:** fedramp_moderate: CM-3, IA-5; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-5; owasp_nhi: NHI1; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
 
 Cognito pre-token-generation Lambda has been deleted. Custom claim injection, token-time authorization decisions, and dynamic scope customization all stop working. Tokens are issued without the customizations the application expects.
 
@@ -9532,7 +9547,7 @@ Cognito pre-token-generation Lambda has been deleted. Custom claim injection, to
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-3, CM-3; iso_27001_2022: A.5.16, A.8.2; nist_800_53_r5: AC-3, CM-2, CM-3; pci_dss_v4.0: 7.2; soc2: CC6.1, CC8.1;
+- **Compliance:** fedramp_moderate: AC-3, CM-3; iso_27001_2022: A.5.16, A.8.2; nist_800_53_r5: AC-3, CM-2, CM-3; owasp_nhi: NHI1; pci_dss_v4.0: 7.2; soc2: CC6.1, CC8.1;
 
 Cognito user pool app client lists allowed OAuth scopes that include scopes from a resource server that has been deleted. Token requests that ask for those scopes return invalid_scope errors. The app client appears configured; some OAuth flows fail.
 
@@ -9547,7 +9562,7 @@ Cognito user pool app client lists allowed OAuth scopes that include scopes from
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-3, IA-2, IA-8; iso_27001_2022: A.5.16, A.5.17; nist_800_53_r5: AC-3, CM-2, IA-2, IA-8; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+- **Compliance:** fedramp_moderate: AC-3, IA-2, IA-8; iso_27001_2022: A.5.16, A.5.17; nist_800_53_r5: AC-3, CM-2, IA-2, IA-8; owasp_nhi: NHI1; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
 
 Cognito user pool has a SAML identity provider configured with a metadata URL that is no longer reachable. SAML federation fails because Cognito cannot fetch the IdP certificate or endpoints. Federated logins break.
 
@@ -9562,7 +9577,7 @@ Cognito user pool has a SAML identity provider configured with a metadata URL th
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3; pci_dss_v4.0: 8.2; soc2: CC6.1, CC8.1;
+- **Compliance:** fedramp_moderate: CM-3; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3; owasp_nhi: NHI1; pci_dss_v4.0: 8.2; soc2: CC6.1, CC8.1;
 
 Cognito user-migration Lambda has been deleted while the pool still uses migration- on-sign-in. Users from the legacy directory cannot be migrated and cannot sign in to the new pool — the migration path is broken.
 
@@ -9577,7 +9592,7 @@ Cognito user-migration Lambda has been deleted while the pool still uses migrati
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: CM-3, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-2; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.1;
+- **Compliance:** fedramp_moderate: CM-3, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, CM-3, IA-2; owasp_nhi: NHI1; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1, A1.1;
 
 Cognito verify-auth-challenge-response Lambda has been deleted. Even when define-auth and create-auth produce a challenge, the response cannot be validated — users complete the challenge correctly but their answer is never confirmed.
 
@@ -9891,26 +9906,11 @@ No CloudWatch metrics capture login success and failure rates for the user pool.
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: IA-2(1); hipaa: 164.312(d); nist_800_53_r5: IA-2(1); pci_dss_v4.0: 8.3.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: IA-2(1); hipaa: 164.312(d); nist_800_53_r5: IA-2(1); owasp_nhi: NHI4; pci_dss_v4.0: 8.3.1; soc2: CC6.1;
 
 Cognito user pools handling PHI must enforce multi-factor authentication. Without MFA, a compromised password grants full access to the application and any PHI it serves.
 
 **Remediation:** Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true
-
----
-
-### CTL.COGNITO.MFA.ENFORCE.001
-
-**Cognito User Pools Must Enforce MFA for All Users**
-
-- **Severity:** high
-- **Type:** unsafe_state
-- **Domain:** identity
-- **Compliance:** aws_security_hub: Cognito.1; hipaa: 164.312(d); mitre_attack: TA0006; nist_800_53_r5: IA-2;
-
-Cognito user pools without MFA enforcement are vulnerable to credential stuffing and brute force attacks. A user pool managing authentication for a customer-facing application without MFA means a single leaked password leads to full account compromise. MFA configuration ON requires all users to set up MFA.
-
-**Remediation:** aws cognito-idp set-user-pool-mfa-config --user-pool-id <id> --software-token-mfa-configuration Enabled=true --mfa-configuration ON
 
 ---
 
@@ -9936,7 +9936,7 @@ Cognito user pool has MFA enabled but only SMS is permitted as the second factor
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: IA-2, IA-8; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, IA-8; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+- **Compliance:** fedramp_moderate: IA-2, IA-8; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, IA-8; owasp_nhi: NHI3; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
 
 Cognito OIDC identity provider's issuer URL is unreachable. Cognito cannot fetch the OpenID Connect discovery document; OIDC- federated logins fail.
 
@@ -9951,7 +9951,7 @@ Cognito OIDC identity provider's issuer URL is unreachable. Cognito cannot fetch
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-3, AC-6; iso_27001_2022: A.5.15, A.8.5; nist_800_53_r5: AC-3, AC-6, IA-2; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
+- **Compliance:** fedramp_moderate: AC-3, AC-6; iso_27001_2022: A.5.15, A.8.5; nist_800_53_r5: AC-3, AC-6, IA-2; owasp_nhi: NHI3; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
 
 Cognito OIDC identity provider configuration requests scopes beyond `openid profile email`. Extra scopes (groups, offline_access, custom IdP scopes) request more authorization than the application needs and grant Cognito access to more user data than intended.
 
@@ -9966,7 +9966,7 @@ Cognito OIDC identity provider configuration requests scopes beyond `openid prof
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-5; iso_27001_2022: A.5.17, A.8.5; nist_800_53_r5: IA-5; pci_dss_v4.0: 8.6; soc2: CC6.1, CC8.1;
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-5; iso_27001_2022: A.5.17, A.8.5; nist_800_53_r5: IA-5; owasp_nhi: NHI3; pci_dss_v4.0: 8.6; soc2: CC6.1, CC8.1;
 
 Cognito OIDC identity provider's client secret has not been rotated in 90+ days. Long-lived OIDC client secrets become high-value credentials over time; compromise of a secret rotated infrequently yields long-term federated access.
 
@@ -9981,7 +9981,7 @@ Cognito OIDC identity provider's client secret has not been rotated in 90+ days.
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, IA-5; soc2: CC8.1;
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, IA-5; owasp_nhi: NHI1; soc2: CC8.1;
 
 Cognito user pool app client has had no authentication activity in 90+ days — TokenIssuance metric reports zero, no refresh activity. The client exists with valid credentials and a callback list but no application uses it.
 
@@ -9996,7 +9996,7 @@ Cognito user pool app client has had no authentication activity in 90+ days — 
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; soc2: CC8.1;
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; owasp_nhi: NHI1; soc2: CC8.1;
 
 Cognito identity pool exists with no identity providers configured (no Cognito user pool, no SAML, no OIDC, no social providers, no developer-authenticated identities). The pool can't actually authenticate anyone — it's a configuration shell.
 
@@ -10011,7 +10011,7 @@ Cognito identity pool exists with no identity providers configured (no Cognito u
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; soc2: CC8.1;
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; owasp_nhi: NHI1; soc2: CC8.1;
 
 Cognito user pool exists but has zero app clients configured. The pool can hold users but no application can authenticate against it. Either the pool is leftover from a decommissioned project or a new pool was created and the integration was abandoned mid-setup.
 
@@ -10026,7 +10026,7 @@ Cognito user pool exists but has zero app clients configured. The pool can hold 
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; soc2: CC8.1;
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; owasp_nhi: NHI1; soc2: CC8.1;
 
 Cognito user pool's estimated user count is zero and has been zero for 90+ days. The pool is dormant — no users, no authentication traffic, no reason to keep it. Same dormancy threshold as the rest of the catalog (Lambda, ELB, Secrets Manager).
 
@@ -10041,7 +10041,7 @@ Cognito user pool's estimated user count is zero and has been zero for 90+ days.
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; soc2: CC8.1;
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; owasp_nhi: NHI1; soc2: CC8.1;
 
 Cognito resource server defines custom scopes but no app client lists those scopes in allowed_o_auth_scopes. The scopes can never be requested or issued — the resource server is configuration noise.
 
@@ -10056,7 +10056,7 @@ Cognito resource server defines custom scopes but no app client lists those scop
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; soc2: CC8.1;
+- **Compliance:** iso_27001_2022: A.5.9, A.8.10; nist_800_53_r5: CM-2, CM-8, SA-22; owasp_nhi: NHI1; soc2: CC8.1;
 
 Cognito user pool has Lambda triggers configured AND the pool is dormant (zero users, no auth activity). The triggers don't fire — the pool has no auth traffic — but they exist in configuration, accumulate drift, and contribute to attack surface if the pool is later reactivated by an attacker.
 
@@ -10074,23 +10074,9 @@ Cognito user pool has Lambda triggers configured AND the pool is dormant (zero u
 - **Compliance:** fedramp_moderate: IA-5(1); hipaa: 164.312(d); nist_800_53_r5: IA-5(1); pci_dss_v4.0: 8.3.6; soc2: CC6.1;
 
 Cognito user pools must enforce a minimum password length of 12 characters and require at least three of four character classes (uppercase, lowercase, numbers, special characters). Cognito password policy is independent of the IAM account password policy — a strong IAM policy does not protect application users authenticated through Cognito. A user pool with weak defaults allows end users to set trivially guessable passwords. Temporary password validity must not exceed 7 days — temporary passwords issued during account creation or password reset that remain valid for extended periods are a credential exposure risk if the invitation email is intercepted. For user pools handling PHI (patient portals, healthcare applications), weak application passwords are a direct credential compromise risk that IAM password controls cannot address.
+This control reads a pre-computed `is_weak` rollup that the collector derives from the underlying minimum-length and char-class requirements (uppercase, lowercase, numbers, symbols). The rollup is intentional: one finding fires on weak-password configurations of any shape rather than four near-identical findings per char-class. The cost is triage granularity — the finding does not name *which* specific requirement is missing. Operators inspect the observation's `password_policy` object directly to identify the failing field. Temporary password validity is covered by a sibling control (`TEMPPASSWORD.001`) reading `temp_password_valid_days_exceeded`.
 
 **Remediation:** Update the user pool password policy via the Cognito console or UpdateUserPool API. Set minimum password length to 12 or higher. Require at least three of: uppercase, lowercase, numbers, special characters. Set temporary password validity to 7 days or less. Consider enabling Cognito advanced security features for compromised credential detection as a complementary control.
-
----
-
-### CTL.COGNITO.PASSWORD.POLICY.001
-
-**Cognito User Pools Must Enforce a Strong Password Policy**
-
-- **Severity:** medium
-- **Type:** unsafe_state
-- **Domain:** identity
-- **Compliance:** aws_security_hub: Cognito.3; mitre_attack: TA0006; nist_800_53_r5: IA-5;
-
-Weak Cognito password policies enable brute force and dictionary attacks against user accounts. A minimum length of 12 characters with complexity requirements significantly increases the effort required for credential attacks. Temporary passwords with long validity windows allow attackers to reuse intercepted temporary passwords for extended periods.
-
-**Remediation:** aws cognito-idp update-user-pool --user-pool-id <id> --policies PasswordPolicy='{MinimumLength=12, RequireUppercase=true,RequireLowercase=true, RequireNumbers=true,RequireSymbols=true, TemporaryPasswordValidityDays=3}'
 
 ---
 
@@ -10101,7 +10087,7 @@ Weak Cognito password policies enable brute force and dictionary attacks against
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.5; fedramp_moderate: IA-2, IA-5; hipaa: 164.308(a)(5)(ii)(D), 164.312(a)(2)(i); iso_27001_2022: A.5.17, A.8.5; nist_800_53_r5: IA-2, IA-5, AC-7; pci_dss_v4.0: 8.4, 8.5; soc2: CC6.1, CC6.6;
+- **Compliance:** cis_aws_v3.0: 1.5; fedramp_moderate: IA-2, IA-5; hipaa: 164.308(a)(5)(ii)(D), 164.312(a)(2)(i); iso_27001_2022: A.5.17, A.8.5; nist_800_53_r5: IA-2, IA-5, AC-7; owasp_nhi: NHI4; pci_dss_v4.0: 8.4, 8.5; soc2: CC6.1, CC6.6;
 
 Cognito user pool enforces MFA but the account-recovery configuration permits recovery via email or phone without challenging MFA. An attacker who controls the user's email or SMS recovery channel can reset the password and complete authentication without ever encountering the second factor. MFA becomes effectively optional through the recovery path.
 
@@ -10146,7 +10132,7 @@ Cognito user pool has app clients using OAuth flows (code, implicit) but no reso
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: IA-2, IA-8; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, IA-8; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+- **Compliance:** fedramp_moderate: IA-2, IA-8; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, IA-8; owasp_nhi: NHI3; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
 
 Cognito SAML provider's attribute mapping doesn't include required attributes such as email or name. Federated users authenticate but their Cognito records lack the attributes the application expects. Application-side authorization (group lookups, profile rendering, recovery flows) fails because the data isn't there.
 
@@ -10161,7 +10147,7 @@ Cognito SAML provider's attribute mapping doesn't include required attributes su
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-2, SC-12; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: IA-2, SC-12; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-2, SC-12; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: IA-2, SC-12; owasp_nhi: NHI3; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
 
 Cognito SAML identity provider's signing certificate (in cached metadata) has expired. Signature verification fails on every incoming assertion; federation is broken until the cached cert is refreshed.
 
@@ -10176,7 +10162,7 @@ Cognito SAML identity provider's signing certificate (in cached metadata) has ex
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-2, IA-8; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, IA-8, SC-12; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-2, IA-8; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, IA-8, SC-12; owasp_nhi: NHI3; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
 
 Cognito SAML identity provider's cached metadata document is past its validUntil date. Cognito treats expired metadata as invalid; SAML federation begins to fail silently as the cached document ages out. Distinct from GHOST.SAMLMETA (URL unreachable) — here the metadata fetched successfully but has aged past validity.
 
@@ -10191,7 +10177,7 @@ Cognito SAML identity provider's cached metadata document is past its validUntil
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: IA-2, SC-8, SC-13; iso_27001_2022: A.5.16, A.8.20; nist_800_53_r5: IA-2, SC-8, SC-13; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
+- **Compliance:** fedramp_moderate: IA-2, SC-8, SC-13; iso_27001_2022: A.5.16, A.8.20; nist_800_53_r5: IA-2, SC-8, SC-13; owasp_nhi: NHI3; pci_dss_v4.0: 4.2; soc2: CC6.1, CC6.7;
 
 Cognito SAML identity provider does not request encrypted SAML assertions. Assertions travel through the user's browser in plaintext, exposing IdP-issued attributes (email, group memberships, custom claims) to anyone who can intercept the response — malicious browser extensions, network on- path attackers, leaked browser history.
 
@@ -10206,7 +10192,7 @@ Cognito SAML identity provider does not request encrypted SAML assertions. Asser
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: CM-2, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, IA-2, IA-8; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+- **Compliance:** fedramp_moderate: CM-2, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, IA-2, IA-8; owasp_nhi: NHI3; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
 
 Cognito SAML identity provider is configured with a static metadata file rather than a metadata URL. Static metadata never auto- refreshes — IdP certificate rotation breaks federation until a human re-uploads. The failure mode is silent until the next IdP cert rotation.
 
@@ -10221,7 +10207,7 @@ Cognito SAML identity provider is configured with a static metadata file rather 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-2, SC-12, SC-13; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, SC-12, SC-13; pci_dss_v4.0: 8.3; soc2: CC6.1;
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: IA-2, SC-12, SC-13; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, SC-12, SC-13; owasp_nhi: NHI3; pci_dss_v4.0: 8.3; soc2: CC6.1;
 
 Cognito SAML identity provider configuration does not require signed assertions. Cognito accepts assertions without verifying the signature — an attacker who can craft a SAML response (no infrastructure access required) can forge a federated identity.
 
@@ -10251,7 +10237,7 @@ Cognito user pools should require administrator-created accounts (AllowAdminCrea
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** fedramp_moderate: AC-2, IA-2; iso_27001_2022: A.5.16, A.5.18; nist_800_53_r5: AC-2, IA-2, IA-8; pci_dss_v4.0: 8.3; soc2: CC6.1, CC6.3;
+- **Compliance:** fedramp_moderate: AC-2, IA-2; iso_27001_2022: A.5.16, A.5.18; nist_800_53_r5: AC-2, IA-2, IA-8; owasp_nhi: NHI3; pci_dss_v4.0: 8.3; soc2: CC6.1, CC6.3;
 
 Cognito social identity provider has no domain restriction — anyone with a Google, Facebook, Apple, or Amazon account can register, regardless of email domain. For applications meant only for users with corporate identities, this opens registration to the entire internet population on those providers.
 
@@ -10266,7 +10252,7 @@ Cognito social identity provider has no domain restriction — anyone with a Goo
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: IA-2, IA-5; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, IA-5; pci_dss_v4.0: 8.2; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: IA-2, IA-5; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, IA-5; owasp_nhi: NHI3; pci_dss_v4.0: 8.2; soc2: CC6.1;
 
 Cognito social identity provider's attribute mapping passes email through but doesn't mark email_verified=true even though the social provider has already verified the email. Cognito treats the email as unverified and the application's verified- email checks block legitimate users while silently accepting spoofed inputs.
 
@@ -10281,7 +10267,7 @@ Cognito social identity provider's attribute mapping passes email through but do
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: CM-2, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, IA-2; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+- **Compliance:** fedramp_moderate: CM-2, IA-2; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: CM-2, IA-2; owasp_nhi: NHI3; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
 
 Cognito social identity provider (Google, Facebook, Apple, Amazon, etc.) is configured with credentials that match known test or sandbox app IDs — promotion to production without rotating credentials. Test app IDs often have different rate limits, distinct consent UX, and may permit registration patterns the production app intentionally blocks.
 
@@ -10296,7 +10282,7 @@ Cognito social identity provider (Google, Facebook, Apple, Amazon, etc.) is conf
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: IA-5;
+- **Compliance:** nist_800_53_r5: IA-5; owasp_nhi: NHI7;
 
 Cognito user pool temporary password validity must not exceed 7 days. Long-lived temporary passwords increase the window for credential interception or misuse.
 
@@ -16260,7 +16246,7 @@ EKS clusters must encrypt Kubernetes secrets at rest using a customer-managed KM
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** encryption
-- **Compliance:** mitre_attack: TA0006; nist_800_53_r5: SC-12;
+- **Compliance:** mitre_attack: TA0006; nist_800_53_r5: SC-12; owasp_nhi: NHI7;
 
 EKS envelope encryption uses a KMS CMK to encrypt the data encryption key protecting Kubernetes secrets. A compromised KMS key grants permanent access to all secrets encrypted with it — without rotation, a leaked or compromised key remains valid indefinitely. Annual KMS key rotation limits the window of exposure. Each rotation generates a new key version — previous versions remain available for decryption but new encryptions use the current version.
 
@@ -16777,7 +16763,7 @@ ELB listener certificate is configured without the intermediate CA in its chain.
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12; pci_dss_v4.0: 4.2; soc2: CC6.1, CC8.1;
+- **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12; owasp_nhi: NHI7; pci_dss_v4.0: 4.2; soc2: CC6.1, CC8.1;
 
 ELB listener certificate has 30 or fewer days until expiry. ACM-issued certificates auto-renew if DNS validation is in place, but imported certificates and ACM certs with broken validation paths require manual rotation. A certificate expiring inside 30 days needs immediate operator attention.
 
@@ -19982,7 +19968,7 @@ API key has no API restrictions — usable to call any GCP API. A leaked unrestr
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_gcp_v3: 1.14; nist_800_53_r5: IA-5; soc2: CC6.1;
+- **Compliance:** cis_gcp_v3: 1.14; nist_800_53_r5: IA-5; owasp_nhi: NHI7; soc2: CC6.1;
 
 API key older than 90 days. Unrotated keys accumulate risk.
 
@@ -20102,7 +20088,7 @@ Service account has user-managed JSON key files. Long-lived, exportable credenti
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_gcp_v3: 1.5; nist_800_53_r5: IA-5; soc2: CC6.1;
+- **Compliance:** cis_gcp_v3: 1.5; nist_800_53_r5: IA-5; owasp_nhi: NHI7; soc2: CC6.1;
 
 Service account key older than 90 days. Unrotated keys accumulate risk — a leaked key remains valid indefinitely if not rotated.
 
@@ -20162,7 +20148,7 @@ KMS key IAM binding includes allUsers or allAuthenticatedUsers. Anyone can perfo
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** encryption
-- **Compliance:** cis_gcp_v3: 1.10; nist_800_53_r5: SC-12; soc2: CC6.1;
+- **Compliance:** cis_gcp_v3: 1.10; nist_800_53_r5: SC-12; owasp_nhi: NHI7; soc2: CC6.1;
 
 Cloud KMS key does not have automatic rotation configured. CIS requires rotation period of 365 days or less.
 
@@ -21149,7 +21135,7 @@ Safety mechanism integrity control. Checks that security guardrails are actively
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.12; fedramp_moderate: AC-2; hipaa: 164.312(a)(2)(i); nist_800_53_r5: AC-2; pci_dss_v4.0: 8.1.4; soc2: CC6.2;
+- **Compliance:** cis_aws_v3.0: 1.12; fedramp_moderate: AC-2; hipaa: 164.312(a)(2)(i); nist_800_53_r5: AC-2; owasp_nhi: NHI1; pci_dss_v4.0: 8.1.4; soc2: CC6.2;
 
 IAM accounts with no login or API activity for 90 days or more must be disabled. Dormant accounts are high-value targets — they have permissions but no active user monitoring their usage. Legacy accounts, test accounts, and accounts from departed employees accumulate over time and provide persistent, unmonitored access paths for attackers.
 
@@ -21164,7 +21150,7 @@ IAM accounts with no login or API activity for 90 days or more must be disabled.
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-6(5); nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.2; soc2: CC6.1;
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-6(5); nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.2; soc2: CC6.1;
 
 AWS accounts must have no more than 2 users with full administrator access. Excessive admin accounts expand the credential compromise surface and violate least privilege. Use IAM roles with temporary elevation (break-glass) instead of permanent admin access.
 
@@ -21284,7 +21270,7 @@ Expired SSL/TLS server certificates must be removed from IAM. Expired certificat
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-2, CM-3; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: AC-2, CM-3, IR-4; pci_dss_v4.0: 7.2.1, 10.6; soc2: CC6.1, CC8.1;
+- **Compliance:** fedramp_moderate: AC-2, CM-3; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: AC-2, CM-3, IR-4; owasp_nhi: NHI1; pci_dss_v4.0: 7.2.1, 10.6; soc2: CC6.1, CC8.1;
 
 A principal has a transitive role-assumption chain whose target is scheduled for deletion at a known future time. The chain is reachable now, but every consumer caching the reachability decision is stale once the deletion completes — the time-of-check / time-of-use pattern. After the deletion window closes, the chain has a future-ghost reference: any policy that re-evaluated against the cached chain would assume permissions that no longer exist (or — worse — that another team has recreated under the same ARN with different intent). Same ghost-reference primitive as CTL.SECRETS.GHOST.DELETION.REFERENCED.001, lifted from per-asset to multi-hop chain analysis. The .present boolean is folded upstream from Stave's chain walker, which stamps each emitted RoleChainFact with `scheduled_deletion_at` whenever the chain crosses an identity scheduled for future deletion (the earliest such timestamp wins per chain).
 
@@ -21299,7 +21285,7 @@ A principal has a transitive role-assumption chain whose target is scheduled for
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.10; cis_aws_v3.0: 1.10; fedramp_moderate: IA-2(1); ffiec: CAT-D3; gdpr: Art.32; hipaa: 164.312(d); iso_27001_2022: A.8.5; nist_800_53_r5: IA-2(1); nist_csf_2.0: PR.AA; pci_dss_v3.2.1: 8.3; pci_dss_v4.0: 8.3.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.10; cis_aws_v3.0: 1.10; fedramp_moderate: IA-2(1); ffiec: CAT-D3; gdpr: Art.32; hipaa: 164.312(d); iso_27001_2022: A.8.5; nist_800_53_r5: IA-2(1); nist_csf_2.0: PR.AA; owasp_nhi: NHI4; pci_dss_v3.2.1: 8.3; pci_dss_v4.0: 8.3.1; soc2: CC6.1;
 
 IAM users with console access must have multi-factor authentication enabled. Console access without MFA allows credential-only login, making accounts vulnerable to password compromise.
 
@@ -21314,7 +21300,7 @@ IAM users with console access must have multi-factor authentication enabled. Con
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-2; iso_27001_2022: A.8.5; nist_800_53_r5: AC-2; pci_dss_v4.0: 8.1.4; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-2; iso_27001_2022: A.8.5; nist_800_53_r5: AC-2; owasp_nhi: NHI7; pci_dss_v4.0: 8.1.4; soc2: CC6.1;
 
 IAM credentials must have a defined maximum lifetime. Credentials without expiry — access keys created for QA, debugging, or temporary integrations — persist indefinitely and become permanent attack surfaces. Time transforms temporary mistakes into permanent breaches. Every credential must have a TTL enforced at creation time or through automated lifecycle policies.
 
@@ -21344,7 +21330,7 @@ IAM user console password has been disabled and re-enabled more than once in 30 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.14; cis_aws_v3.0: 1.14; fedramp_moderate: IA-5(1); hipaa: 164.312(a)(2)(i); nist_800_53_r5: IA-5(1); pci_dss_v3.2.1: 8.2.4; pci_dss_v4.0: 8.3.9; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.14; cis_aws_v3.0: 1.14; fedramp_moderate: IA-5(1); hipaa: 164.312(a)(2)(i); nist_800_53_r5: IA-5(1); owasp_nhi: NHI7; pci_dss_v3.2.1: 8.2.4; pci_dss_v4.0: 8.3.9; soc2: CC6.1;
 
 IAM user access keys older than 90 days must be rotated. Long-lived access keys accumulate exposure risk and may have been leaked in code repositories, logs, or configuration files.
 
@@ -21359,7 +21345,7 @@ IAM user access keys older than 90 days must be rotated. Long-lived access keys 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.11; soc2: CC6.2;
+- **Compliance:** cis_aws_v3.0: 1.11; owasp_nhi: NHI1; soc2: CC6.2;
 
 Access keys should not be created at user creation time. Keys created during setup are often distributed insecurely and may not be needed. Create keys only for specific programmatic access.
 
@@ -21374,7 +21360,7 @@ Access keys should not be created at user creation time. Keys created during set
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.13; fedramp_moderate: IA-5; nist_800_53_r5: IA-5; pci_dss_v4.0: 8.3.4; soc2: CC6.1;
+- **Compliance:** cis_aws_v3.0: 1.13; fedramp_moderate: IA-5; nist_800_53_r5: IA-5; owasp_nhi: NHI7, NHI10; pci_dss_v4.0: 8.3.4; soc2: CC6.1;
 
 Each IAM user must have at most one active access key. Multiple active keys increase the attack surface and complicate key rotation.
 
@@ -21389,7 +21375,7 @@ Each IAM user must have at most one active access key. Multiple active keys incr
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.12; cis_aws_v3.0: 1.12; fedramp_moderate: AC-2; hipaa: 164.312(a)(2)(i); nist_800_53_r5: AC-2; pci_dss_v4.0: 8.1.4; soc2: CC6.2;
+- **Compliance:** cis_aws_v1.4.0: 1.12; cis_aws_v3.0: 1.12; fedramp_moderate: AC-2; hipaa: 164.312(a)(2)(i); nist_800_53_r5: AC-2; owasp_nhi: NHI1; pci_dss_v4.0: 8.1.4; soc2: CC6.2;
 
 IAM credentials unused for 90 days or more must be disabled. Dormant credentials are a persistent attack surface that provides access without triggering normal usage patterns.
 
@@ -21404,7 +21390,7 @@ IAM credentials unused for 90 days or more must be disabled. Dormant credentials
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.12;
+- **Compliance:** cis_aws_v3.0: 1.12; owasp_nhi: NHI1;
 
 IAM credentials (passwords and access keys) unused for 45 or more days must be disabled. CIS v3.0 requires a 45-day threshold, which is stricter than the 90-day HIPAA threshold.
 
@@ -21419,7 +21405,7 @@ IAM credentials (passwords and access keys) unused for 45 or more days must be d
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: IA-5(7); nist_800_53_r5: IA-5(7); pci_dss_v4.0: 8.6.2; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: IA-5(7); nist_800_53_r5: IA-5(7); owasp_nhi: NHI2; pci_dss_v4.0: 8.6.2; soc2: CC6.1;
 
 CloudFormation stack parameters, resources, or outputs contain AWS access keys, secret keys, or hardcoded passwords. Stack parameters marked as NoEcho are still visible in the template source. Stack history retains parameter values across updates — credentials embedded in any historical version remain retrievable.
 
@@ -21434,7 +21420,7 @@ CloudFormation stack parameters, resources, or outputs contain AWS access keys, 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: IA-5(1); nist_800_53_r5: IA-5(1); pci_dss_v4.0: 8.3.6; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: IA-5(1); nist_800_53_r5: IA-5(1); owasp_nhi: NHI2; pci_dss_v4.0: 8.3.6; soc2: CC6.1;
 
 CI/CD pipelines (GitHub Actions, GitLab CI, Bitbucket Pipelines) authenticate to AWS using long-lived IAM access keys stored as CI/CD secrets instead of OIDC federation. OIDC federation provides short-lived credentials scoped to specific repositories and workflows — no long-lived secrets to leak, no keys to rotate.
 
@@ -21449,7 +21435,7 @@ CI/CD pipelines (GitHub Actions, GitLab CI, Bitbucket Pipelines) authenticate to
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: IA-5(7); hipaa: 164.312(a)(1); nist_800_53_r5: IA-5(7); pci_dss_v4.0: 8.6.2; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: IA-5(7); hipaa: 164.312(a)(1); nist_800_53_r5: IA-5(7); owasp_nhi: NHI2; pci_dss_v4.0: 8.6.2; soc2: CC6.1;
 
 EC2 instance user data contains AWS access keys, secret keys, or session tokens. User data is retrievable via the instance metadata service (169.254.169.254/latest/user-data) and visible in the EC2 console, API responses, and CloudFormation stack history. Credentials in user data are exposed to anyone with EC2 describe permissions or metadata access — four separate attack surfaces.
 
@@ -21464,7 +21450,7 @@ EC2 instance user data contains AWS access keys, secret keys, or session tokens.
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-4; iso_27001_2022: A.8.22; nist_800_53_r5: AC-4; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-4; iso_27001_2022: A.8.22; nist_800_53_r5: AC-4; owasp_nhi: NHI6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 IAM roles in non-production environments (test, staging, QA) must not have access to production resources. Cross-environment access collapses security boundaries — a compromised test account becomes a path to production data. The Microsoft breach (2024) demonstrated this exact failure: a test tenant with production-scope grants enabled a nation-state actor to pivot from test to production.
 
@@ -21479,7 +21465,7 @@ IAM roles in non-production environments (test, staging, QA) must not have acces
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-4; nist_800_53_r5: AC-4; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-4; nist_800_53_r5: AC-4; owasp_nhi: NHI6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Production resources must have no transitive access path from non-production environments. The extractor traces sts:AssumeRole chains and resource policy grants from non-production accounts to production resources. A direct cross-account role is one hop; a chain through an intermediate shared-services account is two or more. Each hop widens the attack surface — a compromised dev credential becomes a production breach when bridge roles exist.
 
@@ -21494,7 +21480,7 @@ Production resources must have no transitive access path from non-production env
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
 
 No IAM policy on any cloud provider should grant unrestricted administrative access (Action: *, Resource: * or equivalent). This control extends CTL.IAM.POLICY.ADMIN.001 beyond AWS to Azure (Contributor/Owner at subscription scope) and GCP (roles/owner, roles/editor at project scope). The same least-privilege principle applies regardless of cloud provider.
 
@@ -21509,7 +21495,7 @@ No IAM policy on any cloud provider should grant unrestricted administrative acc
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: IA-2(1); soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: IA-2(1); owasp_nhi: NHI4; soc2: CC6.1;
 
 All privileged accounts across all cloud providers must have MFA enforced. This control extends AWS MFA controls to Azure AD (Conditional Access requiring MFA) and GCP (2-Step Verification enforcement). A single cloud account without MFA is a breach vector regardless of how well other clouds are protected.
 
@@ -21524,7 +21510,7 @@ All privileged accounts across all cloud providers must have MFA enforced. This 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
 
 Principals with lambda:AddLayerVersionPermission can modify shared Lambda layers that other functions depend on. If the attacker modifies a widely-used layer, every function using that layer is compromised on next deployment. This is a supply chain attack via Lambda layers — the attacker doesn't modify the function code, they modify a dependency the function imports.
 
@@ -21539,7 +21525,7 @@ Principals with lambda:AddLayerVersionPermission can modify shared Lambda layers
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A principal with `iam:AddUserToGroup` can add itself to any group whose Resource scope includes it. When a candidate target group grants permissions that exceed the principal's current set, joining that group is a single-call privilege escalation. This is Rhino Security Labs privilege-escalation technique #6 ("IAM — AddUserToGroup"). Unlike techniques #3 and #4, the escalating principal does not need to modify the group's policies at all; it only needs the group to exist with broader permissions and for `AddUserToGroup` to be scoped to reach that group.
 Scope: gated on `identity.kind == "user"`. The `iam:AddUserToGroup` AWS action targets users specifically; IAM groups cannot contain roles. No role-side analogue exists.
@@ -21555,7 +21541,7 @@ Scope: gated on `identity.kind == "user"`. The `iam:AddUserToGroup` AWS action t
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A principal with `sts:AssumeRole` reaching a role whose attached permissions exceed its own — and whose trust policy permits the principal to assume it — has a one-call path to those permissions. The principal does not grant itself anything; it pivots into a role that already carries the broader set. This is Rhino Security Labs' role-assumption escalation pattern, adjacent to the direct-policy cluster (CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001 etc.) but distinct: the escalation vector here is the role's existing trust, not a self-modification of any policy. Remediation also differs — remove `sts:AssumeRole` from the principal or narrow the trust policy on the target role — so the control is separate from CTL.IAM.ESCALATE.UPDATETRUST.001 even though the two can chain.
 
@@ -21570,7 +21556,7 @@ A principal with `sts:AssumeRole` reaching a role whose attached permissions exc
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A principal with `iam:AttachGroupPolicy` whose Resource field includes a group the principal belongs to can attach any managed policy to that group, elevating every member including itself. This is Rhino Security Labs privilege-escalation technique #3 ("IAM — Attach to group"). The group hop adds one indirection over `AttachUserPolicy` on self but is functionally equivalent: attach `AdministratorAccess` to a belonging group, and the principal is admin.
 Scope: gated on `identity.kind == "user"`. IAM groups are a user-only concept — roles cannot belong to groups. The technique has no role-side analogue; there is no future control waiting in the queue for a role-side version because AWS IAM does not have role groups.
@@ -21586,7 +21572,7 @@ Scope: gated on `identity.kind == "user"`. IAM groups are a user-only concept �
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A role with `iam:AttachRolePolicy` whose Resource field includes its own role ARN can attach any managed policy — including `arn:aws:iam::aws:policy/AdministratorAccess` — to itself and gain that policy's permissions with a single API call. This is the role-side analogue of `CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001`: distinct AWS action (`iam:AttachRolePolicy` vs `iam:AttachUserPolicy`), distinct principal kind (role vs user), same one-step escalation outcome. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate this technique on roles as well as users. The companion Cluster 1 user-side control intentionally stays user-gated because its action is user-scoped; this control mirrors it for the role-action.
 
@@ -21601,7 +21587,7 @@ A role with `iam:AttachRolePolicy` whose Resource field includes its own role AR
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A principal with `iam:AttachUserPolicy` whose Resource field includes its own user ARN can attach any managed policy — including `arn:aws:iam::aws:policy/AdministratorAccess` — to itself and become admin with a single API call. This is Rhino Security Labs privilege-escalation technique #1 ("IAM — Attach to user") and is covered by Prowler's iam_policy_allows_privilege_escalation and Pacu's iam__privesc_scan. No other permission is required; self-scoped AttachUserPolicy is a one-step path to full admin.
 Scope: gated on `identity.kind == "user"`. The `iam:AttachUserPolicy` AWS action targets users specifically — roles cannot be the self- target. The role-side analogue is `iam:AttachRolePolicy` on self, a separate technique that will require its own `CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001` control in a future iteration.
@@ -21617,7 +21603,7 @@ Scope: gated on `identity.kind == "user"`. The `iam:AttachUserPolicy` AWS action
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 IAM principals must have no multi-step permission chain that leads to administrative access. The extractor analyzes known escalation patterns (iam:PassRole + lambda:CreateFunction, iam:CreatePolicyVersion on self, sts:AssumeRole to admin role, etc.) and traces whether a low-privileged principal can chain permissions to reach admin. Each step is individually authorized but the composition creates a privilege escalation path that policy reviews miss.
 
@@ -21632,7 +21618,7 @@ IAM principals must have no multi-step permission chain that leads to administra
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5), CM-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5), CM-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5), CM-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5), CM-3; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Principals with cloudformation:UpdateStack, CreateChangeSet, or ExecuteChangeSet on a SPECIFIC existing stack whose attached service role exceeds the principal's own permissions can escalate via the confused-deputy pattern. The stack's execution role was bound at creation time; UpdateStack with an attacker-controlled template runs that template under the existing role, deploying arbitrary AWS resources at the role's authority level. No iam:PassRole is required at update time because the role binding pre-existed the attack — that is precisely what makes this path invisible to controls focused on the create-and-pass primitive. The .present boolean is folded upstream from Stave's chain walker, which emits hops of type `cfn_update_existing` whenever this primitive matches.
 
@@ -21647,7 +21633,7 @@ Principals with cloudformation:UpdateStack, CreateChangeSet, or ExecuteChangeSet
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Principals with lambda:InvokeFunction or lambda:UpdateFunctionCode on a SPECIFIC existing Lambda function whose execution role exceeds the principal's own permissions can escalate via the confused-deputy pattern. Distinct from the create-and-pass technique covered by CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001: this path requires NO iam:PassRole. The role binding pre-existed the attack — the principal needs only the trigger action against the specific function ARN. UpdateFunctionCode escalates by replacing the function's payload with attacker-controlled code that runs under the existing execution role; InvokeFunction escalates when the function already exposes data-exfil or privilege-mutation behavior to its caller. The .present boolean is folded upstream from Stave's chain walker, which emits hops of type `lambda_invoke_existing` whenever this primitive matches.
 
@@ -21662,7 +21648,7 @@ Principals with lambda:InvokeFunction or lambda:UpdateFunctionCode on a SPECIFIC
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A principal with `iam:CreateAccessKey` whose Resource field reaches another IAM user — one whose attached permissions exceed the principal's own — can create a second access key for that user and authenticate as them immediately. The target user's password, console session, or MFA state is irrelevant; access keys are standalone long-lived credentials. This is Rhino Security Labs' credential-manipulation escalation technique and is covered by Prowler's iam_policy_allows_privilege_escalation and Pacu's iam__privesc_scan. The target user is limited to two access keys by AWS; when the victim already has two keys the attack requires an extra `DeleteAccessKey` call, which the `target_has_max_keys` diagnostic exposes.
 
@@ -21677,7 +21663,7 @@ A principal with `iam:CreateAccessKey` whose Resource field reaches another IAM 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-2; owasp_nhi: NHI5; soc2: CC6.1;
 
 Principals with organizations:CreateAccount can create new AWS accounts within the organization. The creator gets root access to the new account via the root email address. A new account starts with no SCPs applied beyond the default FullAWSAccess, providing unrestricted access until organizational policies are applied.
 
@@ -21692,7 +21678,7 @@ Principals with organizations:CreateAccount can create new AWS accounts within t
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
 
 Principals with kms:CreateGrant can delegate KMS key access to other principals without modifying the key policy. A grant allows the grantee to perform cryptographic operations (Decrypt, Encrypt, GenerateDataKey) on the key. An attacker with CreateGrant on a KMS key used for S3, RDS, or EBS encryption can grant themselves decrypt access, bypassing all IAM and bucket policies.
 
@@ -21707,7 +21693,7 @@ Principals with kms:CreateGrant can delegate KMS key access to other principals 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Principals with iam:CreateInstanceProfile, iam:AddRoleToInstanceProfile, and ec2:AssociateIamInstanceProfile can escalate by creating a new instance profile, attaching a powerful role, and associating it with an EC2 instance they control. The instance then receives credentials for the powerful role via IMDS. This is distinct from the RunInstances vector (which creates a new instance with a profile) — this vector modifies an existing instance. No iam:PassRole is required for the iam:AddRoleToInstanceProfile step.
 
@@ -21722,7 +21708,7 @@ Principals with iam:CreateInstanceProfile, iam:AddRoleToInstanceProfile, and ec2
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A principal with `iam:CreateLoginProfile` whose Resource field reaches another IAM user — one whose attached permissions exceed the principal's own AND who currently has no console login profile — can create a console password for that user and log in as them. Programmatic-only service accounts (no password set) are the specific target: the absence of a login profile is the precondition that makes `CreateLoginProfile` succeed. Once a profile exists, future takeover requires `UpdateLoginProfile` (covered by `CTL.IAM.ESCALATE.UPDATELOGINPROFILE.001`). Rhino Security Labs enumerates this as a distinct technique because the victim population — service accounts that "can't be logged into as" — is often overlooked during permission review.
 
@@ -21737,7 +21723,7 @@ A principal with `iam:CreateLoginProfile` whose Resource field reaches another I
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A principal with both `iam:CreatePolicyVersion` and `iam:SetDefaultPolicyVersion` on a managed policy attached to itself — directly or via a group it belongs to — can create a new version of that policy granting broader permissions and mark the new version default. Every attached principal, including the one that authored the change, picks up the new effective policy immediately. This is Rhino Security Labs privilege-escalation technique #5 ("IAM — CreatePolicyVersion"). The version mechanism makes the escalation subtle: policy ARN and attachments are unchanged; only the default version pointer moves.
 
@@ -21752,7 +21738,7 @@ A principal with both `iam:CreatePolicyVersion` and `iam:SetDefaultPolicyVersion
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Principals with iam:DeleteRolePermissionsBoundary can remove permission boundaries from IAM roles. Permission boundaries limit the maximum permissions a role can use regardless of its identity policies. Removing the boundary instantly expands the role's effective permissions to whatever its identity policies allow — potentially full admin access that was previously constrained by the boundary.
 
@@ -21767,7 +21753,7 @@ Principals with iam:DeleteRolePermissionsBoundary can remove permission boundari
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
 
 Principals with ecr:GetAuthorizationToken can obtain a Docker credential that authenticates to ALL ECR repositories in the account — not just the repositories the principal's IAM policy specifies. The ECR authorization token is account-scoped, not repository-scoped. Repository-level IAM restrictions are bypassed by the Docker authentication layer. This is an AWS design behavior, not a bug.
 
@@ -21782,7 +21768,7 @@ Principals with ecr:GetAuthorizationToken can obtain a Docker credential that au
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Principals with lambda:UpdateFunctionCode on a function whose execution role exceeds the principal's permissions can escalate by modifying the function's code. The modified code runs under the existing execution role on the next invocation. Unlike PassRole-based Lambda escalation, this technique does not require iam:PassRole — the powerful role is already attached. The attacker only changes what code the role executes. Rhino Security Labs documents this as "EditExistingLambdaFunctionWithRole" and Prowler's iam_policy_allows_privilege_escalation enumerates it.
 
@@ -21797,7 +21783,7 @@ Principals with lambda:UpdateFunctionCode on a function whose execution role exc
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
 
 Principals with ecs:ExecuteCommand can open a shell session inside running ECS containers and access the task role credentials via the container metadata endpoint. This provides the same privilege escalation as PassRole+RunInstances but without needing PassRole — the container and its role already exist. The attacker executes commands as the container process and inherits whatever AWS permissions the task role provides.
 
@@ -21812,7 +21798,7 @@ Principals with ecs:ExecuteCommand can open a shell session inside running ECS c
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
 
 Principals with ec2:GetPasswordData can retrieve the administrator password for any Windows EC2 instance. The password is encrypted with the key pair specified at launch. If the attacker also has access to the key pair or the key pair is widely shared, they gain RDP administrator access to the instance and inherit its network position and IAM role.
 
@@ -21827,7 +21813,7 @@ Principals with ec2:GetPasswordData can retrieve the administrator password for 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(5); pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
 
 Principals with kms:PutKeyPolicy can replace the key policy on any KMS key within scope. The attacker adds themselves as a key user with kms:Decrypt permission. All data encrypted by the key — S3 objects, EBS volumes, RDS snapshots, Secrets Manager secrets — becomes decryptable. Unlike kms:CreateGrant which adds a temporary grant, PutKeyPolicy modifies the permanent authorization on the key.
 
@@ -21842,7 +21828,7 @@ Principals with kms:PutKeyPolicy can replace the key policy on any KMS key withi
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
 
 Principals with lambda:AddPermission can modify a Lambda function's resource-based policy to allow cross-account invocation. If the Lambda function has a privileged execution role, the attacker grants an external account permission to invoke the function, then invokes it from that account to execute code with the function's role permissions.
 
@@ -21857,7 +21843,7 @@ Principals with lambda:AddPermission can modify a Lambda function's resource-bas
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
 
 Principals with ec2:ModifyInstanceAttribute can modify an EC2 instance's user-data script. On the next instance reboot, the modified user-data executes with the instance profile role's permissions. The attacker injects a reverse shell or credential exfiltration script into user-data, reboots the instance, and gains the instance role's permissions.
 
@@ -21872,7 +21858,7 @@ Principals with ec2:ModifyInstanceAttribute can modify an EC2 instance's user-da
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Principals with iam:PassRole on a role R plus autoscaling:CreateLaunchConfiguration and autoscaling:CreateAutoScalingGroup can escalate to R's permissions even when ec2:RunInstances is explicitly denied. The principal creates a launch configuration specifying R as the instance profile, then creates an auto scaling group with min-size 1. The AWSServiceRoleForAutoScaling service-linked role launches the EC2 instance on the principal's behalf, bypassing any ec2:RunInstances deny. The principal gains shell access via user-data reverse shell, SSH key, or vulnerable AMI, then reads IMDS credentials for R. This technique was documented in the 2022 EC2 Auto Scaling privilege escalation research and is detected by PMapper.
 
@@ -21887,7 +21873,7 @@ Principals with iam:PassRole on a role R plus autoscaling:CreateLaunchConfigurat
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Principals with iam:PassRole on a role R plus glue:CreateDevEndpoint can escalate to R's permissions by creating a Glue development endpoint that runs under R and then connecting to its SSH interface. The principal executes arbitrary code on the endpoint under R's authority. When R's effective permissions exceed the principal's own, this is a privilege escalation path. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate this technique. SSH public-key registration on the endpoint is captured in the diagnostic fields so an operator can see how the principal would reach the running environment.
 
@@ -21902,7 +21888,7 @@ Principals with iam:PassRole on a role R plus glue:CreateDevEndpoint can escalat
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Principals with iam:PassRole on a role R, lambda:CreateFunction, and a path to invoke the function (lambda:InvokeFunction directly, creation of a function URL, or wiring to another trigger) can escalate to R's permissions. The created Lambda executes under R, so any code the principal uploads runs with R's authority. When R's effective permissions exceed the principal's own, this is a privilege escalation path. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate this technique. The invocation step is folded into the .present boolean upstream — a CreateFunction grant without any invocation path is not an escalation; the diagnostic fields expose which invocation vector was observed.
 
@@ -21917,7 +21903,7 @@ Principals with iam:PassRole on a role R, lambda:CreateFunction, and a path to i
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Principals with iam:PassRole on a role R plus datapipeline:CreatePipeline and datapipeline:ActivatePipeline can escalate to R's permissions by defining pipeline actions that run under R. The activation step is what triggers execution; creation alone is not sufficient. Both permissions folded into the .present boolean upstream; the diagnostic fields expose which sub-conditions held. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate this technique.
 
@@ -21932,7 +21918,7 @@ Principals with iam:PassRole on a role R plus datapipeline:CreatePipeline and da
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Principals with iam:PassRole on a role R plus cloudformation:CreateStack (without a condition that denies CAPABILITY_IAM / CAPABILITY_NAMED_IAM) can escalate to R's permissions by submitting a template that CloudFormation executes under R. When R's effective permissions exceed the principal's own, this is a privilege escalation path. The attacker submits a template that performs IAM mutations (attach user policy, put user policy, create access key), and CloudFormation executes those mutations under R. The principal never gains R directly — but gains R's authority through CloudFormation's template execution.
 
@@ -21947,7 +21933,7 @@ Principals with iam:PassRole on a role R plus cloudformation:CreateStack (withou
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Principals with iam:PassRole on a role R plus ec2:RunInstances can escalate to R's permissions by launching an EC2 instance with R as its instance profile and executing code on the instance via user-data (first-boot) or direct shell access. When R's effective permissions exceed the principal's own, the running instance can call the IMDS for temporary credentials under R and perform actions the original principal lacks — including IAM mutations if R carries them.
 
@@ -21962,7 +21948,7 @@ Principals with iam:PassRole on a role R plus ec2:RunInstances can escalate to R
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Principals with ssm:SendCommand or ssm:StartSession on an EC2 instance whose attached instance profile role R has broader effective permissions than the principal can escalate to R. The command or interactive session executes on the instance under R (the instance-profile role is the caller from the OS's perspective); IMDS reads from that session return R's temporary credentials. Rhino Security Labs' iam__privesc_scan lists this technique; the iam:PassRole check captured upstream corresponds to whether the principal can also attach alternate instance profiles, which widens the target-role set. Distinct from PASSROLE.RUNINSTANCES, which covers creating a fresh instance with an attacker-chosen profile; this covers exploiting an already-running one.
 
@@ -21977,7 +21963,7 @@ Principals with ssm:SendCommand or ssm:StartSession on an EC2 instance whose att
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Principals with s3:PutBucketPolicy can replace any S3 bucket's resource policy. The attacker can grant themselves or an external account full access to the bucket, bypassing all IAM-based access controls. This is a resource policy mutation — the bucket policy is an independent authorization mechanism that grants access regardless of the caller's IAM policies.
 
@@ -21992,7 +21978,7 @@ Principals with s3:PutBucketPolicy can replace any S3 bucket's resource policy. 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A principal with `iam:PutGroupPolicy` whose Resource field includes a group the principal belongs to can write an arbitrary inline policy onto that group. Every member of the group — including the principal — inherits the inline policy immediately. This is Rhino Security Labs privilege-escalation technique #4 ("IAM — Put inline policy on group"). Mirrors PUTUSERPOLICY but via the group hop.
 Scope: gated on `identity.kind == "user"`. IAM groups are a user-only concept — roles cannot belong to groups. No role-side analogue exists because AWS IAM does not have role groups.
@@ -22008,7 +21994,7 @@ Scope: gated on `identity.kind == "user"`. IAM groups are a user-only concept �
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A role with `iam:PutRolePolicy` whose Resource field includes its own role ARN can write an arbitrary inline policy onto itself — including one that grants `"Action": "*"` on `"Resource": "*"`. This is the role-side analogue of `CTL.IAM.ESCALATE.PUTUSERPOLICY.001`: distinct AWS action (`iam:PutRolePolicy` vs `iam:PutUserPolicy`), distinct principal kind (role vs user), same one-step escalation outcome. A single `PutRolePolicy` call produces full admin authority without touching any managed policy or other principal. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate this technique on roles.
 
@@ -22023,7 +22009,7 @@ A role with `iam:PutRolePolicy` whose Resource field includes its own role ARN c
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A principal with `iam:PutUserPolicy` whose Resource field includes its own user ARN can write an arbitrary inline policy onto itself — including one that grants `"Action": "*"` on `"Resource": "*"`. This is Rhino Security Labs privilege-escalation technique #2 ("IAM — Put inline policy on user") and is covered by Prowler's iam_policy_allows_privilege_escalation and Pacu's iam__privesc_scan. A single PutUserPolicy call produces full admin access without touching any managed policy or group.
 Scope: gated on `identity.kind == "user"`. The `iam:PutUserPolicy` AWS action targets users specifically — roles cannot be the self- target. The role-side analogue is `iam:PutRolePolicy` on self, a separate technique that will require its own `CTL.IAM.ESCALATE.PUTROLEPOLICY.001` control in a future iteration.
@@ -22039,7 +22025,7 @@ Scope: gated on `identity.kind == "user"`. The `iam:PutUserPolicy` AWS action ta
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A principal with `iam:ResyncMFADevice` whose Resource field reaches another IAM user — one whose attached permissions exceed the principal's own — can resynchronize or manipulate that user's MFA device. In combination with a password reset (`iam:UpdateLoginProfile`, covered separately) this clears the MFA barrier on console login; on its own it enables temporary MFA bypass by forcing the device into a resync window where a chosen code pair is accepted. This is one of Rhino Security Labs' credential-manipulation techniques and is covered by Prowler's iam_policy_allows_privilege_escalation and Pacu's iam__privesc_scan. The finding fires whenever the permission reaches a privileged user; whether the attack has already been chained with a password reset is a RiskEngine-level compounding concern, not something the single-resource control gates on.
 
@@ -22054,7 +22040,7 @@ A principal with `iam:ResyncMFADevice` whose Resource field reaches another IAM 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
 
 Principals with unrestricted iam:CreateServiceLinkedRole can create AWS service-linked roles for any AWS service. Service-linked roles have AWS-managed permission policies that cannot be modified. Some service-linked roles have broad permissions — creating them introduces new roles with predefined access that the principal does not directly control.
 
@@ -22069,7 +22055,7 @@ Principals with unrestricted iam:CreateServiceLinkedRole can create AWS service-
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
 
 Principals with sns:AddPermission can modify an SNS topic's resource-based policy to allow cross-account subscription or publishing. If the topic carries sensitive notifications (CloudWatch alarms, security findings, application events), the attacker grants an external account subscribe access to receive all messages.
 
@@ -22084,7 +22070,7 @@ Principals with sns:AddPermission can modify an SNS topic's resource-based polic
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
 
 Principals with sqs:AddPermission can modify an SQS queue's resource-based policy to allow cross-account message consumption. If the queue processes sensitive data or triggers downstream workflows (Lambda, Step Functions), the attacker grants an external account access to consume or inject messages.
 
@@ -22099,7 +22085,7 @@ Principals with sqs:AddPermission can modify an SQS queue's resource-based polic
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Principals with codebuild:StartBuild on project P, plus write access to P's source repository (CodeCommit push, S3 PutObject on source bucket, or external Git write) or the ability to override P's buildspec on invocation, can escalate to P's service role by injecting a malicious buildspec. The buildspec runs inside CodeBuild under P's service role and can perform any action the role is authorised for. This vector does not require iam:PassRole — the service role is already attached to the project; the attacker only needs to change what it executes.
 
@@ -22114,7 +22100,7 @@ Principals with codebuild:StartBuild on project P, plus write access to P's sour
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
 
 Principals with ssm:StartSession can open an interactive shell on any EC2 instance managed by SSM without needing SSH keys or security group rules. The session runs as root (or ssm-user) and can access the instance profile credentials from the IMDS. Unlike PassRole+RunInstances, the instance and its role already exist — the attacker just connects.
 
@@ -22129,7 +22115,7 @@ Principals with ssm:StartSession can open an interactive shell on any EC2 instan
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Principals with glue:UpdateDevEndpoint on an existing Glue development endpoint can replace the SSH public key and connect to the endpoint. The endpoint runs under its attached IAM role. If the role's permissions exceed the principal's, this is a privilege escalation path. Unlike PassRole-based Glue escalation (which creates a new endpoint), this technique modifies an existing one — no iam:PassRole required. Rhino Security Labs documents this as "UpdateExistingGlueDevEndpoint". Note: AWS deprecated Glue dev endpoints in favor of interactive sessions, but existing endpoints remain operational.
 
@@ -22144,7 +22130,7 @@ Principals with glue:UpdateDevEndpoint on an existing Glue development endpoint 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
 
 Principals with lambda:UpdateFunctionConfiguration can modify a Lambda function's environment variables, VPC configuration, and runtime settings without changing its code. Environment variables often contain secrets (API keys, database credentials, tokens). The attacker can exfiltrate these by adding an environment variable that sends secrets to an external endpoint, or modify VPC settings to route traffic through an attacker-controlled network.
 
@@ -22159,7 +22145,7 @@ Principals with lambda:UpdateFunctionConfiguration can modify a Lambda function'
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A principal with `iam:UpdateLoginProfile` whose Resource field reaches another IAM user — one whose attached permissions exceed the principal's own — can reset that user's console password to a chosen value and log in as them. MFA enrollment on the target user is NOT a barrier: an attacker with `iam:ResyncMFADevice` (covered by `CTL.IAM.ESCALATE.RESYNCMFADEVICE.001`) or `iam:DeactivateMFADevice` on the same user can disarm MFA first. This is Rhino Security Labs' credential-manipulation escalation technique and is covered by Prowler's iam_policy_allows_privilege_escalation and Pacu's iam__privesc_scan. The control requires the target user to already have a console login profile; the `CREATELOGINPROFILE.001` control covers the case where the target has no profile and one must be created.
 
@@ -22174,7 +22160,7 @@ A principal with `iam:UpdateLoginProfile` whose Resource field reaches another I
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A principal with `iam:UpdateAssumeRolePolicy` reaching a role whose attached permissions exceed its own can rewrite the role's trust policy to admit itself and then call `sts:AssumeRole` to pick up the broader permissions. The update is a single call and leaves the role's permissions unchanged — only the trust-policy pointer moves — which makes the escalation subtle in post-incident review. This is Rhino Security Labs' two-step role-assumption pattern. Listed as a distinct control from CTL.IAM.ESCALATE.ASSUMEROLE.001 because the remediations are different: this control is fixed by removing `iam:UpdateAssumeRolePolicy` from the principal or narrowing its Resource; ASSUMEROLE is fixed by removing `sts:AssumeRole` or narrowing target trust.
 
@@ -22189,7 +22175,7 @@ A principal with `iam:UpdateAssumeRolePolicy` reaching a role whose attached per
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws: 1.21; nist_800_53_r5: IA-2;
+- **Compliance:** cis_aws: 1.21; nist_800_53_r5: IA-2; owasp_nhi: NHI3;
 
 IAM users with console access should authenticate through identity federation rather than IAM-native passwords. Federated authentication centralizes identity management in the organization's identity provider and enforces consistent MFA, password policies, and session controls. IAM-native console users maintain a separate credential that bypasses the organization's identity governance — password resets, MFA enrollment, and access reviews must be managed independently in each AWS account. When console users authenticate directly through IAM, credential lifecycle management fragments across accounts and centralized access revocation requires visiting every account individually. Identity federation eliminates the IAM password as an attack surface and ensures that disabling a user in the identity provider immediately revokes AWS console access.
 
@@ -22204,7 +22190,7 @@ IAM users with console access should authenticate through identity federation ra
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-2; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-2; owasp_nhi: NHI3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Federated role trust policy allows any federated user to assume the role — not scoped to specific IdP groups or attributes. Any user who authenticates via the IdP can assume the role regardless of their group membership or job function.
 
@@ -22219,7 +22205,7 @@ Federated role trust policy allows any federated user to assume the role — not
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: IA-8; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: IA-8; owasp_nhi: NHI3; soc2: CC6.1;
 
 SAML trust policy does not validate the audience restriction in assertions. Without audience validation, a SAML assertion intended for a different service provider can be replayed against AWS. The assertion is valid — signed by the IdP — but was meant for a different application.
 
@@ -22234,7 +22220,7 @@ SAML trust policy does not validate the audience restriction in assertions. With
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** hipaa: 164.312(d); nist_800_53_r5: IA-5; soc2: CC6.1;
+- **Compliance:** hipaa: 164.312(d); nist_800_53_r5: IA-5; owasp_nhi: NHI3; soc2: CC6.1;
 
 SAML provider certificate is older than 365 days. The certificate authenticates the IdP to AWS. If the certificate's private key is compromised, an attacker can forge SAML assertions and assume any role that trusts the SAML provider. The SolarWinds/Nobelium attack (Golden SAML) used forged SAML tokens via compromised AD FS signing certificates.
 
@@ -22249,7 +22235,7 @@ SAML provider certificate is older than 365 days. The certificate authenticates 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-2; owasp_nhi: NHI3; soc2: CC6.1;
 
 Federated role maximum session duration exceeds 4 hours. Federation sessions persist after the IdP revokes access. If a user is terminated in the IdP, their AWS session continues until expiry. A 12-hour session means a terminated employee retains AWS access for up to 12 hours after termination.
 
@@ -22264,7 +22250,7 @@ Federated role maximum session duration exceeds 4 hours. Federation sessions per
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.2;
+- **Compliance:** nist_800_53_r5: AC-2; owasp_nhi: NHI3; soc2: CC6.2;
 
 Federated role trust policy does not require session tags. Without session tags, federated sessions are not attributed to specific user identities in the IdP. CloudTrail shows the role ARN and session name but no IdP-side identity attributes. Session tags propagate IdP attributes into the AWS session for attribution and ABAC.
 
@@ -22399,7 +22385,7 @@ IAM users exist in the AWS management (root) account of the organization. The ma
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.16; nist_800_53_r5: AC-2; soc2: CC6.1;
+- **Compliance:** cis_aws_v3.0: 1.16; nist_800_53_r5: AC-2; owasp_nhi: NHI1; soc2: CC6.1;
 
 More than 20 IAM users in the account. Large numbers of IAM users indicate that human access is managed through IAM users instead of federation (SSO/SAML/OIDC). IAM users require individual credential management, individual MFA enrollment, and individual access key rotation. Federation centralizes all of this in the identity provider.
 
@@ -22443,7 +22429,7 @@ IAM policies must not grant broad iam:List* permissions without resource scope c
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.6; fedramp_moderate: IA-2(1); gdpr: Art.32; hipaa: 164.312(d); iso_27001_2022: A.8.5; nist_800_53_r5: IA-2(1); nist_csf_2.0: PR.AA; pci_dss_v4.0: 8.3.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v3.0: 1.6; fedramp_moderate: IA-2(1); gdpr: Art.32; hipaa: 164.312(d); iso_27001_2022: A.8.5; nist_800_53_r5: IA-2(1); nist_csf_2.0: PR.AA; owasp_nhi: NHI4; pci_dss_v4.0: 8.3.1; soc2: CC6.1;
 
 IAM users with admin access must use a hardware MFA device (FIDO2, YubiKey, Gemalto), not a virtual MFA app or SMS. Virtual MFA can be compromised through device theft, seed extraction, or SIM swap attacks. Hardware tokens cannot be cloned or phished via device compromise, providing stronger protection for the most privileged identities.
 
@@ -22458,7 +22444,7 @@ IAM users with admin access must use a hardware MFA device (FIDO2, YubiKey, Gema
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6; hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6; hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 After resolving all policy layers (SCPs, permission boundaries, identity-based policies, explicit denies), a principal not designated as administrative must not have admin-equivalent effective permissions. This is distinct from CTL.IAM.POLICY.ADMIN.001 which checks policy content — this control checks the resolved effective permissions after organizational constraints are applied. A principal may have an AdminAccess policy attached but be effectively constrained by an SCP.
 
@@ -22473,7 +22459,7 @@ After resolving all policy layers (SCPs, permission boundaries, identity-based p
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
 
 A principal with a permission boundary must have a boundary that meaningfully constrains its effective permissions. A boundary that allows iam:* or *:* on Resource: * is not a meaningful constraint. A boundary that is broader than the identity-based policy constrains nothing. Both conditions create a false sense of security — the boundary exists but provides no actual restriction.
 
@@ -22488,7 +22474,7 @@ A principal with a permission boundary must have a boundary that meaningfully co
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-6; hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-6; hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 After resolving all policy layers including transitive role assumption chains, no non-administrative principal may have effective permissions to escalate beyond their intended privilege scope. Escalation is detected in two forms: direct escalation primitives (iam:CreatePolicyVersion, iam:AttachRolePolicy, etc.) in the resolved effective allow set, and transitive escalation through role chains that reach higher privilege levels than the principal's direct permissions. A developer role that can assume a pipeline role that can assume an admin role has effective admin access — neither individual role appears dangerous, but the chain is the finding.
 
@@ -22503,7 +22489,7 @@ After resolving all policy layers including transitive role assumption chains, n
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-3; gdpr: Art.32; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; gdpr: Art.32; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 For each resource tagged data-classification: phi, the complete set of principals with resolved effective access — via identity-based policies AND resource-based policies — must be limited to principals designated as PHI-authorized. A non-designated principal with effective read access to PHI data is a breach path regardless of how it was granted. This control resolves the complete multi-layer access picture including identity policies, SCPs, permission boundaries, and resource policies simultaneously. Cross-account resource policy grants on PHI are the highest-severity variant.
 
@@ -22578,7 +22564,7 @@ The IAM account password policy must prevent reuse of the last 24 passwords. Wit
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.12; fedramp_moderate: IA-5(1); hipaa: 164.312(a)(2)(i); nist_800_53_r5: IA-5(1); pci_dss_v4.0: 8.3.9; soc2: CC6.1;
+- **Compliance:** cis_aws_v3.0: 1.12; fedramp_moderate: IA-5(1); hipaa: 164.312(a)(2)(i); nist_800_53_r5: IA-5(1); owasp_nhi: NHI7; pci_dss_v4.0: 8.3.9; soc2: CC6.1;
 
 IAM user console passwords must be rotated per organizational policy (typically 90 days). The credential report tracks password_last_changed; passwords older than the policy period have accumulated exposure risk and may have been shared, phished, or brute-forced. This complements access key rotation (CTL.IAM.CRED.ROTATION.001) to cover the full credential lifecycle.
 
@@ -22593,7 +22579,7 @@ IAM user console passwords must be rotated per organizational policy (typically 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-6; ffiec: CAT-D3; gdpr: Art.32; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; nist_csf_2.0: PR.AA; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-6; ffiec: CAT-D3; gdpr: Art.32; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; nist_csf_2.0: PR.AA; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 No IAM policy with Effect Allow on Action "*" and Resource "*" should be attached to any IAM entity. Full admin policies violate least privilege and grant unrestricted access to all services.
 
@@ -22623,7 +22609,7 @@ sts:AssumeRole permissions must be scoped to specific role ARNs, not wildcard Re
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.22; soc2: CC6.3;
+- **Compliance:** cis_aws_v3.0: 1.22; owasp_nhi: NHI5; soc2: CC6.3;
 
 The AWSCloudShellFullAccess managed policy should not be attached to any IAM entity unless specifically required. CloudShell provides a browser-based shell that can bypass network-level controls.
 
@@ -22773,7 +22759,7 @@ IAM users must not have managed policies attached directly. Policies should be a
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 IAM policies must not grant the ability to modify, create, or attach policies to the principal's own role or user. Permissions like iam:CreatePolicyVersion, iam:AttachRolePolicy, and iam:PutRolePolicy scoped to self enable privilege escalation — a compromised identity can grant itself full admin access without needing any other vulnerability.
 
@@ -22833,7 +22819,7 @@ IAM policies granting KMS permissions must only reference KMS key ARNs in enable
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.15; cis_aws_v3.0: 1.15; fedramp_moderate: AC-6; ffiec: CAT-D3; gdpr: Art.32; hipaa: 164.312(a)(1); iso_27001_2022: A.8.2; nist_800_53_r5: AC-6; nist_csf_2.0: PR.AA; pci_dss_v4.0: 7.2.2; soc2: CC6.3;
+- **Compliance:** cis_aws_v1.4.0: 1.15; cis_aws_v3.0: 1.15; fedramp_moderate: AC-6; ffiec: CAT-D3; gdpr: Art.32; hipaa: 164.312(a)(1); iso_27001_2022: A.8.2; nist_800_53_r5: AC-6; nist_csf_2.0: PR.AA; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.2; soc2: CC6.3;
 
 IAM users must not have inline policies attached directly. Inline policies are harder to audit, cannot be reused, and create per-user policy sprawl that resists central governance.
 
@@ -22848,7 +22834,7 @@ IAM users must not have inline policies attached directly. Inline policies are h
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 1.16; nist_800_53_r5: AC-2; soc2: CC6.1;
+- **Compliance:** cis_aws_v3.0: 1.16; nist_800_53_r5: AC-2; owasp_nhi: NHI5; soc2: CC6.1;
 
 IAM roles must not have inline policies attached. Inline policies are embedded directly in the role and cannot be versioned, audited, or reused independently. They create shadow permission grants that are invisible to policy-listing tools that only enumerate managed policies. Use managed policies attached to the role instead. CTL.IAM.POLICY.INLINE.001 enforces this for users; this control enforces it for roles.
 
@@ -22863,7 +22849,7 @@ IAM roles must not have inline policies attached. Inline policies are embedded d
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.4; fedramp_moderate: IA-2(1); hipaa: 164.312(d); nist_800_53_r5: IA-2(1); pci_dss_v4.0: 8.4.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v3.0: 1.4; fedramp_moderate: IA-2(1); hipaa: 164.312(d); nist_800_53_r5: IA-2(1); owasp_nhi: NHI4; pci_dss_v4.0: 8.4.1; soc2: CC6.1;
 
 IAM policies governing destructive operations (s3:DeleteBucket, iam:CreateUser, ec2:TerminateInstances, etc.) must include an aws:MultiFactorAuthPresent condition. Without policy-level MFA enforcement, a compromised access key alone is sufficient to execute destructive actions — the credential becomes the only barrier between an attacker and data loss.
 
@@ -22878,7 +22864,7 @@ IAM policies governing destructive operations (s3:DeleteBucket, iam:CreateUser, 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 iam:PassRole permissions must be scoped to specific role ARNs, not wildcard resource *. PassRole allows a principal to assign an IAM role to an AWS service (Lambda, EC2, ECS). With a wildcard resource, an attacker can pass any role — including highly privileged ones — to a service they control, achieving privilege escalation without directly modifying IAM policies.
 
@@ -22893,7 +22879,7 @@ iam:PassRole permissions must be scoped to specific role ARNs, not wildcard reso
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 IAM policies granting iam:PassRole must include an iam:PassedToService condition restricting which AWS service can receive the passed role. Without this condition, a principal can pass a role to any compute service — Lambda, EC2, Glue, CodeBuild, CloudFormation, SSM — regardless of Resource scope. A role scoped to specific ARNs but passable to any service still enables lateral movement: the principal picks whichever service gives the most convenient execution environment.
 
@@ -22908,7 +22894,7 @@ IAM policies granting iam:PassRole must include an iam:PassedToService condition
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 IAM policies granting sensitive actions (s3:*, kms:Decrypt, dynamodb:*, secretsmanager:GetSecretValue, rds:*, ec2:*, lambda:InvokeFunction, sts:AssumeRole) must scope the Resource element to specific ARNs. Resource "*" on sensitive actions grants the action on every resource in the account, vastly exceeding least privilege. CTL.IAM.POLICY.PASSROLE.001 and CTL.IAM.POLICY.ASSUMEROLE.001 enforce resource scoping for PassRole and AssumeRole specifically; this control generalizes the pattern to all sensitive actions.
 
@@ -22923,7 +22909,7 @@ IAM policies granting sensitive actions (s3:*, kms:Decrypt, dynamodb:*, secretsm
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 IAM users and roles must not have any attached policy (inline or customer-managed) that grants `<service>:*` on `Resource: "*"` for services on the denied list. Service-wildcard grants are scoped to a single service but still exceed least-privilege for high-blast-radius services. The default denied list covers three Prowler-flagged services:
 
@@ -22953,7 +22939,7 @@ Operators extend the denied list via `params.denied_service_wildcards` as new se
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
 
 IAM policies using NotAction or NotResource create negative logic that is prone to bypass. A NotAction policy says "allow everything EXCEPT these actions" — but the list of excepted actions rarely covers all dangerous permissions. New AWS services and actions are automatically allowed by the implicit "everything else" grant. Attackers exploit this shadow effect to find actions like iam:PutRolePolicy that fall through the negative logic gap.
 
@@ -22968,7 +22954,7 @@ IAM policies using NotAction or NotResource create negative logic that is prone 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); nist_800_53_r5: AC-6(5); soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
 
 IAM policies using NotAction that allow IAM write actions (iam:PutRolePolicy, iam:CreateUser, iam:AttachRolePolicy) through the negative logic gap are a critical privilege escalation vector. The extractor resolves the effective permissions of NotAction policies and flags when dangerous IAM write actions fall through.
 
@@ -22983,7 +22969,7 @@ IAM policies using NotAction that allow IAM write actions (iam:PutRolePolicy, ia
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-5; iso_27001_2022: A.8.3; nist_800_53_r5: AC-5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-5; iso_27001_2022: A.8.3; nist_800_53_r5: AC-5; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 No single IAM role should have both data access permissions (s3:GetObject, dynamodb:GetItem, rds:*, secretsmanager:GetSecretValue) and IAM management permissions (iam:CreateRole, iam:AttachPolicy, iam:CreateUser, iam:PutRolePolicy). Combining these creates a privilege escalation path — a compromised role with data access can grant itself additional permissions. Separation of privileged access is required by IAM-09 in CCM v4.1.
 
@@ -23087,7 +23073,7 @@ All IAM roles must have a role-type tag with a value from the defined taxonomy (
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(1); nist_800_53_r5: AC-6(1); pci_dss_v4.0: 7.2.2; soc2: CC6.3;
+- **Compliance:** fedramp_moderate: AC-6(1); nist_800_53_r5: AC-6(1); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.2; soc2: CC6.3;
 
 Lambda execution role trust policy allows lambda.amazonaws.com without a condition restricting which Lambda functions can assume it. Any Lambda function in the account can assume this role. If the role has database access, any function — including one an attacker creates — gets database access by assuming this role.
 
@@ -23117,7 +23103,7 @@ IAM roles must not retain access to services that have never been used or were l
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.21; nist_800_53_r5: AC-2(3); soc2: CC6.2;
+- **Compliance:** cis_aws_v3.0: 1.21; nist_800_53_r5: AC-2(3); owasp_nhi: NHI1; soc2: CC6.2;
 
 IAM role has not been assumed in 90 or more days. The role exists with attached permissions but serves no active purpose. Unused roles are a latent attack surface — if compromised, their permissions are available but not being monitored for anomalous usage because nobody uses them normally.
 
@@ -23132,7 +23118,7 @@ IAM role has not been assumed in 90 or more days. The role exists with attached 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.4; cis_aws_v3.0: 1.4; fedramp_moderate: IA-2; hipaa: 164.312(a)(1); nist_800_53_r5: IA-2; pci_dss_v3.2.1: 2.1; pci_dss_v4.0: 8.3.4; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.4; cis_aws_v3.0: 1.4; fedramp_moderate: IA-2; hipaa: 164.312(a)(1); nist_800_53_r5: IA-2; owasp_nhi: NHI2; pci_dss_v3.2.1: 2.1; pci_dss_v4.0: 8.3.4; soc2: CC6.1;
 
 The AWS root account must not have active access keys. Root access keys provide unrestricted programmatic access. Use IAM users or roles for programmatic access instead.
 
@@ -23192,7 +23178,7 @@ Root account API activity has occurred more than once in 30 days. A single root 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.7; fedramp_moderate: AC-2; nist_800_53_r5: AC-2; pci_dss_v4.0: 8.1.1; soc2: CC6.2;
+- **Compliance:** cis_aws_v3.0: 1.7; fedramp_moderate: AC-2; nist_800_53_r5: AC-2; owasp_nhi: NHI5, NHI10; pci_dss_v4.0: 8.1.1; soc2: CC6.2;
 
 The root account must not be used for day-to-day operations. Root activity should be limited to account setup tasks. Recent root usage indicates operational reliance on root credentials.
 
@@ -23207,7 +23193,7 @@ The root account must not be used for day-to-day operations. Root activity shoul
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AU-2; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AU-2; owasp_nhi: NHI6; soc2: CC6.1;
 
 SCP does not deny CloudTrail modification or deletion in member accounts. A member account admin or attacker with admin access can stop logging, delete trails, or modify trail configuration. Without SCP protection, the audit trail can be destroyed and subsequent attacker actions go unrecorded.
 
@@ -23222,7 +23208,7 @@ SCP does not deny CloudTrail modification or deletion in member accounts. A memb
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AU-2; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AU-2; owasp_nhi: NHI6; soc2: CC6.1;
 
 SCP does not deny AWS Config modification or deletion in member accounts. AWS Config records resource configuration changes. Without SCP protection, a compromised admin can stop Config recording and modify resources without configuration change history.
 
@@ -23267,7 +23253,7 @@ SCPs must not contain Allow statements for actions that undermine the organizati
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; nist_csf_2.0: PR.AA; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; nist_csf_2.0: PR.AA; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 AWS Organizations must have restrictive Service Control Policies beyond the default FullAWSAccess SCP. An organization that only has FullAWSAccess applied has no organizational guardrails — any IAM permission granted within a member account is allowed, including access to unused services that expand the attack surface.
 
@@ -23282,7 +23268,7 @@ AWS Organizations must have restrictive Service Control Policies beyond the defa
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: SI-4; soc2: CC6.6;
+- **Compliance:** nist_800_53_r5: SI-4; owasp_nhi: NHI6; soc2: CC6.6;
 
 SCP does not deny GuardDuty disablement in member accounts. A compromised account admin can disable GuardDuty threat detection, eliminating runtime threat monitoring. Without SCP protection, the attacker can disable GuardDuty and operate without threat alerts.
 
@@ -23297,7 +23283,7 @@ SCP does not deny GuardDuty disablement in member accounts. A compromised accoun
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 SCP does not deny known privilege escalation actions in member accounts. Actions like iam:CreatePolicyVersion, iam:AttachRolePolicy, iam:PutRolePolicy, and iam:UpdateAssumeRolePolicy are the core escalation primitives. SCPs are the only control that prevents an account admin from self-escalating — IAM policies can be modified by anyone with iam:*, and permission boundaries can be removed.
 
@@ -23312,7 +23298,7 @@ SCP does not deny known privilege escalation actions in member accounts. Actions
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 Member accounts can exit the organization via organizations:LeaveOrganization. When an account leaves, ALL SCPs are immediately removed — every organizational guardrail drops instantly. The account becomes completely ungoverned with no region restrictions, no service restrictions, and no escalation prevention. An attacker who compromises a member account admin can remove every organizational control with one API call.
 
@@ -23357,7 +23343,7 @@ SCP does not restrict which AWS regions member accounts can use. Resources can b
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI6; soc2: CC6.1;
 
 SCP does not deny iam:CreateAccessKey for root users in member accounts. Root access keys provide unrestricted API access to the entire AWS account — every service, every resource, every action. They bypass IAM policies and permission boundaries. Once created, root access keys persist until explicitly deleted.
 
@@ -23387,7 +23373,7 @@ Service Control Policies must deny cloudtrail:StopLogging, cloudtrail:DeleteTrai
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-12; nist_800_53_r5: AC-12; pci_dss_v4.0: 8.2.8; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-12; nist_800_53_r5: AC-12; owasp_nhi: NHI4; pci_dss_v4.0: 8.2.8; soc2: CC6.1;
 
 IAM role allows sessions up to 12 hours (the AWS maximum). For most roles, 1-4 hours is sufficient. Long sessions persist after credential compromise is detected — revocation requires waiting for session expiry or deleting the role entirely. MaxSessionDuration controls the upper bound of temporary credentials issued via AssumeRole.
 
@@ -23417,7 +23403,7 @@ Role trust policy does not include a condition on sts:RoleSessionName. Assumed s
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AU-3(1); nist_800_53_r5: AU-3(1); pci_dss_v4.0: 10.2.1; soc2: CC7.2;
+- **Compliance:** fedramp_moderate: AU-3(1); nist_800_53_r5: AU-3(1); owasp_nhi: NHI10; pci_dss_v4.0: 10.2.1; soc2: CC7.2;
 
 Role trust policy does not require sts:SourceIdentity. In role chaining (A assumes B assumes C), the original caller's identity is lost at each hop. SourceIdentity propagates the original caller through the entire chain — CloudTrail shows who started the chain, not just the last role in it. Once set, SourceIdentity cannot be changed by subsequent AssumeRole calls.
 
@@ -23447,7 +23433,7 @@ AWS IAM Identity Center is configured but IAM users with console access still ex
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** hipaa: 164.312(d); nist_800_53_r5: IA-2(1); pci_dss_v4.0: 8.3.1; soc2: CC6.1;
+- **Compliance:** hipaa: 164.312(d); nist_800_53_r5: IA-2(1); owasp_nhi: NHI4; pci_dss_v4.0: 8.3.1; soc2: CC6.1;
 
 MFA is not enforced at the AWS Identity Center level. MFA enforcement may be delegated to the external IdP but if the IdP is configured without MFA for some users, those users access AWS without MFA. Identity Center should enforce MFA independently as defense-in-depth.
 
@@ -23492,11 +23478,26 @@ At least one IAM entity must have the AWSSupportAccess managed policy attached. 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.312(a)(1); iso_27001_2022: A.8.3; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1, CC9.2;
+- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.312(a)(1); iso_27001_2022: A.8.3; nist_800_53_r5: AC-3, AC-6; owasp_nhi: NHI4; pci_dss_v4.0: 7.2.1; soc2: CC6.1, CC9.2;
 
 IAM roles trusted by third-party AWS accounts (accounts outside your organization) must include sts:ExternalId or aws:SourceAccount conditions. Without these guardrails, the confused deputy problem allows any customer of the same third-party vendor to assume your role through the vendor's IAM system. The Microsoft Midnight Blizzard 2024 breach exploited a legacy cross-tenant trust without per-customer binding to pivot from a test tenant to production Exchange mailboxes. Coupa/Corecard-pattern SaaS integrations with shared IAM roles and no ExternalId allow cross-customer data access if the vendor's IAM system is compromised.
 
 **Remediation:** Add an sts:ExternalId condition with a unique per-relationship value to the role trust policy. Alternatively, add aws:SourceAccount scoped to the specific account that should be permitted. Do not use wildcard values — ExternalId set to * provides no protection.
+
+---
+
+### CTL.IAM.TRUST.DUAL.001
+
+**IAM Role Trust Must Not Combine Compute and Identity Federation Without Scoping**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3, AC-6; owasp_nhi: NHI6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM roles must not simultaneously trust a compute service principal (lambda.amazonaws.com, ec2.amazonaws.com, ecs-tasks.amazonaws.com, apigateway.amazonaws.com) AND an identity federation principal (cognito-identity.amazonaws.com, sts.amazonaws.com via SAML/OIDC, accounts.google.com) when the identity federation trust carries no condition restricting which identity pool, audience, or external ID can assume the role. The dual-trust pattern is the Capital One pre-condition: the role exists for a Lambda integration; a Cognito trust gets added later for a mobile app and the developer forgets to scope it to the specific identity pool. Any identity pool in the account — including pools that allow unauthenticated access — can obtain credentials for a role intended for a single backend service.
+
+**Remediation:** Either (a) remove the identity federation principal from the trust policy if the role only needs the compute service, or (b) add a Condition that scopes the identity federation trust to the specific pool: for Cognito, "cognito-identity.amazonaws.com:aud" = "<region>:<pool-id>"; for SAML, "saml:aud" = "<application-id>"; for OIDC, "oidc:aud" = "<client-id>". Wildcard audience values provide no protection.
 
 ---
 
@@ -23507,7 +23508,7 @@ IAM roles trusted by third-party AWS accounts (accounts outside your organizatio
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; owasp_nhi: NHI4; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 IAM roles with cross-account trust policies must include an sts:ExternalId condition. Without an external ID, any principal in the trusted account can assume the role — including compromised service accounts, OAuth applications, or test tenants. The Microsoft Midnight Blizzard 2024 breach exploited a legacy test OAuth app to assume a role with full_access_as_app permissions, pivoting from a test tenant to production Exchange mailboxes.
 
@@ -23522,7 +23523,7 @@ IAM roles with cross-account trust policies must include an sts:ExternalId condi
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-3; owasp_nhi: NHI1; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 IAM role trust policies must not allow assumption by principals in external AWS accounts that are not recognized as known partners or organization members. Unknown external trust creates lateral access paths outside the organization's control. AWS does not notify the trusting account when a trusted account changes ownership, is decommissioned, or is compromised.
 
@@ -23537,7 +23538,7 @@ IAM role trust policies must not allow assumption by principals in external AWS 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-3; owasp_nhi: NHI1; soc2: CC6.1;
 
 Trust policies and SCPs using aws:PrincipalOrgPaths conditions must not reference Organizational Units that have been removed from the AWS Organization. A condition referencing a non-existent OU produces unpredictable access behavior — either blocking all access (availability failure) or broadening access (security failure).
 
@@ -23552,7 +23553,7 @@ Trust policies and SCPs using aws:PrincipalOrgPaths conditions must not referenc
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: IA-5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: IA-5; owasp_nhi: NHI1; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 IAM SAML and OIDC provider configurations must not reference identity provider endpoints that are decommissioned, unreachable, or unrecognized. If the provider's endpoint domain is reclaimable (expired domain, abandoned subdomain), an attacker who claims the domain can issue federation tokens accepted by AWS — gaining access to every role trusting the provider. This is the identity equivalent of subdomain takeover.
 
@@ -23567,7 +23568,7 @@ IAM SAML and OIDC provider configurations must not reference identity provider e
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; owasp_nhi: NHI3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 IAM roles that trust OIDC identity providers (GitHub Actions, GitLab CI, Bitbucket Pipelines) must restrict the subject claim to a specific repository and branch. A trust policy that accepts any repository from the provider allows any project in the provider's namespace to assume the role — a compromised or malicious repository becomes a production ingress path.
 
@@ -23582,7 +23583,7 @@ IAM roles that trust OIDC identity providers (GitHub Actions, GitLab CI, Bitbuck
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; owasp_nhi: NHI3; soc2: CC6.1;
 
 IAM roles with OIDC federation must use exact or prefix-scoped subject claims. A wildcard sub condition ("*") defeats the purpose of OIDC federation — it accepts any identity from the provider, including pull request workflows from forks, ephemeral runners, and compromised pipelines. This is the supply chain equivalent of s3:* on Resource "*".
 
@@ -23597,7 +23598,7 @@ IAM roles with OIDC federation must use exact or prefix-scoped subject claims. A
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI3; soc2: CC6.1;
 
 IAM roles assumed via OIDC federation (CI/CD pipelines) must have scoped permissions appropriate for their deployment task. A CI/CD role with AdministratorAccess or broad wildcard actions creates a supply chain blast radius — any compromise of the CI/CD pipeline grants full account access. The extractor checks if the role's effective permissions exceed a deployment-appropriate scope.
 
@@ -23612,7 +23613,7 @@ IAM roles assumed via OIDC federation (CI/CD pipelines) must have scoped permiss
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; owasp_nhi: NHI6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 IAM roles with cross-account trust policies must include an aws:PrincipalOrgID condition restricting assumption to principals within the AWS Organization. Without this condition, any external AWS account — including attacker-controlled accounts — can attempt role assumption. PrincipalOrgID is the broadest safe boundary for multi-account organizations: it permits all org members while denying all outsiders.
 
@@ -23627,7 +23628,7 @@ IAM roles with cross-account trust policies must include an aws:PrincipalOrgID c
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; owasp_nhi: NHI4; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 IAM roles with cross-account trust policies must include at least one session-limiting condition beyond principal identity binding. Without constraints on session duration, source network, or MFA, an assumed-role session is usable from any IP address, without MFA, for the maximum default duration (up to 12 hours). Existing controls verify principal binding (ExternalId, SourceArn, ConfusedDeputy). This control verifies that the trust policy also constrains the assumption context — how long, from where, and with what authentication strength.
 
@@ -23642,7 +23643,7 @@ IAM roles with cross-account trust policies must include at least one session-li
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3, AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3, AC-6; owasp_nhi: NHI4; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 IAM roles trusted by AWS service principals (*.amazonaws.com) must include aws:SourceArn or aws:SourceAccount conditions. Without these conditions, the service can assume the role when acting on behalf of any resource in any account — including attacker-controlled resources. AWS Lambda execution roles without aws:SourceArn allow any Lambda function in any account to assume the role. SNS/S3 notification roles without SourceArn allow any bucket or topic in any account to trigger the role assumption.
 
@@ -23657,7 +23658,7 @@ IAM roles trusted by AWS service principals (*.amazonaws.com) must include aws:S
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; owasp_nhi: NHI4; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 IAM role trust policies must not use Principal "*" or Principal: {AWS: "*"}. A wildcard principal allows any AWS principal in any account to attempt role assumption. This is the most dangerous trust configuration — the role is effectively public to the entire AWS ecosystem.
 
@@ -23702,7 +23703,7 @@ External vendor roles must have scoped access to sensitive resources. A vendor t
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; nist_csf_2.0: PR.AA;
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; nist_csf_2.0: PR.AA; owasp_nhi: NHI5;
 
 Access to sensitive resources must be governed by identity-based controls (IAM policies, conditions, session tags) rather than relying solely on network perimeter (VPC, security groups, NACLs). Network-only access control fails when the perimeter is bypassed — via VPN compromise, lateral movement, or insider threat. Zero Trust requires every access decision to verify identity, device, and context.
 
@@ -23717,7 +23718,7 @@ Access to sensitive resources must be governed by identity-based controls (IAM p
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: IA-5; nist_800_53_r5: IA-5; nist_csf_2.0: PR.AA;
+- **Compliance:** fedramp_moderate: IA-5; nist_800_53_r5: IA-5; nist_csf_2.0: PR.AA; owasp_nhi: NHI5;
 
 Service-to-service access must use short-lived credentials (STS temporary tokens, IAM Roles Anywhere certificates, OIDC federation) rather than long-lived access keys. Short-lived credentials limit the blast radius of compromise — a stolen token expires automatically. This is a core Zero Trust principle: never trust a credential longer than necessary.
 
@@ -24901,7 +24902,7 @@ KMS key has no CloudWatch alarm wired to a CloudTrail metric filter for the kms:
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** detection
-- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.24; nist_800_53_r5: SI-4; pci_dss_v4.0: 10.4.1; soc2: CC7.2;
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.8.24; nist_800_53_r5: SI-4; owasp_nhi: NHI7; pci_dss_v4.0: 10.4.1; soc2: CC7.2;
 
 KMS key has no CloudWatch alarm wired to KMS key rotation events. Rotation events indicate the key material was rotated — expected annually if auto-rotation is enabled. A FAILED rotation means the key material did NOT change, so the old material continues past its intended lifetime. An UNEXPECTED rotation (manual rotation outside the schedule) may indicate a compromise response or unauthorized activity. Distinct from CTL.KMS.ROTATION.001 (asserts auto-rotation is enabled, configuration): this control fires on the missing detection wiring around rotation events themselves.
 
@@ -24976,7 +24977,7 @@ KMS keys encrypting more than 50 resources must have deletion protection enabled
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.24; nist_800_53_r5: AC-3, AC-4, AC-6; pci_dss_v4.0: 3.5, 7.1; soc2: CC6.1, CC6.6;
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.24; nist_800_53_r5: AC-3, AC-4, AC-6; owasp_nhi: NHI6; pci_dss_v4.0: 3.5, 7.1; soc2: CC6.1, CC6.6;
 
 KMS key policy grants access to more than five external AWS accounts. The key's blast radius spans many accounts in both directions: if the key is compromised, disabled, or deleted, every sharing account that depends on it is affected; if any one of the sharing accounts is compromised, the attacker acquires cryptographic operations on data in every other sharing account. The blast radius grows roughly quadratically in the number of sharing accounts — N accounts means N populations of data at risk if the key fails, and N independent compromise paths to the key if any account is breached. Distinct from CTL.KMS.POLICY.CROSSACCOUNT.001 (asserts the presence of conditions on cross-account access) — that control checks the protective semantics of the policy; this control checks the topology of who is sharing, regardless of whether conditions are present. Threshold of five is a heuristic that accommodates legitimate centralized patterns (organization logging key, shared encryption key for a small multi-account application) while flagging the cases where centralization has eroded into sprawl.
 
@@ -24991,7 +24992,7 @@ KMS key policy grants access to more than five external AWS accounts. The key's 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-2; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: AC-2, AC-3; pci_dss_v4.0: 3.5, 7.2.4; soc2: CC6.1, CC8.1;
+- **Compliance:** fedramp_moderate: AC-2; iso_27001_2022: A.5.16, A.8.24; nist_800_53_r5: AC-2, AC-3; owasp_nhi: NHI1; pci_dss_v4.0: 3.5, 7.2.4; soc2: CC6.1, CC8.1;
 
 KMS key policy grants access to an AWS account ID that is no longer active in the organization — the account was closed, decommissioned, or transferred to an external party. The policy entry persists. The danger has two shapes: if the account ID was transferred, the key policy now grants access to an entity outside organizational control; if the account was closed, the residual policy entry is decommission debris that obscures the actual access topology. Detection requires cross-referencing the key policy's cross-account principals against the active account list (AWS Organizations or an inventory of authorized accounts). When account inventory is unavailable the control cannot fire — fail loud rather than silently passing keys whose authorization has not been reconciled. Same incomplete-decommission family as CTL.KMS.GRANT.ORPHAN.001 (orphan grant principal), CTL.KMS.ALIAS.ORPHAN.001 (alias orphan), and CTL.IAM.ROLE.GHOST.001 — debris that survives the decommission of its referent.
 
@@ -25036,7 +25037,7 @@ KMS keys must have AWS_KMS origin, confirming they are generated and stored in F
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A KMS grant includes multiple sensitive operations (Decrypt, Encrypt, GenerateDataKey, ReEncryptFrom, ReEncryptTo) for a single grantee. Grants should follow least privilege — a grantee that needs to encrypt should not also have decrypt. Broad grants effectively give full cryptographic access to the key.
 
@@ -25051,7 +25052,7 @@ A KMS grant includes multiple sensitive operations (Decrypt, Encrypt, GenerateDa
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.8.24; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.8.24; nist_800_53_r5: AC-6; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 KMS key has more than 100 active grants. The KMS service limit is 50,000 grants per key, but more than 100 active grants is a red flag for: programmatic grant creation without governance (grants created but never retired), an unauditable access surface (100+ grants across many principals and operations cannot be manually reviewed), and incomplete cleanup of short-lived workloads. AWS services that use grants (EBS, RDS, Redshift) may create many grants automatically; the threshold is conservative to avoid false positives on service-managed grant volume.
 
@@ -25066,7 +25067,7 @@ KMS key has more than 100 active grants. The KMS service limit is 50,000 grants 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** fedramp_moderate: AC-2; nist_800_53_r5: AC-2; pci_dss_v4.0: 7.2.4; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-2; nist_800_53_r5: AC-2; owasp_nhi: NHI1; pci_dss_v4.0: 7.2.4; soc2: CC6.1;
 
 KMS grant grants cryptographic operations to a principal (IAM role or user) that has been deleted. The grant persists in the key's grant list — consuming grant quota (50,000 per key) and cluttering the access-control surface. Orphaned grants cannot be exercised (the principal does not exist) but they signal incomplete cleanup and obscure the actual access state of the key. Distinct from CTL.KMS.POLICY.GHOSTREF.001 (deleted principal in the key policy): grants are an alternative access mechanism not visible in the key policy document. They require a separate ListGrants API call to enumerate. Orphan grants imply the IAM role lifecycle drove the grantee out of existence but the grant retirement step was skipped.
 
@@ -25081,7 +25082,7 @@ KMS grant grants cryptographic operations to a principal (IAM role or user) that
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: SC-12(1); nist_800_53_r5: SC-12(1); pci_dss_v4.0: 3.6.1.2; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: SC-12(1); nist_800_53_r5: SC-12(1); owasp_nhi: NHI7; pci_dss_v4.0: 3.6.1.2; soc2: CC6.1;
 
 Imported key material has no expiration date set. Imported keys persist indefinitely without forced rotation. Unlike AWS-generated key material (which supports automatic rotation), imported material must be manually re-imported. Without expiration, there is no mechanism forcing re-import and periodic review of the key material source.
 
@@ -25140,7 +25141,7 @@ KMS key encrypts resources tagged production AND resources tagged non-production
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** fedramp_moderate: AC-2; hipaa: 164.312(a)(1); nist_800_53_r5: AC-2; pci_dss_v4.0: 7.2.4; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-2; hipaa: 164.312(a)(1); nist_800_53_r5: AC-2; owasp_nhi: NHI1; pci_dss_v4.0: 7.2.4; soc2: CC6.1;
 
 KMS key has not been used for any cryptographic operation in more than 90 days, yet its key policy continues to grant access to principals. Dormant keys are a latent decryption surface: the policy still grants kms:Decrypt, the key can still be used by anyone with that permission, and nobody monitors the key for anomalous usage because it appears unused. If the key encrypted historical data in S3, RDS snapshots, or other services, that data remains decryptable to anyone who discovers the key ARN and has Decrypt permission — even though no application actively uses the key. Same 90-day dormancy threshold used across Lambda, IAM roles, DynamoDB, CloudFront, and Route 53 controls. The finding prompts review: if the key is truly unused, disable it (and eventually schedule deletion); if it encrypts archival data, minimize the policy to the principals who legitimately need archival decryption.
 
@@ -25170,7 +25171,7 @@ KMS key has no alias attached and is referenced only by its key ID (a UUID). Ali
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.8.24; nist_800_53_r5: CM-2, CM-3, SC-12; pci_dss_v4.0: 3.6; soc2: CC6.1, CC8.1;
+- **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.8.24; nist_800_53_r5: CM-2, CM-3, SC-12; owasp_nhi: NHI7; pci_dss_v4.0: 3.6; soc2: CC6.1, CC8.1;
 
 KMS key has automatic rotation enabled, but the configured rotation period exceeds the rotation cadence required by an applicable compliance profile. The AWS default is 365 days; KMS now supports configurable rotation periods between 90 and 2560 days. Some compliance interpretations and many internal policies require shorter cadences — 90 days is the common floor — to limit the volume of data encrypted under any single key version and to bound the recovery window after a key compromise. This control is profile-conditioned: it fires only when a compliance tag or compliance profile is present on the key AND the configured period exceeds the required period. Same compliance-profile pattern as CTL.RDS.BACKUP.RETENTION.COMPLIANCE.001 — the requirement comes from the profile, not from a single fixed threshold. Distinct from CTL.KMS.ROTATION.001 (asserts rotation is enabled at all): this control assumes rotation is on and asserts the period is short enough.
 
@@ -25245,7 +25246,7 @@ KMS multi-region key has replicas in other regions whose key policies differ fro
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: SC-12(1); nist_800_53_r5: SC-12(1); soc2: A1.1;
+- **Compliance:** fedramp_moderate: SC-12(1); nist_800_53_r5: SC-12(1); owasp_nhi: NHI1; soc2: A1.1;
 
 KMS keys scheduled for deletion have a waiting period (7-30 days) before key material is permanently destroyed. Once deleted, all data encrypted by the key becomes permanently inaccessible — S3 objects, RDS snapshots, EBS volumes, Secrets Manager secrets, and any other resource encrypted by this key. This control detects keys pending deletion that still have dependent resources, giving operators time to cancel deletion or re-encrypt resources with a different key.
 
@@ -25275,7 +25276,7 @@ KMS key policies must not grant wildcard principal access. A key policy with Pri
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.24; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 3.6.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.24; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 3.6.1; soc2: CC6.1;
 
 KMS key policies must not grant key administration actions (kms:Create*, kms:Put*, kms:Disable*, kms:ScheduleKeyDeletion, kms:EnableKey, kms:EnableKeyRotation, kms:UpdateKeyDescription) to principals beyond designated key administrators. Broad administrative access allows any granted principal to disable the key, schedule it for deletion, or modify its policy — disrupting every resource encrypted by the key.
 
@@ -25305,7 +25306,7 @@ KMS key policies granting usage actions (kms:Decrypt, kms:Encrypt, kms:GenerateD
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; owasp_nhi: NHI6; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
 
 KMS key policies must not grant kms:Decrypt, kms:Encrypt, kms:GenerateDataKey, or kms:* to external account principals without restricting via kms:CallerAccount, kms:ViaService, or aws:PrincipalOrgID conditions. Unlike IAM policies, the key policy is the primary authorization mechanism — IAM policies alone cannot grant KMS access unless the key policy permits it. Broad cross-account key access allows external principals to decrypt every resource encrypted by this key.
 
@@ -25320,7 +25321,7 @@ KMS key policies must not grant kms:Decrypt, kms:Encrypt, kms:GenerateDataKey, o
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 3.6; fedramp_moderate: AC-3; hipaa: 164.312(a)(1); iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; pci_dss_v4.0: 3.6.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v3.0: 3.6; fedramp_moderate: AC-3; hipaa: 164.312(a)(1); iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; owasp_nhi: NHI5; pci_dss_v4.0: 3.6.1; soc2: CC6.1;
 
 Customer-managed KMS key policy grants kms:Decrypt to a broad principal — the account root (arn:aws:iam::ACCT:root) without IAM-side restrictions, a wildcard principal (Principal: *), or a broad IAM pattern (arn:aws:iam::ACCT:role/*). Decrypt is the most sensitive KMS operation: it reads encrypted data. Broad Decrypt access means any matching principal can decrypt any ciphertext encrypted with this key — S3 objects, RDS snapshots, EBS volumes, Lambda environment variables, Secrets Manager secrets. Distinct from CTL.KMS.POLICY.ADMIN.BROAD.001 (broad admin actions) and CTL.KMS.POLICY.001 (wildcard Principal "*" on any action): this control fires on Decrypt-specific broad scope even when admin and wildcard checks pass. Suppressed on AWS-managed keys, whose policies are AWS-controlled.
 
@@ -25335,7 +25336,7 @@ Customer-managed KMS key policy grants kms:Decrypt to a broad principal — the 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; owasp_nhi: NHI1; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 KMS key policies must not grant cryptographic permissions to principal ARNs that don't exist in the IAM inventory. A ghost principal in a key policy inherits decrypt access to every resource encrypted by that key — S3 objects, RDS snapshots, EBS volumes, Secrets Manager secrets. KMS keys are the trust anchor for encryption. Resource-based policies (including key policies) evaluate ARN strings, not unique IDs. An attacker who creates a role matching the ghost principal's name inherits the key's full permission scope.
 
@@ -25350,7 +25351,7 @@ KMS key policies must not grant cryptographic permissions to principal ARNs that
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; owasp_nhi: NHI9; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 KMS key policy grants kms:CreateGrant AND at least one existing grant on the key includes GrantWithGrant in its operations or retiring-principal constraints — enabling a chain of delegation. Principal A creates a grant for Principal B with GrantWithGrant. Principal B creates a grant for Principal C. Principal C creates a grant for Principal D. The key's effective access becomes a chain that is invisible from the key policy alone and grows without further policy changes.
 
@@ -25365,7 +25366,7 @@ KMS key policy grants kms:CreateGrant AND at least one existing grant on the key
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; pci_dss_v4.0: 3.6.1.4; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; owasp_nhi: NHI9; pci_dss_v4.0: 3.6.1.4; soc2: CC6.1;
 
 KMS key policy does not include a kms:EncryptionContext condition on usage statements. Without encryption context enforcement, any ciphertext encrypted with the key can be decrypted without providing context — there is no per-operation additional authentication data. Encryption context provides per-operation access control: a principal must know the context (key-value pairs) used during encryption to decrypt. Without context enforcement, Decrypt is a blanket operation on every ciphertext encrypted by the key. Narrows CTL.KMS.POLICY.CONDITION.001 to the specific case where EncryptionContext is missing even if ViaService or CallerAccount is present.
 
@@ -25380,7 +25381,7 @@ KMS key policy does not include a kms:EncryptionContext condition on usage state
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; owasp_nhi: NHI9; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
 
 KMS key with key_usage=ENCRYPT_DECRYPT has no kms:ViaService condition on its usage statements. Without ViaService, the key is usable directly via the KMS Decrypt/Encrypt APIs — not just through AWS services (S3, RDS, EBS, Secrets Manager). A principal with kms:Decrypt can call KMS Decrypt directly with any ciphertext encrypted by the key, bypassing the calling service's access controls. ViaService restricts key usage to operations performed through specific AWS services (kms:ViaService = s3.us-east-1.amazonaws.com means the key can only be used through S3 in us-east-1). Narrows CTL.KMS.POLICY.CONDITION.001 to the specific case where ViaService is missing, even when other protective conditions (CallerAccount, EncryptionContext) are present. Only applies to ENCRYPT_DECRYPT keys; SIGN_VERIFY and GENERATE_VERIFY_MAC keys do not use ViaService.
 
@@ -25395,7 +25396,7 @@ KMS key with key_usage=ENCRYPT_DECRYPT has no kms:ViaService condition on its us
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 3.6; fedramp_moderate: SC-12; ffiec: ISH-4; gdpr: Art.32; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12; nist_csf_2.0: PR.DS; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+- **Compliance:** cis_aws_v3.0: 3.6; fedramp_moderate: SC-12; ffiec: ISH-4; gdpr: Art.32; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12; nist_csf_2.0: PR.DS; owasp_nhi: NHI7; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
 
 Customer-created symmetric KMS keys must have automatic key rotation enabled. Key rotation limits the amount of data encrypted with a single key version, reducing the blast radius of key compromise.
 
@@ -25665,6 +25666,7 @@ Lambda functions with environment variables must encrypt them using a customer-m
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** governance
+- **Compliance:** owasp_nhi: NHI2;
 
 Lambda functions should carry no more than the configured environment-variable threshold (default 20). Functions whose env-var count exceeds the threshold are almost always misconfigured: they hold a mix of credentials, endpoint URLs, feature flags, retry parameters, and per-deploy configuration that should live in a configuration service (AWS AppConfig, SSM Parameter Store with hierarchies, or a layer-resident config file) rather than in the function's environment block. Three problems compound at scale. (1) Audit cost: a 30-variable env block is past the size a human reviewer can hold in working memory; identifying which entries are credentials versus URLs versus flags becomes a per-variable pattern-matching exercise. (2) Rotation cost: every change to any one variable requires a function configuration update and (for raw credentials) a published-version churn that retains the historical value. (3) Disclosure surface: every additional variable is one more value exposed by lambda:GetFunctionConfiguration. The threshold is a heuristic; some functions legitimately carry many flags, and the threshold is configurable.
 
@@ -25694,7 +25696,7 @@ Lambda functions must not encrypt their environment variables with a KMS key own
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; owasp_nhi: NHI2; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
 
 Lambda function environment variables must not contain plaintext secrets such as database credentials, API keys, or tokens. Environment variables are visible in plaintext to anyone with lambda:GetFunction permission, are included in CloudTrail logs for UpdateFunctionConfiguration events, and are stored in the Lambda service's configuration store without application-level encryption. AWS Secrets Manager and SSM Parameter Store SecureString provide encrypted storage with rotation, audit logging, and fine-grained access control. Moving secrets out of environment variables is the single most impactful Lambda security improvement for most functions.
 
@@ -25709,7 +25711,7 @@ Lambda function environment variables must not contain plaintext secrets such as
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** secrets
-- **Compliance:** nist_800_53_r5: MP-6; pci_dss_v4: 3.5;
+- **Compliance:** nist_800_53_r5: MP-6; owasp_nhi: NHI2; pci_dss_v4: 3.5;
 
 Lambda functions with multiple published versions whose older versions hold environment variables that differ from the current ($LATEST) version are surfaced for cleanup. Published Lambda versions are immutable snapshots of the function configuration — including the full environment-variable map at the moment the version was published — and the snapshot persists even after the live function rotates the credential, removes the variable, or migrates to a Secrets Manager reference. Anyone with `lambda:GetFunction` against the version- qualified ARN can read the historical environment block. A database password that was a raw value in version 3 is still readable from version 3 a year later, even if version 14 is the live one and the password has been rotated three times in the meantime. The pattern is benign for non-credential env vars (feature flags, service URLs); it is a leak when the env var ever held a credential. Published-version cleanup (DeleteFunction with version qualifier) is the remediation; the control is medium because the leak requires both `GetFunction` rights AND awareness that versions retain history.
 
@@ -25859,7 +25861,7 @@ All Lambda layers referenced by a function must have ARNs whose account IDs are 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: IA-5; pci_dss_v4.0: 8.3.4; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: IA-5; owasp_nhi: NHI2; pci_dss_v4.0: 8.3.4; soc2: CC6.1;
 
 Lambda layers must not contain embedded secrets (API keys, database credentials, certificates, private keys). Unlike environment variables (detectable via ENV.SECRETS.001), layer contents are opaque archives accessible to anyone with lambda:GetLayerVersion permission. Secrets in layers persist across function versions and are not encrypted by KMS.
 
@@ -26099,7 +26101,7 @@ Lambda functions using end-of-life runtimes do not receive security patches from
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** secrets
-- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4: 7.2;
+- **Compliance:** nist_800_53_r5: AC-3; owasp_nhi: NHI2; pci_dss_v4: 7.2;
 
 Lambda functions whose environment variables reference Secrets Manager ARNs or SSM Parameter Store names must have execution roles whose IAM policy grants the appropriate fetch action (`secretsmanager:GetSecretValue` for SM, `ssm:GetParameter` / `ssm:GetParameters` for SSM) on the referenced resource. The deployment is set up with the right reference but the wrong (or missing) permission: the env var carries the ARN, the application code calls GetSecretValue with that ARN, and the call fails with AccessDeniedException. The function then either crashes (when it does not handle the error path) or operates in a degraded mode (when it falls back to a default or skips the credential-using operation), and the failure is consistent across every cold start. The pattern is almost always a deployment misconfiguration: the secret was created and the env var was wired, but the IAM policy update that grants the fetch was either never authored (the IaC is split across teams) or was scoped to the wrong ARN (a previous version of the secret, a sibling secret, or a wildcard that intentionally excluded this one). Cross-resource reasoning: env var references are joined against role policy grants to detect the mismatch.
 
@@ -26114,7 +26116,7 @@ Lambda functions whose environment variables reference Secrets Manager ARNs or S
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** secrets
-- **Compliance:** hipaa: 164.312(d); nist_800_53_r5: IA-5; pci_dss_v4: 8.2;
+- **Compliance:** hipaa: 164.312(d); nist_800_53_r5: IA-5; owasp_nhi: NHI2, NHI9; pci_dss_v4: 8.2;
 
 Lambda functions that hold credential-shaped environment variables (DB_PASSWORD, API_KEY, SECRET_TOKEN, OAUTH_*, AUTH_TOKEN, and similar) must reference those values through Secrets Manager ARNs or SSM Parameter Store SecureString parameters at runtime, not store them as raw values in the function's environment block. Raw credentials in env vars are visible to any principal with `lambda:GetFunctionConfiguration` (a much broader set than the secrets-fetch IAM permission would be), persist immutably in every published function version (rotating the live credential leaves the old value in every historical version snapshot — see CTL.LAMBDA.ENV.VISIBLE.VERSIONS.001), are not CloudTrail-audited at the read level (only function- configuration reads are logged, not env var reads), and do not rotate without a function configuration update (which means rotation in practice happens rarely or never). Secrets Manager (and SSM SecureString) centralizes the credential, supports automatic rotation, logs every retrieval via CloudTrail with the IAM identity that fetched it, and keeps the credential value out of the function configuration entirely. Distinct from CTL.LAMBDA.ENV.SECRETS.001, which detects the pattern; this control checks for the management alternative.
 
@@ -26129,7 +26131,7 @@ Lambda functions that hold credential-shaped environment variables (DB_PASSWORD,
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** secrets
-- **Compliance:** nist_800_53_r5: SC-28; pci_dss_v4: 3.4;
+- **Compliance:** nist_800_53_r5: SC-28; owasp_nhi: NHI2, NHI9; pci_dss_v4: 3.4;
 
 Lambda functions whose environment variables reference SSM Parameter Store parameters that hold credentials must reference SecureString-typed parameters, not String-typed ones. SSM Parameter Store String type stores values in plaintext: the parameter is readable by any principal holding `ssm:GetParameter` (a much broader IAM action than the kms:Decrypt that SecureString reads require), is visible in the SSM console without an additional decrypt step, is unencrypted at rest, and provides no CloudTrail signal for its read operations distinct from generic parameter reads. SecureString-typed parameters encrypt the value with KMS, gate reads on `kms:Decrypt` against the key policy, log every decrypt in CloudTrail under the calling identity, and store ciphertext at rest. The pattern that produces this finding is a one-shot parameter creation that took the SSM default (String) for what was clearly a credential, or a refactor where the parameter was migrated to a new name without re-typing as SecureString. Same architectural pattern as the S3 / RDS / Secrets-Manager equivalence: managed storage is necessary but not sufficient — the storage type matters.
 
@@ -28608,7 +28610,7 @@ OpenSearch cross-cluster setup is over-broad: CCS trust granted to a non-product
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** encryption
-- **Compliance:** fedramp_moderate: SC-12, SC-17; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-17; soc2: CC7.4, A1.2;
+- **Compliance:** fedramp_moderate: SC-12, SC-17; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12, SC-17; owasp_nhi: NHI7; soc2: CC7.4, A1.2;
 
 OpenSearch domain custom endpoint TLS certificate expires within 30 days and no automated rotation is configured. ACM-issued certs auto-renew if the CNAME validation record is in place; certs imported from external sources do not. Once a cert expires, every TLS handshake fails: the domain is reachable but unusable for any TLS-verifying client. Outage scope is every client that talks to the custom endpoint.
 
@@ -33386,6 +33388,21 @@ S3 buckets tagged with data-classification=phi must have malware scanning enable
 
 ---
 
+### CTL.S3.MARKER.PHI.001
+
+**S3 Bucket Tagged data-classification=phi (Marker)**
+
+- **Severity:** low
+- **Type:** marker
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(c)(1);
+
+Fact-recording marker for S3 buckets tagged data-classification=phi. Emits an informational finding (NOT a violation) on every PHI-tagged bucket so cross-resource chains can compose it with violation findings on related identities or resources. Examples: a Cognito unauth role with s3:GetObject targeting a PHI bucket; an IAM role outside the covered entity that can AssumeRole to a principal that reaches a PHI bucket. PHI tagging on its own is the desired state — never a finding to triage. The marker exists so the chain engine can join "violation on the access side" with "data classification on the storage side" without forcing the collector to denormalise every join shape into a per-asset boolean.
+
+**Remediation:** None. This marker exists as a chain-detection ingredient. To suppress noise on dashboards, filter findings by control_id when rendering Findings — markers should appear in a separate "facts" panel rather than the violation list.
+
+---
+
 ### CTL.S3.MFADELETE.001
 
 **MFA Delete Must Be Enabled on S3 Buckets**
@@ -34333,7 +34350,7 @@ No CloudWatch alarm monitors CloudTrail for PutSecretValue API calls. PutSecretV
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: IA-5, SI-4; pci_dss_v4.0: 8.2.4; soc2: CC7.2;
+- **Compliance:** fedramp_moderate: SI-4; iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: IA-5, SI-4; owasp_nhi: NHI7; pci_dss_v4.0: 8.2.4; soc2: CC7.2;
 
 No monitoring tracks secrets approaching their rotation deadline — secrets where (LastRotatedDate + interval) falls within the next 7 days. Proactive control (vs. reactive ROTATION.STALE.001 which fires after rotation is already overdue): early warning lets the team verify the rotation pipeline before failure.
 
@@ -34348,7 +34365,7 @@ No monitoring tracks secrets approaching their rotation deadline — secrets whe
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** detection
-- **Compliance:** cis_aws_v3.0: 2.4; fedramp_moderate: SI-4; hipaa: 164.312(a)(1); iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: IA-5, SI-4, IR-4; pci_dss_v4.0: 8.2.4, 10.6; soc2: CC7.2, CC7.3;
+- **Compliance:** cis_aws_v3.0: 2.4; fedramp_moderate: SI-4; hipaa: 164.312(a)(1); iso_27001_2022: A.5.16, A.8.16; nist_800_53_r5: IA-5, SI-4, IR-4; owasp_nhi: NHI7; pci_dss_v4.0: 8.2.4, 10.6; soc2: CC7.2, CC7.3;
 
 No CloudWatch alarm monitors the RotationFailed event (Secrets Manager → CloudWatch Events / EventBridge) or CloudTrail RotateSecret error events. When rotation fails the credential doesn't change, the next rotation attempt may also fail, and the credential becomes static while rotation appears configured. Companion to CTL.SECRETS.GHOST.ROTATIONLAMBDA.001 and CTL.SECRETS.ROTATION.STALE.001 (SM-1): the SM-1 controls detect rotation already broken (state); this alarm detects rotation failing now (event), enabling minutes-level response.
 
@@ -34378,7 +34395,7 @@ CloudTrail is not configured to log Secrets Manager data events (GetSecretValue,
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-6, SC-12; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.6;
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-6, SC-12; owasp_nhi: NHI6; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.6;
 
 Secret resource policy grants GetSecretValue to more than 5 external accounts. Same blast-radius pattern as CTL.KMS.CROSSACCOUNT.BLASTRADIUS.001 — each sharing account increases risk in both directions: credential compromise affects all accounts, and account compromise in any one of them provides credential access. Threshold of 5 is consistent across cross-account blast radius controls.
 
@@ -34393,7 +34410,7 @@ Secret resource policy grants GetSecretValue to more than 5 external accounts. S
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-4, SC-12; pci_dss_v4.0: 3.4.1, 7.1; soc2: CC6.1, CC6.7;
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-4, SC-12; owasp_nhi: NHI6; pci_dss_v4.0: 3.4.1, 7.1; soc2: CC6.1, CC6.7;
 
 Secret resource policy grants GetSecretValue to an external account but the secret's KMS key policy doesn't grant kms:Decrypt to that account. The external account has Secrets Manager permission to read the secret but can't decrypt it — the KMS key blocks the decryption. The access appears granted; the decryption fails. This is a cross-service permission mismatch where one service grants access and the other blocks it. Note: secrets encrypted with the AWS-managed key (aws/secretsmanager) cannot be shared cross-account at all — this control applies to CMK-encrypted secrets where cross-account access is intended.
 
@@ -34408,7 +34425,7 @@ Secret resource policy grants GetSecretValue to an external account but the secr
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** fedramp_moderate: IA-5; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-5, SC-12, CM-2; pci_dss_v4.0: 3.5, 8.2.4; soc2: CC6.1, CC6.7;
+- **Compliance:** fedramp_moderate: IA-5; iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-5, SC-12, CM-2; owasp_nhi: NHI9; pci_dss_v4.0: 3.5, 8.2.4; soc2: CC6.1, CC6.7;
 
 The same credential value exists in secrets in multiple accounts — the credential was copied between accounts instead of using cross-account access via resource policy. When the credential rotates in the source account, the copy is stale; authentication may fail or destination accounts may continue using the old value. Stave detects duplication via observation metadata (matching credential fingerprints, tag patterns, or scanner-flagged duplicates) rather than reading the credential value itself.
 
@@ -34453,7 +34470,7 @@ Secret resource policy grants access to an IAM principal (role or user ARN) that
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** cis_aws_v3.0: 2.4; fedramp_moderate: IA-5; hipaa: 164.312(a)(1); iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-5, SC-12, CM-2, CM-3; pci_dss_v4.0: 3.6, 8.2.4; soc2: CC6.1, CC6.7, CC8.1;
+- **Compliance:** cis_aws_v3.0: 2.4; fedramp_moderate: IA-5; hipaa: 164.312(a)(1); iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-5, SC-12, CM-2, CM-3; owasp_nhi: NHI1; pci_dss_v4.0: 3.6, 8.2.4; soc2: CC6.1, CC6.7, CC8.1;
 
 Secret has rotation enabled but the rotation Lambda function has been deleted. The console shows rotation enabled, the rotation schedule is set, the rotation ARN is present — but the Lambda function doesn't exist. When the next rotation is triggered, the invocation fails silently. The credential never rotates. The secret appears to have active rotation; it doesn't. This is the credential rotation ghost — the most dangerous ghost reference in the Secrets Manager domain because the gap is INVISIBLE to audits: the rotation configuration shows "Enabled, 30-day interval" while the credential has been static since the Lambda was deleted.
 
@@ -34558,7 +34575,7 @@ Secret's AWSPREVIOUS version stage contains a credential value that is more than
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: AC-3; hipaa: 164.312(a)(1); iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-4, AC-6; pci_dss_v4.0: 7.1, 7.2, 1.2; soc2: CC6.1, CC6.6, CC6.7;
+- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: AC-3; hipaa: 164.312(a)(1); iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-4, AC-6; owasp_nhi: NHI9; pci_dss_v4.0: 7.1, 7.2, 1.2; soc2: CC6.1, CC6.6, CC6.7;
 
 Secret resource policy grants secretsmanager:GetSecretValue to principals in external accounts without an aws:PrincipalOrgID condition. Any principal in the specified external account with the matching IAM permissions can read the credential. Distinct from CTL.SECRETSMANAGER.POLICY.PUBLIC.001 (Principal '*') and from CTL.SECRETS.CROSSACCOUNT.NOKMS.001 (cross-service KMS mismatch): this control checks the org-boundary scoping condition specifically.
 
@@ -34573,7 +34590,7 @@ Secret resource policy grants secretsmanager:GetSecretValue to principals in ext
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-6, SC-12; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-6, SC-12; owasp_nhi: NHI5; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
 
 Secret resource policy grants both secretsmanager:GetSecretValue (read the credential) and secretsmanager:PutSecretValue (modify the credential) to the same APPLICATION principal. The principal that reads the credential can also change it — no separation between credential consumer (reads) and credential manager (writes). An attacker who compromises the principal can read the current credential AND replace it. The control excludes rotation-Lambda principals (which legitimately need PutSecretValue for rotation) by checking the policy_rotation_principals inventory.
 
@@ -34588,7 +34605,7 @@ Secret resource policy grants both secretsmanager:GetSecretValue (read the crede
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-6, CM-2; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3, CC8.1;
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, AC-6, CM-2; owasp_nhi: NHI5, NHI9; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3, CC8.1;
 
 Secret resource policy has more than 10 permission statements. Same threshold and pattern as CTL.SQS.POLICY.SPRAWL.001, CTL.SNS.POLICY.SPRAWL.001, and CTL.LAMBDA.POLICY.ACCUMULATED.001 — accumulated permission statements make the credential's access surface unauditable. Sprawled secret policies often hide effectively-public access in a Statement that the team forgot was added.
 
@@ -34648,7 +34665,7 @@ Secrets Manager secret is replicated to other regions but the replicas have diff
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** aws_security_hub: SecretsManager.1; mitre_attack: T1528; nist_800_53_r5: IA-5;
+- **Compliance:** aws_security_hub: SecretsManager.1; mitre_attack: T1528; nist_800_53_r5: IA-5; owasp_nhi: NHI7;
 
 Secrets without automatic rotation retain the same credential value indefinitely. An attacker who obtains a secret value through any means (log harvesting, memory dump, API call) has permanent access unless the secret is manually rotated. Automatic rotation limits the window of compromise — a stolen credential becomes invalid after the rotation interval.
 
@@ -34663,7 +34680,7 @@ Secrets without automatic rotation retain the same credential value indefinitely
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** cis_aws_v3.0: 2.4; fedramp_moderate: IA-5; hipaa: 164.312(a)(1); iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-5, SC-12; pci_dss_v4.0: 3.6, 8.2.4; soc2: CC6.1, CC6.7;
+- **Compliance:** cis_aws_v3.0: 2.4; fedramp_moderate: IA-5; hipaa: 164.312(a)(1); iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-5, SC-12; owasp_nhi: NHI7; pci_dss_v4.0: 3.6, 8.2.4; soc2: CC6.1, CC6.7;
 
 Secret rotation interval is configured to more than 90 days. Most compliance frameworks recommend or require credential rotation within 90 days — PCI-DSS recommends 90-day rotation, NIST 800-53 recommends periodic rotation, and many organizational policies require 90 days or less. A rotation interval of 365 days means the credential is the same for an entire year. Note: some credentials don't rotate frequently (long-lived API keys for stable integrations, OAuth client secrets); the finding warrants review against credential type and compliance requirements rather than a hard reject.
 
@@ -34678,7 +34695,7 @@ Secret rotation interval is configured to more than 90 days. Most compliance fra
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** cis_aws_v3.0: 2.4; fedramp_moderate: IA-5; hipaa: 164.312(a)(1); iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-5, SC-12; pci_dss_v4.0: 3.6, 8.2.4; soc2: CC6.1, CC6.7;
+- **Compliance:** cis_aws_v3.0: 2.4; fedramp_moderate: IA-5; hipaa: 164.312(a)(1); iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-5, SC-12; owasp_nhi: NHI7; pci_dss_v4.0: 3.6, 8.2.4; soc2: CC6.1, CC6.7;
 
 Secret has rotation enabled but LastRotatedDate is null — rotation has never successfully completed. Rotation was configured (enabled, Lambda set, schedule set) but has never executed successfully. The credential is the same value that was stored when the secret was created. The configuration shows good intent ("rotation enabled, 30-day interval") but the credential has never actually been changed.
 
@@ -34693,7 +34710,7 @@ Secret has rotation enabled but LastRotatedDate is null — rotation has never s
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** fedramp_moderate: IA-5; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: IA-5, CP-10; pci_dss_v4.0: 8.2.4; soc2: CC6.1, A1.2;
+- **Compliance:** fedramp_moderate: IA-5; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: IA-5, CP-10; owasp_nhi: NHI7; pci_dss_v4.0: 8.2.4; soc2: CC6.1, A1.2;
 
 Production secret uses the single-user rotation strategy instead of the multi-user (alternating-users) strategy. Single-user rotation: changes the password for the same database user. During the brief window between password change and secret update, connections using the old password fail. Multi-user rotation: alternates between two users (e.g., app_user and app_user_clone). One is always valid while the other rotates. No downtime window. Fires only on production secrets — single-user rotation on dev/test is acceptable. Same production heuristic as CTL.APIGATEWAY.EXECLOG.LEVEL.001 and CTL.ECS.EXEC.PRODUCTION.001.
 
@@ -34708,7 +34725,7 @@ Production secret uses the single-user rotation strategy instead of the multi-us
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** cis_aws_v3.0: 2.4; fedramp_moderate: IA-5; hipaa: 164.312(a)(1); iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-5, SC-12; pci_dss_v4.0: 3.6, 8.2.4; soc2: CC6.1, CC6.7;
+- **Compliance:** cis_aws_v3.0: 2.4; fedramp_moderate: IA-5; hipaa: 164.312(a)(1); iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-5, SC-12; owasp_nhi: NHI7; pci_dss_v4.0: 3.6, 8.2.4; soc2: CC6.1, CC6.7;
 
 Secret has rotation enabled but the last successful rotation was more than 2x the rotation interval ago. If the configured interval is 30 days and the last rotation was 90 days ago, rotation has been failing or stuck for 60+ days. The configuration shows "rotation enabled, 30-day interval" — the credential hasn't actually changed in 90 days. Deepens CTL.SECRETS.ROTATION.001 (which checks whether rotation is enabled) by checking whether rotation is actually WORKING.
 
@@ -34723,7 +34740,7 @@ Secret has rotation enabled but the last successful rotation was more than 2x th
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(a)(1); soc2: CC6.1;
+- **Compliance:** hipaa: 164.312(a)(1); owasp_nhi: NHI9; soc2: CC6.1;
 
 Secrets Manager secrets must have automatic rotation enabled. Long-lived secrets that are never rotated increase the blast radius of credential leaks and prevent timely revocation.
 
@@ -34767,7 +34784,7 @@ The observation snapshot is missing required Secrets Manager properties. A safet
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-3; owasp_nhi: NHI5; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
 
 Secrets Manager resource policies must not grant secretsmanager:GetSecretValue or secretsmanager:* to Principal "*" or to unauthenticated principals without scoping conditions. Public secret access allows any AWS principal to retrieve the secret value, which typically contains database credentials, API keys, or certificates.
 
@@ -36719,7 +36736,7 @@ Step Functions state machine's KMS key is a single-region key. Cross-region disa
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** encryption
-- **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.4; soc2: CC6.7, CC8.1;
+- **Compliance:** fedramp_moderate: SC-12; iso_27001_2022: A.8.24; nist_800_53_r5: SC-12; owasp_nhi: NHI7; pci_dss_v4.0: 3.6.4; soc2: CC6.7, CC8.1;
 
 Step Functions state machine's KMS key has automatic rotation disabled. AWS rotates the key material annually when enabled; without it, the same material protects data indefinitely. NIST / PCI-DSS guidance recommends automatic rotation for keys with long-lived data.
 

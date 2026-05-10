@@ -7,7 +7,7 @@
     "now": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "29edf3ff25d99dd98046a7d7dccfda1e91059638f476937e64faf94eab34e781",
+    "policy_fingerprint": "787c7dff525b8285368ea401712229f8adfa6ac60a68cbcb6090af89883bfe60",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -688,6 +688,7 @@
         "fedramp_moderate": "IA-2",
         "hipaa": "164.312(a)(1)",
         "nist_800_53_r5": "IA-2",
+        "owasp_nhi": "NHI2",
         "pci_dss_v3.2.1": "2.1",
         "pci_dss_v4.0": "8.3.4",
         "soc2": "CC6.1"
@@ -2245,6 +2246,7 @@
         "fedramp_moderate": "IA-2(1)",
         "hipaa": "164.312(d)",
         "nist_800_53_r5": "IA-2(1)",
+        "owasp_nhi": "NHI4",
         "pci_dss_v4.0": "8.3.1",
         "soc2": "CC6.1"
       },
@@ -4901,6 +4903,7 @@
       "control_severity": "medium",
       "control_compliance": {
         "hipaa": "164.312(a)(1)",
+        "owasp_nhi": "NHI9",
         "soc2": "CC6.1"
       },
       "control_compliance_ccm_v4": [

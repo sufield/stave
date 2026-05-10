@@ -7,6 +7,7 @@ description: >
 domain: identity
 severity: medium
 compliance:
+  owasp_nhi: "NHI7"
   cis_gcp_v3: "1.5"
   nist_800_53_r5: "IA-5"
   soc2: "CC6.1"

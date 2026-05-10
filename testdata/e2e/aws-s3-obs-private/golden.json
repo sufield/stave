@@ -7,7 +7,7 @@
     "now": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "9ad9e43495c10bc9e37d1291a8b3b8fa65339445436de88b3d48e575ef16ec40",
+    "policy_fingerprint": "43eb83459f3e0740ee1056856233d8beb3c73e1104a2ae4623e638648daca12f",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -353,6 +353,131 @@
           "property_path": "storage.object_ownership.rule",
           "current_value": "",
           "fix_action": "set to BucketOwnerEnforced"
+        }
+      ]
+    }
+  ],
+  "marker_findings": [
+    {
+      "finding_id": "sha256:89c6271ba857d310",
+      "control_id": "CTL.S3.MARKER.PHI.001",
+      "control_name": "S3 Bucket Tagged data-classification=phi (Marker)",
+      "control_description": "Fact-recording marker for S3 buckets tagged data-classification=phi. Emits an informational finding (NOT a violation) on every PHI-tagged bucket so cross-resource chains can compose it with violation findings on related identities or resources. Examples: a Cognito unauth role with s3:GetObject targeting a PHI bucket; an IAM role outside the covered entity that can AssumeRole to a principal that reaches a PHI bucket. PHI tagging on its own is the desired state — never a finding to triage. The marker exists so the chain engine can join \"violation on the access side\" with \"data classification on the storage side\" without forcing the collector to denormalise every join shape into a per-asset boolean.\n",
+      "asset_id": "private-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.tags.data-classification",
+            "actual_value": "phi",
+            "operator": "eq",
+            "unsafe_value": "phi"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "low",
+      "control_compliance": {
+        "hipaa": "164.312(c)(1)"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "No remediation. PHI tagging is the desired state.",
+        "action": "None. This marker exists as a chain-detection ingredient. To suppress noise on dashboards, filter findings by control_id when rendering Findings — markers should appear in a separate \"facts\" panel rather than the violation list."
+      },
+      "fix_plan": {
+        "id": "",
+        "target": {
+          "asset_id": "private-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "None. This marker exists as a chain-detection ingredient. To suppress noise on dashboards, filter findings by control_id when rendering Findings — markers should appear in a separate \"facts\" panel rather than the violation list."
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        },
+        {
+          "predicate_expr": "storage.tags.data-classification eq \"phi\"",
+          "observation_key": "storage.tags.data-classification",
+          "operator": "eq",
+          "expected_value": "phi",
+          "observed_value": "phi"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "private-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.MARKER.PHI.001",
+          "control_name": "S3 Bucket Tagged data-classification=phi (Marker)",
+          "severity": "low",
+          "reasoning": [
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "the bucket's data-classification tag = \"phi\"",
+              "observation_key": "storage.tags.data-classification",
+              "observed_value": "phi"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          },
+          {
+            "path": "storage.tags.data-classification",
+            "current_value": "phi",
+            "required_value": "any value other than phi",
+            "has_safe_default": false,
+            "description": "Change storage.tags.data-classification away from phi"
+          }
+        ],
+        "action": "None. This marker exists as a chain-detection ingredient. To suppress noise on dashboards, filter findings by control_id when rendering Findings — markers should appear in a separate \"facts\" panel rather than the violation list."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3",
+        "hipaa"
+      ],
+      "delta": [
+        {
+          "property_label": "data classification tag",
+          "property_path": "storage.tags.data-classification",
+          "current_value": "phi",
+          "fix_action": "change from \"phi\" to any other value, or remove"
         }
       ]
     }

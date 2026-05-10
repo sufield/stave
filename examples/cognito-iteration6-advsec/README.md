@@ -69,13 +69,14 @@ two asset entries. In production this means the collector
 emits two observation entries per user pool — one with each
 `kind` value — which is wasteful but works.
 
-This is the same kind of catalog-content gap flagged in
-Iteration 3 (PASSWORD.001 / PASSWORD.POLICY.001 duplication,
-MFA.001 / MFA.ENFORCE.001 duplication). The fix is a content
-review that picks ONE canonical `kind` value and migrates the
-predicates. Out of scope for the Iteration 6 fixture build;
-flagged for the broader auth-baseline / catalog-content
-review.
+This is the same kind of catalog-content gap that was closed
+in the Iteration 3 dedup pass (`PASSWORD.001` ↔
+`PASSWORD.POLICY.001` and `MFA.001` ↔ `MFA.ENFORCE.001` —
+each pair retired the duplicate, kept the canonical path).
+The `kind` split here would be fixed the same way: pick ONE
+canonical value and migrate the predicates. Out of scope for
+the Iteration 6 fixture build; flagged for the broader
+auth-baseline / catalog-content review.
 
 ## Catalog observation: ADVSEC subdivisions
 

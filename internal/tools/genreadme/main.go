@@ -122,6 +122,16 @@ func collect(controlsRoot string) (Data, error) {
 			}
 		}
 
+		// Some domains keep controls at the domain root with no
+		// subcategory (e.g. acm/, eks/, shield/, guardrail/). Count
+		// those too — the runtime catalog loader picks them up via
+		// recursive walk, so the README total must include them.
+		flatFiles, err := filepath.Glob(filepath.Join(domainDir, "*.yaml"))
+		if err != nil {
+			return Data{}, fmt.Errorf("globbing %s root: %w", domainName, err)
+		}
+		domainTotal += len(flatFiles)
+
 		domainTotals[domainName] = domainTotal
 		total += domainTotal
 	}

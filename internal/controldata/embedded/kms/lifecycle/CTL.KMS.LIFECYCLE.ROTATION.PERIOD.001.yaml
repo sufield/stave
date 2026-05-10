@@ -22,6 +22,7 @@ description: >
 domain: governance
 severity: medium
 compliance:
+  owasp_nhi: "NHI7"
   soc2: "CC6.1, CC8.1"
   nist_800_53_r5: "CM-2, CM-3, SC-12"
   pci_dss_v4.0: "3.6"

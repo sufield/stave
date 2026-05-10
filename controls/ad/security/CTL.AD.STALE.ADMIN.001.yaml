@@ -7,6 +7,7 @@ description: >
 domain: identity
 severity: high
 compliance:
+  owasp_nhi: "NHI1"
   cis_ad: "5.1"
   ccm_v4: ["IAM-09", "IVS-04"]
 scope_tags:
