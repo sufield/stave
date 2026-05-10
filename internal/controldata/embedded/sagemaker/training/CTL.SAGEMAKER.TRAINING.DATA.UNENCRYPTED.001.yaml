@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.TRAINING.DATA.UNENCRYPTED.001
+name: SageMaker Training Data Source Must Use Encrypted Reads
+description: >
+  SageMaker training job ingests its InputDataConfig data
+  source without encryption-in-transit and without explicit
+  KMS encryption-context binding. Distinct from
+  CTL.SAGEMAKER.TRAINING.ENCRYPT.VOLUME.001 (which checks the
+  training instance's local volume encryption at rest) — this
+  control flags the read path between S3 and the training
+  container. Unencrypted training reads expose dataset content
+  on the AWS network path and bind retrieval to the bucket-
+  level KMS key (rather than a job-specific encryption
+  context), so a compromised training role's blast radius
+  spans every bucket the role can decrypt.
+domain: governance
+severity: high
+compliance:
+  owasp_nhi: "NHI6"
+  nist_800_53_r5: "SC-8, SC-13"
+  soc2: "CC6.7"
+  hipaa: "164.312(e)(1), 164.312(e)(2)(ii)"
+  ccm_v4: ["CEK-03", "CEK-06"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    SageMaker training job reads input data without
+    encryption-in-transit + KMS encryption-context binding.
+  action: >
+    Add aws:SecureTransport=true deny-rule to the source
+    bucket policy. Configure the training job's
+    InputDataConfig with a KmsKeyId and pass an explicit
+    encryption-context entry binding the decrypt to the
+    training-job ARN. Add a key policy permitting only the
+    training role to decrypt with that context.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_training",
+        "training": { "data_source_encrypted": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_training
+    - field: properties.compute.training.data_source_encrypted
+      op: eq
+      value: false

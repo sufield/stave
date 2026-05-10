@@ -1,0 +1,42 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.MARKER.BEDROCK.TOOL.001
+name: Lambda Function Registered as Bedrock Agent Tool (Marker)
+description: >
+  Fact-recording marker for Lambda functions that are registered
+  as a Bedrock agent action group (the agent's tool list). Emits
+  an informational finding (NOT a violation) so cross-service
+  chains can compose this fact with overpermission markers on
+  the Lambda's execution role. Same pattern as
+  CTL.S3.MARKER.PHI.001 + CTL.BEDROCK.KB.MARKER.INDEXES.001
+  applied to Lambda. A Lambda being a Bedrock tool is the
+  desired state — never a finding to triage. The marker exists
+  so the chain engine can join "agent prompt surface reaches
+  this Lambda" with "this Lambda's role reaches PHI" without
+  forcing the collector to denormalise the agent → Lambda → S3
+  reachability into a single per-Lambda boolean.
+domain: governance
+severity: low
+type: marker
+classification: state_assertion
+compliance:
+  hipaa: "164.312(c)(1)"
+scope_tags:
+  - aws
+  - lambda
+  - bedrock
+remediation:
+  description: >
+    No remediation. A Lambda registered as a Bedrock agent
+    action group is the desired state.
+  action: >
+    None. This marker exists as a chain-detection ingredient.
+    Render it under a "facts" panel rather than the violation
+    list.
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: lambda_function
+    - field: properties.compute.bedrock.is_agent_tool
+      op: eq
+      value: true

@@ -1,0 +1,59 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.KB.DATASOURCE.CROSSACCOUNT.001
+name: Bedrock Knowledge Base Data Source Must Not Cross Account Boundary
+description: >
+  Bedrock knowledge base reads from an S3 bucket in a different
+  AWS account. Cross-account RAG ingestion expands the trust
+  boundary of the agent's response surface: query results may
+  include content from outside the workload's control plane,
+  and a compromise of the source account propagates into the
+  agent's outputs. Cross-account data sources are sometimes
+  legitimate (a dedicated data-engineering account feeding a
+  product account) but require explicit scoping — VPC endpoint
+  policies, encryption-in-transit on the bucket policy, and
+  pinned KMS key ARNs — none of which are visible to a casual
+  reader of the knowledge-base config. This control flags the
+  cross-account property so operators can confirm the scoping
+  is in place.
+domain: governance
+severity: high
+compliance:
+  owasp_nhi: "NHI3, NHI6"
+  nist_800_53_r5: "AC-4, AC-6"
+  soc2: "CC6.1, CC6.6"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["DSP-07", "IVS-04"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    Bedrock knowledge base ingests data from an S3 bucket in a
+    different AWS account. The agent's response surface
+    inherits the source account's compromise risk.
+  action: >
+    Either (1) replicate the data source into the local account
+    via S3 replication + recreate the knowledge base, or (2)
+    keep the cross-account source but pin the bucket policy to
+    require aws:PrincipalArn matching the KB role and add a
+    VPC endpoint policy restricting the call path. Document
+    the cross-account dependency in the agent's runbook.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_knowledge_base",
+        "knowledge_base": { "data_source_is_cross_account": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_knowledge_base
+    - field: properties.ai.knowledge_base.data_source_is_cross_account
+      op: eq
+      value: true

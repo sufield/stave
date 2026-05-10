@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.TRAINING.OVERPERM.S3.001
+name: SageMaker Training Job Role Must Scope S3 Access
+description: >
+  SageMaker training job execution role grants s3:GetObject (or
+  s3:*) on Resource: * — the training container can read any
+  object in any bucket in the account, not just the declared
+  training data inputs. A training job is the highest-blast-
+  radius non-human identity in an ML platform: it ingests
+  attacker-controlled or attacker-staged data, runs untrusted
+  code (model frameworks, custom scripts), and writes outputs
+  to model-artifact buckets. Scope the training role to the
+  specific input bucket(s) listed in the InputDataConfig and
+  the output bucket listed in the OutputDataConfig.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-04", "IAM-05", "DSP-07"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    SageMaker training job role can read any S3 object in the
+    account. The training container's data-access scope exceeds
+    its declared input data configuration.
+  action: >
+    Restrict the role's s3:GetObject permission to the bucket
+    ARNs declared in the training job's InputDataConfig +
+    OutputDataConfig. Use s3:prefix conditions matching the
+    declared S3DataSource paths so the training container
+    cannot read sibling prefixes.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_training",
+        "identity": {
+          "execution_role": { "has_broad_s3_access": false }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_training
+    - field: properties.compute.identity.execution_role.has_broad_s3_access
+      op: eq
+      value: true

@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.MARKER.PRODUCTION.001
+name: IAM Role Tagged environment=production (Marker)
+description: >
+  Fact-recording marker for IAM roles tagged environment=production
+  (or equivalent production-tier tag). Emits an informational
+  finding (NOT a violation) on every production-tagged role so
+  cross-resource chains can compose it with development-side
+  controls. Examples: a SageMaker notebook role with sts:AssumeRole
+  pointing at a production role; a Lambda execution role that can
+  AssumeRole into a production database role; a CodeBuild role
+  that can deploy to production endpoints. Production tagging
+  on its own is the desired state — never a finding to triage.
+  The marker exists so the chain engine can join "violation on
+  the development side: this identity can reach production" with
+  "the target is production" without forcing the collector to
+  denormalise every dev→prod join shape into a per-asset boolean.
+domain: governance
+severity: low
+type: marker
+classification: state_assertion
+compliance:
+  nist_800_53_r5: "AC-2(7)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - iam
+remediation:
+  description: >
+    No remediation. Production tagging on IAM roles is the
+    desired state.
+  action: >
+    None. This marker exists as a chain-detection ingredient.
+    To suppress noise on dashboards, filter findings by
+    control_id when rendering Findings — markers should
+    appear in a separate "facts" panel rather than the
+    violation list.
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.tags.environment
+      op: eq
+      value: production

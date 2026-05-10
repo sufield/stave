@@ -1,0 +1,27 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-10T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:agent/CUSTSUPPORT03",
+      "type": "aws_bedrock_agent",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_agent",
+          "agent": {
+            "guardrail_associated": true,
+            "model_invoke_scope_broad": false,
+            "lambda_invoke_scope_broad": true,
+            "s3_access_scope_broad": false,
+            "invocation_logging_enabled": false,
+            "idle_session_ttl_excessive": false,
+            "action_group_count": 5,
+            "has_ghost_action_group_lambda": false
+          }
+        }
+      }
+    }
+  ]
+}

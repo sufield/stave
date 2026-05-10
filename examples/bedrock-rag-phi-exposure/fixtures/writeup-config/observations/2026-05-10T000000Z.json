@@ -1,0 +1,50 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-10T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:knowledge-base/PATIENTKB",
+      "type": "aws_bedrock_knowledge_base",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_knowledge_base",
+          "knowledge_base": {
+            "target_bucket_arn": "arn:aws:s3:::patient-records",
+            "data_source_is_cross_account": true,
+            "data_source_encrypted": false,
+            "role_s3_scope_broader_than_sources": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::patient-records",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "tags": {
+            "data-classification": "phi"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:agent/CUSTSUPPORTAGENT",
+      "type": "aws_bedrock_agent",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_agent",
+          "agent": {
+            "guardrail_associated": true,
+            "public_invocation_endpoint": true
+          }
+        }
+      }
+    }
+  ]
+}

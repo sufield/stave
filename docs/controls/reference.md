@@ -3,30 +3,30 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2618
-**Pack hash:** `8fa609e3250f11749a47144aef44e73c5c20aaab28fbb226325a0de0a854de75`
+**Total controls:** 2650
+**Pack hash:** `1d871b95832bf941306c39fb5450d49381609744c6032f218b22867deb8129f8`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 270 |
-| high | 1131 |
+| high | 1149 |
 | info | 16 |
-| low | 199 |
-| medium | 1002 |
+| low | 204 |
+| medium | 1011 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 88 |
+| audit | 89 |
 | capacity | 3 |
 | detection | 134 |
 | encryption | 113 |
-| exposure | 1185 |
-| governance | 559 |
+| exposure | 1186 |
+| governance | 576 |
 | hygiene | 18 |
-| identity | 401 |
+| identity | 414 |
 | lifecycle | 31 |
 | network | 32 |
 | resilience | 33 |
@@ -4697,6 +4697,36 @@ Bedrock API keys must have appropriate expiration dates. Long-lived or non-expir
 
 ---
 
+### CTL.BEDROCK.AGENT.ACTIONGROUPS.SPRAWL.001
+
+**Bedrock Agent Action-Group Count Must Be Bounded**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6, CM-2; owasp_nhi: NHI5; soc2: CC6.1, CC8.1;
+
+Bedrock agent has more than 10 action groups attached. Each action group is a Lambda function or API schema the agent can invoke; sprawled action-group lists expand the agent's blast radius beyond its stated purpose, often because teams stack ad-hoc tool integrations onto a single agent rather than splitting capability into purpose-built agents. Same shape as CTL.SQS.POLICY.SPRAWL and CTL.SECRETS.POLICY.SPRAWL — accumulated permission attachments that hide effective reachability. An attacker who controls the prompt enumerates the larger surface; legitimate operators no longer reason about what the agent can do.
+
+**Remediation:** Split the agent into purpose-built agents (one per customer workflow) so each agent's action-group list stays small and reviewable. Remove inactive or deprecated action groups via DeleteAgentActionGroup.
+
+---
+
+### CTL.BEDROCK.AGENT.GHOST.LAMBDA.001
+
+**Bedrock Agent Action Group Must Not Reference Deleted Lambda**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2, CM-8; owasp_nhi: NHI1; soc2: CC8.1;
+
+Bedrock agent has at least one action group whose actionGroupExecutor.lambda field references a Lambda function ARN that no longer exists. Same shape as the Cognito ghost-trigger family (CTL.COGNITO.GHOST.PRESIGNUP.001 et al) applied to Bedrock action groups. The agent's tool list advertises a capability it cannot deliver; either the action group should be deleted (because the underlying Lambda is gone) or the Lambda should be restored. Ghost references are the canonical NHI1 (improper offboarding) failure mode: the surrounding configuration retains active references to decommissioned dependencies.
+
+**Remediation:** Either delete the orphan action group via DeleteAgentActionGroup, or restore the missing Lambda function and reattach it. Re-prepare the agent with PrepareAgent after the change.
+
+---
+
 ### CTL.BEDROCK.AGENT.GUARDRAIL.001
 
 **Bedrock Agents Must Have an Associated Guardrail**
@@ -4709,6 +4739,141 @@ Bedrock API keys must have appropriate expiration dates. Long-lived or non-expir
 Bedrock agents must have a guardrail associated with their sessions. Without guardrails, agent exchanges may expose PII or internal data, accept prompt injections that manipulate tool calls, and produce unsafe or out-of-scope responses. Agents can invoke tools and APIs — an unguarded agent is an unguarded API caller.
 
 **Remediation:** Associate a guardrail with the agent via the guardrailConfiguration setting in the agent definition.
+
+---
+
+### CTL.BEDROCK.AGENT.LOGGING.001
+
+**Bedrock Agent Must Have Per-Agent Invocation Logging**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** hipaa: 164.312(b); nist_800_53_r5: AU-2, AU-12; owasp_nhi: NHI8; soc2: CC7.2;
+
+Bedrock agent invocations must be captured by per-agent logging. The account-level CTL.BEDROCK.LOG.INVOCATION.001 control checks the global ModelInvocationLoggingConfiguration; this control flags individual agents that opt out of, or are not covered by, invocation logging — so an operator can see "agent X has no audit trail" without scanning every agent's coverage manually. Without per-agent invocation records, prompt-injection attacks, unauthorized tool calls, and data-exfiltration attempts leave no forensic evidence.
+
+**Remediation:** Enable model invocation logging at the account level (PutModelInvocationLoggingConfiguration) and verify the agent's invocations land in the configured CloudWatch log group or S3 destination. For agents that need logging segregated from the account default, configure a dedicated logging configuration tagged with the agent ID.
+
+---
+
+### CTL.BEDROCK.AGENT.OVERPERM.LAMBDA.001
+
+**Bedrock Agent Execution Role Must Scope lambda:InvokeFunction**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+Bedrock agent execution role grants lambda:InvokeFunction on Resource: * — the agent can invoke any Lambda function in the account, not only the functions registered as action groups. An attacker who gains prompt control can direct the agent to invoke privileged Lambda functions beyond its intended tool set, turning the agent into a proxy for arbitrary Lambda execution. Scope lambda:InvokeFunction to the specific function ARNs registered in the agent's actionGroups.
+
+**Remediation:** Replace Resource: "*" on lambda:InvokeFunction with the explicit list of Lambda function ARNs the agent's actionGroups reference. Example: Resource: ["arn:aws:lambda:us-east-1:111122223333:function:order-lookup", "arn:aws:lambda:us-east-1:111122223333:function:product-search"].
+
+---
+
+### CTL.BEDROCK.AGENT.OVERPERM.MODEL.001
+
+**Bedrock Agent Execution Role Must Scope bedrock:InvokeModel**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+Bedrock agent execution role grants bedrock:InvokeModel on Resource: * — the agent can invoke any foundation model in the account, ignoring whatever model the agent's foundation_model field declares. An attacker who controls the agent's prompt or tool input can pivot the agent to invoke unintended models (cheaper, less restricted, or with different content policies) and bypass model-allowlist governance. Scope the bedrock:InvokeModel permission to the specific model ARN(s) the agent is configured to use.
+
+**Remediation:** Scope the role's bedrock:InvokeModel permission to the specific foundation model ARN(s) the agent uses. Replace Resource: "*" with explicit model ARNs such as arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0.
+
+---
+
+### CTL.BEDROCK.AGENT.OVERPERM.S3.001
+
+**Bedrock Agent Execution Role Must Scope S3 Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+Bedrock agent execution role grants s3:GetObject (or s3:*) on Resource: * — the agent can read any object in any bucket in the account, not only the buckets that back its action-group API schemas or knowledge-base data sources. An attacker who controls the agent's prompt or tool input can extract data from buckets the agent should never touch (PHI buckets, customer-tenant buckets, audit logs).
+
+**Remediation:** Scope the role's s3:GetObject (and any other S3 actions) to the specific bucket / prefix combinations the agent's action groups and knowledge bases reference. Use StringEquals on s3:prefix conditions to narrow further.
+
+---
+
+### CTL.BEDROCK.AGENT.PUBLIC.INVOCATION.001
+
+**Bedrock Agent Invocation Endpoint Must Not Be Publicly Accessible**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-3, SC-7; owasp_nhi: NHI6; soc2: CC6.6;
+
+Bedrock agent's invocation surface is reachable without authenticated AWS principals — for example, an API Gateway fronting InvokeAgent with no authorizer, a public Lambda URL proxying agent invocation, or a CloudFront distribution that forwards directly to the agent without auth. The agent's blast radius is whatever the agent's execution role can reach (knowledge-base contents, Lambda action groups, invoked models). Letting unauthenticated callers reach InvokeAgent turns the agent's internal data and tool surface into an internet-accessible API. The collector pre-computes the boolean from the agent's downstream invocation paths (API Gateway authorizers, Lambda URL auth_type, public CloudFront distributions pointing at the agent endpoint).
+
+**Remediation:** Front the agent invocation with an authenticated path: either an API Gateway authorizer (Cognito user pool, custom Lambda authorizer, or IAM auth), a Lambda URL with auth_type=AWS_IAM, or a private VPC integration. Remove any public Lambda URL or unrestricted API Gateway resource that proxies InvokeAgent.
+
+---
+
+### CTL.BEDROCK.AGENT.SESSION.TTL.001
+
+**Bedrock Agent Idle Session TTL Must Be Bounded**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(2)(iii); nist_800_53_r5: AC-12; owasp_nhi: NHI7; soc2: CC6.1;
+
+Bedrock agent's idle session TTL (idleSessionTTLInSeconds) is excessive — sessions persist longer than necessary, leaving partially-consumed agent contexts available to subsequent callers. A long-lived idle session keeps prompt history, tool-call results, and partially-populated working memory available to whoever next attaches to that session ID. The collector pre-computes whether the configured TTL exceeds the recommended threshold (1800 seconds / 30 minutes by default).
+
+**Remediation:** Reduce idleSessionTTLInSeconds on the agent to 1800 (30 minutes) or less. For agents handling sensitive workflows, 600 (10 minutes) is the tighter recommendation. Update via UpdateAgent and re-prepare with PrepareAgent.
+
+---
+
+### CTL.BEDROCK.AGENT.SHADOW.001
+
+**Bedrock Agent Must Be Managed by Infrastructure as Code**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2, CM-3, AC-3; owasp_nhi: NHI1, NHI6; soc2: CC8.1;
+
+Bedrock agent has no infrastructure-as-code management tag (managed_by, terraform, cloudformation, or equivalent). Agents created outside the IaC pipeline are not subject to code review, approval workflows, or drift detection — their permissions may exceed what the security team has approved, and there is no audit trail tying the agent's existence to a reviewed commit. Shadow agents are the canonical AI-surface ungoverned-configuration failure mode: production agents appear through console clicks or scripted CLI calls without going through change-management. The collector pre-computes the managed_by_iac boolean by inspecting the agent's tags against the organisation's IaC tagging convention.
+
+**Remediation:** Either (1) import the agent into your IaC pipeline via terraform import or aws cloudformation import, then tag it with managed_by=terraform / managed_by=cloudformation, or (2) delete the agent if it was created for ad-hoc testing and is no longer in active use. Reject any future untagged agents at the SCP / Service Control Policy level with a Deny statement on bedrock:CreateAgent missing the required tag.
+
+---
+
+### CTL.BEDROCK.AGENT.STALE.001
+
+**Bedrock Agent Must Not Be Idle Beyond Threshold**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-2(3); owasp_nhi: NHI1; soc2: CC6.1;
+
+Bedrock agent has not been invoked within the observation window (default 30 days). A stale agent retains its execution role permissions, its action-group registrations (the Lambdas it can call), and its knowledge-base associations — a dormant attack surface with active credentials. Same shape as CTL.SAGEMAKER.NOTEBOOK.IDLE.001 (idle data-science notebook) and CTL.LIFECYCLE.STAGING.STALE.001 (general stale-resource pattern) applied to Bedrock agents. Distinct from CTL.BEDROCK.AGENT.SESSION.TTL.001 (idle-session TTL too long): SESSION.TTL is per-session timeout configuration; this control flags agents whose entire identity is idle.
+
+**Remediation:** Either delete the agent + its execution role if the workload is truly abandoned, or document the agent's expected idle duration with a reviewed_at tag and a scheduled review date. Reduce blast radius by detaching high-privilege managed policies from the role even while the agent stays.
+
+---
+
+### CTL.BEDROCK.GHOST.KNOWLEDGEBASE.001
+
+**Bedrock Agent Must Not Reference Deleted Knowledge Base**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2, CM-8; owasp_nhi: NHI1; soc2: CC8.1;
+
+Bedrock agent's knowledgeBases list contains at least one knowledge-base ID that no longer exists in the current inventory. RAG queries through this agent will fail or return empty results — and the broken reference is invisible to runtime: the agent silently degrades. Sibling to CTL.BEDROCK.AGENT.GHOST.LAMBDA.001 (which catches the same pattern on actionGroups). Same shape as the Cognito ghost-trigger family (PRESIGNUP, PREAUTH, ...) applied to Bedrock agent KB references. The collector pre-computes the has_ghost_knowledge_base boolean by joining the agent's declared KB IDs against the live knowledge-base inventory.
+
+**Remediation:** Either remove the dead knowledge base from the agent via DisassociateAgentKnowledgeBase, or recreate the knowledge base if it was deleted accidentally. Re-prepare the agent with PrepareAgent after the change.
 
 ---
 
@@ -4739,6 +4904,66 @@ Bedrock guardrails must configure sensitive information filters to block or mask
 Bedrock guardrails must configure the prompt attack filter at HIGH strength. Without high-strength filtering, models are exposed to prompt injection and jailbreak attacks that can coerce disclosure of sensitive data, evade content policies, and trigger unintended tool execution.
 
 **Remediation:** Update the guardrail to set the prompt attack filter strength to HIGH via aws bedrock update-guardrail.
+
+---
+
+### CTL.BEDROCK.KB.DATASOURCE.CROSSACCOUNT.001
+
+**Bedrock Knowledge Base Data Source Must Not Cross Account Boundary**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(e)(1); nist_800_53_r5: AC-4, AC-6; owasp_nhi: NHI3, NHI6; soc2: CC6.1, CC6.6;
+
+Bedrock knowledge base reads from an S3 bucket in a different AWS account. Cross-account RAG ingestion expands the trust boundary of the agent's response surface: query results may include content from outside the workload's control plane, and a compromise of the source account propagates into the agent's outputs. Cross-account data sources are sometimes legitimate (a dedicated data-engineering account feeding a product account) but require explicit scoping — VPC endpoint policies, encryption-in-transit on the bucket policy, and pinned KMS key ARNs — none of which are visible to a casual reader of the knowledge-base config. This control flags the cross-account property so operators can confirm the scoping is in place.
+
+**Remediation:** Either (1) replicate the data source into the local account via S3 replication + recreate the knowledge base, or (2) keep the cross-account source but pin the bucket policy to require aws:PrincipalArn matching the KB role and add a VPC endpoint policy restricting the call path. Document the cross-account dependency in the agent's runbook.
+
+---
+
+### CTL.BEDROCK.KB.DATASOURCE.UNENCRYPTED.001
+
+**Bedrock Knowledge Base Data Source Must Use Encrypted Reads**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(e)(1), 164.312(e)(2)(ii); nist_800_53_r5: SC-8, SC-13; owasp_nhi: NHI6; soc2: CC6.7;
+
+Bedrock knowledge base reads its S3 data source without encryption in transit / encryption-context binding. RAG retrieval flows S3 object content through the knowledge base ingestion pipeline; without TLS-only bucket policy enforcement (aws:SecureTransport=true) and SSE-KMS with explicit encryption context, the data path is observable on shared network paths and AWS API logs do not bind retrieval to the intended decrypt key. The collector pre-computes the boolean data_source_encrypted assessment from the bucket policy, KMS key policy, and KB role's permission boundary.
+
+**Remediation:** Add aws:SecureTransport=true deny-rule to the source bucket's policy. Configure the bucket with SSE-KMS and a customer-managed CMK. Add a key policy permitting the KB role to decrypt with an explicit encryption context matching the knowledge-base ID.
+
+---
+
+### CTL.BEDROCK.KB.MARKER.INDEXES.001
+
+**Bedrock Knowledge Base Indexes S3 Bucket (Marker)**
+
+- **Severity:** low
+- **Type:** marker
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(c)(1);
+
+Fact-recording marker for Bedrock knowledge bases that index a specific S3 bucket. Emits an informational finding (NOT a violation) on every knowledge base whose data source carries a bucket ARN — so cross-resource chains can compose this fact with data-classification markers on the target bucket. Same pattern as CTL.S3.MARKER.PHI.001 + CTL.COGNITO.IDPOOL.UNAUTH.S3 / cognito_unauth_phi_s3 chain: a knowledge base indexing a bucket is the desired state — never a finding to triage. The marker exists so the chain engine can join "knowledge base side: indexes bucket X" with "storage side: bucket X is classified PHI" via scope_field on the shared bucket ARN.
+
+**Remediation:** None. This marker exists as a chain-detection ingredient. To suppress noise on dashboards, filter findings by control_id when rendering Findings — markers should appear in a separate "facts" panel rather than the violation list.
+
+---
+
+### CTL.BEDROCK.KB.OVERPERM.S3.001
+
+**Bedrock Knowledge Base Role Must Scope S3 Access to Data Sources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+Bedrock knowledge base IAM role grants S3 access broader than the buckets / prefixes declared in the knowledge base's dataSources. The collector compares the role's effective S3 resource set against the knowledge base's declared data-source ARNs; this control fires when the role can read S3 objects outside the declared sources. RAG retrieval becomes a data- exfiltration surface: queries that slip past topic filtering can pull content from any bucket the role can reach, not only the buckets the knowledge base is supposed to index.
+
+**Remediation:** Restrict the knowledge base role's S3 actions to the exact bucket ARNs (and inclusion prefixes) listed in the knowledge base's dataSources. Use StringEquals on s3:prefix conditions for prefix-scoped data sources.
 
 ---
 
@@ -22422,6 +22647,21 @@ IAM policies must not grant broad iam:List* permissions without resource scope c
 
 ---
 
+### CTL.IAM.MARKER.PRODUCTION.001
+
+**IAM Role Tagged environment=production (Marker)**
+
+- **Severity:** low
+- **Type:** marker
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-2(7); soc2: CC6.1;
+
+Fact-recording marker for IAM roles tagged environment=production (or equivalent production-tier tag). Emits an informational finding (NOT a violation) on every production-tagged role so cross-resource chains can compose it with development-side controls. Examples: a SageMaker notebook role with sts:AssumeRole pointing at a production role; a Lambda execution role that can AssumeRole into a production database role; a CodeBuild role that can deploy to production endpoints. Production tagging on its own is the desired state — never a finding to triage. The marker exists so the chain engine can join "violation on the development side: this identity can reach production" with "the target is production" without forcing the collector to denormalise every dev→prod join shape into a per-asset boolean.
+
+**Remediation:** None. This marker exists as a chain-detection ingredient. To suppress noise on dashboards, filter findings by control_id when rendering Findings — markers should appear in a separate "facts" panel rather than the violation list.
+
+---
+
 ### CTL.IAM.MFA.HWKEY.001
 
 **Privileged Accounts Must Use Hardware MFA**
@@ -25986,6 +26226,36 @@ Lambda functions must have an associated CloudWatch log group. Lambda creates th
 Lambda function CloudWatch log groups must have an explicit retention policy of at least 365 days. Lambda creates the log group on first invocation but does not set a retention policy — the default is "Never expire," which accumulates storage cost indefinitely and may violate data deletion policies (GDPR right to erasure, internal retention rules requiring deletion after a period). Retention shorter than 365 days fails compliance audit windows that require log preservation across investigation cycles. Two failure modes, one control: unbounded accumulation (no retention set — cost and compliance) and premature deletion (retention below the audit window — investigation gap).
 
 **Remediation:** Set CloudWatch log group retention to 365 days or more via aws logs put-retention-policy --log-group-name /aws/lambda/<function> --retention-in-days 365.
+
+---
+
+### CTL.LAMBDA.MARKER.BEDROCK.TOOL.001
+
+**Lambda Function Registered as Bedrock Agent Tool (Marker)**
+
+- **Severity:** low
+- **Type:** marker
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(c)(1);
+
+Fact-recording marker for Lambda functions that are registered as a Bedrock agent action group (the agent's tool list). Emits an informational finding (NOT a violation) so cross-service chains can compose this fact with overpermission markers on the Lambda's execution role. Same pattern as CTL.S3.MARKER.PHI.001 + CTL.BEDROCK.KB.MARKER.INDEXES.001 applied to Lambda. A Lambda being a Bedrock tool is the desired state — never a finding to triage. The marker exists so the chain engine can join "agent prompt surface reaches this Lambda" with "this Lambda's role reaches PHI" without forcing the collector to denormalise the agent → Lambda → S3 reachability into a single per-Lambda boolean.
+
+**Remediation:** None. This marker exists as a chain-detection ingredient. Render it under a "facts" panel rather than the violation list.
+
+---
+
+### CTL.LAMBDA.OVERPERM.S3PHI.001
+
+**Lambda Execution Role Must Not Reach PHI-Tagged S3 Buckets**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+Lambda execution role's effective S3 access set includes at least one bucket carrying the data-classification=phi tag. Same predicate shape as CTL.LAMBDA.OVERPERM (general overpermission) but specialized for the cross-service AI compound: when a Lambda is also registered as a Bedrock agent action group (CTL.LAMBDA.MARKER.BEDROCK.TOOL.001), the agent's prompt surface gains a path to PHI through the tool-call boundary. The collector pre-computes the boolean by joining the role's effective s3:GetObject targets against the bucket-tag inventory; this control reads the flag and stamps target_phi_bucket_arn for chain composition with the S3 PHI marker.
+
+**Remediation:** Scope the Lambda role's S3 actions to the specific non-PHI bucket(s) the function legitimately requires. If PHI access is necessary, wrap the function with explicit output redaction and require the agent (or any other caller) to authenticate per-request rather than relying on the Lambda's broad role permissions.
 
 ---
 
@@ -34059,6 +34329,36 @@ Signed upload policies must restrict write permission to a single exact object k
 
 ---
 
+### CTL.SAGEMAKER.DOMAIN.SHAREDROLE.001
+
+**SageMaker Studio Domain Must Not Use a Single Shared Execution Role**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1), 164.312(a)(2)(i); nist_800_53_r5: AC-2, AC-6; owasp_nhi: NHI5, NHI6; soc2: CC6.1;
+
+SageMaker Studio domain assigns a single execution role to every user profile in the domain. Every data scientist and ML engineer in the domain operates with identical IAM permissions — there is no per-user or per-team scoping. A compromise of any user's Studio session grants the attacker the same blast radius as the broadest user in the domain (typically the role's full s3:* / sagemaker:* / iam:PassRole footprint). The shared-role model is the default Studio onboarding pattern and is almost always a leftover from early platform setup — deferred from iteration 3 because the aws_sagemaker_domain asset type was not yet projected.
+
+**Remediation:** Create per-user-profile execution roles (or per-team roles) scoped to the buckets and services each user's workload requires. Update each UserProfile's ExecutionRole via UpdateUserProfile. Add a permissions boundary at the domain level that caps any per-user role's permissions to the domain's intended scope.
+
+---
+
+### CTL.SAGEMAKER.ENDPOINT.MONITOR.001
+
+**SageMaker Endpoint Configuration Must Have Model Monitoring**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(b); nist_800_53_r5: AU-2, CM-3; owasp_nhi: NHI8; soc2: CC7.2;
+
+SageMaker endpoint configuration has no model monitoring schedule attached. Without a monitoring schedule (data quality, model quality, bias drift, or feature attribution), a deployed endpoint can drift, be silently replaced, or serve adversarial inputs without detection. Model monitoring is the equivalent of CloudTrail for ML inference: the audit surface that distinguishes "the model is doing what it promised" from "the model is doing something useful enough for the dashboard to look healthy."
+
+**Remediation:** Attach a monitoring schedule via CreateMonitoringSchedule targeting the endpoint. At minimum, configure a data- quality monitor with a baseline statistics file. For production endpoints serving regulated data, also attach model-quality and bias-drift monitors.
+
+---
+
 ### CTL.SAGEMAKER.ENDPOINT.REDUNDANCY.001
 
 **SageMaker Endpoint Must Use Multiple Instances**
@@ -34071,6 +34371,36 @@ Signed upload policies must restrict write permission to a single exact object k
 SageMaker endpoint configurations must use at least two instances per production variant for multi-AZ redundancy. Single-instance endpoints are single points of failure.
 
 **Remediation:** Set InitialInstanceCount to at least 2 per production variant.
+
+---
+
+### CTL.SAGEMAKER.ENDPOINT.STALE.001
+
+**SageMaker Endpoint Must Not Be Idle Beyond Threshold**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-2(3), CM-7; owasp_nhi: NHI1; soc2: CC6.1;
+
+SageMaker inference endpoint has not received traffic within the observation window (default 30 days). Stale endpoints consume compute resources (each instance billed per hour), retain their execution role + KMS-key access, and stay reachable from any caller still holding the endpoint name — a cost liability and a security liability with no active workload. Same shape as CTL.SAGEMAKER.NOTEBOOK.IDLE.001 + CTL.BEDROCK.AGENT.STALE.001 applied to the inference surface.
+
+**Remediation:** DeleteEndpoint + delete the corresponding endpoint configuration if the workload is abandoned. If the endpoint must remain for compliance or warm-restore reasons, UpdateEndpoint to a single t2.medium instance and document the expected idle duration with a reviewed_at tag.
+
+---
+
+### CTL.SAGEMAKER.GHOST.MODEL.001
+
+**SageMaker Endpoint Must Not Reference Deleted Model Artifact**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2, CM-8, SI-7; owasp_nhi: NHI1; soc2: CC8.1;
+
+SageMaker endpoint's model configuration references an S3 model-artifact path (ModelDataUrl) that no longer exists. The endpoint may serve stale predictions from a cached model, fail on cold start when the artifact is pulled, or — most dangerously — be silently re-pointed to an attacker- staged artifact if the bucket is later re-created. Same shape as CTL.BEDROCK.AGENT.GHOST.LAMBDA.001 (deleted Lambda in agent action group) applied to SageMaker model artifacts. The collector pre-computes the has_ghost_model_artifact boolean by joining the endpoint configuration's ModelDataUrl against the live S3 object inventory.
+
+**Remediation:** Either (1) UpdateEndpoint to a new endpoint configuration pointing at a live, signed model artifact, or (2) delete the endpoint if the workload is abandoned. Add S3 object- lock to the model-artifact bucket so deleted artifacts cannot be silently overwritten by future writes.
 
 ---
 
@@ -34104,6 +34434,21 @@ SageMaker models must define VpcConfig with subnets and security groups so infer
 
 ---
 
+### CTL.SAGEMAKER.NOTEBOOK.ASSUMEROLE.001
+
+**SageMaker Notebook Execution Role Must Not Have Unscoped sts:AssumeRole**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+SageMaker notebook execution role grants sts:AssumeRole on Resource: * (or on a role outside the notebook's declared cross-account/cross-environment list). A notebook is an interactive, hand-driven identity used by data scientists. Letting the notebook role assume arbitrary other roles is a privilege-escalation primitive: a researcher in a development notebook can step into a production role and access customer data, audit logs, or financial systems without any approval gate. Distinct from CTL.SAGEMAKER.NOTEBOOK.OVERPERM.PASSROLE.001 (which checks iam:PassRole — passing a role to a service the notebook invokes); this control checks sts:AssumeRole — the notebook's identity stepping into another role's identity directly. The collector stamps the assumable target ARN on the asset for chain composition with environment markers.
+
+**Remediation:** Either remove sts:AssumeRole from the notebook role, or restrict the action's Resource to a specific list of non-production role ARNs the research workflow legitimately requires. Add a permissions-boundary on the notebook role that denies sts:AssumeRole for any role tagged environment=production.
+
+---
+
 ### CTL.SAGEMAKER.NOTEBOOK.ENCRYPT.001
 
 **SageMaker Notebook EBS Volume Must Be Encrypted**
@@ -34119,6 +34464,21 @@ SageMaker notebook instances must encrypt the ML storage volume at rest with KMS
 
 ---
 
+### CTL.SAGEMAKER.NOTEBOOK.IDLE.001
+
+**SageMaker Notebook Must Not Be Idle Beyond Threshold**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(a)(2)(ii); nist_800_53_r5: AC-2(3); owasp_nhi: NHI1; soc2: CC6.1;
+
+SageMaker notebook instance has been idle for more than 30 days. An idle notebook keeps an interactive identity active with cached credentials, attached EBS volumes containing research data, and any IAM role permissions the notebook carries. The cost is real (notebook compute is billed per running hour) but the security cost is larger: stale notebooks accumulate forgotten data, credentials become unrotated, and the notebook becomes an offboarding gap when the data scientist who owned it leaves. The collector pre-computes the boolean idle assessment from the instance's LastModifiedTime / NotebookInstanceStatus fields.
+
+**Remediation:** StopNotebookInstance now; review the attached lifecycle configuration to enforce auto-stop on future idle periods; delete the notebook + role if the workload is truly abandoned.
+
+---
+
 ### CTL.SAGEMAKER.NOTEBOOK.INTERNET.001
 
 **SageMaker Notebook Must Not Have Direct Internet Access**
@@ -34131,6 +34491,66 @@ SageMaker notebook instances must encrypt the ML storage volume at rest with KMS
 SageMaker notebook instances must disable DirectInternetAccess, forcing VPC-only connectivity. An internet-accessible notebook is an interactive Jupyter environment reachable from the public internet with the attached IAM role's credentials available via IMDS.
 
 **Remediation:** Disable DirectInternetAccess and deploy the notebook in a VPC with NAT gateway for outbound connectivity.
+
+---
+
+### CTL.SAGEMAKER.NOTEBOOK.LIFECYCLE.001
+
+**SageMaker Notebook Must Have a Lifecycle Configuration**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2, CM-7; owasp_nhi: NHI1; soc2: CC8.1;
+
+SageMaker notebook has no LifecycleConfigName attached. A lifecycle configuration runs scripts at notebook creation/start to enforce hardening (mount restrictions, package allow-listing, idle-timeout enforcement, agent installation). Without one, notebooks come up with stock configuration and cannot be hardened consistently across the team. Lifecycle configurations are also the standard hook for auto-stop and credential rotation; their absence is the upstream cause of several other lifecycle failures in this iteration.
+
+**Remediation:** Create a lifecycle configuration with on-create + on-start scripts that enforce idle-timeout, mount restrictions, and package install policy. Attach it to the notebook via UpdateNotebookInstance.
+
+---
+
+### CTL.SAGEMAKER.NOTEBOOK.OVERPERM.ADMIN.001
+
+**SageMaker Notebook Execution Role Must Not Have Admin Policy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+SageMaker notebook execution role has AdministratorAccess (or equivalent admin policy) attached. Notebook environments are interactive — root-equivalent permissions on the notebook identity make every Jupyter cell a potential admin operation, and a compromised notebook (stolen credentials, malicious package install, supply-chain attack on a pip dependency) inherits unbounded account access. Notebook roles should be scoped to the specific actions the data-science workflow requires; admin attachment is almost always a leftover from early prototyping.
+
+**Remediation:** Detach AdministratorAccess (and any equivalent customer- managed admin policy) from the notebook execution role. Replace with scoped policies covering only the SageMaker, S3, and IAM:PassRole permissions the research workflow actually needs.
+
+---
+
+### CTL.SAGEMAKER.NOTEBOOK.OVERPERM.PASSROLE.001
+
+**SageMaker Notebook Execution Role Must Not Have Unrestricted iam:PassRole**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+SageMaker notebook execution role grants iam:PassRole on Resource: * — a notebook user can pass any role to AWS services that accept a role parameter (CreateTrainingJob, CreateProcessingJob, CreateEndpoint, Lambda, etc.). The notebook becomes a privilege-escalation primitive: the user attaches a production role to a SageMaker resource the notebook can manipulate. Same shape as CTL.IAM.POLICY.PASSROLE.001 but on the SageMaker notebook's interactive identity, where the blast radius is highest because the notebook is hand-driven.
+
+**Remediation:** Restrict iam:PassRole to a specific list of role ARNs the research workflow needs to assume — typically the SageMaker training/processing-job role and nothing else. Add iam:PassedToService conditions matching only the services the notebook actually invokes (sagemaker.amazonaws.com).
+
+---
+
+### CTL.SAGEMAKER.NOTEBOOK.OVERPERM.S3.001
+
+**SageMaker Notebook Execution Role Must Scope S3 Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+SageMaker notebook execution role grants s3:GetObject (or s3:*) on Resource: * — the notebook user can read any object in any bucket in the account, including production data, secrets, PHI buckets, and audit logs. Notebook execution roles are interactive identities used by data scientists and ML engineers; broad S3 access on these roles is the canonical exfiltration pattern from data-science platforms (one careless boto3 call from a Jupyter cell pulls non-training data into the notebook environment). Scope the role to the specific buckets the research workflow requires.
+
+**Remediation:** Replace Resource: "*" on the role's S3 actions with the explicit list of training-data and model-artifact bucket ARNs the workflow requires. Use s3:prefix conditions to narrow further when only specific prefixes are needed.
 
 ---
 
@@ -34161,6 +34581,36 @@ SageMaker notebook instances must disable root access. Root privileges allow use
 SageMaker notebook instances must be deployed in a VPC with subnet and security group configuration for private networking.
 
 **Remediation:** Configure the notebook with a subnet_id and security groups.
+
+---
+
+### CTL.SAGEMAKER.TRAINING.DATA.CROSSACCOUNT.001
+
+**SageMaker Training Data Source Must Not Cross Account Boundary**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(e)(1); nist_800_53_r5: AC-4, AC-6; owasp_nhi: NHI6; soc2: CC6.1, CC6.6;
+
+SageMaker training job's InputDataConfig references an S3 bucket in a different AWS account. Cross-account training data ingestion expands the trust boundary of the model artifacts: the resulting model encodes whatever the source account exposes. If the source bucket is compromised — or legitimately owned by a third party with weaker controls — the model can be poisoned, attribute leakage in inference outputs becomes a cross-account exfil channel, or the trained weights inherit data the local account never approved. Cross-account sources are sometimes legitimate (third-party labelled datasets, partner data exchange) but require explicit scoping that this control surfaces.
+
+**Remediation:** Either replicate the training data into the local account, or pin the source bucket policy to require aws:PrincipalArn matching the training role and add an SCP-level aws:ResourceAccount allow-list for training-data buckets. Document the cross-account dependency in the model card.
+
+---
+
+### CTL.SAGEMAKER.TRAINING.DATA.UNENCRYPTED.001
+
+**SageMaker Training Data Source Must Use Encrypted Reads**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(e)(1), 164.312(e)(2)(ii); nist_800_53_r5: SC-8, SC-13; owasp_nhi: NHI6; soc2: CC6.7;
+
+SageMaker training job ingests its InputDataConfig data source without encryption-in-transit and without explicit KMS encryption-context binding. Distinct from CTL.SAGEMAKER.TRAINING.ENCRYPT.VOLUME.001 (which checks the training instance's local volume encryption at rest) — this control flags the read path between S3 and the training container. Unencrypted training reads expose dataset content on the AWS network path and bind retrieval to the bucket- level KMS key (rather than a job-specific encryption context), so a compromised training role's blast radius spans every bucket the role can decrypt.
+
+**Remediation:** Add aws:SecureTransport=true deny-rule to the source bucket policy. Configure the training job's InputDataConfig with a KmsKeyId and pass an explicit encryption-context entry binding the decrypt to the training-job ARN. Add a key policy permitting only the training role to decrypt with that context.
 
 ---
 
@@ -34206,6 +34656,36 @@ SageMaker training jobs must encrypt ML storage volumes at rest with KMS. Traini
 SageMaker training jobs must enable network isolation to prevent training containers from making inbound or outbound network calls. Without isolation, a compromised training container can exfiltrate training data or model artifacts to external endpoints.
 
 **Remediation:** Set EnableNetworkIsolation to true on the training job.
+
+---
+
+### CTL.SAGEMAKER.TRAINING.OVERPERM.PASSROLE.001
+
+**SageMaker Training Job Role Must Not Have Unrestricted iam:PassRole**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+SageMaker training job execution role grants iam:PassRole on Resource: * — a compromised training container (or a malicious model-framework dependency) can pass any role to AWS services that accept a role parameter. Training workloads should not need iam:PassRole at all in most designs; when they do, the permission should be scoped to the specific roles required (e.g., a downstream HyperParameterTuning role) rather than left open. The attacker-controlled-input + untrusted-code combination on training jobs makes any privilege-escalation primitive here unusually high-impact.
+
+**Remediation:** Remove iam:PassRole from the training job role unless a specific downstream invocation requires it. When required, restrict the action to the specific role ARN and constrain iam:PassedToService to the exact target service.
+
+---
+
+### CTL.SAGEMAKER.TRAINING.OVERPERM.S3.001
+
+**SageMaker Training Job Role Must Scope S3 Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+SageMaker training job execution role grants s3:GetObject (or s3:*) on Resource: * — the training container can read any object in any bucket in the account, not just the declared training data inputs. A training job is the highest-blast- radius non-human identity in an ML platform: it ingests attacker-controlled or attacker-staged data, runs untrusted code (model frameworks, custom scripts), and writes outputs to model-artifact buckets. Scope the training role to the specific input bucket(s) listed in the InputDataConfig and the output bucket listed in the OutputDataConfig.
+
+**Remediation:** Restrict the role's s3:GetObject permission to the bucket ARNs declared in the training job's InputDataConfig + OutputDataConfig. Use s3:prefix conditions matching the declared S3DataSource paths so the training container cannot read sibling prefixes.
 
 ---
 

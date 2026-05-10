@@ -1,0 +1,35 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-10T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:sagemaker:us-east-1:111122223333:notebook-instance/research-dev-scoped",
+      "type": "aws_sagemaker_notebook",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_notebook",
+          "identity": {
+            "execution_role": {
+              "has_assume_role_unscoped": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/ProductionDataAdmin",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "tags": {
+            "environment": "production"
+          }
+        }
+      }
+    }
+  ]
+}

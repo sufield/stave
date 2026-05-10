@@ -1,0 +1,23 @@
+ACT 5: What a component scanner reports on the same writeup.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  (Illustrative — these are the checks a component-level
+   scanner would run; not actual output from any vendor.)
+
+    Bedrock encryption:        ✅ PASS — invocation logs use KMS
+    Bedrock VPC endpoint:      ✅ PASS — VPC endpoint configured
+    Bedrock model allowlist:   ✅ PASS — foundation models scoped
+    S3 encryption at rest:     ✅ PASS — SSE-KMS enabled
+    S3 public access block:    ✅ PASS — public access blocked
+    Lambda env encryption:     ✅ PASS — at-rest encryption on
+
+  6 checks. 6 passes. Component scanner: COMPLIANT.
+
+  Stave on the same configuration: 3 CRITICAL compound chains.
+  Agent → Lambda → S3 PHI. No guardrail. No audit trail.
+
+  The scanner checked components. Stave checked interactions.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+

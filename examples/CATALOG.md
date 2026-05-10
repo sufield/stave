@@ -23,6 +23,9 @@ image to build, no separate launcher.
 - **[demo-s3-data-governance](demo-s3-data-governance/)** — Data classification + lifecycle hygiene
 - **[demo-s3-tool-blind-spot](demo-s3-tool-blind-spot/)** — What single-resource scanners miss
 
+### AI Security
+- **[demo-ai-security](demo-ai-security/)** — Bedrock agent overprivilege + Lambda tool reaching PHI + RAG indexing PHI bucket. 5 violations compose into 3 CRITICAL compound chains; remediation drives all chains silent. The talk demo — five acts in under five minutes.
+
 These are the first stops for an early adopter — a single
 asset, a clear violation, encoding-verified output. Once the
 shape is familiar, the multi-engine examples below show how

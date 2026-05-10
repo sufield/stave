@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.GHOST.MODEL.001
+name: SageMaker Endpoint Must Not Reference Deleted Model Artifact
+description: >
+  SageMaker endpoint's model configuration references an S3
+  model-artifact path (ModelDataUrl) that no longer exists.
+  The endpoint may serve stale predictions from a cached
+  model, fail on cold start when the artifact is pulled, or
+  — most dangerously — be silently re-pointed to an attacker-
+  staged artifact if the bucket is later re-created. Same
+  shape as CTL.BEDROCK.AGENT.GHOST.LAMBDA.001 (deleted Lambda
+  in agent action group) applied to SageMaker model
+  artifacts. The collector pre-computes the
+  has_ghost_model_artifact boolean by joining the endpoint
+  configuration's ModelDataUrl against the live S3 object
+  inventory.
+domain: governance
+severity: high
+compliance:
+  owasp_nhi: "NHI1"
+  nist_800_53_r5: "CM-2, CM-8, SI-7"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-04", "DSP-01"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    SageMaker endpoint configuration references a model artifact
+    S3 path that no longer exists. The endpoint is in an
+    inconsistent state — running on cache, failing on cold
+    start, or vulnerable to artifact-path re-creation by a
+    different workload.
+  action: >
+    Either (1) UpdateEndpoint to a new endpoint configuration
+    pointing at a live, signed model artifact, or (2) delete
+    the endpoint if the workload is abandoned. Add S3 object-
+    lock to the model-artifact bucket so deleted artifacts
+    cannot be silently overwritten by future writes.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_endpoint_config",
+        "governance": { "has_ghost_model_artifact": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_endpoint_config
+    - field: properties.compute.governance.has_ghost_model_artifact
+      op: eq
+      value: true

@@ -1,0 +1,52 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.KB.OVERPERM.S3.001
+name: Bedrock Knowledge Base Role Must Scope S3 Access to Data Sources
+description: >
+  Bedrock knowledge base IAM role grants S3 access broader than
+  the buckets / prefixes declared in the knowledge base's
+  dataSources. The collector compares the role's effective S3
+  resource set against the knowledge base's declared data-source
+  ARNs; this control fires when the role can read S3 objects
+  outside the declared sources. RAG retrieval becomes a data-
+  exfiltration surface: queries that slip past topic filtering
+  can pull content from any bucket the role can reach, not only
+  the buckets the knowledge base is supposed to index.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-04", "IAM-05", "DSP-07"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Bedrock knowledge base role has S3 access broader than the
+    knowledge base's declared data sources.
+  action: >
+    Restrict the knowledge base role's S3 actions to the exact
+    bucket ARNs (and inclusion prefixes) listed in the
+    knowledge base's dataSources. Use StringEquals on
+    s3:prefix conditions for prefix-scoped data sources.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_knowledge_base",
+        "knowledge_base": { "role_s3_scope_broader_than_sources": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_knowledge_base
+    - field: properties.ai.knowledge_base.role_s3_scope_broader_than_sources
+      op: eq
+      value: true

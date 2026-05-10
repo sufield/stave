@@ -1,0 +1,52 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENT.SESSION.TTL.001
+name: Bedrock Agent Idle Session TTL Must Be Bounded
+description: >
+  Bedrock agent's idle session TTL (idleSessionTTLInSeconds) is
+  excessive — sessions persist longer than necessary, leaving
+  partially-consumed agent contexts available to subsequent
+  callers. A long-lived idle session keeps prompt history,
+  tool-call results, and partially-populated working memory
+  available to whoever next attaches to that session ID. The
+  collector pre-computes whether the configured TTL exceeds the
+  recommended threshold (1800 seconds / 30 minutes by default).
+domain: identity
+severity: medium
+compliance:
+  owasp_nhi: "NHI7"
+  nist_800_53_r5: "AC-12"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(2)(iii)"
+  ccm_v4: ["IAM-13"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Bedrock agent's idle session TTL exceeds the recommended
+    bound. Stale sessions retain prompt/tool-call context for
+    next callers.
+  action: >
+    Reduce idleSessionTTLInSeconds on the agent to 1800 (30
+    minutes) or less. For agents handling sensitive workflows,
+    600 (10 minutes) is the tighter recommendation. Update via
+    UpdateAgent and re-prepare with PrepareAgent.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agent",
+        "agent": { "idle_session_ttl_excessive": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agent
+    - field: properties.ai.agent.idle_session_ttl_excessive
+      op: eq
+      value: true

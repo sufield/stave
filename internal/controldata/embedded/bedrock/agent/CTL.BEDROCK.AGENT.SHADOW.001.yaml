@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENT.SHADOW.001
+name: Bedrock Agent Must Be Managed by Infrastructure as Code
+description: >
+  Bedrock agent has no infrastructure-as-code management tag
+  (managed_by, terraform, cloudformation, or equivalent). Agents
+  created outside the IaC pipeline are not subject to code
+  review, approval workflows, or drift detection — their
+  permissions may exceed what the security team has approved,
+  and there is no audit trail tying the agent's existence to a
+  reviewed commit. Shadow agents are the canonical AI-surface
+  ungoverned-configuration failure mode: production agents
+  appear through console clicks or scripted CLI calls without
+  going through change-management. The collector pre-computes
+  the managed_by_iac boolean by inspecting the agent's tags
+  against the organisation's IaC tagging convention.
+domain: governance
+severity: medium
+compliance:
+  owasp_nhi: "NHI1, NHI6"
+  nist_800_53_r5: "CM-2, CM-3, AC-3"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-04", "GRC-03"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Bedrock agent has no IaC management tag. The agent's
+    existence and permissions are not under change control.
+  action: >
+    Either (1) import the agent into your IaC pipeline via
+    terraform import or aws cloudformation import, then tag
+    it with managed_by=terraform / managed_by=cloudformation,
+    or (2) delete the agent if it was created for ad-hoc
+    testing and is no longer in active use. Reject any future
+    untagged agents at the SCP / Service Control Policy level
+    with a Deny statement on bedrock:CreateAgent missing the
+    required tag.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agent",
+        "agent": { "managed_by_iac": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agent
+    - field: properties.ai.agent.managed_by_iac
+      op: eq
+      value: false

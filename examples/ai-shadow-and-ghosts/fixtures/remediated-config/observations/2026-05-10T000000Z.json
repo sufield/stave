@@ -1,0 +1,55 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-10T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:agent/GOVERNEDAGENT01",
+      "type": "aws_bedrock_agent",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_agent",
+          "agent": {
+            "guardrail_associated": true,
+            "managed_by_iac": true,
+            "is_idle": false,
+            "has_ghost_knowledge_base": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sagemaker:us-east-1:111122223333:endpoint-config/active-inference",
+      "type": "aws_sagemaker_endpoint_config",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_endpoint_config",
+          "governance": {
+            "is_idle": false,
+            "has_ghost_model_artifact": false,
+            "has_model_monitor": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sagemaker:us-east-1:111122223333:domain/d-perprofile",
+      "type": "aws_sagemaker_domain",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_domain",
+          "identity": {
+            "domain_role": {
+              "arn": "arn:aws:iam::111122223333:role/SageMakerStudioProfileTemplate",
+              "is_shared": false,
+              "user_profile_count": 12
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENT.GHOST.LAMBDA.001
+name: Bedrock Agent Action Group Must Not Reference Deleted Lambda
+description: >
+  Bedrock agent has at least one action group whose
+  actionGroupExecutor.lambda field references a Lambda function
+  ARN that no longer exists. Same shape as the Cognito
+  ghost-trigger family (CTL.COGNITO.GHOST.PRESIGNUP.001 et al)
+  applied to Bedrock action groups. The agent's tool list
+  advertises a capability it cannot deliver; either the action
+  group should be deleted (because the underlying Lambda is
+  gone) or the Lambda should be restored. Ghost references
+  are the canonical NHI1 (improper offboarding) failure mode:
+  the surrounding configuration retains active references to
+  decommissioned dependencies.
+domain: governance
+severity: medium
+compliance:
+  owasp_nhi: "NHI1"
+  nist_800_53_r5: "CM-2, CM-8"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-04", "DSP-01"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Bedrock agent has at least one action group pointing to a
+    deleted Lambda function. The agent cannot invoke the tool
+    but the configuration retains the reference.
+  action: >
+    Either delete the orphan action group via
+    DeleteAgentActionGroup, or restore the missing Lambda
+    function and reattach it. Re-prepare the agent with
+    PrepareAgent after the change.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agent",
+        "agent": { "has_ghost_action_group_lambda": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agent
+    - field: properties.ai.agent.has_ghost_action_group_lambda
+      op: eq
+      value: true

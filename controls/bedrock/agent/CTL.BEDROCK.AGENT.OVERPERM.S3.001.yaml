@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENT.OVERPERM.S3.001
+name: Bedrock Agent Execution Role Must Scope S3 Access
+description: >
+  Bedrock agent execution role grants s3:GetObject (or s3:*) on
+  Resource: * — the agent can read any object in any bucket in
+  the account, not only the buckets that back its action-group
+  API schemas or knowledge-base data sources. An attacker who
+  controls the agent's prompt or tool input can extract data
+  from buckets the agent should never touch (PHI buckets,
+  customer-tenant buckets, audit logs).
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-04", "IAM-05", "DSP-07"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Bedrock agent execution role can read any S3 object in the
+    account. The agent's data-access scope exceeds its
+    knowledge-base + action-group footprint.
+  action: >
+    Scope the role's s3:GetObject (and any other S3 actions) to
+    the specific bucket / prefix combinations the agent's
+    action groups and knowledge bases reference. Use
+    StringEquals on s3:prefix conditions to narrow further.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agent",
+        "agent": { "s3_access_scope_broad": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agent
+    - field: properties.ai.agent.s3_access_scope_broad
+      op: eq
+      value: true

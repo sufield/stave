@@ -1,0 +1,34 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-10T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:lambda:us-east-1:111122223333:function:patient-lookup-tool",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "lambda_function",
+          "bedrock": {
+            "is_agent_tool": true,
+            "role_reaches_phi_bucket": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::patient-records",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "tags": {
+            "data-classification": "phi"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+id: bedrock_agent_tool_phi_exposure
+description: >
+  A Lambda function is registered as a Bedrock agent action
+  group AND that Lambda's execution role can read S3 objects
+  from a PHI-tagged bucket. The agent's prompt-driven tool
+  invocation reaches PHI through the Lambda → S3 path.
+  Compose-by-asset.ID on the Lambda — both the
+  bedrock-tool marker and the role-reaches-PHI violation
+  fire on the same Lambda asset, so no scope_field is
+  required. The agent → Lambda hop is established by the
+  marker (Lambda is registered in some agent's actionGroups);
+  the Lambda → PHI hop is established by the violation
+  (Lambda role's effective S3 set intersects PHI buckets).
+  Threshold of 2 because both legs must fire — a Lambda
+  reaching PHI without being an agent tool is a different
+  control's job; an agent tool that doesn't reach PHI is
+  the desired state.
+controls:
+  - CTL.LAMBDA.MARKER.BEDROCK.TOOL.001
+  - CTL.LAMBDA.OVERPERM.S3PHI.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - automation_hijack
+postconditions:
+  - data_access

@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.DOMAIN.SHAREDROLE.001
+name: SageMaker Studio Domain Must Not Use a Single Shared Execution Role
+description: >
+  SageMaker Studio domain assigns a single execution role to
+  every user profile in the domain. Every data scientist and
+  ML engineer in the domain operates with identical IAM
+  permissions — there is no per-user or per-team scoping.
+  A compromise of any user's Studio session grants the
+  attacker the same blast radius as the broadest user in the
+  domain (typically the role's full s3:* / sagemaker:* /
+  iam:PassRole footprint). The shared-role model is the
+  default Studio onboarding pattern and is almost always a
+  leftover from early platform setup — deferred from
+  iteration 3 because the aws_sagemaker_domain asset type
+  was not yet projected.
+domain: identity
+severity: medium
+compliance:
+  owasp_nhi: "NHI5, NHI6"
+  nist_800_53_r5: "AC-2, AC-6"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1), 164.312(a)(2)(i)"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    SageMaker Studio domain assigns one execution role to all
+    user profiles. Every user shares the same IAM permissions;
+    user-level scoping is impossible.
+  action: >
+    Create per-user-profile execution roles (or per-team
+    roles) scoped to the buckets and services each user's
+    workload requires. Update each UserProfile's
+    ExecutionRole via UpdateUserProfile. Add a permissions
+    boundary at the domain level that caps any per-user role's
+    permissions to the domain's intended scope.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_domain",
+        "identity": {
+          "domain_role": { "is_shared": false }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_domain
+    - field: properties.compute.identity.domain_role.is_shared
+      op: eq
+      value: true

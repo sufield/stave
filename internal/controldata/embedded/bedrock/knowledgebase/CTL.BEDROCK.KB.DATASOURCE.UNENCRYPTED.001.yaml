@@ -1,0 +1,54 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.KB.DATASOURCE.UNENCRYPTED.001
+name: Bedrock Knowledge Base Data Source Must Use Encrypted Reads
+description: >
+  Bedrock knowledge base reads its S3 data source without
+  encryption in transit / encryption-context binding. RAG
+  retrieval flows S3 object content through the knowledge base
+  ingestion pipeline; without TLS-only bucket policy enforcement
+  (aws:SecureTransport=true) and SSE-KMS with explicit
+  encryption context, the data path is observable on shared
+  network paths and AWS API logs do not bind retrieval to the
+  intended decrypt key. The collector pre-computes the boolean
+  data_source_encrypted assessment from the bucket policy, KMS
+  key policy, and KB role's permission boundary.
+domain: governance
+severity: high
+compliance:
+  owasp_nhi: "NHI6"
+  nist_800_53_r5: "SC-8, SC-13"
+  soc2: "CC6.7"
+  hipaa: "164.312(e)(1), 164.312(e)(2)(ii)"
+  ccm_v4: ["CEK-03", "CEK-06"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    Bedrock knowledge base ingests S3 data without
+    encryption-in-transit + KMS encryption-context binding.
+  action: >
+    Add aws:SecureTransport=true deny-rule to the source
+    bucket's policy. Configure the bucket with SSE-KMS and a
+    customer-managed CMK. Add a key policy permitting the KB
+    role to decrypt with an explicit encryption context
+    matching the knowledge-base ID.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_knowledge_base",
+        "knowledge_base": { "data_source_encrypted": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_knowledge_base
+    - field: properties.ai.knowledge_base.data_source_encrypted
+      op: eq
+      value: false

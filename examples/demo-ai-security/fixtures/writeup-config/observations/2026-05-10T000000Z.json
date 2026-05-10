@@ -1,0 +1,74 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-10T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:agent/CUSTSUPPORTAGENT",
+      "type": "aws_bedrock_agent",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_agent",
+          "agent": {
+            "guardrail_associated": false,
+            "lambda_invoke_scope_broad": true,
+            "s3_access_scope_broad": true,
+            "invocation_logging_enabled": false,
+            "model_invoke_scope_broad": false,
+            "idle_session_ttl_excessive": false,
+            "action_group_count": 3,
+            "has_ghost_action_group_lambda": false,
+            "managed_by_iac": true,
+            "is_idle": false,
+            "has_ghost_knowledge_base": false,
+            "public_invocation_endpoint": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:knowledge-base/PATIENTKB",
+      "type": "aws_bedrock_knowledge_base",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_knowledge_base",
+          "knowledge_base": {
+            "target_bucket_arn": "arn:aws:s3:::patient-records",
+            "data_source_is_cross_account": false,
+            "data_source_encrypted": true,
+            "role_s3_scope_broader_than_sources": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-east-1:111122223333:function:patient-lookup-tool",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "lambda_function",
+          "bedrock": {
+            "is_agent_tool": true,
+            "role_reaches_phi_bucket": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::patient-records",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "tags": {
+            "data-classification": "phi"
+          }
+        }
+      }
+    }
+  ]
+}

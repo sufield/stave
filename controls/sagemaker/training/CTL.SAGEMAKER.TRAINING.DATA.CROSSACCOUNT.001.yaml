@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.TRAINING.DATA.CROSSACCOUNT.001
+name: SageMaker Training Data Source Must Not Cross Account Boundary
+description: >
+  SageMaker training job's InputDataConfig references an S3
+  bucket in a different AWS account. Cross-account training
+  data ingestion expands the trust boundary of the model
+  artifacts: the resulting model encodes whatever the source
+  account exposes. If the source bucket is compromised — or
+  legitimately owned by a third party with weaker controls —
+  the model can be poisoned, attribute leakage in inference
+  outputs becomes a cross-account exfil channel, or the
+  trained weights inherit data the local account never
+  approved. Cross-account sources are sometimes legitimate
+  (third-party labelled datasets, partner data exchange) but
+  require explicit scoping that this control surfaces.
+domain: governance
+severity: high
+compliance:
+  owasp_nhi: "NHI6"
+  nist_800_53_r5: "AC-4, AC-6"
+  soc2: "CC6.1, CC6.6"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["DSP-07", "IVS-04"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    SageMaker training job ingests data from an S3 bucket in a
+    different AWS account.
+  action: >
+    Either replicate the training data into the local account,
+    or pin the source bucket policy to require aws:PrincipalArn
+    matching the training role and add an SCP-level
+    aws:ResourceAccount allow-list for training-data buckets.
+    Document the cross-account dependency in the model card.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_training",
+        "training": { "data_source_is_cross_account": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_training
+    - field: properties.compute.training.data_source_is_cross_account
+      op: eq
+      value: true

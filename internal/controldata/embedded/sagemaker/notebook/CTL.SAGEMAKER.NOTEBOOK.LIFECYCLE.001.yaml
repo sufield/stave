@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.NOTEBOOK.LIFECYCLE.001
+name: SageMaker Notebook Must Have a Lifecycle Configuration
+description: >
+  SageMaker notebook has no LifecycleConfigName attached. A
+  lifecycle configuration runs scripts at notebook
+  creation/start to enforce hardening (mount restrictions,
+  package allow-listing, idle-timeout enforcement, agent
+  installation). Without one, notebooks come up with stock
+  configuration and cannot be hardened consistently across
+  the team. Lifecycle configurations are also the standard
+  hook for auto-stop and credential rotation; their absence
+  is the upstream cause of several other lifecycle failures
+  in this iteration.
+domain: governance
+severity: medium
+compliance:
+  owasp_nhi: "NHI1"
+  nist_800_53_r5: "CM-2, CM-7"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-04"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    SageMaker notebook has no lifecycle configuration. The
+    notebook starts with stock config and cannot be hardened
+    via the standard hook.
+  action: >
+    Create a lifecycle configuration with on-create + on-start
+    scripts that enforce idle-timeout, mount restrictions, and
+    package install policy. Attach it to the notebook via
+    UpdateNotebookInstance.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_notebook",
+        "governance": { "has_lifecycle_config": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_notebook
+    - field: properties.compute.governance.has_lifecycle_config
+      op: eq
+      value: false

@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENT.LOGGING.001
+name: Bedrock Agent Must Have Per-Agent Invocation Logging
+description: >
+  Bedrock agent invocations must be captured by per-agent logging.
+  The account-level CTL.BEDROCK.LOG.INVOCATION.001 control checks
+  the global ModelInvocationLoggingConfiguration; this control
+  flags individual agents that opt out of, or are not covered by,
+  invocation logging — so an operator can see "agent X has no
+  audit trail" without scanning every agent's coverage manually.
+  Without per-agent invocation records, prompt-injection attacks,
+  unauthorized tool calls, and data-exfiltration attempts leave
+  no forensic evidence.
+domain: audit
+severity: high
+compliance:
+  owasp_nhi: "NHI8"
+  nist_800_53_r5: "AU-2, AU-12"
+  soc2: "CC7.2"
+  hipaa: "164.312(b)"
+  ccm_v4: ["LOG-01", "LOG-12"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Bedrock agent has no invocation logging — agent actions
+    (model invocations, action-group calls, knowledge-base
+    retrievals) are unaudited.
+  action: >
+    Enable model invocation logging at the account level
+    (PutModelInvocationLoggingConfiguration) and verify the
+    agent's invocations land in the configured CloudWatch log
+    group or S3 destination. For agents that need
+    logging segregated from the account default, configure a
+    dedicated logging configuration tagged with the agent ID.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agent",
+        "agent": { "invocation_logging_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agent
+    - field: properties.ai.agent.invocation_logging_enabled
+      op: eq
+      value: false

@@ -1,0 +1,40 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-10T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:agent/CUSTSUPPORT02",
+      "type": "aws_bedrock_agent",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_agent",
+          "agent": {
+            "guardrail_associated": true,
+            "model_invoke_scope_broad": false,
+            "lambda_invoke_scope_broad": false,
+            "s3_access_scope_broad": false,
+            "invocation_logging_enabled": true,
+            "idle_session_ttl_excessive": false,
+            "action_group_count": 4,
+            "has_ghost_action_group_lambda": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:knowledge-base/PRODKB02",
+      "type": "aws_bedrock_knowledge_base",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_knowledge_base",
+          "knowledge_base": {
+            "role_s3_scope_broader_than_sources": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-10T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:sagemaker:us-east-1:111122223333:notebook-instance/research-notebook-scoped",
+      "type": "aws_sagemaker_notebook",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_notebook",
+          "access": {
+            "root_access_enabled": false
+          },
+          "identity": {
+            "execution_role": {
+              "has_broad_s3_access": false,
+              "has_passrole": false,
+              "has_admin_policy": false
+            }
+          },
+          "governance": {
+            "has_lifecycle_config": true,
+            "is_idle": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sagemaker:us-east-1:111122223333:training-job/train-bert-classifier-scoped",
+      "type": "aws_sagemaker_training_job",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_training",
+          "network": {
+            "network_isolation_enabled": true
+          },
+          "identity": {
+            "execution_role": {
+              "has_broad_s3_access": false,
+              "has_passrole": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sagemaker:us-east-1:111122223333:endpoint-config/inference-prod-monitored",
+      "type": "aws_sagemaker_endpoint_config",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_endpoint_config",
+          "governance": {
+            "has_model_monitor": true
+          }
+        }
+      }
+    }
+  ]
+}

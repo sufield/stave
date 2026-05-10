@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.NOTEBOOK.OVERPERM.ADMIN.001
+name: SageMaker Notebook Execution Role Must Not Have Admin Policy
+description: >
+  SageMaker notebook execution role has AdministratorAccess (or
+  equivalent admin policy) attached. Notebook environments are
+  interactive — root-equivalent permissions on the notebook
+  identity make every Jupyter cell a potential admin operation,
+  and a compromised notebook (stolen credentials, malicious
+  package install, supply-chain attack on a pip dependency)
+  inherits unbounded account access. Notebook roles should be
+  scoped to the specific actions the data-science workflow
+  requires; admin attachment is almost always a leftover from
+  early prototyping.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    SageMaker notebook execution role has an admin policy
+    attached. Compromised notebook credentials grant unbounded
+    account access.
+  action: >
+    Detach AdministratorAccess (and any equivalent customer-
+    managed admin policy) from the notebook execution role.
+    Replace with scoped policies covering only the SageMaker,
+    S3, and IAM:PassRole permissions the research workflow
+    actually needs.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_notebook",
+        "identity": {
+          "execution_role": { "has_admin_policy": false }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_notebook
+    - field: properties.compute.identity.execution_role.has_admin_policy
+      op: eq
+      value: true

@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.OVERPERM.S3PHI.001
+name: Lambda Execution Role Must Not Reach PHI-Tagged S3 Buckets
+description: >
+  Lambda execution role's effective S3 access set includes at
+  least one bucket carrying the data-classification=phi tag.
+  Same predicate shape as CTL.LAMBDA.OVERPERM (general
+  overpermission) but specialized for the cross-service AI
+  compound: when a Lambda is also registered as a Bedrock
+  agent action group (CTL.LAMBDA.MARKER.BEDROCK.TOOL.001),
+  the agent's prompt surface gains a path to PHI through the
+  tool-call boundary. The collector pre-computes the boolean
+  by joining the role's effective s3:GetObject targets
+  against the bucket-tag inventory; this control reads the
+  flag and stamps target_phi_bucket_arn for chain
+  composition with the S3 PHI marker.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-04", "IAM-05", "DSP-07"]
+scope_tags:
+  - aws
+  - lambda
+  - hipaa
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Lambda execution role can read S3 objects from a
+    PHI-tagged bucket. When the same Lambda is reachable from
+    a Bedrock agent's tool list, the agent's prompt surface
+    can extract PHI through tool-call results.
+  action: >
+    Scope the Lambda role's S3 actions to the specific
+    non-PHI bucket(s) the function legitimately requires. If
+    PHI access is necessary, wrap the function with explicit
+    output redaction and require the agent (or any other
+    caller) to authenticate per-request rather than relying
+    on the Lambda's broad role permissions.
+  example: |
+    {
+      "compute": {
+        "kind": "lambda_function",
+        "bedrock": { "role_reaches_phi_bucket": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: lambda_function
+    - field: properties.compute.bedrock.role_reaches_phi_bucket
+      op: eq
+      value: true

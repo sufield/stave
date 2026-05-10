@@ -1,0 +1,52 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENT.OVERPERM.LAMBDA.001
+name: Bedrock Agent Execution Role Must Scope lambda:InvokeFunction
+description: >
+  Bedrock agent execution role grants lambda:InvokeFunction on
+  Resource: * — the agent can invoke any Lambda function in the
+  account, not only the functions registered as action groups.
+  An attacker who gains prompt control can direct the agent to
+  invoke privileged Lambda functions beyond its intended tool
+  set, turning the agent into a proxy for arbitrary Lambda
+  execution. Scope lambda:InvokeFunction to the specific function
+  ARNs registered in the agent's actionGroups.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Bedrock agent execution role permits invoking any Lambda function.
+    The agent can be redirected to invoke functions outside its
+    declared action groups.
+  action: >
+    Replace Resource: "*" on lambda:InvokeFunction with the explicit
+    list of Lambda function ARNs the agent's actionGroups reference.
+    Example: Resource: ["arn:aws:lambda:us-east-1:111122223333:function:order-lookup",
+    "arn:aws:lambda:us-east-1:111122223333:function:product-search"].
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agent",
+        "agent": { "lambda_invoke_scope_broad": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agent
+    - field: properties.ai.agent.lambda_invoke_scope_broad
+      op: eq
+      value: true

@@ -1,0 +1,54 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.GHOST.KNOWLEDGEBASE.001
+name: Bedrock Agent Must Not Reference Deleted Knowledge Base
+description: >
+  Bedrock agent's knowledgeBases list contains at least one
+  knowledge-base ID that no longer exists in the current
+  inventory. RAG queries through this agent will fail or
+  return empty results — and the broken reference is invisible
+  to runtime: the agent silently degrades. Sibling to
+  CTL.BEDROCK.AGENT.GHOST.LAMBDA.001 (which catches the same
+  pattern on actionGroups). Same shape as the Cognito
+  ghost-trigger family (PRESIGNUP, PREAUTH, ...) applied to
+  Bedrock agent KB references. The collector pre-computes the
+  has_ghost_knowledge_base boolean by joining the agent's
+  declared KB IDs against the live knowledge-base inventory.
+domain: governance
+severity: medium
+compliance:
+  owasp_nhi: "NHI1"
+  nist_800_53_r5: "CM-2, CM-8"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-04", "DSP-01"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Bedrock agent references at least one knowledge base ID that
+    no longer exists. RAG retrievals through this agent silently
+    fail; the agent's configuration retains a stale KB reference.
+  action: >
+    Either remove the dead knowledge base from the agent via
+    DisassociateAgentKnowledgeBase, or recreate the knowledge
+    base if it was deleted accidentally. Re-prepare the agent
+    with PrepareAgent after the change.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agent",
+        "agent": { "has_ghost_knowledge_base": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agent
+    - field: properties.ai.agent.has_ghost_knowledge_base
+      op: eq
+      value: true

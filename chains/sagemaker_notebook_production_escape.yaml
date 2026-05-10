@@ -1,0 +1,26 @@
+id: sagemaker_notebook_production_escape
+description: >
+  SageMaker notebook execution role grants unscoped
+  sts:AssumeRole AND the assumable target role is tagged
+  environment=production. A researcher in a development
+  notebook can step into the production role and reach
+  whatever production-side data and infrastructure that role
+  controls — customer records, financial systems, audit logs
+  — without any approval gate. Cross-resource compound: the
+  notebook side fires the AssumeRole violation and stamps
+  target_role_arn on the notebook asset; the production-role
+  side fires the environment=production marker. The chain
+  joins by scope_field on target_role_arn (notebook's
+  property value) which the resolver maps to the IAM role's
+  asset.ID via the per-asset fallback — same shape as
+  cognito_unauth_phi_s3 and bedrock_rag_phi_exposure.
+controls:
+  - CTL.SAGEMAKER.NOTEBOOK.ASSUMEROLE.001
+  - CTL.IAM.MARKER.PRODUCTION.001
+escalation_threshold: 2
+compound_severity: high
+scope_field: properties.compute.identity.execution_role.assumable_role_arn
+preconditions:
+  - automation_hijack
+postconditions:
+  - data_access

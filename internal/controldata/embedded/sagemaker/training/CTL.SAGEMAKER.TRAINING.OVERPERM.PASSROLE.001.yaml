@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.TRAINING.OVERPERM.PASSROLE.001
+name: SageMaker Training Job Role Must Not Have Unrestricted iam:PassRole
+description: >
+  SageMaker training job execution role grants iam:PassRole on
+  Resource: * — a compromised training container (or a
+  malicious model-framework dependency) can pass any role to
+  AWS services that accept a role parameter. Training
+  workloads should not need iam:PassRole at all in most
+  designs; when they do, the permission should be scoped to
+  the specific roles required (e.g., a downstream
+  HyperParameterTuning role) rather than left open. The
+  attacker-controlled-input + untrusted-code combination on
+  training jobs makes any privilege-escalation primitive
+  here unusually high-impact.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    SageMaker training job role permits passing arbitrary
+    roles to AWS services. A compromised training container
+    can escalate by attaching production roles to new
+    SageMaker resources.
+  action: >
+    Remove iam:PassRole from the training job role unless a
+    specific downstream invocation requires it. When required,
+    restrict the action to the specific role ARN and constrain
+    iam:PassedToService to the exact target service.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_training",
+        "identity": {
+          "execution_role": { "has_passrole": false }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_training
+    - field: properties.compute.identity.execution_role.has_passrole
+      op: eq
+      value: true

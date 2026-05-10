@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.NOTEBOOK.OVERPERM.PASSROLE.001
+name: SageMaker Notebook Execution Role Must Not Have Unrestricted iam:PassRole
+description: >
+  SageMaker notebook execution role grants iam:PassRole on
+  Resource: * — a notebook user can pass any role to AWS
+  services that accept a role parameter (CreateTrainingJob,
+  CreateProcessingJob, CreateEndpoint, Lambda, etc.). The
+  notebook becomes a privilege-escalation primitive: the user
+  attaches a production role to a SageMaker resource the
+  notebook can manipulate. Same shape as
+  CTL.IAM.POLICY.PASSROLE.001 but on the SageMaker
+  notebook's interactive identity, where the blast radius is
+  highest because the notebook is hand-driven.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    SageMaker notebook execution role permits passing arbitrary
+    roles to AWS services. The notebook user can escalate
+    by attaching a production role to a SageMaker resource.
+  action: >
+    Restrict iam:PassRole to a specific list of role ARNs the
+    research workflow needs to assume — typically the
+    SageMaker training/processing-job role and nothing else.
+    Add iam:PassedToService conditions matching only the
+    services the notebook actually invokes (sagemaker.amazonaws.com).
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_notebook",
+        "identity": {
+          "execution_role": { "has_passrole": false }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_notebook
+    - field: properties.compute.identity.execution_role.has_passrole
+      op: eq
+      value: true

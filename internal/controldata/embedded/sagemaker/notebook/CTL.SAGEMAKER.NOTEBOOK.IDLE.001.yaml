@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.NOTEBOOK.IDLE.001
+name: SageMaker Notebook Must Not Be Idle Beyond Threshold
+description: >
+  SageMaker notebook instance has been idle for more than 30
+  days. An idle notebook keeps an interactive identity active
+  with cached credentials, attached EBS volumes containing
+  research data, and any IAM role permissions the notebook
+  carries. The cost is real (notebook compute is billed per
+  running hour) but the security cost is larger: stale
+  notebooks accumulate forgotten data, credentials become
+  unrotated, and the notebook becomes an offboarding gap
+  when the data scientist who owned it leaves. The collector
+  pre-computes the boolean idle assessment from the
+  instance's LastModifiedTime / NotebookInstanceStatus fields.
+domain: governance
+severity: medium
+compliance:
+  owasp_nhi: "NHI1"
+  nist_800_53_r5: "AC-2(3)"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(2)(ii)"
+  ccm_v4: ["IAM-13"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    SageMaker notebook has been idle past the staleness
+    threshold. Stop the instance, audit the role's recent
+    usage, and decide whether to delete or archive.
+  action: >
+    StopNotebookInstance now; review the attached lifecycle
+    configuration to enforce auto-stop on future idle
+    periods; delete the notebook + role if the workload is
+    truly abandoned.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_notebook",
+        "governance": { "is_idle": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_notebook
+    - field: properties.compute.governance.is_idle
+      op: eq
+      value: true

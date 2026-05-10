@@ -1,0 +1,54 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.ENDPOINT.STALE.001
+name: SageMaker Endpoint Must Not Be Idle Beyond Threshold
+description: >
+  SageMaker inference endpoint has not received traffic within
+  the observation window (default 30 days). Stale endpoints
+  consume compute resources (each instance billed per hour),
+  retain their execution role + KMS-key access, and stay
+  reachable from any caller still holding the endpoint name —
+  a cost liability and a security liability with no active
+  workload. Same shape as CTL.SAGEMAKER.NOTEBOOK.IDLE.001 +
+  CTL.BEDROCK.AGENT.STALE.001 applied to the inference
+  surface.
+domain: governance
+severity: low
+compliance:
+  owasp_nhi: "NHI1"
+  nist_800_53_r5: "AC-2(3), CM-7"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-13"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    SageMaker endpoint has been idle past the staleness
+    threshold. Decide whether to delete (cost saving) or
+    archive (with reduced instance count).
+  action: >
+    DeleteEndpoint + delete the corresponding endpoint
+    configuration if the workload is abandoned. If the
+    endpoint must remain for compliance or warm-restore
+    reasons, UpdateEndpoint to a single t2.medium instance
+    and document the expected idle duration with a
+    reviewed_at tag.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_endpoint_config",
+        "governance": { "is_idle": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_endpoint_config
+    - field: properties.compute.governance.is_idle
+      op: eq
+      value: true

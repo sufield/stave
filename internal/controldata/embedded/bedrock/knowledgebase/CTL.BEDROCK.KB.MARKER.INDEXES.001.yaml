@@ -1,0 +1,40 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.KB.MARKER.INDEXES.001
+name: Bedrock Knowledge Base Indexes S3 Bucket (Marker)
+description: >
+  Fact-recording marker for Bedrock knowledge bases that index a
+  specific S3 bucket. Emits an informational finding (NOT a
+  violation) on every knowledge base whose data source carries a
+  bucket ARN — so cross-resource chains can compose this fact
+  with data-classification markers on the target bucket. Same
+  pattern as CTL.S3.MARKER.PHI.001 + CTL.COGNITO.IDPOOL.UNAUTH.S3
+  / cognito_unauth_phi_s3 chain: a knowledge base indexing a
+  bucket is the desired state — never a finding to triage. The
+  marker exists so the chain engine can join "knowledge base
+  side: indexes bucket X" with "storage side: bucket X is
+  classified PHI" via scope_field on the shared bucket ARN.
+domain: governance
+severity: low
+type: marker
+classification: state_assertion
+compliance:
+  hipaa: "164.312(c)(1)"
+scope_tags:
+  - aws
+  - bedrock
+remediation:
+  description: >
+    No remediation. A knowledge base indexing an S3 bucket is the
+    desired state.
+  action: >
+    None. This marker exists as a chain-detection ingredient. To
+    suppress noise on dashboards, filter findings by control_id
+    when rendering Findings — markers should appear in a separate
+    "facts" panel rather than the violation list.
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_knowledge_base
+    - field: properties.ai.knowledge_base.target_bucket_arn
+      op: present

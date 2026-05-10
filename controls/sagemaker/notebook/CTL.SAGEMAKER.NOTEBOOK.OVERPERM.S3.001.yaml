@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.NOTEBOOK.OVERPERM.S3.001
+name: SageMaker Notebook Execution Role Must Scope S3 Access
+description: >
+  SageMaker notebook execution role grants s3:GetObject (or s3:*)
+  on Resource: * — the notebook user can read any object in any
+  bucket in the account, including production data, secrets, PHI
+  buckets, and audit logs. Notebook execution roles are interactive
+  identities used by data scientists and ML engineers; broad S3
+  access on these roles is the canonical exfiltration pattern from
+  data-science platforms (one careless boto3 call from a Jupyter
+  cell pulls non-training data into the notebook environment).
+  Scope the role to the specific buckets the research workflow
+  requires.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-04", "IAM-05", "DSP-07"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    SageMaker notebook execution role can read any S3 object in
+    the account. The notebook user's data-access scope exceeds
+    the research workload's needs.
+  action: >
+    Replace Resource: "*" on the role's S3 actions with the
+    explicit list of training-data and model-artifact bucket
+    ARNs the workflow requires. Use s3:prefix conditions to
+    narrow further when only specific prefixes are needed.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_notebook",
+        "identity": {
+          "execution_role": { "has_broad_s3_access": false }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_notebook
+    - field: properties.compute.identity.execution_role.has_broad_s3_access
+      op: eq
+      value: true

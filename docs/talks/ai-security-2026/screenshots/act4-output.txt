@@ -1,0 +1,24 @@
+ACT 4: The fix — and proof it works.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Remediations applied to the four assets:
+  1. Scoped agent execution role to specific Lambda ARNs
+  2. Attached a Bedrock guardrail (sensitive-info filter on)
+  3. Enabled per-agent invocation logging
+  4. Changed KB data source from PHI bucket → product-docs bucket
+  5. Scoped Lambda tool role to non-PHI bucket only
+
+Running: stave apply on the remediated configuration
+
+AI findings: 0
+Chains:      0
+
+All AI controls pass. The compound chains are silent.
+
+  Cost of remediation:  $0 (role scoping)  +  $0.050/MAU (guardrail)
+  Time:                 ~30 minutes across the four config changes
+  Risk:                 0 — the attack path is gone, not just suppressed
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+

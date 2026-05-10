@@ -1,0 +1,63 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.NOTEBOOK.ASSUMEROLE.001
+name: SageMaker Notebook Execution Role Must Not Have Unscoped sts:AssumeRole
+description: >
+  SageMaker notebook execution role grants sts:AssumeRole on
+  Resource: * (or on a role outside the notebook's declared
+  cross-account/cross-environment list). A notebook is an
+  interactive, hand-driven identity used by data scientists.
+  Letting the notebook role assume arbitrary other roles is a
+  privilege-escalation primitive: a researcher in a development
+  notebook can step into a production role and access
+  customer data, audit logs, or financial systems without
+  any approval gate. Distinct from
+  CTL.SAGEMAKER.NOTEBOOK.OVERPERM.PASSROLE.001 (which checks
+  iam:PassRole — passing a role to a service the notebook
+  invokes); this control checks sts:AssumeRole — the
+  notebook's identity stepping into another role's identity
+  directly. The collector stamps the assumable target ARN on
+  the asset for chain composition with environment markers.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    SageMaker notebook execution role can assume arbitrary
+    target roles. A researcher with notebook access can step
+    into production identities without approval.
+  action: >
+    Either remove sts:AssumeRole from the notebook role, or
+    restrict the action's Resource to a specific list of
+    non-production role ARNs the research workflow legitimately
+    requires. Add a permissions-boundary on the notebook role
+    that denies sts:AssumeRole for any role tagged
+    environment=production.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_notebook",
+        "identity": {
+          "execution_role": { "has_assume_role_unscoped": false }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_notebook
+    - field: properties.compute.identity.execution_role.has_assume_role_unscoped
+      op: eq
+      value: true
