@@ -2,7 +2,6 @@
   "schema_version": "obs.v0.1",
   "captured_at": "2026-05-09T00:00:00Z",
   "source": "deployed",
-  "vendor": "aws",
   "assets": [
     {
       "id": "arn:aws:s3:::phi-records",

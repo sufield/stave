@@ -313,7 +313,7 @@ func TestDetectChains_ScopeFieldNilResolverFallsBack(t *testing.T) {
 	}
 	findings := DetectChains(failures, chain, lookup, nil)
 	if len(findings) != 0 {
-		t.Errorf("expected 0 findings (nil resolver → asset.ID grouping, no asset has both)", )
+		t.Errorf("expected 0 findings (nil resolver → asset.ID grouping, no asset has both)")
 	}
 }
 
