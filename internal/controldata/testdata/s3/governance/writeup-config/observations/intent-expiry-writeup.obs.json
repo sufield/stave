@@ -1,0 +1,43 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-10T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:knowledge-base/kb-claims-rag",
+      "type": "aws_bedrock_knowledge_base",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_knowledge_base",
+          "knowledge_base": {
+            "target_bucket_arn": "arn:aws:s3:::patient-claims-data"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::patient-claims-data",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "tags": {
+            "environment": "production",
+            "owner": "data-engineering"
+          },
+          "classification": {
+            "is_unclassified": true,
+            "declared_value": null
+          }
+        }
+      }
+    }
+  ]
+}

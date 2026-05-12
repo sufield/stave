@@ -1,0 +1,35 @@
+id: intent_expiry_unclassified_ai_datasource
+description: >
+  Intent-expiry compound on AI data sources — a Bedrock knowledge
+  base indexes an S3 bucket AND that bucket has no
+  data-classification tag. The protection chains that detect
+  sensitive-data exposure through AI tool chains
+  (bedrock_rag_phi_exposure and others) all condition on the
+  classification marker. When the marker is absent, those chains
+  go silent — not because the data is safe, but because the
+  operator has not declared what the bucket contains. If the
+  bucket holds PHI, PII, or other sensitive data, the
+  protection gap is invisible.
+
+  This is the "tag existed Monday, gone Tuesday" failure mode
+  surfaced on a single snapshot: any KB-indexed bucket missing
+  the data-classification declaration is a coverage gap whether
+  the tag was removed yesterday or was never applied. The
+  failure mode is the absence of the declaration, not the
+  history of how it disappeared.
+
+  Same scope_field pattern as bedrock_rag_phi_exposure: the
+  Bedrock side stamps target_bucket_arn on the knowledge base;
+  the S3 side falls back to its own asset.ID (the bucket ARN)
+  when the property path is absent, so the chain groups by the
+  shared bucket ARN.
+controls:
+  - CTL.BEDROCK.KB.MARKER.INDEXES.001
+  - CTL.S3.CLASSIFY.COVERAGE.001
+escalation_threshold: 2
+compound_severity: high
+scope_field: properties.ai.knowledge_base.target_bucket_arn
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_access

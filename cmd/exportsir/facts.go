@@ -571,6 +571,72 @@ var propertyAllowlist = []propertyPath{
 	{blockKey: "auth", keys: []string{"webhook", "identity_mapping", "uses_access_key_id"}, predicateName: "has_uses_access_key_id"},
 	// CloudTrail trail logging state (cloudtrail-stop-logging mgmt-events fixtures)
 	{blockKey: "trail", keys: []string{"is_logging"}, predicateName: "has_logging_enabled", assetTypes: []string{"aws_cloudtrail_trail"}},
+
+	// ── AI Agent (Bedrock) ────────────────────────────────────
+	// Covers the bedrock agent overpermissioned + governance fixtures
+	// under examples/demo-ai-security/. Properties land at
+	// properties.ai.agent.* on aws_bedrock_agent assets.
+	{blockKey: "ai", keys: []string{"agent", "guardrail_associated"}, predicateName: "has_agent_guardrail", assetTypes: []string{"aws_bedrock_agent"}},
+	{blockKey: "ai", keys: []string{"agent", "invocation_logging_enabled"}, predicateName: "has_agent_invocation_logging", assetTypes: []string{"aws_bedrock_agent"}},
+	{blockKey: "ai", keys: []string{"agent", "lambda_invoke_scope_broad"}, predicateName: "has_agent_lambda_scope_broad", assetTypes: []string{"aws_bedrock_agent"}},
+	{blockKey: "ai", keys: []string{"agent", "s3_access_scope_broad"}, predicateName: "has_agent_s3_scope_broad", assetTypes: []string{"aws_bedrock_agent"}},
+	{blockKey: "ai", keys: []string{"agent", "managed_by_iac"}, predicateName: "has_agent_iac_managed", assetTypes: []string{"aws_bedrock_agent"}},
+	{blockKey: "ai", keys: []string{"agent", "action_group_count"}, predicateName: "has_agent_action_group_count", assetTypes: []string{"aws_bedrock_agent"}},
+	// Bedrock knowledge base — target bucket ARN is the chain
+	// scope_field for bedrock_rag_phi_exposure and
+	// intent_expiry_unclassified_ai_datasource.
+	{blockKey: "ai", keys: []string{"knowledge_base", "target_bucket_arn"}, predicateName: "has_kb_target_bucket", assetTypes: []string{"aws_bedrock_knowledge_base"}},
+	{blockKey: "ai", keys: []string{"knowledge_base", "data_source_encrypted"}, predicateName: "has_kb_source_encrypted", assetTypes: []string{"aws_bedrock_knowledge_base"}},
+
+	// ── VPC Peering (vpc-peering-exfiltration demo) ───────────
+	// The chain vpc_peering_exposure groups by
+	// properties.network.peering.id (scope_field), which both the
+	// peering connection asset and the route table asset carry.
+	{blockKey: "network", keys: []string{"peering", "id"}, predicateName: "has_peering_id", assetTypes: []string{"aws_vpc_peering_connection", "aws_vpc_route_table"}},
+	{blockKey: "network", keys: []string{"peering", "status"}, predicateName: "has_peering_status", assetTypes: []string{"aws_vpc_peering_connection"}},
+	{blockKey: "network", keys: []string{"peering", "peer_account_in_org"}, predicateName: "has_peering_peer_in_org", assetTypes: []string{"aws_vpc_peering_connection"}},
+	{blockKey: "network", keys: []string{"peering", "dns_resolution_from_remote"}, predicateName: "has_peering_dns_resolution", assetTypes: []string{"aws_vpc_peering_connection"}},
+	{blockKey: "network", keys: []string{"peering", "peer_account_id"}, predicateName: "has_peering_peer_account", assetTypes: []string{"aws_vpc_peering_connection"}},
+	{blockKey: "network", keys: []string{"peering", "peer_vpc_id"}, predicateName: "has_peering_peer_vpc", assetTypes: []string{"aws_vpc_peering_connection"}},
+	{blockKey: "network", keys: []string{"peering_route", "has_broad_destination"}, predicateName: "has_peering_route_broad", assetTypes: []string{"aws_vpc_route_table"}},
+	{blockKey: "network", keys: []string{"peering_route", "peer_connection_id"}, predicateName: "has_peering_route_target", assetTypes: []string{"aws_vpc_route_table"}},
+
+	// ── EC2 Instance (shadow-ec2-lateral-movement demo) ────────
+	// The shadow_ec2_lateral_movement chain composes three of these
+	// scalars on a single aws_ec2_instance asset.
+	{blockKey: "compute", keys: []string{"instance", "state"}, predicateName: "has_instance_state", assetTypes: []string{"aws_ec2_instance"}},
+	{blockKey: "compute", keys: []string{"instance", "stopped_age_exceeds_threshold"}, predicateName: "has_instance_stopped_aged", assetTypes: []string{"aws_ec2_instance"}},
+	{blockKey: "compute", keys: []string{"instance", "stopped_age_days"}, predicateName: "has_instance_stopped_age_days", assetTypes: []string{"aws_ec2_instance"}},
+	{blockKey: "compute", keys: []string{"instance", "spans_security_zones"}, predicateName: "has_instance_dual_homed", assetTypes: []string{"aws_ec2_instance"}},
+	{blockKey: "compute", keys: []string{"instance_profile", "is_overprivileged"}, predicateName: "has_instance_profile_overprivileged", assetTypes: []string{"aws_ec2_instance"}},
+	{blockKey: "compute", keys: []string{"instance_profile", "arn"}, predicateName: "has_instance_profile_arn", assetTypes: []string{"aws_ec2_instance"}},
+	{blockKey: "compute", keys: []string{"ec2", "vpc_id"}, predicateName: "has_instance_vpc", assetTypes: []string{"aws_ec2_instance"}},
+
+	// ── IAM Role drift / Shadow Admin ───────────────────────────
+	// Five-control entropy family at controls/iam/entropy/ —
+	// PERMISSIONDRIFT, CATEGORYMIX, INTENTMISMATCH, INTENTTAG,
+	// ENTROPY.INCOMPLETE. All scalars are collector-computed
+	// booleans / numerics layered on top of raw Access Advisor.
+	{blockKey: "identity", keys: []string{"role_age_days"}, predicateName: "has_role_age_days", assetTypes: []string{"aws_iam_role"}},
+	{blockKey: "identity", keys: []string{"access_advisor", "available"}, predicateName: "has_access_advisor_available", assetTypes: []string{"aws_iam_role"}},
+	{blockKey: "identity", keys: []string{"intent_match", "has_intent_mismatch"}, predicateName: "has_intent_mismatch", assetTypes: []string{"aws_iam_role"}},
+	{blockKey: "identity", keys: []string{"intent_match", "declared_role_type"}, predicateName: "has_declared_role_type", assetTypes: []string{"aws_iam_role"}},
+	{blockKey: "identity", keys: []string{"permission_categories", "has_incompatible_categories"}, predicateName: "has_incompatible_categories", assetTypes: []string{"aws_iam_role"}},
+	{blockKey: "identity", keys: []string{"permission_drift", "threshold_exceeded"}, predicateName: "has_permission_drift_threshold_exceeded", assetTypes: []string{"aws_iam_role"}},
+	{blockKey: "identity", keys: []string{"permission_drift", "unused_service_ratio"}, predicateName: "has_unused_service_ratio", assetTypes: []string{"aws_iam_role"}},
+	{blockKey: "identity", keys: []string{"permission_drift", "total_services_accessible"}, predicateName: "has_total_services_accessible", assetTypes: []string{"aws_iam_role"}},
+
+	// ── S3 Delegation (s3-delegation-failure demo) ──────────────
+	// Five-control delegation family at controls/s3/delegation/.
+	// All scalars are collector-stamped after comparing the bucket
+	// policy against vendor_registry.yaml.
+	{blockKey: "delegation", keys: []string{"has_unknown_external_principal"}, predicateName: "has_unknown_delegation", assetTypes: []string{"aws_s3_bucket"}},
+	{blockKey: "delegation", keys: []string{"has_scope_exceeded"}, predicateName: "has_delegation_scope_exceeded", assetTypes: []string{"aws_s3_bucket"}},
+	{blockKey: "delegation", keys: []string{"has_expired_review"}, predicateName: "has_delegation_review_expired", assetTypes: []string{"aws_s3_bucket"}},
+	{blockKey: "delegation", keys: []string{"customer_can_revoke"}, predicateName: "has_customer_can_revoke", assetTypes: []string{"aws_s3_bucket"}},
+	{blockKey: "delegation", keys: []string{"vendor_can_make_public"}, predicateName: "has_vendor_can_make_public", assetTypes: []string{"aws_s3_bucket"}},
+	{blockKey: "delegation", keys: []string{"has_external_principals_with_control"}, predicateName: "has_delegation_external_principals", assetTypes: []string{"aws_s3_bucket"}},
+	{blockKey: "delegation", keys: []string{"vendor_has_put_bucket_policy"}, predicateName: "has_vendor_put_bucket_policy", assetTypes: []string{"aws_s3_bucket"}},
 }
 
 // propertyFacts walks the propertyAllowlist for every asset and
@@ -1467,25 +1533,57 @@ var baselineSMT2Predicates = []string{
 	"contributed_by",
 	"cross_account_assumes",
 	"first_seen_at",
+	"has_access_advisor_available",
 	"has_action",
 	"has_advanced_security_enabled",
 	"has_advanced_security_mode",
+	"has_agent_action_group_count",
+	"has_agent_guardrail",
+	"has_agent_iac_managed",
+	"has_agent_invocation_logging",
+	"has_agent_lambda_scope_broad",
+	"has_agent_s3_scope_broad",
 	"has_bucket_exists",
 	"has_bucket_owned",
 	"has_condition",
 	"has_condition_value",
+	"has_customer_can_revoke",
 	"has_data_event_logging",
+	"has_declared_role_type",
+	"has_delegation_external_principals",
+	"has_delegation_review_expired",
+	"has_delegation_scope_exceeded",
 	"has_deny_action",
 	"has_deny_resource",
 	"has_exposed_repo_artifacts",
 	"has_exposure_window",
 	"has_forbidden_state",
 	"has_ghost_trigger",
+	"has_incompatible_categories",
+	"has_instance_dual_homed",
+	"has_instance_profile_arn",
+	"has_instance_profile_overprivileged",
+	"has_instance_state",
+	"has_instance_stopped_age_days",
+	"has_instance_stopped_aged",
+	"has_instance_vpc",
+	"has_intent_mismatch",
 	"has_intent_rationale",
+	"has_kb_source_encrypted",
+	"has_kb_target_bucket",
 	"has_list_via_resource",
 	"has_logging_enabled",
 	"has_mfa_enforced",
+	"has_peering_dns_resolution",
+	"has_peering_id",
+	"has_peering_peer_account",
+	"has_peering_peer_in_org",
+	"has_peering_peer_vpc",
+	"has_peering_route_broad",
+	"has_peering_route_target",
+	"has_peering_status",
 	"has_permission_action",
+	"has_permission_drift_threshold_exceeded",
 	"has_permission_resource",
 	"has_privilege_level",
 	"has_public_access_blocked",
@@ -1493,14 +1591,20 @@ var baselineSMT2Predicates = []string{
 	"has_public_read",
 	"has_read_via_resource",
 	"has_resource",
+	"has_role_age_days",
 	"has_severity",
 	"has_tag",
+	"has_total_services_accessible",
 	"has_trigger_lambda_exists",
 	"has_trigger_type",
 	"has_type",
+	"has_unknown_delegation",
+	"has_unused_service_ratio",
 	"has_upload_key_mode",
 	"has_uses_access_key_id",
 	"has_vendor",
+	"has_vendor_can_make_public",
+	"has_vendor_put_bucket_policy",
 	"has_webhook_config_access",
 	"is_decommissioned",
 	"is_provisioned",

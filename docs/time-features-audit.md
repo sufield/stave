@@ -28,16 +28,16 @@ each feature against the closest commercial equivalents.
 | 8 | `stave watch` — continuous monitor of observation dir | ✅ | ✓ matches | none |
 | 9 | `stave monitor` — live posture-score terminal display | ✅ | ✓ matches | none |
 | 10 | Per-finding `HasTemporalEvidence` flag | ✅ | ✓ matches | none |
-| 11 | Recurrence tracking across runs (`internal/core/evaluation/recurrence/`) | ✅ | partial — no user-facing command surfaces it | **GAP-B: surfacing** |
+| 11 | Recurrence tracking across runs (`internal/core/evaluation/engine/recurrence.go`) | ✅ | surfaced via `stave trend oscillation` (classifies chronic / deploy-time / random with cycle count + failure rate) and the per-finding `posture_drift.{pattern,exposure_window_count}` block in `stave apply --format json` output. Also exposed as a control family (`controls/{iam,s3,vpc,cloudtrail}/recurrence/CTL.*.RECUR.001.yaml`). | ~~GAP-B~~ closed |
 | 12 | Time-based predicate fields in 176 controls (`is_idle`, `is_dormant`, `appears_unused`, expiry-days, etc) | ✅ | ✓ matches per-control YAML | none |
 | 12b | **Time-Bound Credential Invariant** — 48 controls: IAM credential TTL (10, includes the new TTL-elapsed variant), token TTL (5), cert/SAML expiry (11), AD/Azure/GCP lifecycle (11), Secrets Manager rotation (7), KMS rotation (3), Bedrock long-lived keys (1). 37 of the 48 carry NHI7 (Long-Lived Secrets) per [`docs/compliance/owasp-nhi-top10.md`](compliance/owasp-nhi-top10.md). Strategic framing in [`business/collins/first-10.md`](../../business/collins/first-10.md) lines 225/350/556 + the [time-adversary thesis](../../business/security-theory/time-adversary.md). | ✅ | ✓ matches catalog — stricter TTL-elapsed variant shipped as `CTL.IAM.CRED.TTL.EXCEEDED.001` (Temporal Iteration 2) | ~~GAP-L~~ closed |
 | 13 | Temporal ghost detection — 2 controls confirm ghosts across two observations | ✅ | ✓ matches — dedicated doc at [`docs/temporal-ghost.md`](temporal-ghost.md) (closed in Temporal Iteration 1) | ~~GAP-C~~ closed |
 | 14 | Exposure window tracking (`internal/core/asset/` close-on-secure semantics) | ✅ | ✓ matches | none |
 | 15 | TLA+ temporal safety — drift margin from "safe today" to "unsafe in N flips" | ✅ | `examples/tlaplus-temporal-safety/` only | none |
-| 16 | `examples/forecast/` — linear-trend posture-score projector | ✅ | external example only; no `stave forecast` subcommand wraps it | **GAP-D: cmd subsumption** |
+| 16 | `examples/forecast/` — linear-trend posture-score projector | ✅ | shipped as `stave trend forecast` (cmd/trend/forecast.go) with the same JSON shape the Python example produces; the Python script's header docstring explicitly describes itself as a "replica" of `internal/app/forecast/` and the Go subcommand. SLA projection per-severity (ON_TRACK / AT_RISK / BREACHING) and MTTR history reuse the same closed-form least-squares fit. | ~~GAP-D~~ closed |
 | 17 | Severity-keyed SLA in compliance profiles | ✅ | ✓ default profile now applied when neither `--sla-profile` nor `--sla-profile-file` is set (Temporal Iteration 1, `internal/adapters/sla/provider.go`) | ~~GAP-E~~ closed |
 | 18 | Observation freshness / extractor-staleness detection | ✅ | shipped as `CTL.META.OBSERVATION.STALE.001` (Temporal Iteration 2) — meta-control flags stale-collector facts via `properties.meta.observation.is_stale` | ~~GAP-F~~ closed |
-| 19 | Intent-expiry tracking ("Monday OK, Tuesday intent vanished") | ❌ | `reviewed_at` is a remediation suggestion, not a predicate input | **GAP-G: missing feature** |
+| 19 | Intent-expiry tracking ("Monday OK, Tuesday intent vanished") | ✅ | surfaced on a single snapshot via `chains/intent_expiry_unclassified_ai_datasource.yaml`: composes `CTL.BEDROCK.KB.MARKER.INDEXES.001` (KB indexes bucket X) with `CTL.S3.CLASSIFY.COVERAGE.001` (bucket X is unclassified), grouped by `scope_field: properties.ai.knowledge_base.target_bucket_arn`. Fires whether the tag was removed yesterday or was never applied — the absence is the failure mode. Cross-snapshot tag-removal attribution remains separately scoped (perturbation analysis). | ~~GAP-G~~ closed |
 | 20 | Long-horizon causality ("this regression today was caused by IaC commit 6 months ago") | ❌ | bisect finds transition; doesn't attribute to a commit / actor / ticket | **GAP-H: scope boundary** |
 | 21 | Silent-monitoring-collapse over time ("the dog that didn't bark") | partial | `chains/silent_monitoring_collapse.yaml` + `cloudwatch_silence_as_safety.yaml` detect missing alarms in the *current* state, not absence of expected alerting *events* over time | **GAP-I: deeper temporal modeling** |
 | 22 | "Time travel" / "what did our posture look like on date X" reports | partial | `stave apply --now <past-date>` works for fixtures that include a snapshot from that date, but there's no point-in-time-report subcommand | **GAP-J: cmd composition** |
@@ -53,12 +53,17 @@ each feature against the closest commercial equivalents.
 - ~~GAP-F~~ (observation freshness) — **closed**, shipped as `CTL.META.OBSERVATION.STALE.001` (governance/NHI8, severity high)
 - ~~GAP-L~~ (stricter TBCI variant) — **closed**, shipped as `CTL.IAM.CRED.TTL.EXCEEDED.001` (identity/NHI7, severity critical)
 
-Remaining open: GAP-B (recurrence surfacing), GAP-D (`stave forecast`
-subcommand), GAP-G (intent expiry), GAP-H (causality — out of
-scope), GAP-I (silent-monitoring over time), GAP-J (time-travel
-reports), GAP-K (cross-control temporal compound). Items B/D are
-surfacing decisions; G/I/J/K are feature-extension scope; H is an
-architectural boundary.
+**As of Temporal Iteration 3 (audit reconciliation, 2026-05-12):**
+- ~~GAP-B~~ (recurrence surfacing) — **closed**, surfaced via `stave trend oscillation` (chronic / deploy-time / random classifier), the per-finding `posture_drift.{pattern,exposure_window_count}` block in `stave apply --format json`, and the recurrence-control family at `controls/{iam,s3,vpc,cloudtrail}/recurrence/`. The bare `stave findings --recurrence-only` command the original audit suggested isn't built, but the existing surfaces (oscillation subcommand + apply output + control pack) cover the underlying need.
+- ~~GAP-D~~ (`stave forecast` subcommand) — **closed**, shipped as `stave trend forecast` (`cmd/trend/forecast.go`); `examples/forecast/forecast.py` is documented as a replica of the Go subcommand for users who want a portable stdlib reference. No bare `stave forecast` alias; `stave trend forecast` is the canonical entry.
+
+**As of Temporal Iteration 4 (2026-05-12):**
+- ~~GAP-G~~ (intent expiry) — **closed**, shipped as `chains/intent_expiry_unclassified_ai_datasource.yaml` composing the existing `CTL.S3.CLASSIFY.COVERAGE.001` (bucket lacks data-classification) with `CTL.BEDROCK.KB.MARKER.INDEXES.001` (KB indexes the bucket) via `scope_field: properties.ai.knowledge_base.target_bucket_arn`. Threshold 2, compound_severity high. Approach A (single-snapshot tag-absence detection) per spec; Approach B (cross-snapshot tag-removal attribution via the perturbation tool) remains a separate scope.
+
+Remaining open: GAP-H (causality — out of scope), GAP-I
+(silent-monitoring over time), GAP-J (time-travel reports), GAP-K
+(cross-control temporal compound). I/J/K are feature-extension
+scope; H is an architectural boundary.
 
 ---
 
@@ -336,9 +341,26 @@ configuration that needs root-cause investigation.
 based on recurrence patterns. AWS Config: doesn't surface
 recurrence — every compliance change is a separate event.
 
-**⚠️ GAP-B (surfacing):** Recurrence is computed but no user-facing
-command exposes it directly. A `stave findings --recurrence-only` or
-`stave inspect recurrence` subcommand would close the gap.
+**~~⚠️ GAP-B (surfacing)~~ — closed (Temporal Iteration 3,
+2026-05-12):** Three surfaces expose recurrence:
+
+- `stave trend oscillation --history <dir>` — classifies every
+  (control_id, asset_id) pair into `chronic` (>80% failure rate),
+  `deploy-time` (toggles ≥ 3 times across snapshots), or `random`,
+  with cycle count, confidence, and failure-rate fields. The
+  underlying classifier lives at `internal/app/oscillation/`.
+- Per-finding `posture_drift.{pattern, exposure_window_count}` in
+  `stave apply --format json` output. Pattern values:
+  `persistent`, `degraded`, `recurring`, `transient`.
+- Control pack: `controls/{iam,s3,vpc,cloudtrail}/recurrence/`
+  ships dedicated unsafe-recurrence detectors (e.g.
+  `CTL.IAM.ROOT.RECUR.001`, `CTL.S3.PUBLIC.RECUR.001`,
+  `CTL.IAM.CRED.RECUR.001`, etc.) that fire when a control's
+  same-asset failure pattern matches a recurrence template.
+
+The originally suggested `stave findings --recurrence-only`
+filter isn't built; the existing surfaces cover the underlying
+"find me the recurring violations" need.
 
 ---
 
@@ -558,10 +580,17 @@ quarterly OKR reviews.
 projections are the closest concept; Stave applies the same math to
 security posture.
 
-**⚠️ GAP-D (surfacing):** External example only. A `stave forecast`
-subcommand wrapping the script (same way `stave trend` wraps trend
-computation) would make the feature discoverable. Today an adopter
-has to know to look under `examples/`.
+**~~⚠️ GAP-D (surfacing)~~ — closed (Temporal Iteration 3,
+2026-05-12):** Shipped as `stave trend forecast`
+(`cmd/trend/forecast.go`). Same closed-form least-squares fit
+on posture-score history, same per-severity SLA projection
+vocabulary (ON_TRACK / AT_RISK / BREACHING), same MTTR
+trajectory model. The Python script at
+`examples/forecast/forecast.py` is now documented in its header
+docstring as a replica of this Go subcommand — kept for users
+who want a stdlib-only reference implementation. No bare
+`stave forecast` alias was added: `stave trend forecast` is the
+canonical entry.
 
 ---
 
@@ -638,26 +667,51 @@ so it ships as an explicit canary control.
 
 ---
 
-### 19. Intent expiry — **GAP-G**
+### 19. Intent expiry — **~~GAP-G~~ closed (Temporal Iteration 4, 2026-05-12)**
 
-**Description (proposed).** "Monday: a permission is created for a
-specific project. Tuesday: the project ends; the intent for that
-permission vanishes. The configuration didn't change but the
-permission is now stale." `temporal-dimension.md` flags this as the
+**Description.** "Monday: a permission is created for a specific
+project. Tuesday: the project ends; the intent for that permission
+vanishes. The configuration didn't change but the permission is
+now stale." `temporal-dimension.md` flags this as the
 "clock that ran out" failure mode.
 
-**Applied as.** Would require a `reviewed_at` / `expires_at` tag
-on resources + a control comparing `now - reviewed_at` to a
-threshold, OR a `business_intent.expires_at` field in the
-observation.
+**Applied as.** Single-snapshot detection of intent-declaration
+absence: a Bedrock knowledge base indexes an S3 bucket AND the
+bucket has no `data-classification` tag (the collector pre-computes
+`storage.classification.is_unclassified` from the tag inventory).
+Both conditions fire on the same shared bucket ARN via
+`scope_field: properties.ai.knowledge_base.target_bucket_arn`,
+which falls back to the S3 asset's own ID when the property is
+absent on the bucket asset — same pattern as
+`bedrock_rag_phi_exposure`.
+
+Surfaces:
+- Control: `controls/s3/governance/CTL.S3.CLASSIFY.COVERAGE.001`
+  (already shipped — fires on any bucket where the collector
+  stamps `classification.is_unclassified == true`)
+- Marker: `controls/bedrock/knowledgebase/CTL.BEDROCK.KB.MARKER.INDEXES.001`
+- Chain: `chains/intent_expiry_unclassified_ai_datasource.yaml`
+  (new — composes the two above, threshold 2, severity high)
+- Fixtures:
+  `internal/controldata/testdata/s3/governance/{writeup-config,remediated-config}/`
+
+The chain fires whether the tag was removed yesterday or never
+applied — the absence is the failure mode. Cross-snapshot
+tag-removal attribution (Approach B in the iter-4 spec) is
+intentionally out of scope for this iteration; if needed, extend
+the perturbation analysis tool to emit a `tag_removed` diff
+category.
 
 **Problem addressed.** The slowest-moving failure mode — nothing
-in the config changed; the *business reality* changed. Stave can
-detect it only if the collector materializes intent into observation
-data.
+in the config changed; the *business reality* changed. Stave
+detects the resulting coverage gap on the snapshot where it
+already exists, without requiring two-snapshot comparison.
 
-**Existing tools.** No tool addresses this directly. Some companies
-implement it via custom `Last-Reviewed` tags + ad-hoc audits.
+**Existing tools.** No commercial tool joins
+"knowledge-base-indexes-bucket" with "bucket-is-unclassified" into
+a single finding. CSPM tools surface untagged buckets in
+isolation; AI-security platforms surface KB data sources in
+isolation. The compound is the differentiator.
 
 ---
 
