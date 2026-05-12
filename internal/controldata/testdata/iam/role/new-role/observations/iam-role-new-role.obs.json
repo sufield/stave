@@ -1,0 +1,81 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-10T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:role/NewBatchProcessor",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "iam_role",
+          "role_name": "NewBatchProcessor",
+          "role_arn": "arn:aws:iam::111122223333:role/NewBatchProcessor",
+          "role_age_days": 45,
+          "last_used": "2026-05-09T00:00:00Z",
+          "tags": {
+            "role-type": "data-pipeline"
+          },
+          "permission_drift": {
+            "total_services_accessible": 5,
+            "unused_services_count": 2,
+            "unused_service_ratio": 0.40,
+            "unused_services": [
+              "secretsmanager",
+              "kms"
+            ],
+            "threshold_override": null,
+            "threshold_exceeded": true
+          },
+          "permission_categories": {
+            "categories_present": [
+              "data_read",
+              "data_write",
+              "compute_control",
+              "crypto_use",
+              "secrets_access"
+            ],
+            "incompatible_pairs": [],
+            "has_incompatible_categories": false
+          },
+          "intent_match": {
+            "declared_role_type": "data-pipeline",
+            "forbidden_categories_present": [],
+            "has_intent_mismatch": false
+          },
+          "access_advisor": {
+            "available": true,
+            "service_last_accessed": [
+              {
+                "service": "s3",
+                "last_authenticated": "2026-05-09T00:00:00Z"
+              },
+              {
+                "service": "dynamodb",
+                "last_authenticated": "2026-05-08T00:00:00Z"
+              },
+              {
+                "service": "lambda",
+                "last_authenticated": "2026-05-07T00:00:00Z"
+              },
+              {
+                "service": "secretsmanager",
+                "last_authenticated": null
+              },
+              {
+                "service": "kms",
+                "last_authenticated": null
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "source": "deployed"
+}

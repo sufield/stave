@@ -46,22 +46,30 @@ remediation:
   example: |
     {
       "identity": {
-        "kind": "role",
-        "unused_service_ratio": 0.15,
-        "role_active_days": 180
+        "kind": "iam_role",
+        "role_age_days": 180,
+        "access_advisor": { "available": true },
+        "permission_drift": {
+          "unused_service_ratio": 0.15,
+          "threshold_override": null,
+          "threshold_exceeded": false
+        }
       }
     }
 unsafe_predicate:
   all:
     - field: properties.identity.kind
       op: eq
-      value: role
-    - field: properties.identity.role_active_days
+      value: iam_role
+    - field: properties.identity.role_age_days
       op: gt
       value: 90
-    - field: properties.identity.unused_service_ratio
-      op: gt
-      value: 0.20
+    - field: properties.identity.access_advisor.available
+      op: eq
+      value: true
+    - field: properties.identity.permission_drift.threshold_exceeded
+      op: eq
+      value: true
 tests:
   - name: "role with low drift passes"
     verdict: PASS
@@ -71,9 +79,14 @@ tests:
       vendor: aws
       properties:
         identity:
-          kind: role
-          role_active_days: 180
-          unused_service_ratio: 0.10
+          kind: iam_role
+          role_age_days: 180
+          access_advisor:
+            available: true
+          permission_drift:
+            unused_service_ratio: 0.10
+            threshold_override: null
+            threshold_exceeded: false
   - name: "role with high drift fails"
     verdict: VIOLATION
     asset:
@@ -82,9 +95,46 @@ tests:
       vendor: aws
       properties:
         identity:
-          kind: role
-          role_active_days: 365
-          unused_service_ratio: 0.45
+          kind: iam_role
+          role_age_days: 365
+          access_advisor:
+            available: true
+          permission_drift:
+            unused_service_ratio: 0.45
+            threshold_override: null
+            threshold_exceeded: true
+  - name: "young role with high drift passes (age guard)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123:role/new-role"
+      asset_type: iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: iam_role
+          role_age_days: 45
+          access_advisor:
+            available: true
+          permission_drift:
+            unused_service_ratio: 0.40
+            threshold_override: null
+            threshold_exceeded: true
+  - name: "role with override above ratio passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123:role/override-role"
+      asset_type: iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: iam_role
+          role_age_days: 540
+          access_advisor:
+            available: true
+          permission_drift:
+            unused_service_ratio: 0.40
+            threshold_override: 0.50
+            threshold_exceeded: false
 alternatives:
   - tool: prowler
     check_id: iam_role_access_not_stale_to_bedrock

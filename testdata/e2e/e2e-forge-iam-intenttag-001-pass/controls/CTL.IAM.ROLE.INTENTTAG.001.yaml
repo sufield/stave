@@ -46,7 +46,7 @@ unsafe_predicate:
   all:
     - field: properties.identity.kind
       op: eq
-      value: role
+      value: iam_role
     - field: properties.identity.tags.role-type
       op: missing
 tests:
@@ -58,7 +58,7 @@ tests:
       vendor: aws
       properties:
         identity:
-          kind: role
+          kind: iam_role
           tags:
             role-type: data-reader
   - name: "role without intent tag fails"
@@ -69,5 +69,5 @@ tests:
       vendor: aws
       properties:
         identity:
-          kind: role
+          kind: iam_role
           tags: {}

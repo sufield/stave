@@ -46,17 +46,20 @@ remediation:
   example: |
     {
       "identity": {
-        "kind": "role",
-        "has_incompatible_categories": false,
-        "permission_categories": ["data_read", "crypto_use"]
+        "kind": "iam_role",
+        "permission_categories": {
+          "categories_present": ["data_read", "crypto_use"],
+          "incompatible_pairs": [],
+          "has_incompatible_categories": false
+        }
       }
     }
 unsafe_predicate:
   all:
     - field: properties.identity.kind
       op: eq
-      value: role
-    - field: properties.identity.has_incompatible_categories
+      value: iam_role
+    - field: properties.identity.permission_categories.has_incompatible_categories
       op: eq
       value: true
 tests:
@@ -68,8 +71,11 @@ tests:
       vendor: aws
       properties:
         identity:
-          kind: role
-          has_incompatible_categories: false
+          kind: iam_role
+          permission_categories:
+            categories_present: [data_read, crypto_use]
+            incompatible_pairs: []
+            has_incompatible_categories: false
   - name: "role with mixed categories fails"
     verdict: VIOLATION
     asset:
@@ -78,5 +84,9 @@ tests:
       vendor: aws
       properties:
         identity:
-          kind: role
-          has_incompatible_categories: true
+          kind: iam_role
+          permission_categories:
+            categories_present: [data_read, secrets_access]
+            incompatible_pairs:
+              - [data_read, secrets_access]
+            has_incompatible_categories: true

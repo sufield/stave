@@ -13,10 +13,13 @@
 #   • a property whose projector entry was removed during a
 #     refactor (genuine drift)
 #
-# Output is two lists:
+# Output is three lists:
 #   1. Property paths in observations that no projector handles
 #   2. Projector entries whose property path doesn't appear in
 #      any observation (catches stale projector entries)
+#   3. Predicate names the projectors emit that no .facts.jsonl
+#      fixture exercises (catches specialized-projector blind
+#      spots that the property-path audit cannot see)
 #
 # This is a development-time script, not a CI gate. Run it after
 # adding a new control or projector to see what shifted.
@@ -38,7 +41,10 @@ stave_root=$(cd "$explain_dir/../.." && pwd)
 # top-level "assets[i].properties." prefix so we get the same
 # shape the propertyAllowlist uses (block-key + nested keys).
 obs_paths=$(mktemp)
-trap 'rm -f "$obs_paths" "$proj_paths"' EXIT
+proj_paths=$(mktemp)
+pred_names=$(mktemp)
+pred_seen=$(mktemp)
+trap 'rm -f "$obs_paths" "$proj_paths" "$pred_names" "$pred_seen"' EXIT
 
 # observation files live under observations/ dirs throughout
 # examples/ and testdata/. Match any .json file inside a path
@@ -61,7 +67,6 @@ obs_count=$(wc -l < "$obs_paths")
 # Each propertyAllowlist entry has a blockKey + keys list. We
 # rebuild the dotted path the projector navigates so the diff is
 # apples-to-apples with the observation paths above.
-proj_paths=$(mktemp)
 python3 - "$stave_root/cmd/exportsir/facts.go" > "$proj_paths" <<'PY'
 import re
 import sys
@@ -109,4 +114,43 @@ if [ -z "$stale" ]; then
     echo "  (none)"
 else
     echo "$stale" | sed 's/^/  /'
+fi
+echo ""
+
+# --- Predicate-side audit -------------------------------------
+# The propertyAllowlist audit above only sees property-driven
+# projectors. Specialized projectors (denyPolicyFacts,
+# conditionFacts, stringifiedPolicyFacts, dataEventLoggingFacts,
+# tagFacts, trustPolicyFacts, assumeEdgeFacts, iamPolicyFacts,
+# cognitoMappingFacts, cognitoUserPoolFacts, identityFacts,
+# exposureFacts, assetFacts, controlFacts) emit predicates that
+# never appear in the allowlist. To surface them, enumerate the
+# string-literal predicate names emitted anywhere in facts.go
+# and check each against the .facts.jsonl goldens.
+grep -oP 'Predicate:\s*"\K[a-z_][a-z_0-9]*' \
+    "$stave_root/cmd/exportsir/facts.go" \
+    | sort -u > "$pred_names"
+pred_count=$(wc -l < "$pred_names")
+
+# Collect every predicate name observed in .facts.jsonl fixtures.
+while IFS= read -r f; do
+    jq -r '.predicate // empty' "$f" 2>/dev/null
+done < <(find "$stave_root/examples" "$stave_root/testdata" -type f -name '*.facts.jsonl') \
+    | sort -u > "$pred_seen"
+seen_count=$(wc -l < "$pred_seen")
+
+echo "Projector predicate audit"
+echo "  predicate names emitted by facts.go: $pred_count"
+echo "  predicate names seen in fixtures:    $seen_count"
+echo ""
+
+# Predicates the projectors emit but no .facts.jsonl golden
+# exercises. These are blind spots — if a projector regresses
+# on one of these, no test catches it.
+echo "Projector predicates no fixture exercises:"
+unexercised=$(comm -23 "$pred_names" "$pred_seen")
+if [ -z "$unexercised" ]; then
+    echo "  (none)"
+else
+    echo "$unexercised" | sed 's/^/  /'
 fi

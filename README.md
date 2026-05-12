@@ -255,7 +255,7 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ### AWS IAM (167 controls)
 
-Root account MFA and access keys, console user MFA, credential rotation, password policy, privilege escalation (self-modify, PassRole, AssumeRole), permissions boundaries, break-glass persistence, cross-environment access, inactive accounts, blast-radius thresholds for roles and users. CIS AWS Benchmark aligned.
+Root account MFA and access keys, console user MFA, credential rotation, password policy, privilege escalation (self-modify, PassRole, AssumeRole), permissions boundaries, break-glass persistence, cross-environment access, inactive accounts, blast-radius thresholds for roles and users. **Shadow Admin detection** — a role tagged `readonly` that has accumulated permissions across incompatible categories (data + secrets, data + IAM write) and retains services that Access Advisor reports as unused is structurally a Shadow Admin even when no admin policy is attached; the [`shadow_admin_by_accumulation`](chains/shadow_admin_by_accumulation.yaml) and [`privilege_creep_lateral_movement`](chains/privilege_creep_lateral_movement.yaml) chains compose permission drift, category mixing, and intent mismatch into compound findings. CIS AWS Benchmark aligned.
 
 ### AWS OpenSearch (132 controls)
 

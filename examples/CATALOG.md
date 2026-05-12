@@ -44,6 +44,7 @@ the same fact base.
 - **[iam-overpermission-wildcard](iam-overpermission-wildcard/multi-engine-results.md)** — 4 fixture(s): after, before, bybit-pattern-after, bybit-pattern-before. CEL findings — after: 0, before: 1, bybit-pattern-after: 0, bybit-pattern-before: 0.
 - **[iam-attach-user-policy-self](iam-attach-user-policy-self/multi-engine-results.md)** — 2 fixture(s): after, before. CEL findings — after: 0, before: 1.
 - **[iam-autoscaling-privesc-bypass](iam-autoscaling-privesc-bypass/multi-engine-results.md)** — 2 fixture(s): remediated-config, writeup-config. CEL findings — remediated-config: 0, writeup-config: 1.
+- **[shadow-admin-detection](shadow-admin-detection/)** — IAM role privilege creep: drift + category mixing + intent mismatch compose into two CRITICAL chains (`shadow_admin_by_accumulation`, `privilege_creep_lateral_movement`). A role tagged `readonly` that can retrieve any secret and invoke any Lambda — no admin policy attached.
 
 ### Cross-Service Trust Chains
 

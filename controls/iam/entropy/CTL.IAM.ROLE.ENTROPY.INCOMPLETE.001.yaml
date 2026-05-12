@@ -32,15 +32,38 @@ remediation:
   example: |
     {
       "identity": {
-        "kind": "role",
-        "entropy_data_complete": true
+        "kind": "iam_role",
+        "access_advisor": { "available": true }
       }
     }
 unsafe_predicate:
   all:
     - field: properties.identity.kind
       op: eq
-      value: role
-    - field: properties.identity.entropy_data_complete
+      value: iam_role
+    - field: properties.identity.access_advisor.available
       op: eq
       value: false
+tests:
+  - name: "role with access advisor passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123:role/observable"
+      asset_type: iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: iam_role
+          access_advisor:
+            available: true
+  - name: "role missing access advisor fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123:role/blind"
+      asset_type: iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: iam_role
+          access_advisor:
+            available: false

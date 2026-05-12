@@ -1,0 +1,58 @@
+version: "1.0"
+description: |
+  Maps role-type tag values to allowed and forbidden permission
+  categories. Used by the collector to pre-compute intent
+  mismatch. Controls read the pre-computed result.
+
+valid_role_types:
+  - application
+  - data-pipeline
+  - readonly
+  - admin
+  - security
+  - ci-cd
+  - break-glass
+  - service-account
+
+role_type_permissions:
+  readonly:
+    allowed: [data_read, audit_read, iam_read, crypto_use]
+    forbidden: [data_write, iam_write, compute_control,
+                network_control, crypto_control, audit_control,
+                secrets_access]
+
+  application:
+    allowed: [data_read, data_write, crypto_use, secrets_access,
+              audit_read]
+    forbidden: [iam_write, compute_control, network_control,
+                crypto_control, audit_control]
+
+  data-pipeline:
+    allowed: [data_read, data_write, crypto_use, secrets_access,
+              compute_control]
+    forbidden: [iam_write, network_control, crypto_control,
+                audit_control]
+
+  ci-cd:
+    allowed: [compute_control, data_read, crypto_use,
+              secrets_access]
+    forbidden: [iam_write, data_write, network_control,
+                crypto_control, audit_control]
+
+  service-account:
+    allowed: [data_read, crypto_use, secrets_access]
+    forbidden: [iam_write, compute_control, network_control,
+                crypto_control, audit_control, data_write]
+
+  admin:
+    allowed: [all]
+    forbidden: []
+
+  security:
+    allowed: [audit_read, audit_control, iam_read, data_read]
+    forbidden: [data_write, compute_control, network_control,
+                crypto_control, secrets_access]
+
+  break-glass:
+    allowed: [all]
+    forbidden: []

@@ -43,22 +43,25 @@ remediation:
   example: |
     {
       "identity": {
-        "kind": "role",
+        "kind": "iam_role",
         "tags": {
           "role-type": "readonly"
         },
-        "intent_mismatch": false,
-        "permission_categories": ["data_read", "audit_read"]
+        "intent_match": {
+          "declared_role_type": "readonly",
+          "forbidden_categories_present": [],
+          "has_intent_mismatch": false
+        }
       }
     }
 unsafe_predicate:
   all:
     - field: properties.identity.kind
       op: eq
-      value: role
+      value: iam_role
     - field: properties.identity.tags.role-type
       op: present
-    - field: properties.identity.intent_mismatch
+    - field: properties.identity.intent_match.has_intent_mismatch
       op: eq
       value: true
 tests:
@@ -70,10 +73,13 @@ tests:
       vendor: aws
       properties:
         identity:
-          kind: role
-          intent_mismatch: false
+          kind: iam_role
           tags:
-            role-type: data-reader
+            role-type: application
+          intent_match:
+            declared_role_type: application
+            forbidden_categories_present: []
+            has_intent_mismatch: false
   - name: "role with intent mismatch fails"
     verdict: VIOLATION
     asset:
@@ -82,7 +88,10 @@ tests:
       vendor: aws
       properties:
         identity:
-          kind: role
-          intent_mismatch: true
+          kind: iam_role
           tags:
-            role-type: read-only
+            role-type: readonly
+          intent_match:
+            declared_role_type: readonly
+            forbidden_categories_present: [secrets_access, compute_control]
+            has_intent_mismatch: true

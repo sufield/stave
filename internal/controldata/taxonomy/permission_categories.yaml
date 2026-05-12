@@ -1,0 +1,75 @@
+version: "1.0"
+description: |
+  Permission category taxonomy for IAM role analysis.
+  Used by the collector to classify role permissions into
+  structural categories. Controls read the pre-computed
+  category assignments, not this file directly.
+
+categories:
+  data_read:
+    description: Reading data from storage services
+    services: [s3, dynamodb, rds-data, glacier, backup]
+    actions_include: ["Get*", "List*", "Describe*", "Read*"]
+    actions_exclude: ["Put*", "Delete*", "Create*", "Update*"]
+
+  data_write:
+    description: Writing or deleting data in storage services
+    services: [s3, dynamodb, rds-data, glacier]
+    actions_include: ["Put*", "Delete*", "Create*", "Update*", "Write*"]
+
+  iam_read:
+    description: Reading IAM configuration
+    services: [iam]
+    actions_include: ["Get*", "List*"]
+
+  iam_write:
+    description: Modifying IAM configuration
+    services: [iam]
+    actions_include: ["Create*", "Delete*", "Update*", "Attach*", "Detach*", "Put*", "Tag*"]
+
+  secrets_access:
+    description: Accessing credentials and secrets
+    services: [secretsmanager, ssm]
+    actions_include: ["GetSecretValue", "GetParameter", "GetParameters"]
+
+  compute_control:
+    description: Creating or modifying compute resources
+    services: [ec2, lambda, ecs, eks]
+    actions_include: ["Run*", "Create*", "Update*", "Delete*", "Invoke*"]
+
+  network_control:
+    description: Modifying network configuration
+    services: [ec2]
+    actions_include: ["CreateVpc*", "DeleteVpc*", "AuthorizeSecurityGroup*",
+                      "CreateRoute*", "DeleteRoute*", "ModifySubnet*"]
+
+  crypto_control:
+    description: Managing encryption keys
+    services: [kms]
+    actions_include: ["Create*", "Delete*", "Disable*", "Enable*", "Put*", "Schedule*"]
+
+  crypto_use:
+    description: Using encryption keys for data operations
+    services: [kms]
+    actions_include: ["Decrypt", "Encrypt", "GenerateDataKey*", "ReEncrypt*"]
+
+  audit_read:
+    description: Reading audit and logging configuration
+    services: [cloudtrail, cloudwatch, logs, config]
+    actions_include: ["Get*", "List*", "Describe*", "Lookup*"]
+
+  audit_control:
+    description: Modifying audit and logging configuration
+    services: [cloudtrail, cloudwatch, logs, config]
+    actions_include: ["Create*", "Delete*", "Update*", "Put*", "Stop*", "Start*"]
+
+incompatible_pairs:
+  - [data_read, iam_write]
+  - [data_write, iam_write]
+  - [data_read, secrets_access]
+  - [compute_control, iam_write]
+  - [audit_control, data_read]
+  - [audit_control, data_write]
+  - [audit_control, secrets_access]
+  - [crypto_control, data_read]
+  - [crypto_control, data_write]

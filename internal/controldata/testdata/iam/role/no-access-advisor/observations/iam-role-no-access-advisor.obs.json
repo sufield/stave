@@ -1,0 +1,55 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-10T00:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:role/BlindAuditCollector",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "iam_role",
+          "role_name": "BlindAuditCollector",
+          "role_arn": "arn:aws:iam::111122223333:role/BlindAuditCollector",
+          "role_age_days": 200,
+          "last_used": "2026-05-09T00:00:00Z",
+          "tags": {
+            "role-type": "security"
+          },
+          "permission_drift": {
+            "total_services_accessible": null,
+            "unused_services_count": null,
+            "unused_service_ratio": null,
+            "unused_services": [],
+            "threshold_override": null,
+            "threshold_exceeded": false
+          },
+          "permission_categories": {
+            "categories_present": [
+              "audit_read",
+              "iam_read",
+              "data_read"
+            ],
+            "incompatible_pairs": [],
+            "has_incompatible_categories": false
+          },
+          "intent_match": {
+            "declared_role_type": "security",
+            "forbidden_categories_present": [],
+            "has_intent_mismatch": false
+          },
+          "access_advisor": {
+            "available": false,
+            "service_last_accessed": []
+          }
+        }
+      }
+    }
+  ],
+  "source": "deployed"
+}

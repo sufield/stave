@@ -13,7 +13,7 @@
       "vendor": "aws",
       "properties": {
         "identity": {
-          "kind": "role",
+          "kind": "iam_role",
           "tags": {}
         }
       }
