@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.S3.DELEGATION.SCOPE.001
+name: Vendor's Actual S3 Permissions Exceed Declared Scope
+description: >
+  A registered vendor's actual permissions on this bucket exceed
+  the scope declared for them in the vendor registry. The vendor
+  was approved for specific actions (e.g., PutObject to raw-data/*)
+  but the bucket policy grants additional actions (e.g.,
+  DeleteObject, PutBucketPolicy) beyond the declared purpose.
+  Scope creep in vendor permissions is the supply-chain equivalent
+  of IAM privilege creep: the vendor's declared purpose says
+  "ingest data"; the actual permissions say "ingest data, delete
+  data, and rewrite the bucket policy." The gap is the attack
+  surface.
+intent_rationale: >
+  The vendor registry declares what the vendor SHOULD be able to
+  do. The bucket policy declares what the vendor CAN do. When the
+  two diverge, either the registry is outdated (update it) or the
+  policy is overpermissioned (scope it). Both are actionable
+  decisions and the finding names the specific exceeded actions
+  under delegation.external_principals[].exceeded_actions.
+domain: exposure
+severity: high
+compliance:
+  owasp_nhi: "NHI3, NHI5"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+  ccm_v4: ["STA-04", "IAM-02"]
+scope_tags:
+  - aws
+  - s3
+  - supply-chain
+type: unsafe_state
+classification: state_assertion
+params:
+  base_impact: 7
+  attack_stage: persistence
+remediation:
+  description: >
+    A vendor's actual bucket-policy actions are broader than the
+    declared scope in vendor_registry.yaml. The vendor can perform
+    operations beyond the approved purpose.
+  action: >
+    Compare the vendor's actual_actions against allowed_actions in
+    vendor_registry.yaml. For each exceeded action: if it is still
+    needed, update the vendor registry to reflect the new scope
+    and obtain approval; if not, remove the action from the bucket
+    policy. The exceeded actions are listed in the finding
+    evidence under delegation.external_principals[].exceeded_actions.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket"
+      },
+      "delegation": {
+        "has_scope_exceeded": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.delegation.has_scope_exceeded
+      op: eq
+      value: true
+tests:
+  - name: "vendor within declared scope passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::scoped-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+        delegation:
+          has_scope_exceeded: false
+  - name: "vendor with actions beyond declared scope fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::scope-creep-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+        delegation:
+          has_scope_exceeded: true

@@ -66,6 +66,10 @@ the same fact base.
 - **[s3-cross-account-replication-overperm](s3-cross-account-replication-overperm/multi-engine-results.md)** — 2 fixture(s): remediated-config, writeup-config. CEL findings — remediated-config: 0, writeup-config: 0.
 - **[s3-dotgit-readable](s3-dotgit-readable/multi-engine-results.md)** — 2 fixture(s): after, before. CEL findings — after: 0, before: 1.
 
+### Supply Chain
+
+- **[s3-delegation-failure](s3-delegation-failure/)** — Vendor control exceeds the assurance boundary. The `delegated_control_failure` chain (threshold 3 of 5, CRITICAL) composes unknown principals, scope creep, overdue review, irrevocability, and public-escalation capability onto one bucket. Complementary to `vendor_attack_path` (confused-deputy) — same bucket, different failure mode.
+
 ### Cognito User Pools
 
 - **[cognito-no-mfa-advanced-security](cognito-no-mfa-advanced-security/multi-engine-results.md)** — 2 fixture(s): after, before. CEL findings — after: 0, before: 1.

@@ -1,0 +1,27 @@
+id: delegated_control_failure
+description: >
+  S3 bucket delegation has systemic safety failure — three or more
+  delegation governance defects co-occur on the same bucket
+  (unknown external principals, scope exceeded, overdue vendor
+  review, irrevocable customer access, or vendor able to make the
+  bucket public). The bucket has an owner; control was transferred
+  to a weaker party without safety continuity. Risk transference
+  without assurance produces uncontained blast radius.
+  Complementary to chains/vendor_attack_path.yaml (which checks
+  whether a vendor CAN reach the bucket via confused-deputy):
+  delegated_control_failure checks whether the delegation
+  governance itself is intact. Both may fire on the same bucket —
+  different narratives, both valid. Threshold 3 of 5 distinguishes
+  systemic governance breakdown from a single overdue review.
+controls:
+  - CTL.S3.DELEGATION.KNOWN.001
+  - CTL.S3.DELEGATION.SCOPE.001
+  - CTL.S3.DELEGATION.LIFECYCLE.001
+  - CTL.S3.DELEGATION.REVOCABLE.001
+  - CTL.S3.DELEGATION.ESCALATION.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - cross_account_injection
+postconditions:
+  - s3_data_access

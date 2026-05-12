@@ -1,0 +1,54 @@
+version: "1.0"
+description: |
+  Declared vendor/partner registry for S3 delegation controls.
+  Maps external AWS account IDs and IAM principals to declared
+  vendors with purpose, scope, and expiry metadata.
+
+  The collector (or operator) populates this file. The S3
+  delegation controls compare bucket policy principals against
+  this registry to determine whether delegated access is known,
+  scoped, and time-bound.
+
+  Operator semantics:
+  - External principals not in this registry fire
+    CTL.S3.DELEGATION.KNOWN.001 (unknown party).
+  - Actual permissions broader than allowed_actions/allowed_prefixes
+    fire CTL.S3.DELEGATION.SCOPE.001.
+  - Entries with review_date in the past fire
+    CTL.S3.DELEGATION.LIFECYCLE.001.
+
+  The collector does the comparison; the YAML controls read the
+  pre-computed booleans the collector stamps under
+  properties.delegation.*.
+
+vendors:
+  - vendor_id: "vendor-acme-analytics"
+    vendor_name: "Acme Analytics Corp"
+    aws_account_id: "999988887777"
+    principal_arns:
+      - "arn:aws:iam::999988887777:role/AcmeDataPipeline"
+      - "arn:aws:iam::999988887777:role/AcmeIngestion"
+    declared_purpose: "Analytics data ingestion — PutObject to raw-data prefix only"
+    allowed_actions:
+      - "s3:PutObject"
+      - "s3:GetObject"
+    allowed_prefixes:
+      - "raw-data/*"
+    review_date: "2026-12-01"
+    contract_expiry: "2027-06-30"
+    owner_team: "data-engineering"
+
+  - vendor_id: "vendor-backup-co"
+    vendor_name: "BackupCo Disaster Recovery"
+    aws_account_id: "666655554444"
+    principal_arns:
+      - "arn:aws:iam::666655554444:role/BackupCoDR"
+    declared_purpose: "Disaster recovery replication — full bucket read for backup"
+    allowed_actions:
+      - "s3:GetObject"
+      - "s3:ListBucket"
+    allowed_prefixes:
+      - "*"
+    review_date: "2026-09-01"
+    contract_expiry: "2027-03-31"
+    owner_team: "platform-sre"

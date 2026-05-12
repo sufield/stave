@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.S3.DELEGATION.KNOWN.001
+name: S3 Bucket Has Unregistered External Principal With Control Rights
+description: >
+  This S3 bucket's policy grants control-level actions (PutObject,
+  DeleteObject, PutBucketPolicy, PutBucketAcl, or equivalent) to an
+  external AWS principal that is not registered in the vendor
+  registry (controldata/taxonomy/vendor_registry.yaml). The access
+  may be legitimate but undeclared — or it may be residual from a
+  decommissioned integration. Unknown external principals with
+  control rights are the supply-chain entry point: if the external
+  account is compromised, the attacker inherits whatever permissions
+  the bucket policy grants, and the security team does not know the
+  principal exists.
+intent_rationale: >
+  The vendor registry is the operator's declaration of which
+  external parties should have access and why. A principal not in
+  the registry is access nobody formally approved — likely added
+  for a one-time migration, proof of concept, or vendor trial and
+  never removed.
+domain: exposure
+severity: high
+compliance:
+  owasp_nhi: "NHI3"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1"
+  ccm_v4: ["STA-04", "IAM-02"]
+scope_tags:
+  - aws
+  - s3
+  - supply-chain
+type: unsafe_state
+classification: state_assertion
+params:
+  base_impact: 7
+  attack_stage: initial_access
+remediation:
+  description: >
+    The bucket policy grants control-level actions to an external
+    principal not present in the vendor registry. The principal
+    has unreviewed, undeclared access to the bucket.
+  action: >
+    Identify the unknown principal by reading the bucket policy.
+    Determine whether the access is still needed. If needed, add
+    the vendor to controldata/taxonomy/vendor_registry.yaml with a
+    declared purpose, scope, and review date. If not needed, remove
+    the principal from the bucket policy. Re-run the collector to
+    refresh delegation.has_unknown_external_principal.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket"
+      },
+      "delegation": {
+        "has_unknown_external_principal": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.delegation.has_unknown_external_principal
+      op: eq
+      value: true
+tests:
+  - name: "bucket with only registered vendors passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::clean-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+        delegation:
+          has_unknown_external_principal: false
+  - name: "bucket with an unregistered external principal fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::leaky-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+        delegation:
+          has_unknown_external_principal: true

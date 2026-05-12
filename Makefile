@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-unit test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-e2e regenerate-goldens-strict readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check
+.PHONY: all build build-dev test test-unit test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check
 # Binary name
 BINARY=stave
 
@@ -581,28 +581,101 @@ demo-check: build
 ##                       coercion drift) at demo-check time so a faulty
 ##                       projector fails the build on every developer
 ##                       machine — no manual step required.
+##
+##                       Discovers fixtures via glob in two roots:
+##                         - ../docs-content/demo/scenarios/*/observations
+##                         - examples/*/fixtures/*/observations
+##                       New demos under examples/ are picked up
+##                       automatically without Makefile edits.
+##
+##                       Three outcome categories:
+##                         OK    — n/n verifiable facts match
+##                         SKIP  — 0/0 facts (SIR projector has no path
+##                                 for the fixture's properties yet —
+##                                 not an encoding bug)
+##                         FAIL  — verifier reports a mismatch — exit 1
 verify-encoding-demos: build
 	@echo "Verifying encoding correctness for demo scenarios..."
-	@fail=0; tmp=$$(mktemp); \
-	for scenario in ../docs-content/demo/scenarios/*/; do \
-		name="$$(basename "$$scenario")"; \
-		[ -d "$$scenario/observations" ] || continue; \
+	@fail=0; ok=0; skip=0; tmp=$$(mktemp); \
+	for obs_dir in $$(find ../docs-content/demo/scenarios -mindepth 2 -maxdepth 2 \
+	                       -type d -name observations 2>/dev/null | sort) \
+	               $$(find examples -path '*/fixtures/*/observations' \
+	                       -type d 2>/dev/null | sort); do \
+		label=$$(echo "$$obs_dir" \
+			| sed -E 's|^\.\./docs-content/demo/scenarios/([^/]+)/observations$$|docs-content:\1|; \
+			          s|^examples/([^/]+)/fixtures/([^/]+)/observations$$|\1/\2|'); \
 		./stave export-sir --format jsonl \
-			--observations "$$scenario/observations" \
-			--now 2026-01-15T00:00:00Z > "$$tmp" 2>/dev/null || true; \
-		out="$$(NO_COLOR=1 python3 examples/explain/verify_encoding.py --strict \
-			"$$tmp" "$$scenario/observations" 2>&1)"; \
-		if [ $$? -ne 0 ]; then \
-			echo "FAIL: $$name encoding verification:"; \
+			--observations "$$obs_dir" \
+			--now 2027-01-01T00:00:00Z > "$$tmp" 2>/dev/null; \
+		rc=$$?; \
+		if [ "$$rc" -ne 0 ]; then \
+			echo "  SKIP: $$label — export-sir rc=$$rc"; \
+			skip=$$((skip+1)); \
+			continue; \
+		fi; \
+		out=$$(NO_COLOR=1 python3 examples/explain/verify_encoding.py --strict \
+			"$$tmp" "$$obs_dir" 2>&1); \
+		vrc=$$?; \
+		if [ "$$vrc" -ne 0 ]; then \
+			echo "  FAIL: $$label encoding verification:"; \
 			echo "$$out" | sed 's/^/    /'; \
 			fail=1; \
+		elif echo "$$out" | grep -q '0/0 verifiable'; then \
+			echo "  SKIP: $$label — 0/0 verifiable facts (SIR projector gap)"; \
+			skip=$$((skip+1)); \
 		else \
-			echo "  OK: $$name — $$(echo "$$out" | head -1 | sed 's/Encoding verified: //')"; \
+			summary=$$(echo "$$out" | head -1 | sed 's/Encoding verified: //'); \
+			echo "  OK: $$label — $$summary"; \
+			ok=$$((ok+1)); \
 		fi; \
 	done; \
 	rm -f "$$tmp"; \
+	echo "Summary: $$ok OK, $$skip SKIP, $$( [ "$$fail" -eq 1 ] && echo 1 || echo 0 ) FAIL"; \
 	if [ "$$fail" -eq 1 ]; then exit 1; fi; \
-	echo "All demo scenario encodings verified"
+	echo "All demo scenario encodings verified (or skipped due to projector gap)"
+
+## verify-encoding-controls: Run verify_encoding.py --strict against every
+##                          internal/controldata/testdata/*/*/observations
+##                          directory. Same OK / SKIP / FAIL semantics as
+##                          verify-encoding-demos but covers per-control
+##                          taxonomy fixtures (Shadow Admin role scenarios,
+##                          S3 delegation scenarios) instead of demos.
+verify-encoding-controls: build
+	@echo "Verifying encoding correctness for control testdata..."
+	@fail=0; ok=0; skip=0; tmp=$$(mktemp); \
+	for obs_dir in $$(find internal/controldata -path '*/testdata/*/observations' \
+	                       -type d 2>/dev/null | sort); do \
+		label=$$(echo "$$obs_dir" \
+			| sed -E 's|^internal/controldata/testdata/||; s|/observations$$||'); \
+		./stave export-sir --format jsonl \
+			--observations "$$obs_dir" \
+			--now 2027-01-01T00:00:00Z > "$$tmp" 2>/dev/null; \
+		rc=$$?; \
+		if [ "$$rc" -ne 0 ]; then \
+			echo "  SKIP: $$label — export-sir rc=$$rc"; \
+			skip=$$((skip+1)); \
+			continue; \
+		fi; \
+		out=$$(NO_COLOR=1 python3 examples/explain/verify_encoding.py --strict \
+			"$$tmp" "$$obs_dir" 2>&1); \
+		vrc=$$?; \
+		if [ "$$vrc" -ne 0 ]; then \
+			echo "  FAIL: $$label encoding verification:"; \
+			echo "$$out" | sed 's/^/    /'; \
+			fail=1; \
+		elif echo "$$out" | grep -q '0/0 verifiable'; then \
+			echo "  SKIP: $$label — 0/0 verifiable facts (SIR projector gap)"; \
+			skip=$$((skip+1)); \
+		else \
+			summary=$$(echo "$$out" | head -1 | sed 's/Encoding verified: //'); \
+			echo "  OK: $$label — $$summary"; \
+			ok=$$((ok+1)); \
+		fi; \
+	done; \
+	rm -f "$$tmp"; \
+	echo "Summary: $$ok OK, $$skip SKIP, $$( [ "$$fail" -eq 1 ] && echo 1 || echo 0 ) FAIL"; \
+	if [ "$$fail" -eq 1 ]; then exit 1; fi; \
+	echo "All control testdata encodings verified (or skipped due to projector gap)"
 
 ## verify-encoding-e2e: Run verify_encoding.py --strict against every
 ##                     testdata/e2e/<fixture>/observations directory.

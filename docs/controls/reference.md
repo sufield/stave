@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2652
-**Pack hash:** `0576388f5b2c85d2d444564a6b9f935b2ace4fbe1e12aa5ecec0420084238d7e`
+**Total controls:** 2657
+**Pack hash:** `bf8d46368e12a0a9b9ae72159163c8b4896950273855dace5f197d713f7267a8`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 271 |
-| high | 1150 |
+| critical | 272 |
+| high | 1153 |
 | info | 16 |
 | low | 204 |
-| medium | 1011 |
+| medium | 1012 |
 
 | Domain | Count |
 |--------|-------|
@@ -23,7 +23,7 @@
 | capacity | 3 |
 | detection | 134 |
 | encryption | 113 |
-| exposure | 1186 |
+| exposure | 1191 |
 | governance | 577 |
 | hygiene | 18 |
 | identity | 415 |
@@ -33264,6 +33264,81 @@ S3 bucket CORS configurations that set AllowedOrigins to "*" expose the bucket's
 CloudFront distributions must not reference S3 origins that do not exist. A missing/unclaimed origin bucket enables takeover and CDN content poisoning.
 
 **Remediation:** Create the S3 bucket in your AWS account to claim the name, or remove the dangling origin from the CloudFront distribution. Update the distribution to use an Origin Access Control (OAC).
+
+---
+
+### CTL.S3.DELEGATION.ESCALATION.001
+
+**Vendor Can Make S3 Bucket Public**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; hipaa: 164.312(e)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI3, NHI5, NHI6; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
+
+A delegated vendor principal has permissions that could make this bucket publicly accessible — s3:PutBucketPolicy with the ability to add a public Principal, or s3:PutBucketAcl with the ability to grant public-read. The vendor is the weakest link in the access chain: if the vendor is compromised, the attacker can expose the bucket to the internet through the vendor's delegated permissions without ever touching the customer account. This is the supply-chain version of the public-bucket finding — the bucket is not public today, but one compromised vendor credential away from being public. This is a distinct check from S3 Block Public Access (the backstop): ESCALATION.001 asks whether the vendor CAN escalate; the BPA control asks whether the backstop is in place. Both are needed.
+
+**Remediation:** Remove the vendor's ability to modify bucket accessibility: remove s3:PutBucketPolicy and s3:PutBucketAcl from the vendor's allowed actions. As defense-in-depth, enable S3 Block Public Access at the account level (separate backstop check) and add an SCP denying s3:PutBucketPolicy and s3:PutBucketAcl for the vendor's account. Re-run the collector to refresh delegation.vendor_can_make_public.
+
+---
+
+### CTL.S3.DELEGATION.KNOWN.001
+
+**S3 Bucket Has Unregistered External Principal With Control Rights**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; owasp_nhi: NHI3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+This S3 bucket's policy grants control-level actions (PutObject, DeleteObject, PutBucketPolicy, PutBucketAcl, or equivalent) to an external AWS principal that is not registered in the vendor registry (controldata/taxonomy/vendor_registry.yaml). The access may be legitimate but undeclared — or it may be residual from a decommissioned integration. Unknown external principals with control rights are the supply-chain entry point: if the external account is compromised, the attacker inherits whatever permissions the bucket policy grants, and the security team does not know the principal exists.
+
+**Remediation:** Identify the unknown principal by reading the bucket policy. Determine whether the access is still needed. If needed, add the vendor to controldata/taxonomy/vendor_registry.yaml with a declared purpose, scope, and review date. If not needed, remove the principal from the bucket policy. Re-run the collector to refresh delegation.has_unknown_external_principal.
+
+---
+
+### CTL.S3.DELEGATION.LIFECYCLE.001
+
+**Vendor Access Review Date Has Passed**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-2; nist_800_53_r5: AC-2; owasp_nhi: NHI1, NHI3; pci_dss_v4.0: 7.2.4; soc2: CC6.3;
+
+This bucket has delegated access to a vendor whose review_date in the vendor registry (controldata/taxonomy/vendor_registry.yaml) has passed. The access has not been formally reviewed since the scheduled date. Vendor access without periodic review becomes abandoned access: the vendor's needs may have changed, their security posture may have degraded, the team that managed the integration may have left, or the integration may no longer be needed. Time degrades assurance, and a passed review date means the operator's re-verification commitment was not kept.
+
+**Remediation:** Conduct the overdue vendor access review. Confirm the vendor relationship is still active, verify the vendor's current security posture, confirm the declared scope still matches operational need, and update review_date in controldata/taxonomy/vendor_registry.yaml. If the relationship has ended, remove the vendor entry from the registry and remove the corresponding principal from the bucket policy.
+
+---
+
+### CTL.S3.DELEGATION.REVOCABLE.001
+
+**Customer Cannot Revoke Vendor's S3 Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; owasp_nhi: NHI3, NHI6; pci_dss_v4.0: 7.2.5; soc2: CC6.1;
+
+The customer account does not retain the ability to revoke this vendor's access to the bucket. This can occur when the vendor owns the bucket in the customer's namespace (cross-account bucket ownership), when the vendor's IAM role has s3:PutBucketPolicy on this bucket (the vendor can restore their own access after revocation), or when the bucket policy uses a condition the customer cannot modify. Irrevocable vendor access means the customer cannot contain a vendor-side breach: if the vendor is compromised, the customer must wait for the vendor to remediate, or delete the bucket entirely.
+
+**Remediation:** Verify bucket ownership is with the customer account (not the vendor's account). Remove s3:PutBucketPolicy and s3:PutBucketAcl from the vendor's allowed actions. Ensure the customer's IAM retains s3:PutBucketPolicy on this bucket so customer-side changes can override vendor changes. Re-run the collector to refresh delegation.customer_can_revoke.
+
+---
+
+### CTL.S3.DELEGATION.SCOPE.001
+
+**Vendor's Actual S3 Permissions Exceed Declared Scope**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; owasp_nhi: NHI3, NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A registered vendor's actual permissions on this bucket exceed the scope declared for them in the vendor registry. The vendor was approved for specific actions (e.g., PutObject to raw-data/*) but the bucket policy grants additional actions (e.g., DeleteObject, PutBucketPolicy) beyond the declared purpose. Scope creep in vendor permissions is the supply-chain equivalent of IAM privilege creep: the vendor's declared purpose says "ingest data"; the actual permissions say "ingest data, delete data, and rewrite the bucket policy." The gap is the attack surface.
+
+**Remediation:** Compare the vendor's actual_actions against allowed_actions in vendor_registry.yaml. For each exceeded action: if it is still needed, update the vendor registry to reflect the new scope and obtain approval; if not, remove the action from the bucket policy. The exceeded actions are listed in the finding evidence under delegation.external_principals[].exceeded_actions.
 
 ---
 

@@ -1,0 +1,51 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-10T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:s3:::customer-data-lake",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "tags": {
+            "data-classification": "confidential",
+            "environment": "production",
+            "owner": "data-engineering"
+          }
+        },
+        "delegation": {
+          "has_external_principals_with_control": true,
+          "external_principals": [
+            {
+              "principal_arn": "arn:aws:iam::999988887777:role/AcmeDataPipeline",
+              "account_id": "999988887777",
+              "is_known_vendor": true,
+              "vendor_id": "vendor-acme-analytics",
+              "declared_actions": ["s3:PutObject", "s3:GetObject"],
+              "actual_actions": ["s3:PutObject", "s3:GetObject"],
+              "scope_exceeded": false,
+              "exceeded_actions": []
+            }
+          ],
+          "has_unknown_external_principal": false,
+          "has_scope_exceeded": false,
+          "has_expired_review": false,
+          "review_date": "2026-12-01",
+          "review_overdue_days": 0,
+          "customer_can_revoke": true,
+          "vendor_can_make_public": false,
+          "vendor_has_put_bucket_policy": false,
+          "vendor_has_put_bucket_acl": false
+        }
+      }
+    }
+  ]
+}

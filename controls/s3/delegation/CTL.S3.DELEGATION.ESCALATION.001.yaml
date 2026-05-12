@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.S3.DELEGATION.ESCALATION.001
+name: Vendor Can Make S3 Bucket Public
+description: >
+  A delegated vendor principal has permissions that could make this
+  bucket publicly accessible — s3:PutBucketPolicy with the ability
+  to add a public Principal, or s3:PutBucketAcl with the ability to
+  grant public-read. The vendor is the weakest link in the access
+  chain: if the vendor is compromised, the attacker can expose the
+  bucket to the internet through the vendor's delegated permissions
+  without ever touching the customer account. This is the
+  supply-chain version of the public-bucket finding — the bucket
+  is not public today, but one compromised vendor credential away
+  from being public. This is a distinct check from S3 Block Public
+  Access (the backstop): ESCALATION.001 asks whether the vendor
+  CAN escalate; the BPA control asks whether the backstop is in
+  place. Both are needed.
+intent_rationale: >
+  No vendor should have the ability to make a customer's bucket
+  public. This permission has no legitimate use case in a
+  delegation context. Its presence indicates either
+  overpermissioned delegation or a bucket policy that was never
+  reviewed for escalation paths. The structural distinction
+  between "vendor has scoped permissions" and "vendor has policy-
+  modification permissions" is the difference between supply-chain
+  access and supply-chain takeover.
+domain: exposure
+severity: critical
+compliance:
+  owasp_nhi: "NHI3, NHI5, NHI6"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  pci_dss_v4.0: "1.3.1"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["STA-04", "IAM-02"]
+scope_tags:
+  - aws
+  - s3
+  - supply-chain
+type: unsafe_state
+classification: state_assertion
+params:
+  base_impact: 10
+  attack_stage: exfiltration
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    A delegated vendor has policy- or ACL-modification permissions
+    that can flip this bucket to public. The vendor is one
+    credential compromise away from exposing the bucket to the
+    internet.
+  action: >
+    Remove the vendor's ability to modify bucket accessibility:
+    remove s3:PutBucketPolicy and s3:PutBucketAcl from the vendor's
+    allowed actions. As defense-in-depth, enable S3 Block Public
+    Access at the account level (separate backstop check) and add
+    an SCP denying s3:PutBucketPolicy and s3:PutBucketAcl for the
+    vendor's account. Re-run the collector to refresh
+    delegation.vendor_can_make_public.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket"
+      },
+      "delegation": {
+        "vendor_can_make_public": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.delegation.vendor_can_make_public
+      op: eq
+      value: true
+tests:
+  - name: "vendor without bucket-policy modification rights passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::scoped-vendor-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+        delegation:
+          vendor_can_make_public: false
+  - name: "vendor with PutBucketPolicy on customer bucket fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::vendor-can-publicize"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+        delegation:
+          vendor_can_make_public: true

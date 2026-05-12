@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.S3.DELEGATION.LIFECYCLE.001
+name: Vendor Access Review Date Has Passed
+description: >
+  This bucket has delegated access to a vendor whose review_date
+  in the vendor registry (controldata/taxonomy/vendor_registry.yaml)
+  has passed. The access has not been formally reviewed since the
+  scheduled date. Vendor access without periodic review becomes
+  abandoned access: the vendor's needs may have changed, their
+  security posture may have degraded, the team that managed the
+  integration may have left, or the integration may no longer be
+  needed. Time degrades assurance, and a passed review date means
+  the operator's re-verification commitment was not kept.
+intent_rationale: >
+  A vendor that was trustworthy 18 months ago may have been
+  acquired, suffered a breach, or lost the team that managed the
+  integration. The review_date is the operator's commitment to
+  re-verify. A passed review_date is the signal that the
+  commitment is overdue — not necessarily that the vendor is
+  unsafe, but that the assumption of safety is unverified.
+domain: exposure
+severity: medium
+compliance:
+  owasp_nhi: "NHI1, NHI3"
+  nist_800_53_r5: "AC-2"
+  fedramp_moderate: "AC-2"
+  pci_dss_v4.0: "7.2.4"
+  soc2: "CC6.3"
+  ccm_v4: ["STA-04", "IAM-12"]
+scope_tags:
+  - aws
+  - s3
+  - supply-chain
+type: unsafe_state
+classification: state_assertion
+params:
+  base_impact: 4
+  attack_stage: persistence
+remediation:
+  description: >
+    The vendor's review_date in vendor_registry.yaml is in the past.
+    Periodic re-verification of vendor access has lapsed.
+  action: >
+    Conduct the overdue vendor access review. Confirm the vendor
+    relationship is still active, verify the vendor's current
+    security posture, confirm the declared scope still matches
+    operational need, and update review_date in
+    controldata/taxonomy/vendor_registry.yaml. If the relationship
+    has ended, remove the vendor entry from the registry and remove
+    the corresponding principal from the bucket policy.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket"
+      },
+      "delegation": {
+        "has_expired_review": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.delegation.has_expired_review
+      op: eq
+      value: true
+tests:
+  - name: "vendor with future review date passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::reviewed-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+        delegation:
+          has_expired_review: false
+  - name: "vendor with overdue review fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::stale-review-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+        delegation:
+          has_expired_review: true
