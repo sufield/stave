@@ -20,6 +20,15 @@ description: >
   This control is the prerequisite for all other WAF rule controls — if
   the parser can be overflowed, managed rules, OWASP coverage, and custom
   rules are irrelevant for any request designed to exceed the limit.
+  This control is the **parser overflow protection** check in the
+  seven-control WAF safety envelope: presence (CTL.WAF.RULES.001),
+  enforcement (CTL.WAF.RULES.BLOCKMODE.001), coverage
+  (CTL.WAF.RULES.OWASP.001), visibility (CTL.WAF.LOGGING.001),
+  architectural prerequisite (CTL.WAF.ORIGIN.LOCKDOWN.001), parser
+  overflow protection (CTL.WAF.PARSERLIMIT.PROTECT.001), and evasion
+  observability (CTL.WAF.EVASION.OBSERVE.001). All seven may fire on
+  the same Web ACL simultaneously; each addresses a distinct failure
+  mode.
 domain: exposure
 severity: critical
 compliance:

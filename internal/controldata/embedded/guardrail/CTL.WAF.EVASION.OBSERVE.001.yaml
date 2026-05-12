@@ -17,6 +17,15 @@ description: >
   CTL.WAF.LOGGING.001 (which checks logging is enabled) by verifying the
   logging and inspection configuration captures enough detail to detect
   evasion patterns.
+  This control is the **evasion observability** check in the
+  seven-control WAF safety envelope: presence (CTL.WAF.RULES.001),
+  enforcement (CTL.WAF.RULES.BLOCKMODE.001), coverage
+  (CTL.WAF.RULES.OWASP.001), visibility (CTL.WAF.LOGGING.001),
+  architectural prerequisite (CTL.WAF.ORIGIN.LOCKDOWN.001), parser
+  overflow protection (CTL.WAF.PARSERLIMIT.PROTECT.001), and evasion
+  observability (CTL.WAF.EVASION.OBSERVE.001). All seven may fire on
+  the same Web ACL simultaneously; each addresses a distinct failure
+  mode.
 domain: exposure
 severity: high
 compliance:

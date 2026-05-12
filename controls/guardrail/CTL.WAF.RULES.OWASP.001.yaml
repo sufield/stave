@@ -17,6 +17,14 @@ description: >
   lacked AWSManagedRulesCommonRuleSet — the payload used a marquee
   element with an inline event handler, a known vector covered by
   the CrossSiteScripting_BODY rule in the common rule set.
+  This control is the **coverage** check in the seven-control WAF
+  safety envelope: presence (CTL.WAF.RULES.001), enforcement
+  (CTL.WAF.RULES.BLOCKMODE.001), coverage (CTL.WAF.RULES.OWASP.001),
+  visibility (CTL.WAF.LOGGING.001), architectural prerequisite
+  (CTL.WAF.ORIGIN.LOCKDOWN.001), parser overflow protection
+  (CTL.WAF.PARSERLIMIT.PROTECT.001), and evasion observability
+  (CTL.WAF.EVASION.OBSERVE.001). All seven may fire on the same Web
+  ACL simultaneously; each addresses a distinct failure mode.
 domain: exposure
 severity: high
 compliance:
@@ -71,3 +79,28 @@ unsafe_predicate:
     - field: properties.waf.rules.has_owasp_coverage
       op: eq
       value: false
+tests:
+  - name: "web acl with all three OWASP groups passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/prod/abc"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          rules:
+            has_managed_rules: true
+            has_owasp_coverage: true
+  - name: "web acl missing OWASP coverage fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/blacklist-only/def"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          rules:
+            has_managed_rules: false
+            has_owasp_coverage: false

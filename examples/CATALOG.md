@@ -82,6 +82,8 @@ the same fact base.
 ### Network / API Boundaries
 
 - **[apigw-private-api-scoped-deny](apigw-private-api-scoped-deny/multi-engine-results.md)** — 3 fixture(s): broadened-allow, remediated-config, writeup-config. CEL findings — broadened-allow: 0, remediated-config: 0, writeup-config: 0.
+- **[vpc-peering-exfiltration](vpc-peering-exfiltration/)** — Forgotten VPC peering to an external AWS account combined with a `/16` route to the full peer CIDR. The `vpc_peering_exposure` chain (threshold 2, CRITICAL) composes a peering-connection finding with a route-table finding via `scope_field` on the peering ID.
+- **[shadow-ec2-lateral-movement](shadow-ec2-lateral-movement/)** — Dormant EC2 instance with an overprivileged role and ENIs spanning staging + production. The `shadow_ec2_lateral_movement` chain (threshold 3 of 3, CRITICAL) joins lifecycle staleness, profile overprivilege, and dual-homed network reachability onto one instance asset — the cheapest path from low-trust into prod.
 
 ### Lifecycle Drift
 

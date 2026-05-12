@@ -10,6 +10,12 @@ controls:
   - CTL.VPC.PEERING.ROUTES.001
 escalation_threshold: 2
 compound_severity: critical
+# Member predicates require mutually exclusive `kind` values
+# (peering_connection vs route_table). Without scope_field, the
+# chain engine groups findings by asset.ID and the two findings
+# can never co-occur on a single asset. The peering connection ID
+# is the logical resource both findings describe — group by it.
+scope_field: properties.network.peering.id
 preconditions:
   - network_access_vpc
 postconditions:

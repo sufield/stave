@@ -1,0 +1,46 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-10T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ec2:us-east-1:111122223333:vpc-peering-connection/pcx-0abc123def456789",
+      "type": "aws_vpc_peering_connection",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "peering_connection",
+          "peering": {
+            "id": "pcx-0abc123def456789",
+            "status": "active",
+            "requester_vpc_id": "vpc-prod-001",
+            "requester_account_id": "111122223333",
+            "peer_vpc_id": "vpc-internal-shared-003",
+            "peer_account_id": "111122223333",
+            "peer_account_in_org": true,
+            "dns_resolution_from_remote": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ec2:us-east-1:111122223333:route-table/rtb-prod-main-001",
+      "type": "aws_vpc_route_table",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "route_table",
+          "vpc_id": "vpc-prod-001",
+          "peering": {
+            "id": "pcx-0abc123def456789"
+          },
+          "peering_route": {
+            "peer_connection_id": "pcx-0abc123def456789",
+            "peer_cidr": "10.200.5.0/24",
+            "has_broad_destination": false
+          }
+        }
+      }
+    }
+  ]
+}

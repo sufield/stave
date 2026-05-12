@@ -17,6 +17,15 @@ description: >
   origin behind Cloudflare was discoverable via Censys, allowing direct
   unfiltered payload delivery and denial-of-service against the
   unprotected origin.
+  This control is the **architectural prerequisite** in the
+  seven-control WAF safety envelope: presence (CTL.WAF.RULES.001),
+  enforcement (CTL.WAF.RULES.BLOCKMODE.001), coverage
+  (CTL.WAF.RULES.OWASP.001), visibility (CTL.WAF.LOGGING.001),
+  architectural prerequisite (CTL.WAF.ORIGIN.LOCKDOWN.001), parser
+  overflow protection (CTL.WAF.PARSERLIMIT.PROTECT.001), and evasion
+  observability (CTL.WAF.EVASION.OBSERVE.001). All seven may fire on
+  the same Web ACL simultaneously; each addresses a distinct failure
+  mode.
 domain: exposure
 severity: critical
 compliance:
@@ -71,3 +80,26 @@ unsafe_predicate:
     - field: properties.waf.origin_lockdown.allows_direct_ingress
       op: eq
       value: true
+tests:
+  - name: "web acl with origin locked to CDN prefix list passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/prod/abc"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          origin_lockdown:
+            allows_direct_ingress: false
+  - name: "web acl with origin reachable from 0.0.0.0/0 fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/exposed-origin/def"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          origin_lockdown:
+            allows_direct_ingress: true

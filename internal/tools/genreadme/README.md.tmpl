@@ -39,6 +39,14 @@ The five-act demo above is the 90-second version. The 20-minute conference talk 
 
 Every control maps to the OWASP Non-Human Identity (NHI) Top 10 — see [`docs/compliance/owasp-nhi-top10.md`](docs/compliance/owasp-nhi-top10.md) for the full 235-control mapping (NHI1 through NHI10). The AI iterations cover six of the ten risks directly (NHI1, NHI3, NHI5, NHI6, NHI7, NHI8).
 
+## How detection works
+
+Detection is a three-stage pipeline. Read this section once; other docs defer to it rather than re-explaining the flow.
+
+1. **CEL evaluation — primary detection.** Each control's `unsafe_predicate` is evaluated against the observation properties. This is where findings are produced. A ghost reference is detected because the collector pre-computed `has_ghost_action_group: true` and the control reads it; an overprivileged role is detected because the collector pre-computed `is_overbroad: true` and the control reads it. Stave does the predicate work; the collector does the property work.
+2. **Chain engine — compound composition.** Findings are grouped by `asset.ID` (or by `scope_field` when a chain spans asset kinds), and the chain engine checks whether enough member controls fired to meet the chain's threshold. This is where individual findings become attack paths.
+3. **External engines — independent verification on the fact export.** Nine external reasoning engines consume Stave's JSONL triples or SMT-LIB assertions and provide additional reasoning dimensions. They do not replace CEL for detection; they verify, quantify, and explain on the same fact set that CEL already evaluated. The exception: when CEL's literal-predicate expressivity falls short (e.g., prefix-wildcard reasoning over IAM actions), SMT solving can surface cases CEL can't express — see [`examples/apigw-private-api-scoped-deny/`](examples/apigw-private-api-scoped-deny/) and [`examples/iam-autoscaling-privesc-bypass/`](examples/iam-autoscaling-privesc-bypass/) for the "CEL passes, Z3 finds" pattern.
+
 ## Reasoning engines
 
 Nine reasoning engines consume Stave's outputs, each answering a different kind of question:

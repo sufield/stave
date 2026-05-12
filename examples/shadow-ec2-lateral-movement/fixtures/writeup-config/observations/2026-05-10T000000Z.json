@@ -1,0 +1,39 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-10T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ec2:us-east-1:111122223333:instance/i-0shadow123456789",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "instance": {
+            "id": "i-0shadow123456789",
+            "state": "stopped",
+            "stopped_age_days": 180,
+            "stopped_age_exceeds_threshold": true,
+            "spans_security_zones": true
+          },
+          "instance_profile": {
+            "arn": "arn:aws:iam::111122223333:instance-profile/LegacyMigrationTestRole",
+            "is_overprivileged": true,
+            "is_shared": false
+          },
+          "ec2": {
+            "vpc_id": "vpc-shared-001",
+            "subnet_ids": ["subnet-staging-001", "subnet-prod-tier-007"],
+            "security_group_ids": ["sg-permissive-001", "sg-prod-app-002"],
+            "tags": {
+              "Name": "test-migration-2024",
+              "environment": "staging",
+              "owner": "platform-team-archived"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
