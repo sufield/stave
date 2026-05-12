@@ -392,10 +392,8 @@ func isSafeRunRelative(name string) bool {
 	if filepath.IsAbs(name) {
 		return false
 	}
-	for _, seg := range strings.Split(filepath.ToSlash(name), "/") {
-		if seg == ".." {
-			return false
-		}
+	if slices.Contains(strings.Split(filepath.ToSlash(name), "/"), "..") {
+		return false
 	}
 	return true
 }

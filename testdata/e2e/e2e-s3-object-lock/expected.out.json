@@ -120,6 +120,8 @@
         },
         "action": "Enable S3 Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation. If the bucket already exists, create a new bucket with Object Lock enabled and migrate objects. Set a default retention period appropriate for your compliance framework."
       },
+      "sla_deadline_hours": 1440,
+      "sla_policy_source": "profile:default",
       "exposure_score": 51.369863013698634,
       "score_breakdown": {
         "base_score": 50,
@@ -297,6 +299,8 @@
         },
         "action": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period."
       },
+      "sla_deadline_hours": 1440,
+      "sla_policy_source": "profile:default",
       "exposure_score": 51.369863013698634,
       "score_breakdown": {
         "base_score": 50,
@@ -481,6 +485,8 @@
         },
         "action": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings."
       },
+      "sla_deadline_hours": 1440,
+      "sla_policy_source": "profile:default",
       "exposure_score": 51.369863013698634,
       "score_breakdown": {
         "base_score": 50,
@@ -852,7 +858,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
+      "head_commit": "9247eacc98d1e079164b3d7a89693d95d2ddaaf8",
       "dirty": false
     }
   }

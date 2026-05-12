@@ -66,14 +66,14 @@ Stave cannot attribute the change to a specific event within this window.
 
 The property delta shows exactly which fields changed between the last
 PASS and first VIOLATION snapshots, using the same diff engine as
-`stave drift`.
+`stave diff`.
 
 ## Relationship to other features
 
 | Command | Question it answers |
 |---|---|
 | `stave apply` | Is the current state safe? |
-| `stave drift` | What changed between two points? |
+| `stave diff` | What changed between two points? |
 | `stave bisect` | When was a violation first introduced? |
 | `stave bisect --mode scan` | Has this invariant ever been violated? |
 

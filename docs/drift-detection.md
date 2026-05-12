@@ -4,7 +4,7 @@ Drift detection answers the CISO's Tuesday question: "We were safe
 on Monday. What specifically changed in our configuration that made
 us unsafe on Tuesday?"
 
-`stave drift` compares two observation snapshots and reports every
+`stave diff` compares two observation snapshots and reports every
 asset-level configuration change — resources added, removed, or
 reconfigured. Configuration drift is treated as a violation (exit
 code 3), making Stave an infrastructure integrity gate.
@@ -12,7 +12,7 @@ code 3), making Stave an infrastructure integrity gate.
 ## How it works
 
 ```bash
-stave drift --baseline monday.json --current tuesday.json
+stave diff --snapshot-before monday.json --snapshot-after tuesday.json
 ```
 
 Stave loads both snapshots, computes property-level diffs for every
@@ -115,10 +115,10 @@ flat, stable field names, deterministic ordering.
 | 3 | Drift detected — one or more resources changed |
 
 Exit code 3 matches the violation convention used by `stave apply`,
-making `stave drift` composable in CI/CD pipelines:
+making `stave diff` composable in CI/CD pipelines:
 
 ```bash
-stave drift -b before-deploy.json -c after-deploy.json || exit 1
+stave diff --snapshot-before before-deploy.json --snapshot-after after-deploy.json || exit 1
 ```
 
 ## CI/CD workflow
@@ -135,16 +135,16 @@ stave apply --format json > baseline.json
 stave apply --format json > current.json
 
 # Detect drift — exit 3 if anything changed unexpectedly
-stave drift --baseline baseline.json --current current.json
+stave diff --snapshot-before baseline.json --snapshot-after current.json
 ```
 
 ### Scheduled drift monitoring
 
 ```bash
 # Daily: compare yesterday's snapshot to today's
-stave drift \
-  --baseline observations/2026-04-11.json \
-  --current observations/2026-04-12.json \
+stave diff \
+  --snapshot-before observations/2026-04-11.json \
+  --snapshot-after observations/2026-04-12.json \
   --format json > drift-report.json
 ```
 
@@ -153,11 +153,11 @@ stave drift \
 | Feature | Question it answers |
 |---|---|
 | `stave apply` | Is the current state safe? |
-| `stave drift` | What changed between two points in time? |
+| `stave diff` | What changed between two points in time? |
 | `stave bisect` | When was a violation first introduced? |
 | `stave apply --dry-run` | Are inputs well-formed before evaluation? |
 
-`stave apply` evaluates safety. `stave drift` detects change.
+`stave apply` evaluates safety. `stave diff` detects change.
 `stave bisect` finds the temporal origin of a violation. Use them
 together: drift finds *what* changed, bisect finds *when* the
 violation started, apply determines *if* the change made things unsafe.

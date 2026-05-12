@@ -65,7 +65,7 @@ func resolveScalarPath(root map[string]any, path string) (string, bool) {
 		return "", false
 	}
 	var cur any = root
-	for _, seg := range strings.Split(path, ".") {
+	for seg := range strings.SplitSeq(path, ".") {
 		m, ok := cur.(map[string]any)
 		if !ok {
 			return "", false

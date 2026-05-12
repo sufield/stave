@@ -99,6 +99,8 @@
         },
         "action": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
       },
+      "sla_deadline_hours": 336,
+      "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
@@ -364,7 +366,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
+      "head_commit": "9247eacc98d1e079164b3d7a89693d95d2ddaaf8",
       "dirty": false
     }
   }

@@ -8,11 +8,36 @@ Stave is a static analysis tool that evaluates cloud infrastructure configuratio
 
 ## What is Stave?
 
-Stave is a static analysis tool that evaluates cloud infrastructure configurations against a catalog of 2650+ system invariants using [CEL](https://github.com/google/cel-go) predicate evaluation. It operates on observation snapshots representing infrastructure state — no cloud credentials, no API calls, no network access.
+Stave is a static analysis tool that evaluates cloud infrastructure configurations against a catalog of 2652+ system invariants using [CEL](https://github.com/google/cel-go) predicate evaluation. It operates on observation snapshots representing infrastructure state — no cloud credentials, no API calls, no network access.
 
 Stave's second function is **fact export**. It projects normalized configuration facts into standardized formats (JSONL triples, SMT-LIB v2) that external reasoning engines consume independently. Stave exports facts. External programs own rules.
 
 Stave does two things: **evaluate** (CEL) and **export** (facts). Everything else is delegated to purpose-built external tools that read Stave's output as files. No subprocess calls from Stave to solvers. No plugin loading. Files are the language boundary.
+
+## AI agent identity
+
+Your AI agent has admin access. Your scanner says you're compliant.
+
+![AI Security Demo](docs/talks/ai-security-2026/demo-ai-security.gif)
+
+```bash
+bash examples/demo-ai-security/run.sh
+```
+
+A Bedrock agent with broad Lambda invoke + no guardrail + a Lambda tool that reaches a PHI-tagged S3 bucket is the canonical AI compound failure mode: **every component-level check passes** (encryption ✅, VPC ✅, model allowlist ✅, public access blocked ✅) and **the dashboard is green**. Stave's compound chains compose those individually-passing settings into the attack story they describe — agent → Lambda → S3 PHI, no audit trail.
+
+The five-act demo above is the 90-second version. The 20-minute conference talk lives at [`docs/talks/ai-security-2026/`](docs/talks/ai-security-2026/) with [slides](docs/talks/ai-security-2026/slides.md), [speaker notes](docs/talks/ai-security-2026/speaker-notes.md), [voiceover script](docs/talks/ai-security-2026/voiceover-script.md), and a [recording runbook](docs/talks/ai-security-2026/RECORDING.md) for the YouTube / dev.to MP4.
+
+| AI surface | Controls | Compound chains | Iteration |
+|---|---:|---:|---|
+| Bedrock agent overprivilege + lifecycle | 8 | 1 (`bedrock_agent_overpermissioned`) | [Iter 2](controls/bedrock/agent/) |
+| SageMaker execution-role overprivilege + lifecycle | 8 | 1 (`sagemaker_training_role_overprivileged`) | [Iter 3](controls/sagemaker/) |
+| AI data-boundary violations (RAG indexing PHI, cross-account training) | 6 | 1 (`bedrock_rag_phi_exposure`) | [Iter 4](chains/bedrock_rag_phi_exposure.yaml) |
+| Cross-service AI compounds (agent → Lambda → S3, notebook → prod role) | 4 | 2 (`bedrock_agent_tool_phi_exposure`, `sagemaker_notebook_production_escape`) | [Iter 5](chains/bedrock_agent_tool_phi_exposure.yaml) |
+| Shadow agent governance + ghost references | 6 | 0 | [Iter 6](controls/bedrock/agent/CTL.BEDROCK.AGENT.SHADOW.001.yaml) |
+| **Total** | **32** | **5** | [taxonomy](docs/ai-agent-identity-taxonomy.md) |
+
+Every control maps to the OWASP Non-Human Identity (NHI) Top 10 — see [`docs/compliance/owasp-nhi-top10.md`](docs/compliance/owasp-nhi-top10.md) for the full 235-control mapping (NHI1 through NHI10). The AI iterations cover six of the ten risks directly (NHI1, NHI3, NHI5, NHI6, NHI7, NHI8).
 
 ## Reasoning engines
 
@@ -44,7 +69,8 @@ Stave operates on static snapshots with no cloud credentials, no network access,
 
 ## Features
 
-- **2650 built-in controls across 74 domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, ECR, EKS, CloudTrail, CloudWatch, KMS, OpenSearch, Redshift, Neptune, DocumentDB, Glue, CodeBuild, SageMaker, Bedrock, Cognito, API Gateway, EMR, Kinesis, MSK, EFS, Route53, DMS, SSM, ACM, WAF, Shield, Network Firewall, EventBridge, Config, Backup, and [38 more](docs/controls/reference.md)
+- **AI agent identity — 32 controls + 5 compound chains** — Bedrock agent overprivilege, RAG knowledge-base PHI exposure, SageMaker execution-role overprivilege, cross-service AI tool chains (agent → Lambda → S3 PHI), shadow agents (created outside IaC), ghost references (agent points to deleted Lambda / knowledge base / model artifact). [Five-act demo](examples/demo-ai-security/) showcases the compound detection in 90 seconds; full conference talk under [`docs/talks/ai-security-2026/`](docs/talks/ai-security-2026/).
+- **2652 built-in controls across 74 domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, ECR, EKS, CloudTrail, CloudWatch, KMS, OpenSearch, Redshift, Neptune, DocumentDB, Glue, CodeBuild, SageMaker, Bedrock, Cognito, API Gateway, EMR, Kinesis, MSK, EFS, Route53, DMS, SSM, ACM, WAF, Shield, Network Firewall, EventBridge, Config, Backup, and [38 more](docs/controls/reference.md)
 - **23 ghost reference controls** — cross-inventory reasoning detects dangling references to deleted resources across IAM policies, resource policies, event triggers, compute dependencies, network infrastructure, cross-account trust, and temporal confirmation. Detection no per-resource scanner can perform.
 - **30+ compound chain definitions** — detect multi-step attack paths across data protection, identity, detection, recovery, sovereignty, supply chain, cryptographic concentration, WAF safety envelope, ghost resource exfiltration, and silent monitoring collapse
 - **7-control WAF safety envelope** — presence, enforcement, OWASP coverage, logging, origin lockdown, parser overflow protection, evasion observability
@@ -55,7 +81,7 @@ Stave operates on static snapshots with no cloud credentials, no network access,
 - **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
 - **Full triage output per finding** — DEFECT (what's wrong), INFECTION (how it enables attack), FAILURE (worst case), OBSERVED (what the engine consulted), DELTA (mechanically verified fix)
 - **Remediation ranking** — `stave rank` produces a prioritized remediation roadmap with SLA urgency, risk impact percentages, and remediation bundles
-- **Drift detection** — `stave drift` compares two snapshots and treats configuration changes as violations, exit code 3 for CI/CD gating
+- **Drift detection** — `stave diff` compares two snapshots and treats configuration changes as violations, exit code 3 for CI/CD gating
 - **Continuous monitoring** — `stave watch` monitors observation directories for new snapshots, detects regressions in real time, emits alerts to stdout or JSONL file sinks
 - **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
 - **Graph export** — `stave path` and `stave graph export` emit nodes and edges in JSON, DOT, CSV, JSON-LD, and GraphML for graph-data-science workloads (centrality, community detection, shortest path, influence propagation) on any library — Neo4j GDS, igraph, NetworkX, Spark GraphX, Gephi
@@ -78,7 +104,7 @@ Stave ships in **three progressive tiers**. Each tier adds capability on top of 
 
 ### Tier 1 — Stave standalone
 
-The Go binary. No dependencies beyond Go itself. Does CEL evaluation against 2650+ controls and fact export (JSONL, SMT-LIB).
+The Go binary. No dependencies beyond Go itself. Does CEL evaluation against 2652+ controls and fact export (JSONL, SMT-LIB).
 
 ```bash
 go install github.com/sufield/stave@latest
@@ -204,7 +230,7 @@ New observation properties are additive and backward-compatible. Existing contro
 
 ## Built-in controls
 
-2650 controls across 74 domains:
+2652 controls across 74 domains:
 
 ### AWS S3 (113 controls)
 
@@ -227,7 +253,7 @@ New observation properties are additive and backward-compatible. Existing contro
 | `cors` | 1 | Wildcard origin CORS on non-public-by-design buckets |
 | `misc` | 8 | Incomplete data, completeness checks |
 
-### AWS IAM (166 controls)
+### AWS IAM (167 controls)
 
 Root account MFA and access keys, console user MFA, credential rotation, password policy, privilege escalation (self-modify, PassRole, AssumeRole), permissions boundaries, break-glass persistence, cross-environment access, inactive accounts, blast-radius thresholds for roles and users. CIS AWS Benchmark aligned.
 

@@ -46,8 +46,8 @@ func ResolveTierForPath(relPath string, rules []retention.Rule, defaultTier stri
 // matched is the bare "snapshots" entry (which the directory walker
 // produces during pruning).
 func MatchGlob(pattern, relPath string) (bool, error) {
-	if strings.HasSuffix(pattern, "/**") {
-		prefix := strings.TrimSuffix(pattern, "/**")
+	if before, ok := strings.CutSuffix(pattern, "/**"); ok {
+		prefix := before
 		// Accept both "dir" (bare directory) and any descendant
 		// "dir/whatever". TrimSuffix-of-"/" before equality so a
 		// pattern of "dir/**" matches "dir" without trailing slash.

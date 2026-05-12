@@ -287,7 +287,7 @@ func TestValidation_DeterministicOrder(t *testing.T) {
 		},
 	}
 	var first []ValidationWarning
-	for run := 0; run < 5; run++ {
+	for run := range 5 {
 		warnings := ValidateSIRCompleteness(findings, facts, controls)
 		if run == 0 {
 			first = warnings

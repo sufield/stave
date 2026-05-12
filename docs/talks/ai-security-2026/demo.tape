@@ -7,6 +7,12 @@
 #
 #     vhs docs/talks/ai-security-2026/demo.tape
 #
+# If running in a sandboxed shell where headless Chrome's Zygote
+# can't initialise (you'll see a ZygoteHostImpl::Init crash and
+# "recording failed"), prepend VHS_NO_SANDBOX=1:
+#
+#     VHS_NO_SANDBOX=1 vhs docs/talks/ai-security-2026/demo.tape
+#
 # Output: docs/talks/ai-security-2026/demo-ai-security.gif
 #
 # Tunables: bump FontSize to 24 for projector capture; drop to 14

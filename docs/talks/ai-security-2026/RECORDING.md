@@ -30,9 +30,27 @@ go install github.com/charmbracelet/vhs@latest
 vhs docs/talks/ai-security-2026/demo.tape
 ```
 
-Output: `docs/talks/ai-security-2026/demo-ai-security.gif`. Drop
-this into the README as the hero image. Tunables (font size,
-theme, dimensions) are at the top of `demo.tape`.
+Output: `docs/talks/ai-security-2026/demo-ai-security.gif`
+(~1.1 MB at the shipped settings — well under GitHub's 10 MB
+hero-image cap). Drop this into the README as the hero image.
+Tunables (font size, theme, dimensions) are at the top of
+`demo.tape`.
+
+**Sandbox hiccup, common in containers / CI:** if headless
+Chrome's Zygote can't initialise (you'll see a
+`ZygoteHostImpl::Init` crash and `recording failed`), prepend
+`VHS_NO_SANDBOX=1`:
+
+```bash
+VHS_NO_SANDBOX=1 vhs docs/talks/ai-security-2026/demo.tape
+```
+
+This is the standard workaround when Chrome's setuid sandbox
+binary isn't available — affects most rootless containers and
+Codespaces variants. The flag disables the sandbox for the
+single short-lived Chrome instance VHS spawns; it's
+appropriate for a build-time rendering task running over
+trusted local input.
 
 ## Path 2 — asciinema for embeddable terminal recording
 

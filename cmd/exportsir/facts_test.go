@@ -1507,7 +1507,7 @@ func TestStringifiedPolicyFacts_DeterministicOrder(t *testing.T) {
 		}},
 	}
 	var first []string
-	for run := 0; run < 5; run++ {
+	for run := range 5 {
 		facts := ExtractFacts(doc)
 		var order []string
 		for _, f := range facts {
@@ -1770,7 +1770,7 @@ func TestFreshness_DeterministicAcrossRuns(t *testing.T) {
 	}
 	first := mk()
 	AnnotateFreshness(first, now)
-	for run := 0; run < 5; run++ {
+	for run := range 5 {
 		next := mk()
 		AnnotateFreshness(next, now)
 		for i := range first {

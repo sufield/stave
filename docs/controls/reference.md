@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2650
-**Pack hash:** `1d871b95832bf941306c39fb5450d49381609744c6032f218b22867deb8129f8`
+**Total controls:** 2652
+**Pack hash:** `0576388f5b2c85d2d444564a6b9f935b2ace4fbe1e12aa5ecec0420084238d7e`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 270 |
-| high | 1149 |
+| critical | 271 |
+| high | 1150 |
 | info | 16 |
 | low | 204 |
 | medium | 1011 |
@@ -24,9 +24,9 @@
 | detection | 134 |
 | encryption | 113 |
 | exposure | 1186 |
-| governance | 576 |
+| governance | 577 |
 | hygiene | 18 |
-| identity | 414 |
+| identity | 415 |
 | lifecycle | 31 |
 | network | 32 |
 | resilience | 33 |
@@ -21593,6 +21593,26 @@ Each IAM user must have at most one active access key. Multiple active keys incr
 
 ---
 
+### CTL.IAM.CRED.TTL.EXCEEDED.001
+
+**IAM Credential Has Exceeded Its Declared TTL**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: IA-5; hipaa: 164.312(d); iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-5, AC-2; owasp_nhi: NHI7; pci_dss_v4.0: 8.3.5; soc2: CC6.1;
+
+IAM credential has a declared TTL (maximum lifetime) and the current age exceeds it. The credential should have been rotated or deactivated when its TTL elapsed. A credential beyond its TTL is a permanent attack surface masquerading as a temporary one. Distinct from CTL.IAM.CRED.EXPIRY.001 which checks whether an expiry IS DECLARED — this control checks whether the declared expiry HAS ELAPSED. A credential with has_expiry=true and ttl_exceeded=true passed the first check and fails the second: the operator set a TTL but nobody enforced it. Same shape as CTL.AD.KRBTGT.ROTATION.001 (krbtgt_password_age_days > 180) and CTL.IAM.CRED.UNUSED45.001 (access_key_unused_days > 45) — the Time-Bound Credential Invariant stricter variant called out in the temporal-features audit (GAP-L, row 12b).
+
+**Remediation:** Rotate or deactivate the credential immediately. For access keys:
+
+    aws iam update-access-key --access-key-id <key-id> \
+      --status Inactive --user-name <user>
+
+Then issue a new credential with a fresh TTL, or migrate the workload to ephemeral credentials (OIDC federation via GitHub Actions / GitLab CI assume-role, IAM Roles Anywhere with SPIFFE/SPIRE, or short-lived STS sessions tied to a workload identity). Audit how the TTL was bypassed — typically the collector pre-computes ttl_exceeded from the credential's creation date + declared max lifetime; the bypass is usually "the rotation Lambda failed and nobody noticed."
+
+---
+
 ### CTL.IAM.CRED.UNUSED.001
 
 **Disable Unused Credentials**
@@ -27726,6 +27746,27 @@ Defender XDR detected exposed credentials for privileged users. Active threat re
 Amazon Macie must be enabled for automated sensitive data discovery in S3 buckets. Without Macie, PII and sensitive data in S3 goes undetected.
 
 **Remediation:** Enable Macie in the account.
+
+---
+
+### CTL.META.OBSERVATION.STALE.001
+
+**Observation Data Is Stale — Collector May Have Stopped**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(b); nist_800_53_r5: SI-4, AU-6; soc2: CC7.1, CC7.2;
+
+The most recent observation's captured_at timestamp is older than the configured freshness threshold (default 24 hours, exceeded = precomputed boolean on a synthetic meta asset). The infrastructure may have changed since the last collection. Every finding evaluated against this snapshot is therefore based on stale data — every PASS is suspect, every violation may have been remediated, and every green dashboard is potentially green because the collector died, not because the infrastructure is safe. This is a meta-control — it checks the observation pipeline itself, not the infrastructure the observations describe. A stale observation is the canary that catches collector failure before it causes a coverage gap.
+
+**Remediation:** Triage the collector pipeline: 1) Confirm the collector process is running (check the systemd
+   unit, container task, or scheduler entry that drives it).
+2) Verify the collector still has the IAM credentials and
+   permissions it needs to read the cloud APIs.
+3) Check the output path is writable and not full. 4) Inspect the collector's logs (CloudWatch, journald, container
+   stdout) for errors immediately before captured_at.
+Once the collector is restored, re-run `stave apply` with the fresh observation; this control falls silent automatically.
 
 ---
 

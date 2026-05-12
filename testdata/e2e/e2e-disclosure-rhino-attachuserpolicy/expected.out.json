@@ -97,6 +97,10 @@
         },
         "action": "Remove `iam:AttachUserPolicy` from the principal, or scope its Resource field to user ARNs that do not include the principal itself (admin-only bootstrap roles, for example). Enforce at the organization level with an SCP that denies `iam:AttachUserPolicy` on `${aws:PrincipalArn}`. Also consider a permissions boundary on the principal that prevents the attached policy from taking effect."
       },
+      "sla_deadline_hours": 72,
+      "sla_breached": true,
+      "sla_overdue_hours": 67416,
+      "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -345,7 +349,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
+      "head_commit": "9247eacc98d1e079164b3d7a89693d95d2ddaaf8",
       "dirty": false
     }
   }

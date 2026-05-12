@@ -222,6 +222,11 @@
         },
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
+      "sla_deadline_hours": 336,
+      "sla_breached": true,
+      "sla_overdue_hours": 89376,
+      "sla_escalated_severity": "critical",
+      "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
@@ -391,6 +396,11 @@
         },
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
+      "sla_deadline_hours": 336,
+      "sla_breached": true,
+      "sla_overdue_hours": 89376,
+      "sla_escalated_severity": "critical",
+      "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
@@ -560,6 +570,11 @@
         },
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
+      "sla_deadline_hours": 336,
+      "sla_breached": true,
+      "sla_overdue_hours": 89376,
+      "sla_escalated_severity": "critical",
+      "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
@@ -735,6 +750,11 @@
         },
         "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
       },
+      "sla_deadline_hours": 336,
+      "sla_breached": true,
+      "sla_overdue_hours": 89376,
+      "sla_escalated_severity": "critical",
+      "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
@@ -978,6 +998,11 @@
         },
         "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
       },
+      "sla_deadline_hours": 336,
+      "sla_breached": true,
+      "sla_overdue_hours": 89376,
+      "sla_escalated_severity": "critical",
+      "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
@@ -1221,6 +1246,11 @@
         },
         "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
       },
+      "sla_deadline_hours": 336,
+      "sla_breached": true,
+      "sla_overdue_hours": 89376,
+      "sla_escalated_severity": "critical",
+      "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
@@ -1486,6 +1516,10 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
+      "sla_deadline_hours": 72,
+      "sla_breached": true,
+      "sla_overdue_hours": 89640,
+      "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -1660,6 +1694,10 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
+      "sla_deadline_hours": 72,
+      "sla_breached": true,
+      "sla_overdue_hours": 89640,
+      "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -1834,6 +1872,10 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
+      "sla_deadline_hours": 72,
+      "sla_breached": true,
+      "sla_overdue_hours": 89640,
+      "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -1998,6 +2040,10 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove bucket policy statements that grant s3:PutObject or s3:DeleteObject to Principal \"*\". Remove ACL grants that allow WRITE or FULL_CONTROL to AllUsers or AuthenticatedUsers. Enable S3 Public Access Block."
       },
+      "sla_deadline_hours": 72,
+      "sla_breached": true,
+      "sla_overdue_hours": 89640,
+      "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -2162,6 +2208,11 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
       },
+      "sla_deadline_hours": 1440,
+      "sla_breached": true,
+      "sla_overdue_hours": 88272,
+      "sla_escalated_severity": "critical",
+      "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 50,
@@ -2324,6 +2375,11 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
       },
+      "sla_deadline_hours": 1440,
+      "sla_breached": true,
+      "sla_overdue_hours": 88272,
+      "sla_escalated_severity": "critical",
+      "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 50,
@@ -2486,6 +2542,11 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
       },
+      "sla_deadline_hours": 1440,
+      "sla_breached": true,
+      "sla_overdue_hours": 88272,
+      "sla_escalated_severity": "critical",
+      "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 50,
@@ -3249,7 +3310,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
+      "head_commit": "9247eacc98d1e079164b3d7a89693d95d2ddaaf8",
       "dirty": false
     }
   }

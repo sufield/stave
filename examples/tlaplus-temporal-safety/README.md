@@ -174,7 +174,7 @@ reaches a violating state.
  temporal-logic properties require TLC. The `.tla` file
  ships those concerns to TLC when needed.
 
-- **Not a drift detector.** Stave already has `stave drift`
+- **Not a drift detector.** Stave already has `stave diff`
  for diffing two snapshots. This engine answers a
  forward-looking *what-if*: given the current snapshot,
  which legitimate flips break safety? Drift detection is

@@ -26,6 +26,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -142,8 +143,8 @@ type Freshness struct {
 // including it is the prefix. Falls back to the original path
 // when no bracketed index is present.
 func stripIndexPrefix(p string) string {
-	if i := strings.Index(p, "]."); i >= 0 {
-		return p[i+2:]
+	if _, after, ok := strings.Cut(p, "]."); ok {
+		return after
 	}
 	return p
 }
@@ -244,10 +245,7 @@ func AnnotateFreshness(facts []Fact, now time.Time) {
 		if err != nil {
 			continue
 		}
-		age := nowUTC.Sub(captured)
-		if age < 0 {
-			age = 0
-		}
+		age := max(nowUTC.Sub(captured), 0)
 		facts[i].Freshness = &Freshness{
 			CapturedAt: captured.UTC(),
 			AgeSeconds: int64(age.Seconds()),
@@ -592,13 +590,7 @@ func propertyFacts(assets []sir.AssetFact) []Fact {
 		a := &assets[i]
 		for _, rule := range propertyAllowlist {
 			if len(rule.assetTypes) > 0 {
-				match := false
-				for _, t := range rule.assetTypes {
-					if a.Type == t {
-						match = true
-						break
-					}
-				}
+				match := slices.Contains(rule.assetTypes, a.Type)
 				if !match {
 					continue
 				}
@@ -870,13 +862,7 @@ func stringifiedPolicyFacts(assets []sir.AssetFact) []Fact {
 		a := &assets[i]
 		for _, rule := range stringifiedPolicyAllowlist {
 			if len(rule.assetTypes) > 0 {
-				match := false
-				for _, t := range rule.assetTypes {
-					if a.Type == t {
-						match = true
-						break
-					}
-				}
+				match := slices.Contains(rule.assetTypes, a.Type)
 				if !match {
 					continue
 				}

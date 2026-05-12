@@ -232,7 +232,7 @@ func TestWriteRun_Deterministic(t *testing.T) {
 	}
 
 	first := read(t)
-	for i := 0; i < 4; i++ {
+	for i := range 4 {
 		got := read(t)
 		if string(got) != string(first) {
 			t.Fatalf("WriteRun produced non-deterministic sha256sums.txt on iteration %d:\n first: %q\n got:   %q",

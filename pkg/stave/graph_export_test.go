@@ -414,7 +414,7 @@ func TestExportGraph_WithSIRDocumentDeterministic(t *testing.T) {
 		},
 	}
 	first := stave.ExportGraph(a, stave.WithSIRDocument(doc))
-	for run := 0; run < 5; run++ {
+	for run := range 5 {
 		next := stave.ExportGraph(a, stave.WithSIRDocument(doc))
 		if len(first.TransitiveReachability) != len(next.TransitiveReachability) {
 			t.Fatalf("run %d: count differs", run)

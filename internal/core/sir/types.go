@@ -327,7 +327,7 @@ type RoleChainFact struct {
 	// solvers use this annotation to surface "future ghost
 	// reference" findings — chains that are reachable today but
 	// will be stale once the deletion completes.
-	ScheduledDeletionAt time.Time `json:"scheduled_deletion_at,omitempty"`
+	ScheduledDeletionAt time.Time `json:"scheduled_deletion_at"`
 }
 
 // TemporalFacts captures the time grid the SIR is grounded on:

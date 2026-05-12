@@ -119,6 +119,10 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Create the S3 bucket in your AWS account, or remove the DNS record, CDN origin, or application reference pointing to the unclaimed bucket."
       },
+      "sla_deadline_hours": 72,
+      "sla_breached": true,
+      "sla_overdue_hours": 86184,
+      "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -392,7 +396,7 @@
     },
     "git": {
       "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
+      "head_commit": "9247eacc98d1e079164b3d7a89693d95d2ddaaf8",
       "dirty": false
     }
   }

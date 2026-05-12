@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -99,12 +100,7 @@ func hasParentSegment(path string) bool {
 	// Substring fast-path failed — split on either separator and
 	// look for an exact `..` segment.
 	normalized := strings.ReplaceAll(path, "\\", "/")
-	for _, seg := range strings.Split(normalized, "/") {
-		if seg == ".." {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(strings.Split(normalized, "/"), "..")
 }
 
 func LoadExceptions(path string) ([]Config, error) {

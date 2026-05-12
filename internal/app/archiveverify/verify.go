@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -341,7 +342,7 @@ func verifyRunChecksums(archivePath, runID string) (bool, string) {
 	// or arbitrary readable files on disk, which would let a forged
 	// bundle pass verification by hashing unrelated content.
 	expected := make(map[string]string)
-	for _, line := range strings.Split(strings.TrimSpace(string(data)), "\n") {
+	for line := range strings.SplitSeq(strings.TrimSpace(string(data)), "\n") {
 		parts := strings.SplitN(line, "  ", 2)
 		if len(parts) != 2 {
 			continue
@@ -437,10 +438,8 @@ func isSafeRunRelative(filename string) bool {
 	// Check raw segments (before filepath.Clean collapses .. into the
 	// base path) so attackers can't slip "../foo" through by relying on
 	// filepath.Join's cleaning.
-	for _, seg := range strings.Split(filepath.ToSlash(filename), "/") {
-		if seg == ".." {
-			return false
-		}
+	if slices.Contains(strings.Split(filepath.ToSlash(filename), "/"), "..") {
+		return false
 	}
 	return true
 }

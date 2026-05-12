@@ -37,18 +37,18 @@ import (
 )
 
 const (
-	staleControlID  stave.ControlID = "CTL.LIFECYCLE.STAGING.STALE.001"
-	s3PublicListID  stave.ControlID = "CTL.S3.PUBLIC.LIST.002"
+	staleControlID stave.ControlID = "CTL.LIFECYCLE.STAGING.STALE.001"
+	s3PublicListID stave.ControlID = "CTL.S3.PUBLIC.LIST.002"
 
 	fixedNow  = "2026-01-09T00:00:00Z"
 	maxUnsafe = 168 * time.Hour
 )
 
 type scenario struct {
-	label              string
-	dir                string
-	expectStaleFires   bool
-	expectPublicFires  bool
+	label             string
+	dir               string
+	expectStaleFires  bool
+	expectPublicFires bool
 }
 
 func main() {

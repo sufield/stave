@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.META.OBSERVATION.STALE.001
+name: Observation Data Is Stale — Collector May Have Stopped
+description: >
+  The most recent observation's captured_at timestamp is older than
+  the configured freshness threshold (default 24 hours, exceeded =
+  precomputed boolean on a synthetic meta asset). The infrastructure
+  may have changed since the last collection. Every finding evaluated
+  against this snapshot is therefore based on stale data — every PASS
+  is suspect, every violation may have been remediated, and every
+  green dashboard is potentially green because the collector died,
+  not because the infrastructure is safe. This is a meta-control —
+  it checks the observation pipeline itself, not the infrastructure
+  the observations describe. A stale observation is the canary that
+  catches collector failure before it causes a coverage gap.
+domain: governance
+severity: high
+compliance:
+  owasp_nhi: "NHI8"
+  nist_800_53_r5: "SI-4, AU-6"
+  soc2: "CC7.1, CC7.2"
+  hipaa: "164.312(b)"
+  ccm_v4: ["LOG-01", "LOG-09"]
+scope_tags:
+  - aws
+  - meta
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Observation collector may have stopped emitting fresh snapshots.
+    Every other control's verdict on this run is evaluated against
+    stale data.
+  action: >
+    Triage the collector pipeline:
+    1) Confirm the collector process is running (check the systemd
+       unit, container task, or scheduler entry that drives it).
+    2) Verify the collector still has the IAM credentials and
+       permissions it needs to read the cloud APIs.
+    3) Check the output path is writable and not full.
+    4) Inspect the collector's logs (CloudWatch, journald, container
+       stdout) for errors immediately before captured_at.
+    Once the collector is restored, re-run `stave apply` with the
+    fresh observation; this control falls silent automatically.
+  example: |
+    {
+      "meta": {
+        "kind": "observation_meta",
+        "observation": { "is_stale": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.meta.kind
+      op: eq
+      value: observation_meta
+    - field: properties.meta.observation.is_stale
+      op: eq
+      value: true
