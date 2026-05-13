@@ -209,6 +209,10 @@ func ExtractFacts(doc *sir.Document) []Fact {
 	facts = append(facts, annotateProvenance(dataEventLoggingFacts(doc.Assets), "dataEventLoggingFacts", assetByID)...)
 	facts = append(facts, annotateProvenance(propertyFacts(doc.Assets), "propertyFacts", assetByID)...)
 	facts = append(facts, annotateProvenance(tagFacts(doc.Assets), "tagFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(delegationPrincipalFacts(doc.Assets), "delegationPrincipalFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(unusedServiceFacts(doc.Assets), "unusedServiceFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(incompatiblePairFacts(doc.Assets), "incompatiblePairFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(forbiddenCategoryFacts(doc.Assets), "forbiddenCategoryFacts", assetByID)...)
 	facts = append(facts, annotateProvenance(trustPolicyFacts(doc.Assets), "trustPolicyFacts", assetByID)...)
 	facts = append(facts, annotateProvenance(assumeEdgeFacts(doc.Assets), "assumeEdgeFacts", assetByID)...)
 	facts = append(facts, annotateProvenance(identityFacts(doc.Identities), "identityFacts", assetByID)...)
@@ -1203,6 +1207,217 @@ func tagFacts(assets []sir.AssetFact) []Fact {
 // canonical PassRole exploit shape: role is overpermissioned
 // AND assumable by a compute service the attacker controls.
 //
+// delegationPrincipalFacts walks
+// properties.delegation.external_principals[] on every
+// aws_s3_bucket asset and emits one fact per external principal
+// with control rights:
+//
+//   has_delegated_principal(bucket_arn, principal_arn)        — every element
+//   has_unknown_delegated_principal(bucket_arn, principal_arn) — element.is_known_vendor == false
+//   has_delegation_scope_exceeded_for(bucket_arn, principal_arn) — element.scope_exceeded == true
+//
+// The scalar booleans on properties.delegation.* (has_*) say
+// THAT a defect exists; these per-principal facts say WHICH
+// principal carries it. Soufflé / Clingo queries pivot on the
+// per-principal predicate to enumerate every offender.
+//
+// Empty / absent / wrong-shape arrays yield no facts.
+func delegationPrincipalFacts(assets []sir.AssetFact) []Fact {
+	var out []Fact
+	for i := range assets {
+		a := &assets[i]
+		if a.Type != "aws_s3_bucket" {
+			continue
+		}
+		delegation, ok := a.Properties["delegation"].(map[string]any)
+		if !ok {
+			continue
+		}
+		principals, ok := delegation["external_principals"].([]any)
+		if !ok {
+			continue
+		}
+		evid := fmt.Sprintf("assets[%d].properties.delegation.external_principals", i)
+		for pi, raw := range principals {
+			p, ok := raw.(map[string]any)
+			if !ok {
+				continue
+			}
+			arn, ok := p["principal_arn"].(string)
+			if !ok || arn == "" {
+				continue
+			}
+			elemEvid := fmt.Sprintf("%s[%d]", evid, pi)
+			out = append(out, Fact{
+				Subject: a.ID, Predicate: "has_delegated_principal", Object: arn,
+				Source: "delegation", Evidence: elemEvid + ".principal_arn",
+			})
+			if known, ok := p["is_known_vendor"].(bool); ok && !known {
+				out = append(out, Fact{
+					Subject: a.ID, Predicate: "has_unknown_delegated_principal", Object: arn,
+					Source: "delegation", Evidence: elemEvid + ".is_known_vendor",
+				})
+			}
+			if exceeded, ok := p["scope_exceeded"].(bool); ok && exceeded {
+				out = append(out, Fact{
+					Subject: a.ID, Predicate: "has_delegation_scope_exceeded_for", Object: arn,
+					Source: "delegation", Evidence: elemEvid + ".scope_exceeded",
+				})
+			}
+		}
+	}
+	return out
+}
+
+// unusedServiceFacts walks
+// properties.identity.permission_drift.unused_services[] on
+// every aws_iam_role asset and emits
+//
+//   has_unused_service(role_arn, service_namespace)
+//
+// per element. Companion to the scalar has_unused_service_ratio
+// (which says HOW MUCH drift): this projector says WHICH
+// services drifted. Prolog proof trees consume the per-service
+// fact to derive "lambda was accessible to this role and never
+// used in 90+ days" as the explainable chain.
+//
+// Empty / absent / wrong-shape arrays yield no facts.
+func unusedServiceFacts(assets []sir.AssetFact) []Fact {
+	var out []Fact
+	for i := range assets {
+		a := &assets[i]
+		if a.Type != "aws_iam_role" {
+			continue
+		}
+		identity, ok := a.Properties["identity"].(map[string]any)
+		if !ok {
+			continue
+		}
+		drift, ok := identity["permission_drift"].(map[string]any)
+		if !ok {
+			continue
+		}
+		services, ok := drift["unused_services"].([]any)
+		if !ok {
+			continue
+		}
+		evid := fmt.Sprintf("assets[%d].properties.identity.permission_drift.unused_services", i)
+		for si, raw := range services {
+			service, ok := raw.(string)
+			if !ok || service == "" {
+				continue
+			}
+			out = append(out, Fact{
+				Subject: a.ID, Predicate: "has_unused_service", Object: service,
+				Source: "permission_drift", Evidence: fmt.Sprintf("%s[%d]", evid, si),
+			})
+		}
+	}
+	return out
+}
+
+// incompatiblePairFacts walks
+// properties.identity.permission_categories.incompatible_pairs[]
+// on every aws_iam_role asset. Each element is a 2-element
+// array [category_a, category_b]; the projector emits one fact
+// per pair with the two category names joined by "+" as the
+// object — a stable form Clingo violation rules can match
+// against the incompatible-pair taxonomy in
+// internal/controldata/taxonomy/permission_categories.yaml.
+//
+//   has_incompatible_pair(role_arn, "data_read+secrets_access")
+//
+// Companion to the scalar has_incompatible_categories (which
+// says THAT a violation exists): this projector names every
+// concrete pair that triggered it.
+//
+// Empty / absent / wrong-shape arrays yield no facts.
+func incompatiblePairFacts(assets []sir.AssetFact) []Fact {
+	var out []Fact
+	for i := range assets {
+		a := &assets[i]
+		if a.Type != "aws_iam_role" {
+			continue
+		}
+		identity, ok := a.Properties["identity"].(map[string]any)
+		if !ok {
+			continue
+		}
+		cats, ok := identity["permission_categories"].(map[string]any)
+		if !ok {
+			continue
+		}
+		pairs, ok := cats["incompatible_pairs"].([]any)
+		if !ok {
+			continue
+		}
+		evid := fmt.Sprintf("assets[%d].properties.identity.permission_categories.incompatible_pairs", i)
+		for pi, raw := range pairs {
+			pair, ok := raw.([]any)
+			if !ok || len(pair) != 2 {
+				continue
+			}
+			a0, ok0 := pair[0].(string)
+			a1, ok1 := pair[1].(string)
+			if !ok0 || !ok1 || a0 == "" || a1 == "" {
+				continue
+			}
+			out = append(out, Fact{
+				Subject: a.ID, Predicate: "has_incompatible_pair", Object: a0 + "+" + a1,
+				Source: "permission_categories", Evidence: fmt.Sprintf("%s[%d]", evid, pi),
+			})
+		}
+	}
+	return out
+}
+
+// forbiddenCategoryFacts walks
+// properties.identity.intent_match.forbidden_categories_present[]
+// on every aws_iam_role asset and emits
+//
+//   has_forbidden_category(role_arn, category)
+//
+// per element. Companion to the scalar has_intent_mismatch
+// (which says THAT permissions contradict the declared role
+// type): this projector names every concrete forbidden
+// category — the Clingo violation rule can quote each
+// offending category in the produced answer set.
+//
+// Empty / absent / wrong-shape arrays yield no facts.
+func forbiddenCategoryFacts(assets []sir.AssetFact) []Fact {
+	var out []Fact
+	for i := range assets {
+		a := &assets[i]
+		if a.Type != "aws_iam_role" {
+			continue
+		}
+		identity, ok := a.Properties["identity"].(map[string]any)
+		if !ok {
+			continue
+		}
+		intent, ok := identity["intent_match"].(map[string]any)
+		if !ok {
+			continue
+		}
+		forbidden, ok := intent["forbidden_categories_present"].([]any)
+		if !ok {
+			continue
+		}
+		evid := fmt.Sprintf("assets[%d].properties.identity.intent_match.forbidden_categories_present", i)
+		for ci, raw := range forbidden {
+			cat, ok := raw.(string)
+			if !ok || cat == "" {
+				continue
+			}
+			out = append(out, Fact{
+				Subject: a.ID, Predicate: "has_forbidden_category", Object: cat,
+				Source: "intent_match", Evidence: fmt.Sprintf("%s[%d]", evid, ci),
+			})
+		}
+	}
+	return out
+}
+
 // Property path: properties.identity.trusted_services []string
 //
 // Empty / absent / wrong-shape trusted_services yields no
@@ -1550,16 +1765,20 @@ var baselineSMT2Predicates = []string{
 	"has_customer_can_revoke",
 	"has_data_event_logging",
 	"has_declared_role_type",
+	"has_delegated_principal",
 	"has_delegation_external_principals",
 	"has_delegation_review_expired",
 	"has_delegation_scope_exceeded",
+	"has_delegation_scope_exceeded_for",
 	"has_deny_action",
 	"has_deny_resource",
 	"has_exposed_repo_artifacts",
 	"has_exposure_window",
+	"has_forbidden_category",
 	"has_forbidden_state",
 	"has_ghost_trigger",
 	"has_incompatible_categories",
+	"has_incompatible_pair",
 	"has_instance_dual_homed",
 	"has_instance_profile_arn",
 	"has_instance_profile_overprivileged",
@@ -1598,7 +1817,9 @@ var baselineSMT2Predicates = []string{
 	"has_trigger_lambda_exists",
 	"has_trigger_type",
 	"has_type",
+	"has_unknown_delegated_principal",
 	"has_unknown_delegation",
+	"has_unused_service",
 	"has_unused_service_ratio",
 	"has_upload_key_mode",
 	"has_uses_access_key_id",

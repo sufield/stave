@@ -79,3 +79,26 @@ unsafe_predicate:
     - field: properties.waf.evasion_observability.enabled
       op: eq
       value: false
+tests:
+  - name: "web acl with full body inspection + sampled allowed-request logging passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/prod/abc"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          evasion_observability:
+            enabled: true
+  - name: "web acl without evasion observability fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/blind/def"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          evasion_observability:
+            enabled: false

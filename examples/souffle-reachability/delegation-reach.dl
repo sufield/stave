@@ -1,0 +1,64 @@
+// delegation-reach.dl — Soufflé reachability over S3 delegation
+// facts. Answers "which external principals have excessive reach
+// into which buckets, and how wide is the per-bucket blast radius?"
+//
+// Reads per-principal facts emitted by delegationPrincipalFacts in
+// cmd/exportsir/facts.go:
+//   has_delegated_principal(bucket, principal)
+//   has_delegation_scope_exceeded_for(bucket, principal)
+//   has_unknown_delegated_principal(bucket, principal)
+//
+// Plus the scalar per-bucket booleans for the escalation /
+// revocability axes.
+//
+// Soufflé computes counts the way Clingo cannot: ASP enumerates
+// witnesses one at a time; Soufflé computes the complete
+// transitive closure plus aggregations in one bottom-up pass.
+
+.decl has_delegated_principal(bucket: symbol, principal: symbol)
+.input has_delegated_principal
+.decl has_delegation_scope_exceeded_for(bucket: symbol, principal: symbol)
+.input has_delegation_scope_exceeded_for
+.decl has_unknown_delegated_principal(bucket: symbol, principal: symbol)
+.input has_unknown_delegated_principal
+.decl has_vendor_can_make_public(bucket: symbol, value: symbol)
+.input has_vendor_can_make_public
+.decl has_customer_can_revoke(bucket: symbol, value: symbol)
+.input has_customer_can_revoke
+
+// ─── Excessive reach ────────────────────────────────────────
+// One row per (bucket, principal, reason) where the reason
+// explains why this principal's access is problematic.
+.decl excessive_reach(bucket: symbol, principal: symbol, reason: symbol)
+.output excessive_reach
+
+excessive_reach(B, P, "scope_exceeded") :-
+    has_delegation_scope_exceeded_for(B, P).
+
+excessive_reach(B, P, "unknown_principal") :-
+    has_unknown_delegated_principal(B, P).
+
+excessive_reach(B, "any_principal", "vendor_can_make_public") :-
+    has_vendor_can_make_public(B, "true").
+
+excessive_reach(B, "any_principal", "customer_cannot_revoke") :-
+    has_customer_can_revoke(B, "false").
+
+// ─── Per-bucket counts ───────────────────────────────────────
+// How many distinct principals have excessive reach on this bucket?
+.decl excessive_reach_count(bucket: symbol, n: number)
+.output excessive_reach_count
+
+excessive_reach_count(B, C) :-
+    has_delegated_principal(B, _),
+    C = count : { excessive_reach(B, _, _) }.
+
+// ─── Per-bucket total principal count ────────────────────────
+// All delegated principals, for ratio context against
+// excessive_reach_count.
+.decl delegated_principal_count(bucket: symbol, n: number)
+.output delegated_principal_count
+
+delegated_principal_count(B, C) :-
+    has_delegated_principal(B, _),
+    C = count : { has_delegated_principal(B, _) }.

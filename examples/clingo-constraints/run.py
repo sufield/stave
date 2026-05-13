@@ -44,6 +44,38 @@ LIFTED_PREDICATES = {
     "resource_policy_principal", "resource_policy_action",
     "has_condition", "has_condition_value",
     "has_deny_action", "has_deny_resource",
+    # AI agent (Bedrock) — scalar booleans projected by the
+    # propertyAllowlist extension; rules in ai-delegation-shadow.lp.
+    "has_agent_guardrail", "has_agent_invocation_logging",
+    "has_agent_lambda_scope_broad", "has_agent_s3_scope_broad",
+    "has_agent_iac_managed", "has_agent_action_group_count",
+    "has_kb_target_bucket", "has_kb_source_encrypted",
+    # VPC peering — covers vpc_peering_exposure chain context.
+    "has_peering_id", "has_peering_status", "has_peering_peer_in_org",
+    "has_peering_dns_resolution", "has_peering_peer_account",
+    "has_peering_peer_vpc", "has_peering_route_broad",
+    "has_peering_route_target",
+    # EC2 instance — covers shadow_ec2_lateral_movement chain.
+    "has_instance_state", "has_instance_stopped_aged",
+    "has_instance_stopped_age_days", "has_instance_dual_homed",
+    "has_instance_profile_overprivileged",
+    "has_instance_profile_arn", "has_instance_vpc",
+    # IAM role drift / Shadow Admin — scalar + per-element facts.
+    "has_role_age_days", "has_access_advisor_available",
+    "has_intent_mismatch", "has_declared_role_type",
+    "has_incompatible_categories",
+    "has_permission_drift_threshold_exceeded",
+    "has_unused_service_ratio", "has_total_services_accessible",
+    "has_unused_service", "has_incompatible_pair",
+    "has_forbidden_category",
+    # S3 delegation — scalar + per-principal facts.
+    "has_unknown_delegation", "has_delegation_scope_exceeded",
+    "has_delegation_review_expired", "has_customer_can_revoke",
+    "has_vendor_can_make_public",
+    "has_delegation_external_principals",
+    "has_vendor_put_bucket_policy",
+    "has_delegated_principal", "has_unknown_delegated_principal",
+    "has_delegation_scope_exceeded_for",
 }
 
 
@@ -70,11 +102,17 @@ def load_facts(jsonl_path: Path) -> list[str]:
     return sorted(set(facts))
 
 
-def solve(facts: list[str], constraints_path: Path) -> tuple[list[clingo.Symbol], list[clingo.Symbol]]:
-    """Run Clingo with the given facts + constraints. Return (violations, latents)."""
+def solve(facts: list[str], constraints_paths: list[Path]) -> tuple[list[clingo.Symbol], list[clingo.Symbol]]:
+    """Run Clingo with the given facts + constraints. Return (violations, latents).
+
+    Accepts multiple constraint files so the catalog can keep
+    domain-specific rule sets in separate .lp files
+    (e.g. constraints.lp + ai-delegation-shadow.lp).
+    """
     ctl = clingo.Control(["--warn=none"])
     ctl.add("facts", [], "\n".join(facts))
-    ctl.load(str(constraints_path))
+    for path in constraints_paths:
+        ctl.load(str(path))
     ctl.ground([("base", []), ("facts", [])])
 
     violations: list[clingo.Symbol] = []
@@ -100,38 +138,51 @@ def render(label: str, violations: list[clingo.Symbol], latents: list[clingo.Sym
 
     by_kind: dict[str, list[tuple[str, str]]] = {}
     for atom in violations:
-        if len(atom.arguments) != 3:
+        args = atom.arguments
+        # Support both violation/2 (subject + kind) and violation/3
+        # (subject + kind + object). For arity-2 atoms the third
+        # column is empty.
+        if len(args) == 3:
+            subj, kind, obj = args[0].string, args[1].string, args[2].string
+        elif len(args) == 2:
+            subj, kind, obj = args[0].string, args[1].string, ""
+        else:
             continue
-        subj = atom.arguments[0].string
-        kind = atom.arguments[1].string
-        obj = atom.arguments[2].string
         by_kind.setdefault(kind, []).append((subj, obj))
 
     for kind in sorted(by_kind):
         rows = sorted(set(by_kind[kind]))
         print(f"  violation: {kind}  ({len(rows)})")
         for subj, obj in rows:
-            print(f"    {subj}  ->  {obj}")
+            if obj:
+                print(f"    {subj}  ->  {obj}")
+            else:
+                print(f"    {subj}")
 
     if latents:
-        latent_rows = sorted(
-            {(a.arguments[0].string, a.arguments[1].string) for a in latents if len(a.arguments) == 2}
-        )
+        latent_rows = sorted({
+            tuple(a.string for a in atom.arguments)
+            for atom in latents
+            if len(atom.arguments) in (2, 3)
+        })
         print(f"  latent_risk  ({len(latent_rows)})")
-        for subj, kind in latent_rows:
-            print(f"    {subj}  ({kind})")
+        for row in latent_rows:
+            if len(row) == 3:
+                print(f"    {row[0]}  ({row[1]}: {row[2]})")
+            else:
+                print(f"    {row[0]}  ({row[1]})")
     print()
 
 
 def main() -> int:
-    if len(sys.argv) != 4:
-        print("usage: run.py <label> <facts.jsonl> <constraints.lp>", file=sys.stderr)
+    if len(sys.argv) < 4:
+        print("usage: run.py <label> <facts.jsonl> <constraints.lp> [<more.lp> ...]", file=sys.stderr)
         return 2
     label = sys.argv[1]
     jsonl_path = Path(sys.argv[2])
-    constraints_path = Path(sys.argv[3])
+    constraints_paths = [Path(p) for p in sys.argv[3:]]
     facts = load_facts(jsonl_path)
-    violations, latents = solve(facts, constraints_path)
+    violations, latents = solve(facts, constraints_paths)
     render(label, violations, latents)
     return 0
 

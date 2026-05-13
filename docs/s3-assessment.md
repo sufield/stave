@@ -74,6 +74,39 @@ The `aws-s3` profile evaluates 67 controls across these categories:
 | CDN & takeover | CDN.OAC.001, CDN.EXPOSURE.001, BUCKET.TAKEOVER.001, DANGLING.ORIGIN.001 | CloudFront OAC, dangling origins |
 | Write scope | WRITE.SCOPE.001, WRITE.CONTENT.001 | Signed upload key/content-type binding |
 | Tenant isolation | TENANT.ISOLATION.001 | Prefix-scoped multi-tenant access |
+| Vendor delegation | DELEGATION.{KNOWN,SCOPE,LIFECYCLE,REVOCABLE,ESCALATION}.001 | Supply-chain governance of external principals with control rights |
+
+## Vendor delegation governance
+
+Five controls under `controls/s3/delegation/` plus one compound
+chain detect the "your bucket has an owner, the vendor has
+control" pattern — risk transferred to a weaker party without
+safety continuity.
+
+| Control | Detects |
+|---|---|
+| `CTL.S3.DELEGATION.KNOWN.001` | External principal not in `controldata/taxonomy/vendor_registry.yaml` |
+| `CTL.S3.DELEGATION.SCOPE.001` | Actual permissions exceed the vendor's declared scope |
+| `CTL.S3.DELEGATION.LIFECYCLE.001` | Vendor `review_date` in the past |
+| `CTL.S3.DELEGATION.REVOCABLE.001` | Customer cannot unilaterally revoke vendor access |
+| `CTL.S3.DELEGATION.ESCALATION.001` | Vendor can make bucket public (PutBucketPolicy / PutBucketAcl) |
+
+Compound chain: `delegated_control_failure` — threshold 3 of 5,
+CRITICAL. Complementary to `vendor_attack_path` (confused-deputy);
+same bucket can fire both.
+
+The collector populates `properties.delegation.*` booleans by
+comparing the bucket policy against `vendor_registry.yaml`.
+Single-snapshot detection: the predicates fire whether a
+declaration was removed yesterday or never applied.
+
+Worked demo: `examples/s3-delegation-failure/run.sh`. See
+`examples/s3-delegation-failure/multi-engine-results.md` for
+CEL + chain + Clingo + Soufflé output. The Soufflé program
+`examples/souffle-reachability/delegation-reach.dl` enumerates
+per-principal `excessive_reach` rows and counts; the Clingo
+rules in `examples/clingo-constraints/ai-delegation-shadow.lp`
+name every (bucket, principal, reason) triple.
 
 ## Notes
 
