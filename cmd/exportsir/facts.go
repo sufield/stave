@@ -1212,9 +1212,9 @@ func tagFacts(assets []sir.AssetFact) []Fact {
 // aws_s3_bucket asset and emits one fact per external principal
 // with control rights:
 //
-//   has_delegated_principal(bucket_arn, principal_arn)        — every element
-//   has_unknown_delegated_principal(bucket_arn, principal_arn) — element.is_known_vendor == false
-//   has_delegation_scope_exceeded_for(bucket_arn, principal_arn) — element.scope_exceeded == true
+//	has_delegated_principal(bucket_arn, principal_arn)        — every element
+//	has_unknown_delegated_principal(bucket_arn, principal_arn) — element.is_known_vendor == false
+//	has_delegation_scope_exceeded_for(bucket_arn, principal_arn) — element.scope_exceeded == true
 //
 // The scalar booleans on properties.delegation.* (has_*) say
 // THAT a defect exists; these per-principal facts say WHICH
@@ -1273,7 +1273,7 @@ func delegationPrincipalFacts(assets []sir.AssetFact) []Fact {
 // properties.identity.permission_drift.unused_services[] on
 // every aws_iam_role asset and emits
 //
-//   has_unused_service(role_arn, service_namespace)
+//	has_unused_service(role_arn, service_namespace)
 //
 // per element. Companion to the scalar has_unused_service_ratio
 // (which says HOW MUCH drift): this projector says WHICH
@@ -1325,7 +1325,7 @@ func unusedServiceFacts(assets []sir.AssetFact) []Fact {
 // against the incompatible-pair taxonomy in
 // internal/controldata/taxonomy/permission_categories.yaml.
 //
-//   has_incompatible_pair(role_arn, "data_read+secrets_access")
+//	has_incompatible_pair(role_arn, "data_read+secrets_access")
 //
 // Companion to the scalar has_incompatible_categories (which
 // says THAT a violation exists): this projector names every
@@ -1375,7 +1375,7 @@ func incompatiblePairFacts(assets []sir.AssetFact) []Fact {
 // properties.identity.intent_match.forbidden_categories_present[]
 // on every aws_iam_role asset and emits
 //
-//   has_forbidden_category(role_arn, category)
+//	has_forbidden_category(role_arn, category)
 //
 // per element. Companion to the scalar has_intent_mismatch
 // (which says THAT permissions contradict the declared role
