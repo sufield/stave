@@ -184,6 +184,19 @@ func runE2ECase(t *testing.T, bin, caseDir string) {
 			"--max-unsafe", "168h",
 			"--now", now,
 		}
+		// The apply command's default --format flipped from json to
+		// text in commit 028ecab58 for human-readable first-run UX.
+		// E2E fixtures that ship JSON-shaped expectations (built
+		// before the flip) carry no `--format json` in args.txt
+		// because they relied on the old default. Inject it here so
+		// fixture intent (expressed by the presence of expected JSON
+		// goldens) drives the CLI invocation, instead of asking
+		// every fixture's args.txt to repeat the same flag. Text /
+		// SARIF cases override the invocation via command.txt and
+		// never reach this branch.
+		if expectsJSONStdout(caseDir) && !argsContainFormat(caseDir) {
+			args = append(args, "--format", "json")
+		}
 		if argsFile := filepath.Join(caseDir, "args.txt"); fileExists(argsFile) {
 			extra := readFileTrimmed(t, argsFile)
 			extra = strings.ReplaceAll(extra, "$CASE_DIR", relCaseDir)
@@ -239,12 +252,7 @@ func runE2ECase(t *testing.T, bin, caseDir string) {
 	// as a vague package-level FAIL.
 	out := bytes.TrimSpace(stdout.Bytes())
 
-	expectsJSON := fileExists(filepath.Join(caseDir, "expected.summary.json")) ||
-		fileExists(filepath.Join(caseDir, "expected.findings.count")) ||
-		fileExists(filepath.Join(caseDir, "expected.input_hashes.json")) ||
-		fileExists(filepath.Join(caseDir, "expected.source_evidence.json")) ||
-		fileExists(filepath.Join(caseDir, "expected.out.json")) ||
-		fileExists(filepath.Join(caseDir, "expected.out.sarif"))
+	expectsJSON := expectsJSONStdout(caseDir)
 
 	isJSON := len(out) > 0 && (out[0] == '{' || out[0] == '[')
 
@@ -493,6 +501,44 @@ func checkGeneratedFile(t *testing.T, caseDir string) {
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+// expectsJSONStdout reports whether the fixture ships an
+// expected.* file that drives a stdout-JSON validator. The set
+// covers every check that calls extractJSONPath / json.Unmarshal
+// on captured stdout (checkSummary, checkFindingsCount,
+// checkInputHashes, checkSourceEvidence, checkFullOutput,
+// checkSARIF). Adding a new JSON-shape expected file later
+// requires extending this list; the gate just below uses the
+// same predicate.
+func expectsJSONStdout(caseDir string) bool {
+	return fileExists(filepath.Join(caseDir, "expected.summary.json")) ||
+		fileExists(filepath.Join(caseDir, "expected.findings.count")) ||
+		fileExists(filepath.Join(caseDir, "expected.input_hashes.json")) ||
+		fileExists(filepath.Join(caseDir, "expected.source_evidence.json")) ||
+		fileExists(filepath.Join(caseDir, "expected.out.json")) ||
+		fileExists(filepath.Join(caseDir, "expected.out.sarif"))
+}
+
+// argsContainFormat reports whether the fixture's args.txt
+// already supplies a --format / -f flag. Used by the apply-path
+// command builder to avoid double-injecting --format json when
+// a fixture explicitly chooses a different output shape.
+func argsContainFormat(caseDir string) bool {
+	argsFile := filepath.Join(caseDir, "args.txt")
+	if !fileExists(argsFile) {
+		return false
+	}
+	data, err := os.ReadFile(argsFile)
+	if err != nil {
+		return false
+	}
+	for tok := range strings.FieldsSeq(string(data)) {
+		if tok == "--format" || tok == "-f" || strings.HasPrefix(tok, "--format=") || strings.HasPrefix(tok, "-f=") {
+			return true
+		}
+	}
+	return false
 }
 
 func readFileTrimmed(t *testing.T, path string) string {

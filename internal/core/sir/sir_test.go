@@ -838,3 +838,109 @@ func TestBuilder_HydratedDocumentRoundTripsJSON(t *testing.T) {
 		t.Fatalf("round-trip not stable:\n  first: %s\n  again: %s", encoded, reEncoded)
 	}
 }
+
+// fakeCoverageSource returns a hand-built coverage report. Used to
+// exercise the WithCoverageSource path without standing up the
+// engine-backed adapter.
+type fakeCoverageSource struct {
+	report CoverageReport
+	err    error
+}
+
+func (f *fakeCoverageSource) Coverage(_ []asset.Snapshot, _ map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle) (CoverageReport, error) {
+	return f.report, f.err
+}
+
+func TestBuilder_CoverageSource_DefaultIsZeroPolicyNoGaps(t *testing.T) {
+	// Without WithCoverageSource, Temporal.Coverage is the
+	// zero-value policy and Gaps is nil/empty. Existing fixtures
+	// must not see surprise rows.
+	b := NewBuilder()
+	doc, err := b.Build(nil, []asset.Snapshot{sampleSnapshot(fixedTime.Add(-time.Hour))}, fixedTime)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	if doc.Temporal.Coverage.MaxAllowedGap != 0 || doc.Temporal.Coverage.MinRequiredSpan != 0 {
+		t.Errorf("default Coverage policy should be zero, got %+v", doc.Temporal.Coverage)
+	}
+	if len(doc.Temporal.Gaps) != 0 {
+		t.Errorf("default Gaps should be empty, got %d rows", len(doc.Temporal.Gaps))
+	}
+}
+
+func TestBuilder_CoverageSource_PopulatesPolicyAndGaps(t *testing.T) {
+	gap := CoverageGap{
+		AssetID: "arn:aws:s3:::bucket-a",
+		Start:   fixedTime.Add(-24 * time.Hour),
+		End:     fixedTime.Add(-1 * time.Hour),
+		Reason:  "maximum observation gap 23h0m0s exceeds threshold 12h0m0s",
+	}
+	src := &fakeCoverageSource{
+		report: CoverageReport{
+			Policy: CoveragePolicy{
+				MinRequiredSpan: 12 * time.Hour,
+				MaxAllowedGap:   12 * time.Hour,
+			},
+			Gaps: []CoverageGap{gap},
+		},
+	}
+	b := NewBuilder(WithCoverageSource(src))
+	doc, err := b.Build(nil, []asset.Snapshot{sampleSnapshot(fixedTime.Add(-time.Hour))}, fixedTime)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	if doc.Temporal.Coverage.MaxAllowedGap != 12*time.Hour {
+		t.Errorf("Coverage.MaxAllowedGap: want 12h, got %s", doc.Temporal.Coverage.MaxAllowedGap)
+	}
+	if doc.Temporal.Coverage.MinRequiredSpan != 12*time.Hour {
+		t.Errorf("Coverage.MinRequiredSpan: want 12h, got %s", doc.Temporal.Coverage.MinRequiredSpan)
+	}
+	if len(doc.Temporal.Gaps) != 1 {
+		t.Fatalf("Gaps: want 1, got %d", len(doc.Temporal.Gaps))
+	}
+	if doc.Temporal.Gaps[0] != gap {
+		t.Errorf("Gap row:\n  want %+v\n  got  %+v", gap, doc.Temporal.Gaps[0])
+	}
+}
+
+func TestBuilder_CoverageSource_SortsGapsDeterministically(t *testing.T) {
+	// A source that returns rows in an arbitrary order must be
+	// projected into a deterministic (AssetID, Start) order. Two
+	// builds of the same input must emit byte-identical Gaps.
+	now := fixedTime
+	g1 := CoverageGap{AssetID: "arn:aws:s3:::bucket-b", Start: now.Add(-3 * time.Hour), End: now, Reason: "gap"}
+	g2 := CoverageGap{AssetID: "arn:aws:s3:::bucket-a", Start: now.Add(-4 * time.Hour), End: now, Reason: "gap"}
+	g3 := CoverageGap{AssetID: "arn:aws:s3:::bucket-a", Start: now.Add(-2 * time.Hour), End: now, Reason: "gap"}
+	src := &fakeCoverageSource{
+		report: CoverageReport{
+			Policy: CoveragePolicy{MaxAllowedGap: time.Hour},
+			Gaps:   []CoverageGap{g1, g2, g3},
+		},
+	}
+	b := NewBuilder(WithCoverageSource(src))
+	doc, err := b.Build(nil, []asset.Snapshot{sampleSnapshot(now.Add(-time.Hour))}, now)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	want := []CoverageGap{g2, g3, g1} // (a, -4h), (a, -2h), (b, -3h)
+	if len(doc.Temporal.Gaps) != len(want) {
+		t.Fatalf("Gaps len: want %d got %d", len(want), len(doc.Temporal.Gaps))
+	}
+	for i := range want {
+		if doc.Temporal.Gaps[i] != want[i] {
+			t.Errorf("Gap[%d]:\n  want %+v\n  got  %+v", i, want[i], doc.Temporal.Gaps[i])
+		}
+	}
+}
+
+func TestBuilder_CoverageSourceErrorPropagates(t *testing.T) {
+	src := &fakeCoverageSource{err: errSentinel}
+	b := NewBuilder(WithCoverageSource(src))
+	_, err := b.Build(nil, []asset.Snapshot{sampleSnapshot(fixedTime.Add(-time.Hour))}, fixedTime)
+	if err == nil {
+		t.Fatalf("Build: want error, got nil")
+	}
+	if !strings.Contains(err.Error(), "coverage") {
+		t.Errorf("expected error to wrap with 'coverage', got %q", err.Error())
+	}
+}

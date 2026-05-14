@@ -64,6 +64,31 @@ type RoleChainSource interface {
 	RoleChains(snapshots []asset.Snapshot) (map[asset.ID][]RoleChainFact, error)
 }
 
+// CoverageSource is the seam between the SIR builder and the
+// engine's coverage validator. The validator's thresholds
+// (continuity limit, minimum audit-window span) live on the
+// engine.Assessor; SIR cannot import engine, so the platform
+// adapter (sirbridge.EngineCoverageSource) reads them from the
+// caller's configuration and translates the validator's
+// per-lifecycle verdict into vendor-neutral CoverageGap rows.
+//
+// The lifecycle map is the same shape WithLifecycleSource
+// produces; passing it here avoids re-running the engine.
+type CoverageSource interface {
+	Coverage(snapshots []asset.Snapshot, lifecycles map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle) (CoverageReport, error)
+}
+
+// CoverageReport is the value returned by a CoverageSource. The
+// Policy block reports the thresholds the validator graded
+// against; Gaps enumerates the per-asset intervals where the
+// observed cadence fell short. The builder sorts Gaps by
+// (AssetID, Start) before exposing them; callers may return
+// unordered input.
+type CoverageReport struct {
+	Policy CoveragePolicy
+	Gaps   []CoverageGap
+}
+
 // Option configures a Builder.
 type Option func(*Builder)
 
@@ -92,6 +117,14 @@ func WithRoleChainSource(s RoleChainSource) Option {
 	return func(b *Builder) { b.roleChains = s }
 }
 
+// WithCoverageSource registers the platform-side coverage
+// validator that hydrates Temporal.Coverage and Temporal.Gaps.
+// Without this option, those fields stay at zero-value — the
+// SIR cannot distinguish observed-safe from unobserved.
+func WithCoverageSource(s CoverageSource) Option {
+	return func(b *Builder) { b.coverage = s }
+}
+
 // Builder assembles a Document from controls + snapshots. Construct
 // via NewBuilder; the zero value is not usable because options must
 // flow through the constructor.
@@ -99,6 +132,7 @@ type Builder struct {
 	groupers   []ResourceFactGrouper
 	lifecycles LifecycleSource
 	roleChains RoleChainSource
+	coverage   CoverageSource
 }
 
 // NewBuilder returns a Builder configured with the supplied options.
@@ -140,7 +174,11 @@ func (b *Builder) Build(controls []controldef.ControlDefinition, snapshots []ass
 	if err != nil {
 		return nil, fmt.Errorf("lifecycles: %w", err)
 	}
-	doc.Temporal = buildTemporalFacts(snapshots, lifecycles, now)
+	coverage, err := b.collectCoverage(snapshots, lifecycles)
+	if err != nil {
+		return nil, fmt.Errorf("coverage: %w", err)
+	}
+	doc.Temporal = buildTemporalFacts(snapshots, lifecycles, coverage, now)
 
 	for i, grouper := range b.groupers {
 		groups, gerr := grouper.GroupResources(snapshots, now)
@@ -174,6 +212,18 @@ func (b *Builder) collectLifecycles(controls []controldef.ControlDefinition, sna
 		return nil, nil
 	}
 	return b.lifecycles.Lifecycles(controls, snapshots)
+}
+
+// collectCoverage runs the registered CoverageSource (if any).
+// Returns a zero-value report (zero-policy, nil gaps) when no
+// source is registered — buildTemporalFacts forwards both to the
+// resulting Document so the SIR shape is uniform whether or not
+// coverage hydration ran.
+func (b *Builder) collectCoverage(snapshots []asset.Snapshot, lifecycles map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle) (CoverageReport, error) {
+	if b.coverage == nil {
+		return CoverageReport{}, nil
+	}
+	return b.coverage.Coverage(snapshots, lifecycles)
 }
 
 // buildControlFacts translates a control catalog into deterministic,
@@ -506,7 +556,7 @@ func sortRoleChains(chains []RoleChainFact) {
 // here — it would be re-implementing logic that doesn't yet exist
 // upstream, violating the "DO NOT re-implement" constraint. A
 // future merger can run as a downstream pass if needed.
-func buildTemporalFacts(snapshots []asset.Snapshot, lifecycles map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle, now time.Time) TemporalFacts {
+func buildTemporalFacts(snapshots []asset.Snapshot, lifecycles map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle, coverage CoverageReport, now time.Time) TemporalFacts {
 	temporal := TemporalFacts{}
 	if len(snapshots) > 0 {
 		obs := make([]time.Time, 0, len(snapshots))
@@ -519,6 +569,21 @@ func buildTemporalFacts(snapshots []asset.Snapshot, lifecycles map[kernel.Contro
 		temporal.Observations = obs
 	}
 	temporal.Windows = exposureWindowsFromLifecycles(lifecycles, now)
+	temporal.Coverage = coverage.Policy
+	if len(coverage.Gaps) > 0 {
+		gaps := make([]CoverageGap, len(coverage.Gaps))
+		copy(gaps, coverage.Gaps)
+		slices.SortFunc(gaps, func(a, b CoverageGap) int {
+			if n := cmp.Compare(a.AssetID, b.AssetID); n != 0 {
+				return n
+			}
+			if n := a.Start.Compare(b.Start); n != 0 {
+				return n
+			}
+			return cmp.Compare(a.Reason, b.Reason)
+		})
+		temporal.Gaps = gaps
+	}
 	return temporal
 }
 

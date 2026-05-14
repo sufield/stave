@@ -335,9 +335,34 @@ type RoleChainFact struct {
 // inferred exposure window (Windows). Compound checks that gate on
 // "for at least N hours" or "during gap" reason against this
 // structure rather than rederiving it.
+//
+// Coverage names the snapshot-cadence policy the SIR was graded
+// against; Gaps enumerates the per-asset intervals where the
+// observed cadence violated that policy. Together they let a
+// consumer distinguish "asset was observed safe" from "asset was
+// not observed often enough to tell": the absence of a window in
+// Windows for an asset that appears in Gaps means "unknown," not
+// "safe."
 type TemporalFacts struct {
 	Observations []time.Time      `json:"observations"`
 	Windows      []ExposureWindow `json:"windows"`
+	Coverage     CoveragePolicy   `json:"coverage"`
+	Gaps         []CoverageGap    `json:"coverage_gaps,omitempty"`
+}
+
+// CoveragePolicy records the snapshot-cadence thresholds the SIR
+// was graded against. MaxAllowedGap is the global continuity limit
+// (the engine's ContinuityLimit setting); MinRequiredSpan is the
+// minimum audit-window length below which the validator declines
+// to grade.
+//
+// Durations are serialised as integer nanoseconds (Go's
+// time.Duration default) so round-tripping the JSON does not lose
+// precision. The `_ns` suffix on the JSON tags documents the unit
+// for consumers parsing the SIR from other languages.
+type CoveragePolicy struct {
+	MinRequiredSpan time.Duration `json:"min_required_span_ns"`
+	MaxAllowedGap   time.Duration `json:"max_allowed_gap_ns"`
 }
 
 // ValidityWindow names a time interval during which a principal

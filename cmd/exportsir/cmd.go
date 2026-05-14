@@ -30,6 +30,7 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation/engine"
 	"github.com/sufield/stave/internal/core/sir"
 )
 
@@ -161,9 +162,20 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options, newCtl
 		return fmt.Errorf("build CEL evaluator: %w", err)
 	}
 
+	// Coverage thresholds match the engine's defaults: 12h required
+	// observation span (also the engine's continuity limit). A
+	// future flag could override these per-export; for now the
+	// export-sir CLI carries the same global posture the assessor
+	// does.
+	coverageSrc, err := sirbridge.NewEngineCoverageSource(engine.DefaultContinuityLimit, engine.DefaultContinuityLimit)
+	if err != nil {
+		return fmt.Errorf("build coverage source: %w", err)
+	}
+
 	builder := sir.NewBuilder(
 		sir.WithRoleChainSource(sirbridge.NewAWSRoleChainSource()),
 		sir.WithLifecycleSource(sirbridge.NewEngineLifecycleSource(celEval)),
+		sir.WithCoverageSource(coverageSrc),
 		sir.WithResourceFactGrouper(sirbridge.NewAWSS3FactGrouper()),
 	)
 
