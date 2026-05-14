@@ -24,6 +24,8 @@ scope_tags:
   - cognito
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_cognito_identity_pool
 params:
   attack_stage: detection_evasion
   blast_radius:

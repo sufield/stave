@@ -1,0 +1,286 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_iam_user",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_iam_user observations. 29 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "identity": {
+      "additionalProperties": true,
+      "properties": {
+        "access_keys": {
+          "additionalProperties": true,
+          "properties": {
+            "active_count": {
+              "description": "Read by control(s): CTL.IAM.CRED.SINGLEKEY.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "created_at_setup": {
+              "description": "Read by control(s): CTL.IAM.CRED.SETUPKEY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_stale_key": {
+              "description": "Read by control(s): CTL.IAM.CRED.ROTATION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "console_access": {
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "description": "Read by control(s): CTL.IAM.CONSOLE.MFA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "mfa_enabled": {
+              "description": "Read by control(s): CTL.IAM.CONSOLE.MFA.001, CTL.IAM.CROSSCLOUD.MFA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "credentials": {
+          "additionalProperties": true,
+          "properties": {
+            "has_expiry": {
+              "description": "Read by control(s): CTL.IAM.CRED.TTL.EXCEEDED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ttl_exceeded": {
+              "description": "Read by control(s): CTL.IAM.CRED.TTL.EXCEEDED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "unused": {
+              "description": "Read by control(s): CTL.IAM.CRED.UNUSED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "unused_days": {
+              "description": "Read by control(s): CTL.IAM.CRED.UNUSED45.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        },
+        "escalation": {
+          "additionalProperties": true,
+          "properties": {
+            "add_user_to_group": {
+              "additionalProperties": true,
+              "properties": {
+                "present": {
+                  "description": "Read by control(s): CTL.IAM.ESCALATE.ADDUSERTOGROUP.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "attach_group_policy": {
+              "additionalProperties": true,
+              "properties": {
+                "present": {
+                  "description": "Read by control(s): CTL.IAM.ESCALATE.ATTACHGROUPPOLICY.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "attach_user_policy_self": {
+              "additionalProperties": true,
+              "properties": {
+                "present": {
+                  "description": "Read by control(s): CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "put_group_policy": {
+              "additionalProperties": true,
+              "properties": {
+                "present": {
+                  "description": "Read by control(s): CTL.IAM.ESCALATE.PUTGROUPPOLICY.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "put_user_policy_self": {
+              "additionalProperties": true,
+              "properties": {
+                "present": {
+                  "description": "Read by control(s): CTL.IAM.ESCALATE.PUTUSERPOLICY.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 29 controls: CTL.IAM.CONSOLE.MFA.001, CTL.IAM.CRED.ROTATION.001, CTL.IAM.CRED.SETUPKEY.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "password": {
+          "additionalProperties": true,
+          "properties": {
+            "has_stale_password": {
+              "description": "Read by control(s): CTL.IAM.PASSWORD.ROTATION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "policies": {
+          "additionalProperties": true,
+          "properties": {
+            "has_admin_access": {
+              "description": "Read by control(s): CTL.IAM.CROSSCLOUD.ADMIN.001, CTL.IAM.POLICY.ADMIN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_direct_policies": {
+              "description": "Read by control(s): CTL.IAM.POLICY.DIRECT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_inline_policies": {
+              "description": "Read by control(s): CTL.IAM.POLICY.INLINE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "service_wildcards_granted": {
+              "description": "Read by control(s): CTL.IAM.POLICY.SERVICEWILDCARD.001"
+            }
+          }
+        },
+        "policy": {
+          "additionalProperties": true,
+          "properties": {
+            "create_actions_missing_region": {
+              "description": "Read by control(s): CTL.IAM.POLICY.CONDITION.REGION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cross_account_missing_org_id": {
+              "description": "Read by control(s): CTL.IAM.POLICY.CONDITION.ORGID.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_broader_inactive_version": {
+              "description": "Read by control(s): CTL.IAM.POLICY.VERSIONS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_notresource": {
+              "description": "Read by control(s): CTL.IAM.POLICY.CONDITION.NOTRESOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_stringlike_on_identity": {
+              "description": "Read by control(s): CTL.IAM.POLICY.CONDITION.STRINGLIKE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_temporal_without_expiry": {
+              "description": "Read by control(s): CTL.IAM.POLICY.CONDITION.TEMPORAL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "iam_admin_missing_sourceip": {
+              "description": "Read by control(s): CTL.IAM.POLICY.CONDITION.SOURCEIP.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "kms_missing_viaservice": {
+              "description": "Read by control(s): CTL.IAM.POLICY.CONDITION.VIASERVICE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "user": {
+          "additionalProperties": true,
+          "properties": {
+            "reachable_resources_count": {
+              "description": "Read by control(s): CTL.IAM.IDENTITY.BLASTRADIUS.005",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "sensitive_resource_count": {
+              "description": "Read by control(s): CTL.IAM.IDENTITY.BLASTRADIUS.006",
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_iam_user Properties",
+  "type": "object"
+}

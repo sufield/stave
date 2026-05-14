@@ -22,6 +22,8 @@ domain: governance
 severity: low
 type: marker
 classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
 compliance:
   hipaa: "164.312(c)(1)"
 scope_tags:

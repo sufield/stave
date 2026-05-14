@@ -61,7 +61,11 @@
     },
     "source": {
       "type": "string",
-      "enum": ["deployed", "planned", "local"],
+      "enum": [
+        "deployed",
+        "planned",
+        "local"
+      ],
       "title": "Snapshot Source",
       "description": "Origin context of the snapshot: deployed (CI/CD or scheduled scan), planned (IaC plan), or local (developer workstation)."
     },
@@ -146,16 +150,764 @@
       },
       "allOf": [
         {
-          "if": { "properties": { "type": { "const": "aws_sqs_queue" } }, "required": ["type"] },
-          "then": { "properties": { "properties": { "$ref": "urn:stave:schema:asset-type:aws_sqs_queue" } } }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_stepfunctions_state_machine"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_stepfunctions_state_machine"
+              }
+            }
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "aws_opensearch_domain" } }, "required": ["type"] },
-          "then": { "properties": { "properties": { "$ref": "urn:stave:schema:asset-type:aws_opensearch_domain" } } }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_opensearch_domain"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_opensearch_domain"
+              }
+            }
+          }
         },
         {
-          "if": { "properties": { "type": { "const": "aws_stepfunctions_state_machine" } }, "required": ["type"] },
-          "then": { "properties": { "properties": { "$ref": "urn:stave:schema:asset-type:aws_stepfunctions_state_machine" } } }
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_s3_bucket"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_s3_bucket"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_cognito_user_pool"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_cognito_user_pool"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_lambda_function"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_lambda_function"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_cloudtrail_trail"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_cloudtrail_trail"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_kms_key"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_kms_key"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_ec2_instance"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_ec2_instance"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_sqs_queue"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_sqs_queue"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_iam_user"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_iam_user"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_iam_role"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_iam_role"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_sns_topic"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_sns_topic"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_ec2_security_group"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_ec2_security_group"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_eks_cluster"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_eks_cluster"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_eventbridge_bus"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_eventbridge_bus"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_cognito_app_client"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_cognito_app_client"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_cognito_identity_pool"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_cognito_identity_pool"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_eventbridge_rule"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_eventbridge_rule"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_vpc"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_vpc"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_bedrock_agent"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_bedrock_agent"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_ebs_snapshot"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_ebs_snapshot"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_eks_namespace"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_eks_namespace"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_ec2_account"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_ec2_account"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_eks_pod_spec"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_eks_pod_spec"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_eventbridge_pipe"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_eventbridge_pipe"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_cognito_account"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_cognito_account"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_eventbridge_schedule"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_eventbridge_schedule"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_eventbridge_rule_target"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_eventbridge_rule_target"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_ec2_launch_template"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_ec2_launch_template"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_iam_account"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_iam_account"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_organization"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_organization"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_eks_addon"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_eks_addon"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_eks_nodegroup"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_eks_nodegroup"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_eks_workload"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_eks_workload"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_sns_subscription"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_sns_subscription"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_vpc_endpoint"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_vpc_endpoint"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_aoss_collection"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_aoss_collection"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_dlm_policy"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_dlm_policy"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_ec2_subnet"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_ec2_subnet"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "aws_eventbridge_archive"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "properties": {
+                "$ref": "urn:stave:schema:asset-type:aws_eventbridge_archive"
+              }
+            }
+          }
         }
       ]
     },

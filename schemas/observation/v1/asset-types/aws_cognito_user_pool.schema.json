@@ -1,0 +1,421 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_cognito_user_pool",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_cognito_user_pool observations. 58 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "identity": {
+      "additionalProperties": true,
+      "properties": {
+        "advanced_security": {
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "description": "Read by control(s): CTL.COGNITO.ADVANCED.SECURITY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "mode": {
+              "description": "Read by control(s): CTL.COGNITO.ADVANCED.SECURITY.AUDITONLY.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "auth": {
+          "additionalProperties": true,
+          "properties": {
+            "mfa_enforced": {
+              "description": "Read by control(s): CTL.COGNITO.INCOMPLETE.001, CTL.COGNITO.MFA.001, CTL.COGNITO.RECOVERY.NOMFA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "cognito": {
+          "additionalProperties": true,
+          "properties": {
+            "allow_admin_create_only": {
+              "description": "Read by control(s): CTL.COGNITO.HOSTEDUI.SIGNUPADMIN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "auth_log_retention_compliant": {
+              "description": "Read by control(s): CTL.COGNITO.COMPLIANCE.LOGRETENTION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "custom_domain_cert_expired": {
+              "description": "Read by control(s): CTL.COGNITO.DOMAIN.CERTEXPIRY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "device_tracking_enabled": {
+              "description": "Read by control(s): CTL.COGNITO.ADVSEC.DEVICETRACK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "domain_enforces_https": {
+              "description": "Read by control(s): CTL.COGNITO.DOMAIN.HTTPS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "email_auto_verified": {
+              "description": "Read by control(s): CTL.COGNITO.VERIFY.EMAIL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_app_clients": {
+              "description": "Read by control(s): CTL.COGNITO.ORPHAN.NOCLIENTS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_brute_force_protection": {
+              "description": "Read by control(s): CTL.COGNITO.LOCKOUT.NONE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_domain_cert": {
+              "description": "Read by control(s): CTL.COGNITO.GHOST.DOMAINCERT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_domain_dns": {
+              "description": "Read by control(s): CTL.COGNITO.GHOST.DOMAINDNS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_saml_metadata": {
+              "description": "Read by control(s): CTL.COGNITO.GHOST.SAMLMETA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_trigger": {
+              "description": "Read by 10 controls: CTL.COGNITO.GHOST.CREATEAUTH.001, CTL.COGNITO.GHOST.CUSTOMMSG.001, CTL.COGNITO.GHOST.DEFINEAUTH.001, …",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_orphan_triggers": {
+              "description": "Read by control(s): CTL.COGNITO.ORPHAN.TRIGGERS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_resource_servers": {
+              "description": "Read by control(s): CTL.COGNITO.RESOURCESRV.NONE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "hosted_ui_allows_signup": {
+              "description": "Read by control(s): CTL.COGNITO.HOSTEDUI.SIGNUPADMIN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "in_approved_region": {
+              "description": "Read by control(s): CTL.COGNITO.COMPLIANCE.REGION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_user_pool_dormant": {
+              "description": "Read by control(s): CTL.COGNITO.ORPHAN.NOUSERS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "mfa_sms_enabled": {
+              "description": "Read by control(s): CTL.COGNITO.VERIFY.PHONE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "mfa_sms_only": {
+              "description": "Read by control(s): CTL.COGNITO.MFA.SMSONLY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "oauth_cors_wildcard": {
+              "description": "Read by control(s): CTL.COGNITO.HOSTEDUI.CORS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "oidc_issuer_cross_account": {
+              "description": "Read by control(s): CTL.COGNITO.CROSSACCT.OIDC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "oidc_issuer_reachable": {
+              "description": "Read by control(s): CTL.COGNITO.OIDC.ISSUER.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "oidc_scopes_broad": {
+              "description": "Read by control(s): CTL.COGNITO.OIDC.SCOPEBROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "oidc_secret_rotation_overdue": {
+              "description": "Read by control(s): CTL.COGNITO.OIDC.SECRETROT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "phone_auto_verified": {
+              "description": "Read by control(s): CTL.COGNITO.VERIFY.PHONE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "recovery_bypasses_mfa": {
+              "description": "Read by control(s): CTL.COGNITO.RECOVERY.NOMFA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "saml_assertion_encrypted": {
+              "description": "Read by control(s): CTL.COGNITO.SAML.NOENCRYPT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "saml_assertion_signed": {
+              "description": "Read by control(s): CTL.COGNITO.SAML.NOSIGN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "saml_attribute_mapping_complete": {
+              "description": "Read by control(s): CTL.COGNITO.SAML.ATTRMAP.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "saml_idp_trusted": {
+              "description": "Read by control(s): CTL.COGNITO.CROSSACCT.SAML.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "saml_metadata_expired": {
+              "description": "Read by control(s): CTL.COGNITO.SAML.METAEXPIRED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "saml_metadata_static": {
+              "description": "Read by control(s): CTL.COGNITO.SAML.NOREFRESH.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "saml_signing_cert_expired": {
+              "description": "Read by control(s): CTL.COGNITO.SAML.CERTEXPIRED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "social_allows_any_domain": {
+              "description": "Read by control(s): CTL.COGNITO.SOCIAL.ANYDOMAIN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "social_email_marked_verified": {
+              "description": "Read by control(s): CTL.COGNITO.SOCIAL.NOVERIFY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "social_uses_test_credentials": {
+              "description": "Read by control(s): CTL.COGNITO.SOCIAL.TESTCREDS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "tags_complete": {
+              "description": "Read by control(s): CTL.COGNITO.COMPLIANCE.NOTAG.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "trigger_lambda_cross_account": {
+              "description": "Read by control(s): CTL.COGNITO.CROSSACCT.LAMBDA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "trigger_type": {
+              "description": "Read by 10 controls: CTL.COGNITO.GHOST.CREATEAUTH.001, CTL.COGNITO.GHOST.CUSTOMMSG.001, CTL.COGNITO.GHOST.DEFINEAUTH.001, …",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "uses_cmk_encryption": {
+              "description": "Read by control(s): CTL.COGNITO.COMPLIANCE.NOCMK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "uses_default_domain": {
+              "description": "Read by control(s): CTL.COGNITO.HOSTEDUI.DEFAULT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "uses_oauth_flows": {
+              "description": "Read by control(s): CTL.COGNITO.RESOURCESRV.NONE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "governance": {
+          "additionalProperties": true,
+          "properties": {
+            "deletion_protection_enabled": {
+              "description": "Read by control(s): CTL.COGNITO.DELETEPROT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "self_registration_restricted": {
+              "description": "Read by control(s): CTL.COGNITO.SELFREG.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 58 controls: CTL.COGNITO.ADAPTIVE.AUTH.001, CTL.COGNITO.ADVANCED.SECURITY.001, CTL.COGNITO.ADVANCED.SECURITY.AUDITONLY.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "network": {
+          "additionalProperties": true,
+          "properties": {
+            "waf_acl_attached": {
+              "description": "Read by control(s): CTL.COGNITO.WAF.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "password_policy": {
+          "additionalProperties": true,
+          "properties": {
+            "is_weak": {
+              "description": "Read by control(s): CTL.COGNITO.PASSWORD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "temp_password_valid_days_exceeded": {
+              "description": "Read by control(s): CTL.COGNITO.TEMPPASSWORD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "security": {
+          "additionalProperties": true,
+          "properties": {
+            "blocks_compromised_credentials": {
+              "description": "Read by control(s): CTL.COGNITO.COMPROMISED.CREDS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "blocks_risky_sign_ins": {
+              "description": "Read by control(s): CTL.COGNITO.ADAPTIVE.AUTH.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_cognito_user_pool Properties",
+  "type": "object"
+}

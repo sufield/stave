@@ -1,0 +1,317 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_iam_role",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_iam_role observations. 28 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "identity": {
+      "additionalProperties": true,
+      "properties": {
+        "access_advisor": {
+          "additionalProperties": true,
+          "properties": {
+            "available": {
+              "description": "Read by control(s): CTL.IAM.ROLE.ENTROPY.INCOMPLETE.001, CTL.IAM.ROLE.PERMISSIONDRIFT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "escalation": {
+          "additionalProperties": true,
+          "properties": {
+            "attach_role_policy": {
+              "additionalProperties": true,
+              "properties": {
+                "present": {
+                  "description": "Read by control(s): CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "put_role_policy": {
+              "additionalProperties": true,
+              "properties": {
+                "present": {
+                  "description": "Read by control(s): CTL.IAM.ESCALATE.PUTROLEPOLICY.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "intent_match": {
+          "additionalProperties": true,
+          "properties": {
+            "has_intent_mismatch": {
+              "description": "Read by control(s): CTL.IAM.ROLE.INTENTMISMATCH.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 28 controls: CTL.IAM.CROSS.ENV.PATH.001, CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001, CTL.IAM.ESCALATE.PUTROLEPOLICY.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "permission_categories": {
+          "additionalProperties": true,
+          "properties": {
+            "has_incompatible_categories": {
+              "description": "Read by control(s): CTL.IAM.ROLE.CATEGORYMIX.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "permission_drift": {
+          "additionalProperties": true,
+          "properties": {
+            "threshold_exceeded": {
+              "description": "Read by control(s): CTL.IAM.ROLE.PERMISSIONDRIFT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "policies": {
+          "additionalProperties": true,
+          "properties": {
+            "has_inline_policies": {
+              "description": "Read by control(s): CTL.IAM.POLICY.INLINE.002",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "service_wildcards_granted": {
+              "description": "Read by control(s): CTL.IAM.POLICY.SERVICEWILDCARD.001"
+            }
+          }
+        },
+        "role": {
+          "additionalProperties": true,
+          "properties": {
+            "assume_chain_depth": {
+              "description": "Read by control(s): CTL.IAM.IDENTITY.BLASTRADIUS.003",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "blast_radius_scope": {
+              "description": "Read by control(s): CTL.IAM.IDENTITY.BLASTRADIUS.002",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "cross_account_trust_without_external_id": {
+              "description": "Read by control(s): CTL.IAM.IDENTITY.BLASTRADIUS.002",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cross_env": {
+              "additionalProperties": true,
+              "properties": {
+                "reachable_from_lower_env": {
+                  "description": "Read by control(s): CTL.IAM.CROSS.ENV.PATH.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "has_data_and_iam_access": {
+              "description": "Read by control(s): CTL.IAM.POLICY.SOD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "lambda_scoped": {
+              "description": "Read by control(s): CTL.IAM.ROLE.LAMBDA.SCOPING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "reachable_resources_count": {
+              "description": "Read by control(s): CTL.IAM.IDENTITY.BLASTRADIUS.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "sensitive_resource_count": {
+              "description": "Read by control(s): CTL.IAM.IDENTITY.BLASTRADIUS.004",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "session_duration_excessive": {
+              "description": "Read by control(s): CTL.IAM.SESSION.DURATION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "role_age_days": {
+          "description": "Read by control(s): CTL.IAM.ROLE.PERMISSIONDRIFT.001",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tags": {
+          "additionalProperties": true,
+          "properties": {
+            "environment": {
+              "description": "Read by control(s): CTL.IAM.MARKER.PRODUCTION.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "role-type": {
+              "description": "Read by control(s): CTL.IAM.ROLE.INTENTMISMATCH.001, CTL.IAM.ROLE.INTENTTAG.001"
+            }
+          }
+        },
+        "trust_policy": {
+          "additionalProperties": true,
+          "properties": {
+            "has_assumption_constraints": {
+              "description": "Read by control(s): CTL.IAM.TRUST.SESSION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_compute_trust": {
+              "description": "Read by control(s): CTL.IAM.TRUST.DUAL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_cross_account_trust": {
+              "description": "Read by control(s): CTL.IAM.TRUST.ORGBOUNDARY.001, CTL.IAM.TRUST.SESSION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_ou_reference": {
+              "description": "Read by control(s): CTL.IAM.TRUST.GHOST.ORG.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_identity_federation_trust": {
+              "description": "Read by control(s): CTL.IAM.TRUST.DUAL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_org_id_condition": {
+              "description": "Read by control(s): CTL.IAM.TRUST.ORGBOUNDARY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_unknown_external_account": {
+              "description": "Read by control(s): CTL.IAM.TRUST.GHOST.ACCOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_wildcard_principal": {
+              "description": "Read by control(s): CTL.IAM.TRUST.WILDCARD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "identity_federation_trust_unscoped": {
+              "description": "Read by control(s): CTL.IAM.TRUST.DUAL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "requires_session_name": {
+              "description": "Read by control(s): CTL.IAM.SESSION.NAME.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "requires_source_identity": {
+              "description": "Read by control(s): CTL.IAM.SESSION.SOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "vendor_trust": {
+          "additionalProperties": true,
+          "properties": {
+            "is_dormant": {
+              "description": "Read by control(s): CTL.IAM.VENDOR.DORMANT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_external_vendor": {
+              "description": "Read by control(s): CTL.IAM.VENDOR.DORMANT.001, CTL.IAM.VENDOR.OVERPRIVILEGED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "reachable_sensitive_count": {
+              "description": "Read by control(s): CTL.IAM.VENDOR.OVERPRIVILEGED.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_iam_role Properties",
+  "type": "object"
+}

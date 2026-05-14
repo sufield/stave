@@ -12,609 +12,1002 @@
           "properties": {
             "eventbridge_status_rules": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.EVENTBRIDGE.STATUS.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "execution_time_slo_alarm": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ALARM.EXEC.TIME.SLO.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "executions_failed_alarm": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ALARM.EXEC.FAILED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "executions_throttled_alarm": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ALARM.EXEC.THROTTLED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "rate_limit_notify_present": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.RATE.LIMIT.NONOTIFY.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "schedule_time_alarms": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ALARM.SCHEDULE.TIME.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "asl": {
           "additionalProperties": true,
           "properties": {
             "catch_states_all_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.CATCH.STATES.ALL.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "choice_without_default_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.CHOICE.NODEFAULT.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "dm_child_role_separate": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.DM.CHILD.IAM.INHERIT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "dm_no_itembatcher_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.DM.NO.ITEMBATCHER.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "dm_no_resultwriter_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.DM.NO.RESULTWRITER.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "dm_no_tolerance_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.DM.NO.TOLERANCE.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "dm_s3_no_prefix_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.DM.S3.NOPREFIX.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "fail_captures_error": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.FAIL.NOCAPTURE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "has_async_lambda": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LAMBDA.DLQ.MISSING.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "has_distributed_map": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.DM.CHILD.IAM.INHERIT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "heartbeat_gt_timeout_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.WAITFORTOKEN.HEARTBEAT.GT.TIMEOUT.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "inline_map_large_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.MAP.LARGE.NOTDISTRIBUTED.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "is_sync_express_apigw": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.SYNCEXP.APIGW.TIMEOUT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "lambda_async_dlq_configured": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LAMBDA.DLQ.MISSING.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "lambda_callback_heartbeats": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LAMBDA.CALLBACK.NOHEARTBEAT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "lambda_crossregion_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LAMBDA.CROSSREGION.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "lambda_logs_correlated": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LAMBDA.LOG.UNCORRELATED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "lambda_policy_matches": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LAMBDA.RES.POLICY.MISMATCH.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "lambda_resource_latest_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LAMBDA.RESOURCE.LATEST.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "lambda_role_drift": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LAMBDA.ROLE.DRIFT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "lambda_timeout_gt_task_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LAMBDA.TIMEOUT.GT.TASK.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "lambda_unpinned_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LAMBDA.UNPINNED.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "lambda_uses_callback": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LAMBDA.CALLBACK.NOHEARTBEAT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "map_maxconcurrency_zero_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.MAP.MAXCONCURRENCY.ZERO.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "map_no_maxconcurrency_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.MAP.NOMAXCONCURRENCY.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "map_without_catch_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.MAP.NOCATCH.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "parallel_without_catch_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.PARALLEL.NOCATCH.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "query_lang_mismatch": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.QUERY.LANG.MISMATCH.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "resultpath_null_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.RESULTPATH.NULL.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "retry_no_backoff_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.RETRY.NOBACKOFF.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "retry_states_all_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.RETRY.STATES.ALL.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "retry_zero_attempts_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.RETRY.NOATTEMPTS.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "sync_catch_stops_resource": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.SYNC.NOCLEANUP.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "sync_no_catch_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.SYNC.NOCATCH.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "sync_no_retry_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.SYNC.NORETRY.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "sync_unsupported_resource_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.SYNC.SILENT.FALLBACK.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "syncexp_apigw_timeout_race": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.SYNCEXP.APIGW.TIMEOUT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "tasks_without_catch": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.CATCH.MISSING.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "wait_hardcoded_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ASL.WAIT.HARDCODED.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "waitforcallback_no_timeout_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.WAITFORCALLBACK.NOTIMEOUT.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "waitfortoken_no_heartbeat_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.WAITFORTOKEN.NOHEARTBEAT.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "compliance": {
           "additionalProperties": true,
           "properties": {
             "env_data_isolated": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.DEV.PROD.DATA.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "iac_compliance_consistent": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IAC.COMPLIANCE.DRIFT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "region_authorized": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.REGION.UNAUTHORIZED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "role_compliance_isolated": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ROLE.COMPLIANCE.REUSE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "cost": {
           "additionalProperties": true,
           "properties": {
             "execution_history_archived": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.EXECUTION.HISTORY.RETENTION.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "idle_days": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IDLE.MACHINE.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "log_cost_balanced": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LOG.COST.RUNAWAY.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "tags_complete": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.NOTAGS.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "type_matches_workload": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.WORKFLOW.TYPE.MISMATCH.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "deployment": {
           "additionalProperties": true,
           "properties": {
             "alias_targets_versioned": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ALIAS.LATEST.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "alias_uses_weighted_routing": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ALIAS.NOWEIGHTED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "apigw_targets_alias_arn": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.APIGW.UNVERSIONED.ARN.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "dr_region_deployed": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.DR.NOSECONDREGION.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "eb_targets_alias_arn": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.EB.UNVERSIONED.ARN.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "eventbridge_rule_consumer_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.EB.SHARED.MACHINE.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "has_apigw_target": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.APIGW.UNVERSIONED.ARN.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "has_eventbridge_target": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.EB.UNVERSIONED.ARN.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "iam_resource_pinned_to_alias": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ALIAS.ROLE.UNVERSIONED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "is_production": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.DR.NOSECONDREGION.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "last_modified_by_iac": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IAC.CONSOLE.DRIFT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "name_unique_across_envs": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.NAME.COLLISION.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "startexec_name_idempotent": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IDEMPOTENCY.NAME.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "tags_consistent_across_versions": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.TAGS.VERSION.DRIFT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "uses_waitfortoken": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.WAITFORTOKEN.NOVALIDATE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "version_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.VERSION.ACCUMULATION.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "versioning_enabled": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.VERSION.OFF.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "worker_validates_token": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.WAITFORTOKEN.NOVALIDATE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "edges": {
           "additionalProperties": true,
           "properties": {
             "bedrock_quota_guarded": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.BEDROCK.NOQUOTA.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "ddb_condition_caught": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.DDB.CONDITION.UNCAUGHT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "emr_job_timeout_set": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.EMR.SERVERLESS.NOTIMEOUT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "sagemaker_runtime_set": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.SAGEMAKER.NORUNTIME.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "uses_bedrock": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.BEDROCK.NOQUOTA.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "uses_ddb_condition": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.DDB.CONDITION.UNCAUGHT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "uses_emr_sync": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.EMR.SERVERLESS.NOTIMEOUT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "uses_sagemaker": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.SAGEMAKER.NORUNTIME.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "encrypt": {
           "additionalProperties": true,
           "properties": {
             "callback_channel_encrypted": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.SYNC.UNENCRYPTED.CALLBACK.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "definition_and_exec_keys_match": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ENCRYPT.KEY.DRIFT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "definition_uses_customer_key": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ENCRYPT.DEFINITION.AWSOWNED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "exec_kms_enabled": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ENCRYPT.EXEC.OFF.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "has_sync_callback": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.SYNC.UNENCRYPTED.CALLBACK.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "is_production": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ENCRYPT.KMS.NOMULTIREGION.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "kms_multi_region": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ENCRYPT.KMS.NOMULTIREGION.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "kms_rotation_enabled": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ENCRYPT.KMS.NOROTATION.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "log_redacts_secrets": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ENCRYPT.LOG.SECRET.LEAK.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "payload_has_secrets": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ENCRYPT.LOG.SECRET.LEAK.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "task_token_protected": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.TOKEN.PLAINTEXT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "uses_task_token": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.TOKEN.PLAINTEXT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "iam": {
           "additionalProperties": true,
           "properties": {
             "controlplane_to_nonadmin": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IAM.UPDATE.NONADMIN.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "crossaccount_action_wildcard": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IAM.CROSSACCOUNT.WILDCARD.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "crossaccount_externalid_present": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IAM.CROSSACCOUNT.NOEXTERNAL.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "crossaccount_no_source_account": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IAM.CROSSACCOUNT.NOSRC.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "has_crossaccount_principal": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IAM.CROSSACCOUNT.NOEXTERNAL.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "has_stale_temp_rule": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IAM.STALE.RULE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "ops_actions_broadly_granted": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IAM.OPS.BROAD.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "stale_temp_rule_age_days": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IAM.STALE.RULE.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "startexec_resource_allmachines": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IAM.STARTEXEC.ALLMACHINE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "startexec_wildcard_principal": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IAM.STARTEXEC.WILDCARD.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "states_wildcard_resource_wildcard": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IAM.STATES.WILDCARD.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "uses_resource_tag_scoping": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IAM.NORESOURCETAG.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "kind": {
           "description": "Read by 111 controls: CTL.STEPFUNCTIONS.ACTIVITY.ZOMBIE.001, CTL.STEPFUNCTIONS.ALARM.EXEC.FAILED.001, CTL.STEPFUNCTIONS.ALARM.EXEC.THROTTLED.001, …",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "log": {
           "additionalProperties": true,
           "properties": {
             "destination_log_group_exists": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LOG.GROUP.MISSING.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "dm_iteration_tracing": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.DM.NOTRACING.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "express_archived_long_retention": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LOG.EXPRESS.UNARCHIVED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "has_distributed_map": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.DM.NOTRACING.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "include_execution_data": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LOG.NOEXEC.DATA.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "is_express": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LOG.EXPRESS.UNARCHIVED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "is_production": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.XRAY.OFF.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "level_too_low": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LOG.LEVEL.LOW.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "retention_days": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.LOG.RETENTION.SHORT.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "xray_enabled": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.XRAY.OFF.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "operational": {
           "additionalProperties": true,
           "properties": {
             "breakglass_jit_only": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.BREAKGLASS.PERMANENT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "deletion_protection": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.DELETION.PROTECTION.OFF.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "history_autoarchive": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.HISTORY.NOAUTOARCHIVE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "is_production": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.DELETION.PROTECTION.OFF.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "ownership_tags_complete": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.IAC.OWNERSHIP.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "zombie_activity_count": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ACTIVITY.ZOMBIE.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "role": {
           "additionalProperties": true,
           "properties": {
             "dynamodb_wildcard": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ROLE.PERM.DYNAMODB.WILDCARD.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "has_defense_conditions": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ROLE.NOCONDITIONS.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "has_stale_permissions": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ROLE.STALE.PERMS.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "lambda_invoke_wildcard": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ROLE.PERM.LAMBDA.WILDCARD.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "machine_idle_days": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ROLE.IDLE.MACHINE.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "messaging_wildcard": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ROLE.PERM.MESSAGING.WILDCARD.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "s3_wildcard": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ROLE.PERM.S3.WILDCARD.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "shared_across_machines": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ROLE.SHARED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "sts_assume_wildcard": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ROLE.PERM.STS.WILDCARD.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "trust_has_source_account": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ROLE.TRUST.NOSRCACCT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "trust_has_source_arn": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ROLE.TRUST.NOSRCACCT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "trust_multiple_services": {
               "description": "Read by control(s): CTL.STEPFUNCTIONS.ROLE.TRUST.MULTIPLE.SERVICES.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         }
-      },
-      "type": "object"
+      }
     }
   },
   "title": "aws_stepfunctions_state_machine Properties",

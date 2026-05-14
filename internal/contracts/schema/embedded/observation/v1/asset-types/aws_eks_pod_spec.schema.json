@@ -1,0 +1,139 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_pod_spec",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_pod_spec observations. 11 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "pod_spec": {
+          "additionalProperties": true,
+          "properties": {
+            "allow_privilege_escalation": {
+              "description": "Read by control(s): CTL.EKS.POD.PRIVESCALATION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "automount_service_account_token": {
+              "description": "Read by control(s): CTL.EKS.POD.SATOKEN.AUTOMOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "calls_aws_apis": {
+              "description": "Read by control(s): CTL.EKS.POD.NODE.PROFILE.INHERIT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_configmap_ref": {
+              "description": "Read by control(s): CTL.EKS.POD.GHOST.CONFIGMAP.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_secret_ref": {
+              "description": "Read by control(s): CTL.EKS.POD.GHOST.SECRET.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_host_ipc": {
+              "description": "Read by control(s): CTL.EKS.POD.HOSTACCESS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_host_network": {
+              "description": "Read by control(s): CTL.EKS.POD.HOSTACCESS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_host_pid": {
+              "description": "Read by control(s): CTL.EKS.POD.HOSTACCESS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_irsa_or_pod_identity": {
+              "description": "Read by control(s): CTL.EKS.POD.NODE.PROFILE.INHERIT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_privileged_container": {
+              "description": "Read by control(s): CTL.EKS.POD.PRIVILEGED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_sensitive_host_path_mount": {
+              "description": "Read by control(s): CTL.EKS.POD.HOSTPATH.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "image_pull_policy": {
+              "description": "Read by control(s): CTL.EKS.IMAGE.PULLPOLICY.NEVER.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "is_infrastructure_daemonset": {
+              "description": "Read by control(s): CTL.EKS.POD.HOSTACCESS.001, CTL.EKS.POD.HOSTPATH.001, CTL.EKS.POD.PRIVILEGED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_system_namespace": {
+              "description": "Read by control(s): CTL.EKS.NS.PRIORITYCLASS.SYSTEM.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "runs_as_root": {
+              "description": "Read by control(s): CTL.EKS.POD.RUNASROOT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "uses_kubernetes_api": {
+              "description": "Read by control(s): CTL.EKS.POD.SATOKEN.AUTOMOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "uses_system_priority": {
+              "description": "Read by control(s): CTL.EKS.NS.PRIORITYCLASS.SYSTEM.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_pod_spec Properties",
+  "type": "object"
+}

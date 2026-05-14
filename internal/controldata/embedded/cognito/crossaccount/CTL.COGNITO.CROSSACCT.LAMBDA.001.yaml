@@ -23,6 +23,8 @@ scope_tags:
   - cognito
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_cognito_user_pool
 params:
   attack_stage: lateral_movement
   blast_radius:

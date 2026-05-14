@@ -22,6 +22,8 @@ scope_tags:
   - iam
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_iam_policy
 params:
   base_impact: 8
   attack_stage: persistence

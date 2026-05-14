@@ -12,611 +12,989 @@
           "properties": {
             "auth_basic_in_front_of_fgac": {
               "description": "Read by control(s): CTL.OPENSEARCH.AUTH.BASIC.OVER.FGAC.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "custom_endpoint_enabled": {
               "description": "Read by control(s): CTL.OPENSEARCH.CUSTOM.CERT.EXPIRY.001, CTL.OPENSEARCH.CUSTOM.CERT.UNTRUSTED.001, CTL.OPENSEARCH.CUSTOM.ENDPOINT.PUBLIC.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "custom_endpoint_targets_public": {
               "description": "Read by control(s): CTL.OPENSEARCH.CUSTOM.ENDPOINT.PUBLIC.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "default_admin_user_present": {
               "description": "Read by control(s): CTL.OPENSEARCH.DEFAULT.ADMIN.PRESENT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "describe_actions_overshared": {
               "description": "Read by control(s): CTL.OPENSEARCH.POLICY.RI.RECON.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "fgac_enabled": {
               "description": "Read by 4 controls: CTL.OPENSEARCH.AUTH.BASIC.OVER.FGAC.001, CTL.OPENSEARCH.FGAC.NOUSERS.001, CTL.OPENSEARCH.MASTER.PASSWORD.AGE.001, …",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "fgac_internal_user_count": {
               "description": "Read by control(s): CTL.OPENSEARCH.FGAC.NOUSERS.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "master_password_age_days": {
               "description": "Read by control(s): CTL.OPENSEARCH.MASTER.PASSWORD.AGE.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "master_user_iam_role": {
               "description": "Read by control(s): CTL.OPENSEARCH.MASTER.PASSWORD.AGE.001, CTL.OPENSEARCH.MASTER.PASSWORD.AUTH.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "policy_action_wildcard_nonadmin": {
               "description": "Read by control(s): CTL.OPENSEARCH.POLICY.ACTION.WILDCARD.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "policy_allows_wildcard": {
               "description": "Read by control(s): CTL.OPENSEARCH.POLICY.WILDCARD.OPEN.IP.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "policy_crossaccount_action_wildcard": {
               "description": "Read by control(s): CTL.OPENSEARCH.POLICY.CROSSACCOUNT.WILDCARD.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "policy_crossaccount_externalid_present": {
               "description": "Read by control(s): CTL.OPENSEARCH.POLICY.CROSSACCOUNT.NOEXTERNAL.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "policy_crossaccount_principal": {
               "description": "Read by control(s): CTL.OPENSEARCH.POLICY.CROSSACCOUNT.NOEXTERNAL.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "policy_delete_to_readonly_role": {
               "description": "Read by control(s): CTL.OPENSEARCH.POLICY.DELETE.READONLY.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "policy_eshttp_wildcard_readonly": {
               "description": "Read by control(s): CTL.OPENSEARCH.POLICY.ESHTTP.WILDCARD.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "policy_has_stale_temp_rule": {
               "description": "Read by control(s): CTL.OPENSEARCH.POLICY.STALE.RULE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "policy_ip_allowlist_dynamic_isp": {
               "description": "Read by control(s): CTL.OPENSEARCH.POLICY.IP.DYNAMIC.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "policy_managed_in_iac": {
               "description": "Read by control(s): CTL.OPENSEARCH.POLICY.UNVERSIONED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "policy_oldest_temp_rule_age_days": {
               "description": "Read by control(s): CTL.OPENSEARCH.POLICY.STALE.RULE.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "policy_open_ip_condition": {
               "description": "Read by control(s): CTL.OPENSEARCH.POLICY.WILDCARD.OPEN.IP.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "policy_updateconfig_nonadmin": {
               "description": "Read by control(s): CTL.OPENSEARCH.POLICY.UPDATECONFIG.NONADMIN.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "policy_uses_stringequals_on_sourceip": {
               "description": "Read by control(s): CTL.OPENSEARCH.POLICY.SOURCEIP.STRINGEQUALS.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "privatelink_enabled": {
               "description": "Read by control(s): CTL.OPENSEARCH.PRIVATELINK.PRINCIPAL.WILDCARD.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "privatelink_endpoint_policy_wildcard": {
               "description": "Read by control(s): CTL.OPENSEARCH.PRIVATELINK.PRINCIPAL.WILDCARD.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "publicly_accessible": {
               "description": "Read by control(s): CTL.OPENSEARCH.PUBLIC.AFTER.VPC.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "role_mapping_allaccess_broad": {
               "description": "Read by control(s): CTL.OPENSEARCH.ROLE.ALLACCESS.BROAD.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "role_mapping_dangling_count": {
               "description": "Read by control(s): CTL.OPENSEARCH.ROLE.MAPPING.DANGLING.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "role_mapping_kibana_wildcard": {
               "description": "Read by control(s): CTL.OPENSEARCH.ROLE.KIBANA.WILDCARD.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "saml_enabled": {
               "description": "Read by control(s): CTL.OPENSEARCH.SAML.METADATA.EXPIRED.001, CTL.OPENSEARCH.SAML.NOMAPPING.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "saml_metadata_days_until_expiry": {
               "description": "Read by control(s): CTL.OPENSEARCH.SAML.METADATA.EXPIRED.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "saml_role_mappings_count": {
               "description": "Read by control(s): CTL.OPENSEARCH.SAML.NOMAPPING.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "vpc_enabled": {
               "description": "Read by control(s): CTL.OPENSEARCH.CUSTOM.ENDPOINT.PUBLIC.001, CTL.OPENSEARCH.PUBLIC.AFTER.VPC.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "vpc_endpoint_service": {
               "additionalProperties": true,
               "properties": {
                 "permits_foreign_principals": {
                   "description": "Read by control(s): CTL.OPENSEARCH.VPCE.FOREIGN.PRINCIPAL.001",
-                  "type": "boolean"
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
                 }
-              },
-              "type": "object"
+              }
             }
-          },
-          "type": "object"
+          }
         },
         "alarms": {
           "additionalProperties": true,
           "properties": {
             "alarms_have_subscribers": {
               "description": "Read by control(s): CTL.OPENSEARCH.NOTIFY.SUBSCRIBER.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "autosnapshot_failure_alarm_present": {
               "description": "Read by control(s): CTL.OPENSEARCH.ALARM.AUTOSNAPSHOT.FAILURE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "cluster_red_alarm_present": {
               "description": "Read by control(s): CTL.OPENSEARCH.ALARM.CLUSTER.RED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "cluster_yellow_alarm_present": {
               "description": "Read by control(s): CTL.OPENSEARCH.ALARM.CLUSTER.YELLOW.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "freestorage_alarm_present": {
               "description": "Read by control(s): CTL.OPENSEARCH.ALARM.FREESTORAGE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "http_5xx_alarm_present": {
               "description": "Read by control(s): CTL.OPENSEARCH.ALARM.5XX.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "jvm_pressure_alarm_present": {
               "description": "Read by control(s): CTL.OPENSEARCH.ALARM.JVM.PRESSURE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "kms_alarms_complete": {
               "description": "Read by control(s): CTL.OPENSEARCH.ALARM.KMS.INACCESSIBLE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "maintenance_window_set_offpeak": {
               "description": "Read by control(s): CTL.OPENSEARCH.MAINTENANCE.WINDOW.UNSET.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "master_health_alarms_complete": {
               "description": "Read by control(s): CTL.OPENSEARCH.ALARM.MASTER.HEALTH.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "nodes_alarm_present": {
               "description": "Read by control(s): CTL.OPENSEARCH.ALARM.NODES.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "software_update_notification_subscribed": {
               "description": "Read by control(s): CTL.OPENSEARCH.SOFTWARE.UPDATE.NOTIFY.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "threadpool_alarms_complete": {
               "description": "Read by control(s): CTL.OPENSEARCH.ALARM.THREADPOOL.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "audit": {
           "additionalProperties": true,
           "properties": {
             "body_capture_enabled": {
               "description": "Read by control(s): CTL.OPENSEARCH.AUDIT.NOBODY.CAPTURE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "captures_index_name": {
               "description": "Read by control(s): CTL.OPENSEARCH.AUDIT.NOINDEX.NAME.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "categories_complete": {
               "description": "Read by control(s): CTL.OPENSEARCH.AUDIT.CATEGORIES.INCOMPLETE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "crossaccount_log_delivery": {
               "description": "Read by control(s): CTL.OPENSEARCH.LOG.CROSSACCT.TRUST.MISSING.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "crossaccount_log_role_trust_complete": {
               "description": "Read by control(s): CTL.OPENSEARCH.LOG.CROSSACCT.TRUST.MISSING.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "destination_log_group_exists": {
               "description": "Read by control(s): CTL.OPENSEARCH.AUDIT.LOGGROUP.MISSING.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "enabled": {
               "description": "Read by 4 controls: CTL.OPENSEARCH.AUDIT.CATEGORIES.INCOMPLETE.001, CTL.OPENSEARCH.AUDIT.LOGGROUP.MISSING.001, CTL.OPENSEARCH.AUDIT.NOBODY.CAPTURE.001, …",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "index_slowlog_enabled": {
               "description": "Read by control(s): CTL.OPENSEARCH.SLOWLOG.INDEX.OFF.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "log_retention_days": {
               "description": "Read by control(s): CTL.OPENSEARCH.AUDIT.RETENTION.SHORT.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "retention_lt_export_cadence": {
               "description": "Read by control(s): CTL.OPENSEARCH.LOG.RETENTION.BEFORE.EXPORT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "search_slowlog_enabled": {
               "description": "Read by control(s): CTL.OPENSEARCH.SLOWLOG.SEARCH.OFF.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "security_changes_separate_retention": {
               "description": "Read by control(s): CTL.OPENSEARCH.AUDIT.SECURITY.CHANGES.SHARED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "slowlog_threshold_too_high": {
               "description": "Read by control(s): CTL.OPENSEARCH.SLOWLOG.THRESHOLD.HIGH.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "backup": {
           "additionalProperties": true,
           "properties": {
             "manual_repo_registered": {
               "description": "Read by 4 controls: CTL.OPENSEARCH.SNAPSHOT.KEY.DRIFT.001, CTL.OPENSEARCH.SNAPSHOT.NOCROSSREGION.001, CTL.OPENSEARCH.SNAPSHOT.NOMANUAL.REPO.001, …",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "repo_path_collision": {
               "description": "Read by control(s): CTL.OPENSEARCH.SNAPSHOT.REPO.PATH.COLLISION.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "repo_role_trust_complete": {
               "description": "Read by control(s): CTL.OPENSEARCH.SNAPSHOT.REPO.ROLE.TRUST.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "snapshot_aligned_with_ism": {
               "description": "Read by control(s): CTL.OPENSEARCH.SNAPSHOT.ISM.UNALIGNED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "snapshot_before_delete_enforced": {
               "description": "Read by control(s): CTL.OPENSEARCH.DELETE.NOSNAPSHOT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "snapshot_crossregion_replicated": {
               "description": "Read by control(s): CTL.OPENSEARCH.SNAPSHOT.NOCROSSREGION.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "snapshot_excludes_security_index": {
               "description": "Read by control(s): CTL.OPENSEARCH.SNAPSHOT.SECURITY.INDEX.MIXED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "snapshot_key_matches_domain": {
               "description": "Read by control(s): CTL.OPENSEARCH.SNAPSHOT.KEY.DRIFT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "snapshot_retention_days": {
               "description": "Read by control(s): CTL.OPENSEARCH.SNAPSHOT.RETENTION.SHORT.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "snapshot_window_offpeak": {
               "description": "Read by control(s): CTL.OPENSEARCH.SNAPSHOT.WINDOW.PEAK.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "capacity": {
           "additionalProperties": true,
           "properties": {
             "az_resilient": {
               "description": "Read by control(s): CTL.OPENSEARCH.AZ.SINGLE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "data_node_count": {
               "description": "Read by control(s): CTL.OPENSEARCH.DATA.NODE.SINGLE.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "dedicated_master_enabled": {
               "description": "Read by control(s): CTL.OPENSEARCH.MASTER.COUNT.NONQUORUM.001, CTL.OPENSEARCH.MASTER.NODEDICATED.001, CTL.OPENSEARCH.MASTER.SAME.INSTANCE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "ebs_appropriate_for_workload": {
               "description": "Read by control(s): CTL.OPENSEARCH.EBS.GP2.IO.HEAVY.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "indices_with_zero_replicas": {
               "description": "Read by control(s): CTL.OPENSEARCH.NOREPLICAS.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "is_production": {
               "description": "Read by 4 controls: CTL.OPENSEARCH.AZ.SINGLE.001, CTL.OPENSEARCH.DATA.NODE.SINGLE.001, CTL.OPENSEARCH.MASTER.NODEDICATED.001, …",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "master_count": {
               "description": "Read by control(s): CTL.OPENSEARCH.MASTER.COUNT.NONQUORUM.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "master_data_typed_separately": {
               "description": "Read by control(s): CTL.OPENSEARCH.MASTER.SAME.INSTANCE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "master_undersized": {
               "description": "Read by control(s): CTL.OPENSEARCH.MASTER.UNDERSIZED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "shards_per_node": {
               "description": "Read by control(s): CTL.OPENSEARCH.SHARD.COUNT.HIGH.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "storage_autoscaling_enabled": {
               "description": "Read by control(s): CTL.OPENSEARCH.STORAGE.NOAUTOSCALE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "tiering_available": {
               "description": "Read by control(s): CTL.OPENSEARCH.TIERING.OFF.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "tiering_enabled": {
               "description": "Read by control(s): CTL.OPENSEARCH.TIERING.OFF.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "with_standby_available": {
               "description": "Read by control(s): CTL.OPENSEARCH.AZ.NOSTANDBY.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "with_standby_enabled": {
               "description": "Read by control(s): CTL.OPENSEARCH.AZ.NOSTANDBY.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "config": {
           "additionalProperties": true,
           "properties": {
             "last_modified_by_iac": {
               "description": "Read by control(s): CTL.OPENSEARCH.IAC.DRIFT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "cost": {
           "additionalProperties": true,
           "properties": {
             "has_orphan_resources": {
               "description": "Read by control(s): CTL.OPENSEARCH.ORPHAN.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "is_idle": {
               "description": "Read by control(s): CTL.OPENSEARCH.IDLE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "is_overprovisioned": {
               "description": "Read by control(s): CTL.OPENSEARCH.OVERPROVISIONED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "crosscluster": {
           "additionalProperties": true,
           "properties": {
             "all_in_inventory": {
               "description": "Read by control(s): CTL.OPENSEARCH.CCS.SHADOW.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "ccr_replicates_security_index": {
               "description": "Read by control(s): CTL.OPENSEARCH.CCR.SECURITY.INDEX.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "connections_over_public": {
               "description": "Read by control(s): CTL.OPENSEARCH.CCS.PUBLIC.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "crosses_compliance_boundary": {
               "description": "Read by control(s): CTL.OPENSEARCH.CCS.COMPLIANCE.BOUNDARY.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "has_connections": {
               "description": "Read by 4 controls: CTL.OPENSEARCH.CCS.NOTLSVERIFY.001, CTL.OPENSEARCH.CCS.PUBLIC.001, CTL.OPENSEARCH.CCS.SHADOW.001, …",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "tls_verified": {
               "description": "Read by control(s): CTL.OPENSEARCH.CCS.NOTLSVERIFY.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "trust_scoped": {
               "description": "Read by control(s): CTL.OPENSEARCH.CCS.UNSCOPED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "encrypt": {
           "additionalProperties": true,
           "properties": {
             "custom_endpoint_cert_auto_renews": {
               "description": "Read by control(s): CTL.OPENSEARCH.CUSTOM.CERT.EXPIRY.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "custom_endpoint_cert_days_until_expiry": {
               "description": "Read by control(s): CTL.OPENSEARCH.CUSTOM.CERT.EXPIRY.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "custom_endpoint_cert_trusted": {
               "description": "Read by control(s): CTL.OPENSEARCH.CUSTOM.CERT.UNTRUSTED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "tls_policy_below_modern_floor": {
               "description": "Read by control(s): CTL.OPENSEARCH.TLS.POLICY.WEAK.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "engine": {
           "additionalProperties": true,
           "properties": {
             "autotune_enabled": {
               "description": "Read by control(s): CTL.OPENSEARCH.AUTOTUNE.OFF.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "behind_latest": {
               "description": "Read by control(s): CTL.OPENSEARCH.ENGINE.OUTDATED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "bluegreen_failed_hours": {
               "description": "Read by control(s): CTL.OPENSEARCH.BLUEGREEN.STUCK.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             },
             "drifts_from_nonprod": {
               "description": "Read by control(s): CTL.OPENSEARCH.ENGINE.DRIFT.ENVS.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "is_eol": {
               "description": "Read by control(s): CTL.OPENSEARCH.ENGINE.EOL.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "is_legacy_es7": {
               "description": "Read by control(s): CTL.OPENSEARCH.ES7.NOT.MIGRATED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "plugins_compatible": {
               "description": "Read by control(s): CTL.OPENSEARCH.PLUGIN.UNSUPPORTED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "software_update_pending_days": {
               "description": "Read by control(s): CTL.OPENSEARCH.SOFTWARE.UPDATE.STALE.001",
-              "type": "number"
+              "type": [
+                "number",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "governance": {
           "additionalProperties": true,
           "properties": {
             "breakglass_jit_only": {
               "description": "Read by control(s): CTL.OPENSEARCH.OPERATOR.ESSTAR.PERMANENT.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "deletion_protection": {
               "description": "Read by control(s): CTL.OPENSEARCH.DELETION.PROTECTION.OFF.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "iam_tag_based_access": {
               "description": "Read by control(s): CTL.OPENSEARCH.IAM.NOTAGAUTH.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "is_production": {
               "description": "Read by control(s): CTL.OPENSEARCH.DELETION.PROTECTION.OFF.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "region_authorized": {
               "description": "Read by control(s): CTL.OPENSEARCH.REGION.UNAUTHORIZED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "snapshot_region_authorized": {
               "description": "Read by control(s): CTL.OPENSEARCH.SNAPSHOT.UNAUTHORIZED.REGION.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "tags_complete": {
               "description": "Read by control(s): CTL.OPENSEARCH.NOTAGS.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "ism": {
           "additionalProperties": true,
           "properties": {
             "cold_storage_enabled": {
               "description": "Read by control(s): CTL.OPENSEARCH.ISM.COLD.UNAVAILABLE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "delete_has_snapshot_guard": {
               "description": "Read by control(s): CTL.OPENSEARCH.ISM.NOSNAPSHOT.DELETE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "has_delete_state": {
               "description": "Read by control(s): CTL.OPENSEARCH.ISM.NOSNAPSHOT.DELETE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "has_failure_path": {
               "description": "Read by control(s): CTL.OPENSEARCH.ISM.NOFAILURE.PATH.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "has_timeseries_indices": {
               "description": "Read by control(s): CTL.OPENSEARCH.ISM.MISSING.001, CTL.OPENSEARCH.ROLLOVER.MISSING.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "rollover_complete": {
               "description": "Read by control(s): CTL.OPENSEARCH.ROLLOVER.MISSING.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "timeseries_indices_with_policy": {
               "description": "Read by control(s): CTL.OPENSEARCH.ISM.MISSING.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "ultrawarm_enabled": {
               "description": "Read by control(s): CTL.OPENSEARCH.ISM.WARM.UNAVAILABLE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "uses_cold_transition": {
               "description": "Read by control(s): CTL.OPENSEARCH.ISM.COLD.UNAVAILABLE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "uses_warm_transition": {
               "description": "Read by control(s): CTL.OPENSEARCH.ISM.WARM.UNAVAILABLE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         },
         "kind": {
           "description": "Read by 109 controls: CTL.OPENSEARCH.ALARM.5XX.001, CTL.OPENSEARCH.ALARM.AUTOSNAPSHOT.FAILURE.001, CTL.OPENSEARCH.ALARM.CLUSTER.RED.001, …",
-          "type": "string"
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "plugin": {
           "additionalProperties": true,
           "properties": {
             "all_signed_trusted": {
               "description": "Read by control(s): CTL.OPENSEARCH.PLUGIN.UNTRUSTED.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "inline_scripts_enabled": {
               "description": "Read by control(s): CTL.OPENSEARCH.PAINLESS.INLINE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "ml_enabled": {
               "description": "Read by control(s): CTL.OPENSEARCH.ML.UNSAFE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "ml_safe": {
               "description": "Read by control(s): CTL.OPENSEARCH.ML.UNSAFE.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             },
             "notify_safe": {
               "description": "Read by control(s): CTL.OPENSEARCH.NOTIFY.HTTP.001",
-              "type": "boolean"
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
-          },
-          "type": "object"
+          }
         }
-      },
-      "type": "object"
+      }
     }
   },
   "title": "aws_opensearch_domain Properties",

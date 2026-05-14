@@ -1,0 +1,111 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_bedrock_agent",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_bedrock_agent observations. 12 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "ai": {
+      "additionalProperties": true,
+      "properties": {
+        "agent": {
+          "additionalProperties": true,
+          "properties": {
+            "action_group_count": {
+              "description": "Read by control(s): CTL.BEDROCK.AGENT.ACTIONGROUPS.SPRAWL.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "guardrail_associated": {
+              "description": "Read by control(s): CTL.BEDROCK.AGENT.GUARDRAIL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_action_group_lambda": {
+              "description": "Read by control(s): CTL.BEDROCK.AGENT.GHOST.LAMBDA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_knowledge_base": {
+              "description": "Read by control(s): CTL.BEDROCK.GHOST.KNOWLEDGEBASE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "idle_session_ttl_excessive": {
+              "description": "Read by control(s): CTL.BEDROCK.AGENT.SESSION.TTL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "invocation_logging_enabled": {
+              "description": "Read by control(s): CTL.BEDROCK.AGENT.LOGGING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_idle": {
+              "description": "Read by control(s): CTL.BEDROCK.AGENT.STALE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "lambda_invoke_scope_broad": {
+              "description": "Read by control(s): CTL.BEDROCK.AGENT.OVERPERM.LAMBDA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "managed_by_iac": {
+              "description": "Read by control(s): CTL.BEDROCK.AGENT.SHADOW.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "model_invoke_scope_broad": {
+              "description": "Read by control(s): CTL.BEDROCK.AGENT.OVERPERM.MODEL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "public_invocation_endpoint": {
+              "description": "Read by control(s): CTL.BEDROCK.AGENT.PUBLIC.INVOCATION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "s3_access_scope_broad": {
+              "description": "Read by control(s): CTL.BEDROCK.AGENT.OVERPERM.S3.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 12 controls: CTL.BEDROCK.AGENT.ACTIONGROUPS.SPRAWL.001, CTL.BEDROCK.AGENT.GHOST.LAMBDA.001, CTL.BEDROCK.AGENT.GUARDRAIL.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_bedrock_agent Properties",
+  "type": "object"
+}

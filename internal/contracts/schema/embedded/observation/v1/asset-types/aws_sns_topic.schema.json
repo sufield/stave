@@ -1,0 +1,251 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_sns_topic",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_sns_topic observations. 24 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "messaging": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by 24 controls: CTL.SNS.ALARM.DELETETOPIC.001, CTL.SNS.ALARM.DELIVERYFAILURE.001, CTL.SNS.ALARM.PUBLISHED.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sns": {
+          "additionalProperties": true,
+          "properties": {
+            "alarm_delete_topic": {
+              "description": "Read by control(s): CTL.SNS.ALARM.DELETETOPIC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_delivery_failure": {
+              "description": "Read by control(s): CTL.SNS.ALARM.DELIVERYFAILURE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_published": {
+              "description": "Read by control(s): CTL.SNS.ALARM.PUBLISHED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_sms_spend": {
+              "description": "Read by control(s): CTL.SNS.ALARM.SMSSPEND.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "all_unconfirmed": {
+              "description": "Read by control(s): CTL.SNS.LIFECYCLE.UNCONFIRMED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cloudtrail_data_events": {
+              "description": "Read by control(s): CTL.SNS.AUDIT.DATAEVENTS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "delete_broadly_granted": {
+              "description": "Read by control(s): CTL.SNS.POLICY.DELETETOPIC.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "delivery_log_retention_set": {
+              "description": "Read by control(s): CTL.SNS.DELIVERY.LOG.RETENTION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "delivery_status_complete": {
+              "description": "Read by control(s): CTL.SNS.DELIVERY.STATUS.PARTIAL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "encrypted": {
+              "description": "Read by control(s): CTL.SNS.ENCRYPT.CMK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_any_delivery_logging": {
+              "description": "Read by control(s): CTL.SNS.DELIVERY.LOG.RETENTION.001, CTL.SNS.DELIVERY.STATUS.DISABLED.001, CTL.SNS.DELIVERY.STATUS.PARTIAL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_cross_account_subscription": {
+              "description": "Read by control(s): CTL.SNS.CROSSACCOUNT.SUBSCRIPTION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_source_arn": {
+              "description": "Read by control(s): CTL.SNS.GHOST.POLICY.SOURCEARN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_orphan_alarm_ref": {
+              "description": "Read by control(s): CTL.SNS.LIFECYCLE.ORPHAN.ALARM.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_sms_subscriptions": {
+              "description": "Read by control(s): CTL.SNS.ALARM.SMSSPEND.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_subscriptions": {
+              "description": "Read by control(s): CTL.SNS.LIFECYCLE.NOSUBSCRIBERS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_dormant": {
+              "description": "Read by control(s): CTL.SNS.LIFECYCLE.DORMANT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_allows_cloudwatch": {
+              "description": "Read by control(s): CTL.SNS.POLICY.CLOUDWATCH.NOSOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_allows_events": {
+              "description": "Read by control(s): CTL.SNS.POLICY.CLOUDWATCH.NOSOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_allows_lambda": {
+              "description": "Read by control(s): CTL.SNS.POLICY.LAMBDA.NOSOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_allows_s3": {
+              "description": "Read by control(s): CTL.SNS.POLICY.S3.NOSOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_cloudwatch_has_source": {
+              "description": "Read by control(s): CTL.SNS.POLICY.CLOUDWATCH.NOSOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_cross_account": {
+              "description": "Read by control(s): CTL.SNS.POLICY.CROSSACCOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_enforces_ssl": {
+              "description": "Read by control(s): CTL.SNS.ENCRYPT.TRANSPORT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_events_has_source": {
+              "description": "Read by control(s): CTL.SNS.POLICY.CLOUDWATCH.NOSOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_excessive": {
+              "description": "Read by control(s): CTL.SNS.POLICY.SPRAWL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_has_org_condition": {
+              "description": "Read by control(s): CTL.SNS.POLICY.CROSSACCOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_lambda_has_source": {
+              "description": "Read by control(s): CTL.SNS.POLICY.LAMBDA.NOSOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_s3_has_source": {
+              "description": "Read by control(s): CTL.SNS.POLICY.S3.NOSOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "setattr_broadly_granted": {
+              "description": "Read by control(s): CTL.SNS.POLICY.SETTOPICATTRS.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "subscribe_broadly_granted": {
+              "description": "Read by control(s): CTL.SNS.POLICY.SUBSCRIBE.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "uses_cmk": {
+              "description": "Read by control(s): CTL.SNS.ENCRYPT.CMK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_sns_topic Properties",
+  "type": "object"
+}

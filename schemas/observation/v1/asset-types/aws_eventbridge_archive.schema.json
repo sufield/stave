@@ -1,0 +1,69 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eventbridge_archive",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eventbridge_archive observations. 6 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "governance": {
+      "additionalProperties": true,
+      "properties": {
+        "events": {
+          "additionalProperties": true,
+          "properties": {
+            "bus_is_default": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.ARCHIVE.DEFAULTBUS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cross_region_replicated": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.ARCHIVE.CROSSREGION.UNENCRYPTED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cross_region_uses_cmk": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.ARCHIVE.CROSSREGION.UNENCRYPTED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_event_pattern": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.ARCHIVE.NOFILTER.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "retention_days": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.ARCHIVE.RETENTION.LONG.001, CTL.EVENTBRIDGE.ARCHIVE.RETENTION.SHORT.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "uses_cmk": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.ARCHIVE.NOCMK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 6 controls: CTL.EVENTBRIDGE.ARCHIVE.CROSSREGION.UNENCRYPTED.001, CTL.EVENTBRIDGE.ARCHIVE.DEFAULTBUS.001, CTL.EVENTBRIDGE.ARCHIVE.NOCMK.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_eventbridge_archive Properties",
+  "type": "object"
+}

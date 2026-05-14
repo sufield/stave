@@ -22,6 +22,8 @@ scope_tags:
   - vpc
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_vpn_connection
 params:
   attack_stage: persistence
 observation_fields:

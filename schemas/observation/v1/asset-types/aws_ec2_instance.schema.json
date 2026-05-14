@@ -1,0 +1,423 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_ec2_instance",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_ec2_instance observations. 37 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "compute": {
+      "additionalProperties": true,
+      "properties": {
+        "ami": {
+          "additionalProperties": true,
+          "properties": {
+            "is_deprecated_or_aged": {
+              "description": "Read by control(s): CTL.EC2.AMI.CURRENCY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_trusted": {
+              "description": "Read by control(s): CTL.EC2.AMI.UNTRUSTED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "containers": {
+          "additionalProperties": true,
+          "properties": {
+            "has_bridge_network": {
+              "description": "Read by control(s): CTL.EC2.IMDSV2.002",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_host_network": {
+              "description": "Read by control(s): CTL.EC2.IMDSV2.002",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "present": {
+              "description": "Read by control(s): CTL.EC2.IMDSV2.002",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "disable_api_termination": {
+          "description": "Read by control(s): CTL.EC2.TERMINATION.PROTECT.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "ec2": {
+          "additionalProperties": true,
+          "properties": {
+            "imds_hop_limit_excessive": {
+              "description": "Read by control(s): CTL.EC2.IMDS.HOPLIMIT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "imds_unnecessary": {
+              "description": "Read by control(s): CTL.EC2.IMDS.UNNECESSARY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "inspector_account_enabled": {
+              "description": "Read by control(s): CTL.EC2.INSPECTOR.COVERAGE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "inspector_covered": {
+              "description": "Read by control(s): CTL.EC2.INSPECTOR.COVERAGE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "inspector_findings_stale_count": {
+              "description": "Read by control(s): CTL.EC2.INSPECTOR.FINDINGS.STALE.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "patch_scan_stale": {
+              "description": "Read by control(s): CTL.EC2.PATCH.SCAN.STALE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "patch_window_inactive": {
+              "description": "Read by control(s): CTL.EC2.PATCH.WINDOW.INACTIVE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ssm_agent_stale": {
+              "description": "Read by control(s): CTL.EC2.SSM.AGENT.STALE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ssm_managed": {
+              "description": "Read by control(s): CTL.EC2.SSM.AGENT.STALE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "enclave_options": {
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "description": "Read by control(s): CTL.EC2.NITRO.ENCLAVE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "encryption": {
+          "additionalProperties": true,
+          "properties": {
+            "ebs_encrypted": {
+              "description": "Read by control(s): CTL.EC2.EBS.ENCRYPT.001, CTL.EC2.INCOMPLETE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "iam_instance_profile": {
+          "additionalProperties": true,
+          "properties": {
+            "attached": {
+              "description": "Read by control(s): CTL.EC2.INSTANCE.PROFILE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "iam_profile_attached": {
+          "description": "Read by control(s): CTL.EC2.IAMROLE.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "instance": {
+          "additionalProperties": true,
+          "properties": {
+            "has_key_pair": {
+              "description": "Read by control(s): CTL.EC2.KEYPAIR.NOKEY.SSHOPEN.001, CTL.EC2.KEYPAIR.SSM.PREFERRED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "instance_type_eol": {
+              "description": "Read by control(s): CTL.EC2.INSTANCE.EOL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_network_appliance": {
+              "description": "Read by control(s): CTL.EC2.NETWORK.SRCDSTCHECK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_nitro": {
+              "description": "Read by control(s): CTL.EC2.NITRO.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "nitro_tpm_enabled": {
+              "description": "Read by control(s): CTL.EC2.NITROTPM.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "sensitive_workload": {
+              "description": "Read by control(s): CTL.EC2.TENANCY.SENSITIVE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "sg_allows_ssh": {
+              "description": "Read by control(s): CTL.EC2.KEYPAIR.NOKEY.SSHOPEN.001, CTL.EC2.KEYPAIR.SSM.PREFERRED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "sg_count_excessive": {
+              "description": "Read by control(s): CTL.EC2.NETWORK.MULTIPLE.SG.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "source_dest_check": {
+              "description": "Read by control(s): CTL.EC2.NETWORK.SRCDSTCHECK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "spans_security_zones": {
+              "description": "Read by control(s): CTL.EC2.NETWORK.DUALHOMED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ssm_managed": {
+              "description": "Read by control(s): CTL.EC2.KEYPAIR.SSM.PREFERRED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "state": {
+              "description": "Read by control(s): CTL.EC2.INSTANCE.STOPPED.AGED.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "stopped_age_exceeds_threshold": {
+              "description": "Read by control(s): CTL.EC2.INSTANCE.STOPPED.AGED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "supports_nitro_tpm": {
+              "description": "Read by control(s): CTL.EC2.NITROTPM.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "supports_uefi": {
+              "description": "Read by control(s): CTL.EC2.SECUREBOOT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "tenancy": {
+              "description": "Read by control(s): CTL.EC2.TENANCY.SENSITIVE.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "uefi_secure_boot_enabled": {
+              "description": "Read by control(s): CTL.EC2.SECUREBOOT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "instance_age": {
+          "additionalProperties": true,
+          "properties": {
+            "exceeds_threshold": {
+              "description": "Read by control(s): CTL.EC2.INSTANCE.AGE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "instance_profile": {
+          "additionalProperties": true,
+          "properties": {
+            "is_overprivileged": {
+              "description": "Read by control(s): CTL.EC2.PROFILE.OVERBROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_shared": {
+              "description": "Read by control(s): CTL.EC2.PROFILE.SHARED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 37 controls: CTL.EC2.AMI.CURRENCY.001, CTL.EC2.AMI.UNTRUSTED.001, CTL.EC2.DEFAULT.VPC.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "monitoring": {
+          "additionalProperties": true,
+          "properties": {
+            "detailed_enabled": {
+              "description": "Read by control(s): CTL.EC2.DETAILED.MONITORING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "network": {
+          "additionalProperties": true,
+          "properties": {
+            "has_load_balancer": {
+              "description": "Read by control(s): CTL.EC2.NETWORK.DIRECT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_public_ip": {
+              "description": "Read by control(s): CTL.EC2.NETWORK.DIRECT.001, CTL.EC2.PUBLIC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "imds_hop_limit": {
+              "description": "Read by control(s): CTL.EC2.IMDSV2.002",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "imdsv2_required": {
+              "description": "Read by control(s): CTL.EC2.IMDSV2.001, CTL.EC2.IMDSV2.002",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_default_vpc": {
+              "description": "Read by control(s): CTL.EC2.DEFAULT.VPC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "ssm_managed": {
+          "description": "Read by control(s): CTL.EC2.SSM.MANAGED.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "tags": {
+          "additionalProperties": true,
+          "properties": {
+            "requires-enclave": {
+              "description": "Read by control(s): CTL.EC2.NITRO.ENCLAVE.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "user_data": {
+          "additionalProperties": true,
+          "properties": {
+            "has_secrets": {
+              "description": "Read by control(s): CTL.EC2.USERDATA.SECRETS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_ec2_instance Properties",
+  "type": "object"
+}

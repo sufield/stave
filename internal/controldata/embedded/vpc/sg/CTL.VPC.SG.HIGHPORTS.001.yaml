@@ -20,6 +20,8 @@ scope_tags:
   - vpc
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_security_group
 defect: >
   Security group allows internet access on high-risk service ports.
 infection: >

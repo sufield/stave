@@ -1,0 +1,93 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_aoss_collection",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_aoss_collection observations. 6 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "search_service": {
+      "additionalProperties": true,
+      "properties": {
+        "access": {
+          "additionalProperties": true,
+          "properties": {
+            "data_access_wildcard": {
+              "description": "Read by control(s): CTL.OPENSEARCH.AOSS.ACCESS.WILDCARD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "network_policy_public": {
+              "description": "Read by control(s): CTL.OPENSEARCH.AOSS.NETPOLICY.PUBLIC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "vpc_endpoint_present": {
+              "description": "Read by control(s): CTL.OPENSEARCH.AOSS.VPCE.MISSING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "vpc_required": {
+              "description": "Read by control(s): CTL.OPENSEARCH.AOSS.VPCE.MISSING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "encrypt": {
+          "additionalProperties": true,
+          "properties": {
+            "explicit_policy_attached": {
+              "description": "Read by control(s): CTL.OPENSEARCH.AOSS.ENCRYPT.POLICY.MISSING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "uses_customer_key": {
+              "description": "Read by control(s): CTL.OPENSEARCH.AOSS.ENCRYPT.AWS.OWNED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 6 controls: CTL.OPENSEARCH.AOSS.ACCESS.WILDCARD.001, CTL.OPENSEARCH.AOSS.CAPACITY.MISSING.001, CTL.OPENSEARCH.AOSS.ENCRYPT.AWS.OWNED.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lifecycle": {
+          "additionalProperties": true,
+          "properties": {
+            "capacity_policy_attached": {
+              "description": "Read by control(s): CTL.OPENSEARCH.AOSS.CAPACITY.MISSING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "lifecycle_policy_attached": {
+              "description": "Read by control(s): CTL.OPENSEARCH.AOSS.CAPACITY.MISSING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_aoss_collection Properties",
+  "type": "object"
+}

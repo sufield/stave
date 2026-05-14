@@ -227,16 +227,22 @@ func recordField(r *policy.PredicateRule, ctlID kernel.ControlID, out map[string
 	if cur.Conflict {
 		return
 	}
-	// "any" is the no-information case: prefer the more specific
-	// type when one side is known.
+	// Empty Type is the no-information case: prefer the more
+	// specific type when one side is known. On conflict, drop
+	// the type entirely (empty string) rather than emitting an
+	// invalid JSON Schema type literal — JSON Schema's type set
+	// is closed (string, number, integer, boolean, object,
+	// array, null), so "any" is not a legal value. The absence
+	// of a type field is the correct way to say "no constraint
+	// here."
 	switch {
-	case cur.Type == "" || cur.Type == "any":
+	case cur.Type == "":
 		cur.Type = inferred
-	case inferred == "" || inferred == "any":
+	case inferred == "":
 		// keep existing
 	case cur.Type != inferred:
 		cur.Conflict = true
-		cur.Type = "any"
+		cur.Type = ""
 	}
 }
 
@@ -249,10 +255,16 @@ func inferType(r *policy.PredicateRule) string {
 	switch r.Op {
 	case "missing", "present":
 		return ""
-	case "list_empty", "any_match", "any_identity_match", "any_in_field", "not_in_field", "contains", "not_subset_of_field", "neq_field":
-		// These read containers; the value: side carries the
-		// element-shape, which is too coarse to translate
-		// reliably without a per-operator emitter.
+	case "in", "list_empty", "any_match", "any_identity_match", "any_in_field", "not_in_field", "contains", "not_subset_of_field", "neq_field":
+		// These operators carry containment / list semantics
+		// on the value: side. `in` in particular reads
+		//   field is one of [a, b, c]
+		// which makes the field a SCALAR matched against a
+		// list — emitting array here was the original bug:
+		// the field's own type was being read off the list
+		// of allowed values. Returning "" is the honest
+		// answer: we know the path exists, not its scalar
+		// shape.
 		return ""
 	}
 	switch r.Value.Raw().(type) {
@@ -343,36 +355,54 @@ func insertPath(node map[string]any, segments []string, leaf *pathEntry) {
 			applyLeaf(existing, leaf)
 			return
 		}
-		// Mid-path: must be an object node. If a prior leaf
-		// landed here as a scalar, promote it to an object that
-		// also carries the original scalar type via $comment.
-		if _, isObj := existing["type"]; !isObj {
-			existing["type"] = "object"
-			existing["additionalProperties"] = true
+		// Mid-path: there's at least one deeper segment, so we
+		// need a `properties` map for the next-iteration insert.
+		// Do NOT pin "type": "object" here, however — predicate
+		// paths describe "if this is an object, these are its
+		// keys"; real fixtures may legitimately carry an array,
+		// scalar, or null at the same position when a control
+		// expects nested-object data but the observation predates
+		// or post-dates the predicate shape. JSON Schema's
+		// semantic is exactly this: "properties: {...}" only
+		// constrains when the value is an object, so omitting a
+		// type constraint here keeps the schema honest. The
+		// previous shape pinned object on every intermediate
+		// node and rejected legitimate array-shaped fixtures
+		// (e.g. identity.permission_categories landing as a
+		// flat string array in some IAM observations).
+		if _, hasProps := existing["properties"]; !hasProps {
 			existing["properties"] = map[string]any{}
-		} else if existing["type"] != "object" {
-			existing["$comment"] = fmt.Sprintf(
-				"path used as both a %s scalar and an object container by different controls; treating as object here",
-				existing["type"],
-			)
-			existing["type"] = "object"
 			existing["additionalProperties"] = true
-			if _, hasProps := existing["properties"]; !hasProps {
-				existing["properties"] = map[string]any{}
-			}
 		}
 		cur = existing
 	}
 }
 
 func applyLeaf(node map[string]any, leaf *pathEntry) {
-	// Don't overwrite a node that's already been promoted to an
-	// object container during a deeper-path insertion.
-	if existing, ok := node["type"]; ok && existing == "object" {
+	// Don't overwrite a node that's already grown a deeper
+	// `properties` map during a longer-path insertion. The
+	// presence of `properties` means the path is also used as
+	// an object container by some other control; emitting a
+	// leaf-scalar type at the same node would contradict the
+	// nested structure. Leave the type unconstrained — the
+	// caller's `properties` map is the only constraint that
+	// applies when the value is an object; when it's a scalar
+	// or array, nothing inside `properties` will trigger.
+	if _, hasProps := node["properties"]; hasProps {
 		return
 	}
 	if leaf.Type != "" {
-		node["type"] = leaf.Type
+		// Permit null alongside any inferred scalar/container
+		// type. Collectors routinely emit null for unknown or
+		// not-applicable fields, and a predicate that compares
+		// the field to a concrete value (op: eq, value: true)
+		// would simply not match a null observation — so
+		// rejecting null at validate time is stricter than the
+		// runtime semantics. Emitting the type as a
+		// two-element array keeps the schema honest: "this
+		// path's known shape is X, or null when the collector
+		// doesn't have a value for it."
+		node["type"] = []any{leaf.Type, "null"}
 	}
 	descSources := dedupAndSort(leaf.Sources)
 	if len(descSources) > 3 {

@@ -1,0 +1,216 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eventbridge_bus",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eventbridge_bus observations. 18 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "governance": {
+      "additionalProperties": true,
+      "properties": {
+        "events": {
+          "additionalProperties": true,
+          "properties": {
+            "alarm_delete_configured": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.ALARM.DELETE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_policy_change_configured": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.ALARM.POLICYCHANGE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_remove_targets_configured": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.ALARM.REMOVETARGETS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cross_account_target_iam_aligned": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.POLICY.IDENTITY.MISMATCH.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "data_events_logged": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.AUDIT.DATAEVENTS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "days_since_last_putevents": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.LIFECYCLE.BUS.DORMANT.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "federation_source_validated": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.FEDERATION.NOSOURCEACCOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_classification_tag": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.COMPLIANCE.NOTAGS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_cross_account_grant": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.POLICY.IDENTITY.MISMATCH.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_owner_tag": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.COMPLIANCE.NOTAGS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_default": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.LIFECYCLE.BUS.DORMANT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_federation_hub": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.FEDERATION.NOSOURCEACCOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_allows_cloudwatch": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.POLICY.CLOUDWATCH.NOSOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_allows_s3": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.POLICY.S3.NOSOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_allows_ses": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.POLICY.SES.NOSOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_allows_ssm": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.POLICY.SSM.NOSOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_cloudwatch_has_source": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.POLICY.CLOUDWATCH.NOSOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_delete_broad": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.POLICY.DELETEEVENTBUS.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_partner_broad": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.POLICY.PARTNER.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_putrule_broad": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.POLICY.PUTRULE.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_puttargets_broad": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.POLICY.PUTTARGETS.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_removetargets_broad": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.POLICY.REMOVETARGETS.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_s3_has_source": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.POLICY.S3.NOSOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_ses_has_source": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.POLICY.SES.NOSOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_ssm_has_source": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.POLICY.SSM.NOSOURCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_statement_count": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.POLICY.SPRAWL.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "rule_count": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.LIFECYCLE.BUS.DORMANT.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 18 controls: CTL.EVENTBRIDGE.ALARM.DELETE.001, CTL.EVENTBRIDGE.ALARM.POLICYCHANGE.001, CTL.EVENTBRIDGE.ALARM.REMOVETARGETS.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_eventbridge_bus Properties",
+  "type": "object"
+}

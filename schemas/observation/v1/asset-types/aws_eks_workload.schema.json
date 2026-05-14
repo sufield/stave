@@ -1,0 +1,83 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_workload",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_workload observations. 7 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "workload": {
+          "additionalProperties": true,
+          "properties": {
+            "has_ghost_image_repo": {
+              "description": "Read by control(s): CTL.EKS.WORKLOAD.GHOST.IMAGE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "image_age_days": {
+              "description": "Read by control(s): CTL.EKS.IMAGE.BASE.STALE.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "image_has_digest": {
+              "description": "Read by control(s): CTL.EKS.IMAGE.NODIGEST.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "image_registry_allowlisted": {
+              "description": "Read by control(s): CTL.EKS.IMAGE.PUBLIC.REGISTRY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "image_replicated_to_dr": {
+              "description": "Read by control(s): CTL.EKS.ECR.REPLICATION.GAP.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "in_dr_strategy": {
+              "description": "Read by control(s): CTL.EKS.ECR.REPLICATION.GAP.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_production": {
+              "description": "Read by control(s): CTL.EKS.IMAGE.LATEST.TAG.001, CTL.EKS.IMAGE.NODIGEST.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "pulls_from_ecr_public": {
+              "description": "Read by control(s): CTL.EKS.ECR.PULL.PUBLIC.GALLERY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "uses_latest_tag": {
+              "description": "Read by control(s): CTL.EKS.IMAGE.LATEST.TAG.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_workload Properties",
+  "type": "object"
+}

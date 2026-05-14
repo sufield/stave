@@ -31,6 +31,8 @@ scope_tags:
   - ec2
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_instance
 params:
   attack_stage: discovery
 observation_fields:

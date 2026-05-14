@@ -19,6 +19,8 @@ domain: governance
 severity: low
 type: marker
 classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
 compliance:
   nist_800_53_r5: "AC-2(7)"
   soc2: "CC6.1"

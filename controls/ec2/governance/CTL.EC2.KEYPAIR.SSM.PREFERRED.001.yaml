@@ -26,6 +26,8 @@ compliance:
 scope_tags: [aws, ec2]
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_instance
 params:
   attack_stage: initial_access
 remediation:

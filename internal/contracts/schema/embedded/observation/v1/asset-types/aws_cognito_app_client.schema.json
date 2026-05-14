@@ -1,0 +1,163 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_cognito_app_client",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_cognito_app_client observations. 17 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "identity": {
+      "additionalProperties": true,
+      "properties": {
+        "auth": {
+          "additionalProperties": true,
+          "properties": {
+            "token_revocation_enabled": {
+              "description": "Read by control(s): CTL.COGNITO.CLIENT.TOKEN.REVOCATION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "cognito": {
+          "additionalProperties": true,
+          "properties": {
+            "access_token_too_long": {
+              "description": "Read by control(s): CTL.COGNITO.CLIENT.ACCESSTTL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "allows_all_flows": {
+              "description": "Read by control(s): CTL.COGNITO.CLIENT.ALLFLOWS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "allows_all_scopes": {
+              "description": "Read by control(s): CTL.COGNITO.CLIENT.ALLSCOPES.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "allows_implicit_flow": {
+              "description": "Read by control(s): CTL.COGNITO.CLIENT.IMPLICITFLOW.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "callback_has_http": {
+              "description": "Read by control(s): CTL.COGNITO.CLIENT.HTTPCALLBACK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "callback_has_localhost": {
+              "description": "Read by control(s): CTL.COGNITO.CLIENT.LOCALHOST.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "callback_has_wildcard": {
+              "description": "Read by control(s): CTL.COGNITO.CLIENT.WILDCARDCB.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "client_attribute_rw_all": {
+              "description": "Read by control(s): CTL.COGNITO.CLIENT.ATTRRW.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_client_secret": {
+              "description": "Read by control(s): CTL.COGNITO.CLIENT.NOSECRET.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_logout_url": {
+              "description": "Read by control(s): CTL.COGNITO.CLIENT.NOLOGOUT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "id_token_too_long": {
+              "description": "Read by control(s): CTL.COGNITO.CLIENT.IDTTL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_app_client_dormant": {
+              "description": "Read by control(s): CTL.COGNITO.ORPHAN.CLIENT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_public_client": {
+              "description": "Read by control(s): CTL.COGNITO.CLIENT.NOSECRET.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "mixes_user_and_m2m": {
+              "description": "Read by control(s): CTL.COGNITO.CLIENT.CLIENTCREDS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "refresh_token_rotation_enabled": {
+              "description": "Read by control(s): CTL.COGNITO.TOKEN.REFRESHNOROT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "refresh_token_too_long": {
+              "description": "Read by control(s): CTL.COGNITO.CLIENT.REFRESHTTL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 17 controls: CTL.COGNITO.CLIENT.ACCESSTTL.001, CTL.COGNITO.CLIENT.ALLFLOWS.001, CTL.COGNITO.CLIENT.ALLSCOPES.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "security": {
+          "additionalProperties": true,
+          "properties": {
+            "prevent_user_existence_errors": {
+              "description": "Read by control(s): CTL.COGNITO.CLIENT.ENUMERATION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_cognito_app_client Properties",
+  "type": "object"
+}

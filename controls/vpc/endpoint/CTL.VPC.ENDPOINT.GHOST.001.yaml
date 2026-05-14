@@ -16,6 +16,8 @@ compliance:
 scope_tags: [aws, vpc]
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_endpoint
 params:
   attack_stage: persistence
 remediation:

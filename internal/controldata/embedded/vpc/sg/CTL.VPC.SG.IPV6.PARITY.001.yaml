@@ -19,6 +19,8 @@ scope_tags:
   - vpc
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_security_group
 defect: >
   Security group restricts IPv4 access but allows ::/0 (all IPv6) on
   the same ports.

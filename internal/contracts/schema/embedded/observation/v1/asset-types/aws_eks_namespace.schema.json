@@ -1,0 +1,132 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_namespace",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_namespace observations. 12 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "namespace": {
+          "additionalProperties": true,
+          "properties": {
+            "days_since_last_api_activity": {
+              "description": "Read by control(s): CTL.EKS.NS.DORMANT.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "egress_policy_count": {
+              "description": "Read by control(s): CTL.EKS.NETPOL.INGRESSONLY.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "has_classification_label": {
+              "description": "Read by control(s): CTL.EKS.NS.NOCLASSIFICATION.TAG.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_cost_allocation_label": {
+              "description": "Read by control(s): CTL.EKS.NS.NOCOSTALLOC.TAG.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_default_deny_egress": {
+              "description": "Read by control(s): CTL.EKS.NETPOL.NODEFAULTDENY.EGRESS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_default_deny_ingress": {
+              "description": "Read by control(s): CTL.EKS.NETPOL.NODEFAULTDENY.INGRESS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_psa_enforce_label": {
+              "description": "Read by control(s): CTL.EKS.PSA.MISSING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ingress_policy_count": {
+              "description": "Read by control(s): CTL.EKS.NETPOL.INGRESSONLY.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "is_production": {
+              "description": "Read by control(s): CTL.EKS.PSA.AUDITONLY.001, CTL.EKS.PSA.PRIVILEGED.PROD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_system_namespace": {
+              "description": "Read by 9 controls: CTL.EKS.NETPOL.NODEFAULTDENY.EGRESS.001, CTL.EKS.NETPOL.NODEFAULTDENY.INGRESS.001, CTL.EKS.NS.DORMANT.001, …",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "limit_range_count": {
+              "description": "Read by control(s): CTL.EKS.NS.NOLIMITRANGE.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "psa_audit_only": {
+              "description": "Read by control(s): CTL.EKS.PSA.AUDITONLY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "psa_enforce_level": {
+              "description": "Read by control(s): CTL.EKS.PSA.PRIVILEGED.PROD.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "resource_quota_count": {
+              "description": "Read by control(s): CTL.EKS.NS.NORESOURCEQUOTA.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "tenant_count": {
+              "description": "Read by control(s): CTL.EKS.NS.MULTITENANT.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "workload_count": {
+              "description": "Read by control(s): CTL.EKS.NS.DORMANT.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_namespace Properties",
+  "type": "object"
+}

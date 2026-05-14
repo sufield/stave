@@ -13,6 +13,8 @@ scope_tags:
   - kms
 type: unsafe_state
 classification: absence_check
+applicable_asset_types:
+  - aws_kms_key
 params: {}
 remediation:
   description: >

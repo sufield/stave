@@ -1,0 +1,367 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_kms_key",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_kms_key observations. 41 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "cryptography": {
+      "additionalProperties": true,
+      "properties": {
+        "alarms": {
+          "additionalProperties": true,
+          "properties": {
+            "has_create_grant_alarm": {
+              "description": "Read by control(s): CTL.KMS.ALARM.CREATEGRANT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_cross_account_alarm": {
+              "description": "Read by control(s): CTL.KMS.ALARM.CROSSACCOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_decrypt_failure_alarm": {
+              "description": "Read by control(s): CTL.KMS.ALARM.DECRYPT.FAILURE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_decrypt_volume_alarm": {
+              "description": "Read by control(s): CTL.KMS.ALARM.DECRYPT.VOLUME.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_disable_key_alarm": {
+              "description": "Read by control(s): CTL.KMS.ALARM.DISABLE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_put_key_policy_alarm": {
+              "description": "Read by control(s): CTL.KMS.ALARM.POLICYCHANGE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_rotation_alarm": {
+              "description": "Read by control(s): CTL.KMS.ALARM.ROTATION.FAILURE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_schedule_deletion_alarm": {
+              "description": "Read by control(s): CTL.KMS.ALARM.DELETION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "cross_account": {
+          "additionalProperties": true,
+          "properties": {
+            "excessive": {
+              "description": "Read by control(s): CTL.KMS.CROSSACCOUNT.BLASTRADIUS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_decommissioned_account": {
+              "description": "Read by control(s): CTL.KMS.CROSSACCOUNT.DECOMMISSIONED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "dependent_resource_count": {
+          "description": "Read by control(s): CTL.KMS.STATE.DISABLED.001, CTL.KMS.STATE.PENDINGDELETION.001",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "grant_operations_excessive": {
+          "description": "Read by control(s): CTL.KMS.GRANT.BROAD.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "has_excessive_grants": {
+          "description": "Read by control(s): CTL.KMS.GRANT.EXCESSIVE.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "imported_material_expired": {
+          "description": "Read by control(s): CTL.KMS.MATERIAL.EXPIRED.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "imported_material_no_expiry": {
+          "description": "Read by control(s): CTL.KMS.IMPORTED.EXPIRY.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "is_aws_managed": {
+          "description": "Read by control(s): CTL.KMS.POLICY.DECRYPT.BROAD.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "is_disabled": {
+          "description": "Read by control(s): CTL.KMS.STATE.DISABLED.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "is_dormant": {
+          "description": "Read by control(s): CTL.KMS.LIFECYCLE.DORMANT.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "is_pending_import": {
+          "description": "Read by control(s): CTL.KMS.STATE.PENDINGIMPORT.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "key_concentration": {
+          "additionalProperties": true,
+          "properties": {
+            "has_deletion_protection": {
+              "description": "Read by control(s): CTL.KMS.CONCENTRATION.002",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "resource_count": {
+              "description": "Read by control(s): CTL.KMS.CONCENTRATION.001, CTL.KMS.CONCENTRATION.002",
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        },
+        "key_rotation_enabled": {
+          "description": "Read by control(s): CTL.KMS.ROTATION.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "key_usage": {
+          "description": "Read by control(s): CTL.KMS.POLICY.NOVIASERVICE.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "Read by 41 controls: CTL.KMS.ALARM.CREATEGRANT.001, CTL.KMS.ALARM.CROSSACCOUNT.001, CTL.KMS.ALARM.DECRYPT.FAILURE.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lifecycle": {
+          "additionalProperties": true,
+          "properties": {
+            "cross_env": {
+              "description": "Read by control(s): CTL.KMS.LIFECYCLE.CROSSENV.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "deletion_wait_minimum": {
+              "description": "Read by control(s): CTL.KMS.DELETION.MINWAIT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_alias": {
+              "description": "Read by control(s): CTL.KMS.LIFECYCLE.NOALIAS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "pending_deletion": {
+              "description": "Read by control(s): CTL.KMS.DELETION.MINWAIT.001, CTL.KMS.PENDING.DELETION.001, CTL.KMS.STATE.PENDINGDELETION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rotation_enabled": {
+              "description": "Read by control(s): CTL.KMS.LIFECYCLE.ROTATION.PERIOD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rotation_period_compliant": {
+              "description": "Read by control(s): CTL.KMS.LIFECYCLE.ROTATION.PERIOD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "multi_region": {
+          "additionalProperties": true,
+          "properties": {
+            "has_noncompliant_replica": {
+              "description": "Read by control(s): CTL.KMS.MULTIREGION.NONCOMPLIANT.REGION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_multi_region": {
+              "description": "Read by control(s): CTL.KMS.MULTIREGION.NONCOMPLIANT.REGION.001, CTL.KMS.MULTIREGION.NOREPLICA.001, CTL.KMS.MULTIREGION.POLICY.MISMATCH.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "replica_count": {
+              "description": "Read by control(s): CTL.KMS.MULTIREGION.NOREPLICA.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "replica_policies_consistent": {
+              "description": "Read by control(s): CTL.KMS.MULTIREGION.POLICY.MISMATCH.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "description": "Read by control(s): CTL.KMS.FIPS.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "policy": {
+          "additionalProperties": true,
+          "properties": {
+            "admin_actions_broadly_granted": {
+              "description": "Read by control(s): CTL.KMS.POLICY.ADMIN.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "allows_grant_with_grant": {
+              "description": "Read by control(s): CTL.KMS.POLICY.GRANTWITHGRANT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "decrypt_broadly_granted": {
+              "description": "Read by control(s): CTL.KMS.POLICY.DECRYPT.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_broad_cross_account": {
+              "description": "Read by control(s): CTL.KMS.POLICY.CROSSACCOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_cross_account_principal": {
+              "description": "Read by control(s): CTL.KMS.ALARM.CROSSACCOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_principal": {
+              "description": "Read by control(s): CTL.KMS.POLICY.GHOSTREF.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_usage_conditions": {
+              "description": "Read by control(s): CTL.KMS.POLICY.CONDITION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_via_service": {
+              "description": "Read by control(s): CTL.KMS.POLICY.NOVIASERVICE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_wildcard_principal": {
+              "description": "Read by control(s): CTL.KMS.INCOMPLETE.001, CTL.KMS.POLICY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "requires_encryption_context": {
+              "description": "Read by control(s): CTL.KMS.POLICY.NOCONTEXT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "principal_has_admin_and_usage": {
+          "description": "Read by control(s): CTL.KMS.SEPARATION.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_kms_key Properties",
+  "type": "object"
+}

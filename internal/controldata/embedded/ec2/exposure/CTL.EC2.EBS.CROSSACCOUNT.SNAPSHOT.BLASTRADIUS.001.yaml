@@ -23,6 +23,8 @@ scope_tags:
   - ebs
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_ebs_snapshot
 params:
   attack_stage: persistence
   blast_radius:

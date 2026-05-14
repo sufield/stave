@@ -26,9 +26,9 @@ import (
 // catalog can evaluate against the supplied observations.
 type Report struct {
 	// Snapshot summary.
-	ObservationCount int                          `json:"observation_count"`
-	ObservedTypes    map[kernel.AssetType]int     `json:"observed_asset_types"`
-	CatalogTypes     map[kernel.AssetType]bool    `json:"catalog_asset_types"`
+	ObservationCount int                       `json:"observation_count"`
+	ObservedTypes    map[kernel.AssetType]int  `json:"observed_asset_types"`
+	CatalogTypes     map[kernel.AssetType]bool `json:"catalog_asset_types"`
 
 	// Per-control verdict counts.
 	Controls ControlForecast `json:"controls"`

@@ -1,0 +1,97 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_cognito_account",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_cognito_account observations. 10 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "identity": {
+      "additionalProperties": true,
+      "properties": {
+        "cognito": {
+          "additionalProperties": true,
+          "properties": {
+            "alarm_admin_create_user": {
+              "description": "Read by control(s): CTL.COGNITO.ALARM.ADMINCREATE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_admin_set_user_password": {
+              "description": "Read by control(s): CTL.COGNITO.ALARM.ADMINPWD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_create_identity_pool_unauth": {
+              "description": "Read by control(s): CTL.COGNITO.ALARM.CREATEIDPOOL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_delete_user_pool": {
+              "description": "Read by control(s): CTL.COGNITO.ALARM.DELETEPOOL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_failed_auth_spike": {
+              "description": "Read by control(s): CTL.COGNITO.ALARM.FAILEDAUTH.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_mfa_failure_spike": {
+              "description": "Read by control(s): CTL.COGNITO.ALARM.MFAFAIL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_registration_spike": {
+              "description": "Read by control(s): CTL.COGNITO.ALARM.REGSPIKE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_set_risk_config": {
+              "description": "Read by control(s): CTL.COGNITO.ALARM.RISKCONFIG.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_update_user_pool": {
+              "description": "Read by control(s): CTL.COGNITO.ALARM.UPDATEPOOL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "metrics_logins_tracked": {
+              "description": "Read by control(s): CTL.COGNITO.METRICS.LOGINS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 10 controls: CTL.COGNITO.ALARM.ADMINCREATE.001, CTL.COGNITO.ALARM.ADMINPWD.001, CTL.COGNITO.ALARM.CREATEIDPOOL.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_cognito_account Properties",
+  "type": "object"
+}

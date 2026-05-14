@@ -1,0 +1,48 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eventbridge_rule_target",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eventbridge_rule_target observations. 9 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "governance": {
+      "additionalProperties": true,
+      "properties": {
+        "events": {
+          "additionalProperties": true,
+          "properties": {
+            "has_ghost_invocation_role": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.GHOST.TARGET.IAMROLE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_target": {
+              "description": "Read by 8 controls: CTL.EVENTBRIDGE.FEDERATION.GHOST.SPOKE.001, CTL.EVENTBRIDGE.GHOST.TARGET.BATCH.001, CTL.EVENTBRIDGE.GHOST.TARGET.CODEPIPELINE.001, …",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "target_type": {
+              "description": "Read by 8 controls: CTL.EVENTBRIDGE.FEDERATION.GHOST.SPOKE.001, CTL.EVENTBRIDGE.GHOST.TARGET.BATCH.001, CTL.EVENTBRIDGE.GHOST.TARGET.CODEPIPELINE.001, …",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 9 controls: CTL.EVENTBRIDGE.FEDERATION.GHOST.SPOKE.001, CTL.EVENTBRIDGE.GHOST.TARGET.BATCH.001, CTL.EVENTBRIDGE.GHOST.TARGET.CODEPIPELINE.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_eventbridge_rule_target Properties",
+  "type": "object"
+}

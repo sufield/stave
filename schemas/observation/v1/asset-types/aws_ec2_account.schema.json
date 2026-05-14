@@ -1,0 +1,125 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_ec2_account",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_ec2_account observations. 11 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "compute": {
+      "additionalProperties": true,
+      "properties": {
+        "ebs": {
+          "additionalProperties": true,
+          "properties": {
+            "alarm_burst_balance": {
+              "description": "Read by control(s): CTL.EC2.EBS.ALARM.BURSTBALANCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_create_snapshot": {
+              "description": "Read by control(s): CTL.EC2.EBS.ALARM.CREATESNAPSHOT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_delete_snapshot": {
+              "description": "Read by control(s): CTL.EC2.EBS.ALARM.DELETESNAPSHOT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_snapshot_public": {
+              "description": "Read by control(s): CTL.EC2.EBS.ALARM.SNAPSHOTPUBLIC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_snapshot_share": {
+              "description": "Read by control(s): CTL.EC2.EBS.ALARM.SNAPSHOTSHARE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_volume_status": {
+              "description": "Read by control(s): CTL.EC2.EBS.ALARM.VOLUMESTATUS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "default_encrypt_enabled": {
+              "description": "Read by control(s): CTL.EC2.EBS.DEFAULT.ENCRYPT.CMK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "default_uses_cmk": {
+              "description": "Read by control(s): CTL.EC2.EBS.DEFAULT.ENCRYPT.CMK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "delete_snapshot_broadly_granted": {
+              "description": "Read by control(s): CTL.EC2.EBS.ACCESS.DELETESNAPSHOT.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_dlm_policy": {
+              "description": "Read by control(s): CTL.EC2.EBS.DLM.NOPOLICY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_gp2_volumes": {
+              "description": "Read by control(s): CTL.EC2.EBS.ALARM.BURSTBALANCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_scp_deny_public_snapshot": {
+              "description": "Read by control(s): CTL.EC2.EBS.CROSSACCOUNT.NOSCPRESTRICTION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_org_account": {
+              "description": "Read by control(s): CTL.EC2.EBS.CROSSACCOUNT.NOSCPRESTRICTION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "modify_snapshot_broadly_granted": {
+              "description": "Read by control(s): CTL.EC2.EBS.ACCESS.MODIFYSNAPSHOT.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 11 controls: CTL.EC2.EBS.ACCESS.DELETESNAPSHOT.BROAD.001, CTL.EC2.EBS.ACCESS.MODIFYSNAPSHOT.BROAD.001, CTL.EC2.EBS.ALARM.BURSTBALANCE.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_ec2_account Properties",
+  "type": "object"
+}

@@ -1,0 +1,413 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_cloudtrail_trail",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_cloudtrail_trail observations. 44 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "audit": {
+      "additionalProperties": true,
+      "properties": {
+        "cloudtrail": {
+          "additionalProperties": true,
+          "properties": {
+            "alarm_bulk_deletion": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.ALARM.RESOURCEDELETION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_delete_trail": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.ALARM.DELETETRAIL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_failed_login": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.ALARM.FAILEDLOGIN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_guardduty": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.ALARM.GUARDDUTY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_natgw": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.ALARM.NATGW.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_org_change": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.ALARM.ORGCHANGE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_put_event_selectors": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.ALARM.EVENTSELECTOR.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_s3_policy": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.ALARM.S3POLICY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_stop_logging": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.ALARM.STOPLOGGING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cw_logs_delivery_configured": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.CWLOGS.ENCRYPT.001, CTL.CLOUDTRAIL.CWLOGS.RETENTION.SHORT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cw_logs_encrypted_cmk": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.CWLOGS.ENCRYPT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cw_logs_retention_compliant": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.CWLOGS.RETENTION.SHORT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "digest_same_bucket": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.INTEGRITY.DIGEST.SAMEBUCKET.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_cw_logs": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.GHOST.CWLOGS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_cw_role": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.GHOST.CWROLE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_s3_bucket": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.GHOST.S3BUCKET.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_sns_topic": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.GHOST.SNSTOPIC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_s3_data_event_gap": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.DATAEVENTS.S3.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "include_global_events": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.CONFIG.GLOBALEVENTS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "log_bucket_same_account": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.CENTRAL.SAMEACCOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "log_validation_enabled": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.INTEGRITY.DIGEST.SAMEBUCKET.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "mgmt_logs_reads": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.STATE.MGMT.WRITEONLY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "s3_has_lifecycle": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.S3.LIFECYCLE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "s3_lifecycle_too_short": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.S3.LIFECYCLE.SHORT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "s3_mfa_delete_enabled": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.S3.MFADELETE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "s3_object_lock_enabled": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.S3.OBJECTLOCK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "s3_policy_denies_delete": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.S3.NODELETE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "s3_policy_has_source_arn": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.S3.SOURCEARN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "s3_read_broadly_granted": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.ACCESS.LOGREAD.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "s3_versioning_enabled": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.S3.MFADELETE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "scp_denies_stop_logging": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.ORG.MEMBERCANSTOP.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "sns_configured": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.GHOST.SNSTOPIC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "stop_logging_broadly_granted": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.ACCESS.STOPLOGGING.IAM.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "cloudwatch_logs": {
+          "additionalProperties": true,
+          "properties": {
+            "delivery_active": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.CWLOGS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 30 controls: CTL.CLOUDTRAIL.ACCESS.LOGREAD.BROAD.001, CTL.CLOUDTRAIL.ACCESS.STOPLOGGING.IAM.001, CTL.CLOUDTRAIL.ALARM.DELETETRAIL.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "audit_trail": {
+      "additionalProperties": true,
+      "properties": {
+        "data_events": {
+          "additionalProperties": true,
+          "properties": {
+            "dynamodb": {
+              "additionalProperties": true,
+              "properties": {
+                "enabled": {
+                  "description": "Read by control(s): CTL.CLOUDTRAIL.DATA.DYNAMODB.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "lambda": {
+              "additionalProperties": true,
+              "properties": {
+                "enabled": {
+                  "description": "Read by control(s): CTL.CLOUDTRAIL.DATA.LAMBDA.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "encryption": {
+          "additionalProperties": true,
+          "properties": {
+            "encrypted": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.ENCRYPT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "has_cross_account_replication": {
+          "description": "Read by control(s): CTL.CLOUDTRAIL.REPLICATION.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "insights": {
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.INSIGHTS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "is_organization_trail": {
+          "description": "Read by control(s): CTL.CLOUDTRAIL.ORG.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "Read by 14 controls: CTL.CLOUDTRAIL.DATA.DYNAMODB.001, CTL.CLOUDTRAIL.DATA.LAMBDA.001, CTL.CLOUDTRAIL.DATAREAD.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "log_file_validation_enabled": {
+          "description": "Read by control(s): CTL.CLOUDTRAIL.VALIDATION.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "multi_region_enabled": {
+          "description": "Read by control(s): CTL.CLOUDTRAIL.ENABLED.001, CTL.CLOUDTRAIL.INCOMPLETE.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "network_activity_events": {
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.NETWORK.ACTIVITY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "retention": {
+          "additionalProperties": true,
+          "properties": {
+            "long_term_enabled": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.RETENTION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "s3_bucket_logging_enabled": {
+          "description": "Read by control(s): CTL.CLOUDTRAIL.S3LOG.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "s3_data_events": {
+          "additionalProperties": true,
+          "properties": {
+            "read_enabled": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.DATAREAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "write_enabled": {
+              "description": "Read by control(s): CTL.CLOUDTRAIL.DATAWRITE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_cloudtrail_trail Properties",
+  "type": "object"
+}

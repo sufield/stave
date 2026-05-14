@@ -31,6 +31,8 @@ compliance:
 scope_tags: [aws, lambda]
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_lambda_function
 params:
   attack_stage: privilege_escalation
 remediation:

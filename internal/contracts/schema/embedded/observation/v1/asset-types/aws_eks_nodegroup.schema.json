@@ -1,0 +1,83 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_nodegroup",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_nodegroup observations. 7 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "nodegroup": {
+          "additionalProperties": true,
+          "properties": {
+            "bootstrap_pinned": {
+              "description": "Read by control(s): CTL.EKS.NODEGROUP.BOOTSTRAP.UNPINNED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "imds_endpoint_enabled": {
+              "description": "Read by control(s): CTL.EKS.NODEGROUP.IMDS.DISABLED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "imds_hop_limit": {
+              "description": "Read by control(s): CTL.EKS.NODEGROUP.IMDS.HOPLIMIT.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "imdsv2_required": {
+              "description": "Read by control(s): CTL.EKS.NODEGROUP.IMDSV2.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "instance_profile_shared_count": {
+              "description": "Read by control(s): CTL.EKS.NODEGROUP.PROFILE.SHARED.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "is_self_managed": {
+              "description": "Read by control(s): CTL.EKS.NODEGROUP.BOOTSTRAP.UNPINNED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ssm_session_manager_configured": {
+              "description": "Read by control(s): CTL.EKS.NODEGROUP.SSM.MISSING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "worker_sg_ssh_open": {
+              "description": "Read by control(s): CTL.EKS.NODEGROUP.SSH.OPEN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "workloads_depend_on_imds": {
+              "description": "Read by control(s): CTL.EKS.NODEGROUP.IMDS.DISABLED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_nodegroup Properties",
+  "type": "object"
+}

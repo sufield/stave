@@ -1,0 +1,160 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eventbridge_rule",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eventbridge_rule observations. 16 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "governance": {
+      "additionalProperties": true,
+      "properties": {
+        "events": {
+          "additionalProperties": true,
+          "properties": {
+            "alarm_dlq_depth_configured": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.ALARM.DEADLETTER.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_failed_invocations_configured": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.ALARM.FAILEDINVOCATIONS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_throttled_configured": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.ALARM.THROTTLED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_application_custom_pattern": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.RULE.DEFAULTBUS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_dlq": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.ALARM.DEADLETTER.001, CTL.EVENTBRIDGE.RULE.NODLQ.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_dlq": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.GHOST.RULE.DLQ.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_narrowing_filter": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.RULE.PATTERN.SENSITIVE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_overlapping_pattern": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.RULE.PATTERN.OVERLAP.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_retries": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.RULE.RETRY.NONE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_self_publishing_loop": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.RULE.SELFLOOP.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_default_bus": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.RULE.DEFAULTBUS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "maximum_event_age_seconds": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.RULE.MAXAGE.SHORT.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "pattern_matches_everything": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.RULE.PATTERN.WIDE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rule_enabled": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.RULE.NOTARGETS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "schedule_expression_valid": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.RULE.SCHEDULE.SYNTAX.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "subscribes_sensitive_source": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.RULE.PATTERN.SENSITIVE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "target_count": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.RULE.FANOUT.WIDE.001, CTL.EVENTBRIDGE.RULE.NOTARGETS.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "timezone_documented": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.RULE.SCHEDULE.TIMEZONE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "uses_cron_schedule": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.RULE.SCHEDULE.TIMEZONE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 16 controls: CTL.EVENTBRIDGE.ALARM.DEADLETTER.001, CTL.EVENTBRIDGE.ALARM.FAILEDINVOCATIONS.001, CTL.EVENTBRIDGE.ALARM.THROTTLED.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_eventbridge_rule Properties",
+  "type": "object"
+}

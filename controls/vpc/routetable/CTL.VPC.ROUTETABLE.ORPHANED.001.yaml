@@ -21,6 +21,8 @@ scope_tags:
   - vpc
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_route_table
 observation_fields:
   - network.kind
   - network.routetable.association_count

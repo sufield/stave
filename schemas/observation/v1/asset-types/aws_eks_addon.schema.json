@@ -1,0 +1,90 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_addon",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_addon observations. 7 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "addon": {
+          "additionalProperties": true,
+          "properties": {
+            "addon_name": {
+              "description": "Read by 4 controls: CTL.EKS.COREDNS.AUTOSCALE.001, CTL.EKS.CSI.EBS.NOIRSA.001, CTL.EKS.CSI.EFS.NOIRSA.001, …",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "cluster_node_count": {
+              "description": "Read by control(s): CTL.EKS.COREDNS.AUTOSCALE.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "custom_networking_enabled": {
+              "description": "Read by control(s): CTL.EKS.VPC.CNI.CUSTOMNETWORKING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "eniconfig_cr_count": {
+              "description": "Read by control(s): CTL.EKS.VPC.CNI.CUSTOMNETWORKING.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "has_autoscaler": {
+              "description": "Read by control(s): CTL.EKS.COREDNS.AUTOSCALE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_irsa_role": {
+              "description": "Read by control(s): CTL.EKS.ADDON.GHOST.IRSA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_irsa": {
+              "description": "Read by control(s): CTL.EKS.CSI.EBS.NOIRSA.001, CTL.EKS.CSI.EFS.NOIRSA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_core_addon": {
+              "description": "Read by control(s): CTL.EKS.ADDON.SELFMANAGED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_dual_install": {
+              "description": "Read by control(s): CTL.EKS.ADDON.HELMDUAL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_self_managed": {
+              "description": "Read by control(s): CTL.EKS.ADDON.SELFMANAGED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_addon Properties",
+  "type": "object"
+}

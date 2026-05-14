@@ -25,6 +25,8 @@ scope_tags:
   - lambda
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_lambda_function
 params:
   base_impact: 8
   attack_stage: initial_access

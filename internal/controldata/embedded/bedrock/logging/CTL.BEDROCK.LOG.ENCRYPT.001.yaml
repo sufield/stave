@@ -18,6 +18,8 @@ scope_tags:
   - bedrock
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_logging_config
 params:
   attack_stage: exfiltration
 remediation:

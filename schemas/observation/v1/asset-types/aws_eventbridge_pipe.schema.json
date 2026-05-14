@@ -1,0 +1,118 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eventbridge_pipe",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eventbridge_pipe observations. 11 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "governance": {
+      "additionalProperties": true,
+      "properties": {
+        "events": {
+          "additionalProperties": true,
+          "properties": {
+            "alarm_failed_configured": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.ALARM.PIPE.FAILED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "enrichment_role_has_wildcard": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.PIPE.ENRICHMENT.IAM.WILDCARD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "enrichment_timeout_seconds": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.PIPE.ENRICHMENT.NOTIMEOUT.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "enrichment_type": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.PIPE.ENRICHMENT.IAM.WILDCARD.001, CTL.EVENTBRIDGE.PIPE.ENRICHMENT.NOTIMEOUT.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "has_source_filter": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.PIPE.SOURCE.NOFILTER.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "kafka_credentials_plaintext": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.PIPE.SOURCE.KAFKA.PLAINTEXT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "msk_auth_type": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.PIPE.SOURCE.MSK.NOIAM.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "source_has_dlq": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.PIPE.SOURCE.NODLQ.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "source_role_has_wildcard": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.PIPE.SOURCE.IAM.WILDCARD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "source_type": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.PIPE.SOURCE.KAFKA.PLAINTEXT.001, CTL.EVENTBRIDGE.PIPE.SOURCE.MSK.NOIAM.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "state": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.PIPE.LIFECYCLE.CREATEFAILED.001, CTL.EVENTBRIDGE.PIPE.LIFECYCLE.DORMANT.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "stopped_days": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.PIPE.LIFECYCLE.DORMANT.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "target_has_dlq": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.PIPE.TARGET.NODLQ.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 11 controls: CTL.EVENTBRIDGE.ALARM.PIPE.FAILED.001, CTL.EVENTBRIDGE.PIPE.ENRICHMENT.IAM.WILDCARD.001, CTL.EVENTBRIDGE.PIPE.ENRICHMENT.NOTIMEOUT.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_eventbridge_pipe Properties",
+  "type": "object"
+}

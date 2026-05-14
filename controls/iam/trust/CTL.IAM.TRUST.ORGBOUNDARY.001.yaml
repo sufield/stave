@@ -24,6 +24,8 @@ scope_tags:
   - iam
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
 params:
   attack_stage: lateral_movement
 remediation:

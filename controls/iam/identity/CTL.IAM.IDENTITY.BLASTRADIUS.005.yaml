@@ -27,6 +27,8 @@ scope_tags:
   - iam
 type: unsafe_state
 classification: parameterized_check
+applicable_asset_types:
+  - aws_iam_user
 params:
   base_impact: 8
   attack_stage: persistence

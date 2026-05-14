@@ -26,6 +26,8 @@ scope_tags:
   - ebs
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_dlm_policy
 params:
   attack_stage: impact
   blast_radius:

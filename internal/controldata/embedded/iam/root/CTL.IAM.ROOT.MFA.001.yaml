@@ -26,6 +26,8 @@ scope_tags:
   - iam
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_iam_account
 params:
   attack_stage: credential_access
 observation_fields:

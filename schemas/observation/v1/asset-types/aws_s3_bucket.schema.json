@@ -1,0 +1,732 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_s3_bucket",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_s3_bucket observations. 78 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "delegation": {
+      "additionalProperties": true,
+      "properties": {
+        "customer_can_revoke": {
+          "description": "Read by control(s): CTL.S3.DELEGATION.REVOCABLE.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "has_expired_review": {
+          "description": "Read by control(s): CTL.S3.DELEGATION.LIFECYCLE.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "has_scope_exceeded": {
+          "description": "Read by control(s): CTL.S3.DELEGATION.SCOPE.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "has_unknown_external_principal": {
+          "description": "Read by control(s): CTL.S3.DELEGATION.KNOWN.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "vendor_can_make_public": {
+          "description": "Read by control(s): CTL.S3.DELEGATION.ESCALATION.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "storage": {
+      "additionalProperties": true,
+      "properties": {
+        "access": {
+          "additionalProperties": true,
+          "properties": {
+            "exposes_bucket_policy": {
+              "description": "Read by control(s): CTL.S3.POLICY.DISCLOSURE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "external_account_ids": {
+              "description": "Read by control(s): CTL.S3.ACCESS.001, CTL.S3.ACCESS.EXTERNAL.ORG.001"
+            },
+            "has_external_write": {
+              "description": "Read by control(s): CTL.S3.ACCESS.003",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ip_condition": {
+              "description": "Read by control(s): CTL.S3.NETWORK.VPC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_vpc_condition": {
+              "description": "Read by control(s): CTL.S3.NETWORK.VPC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_wildcard_principal": {
+              "description": "Read by control(s): CTL.S3.ACCESS.002",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "latent_public_list": {
+              "description": "Read by control(s): CTL.S3.PUBLIC.006",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "phi_access_scoped": {
+              "description": "Read by control(s): CTL.S3.ACCESS.PHI.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_has_scoping_condition": {
+              "description": "Read by control(s): CTL.S3.POLICY.SCOPING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "policy_is_effectively_public": {
+              "description": "Read by control(s): CTL.S3.ACCESS.004, CTL.S3.AP.BYPASS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "presigned_url_restricted": {
+              "description": "Read by control(s): CTL.S3.PRESIGNED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "public_list": {
+              "description": "Read by control(s): CTL.S3.PUBLIC.LIST.002",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "public_read": {
+              "description": "Read by control(s): CTL.S3.CDN.BYPASS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "public_read_scope": {
+              "description": "Read by control(s): CTL.S3.POLICY.OBJECTSCOPED.001"
+            }
+          }
+        },
+        "access_grants": {
+          "additionalProperties": true,
+          "properties": {
+            "has_broad_write_grant": {
+              "description": "Read by control(s): CTL.S3.ACCESS.GRANTS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "identity_center_attached": {
+              "description": "Read by control(s): CTL.S3.ACCESS.GRANTS.002",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "instance_exists": {
+              "description": "Read by control(s): CTL.S3.ACCESS.GRANTS.001, CTL.S3.ACCESS.GRANTS.002",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "account": {
+          "additionalProperties": true,
+          "properties": {
+            "in_organization": {
+              "description": "Read by control(s): CTL.S3.ACCOUNT.BOUNDARY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "scp_restricts_s3_public": {
+              "description": "Read by control(s): CTL.S3.ACCOUNT.SCP.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "acl": {
+          "additionalProperties": true,
+          "properties": {
+            "objects_can_be_public": {
+              "description": "Read by control(s): CTL.S3.ACL.OBJECT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "batch_ops_restricted": {
+          "description": "Read by control(s): CTL.S3.INTELLIGENT.TIERING.EXPOSURE.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "breach_detection": {
+          "additionalProperties": true,
+          "properties": {
+            "all_components_active": {
+              "description": "Read by control(s): CTL.S3.BREACH.DETECT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "cdn_access": {
+          "additionalProperties": true,
+          "properties": {
+            "bucket_policy_grants_cloudfront": {
+              "description": "Read by control(s): CTL.S3.CDN.EXPOSURE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cloudfront_oai": {
+              "additionalProperties": true,
+              "properties": {
+                "enabled": {
+                  "description": "Read by control(s): CTL.S3.CDN.OAC.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "is_cloudfront_origin": {
+              "description": "Read by control(s): CTL.S3.CDN.BYPASS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "origin_uses_http": {
+              "description": "Read by control(s): CTL.S3.CDN.TRANSPORT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "classification": {
+          "additionalProperties": true,
+          "properties": {
+            "is_unclassified": {
+              "description": "Read by control(s): CTL.S3.CLASSIFY.COVERAGE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "controls": {
+          "additionalProperties": true,
+          "properties": {
+            "account_public_access_fully_blocked": {
+              "description": "Read by control(s): CTL.S3.ACCOUNT.PAB.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "public_access_block": {
+              "additionalProperties": true,
+              "properties": {
+                "block_public_acls": {
+                  "description": "Read by control(s): CTL.S3.PAB.BLOCKPUBLICACLS.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "block_public_policy": {
+                  "description": "Read by control(s): CTL.S3.PAB.BLOCKPUBLICPOLICY.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "ignore_public_acls": {
+                  "description": "Read by control(s): CTL.S3.PAB.IGNOREPUBLICACLS.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "restrict_public_buckets": {
+                  "description": "Read by control(s): CTL.S3.PAB.RESTRICTPUBLICBUCKETS.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "public_access_fully_blocked": {
+              "description": "Read by control(s): CTL.S3.AP.BYPASS.001, CTL.S3.CDN.EXPOSURE.001, CTL.S3.CONTROLS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "cors": {
+          "additionalProperties": true,
+          "properties": {
+            "allows_wildcard_origin": {
+              "description": "Read by control(s): CTL.S3.CORS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "configured": {
+              "description": "Read by control(s): CTL.S3.CORS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "encryption": {
+          "additionalProperties": true,
+          "properties": {
+            "algorithm": {
+              "description": "Read by control(s): CTL.S3.ENCRYPT.004",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "at_rest_enabled": {
+              "description": "Read by control(s): CTL.S3.ENCRYPT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "in_transit_enforced": {
+              "description": "Read by control(s): CTL.S3.ENCRYPT.002",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "kms_key_external": {
+              "description": "Read by control(s): CTL.S3.ENCRYPT.KMS.OWNERSHIP.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "kms_key_policy_broad": {
+              "description": "Read by control(s): CTL.S3.ENCRYPT.KMS.POLICY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "exposure": {
+          "additionalProperties": true,
+          "properties": {
+            "has_public_access_point": {
+              "description": "Read by control(s): CTL.S3.AP.BYPASS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "glacier": {
+          "additionalProperties": true,
+          "properties": {
+            "restore_access_unrestricted": {
+              "description": "Read by control(s): CTL.S3.GLACIER.RESTORE.POLICY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "restore_window_excessive": {
+              "description": "Read by control(s): CTL.S3.GLACIER.RESTORE.WINDOW.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "inventory": {
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "description": "Read by control(s): CTL.S3.INVENTORY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 78 controls: CTL.S3.ACCEL.001, CTL.S3.ACCESS.001, CTL.S3.ACCESS.002, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "logging": {
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "description": "Read by 7 controls: CTL.S3.LOG.001, CTL.S3.LOG.BUCKET.LIFECYCLE.001, CTL.S3.LOG.BUCKET.LOCK.001, …",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "object_level_logging": {
+              "additionalProperties": true,
+              "properties": {
+                "enabled": {
+                  "description": "Read by control(s): CTL.S3.AUDIT.OBJECTLEVEL.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "target_prefix": {
+              "description": "Read by control(s): CTL.S3.LOG.PREFIX.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "logging_destination": {
+          "additionalProperties": true,
+          "properties": {
+            "lifecycle_expiration_days": {
+              "description": "Read by control(s): CTL.S3.LOG.RETENTION.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "lifecycle_policy_configured": {
+              "description": "Read by control(s): CTL.S3.LOG.BUCKET.LIFECYCLE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "object_lock_enabled": {
+              "description": "Read by control(s): CTL.S3.LOG.BUCKET.LOCK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "public_access_blocked": {
+              "description": "Read by control(s): CTL.S3.LOG.BUCKET.PUBLIC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "versioning_enabled": {
+              "description": "Read by control(s): CTL.S3.LOG.BUCKET.VERSIONING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "macie": {
+          "additionalProperties": true,
+          "properties": {
+            "automated_discovery": {
+              "description": "Read by control(s): CTL.S3.DETECT.MACIE.002",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "enabled": {
+              "description": "Read by control(s): CTL.S3.DETECT.MACIE.001, CTL.S3.DETECT.MACIE.002",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "malware": {
+          "additionalProperties": true,
+          "properties": {
+            "scanning_enabled": {
+              "description": "Read by control(s): CTL.S3.MALWARE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "mrap_policy_is_public": {
+          "description": "Read by control(s): CTL.S3.MRAP.POLICY.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "mrap_public_access_blocked": {
+          "description": "Read by control(s): CTL.S3.MRAP.PAB.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "notification": {
+          "additionalProperties": true,
+          "properties": {
+            "has_ghost_target": {
+              "description": "Read by control(s): CTL.S3.NOTIFICATION.GHOST.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "object_lock": {
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "description": "Read by control(s): CTL.S3.LOCK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "legal_hold_applied": {
+              "description": "Read by control(s): CTL.S3.LOCK.LEGALHOLD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "object_ownership": {
+          "additionalProperties": true,
+          "properties": {
+            "rule": {
+              "description": "Read by control(s): CTL.S3.OWNERSHIP.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "policy": {
+          "additionalProperties": true,
+          "properties": {
+            "has_ghost_principal": {
+              "description": "Read by control(s): CTL.S3.POLICY.GHOSTREF.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "policy_json": {
+          "description": "Read by control(s): CTL.S3.POLICY.EXISTS.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "region_approved": {
+          "description": "Read by control(s): CTL.S3.REGION.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "replication": {
+          "additionalProperties": true,
+          "properties": {
+            "delete_marker_replication": {
+              "description": "Read by control(s): CTL.S3.REPLICATION.DEST.DELETE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "destination_encrypted": {
+              "description": "Read by control(s): CTL.S3.REPLICATION.003",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "destination_public": {
+              "description": "Read by control(s): CTL.S3.REPLICATION.DEST.PUBLIC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "destination_region": {
+              "description": "Read by control(s): CTL.S3.REPLICATION.002",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "enabled": {
+              "description": "Read by control(s): CTL.S3.REPLICATION.001, CTL.S3.REPLICATION.002, CTL.S3.REPLICATION.003",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "tags": {
+          "additionalProperties": true,
+          "properties": {
+            "compliance": {
+              "description": "Read by control(s): CTL.S3.LOCK.001, CTL.S3.REPLICATION.001"
+            },
+            "cors_wildcard_intended": {
+              "description": "Read by control(s): CTL.S3.CORS.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "data-classification": {
+              "description": "Read by 9 controls: CTL.S3.ACCESS.EXTERNAL.ORG.001, CTL.S3.ACCESS.PHI.001, CTL.S3.BREACH.DETECT.001, …",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "public_list_intended": {
+              "description": "Read by control(s): CTL.S3.PUBLIC.LIST.002",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tenant_mode": {
+              "description": "Read by control(s): CTL.S3.TENANT.ISOLATION.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tenant_prefix": {
+              "description": "Read by control(s): CTL.S3.TENANT.ISOLATION.001"
+            }
+          }
+        },
+        "transfer_acceleration": {
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "description": "Read by control(s): CTL.S3.ACCEL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "versioning": {
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "description": "Read by control(s): CTL.S3.MFADELETE.001, CTL.S3.VERSION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "mfa_delete_enabled": {
+              "description": "Read by control(s): CTL.S3.MFADELETE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_s3_bucket Properties",
+  "type": "object"
+}

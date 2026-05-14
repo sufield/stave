@@ -1,0 +1,91 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_iam_account",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_iam_account observations. 8 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "identity": {
+      "additionalProperties": true,
+      "properties": {
+        "certificates": {
+          "additionalProperties": true,
+          "properties": {
+            "has_expired": {
+              "description": "Read by control(s): CTL.IAM.CERT.EXPIRED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 8 controls: CTL.IAM.CERT.EXPIRED.001, CTL.IAM.INCOMPLETE.001, CTL.IAM.POLICY.CLOUDSHELL.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "policies": {
+          "additionalProperties": true,
+          "properties": {
+            "cloudshell_unrestricted": {
+              "description": "Read by control(s): CTL.IAM.POLICY.CLOUDSHELL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "root": {
+          "additionalProperties": true,
+          "properties": {
+            "hardware_mfa": {
+              "description": "Read by control(s): CTL.IAM.ROOT.HWMFA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_access_keys": {
+              "description": "Read by control(s): CTL.IAM.ROOT.ACCESSKEY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "last_used_days": {
+              "description": "Read by control(s): CTL.IAM.ROOT.USAGE.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "mfa_enabled": {
+              "description": "Read by control(s): CTL.IAM.INCOMPLETE.001, CTL.IAM.ROOT.HWMFA.001, CTL.IAM.ROOT.MFA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "support_role": {
+          "additionalProperties": true,
+          "properties": {
+            "exists": {
+              "description": "Read by control(s): CTL.IAM.SUPPORT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_iam_account Properties",
+  "type": "object"
+}

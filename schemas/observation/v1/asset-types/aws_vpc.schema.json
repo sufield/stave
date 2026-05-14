@@ -1,0 +1,145 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_vpc",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_vpc observations. 13 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "network": {
+      "additionalProperties": true,
+      "properties": {
+        "dns": {
+          "additionalProperties": true,
+          "properties": {
+            "firewall_enabled": {
+              "description": "Read by control(s): CTL.VPC.DNSFIREWALL.ENABLED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "firewall_has_managed_lists": {
+              "description": "Read by control(s): CTL.VPC.DNSFIREWALL.MANAGEDLISTS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "endpoint": {
+          "additionalProperties": true,
+          "properties": {
+            "has_all_critical": {
+              "description": "Read by control(s): CTL.VPC.ENDPOINT.MISSING.CRITICAL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "env_isolation": {
+          "additionalProperties": true,
+          "properties": {
+            "mixed_environments": {
+              "description": "Read by control(s): CTL.VPC.ENV.ISOLATION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "flow_log": {
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "description": "Read by control(s): CTL.VPC.FLOWLOG.001, CTL.VPC.FLOWLOG.ENCRYPT.001, CTL.VPC.INCOMPLETE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "encrypted": {
+              "description": "Read by control(s): CTL.VPC.FLOWLOG.ENCRYPT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "has_s3_endpoint": {
+          "description": "Read by control(s): CTL.VPC.ENDPOINT.S3.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "Read by 13 controls: CTL.VPC.DEFAULT.RESOURCES.001, CTL.VPC.DNSFIREWALL.ENABLED.001, CTL.VPC.DNSFIREWALL.MANAGEDLISTS.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "vpc": {
+          "additionalProperties": true,
+          "properties": {
+            "has_active_resources": {
+              "description": "Read by control(s): CTL.VPC.DEFAULT.RESOURCES.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_egress_only_igw": {
+              "description": "Read by control(s): CTL.VPC.IPV6.EGRESSONLY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ipv6_cidr": {
+              "description": "Read by control(s): CTL.VPC.IPV6.EGRESSONLY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_mixed_environments": {
+              "description": "Read by control(s): CTL.VPC.SEGMENT.ENVMIX.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_network_firewall": {
+              "description": "Read by control(s): CTL.VPC.NETWORK.FIREWALL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "igw_appears_unnecessary": {
+              "description": "Read by control(s): CTL.VPC.IGW.UNNECESSARY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_default": {
+              "description": "Read by control(s): CTL.VPC.DEFAULT.RESOURCES.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_vpc Properties",
+  "type": "object"
+}

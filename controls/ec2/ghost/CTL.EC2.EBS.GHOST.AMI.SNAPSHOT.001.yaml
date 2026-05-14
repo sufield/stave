@@ -26,6 +26,8 @@ scope_tags:
   - ebs
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_ami
 params:
   attack_stage: resilience
   blast_radius:

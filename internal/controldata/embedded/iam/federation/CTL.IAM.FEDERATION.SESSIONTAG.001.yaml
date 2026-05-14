@@ -19,6 +19,8 @@ scope_tags:
   - iam
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_iam_federated_role
 params:
   attack_stage: detection_evasion
 observation_fields:

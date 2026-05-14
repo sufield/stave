@@ -33,6 +33,8 @@ scope_tags:
   - supply-chain
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
 params:
   base_impact: 7
   attack_stage: initial_access

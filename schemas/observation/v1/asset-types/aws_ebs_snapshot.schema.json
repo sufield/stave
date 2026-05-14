@@ -1,0 +1,133 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_ebs_snapshot",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_ebs_snapshot observations. 12 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "compute": {
+      "additionalProperties": true,
+      "properties": {
+        "access": {
+          "additionalProperties": true,
+          "properties": {
+            "has_cross_account_share": {
+              "description": "Read by control(s): CTL.EC2.SNAPSHOT.CROSSACCOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "ebs": {
+          "additionalProperties": true,
+          "properties": {
+            "has_decommissioned_account": {
+              "description": "Read by control(s): CTL.EC2.EBS.GHOST.SNAPSHOT.ACCOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_kms_sharing_mismatch": {
+              "description": "Read by control(s): CTL.EC2.EBS.CROSSACCOUNT.SNAPSHOT.NOENCRYPT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_orphan_volume_snapshot": {
+              "description": "Read by control(s): CTL.EC2.EBS.SNAPSHOT.FORDELETED.VOLUME.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "snapshot_encrypted": {
+              "description": "Read by control(s): CTL.EC2.EBS.CROSSACCOUNT.SNAPSHOT.NOENCRYPT.001, CTL.EC2.EBS.SNAPSHOT.UNENCRYPTED.SHARED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "snapshot_is_stale": {
+              "description": "Read by control(s): CTL.EC2.EBS.SNAPSHOT.STALE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "snapshot_shared": {
+              "description": "Read by control(s): CTL.EC2.EBS.SNAPSHOT.UNENCRYPTED.SHARED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "snapshot_shared_excessive": {
+              "description": "Read by control(s): CTL.EC2.EBS.CROSSACCOUNT.SNAPSHOT.BLASTRADIUS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "snapshot_shared_with_nonprod": {
+              "description": "Read by control(s): CTL.EC2.EBS.CROSSENV.SNAPSHOT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "encrypted": {
+          "description": "Read by control(s): CTL.EC2.EBS.SNAPSHOT.ENCRYPT.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "encryption": {
+          "additionalProperties": true,
+          "properties": {
+            "encrypted": {
+              "description": "Read by control(s): CTL.EC2.SNAPSHOT.ENCRYPT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "is_public": {
+          "description": "Read by control(s): CTL.EC2.SNAPSHOT.PUBLIC.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "Read by 12 controls: CTL.EC2.EBS.CROSSACCOUNT.SNAPSHOT.BLASTRADIUS.001, CTL.EC2.EBS.CROSSACCOUNT.SNAPSHOT.NOENCRYPT.001, CTL.EC2.EBS.CROSSENV.SNAPSHOT.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "snapshot": {
+          "additionalProperties": true,
+          "properties": {
+            "source_ami_deregistered": {
+              "description": "Read by control(s): CTL.EC2.SNAPSHOT.AMI.DEREGISTERED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_ebs_snapshot Properties",
+  "type": "object"
+}

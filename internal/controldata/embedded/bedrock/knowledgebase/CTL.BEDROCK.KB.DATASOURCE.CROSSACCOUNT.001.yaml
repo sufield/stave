@@ -28,6 +28,8 @@ scope_tags:
   - bedrock
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_knowledge_base
 params:
   attack_stage: lateral_movement
 remediation:

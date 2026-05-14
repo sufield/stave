@@ -1,0 +1,83 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_organization",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_organization observations. 8 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "identity": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by 8 controls: CTL.IAM.SCP.CLOUDTRAIL.001, CTL.IAM.SCP.CONFIG.001, CTL.IAM.SCP.FULLACCESS.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scp": {
+          "additionalProperties": true,
+          "properties": {
+            "denies_cloudtrail_modify": {
+              "description": "Read by control(s): CTL.IAM.SCP.CLOUDTRAIL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "denies_config_modify": {
+              "description": "Read by control(s): CTL.IAM.SCP.CONFIG.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "denies_guardduty_disable": {
+              "description": "Read by control(s): CTL.IAM.SCP.GUARDDUTY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "denies_iam_escalation": {
+              "description": "Read by control(s): CTL.IAM.SCP.IAM.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "denies_leave_org": {
+              "description": "Read by control(s): CTL.IAM.SCP.LEAVEORG.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "denies_root_access_key": {
+              "description": "Read by control(s): CTL.IAM.SCP.ROOT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_restrictive_policies": {
+              "description": "Read by control(s): CTL.IAM.SCP.FULLACCESS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "restricts_regions": {
+              "description": "Read by control(s): CTL.IAM.SCP.REGIONS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_organization Properties",
+  "type": "object"
+}

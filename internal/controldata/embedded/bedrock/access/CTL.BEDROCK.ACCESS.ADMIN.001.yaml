@@ -17,6 +17,8 @@ scope_tags:
   - bedrock
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_access
 params:
   attack_stage: privilege_escalation
 remediation:

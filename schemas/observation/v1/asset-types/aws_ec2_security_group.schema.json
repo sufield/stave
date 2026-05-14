@@ -1,0 +1,206 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_ec2_security_group",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_ec2_security_group observations. 19 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "compute": {
+      "additionalProperties": true,
+      "properties": {
+        "inbound_rules": {
+          "additionalProperties": true,
+          "properties": {
+            "broad_cidr_non_http": {
+              "description": "Read by control(s): CTL.EC2.SG.INGRESS.CIDR.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "high_risk_ports_unrestricted": {
+              "description": "Read by control(s): CTL.EC2.SG.RESTRICTED.PORTS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "is_default": {
+          "description": "Read by control(s): CTL.EC2.SG.DEFAULT.RESTRICT.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "Read by control(s): CTL.EC2.SG.DEFAULT.RESTRICT.001, CTL.EC2.SG.INGRESS.CIDR.001, CTL.EC2.SG.RESTRICTED.PORTS.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rules_empty": {
+          "description": "Read by control(s): CTL.EC2.SG.DEFAULT.RESTRICT.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "network": {
+      "additionalProperties": true,
+      "properties": {
+        "egress": {
+          "additionalProperties": true,
+          "properties": {
+            "dns_to_internet": {
+              "description": "Read by control(s): CTL.VPC.SG.EGRESS.DNS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_unrestricted_ipv6_egress": {
+              "description": "Read by control(s): CTL.VPC.SG.IPV6.EGRESS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "unrestricted_all_ports": {
+              "description": "Read by control(s): CTL.VPC.SG.EGRESS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "has_unrestricted_ipv6_ingress": {
+          "description": "Read by control(s): CTL.VPC.SG.IPV6.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "Read by 16 controls: CTL.EC2.SG.UNUSED.001, CTL.VPC.SG.CIDR.BROAD.001, CTL.VPC.SG.DEFAULT.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rules": {
+          "additionalProperties": true,
+          "properties": {
+            "has_ghost_sg_reference": {
+              "description": "Read by control(s): CTL.VPC.SG.GHOST.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "security_group": {
+          "additionalProperties": true,
+          "properties": {
+            "default_sg_attached": {
+              "description": "Read by control(s): CTL.VPC.SG.DEFAULT.INUSE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "egress": {
+              "additionalProperties": true,
+              "properties": {
+                "has_exfil_ports_open": {
+                  "description": "Read by control(s): CTL.VPC.SG.EGRESS.EXFIL.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "has_broad_cidr": {
+              "description": "Read by control(s): CTL.VPC.SG.CIDR.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_broad_eastwest_rules": {
+              "description": "Read by control(s): CTL.VPC.SG.EASTWEST.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_broad_port_range": {
+              "description": "Read by control(s): CTL.VPC.SG.PORTRANGE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ipv6_parity": {
+              "description": "Read by control(s): CTL.VPC.SG.IPV6.PARITY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_rules": {
+              "description": "Read by control(s): CTL.VPC.SG.DEFAULT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_unrestricted_ingress": {
+              "description": "Read by control(s): CTL.VPC.SG.UNRESTRICTED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "high_risk_ports_exposed": {
+              "description": "Read by control(s): CTL.VPC.SG.HIGHPORTS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "icmp_all_types_from_internet": {
+              "description": "Read by control(s): CTL.VPC.SG.ICMP.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_default": {
+              "description": "Read by control(s): CTL.VPC.SG.DEFAULT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_unused": {
+              "description": "Read by control(s): CTL.EC2.SG.UNUSED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_ec2_security_group Properties",
+  "type": "object"
+}

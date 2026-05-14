@@ -1,0 +1,144 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_cognito_identity_pool",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_cognito_identity_pool observations. 16 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "identity": {
+      "additionalProperties": true,
+      "properties": {
+        "access": {
+          "additionalProperties": true,
+          "properties": {
+            "allow_unauthenticated": {
+              "description": "Read by 7 controls: CTL.COGNITO.IDENTITY.GUEST.001, CTL.COGNITO.IDPOOL.UNAUTH.BROAD.001, CTL.COGNITO.IDPOOL.UNAUTH.DDB.001, …",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "cognito": {
+          "additionalProperties": true,
+          "properties": {
+            "allow_classic_flow": {
+              "description": "Read by control(s): CTL.COGNITO.IDPOOL.CLASSICFLOW.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "auth_role_broad": {
+              "description": "Read by control(s): CTL.COGNITO.IDPOOL.AUTHROLE.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "auth_role_can_escalate_via_assume": {
+              "description": "Read by control(s): CTL.COGNITO.IDPOOL.AUTHROLE.ASSUMEROLE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "auth_role_has_cross_account": {
+              "description": "Read by control(s): CTL.COGNITO.IDPOOL.AUTHROLE.CROSSACCT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "auth_role_has_passrole": {
+              "description": "Read by control(s): CTL.COGNITO.IDPOOL.AUTHROLE.PASSROLE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_user_pool": {
+              "description": "Read by control(s): CTL.COGNITO.GHOST.IDPOOL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_identity_providers": {
+              "description": "Read by control(s): CTL.COGNITO.ORPHAN.IDPOOL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_role_mapping": {
+              "description": "Read by control(s): CTL.COGNITO.IDPOOL.ROLEMAPPING.NONE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_unauth_unused": {
+              "description": "Read by control(s): CTL.COGNITO.IDPOOL.UNAUTH.UNUSED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "provider_validates_audience": {
+              "description": "Read by control(s): CTL.COGNITO.IDPOOL.PROVIDER.NOVALIDATION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "unauth_role_broad": {
+              "description": "Read by control(s): CTL.COGNITO.IDPOOL.UNAUTH.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "unauth_role_has_ddb": {
+              "description": "Read by control(s): CTL.COGNITO.IDPOOL.UNAUTH.DDB.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "unauth_role_has_iam": {
+              "description": "Read by control(s): CTL.COGNITO.IDPOOL.UNAUTH.IAM.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "unauth_role_has_lambda": {
+              "description": "Read by control(s): CTL.COGNITO.IDPOOL.UNAUTH.LAMBDA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "unauth_role_has_s3": {
+              "description": "Read by control(s): CTL.COGNITO.IDPOOL.UNAUTH.S3.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 16 controls: CTL.COGNITO.GHOST.IDPOOL.001, CTL.COGNITO.IDENTITY.GUEST.001, CTL.COGNITO.IDPOOL.AUTHROLE.ASSUMEROLE.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_cognito_identity_pool Properties",
+  "type": "object"
+}

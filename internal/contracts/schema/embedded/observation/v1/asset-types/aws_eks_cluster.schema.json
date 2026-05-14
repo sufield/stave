@@ -1,0 +1,174 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_cluster",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_cluster observations. 19 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "cluster": {
+          "additionalProperties": true,
+          "properties": {
+            "access_entry_count": {
+              "description": "Read by control(s): CTL.EKS.AUTH.MIXED.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "alarm_api_errors_configured": {
+              "description": "Read by control(s): CTL.EKS.ALARM.API.ERRORS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_crashloop_configured": {
+              "description": "Read by control(s): CTL.EKS.ALARM.CRASHLOOP.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_etcd_latency_configured": {
+              "description": "Read by control(s): CTL.EKS.ALARM.ETCD.LATENCY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_kubelet_heartbeat_configured": {
+              "description": "Read by control(s): CTL.EKS.ALARM.KUBELET.HEARTBEAT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_node_pressure_configured": {
+              "description": "Read by control(s): CTL.EKS.ALARM.NODE.PRESSURE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_nodes_notready_configured": {
+              "description": "Read by control(s): CTL.EKS.ALARM.NODES.NOTREADY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_oomkilled_configured": {
+              "description": "Read by control(s): CTL.EKS.ALARM.OOMKILLED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "alarm_pod_evicted_configured": {
+              "description": "Read by control(s): CTL.EKS.ALARM.PODEVICTED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "audit_log_retention_days": {
+              "description": "Read by control(s): CTL.EKS.AUDIT.RETENTION.SHORT.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "aws_auth_mapping_count": {
+              "description": "Read by control(s): CTL.EKS.AUTH.MIXED.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "cve_block_admission_enabled": {
+              "description": "Read by control(s): CTL.EKS.IMAGE.CVE.BLOCK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ecr_findings_in_security_hub": {
+              "description": "Read by control(s): CTL.EKS.ECR.SCAN.EXPORT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "etcd_kms_multi_region": {
+              "description": "Read by control(s): CTL.EKS.DR.KMS.SINGLEREGION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "guardduty_eks_protection_enabled": {
+              "description": "Read by control(s): CTL.EKS.GUARDDUTY.EKS.PROTECTION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "guardduty_runtime_monitoring_enabled": {
+              "description": "Read by control(s): CTL.EKS.GUARDDUTY.RUNTIME.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "image_signature_verification_enabled": {
+              "description": "Read by control(s): CTL.EKS.IMAGE.NOSIGNATURE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_dr_cluster": {
+              "description": "Read by control(s): CTL.EKS.DR.KMS.SINGLEREGION.001, CTL.EKS.DR.WARMUP.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "oidc_url_unique_in_account": {
+              "description": "Read by control(s): CTL.EKS.OIDC.SHARED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ram_principal_org_id_set": {
+              "description": "Read by control(s): CTL.EKS.RAM.EXTERNAL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "shared_via_ram": {
+              "description": "Read by control(s): CTL.EKS.RAM.EXTERNAL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "warm_workload_count": {
+              "description": "Read by control(s): CTL.EKS.DR.WARMUP.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_cluster Properties",
+  "type": "object"
+}

@@ -1,0 +1,125 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eventbridge_schedule",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eventbridge_schedule observations. 10 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "governance": {
+      "additionalProperties": true,
+      "properties": {
+        "events": {
+          "additionalProperties": true,
+          "properties": {
+            "action_after_completion": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.SCHEDULER.AAC.DELETE.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "alarm_dropped_configured": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.ALARM.SCHEDULER.DROPPED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "at_time_in_past": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.SCHEDULER.AT.STALE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "disabled_days": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.SCHEDULER.PAUSED.STALE.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "has_dlq": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.SCHEDULER.NODLQ.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_dlq": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.SCHEDULER.GHOST.DLQ.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_recurring": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.SCHEDULER.AAC.DELETE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "role_has_wildcard": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.SCHEDULER.ROLE.WILDCARD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "role_trust_scheduler_only": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.SCHEDULER.ROLE.TRUST.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "schedule_expression_timezone": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.SCHEDULER.TIMEZONE.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "schedule_expression_valid": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.SCHEDULER.CRON.SYNTAX.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "state": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.SCHEDULER.PAUSED.STALE.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "uses_at_expression": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.SCHEDULER.AT.STALE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "uses_cron_expression": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.SCHEDULER.TIMEZONE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 10 controls: CTL.EVENTBRIDGE.ALARM.SCHEDULER.DROPPED.001, CTL.EVENTBRIDGE.SCHEDULER.AAC.DELETE.001, CTL.EVENTBRIDGE.SCHEDULER.AT.STALE.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_eventbridge_schedule Properties",
+  "type": "object"
+}

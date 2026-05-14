@@ -1,0 +1,658 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_lambda_function",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_lambda_function observations. 57 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "compute": {
+      "additionalProperties": true,
+      "properties": {
+        "alarms": {
+          "additionalProperties": true,
+          "properties": {
+            "has_duration_alarm": {
+              "description": "Read by control(s): CTL.LAMBDA.ALARM.DURATION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_errors_alarm": {
+              "description": "Read by control(s): CTL.LAMBDA.ALARM.ERRORS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_iterator_age_alarm": {
+              "description": "Read by control(s): CTL.LAMBDA.ALARM.ITERATORAGE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_throttles_alarm": {
+              "description": "Read by control(s): CTL.LAMBDA.ALARM.THROTTLES.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "async": {
+          "additionalProperties": true,
+          "properties": {
+            "destination_on_failure": {
+              "description": "Read by control(s): CTL.LAMBDA.DLQ.MISSING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "dlq_configured": {
+              "description": "Read by control(s): CTL.LAMBDA.DLQ.001, CTL.LAMBDA.DLQ.MISSING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_async_triggers": {
+              "description": "Read by control(s): CTL.LAMBDA.DLQ.MISSING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "bedrock": {
+          "additionalProperties": true,
+          "properties": {
+            "is_agent_tool": {
+              "description": "Read by control(s): CTL.LAMBDA.MARKER.BEDROCK.TOOL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "role_reaches_phi_bucket": {
+              "description": "Read by control(s): CTL.LAMBDA.OVERPERM.S3PHI.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "code_signing": {
+          "additionalProperties": true,
+          "properties": {
+            "config_arn_set": {
+              "description": "Read by control(s): CTL.LAMBDA.CODESIGN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "enforce_enabled": {
+              "description": "Read by control(s): CTL.LAMBDA.CODESIGN.ENFORCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "concurrency": {
+          "additionalProperties": true,
+          "properties": {
+            "public_unlimited": {
+              "description": "Read by control(s): CTL.LAMBDA.CONFIG.CONCURRENCY.NOLIMIT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "reserved_set": {
+              "description": "Read by control(s): CTL.LAMBDA.CONCURRENCY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "env": {
+          "additionalProperties": true,
+          "properties": {
+            "has_plaintext_secrets": {
+              "description": "Read by control(s): CTL.LAMBDA.ENV.SECRETS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "kms_encrypted": {
+              "description": "Read by control(s): CTL.LAMBDA.ENV.ENCRYPT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "event_source": {
+          "additionalProperties": true,
+          "properties": {
+            "bisect_on_error": {
+              "description": "Read by control(s): CTL.LAMBDA.ESM.BISECT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_failure_destination": {
+              "description": "Read by control(s): CTL.LAMBDA.ESM.NODLQ.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_source": {
+              "description": "Read by control(s): CTL.LAMBDA.TRIGGER.GHOST.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_stream_source": {
+              "description": "Read by control(s): CTL.LAMBDA.ESM.BISECT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "execution_role": {
+          "additionalProperties": true,
+          "properties": {
+            "has_wildcard_passrole": {
+              "description": "Read by control(s): CTL.LAMBDA.PASSROLE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_overprivileged": {
+              "description": "Read by control(s): CTL.LAMBDA.ROLE.LEASTPRIV.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_shared": {
+              "description": "Read by control(s): CTL.LAMBDA.ROLE.SHARED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "function": {
+          "additionalProperties": true,
+          "properties": {
+            "api_gateway": {
+              "additionalProperties": true,
+              "properties": {
+                "has_unauthenticated_route": {
+                  "description": "Read by control(s): CTL.LAMBDA.TRIGGER.APIGATEWAY.NOAUTH.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "env_has_raw_credentials": {
+              "description": "Read by control(s): CTL.LAMBDA.SECRETS.NOTMANAGED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "env_references_secret": {
+              "description": "Read by control(s): CTL.LAMBDA.SECRETS.BROKEN.REF.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "env_references_ssm": {
+              "description": "Read by control(s): CTL.LAMBDA.SECRETS.SSM.INSECURE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "env_var_count_excessive": {
+              "description": "Read by control(s): CTL.LAMBDA.ENV.EXCESSIVE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_dlq": {
+              "description": "Read by control(s): CTL.LAMBDA.GHOST.DLQ.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_kms": {
+              "description": "Read by control(s): CTL.LAMBDA.GHOST.KMS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_role": {
+              "description": "Read by control(s): CTL.LAMBDA.GHOST.ROLE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_vpc": {
+              "description": "Read by control(s): CTL.LAMBDA.GHOST.VPC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_insecure_ssm_param": {
+              "description": "Read by control(s): CTL.LAMBDA.SECRETS.SSM.INSECURE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_stream_trigger": {
+              "description": "Read by control(s): CTL.LAMBDA.ALARM.ITERATORAGE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "kms_key_external": {
+              "description": "Read by control(s): CTL.LAMBDA.ENV.KMS.EXTERNAL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "lifecycle": {
+              "additionalProperties": true,
+              "properties": {
+                "has_no_triggers": {
+                  "description": "Read by control(s): CTL.LAMBDA.LIFECYCLE.NOTRIGGER.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "is_dormant": {
+                  "description": "Read by control(s): CTL.LAMBDA.LIFECYCLE.DORMANT.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "old_versions_have_stale_env": {
+              "description": "Read by control(s): CTL.LAMBDA.ENV.VISIBLE.VERSIONS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "resource_policy": {
+              "additionalProperties": true,
+              "properties": {
+                "cross_account": {
+                  "description": "Read by control(s): CTL.LAMBDA.POLICY.CROSSACCOUNT.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "excessive": {
+                  "description": "Read by control(s): CTL.LAMBDA.POLICY.ACCUMULATED.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "has_org_condition": {
+                  "description": "Read by control(s): CTL.LAMBDA.POLICY.CROSSACCOUNT.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "has_unsourced_service_principal": {
+                  "description": "Read by control(s): CTL.LAMBDA.TRIGGER.CONFUSEDDEPUTY.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            },
+            "role_can_access_secrets": {
+              "description": "Read by control(s): CTL.LAMBDA.SECRETS.BROKEN.REF.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "uses_secrets_manager": {
+              "description": "Read by control(s): CTL.LAMBDA.SECRETS.NOTMANAGED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "vpc_configured": {
+              "description": "Read by control(s): CTL.LAMBDA.GHOST.VPC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "function_url": {
+          "additionalProperties": true,
+          "properties": {
+            "auth_type_none": {
+              "description": "Read by control(s): CTL.LAMBDA.URL.AUTH.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "configured": {
+              "description": "Read by control(s): CTL.LAMBDA.URL.CORS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "cors": {
+              "additionalProperties": true,
+              "properties": {
+                "allows_wildcard_origin": {
+                  "description": "Read by control(s): CTL.LAMBDA.URL.CORS.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "configured": {
+                  "description": "Read by control(s): CTL.LAMBDA.URL.CORS.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "credentials_allowed": {
+                  "description": "Read by control(s): CTL.LAMBDA.URL.CORS.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 56 controls: CTL.LAMBDA.ALARM.DURATION.001, CTL.LAMBDA.ALARM.ERRORS.001, CTL.LAMBDA.ALARM.ITERATORAGE.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "layers": {
+          "additionalProperties": true,
+          "properties": {
+            "has_embedded_secrets": {
+              "description": "Read by control(s): CTL.LAMBDA.LAYER.SECRETS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_reference": {
+              "description": "Read by control(s): CTL.LAMBDA.LAYER.GHOST.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_untrusted_origin": {
+              "description": "Read by control(s): CTL.LAMBDA.LAYER.ORIGIN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "logging": {
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "description": "Read by control(s): CTL.LAMBDA.LOG.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "encrypted_cmk": {
+              "description": "Read by control(s): CTL.LAMBDA.LOG.ENCRYPT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_been_invoked": {
+              "description": "Read by control(s): CTL.LAMBDA.LOG.MISSING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "log_group_exists": {
+              "description": "Read by control(s): CTL.LAMBDA.LOG.ENCRYPT.001, CTL.LAMBDA.LOG.MISSING.001, CTL.LAMBDA.LOG.RETENTION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "retention_days": {
+              "description": "Read by control(s): CTL.LAMBDA.LOG.RETENTION.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "retention_set": {
+              "description": "Read by control(s): CTL.LAMBDA.LOG.RETENTION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "memory": {
+          "additionalProperties": true,
+          "properties": {
+            "at_maximum": {
+              "description": "Read by control(s): CTL.LAMBDA.CONFIG.MEMORY.EXCESSIVE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "policy": {
+          "additionalProperties": true,
+          "properties": {
+            "public_invoke": {
+              "description": "Read by control(s): CTL.LAMBDA.INVOKE.PUBLIC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "runtime": {
+          "additionalProperties": true,
+          "properties": {
+            "eol": {
+              "description": "Read by control(s): CTL.LAMBDA.RUNTIME.EOL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_deprecated": {
+              "description": "Read by control(s): CTL.LAMBDA.RUNTIME.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "timeout": {
+          "additionalProperties": true,
+          "properties": {
+            "at_maximum": {
+              "description": "Read by control(s): CTL.LAMBDA.CONFIG.TIMEOUT.EXCESSIVE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "exceeds_threshold": {
+              "description": "Read by control(s): CTL.LAMBDA.TIMEOUT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "tracing": {
+          "additionalProperties": true,
+          "properties": {
+            "mode_active": {
+              "description": "Read by control(s): CTL.LAMBDA.TRACE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "update_code": {
+          "additionalProperties": true,
+          "properties": {
+            "broadly_granted": {
+              "description": "Read by control(s): CTL.LAMBDA.UPDATECODE.SCOPE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "vpc": {
+          "additionalProperties": true,
+          "properties": {
+            "has_public_subnet": {
+              "description": "Read by control(s): CTL.LAMBDA.VPC.SUBNET.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "in_vpc": {
+              "description": "Read by control(s): CTL.LAMBDA.VPC.ENDPOINTS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "sensitive_without_vpc": {
+              "description": "Read by control(s): CTL.LAMBDA.VPC.SENSITIVE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "uses_vpc_endpoints": {
+              "description": "Read by control(s): CTL.LAMBDA.VPC.ENDPOINTS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "network": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by control(s): CTL.VPC.SEGMENT.LAMBDA.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lambda": {
+          "additionalProperties": true,
+          "properties": {
+            "sg_egress_unrestricted": {
+              "description": "Read by control(s): CTL.VPC.SEGMENT.LAMBDA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "vpc_configured": {
+              "description": "Read by control(s): CTL.VPC.SEGMENT.LAMBDA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_lambda_function Properties",
+  "type": "object"
+}

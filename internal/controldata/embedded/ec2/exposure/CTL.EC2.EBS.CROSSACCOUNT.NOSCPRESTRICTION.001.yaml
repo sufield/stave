@@ -26,6 +26,8 @@ scope_tags:
   - ebs
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_account
 params:
   attack_stage: privilege_escalation
   blast_radius:

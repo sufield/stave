@@ -1,0 +1,83 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_sns_subscription",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_sns_subscription observations. 7 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "messaging": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by 7 controls: CTL.SNS.FIFO.NONFIFO.SUBSCRIPTION.001, CTL.SNS.GHOST.SUBSCRIPTION.DLQ.001, CTL.SNS.GHOST.SUBSCRIPTION.HTTP.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sns": {
+          "additionalProperties": true,
+          "properties": {
+            "has_ghost_http_subscription": {
+              "description": "Read by control(s): CTL.SNS.GHOST.SUBSCRIPTION.HTTP.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_subscription": {
+              "description": "Read by control(s): CTL.SNS.GHOST.SUBSCRIPTION.LAMBDA.001, CTL.SNS.GHOST.SUBSCRIPTION.SQS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_subscription_dlq": {
+              "description": "Read by control(s): CTL.SNS.GHOST.SUBSCRIPTION.DLQ.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_nonfifo_subscription": {
+              "description": "Read by control(s): CTL.SNS.FIFO.NONFIFO.SUBSCRIPTION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_fifo": {
+              "description": "Read by control(s): CTL.SNS.FIFO.NONFIFO.SUBSCRIPTION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "subscription_has_dlq": {
+              "description": "Read by control(s): CTL.SNS.SUBSCRIPTION.NODLQ.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "subscription_protocol": {
+              "description": "Read by control(s): CTL.SNS.GHOST.SUBSCRIPTION.LAMBDA.001, CTL.SNS.GHOST.SUBSCRIPTION.SQS.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "subscription_uses_http": {
+              "description": "Read by control(s): CTL.SNS.SUBSCRIPTION.HTTP.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_sns_subscription Properties",
+  "type": "object"
+}

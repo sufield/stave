@@ -1,0 +1,81 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_vpc_endpoint",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_vpc_endpoint observations. 7 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "network": {
+      "additionalProperties": true,
+      "properties": {
+        "endpoint": {
+          "additionalProperties": true,
+          "properties": {
+            "private_dns_enabled": {
+              "description": "Read by control(s): CTL.VPC.ENDPOINT.DNS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "sg_matches_vpc_cidr": {
+              "description": "Read by control(s): CTL.VPC.ENDPOINT.SG.BROAD.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "endpoint_policy": {
+          "additionalProperties": true,
+          "properties": {
+            "denies_anonymous": {
+              "description": "Read by control(s): CTL.VPC.ENDPOINT.ANON.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_resource": {
+              "description": "Read by control(s): CTL.VPC.ENDPOINT.GHOST.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "requires_iam_conditions": {
+              "description": "Read by control(s): CTL.VPC.ENDPOINT.IAM.CONDITION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "restricts_target_buckets": {
+              "description": "Read by control(s): CTL.VPC.ENDPOINT.BUCKET.RESTRICT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "has_restrictive_policy": {
+          "description": "Read by control(s): CTL.EC2.VPC.ENDPOINT.ACCESS.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "Read by 7 controls: CTL.EC2.VPC.ENDPOINT.ACCESS.001, CTL.VPC.ENDPOINT.ANON.001, CTL.VPC.ENDPOINT.BUCKET.RESTRICT.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_vpc_endpoint Properties",
+  "type": "object"
+}
