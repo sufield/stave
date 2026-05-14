@@ -32,11 +32,17 @@ func TestGraphExportE2E(t *testing.T) {
 		t.Fatalf("build: %v\n%s", err, out)
 	}
 
-	// Use CloudFront H1 fixture (has 9 findings, no chains).
-	assessment := filepath.Join(repoRoot, "testdata", "e2e",
-		"e2e-h1-cloudfront-2805173", "expected.out.json")
+	// Use a dedicated, test-owned assessment fixture. Earlier this
+	// test consumed testdata/e2e/.../expected.out.json directly, which
+	// coupled it to the e2e golden-regeneration pipeline — when regen
+	// produced non-JSON content the test failed with a confusing
+	// parse error rather than a precise input-integrity error. Owning
+	// the fixture under graph/testdata isolates this test from
+	// upstream golden churn.
+	assessment := filepath.Join(repoRoot, "internal", "adapters", "graph",
+		"testdata", "assessment.json")
 	if _, err := os.Stat(assessment); err != nil {
-		t.Skipf("fixture not found: %s", assessment)
+		t.Fatalf("graph assessment fixture not found: %s", assessment)
 	}
 
 	// Run graph export. Capture stderr separately so stdout stays

@@ -481,6 +481,17 @@ func processFixture(name, fixDir string, dryRun bool) fixtureReport {
 			r.Err = derivErr
 			return r
 		}
+		// Refuse to overwrite a JSON-typed golden with non-JSON
+		// content. A regression that wrote a stave error payload
+		// into expected.out.json corrupted the fixture and made
+		// downstream e2e tests fail with confusing parse errors.
+		// Preserve the prior file when the produced content isn't
+		// valid JSON.
+		if isJSONGolden(g) && !json.Valid(newContent) {
+			r.Category = catError
+			r.Err = fmt.Errorf("%s: produced output is not valid JSON; refusing to overwrite golden", g)
+			return r
+		}
 		oldContent, _ := os.ReadFile(filepath.Join(fixDir, g))
 		subCat, detail := classifyDiff(g, oldContent, newContent)
 		if detail != "" {
@@ -953,6 +964,22 @@ func mergeCategory(a, b diffCategory) diffCategory {
 func exists(p string) bool {
 	_, err := os.Stat(p)
 	return err == nil
+}
+
+// isJSONGolden reports whether the golden file is expected to contain
+// valid JSON (or SARIF, which is JSON). Non-JSON goldens
+// (expected.exit, expected.findings.count) are excluded.
+func isJSONGolden(name string) bool {
+	switch name {
+	case "expected.out.json",
+		"expected.summary.json",
+		"expected.input_hashes.json",
+		"expected.source_evidence.json",
+		"expected.out.sarif",
+		"golden.json":
+		return true
+	}
+	return false
 }
 
 // printReport emits the human-readable summary.
