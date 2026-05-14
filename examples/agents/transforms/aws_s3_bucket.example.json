@@ -1,0 +1,47 @@
+{
+  "_comment": "Reference: the shape stave_transform.py produces for aws_s3_bucket. Use this as a target when authoring transforms for other asset types: same envelope, same source/generated_by block, asset entries with the per-type properties shape. The properties section matches the canonical aws_s3_bucket sub-schema at schemas/observation/v1/asset-types/aws_s3_bucket.schema.json — any field present here is one Stave's controls already know how to read.",
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-05-14T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "steampipe",
+    "tool": "stave-transform-agent",
+    "tool_version": "0.1.0",
+    "provider": "aws"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:s3:::example-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "example-bucket",
+          "id": "arn:aws:s3:::example-bucket",
+          "tags": {
+            "data_classification": "phi",
+            "environment": "production"
+          },
+          "controls": {
+            "public_access_block": {
+              "block_public_acls": true,
+              "block_public_policy": true,
+              "ignore_public_acls": true,
+              "restrict_public_buckets": true
+            },
+            "public_access_fully_blocked": true
+          },
+          "encryption": {
+            "algorithm": "aws:kms",
+            "kms_key_id": "arn:aws:kms:us-east-1:111122223333:key/abc-def-123"
+          },
+          "versioning": {
+            "enabled": true,
+            "mfa_delete_enabled": false
+          }
+        }
+      }
+    }
+  ]
+}

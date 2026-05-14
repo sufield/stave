@@ -77,11 +77,14 @@ Caveats:
   - Controls without applicable_asset_types declarations fall
     in the 'indeterminate' bucket. The analyzer cannot
     statically classify them; the engine fires them on any
-    asset at evaluation time.
-
-Examples:
+    asset at evaluation time.`,
+		Example: `  # Default text report against an observation directory
   stave readiness --observations ./my-snapshot
+
+  # Machine-readable for CI or tooling
   stave readiness --observations ./my-snapshot --format json
+
+  # Widen the action plan to the top 10 unblocking asset types
   stave readiness --observations ./my-snapshot --top 10`,
 		SilenceUsage:  true,
 		SilenceErrors: true,

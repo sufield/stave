@@ -86,6 +86,8 @@ stave apply --observations ./my-snapshot --allow-unknown-input
 
 See [`docs/quickstart-own-data.md`](docs/quickstart-own-data.md) for prerequisites, the property mapping, and the time-budget breakdown.
 
+**Bring your own data:** See [`examples/agents/`](examples/agents/) for starter templates that transform Steampipe output into Stave observations.
+
 ### Long form — workflow for a real project
 
 ```bash

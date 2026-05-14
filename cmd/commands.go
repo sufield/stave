@@ -41,6 +41,7 @@ import (
 	staveexportsir "github.com/sufield/stave/cmd/exportsir"
 	staveforensics "github.com/sufield/stave/cmd/forensics"
 	staveforge "github.com/sufield/stave/cmd/forge"
+	stavegaps "github.com/sufield/stave/cmd/gaps"
 	"github.com/sufield/stave/cmd/initcmd"
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
@@ -252,6 +253,15 @@ func WireCommands(app *App) error {
 	// vs observation surface — distinct from `apply --dry-run`,
 	// which is schema-validity only).
 	root.AddCommand(stavereadiness.NewCmd(stavereadiness.Deps{
+		NewCtlRepo:     f.NewCtlRepo,
+		NewChainLoader: f.NewChainLoader,
+		NewObsRepo:     f.NewObsRepo,
+	}))
+
+	// Field-level gap analysis — drills past asset-type
+	// coverage (stave readiness) into per-property absence
+	// and the controls/chains each absence blocks.
+	root.AddCommand(stavegaps.NewCmd(stavegaps.Deps{
 		NewCtlRepo:     f.NewCtlRepo,
 		NewChainLoader: f.NewChainLoader,
 		NewObsRepo:     f.NewObsRepo,

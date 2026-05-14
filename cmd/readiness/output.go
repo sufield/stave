@@ -123,9 +123,8 @@ func writeActionPlan(w io.Writer, r readiness.Report) error {
 func writeNotes(w io.Writer, _ readiness.Report) error {
 	return writeLines(w, []string{
 		"\nNotes:",
-		"  - Intent declaration coverage (tags, role-type labels, vendor",
-		"    registry) is not part of this report; deferred pending catalog",
-		"    metadata. See docs/readiness.md for the design.",
+		"  - For field-level gaps (which observation properties are absent",
+		"    and what chains they unlock), run: stave gaps --observations <dir>",
 		"  - 'Indeterminate' controls/chains lack applicable_asset_types",
 		"    declarations and cannot be statically classified.",
 	})
