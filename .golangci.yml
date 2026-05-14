@@ -17,10 +17,13 @@ linters:
     - forbidigo
     - fatcontext
     - forcetypeassert
+    - gocognit
     - gocritic
+    - gocyclo
     - gosec
     - govet
     - ineffassign
+    - funlen
     - nestif
     - nilerr
     - nilnesserr
@@ -34,6 +37,7 @@ linters:
     - unparam
     - unused
     - wastedassign
+    - wrapcheck
   settings:
     depguard:
       rules:
@@ -140,6 +144,26 @@ linters:
         - "*.collect"
     nestif:
       min-complexity: 12
+    funlen:
+      # Calibrated against the current codebase: max prod function is
+      # `builtinAliases` (208 lines — a static alias table, not complex);
+      # max statement count is `renderTrendTable` at 85. Ceilings sit
+      # just above those so no existing function fails, but new code
+      # above the bar is caught. Tighten over time as outliers refactor.
+      # See docs/audits/lint-complexity-baseline.md for the ratchet plan.
+      lines: 210
+      statements: 90
+    gocyclo:
+      # Production max cyclomatic complexity is 31 (mergeEdgeProperties
+      # in internal/adapters/graph/builder.go). Ceiling at 32 catches
+      # new code above that bar without forcing immediate refactoring.
+      min-complexity: 32
+    gocognit:
+      # Production max cognitive complexity is 84 (stringifiedPolicyFacts
+      # in cmd/exportsir/facts.go). Ceiling at 85 — same ratchet logic.
+      # cyclop is intentionally not enabled — it overlaps gocyclo with a
+      # different metric scale, and the playbook says pick one.
+      min-complexity: 85
     revive:
       rules:
         - name: unused-parameter
@@ -159,6 +183,31 @@ linters:
         - (*os.File).Close
         - os.Remove
         - os.RemoveAll
+    wrapcheck:
+      # wrapcheck's defaults already ignore fmt.Errorf, errors.New, errors.Join,
+      # errors.Unwrap, and the conventional .Wrap*/.WithMessage*/.WithStack
+      # helpers. The signatures below extend that list with Stave-specific
+      # error-construction helpers — wrapping their results would be
+      # double-wrapping.
+      extra-ignore-sigs:
+        - .WithHint(            # ui.WithHint annotates an error with a fix hint
+        - .WithNextCommand(     # ui.WithNextCommand decorates with a "try X" hint
+        - ui.UserError(         # constructs a user-facing error message
+        - ui.EnumError(         # constructs a user-facing enum-validation error
+      ignore-sig-regexps:
+        # Stream-writer output. Errors are surfaced via errcheck's exclude-
+        # functions and rarely actionable. Wrapping them adds noise without
+        # debugging value.
+        - func fmt\.Fprint
+        - \(io\.Writer\)\.Write
+        - \(\*bufio\.Writer\)\.Flush
+        - \(\*encoding/csv\.Writer\)\.Error
+      ignore-package-globs:
+        # Low-level encoding errors at type-boundary code (controldef
+        # Marshal/Unmarshal helpers, csv writer). Wrapping at the call site
+        # is correct, but at the type-layer wrapping just adds "marshal: "
+        # to messages that already say "json: cannot unmarshal …".
+        - encoding/*
   exclusions:
     generated: strict
     paths:
@@ -167,6 +216,14 @@ linters:
       - (^|/)examples($|/)
       - internal/tools/
     rules:
+      # Iteration scope: wrapcheck is enforced only in internal/core/evaluation/engine/
+      # (5 violations fixed in this iteration). 397 other production violations
+      # are grandfathered. Future iterations widen this allow-list package by
+      # package — remove a path from this exclusion and fix its violations in
+      # the same iteration. See docs/audits/lint-wrapcheck-rollout.md for the chip-away
+      # plan.
+      - linters: [wrapcheck]
+        path-except: '^internal/core/evaluation/engine/'
       - path: _test\.go
         linters:
           - forcetypeassert
@@ -184,6 +241,7 @@ linters:
         linters:
           - cyclop
           - gocognit
+          - gocyclo
           - funlen
           - dupl
 

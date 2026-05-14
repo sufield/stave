@@ -188,7 +188,10 @@ func WireCommands(app *App) error {
 	root.AddCommand(stavecelcmd.NewCmd())
 
 	// Security chronology
-	root.AddCommand(stavebisect.NewCmd())
+	root.AddCommand(stavebisect.NewCmd(stavebisect.Deps{
+		NewCtlRepo:      f.NewCtlRepo,
+		NewCELEvaluator: f.NewCELEvaluator,
+	}))
 
 	// Continuous monitoring
 	root.AddCommand(stavewatch.NewCmd())
@@ -206,22 +209,31 @@ func WireCommands(app *App) error {
 	root.AddCommand(stavetrend.NewCmd())
 
 	// Remediation ranking
-	root.AddCommand(staverank.NewCmd())
+	root.AddCommand(staverank.NewCmd(staverank.Deps{
+		NewSnapshotBundleLoader: f.NewSnapshotBundleLoader,
+	}))
 
 	// Multi-account consolidation
 	root.AddCommand(staveconsolidate.NewCmd())
 
 	// Risk acceptance management
-	root.AddCommand(staveexempt.NewCmd())
+	root.AddCommand(staveexempt.NewCmd(staveexempt.Deps{
+		NewBuiltinControlStore: f.NewBuiltinControlStore,
+	}))
 
 	// Automated evidence collection
 	root.AddCommand(stavecollect.NewCmd())
 
 	// Forensic timeline reconstruction
-	root.AddCommand(staveforensics.NewCmd())
+	root.AddCommand(staveforensics.NewCmd(staveforensics.Deps{
+		NewCtlRepo:      f.NewCtlRepo,
+		NewCELEvaluator: f.NewCELEvaluator,
+	}))
 
 	// ATT&CK coverage map
-	root.AddCommand(stavemap.NewCmd())
+	root.AddCommand(stavemap.NewCmd(stavemap.Deps{
+		NewCtlRepo: f.NewCtlRepo,
+	}))
 
 	// Attack path graph export
 	root.AddCommand(stavepath.NewCmd())
@@ -230,7 +242,10 @@ func WireCommands(app *App) error {
 	root.AddCommand(stavecoverage.NewCmd(f.NewCtlRepo))
 
 	// Control test runner
-	root.AddCommand(stavetest.NewCmd(f.NewCtlRepo))
+	root.AddCommand(stavetest.NewCmd(stavetest.Deps{
+		NewCtlRepo:      f.NewCtlRepo,
+		NewCELEvaluator: f.NewCELEvaluator,
+	}))
 
 	// Terminal posture monitor
 	root.AddCommand(stavemonitor.NewCmd())
@@ -266,7 +281,13 @@ func WireCommands(app *App) error {
 	root.AddCommand(staveplan.NewCmd())
 
 	// Executive report
-	root.AddCommand(stavereport.NewCmd())
+	root.AddCommand(stavereport.NewCmd(stavereport.Deps{
+		NewChainLoader:          f.NewChainLoader,
+		NewSLALoader:            f.NewSLALoader,
+		NewArtifactLoader:       f.NewArtifactLoader,
+		NewSnapshotBundleLoader: f.NewSnapshotBundleLoader,
+		NewCtlRepo:              f.NewCtlRepo,
+	}))
 
 	// Evidence archive verification
 	root.AddCommand(staveverify.NewCmd())
@@ -381,13 +402,14 @@ func wireCISubtree(
 // group ID. A subcommand that is not registered in this build (the
 // edition-stripped case) is treated as a soft skip: the help groupMap
 // names every command that could exist, and a stripped edition
-// simply has fewer of them. Genuine wiring bugs surface as the
-// slog.Warn calls below; there is no error return because every
-// outcome here is recoverable.
+// simply has fewer of them. Soft-skip logging is slog.Debug, not
+// slog.Warn, because edition stripping is the normal case for
+// release builds — the WARN was firing on every `stave --help`
+// invocation and felt like a bug to users.
 func assignCommandGroup(root *cobra.Command, use, groupID string) {
 	cmd, _, err := root.Find([]string{use})
 	if err != nil {
-		slog.Warn("assignCommandGroup: subcommand not present in this build; skipping",
+		slog.Debug("assignCommandGroup: subcommand not present in this build; skipping",
 			"use", use, "group_id", groupID, "error", err)
 		return
 	}
@@ -396,7 +418,7 @@ func assignCommandGroup(root *cobra.Command, use, groupID string) {
 	// would corrupt the help layout, so the same soft-skip rule
 	// applies.
 	if cmd == nil || cmd == root {
-		slog.Warn("assignCommandGroup: subcommand not present in this build; skipping",
+		slog.Debug("assignCommandGroup: subcommand not present in this build; skipping",
 			"use", use, "group_id", groupID)
 		return
 	}

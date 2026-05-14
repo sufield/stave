@@ -24,7 +24,7 @@ type Signature struct {
 // Sign produces an Ed25519 signature for a snapshot file.
 // Sign produces an Ed25519 signature for a snapshot file.
 func Sign(snapshotPath string, privateKey ed25519.PrivateKey, keyID, signedAt string) (*Signature, error) {
-	data, err := os.ReadFile(snapshotPath) //nolint:gosec
+	data, err := os.ReadFile(snapshotPath) //nolint:gosec // G304: snapshotPath is caller-supplied; CLI validates via fsutil.CleanUserPath
 	if err != nil {
 		return nil, fmt.Errorf("read snapshot: %w", err)
 	}
@@ -46,13 +46,13 @@ func Sign(snapshotPath string, privateKey ed25519.PrivateKey, keyID, signedAt st
 
 // Verify checks an Ed25519 signature against a snapshot file.
 func Verify(snapshotPath string, publicKey ed25519.PublicKey) error {
-	data, err := os.ReadFile(snapshotPath) //nolint:gosec
+	data, err := os.ReadFile(snapshotPath) //nolint:gosec // G304: snapshotPath is caller-supplied; CLI validates via fsutil.CleanUserPath
 	if err != nil {
 		return fmt.Errorf("read snapshot: %w", err)
 	}
 
 	sigPath := snapshotPath + ".sig"
-	sigData, err := os.ReadFile(sigPath) //nolint:gosec
+	sigData, err := os.ReadFile(sigPath) //nolint:gosec // G304: sigPath is derived from validated snapshotPath
 	if err != nil {
 		return fmt.Errorf("signature file missing: %s", sigPath)
 	}
@@ -88,5 +88,5 @@ func WriteSig(snapshotPath string, sig *Signature) error {
 	if err != nil {
 		return fmt.Errorf("marshal signature: %w", err)
 	}
-	return os.WriteFile(snapshotPath+".sig", data, 0o644) //nolint:gosec
+	return os.WriteFile(snapshotPath+".sig", data, 0o644) //nolint:gosec // G306: .sig sidecar is world-readable by design; verification tools run as non-owner
 }

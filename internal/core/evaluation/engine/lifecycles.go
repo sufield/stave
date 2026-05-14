@@ -197,7 +197,7 @@ func recordAssetObservation(
 						"control", ctl.ID, "asset_type", a.Type)
 					continue
 				}
-				return lcErr
+				return fmt.Errorf("build exposure lifecycle for asset %s (control %s): %w", a.ID, ctl.ID, lcErr)
 			}
 			t = newLC
 			lcs[a.ID] = t

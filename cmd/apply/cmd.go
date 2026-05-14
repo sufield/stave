@@ -192,7 +192,7 @@ Inputs:
   --input                   Path to observations bundle file (required with --profile)
   --max-unsafe              Maximum allowed unsafe duration (default: from project config)
   --now                     Override current time (RFC3339) for deterministic output
-  --format, -f              Output format: json, text, or sarif (default: json)
+  --format, -f              Output format: text, json, or sarif (default: text)
   --dry-run                 Run readiness checks only
   --allow-unknown-input     Allow observations with unknown source types
 
@@ -249,7 +249,12 @@ Remediation scope:
 	}
 
 	cmd.Flags().BoolVar(&opts.DryRun, "dry-run", false, "Run readiness checks only, without evaluating controls")
-	opts.bindCommon(cmd, contracts.FormatJSON)
+	// Default to text format: first-time human users running `stave apply`
+	// without flags should see a readable summary, not a wall of JSON.
+	// Scripted callers explicitly pass `--format json` (every test, demo,
+	// and CI invocation already does), so flipping the default is safe
+	// for the existing suite.
+	opts.bindCommon(cmd, contracts.FormatText)
 	opts.bindApplySpecific(cmd)
 	opts.markMutuallyExclusive(cmd)
 	// Completion registration is best-effort — if it fails, help output

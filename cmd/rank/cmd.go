@@ -14,7 +14,6 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	apprank "github.com/sufield/stave/internal/app/rank"
 	"github.com/sufield/stave/internal/app/rank/formatter"
 	"github.com/sufield/stave/internal/app/sprintplanner"
@@ -23,11 +22,6 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 )
-
-// Deps holds the adapter factories required by the rank command.
-type Deps struct {
-	NewSnapshotBundleLoader compose.SnapshotBundleLoaderFactory
-}
 
 type options struct {
 	InputPath           string
@@ -56,14 +50,9 @@ func (o *options) SortsByBlastRadius() bool {
 	return o != nil && o.SortBy == sortByBlastRadius
 }
 
-// NewCmd constructs the rank command with default factories.
-func NewCmd() *cobra.Command {
-	f := compose.DefaultFactories()
-	return NewCmdWithDeps(Deps{NewSnapshotBundleLoader: f.NewSnapshotBundleLoader})
-}
-
-// NewCmdWithDeps constructs the rank command with explicit dependencies.
-func NewCmdWithDeps(deps Deps) *cobra.Command {
+// NewCmd constructs the rank command with the given dependencies.
+// commands.go is responsible for resolving the production factories.
+func NewCmd(deps Deps) *cobra.Command {
 	opts := &options{
 		TopN:   5,
 		Format: "text",

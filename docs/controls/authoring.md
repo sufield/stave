@@ -11,6 +11,85 @@ This guide explains how to create new security controls for Stave. Controls are
 declarative YAML — no Go code required. The evaluation engine handles any asset
 type and any cloud vendor without code changes.
 
+## Why a control is data, not code
+
+The engineer who configures an S3 bucket correctly on day one
+is the same engineer who, six months later, has moved teams. A
+new engineer debugs a cross-account access issue, temporarily
+adds a permissive policy, the application works, the tests
+pass, the deploy succeeds. Nobody catches the regression
+because the original engineer's intent — "this bucket must
+never be publicly accessible" — was never written down in a
+way the system could enforce. It lived in their head, maybe
+in a Confluence page nobody reads, maybe in a Slack message
+buried under thousands of others.
+
+Terraform manages the bucket's configuration. OPA can check
+individual resource properties. But none of these express the
+safety property: "regardless of what changes, regardless of
+who changes it, regardless of which tool makes the change —
+this condition must never be violated." That's a system
+invariant. A Stave control is how you write one.
+
+### Liveness vs safety
+
+Borrowed from distributed systems theory:
+
+- **Liveness** properties say what should *eventually* happen
+  ("the system should converge to the desired state"). Terraform
+  and Pulumi express liveness.
+- **Safety** properties say what must *never* happen ("no
+  bucket tagged PHI is ever publicly readable"). That's a
+  Stave control.
+
+A liveness violation is self-correcting (Terraform detects
+drift, reapplies). A safety violation can be invisible —
+every resource matches its desired state, Terraform shows no
+changes, and yet a security property is violated because the
+desired configuration itself is wrong.
+
+### Why YAML, not Python or Go
+
+Most security tools embed their checks as code. A Prowler
+check is a Python function. A Checkov check is Python with
+graph queries. A Trivy check is Rego. The consequences:
+
+- Understanding what a check does requires reading code in a
+  specific language.
+- Extending the tool requires programming in that language.
+- Auditing the check requires a developer, not a security
+  analyst.
+
+Stave's controls are YAML with a constrained DSL. A
+compliance officer can read
+`field: properties.storage.encryption.at_rest_enabled, op: eq, value: false`
+and understand "this fires when encryption is off." They
+can't read a Python function that does the same thing. The
+contract is the documentation.
+
+Three properties follow from controls-as-data:
+
+1. **Readable by non-developers** — compliance officers,
+   CTOs, auditors can read the YAML.
+2. **Composable and introspectable** — you can enumerate all
+   controls programmatically, generate compliance matrices
+   automatically, diff control sets between versions, detect
+   conflicting controls. These operations are trivial on
+   structured YAML and nearly impossible when checks are
+   scattered across code files.
+3. **No side effects** — a Python check could accidentally
+   call an API, modify state, introduce a dependency, fail
+   for reasons unrelated to the security property it's
+   checking. A control reads data and returns a verdict. The
+   constraint is the guarantee.
+
+The DSL deliberately *cannot* call external services, execute
+arbitrary code, or modify state. A control is a pure
+assertion: read data, return true or false. That constraint
+is what makes controls auditable — a compliance officer can
+read the YAML and know exactly what it checks without
+worrying about side effects.
+
 ## Quick Start: Policy Forge
 
 The fastest way to create a new control with test fixtures:

@@ -1,20 +1,12 @@
 # Stave
 
-Stave is a static analysis tool that evaluates cloud infrastructure configuration snapshots against system invariants via CEL predicates and exports standardized facts (JSONL, SMT-LIB) for consumption by external reasoning engines — all from air-gapped snapshots with no cloud credentials required.
+Stave finds dangerous **combinations** in your cloud configuration that single-check scanners miss. A correctly-scoped IAM role, a properly-private S3 bucket, and a correctly-configured Cognito identity pool can compose into a path that lets anonymous users reach patient data. Stave detects these compound risks on static configuration snapshots — no cloud credentials required.
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/sufield/stave?v=1)](https://goreportcard.com/report/github.com/sufield/stave)
 [![codecov](https://codecov.io/gh/sufield/stave/graph/badge.svg?token=OQ72PYGVPZ)](https://codecov.io/gh/sufield/stave)
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sufield/stave?quickstart=1)
 
-## What is Stave?
-
-Stave is a static analysis tool that evaluates cloud infrastructure configurations against a catalog of {{.TotalControls}}+ system invariants using [CEL](https://github.com/google/cel-go) predicate evaluation. It operates on observation snapshots representing infrastructure state — no cloud credentials, no API calls, no network access.
-
-Stave's second function is **fact export**. It projects normalized configuration facts into standardized formats (JSONL triples, SMT-LIB v2) that external reasoning engines consume independently. Stave exports facts. External programs own rules.
-
-Stave does two things: **evaluate** (CEL) and **export** (facts). Everything else is delegated to purpose-built external tools that read Stave's output as files. No subprocess calls from Stave to solvers. No plugin loading. Files are the language boundary.
-
-## AI agent identity
+## What it finds
 
 Your AI agent has admin access. Your scanner says you're compliant.
 
@@ -28,147 +20,75 @@ A Bedrock agent with broad Lambda invoke + no guardrail + a Lambda tool that rea
 
 The five-act demo above is the 90-second version. The 20-minute conference talk lives at [`docs/talks/ai-security-2026/`](docs/talks/ai-security-2026/) with [slides](docs/talks/ai-security-2026/slides.md), [speaker notes](docs/talks/ai-security-2026/speaker-notes.md), [voiceover script](docs/talks/ai-security-2026/voiceover-script.md), and a [recording runbook](docs/talks/ai-security-2026/RECORDING.md) for the YouTube / dev.to MP4.
 
-| AI surface | Controls | Compound chains | Iteration |
-|---|---:|---:|---|
-| Bedrock agent overprivilege + lifecycle | 8 | 1 (`bedrock_agent_overpermissioned`) | [Iter 2](controls/bedrock/agent/) |
-| SageMaker execution-role overprivilege + lifecycle | 8 | 1 (`sagemaker_training_role_overprivileged`) | [Iter 3](controls/sagemaker/) |
-| AI data-boundary violations (RAG indexing PHI, cross-account training) | 6 | 1 (`bedrock_rag_phi_exposure`) | [Iter 4](chains/bedrock_rag_phi_exposure.yaml) |
-| Cross-service AI compounds (agent → Lambda → S3, notebook → prod role) | 4 | 2 (`bedrock_agent_tool_phi_exposure`, `sagemaker_notebook_production_escape`) | [Iter 5](chains/bedrock_agent_tool_phi_exposure.yaml) |
-| Shadow agent governance + ghost references | 6 | 0 | [Iter 6](controls/bedrock/agent/CTL.BEDROCK.AGENT.SHADOW.001.yaml) |
-| **Total** | **32** | **5** | [taxonomy](docs/ai-agent-identity-taxonomy.md) |
+| AI surface | Controls | Compound chains |
+|---|---:|---|
+| [Bedrock agent overprivilege + lifecycle](controls/bedrock/agent/) | 8 | 1 ([`bedrock_agent_overpermissioned`](chains/bedrock_agent_overpermissioned.yaml)) |
+| [SageMaker execution-role overprivilege + lifecycle](controls/sagemaker/) | 8 | 1 ([`sagemaker_training_role_overprivileged`](chains/sagemaker_training_role_overprivileged.yaml)) |
+| [AI data-boundary violations (RAG indexing PHI, cross-account training)](chains/bedrock_rag_phi_exposure.yaml) | 6 | 1 ([`bedrock_rag_phi_exposure`](chains/bedrock_rag_phi_exposure.yaml)) |
+| [Cross-service AI compounds (agent → Lambda → S3, notebook → prod role)](chains/bedrock_agent_tool_phi_exposure.yaml) | 4 | 2 ([`bedrock_agent_tool_phi_exposure`](chains/bedrock_agent_tool_phi_exposure.yaml), [`sagemaker_notebook_production_escape`](chains/sagemaker_notebook_production_escape.yaml)) |
+| [Shadow agent governance + ghost references](controls/bedrock/agent/) | 6 | 0 |
+| **Total** | **32** | **5** ([taxonomy](docs/ai-agent-identity-taxonomy.md)) |
 
-Every control maps to the OWASP Non-Human Identity (NHI) Top 10 — see [`docs/compliance/owasp-nhi-top10.md`](docs/compliance/owasp-nhi-top10.md) for the full 235-control mapping (NHI1 through NHI10). The AI iterations cover six of the ten risks directly (NHI1, NHI3, NHI5, NHI6, NHI7, NHI8).
+Every AI control maps to the OWASP Non-Human Identity (NHI) Top 10 — see [`docs/compliance/owasp-nhi-top10.md`](docs/compliance/owasp-nhi-top10.md) for the full 235-control mapping.
 
-## How detection works
+## What's different
 
-Detection is a three-stage pipeline. Read this section once; other docs defer to it rather than re-explaining the flow.
-
-1. **CEL evaluation — primary detection.** Each control's `unsafe_predicate` is evaluated against the observation properties. This is where findings are produced. A ghost reference is detected because the collector pre-computed `has_ghost_action_group: true` and the control reads it; an overprivileged role is detected because the collector pre-computed `is_overbroad: true` and the control reads it. Stave does the predicate work; the collector does the property work.
-2. **Chain engine — compound composition.** Findings are grouped by `asset.ID` (or by `scope_field` when a chain spans asset kinds), and the chain engine checks whether enough member controls fired to meet the chain's threshold. This is where individual findings become attack paths.
-3. **External engines — independent verification on the fact export.** Nine external reasoning engines consume Stave's JSONL triples or SMT-LIB assertions and provide additional reasoning dimensions. They do not replace CEL for detection; they verify, quantify, and explain on the same fact set that CEL already evaluated. The exception: when CEL's literal-predicate expressivity falls short (e.g., prefix-wildcard reasoning over IAM actions), SMT solving can surface cases CEL can't express — see [`examples/apigw-private-api-scoped-deny/`](examples/apigw-private-api-scoped-deny/) and [`examples/iam-autoscaling-privesc-bypass/`](examples/iam-autoscaling-privesc-bypass/) for the "CEL passes, Z3 finds" pattern.
-
-## Reasoning engines
-
-Nine reasoning engines consume Stave's outputs, each answering a different kind of question:
-
-| Engine | Question | Stave's role |
+| | Checklist scanners | Stave |
 |---|---|---|
-| **CEL** (built-in) | Does this snapshot violate this rule? | evaluates directly |
-| **Z3 / cvc5 / Yices** | Can an unsafe state exist? | exports SMT-LIB facts |
-| **Soufflé** | What is the full blast radius? | exports JSONL triples |
-| **Clingo** | What configurations violate constraints? | exports JSONL triples |
-| **PySAT** | Which control combinations are unsafe? | exports JSONL triples |
-| **Prolog** | Why is this path reachable? | exports JSONL triples |
-| **Probabilistic risk** | How likely is exploitation? | exports JSONL triples |
-| **TLA+ / temporal** | How far from unsafe after remediation? | exports JSONL triples |
-| **Game theory** | What does the attack cost, what's the fix ROI? | exports JSONL triples |
+| **Checks** | Individual settings on individual resources | Compositions across multiple resources |
+| **Finds** | "Bucket not encrypted" (attribute) | "This bucket is reachable through an unauthenticated identity pool" (path) |
+| **Knows your intent?** | No — universal baselines | Yes — reads your tags, trust policies, and declared purpose |
+| **Output** | Hundreds of findings, most are known | A handful of compound chains, each naming root cause and fix |
+| **Proof** | Scan result (point-in-time opinion) | Deterministic, traceable evidence chain |
+| **Credentials** | Requires cloud API access | Runs on static snapshots — air-gapped, no credentials |
 
-Eight engine examples ship under [`examples/`](examples/) — each is a runnable `run.sh` that consumes the JSONL or SMT-LIB output via standard solver / interpreter CLIs. None of them invokes Stave subprocesses; Stave wrote the file, the engine reads it, and the boundary is the on-disk format.
-
-The [`compare-engines/`](examples/compare-engines/) harness runs every available engine across the same fixture set and reports per-fixture consensus or disagreement — disagreement is the signal that one engine's model is incomplete.
-
-The [`compliance-evidence/`](examples/compliance-evidence/) translator turns the engine outputs into auditor-facing evidence packets: per-control evidence chain (Markdown), GRC-import spreadsheet (CSV), and board-level posture summary (Markdown). Mapping from regulatory control to Stave control is derived at run time from each control's existing `compliance:` metadata block — no hand-curated mapping files.
-
-End-to-end pipelines composing every engine + the compliance translator live under [`demos/`](demos/) — the [NODES 2026](demos/nodes-2026/) demo runs the full nine-engine pipeline against the Capital One credential-bypass pattern; the [fwd:cloudsec 2026](demos/fwd-cloudsec-2026/) submission package reuses the same demo through symlinks.
+Stave doesn't replace your scanner. It finds what your scanner structurally cannot — the compound risks that exist in the relationships between individually-correct configurations.
 
 ## Operating model
 
-Stave operates on static snapshots with no cloud credentials, no network access, and no runtime instrumentation — fully air-gapped by design. Findings are deterministic, traceable, and inspectable: same inputs produce the same outputs, every conclusion carries the evidence chain that derived it, and every step is reviewable end-to-end.
+Static configuration snapshots in, deterministic findings out. No cloud credentials, no API calls, no network access. Same inputs produce the same outputs; every conclusion carries the evidence chain that derived it.
 
-## Features
+## Catalog at a glance
 
-- **AI agent identity — 32 controls + 5 compound chains** — Bedrock agent overprivilege, RAG knowledge-base PHI exposure, SageMaker execution-role overprivilege, cross-service AI tool chains (agent → Lambda → S3 PHI), shadow agents (created outside IaC), ghost references (agent points to deleted Lambda / knowledge base / model artifact). [Five-act demo](examples/demo-ai-security/) showcases the compound detection in 90 seconds; full conference talk under [`docs/talks/ai-security-2026/`](docs/talks/ai-security-2026/).
-- **{{.TotalControls}} built-in controls across {{len .DomainTotals}} domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, ECR, EKS, CloudTrail, CloudWatch, KMS, OpenSearch, Redshift, Neptune, DocumentDB, Glue, CodeBuild, SageMaker, Bedrock, Cognito, API Gateway, EMR, Kinesis, MSK, EFS, Route53, DMS, SSM, ACM, WAF, Shield, Network Firewall, EventBridge, Config, Backup, and [{{subtract (len .DomainTotals) 36}} more](docs/controls/reference.md)
-- **23 ghost reference controls** — cross-inventory reasoning detects dangling references to deleted resources across IAM policies, resource policies, event triggers, compute dependencies, network infrastructure, cross-account trust, and temporal confirmation. Detection no per-resource scanner can perform.
-- **30+ compound chain definitions** — detect multi-step attack paths across data protection, identity, detection, recovery, sovereignty, supply chain, cryptographic concentration, WAF safety envelope, ghost resource exfiltration, and silent monitoring collapse
-- **7-control WAF safety envelope** — presence, enforcement, OWASP coverage, logging, origin lockdown, parser overflow protection, evasion observability
-- **Full OWASP Top 10 coverage** — all categories at Full across P1 and P2 priorities
-- **15/15 ATT&CK cloud technique coverage** — configuration preconditions for 100% of AWS ATT&CK techniques tested by Atomic Red Team
-- **20/21 Rhino Security Labs escalation techniques** — 26 ESCALATE controls covering privilege escalation preconditions (1 remaining is AWS-deprecated)
-- **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
-- **Risk reasoning engine** — compound risk scoring across co-failing controls, MITRE-aligned attack stage summary, blast radius multipliers
-- **Full triage output per finding** — DEFECT (what's wrong), INFECTION (how it enables attack), FAILURE (worst case), OBSERVED (what the engine consulted), DELTA (mechanically verified fix)
-- **Remediation ranking** — `stave rank` produces a prioritized remediation roadmap with SLA urgency, risk impact percentages, and remediation bundles
-- **Drift detection** — `stave diff` compares two snapshots and treats configuration changes as violations, exit code 3 for CI/CD gating
-- **Continuous monitoring** — `stave watch` monitors observation directories for new snapshots, detects regressions in real time, emits alerts to stdout or JSONL file sinks
-- **Unsafe duration tracking** — detects how long assets remain misconfigured across snapshots
-- **Graph export** — `stave path` and `stave graph export` emit nodes and edges in JSON, DOT, CSV, JSON-LD, and GraphML for graph-data-science workloads (centrality, community detection, shortest path, influence propagation) on any library — Neo4j GDS, igraph, NetworkX, Spark GraphX, Gephi
-- **Custom controls** — YAML with `unsafe_predicate` for any asset type, no code changes
-- **Evidence bundling** — `stave bundle` produces signed, portable evidence archives for air-gap GRC integration (ASFF compatible)
-- **CI/CD ready** — exit codes, SARIF output, baseline tracking, policy gating
-- **Extensible by design** — new properties and controls are additive and backward-compatible
+- **{{.TotalControls}} built-in controls across {{len .DomainTotals}} domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, EKS, CloudTrail, KMS, OpenSearch, SageMaker, Bedrock, Cognito, and [{{subtract (len .DomainTotals) 14}} more](docs/controls/reference.md).
+- **23 ghost-reference controls** — cross-inventory detection of pointers to deleted resources (IAM → role, agent → Lambda, CNAME → S3 bucket). Single-resource scanners can't see absence.
+- **30+ compound chain definitions** — multi-step attack paths across identity, data, audit, and recovery surfaces; 5 of those land on AI agent identity (Bedrock + Lambda + S3 PHI, RAG → PHI, notebook → prod role).
+- **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0.
+- **Coverage benchmarks** — Full OWASP Top 10, 15/15 ATT&CK cloud techniques tested by Atomic Red Team, 20/21 Rhino Security Labs privilege-escalation techniques.
 
-## Getting started
+See [docs/index.md](docs/index.md) for the full feature index: drift, watch, rank, bundle, graph export, custom controls, CI gating, SARIF, evidence bundles.
 
-Stave ships in **three progressive tiers**. Each tier adds capability on top of the previous one — they are not alternatives. Most adopters live in Tier 1 with occasional Tier 2 when they need a proof for an auditor or a breach investigation. Tier 3 is the demo stage.
-
-### Pick your tier
-
-| Goal | Tier | Install |
-|---|---|---|
-| Scan my AWS configurations | **1** | `go install` or `make build` |
-| Formal proofs / risk quantification / blast-radius counts | **2** | Open the Codespace, or `brew install` engines individually |
-| Full demo with graph visualisation | **3** | `docker compose up` adds Neo4j on top of Tier 2 |
-
-### Tier 1 — Stave standalone
-
-The Go binary. No dependencies beyond Go itself. Does CEL evaluation against {{.TotalControls}}+ controls and fact export (JSONL, SMT-LIB).
+## Install
 
 ```bash
 go install github.com/sufield/stave@latest
 # or build from source:
-git clone https://github.com/sufield/stave.git
-cd stave && make build
+git clone https://github.com/sufield/stave.git && cd stave && make build
 ```
 
-```bash
-stave apply        --observations ./snapshots
-stave export-sir   --format jsonl --observations ./snapshots
-```
-
-This is what early adopters install first. Everything an adopter needs to detect compound misconfigurations and export facts. No Docker, no Python, no solvers — one binary.
-
-### Tier 2 — Stave + reasoning engines
-
-Tier 1 plus external solvers. Use this when you want formal proofs (Z3 / cvc5 / Yices), blast-radius enumeration (Soufflé), constraint enumeration (Clingo), derivation trees (Prolog), risk quantification (PySAT, probabilistic models), or attacker-cost ROI (game-theory model).
-
-**Batteries-included** — click the **Open in GitHub Codespaces** badge above. The devcontainer pre-installs Z3, cvc5, SWI-Prolog, Soufflé, libz3-dev, and a Python venv with `clingo` / `python-sat` / `pyyaml`, then runs `make build`. Wait for `[stave devcontainer] ready` and run any example. Entry-level S3 walkthroughs live under [`examples/demo-s3-*/`](examples/CATALOG.md#demo-scenarios-start-here) — `bash examples/demo-s3-public-read/run.sh` is a one-line first run.
-
-**Pick what you need** — install only the engines whose question shape you need:
-
-```bash
-brew install z3 cvc5 swi-prolog clingo
-pip install python-sat pyyaml
-
-stave export-sir --format smt2 --observations ./snapshots > facts.smt2
-echo '(check-sat)' >> facts.smt2
-z3 facts.smt2
-
-bash examples/souffle-reachability/run.sh
-bash examples/compare-engines/run.sh   # nine-engine consensus
-```
-
-Both paths consume the same `stave export-sir` output — files are the language boundary. See [`examples/`](examples/) for the catalog and [`examples/PREREQUISITES.md`](examples/PREREQUISITES.md) for OS-specific install commands.
-
-### Tier 3 — Stave + visualisation
-
-Tier 2 plus **Neo4j** for graph visualisation. The demo / presentation tier — not daily use.
-
-```bash
-cd demos/nodes-2026
-docker compose up -d        # Neo4j 5
-make demo                   # ten-step walkthrough, all nine engines + graph import
-make teardown
-```
-
-The conference demos at [`demos/nodes-2026/`](demos/nodes-2026/) and [`demos/fwd-cloudsec-2026/`](demos/fwd-cloudsec-2026/) drive the same fixture through every engine and import the resulting graph into Neo4j for the killer-slide visualisation.
+For formal verification, blast-radius enumeration, or compound-attack proofs, install the optional [reasoning engines](docs/index.md) (Z3, cvc5, Soufflé, Clingo, Prolog, PySAT) — or click **Open in Codespaces** above, which pre-installs all of them.
 
 ## Quick start
 
-```bash
-# Initialize project with built-in S3 controls
-stave init --profile aws-s3
+### Try a demo against a bundled snapshot (30 seconds, zero AWS access)
 
+```bash
+bash examples/demo-s3-public-read/run.sh        # Public S3 bucket
+bash examples/demo-ai-security/run.sh           # Bedrock + Lambda + S3 PHI
+```
+
+### Run against your own AWS account (5 minutes)
+
+```bash
+bash scripts/aws-snapshot.sh ./my-snapshot      # read-only AWS CLI calls; AES/SecurityAudit creds suffice
+stave apply --observations ./my-snapshot --allow-unknown-input
+```
+
+See [`docs/quickstart-own-data.md`](docs/quickstart-own-data.md) for prerequisites, the property mapping, and the time-budget breakdown.
+
+### Long form — workflow for a real project
+
+```bash
 # Place observation snapshots in observations/
 # (at least two snapshots for duration-based controls)
 
@@ -176,7 +96,7 @@ stave init --profile aws-s3
 stave validate
 
 # Evaluate and produce findings
-stave apply --format json
+stave apply
 
 # Investigate unexpected results
 stave diagnose
@@ -184,100 +104,39 @@ stave diagnose
 
 ## How it works
 
-```
-Extract → Validate → Apply → Act
+The pipeline is **Extract → Apply → Act**.
 
-1. Extract    Capture asset configs as obs.v0.1 JSON (extractor is external)
-2. Validate   Check inputs are well-formed and complete
-3. Apply      Evaluate snapshots against safety controls, produce findings
-4. Act        Review findings, remediate, re-evaluate
-```
+1. **Extract.** An external collector (cloud APIs, Terraform state, the bundled `scripts/aws-snapshot.sh`, or your own) produces `obs.v0.1` JSON. Stave never touches your cloud directly.
+2. **Apply.** Stave evaluates each control's predicate against each asset, then composes the resulting findings into compound chains (multiple co-failing controls on related assets = one chain finding).
+3. **Act.** Findings ship with explicit remediation, severity, and the evidence chain that justified them. Optionally pipe to nine external reasoning engines (Z3, Soufflé, Clingo, Prolog, …) for formal proofs, blast-radius enumeration, or attacker-cost ROI.
 
-Stave evaluates observations. Extractors are separate programs (any language) that produce `obs.v0.1` JSON from cloud APIs, Terraform state, or any config source. See [Building an Extractor](docs/extractor-prompt.md).
+Full architecture in [docs/architecture/overview.md](docs/architecture/overview.md). The reasoning-engine catalog and what each one answers: [docs/engines.md (in docs/index.md)](docs/index.md).
 
-## Usage examples
-
-### Standard evaluation
+## Compliance profiles
 
 ```bash
-stave apply --format json > evaluation.json
+stave apply --profile hipaa --input observations.json --include-all
+# Also: cis-aws-v3.0, soc2, pci-dss-v4.0, nist-800-53, fedramp,
+#       gdpr, ffiec, iso-27001, nist-csf-2.0
 ```
 
-### Compliance profiles
-
-```bash
-stave apply --profile hipaa --input observations.json --include-all --format json
-stave apply --profile cis-aws-v3.0 --input observations.json --include-all --format json
-stave apply --profile soc2 --input observations.json --include-all --format json
-stave apply --profile pci-dss-v4.0 --input observations.json --include-all --format json
-# Also: nist-800-53, fedramp, gdpr, ffiec, iso-27001, nist-csf-2.0
-```
-
-### CI/CD gating
+## CI/CD
 
 ```bash
 stave ci baseline save
+stave apply --format sarif > results.sarif          # for GitHub Security
 stave apply --format json | stave ci gate --fail-on new
 ```
 
-### SARIF for GitHub Security
+## Custom controls
 
-```bash
-stave apply --format sarif > results.sarif
-```
-
-## Extensibility
-
-Add new detection capabilities without engine changes:
-
-1. **Extract** — write an extractor that outputs `obs.v0.1` JSON
-2. **Author** — write a YAML control with `unsafe_predicate`
-3. **Evaluate** — `stave apply --controls ./my-controls`
-
-New observation properties are additive and backward-compatible. Existing controls ignore new fields. New controls check them. This is how the Access Grants, MRAP, and CloudFront OAC controls were added — zero Go changes, 6 YAML files, 6 test fixtures.
+New controls are YAML — no Go changes. Write an `unsafe_predicate`, point `stave apply --controls ./my-controls` at the directory, and the engine evaluates them alongside the built-in catalog. See [authoring controls](docs/controls/authoring.md).
 
 ## Built-in controls
 
-{{.TotalControls}} controls across {{len .DomainTotals}} domains:
+{{.TotalControls}} controls across {{len .DomainTotals}} domains. Largest surfaces today: AWS S3 ({{domain "s3"}}), AWS IAM ({{domain "iam"}}), AWS OpenSearch ({{domain "opensearch"}}), GCP Cloud Storage ({{domain "gcs"}}), DNS ({{domain "dns"}}, vendor-agnostic dangling-reference detection).
 
-### AWS S3 ({{domain "s3"}} controls)
-
-| Category | Count | What they detect |
-|----------|:---:|-----------------|
-| `public` | {{ctrl "public"}} | Public read/write/list, website hosting, prefix exposure, CloudFront bypass |
-| `acl` | {{ctrl "acl"}} | ACL escalation, reconnaissance, FULL_CONTROL grants |
-| `access` | {{ctrl "access"}} | Cross-account, wildcard actions, presigned URLs, Access Grants, policy disclosure |
-| `encrypt` | {{ctrl "encrypt"}} | Missing encryption at rest/in transit, KMS for PHI |
-| `network` | {{ctrl "network"}} | VPC/IP conditions, VPC endpoint policy, Multi-Region Access Point PAB |
-| `versioning` | {{ctrl "versioning"}} | Disabled versioning, missing MFA delete |
-| `lock` | {{ctrl "lock"}} | Object lock mode, retention period |
-| `logging` | {{ctrl "logging"}} | Access logging, CloudTrail object-level audit |
-| `lifecycle` | {{ctrl "lifecycle"}} | Lifecycle rules, PHI retention |
-| `governance` | {{ctrl "governance"}} | Data classification tags |
-| `write_scope` | {{ctrl "write_scope"}} | Upload scope, content type restriction |
-| `tenant` | {{ctrl "tenant"}} | Prefix-based tenant isolation |
-| `takeover` | {{ctrl "takeover"}} | Dangling bucket references, CDN origins |
-| `artifacts` | {{ctrl "artifacts"}} | VCS artifacts on public buckets |
-| `cors` | {{ctrl "cors"}} | Wildcard origin CORS on non-public-by-design buckets |
-| `misc` | {{ctrl "misc"}} | Incomplete data, completeness checks |
-
-### AWS IAM ({{domain "iam"}} controls)
-
-Root account MFA and access keys, console user MFA, credential rotation, password policy, privilege escalation (self-modify, PassRole, AssumeRole), permissions boundaries, break-glass persistence, cross-environment access, inactive accounts, blast-radius thresholds for roles and users. **Shadow Admin detection** — a role tagged `readonly` that has accumulated permissions across incompatible categories (data + secrets, data + IAM write) and retains services that Access Advisor reports as unused is structurally a Shadow Admin even when no admin policy is attached; the [`shadow_admin_by_accumulation`](chains/shadow_admin_by_accumulation.yaml) and [`privilege_creep_lateral_movement`](chains/privilege_creep_lateral_movement.yaml) chains compose permission drift, category mixing, and intent mismatch into compound findings. CIS AWS Benchmark aligned.
-
-### AWS OpenSearch ({{domain "opensearch"}} controls)
-
-Authentication enforcement, VPC deployment, fine-grained access control, encryption at rest and node-to-node, HTTPS, Kibana exposure, access policy wildcards, audit logging, snapshot encryption. Prevents the Darkbeam (3.8B records), Wyze, and Microsoft Elasticsearch breach patterns.
-
-### GCP Cloud Storage ({{domain "gcs"}} controls)
-
-Public access, uniform bucket-level access, CMEK encryption, access logging, object versioning, data completeness. CIS GCP Benchmark aligned.
-
-### DNS ({{domain "dns"}} controls)
-
-Vendor-agnostic dangling DNS reference detection — subdomain takeover, storage bucket takeover, supply chain takeover via software distribution endpoints. Works with any DNS provider.
-
-Full reference: [Control reference](docs/controls/reference.md)
+Full reference and per-domain breakdowns: [`docs/controls/reference.md`](docs/controls/reference.md).
 
 ## Documentation
 

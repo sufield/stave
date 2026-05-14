@@ -2,6 +2,7 @@ package engine
 
 import (
 	"errors"
+	"fmt"
 	"slices"
 	"time"
 
@@ -87,7 +88,10 @@ func CreateDurationFinding(in DurationFindingInput) (*evaluation.Finding, error)
 	}
 	f.ReasoningTrace = evaluation.ReasoningTraceFromMisconfigurations(misconfigs)
 	f.Delta = policy.DeriveDeltas(misconfigs)
-	return f, durationErr
+	if durationErr != nil {
+		return f, fmt.Errorf("compute exposure duration for control %s asset %s: %w", in.Control.ID, a.ID, durationErr)
+	}
+	return f, nil
 }
 
 // DeriveRootCauses maps misconfiguration categories to high-level mechanism labels.

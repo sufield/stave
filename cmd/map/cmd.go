@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appcoverage "github.com/sufield/stave/internal/app/coverage"
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -25,8 +24,9 @@ type options struct {
 	MinControls int
 }
 
-// NewCmd constructs the map command.
-func NewCmd() *cobra.Command {
+// NewCmd constructs the map command with the given dependencies.
+// cmd/commands.go is responsible for resolving the production factories.
+func NewCmd(deps Deps) *cobra.Command {
 	opts := &options{Format: "table", ControlsDir: "controls", MinControls: 2}
 
 	cmd := &cobra.Command{
@@ -44,7 +44,7 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runMap(cmd.Context(), cmd.OutOrStdout(), opts)
+			return runMap(cmd.Context(), cmd.OutOrStdout(), opts, deps)
 		},
 	}
 
@@ -57,9 +57,8 @@ Exit Codes:
 	return cmd
 }
 
-func runMap(ctx context.Context, stdout io.Writer, opts *options) error {
-	f := compose.DefaultFactories()
-	ctlRepo, err := f.NewCtlRepo()
+func runMap(ctx context.Context, stdout io.Writer, opts *options, deps Deps) error {
+	ctlRepo, err := deps.NewCtlRepo()
 	if err != nil {
 		return fmt.Errorf("create control loader: %w", err)
 	}

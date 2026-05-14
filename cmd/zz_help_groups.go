@@ -17,8 +17,12 @@ func wireHelpGroups(root *cobra.Command) {
 		&cobra.Group{ID: groupSettings, Title: "Settings"},
 	)
 
+	// Top-level commands grouped for the help layout. `init` is intentionally
+	// absent: there is no top-level `init` command in any current edition
+	// (the closest is `sla init`, a subcommand). Listing it here triggered
+	// a soft-skip slog.Warn on every `stave --help` invocation.
 	groupMap := map[string][]string{
-		groupGettingStarted: {"init", "generate"},
+		groupGettingStarted: {"generate"},
 		groupCore:           {"validate", "apply", "diagnose", "explain", "expand", "verify"},
 		groupWorkflow:       {"ci", "snapshot", "status"},
 		groupArtifacts:      {"enforce", "report"},

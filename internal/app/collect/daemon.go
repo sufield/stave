@@ -159,7 +159,7 @@ func RunStatus(opts StatusOpts) string {
 	// Daemon status from PID file.
 	daemonStatus := "NOT RUNNING"
 	if opts.PIDFile != "" {
-		if data, err := os.ReadFile(opts.PIDFile); err == nil { //nolint:gosec
+		if data, err := os.ReadFile(opts.PIDFile); err == nil {
 			pidStr := strings.TrimSpace(string(data))
 			pid, parseErr := strconv.Atoi(pidStr)
 			switch {

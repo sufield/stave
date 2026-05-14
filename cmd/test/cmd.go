@@ -11,8 +11,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	"github.com/sufield/stave/internal/app/controltest"
 	"github.com/sufield/stave/internal/cli/ui"
 )
@@ -26,8 +24,9 @@ type options struct {
 	Verbose     bool
 }
 
-// NewCmd constructs the test command.
-func NewCmd(newCtlRepo compose.CtlRepoFactory) *cobra.Command {
+// NewCmd constructs the test command with the given dependencies.
+// cmd/commands.go is responsible for resolving the production factories.
+func NewCmd(deps Deps) *cobra.Command {
 	opts := &options{Format: "table"}
 
 	cmd := &cobra.Command{
@@ -67,7 +66,7 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runTest(cmd.Context(), cmd.OutOrStdout(), opts, newCtlRepo)
+			return runTest(cmd.Context(), cmd.OutOrStdout(), opts, deps)
 		},
 	}
 
@@ -81,12 +80,12 @@ Exit Codes:
 	return cmd
 }
 
-func runTest(ctx context.Context, stdout io.Writer, opts *options, newCtlRepo compose.CtlRepoFactory) error {
+func runTest(ctx context.Context, stdout io.Writer, opts *options, deps Deps) error {
 	if opts.ControlPath == "" && opts.ControlsDir == "" {
 		opts.ControlsDir = "controls"
 	}
 
-	repo, err := newCtlRepo()
+	repo, err := deps.NewCtlRepo()
 	if err != nil {
 		return fmt.Errorf("init control loader: %w", err)
 	}
@@ -111,8 +110,7 @@ func runTest(ctx context.Context, stdout io.Writer, opts *options, newCtlRepo co
 
 	// Single control path already scoped the directory.
 
-	// Build evaluator using production CEL path.
-	eval, err := stavecel.NewPredicateEval()
+	eval, err := deps.NewCELEvaluator()
 	if err != nil {
 		return fmt.Errorf("init CEL evaluator: %w", err)
 	}

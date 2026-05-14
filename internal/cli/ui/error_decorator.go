@@ -59,8 +59,8 @@ func WithHint(err, hint error) error {
 }
 
 // WithNextCommand appends a remediation command to an error.
-// The "More info" line resolves to a local `stave docs search` reference
-// (or the URL in STAVE_DOCS_URL if set).
+// The "More info" line resolves via metadata.DocsRef — a public
+// GitHub docs URL by default, or the URL in STAVE_DOCS_URL if set.
 func WithNextCommand(err error, command string) error {
 	return withNextCommandAndDocs(err, command, metadata.DocsRef("troubleshooting"))
 }

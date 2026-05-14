@@ -13,21 +13,11 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/app/contracts"
 	er "github.com/sufield/stave/internal/app/execreport"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
-
-// Deps holds the adapter factories the report command depends on.
-type Deps struct {
-	NewChainLoader          compose.ChainLoaderFactory
-	NewSLALoader            compose.SLALoaderFactory
-	NewArtifactLoader       compose.ArtifactLoaderFactory
-	NewSnapshotBundleLoader compose.SnapshotBundleLoaderFactory
-	NewCtlRepo              compose.CtlRepoFactory
-}
 
 type options struct {
 	HistoryDir    string
@@ -43,20 +33,9 @@ type options struct {
 	TeamBreakdown bool
 }
 
-// NewCmd constructs the report command with default factories.
-func NewCmd() *cobra.Command {
-	f := compose.DefaultFactories()
-	return NewCmdWithDeps(Deps{
-		NewChainLoader:          f.NewChainLoader,
-		NewSLALoader:            f.NewSLALoader,
-		NewArtifactLoader:       f.NewArtifactLoader,
-		NewSnapshotBundleLoader: f.NewSnapshotBundleLoader,
-		NewCtlRepo:              f.NewCtlRepo,
-	})
-}
-
-// NewCmdWithDeps constructs the report command with explicit dependencies.
-func NewCmdWithDeps(deps Deps) *cobra.Command {
+// NewCmd constructs the report command with the given dependencies.
+// cmd/commands.go is responsible for resolving the production factories.
+func NewCmd(deps Deps) *cobra.Command {
 	opts := &options{
 		ControlsDir: "controls",
 		ChainsDir:   "chains",

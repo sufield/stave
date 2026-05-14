@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appbisect "github.com/sufield/stave/internal/app/bisect"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -28,6 +27,7 @@ type Input struct {
 	Stderr io.Writer
 	Logger *slog.Logger
 	Opts   *options
+	Deps   Deps
 }
 
 func runBisect(ctx context.Context, in Input) error {
@@ -39,9 +39,7 @@ func runBisect(ctx context.Context, in Input) error {
 	controlsDir := fsutil.CleanUserPath(opts.ControlsDir)
 	obsDir := fsutil.CleanUserPath(opts.ObsDir)
 
-	// Load controls.
-	f := compose.DefaultFactories()
-	ctlRepo, err := f.NewCtlRepo()
+	ctlRepo, err := in.Deps.NewCtlRepo()
 	if err != nil {
 		return fmt.Errorf("create control loader: %w", err)
 	}
@@ -73,8 +71,7 @@ func runBisect(ctx context.Context, in Input) error {
 		clock = ports.FixedClock(t)
 	}
 
-	// Resolve CEL evaluator.
-	celEval, err := f.NewCELEvaluator()
+	celEval, err := in.Deps.NewCELEvaluator()
 	if err != nil {
 		return fmt.Errorf("create CEL evaluator: %w", err)
 	}

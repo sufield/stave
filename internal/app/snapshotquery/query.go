@@ -109,7 +109,7 @@ func parseSnapshotInfo(path string, now time.Time) SnapshotInfo {
 		info.SizeBytes = stat.Size()
 	}
 
-	data, err := os.ReadFile(path) //nolint:gosec
+	data, err := os.ReadFile(path) //nolint:gosec // G304: path is enumerated by the caller from a snapshot directory it already validated
 	if err != nil {
 		info.SchemaValid = false
 		info.ErrorReason = "unreadable"

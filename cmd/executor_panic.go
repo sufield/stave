@@ -106,14 +106,21 @@ func panicMessageFromValue(recovered any) string {
 // logged without disclosing what the operator explicitly asked to be
 // hidden. Operators who did not request sanitization see the raw
 // message unchanged.
+//
+// The bootstrap pipeline wires a.sanitizer unconditionally, so the
+// flag check below is what distinguishes "sanitization requested" from
+// "sanitizer happens to exist." Without it, every error message had
+// its user-supplied paths redacted to `<redacted>` regardless of the
+// flag — making first-time debugging impossible because the user
+// could not see the path they had just typed.
 func (a *App) sanitizeExecuteMessage(message string) string {
+	if !a.Flags.Sanitize {
+		return message
+	}
 	if a.sanitizer != nil {
 		return a.sanitizer.ScrubMessage(message)
 	}
-	if a.Flags.Sanitize {
-		return fallbackScrubMessage(message)
-	}
-	return message
+	return fallbackScrubMessage(message)
 }
 
 // fallbackScrubMessage applies a minimal set of redactions for the

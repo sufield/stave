@@ -205,12 +205,12 @@ func (a *Archive) Verify() ([]string, []string) {
 	var errs, warnings []string
 
 	// Check manifest hash.
-	manifestData, err := os.ReadFile(filepath.Join(a.Path, "manifest.json")) //nolint:gosec
+	manifestData, err := os.ReadFile(filepath.Join(a.Path, "manifest.json"))
 	if err != nil {
 		errs = append(errs, "manifest.json missing or unreadable")
 		return errs, warnings
 	}
-	expectedHash, hashErr := os.ReadFile(filepath.Join(a.Path, "manifest.json.sha256")) //nolint:gosec
+	expectedHash, hashErr := os.ReadFile(filepath.Join(a.Path, "manifest.json.sha256"))
 	switch {
 	case hashErr == nil:
 		actualHash := "sha256:" + sha256Hex(manifestData)

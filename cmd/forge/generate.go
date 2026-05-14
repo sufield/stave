@@ -93,7 +93,7 @@ func runNonInteractive(ctx context.Context, w io.Writer, opts nonInteractiveOpts
 	// Arguments are built from validated CLI flag values and passed
 	// as a slice to exec.Command — no shell interpolation occurs.
 	// G204: subprocess launched with variable — safe, no shell.
-	cmd := exec.CommandContext(ctx, "go", args...) //nolint:gosec
+	cmd := exec.CommandContext(ctx, "go", args...) //nolint:gosec // G204: args built from validated CLI flags passed as a slice — no shell interpolation
 	cmd.Stdout = w
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {

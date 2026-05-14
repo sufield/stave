@@ -207,9 +207,22 @@ func (l *ControlLoader) enrichAndPrepare(ctl *policy.ControlDefinition) error {
 			case diag.SeverityError:
 				return fmt.Errorf("control %s: %s", ctl.ID, issue.Message)
 			case diag.SeverityWarn:
-				slog.Warn("control validation warning",
+				// Demoted from slog.Warn → slog.Debug. These fire on
+				// SHIPPED controls (the embedded catalog), not on
+				// user-authored YAML. End users can't act on
+				// "CTL.X has a malformed severity field" because they
+				// didn't author CTL.X. Surfaced at DEBUG so the
+				// developer running -vv during catalog work still
+				// sees them, but `stave apply` no longer prints a
+				// wall of warnings about controls the user didn't
+				// touch. The remediation field is included so the
+				// developer sees what's wrong without re-deriving
+				// it from the rule ID.
+				slog.Debug("control validation warning",
 					"control_id", ctl.ID,
-					"message", issue.Message)
+					"rule", string(issue.RuleID),
+					"message", issue.Message,
+					"remediation", issue.Remediation)
 			default:
 				// An unknown Severity value almost always means
 				// someone added a new severity tier upstream and

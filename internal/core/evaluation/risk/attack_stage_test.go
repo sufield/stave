@@ -58,7 +58,7 @@ func TestBuildAttackStageSummary(t *testing.T) {
 }
 
 func TestBuildAttackStageSummary_Empty(t *testing.T) {
-	summary := BuildAttackStageSummary(nil, nil) //nolint:staticcheck
+	summary := BuildAttackStageSummary(nil, nil)
 	for _, stage := range AttackStages() {
 		if summary[stage] != "PASS" {
 			t.Errorf("%s = %q, want PASS", stage, summary[stage])

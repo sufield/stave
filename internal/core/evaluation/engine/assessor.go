@@ -317,7 +317,7 @@ func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts 
 		return evaluation.ComplianceReport{}, errors.New("precondition failed: Assessor.Assess requires a non-nil context")
 	}
 	if err := ctx.Err(); err != nil {
-		return evaluation.ComplianceReport{}, err
+		return evaluation.ComplianceReport{}, fmt.Errorf("assess: %w", err)
 	}
 	if a.clock == nil {
 		return evaluation.ComplianceReport{}, errors.New("precondition failed: Assessor requires a Clock")
@@ -374,7 +374,7 @@ func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts 
 
 	for i := range a.controls {
 		if err := ctx.Err(); err != nil {
-			return evaluation.ComplianceReport{}, err
+			return evaluation.ComplianceReport{}, fmt.Errorf("assess: cancelled before control %s (%d/%d): %w", a.controls[i].ID, i, len(a.controls), err)
 		}
 		ctl := &a.controls[i]
 		if !ctl.IsEvaluatable() {
@@ -433,7 +433,7 @@ func (s *assessmentSession) applyControl(
 		// than only in Assess() because a single control with a large
 		// asset set can dominate runtime.
 		if err := ctx.Err(); err != nil {
-			return err
+			return fmt.Errorf("apply control %s: cancelled mid-asset-loop: %w", ctl.ID, err)
 		}
 		lifecycle := lifecycles[id]
 		span := s.beginTrace(string(id), ctl.ID.String())

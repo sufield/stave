@@ -21,8 +21,9 @@ type options struct {
 	ResourceARN string
 }
 
-// NewCmd constructs the bisect command.
-func NewCmd() *cobra.Command {
+// NewCmd constructs the bisect command with the given dependencies.
+// cmd/commands.go is responsible for resolving the production factories.
+func NewCmd(deps Deps) *cobra.Command {
 	opts := &options{}
 
 	cmd := &cobra.Command{
@@ -73,6 +74,7 @@ Exit Codes:
 				Stderr: cmd.ErrOrStderr(),
 				Logger: cmdctx.LoggerFromCmd(cmd),
 				Opts:   opts,
+				Deps:   deps,
 			})
 		},
 		SilenceUsage:  true,

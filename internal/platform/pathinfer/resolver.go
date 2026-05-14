@@ -208,7 +208,7 @@ func (s *walkState) walk(path string, entry fs.DirEntry, walkErrIn error) error 
 			// walk on a single broken symlink, which is exactly
 			// what we want to avoid.
 			s.walkErrs = append(s.walkErrs, walkErr{Path: path, Err: err})
-			return nil //nolint:nilerr
+			return nil //nolint:nilerr // intentional: error captured on s.walkErrs so the walk can continue past a single broken symlink
 		}
 		if !info.IsDir() {
 			return nil

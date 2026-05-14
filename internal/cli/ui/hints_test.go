@@ -15,8 +15,12 @@ func TestEvaluateErrorWithHint_MissingObservations(t *testing.T) {
 	if !strings.Contains(err.Error(), "Next: stave validate --controls ./controls --observations ./observations") {
 		t.Fatalf("expected validate hint, got: %v", err)
 	}
-	if !strings.Contains(err.Error(), "More info: run 'stave docs search") {
-		t.Fatalf("expected local docs reference, got: %v", err)
+	// metadata.DocsRef now returns a GitHub URL by default (the old
+	// "run 'stave docs search …'" hint pointed at a stave subcommand
+	// that never existed). When STAVE_DOCS_URL is unset, the More info
+	// line should be the public docs URL.
+	if !strings.Contains(err.Error(), "More info: https://github.com/sufield/stave/blob/main/docs/start-here.md") {
+		t.Fatalf("expected GitHub docs URL, got: %v", err)
 	}
 }
 

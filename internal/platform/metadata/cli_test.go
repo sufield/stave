@@ -9,16 +9,18 @@ import (
 func TestDocsRef_Default(t *testing.T) {
 	t.Setenv(env.DocsURL.Name, "")
 	got := DocsRef("troubleshooting")
-	if got != "run 'stave docs search troubleshooting'" {
-		t.Errorf("DocsRef = %q", got)
+	want := "https://github.com/sufield/stave/blob/main/docs/start-here.md#troubleshooting"
+	if got != want {
+		t.Errorf("DocsRef = %q, want %q", got, want)
 	}
 }
 
 func TestDocsRef_EmptyTopic(t *testing.T) {
 	t.Setenv(env.DocsURL.Name, "")
 	got := DocsRef("")
-	if got != "run 'stave docs search troubleshooting'" {
-		t.Errorf("DocsRef('') = %q", got)
+	want := "https://github.com/sufield/stave/blob/main/docs/start-here.md#troubleshooting"
+	if got != want {
+		t.Errorf("DocsRef('') = %q, want %q", got, want)
 	}
 }
 

@@ -18,27 +18,11 @@ import (
 	"github.com/sufield/stave/internal/core/ports"
 )
 
-// Deps holds the adapter factories the exempt command group needs.
-// Currently only the validate subcommand depends on a factory; the
-// others read or write the acceptance file via the appexempt
-// app-layer service. Empty Deps is valid — NewCmd uses
-// compose.DefaultFactories().
-type Deps struct {
-	NewBuiltinControlStore compose.BuiltinControlStoreFactory
-}
-
 const defaultFile = "./stave-acknowledgments.yaml"
 
-// NewCmd constructs the exempt command group with default factories.
-func NewCmd() *cobra.Command {
-	f := compose.DefaultFactories()
-	return NewCmdWithDeps(Deps{NewBuiltinControlStore: f.NewBuiltinControlStore})
-}
-
-// NewCmdWithDeps constructs the exempt command group with explicit
-// dependencies. Used by cmd/commands.go to share the compose factory
-// instance across all the wired subcommands.
-func NewCmdWithDeps(deps Deps) *cobra.Command {
+// NewCmd constructs the exempt command group with explicit dependencies.
+// cmd/commands.go is responsible for resolving the production factories.
+func NewCmd(deps Deps) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exempt",
 		Short: "Manage risk acceptances (acknowledgments, exceptions, exemptions)",

@@ -56,7 +56,7 @@ func Assemble(input AssembleInput) (*Package, error) {
 			return nil
 		}
 		path := filepath.Join(dir, filename)
-		if err := os.WriteFile(path, data, 0o644); err != nil { //nolint:gosec
+		if err := os.WriteFile(path, data, 0o644); err != nil { //nolint:gosec // G306: audit bundle is consumed by auditors / external tooling running as a different user — must be world-readable
 			return fmt.Errorf("write %s: %w", filename, err)
 		}
 		pkg.Components = append(pkg.Components, Component{
@@ -87,7 +87,7 @@ func Assemble(input AssembleInput) (*Package, error) {
 	if err != nil {
 		return nil, fmt.Errorf("marshal manifest: %w", err)
 	}
-	if writeErr := os.WriteFile(filepath.Join(dir, "00-manifest.json"), manifestData, 0o644); writeErr != nil { //nolint:gosec
+	if writeErr := os.WriteFile(filepath.Join(dir, "00-manifest.json"), manifestData, 0o644); writeErr != nil { //nolint:gosec // G306: manifest accompanies the bundle and inherits the same world-readable requirement
 		return nil, fmt.Errorf("write manifest: %w", writeErr)
 	}
 

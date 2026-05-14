@@ -104,7 +104,7 @@ func LoadSnapshotsFromDir(t *testing.T, dir string) []asset.Snapshot {
 		// `abs` (a caller-provided fixture root), not user input.
 		// This file is in `internal/testutil` and only callable
 		// from tests.
-		data, readErr := os.ReadFile(path) //nolint:gosec
+		data, readErr := os.ReadFile(path) //nolint:gosec // G304: test-only helper; path built from a directory listing under the caller's fixture root
 
 		if readErr != nil {
 			t.Fatalf("read %s: %v", path, readErr)

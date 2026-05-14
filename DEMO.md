@@ -38,38 +38,6 @@ docker run --rm stave-demo --scenario public-read
 docker run --rm stave-demo --scenario hipaa-compliance
 ```
 
-## Compare safe vs unsafe
-
-```bash
-# Default — one violation (publicly exposed bucket)
-docker run --rm stave-demo
-
-# Same engine, properly secured bucket — zero violations
-docker run --rm stave-demo demo --fixture known-good
-```
-
-## Save the report locally
-
-The demo writes `stave-report.json` inside the container. Mount your
-working directory to keep it:
-
-```bash
-docker run --rm -v "$PWD":/work stave-demo
-cat stave-report.json
-```
-
-Without `-v "$PWD":/work`, the report is discarded on container exit.
-
-## Try with your own data
-
-```bash
-docker run --rm -v "$PWD":/work stave-demo --quickstart
-```
-
-Quickstart auto-detects observation snapshots in `/work`,
-`/work/stave.snapshot/`, or `/work/observations/`. Falls back to the
-built-in fixture if none are found.
-
 ## Pass-through to stave
 
 Any unrecognised arguments are forwarded to the `stave` binary inside

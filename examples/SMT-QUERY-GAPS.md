@@ -74,7 +74,7 @@ Every blocked fixture's missing predicate has the same shape:
 > away.
 
 Adding such projectors is the natural next step. Per the
-[core audit](../docs/core-audit.md), per-asset boolean
+[core audit](../docs/audits/core-audit.md), per-asset boolean
 projection is **fact production** — it stays in core. The CEL
 evaluator already reads these properties; the new projectors
 simply emit the same boolean as a triple so external solvers see

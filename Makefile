@@ -714,6 +714,52 @@ verify-encoding-e2e: build
 regenerate-goldens-strict: regenerate-goldens verify-encoding-e2e
 	@echo "Goldens regenerated AND encoding verified."
 
+## consistency-check: Verify every derived artifact matches its canonical source
+##
+## Runs each non-golden regen target then asserts the working tree is clean.
+## Detects two failure modes the per-tool -check targets miss:
+##   1. Contributor regenerated some derived artifacts but forgot others.
+##   2. Contributor edited an embedded/ file directly instead of the
+##      canonical controls/ or schemas/ source.
+##
+## Golden regen is excluded — it has its own pipeline (regenerate-goldens)
+## and is too slow to gate every PR. See docs/audits/sync-audit.md for the full
+## chain map.
+.PHONY: consistency-check
+consistency-check: sync-schemas sync-controls sync-alternatives
+	@$(GOCMD) run ./internal/tools/genreadme
+	@$(GOCMD) run ./internal/tools/gencontroldocs
+	@$(GOCMD) run ./internal/tools/genmethodologycoverage
+	@# Scope the drift check to paths the gate's targets actually write to.
+	@# Globally `git status` would also surface unrelated working-tree state
+	@# (e.g. when stave/ is checked out inside a monorepo), which is noise
+	@# for this gate.
+	@drift=$$(git status --porcelain -- \
+		internal/contracts/schema/embedded \
+		internal/controldata/embedded \
+		internal/adapters/coverage/embedded \
+		README.md \
+		docs/controls/reference.md \
+		'docs/methodology-coverage-*.md' \
+	); \
+	if [ -n "$$drift" ]; then \
+		echo "ERROR: derived artifacts are out of sync with canonical sources."; \
+		echo ""; \
+		echo "Drifted files:"; \
+		echo "$$drift"; \
+		echo ""; \
+		echo "Fix locally and commit the result:"; \
+		echo "  make consistency-check"; \
+		echo "  git add -u && git commit"; \
+		echo ""; \
+		echo "Or run individual targets — see docs/audits/sync-audit.md for the chain map:"; \
+		echo "  make sync-controls sync-schemas sync-alternatives"; \
+		echo "  make readme docs-controls docs-coverage"; \
+		exit 1; \
+	else \
+		echo "OK: all derived artifacts in sync"; \
+	fi
+
 # ── Public repo sync ──────────────────────────────────────────────
 # Syncs the stave project to a separate public repository, excluding
 # internal-only directories. The public repo lives at PUBLIC_DEST.

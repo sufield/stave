@@ -7,8 +7,14 @@ sensitivity and exposure context. No cloud credentials required.
 Output is deterministic when --now is set (required for reproducible CI/CD runs).
 
 Getting Started:
-  1. init       - Create a starter project layout
-  2. status     - See what to run next in the workflow
+  Run a demo against a bundled snapshot (no AWS credentials needed):
+    bash examples/demo-s3-public-read/run.sh   - Public S3 bucket
+    bash examples/demo-ai-security/run.sh      - Bedrock + Lambda + S3 PHI
+
+  Or start a project layout with built-in S3 controls:
+    stave generate                             - Scaffold starter artifacts
+    stave validate                             - Check inputs are well-formed
+    stave apply                                - Evaluate and produce findings
 
 Operational Workflow:
   1. validate   - Check inputs are well-formed (run first)

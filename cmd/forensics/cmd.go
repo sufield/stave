@@ -14,7 +14,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appbisect "github.com/sufield/stave/internal/app/bisect"
 	appforensics "github.com/sufield/stave/internal/app/forensics"
 	"github.com/sufield/stave/internal/core/ports"
@@ -30,8 +29,9 @@ type options struct {
 	OutPath     string
 }
 
-// NewCmd constructs the forensics command.
-func NewCmd() *cobra.Command {
+// NewCmd constructs the forensics command with the given dependencies.
+// cmd/commands.go is responsible for resolving the production factories.
+func NewCmd(deps Deps) *cobra.Command {
 	opts := &options{Format: "table", ControlsDir: "controls"}
 
 	cmd := &cobra.Command{
@@ -50,7 +50,7 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runForensics(cmd.Context(), cmd.OutOrStdout(), opts)
+			return runForensics(cmd.Context(), cmd.OutOrStdout(), opts, deps)
 		},
 	}
 
@@ -66,8 +66,7 @@ Exit Codes:
 	return cmd
 }
 
-func runForensics(ctx context.Context, stdout io.Writer, opts *options) error {
-	// Load snapshots.
+func runForensics(ctx context.Context, stdout io.Writer, opts *options, deps Deps) error {
 	logger := slog.Default()
 	snapshots, err := appbisect.LoadSnapshotDir(
 		fsutil.CleanUserPath(opts.HistoryDir),
@@ -81,9 +80,7 @@ func runForensics(ctx context.Context, stdout io.Writer, opts *options) error {
 		return fmt.Errorf("no snapshots in %s", opts.HistoryDir)
 	}
 
-	// Load controls.
-	f := compose.DefaultFactories()
-	ctlRepo, err := f.NewCtlRepo()
+	ctlRepo, err := deps.NewCtlRepo()
 	if err != nil {
 		return fmt.Errorf("create control loader: %w", err)
 	}
@@ -92,8 +89,7 @@ func runForensics(ctx context.Context, stdout io.Writer, opts *options) error {
 		return fmt.Errorf("load controls: %w", err)
 	}
 
-	// CEL evaluator.
-	celEval, err := f.NewCELEvaluator()
+	celEval, err := deps.NewCELEvaluator()
 	if err != nil {
 		return fmt.Errorf("init CEL: %w", err)
 	}

@@ -139,7 +139,7 @@ The two modes are **complementary**, not competing:
 
 ## Related
 
-- [`docs/time-features-audit.md`](time-features-audit.md) — full
+- [`docs/audits/time-features-audit.md`](audits/time-features-audit.md) — full
   inventory of time-axis features; this control covers row 13.
 - [`docs/compliance/owasp-nhi-top10.md`](compliance/owasp-nhi-top10.md)
   NHI1 (Improper Offboarding) — temporal-ghost is the

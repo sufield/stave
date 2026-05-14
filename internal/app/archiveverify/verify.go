@@ -309,11 +309,11 @@ func computeVerdict(invalidRuns []InvalidRun, gapsExceeding int, maxGapHours flo
 }
 
 func verifyManifestHash(archivePath string) bool {
-	data, err := os.ReadFile(filepath.Join(archivePath, "manifest.json")) //nolint:gosec
+	data, err := os.ReadFile(filepath.Join(archivePath, "manifest.json")) //nolint:gosec // G304: archivePath is caller-supplied; fixed leaf name keeps the path inside the archive
 	if err != nil {
 		return false
 	}
-	expected, err := os.ReadFile(filepath.Join(archivePath, "manifest.json.sha256")) //nolint:gosec
+	expected, err := os.ReadFile(filepath.Join(archivePath, "manifest.json.sha256")) //nolint:gosec // G304: archivePath is caller-supplied; fixed leaf name keeps the path inside the archive
 	if err != nil {
 		return false
 	}
@@ -324,7 +324,7 @@ func verifyManifestHash(archivePath string) bool {
 func verifyRunChecksums(archivePath, runID string) (bool, string) {
 	runDir := filepath.Join(archivePath, "runs", runID)
 	sumsPath := filepath.Join(runDir, "sha256sums.txt")
-	data, err := os.ReadFile(sumsPath) //nolint:gosec
+	data, err := os.ReadFile(sumsPath) //nolint:gosec // G304: sumsPath is archivePath/runs/<runID>/sha256sums.txt with fixed leaf names
 	if err != nil {
 		return false, "sha256sums.txt missing"
 	}
@@ -394,7 +394,7 @@ func verifyRunChecksums(archivePath, runID string) (bool, string) {
 		if !ok {
 			return fmt.Errorf("%s: file present but not in manifest", rel)
 		}
-		fileData, readErr := os.ReadFile(path) //nolint:gosec
+		fileData, readErr := os.ReadFile(path) //nolint:gosec // G304: path comes from filepath.WalkDir of runDir after isSafeRunRelative + filepath.Rel containment check above
 		if readErr != nil {
 			return fmt.Errorf("%s: %w", rel, readErr)
 		}
