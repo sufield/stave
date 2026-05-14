@@ -148,23 +148,6 @@ type Finding struct {
 	// uses to compare against `--max-unsafe`.
 	UnsafeDurationHours float64
 
-	// SuggestedFix is the solver-derived structured fix when one
-	// is available. Distinct from Delta (which carries
-	// per-property prose actions): SuggestedFix carries a typed
-	// replacement value an AI agent can apply directly. Nil when
-	// no solver-derived fix has been produced — fall back to
-	// Delta (and Remediation) for prose guidance. The internal
-	// engine populates this from the Z3 unsat-core when the
-	// solver runs; CEL-only evaluation leaves it nil.
-	SuggestedFix *SuggestedFix
-
-	// LogicalProof is the solver's human-readable explanation of
-	// why the unsafe predicate / forbidden-state was satisfied —
-	// the Z3 counter-example surfaced as prose. Empty when the
-	// engine ran without a solver, the solver did not produce a
-	// model, or the control has no forbidden_state authored.
-	LogicalProof string
-
 	// ContributingFactIDs lists the SIR fact_ids that describe the
 	// configuration properties of this finding's asset. Use these
 	// to grep from a CEL finding back to the specific JSONL triples
@@ -226,35 +209,6 @@ type DeltaPath struct {
 	PropertyPath  string // raw observation path
 	CurrentValue  string // observed value from snapshot
 	FixAction     string // change needed to eliminate finding
-}
-
-// SuggestedFix is the solver-derived structured replacement for
-// an unsafe configuration. Distinct from DeltaPath (which carries
-// per-property prose actions): SuggestedFix carries the typed
-// before/after values an AI agent or programmatic consumer can
-// apply directly. Populated by the Z3 / SMT pipeline; nil for
-// CEL-only findings.
-//
-// FixType classifies the kind of change:
-//
-//	policy_replacement — the asset's policy document needs replacement
-//	config_change      — a non-policy field (e.g. mfa_configuration) needs a new value
-//	delete_resource    — the asset itself should be removed (no replacement)
-//
-// Confidence is "high", "medium", or "low". A high-confidence fix
-// is a direct negation of the failing predicate — applying it
-// resolves the finding mechanically. Medium-confidence fixes
-// resolve the finding but may have side effects (e.g. removing a
-// public principal that downstream callers depend on).
-// Low-confidence fixes are advisory; they require human review
-// because the engine cannot guarantee the replacement is complete.
-type SuggestedFix struct {
-	FixType          string `json:"fix_type"`
-	Description      string `json:"description"`
-	Current          any    `json:"current,omitempty"`
-	Replacement      any    `json:"replacement,omitempty"`
-	Confidence       string `json:"confidence"`
-	ConfidenceReason string `json:"confidence_reason,omitempty"`
 }
 
 // Remediation is the catalog-authored remediation guidance for a

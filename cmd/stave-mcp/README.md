@@ -7,7 +7,8 @@ Copilot, etc.) over JSON-RPC 2.0 / stdio.
 The premise: an agent proposes a configuration change, calls
 `stave.verify` to check it against the catalog of formally-
 authored invariants, calls `stave.explain` if a finding fires,
-calls `stave.suggest_fix` to get a structured replacement.
+calls `stave.suggest_fix` to read the deterministic delta-path
+and remediation guidance the engine produced.
 Stave is the deterministic guardrail; the agent is the
 probabilistic proposer. The separation is the point.
 
@@ -26,8 +27,8 @@ standard library — no MCP SDK is pulled into go.mod.
 | Tool | Inputs | Output |
 |---|---|---|
 | `stave.verify` | `observations_dir` (required), optional `controls_dir`, `allow_unknown_input` | The full Assessment (findings, summary, status) |
-| `stave.explain` | `observations_dir`, `finding_id` | One finding's `reasoning_trace`, `chain_membership`, `logical_proof`, `compliance` |
-| `stave.suggest_fix` | `observations_dir`, `finding_id` | One finding's `suggested_fix` (Z3-derived structured replacement when present), `delta_paths` (per-property prose), `remediation` |
+| `stave.explain` | `observations_dir`, `finding_id` | One finding's `reasoning_trace`, `chain_membership`, `compliance` |
+| `stave.suggest_fix` | `observations_dir`, `finding_id` | One finding's `delta_paths` (per-property prose) and catalog-authored `remediation` |
 
 `stave.explain` and `stave.suggest_fix` re-run `stave.verify`
 internally and project the named finding. The contract is
@@ -70,14 +71,6 @@ firing on the Lambda role.
   No port, no auth, no TLS. The MCP convention is
   process-per-session via the agent's stdio transport.
 - **Not a remediation engine.** `stave.suggest_fix` returns
-  a SuggestedFix payload. Applying it to cloud infrastructure
+  the engine's delta-path projection and the catalog's authored
+  remediation prose. Applying any of it to cloud infrastructure
   is the agent's responsibility, not the server's.
-
-## Roadmap notes
-
-The `SuggestedFix` field on the public Finding is populated by
-the Z3-side pipeline; for CEL-only findings it returns nil and
-the agent falls back to the `delta_paths` prose. As the Z3
-pipeline ships solver-derived fixes for more control families,
-the same MCP wire shape carries them automatically — no
-changes to this server's tool definitions are needed.

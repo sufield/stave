@@ -219,6 +219,29 @@ func (v *Validator) getSchema(kind schemas.Kind, version string) (*jsonschema.Sc
 		return nil, fmt.Errorf("failed to parse schema %s/%s: %w", kind, ver, unmarshalErr)
 	}
 
+	// Register any auxiliary sub-schemas (e.g. per-asset-type
+	// JSON Schemas under observation/v1/asset-types/) with the
+	// compiler BEFORE compiling the base. The base schema's
+	// cross-file $ref strings — which name the sub-schemas by
+	// their declared $id URN — only resolve once the resources
+	// are registered. Sub-schemas are added under the same write
+	// lock that compiles the base, so the compiler's
+	// goroutine-unsafe state is touched in a single atomic
+	// section per (kind, version) compilation.
+	subSchemas, subErr := schemas.LoadSubSchemas(kind, ver)
+	if subErr != nil {
+		return nil, fmt.Errorf("load sub-schemas for %s/%s: %w", kind, ver, subErr)
+	}
+	for _, sub := range subSchemas {
+		var subDoc any
+		if unmarshalErr := json.Unmarshal(sub.Bytes, &subDoc); unmarshalErr != nil {
+			return nil, fmt.Errorf("parse sub-schema %s: %w", sub.URI, unmarshalErr)
+		}
+		if addErr := v.compiler.AddResource(sub.URI, subDoc); addErr != nil {
+			return nil, fmt.Errorf("add sub-schema resource %s: %w", sub.URI, addErr)
+		}
+	}
+
 	schemaID := fmt.Sprintf("urn:stave:schema:%s:%s", kind, ver)
 	if addErr := v.compiler.AddResource(schemaID, doc); addErr != nil {
 		return nil, fmt.Errorf("failed to add schema resource: %w", addErr)

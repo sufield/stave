@@ -28,7 +28,20 @@ const (
 	KindDiagnose    Kind = "diagnose"
 )
 
+// Two patterns: the original three-level glob covers
+// embedded/<kind>/<version>/<file>.json (control, observation,
+// finding, output, diagnose root schemas). The four-level glob
+// covers embedded/<kind>/<version>/<subdir>/<file>.json — used
+// today only by observation/v1/asset-types/*.json (per-asset
+// JSON Schema sub-schemas resolved via cross-file $ref in the
+// base observation schema). Splitting the patterns explicitly,
+// rather than collapsing to embedded/**/*.json (which Go embed
+// does not support), keeps the embedded surface auditable: a
+// new subdirectory under any kind/version is opt-in, not
+// accidental.
+//
 //go:embed embedded/*/*/*.json
+//go:embed embedded/*/*/*/*.json
 var embeddedFS embed.FS
 
 // registry maps (Kind -> Version) to the internal filesystem path.
@@ -113,6 +126,101 @@ func LoadSchema(kind Kind, version string) ([]byte, error) {
 	}
 
 	return data, nil
+}
+
+// SubSchema is one auxiliary schema embedded under
+// <kind>/<version>/<subdir>/<file>.json. The Bytes are the
+// raw JSON; the URI is the schema's stable identifier used to
+// register the resource with the jsonschema compiler. Sub-schemas
+// are loaded by their kind+version owner (the base schema's
+// validator) and registered with the compiler before the base
+// schema is compiled so cross-file $ref strings resolve.
+type SubSchema struct {
+	URI   string
+	Bytes []byte
+}
+
+// LoadSubSchemas returns the auxiliary sub-schemas registered
+// under the given kind+version. Today this covers
+// observation/v1/asset-types/*.json — per-asset-type property
+// schemas the base observation schema dispatches into via
+// if/then. Other kinds return an empty slice.
+//
+// URI is derived from the file's $id when present, falling back
+// to a urn:stave:schema:<kind>:<version>:<basename> URN. The
+// compiler indexes the doc under both whichever the caller used
+// in AddResource AND the doc's own $id, so cross-file $refs in
+// the base schema referring to the sub-schema's $id resolve.
+func LoadSubSchemas(kind Kind, version string) ([]SubSchema, error) {
+	k := Kind(strings.TrimSpace(string(kind)))
+	v, err := ResolveVersion(k, version)
+	if err != nil {
+		return nil, err
+	}
+
+	dir := fmt.Sprintf("embedded/%s/%s/asset-types", k, v)
+	entries, err := embeddedFS.ReadDir(dir)
+	if err != nil {
+		// Missing sub-schema directory is non-fatal: the kind
+		// simply has no auxiliary schemas registered. Callers
+		// (the validator) treat a nil slice as "no sub-schemas
+		// to register" rather than as a load failure.
+		return nil, nil //nolint:nilerr // intentional: missing dir = no sub-schemas
+	}
+
+	out := make([]SubSchema, 0, len(entries))
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
+			continue
+		}
+		path := dir + "/" + e.Name()
+		data, readErr := embeddedFS.ReadFile(path)
+		if readErr != nil {
+			return nil, fmt.Errorf("read sub-schema %q: %w", path, readErr)
+		}
+		uri := extractSchemaID(data)
+		if uri == "" {
+			// Fall back to a deterministic URN derived from the
+			// file basename. This keeps the resource lookup table
+			// populated even when an author forgets to set $id.
+			base := strings.TrimSuffix(e.Name(), ".json")
+			uri = fmt.Sprintf("urn:stave:schema:%s:%s:%s", k, v, base)
+		}
+		out = append(out, SubSchema{URI: uri, Bytes: data})
+	}
+	slices.SortFunc(out, func(a, b SubSchema) int { return strings.Compare(a.URI, b.URI) })
+	return out, nil
+}
+
+// extractSchemaID does a small, dependency-free scan for the
+// document's top-level "$id" string so the loader can prefer the
+// schema's declared identifier as the AddResource URI. A full
+// json.Unmarshal would also work, but parsing every sub-schema
+// twice (here and in the compiler) is wasteful when we only need
+// one field. The loader treats a missing $id as a soft fallback,
+// not an error.
+func extractSchemaID(data []byte) string {
+	const key = `"$id"`
+	idx := strings.Index(string(data), key)
+	if idx < 0 {
+		return ""
+	}
+	rest := string(data[idx+len(key):])
+	// Expect: optional whitespace, ':', whitespace, '"value"'.
+	rest = strings.TrimLeft(rest, " \t\n\r")
+	if !strings.HasPrefix(rest, ":") {
+		return ""
+	}
+	rest = strings.TrimLeft(rest[1:], " \t\n\r")
+	if !strings.HasPrefix(rest, `"`) {
+		return ""
+	}
+	rest = rest[1:]
+	end := strings.IndexByte(rest, '"')
+	if end < 0 {
+		return ""
+	}
+	return rest[:end]
 }
 
 // SupportedVersions returns all registered versions for a specific kind.

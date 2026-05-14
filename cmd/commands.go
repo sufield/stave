@@ -52,6 +52,7 @@ import (
 	stavenep "github.com/sufield/stave/cmd/nep"
 	stavepath "github.com/sufield/stave/cmd/path"
 	staveplan "github.com/sufield/stave/cmd/plan"
+	stavereadiness "github.com/sufield/stave/cmd/readiness"
 	staveprofile "github.com/sufield/stave/cmd/profile"
 	"github.com/sufield/stave/cmd/prune"
 	staverank "github.com/sufield/stave/cmd/rank"
@@ -245,6 +246,15 @@ func WireCommands(app *App) error {
 	root.AddCommand(stavetest.NewCmd(stavetest.Deps{
 		NewCtlRepo:      f.NewCtlRepo,
 		NewCELEvaluator: f.NewCELEvaluator,
+	}))
+
+	// Pre-evaluation readiness assessment (catalog coverage
+	// vs observation surface — distinct from `apply --dry-run`,
+	// which is schema-validity only).
+	root.AddCommand(stavereadiness.NewCmd(stavereadiness.Deps{
+		NewCtlRepo:     f.NewCtlRepo,
+		NewChainLoader: f.NewChainLoader,
+		NewObsRepo:     f.NewObsRepo,
 	}))
 
 	// Terminal posture monitor

@@ -1,0 +1,178 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_sqs_queue",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_sqs_queue observations. 30 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "messaging": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by 30 controls: CTL.SQS.ALARM.AGE.001, CTL.SQS.ALARM.DELETEQUEUE.001, CTL.SQS.ALARM.DEPTH.001, …",
+          "type": "string"
+        },
+        "sqs": {
+          "additionalProperties": true,
+          "properties": {
+            "alarm_age": {
+              "description": "Read by control(s): CTL.SQS.ALARM.AGE.001",
+              "type": "boolean"
+            },
+            "alarm_delete_queue": {
+              "description": "Read by control(s): CTL.SQS.ALARM.DELETEQUEUE.001",
+              "type": "boolean"
+            },
+            "alarm_depth": {
+              "description": "Read by control(s): CTL.SQS.ALARM.DEPTH.001",
+              "type": "boolean"
+            },
+            "alarm_dlq_age": {
+              "description": "Read by control(s): CTL.SQS.ALARM.DLQ.AGE.001",
+              "type": "boolean"
+            },
+            "alarm_dlq_depth": {
+              "description": "Read by control(s): CTL.SQS.ALARM.DLQ.DEPTH.001",
+              "type": "boolean"
+            },
+            "alarm_purge": {
+              "description": "Read by control(s): CTL.SQS.ALARM.PURGE.001",
+              "type": "boolean"
+            },
+            "alarm_sent": {
+              "description": "Read by control(s): CTL.SQS.ALARM.SENT.001",
+              "type": "boolean"
+            },
+            "cloudtrail_data_events": {
+              "description": "Read by control(s): CTL.SQS.AUDIT.DATAEVENTS.001",
+              "type": "boolean"
+            },
+            "delete_broadly_granted": {
+              "description": "Read by control(s): CTL.SQS.POLICY.DELETEBROADLY.001",
+              "type": "boolean"
+            },
+            "dlq_cross_account": {
+              "description": "Read by control(s): CTL.SQS.CROSSACCOUNT.DLQ.001",
+              "type": "boolean"
+            },
+            "dlq_has_consumer": {
+              "description": "Read by control(s): CTL.SQS.DLQ.NOCONSUMER.001",
+              "type": "boolean"
+            },
+            "dlq_retention_shorter": {
+              "description": "Read by control(s): CTL.SQS.DLQ.RETENTION.MISMATCH.001",
+              "type": "boolean"
+            },
+            "encrypted": {
+              "description": "Read by control(s): CTL.SQS.ENCRYPT.CMK.001",
+              "type": "boolean"
+            },
+            "has_consumer": {
+              "description": "Read by control(s): CTL.SQS.LIFECYCLE.NOCONSUMER.001",
+              "type": "boolean"
+            },
+            "has_ghost_dlq": {
+              "description": "Read by control(s): CTL.SQS.GHOST.DLQ.001",
+              "type": "boolean"
+            },
+            "has_ghost_source_arn": {
+              "description": "Read by control(s): CTL.SQS.GHOST.POLICY.SOURCEARN.001",
+              "type": "boolean"
+            },
+            "has_orphan_dlq_source": {
+              "description": "Read by control(s): CTL.SQS.LIFECYCLE.DLQ.ORPHAN.001",
+              "type": "boolean"
+            },
+            "has_redrive_policy": {
+              "description": "Read by control(s): CTL.SQS.DLQ.MAXRECEIVE.LOW.001",
+              "type": "boolean"
+            },
+            "has_send_activity": {
+              "description": "Read by control(s): CTL.SQS.LIFECYCLE.NOCONSUMER.001",
+              "type": "boolean"
+            },
+            "is_dlq": {
+              "description": "Read by 7 controls: CTL.SQS.ALARM.AGE.001, CTL.SQS.ALARM.DEPTH.001, CTL.SQS.ALARM.DLQ.AGE.001, …",
+              "type": "boolean"
+            },
+            "is_dormant": {
+              "description": "Read by control(s): CTL.SQS.LIFECYCLE.DORMANT.001",
+              "type": "boolean"
+            },
+            "max_receive_low": {
+              "description": "Read by control(s): CTL.SQS.DLQ.MAXRECEIVE.LOW.001",
+              "type": "boolean"
+            },
+            "policy_allows_events": {
+              "description": "Read by control(s): CTL.SQS.POLICY.EVENTS.NOSOURCE.001",
+              "type": "boolean"
+            },
+            "policy_allows_s3": {
+              "description": "Read by control(s): CTL.SQS.POLICY.S3.NOSOURCE.001",
+              "type": "boolean"
+            },
+            "policy_allows_sns": {
+              "description": "Read by control(s): CTL.SQS.POLICY.SNS.NOSOURCE.001",
+              "type": "boolean"
+            },
+            "policy_cross_account": {
+              "description": "Read by control(s): CTL.SQS.POLICY.CROSSACCOUNT.001",
+              "type": "boolean"
+            },
+            "policy_enforces_ssl": {
+              "description": "Read by control(s): CTL.SQS.ENCRYPT.TRANSPORT.001",
+              "type": "boolean"
+            },
+            "policy_events_has_source": {
+              "description": "Read by control(s): CTL.SQS.POLICY.EVENTS.NOSOURCE.001",
+              "type": "boolean"
+            },
+            "policy_excessive": {
+              "description": "Read by control(s): CTL.SQS.POLICY.SPRAWL.001",
+              "type": "boolean"
+            },
+            "policy_has_org_condition": {
+              "description": "Read by control(s): CTL.SQS.POLICY.CROSSACCOUNT.001",
+              "type": "boolean"
+            },
+            "policy_s3_has_source": {
+              "description": "Read by control(s): CTL.SQS.POLICY.S3.NOSOURCE.001",
+              "type": "boolean"
+            },
+            "policy_sns_has_source": {
+              "description": "Read by control(s): CTL.SQS.POLICY.SNS.NOSOURCE.001",
+              "type": "boolean"
+            },
+            "purge_broadly_granted": {
+              "description": "Read by control(s): CTL.SQS.POLICY.PURGE.001",
+              "type": "boolean"
+            },
+            "receive_broadly_granted": {
+              "description": "Read by control(s): CTL.SQS.POLICY.RECEIVEMESSAGE.BROAD.001",
+              "type": "boolean"
+            },
+            "retention_short": {
+              "description": "Read by control(s): CTL.SQS.CONFIG.RETENTION.SHORT.001",
+              "type": "boolean"
+            },
+            "uses_cmk": {
+              "description": "Read by control(s): CTL.SQS.ENCRYPT.CMK.001",
+              "type": "boolean"
+            },
+            "uses_short_polling": {
+              "description": "Read by control(s): CTL.SQS.CONFIG.SHORTPOLLING.001",
+              "type": "boolean"
+            },
+            "visibility_exceeds_retention": {
+              "description": "Read by control(s): CTL.SQS.CONFIG.VISIBILITYTIMEOUT.RETENTION.001",
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "title": "aws_sqs_queue Properties",
+  "type": "object"
+}

@@ -21,6 +21,7 @@ import (
 type Data struct {
 	Version       string
 	TotalControls int
+	TotalChains   int
 	CategoryCount int
 	S3            map[string]int // S3 category → control count
 	DomainTotals  map[string]int // domain → total control count
@@ -30,6 +31,7 @@ func main() {
 	tmplPath := flag.String("tmpl", "internal/tools/genreadme/README.md.tmpl", "template file")
 	outPath := flag.String("out", "README.md", "output file")
 	controlsRoot := flag.String("controls", "controls", "controls root directory")
+	chainsRoot := flag.String("chains", "chains", "chains root directory")
 	check := flag.Bool("check", false, "check mode: exit 1 if output is stale")
 	flag.Parse()
 
@@ -39,7 +41,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	data, err := collect(*controlsRoot)
+	data, err := collect(*controlsRoot, *chainsRoot)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -69,11 +71,11 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error writing %s: %v\n", safeOut, err)
 		os.Exit(1)
 	}
-	fmt.Fprintf(os.Stderr, "Wrote %s (%d controls across %d domains)\n",
-		safeOut, data.TotalControls, len(data.DomainTotals))
+	fmt.Fprintf(os.Stderr, "Wrote %s (%d controls across %d domains, %d chains)\n",
+		safeOut, data.TotalControls, len(data.DomainTotals), data.TotalChains)
 }
 
-func collect(controlsRoot string) (Data, error) {
+func collect(controlsRoot, chainsRoot string) (Data, error) {
 	version, err := os.ReadFile("VERSION")
 	if err != nil {
 		return Data{}, fmt.Errorf("reading VERSION: %w", err)
@@ -136,13 +138,37 @@ func collect(controlsRoot string) (Data, error) {
 		total += domainTotal
 	}
 
+	chainCount, err := countChains(chainsRoot)
+	if err != nil {
+		return Data{}, fmt.Errorf("counting chains: %w", err)
+	}
+
 	return Data{
 		Version:       strings.TrimSpace(string(version)),
 		TotalControls: total,
+		TotalChains:   chainCount,
 		CategoryCount: categoryCount,
 		S3:            s3,
 		DomainTotals:  domainTotals,
 	}, nil
+}
+
+// countChains returns the number of YAML chain definitions under
+// chainsRoot. Chains live flat (one file = one chain); we count
+// *.yaml entries directly rather than walking subdirectories. A
+// missing directory is treated as zero — the same posture as the
+// runtime LoadChains in internal/adapters/controls/yaml.
+func countChains(chainsRoot string) (int, error) {
+	if _, err := os.Stat(chainsRoot); os.IsNotExist(err) {
+		return 0, nil
+	} else if err != nil {
+		return 0, fmt.Errorf("stat %s: %w", chainsRoot, err)
+	}
+	files, err := filepath.Glob(filepath.Join(chainsRoot, "*.yaml"))
+	if err != nil {
+		return 0, fmt.Errorf("globbing %s: %w", chainsRoot, err)
+	}
+	return len(files), nil
 }
 
 // safeLocalPath rejects absolute paths and path traversal.

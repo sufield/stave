@@ -1,0 +1,22 @@
+id: iam_key_leak_persistence
+description: >
+  An IAM user has at least one access key that has exceeded its
+  intended TTL AND no rotation policy is in force. The compound
+  describes the persistence side of credential risk: even if no
+  attacker has the key today, a future leak has unbounded
+  effective lifetime — nothing forces the key out of circulation.
+  The two findings together make the leak-once / use-forever path
+  explicit. The risk-relationship essay names this as the second
+  compound on its list ("credentials never rotated + no MFA
+  device enrollment controls"); this chain captures the rotation
+  half. Pair with iam_single_credential_theft for the full
+  "leaked admin key, never rotated" picture.
+controls:
+  - CTL.IAM.CRED.TTL.EXCEEDED.001
+  - CTL.IAM.CRED.ROTATION.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - ungoverned_operation

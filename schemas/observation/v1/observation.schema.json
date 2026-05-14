@@ -136,14 +136,28 @@
         "properties": {
           "type": "object",
           "title": "Configuration Properties",
-          "description": "Asset configuration properties evaluated by control predicates. Intentionally flexible (any JSON object) to support diverse asset types without per-type schemas. Future versions may introduce typed sub-schemas keyed by asset type."
+          "description": "Asset configuration properties evaluated by control predicates. Outer envelope is any JSON object; per-asset-type shape is refined by the allOf/if-then dispatch below, keyed on the asset's type field."
         },
         "source": {
           "$ref": "#/$defs/sourceRef",
           "title": "Source Reference",
           "description": "Optional reference to the source file and line for traceability."
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "aws_sqs_queue" } }, "required": ["type"] },
+          "then": { "properties": { "properties": { "$ref": "urn:stave:schema:asset-type:aws_sqs_queue" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "aws_opensearch_domain" } }, "required": ["type"] },
+          "then": { "properties": { "properties": { "$ref": "urn:stave:schema:asset-type:aws_opensearch_domain" } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "aws_stepfunctions_state_machine" } }, "required": ["type"] },
+          "then": { "properties": { "properties": { "$ref": "urn:stave:schema:asset-type:aws_stepfunctions_state_machine" } } }
+        }
+      ]
     },
     "identity": {
       "type": "object",

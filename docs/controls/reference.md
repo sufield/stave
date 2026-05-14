@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2657
-**Pack hash:** `bf8d46368e12a0a9b9ae72159163c8b4896950273855dace5f197d713f7267a8`
+**Total controls:** 2658
+**Pack hash:** `9f302927ca59ccbf68deeb00a20654e562c4a2a6040881b95e69234a0c116355`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 272 |
-| high | 1153 |
+| high | 1154 |
 | info | 16 |
 | low | 204 |
 | medium | 1012 |
@@ -26,7 +26,7 @@
 | exposure | 1191 |
 | governance | 577 |
 | hygiene | 18 |
-| identity | 415 |
+| identity | 416 |
 | lifecycle | 31 |
 | network | 32 |
 | resilience | 33 |
@@ -21670,6 +21670,23 @@ CloudFormation stack parameters, resources, or outputs contain AWS access keys, 
 CI/CD pipelines (GitHub Actions, GitLab CI, Bitbucket Pipelines) authenticate to AWS using long-lived IAM access keys stored as CI/CD secrets instead of OIDC federation. OIDC federation provides short-lived credentials scoped to specific repositories and workflows — no long-lived secrets to leak, no keys to rotate.
 
 **Remediation:** Replace long-lived IAM access keys with OIDC federation. Configure an IAM OIDC provider for your CI/CD platform and create a role with a trust policy scoped to specific repositories and workflows.
+
+---
+
+### CTL.IAM.CREDENTIAL.CICD.AI.001
+
+**CI/CD Pipeline Stores Long-Lived AI Provider API Key**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5(1); owasp_nhi: NHI2, NHI7; soc2: CC6.1;
+
+CI/CD pipelines (GitHub Actions, GitLab CI, Bitbucket Pipelines) store long-lived API keys for external AI providers (OpenAI, Anthropic, Google Gemini) as pipeline secrets or environment variables. If the pipeline is compromised — through a supply- chain attack on a dependency, a malicious pull request, or a trojanized GitHub Action — the attacker gains persistent access to the AI provider's API under the organization's account.
+Long-lived AI-provider keys in CI/CD are the AI equivalent of long-lived AWS access keys in CI/CD (see CTL.IAM.CREDENTIAL.CICD.001). The mitigation pattern is the same: prefer short-lived, scoped credentials over permanent API keys, and where OIDC federation is not yet available for the AI provider, rotate the key on a short interval and scope it to the minimum required API surface.
+The TeamPCP / UNC6780 campaign (GTIG, March 2026) demonstrated this exact extraction path against AWS keys; the same technique extracts AI-provider API keys from the same secret stores (LiteLLM/BerriAI compromise is the canonical case study).
+
+**Remediation:** Replace the long-lived AI-provider API key with a short-lived credential. For providers that support OIDC federation (e.g., Google Cloud service-account OIDC), use that. Otherwise: store the key in a secrets manager configured for automatic rotation (AWS Secrets Manager, HashiCorp Vault, GitHub OIDC-fronted issuance); scope it to the minimum required API surface; and set billing alerts to surface unauthorized usage spikes early.
 
 ---
 

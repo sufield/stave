@@ -11,8 +11,7 @@
 //	stave.explain      Re-run verify and project one finding's
 //	                   reasoning_trace + invariant context.
 //	stave.suggest_fix  Re-run verify and project one finding's
-//	                   SuggestedFix (when the engine produced one)
-//	                   plus its Delta paths as a fallback.
+//	                   delta_paths and catalog-authored remediation.
 //
 // # Wire format
 //
@@ -228,7 +227,7 @@ func handleToolsList() any {
 			},
 			{
 				"name":        toolSuggestFix,
-				"description": "Return the SuggestedFix (and Delta fallback) for one finding by FindingID.",
+				"description": "Return one finding's delta paths and catalog-authored remediation guidance by FindingID.",
 				"inputSchema": map[string]any{
 					"type":     "object",
 					"required": []string{"observations_dir", "finding_id"},
@@ -328,18 +327,18 @@ func runExplain(ctx context.Context, args findingArgs) (any, error) {
 			"severity":         f.Severity,
 			"reasoning_trace":  f.ReasoningTrace,
 			"chain_membership": f.ChainMembership,
-			"logical_proof":    f.LogicalProof,
 			"compliance":       f.ControlCompliance,
 		}, nil
 	}
 	return nil, fmt.Errorf("finding_id %q not found", args.FindingID)
 }
 
-// runSuggestFix re-runs Apply, then projects one finding's
-// SuggestedFix (solver-derived) plus its Delta paths as a prose
-// fallback when no structured fix is available. Returning both
-// lets the agent prefer the typed replacement when present and
-// fall back to per-property prose when not.
+// runSuggestFix re-runs Apply, then projects one finding's Delta
+// paths and catalog-authored remediation. The Z3-derived
+// SuggestedFix surface that originally lived alongside Delta was
+// removed when the Python solver was retired (2026-05-06, commit
+// 82118471e); this tool now bundles the deterministic prose
+// guidance the engine still produces.
 func runSuggestFix(ctx context.Context, args findingArgs) (any, error) {
 	if args.FindingID == "" {
 		return nil, errors.New("finding_id is required")
@@ -357,12 +356,11 @@ func runSuggestFix(ctx context.Context, args findingArgs) (any, error) {
 			continue
 		}
 		return map[string]any{
-			"finding_id":    f.FindingID,
-			"control_id":    f.ControlID,
-			"asset_id":      f.AssetID,
-			"suggested_fix": f.SuggestedFix,
-			"delta_paths":   f.Delta,
-			"remediation":   f.Remediation,
+			"finding_id":  f.FindingID,
+			"control_id":  f.ControlID,
+			"asset_id":    f.AssetID,
+			"delta_paths": f.Delta,
+			"remediation": f.Remediation,
 		}, nil
 	}
 	return nil, fmt.Errorf("finding_id %q not found", args.FindingID)
