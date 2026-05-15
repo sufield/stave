@@ -1,0 +1,67 @@
+// shadow-admin-reach.dl — Soufflé reach over IAM role drift /
+// shadow-admin facts. Answers "which roles have which unused
+// services, how big is the unused-service surface, and which
+// roles combine drift with category mixing?"
+//
+// Reads per-element facts emitted by the array projectors in
+// cmd/exportsir/facts.go:
+//   has_unused_service(role, service)
+//   has_incompatible_pair(role, "category_a+category_b")
+//   has_forbidden_category(role, category)
+//
+// Plus the scalar mismatch markers.
+
+.decl has_unused_service(role: symbol, service: symbol)
+.input has_unused_service
+.decl has_incompatible_pair(role: symbol, pair: symbol)
+.input has_incompatible_pair
+.decl has_forbidden_category(role: symbol, category: symbol)
+.input has_forbidden_category
+.decl has_intent_mismatch(role: symbol, value: symbol)
+.input has_intent_mismatch
+.decl has_declared_role_type(role: symbol, role_type: symbol)
+.input has_declared_role_type
+
+// ─── Blast radius: how many services this role retains
+// access to but never uses ─────────────────────────────────────
+.decl unused_blast_radius(role: symbol, n: number)
+.output unused_blast_radius
+
+unused_blast_radius(R, C) :-
+    has_unused_service(R, _),
+    C = count : { has_unused_service(R, _) }.
+
+// ─── Per-role forbidden category count ────────────────────────
+.decl forbidden_category_count(role: symbol, n: number)
+.output forbidden_category_count
+
+forbidden_category_count(R, C) :-
+    has_forbidden_category(R, _),
+    C = count : { has_forbidden_category(R, _) }.
+
+// ─── Combined shadow risk ─────────────────────────────────────
+// Role with both unused-service drift AND an incompatible
+// category pair on the SAME role asset. Soufflé reports the
+// pair so the reader sees "this role drifted AND mixes data_read
+// + secrets_access" in one row.
+.decl combined_shadow_risk(role: symbol, role_type: symbol, unused_n: number, pair: symbol)
+.output combined_shadow_risk
+
+combined_shadow_risk(R, T, C, P) :-
+    has_declared_role_type(R, T),
+    unused_blast_radius(R, C),
+    has_incompatible_pair(R, P).
+
+// ─── Shadow admin enumeration ─────────────────────────────────
+// Any role whose declared type is contradicted by its actual
+// permissions. The intent_mismatch fact already says THAT it
+// happens; this rule pivots on the declared role-type so the
+// reader sees the structural mismatch ("readonly" tagged role
+// that holds a forbidden category).
+.decl shadow_admin_finding(role: symbol, declared_type: symbol, forbidden_category: symbol)
+.output shadow_admin_finding
+
+shadow_admin_finding(R, T, C) :-
+    has_intent_mismatch(R, "true"),
+    has_declared_role_type(R, T),
+    has_forbidden_category(R, C).

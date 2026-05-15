@@ -1,0 +1,171 @@
+// reachability.dl — full-blast-radius reachability over Stave's
+// JSONL fact export.
+//
+// Z3 finds one witness per query; Clingo enumerates atom triples
+// under stable-model semantics; Soufflé computes the *complete*
+// transitive closure in one bottom-up pass and reports counts
+// per derived relation. Counts are the value Soufflé alone
+// produces — they answer "how wide is the blast radius?" rather
+// than "does an unsafe path exist?"
+//
+// Every input relation is declared with `.input`; the transform
+// script pre-creates empty .facts files for relations the
+// fixture does not emit, so the program runs cleanly across
+// every fixture even when (say) `can_assume` is absent.
+
+// =====================================================
+// Input relations — match Stave JSONL predicate names.
+// =====================================================
+.decl has_type(asset: symbol, asset_type: symbol)
+.input has_type
+.decl has_action(role: symbol, action: symbol)
+.input has_action
+.decl has_resource(role: symbol, resource: symbol)
+.input has_resource
+.decl has_tag(asset: symbol, kv: symbol)
+.input has_tag
+.decl can_assume(from_role: symbol, to_role: symbol)
+.input can_assume
+.decl trusts_service(role: symbol, service: symbol)
+.input trusts_service
+.decl contributed_by(asset: symbol, control: symbol)
+.input contributed_by
+.decl maps_unauth_to(pool: symbol, role: symbol)
+.input maps_unauth_to
+.decl maps_auth_to(pool: symbol, role: symbol)
+.input maps_auth_to
+.decl allows_unauthenticated(pool: symbol, flag: symbol)
+.input allows_unauthenticated
+.decl self_registration_unrestricted(pool: symbol, flag: symbol)
+.input self_registration_unrestricted
+
+// =====================================================
+// Transitive role assumption.
+//
+// can_assume edges encode one hop in an sts:AssumeRole chain.
+// transitive_role is the closure: every (start, end) where
+// `end` is reachable from `start` via 1+ hops. Soufflé's
+// bottom-up evaluation computes this in one pass.
+// =====================================================
+.decl transitive_role(start: symbol, end: symbol)
+transitive_role(A, B) :- can_assume(A, B).
+transitive_role(A, C) :- transitive_role(A, B), can_assume(B, C).
+
+// =====================================================
+// Direct access via identity-pool mapping.
+//
+// A Cognito identity pool maps unauthenticated and
+// authenticated principals to specific IAM roles; the role's
+// (action, resource) grants become accessible to whoever
+// enters via the pool.
+// =====================================================
+.decl direct_pool_access(principal: symbol, resource: symbol, action: symbol)
+direct_pool_access(P, R, A) :-
+    maps_unauth_to(P, Role),
+    has_action(Role, A),
+    has_resource(Role, R).
+direct_pool_access(P, R, A) :-
+    maps_auth_to(P, Role),
+    has_action(Role, A),
+    has_resource(Role, R).
+
+// Transitive pool access: pool → role → assume chain → final
+// role's grants. Composing pool mapping with role-assumption
+// closure surfaces the deeper reach Cognito chains create.
+.decl transitive_pool_access(principal: symbol, resource: symbol, action: symbol)
+transitive_pool_access(P, R, A) :-
+    maps_unauth_to(P, Role1),
+    transitive_role(Role1, Role2),
+    has_action(Role2, A),
+    has_resource(Role2, R).
+transitive_pool_access(P, R, A) :-
+    maps_auth_to(P, Role1),
+    transitive_role(Role1, Role2),
+    has_action(Role2, A),
+    has_resource(Role2, R).
+
+// =====================================================
+// reachable — every (principal, resource, action) the
+// configuration permits. Three sources:
+//   1. IAM principals (users / roles) holding direct grants.
+//   2. Identity-pool mediated access (direct or transitive).
+//   3. Roles transitively reachable through assume chains
+//      from another principal.
+// =====================================================
+.decl reachable(principal: symbol, resource: symbol, action: symbol)
+.output reachable
+reachable(P, R, A) :- direct_pool_access(P, R, A).
+reachable(P, R, A) :- transitive_pool_access(P, R, A).
+reachable(P, R, A) :-
+    has_type(P, "aws_iam_role"),
+    has_action(P, A),
+    has_resource(P, R).
+reachable(P, R, A) :-
+    has_type(P, "aws_iam_user"),
+    has_action(P, A),
+    has_resource(P, R).
+reachable(P, R, A) :-
+    transitive_role(P, Final),
+    has_action(Final, A),
+    has_resource(Final, R).
+
+// =====================================================
+// Subset queries.
+// =====================================================
+.decl anonymous_reachable(principal: symbol, resource: symbol, action: symbol)
+.output anonymous_reachable
+anonymous_reachable(P, R, A) :-
+    allows_unauthenticated(P, "true"),
+    maps_unauth_to(P, Role),
+    has_action(Role, A),
+    has_resource(Role, R).
+
+// self_register_reachable: identity-pool authenticated paths
+// when ANY user pool in the configuration admits self-
+// registration. The user pool (cognito-idp) and identity pool
+// (cognito-identity) are distinct ARNs in the SIR with no
+// projected link — the iter-16 reveal is "self-register on any
+// user pool taints all linked identity pools", so the
+// conservative rule says: if any user pool is self-register-
+// open, every auth-mapped principal is reachable. Vanishes on
+// remediated fixtures because self_registration_unrestricted no
+// longer fires anywhere.
+.decl self_register_reachable(principal: symbol, resource: symbol, action: symbol)
+.output self_register_reachable
+self_register_reachable(P, R, A) :-
+    self_registration_unrestricted(_, "true"),
+    maps_auth_to(P, Role),
+    has_action(Role, A),
+    has_resource(Role, R).
+
+// production_reachable joins reachable with the
+// `environment=production` tag. has_tag emits binary
+// (asset, "key=value") since the SMT serializer is
+// binary-only; the literal "environment=production" matches
+// what the bybit-style production fixtures embed.
+.decl production_reachable(principal: symbol, resource: symbol, action: symbol)
+.output production_reachable
+production_reachable(P, R, A) :-
+    reachable(P, R, A),
+    has_tag(R, "environment=production").
+
+// exploitable_overperm — role is both findings-bound (some
+// CEL control fired on it) and assumable by a compute service.
+// Mirrors the iter-13/iter-15 PassRole-on-compute compound;
+// Soufflé enumerates every (role, control, service) triple.
+.decl exploitable_overperm(role: symbol, control: symbol, service: symbol)
+.output exploitable_overperm
+exploitable_overperm(R, C, S) :-
+    contributed_by(R, C),
+    trusts_service(R, S).
+
+// privesc_chain — multi-hop assume chain with hop count.
+// Bound to depth 10 to keep the closure finite even on
+// pathological graphs; matches the kernel's MaxChainDepth.
+.decl privesc_chain(start: symbol, end: symbol, hops: number)
+.output privesc_chain
+privesc_chain(A, B, 1) :- can_assume(A, B).
+privesc_chain(A, C, N + 1) :-
+    privesc_chain(A, B, N),
+    can_assume(B, C),
+    N < 10.

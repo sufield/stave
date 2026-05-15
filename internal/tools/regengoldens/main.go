@@ -530,11 +530,16 @@ func runStave(fixDir string) ([]byte, int, error) {
 		return runCmd(strings.Fields(expanded))
 	case exists(obsFile) && exists(goldenFile):
 		profile := inferProfile(filepath.Base(fixDir))
+		// --format json: the CLI default flipped to text for first-time
+		// human users, but these profile fixtures store JSON goldens.
+		// Without this flag the tool produces text and the
+		// "produced output is not valid JSON" guard rejects every regen.
 		args := []string{
 			"apply",
 			"--profile", profile,
 			"--input", obsFile,
 			"--now", profileNow,
+			"--format", "json",
 		}
 		if profile == "hipaa" {
 			args = append(args, "--include-all")
