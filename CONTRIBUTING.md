@@ -53,13 +53,13 @@ go test -v ./...
 make test-coverage
 
 # Run a specific test
-go test -v -run TestEvaluator ./internal/domain
+go test -v -run TestEvaluator ./internal/core/...
 
 # Run startup benchmark (informational performance budget)
-go test -run '^$' -bench BenchmarkCLIStartupHelp -benchmem ./cmd/stave/cmd
+go test -run '^$' -bench BenchmarkCLIStartupHelp -benchmem ./cmd
 ```
 
-Startup target for lightweight commands is approximately `<500ms` (see `BenchmarkCLIStartupHelp` in `cmd/stave/cmd/startup_benchmark_test.go`).
+Startup target for lightweight commands is approximately `<500ms` (see `BenchmarkCLIStartupHelp` in `cmd/startup_benchmark_test.go`).
 
 ### Why three test targets
 
@@ -101,11 +101,11 @@ no races surfaced.
 
 ### Test Prerequisites
 
-E2E tests (`scripts/e2e.sh`, `scripts/e2e-counterfactual.sh`) require:
+E2E tests (`make e2e`, which drives `go test ./e2e/...`) require:
 
 - **jq** — JSON processor for comparing evaluation output
 - **diff** — standard Unix diff for golden-file comparison
-- **bash** — scripts use bash-specific features (process substitution)
+- **bash** — example invocations use bash-specific features
 
 These are not needed for unit tests (`make test`), only for E2E validation.
 
@@ -207,7 +207,7 @@ internal/
 └── adapters/   # Input/output adapters (JSON, YAML loaders)
 ```
 
-- Keep domain logic in `internal/domain` without I/O concerns
+- Keep domain logic in `internal/core` without I/O concerns
 - Use interfaces (ports) for external dependencies
 - Implement adapters in `internal/adapters`
 
@@ -267,7 +267,7 @@ To add new controls:
 1. Create a YAML file in the appropriate pack directory
 2. Use DSL version `ctrl.v1`
 3. Define clear `unsafe_predicate` conditions
-4. Add tests in `internal/domain/control_test.go`
+4. Add per-control tests in the YAML's own `tests:` block (run via `stave test`) and cover the predicate logic at the call site under `internal/core/...`
 
 Example control:
 

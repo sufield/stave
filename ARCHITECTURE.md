@@ -69,6 +69,6 @@ Enforced by `internal/app/architecture_dependency_test.go`.
 5. `cmd/apply/run.go` -- extracts `cobraState` (Cobra-free boundary), dispatches by mode
 6. `cmd/apply/deps.go` -- `Builder.Build()` assembles adapters from factories
 7. `internal/app/eval/build.go` -- `BuildDependencies()` assembles evaluation pipeline
-8. `internal/app/eval/evaluation_run.go` -- `EvaluateRun.Execute()` loads artifacts, calls engine
-9. `internal/core/evaluation/engine/runner.go` -- `Runner.Evaluate()` (core domain evaluation)
+8. `internal/app/eval/workflow.go` -- `AuditWorkflow.PerformAssessment()` loads artifacts, calls engine
+9. `internal/core/evaluation/engine/assessor.go` -- engine `Assessor` (core domain evaluation)
 10. `internal/app/eval/evaluation_output.go` -- `OutputPipeline.Run()` marshals and writes results

@@ -211,3 +211,58 @@ func TestRankActions_SkipsObservedTypes(t *testing.T) {
 		t.Errorf("observed types must not appear in action plan; got %+v", actions)
 	}
 }
+
+// TestAnalyze_BucketPercentages_SumToHundred locks in the share-of-
+// total percentage annotation. Without these fields a JSON consumer
+// would have to recompute the percentages from the integer counts
+// to render the same numbers the text output shows; with them, the
+// three buckets exposing share-of-total are the source of truth.
+// Their sum must equal 100 (modulo float rounding) whenever Total
+// is non-zero. The test guards both the math and the API:
+//
+//  1. Three controls in three different buckets (CanFire / Blocked /
+//     Indeterminate) so each *Pct is exercised independently.
+//  2. The sum is 100.0 — not 99.9, not 100.1 — because the percent
+//     values are derived from integer counts that always partition
+//     Total exactly.
+//  3. The denominator-annotation field is set verbatim. Renaming the
+//     constant requires touching this test, which is intentional —
+//     the string is the JSON contract.
+func TestAnalyze_BucketPercentages_SumToHundred(t *testing.T) {
+	controls := []policy.ControlDefinition{
+		ctl("CTL.A.001", "aws_s3_bucket"),          // CanFire
+		ctl("CTL.B.001", "aws_missing_type"),       // Blocked
+		ctl("CTL.C.001" /* no applicable types */), // Indeterminate
+	}
+	snapshot := snap(a("b1", "aws_s3_bucket"))
+	r := Analyze(controls, nil, []asset.Snapshot{snapshot}, 0)
+
+	c := r.Controls
+	if c.Total != 3 {
+		t.Fatalf("Total: want 3, got %d", c.Total)
+	}
+	if c.CanFire != 1 || c.Blocked != 1 || c.Indeterminate != 1 {
+		t.Fatalf("bucket counts: want 1/1/1, got %d/%d/%d", c.CanFire, c.Blocked, c.Indeterminate)
+	}
+	sum := c.CanFirePct + c.BlockedPct + c.IndeterminatePct
+	if sum < 99.99 || sum > 100.01 {
+		t.Errorf("share-of-total percentages must sum to ~100; got %.4f (%.4f + %.4f + %.4f)",
+			sum, c.CanFirePct, c.BlockedPct, c.IndeterminatePct)
+	}
+	const wantDenom = "can_fire + blocked (excludes indeterminate)"
+	if r.ReadinessDenominator != wantDenom {
+		t.Errorf("ReadinessDenominator: got %q, want %q", r.ReadinessDenominator, wantDenom)
+	}
+}
+
+// TestAnalyze_EmptyForecast_NoPercentageDivisionByZero guards the
+// degenerate case: an empty control set must leave the *Pct fields
+// at zero, not produce NaN. JSON output of NaN crashes consumers
+// that assume the field is a finite number.
+func TestAnalyze_EmptyForecast_NoPercentageDivisionByZero(t *testing.T) {
+	r := Analyze(nil, nil, nil, 0)
+	if r.Controls.CanFirePct != 0 || r.Controls.BlockedPct != 0 || r.Controls.IndeterminatePct != 0 {
+		t.Errorf("empty forecast must have zero percentages; got %v",
+			[]float64{r.Controls.CanFirePct, r.Controls.BlockedPct, r.Controls.IndeterminatePct})
+	}
+}

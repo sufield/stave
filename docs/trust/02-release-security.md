@@ -446,5 +446,5 @@ Every pull request must pass six checks before merging:
 2. **Lint** — `golangci-lint` v2.8.0 with gosec, errcheck, govet, staticcheck
 3. **Vulnerability check** — `govulncheck` against the Go vulnerability database
 4. **License compliance** — `go-licenses check` with allowlist (Apache-2.0, MIT, BSD-2-Clause, BSD-3-Clause, ISC). Fails on GPL, AGPL, SSPL, LGPL, or unknown licenses. Run locally: `go-licenses check ./cmd/stave --allowed_licenses=Apache-2.0,MIT,BSD-2-Clause,BSD-3-Clause,ISC`
-5. **E2E** — Full end-to-end test suite (`scripts/e2e.sh`)
+5. **E2E** — Full end-to-end test suite (`go test ./e2e/...` via `make e2e`)
 6. **Release config** — `goreleaser check` validates the release configuration

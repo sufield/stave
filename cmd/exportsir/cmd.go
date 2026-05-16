@@ -16,6 +16,7 @@ package exportsir
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -24,14 +25,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/adapters/sirbridge"
-	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/asset"
-	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation/engine"
-	"github.com/sufield/stave/internal/core/sir"
+	"github.com/sufield/stave/internal/core/sirfacts"
+	"github.com/sufield/stave/pkg/stave"
+	"github.com/sufield/stave/pkg/stave/cliapi"
 )
 
 const (
@@ -40,18 +37,27 @@ const (
 )
 
 type options struct {
-	ControlsDir     string
-	ObservationsDir string
-	Format          string
-	Now             string
-	Validate        bool
+	ControlsDir       string
+	ObservationsDir   string
+	Format            string
+	Now               string
+	Validate          bool
+	AllowlistMode     string
+	AllowUnknownInput bool
 }
 
-// NewCmd constructs the export-sir command. Dependencies are
-// injected as factories (matching the rest of the cmd/ tree) so
-// tests can substitute in-memory repositories without spinning
-// up the full CLI bootstrap.
-func NewCmd(newCtlRepo compose.CtlRepoFactory, newObsRepo compose.ObsRepoFactory, newCELEvaluator compose.CELEvaluatorFactory) *cobra.Command {
+// NewCmd constructs the export-sir command. The command routes
+// the evaluation + SIR build through cliapi.Apply — the same
+// entry point cmd/apply uses — so there is one load path, one
+// evaluation, and one SIR builder in the entire CLI. Output
+// formatting (json | jsonl | smt2) is the only piece export-sir
+// adds on top of what stave apply already does.
+//
+// No factory injection: cliapi.Apply owns the loaders. Tests
+// drive the command by writing observation JSON to a tempdir
+// and pointing --observations at it (same shape the CLI uses
+// in production).
+func NewCmd() *cobra.Command {
 	opts := &options{}
 
 	cmd := &cobra.Command{
@@ -65,6 +71,17 @@ risk reasoning. It carries every control fact, asset, identity (with
 transitive role chains), effective-permission edge, and exposure window
 that the engine's evaluation pipeline produces — but stripped of
 infrastructure noise (file paths, git metadata, tool versions).
+
+Scope: the SIR is a curated projection, not a complete dump of every
+property a control reads. The export currently covers 13 top-level
+configuration domains (IAM, Cognito, S3 storage policies, Bedrock AI
+agents, delegation, credential lifecycle, trail logging, network, and
+a subset of compute / k8s). Properties in uncovered domains (Azure,
+GCP, M365, databases, messaging, secrets, monitoring, and 80+ others)
+are evaluated by CEL controls inside 'stave apply' but are NOT in the
+export. A solver UNSAT verdict is valid for chains the SIR can express;
+it is silent about chains whose members live in uncovered domains. See
+the Fact Export reference in stave-guide for the full domain table.
 
 Three output formats are supported:
 
@@ -113,7 +130,7 @@ Exit codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return run(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), opts, newCtlRepo, newObsRepo, newCELEvaluator)
+			return run(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), opts)
 		},
 	}
 
@@ -125,6 +142,13 @@ Exit codes:
 	flags.BoolVar(&opts.Validate, "validate", false,
 		"check SIR coverage against CEL controls and warn on stderr about projection gaps "+
 			"(controls that fire in CEL but evaluate properties not projected as SIR facts)")
+	flags.StringVar(&opts.AllowlistMode, "allowlist-mode", "curated",
+		"scalar projector mode: curated (default — 59 hand-authored entries) | "+
+			"full (experimental — emit one auto_prop_<path> triple per control-read property "+
+			"path the predicate index advertises; measures coverage gain, no downstream solver "+
+			"consumes the auto_prop_* names yet)")
+	flags.BoolVar(&opts.AllowUnknownInput, "allow-unknown-input", false,
+		"accept observations missing generated_by.source_type (matches `stave apply --allow-unknown-input`)")
 
 	return cmd
 }
@@ -133,7 +157,12 @@ Exit codes:
 // problems (mapped to exit code 2 by ui.ExitCode); plain errors
 // fall through to exit code 4 (ExitInternal) — that's the
 // convention the rest of the cmd/ tree follows.
-func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options, newCtlRepo compose.CtlRepoFactory, newObsRepo compose.ObsRepoFactory, newCELEvaluator compose.CELEvaluatorFactory) error {
+//
+// The body routes through cliapi.Apply — the same entry cmd/apply
+// uses. One load, one CEL evaluator build, one SIR build, one
+// fact extraction. export-sir adds output formatting (jsonl /
+// smt2 / json) on top, nothing else.
+func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error {
 	format := strings.ToLower(strings.TrimSpace(opts.Format))
 	switch format {
 	case "", "json", "jsonl", "smt2":
@@ -142,77 +171,85 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options, newCtl
 		return &ui.UserError{Err: fmt.Errorf("--format must be one of json | jsonl | smt2 (got %q)", opts.Format)}
 	}
 
+	allowlistMode := strings.ToLower(strings.TrimSpace(opts.AllowlistMode))
+	if allowlistMode == "" {
+		allowlistMode = "curated"
+	}
+	switch allowlistMode {
+	case "curated", "full":
+		// supported
+	default:
+		return &ui.UserError{Err: fmt.Errorf("--allowlist-mode must be curated | full (got %q)", opts.AllowlistMode)}
+	}
+
 	now, err := resolveNow(opts.Now)
 	if err != nil {
 		return &ui.UserError{Err: err}
 	}
 
-	controls, err := compose.LoadControlsFrom(ctx, newCtlRepo, opts.ControlsDir)
+	// One load path: cliapi.Apply owns the loaders, the CEL
+	// evaluator, and the SIR builder. The result carries the
+	// SIR document, the active controls, and the compliance
+	// report (used by --validate). No duplicate orchestration.
+	res, err := cliapi.Apply(ctx, stave.Config{
+		ControlsDir:       opts.ControlsDir,
+		SnapshotsDir:      opts.ObservationsDir,
+		Now:               now,
+		AllowUnknownInput: opts.AllowUnknownInput,
+	})
 	if err != nil {
-		return fmt.Errorf("load controls: %w", err)
+		return fmt.Errorf("evaluate: %w", err)
 	}
-
-	snapshots, err := compose.LoadSnapshotsFrom(ctx, newObsRepo, opts.ObservationsDir)
-	if err != nil {
-		return fmt.Errorf("load observations: %w", err)
+	if res.IsIncomplete() {
+		return errors.New("evaluate: cliapi.Apply returned an incomplete result")
 	}
-
-	celEval, err := newCELEvaluator()
-	if err != nil {
-		return fmt.Errorf("build CEL evaluator: %w", err)
+	if res.SIRDocument == nil {
+		return errors.New("evaluate: SIR build failed inside cliapi.Apply; no document to project")
 	}
+	doc := res.SIRDocument
 
-	// Coverage thresholds match the engine's defaults: 12h required
-	// observation span (also the engine's continuity limit). A
-	// future flag could override these per-export; for now the
-	// export-sir CLI carries the same global posture the assessor
-	// does.
-	coverageSrc, err := sirbridge.NewEngineCoverageSource(engine.DefaultContinuityLimit, engine.DefaultContinuityLimit)
-	if err != nil {
-		return fmt.Errorf("build coverage source: %w", err)
-	}
-
-	builder := sir.NewBuilder(
-		sir.WithRoleChainSource(sirbridge.NewAWSRoleChainSource()),
-		sir.WithLifecycleSource(sirbridge.NewEngineLifecycleSource(celEval)),
-		sir.WithCoverageSource(coverageSrc),
-		sir.WithResourceFactGrouper(sirbridge.NewAWSS3FactGrouper()),
-	)
-
-	doc, err := builder.Build(controls, snapshots, now)
-	if err != nil {
-		return fmt.Errorf("build SIR: %w", err)
-	}
-
-	// Extract facts once if either the format or --validate needs
-	// them. The JSON format path does not consume facts (it
-	// serialises the nested SIR document directly), but --validate
-	// always does — so the conditional avoids the work for the
-	// no-validate JSON case.
-	var facts []Fact
+	// Extract facts when the format needs them or --validate asks.
+	// The JSON format path serialises the nested SIR document
+	// directly and doesn't read facts unless --validate is also
+	// set, so the conditional avoids the work in the no-validate
+	// JSON case.
+	var facts []sirfacts.Fact
 	if format != "json" || opts.Validate {
-		facts = ExtractFacts(doc)
-		// Stamp freshness using the same `now` the SIR builder
-		// consumed. With --now pinned, AgeSeconds is byte-stable
-		// across runs (golden-friendly); without --now it drifts
-		// by elapsed wall-clock time between exports.
-		AnnotateFreshness(facts, now)
+		facts = sirfacts.ExtractFacts(doc)
+		// --allowlist-mode full appends auto_prop_<path> triples
+		// for every control-read property path the predicate index
+		// advertises. Auto-generated names live in their own
+		// predicate namespace (auto_prop_*) so existing solvers
+		// reading has_public_read / can_assume / has_action see no
+		// new assertions on the predicates they know. The flag is
+		// an experiment — measuring how much the export grows —
+		// not yet a production toggle.
+		if allowlistMode == "full" {
+			facts = append(facts, sirfacts.AutoPropertyFacts(doc.Assets, res.Controls)...)
+		}
+		// AgeSeconds is byte-stable across runs only when --now is
+		// pinned (the SIR builder consumed the same value, so
+		// CapturedAt - Now is reproducible).
+		sirfacts.AnnotateFreshness(facts, now)
 	}
 
 	if opts.Validate {
-		if vErr := validateAndReport(ctx, errW, controls, snapshots, celEval, now, facts); vErr != nil {
-			return fmt.Errorf("validate SIR: %w", vErr)
+		warnings := ValidateSIRCompleteness(res.ComplianceReport.Findings, facts, res.Controls)
+		if len(warnings) == 0 {
+			fmt.Fprintln(errW, "SIR validation: all CEL-evaluated properties are projected. No gaps.")
+		} else {
+			renderValidationWarnings(errW, warnings)
 		}
 	}
 
 	switch format {
 	case "jsonl":
-		if encErr := serializeJSONL(facts, w); encErr != nil {
+		if encErr := sirfacts.SerializeJSONL(facts, w); encErr != nil {
 			return fmt.Errorf("encode jsonl: %w", encErr)
 		}
 		return nil
 	case "smt2":
-		if encErr := serializeSMT2(facts, w); encErr != nil {
+		if encErr := sirfacts.SerializeSMT2(facts, w); encErr != nil {
 			return fmt.Errorf("encode smt2: %w", encErr)
 		}
 		return nil
@@ -230,57 +267,6 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options, newCtl
 // the loaded controls and snapshots to discover which controls
 // fired, then compares each finding's predicate field paths
 // against the SIR fact provenance for the same asset. The
-// emitted warnings (one per uncovered path) flow to stderr; the
-// JSONL/SMT-LIB/JSON output on stdout is untouched.
-//
-// We use appeval.EvaluateLoaded — the lower-level evaluation
-// entry point that takes pre-loaded controls + snapshots —
-// rather than pkg/stave.Apply because pkg/stave/internal/applycore
-// imports cmd/exportsir (for ExtractFacts), so importing
-// pkg/stave from this package would form a cycle. appeval has no
-// such dependency.
-func validateAndReport(
-	ctx context.Context,
-	errW io.Writer,
-	controls []policy.ControlDefinition,
-	snapshots []asset.Snapshot,
-	celEval policy.PredicateEval,
-	now time.Time,
-	facts []Fact,
-) error {
-	clock := constantClock{now: now.UTC()}
-	report, err := appeval.EvaluateLoaded(ctx, appeval.EvaluationRequest{
-		Controls:     controls,
-		Snapshots:    snapshots,
-		Clock:        clock,
-		CELEvaluator: celEval,
-	})
-	if err != nil {
-		return fmt.Errorf("evaluate for validation: %w", err)
-	}
-
-	warnings := ValidateSIRCompleteness(report.Findings, facts, controls)
-	if len(warnings) == 0 {
-		fmt.Fprintln(errW, "SIR validation: all CEL-evaluated properties are projected. No gaps.")
-		return nil
-	}
-	renderValidationWarnings(errW, warnings)
-	return nil
-}
-
-// constantClock pins the wall clock to a specific instant for
-// validation. Reuses the same `now` the SIR builder consumed so
-// CEL evaluation evaluates against the same temporal context.
-//
-// IsUserProvided returns true so the engine treats the time as
-// an explicit override (which it is — `--now` flowed through to
-// here) rather than a wall-clock read. This matters because
-// some downstream code branches on whether time was pinned.
-type constantClock struct{ now time.Time }
-
-func (c constantClock) Now() time.Time       { return c.now }
-func (c constantClock) IsUserProvided() bool { return true }
-
 // resolveNow returns the parsed --now value or, when --now is
 // empty, the current wall-clock time. The empty case is the
 // only place export-sir reads the wall clock; downstream

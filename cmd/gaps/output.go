@@ -87,11 +87,17 @@ func writeGap(w io.Writer, g *appgaps.FieldGap) error {
 }
 
 func writeSummary(w io.Writer, r appgaps.Report) error {
+	// The per-type breakdown lets the operator read the agent-vs-
+	// human split at a glance: tag + derived = "agent loop closes
+	// this," api + collector = "needs the human."
+	s := r.Summary
 	lines := []string{
 		"\nSummary",
 		"-------",
-		fmt.Sprintf("  Total gaps:       %d (%d tag, %d collector)", r.Summary.TotalGaps, r.Summary.TagGaps, r.Summary.CollectorGaps),
-		fmt.Sprintf("  Chains blocked:   %d distinct chains across all gaps", r.Summary.ChainsBlockedTotal),
+		fmt.Sprintf("  Total gaps:       %d", s.TotalGaps),
+		fmt.Sprintf("                    %d tag, %d derived (fixable by agent)", s.TagGaps, s.DerivedGaps),
+		fmt.Sprintf("                    %d api, %d collector (needs operator)", s.ApiGaps, s.CollectorGaps),
+		fmt.Sprintf("  Chains blocked:   %d distinct chains across all gaps", s.ChainsBlockedTotal),
 	}
 	if r.Summary.TopN > 0 {
 		lines = append(lines,

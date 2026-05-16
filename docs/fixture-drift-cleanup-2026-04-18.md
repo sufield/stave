@@ -174,9 +174,8 @@ canonical evolution since the fixtures' golden files were last generated.
 
 #### Regeneration execution
 
-Each of the 53 STALE fixtures was re-run with `./stave apply` (or
-`./stave check` for `e2e-s3-verify`) using the same args as the e2e
-harness. Raw output was written to `expected.out.json` with canonical
+Each of the 53 STALE fixtures was re-run with `./stave apply` using
+the same args as the e2e harness. Raw output was written to `expected.out.json` with canonical
 key ordering (keys sorted, 2-space indent). No control files or
 observation files were modified.
 

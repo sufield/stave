@@ -2,56 +2,127 @@ package gaps
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // classifyRemediation maps a property path to an actionable
-// remediation hint. Two classes:
+// remediation hint. Four classes, distinguished by who can close
+// the gap:
 //
-//   - "tag":  the path is `<something>.tags.<key>`. The operator
-//     adds a tag using the cloud provider's tag-resource
-//     API; effort is seconds-per-asset.
-//   - "collector": every other class. The collector or extractor
-//     must populate the property; effort is a code change.
+//   - "tag":       the path is `<something>.tags.<key>`. Operator
+//     or agent adds a tag via the cloud provider's
+//     tag-resource API. FixableByAgent: true.
+//   - "api":       the value requires a secondary cloud API call
+//     (Access Advisor, CloudTrail data events, IAM
+//     service-last-accessed) that is not in the
+//     standard observation surface. FixableByAgent:
+//     false — the agent cannot conjure the data.
+//   - "collector": the value requires a collector-side analysis
+//     (cross-inventory ghost checks, intent matching,
+//     delegation walks). The collector code itself
+//     must grow. FixableByAgent: false.
+//   - "derived":   the value is a transform-time projection over
+//     data the source already carries (typically
+//     Steampipe columns). An agent authoring a
+//     Steampipe → Stave mapping can add the field
+//     mapping. FixableByAgent: true.
 //
 // The CLI command is a template, not a per-resource substitution.
 // The brief explicitly defers per-asset-ID command rendering to a
 // future `--verbose` flag.
+//
+// Classification is path-pattern driven (not a static per-property
+// list), so new controls that follow the existing naming
+// conventions for permission_drift / has_ghost_ / intent_match /
+// access_advisor / unused_service / delegation classify
+// automatically. New conventions land here as one more pattern
+// rather than touching every property.
 func classifyRemediation(path string, at kernel.AssetType, isIntent bool) Remediation {
 	if _, key, found := strings.Cut(path, ".tags."); found {
 		return Remediation{
-			Type:    "tag",
-			Command: tagCommand(at, key),
-			Effort:  "30 seconds per asset",
+			Type:           "tag",
+			FixableByAgent: true,
+			Guidance:       "Add this tag to the resource via the cloud provider's tag-resource API.",
+			Command:        tagCommand(at, key),
+			Effort:         "30 seconds per asset",
 		}
 	}
-	// A handful of paths are well-known "collector must
-	// compute this" cases: delegation, permission_drift,
-	// intent_match families. Surface them with a more specific
-	// doc pointer. Everything else falls through to the generic
-	// "see the extractor guide" hint.
+
 	rel := strings.TrimPrefix(path, "properties.")
-	for _, prefix := range []string{
-		"delegation.", "identity.delegation.",
-		"permission_drift.", "identity.permission_drift.",
-		"intent_match.", "identity.intent_match.",
-	} {
-		if strings.HasPrefix(rel, prefix) {
-			return Remediation{
-				Type:    "collector",
-				Command: fmt.Sprintf("Collector must compute %s; see docs/extractor-*.md for the property-derivation guide.", rel),
-				Effort:  "Collector code change",
-			}
+
+	// "api" — properties whose value requires a secondary cloud
+	// API call beyond the standard inventory surface. Stave can
+	// evaluate them once the collector calls the right API, but
+	// the agent loop cannot synthesise the result.
+	if matchesAnySegment(rel, "permission_drift", "access_advisor", "unused_service", "unused_service_ratio") {
+		return Remediation{
+			Type:           "api",
+			FixableByAgent: false,
+			Guidance:       "Requires a secondary cloud API call (Access Advisor / service-last-accessed) not exposed by the standard inventory. Collector must call the API and stamp the result.",
+			Command:        fmt.Sprintf("Collector must compute %s from iam:GenerateServiceLastAccessedDetails (or equivalent); see docs/extractor-*.md.", rel),
+			Effort:         "Collector code change (secondary API)",
 		}
 	}
+
+	// "collector" — properties whose value requires a cross-
+	// inventory or analytical walk inside the collector. A
+	// transform agent cannot derive these from a single row.
+	if matchesSegment(rel, "has_ghost_") ||
+		strings.Contains(rel, ".has_ghost_") ||
+		matchesAnySegment(rel, "intent_match", "delegation") ||
+		strings.Contains(rel, ".intent_match.") ||
+		strings.Contains(rel, ".delegation.") {
+		return Remediation{
+			Type:           "collector",
+			FixableByAgent: false,
+			Guidance:       "Requires a collector-side analysis (cross-inventory or relational walk). The collector code must grow to cover it.",
+			Command:        fmt.Sprintf("Collector must compute %s; see docs/extractor-*.md for the property-derivation guide.", rel),
+			Effort:         "Collector code change (analysis)",
+		}
+	}
+
+	// "derived" — anything else. A transform-time projection over
+	// data the source row already carries; an agent authoring a
+	// Steampipe → Stave mapping can add the field.
 	_ = isIntent // reserved: future "intent" remediation may surface a taxonomy doc reference.
 	return Remediation{
-		Type:    "collector",
-		Command: fmt.Sprintf("Collector must populate %s on %s observations; see docs/extractor-prompt.md.", rel, at),
-		Effort:  "Collector code change",
+		Type:           "derived",
+		FixableByAgent: true,
+		Guidance:       "Add this property to the Steampipe → Stave mapping; the source row likely carries the value.",
+		Command:        fmt.Sprintf("Add %s to the field map for %s in contracts/steampipe/%s.yaml; see docs/extractor-prompt.md.", rel, at, at),
+		Effort:         "Mapping change (no collector code)",
 	}
+}
+
+// matchesSegment returns true when seg appears as a prefix of any
+// dot-separated segment in rel. Used to spot ".has_ghost_" inside
+// "identity.trust_policy.has_ghost_principal" — but NOT inside
+// "has_ghost_principal_count" if a future control follows that
+// shape, since matching by segment prevents accidental substring
+// hits.
+func matchesSegment(rel, seg string) bool {
+	for p := range strings.SplitSeq(rel, ".") {
+		if strings.HasPrefix(p, seg) {
+			return true
+		}
+	}
+	return false
+}
+
+// matchesAnySegment returns true when rel has at least one dot-
+// segment equal to one of the supplied segments. Distinguishes
+// "permission_drift.threshold_exceeded" (matches) from
+// "permission_drift_count" (does not).
+func matchesAnySegment(rel string, segs ...string) bool {
+	for p := range strings.SplitSeq(rel, ".") {
+		if slices.Contains(segs, p) {
+			return true
+		}
+	}
+	return false
 }
 
 // tagCommand returns the canonical AWS CLI tag-resource command

@@ -34,7 +34,7 @@ at runtime. This is correct adapter-pattern usage.
 
 ### 2. cel.NewPredicateEval
 
-**File**: `internal/cel/factory.go:10`
+**File**: `internal/adapters/cel/factory.go:10`
 
 Returns `policy.PredicateEval` (a function type alias). The closure
 captures a compiled CEL environment. Returning a concrete type would be

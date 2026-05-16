@@ -39,13 +39,20 @@ type Report struct {
 	// Action plan: ranked unblockers.
 	Actions []Action `json:"actions,omitempty"`
 
-	// ReadinessScore = controls_can_fire / total_controls.
-	// Phase 1 is honest about what it measures: it is the
-	// fraction of declared-asset-type controls whose assets are
-	// observed. Controls without applicable_asset_types are
-	// excluded from the denominator since the analyzer cannot
-	// statically classify them.
+	// ReadinessScore = can_fire / (can_fire + blocked).
+	// Indeterminate controls (those without applicable_asset_types)
+	// are excluded from BOTH numerator and denominator because the
+	// analyzer cannot statically classify them. ReadinessDenominator
+	// names the bucket set explicitly so a consumer reading this
+	// number alongside Controls.Total / Controls.Indeterminate cannot
+	// mistake it for a whole-catalog fraction.
 	ReadinessScore float64 `json:"readiness_score"`
+
+	// ReadinessDenominator self-documents what the score divides
+	// by. Constant string; the analyzer always sets it the same
+	// way. Present so JSON consumers don't need to read this file's
+	// godoc to know what 0.41 means.
+	ReadinessDenominator string `json:"readiness_denominator"`
 }
 
 // ControlForecast classifies every control into one of three
@@ -53,21 +60,33 @@ type Report struct {
 // that declare no applicable_asset_types — the engine fires
 // them on any asset, but the analyzer cannot predict whether
 // they will produce findings.
+//
+// The three *Pct fields are bucket-share-of-Total, scaled 0..100
+// (so 41.4 reads as 41.4%, not 0.414). They are derived from the
+// integer counts at Analyze time so JSON consumers can render
+// percentages without recomputing the math — and so the text
+// renderer can show the same numbers a JSON consumer sees.
 type ControlForecast struct {
-	Total         int `json:"total"`
-	CanFire       int `json:"can_fire"`
-	Blocked       int `json:"blocked"`
-	Indeterminate int `json:"indeterminate"`
+	Total            int     `json:"total"`
+	CanFire          int     `json:"can_fire"`
+	Blocked          int     `json:"blocked"`
+	Indeterminate    int     `json:"indeterminate"`
+	CanFirePct       float64 `json:"can_fire_pct"`
+	BlockedPct       float64 `json:"blocked_pct"`
+	IndeterminatePct float64 `json:"indeterminate_pct"`
 }
 
 // ChainForecast classifies every chain. A chain can fire only
 // if every member control can fire — one blocked member breaks
-// the compound.
+// the compound. *Pct fields use the same scale as ControlForecast.
 type ChainForecast struct {
-	Total         int `json:"total"`
-	CanFire       int `json:"can_fire"`
-	Blocked       int `json:"blocked"`
-	Indeterminate int `json:"indeterminate"`
+	Total            int     `json:"total"`
+	CanFire          int     `json:"can_fire"`
+	Blocked          int     `json:"blocked"`
+	Indeterminate    int     `json:"indeterminate"`
+	CanFirePct       float64 `json:"can_fire_pct"`
+	BlockedPct       float64 `json:"blocked_pct"`
+	IndeterminatePct float64 `json:"indeterminate_pct"`
 }
 
 // Action is one unblocking step the operator can take. Ordered

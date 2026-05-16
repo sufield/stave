@@ -70,30 +70,39 @@ func writeObservedTypes(w io.Writer, r readiness.Report) error {
 }
 
 func writeControlForecast(w io.Writer, r readiness.Report) error {
+	// Three buckets shown with share-of-total percentages so the
+	// operator reads "n controls, X% of the catalog" without
+	// confusing the share-of-total with the readiness score
+	// (share-of-classifiable, printed below).
+	c := r.Controls
 	lines := []string{
 		"\nControl evaluation forecast:",
-		fmt.Sprintf("  Total controls:    %d", r.Controls.Total),
-		fmt.Sprintf("  Can fire:          %d", r.Controls.CanFire),
-		fmt.Sprintf("  Blocked:           %d (declares an asset type the snapshot does not include)", r.Controls.Blocked),
-		fmt.Sprintf("  Indeterminate:     %d (control declares no applicable_asset_types)", r.Controls.Indeterminate),
+		fmt.Sprintf("  Total controls:    %d", c.Total),
+		fmt.Sprintf("  Confirmed active:  %d (%.1f%%) — can evaluate your observations", c.CanFire, c.CanFirePct),
+		fmt.Sprintf("  Confirmed blocked: %d (%.1f%%) — declares an asset type the snapshot does not include", c.Blocked, c.BlockedPct),
+		fmt.Sprintf("  Indeterminate:     %d (%.1f%%) — control declares no applicable_asset_types", c.Indeterminate, c.IndeterminatePct),
 	}
 	return writeLines(w, lines)
 }
 
 func writeChainForecast(w io.Writer, r readiness.Report) error {
+	c := r.Chains
 	lines := []string{
 		"\nChain effectiveness:",
-		fmt.Sprintf("  Total chains:      %d", r.Chains.Total),
-		fmt.Sprintf("  Can fire:          %d", r.Chains.CanFire),
-		fmt.Sprintf("  Blocked:           %d (one or more members require an absent asset type)", r.Chains.Blocked),
-		fmt.Sprintf("  Indeterminate:     %d (one or more members declare no applicable_asset_types)", r.Chains.Indeterminate),
+		fmt.Sprintf("  Total chains:      %d", c.Total),
+		fmt.Sprintf("  Confirmed active:  %d (%.1f%%) — every member can fire", c.CanFire, c.CanFirePct),
+		fmt.Sprintf("  Confirmed blocked: %d (%.1f%%) — one or more members require an absent asset type", c.Blocked, c.BlockedPct),
+		fmt.Sprintf("  Indeterminate:     %d (%.1f%%) — one or more members declare no applicable_asset_types", c.Indeterminate, c.IndeterminatePct),
 	}
 	return writeLines(w, lines)
 }
 
 func writeScore(w io.Writer, r readiness.Report) error {
-	if _, err := fmt.Fprintf(w, "\nReadiness score:     %.0f%% (of classifiable controls)\n",
+	if _, err := fmt.Fprintf(w, "\nReadiness score:     %.1f%% (of classifiable controls)\n",
 		r.ReadinessScore*100); err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintf(w, "                     denominator: %s\n", r.ReadinessDenominator); err != nil {
 		return err
 	}
 	_, err := fmt.Fprintln(w, "                     (input completeness, NOT security posture)")

@@ -95,7 +95,7 @@
 | 85 | `internal/adapters/controls/yaml/loader.go` | 28, 41-49 | Returns *ControlLoader; compile-time check satisfies interface |
 | 86 | `internal/adapters/observations/loader_core.go` | 36, 41-55 | Returns *ObservationLoader; satisfies ObservationRepository |
 | 87 | `internal/app/catalog/provider.go` | 25-27 | Exception: returns ControlProvider interface (multiple impls) |
-| 88 | `internal/cel/factory.go` | 10-22 | Exception: returns PredicateEval function type (closure) |
+| 88 | `internal/adapters/cel/factory.go` | 10-22 | Exception: returns PredicateEval function type (closure) |
 | | | | |
 | | **Domain-Driven Design** | | |
 | | | | |

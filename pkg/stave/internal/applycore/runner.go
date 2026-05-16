@@ -16,7 +16,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sufield/stave/cmd/exportsir"
 	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	"github.com/sufield/stave/internal/adapters/controls/pack"
@@ -32,8 +31,10 @@ import (
 	"github.com/sufield/stave/internal/core/capabilities"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation/engine"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/core/sir"
+	"github.com/sufield/stave/internal/core/sirfacts"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/providers/aws"
 	"github.com/sufield/stave/internal/platform/providers/aws/iam"
@@ -267,7 +268,7 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 // json tag on ContributingFactIDs preserves the prior wire shape
 // for consumers that don't read the new field.
 //
-// Determinism: [exportsir.ExtractFacts] sorts its inner walks;
+// Determinism: [sirfacts.ExtractFacts] sorts its inner walks;
 // per-subject grouping here preserves projection emission order.
 // Subjects with zero facts (control IDs that never produced a
 // fact, or principals not represented as assets) leave the
@@ -280,19 +281,41 @@ func annotateContributingFactIDs(
 	now time.Time,
 	celEval policy.PredicateEval,
 ) *sir.Document {
-	if len(findings) == 0 {
-		return nil
-	}
-	builder := sir.NewBuilder(
+	// The SIR is built unconditionally — even with zero findings
+	// there are consumers (Result.SIRDocument → cmd/exportsir,
+	// pkg/stave.ExportGraph) that need the document. Skipping when
+	// findings is empty would silently break `stave export-sir`
+	// on a fixture that has nothing to flag (a remediated-config
+	// snapshot, for example).
+	//
+	// The CoverageSource matches cmd/exportsir's expectations
+	// (same DefaultContinuityLimit thresholds) so applycore's
+	// Result.SIRDocument and `stave export-sir --format json`
+	// are byte-identical for the same (controls, snapshots, now)
+	// triple. Coverage source has no effect on fact extraction —
+	// facts don't include the coverage report — but having both
+	// callers see identical SIR documents matters for the
+	// "library and CLI route through one builder" invariant.
+	//
+	// A coverage-source construction failure is non-fatal:
+	// fact-id annotation is best-effort already (a SIR build
+	// failure leaves findings un-annotated rather than blocking
+	// the report). Falling back to a nil source preserves the
+	// prior behaviour rather than degrading findings.
+	opts := []sir.Option{
 		sir.WithRoleChainSource(sirbridge.NewAWSRoleChainSource()),
 		sir.WithLifecycleSource(sirbridge.NewEngineLifecycleSource(celEval)),
 		sir.WithResourceFactGrouper(sirbridge.NewAWSS3FactGrouper()),
-	)
+	}
+	if coverageSrc, covErr := sirbridge.NewEngineCoverageSource(engine.DefaultContinuityLimit, engine.DefaultContinuityLimit); covErr == nil {
+		opts = append(opts, sir.WithCoverageSource(coverageSrc))
+	}
+	builder := sir.NewBuilder(opts...)
 	doc, err := builder.Build(controls, snapshots, now)
 	if err != nil || doc == nil {
 		return nil
 	}
-	facts := exportsir.ExtractFacts(doc)
+	facts := sirfacts.ExtractFacts(doc)
 	bySubject := make(map[string][]string, len(facts))
 	for _, f := range facts {
 		if f.Subject == "" || f.FactID == "" {

@@ -43,22 +43,58 @@ type FieldGap struct {
 }
 
 // Remediation describes how the operator closes the gap and the
-// effort it takes. Two classes today: tag remediations (operator
-// adds a tag, seconds-per-asset) and collector remediations (the
-// collector or extractor must populate the property, code change).
+// effort it takes. Four classes today, partitioned along "can an
+// agent loop fix this on the next iteration without escalating to
+// a human?":
+//
+//	tag        — operator (or agent) adds a tag in the cloud
+//	             provider's tag-resource API. Seconds per asset.
+//	             FixableByAgent: true.
+//	derived    — the property is a transform-time computation over
+//	             values the source data already carries. An agent
+//	             authoring a Steampipe → Stave mapping can add the
+//	             field. FixableByAgent: true.
+//	api        — the property requires a secondary cloud API call
+//	             (Access Advisor, CloudTrail data events, etc.)
+//	             outside the standard observation surface. The
+//	             agent cannot conjure data it doesn't have.
+//	             FixableByAgent: false.
+//	collector  — the property requires a cross-inventory check or
+//	             a collector code change (ghost references, intent
+//	             matching, delegation analysis). The data source
+//	             itself must grow to cover it. FixableByAgent: false.
+//
+// Agents read FixableByAgent to decide whether to retry (true) or
+// escalate to the human operator (false). The Type field stays the
+// authoritative classification — FixableByAgent is its derived
+// boolean projection.
 type Remediation struct {
-	Type    string `json:"type"` // "tag" | "collector"
-	Command string `json:"command,omitempty"`
-	Effort  string `json:"effort"`
+	Type           string `json:"type"`
+	FixableByAgent bool   `json:"fixable_by_agent"`
+	Guidance       string `json:"guidance,omitempty"`
+	Command        string `json:"command,omitempty"`
+	Effort         string `json:"effort"`
 }
 
 // Summary aggregates counts and a "quick wins" estimate so the
 // operator gets a single-line answer to "how much catalog
 // coverage am I leaving on the table?"
+//
+// Per-type counts partition the gap set exactly: TagGaps +
+// ApiGaps + DerivedGaps + CollectorGaps equals TotalGaps, and
+// FixableByAgentGaps + NotFixableByAgentGaps equals TotalGaps.
+// Agents read FixableByAgentGaps to decide whether to keep
+// iterating; operators read the per-type split to budget effort
+// (tag work is seconds, derived work is mapping edits, api and
+// collector are escalations).
 type Summary struct {
 	TotalGaps               int    `json:"total_gaps"`
 	TagGaps                 int    `json:"tag_gaps"`
+	ApiGaps                 int    `json:"api_gaps"`
+	DerivedGaps             int    `json:"derived_gaps"`
 	CollectorGaps           int    `json:"collector_gaps"`
+	FixableByAgentGaps      int    `json:"fixable_by_agent_gaps"`
+	NotFixableByAgentGaps   int    `json:"not_fixable_by_agent_gaps"`
 	ChainsBlockedTotal      int    `json:"chains_blocked_total"`
 	ChainsUnblockedByTopN   int    `json:"chains_unblocked_by_top_n,omitempty"`
 	TopN                    int    `json:"top_n,omitempty"`

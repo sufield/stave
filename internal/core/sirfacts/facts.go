@@ -18,7 +18,7 @@
 // order (sort.Strings on subjects/objects, slice index on
 // nested children) so the same SIR document yields
 // byte-identical output across runs.
-package exportsir
+package sirfacts
 
 import (
 	"crypto/sha256"
@@ -1718,9 +1718,9 @@ func exposureFacts(windows []sir.ExposureWindow) []Fact {
 	return out
 }
 
-// serializeJSONL writes one JSON object per line. The order
+// SerializeJSONL writes one JSON object per line. The order
 // reflects ExtractFacts' deterministic walk of the SIR document.
-func serializeJSONL(facts []Fact, w io.Writer) error {
+func SerializeJSONL(facts []Fact, w io.Writer) error {
 	enc := json.NewEncoder(w)
 	for i := range facts {
 		if err := enc.Encode(&facts[i]); err != nil {
@@ -1838,7 +1838,7 @@ var baselineSMT2Predicates = []string{
 	"trusts_service",
 }
 
-// serializeSMT2 writes SMT-LIB v2 declarations, fact assertions,
+// SerializeSMT2 writes SMT-LIB v2 declarations, fact assertions,
 // and per-predicate closed-world axioms.
 //
 // Predicates are declared as binary Bool functions over String
@@ -1866,7 +1866,7 @@ var baselineSMT2Predicates = []string{
 // so no escaping is needed for predicate symbols. String literals
 // follow SMT-LIB v2.6 string theory: surrounded by ", embedded "
 // escaped as "" (per the standard).
-func serializeSMT2(facts []Fact, w io.Writer) error {
+func SerializeSMT2(facts []Fact, w io.Writer) error {
 	bw := newBufferedWriter(w)
 	bw.writeLine("; Stave SIR facts export — SMT-LIB v2")
 	bw.writeLine("; Predicates declared as Bool functions over String args.")
@@ -2012,7 +2012,7 @@ func smt2Quote(s string) string {
 // bufferedWriter is a minimal error-sticky line writer so the
 // serialiser can emit many lines without checking err on each
 // call. The first error halts subsequent writes; the final
-// err is returned by serializeSMT2.
+// err is returned by SerializeSMT2.
 type bufferedWriter struct {
 	w   io.Writer
 	err error

@@ -76,7 +76,7 @@ an audit trail: who accepted the risk, when, why, and which
 compensating controls must remain passing.
 
 **System Invariant as code.** Security policy is expressed as versioned
-YAML invariant files in `controls/`. Custom controls take minutes
+YAML control files in `controls/`. Custom controls take minutes
 to write with `stave forge new` — browse available property paths
 from a real snapshot, write a CEL predicate, see live evaluation
 results before generating any file.

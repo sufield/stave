@@ -70,7 +70,7 @@ Three asset types:
 | `MEMORY.md` | New file: refactoring context and technical debt |
 
 **Zero engine changes**: no modifications to `internal/core/`, `internal/app/`,
-`internal/adapters/`, or `internal/cel/`.
+or `internal/adapters/` (including `internal/adapters/cel/`).
 
 ## How To Use
 

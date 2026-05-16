@@ -3,13 +3,37 @@ name: Docs Drift
 on:
   pull_request:
     paths:
+      # Doc trees
       - 'docs/**'
       - 'stave/docs/**'
+      # Root docs — the audit found stale `internal/domain` references
+      # here that the previous docs-only trigger missed entirely.
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'ARCHITECTURE.md'
+      - 'TESTING.md'
+      # Code paths that the docs name. A move under any of these
+      # could leave a doc referencing a now-dead location, so we
+      # want the drift gate to fire on the PR that does the move.
+      - 'cmd/**'
+      - 'pkg/**'
+      - 'internal/**'
+      # The workflow itself — so an edit to the check list is
+      # validated by the check it just changed.
+      - '.github/workflows/docs-drift.yml'
   push:
     branches: [main]
     paths:
       - 'docs/**'
       - 'stave/docs/**'
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'ARCHITECTURE.md'
+      - 'TESTING.md'
+      - 'cmd/**'
+      - 'pkg/**'
+      - 'internal/**'
+      - '.github/workflows/docs-drift.yml'
   workflow_dispatch:
 
 permissions:
@@ -29,10 +53,34 @@ jobs:
           set -euo pipefail
           bad=0
 
+          # The scan set is every Markdown file under docs/ EXCEPT
+          # the snapshot/historical docs below, plus the four root
+          # docs the audit found ungated. Snapshot docs reference
+          # paths and line numbers as they existed at the time of
+          # writing — treating them as live drift creates CI noise
+          # without value, since those docs are intentionally point-
+          # in-time inventories.
+          #
+          # Excluded:
+          #   docs/plans/      - design plans (path references frozen)
+          #   docs/audits/     - audit reports (point-in-time analyses)
+          #   docs/ontology/   - versioned ontology snapshots
+          #   docs/go-idioms.md - file:line inventory (rotten by design)
+          #
+          # Each check is a single grep across the scan set; a hit
+          # means the pattern (and reason) need updating in the doc.
           check_pattern() {
             local pattern="$1"
             local reason="$2"
-            if grep -rn "$pattern" docs/ --include='*.md' 2>/dev/null; then
+            if grep -rn -E "$pattern" \
+                README.md CONTRIBUTING.md ARCHITECTURE.md TESTING.md \
+                docs/ \
+                --include='*.md' \
+                --exclude-dir=plans \
+                --exclude-dir=audits \
+                --exclude-dir=ontology \
+                --exclude=go-idioms.md \
+                2>/dev/null; then
               echo "::error::Stale reference: $reason (pattern: $pattern)"
               bad=1
             fi
@@ -44,9 +92,28 @@ jobs:
           check_pattern 'internal/report/'           'report moved to adapters/output/report/'
           check_pattern 'internal/pruner/'           'pruner moved to adapters/pruner/'
           check_pattern 'internal/testutil/'         'testutil was deleted'
+          # The 36dcbf2de audit added the following — each was a
+          # real stale path the previous docs-only trigger missed.
+          check_pattern 'internal/domain'            'internal/domain merged into internal/core/'
+          check_pattern 'internal/cel/'              'internal/cel/ moved to internal/adapters/cel/'
+          check_pattern 'cmd/stave/cmd/'             'cmd/stave/cmd nesting flattened to cmd/'
+          check_pattern 'cmd/evaluate'               'cmd/evaluate renamed to cmd/apply'
+          check_pattern 'evaluation_run\.go'         'evaluation_run.go replaced by workflow.go (AuditWorkflow)'
+          check_pattern 'engine/runner\.go'          'engine/runner.go replaced by engine/assessor.go'
+          check_pattern 'scripts/e2e\.sh'            'scripts/e2e.sh retired — use `make e2e` / `go test ./e2e/...`'
+          check_pattern 'scripts/e2e-counterfactual' 'e2e-counterfactual.sh retired'
+          check_pattern '\.inv\.yaml'                '.inv.yaml extension never shipped — use .control.yaml'
+          check_pattern '\.inv\.json'                '.inv.json extension never shipped'
 
-          # Commands that were removed
+          # Commands that were removed or renamed
           check_pattern 'stave-dev extractor'        'extractor command was removed'
+          check_pattern 'stave check\b'              '`stave check` retired — use `stave apply`'
+          check_pattern 'stave invariants\b'         '`stave invariants` retired — there is no such command'
+
+          # Stale vocabulary — file/format language only; "Invariants
+          # as Code" and "System Invariant" stay as the brand/concept.
+          check_pattern 'invariant file'             '"invariant file" is stale — use "control file"'
+          check_pattern 'invariant YAML'             '"invariant YAML" is stale — use "control YAML"'
 
           # Stale binary split language
           check_pattern 'stave-dev only'             'no dev-only commands — all ship in one binary'

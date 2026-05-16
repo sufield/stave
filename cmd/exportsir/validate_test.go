@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
+	"github.com/sufield/stave/internal/core/sirfacts"
 )
 
 // makePredicateRule constructs a leaf PredicateRule with the
@@ -28,20 +29,20 @@ func TestValidation_DetectsProjectionGap(t *testing.T) {
 		ControlID: kernel.ControlID("CTL.COGNITO.MFA.001"),
 		AssetID:   asset.ID("arn:aws:cognito-idp:us-east-1:111122223333:userpool/abc"),
 	}}
-	facts := []Fact{
+	facts := []sirfacts.Fact{
 		{
 			FactID:     "aaaaaaaaaaaa",
 			Subject:    "arn:aws:cognito-idp:us-east-1:111122223333:userpool/abc",
 			Predicate:  "has_type",
 			Object:     "aws_cognito_user_pool",
-			Provenance: &Provenance{PropertyPath: "type"},
+			Provenance: &sirfacts.Provenance{PropertyPath: "type"},
 		},
 		{
 			FactID:     "bbbbbbbbbbbb",
 			Subject:    "arn:aws:cognito-idp:us-east-1:111122223333:userpool/abc",
 			Predicate:  "has_tag",
 			Object:     "environment=production",
-			Provenance: &Provenance{PropertyPath: "tags.environment"},
+			Provenance: &sirfacts.Provenance{PropertyPath: "tags.environment"},
 		},
 	}
 	controls := []policy.ControlDefinition{{
@@ -75,13 +76,13 @@ func TestValidation_NoGapWhenCovered(t *testing.T) {
 		ControlID: kernel.ControlID("CTL.COGNITO.MFA.001"),
 		AssetID:   asset.ID("arn:aws:cognito-idp:us-east-1:111122223333:userpool/abc"),
 	}}
-	facts := []Fact{
+	facts := []sirfacts.Fact{
 		{
 			FactID:    "ccccccccc",
 			Subject:   "arn:aws:cognito-idp:us-east-1:111122223333:userpool/abc",
 			Predicate: "has_mfa_enforced",
 			Object:    "false",
-			Provenance: &Provenance{
+			Provenance: &sirfacts.Provenance{
 				PropertyPath: "identity.governance.mfa_enforced",
 			},
 		},
@@ -113,11 +114,11 @@ func TestValidation_BidirectionalCoverage(t *testing.T) {
 		AssetID:   "arn:aws:iam::111:role/x",
 	}}
 	// Fact path is deeper than control path.
-	facts := []Fact{
+	facts := []sirfacts.Fact{
 		{
 			FactID:  "deeper",
 			Subject: "arn:aws:iam::111:role/x",
-			Provenance: &Provenance{
+			Provenance: &sirfacts.Provenance{
 				PropertyPath: "identity.policies.attached_policies[0].statements[0].Action",
 			},
 		},
@@ -157,11 +158,11 @@ func TestValidation_UnknownControlIDIsIgnored(t *testing.T) {
 		ControlID: "CTL.UNKNOWN.001",
 		AssetID:   "arn:aws:s3:::x",
 	}}
-	facts := []Fact{
+	facts := []sirfacts.Fact{
 		{
 			FactID:     "x",
 			Subject:    "arn:aws:s3:::x",
-			Provenance: &Provenance{PropertyPath: "type"},
+			Provenance: &sirfacts.Provenance{PropertyPath: "type"},
 		},
 	}
 	warnings := ValidateSIRCompleteness(findings, facts, nil)
@@ -266,7 +267,7 @@ func TestValidation_DeterministicOrder(t *testing.T) {
 		{ControlID: "CTL.B", AssetID: "arn:b"},
 		{ControlID: "CTL.A", AssetID: "arn:a"},
 	}
-	facts := []Fact{} // intentionally empty so every CEL path warns
+	facts := []sirfacts.Fact{} // intentionally empty so every CEL path warns
 	controls := []policy.ControlDefinition{
 		{
 			ID: "CTL.A",

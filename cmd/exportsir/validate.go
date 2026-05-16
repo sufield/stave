@@ -32,6 +32,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/sirfacts"
 )
 
 // ValidationWarning is one (control, asset, property-path) tuple
@@ -73,7 +74,7 @@ type ValidationWarning struct {
 // skipped silently — that's a load-time bug, not a coverage gap.
 func ValidateSIRCompleteness(
 	findings []evaluation.Finding,
-	facts []Fact,
+	facts []sirfacts.Fact,
 	controls []policy.ControlDefinition,
 ) []ValidationWarning {
 	if len(findings) == 0 || len(facts) == 0 {

@@ -238,10 +238,28 @@ func buildSummary(gaps []FieldGap, indet int, topN int) Summary {
 	}
 	chainSet := map[kernel.ChainID]struct{}{}
 	for i := range gaps {
-		if gaps[i].Remediation.Type == "tag" {
+		r := gaps[i].Remediation
+		switch r.Type {
+		case "tag":
 			s.TagGaps++
-		} else {
+		case "api":
+			s.ApiGaps++
+		case "derived":
+			s.DerivedGaps++
+		case "collector":
 			s.CollectorGaps++
+		default:
+			// classifyRemediation only emits one of the four known
+			// types. Any other value is a bug — bucket it as
+			// "collector" so the counts still partition TotalGaps
+			// while the unknown type leaks into the gap list for
+			// debugging.
+			s.CollectorGaps++
+		}
+		if r.FixableByAgent {
+			s.FixableByAgentGaps++
+		} else {
+			s.NotFixableByAgentGaps++
 		}
 		for _, c := range gaps[i].ChainsBlocked {
 			chainSet[c] = struct{}{}

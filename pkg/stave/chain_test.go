@@ -115,3 +115,95 @@ postconditions:
 		t.Errorf("expected at least one finding with ChainMembership populated")
 	}
 }
+
+// TestApply_CrossAssetMarkerChainFires locks in that the
+// cognito_unauth_phi_s3 chain composes a violation on a Cognito
+// identity pool with a TypeMarker fact on a separately-collected
+// PHI-tagged S3 bucket. This is the cross-asset path the audit's
+// Experiment 1 originally — and wrongly — reported as broken; the
+// chain actually fires end-to-end, the audit query just looked for
+// chain data in the wrong JSON location (findings[].chain instead
+// of the top-level chain_findings array).
+//
+// The test guards three layered assumptions:
+//
+//  1. The marker control (TypeMarker) fires on a bucket whose
+//     properties.storage.tags.data-classification = "phi", with the
+//     hyphenated key preserved through obs.v0.1 JSON load → CEL
+//     activation → predicate evaluation.
+//  2. The chain engine reads MarkerFindings as well as Findings
+//     when bucketing failures (workflow.go intentionally appends
+//     report.MarkerFindings into the failures slice it passes to
+//     DetectChains).
+//  3. The chain's scope_field (properties.identity.cognito.target_bucket_arn
+//     on the Cognito asset) groups together with the S3 marker's
+//     asset.ID fallback — because both resolve to the same bucket
+//     ARN string, the engine puts both member findings in the same
+//     scope bucket even though they live on different asset.IDs.
+//
+// A regression in any of those three would silently drop the
+// HIPAA-reportable compound finding from the demo. Re-run before
+// shipping any change to chain composition, marker partitioning,
+// or property-path resolution.
+func TestApply_CrossAssetMarkerChainFires(t *testing.T) {
+	a, err := stave.Apply(context.Background(), stave.Config{
+		SnapshotsDir:      "../../examples/cognito-iteration2-unauth/fixtures/cross-resource-config/observations",
+		ChainsDir:         "../../chains",
+		Now:               time.Date(2026, 5, 9, 0, 0, 0, 0, time.UTC),
+		AllowUnknownInput: true,
+	})
+	if err != nil {
+		t.Fatalf("Apply: %v", err)
+	}
+
+	// PHI marker must fire on the bucket — confirms hyphenated tag
+	// key resolution. Without this, the chain has no second member
+	// and never reaches its escalation threshold.
+	var markerFired bool
+	for i := range a.MarkerFindings {
+		if a.MarkerFindings[i].ControlID == "CTL.S3.MARKER.PHI.001" {
+			markerFired = true
+			break
+		}
+	}
+	if !markerFired {
+		t.Fatalf("CTL.S3.MARKER.PHI.001 did not fire on PHI-tagged bucket; got %d markers", len(a.MarkerFindings))
+	}
+
+	// The cross-asset chain must compose the marker with the
+	// Cognito-side violation.
+	var chain *stave.ChainFinding
+	for i := range a.ChainFindings {
+		if a.ChainFindings[i].ChainID == "cognito_unauth_phi_s3" {
+			chain = &a.ChainFindings[i]
+			break
+		}
+	}
+	if chain == nil {
+		ids := make([]stave.ChainID, len(a.ChainFindings))
+		for i := range a.ChainFindings {
+			ids[i] = a.ChainFindings[i].ChainID
+		}
+		t.Fatalf("cognito_unauth_phi_s3 chain did not fire; chains seen: %v", ids)
+	}
+	if chain.Severity != stave.SeverityCritical {
+		t.Errorf("chain severity: got %q, want %q", chain.Severity, stave.SeverityCritical)
+	}
+
+	// Both member controls must be in ControlsFailing — proves the
+	// marker entered chain detection (not just the Cognito violation).
+	wantMembers := map[stave.ControlID]bool{
+		"CTL.COGNITO.IDPOOL.UNAUTH.S3.001": false,
+		"CTL.S3.MARKER.PHI.001":            false,
+	}
+	for _, c := range chain.ControlsFailing {
+		if _, ok := wantMembers[c]; ok {
+			wantMembers[c] = true
+		}
+	}
+	for c, seen := range wantMembers {
+		if !seen {
+			t.Errorf("chain ControlsFailing missing expected member %q; got %v", c, chain.ControlsFailing)
+		}
+	}
+}

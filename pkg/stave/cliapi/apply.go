@@ -24,6 +24,7 @@ import (
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/sir"
 	"github.com/sufield/stave/pkg/stave"
 	"github.com/sufield/stave/pkg/stave/internal/applycore"
 )
@@ -41,6 +42,15 @@ type ApplyResult struct {
 	Assessment       *stave.Assessment
 	ComplianceReport *evaluation.ComplianceReport
 	Controls         []policy.ControlDefinition
+
+	// SIRDocument is the projection applycore built for fact-id
+	// correlation during evaluation. Surfaced here so cmd/exportsir
+	// can reuse it for `stave export-sir` output without re-loading
+	// controls + snapshots and re-running the SIR builder. nil when
+	// the builder failed during evaluation — annotateContributingFactIDs
+	// is best-effort, so a SIR failure leaves findings un-annotated
+	// rather than blocking the report; the same nil propagates here.
+	SIRDocument *sir.Document
 }
 
 // IsIncomplete reports whether the result lacks the mandatory
@@ -76,5 +86,6 @@ func Apply(ctx context.Context, cfg stave.Config) (*ApplyResult, error) {
 		Assessment:       stave.BuildAssessment(r.Report, r.Controls),
 		ComplianceReport: r.Report,
 		Controls:         r.Controls,
+		SIRDocument:      r.SIRDocument,
 	}, nil
 }

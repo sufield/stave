@@ -54,6 +54,8 @@ When three independent solvers (Z3, cvc5, Yices) — external programs consuming
 
 When a solver returns SAT, it produces a constructive counterexample — the specific principal, action, and resource that constitute the attack path. The witness is the exploit.
 
+**Scope of the proof.** The SIR projection is curated, not exhaustive. The fact export currently covers 13 top-level configuration domains — IAM identity (deep), Cognito, S3 storage policies, Bedrock AI agents, delegation, credential lifecycle, trail logging, network, and a subset of compute / k8s. Properties outside the covered domains (Azure, GCP, M365, databases, messaging, secrets, monitoring, and others — 89 domains in total, 56% of catalog property paths) are evaluated by CEL controls inside `stave apply` but are not in the export, so they are not in the proof. A solver UNSAT verdict is mathematically valid for the chains the SIR can express; it is silent about chains whose members live in uncovered domains. See the Fact Export reference's "Scope of the exported fact set" section in stave-guide for the full domain table.
+
 AWS applies this technique internally with Zelkova. No customer-facing tool exposes it for cross-service configuration verification. Stave's fact export brings the data to the solvers; the solvers bring formal verification to the customer side of the shared responsibility model.
 
 ### 4. Security as a financial metric
@@ -82,7 +84,7 @@ For defense, intelligence, and regulated financial services, air-gapped operatio
 
 GRC tools (Drata, Vanta, ServiceNow) collect compliance evidence manually — screenshots, configuration exports, interview notes. Auditors review this evidence to verify that controls are met.
 
-Stave generates evidence packets where each regulatory control (SOC 2, HIPAA, NIST 800-53) cites verdicts from external engines consuming Stave's fact export: a Z3 proof that no unauthorized access path exists, a Soufflé count showing zero unauthorized reachable paths, a risk model result showing exploitation probability at zero percent. The auditor receives a reasoning chain backed by independent external engines, not a screenshot.
+Stave generates evidence packets where each regulatory control (SOC 2, HIPAA, NIST 800-53) cites verdicts from external engines consuming Stave's fact export: a Z3 proof that no unauthorized access path exists, a Soufflé count showing zero unauthorized reachable paths, a risk model result showing exploitation probability at zero percent. The auditor receives a reasoning chain backed by independent external engines, not a screenshot. The proof's domain coverage matches the SIR's projected scope — see the [Fact Export reference](#) for the explicit list of covered and uncovered domains, since "no unauthorized access path exists" is bounded by the predicates the SIR projects.
 
 ## What Stave Does Not Do
 
@@ -190,6 +192,8 @@ When three independent solvers (Z3, cvc5, Yices) — external programs consuming
 
 When a solver returns SAT, it produces a constructive counterexample — the specific principal, action, and resource that constitute the attack path. The witness is the exploit.
 
+**Scope of the proof.** The SIR projection is curated, not exhaustive. The fact export currently covers 13 top-level configuration domains — IAM identity (deep), Cognito, S3 storage policies, Bedrock AI agents, delegation, credential lifecycle, trail logging, network, and a subset of compute / k8s. Properties outside the covered domains (Azure, GCP, M365, databases, messaging, secrets, monitoring, and others — 89 domains in total, 56% of catalog property paths) are evaluated by CEL controls inside `stave apply` but are not in the export, so they are not in the proof. A solver UNSAT verdict is mathematically valid for the chains the SIR can express; it is silent about chains whose members live in uncovered domains. See the Fact Export reference's "Scope of the exported fact set" section in stave-guide for the full domain table.
+
 AWS applies this technique internally with Zelkova. No customer-facing tool exposes it for cross-service configuration verification. Stave's fact export brings the data to the solvers; the solvers bring formal verification to the customer side of the shared responsibility model.
 
 ### 4. Security as a financial metric
@@ -218,7 +222,7 @@ For defense, intelligence, and regulated financial services, air-gapped operatio
 
 GRC tools (Drata, Vanta, ServiceNow) collect compliance evidence manually — screenshots, configuration exports, interview notes. Auditors review this evidence to verify that controls are met.
 
-Stave generates evidence packets where each regulatory control (SOC 2, HIPAA, NIST 800-53) cites verdicts from external engines consuming Stave's fact export: a Z3 proof that no unauthorized access path exists, a Soufflé count showing zero unauthorized reachable paths, a risk model result showing exploitation probability at zero percent. The auditor receives a reasoning chain backed by independent external engines, not a screenshot.
+Stave generates evidence packets where each regulatory control (SOC 2, HIPAA, NIST 800-53) cites verdicts from external engines consuming Stave's fact export: a Z3 proof that no unauthorized access path exists, a Soufflé count showing zero unauthorized reachable paths, a risk model result showing exploitation probability at zero percent. The auditor receives a reasoning chain backed by independent external engines, not a screenshot. The proof's domain coverage matches the SIR's projected scope — see the [Fact Export reference](#) for the explicit list of covered and uncovered domains, since "no unauthorized access path exists" is bounded by the predicates the SIR projects.
 
 ### 8. End-to-end traceability across every layer
 
@@ -353,6 +357,8 @@ When three independent solvers (Z3, cvc5, Yices) — external programs consuming
 
 When a solver returns SAT, it produces a constructive counterexample — the specific principal, action, and resource that constitute the attack path. The witness is the exploit.
 
+**Scope of the proof.** The SIR projection is curated, not exhaustive. The fact export currently covers 13 top-level configuration domains — IAM identity (deep), Cognito, S3 storage policies, Bedrock AI agents, delegation, credential lifecycle, trail logging, network, and a subset of compute / k8s. Properties outside the covered domains (Azure, GCP, M365, databases, messaging, secrets, monitoring, and others — 89 domains in total, 56% of catalog property paths) are evaluated by CEL controls inside `stave apply` but are not in the export, so they are not in the proof. A solver UNSAT verdict is mathematically valid for the chains the SIR can express; it is silent about chains whose members live in uncovered domains. See the Fact Export reference's "Scope of the exported fact set" section in stave-guide for the full domain table.
+
 AWS applies this technique internally with Zelkova. No customer-facing tool exposes it for cross-service configuration verification. Stave's fact export brings the data to the solvers; the solvers bring formal verification to the customer side of the shared responsibility model.
 
 ### 4. Security as a financial metric
@@ -381,7 +387,7 @@ For defense, intelligence, and regulated financial services, air-gapped operatio
 
 GRC tools (Drata, Vanta, ServiceNow) collect compliance evidence manually — screenshots, configuration exports, interview notes. Auditors review this evidence to verify that controls are met.
 
-Stave generates evidence packets where each regulatory control (SOC 2, HIPAA, NIST 800-53) cites verdicts from external engines consuming Stave's fact export: a Z3 proof that no unauthorized access path exists, a Soufflé count showing zero unauthorized reachable paths, a risk model result showing exploitation probability at zero percent. The auditor receives a reasoning chain backed by independent external engines, not a screenshot.
+Stave generates evidence packets where each regulatory control (SOC 2, HIPAA, NIST 800-53) cites verdicts from external engines consuming Stave's fact export: a Z3 proof that no unauthorized access path exists, a Soufflé count showing zero unauthorized reachable paths, a risk model result showing exploitation probability at zero percent. The auditor receives a reasoning chain backed by independent external engines, not a screenshot. The proof's domain coverage matches the SIR's projected scope — see the [Fact Export reference](#) for the explicit list of covered and uncovered domains, since "no unauthorized access path exists" is bounded by the predicates the SIR projects.
 
 ### 8. End-to-end traceability across every layer
 

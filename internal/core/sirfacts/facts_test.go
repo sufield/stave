@@ -1,4 +1,4 @@
-package exportsir
+package sirfacts
 
 import (
 	"bytes"
@@ -120,8 +120,8 @@ func TestSerializeJSONL_OneFactPerLine(t *testing.T) {
 	t.Parallel()
 	facts := ExtractFacts(fixtureDoc())
 	var buf bytes.Buffer
-	if err := serializeJSONL(facts, &buf); err != nil {
-		t.Fatalf("serializeJSONL: %v", err)
+	if err := SerializeJSONL(facts, &buf); err != nil {
+		t.Fatalf("SerializeJSONL: %v", err)
 	}
 	lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
 	if len(lines) != len(facts) {
@@ -146,10 +146,10 @@ func TestSerializeJSONL_Deterministic(t *testing.T) {
 	a := ExtractFacts(fixtureDoc())
 	b := ExtractFacts(fixtureDoc())
 	var bufA, bufB bytes.Buffer
-	if err := serializeJSONL(a, &bufA); err != nil {
+	if err := SerializeJSONL(a, &bufA); err != nil {
 		t.Fatalf("a: %v", err)
 	}
-	if err := serializeJSONL(b, &bufB); err != nil {
+	if err := SerializeJSONL(b, &bufB); err != nil {
 		t.Fatalf("b: %v", err)
 	}
 	if bufA.String() != bufB.String() {
@@ -166,8 +166,8 @@ func TestSerializeSMT2_FactsOnlyNoQueries(t *testing.T) {
 	t.Parallel()
 	facts := ExtractFacts(fixtureDoc())
 	var buf bytes.Buffer
-	if err := serializeSMT2(facts, &buf); err != nil {
-		t.Fatalf("serializeSMT2: %v", err)
+	if err := SerializeSMT2(facts, &buf); err != nil {
+		t.Fatalf("SerializeSMT2: %v", err)
 	}
 	body := buf.String()
 	for _, banned := range []string{"(check-sat)", "(get-model)", "(get-unsat-core)", "(get-proof)"} {
@@ -184,8 +184,8 @@ func TestSerializeSMT2_DeclaresEachPredicate(t *testing.T) {
 	t.Parallel()
 	facts := ExtractFacts(fixtureDoc())
 	var buf bytes.Buffer
-	if err := serializeSMT2(facts, &buf); err != nil {
-		t.Fatalf("serializeSMT2: %v", err)
+	if err := SerializeSMT2(facts, &buf); err != nil {
+		t.Fatalf("SerializeSMT2: %v", err)
 	}
 	body := buf.String()
 	for _, p := range uniquePredicates(facts) {
@@ -222,8 +222,8 @@ func TestSerializeSMT2_DeclaresBaselinePredicates(t *testing.T) {
 	// the projection should still yield a complete declaration
 	// header.
 	var buf bytes.Buffer
-	if err := serializeSMT2(nil, &buf); err != nil {
-		t.Fatalf("serializeSMT2: %v", err)
+	if err := SerializeSMT2(nil, &buf); err != nil {
+		t.Fatalf("SerializeSMT2: %v", err)
 	}
 	body := buf.String()
 	for _, p := range baselineSMT2Predicates {
@@ -242,8 +242,8 @@ func TestSerializeSMT2_ClosedWorldAxiomsPresent(t *testing.T) {
 	t.Parallel()
 	facts := ExtractFacts(fixtureDoc())
 	var buf bytes.Buffer
-	if err := serializeSMT2(facts, &buf); err != nil {
-		t.Fatalf("serializeSMT2: %v", err)
+	if err := SerializeSMT2(facts, &buf); err != nil {
+		t.Fatalf("SerializeSMT2: %v", err)
 	}
 	body := buf.String()
 	for _, p := range baselineSMT2Predicates {

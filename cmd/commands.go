@@ -70,6 +70,7 @@ import (
 	stavetelemetry "github.com/sufield/stave/cmd/telemetry"
 	stavetest "github.com/sufield/stave/cmd/test"
 	stavetrend "github.com/sufield/stave/cmd/trend"
+	validatemapping "github.com/sufield/stave/cmd/validatemapping"
 	staveverify "github.com/sufield/stave/cmd/verify"
 	stavewatch "github.com/sufield/stave/cmd/watch"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
@@ -165,7 +166,7 @@ func WireCommands(app *App) error {
 	// Export & Interop
 	root.AddCommand(staveexport.NewCmd(f.NewCtlRepo, f.NewCELEvaluator))
 	root.AddCommand(staveexportinvariants.NewCmd())
-	root.AddCommand(staveexportsir.NewCmd(f.NewCtlRepo, f.NewObsRepo, f.NewCELEvaluator))
+	root.AddCommand(staveexportsir.NewCmd())
 
 	// Data & Artifacts
 	root.AddCommand(enforce.NewGenerateCmd())
@@ -274,6 +275,15 @@ func WireCommands(app *App) error {
 	// JSON Schema, the predicate-path index, and the Steampipe
 	// mapping directory into one agent-facing view.
 	root.AddCommand(contract.NewCmd(contract.Deps{
+		NewCtlRepo:     f.NewCtlRepo,
+		NewChainLoader: f.NewChainLoader,
+	}))
+
+	// Steampipe→Stave mapping validation. Lets an agent confirm a
+	// generated contracts/steampipe/*.yaml is well-formed, references
+	// only declared schema paths, and covers the catalog's read
+	// surface for that asset type before it ships an observation.
+	root.AddCommand(validatemapping.NewCmd(validatemapping.Deps{
 		NewCtlRepo:     f.NewCtlRepo,
 		NewChainLoader: f.NewChainLoader,
 	}))

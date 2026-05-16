@@ -24,14 +24,17 @@ func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinitio
 
 	controlForecast, controlBlockers := classifyControls(controls, observedTypes)
 	chainForecast, chainBlockers := classifyChains(controls, chains, observedTypes)
+	annotateForecastPercentages(&controlForecast)
+	annotateForecastPercentages(&chainForecast)
 
 	report := Report{
-		ObservationCount: observationCount,
-		ObservedTypes:    observedTypes,
-		CatalogTypes:     catalogTypes,
-		Controls:         controlForecast,
-		Chains:           chainForecast,
-		ReadinessScore:   readinessScore(controlForecast),
+		ObservationCount:     observationCount,
+		ObservedTypes:        observedTypes,
+		CatalogTypes:         catalogTypes,
+		Controls:             controlForecast,
+		Chains:               chainForecast,
+		ReadinessScore:       readinessScore(controlForecast),
+		ReadinessDenominator: "can_fire + blocked (excludes indeterminate)",
 	}
 	if topN > 0 {
 		report.Actions = rankActions(controlBlockers, chainBlockers, observedTypes, topN)
@@ -240,6 +243,63 @@ func readinessScore(f ControlForecast) float64 {
 		return 0
 	}
 	return float64(f.CanFire) / float64(denom)
+}
+
+// annotateForecastPercentages fills the *Pct fields on a forecast
+// from its integer bucket counts. Computed once at Analyze time so
+// every consumer (CLI text, JSON, pkg/stave) sees the same
+// numbers without recomputing. The percentages are share-of-Total
+// (scaled 0..100), distinct from ReadinessScore which is a
+// share-of-classifiable. Showing both prevents the "41% ready"
+// misread the original output enabled.
+//
+// We use a type that exposes the same field set across
+// ControlForecast and ChainForecast via Go 1.18+ generics-like
+// pattern, but because both structs are concrete and identical,
+// a tiny duplicated helper is clearer than introducing a constraint.
+func annotateForecastPercentages(f forecast) {
+	total := f.totalCount()
+	if total == 0 {
+		return
+	}
+	t := float64(total)
+	f.setPct(
+		float64(f.canFireCount())*100/t,
+		float64(f.blockedCount())*100/t,
+		float64(f.indeterminateCount())*100/t,
+	)
+}
+
+// forecast is the minimal interface annotateForecastPercentages
+// needs over the two forecast structs. Defined here (not in
+// types.go) because it is an implementation detail of analysis,
+// not a public surface.
+type forecast interface {
+	totalCount() int
+	canFireCount() int
+	blockedCount() int
+	indeterminateCount() int
+	setPct(canFire, blocked, indet float64)
+}
+
+func (c *ControlForecast) totalCount() int         { return c.Total }
+func (c *ControlForecast) canFireCount() int       { return c.CanFire }
+func (c *ControlForecast) blockedCount() int       { return c.Blocked }
+func (c *ControlForecast) indeterminateCount() int { return c.Indeterminate }
+func (c *ControlForecast) setPct(canFire, blocked, indet float64) {
+	c.CanFirePct = canFire
+	c.BlockedPct = blocked
+	c.IndeterminatePct = indet
+}
+
+func (c *ChainForecast) totalCount() int         { return c.Total }
+func (c *ChainForecast) canFireCount() int       { return c.CanFire }
+func (c *ChainForecast) blockedCount() int       { return c.Blocked }
+func (c *ChainForecast) indeterminateCount() int { return c.Indeterminate }
+func (c *ChainForecast) setPct(canFire, blocked, indet float64) {
+	c.CanFirePct = canFire
+	c.BlockedPct = blocked
+	c.IndeterminatePct = indet
 }
 
 func indexControls(controls []policy.ControlDefinition) map[kernel.ControlID]*policy.ControlDefinition {

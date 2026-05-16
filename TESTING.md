@@ -10,7 +10,7 @@ to.
 |--------|-------|------------------|-------------|
 | `make test-fast` | `-short` across `./...` | sub-minute (cold), seconds (cached) | While iterating on a single change |
 | `make test-unit` | `-short` across `./internal` and `./cmd` | sub-minute | Same as test-fast; alias kept for muscle memory |
-| `make test-integration` | `./internal`, `./cmd/apply`, `./cmd/evaluate` (no `-short`) | 1–3 minutes | Before opening a PR |
+| `make test-integration` | `./internal`, `./cmd/apply` (no `-short`) | 1–3 minutes | Before opening a PR |
 | `make test-e2e` | Builds the binary and runs `./e2e` + `./cmd/stave` testscript fixtures | 5–10 minutes | Before merging when you touched eval, output, or fixture-driven paths |
 | `make test` | Everything, with `-race`, `-parallel 16`, `-tags stavedev` | 10–30 minutes | Final pre-merge check on a fast machine |
 | `make test-ci` | `regenerate-goldens` + `golden-update-all` + `make test` | 30+ minutes | Reproduce CI locally |
@@ -31,20 +31,20 @@ under `-short`. Stave uses this for:
 - Tests that walk every command in the tree
   (`cmd/clig_compliance_test.go`).
 - Tests that load and evaluate every fixture in
-  `testdata/e2e/` (`internal/cel/parallel_test.go`).
-- Heavy integration tests in `cmd/evaluate` that load the HIPAA
-  profile end-to-end.
+  `testdata/e2e/` (`internal/adapters/cel/parallel_test.go`).
+- Heavy integration tests in `cmd/apply` that load the HIPAA
+  profile end-to-end (`cmd/apply/profile_e2e_test.go`).
 
 If a test takes more than ~1s, gate it on `testing.Short()`.
 
 ## Focused runs during development
 
-Run a single package: `go test ./internal/cel/...`
+Run a single package: `go test ./internal/adapters/cel/...`
 
-Run a single function: `go test -run TestCompile_EmptyFieldRule ./internal/cel/...`
+Run a single function: `go test -run TestCompile_EmptyFieldRule ./internal/adapters/cel/...`
 
 Force a re-run (Go caches passing test results by default):
-`go test -count=1 ./internal/cel/...`
+`go test -count=1 ./internal/adapters/cel/...`
 
 Race detector for one package:
 `go test -race ./internal/core/evaluation/engine/...`
