@@ -1,0 +1,93 @@
+question: 'Given the projected per-asset facts, enumerate every violation atom that
+  fires on the Cognito writeup-config fixture. The catalog ships four named violation
+  rules that target the Cognito identity-pool + auth-role shape; the trial agent produces
+  the violation set.
+
+  '
+context: "Clingo's stable-model semantics enumerates every grounded atom derivable\
+  \ from a set of rules and a set of facts. Where Z3 returns one witness per query,\
+  \ Clingo returns the full enumeration. This trial uses four catalog rules, each\
+  \ tied to a specific Cognito misconfiguration. The trial agent reads the JSONL fact\
+  \ stream, lifts each triple into a Clingo binary atom (predicate(subject, object).),\
+  \ and reports the violation atoms the rules produce.\nFour rules, each named:\n\
+  \  - advanced_security_off: user pool with advanced-security mode = \"OFF\"\n  -\
+  \ mfa_disabled: user pool with mfa_enforced = \"false\"\n  - unauth_cognito_s3_read:\
+  \ identity pool that admits unauthenticated principals AND maps them to an IAM role\
+  \ with S3 read grants\n  - wildcard_action_resource: any IAM role with an action\
+  \ containing a \"*\" wildcard on a wildcard resource\n"
+input:
+  source: stave export-sir --format jsonl
+  format: jsonl
+  fixture: input.jsonl
+  required_fields:
+  - predicate
+  - subject
+  - object
+reasoning:
+  steps:
+  - step: 1
+    action: 'Parse every JSONL line into (predicate, subject, object). Treat the stream
+      as ground facts.
+
+      '
+    input: input.jsonl
+    output: A set of binary atoms indexed by predicate name.
+  - step: 2
+    action: 'Apply rule `advanced_security_off`. For every user pool with advanced_security_mode
+      set to "OFF" or advanced_security_enabled set to "false", emit one violation
+      atom.
+
+      '
+    input: facts where predicate is advanced_security_mode or has_advanced_security_enabled
+    output: violation(<pool_arn>, "advanced_security_off")
+    rule: 'Fire when an aws_cognito_user_pool subject has advanced_security_mode ==
+      "OFF" OR has_advanced_security_enabled == "false".
+
+      '
+  - step: 3
+    action: 'Apply rule `mfa_disabled`. For every user pool whose has_mfa_enforced
+      predicate has object "false", emit one violation atom.
+
+      '
+    input: facts where predicate is has_mfa_enforced
+    output: violation(<pool_arn>, "mfa_disabled")
+    rule: 'Fire when an aws_cognito_user_pool subject has has_mfa_enforced == "false".
+      The catalog''s JSONL export uses the `has_<property>` naming convention for
+      every projected boolean; do not strip the prefix.
+
+      '
+  - step: 4
+    action: 'Apply rule `unauth_cognito_s3_read`. For every identity pool that admits
+      unauthenticated principals AND maps them to a role with S3 read grants, emit
+      one violation atom.
+
+      '
+    input: allows_unauthenticated, maps_unauth_to, has_action, has_resource
+    output: violation(<pool_arn>, "unauth_cognito_s3_read")
+    rule: 'Fire when an identity pool has allows_unauthenticated == "true" AND maps_unauth_to
+      a role AND that role has an s3:* action (or s3:GetObject specifically).
+
+      '
+  - step: 5
+    action: 'Apply rule `wildcard_action_resource`. For every IAM role whose has_action
+      contains "*" or a service-wide wildcard, emit one violation atom.
+
+      '
+    input: has_action for aws_iam_role subjects
+    output: violation(<role_arn>, "wildcard_action_resource")
+    rule: 'Fire when an aws_iam_role subject has an has_action value matching "*"
+      or ending in ":*".
+
+      '
+output:
+  format: json
+  schema:
+    violations:
+      type: array
+      description: 'Every violation atom derived by the four rules. Order is not significant;
+        the validator compares sets.
+
+        '
+      items:
+        atom: <violation rule name>
+        subject: <arn that triggered the rule>

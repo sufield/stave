@@ -1,0 +1,54 @@
+question: "Given the projected facts, produce the proof chain anchored at \"anonymous\
+  \ reaches <resource> via <action>\" \u2014 every edge from the identity pool that\
+  \ admits unauthenticated principals down to the IAM grant on the destination resource.\
+  \ The proof must trace the chain through every intermediate node.\n"
+context: "Prolog's strength over the other engines is constructive proof. Z3 returns\
+  \ SAT and a witness; Souffl\xE9 returns counts; Clingo enumerates atoms; Prolog\
+  \ returns the EXPLANATION \u2014 every fact used to derive the goal, ordered as\
+  \ a tree. For the Cognito unauthenticated-reachability question, the proof chain\
+  \ has four edges:\n  1. identity pool admits unauthenticated principals\n  2. identity\
+  \ pool maps unauthenticated principals to a role\n  3. role grants an action\n \
+  \ 4. role grants on a specific resource\n\nThe trial agent's output is the full\
+  \ ordered chain for every (resource, action) leaf the rules derive.\n"
+input:
+  source: stave export-sir --format jsonl
+  format: jsonl
+  fixture: input.jsonl
+  required_fields:
+  - predicate
+  - subject
+  - object
+reasoning:
+  steps:
+  - step: 1
+    action: 'Parse facts. Index by predicate.
+
+      '
+    input: input.jsonl
+    output: Per-predicate sets of (subject, object) pairs.
+  - step: 2
+    action: 'For every identity pool with allows_unauthenticated == "true" AND maps_unauth_to
+      mapping to a role AND that role having a has_action AND a has_resource pair,
+      produce one proof tree.
+
+      '
+    input: allows_unauthenticated, maps_unauth_to, has_action, has_resource
+    output: One proof per (resource, action) tuple derivable.
+    rule: 'The set of derivable tuples is the cartesian product of the role''s actions
+      and resources, restricted to roles reachable from an unauth-admitting pool.
+
+      '
+  - step: 3
+    action: "Render each proof tree as a four-level indented text block. Format (literal):\n\
+      \n  anonymous reaches <resource> via <action>:\n  <pool_arn> --[allows_unauthenticated]-->\
+      \ true\n    <pool_arn> --[maps_unauth_to]--> <role_arn>\n      <role_arn> --[grants]-->\
+      \ <action>\n        <role_arn> --[on_resource]--> <resource>\n"
+    input: derived tuples from step 2
+    output: One text block per tuple, separated by a blank line.
+output:
+  format: text
+  schema:
+    proof_trees: 'A sequence of indented multi-line proof blocks. Each block is rooted
+      at "anonymous reaches X via Y" and lists the four edges that justify the reachability.
+
+      '

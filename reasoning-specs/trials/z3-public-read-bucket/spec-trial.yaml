@@ -1,0 +1,65 @@
+question: "Is there an S3 bucket in this fact base that allows public read AND has\
+  \ Public Access Block disabled? If so, what is the witness \u2014 the specific bucket\
+  \ ARN?\n"
+context: 'In AWS, an S3 bucket is publicly readable when (a) the bucket policy or
+  ACL admits Principal "*" on s3:GetObject AND (b) the Public Access Block ("PAB")
+  flags on the bucket and its containing account do NOT mask that admission. The catalog
+  projects two per-asset booleans: has_public_read(bucket, "true"|"false") and has_public_access_blocked(bucket,
+  "true"|"false"). The forbidden state is the conjunction: a bucket with public_read=true
+  AND public_access_blocked=false. SAT means at least one bucket is in that state
+  and the solver names it; UNSAT means no bucket in the fact base satisfies the conjunction.
+
+  '
+input:
+  source: stave export-sir --format smt2  +  appended query
+  format: smt-lib
+  fixture: input.smt2
+  required_fields:
+  - has_type(<arn>, "aws_s3_bucket")
+  - has_public_read(<arn>, "true"|"false")
+  - has_public_access_blocked(<arn>, "true"|"false")
+reasoning:
+  steps:
+  - step: 1
+    action: 'Read the SMT-LIB document. It declares predicates as Bool functions over
+      String arguments and asserts ground atoms (one per (subject, object) pair) plus
+      closed-world forall axioms ("this predicate is true ONLY for the explicitly-asserted
+      pairs").
+
+      '
+    input: input.smt2 (every line until the first `(check-sat)`)
+    output: An in-solver model of the per-asset facts.
+    rule: 'Treat the document literally. The closed-world axioms forbid any predicate
+      value that wasn''t explicitly asserted; do not infer beyond the asserted ground
+      atoms.
+
+      '
+  - step: 2
+    action: "Read the query block (after the facts). It asserts the conjunction of\
+      \ three constraints over a single free variable `bucket`:\n  (assert (has_type\
+      \ bucket \"aws_s3_bucket\"))\n  (assert (has_public_read bucket \"true\"))\n\
+      \  (assert (has_public_access_blocked bucket \"false\"))\nfollowed by (check-sat)\
+      \ and (get-value (bucket)).\n"
+    input: the query block of input.smt2
+    output: Three additional assertions plus the verdict request.
+    rule: Use the query verbatim; do not modify the constraints.
+  - step: 3
+    action: 'Decide satisfiability and, if SAT, report the witness.
+
+      '
+    input: facts + query from steps 1 and 2
+    output: "One of two outcomes:\n  - SAT: the value of `bucket` for which all three\n\
+      \    constraints hold (e.g. <bucket-arn>)\n  - UNSAT:\
+      \ no `bucket` value can satisfy all three\n"
+    rule: 'SAT requires at least one explicitly-asserted ground atom triple where
+      the same first argument appears in has_type=aws_s3_bucket, has_public_read=true,
+      AND has_public_access_blocked=false. UNSAT requires every s3_bucket subject
+      in the fact base to fail at least one of the two public-state predicates.
+
+      '
+output:
+  format: text
+  schema:
+    verdict: SAT | UNSAT
+    witness: When SAT, the bucket ARN that satisfies the conjunction. Omitted when
+      UNSAT.

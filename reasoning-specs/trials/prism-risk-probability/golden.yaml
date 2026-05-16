@@ -1,0 +1,23 @@
+expected_result:
+  cognito_unauth:
+    aggregate_probability: 0.412
+    steps:
+    - step_name: Discover endpoint
+      probability: 0.8
+    - step_name: Acquire unauth creds
+      probability: 0.95
+    - step_name: Assume role
+      probability: 0.95
+    - step_name: Reach resource
+      probability: 0.95
+    - step_name: Exfiltrate
+      probability: 0.6
+validation:
+  exact_match:
+  - cognito_unauth.steps[*].probability (each step's value)
+  semantic_match:
+  - "aggregate_probability (tolerance \xB10.005, since 0.412 is a rounded display\
+    \ of 0.41187)"
+  ignore:
+  - "any other attack shapes the trial computes (cognito_self_reg, multi_hop_assume,\
+    \ \u2026)"

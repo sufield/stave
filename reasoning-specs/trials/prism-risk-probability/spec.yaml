@@ -1,0 +1,128 @@
+# reasoning-spec: prism-risk-probability
+# engine: prism (risk model)
+# trial-fixture: input.jsonl
+
+question: >
+  Given the observed configuration, estimate the probability of
+  successful exploitation via the `cognito_unauth` attack shape
+  — the five-step chain that ends with an anonymous principal
+  exfiltrating data from a Cognito-trusted resource.
+
+context: >
+  PRISM (probabilistic risk-state model) decomposes a known
+  attack pattern into ordered steps; each step has a probability
+  of success conditional on the prior step succeeding. The
+  aggregate probability is the product of per-step probabilities.
+  The catalog ships per-step probabilities for the cognito_unauth
+  shape; the trial agent reads the configuration facts, applies
+  the model, and reports the per-step probabilities plus the
+  aggregate.
+
+  The five steps of cognito_unauth:
+    1. Discover endpoint                            (P=0.80)
+    2. Acquire unauth creds                         (P=0.95 when allows_unauthenticated == "true", else 0)
+    3. Assume role                                  (P=0.95 when maps_unauth_to is set, else 0)
+    4. Reach resource                               (P=0.95 when the role has any has_action + has_resource, else 0)
+    5. Exfiltrate                                   (P=0.60)
+
+  These step probabilities are fixed in the catalog; the trial
+  agent reads them as given. The work is to determine which
+  steps are "reachable" given the observed facts and compute
+  the product.
+
+input:
+  source: stave export-sir --format jsonl
+  format: jsonl
+  fixture: input.jsonl
+  required_fields:
+    - predicate
+    - subject
+    - object
+
+reasoning:
+  steps:
+    - step: 1
+      action: Parse facts. Index by predicate.
+      input: input.jsonl
+      output: Per-predicate sets.
+
+    - step: 2
+      action: >
+        Apply step 1 of the attack shape: P=0.80
+        (endpoint discovery is environment-independent).
+      input: (none; constant)
+      output: step_1_probability = 0.80
+
+    - step: 3
+      action: >
+        Apply step 2 of the attack shape: P=0.95 if any
+        identity pool has allows_unauthenticated == "true";
+        else P=0.
+      input: allows_unauthenticated relation
+      output: step_2_probability = 0.95 OR 0
+
+    - step: 4
+      action: >
+        Apply step 3 of the attack shape: P=0.95 if any
+        pool with allows_unauthenticated=="true" has
+        maps_unauth_to to any role; else P=0.
+      input: maps_unauth_to + step 3 input
+      output: step_3_probability = 0.95 OR 0
+
+    - step: 5
+      action: >
+        Apply step 4 of the attack shape: P=0.95 if any
+        role reachable via the chain in step 4 has BOTH a
+        has_action AND a has_resource fact; else P=0.
+      input: has_action, has_resource + chain from step 4
+      output: step_4_probability = 0.95 OR 0
+
+    - step: 6
+      action: >
+        Apply step 5 of the attack shape: P=0.60
+        (exfiltration is environment-independent).
+      input: (none; constant)
+      output: step_5_probability = 0.60
+
+    - step: 7
+      action: >
+        Compute the aggregate: product of all five
+        step probabilities.
+      input: step_1..5 probabilities
+      output: P = 0.80 × P2 × P3 × P4 × 0.60
+
+output:
+  format: json
+  schema:
+    cognito_unauth:
+      aggregate_probability: <float 0.0..1.0>
+      steps:
+        - step_name: string
+          probability: <float 0.0..1.0>
+
+  expected_result:
+    # From examples/prism-risk-prioritization/expected/output.txt
+    # for the Cognito writeup-config fixture.
+    cognito_unauth:
+      aggregate_probability: 0.412   # 0.80 × 0.95 × 0.95 × 0.95 × 0.60 = 0.4119... ≈ 41.2%
+      steps:
+        - step_name: "Discover endpoint"
+          probability: 0.80
+        - step_name: "Acquire unauth creds"
+          probability: 0.95
+        - step_name: "Assume role"
+          probability: 0.95
+        - step_name: "Reach resource"
+          probability: 0.95
+        - step_name: "Exfiltrate"
+          probability: 0.60
+
+validation:
+  exact_match:
+    - cognito_unauth.steps[*].probability (each step's value)
+  semantic_match:
+    - aggregate_probability (tolerance ±0.005, since 0.412 is a rounded
+      display of 0.41187)
+  ignore:
+    - any other attack shapes the trial computes
+      (cognito_self_reg, multi_hop_assume, …)

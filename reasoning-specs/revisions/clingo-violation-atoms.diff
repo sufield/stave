@@ -1,0 +1,23 @@
+diff --git a/stave/reasoning-specs/trials/clingo-violation-atoms/spec.yaml b/stave/reasoning-specs/trials/clingo-violation-atoms/spec.yaml
+index 9eb2cb02a..1694c7d49 100644
+--- a/stave/reasoning-specs/trials/clingo-violation-atoms/spec.yaml
++++ b/stave/reasoning-specs/trials/clingo-violation-atoms/spec.yaml
+@@ -59,13 +59,15 @@ reasoning:
+     - step: 3
+       action: >
+         Apply rule `mfa_disabled`. For every user pool whose
+-        mfa_enforced predicate has object "false", emit one
++        has_mfa_enforced predicate has object "false", emit one
+         violation atom.
+-      input: facts where predicate is mfa_enforced
++      input: facts where predicate is has_mfa_enforced
+       output: violation(<pool_arn>, "mfa_disabled")
+       rule: >
+         Fire when an aws_cognito_user_pool subject has
+-        mfa_enforced == "false".
++        has_mfa_enforced == "false". The catalog's JSONL
++        export uses the `has_<property>` naming convention for
++        every projected boolean; do not strip the prefix.
+ 
+     - step: 4
+       action: >

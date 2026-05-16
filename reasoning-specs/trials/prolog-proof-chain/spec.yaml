@@ -1,0 +1,103 @@
+# reasoning-spec: prolog-proof-chain
+# engine: prolog
+# trial-fixture: input.jsonl
+
+question: >
+  Given the projected facts, produce the proof chain anchored at
+  "anonymous reaches <resource> via <action>" — every edge from
+  the identity pool that admits unauthenticated principals down
+  to the IAM grant on the destination resource. The proof must
+  trace the chain through every intermediate node.
+
+context: >
+  Prolog's strength over the other engines is constructive proof.
+  Z3 returns SAT and a witness; Soufflé returns counts; Clingo
+  enumerates atoms; Prolog returns the EXPLANATION — every fact
+  used to derive the goal, ordered as a tree. For the Cognito
+  unauthenticated-reachability question, the proof chain has
+  four edges:
+    1. identity pool admits unauthenticated principals
+    2. identity pool maps unauthenticated principals to a role
+    3. role grants an action
+    4. role grants on a specific resource
+
+  The trial agent's output is the full ordered chain for every
+  (resource, action) leaf the rules derive.
+
+input:
+  source: stave export-sir --format jsonl
+  format: jsonl
+  fixture: input.jsonl
+  required_fields:
+    - predicate                # allows_unauthenticated, maps_unauth_to, has_action, has_resource
+    - subject
+    - object
+
+reasoning:
+  steps:
+    - step: 1
+      action: >
+        Parse facts. Index by predicate.
+      input: input.jsonl
+      output: Per-predicate sets of (subject, object) pairs.
+
+    - step: 2
+      action: >
+        For every identity pool with allows_unauthenticated ==
+        "true" AND maps_unauth_to mapping to a role AND that
+        role having a has_action AND a has_resource pair,
+        produce one proof tree.
+      input: allows_unauthenticated, maps_unauth_to, has_action, has_resource
+      output: One proof per (resource, action) tuple derivable.
+      rule: >
+        The set of derivable tuples is the cartesian product of
+        the role's actions and resources, restricted to roles
+        reachable from an unauth-admitting pool.
+
+    - step: 3
+      action: >
+        Render each proof tree as a four-level indented text
+        block. Format (literal):
+
+          anonymous reaches <resource> via <action>:
+          <pool_arn> --[allows_unauthenticated]--> true
+            <pool_arn> --[maps_unauth_to]--> <role_arn>
+              <role_arn> --[grants]--> <action>
+                <role_arn> --[on_resource]--> <resource>
+      input: derived tuples from step 2
+      output: One text block per tuple, separated by a blank line.
+
+output:
+  format: text
+  schema:
+    proof_trees: >
+      A sequence of indented multi-line proof blocks. Each block
+      is rooted at "anonymous reaches X via Y" and lists the four
+      edges that justify the reachability.
+
+  expected_result:
+    # From examples/prolog-proof-trees/expected/output.txt under
+    # the "Cognito writeup-config / Anonymous Access Chains" section.
+    # 12 proof trees: 3 resources × 4 actions. The catalog projects
+    # 4 actions on the unauth role (s3:GetObject, s3:ListBucket,
+    # dynamodb:GetItem, dynamodb:Query); Prolog's full cartesian
+    # product of has_action × has_resource yields 12, even though
+    # some pairs are semantically nonsensical (e.g. "via s3:GetObject"
+    # on a DynamoDB ARN). The blast-radius rule does not gate the
+    # product by action-resource compatibility; that's a stricter
+    # invariant the engine could add but does not today.
+    proof_trees_count: 12
+    first_proof_root: "anonymous reaches arn:aws:s3:::app-public-assets via s3:GetObject"
+    edges_per_proof: 4
+
+validation:
+  exact_match:
+    - proof_trees_count
+    - edges_per_proof
+  semantic_match:
+    - first_proof_root (the first ARN/action pair the trial reports;
+      order may vary, but at least one proof must be rooted at
+      "arn:aws:s3:::app-public-assets via s3:GetObject")
+  ignore:
+    - rendering whitespace (indentation depth, trailing newlines)
+    - the order of proofs in the output

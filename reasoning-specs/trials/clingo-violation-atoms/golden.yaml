@@ -1,0 +1,17 @@
+expected_result:
+  violations:
+  - atom: advanced_security_off
+    subject: arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool
+  - atom: mfa_disabled
+    subject: arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool
+  - atom: unauth_cognito_s3_read
+    subject: arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:abc-app-pool
+  - atom: wildcard_action_resource
+    subject: arn:aws:iam::111122223333:role/Cognito_appAuth_Role
+validation:
+  exact_match:
+  - "violations (as a set \u2014 order-independent)"
+  semantic_match: []
+  ignore:
+  - any violation atoms from additional rules the trial author synthesises beyond
+    the four listed here

@@ -1,0 +1,11 @@
+expected_result:
+  verdict: SAT
+  witness: arn:aws:s3:::acme-customer-uploads
+validation:
+  exact_match:
+  - verdict
+  - witness
+  semantic_match: []
+  ignore:
+  - solver warnings preceding the verdict line
+  - "whitespace around the (get-value \u2026) tuple"

@@ -1,0 +1,14 @@
+expected_result:
+  proof_trees_count: 12
+  first_proof_root: anonymous reaches arn:aws:s3:::app-public-assets via s3:GetObject
+  edges_per_proof: 4
+validation:
+  exact_match:
+  - proof_trees_count
+  - edges_per_proof
+  semantic_match:
+  - first_proof_root (the first ARN/action pair the trial reports; order may vary,
+    but at least one proof must be rooted at "arn:aws:s3:::app-public-assets via s3:GetObject")
+  ignore:
+  - rendering whitespace (indentation depth, trailing newlines)
+  - the order of proofs in the output

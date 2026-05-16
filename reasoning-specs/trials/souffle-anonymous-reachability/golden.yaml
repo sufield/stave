@@ -1,0 +1,9 @@
+expected_result:
+  anonymous_reachable_count: 12
+validation:
+  exact_match:
+  - anonymous_reachable_count
+  semantic_match: []
+  ignore:
+  - "any additional relation counts the trial computes (reachable, self_register_reachable,\
+    \ etc.) \u2014 they're not asked for here"

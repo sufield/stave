@@ -1,0 +1,81 @@
+question: "Given Stave's per-asset facts exported as triples, how many (role, action,\
+  \ resource) tuples are reachable by an anonymous principal \u2014 i.e., what is\
+  \ the blast radius of the Cognito unauthenticated path?\n"
+context: 'AWS Cognito identity pools can map unauthenticated principals to an IAM
+  role. If the role has data-plane grants (s3:GetObject, dynamodb:Query, etc.) on
+  specific resources, an anonymous user can exercise those grants by obtaining temporary
+  Cognito credentials. The reachability problem is: starting at every identity pool
+  with `allows_unauthenticated == "true"`, walk maps_unauth_to to the role, then enumerate
+  the role''s (has_action, has_resource) pairs. That set is the anonymous_reachable
+  relation. The catalog projects each observed fact as a (subject, predicate, object)
+  triple in JSONL; the trial agent computes the closure.
+
+  '
+input:
+  source: stave export-sir --format jsonl
+  format: jsonl
+  fixture: input.jsonl
+  required_fields:
+  - predicate
+  - subject
+  - object
+reasoning:
+  steps:
+  - step: 1
+    action: 'Parse every JSONL line. Each line is a JSON object containing fields
+      {predicate, subject, object} (other fields may exist; ignore them). Treat lines
+      whose predicate is not in the input-relation list as noise.
+
+      '
+    input: input.jsonl
+    output: Per-predicate sets of (subject, object) pairs.
+    rule: 'Relations of interest: allows_unauthenticated, maps_unauth_to, has_action,
+      has_resource. Any other predicate is ignored for this question.
+
+      '
+  - step: 2
+    action: 'Find every identity pool that admits unauthenticated principals.
+
+      '
+    input: the allows_unauthenticated relation
+    output: 'Set ALLOWING_POOLS = { pool : allows_unauthenticated(pool, "true") }.
+
+      '
+    rule: 'Only pools whose object is the literal string "true" belong; "false" and
+      other values are excluded.
+
+      '
+  - step: 3
+    action: 'Find every IAM role mapped from a pool in ALLOWING_POOLS.
+
+      '
+    input: maps_unauth_to relation + ALLOWING_POOLS
+    output: 'Set UNAUTH_ROLES = { role : maps_unauth_to(pool, role) and pool in ALLOWING_POOLS
+      }.
+
+      '
+  - step: 4
+    action: 'Enumerate every (role, action, resource) triple where the role is in
+      UNAUTH_ROLES and the role has BOTH a has_action AND a has_resource fact.
+
+      '
+    input: has_action and has_resource relations + UNAUTH_ROLES
+    output: 'Set ANONYMOUS_REACHABLE = { (role, action, resource) : role in UNAUTH_ROLES
+      and has_action(role, action) and has_resource(role, resource) }.
+
+      '
+    rule: 'The cartesian product of a role''s has_action set and its has_resource
+      set is the set of (action, resource) pairs the role can exercise. Anonymous
+      reachability is the same product restricted to roles in UNAUTH_ROLES.
+
+      '
+  - step: 5
+    action: Count the tuples in ANONYMOUS_REACHABLE.
+    input: ANONYMOUS_REACHABLE from step 4
+    output: A single integer.
+output:
+  format: json
+  schema:
+    anonymous_reachable_count: "The cardinality of ANONYMOUS_REACHABLE \u2014 the\
+      \ number of (role, action, resource) tuples accessible to an anonymous principal\
+      \ in this fact base.\n"

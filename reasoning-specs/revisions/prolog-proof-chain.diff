@@ -1,0 +1,23 @@
+diff --git a/stave/reasoning-specs/trials/prolog-proof-chain/spec.yaml b/stave/reasoning-specs/trials/prolog-proof-chain/spec.yaml
+index 57a0f6151..4b723008c 100644
+--- a/stave/reasoning-specs/trials/prolog-proof-chain/spec.yaml
++++ b/stave/reasoning-specs/trials/prolog-proof-chain/spec.yaml
+@@ -78,9 +78,15 @@ output:
+   expected_result:
+     # From examples/prolog-proof-trees/expected/output.txt under
+     # the "Cognito writeup-config / Anonymous Access Chains" section.
+-    # Six proof trees expected — three resources × two actions
+-    # (s3:GetObject, s3:ListBucket).
+-    proof_trees_count: 6
++    # 12 proof trees: 3 resources × 4 actions. The catalog projects
++    # 4 actions on the unauth role (s3:GetObject, s3:ListBucket,
++    # dynamodb:GetItem, dynamodb:Query); Prolog's full cartesian
++    # product of has_action × has_resource yields 12, even though
++    # some pairs are semantically nonsensical (e.g. "via s3:GetObject"
++    # on a DynamoDB ARN). The blast-radius rule does not gate the
++    # product by action-resource compatibility; that's a stricter
++    # invariant the engine could add but does not today.
++    proof_trees_count: 12
+     first_proof_root: "anonymous reaches arn:aws:s3:::app-public-assets via s3:GetObject"
+     edges_per_proof: 4
+ 

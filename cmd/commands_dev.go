@@ -211,20 +211,30 @@ Examples:
 }
 
 func newCapabilitiesCmd() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "capabilities",
-		Short: "Print supported input types and version constraints",
-		Long: `Capabilities outputs a JSON document describing what observation schemas,
-control DSL versions, input source types, and command capability metadata
-this version of Stave supports.
+		Short: "Print supported input types and version constraints (default) or a user-facing catalog (subcommand)",
+		Long: `Capabilities exposes two views.
+
+Default (no subcommand) emits a JSON document describing the protocol
+metadata: observation schemas, control DSL versions, input source
+types, and command capability metadata this version of Stave supports.
+This is the stable contract consumers parse.
+
+` + "`stave capabilities catalog`" + ` emits the user-facing capability
+catalog: grouped detections + compound chains + operational features.
+Pair with ` + "`stave search`" + ` to look up by intent.
 
 Exit Codes:
   0   - Success
   4   - Internal error
 
 Examples:
-  # Check supported versions
+  # Protocol metadata (default)
   stave capabilities
+
+  # User-facing catalog
+  stave capabilities catalog
 
   # Pipe to jq for parsing
   stave capabilities | jq '.observations.schema_versions'
@@ -235,14 +245,19 @@ Examples:
   # Check security-audit capabilities
   stave capabilities | jq '.security_audit'` + OfflineHelpSuffix,
 		Example:       `  stave capabilities | jq '.version'`,
-		Args:          cobra.NoArgs,
+		// Allow subcommands; explicit args check keeps the default
+		// RunE strict.
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 {
+				return fmt.Errorf("unknown subcommand %q", args[0])
+			}
 			caps := capabilities.Summarize(Version())
 			return jsonutil.WriteIndented(cmd.OutOrStdout(), caps)
 		},
 	}
+	return cmd
 }
 
 // writeSBOM generates a CycloneDX 1.5 JSON SBOM from Go build info.

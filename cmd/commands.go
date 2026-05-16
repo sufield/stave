@@ -41,8 +41,10 @@ import (
 	staveexportsir "github.com/sufield/stave/cmd/exportsir"
 	staveforensics "github.com/sufield/stave/cmd/forensics"
 	staveforge "github.com/sufield/stave/cmd/forge"
+	catalog "github.com/sufield/stave/cmd/catalog"
 	contract "github.com/sufield/stave/cmd/contract"
 	stavegaps "github.com/sufield/stave/cmd/gaps"
+	search "github.com/sufield/stave/cmd/search"
 	"github.com/sufield/stave/cmd/initcmd"
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
@@ -276,6 +278,14 @@ func WireCommands(app *App) error {
 		NewChainLoader: f.NewChainLoader,
 	}))
 
+	// Free-form search across controls + chains + asset types.
+	// Bridges user intent ("public S3 bucket") to catalog vocabulary
+	// without forcing the user to know the taxonomy first.
+	root.AddCommand(search.NewCmd(search.Deps{
+		NewCtlRepo:     f.NewCtlRepo,
+		NewChainLoader: f.NewChainLoader,
+	}))
+
 	// Terminal posture monitor
 	root.AddCommand(stavemonitor.NewCmd())
 
@@ -341,7 +351,14 @@ func WireCommands(app *App) error {
 	}))
 	root.AddCommand(enforce.NewGraphCmd(f.NewCtlRepo, loadSnapshots))
 	root.AddCommand(initalias.NewCmd(root))
-	root.AddCommand(newCapabilitiesCmd())
+	{
+		capabilitiesCmd := newCapabilitiesCmd()
+		capabilitiesCmd.AddCommand(catalog.NewCmd(catalog.Deps{
+			NewCtlRepo:     f.NewCtlRepo,
+			NewChainLoader: f.NewChainLoader,
+		}))
+		root.AddCommand(capabilitiesCmd)
+	}
 	root.AddCommand(newCompletionCmd())
 	root.AddCommand(newSchemasCmd())
 	root.AddCommand(newVersionCmd(app.Edition))
