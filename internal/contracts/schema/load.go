@@ -238,3 +238,51 @@ func SupportedVersions(kind Kind) []string {
 	slices.Sort(out)
 	return out
 }
+
+// AssetTypeSchema returns the embedded per-asset-type JSON Schema
+// bytes for the given asset type (e.g. "aws_s3_bucket"). Returns
+// ErrSchemaNotFound when no schema is registered for the type.
+// Read-only; suitable for `stave contract show` and any tooling
+// that wants to inspect per-type expectations without going through
+// the JSON Schema compiler.
+func AssetTypeSchema(assetType string) ([]byte, error) {
+	at := strings.TrimSpace(assetType)
+	if at == "" {
+		return nil, fmt.Errorf("asset type is empty: %w", ErrSchemaNotFound)
+	}
+	v, err := ResolveVersion(KindObservation, "")
+	if err != nil {
+		return nil, err
+	}
+	path := fmt.Sprintf("embedded/%s/%s/asset-types/%s.schema.json", KindObservation, v, at)
+	data, readErr := embeddedFS.ReadFile(path)
+	if readErr != nil {
+		return nil, fmt.Errorf("%s: %w", at, ErrSchemaNotFound)
+	}
+	return data, nil
+}
+
+// AssetTypesWithSchema returns the sorted list of asset types that
+// have an embedded per-asset-type JSON Schema. Each entry is a bare
+// asset-type identifier (e.g. "aws_s3_bucket"), matching the filename
+// stem under embedded/observation/v1/asset-types/.
+func AssetTypesWithSchema() []string {
+	v, err := ResolveVersion(KindObservation, "")
+	if err != nil {
+		return nil
+	}
+	dir := fmt.Sprintf("embedded/%s/%s/asset-types", KindObservation, v)
+	entries, err := embeddedFS.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	out := make([]string, 0, len(entries))
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
+			continue
+		}
+		out = append(out, strings.TrimSuffix(e.Name(), ".schema.json"))
+	}
+	slices.Sort(out)
+	return out
+}

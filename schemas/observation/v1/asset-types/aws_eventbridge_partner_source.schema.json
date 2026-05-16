@@ -1,0 +1,55 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eventbridge_partner_source",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eventbridge_partner_source observations. 3 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "governance": {
+      "additionalProperties": true,
+      "properties": {
+        "events": {
+          "additionalProperties": true,
+          "properties": {
+            "associated_bus_is_default": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.PARTNER.DEFAULTBUS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "consuming_rule_count": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.PARTNER.ORPHAN.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "pending_days": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.PARTNER.PENDING.STALE.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "state": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.PARTNER.PENDING.STALE.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by control(s): CTL.EVENTBRIDGE.PARTNER.DEFAULTBUS.001, CTL.EVENTBRIDGE.PARTNER.ORPHAN.001, CTL.EVENTBRIDGE.PARTNER.PENDING.STALE.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_eventbridge_partner_source Properties",
+  "type": "object"
+}

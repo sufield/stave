@@ -1,0 +1,104 @@
+# Steampipe → Stave mapping for aws_lambda_function.
+#
+# The Steampipe `aws_lambda_function` table yields the function
+# record, configuration, environment variables, layers, vpc config,
+# and dead-letter config. The catalog's lambda property surface
+# adds CloudWatch alarm presence (cross-table aws_cloudwatch_alarm),
+# code-signing config detail, async destination policy, Bedrock
+# tool linkage, and execution-role permission analysis — each of
+# which is documented in derived_properties.
+asset_type: aws_lambda_function
+steampipe_table: aws_lambda_function
+schema_version: obs.v0.1
+
+asset_id_column: arn
+vendor: aws
+
+operations:
+  - kind: static
+    path: properties.compute.kind
+    value: lambda_function
+
+  - kind: field
+    path: properties.compute.id
+    column: arn
+    use_asset_id: true
+  - kind: field
+    path: properties.compute.name
+    column: name
+  - kind: field
+    path: properties.compute.runtime
+    column: runtime
+  - kind: field
+    path: properties.compute.handler
+    column: handler
+  - kind: field
+    path: properties.compute.memory_size
+    column: memory_size
+    coerce: int
+  - kind: field
+    path: properties.compute.timeout
+    column: timeout
+    coerce: int
+  - kind: field
+    path: properties.compute.last_modified
+    column: last_modified
+  - kind: field
+    path: properties.compute.execution_role.arn
+    column: role
+  - kind: field
+    path: properties.compute.code_signing.config_arn_set
+    column: code_signing_config_arn
+    coerce: bool
+  - kind: field
+    path: properties.compute.tags
+    column: tags
+    default: {}
+    type: dict
+
+  - kind: field
+    path: properties.compute.env.kms_key_id
+    column: kms_key_arn
+  - kind: field
+    path: properties.compute.env.kms_encrypted
+    column: kms_key_arn
+    coerce: bool
+    default: false
+
+derived_properties:
+  - path: properties.compute.alarms.has_duration_alarm
+    source: aws_cloudwatch_alarm — filter by MetricName=Duration, Dimensions.FunctionName=this
+  - path: properties.compute.alarms.has_errors_alarm
+    source: aws_cloudwatch_alarm — filter by MetricName=Errors, Dimensions.FunctionName=this
+  - path: properties.compute.alarms.has_iterator_age_alarm
+    source: aws_cloudwatch_alarm — filter by MetricName=IteratorAge, Dimensions.FunctionName=this
+  - path: properties.compute.alarms.has_throttles_alarm
+    source: aws_cloudwatch_alarm — filter by MetricName=Throttles, Dimensions.FunctionName=this
+  - path: properties.compute.async.destination_on_failure
+    source: aws_lambda_event_invoke_config — destination_config.on_failure non-empty
+  - path: properties.compute.async.dlq_configured
+    source: dead_letter_config.target_arn from this row, non-null
+  - path: properties.compute.async.has_async_triggers
+    source: aws_lambda_event_source_mapping — any source with state=Enabled where this function is the target
+  - path: properties.compute.bedrock.is_agent_tool
+    source: aws_bedrock_agent_action_group — function_arn matches this function
+  - path: properties.compute.bedrock.role_reaches_phi_bucket
+    source: Walk this function's execution_role permissions to s3:GetObject on phi-tagged buckets
+  - path: properties.compute.code_signing.enforce_enabled
+    source: aws_lambda_code_signing_config — policies.untrusted_artifact_on_deployment=Enforce
+  - path: properties.compute.concurrency.public_unlimited
+    source: function URL with AuthType=NONE AND reserved_concurrent_executions=null
+  - path: properties.compute.concurrency.reserved_set
+    source: reserved_concurrent_executions column non-null
+  - path: properties.compute.env.has_plaintext_secrets
+    source: Scan environment.variables for keys matching SECRET|TOKEN|PASSWORD|KEY patterns
+  - path: properties.compute.event_source.bisect_on_error
+    source: aws_lambda_event_source_mapping — bisect_batch_on_function_error=true
+  - path: properties.compute.event_source.has_failure_destination
+    source: aws_lambda_event_source_mapping — destination_config.on_failure non-empty
+  - path: properties.compute.event_source.has_ghost_source
+    source: aws_lambda_event_source_mapping — referenced source (Kinesis/DynamoDB/SQS) does not exist in inventory
+  - path: properties.compute.event_source.is_stream_source
+    source: aws_lambda_event_source_mapping — event_source_arn is Kinesis or DynamoDB Streams
+  - path: properties.compute.execution_role.has_wildcard_passrole
+    source: Walk execution role's permissions; detect iam:PassRole on Resource=*

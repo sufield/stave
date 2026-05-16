@@ -1,0 +1,97 @@
+# Steampipe → Stave mapping for aws_kms_key.
+#
+# The Steampipe `aws_kms_key` table yields the key record plus
+# key_manager (AWS|CUSTOMER), key_state, enabled flag, rotation
+# state, and the resource policy. Catalog properties about
+# concentration risk, dependent-resource counts, and grant
+# excess are derived from cross-table joins documented below.
+asset_type: aws_kms_key
+steampipe_table: aws_kms_key
+schema_version: obs.v0.1
+
+asset_id_column: arn
+vendor: aws
+
+operations:
+  - kind: static
+    path: properties.cryptography.kind
+    value: kms_key
+
+  - kind: field
+    path: properties.cryptography.id
+    column: arn
+    use_asset_id: true
+  - kind: field
+    path: properties.cryptography.key_id
+    column: id
+  - kind: field
+    path: properties.cryptography.is_aws_managed
+    column: key_manager
+    # Set true when key_manager == "AWS"; collector should normalise
+    # to bool.
+  - kind: field
+    path: properties.cryptography.is_disabled
+    column: enabled
+    coerce: bool
+    # Inverted: catalog reads is_disabled; column is enabled. The
+    # collector should negate.
+  - kind: field
+    path: properties.cryptography.rotation.enabled
+    column: key_rotation_enabled
+    coerce: bool
+    default: false
+  - kind: field
+    path: properties.cryptography.creation_date
+    column: creation_date
+  - kind: field
+    path: properties.cryptography.deletion_date
+    column: deletion_date
+  - kind: field
+    path: properties.cryptography.key_state
+    column: key_state
+  - kind: field
+    path: properties.cryptography.tags
+    column: tags_src
+    default: {}
+    type: dict
+  - kind: field
+    path: properties.cryptography.policy.raw
+    column: policy
+
+derived_properties:
+  - path: properties.cryptography.alarms.has_create_grant_alarm
+    source: aws_cloudwatch_log_metric_filter on CloudTrail for CreateGrant + alarm presence
+  - path: properties.cryptography.alarms.has_cross_account_alarm
+    source: Metric filter on cross-account KMS API events + alarm
+  - path: properties.cryptography.alarms.has_decrypt_failure_alarm
+    source: Metric filter on Decrypt failure + alarm
+  - path: properties.cryptography.alarms.has_decrypt_volume_alarm
+    source: Metric on Decrypt count anomaly + alarm
+  - path: properties.cryptography.alarms.has_disable_key_alarm
+    source: Metric on DisableKey + alarm
+  - path: properties.cryptography.alarms.has_put_key_policy_alarm
+    source: Metric on PutKeyPolicy + alarm
+  - path: properties.cryptography.alarms.has_rotation_alarm
+    source: Metric on EnableKeyRotation/DisableKeyRotation + alarm
+  - path: properties.cryptography.alarms.has_schedule_deletion_alarm
+    source: Metric on ScheduleKeyDeletion + alarm
+  - path: properties.cryptography.cross_account.excessive
+    source: Parse policy.Statement[].Principal for external Account count > threshold
+  - path: properties.cryptography.cross_account.has_decommissioned_account
+    source: Cross-reference policy Principal accounts against active org accounts
+  - path: properties.cryptography.dependent_resource_count
+    source: Count S3 buckets / RDS instances / EBS volumes / Secrets Manager secrets that reference this key
+  - path: properties.cryptography.grant_operations_excessive
+    source: aws_kms_key_grant — count operations per grant > threshold
+  - path: properties.cryptography.has_excessive_grants
+    source: aws_kms_key_grant — grant count > threshold for this key
+  - path: properties.cryptography.imported_material_expired
+    source: aws_kms_key — origin=EXTERNAL AND valid_to < now
+  - path: properties.cryptography.imported_material_no_expiry
+    source: aws_kms_key — origin=EXTERNAL AND valid_to is null
+  - path: properties.cryptography.is_dormant
+    source: CloudTrail data events on this key — no Decrypt/Encrypt in last N days
+  - path: properties.cryptography.is_pending_import
+    source: key_state == 'PendingImport'
+  - path: properties.cryptography.key_concentration.has_deletion_protection
+    source: aws_kms_key_replica_key OR dependent_resource_count > threshold + deletion_window check

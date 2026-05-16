@@ -1,0 +1,55 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_vpn_connection",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_vpn_connection observations. 4 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "network": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by 4 controls: CTL.VPC.VPN.ENCRYPTION.WEAK.001, CTL.VPC.VPN.LOGGING.001, CTL.VPC.VPN.PSK.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "vpn": {
+          "additionalProperties": true,
+          "properties": {
+            "encryption_weak": {
+              "description": "Read by control(s): CTL.VPC.VPN.ENCRYPTION.WEAK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_tunnel_down": {
+              "description": "Read by control(s): CTL.VPC.VPN.TUNNEL.DOWN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "logging_enabled": {
+              "description": "Read by control(s): CTL.VPC.VPN.LOGGING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "uses_psk": {
+              "description": "Read by control(s): CTL.VPC.VPN.PSK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_vpn_connection Properties",
+  "type": "object"
+}

@@ -1,0 +1,55 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_vpc_peering_connection",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_vpc_peering_connection observations. 4 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "network": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by 4 controls: CTL.VPC.PEERING.BIDIRECTIONAL.001, CTL.VPC.PEERING.CROSSACCOUNT.001, CTL.VPC.PEERING.DNS.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "peering": {
+          "additionalProperties": true,
+          "properties": {
+            "dns_resolution_enabled": {
+              "description": "Read by control(s): CTL.VPC.PEERING.DNS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "peer_account_in_org": {
+              "description": "Read by control(s): CTL.VPC.PEERING.CROSSACCOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "routes_bidirectional": {
+              "description": "Read by control(s): CTL.VPC.PEERING.BIDIRECTIONAL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "status_pending": {
+              "description": "Read by control(s): CTL.VPC.PEERING.PENDING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_vpc_peering_connection Properties",
+  "type": "object"
+}

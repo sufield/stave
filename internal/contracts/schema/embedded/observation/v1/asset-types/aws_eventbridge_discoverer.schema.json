@@ -1,0 +1,48 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eventbridge_discoverer",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eventbridge_discoverer observations. 2 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "governance": {
+      "additionalProperties": true,
+      "properties": {
+        "events": {
+          "additionalProperties": true,
+          "properties": {
+            "has_ghost_source_bus": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.DISCOVERER.GHOST.BUS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "indexes_sensitive_source": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.DISCOVERER.SENSITIVE.BUS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "state": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.DISCOVERER.SENSITIVE.BUS.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by control(s): CTL.EVENTBRIDGE.DISCOVERER.GHOST.BUS.001, CTL.EVENTBRIDGE.DISCOVERER.SENSITIVE.BUS.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_eventbridge_discoverer Properties",
+  "type": "object"
+}

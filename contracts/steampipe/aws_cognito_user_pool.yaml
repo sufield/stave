@@ -1,0 +1,103 @@
+# Steampipe → Stave mapping for aws_cognito_user_pool.
+#
+# The Steampipe `aws_cognito_user_pool` table yields the pool
+# record, MFA configuration, password policy, user pool tags, and
+# advanced security mode. The catalog's cognito surface includes
+# ghost-resource detection (orphaned triggers, dangling domain
+# certs/DNS), brute-force protection inference, hosted UI signup
+# settings, and SAML/OIDC trust analysis — all derived.
+asset_type: aws_cognito_user_pool
+steampipe_table: aws_cognito_user_pool
+schema_version: obs.v0.1
+
+asset_id_column: arn
+vendor: aws
+
+operations:
+  - kind: static
+    path: properties.identity.kind
+    value: user_pool
+
+  - kind: field
+    path: properties.identity.id
+    column: arn
+    use_asset_id: true
+  - kind: field
+    path: properties.identity.cognito.id
+    column: id
+  - kind: field
+    path: properties.identity.cognito.name
+    column: name
+  - kind: field
+    path: properties.identity.advanced_security.mode
+    column: user_pool_add_ons
+    # Steampipe surfaces UserPoolAddOns.AdvancedSecurityMode as a
+    # nested field; the collector should lift it. The schema also
+    # has identity.advanced_security.enabled which the collector
+    # derives from mode != "OFF".
+  - kind: field
+    path: properties.identity.cognito.creation_date
+    column: creation_date
+  - kind: field
+    path: properties.identity.cognito.last_modified_date
+    column: last_modified_date
+  - kind: field
+    path: properties.identity.cognito.estimated_number_of_users
+    column: estimated_number_of_users
+    coerce: int
+  - kind: field
+    path: properties.identity.cognito.region
+    column: region
+  - kind: field
+    path: properties.identity.tags
+    column: tags_src
+    default: {}
+    type: dict
+
+  - kind: extract
+    path: properties.identity.password_policy.raw
+    column: policies
+    json_path: "PasswordPolicy"
+    key_variants:
+      PasswordPolicy: password_policy
+    default: null
+
+derived_properties:
+  - path: properties.identity.advanced_security.enabled
+    source: user_pool_add_ons.AdvancedSecurityMode != "OFF"
+  - path: properties.identity.auth.mfa_enforced
+    source: mfa_configuration column == "ON"
+  - path: properties.identity.cognito.allow_admin_create_only
+    source: admin_create_user_config.AllowAdminCreateUserOnly column
+  - path: properties.identity.cognito.auth_log_retention_compliant
+    source: aws_cloudwatch_log_group lookup on the auth-events log group — retention_in_days >= threshold
+  - path: properties.identity.cognito.custom_domain_cert_expired
+    source: aws_cognito_user_pool_domain — certificate_arn + aws_acm_certificate.not_after < now
+  - path: properties.identity.cognito.device_tracking_enabled
+    source: device_configuration.ChallengeRequiredOnNewDevice column
+  - path: properties.identity.cognito.domain_enforces_https
+    source: aws_cognito_user_pool_domain — domain_status=ACTIVE (Cognito-managed domains are HTTPS-only)
+  - path: properties.identity.cognito.email_auto_verified
+    source: auto_verified_attributes column contains "email"
+  - path: properties.identity.cognito.has_app_clients
+    source: aws_cognito_user_pool_client filter on user_pool_id — count > 0
+  - path: properties.identity.cognito.has_brute_force_protection
+    source: advanced_security.enabled AND user_pool_add_ons.AdvancedSecurityMode in ("AUDIT","ENFORCED")
+  - path: properties.identity.cognito.has_ghost_domain_cert
+    source: aws_cognito_user_pool_domain — certificate_arn references a deleted/non-existent ACM cert
+  - path: properties.identity.cognito.has_ghost_domain_dns
+    source: aws_cognito_user_pool_domain — custom_domain DNS does not resolve to Cognito
+  - path: properties.identity.cognito.has_ghost_saml_metadata
+    source: aws_cognito_identity_provider — provider_type=SAML AND metadata URL non-resolvable
+  - path: properties.identity.cognito.has_ghost_trigger
+    source: lambda_config Lambda ARN does not exist in aws_lambda_function inventory
+  - path: properties.identity.cognito.has_orphan_triggers
+    source: lambda_config references a Lambda function not in this account/region
+  - path: properties.identity.cognito.has_resource_servers
+    source: aws_cognito_resource_server filter on user_pool_id — count > 0
+  - path: properties.identity.cognito.hosted_ui_allows_signup
+    source: client_signup_settings — for any app client with hosted UI enabled, allow_user_signup=true
+  - path: properties.identity.cognito.in_approved_region
+    source: region in (us-east-1, us-west-2, eu-west-1) — operator-defined approved list
+  - path: properties.identity.cognito.is_user_pool_dormant
+    source: estimated_number_of_users == 0 OR CloudTrail events for this pool absent in last N days

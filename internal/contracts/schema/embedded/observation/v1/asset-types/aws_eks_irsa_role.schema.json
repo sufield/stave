@@ -1,0 +1,62 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_irsa_role",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_irsa_role observations. 4 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "irsa": {
+          "additionalProperties": true,
+          "properties": {
+            "has_ghost_oidc_provider": {
+              "description": "Read by control(s): CTL.EKS.IRSA.OIDC.GHOST.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "trust_aud_set": {
+              "description": "Read by control(s): CTL.EKS.IRSA.AUDIENCE.MISSING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "trust_is_cross_account": {
+              "description": "Read by control(s): CTL.EKS.IRSA.CROSSACCOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "trust_oidc_issuer_set": {
+              "description": "Read by control(s): CTL.EKS.IRSA.AUDIENCE.MISSING.001, CTL.EKS.IRSA.SUB.UNSCOPED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "trust_principal_org_id_set": {
+              "description": "Read by control(s): CTL.EKS.IRSA.CROSSACCOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "trust_sub_set": {
+              "description": "Read by control(s): CTL.EKS.IRSA.SUB.UNSCOPED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_irsa_role Properties",
+  "type": "object"
+}

@@ -1,0 +1,48 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_bedrock_access",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_bedrock_access observations. 3 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "ai": {
+      "additionalProperties": true,
+      "properties": {
+        "access": {
+          "additionalProperties": true,
+          "properties": {
+            "has_admin_privileges": {
+              "description": "Read by control(s): CTL.BEDROCK.ACCESS.ADMIN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_full_access_policy": {
+              "description": "Read by control(s): CTL.BEDROCK.ACCESS.FULLACCESS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_long_lived": {
+              "description": "Read by control(s): CTL.BEDROCK.ACCESS.LONGTERM.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by control(s): CTL.BEDROCK.ACCESS.ADMIN.001, CTL.BEDROCK.ACCESS.FULLACCESS.001, CTL.BEDROCK.ACCESS.LONGTERM.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_bedrock_access Properties",
+  "type": "object"
+}

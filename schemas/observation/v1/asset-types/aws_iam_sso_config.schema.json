@@ -1,0 +1,41 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_iam_sso_config",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_iam_sso_config observations. 2 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "identity": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by control(s): CTL.IAM.SSO.LEGACY.001, CTL.IAM.SSO.MFA.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sso": {
+          "additionalProperties": true,
+          "properties": {
+            "has_legacy_iam_users": {
+              "description": "Read by control(s): CTL.IAM.SSO.LEGACY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "mfa_enforced": {
+              "description": "Read by control(s): CTL.IAM.SSO.MFA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_iam_sso_config Properties",
+  "type": "object"
+}

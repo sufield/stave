@@ -1,0 +1,34 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_rbac_binding",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_rbac_binding observations. 2 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "rbac_binding": {
+          "additionalProperties": true,
+          "properties": {
+            "has_ghost_role_ref": {
+              "description": "Read by control(s): CTL.EKS.RBAC.GHOST.ROLEREF.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_subject": {
+              "description": "Read by control(s): CTL.EKS.RBAC.GHOST.SUBJECT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_rbac_binding Properties",
+  "type": "object"
+}

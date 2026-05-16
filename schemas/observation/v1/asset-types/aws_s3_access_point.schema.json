@@ -1,0 +1,69 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_s3_access_point",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_s3_access_point observations. 6 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "storage": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by 6 controls: CTL.S3.AP.PAB.001, CTL.S3.AP.PAB.BLOCKPUBLICACLS.001, CTL.S3.AP.PAB.BLOCKPUBLICPOLICY.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "policy_is_public": {
+          "description": "Read by control(s): CTL.S3.AP.POLICY.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "public_access_block": {
+          "additionalProperties": true,
+          "properties": {
+            "block_public_acls": {
+              "description": "Read by control(s): CTL.S3.AP.PAB.BLOCKPUBLICACLS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "block_public_policy": {
+              "description": "Read by control(s): CTL.S3.AP.PAB.BLOCKPUBLICPOLICY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ignore_public_acls": {
+              "description": "Read by control(s): CTL.S3.AP.PAB.IGNOREPUBLICACLS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "restrict_public_buckets": {
+              "description": "Read by control(s): CTL.S3.AP.PAB.RESTRICTPUBLICBUCKETS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "public_access_fully_blocked": {
+          "description": "Read by control(s): CTL.S3.AP.PAB.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_s3_access_point Properties",
+  "type": "object"
+}

@@ -1,0 +1,51 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_bedrock_knowledge_base",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_bedrock_knowledge_base observations. 4 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "ai": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by 4 controls: CTL.BEDROCK.KB.DATASOURCE.CROSSACCOUNT.001, CTL.BEDROCK.KB.DATASOURCE.UNENCRYPTED.001, CTL.BEDROCK.KB.MARKER.INDEXES.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "knowledge_base": {
+          "additionalProperties": true,
+          "properties": {
+            "data_source_encrypted": {
+              "description": "Read by control(s): CTL.BEDROCK.KB.DATASOURCE.UNENCRYPTED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "data_source_is_cross_account": {
+              "description": "Read by control(s): CTL.BEDROCK.KB.DATASOURCE.CROSSACCOUNT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "role_s3_scope_broader_than_sources": {
+              "description": "Read by control(s): CTL.BEDROCK.KB.OVERPERM.S3.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "target_bucket_arn": {
+              "description": "Read by control(s): CTL.BEDROCK.KB.MARKER.INDEXES.001"
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_bedrock_knowledge_base Properties",
+  "type": "object"
+}

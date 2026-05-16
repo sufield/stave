@@ -1,0 +1,41 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_node",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_node observations. 1 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "node": {
+          "additionalProperties": true,
+          "properties": {
+            "is_self_managed": {
+              "description": "Read by control(s): CTL.EKS.NODEGROUP.SELFMANAGED.NOTREADY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "notready_minutes": {
+              "description": "Read by control(s): CTL.EKS.NODEGROUP.SELFMANAGED.NOTREADY.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "ready": {
+              "description": "Read by control(s): CTL.EKS.NODEGROUP.SELFMANAGED.NOTREADY.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_node Properties",
+  "type": "object"
+}

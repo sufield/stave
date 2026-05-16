@@ -1,0 +1,48 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_transit_gateway_route_table",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_transit_gateway_route_table observations. 3 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "network": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by control(s): CTL.VPC.TGW.BLACKHOLE.001, CTL.VPC.TGW.PROPAGATION.001, CTL.VPC.TGW.ROUTING.ALLTOALL.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tgw": {
+          "additionalProperties": true,
+          "properties": {
+            "all_to_all_routing": {
+              "description": "Read by control(s): CTL.VPC.TGW.ROUTING.ALLTOALL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_blackhole_routes": {
+              "description": "Read by control(s): CTL.VPC.TGW.BLACKHOLE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "propagation_enabled": {
+              "description": "Read by control(s): CTL.VPC.TGW.PROPAGATION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_transit_gateway_route_table Properties",
+  "type": "object"
+}

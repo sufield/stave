@@ -1,0 +1,41 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_service",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_service observations. 2 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "service": {
+          "additionalProperties": true,
+          "properties": {
+            "endpoint_count": {
+              "description": "Read by control(s): CTL.EKS.SERVICE.LB.NOENDPOINTS.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "has_ghost_sg": {
+              "description": "Read by control(s): CTL.EKS.SERVICE.GHOST.SG.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "type": {
+              "description": "Read by control(s): CTL.EKS.SERVICE.LB.NOENDPOINTS.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_service Properties",
+  "type": "object"
+}

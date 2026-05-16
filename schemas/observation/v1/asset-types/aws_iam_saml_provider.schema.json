@@ -1,0 +1,41 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_iam_saml_provider",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_iam_saml_provider observations. 2 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "identity": {
+      "additionalProperties": true,
+      "properties": {
+        "federation": {
+          "additionalProperties": true,
+          "properties": {
+            "saml_audience_restricted": {
+              "description": "Read by control(s): CTL.IAM.FEDERATION.SAML.AUDIENCE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "saml_cert_rotated": {
+              "description": "Read by control(s): CTL.IAM.FEDERATION.SAML.CERT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by control(s): CTL.IAM.FEDERATION.SAML.AUDIENCE.001, CTL.IAM.FEDERATION.SAML.CERT.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_iam_saml_provider Properties",
+  "type": "object"
+}

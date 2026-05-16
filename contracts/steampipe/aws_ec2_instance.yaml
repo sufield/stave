@@ -1,0 +1,111 @@
+# Steampipe → Stave mapping for aws_ec2_instance.
+#
+# The Steampipe `aws_ec2_instance` table yields the instance record,
+# IMDS configuration, IAM instance profile, network interfaces,
+# block device mappings, and tags. Catalog properties about
+# AMI deprecation, SSM patch state, Inspector coverage, container
+# runtime detection, and KMS/snapshot lineage are derived.
+asset_type: aws_ec2_instance
+steampipe_table: aws_ec2_instance
+schema_version: obs.v0.1
+
+asset_id_column: arn
+vendor: aws
+
+operations:
+  - kind: static
+    path: properties.compute.kind
+    value: ec2_instance
+
+  - kind: field
+    path: properties.compute.id
+    column: arn
+    use_asset_id: true
+  - kind: field
+    path: properties.compute.instance.id
+    column: instance_id
+  - kind: field
+    path: properties.compute.instance.type
+    column: instance_type
+  - kind: field
+    path: properties.compute.instance.state
+    column: instance_state
+  - kind: field
+    path: properties.compute.instance.launch_time
+    column: launch_time
+  - kind: field
+    path: properties.compute.ami.id
+    column: image_id
+  - kind: field
+    path: properties.compute.instance.has_key_pair
+    column: key_name
+    coerce: bool
+    # The collector should map non-null name to true.
+  - kind: field
+    path: properties.compute.iam_profile_attached
+    column: iam_instance_profile_arn
+    coerce: bool
+  - kind: field
+    path: properties.compute.iam_instance_profile.arn
+    column: iam_instance_profile_arn
+  - kind: field
+    path: properties.compute.disable_api_termination
+    column: disable_api_termination
+    coerce: bool
+    default: false
+  - kind: field
+    path: properties.compute.tags
+    column: tags_src
+    default: {}
+    type: dict
+
+  - kind: extract
+    path: properties.compute.ec2.imds_hop_limit_excessive
+    column: metadata_options
+    json_path: "HttpPutResponseHopLimit"
+    key_variants:
+      HttpPutResponseHopLimit: http_put_response_hop_limit
+    default: false
+    # Collector should compare to threshold (typically > 2)
+  - kind: extract
+    path: properties.compute.ec2.imds_v2_required
+    column: metadata_options
+    json_path: "HttpTokens"
+    key_variants:
+      HttpTokens: http_tokens
+    default: "optional"
+    # required => IMDSv2 only
+
+derived_properties:
+  - path: properties.compute.ami.is_deprecated_or_aged
+    source: aws_ec2_ami — lookup image_id; check DeprecationTime < now OR (now - CreationDate).days > threshold
+  - path: properties.compute.ami.is_trusted
+    source: aws_ec2_ami.OwnerId in (this account, known-good account list)
+  - path: properties.compute.containers.has_bridge_network
+    source: aws_ec2_instance — user_data or installed packages indicate docker with bridge network
+  - path: properties.compute.containers.has_host_network
+    source: aws_ec2_instance — user_data or docker config indicates --network=host
+  - path: properties.compute.containers.present
+    source: ssm:DescribeInstanceInformation + ssm:GetInventory — Docker installed
+  - path: properties.compute.ec2.imds_unnecessary
+    source: iam_instance_profile_arn is null AND no application needs IMDS metadata
+  - path: properties.compute.ec2.inspector_account_enabled
+    source: aws_inspector2_enabledaccount — this account enabled
+  - path: properties.compute.ec2.inspector_covered
+    source: aws_inspector2_member or coverage lookup for this instance
+  - path: properties.compute.ec2.inspector_findings_stale_count
+    source: aws_inspector2_finding filter on this instance; count where updated_at < threshold
+  - path: properties.compute.ec2.patch_scan_stale
+    source: ssm:DescribeInstancePatchStates — operation_end_time older than threshold
+  - path: properties.compute.ec2.patch_window_inactive
+    source: ssm:DescribeMaintenanceWindowsForTarget — any window where target includes this instance, status=ACTIVE
+  - path: properties.compute.ec2.ssm_agent_stale
+    source: ssm:DescribeInstanceInformation — AgentVersion older than latest by N versions
+  - path: properties.compute.ec2.ssm_managed
+    source: ssm:DescribeInstanceInformation — instance present in result
+  - path: properties.compute.enclave_options.enabled
+    source: enclave_options.Enabled column (typically present in Steampipe row)
+  - path: properties.compute.encryption.ebs_encrypted
+    source: aws_ebs_volume — every attached volume has Encrypted=true
+  - path: properties.compute.iam_instance_profile.attached
+    source: iam_instance_profile_arn non-null (same as iam_profile_attached above; both paths appear)

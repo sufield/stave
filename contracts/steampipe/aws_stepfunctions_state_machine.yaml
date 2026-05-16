@@ -1,0 +1,96 @@
+# Steampipe → Stave mapping for aws_stepfunctions_state_machine.
+#
+# Steampipe table: `aws_sfn_state_machine`. Yields the state-machine
+# record, ASL definition JSON, role_arn, logging configuration, and
+# tags. Almost every catalog property is derived from ASL analysis
+# (state types, retry config, timeout/heartbeat sanity, distributed-
+# map options, choice-default presence) or from cross-table joins
+# (CloudWatch alarms on execution metrics, EventBridge rule status).
+asset_type: aws_stepfunctions_state_machine
+steampipe_table: aws_sfn_state_machine
+schema_version: obs.v0.1
+
+asset_id_column: arn
+vendor: aws
+
+operations:
+  - kind: static
+    path: properties.compute.kind
+    value: state_machine
+
+  - kind: field
+    path: properties.compute.id
+    column: arn
+    use_asset_id: true
+  - kind: field
+    path: properties.compute.name
+    column: name
+  - kind: field
+    path: properties.compute.asl.raw
+    column: definition
+  - kind: field
+    path: properties.compute.asl.type
+    column: type
+    # STANDARD or EXPRESS — the catalog reads this distinction
+  - kind: field
+    path: properties.compute.execution_role.arn
+    column: role_arn
+  - kind: field
+    path: properties.compute.creation_date
+    column: creation_date
+  - kind: field
+    path: properties.compute.tracing_config
+    column: tracing_configuration
+  - kind: field
+    path: properties.compute.logging_configuration
+    column: logging_configuration
+  - kind: field
+    path: properties.compute.tags
+    column: tags_src
+    default: {}
+    type: dict
+
+derived_properties:
+  # CloudWatch alarms keyed off this state machine's metrics
+  - path: properties.compute.alarms.eventbridge_status_rules
+    source: aws_eventbridge_rule — rule targets this state machine AND has status DISABLED → alarm
+  - path: properties.compute.alarms.execution_time_slo_alarm
+    source: aws_cloudwatch_alarm — MetricName=ExecutionTime, Dimensions.StateMachineArn=this
+  - path: properties.compute.alarms.executions_failed_alarm
+    source: aws_cloudwatch_alarm — MetricName=ExecutionsFailed for this state machine
+  - path: properties.compute.alarms.executions_throttled_alarm
+    source: aws_cloudwatch_alarm — MetricName=ExecutionsThrottled for this state machine
+  - path: properties.compute.alarms.rate_limit_notify_present
+    source: aws_sns_topic subscription on the executions_throttled alarm
+  - path: properties.compute.alarms.schedule_time_alarms
+    source: EventBridge schedule alarms on the schedule that invokes this state machine
+
+  # ASL analysis — parse the `definition` JSON
+  - path: properties.compute.asl.catch_states_all_count
+    source: Walk ASL; count States[*] with Catch[*].ErrorEquals containing "States.ALL"
+  - path: properties.compute.asl.choice_without_default_count
+    source: Walk ASL; count Type=Choice states missing Default field
+  - path: properties.compute.asl.dm_child_role_separate
+    source: Walk ASL; for Type=Map with ItemReader/ItemBatcher (distributed-map), check ChildExecutionRole != root role
+  - path: properties.compute.asl.dm_no_itembatcher_count
+    source: Walk ASL; count distributed-map states without ItemBatcher
+  - path: properties.compute.asl.dm_no_resultwriter_count
+    source: Walk ASL; count distributed-map states without ResultWriter
+  - path: properties.compute.asl.dm_no_tolerance_count
+    source: Walk ASL; count distributed-map states without ToleratedFailurePercentage/ToleratedFailureCount
+  - path: properties.compute.asl.dm_s3_no_prefix_count
+    source: Walk ASL; count distributed-map states with S3 ItemReader but no Prefix
+  - path: properties.compute.asl.fail_captures_error
+    source: Walk ASL; check Fail states emit Error/Cause fields
+  - path: properties.compute.asl.has_async_lambda
+    source: Walk ASL; any Task with Resource=arn:aws:states:::lambda:invoke and Parameters.InvocationType=Event
+  - path: properties.compute.asl.has_distributed_map
+    source: Walk ASL; any Type=Map with ItemReader OR ItemProcessor.ProcessorConfig.Mode=DISTRIBUTED
+  - path: properties.compute.asl.heartbeat_gt_timeout_count
+    source: Walk ASL; count states where HeartbeatSeconds > TimeoutSeconds
+  - path: properties.compute.asl.inline_map_large_count
+    source: Walk ASL; count inline Map states with MaxConcurrency > threshold
+  - path: properties.compute.asl.is_sync_express_apigw
+    source: type=EXPRESS AND any API Gateway integration invokes startSyncExecution
+  - path: properties.compute.asl.lambda_async_dlq_configured
+    source: For each async Lambda invoke in ASL, check the Lambda's dead-letter config

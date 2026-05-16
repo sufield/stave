@@ -1,0 +1,34 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_transit_gateway_attachment",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_transit_gateway_attachment observations. 1 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "network": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by control(s): CTL.VPC.TGW.ATTACHMENT.ISOLATED.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tgw": {
+          "additionalProperties": true,
+          "properties": {
+            "attachment_appears_isolated": {
+              "description": "Read by control(s): CTL.VPC.TGW.ATTACHMENT.ISOLATED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_transit_gateway_attachment Properties",
+  "type": "object"
+}

@@ -1,0 +1,34 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_cognito_user_pool_client",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_cognito_user_pool_client observations. 1 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "identity": {
+      "additionalProperties": true,
+      "properties": {
+        "cognito": {
+          "additionalProperties": true,
+          "properties": {
+            "has_ghost_resource_server": {
+              "description": "Read by control(s): CTL.COGNITO.GHOST.RESOURCESRV.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by control(s): CTL.COGNITO.GHOST.RESOURCESRV.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_cognito_user_pool_client Properties",
+  "type": "object"
+}

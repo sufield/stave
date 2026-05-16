@@ -1,0 +1,76 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_vpc_flow_log",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_vpc_flow_log observations. 4 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "network": {
+      "additionalProperties": true,
+      "properties": {
+        "flowlog": {
+          "additionalProperties": true,
+          "properties": {
+            "captures_all": {
+              "description": "Read by control(s): CTL.VPC.FLOWLOG.BIDIRECTIONAL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "destination_allows_deletion": {
+              "description": "Read by control(s): CTL.VPC.FLOWLOG.DESTINATION.SECURE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "destination_encrypted": {
+              "description": "Read by control(s): CTL.VPC.FLOWLOG.DESTINATION.SECURE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "destination_public": {
+              "description": "Read by control(s): CTL.VPC.FLOWLOG.DESTINATION.SECURE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_critical_fields": {
+              "description": "Read by control(s): CTL.VPC.FLOWLOG.FORMAT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_active": {
+              "description": "Read by control(s): CTL.VPC.FLOWLOG.STATUS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "retention_adequate": {
+              "description": "Read by control(s): CTL.VPC.FLOWLOG.DESTINATION.SECURE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 4 controls: CTL.VPC.FLOWLOG.BIDIRECTIONAL.001, CTL.VPC.FLOWLOG.DESTINATION.SECURE.001, CTL.VPC.FLOWLOG.FORMAT.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_vpc_flow_log Properties",
+  "type": "object"
+}

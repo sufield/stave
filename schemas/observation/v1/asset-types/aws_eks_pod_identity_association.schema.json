@@ -1,0 +1,34 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_pod_identity_association",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_pod_identity_association observations. 2 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "pod_identity": {
+          "additionalProperties": true,
+          "properties": {
+            "has_ghost_service_account": {
+              "description": "Read by control(s): CTL.EKS.PODIDENTITY.GHOST.SA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_default_namespace": {
+              "description": "Read by control(s): CTL.EKS.PODIDENTITY.DEFAULTNS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_pod_identity_association Properties",
+  "type": "object"
+}

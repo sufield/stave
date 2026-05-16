@@ -1,0 +1,34 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_ebs_attachment",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_ebs_attachment observations. 1 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "compute": {
+      "additionalProperties": true,
+      "properties": {
+        "ebs": {
+          "additionalProperties": true,
+          "properties": {
+            "delete_on_termination": {
+              "description": "Read by control(s): CTL.EC2.EBS.DELETEONTERMINATION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by control(s): CTL.EC2.EBS.DELETEONTERMINATION.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_ebs_attachment Properties",
+  "type": "object"
+}

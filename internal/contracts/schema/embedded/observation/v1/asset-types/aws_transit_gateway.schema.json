@@ -1,0 +1,41 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_transit_gateway",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_transit_gateway observations. 2 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "network": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by control(s): CTL.VPC.SEGMENT.EASTWEST.001, CTL.VPC.TGW.FLOWLOGS.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tgw": {
+          "additionalProperties": true,
+          "properties": {
+            "flow_logs_enabled": {
+              "description": "Read by control(s): CTL.VPC.TGW.FLOWLOGS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "traffic_routes_through_inspection": {
+              "description": "Read by control(s): CTL.VPC.SEGMENT.EASTWEST.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_transit_gateway Properties",
+  "type": "object"
+}

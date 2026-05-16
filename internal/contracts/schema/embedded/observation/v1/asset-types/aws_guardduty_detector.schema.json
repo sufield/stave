@@ -1,0 +1,18 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_guardduty_detector",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_guardduty_detector observations. 1 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "threat_detection": {
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "description": "Read by control(s): CTL.GUARDDUTY.INCOMPLETE.001"
+        }
+      }
+    }
+  },
+  "title": "aws_guardduty_detector Properties",
+  "type": "object"
+}

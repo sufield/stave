@@ -490,6 +490,23 @@ ifndef ID
 endif
 	$(GOCMD) run ./internal/tools/gencontrol --id "$(ID)" --name "$(NAME)" --field "$(FIELD)" --remediation "$(REMEDIATION)" $(if $(DOMAIN),--domain "$(DOMAIN)") $(if $(SEVERITY),--severity "$(SEVERITY)") $(if $(SCOPE_TAGS),--scope-tags "$(SCOPE_TAGS)") $(if $(ASSET_TYPE),--asset-type "$(ASSET_TYPE)") $(if $(OP),--op "$(OP)") $(if $(VALUE),--value "$(VALUE)") $(if $(COMPLIANCE),--compliance "$(COMPLIANCE)") $(if $(OUT),--out "$(OUT)")
 
+## gen-steampipe-mappings: Generate contracts/steampipe/*.yaml from the cached column catalog
+##                          Skips existing files; new files carry _auto_generated: true and
+##                          _review_required: N markers for human review.
+gen-steampipe-mappings:
+	@echo "Generating Steampipe -> Stave mapping YAMLs..."
+	@python3 scripts/gen-steampipe-mappings.py \
+		--columns scripts/steampipe-columns.json \
+		--output contracts/steampipe/ \
+		--skip-existing
+	@echo "Total mappings: $$(ls contracts/steampipe/*.yaml 2>/dev/null | wc -l)"
+
+## gen-steampipe-mappings-validate: Measure auto-generator accuracy against hand-authored ground truth.
+gen-steampipe-mappings-validate:
+	@python3 scripts/gen-steampipe-mappings.py \
+		--columns scripts/steampipe-columns.json \
+		--validate-against contracts/steampipe/
+
 ## docs-controls: Generate control reference from built-in catalog
 docs-controls: sync-controls
 	$(GOCMD) run ./internal/tools/gencontroldocs

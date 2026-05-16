@@ -1,0 +1,18 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_route53_hosted_zone",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_route53_hosted_zone observations. 1 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "dns_service": {
+      "additionalProperties": true,
+      "properties": {
+        "health_checks_configured": {
+          "description": "Read by control(s): CTL.ROUTE53.INCOMPLETE.001"
+        }
+      }
+    }
+  },
+  "title": "aws_route53_hosted_zone Properties",
+  "type": "object"
+}

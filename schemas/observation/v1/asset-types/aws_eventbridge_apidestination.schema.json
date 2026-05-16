@@ -1,0 +1,55 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eventbridge_apidestination",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eventbridge_apidestination observations. 4 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "governance": {
+      "additionalProperties": true,
+      "properties": {
+        "events": {
+          "additionalProperties": true,
+          "properties": {
+            "alarm_5xx_configured": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.ALARM.APIDEST.5XX.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "endpoint_uses_https": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.APIDEST.HTTP.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_connection": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.APIDEST.GHOST.CONNECTION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "rate_limit_set": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.APIDEST.RATELIMIT.UNSET.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 4 controls: CTL.EVENTBRIDGE.ALARM.APIDEST.5XX.001, CTL.EVENTBRIDGE.APIDEST.GHOST.CONNECTION.001, CTL.EVENTBRIDGE.APIDEST.HTTP.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_eventbridge_apidestination Properties",
+  "type": "object"
+}

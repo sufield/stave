@@ -1,0 +1,123 @@
+# Steampipe → Stave mapping for aws_opensearch_domain.
+#
+# The Steampipe `aws_opensearch_domain` table yields the cluster
+# record, encryption settings, VPC config, access policy, log
+# publishing options, advanced security, and snapshot options.
+# Catalog properties about temp-rule staleness, IP allowlist
+# dynamism, cross-account principal trust, and slow-query log
+# retention are derived from the access policy plus cross-table
+# joins documented below.
+asset_type: aws_opensearch_domain
+steampipe_table: aws_opensearch_domain
+schema_version: obs.v0.1
+
+asset_id_column: arn
+vendor: aws
+
+operations:
+  - kind: static
+    path: properties.search_service.kind
+    value: opensearch_domain
+
+  - kind: field
+    path: properties.search_service.id
+    column: arn
+    use_asset_id: true
+  - kind: field
+    path: properties.search_service.name
+    column: domain_name
+  - kind: field
+    path: properties.search_service.engine_version
+    column: engine_version
+  - kind: field
+    path: properties.search_service.region
+    column: region
+  - kind: field
+    path: properties.search_service.endpoint
+    column: endpoint
+  - kind: field
+    path: properties.search_service.access.policy.raw
+    column: access_policies
+  - kind: field
+    path: properties.search_service.tags
+    column: tags_src
+    default: {}
+    type: dict
+
+  - kind: extract
+    path: properties.search_service.encryption.kms_key_id
+    column: encryption_at_rest_options
+    json_path: "KmsKeyId"
+    key_variants:
+      KmsKeyId: kms_key_id
+    default: null
+  - kind: extract
+    path: properties.search_service.encryption.at_rest_enabled
+    column: encryption_at_rest_options
+    json_path: "Enabled"
+    key_variants:
+      Enabled: enabled
+    default: false
+  - kind: extract
+    path: properties.search_service.encryption.node_to_node_enabled
+    column: node_to_node_encryption_options
+    json_path: "Enabled"
+    key_variants:
+      Enabled: enabled
+    default: false
+  - kind: extract
+    path: properties.search_service.access.fgac_enabled
+    column: advanced_security_options
+    json_path: "Enabled"
+    key_variants:
+      Enabled: enabled
+    default: false
+  - kind: extract
+    path: properties.search_service.access.master_user_iam_role
+    column: advanced_security_options
+    json_path: "MasterUserOptions.MasterUserArn"
+    key_variants:
+      MasterUserOptions: master_user_options
+      MasterUserArn: master_user_arn
+    default: null
+    # The catalog stores this as a boolean (master user is an IAM role
+    # vs an internal user); the collector should convert the extracted
+    # ARN to bool(non-null) before emitting.
+
+derived_properties:
+  - path: properties.search_service.access.auth_basic_in_front_of_fgac
+    source: aws_elbv2_load_balancer / aws_api_gateway_method that proxies to this domain — has HTTP Basic auth header rule
+  - path: properties.search_service.access.custom_endpoint_enabled
+    source: domain_endpoint_options.custom_endpoint_enabled
+  - path: properties.search_service.access.custom_endpoint_targets_public
+    source: domain_endpoint_options.custom_endpoint resolves to a public IP / public-facing CloudFront
+  - path: properties.search_service.access.default_admin_user_present
+    source: advanced_security_options.MasterUserOptions.MasterUserName is "admin" or similar default
+  - path: properties.search_service.access.describe_actions_overshared
+    source: Parse access_policies — Describe* actions allowed for too many principals
+  - path: properties.search_service.access.fgac_internal_user_count
+    source: aws_opensearch_internal_user (if plugin exposes) or admin role lookup
+  - path: properties.search_service.access.master_password_age_days
+    source: master_user_options password rotation — derived from CloudTrail
+  - path: properties.search_service.access.policy_action_wildcard_nonadmin
+    source: Parse access_policies — Statement with Action=* and Principal != admin role
+  - path: properties.search_service.access.policy_allows_wildcard
+    source: Parse access_policies — any Statement with Principal=*
+  - path: properties.search_service.access.policy_crossaccount_action_wildcard
+    source: Parse access_policies — external Account in Principal AND Action=*
+  - path: properties.search_service.access.policy_crossaccount_externalid_present
+    source: Parse access_policies — cross-account statement has sts:ExternalId condition
+  - path: properties.search_service.access.policy_crossaccount_principal
+    source: Parse access_policies — any Principal Account != this account
+  - path: properties.search_service.access.policy_delete_to_readonly_role
+    source: Parse access_policies — Statement granting Delete* to a role named "*ReadOnly*"
+  - path: properties.search_service.access.policy_eshttp_wildcard_readonly
+    source: Parse access_policies — es:ESHttpGet* with Principal=* AND readonly-shaped role
+  - path: properties.search_service.access.policy_has_stale_temp_rule
+    source: Parse access_policies — Sid contains "temp"/"adhoc" AND older than N days
+  - path: properties.search_service.access.policy_ip_allowlist_dynamic_isp
+    source: Cross-reference Condition.IpAddress CIDRs against known dynamic-ISP blocks
+  - path: properties.search_service.access.policy_managed_in_iac
+    source: aws_cloudformation_stack contains this domain OR Terraform state contains it
+  - path: properties.search_service.access.policy_oldest_temp_rule_age_days
+    source: Parse access_policies — oldest Sid-tagged temp rule's age

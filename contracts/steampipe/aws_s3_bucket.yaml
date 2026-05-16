@@ -1,0 +1,111 @@
+asset_type: aws_s3_bucket
+steampipe_table: aws_s3_bucket
+schema_version: obs.v0.1
+
+# Asset-identity computation.
+#   asset_id_column             Steampipe column whose value is the asset id.
+#   asset_id_fallback_template  Used when the column is null/empty.
+#                               Template vars in {braces} are filled from
+#                               other columns in the same row.
+asset_id_column: arn
+asset_id_fallback_template: "arn:aws:s3:::{name}"
+vendor: aws
+
+# Operations are processed in declared YAML order. Each writes to one
+# property path; later operations can read paths set by earlier ones.
+# Order matters because JSON object key order is preserved in the
+# output observation file.
+#
+# Operation kinds:
+#   field    — direct column -> property mapping
+#              optional: coerce (bool|str|int|float), default,
+#                        use_asset_id (replace column value with id),
+#                        type (set to "dict" to force {} when missing)
+#   static   — fixed value (no column lookup)
+#   extract  — pull a nested value from a JSON-shaped column.
+#              json_path is dot-segmented; numeric segments are list
+#              indices. key_variants maps canonical key -> fallback
+#              key tried when the canonical one is absent (handles
+#              PascalCase vs snake_case across Steampipe plugin
+#              versions).
+#   computed — derive from already-populated property paths
+#              op: all | any (boolean reduction)
+operations:
+  - kind: static
+    path: properties.storage.kind
+    value: bucket
+
+  - kind: field
+    path: properties.storage.name
+    column: name
+  - kind: field
+    path: properties.storage.id
+    column: arn
+    use_asset_id: true
+  - kind: field
+    path: properties.storage.tags
+    column: tags
+    default: {}
+    type: dict
+
+  - kind: field
+    path: properties.storage.controls.public_access_block.block_public_acls
+    column: block_public_acls
+    coerce: bool
+    default: false
+  - kind: field
+    path: properties.storage.controls.public_access_block.block_public_policy
+    column: block_public_policy
+    coerce: bool
+    default: false
+  - kind: field
+    path: properties.storage.controls.public_access_block.ignore_public_acls
+    column: ignore_public_acls
+    coerce: bool
+    default: false
+  - kind: field
+    path: properties.storage.controls.public_access_block.restrict_public_buckets
+    column: restrict_public_buckets
+    coerce: bool
+    default: false
+  - kind: computed
+    path: properties.storage.controls.public_access_fully_blocked
+    op: all
+    inputs:
+      - properties.storage.controls.public_access_block.block_public_acls
+      - properties.storage.controls.public_access_block.block_public_policy
+      - properties.storage.controls.public_access_block.ignore_public_acls
+      - properties.storage.controls.public_access_block.restrict_public_buckets
+
+  - kind: extract
+    path: properties.storage.encryption.algorithm
+    column: server_side_encryption_configuration
+    json_path: "Rules.0.ApplyServerSideEncryptionByDefault.SSEAlgorithm"
+    key_variants:
+      Rules: rules
+      ApplyServerSideEncryptionByDefault: apply_server_side_encryption_by_default
+      SSEAlgorithm: sse_algorithm
+    default: "none"
+  - kind: extract
+    path: properties.storage.encryption.kms_key_id
+    column: server_side_encryption_configuration
+    json_path: "Rules.0.ApplyServerSideEncryptionByDefault.KMSMasterKeyID"
+    key_variants:
+      Rules: rules
+      ApplyServerSideEncryptionByDefault: apply_server_side_encryption_by_default
+      KMSMasterKeyID: kms_master_key_id
+    default: null
+
+  - kind: field
+    path: properties.storage.versioning.enabled
+    column: versioning_enabled
+    coerce: bool
+    default: false
+  - kind: field
+    path: properties.storage.versioning.mfa_delete_enabled
+    column: versioning_mfa_delete
+    coerce: bool
+    default: false
+
+# Source of truth for valid target paths:
+#   schemas/observation/v1/asset-types/aws_s3_bucket.schema.json

@@ -1,0 +1,27 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_velero_backup_target",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_velero_backup_target observations. 1 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "velero_backup_target": {
+          "additionalProperties": true,
+          "properties": {
+            "per_cluster_scope_enforced": {
+              "description": "Read by control(s): CTL.EKS.VELERO.RESTORE.SCOPE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_velero_backup_target Properties",
+  "type": "object"
+}

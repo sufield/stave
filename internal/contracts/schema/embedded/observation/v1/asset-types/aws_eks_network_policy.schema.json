@@ -1,0 +1,55 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_network_policy",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_network_policy observations. 4 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "network_policy": {
+          "additionalProperties": true,
+          "properties": {
+            "egress_allows_world": {
+              "description": "Read by control(s): CTL.EKS.NETPOL.EGRESS.OPEN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_peer": {
+              "description": "Read by control(s): CTL.EKS.NETPOL.GHOST.PEER.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_wide_namespace_selector": {
+              "description": "Read by control(s): CTL.EKS.NETPOL.NSSELECTOR.WIDE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "ingress_allows_world": {
+              "description": "Read by control(s): CTL.EKS.NETPOL.INGRESS.OPEN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "peer_match_count": {
+              "description": "Read by control(s): CTL.EKS.NETPOL.GHOST.PEER.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_network_policy Properties",
+  "type": "object"
+}

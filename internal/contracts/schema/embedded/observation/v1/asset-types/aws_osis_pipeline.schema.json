@@ -1,0 +1,67 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_osis_pipeline",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_osis_pipeline observations. 4 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "search_service": {
+      "additionalProperties": true,
+      "properties": {
+        "access": {
+          "additionalProperties": true,
+          "properties": {
+            "vpc_configured": {
+              "description": "Read by control(s): CTL.OPENSEARCH.OSIS.NOVPC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "config": {
+          "additionalProperties": true,
+          "properties": {
+            "dlq_enabled": {
+              "description": "Read by control(s): CTL.OPENSEARCH.OSIS.BUFFER.UNSAFE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "persistent_buffer": {
+              "description": "Read by control(s): CTL.OPENSEARCH.OSIS.BUFFER.UNSAFE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "secrets_externalized": {
+              "description": "Read by control(s): CTL.OPENSEARCH.OSIS.SECRETS.PLAIN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "source_config_safe": {
+              "description": "Read by control(s): CTL.OPENSEARCH.OSIS.SOURCE.UNSAFE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 4 controls: CTL.OPENSEARCH.OSIS.BUFFER.UNSAFE.001, CTL.OPENSEARCH.OSIS.NOVPC.001, CTL.OPENSEARCH.OSIS.SECRETS.PLAIN.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_osis_pipeline Properties",
+  "type": "object"
+}

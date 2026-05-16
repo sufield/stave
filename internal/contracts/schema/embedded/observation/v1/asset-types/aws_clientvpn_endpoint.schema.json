@@ -1,0 +1,48 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_clientvpn_endpoint",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_clientvpn_endpoint observations. 3 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "network": {
+      "additionalProperties": true,
+      "properties": {
+        "clientvpn": {
+          "additionalProperties": true,
+          "properties": {
+            "allows_all": {
+              "description": "Read by control(s): CTL.VPC.CLIENTVPN.AUTH.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "connection_logging": {
+              "description": "Read by control(s): CTL.VPC.CLIENTVPN.LOGGING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "split_tunnel": {
+              "description": "Read by control(s): CTL.VPC.CLIENTVPN.SPLITTUNNEL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by control(s): CTL.VPC.CLIENTVPN.AUTH.001, CTL.VPC.CLIENTVPN.LOGGING.001, CTL.VPC.CLIENTVPN.SPLITTUNNEL.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_clientvpn_endpoint Properties",
+  "type": "object"
+}

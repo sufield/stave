@@ -1,0 +1,55 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_storage_class",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_storage_class observations. 4 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "storage_class": {
+          "additionalProperties": true,
+          "properties": {
+            "encryption_parameter": {
+              "description": "Read by control(s): CTL.EKS.STORAGECLASS.NOTENCRYPTED.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "has_ghost_kms_key": {
+              "description": "Read by control(s): CTL.EKS.STORAGECLASS.GHOST.KMS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_default": {
+              "description": "Read by control(s): CTL.EKS.STORAGECLASS.GP2DEFAULT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "type": {
+              "description": "Read by control(s): CTL.EKS.STORAGECLASS.GP2DEFAULT.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "volume_binding_mode": {
+              "description": "Read by control(s): CTL.EKS.STORAGECLASS.NOWAITFORCONSUMER.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_storage_class Properties",
+  "type": "object"
+}

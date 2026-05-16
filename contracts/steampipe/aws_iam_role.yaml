@@ -1,0 +1,95 @@
+# Steampipe → Stave mapping for aws_iam_role.
+#
+# Most of Stave's iam_role property surface is DERIVED — Access
+# Advisor analysis, blast-radius graph walks, escalation-primitive
+# detection, intent mismatch. The Steampipe `aws_iam_role` table
+# yields the raw role record plus its attached + inline policies;
+# everything beyond that is the collector's job. The derived_properties:
+# block below names every catalog-read path that needs collector
+# work and the upstream source.
+asset_type: aws_iam_role
+steampipe_table: aws_iam_role
+schema_version: obs.v0.1
+
+asset_id_column: arn
+vendor: aws
+
+operations:
+  - kind: static
+    path: properties.identity.kind
+    value: role
+
+  - kind: field
+    path: properties.identity.id
+    column: arn
+    use_asset_id: true
+  - kind: field
+    path: properties.identity.role_name
+    column: name
+  - kind: field
+    path: properties.identity.path
+    column: path
+  - kind: field
+    path: properties.identity.create_date
+    column: create_date
+  - kind: field
+    path: properties.identity.max_session_duration
+    column: max_session_duration
+    coerce: int
+  - kind: field
+    path: properties.identity.role.session_duration_excessive
+    column: max_session_duration
+    coerce: bool
+    # Set to true downstream if value > 3600; the raw int is also
+    # surfaced above. The collector may rewrite this.
+
+  - kind: field
+    path: properties.identity.tags
+    column: tags_src
+    default: {}
+    type: dict
+
+  - kind: field
+    path: properties.identity.trust_policy.raw
+    column: assume_role_policy_document
+
+# Properties the Stave catalog reads that this Steampipe table
+# cannot directly populate. Each entry names the property path
+# and the source the collector must consult.
+derived_properties:
+  - path: properties.identity.access_advisor.available
+    source: iam:GenerateServiceLastAccessedDetails + iam:GetServiceLastAccessedDetails (separate API call per role)
+  - path: properties.identity.permission_drift.threshold_exceeded
+    source: Computed from Access Advisor unused-service ratio
+  - path: properties.identity.permission_categories.has_incompatible_categories
+    source: Policy analysis against controldata/taxonomy/permission_categories.yaml
+  - path: properties.identity.intent_match.has_intent_mismatch
+    source: Cross-reference role name + tags against attached policy permissions
+  - path: properties.identity.escalation.attach_role_policy.present
+    source: Policy analysis — detect iam:AttachRolePolicy on self target
+  - path: properties.identity.escalation.put_role_policy.present
+    source: Policy analysis — detect iam:PutRolePolicy on self target
+  - path: properties.identity.policies.has_inline_policies
+    source: Computed from steampipe column `inline_policies` (length > 0)
+  - path: properties.identity.policies.service_wildcards_granted
+    source: Walk every statement in attached + inline policies, collect Action wildcards
+  - path: properties.identity.role.assume_chain_depth
+    source: Transitive AssumeRole graph traversal across all roles in the account
+  - path: properties.identity.role.blast_radius_scope
+    source: Computed from reachable_resources_count + sensitive_resource_count thresholds
+  - path: properties.identity.role.cross_account_trust_without_external_id
+    source: "Parse trust_policy — detect external Account in Principal without sts:ExternalId condition"
+  - path: properties.identity.role.cross_env.reachable_from_lower_env
+    source: Compare role's environment tag with the trusted principals' environment tags
+  - path: properties.identity.role.has_data_and_iam_access
+    source: Policy analysis — detect both data-plane actions (s3:*, dynamodb:*) and iam:* on same role
+  - path: properties.identity.role.lambda_scoped
+    source: Trust policy principal == lambda.amazonaws.com
+  - path: properties.identity.role.reachable_resources_count
+    source: Walk attached + inline policy Resource fields, expand wildcards against account inventory
+  - path: properties.identity.role.sensitive_resource_count
+    source: Filter reachable_resources by tag data_classification in (phi, pii, financial)
+  - path: properties.identity.role_age_days
+    source: now - create_date (collector-side arithmetic)
+  - path: properties.identity.tags.environment
+    source: tags["environment"] — collector should lift this to a flat field

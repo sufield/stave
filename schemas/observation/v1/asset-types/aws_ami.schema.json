@@ -1,0 +1,53 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_ami",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_ami observations. 3 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "compute": {
+      "additionalProperties": true,
+      "properties": {
+        "ami": {
+          "additionalProperties": true,
+          "properties": {
+            "encrypted": {
+              "description": "Read by control(s): CTL.EC2.AMI.ENCRYPTION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "ebs": {
+          "additionalProperties": true,
+          "properties": {
+            "has_ghost_ami_snapshot": {
+              "description": "Read by control(s): CTL.EC2.EBS.GHOST.AMI.SNAPSHOT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "is_public": {
+          "description": "Read by control(s): CTL.EC2.AMI.PUBLIC.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "Read by control(s): CTL.EC2.AMI.ENCRYPTION.001, CTL.EC2.AMI.PUBLIC.001, CTL.EC2.EBS.GHOST.AMI.SNAPSHOT.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_ami Properties",
+  "type": "object"
+}

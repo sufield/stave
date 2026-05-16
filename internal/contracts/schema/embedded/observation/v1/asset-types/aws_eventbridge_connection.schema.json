@@ -1,0 +1,55 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eventbridge_connection",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eventbridge_connection observations. 5 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "governance": {
+      "additionalProperties": true,
+      "properties": {
+        "events": {
+          "additionalProperties": true,
+          "properties": {
+            "auth_type": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.CONNECTION.APIKEY.PLAINTEXT.001, CTL.EVENTBRIDGE.CONNECTION.BASIC.PLAINTEXT.001, CTL.EVENTBRIDGE.CONNECTION.OAUTH.PLAINTEXT.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "credentials_via_secret": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.CONNECTION.APIKEY.PLAINTEXT.001, CTL.EVENTBRIDGE.CONNECTION.BASIC.PLAINTEXT.001, CTL.EVENTBRIDGE.CONNECTION.OAUTH.PLAINTEXT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ghost_secret": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.CONNECTION.GHOST.SECRET.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "state": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.CONNECTION.DEAUTHORIZED.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 5 controls: CTL.EVENTBRIDGE.CONNECTION.APIKEY.PLAINTEXT.001, CTL.EVENTBRIDGE.CONNECTION.BASIC.PLAINTEXT.001, CTL.EVENTBRIDGE.CONNECTION.DEAUTHORIZED.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_eventbridge_connection Properties",
+  "type": "object"
+}

@@ -1,0 +1,34 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_bedrock_vpc_config",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_bedrock_vpc_config observations. 1 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "ai": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by control(s): CTL.BEDROCK.VPC.ENDPOINTS.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "network": {
+          "additionalProperties": true,
+          "properties": {
+            "vpc_endpoints_configured": {
+              "description": "Read by control(s): CTL.BEDROCK.VPC.ENDPOINTS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_bedrock_vpc_config Properties",
+  "type": "object"
+}

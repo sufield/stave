@@ -1,0 +1,41 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_bedrock_guardrail",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_bedrock_guardrail observations. 2 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "ai": {
+      "additionalProperties": true,
+      "properties": {
+        "guardrail": {
+          "additionalProperties": true,
+          "properties": {
+            "prompt_attack_filter_high": {
+              "description": "Read by control(s): CTL.BEDROCK.GUARDRAIL.PROMPTATTACK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "sensitive_info_filter_enabled": {
+              "description": "Read by control(s): CTL.BEDROCK.GUARDRAIL.PII.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by control(s): CTL.BEDROCK.GUARDRAIL.PII.001, CTL.BEDROCK.GUARDRAIL.PROMPTATTACK.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_bedrock_guardrail Properties",
+  "type": "object"
+}

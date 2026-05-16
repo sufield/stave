@@ -5,10 +5,12 @@ Reads raw Steampipe-shaped JSON rows and emits an obs.v0.1
 observation snapshot for Stave. Two modes:
 
   Deterministic (default)
-    Built-in transforms for known asset types. Today aws_s3_bucket
-    is fully wired as a worked example. Other types fall through
-    with a clear "no built-in transform; use --llm or extend the
-    BUILTIN_TRANSFORMS table" message.
+    Declarative transforms loaded from YAML files at
+    contracts/steampipe/<asset_type>.yaml. Each file maps
+    Steampipe columns to Stave property paths. Today aws_s3_bucket
+    ships as a worked example. To add a new type, drop a YAML file
+    in the contracts directory — no Python code change required.
+    Agents in any language can read the same YAML.
 
   LLM-assisted (`--llm`)
     Sends the target asset-type schema + the raw rows' column
@@ -35,98 +37,244 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 # ---------------------------------------------------------------------------
-# Deterministic transforms
+# Declarative transforms loaded from YAML
 # ---------------------------------------------------------------------------
 
 Asset = dict[str, Any]
-Transform = Callable[[dict[str, Any]], Asset]
+TransformSpec = dict[str, Any]
 
 
-def transform_aws_s3_bucket(row: dict[str, Any]) -> Asset:
-    """Map a Steampipe aws_s3_bucket row to Stave's aws_s3_bucket
-    asset shape. Conservative: only fields the canonical S3 sub-
-    schema declares paths for; everything else is omitted (Stave
-    treats absence as "not observed", which is honest)."""
-    name = row.get("name", "")
-    arn = row.get("arn") or f"arn:aws:s3:::{name}"
-
-    # Public Access Block flags. Steampipe surfaces these at the
-    # top level (block_public_acls, etc.) when the bucket has a
-    # PAB configured; null when it doesn't.
-    pab_block_public_acls = row.get("block_public_acls") or False
-    pab_block_public_policy = row.get("block_public_policy") or False
-    pab_ignore_public_acls = row.get("ignore_public_acls") or False
-    pab_restrict_public_buckets = row.get("restrict_public_buckets") or False
-    pab_fully_blocked = all(
-        [
-            pab_block_public_acls,
-            pab_block_public_policy,
-            pab_ignore_public_acls,
-            pab_restrict_public_buckets,
-        ]
-    )
-
-    # Server-side encryption — Steampipe returns the SSE config
-    # as JSON; pick the first rule's algorithm and KMS key ID.
-    sse_algorithm = None
-    sse_kms_key_id = None
-    sse_cfg = row.get("server_side_encryption_configuration")
-    if isinstance(sse_cfg, dict):
-        rules = sse_cfg.get("Rules") or sse_cfg.get("rules") or []
-        if rules:
-            apply = (
-                rules[0].get("ApplyServerSideEncryptionByDefault")
-                or rules[0].get("apply_server_side_encryption_by_default")
-                or {}
-            )
-            sse_algorithm = apply.get("SSEAlgorithm") or apply.get("sse_algorithm")
-            sse_kms_key_id = apply.get("KMSMasterKeyID") or apply.get("kms_master_key_id")
-
-    tags = row.get("tags") or {}
-    if not isinstance(tags, dict):
-        tags = {}
-
-    return {
-        "id": arn,
-        "type": "aws_s3_bucket",
-        "vendor": "aws",
-        "properties": {
-            "storage": {
-                "kind": "bucket",
-                "name": name,
-                "id": arn,
-                "tags": tags,
-                "controls": {
-                    "public_access_block": {
-                        "block_public_acls": pab_block_public_acls,
-                        "block_public_policy": pab_block_public_policy,
-                        "ignore_public_acls": pab_ignore_public_acls,
-                        "restrict_public_buckets": pab_restrict_public_buckets,
-                    },
-                    "public_access_fully_blocked": pab_fully_blocked,
-                },
-                "encryption": {
-                    "algorithm": sse_algorithm or "none",
-                    "kms_key_id": sse_kms_key_id,
-                },
-                "versioning": {
-                    "enabled": bool(row.get("versioning_enabled")),
-                    "mfa_delete_enabled": bool(row.get("versioning_mfa_delete")),
-                },
-            }
-        },
-    }
+def _project_root() -> Path:
+    """Resolve the stave repo root from this file's location.
+    stave_transform.py lives at examples/agents/stave_transform.py.
+    """
+    return Path(__file__).resolve().parents[2]
 
 
-# Asset-type → transform function. Add your organisation's
-# transforms here once the LLM-assisted mapping stabilises; the
-# brief explicitly calls this out as the production path.
-BUILTIN_TRANSFORMS: dict[str, Transform] = {
-    "aws_s3_bucket": transform_aws_s3_bucket,
+def _default_contracts_dir() -> Path:
+    return _project_root() / "contracts" / "steampipe"
+
+
+def load_steampipe_mappings(contracts_dir: Path | None = None) -> dict[str, TransformSpec]:
+    """Load every YAML mapping under contracts/steampipe/. Returns a
+    mapping of asset_type -> raw spec dict, validated for required keys.
+
+    Agents in other languages can perform the same load with their own
+    YAML parser — the file shape is the contract, not this loader.
+    """
+    try:
+        import yaml  # type: ignore  # pylint: disable=import-outside-toplevel
+    except ImportError as exc:
+        raise SystemExit(
+            "PyYAML is required to load contracts/steampipe/*.yaml. "
+            "Install with: pip install pyyaml"
+        ) from exc
+
+    base = contracts_dir or _default_contracts_dir()
+    if not base.is_dir():
+        return {}
+
+    specs: dict[str, TransformSpec] = {}
+    for yaml_path in sorted(base.glob("*.yaml")):
+        with yaml_path.open() as fh:
+            spec = yaml.safe_load(fh)
+        if not isinstance(spec, dict):
+            raise SystemExit(f"{yaml_path}: top-level must be a mapping")
+        for required in ("asset_type", "asset_id_column", "vendor"):
+            if required not in spec:
+                raise SystemExit(f"{yaml_path}: missing required field {required!r}")
+        specs[spec["asset_type"]] = spec
+    return specs
+
+
+# Loaded at import time; agents that want a different contracts directory
+# can call load_steampipe_mappings(Path(...)) and pass the result to
+# transform_rows() instead. Kept module-level for backwards-compatible
+# discovery via `BUILTIN_TRANSFORMS`.
+BUILTIN_TRANSFORMS: dict[str, TransformSpec] = load_steampipe_mappings()
+
+
+# ---------------------------------------------------------------------------
+# Spec interpreter — the loader for the contracts/steampipe/*.yaml format
+# ---------------------------------------------------------------------------
+
+
+def _coerce(value: Any, kind: str | None) -> Any:
+    if kind is None:
+        return value
+    if kind == "bool":
+        return bool(value)
+    if kind == "str":
+        return "" if value is None else str(value)
+    if kind == "int":
+        return 0 if value is None else int(value)
+    if kind == "float":
+        return 0.0 if value is None else float(value)
+    raise SystemExit(f"unknown coerce kind: {kind!r}")
+
+
+def _format_template(template: str, row: dict[str, Any]) -> str:
+    """Fill {column} placeholders in template with row column values.
+    Missing columns become empty strings — same behaviour as the
+    previous imperative code path.
+    """
+    out = template
+    # Use a simple ${col} replacement; format() would die on legitimate
+    # braces inside a value.
+    for key, value in row.items():
+        placeholder = "{" + key + "}"
+        if placeholder in out:
+            out = out.replace(placeholder, "" if value is None else str(value))
+    return out
+
+
+def _compute_asset_id(spec: TransformSpec, row: dict[str, Any]) -> str:
+    primary = row.get(spec["asset_id_column"])
+    if primary:
+        return str(primary)
+    fallback = spec.get("asset_id_fallback_template")
+    if fallback:
+        return _format_template(fallback, row)
+    return ""
+
+
+def _set_path(node: dict[str, Any], path: str, value: Any) -> None:
+    segments = path.split(".")
+    if segments[0] == "properties":
+        segments = segments[1:]
+    cur = node
+    for seg in segments[:-1]:
+        nxt = cur.get(seg)
+        if not isinstance(nxt, dict):
+            nxt = {}
+            cur[seg] = nxt
+        cur = nxt
+    cur[segments[-1]] = value
+
+
+def _get_path(node: dict[str, Any], path: str) -> Any:
+    segments = path.split(".")
+    if segments and segments[0] == "properties":
+        segments = segments[1:]
+    cur: Any = node
+    for seg in segments:
+        if not isinstance(cur, dict):
+            return None
+        cur = cur.get(seg)
+    return cur
+
+
+def _walk_json_path(blob: Any, path: str, key_variants: dict[str, str]) -> Any:
+    """Traverse a JSON blob along a dotted path. Numeric segments are
+    treated as list indices. For each string segment, fall back to its
+    key_variants alias if the primary key is absent.
+    """
+    if not path:
+        # Empty json_path means "return the column value as-is."
+        return blob
+    cur = blob
+    for seg in path.split("."):
+        if cur is None:
+            return None
+        if seg.isdigit():
+            idx = int(seg)
+            if isinstance(cur, list) and 0 <= idx < len(cur):
+                cur = cur[idx]
+                continue
+            return None
+        if isinstance(cur, dict):
+            if seg in cur:
+                cur = cur[seg]
+                continue
+            alt = key_variants.get(seg)
+            if alt and alt in cur:
+                cur = cur[alt]
+                continue
+            return None
+        return None
+    return cur
+
+
+def _apply_field(properties: dict[str, Any], op: dict[str, Any], row: dict[str, Any], asset_id: str) -> None:
+    path = op["path"]
+    if op.get("use_asset_id"):
+        value: Any = asset_id
+    else:
+        value = row.get(op["column"])
+        if value is None and "default" in op:
+            value = op["default"]
+        if op.get("type") == "dict" and not isinstance(value, dict):
+            value = {}
+        value = _coerce(value, op.get("coerce"))
+    _set_path(properties, path, value)
+
+
+def _apply_static(properties: dict[str, Any], op: dict[str, Any]) -> None:
+    _set_path(properties, op["path"], op["value"])
+
+
+def _apply_extract(properties: dict[str, Any], op: dict[str, Any], row: dict[str, Any]) -> None:
+    blob = row.get(op["column"])
+    variants = op.get("key_variants") or {}
+    value = _walk_json_path(blob, op["json_path"], variants) if blob is not None else None
+    if value is None:
+        value = op.get("default")
+    _set_path(properties, op["path"], value)
+
+
+def _apply_computed(properties: dict[str, Any], op: dict[str, Any]) -> None:
+    inputs = op.get("inputs") or []
+    values = [_get_path(properties, p) for p in inputs]
+    kind = op.get("op")
+    if kind == "all":
+        value: Any = all(values)
+    elif kind == "any":
+        value = any(values)
+    else:
+        raise SystemExit(f"unknown computed op: {kind!r}")
+    _set_path(properties, op["path"], value)
+
+
+_OP_DISPATCH: dict[str, Any] = {
+    "field": _apply_field,
+    "static": _apply_static,
+    "extract": _apply_extract,
+    "computed": _apply_computed,
 }
+
+
+def transform_with_spec(spec: TransformSpec, row: dict[str, Any]) -> Asset:
+    """Apply a YAML-loaded mapping spec to a single Steampipe row.
+
+    Operations are processed in declared YAML order. Each operation
+    writes one property path. Later operations may read paths
+    written by earlier ones — required for ``computed`` ops, optional
+    for everything else. The YAML author controls insertion order
+    (which preserves into JSON output order), so output bytes are
+    a deterministic function of the YAML, not of the loader.
+    """
+    asset_id = _compute_asset_id(spec, row)
+    properties: dict[str, Any] = {}
+    for op in spec.get("operations") or []:
+        kind = op.get("kind")
+        handler = _OP_DISPATCH.get(kind)
+        if handler is None:
+            raise SystemExit(f"unknown operation kind: {kind!r}")
+        if kind == "field":
+            handler(properties, op, row, asset_id)
+        elif kind == "extract":
+            handler(properties, op, row)
+        else:
+            handler(properties, op)
+    return {
+        "id": asset_id,
+        "type": spec["asset_type"],
+        "vendor": spec["vendor"],
+        "properties": properties,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -319,13 +467,14 @@ def transform_rows(
     use_llm: bool,
     schemas_dir: Path,
 ) -> list[Asset]:
-    if asset_type in BUILTIN_TRANSFORMS:
-        return [BUILTIN_TRANSFORMS[asset_type](r) for r in rows]
+    spec = BUILTIN_TRANSFORMS.get(asset_type)
+    if spec is not None:
+        return [transform_with_spec(spec, r) for r in rows]
     if not use_llm:
         raise SystemExit(
             f"ERROR: no built-in transform for asset type {asset_type!r}. "
-            f"Either add one to BUILTIN_TRANSFORMS or pass --llm to attempt "
-            f"an LLM-assisted mapping."
+            f"Either drop a mapping file at contracts/steampipe/{asset_type}.yaml "
+            f"or pass --llm to attempt an LLM-assisted mapping."
         )
     schema = load_target_schema(asset_type, schemas_dir)
     columns = sorted({k for r in rows for k in r.keys()})
@@ -335,15 +484,16 @@ def transform_rows(
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n", maxsplit=1)[0])
-    parser.add_argument("--input", required=True, type=Path, help="Raw JSON file from steampipe_collector.py")
-    parser.add_argument("--asset-type", required=True, help="Stave asset type, e.g. aws_s3_bucket")
+    parser.add_argument("--list-transforms", action="store_true", help="Print available asset types from contracts/steampipe/ and exit")
+    parser.add_argument("--input", type=Path, help="Raw JSON file from steampipe_collector.py")
+    parser.add_argument("--asset-type", help="Stave asset type, e.g. aws_s3_bucket")
     parser.add_argument(
         "--schema",
         type=Path,
         default=Path("../../schemas/observation/v1"),
         help="Path to schemas/observation/v1 (default: ../../schemas/observation/v1)",
     )
-    parser.add_argument("--output", required=True, type=Path, help="Output directory for the obs.v0.1 file")
+    parser.add_argument("--output", type=Path, help="Output directory for the obs.v0.1 file (required unless --list-transforms)")
     parser.add_argument("--source", default="deployed", choices=["deployed", "planned", "local"])
     parser.add_argument("--validate", action="store_true", help="Run stave validate after transform")
     parser.add_argument("--no-llm", action="store_true", help="Hard-disable LLM mode (default unless --llm)")
@@ -351,8 +501,17 @@ def main() -> int:
     parser.add_argument("--ooda-max-attempts", type=int, default=3, help="Validation/repair loop bound")
     args = parser.parse_args()
 
+    if args.list_transforms:
+        for asset_type in sorted(BUILTIN_TRANSFORMS.keys()):
+            print(asset_type)
+        return 0
+
     if args.no_llm and args.llm:
         print("ERROR: --no-llm and --llm are mutually exclusive", file=sys.stderr)
+        return 2
+
+    if args.input is None or args.asset_type is None or args.output is None:
+        print("ERROR: --input, --asset-type, and --output are required (unless --list-transforms)", file=sys.stderr)
         return 2
 
     rows = json.loads(args.input.read_text())

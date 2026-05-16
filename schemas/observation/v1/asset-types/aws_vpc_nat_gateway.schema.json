@@ -1,0 +1,41 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_vpc_nat_gateway",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_vpc_nat_gateway observations. 2 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "network": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by control(s): CTL.VPC.NAT.LOGGING.001, CTL.VPC.NAT.SINGLEAZ.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "nat": {
+          "additionalProperties": true,
+          "properties": {
+            "flow_logs_enabled": {
+              "description": "Read by control(s): CTL.VPC.NAT.LOGGING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "single_az": {
+              "description": "Read by control(s): CTL.VPC.NAT.SINGLEAZ.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_vpc_nat_gateway Properties",
+  "type": "object"
+}

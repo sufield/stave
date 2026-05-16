@@ -1,0 +1,36 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_kms_alias",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_kms_alias observations. 2 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "cryptography": {
+      "additionalProperties": true,
+      "properties": {
+        "alias_is_ghost": {
+          "description": "Read by control(s): CTL.KMS.ALIAS.GHOST.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "alias_is_orphan": {
+          "description": "Read by control(s): CTL.KMS.ALIAS.ORPHAN.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "Read by control(s): CTL.KMS.ALIAS.GHOST.001, CTL.KMS.ALIAS.ORPHAN.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_kms_alias Properties",
+  "type": "object"
+}

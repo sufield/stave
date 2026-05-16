@@ -1,0 +1,27 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_daemonset",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_daemonset observations. 1 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "daemonset": {
+          "additionalProperties": true,
+          "properties": {
+            "overlaps_fargate_profile": {
+              "description": "Read by control(s): CTL.EKS.FARGATE.DAEMONSET.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_daemonset Properties",
+  "type": "object"
+}

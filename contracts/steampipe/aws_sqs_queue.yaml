@@ -1,0 +1,98 @@
+# Steampipe → Stave mapping for aws_sqs_queue.
+#
+# The Steampipe `aws_sqs_queue` table yields the queue record,
+# attributes (visibility timeout, retention, KMS, redrive policy),
+# resource-based policy, and tags. Most catalog properties about
+# DLQ shape, consumer activity, alarms, and cross-account
+# decommissioned references are derived from cross-table joins.
+asset_type: aws_sqs_queue
+steampipe_table: aws_sqs_queue
+schema_version: obs.v0.1
+
+asset_id_column: queue_arn
+asset_id_fallback_template: "arn:aws:sqs:{region}:{owner_account_id}:{name}"
+vendor: aws
+
+operations:
+  - kind: static
+    path: properties.messaging.kind
+    value: sqs_queue
+
+  - kind: field
+    path: properties.messaging.id
+    column: queue_arn
+    use_asset_id: true
+  - kind: field
+    path: properties.messaging.name
+    column: name
+  - kind: field
+    path: properties.messaging.region
+    column: region
+  - kind: field
+    path: properties.messaging.url
+    column: queue_url
+  - kind: field
+    path: properties.messaging.sqs.encrypted
+    column: kms_master_key_id
+    coerce: bool
+    # true when kms_master_key_id is non-null
+  - kind: field
+    path: properties.messaging.sqs.kms_key_id
+    column: kms_master_key_id
+  - kind: field
+    path: properties.messaging.sqs.message_retention_period
+    column: message_retention_seconds
+    coerce: int
+  - kind: field
+    path: properties.messaging.sqs.visibility_timeout
+    column: visibility_timeout_seconds
+    coerce: int
+  - kind: field
+    path: properties.messaging.policy.raw
+    column: policy
+  - kind: field
+    path: properties.messaging.sqs.redrive_policy_raw
+    column: redrive_policy
+  - kind: field
+    path: properties.messaging.tags
+    column: tags_src
+    default: {}
+    type: dict
+
+derived_properties:
+  - path: properties.messaging.sqs.alarm_age
+    source: aws_cloudwatch_alarm — MetricName=ApproximateAgeOfOldestMessage for this queue
+  - path: properties.messaging.sqs.alarm_delete_queue
+    source: CloudTrail metric filter on sqs:DeleteQueue + alarm
+  - path: properties.messaging.sqs.alarm_depth
+    source: aws_cloudwatch_alarm — MetricName=ApproximateNumberOfMessages for this queue
+  - path: properties.messaging.sqs.alarm_dlq_age
+    source: aws_cloudwatch_alarm on the DLQ referenced in redrive_policy
+  - path: properties.messaging.sqs.alarm_dlq_depth
+    source: aws_cloudwatch_alarm — depth metric on the DLQ
+  - path: properties.messaging.sqs.alarm_purge
+    source: CloudTrail metric filter on sqs:PurgeQueue + alarm
+  - path: properties.messaging.sqs.alarm_sent
+    source: aws_cloudwatch_alarm — MetricName=NumberOfMessagesSent for this queue
+  - path: properties.messaging.sqs.cloudtrail_data_events
+    source: aws_cloudtrail_trail_event_selector — DataResource for AWS::SQS::Queue includes this queue
+  - path: properties.messaging.sqs.delete_broadly_granted
+    source: Parse policy — Statement with Action including sqs:DeleteMessage and Principal=* or external
+  - path: properties.messaging.sqs.dlq_cross_account
+    source: Parse redrive_policy — DeadLetterTargetArn account != this queue's account
+  - path: properties.messaging.sqs.dlq_has_consumer
+    source: aws_lambda_event_source_mapping OR ECS service references redrive_policy.DeadLetterTargetArn
+  - path: properties.messaging.sqs.dlq_retention_shorter
+    source: Look up DLQ's message_retention_seconds; compare with this queue's
+  - path: properties.messaging.sqs.has_consumer
+    source: aws_lambda_event_source_mapping references this queue_arn OR ECS service polls it
+  - path: properties.messaging.sqs.has_ghost_dlq
+    source: redrive_policy.DeadLetterTargetArn non-null AND lookup against aws_sqs_queue returns empty
+  - path: properties.messaging.sqs.has_ghost_source_arn
+    source: aws_sqs_queue references this queue as its DLQ but source queue ARN no longer exists
+  - path: properties.messaging.sqs.has_orphan_dlq_source
+    source: This queue is a DLQ but no source queue references it via redrive_policy
+  - path: properties.messaging.sqs.has_redrive_policy
+    source: redrive_policy column is non-null
+  - path: properties.messaging.sqs.has_send_activity
+    source: CloudWatch metric — NumberOfMessagesSent > 0 in last N days

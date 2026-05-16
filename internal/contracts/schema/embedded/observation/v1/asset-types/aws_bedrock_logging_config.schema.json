@@ -1,0 +1,41 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_bedrock_logging_config",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_bedrock_logging_config observations. 2 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "ai": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by control(s): CTL.BEDROCK.LOG.ENCRYPT.001, CTL.BEDROCK.LOG.INVOCATION.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "logging": {
+          "additionalProperties": true,
+          "properties": {
+            "encryption_enabled": {
+              "description": "Read by control(s): CTL.BEDROCK.LOG.ENCRYPT.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "invocation_logging_enabled": {
+              "description": "Read by control(s): CTL.BEDROCK.LOG.INVOCATION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_bedrock_logging_config Properties",
+  "type": "object"
+}

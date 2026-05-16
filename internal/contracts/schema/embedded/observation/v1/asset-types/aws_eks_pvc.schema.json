@@ -1,0 +1,27 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_pvc",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_pvc observations. 1 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "pvc": {
+          "additionalProperties": true,
+          "properties": {
+            "has_ghost_storage_class": {
+              "description": "Read by control(s): CTL.EKS.PVC.GHOST.STORAGECLASS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_pvc Properties",
+  "type": "object"
+}

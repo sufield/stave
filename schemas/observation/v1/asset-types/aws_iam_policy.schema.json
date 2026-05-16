@@ -1,0 +1,53 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_iam_policy",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_iam_policy observations. 3 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "identity": {
+      "additionalProperties": true,
+      "properties": {
+        "kind": {
+          "description": "Read by control(s): CTL.IAM.POLICY.MFA.001, CTL.IAM.POLICY.SHADOW.001, CTL.IAM.POLICY.SHADOW.002",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "policy": {
+          "additionalProperties": true,
+          "properties": {
+            "mfa_required_on_destructive_actions": {
+              "description": "Read by control(s): CTL.IAM.POLICY.MFA.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "shadow_logic": {
+              "additionalProperties": true,
+              "properties": {
+                "has_not_action": {
+                  "description": "Read by control(s): CTL.IAM.POLICY.SHADOW.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "permits_iam_write_via_negative": {
+                  "description": "Read by control(s): CTL.IAM.POLICY.SHADOW.002",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_iam_policy Properties",
+  "type": "object"
+}

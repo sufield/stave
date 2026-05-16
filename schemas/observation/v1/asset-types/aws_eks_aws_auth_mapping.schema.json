@@ -1,0 +1,53 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_aws_auth_mapping",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_aws_auth_mapping observations. 3 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "cluster": {
+          "additionalProperties": true,
+          "properties": {
+            "aws_auth": {
+              "additionalProperties": true,
+              "properties": {
+                "groups_include_masters": {
+                  "description": "Read by control(s): CTL.EKS.AWSAUTH.MASTERS.BROAD.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "has_ghost_role": {
+                  "description": "Read by control(s): CTL.EKS.AWSAUTH.GHOST.ROLE.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "is_break_glass_admin": {
+                  "description": "Read by control(s): CTL.EKS.AWSAUTH.MASTERS.BROAD.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "role_account_in_org": {
+                  "description": "Read by control(s): CTL.EKS.AWSAUTH.UNTRUSTED.ACCOUNT.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_aws_auth_mapping Properties",
+  "type": "object"
+}

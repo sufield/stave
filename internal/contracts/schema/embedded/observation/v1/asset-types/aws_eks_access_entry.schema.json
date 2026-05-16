@@ -1,0 +1,46 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_access_entry",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_access_entry observations. 2 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "cluster": {
+          "additionalProperties": true,
+          "properties": {
+            "access_entry": {
+              "additionalProperties": true,
+              "properties": {
+                "has_cluster_admin_policy": {
+                  "description": "Read by control(s): CTL.EKS.ACCESSENTRY.CLUSTERADMIN.BROAD.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "has_ghost_principal": {
+                  "description": "Read by control(s): CTL.EKS.ACCESSENTRY.GHOST.PRINCIPAL.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "is_break_glass_admin": {
+                  "description": "Read by control(s): CTL.EKS.ACCESSENTRY.CLUSTERADMIN.BROAD.001",
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_access_entry Properties",
+  "type": "object"
+}

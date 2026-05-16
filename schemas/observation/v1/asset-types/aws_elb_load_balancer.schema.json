@@ -1,0 +1,23 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_elb_load_balancer",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_elb_load_balancer observations. 1 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "loadbalancer": {
+      "additionalProperties": true,
+      "properties": {
+        "encryption": {
+          "additionalProperties": true,
+          "properties": {
+            "tls_1_2_or_higher": {
+              "description": "Read by control(s): CTL.ELB.INCOMPLETE.001"
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_elb_load_balancer Properties",
+  "type": "object"
+}

@@ -41,6 +41,7 @@ import (
 	staveexportsir "github.com/sufield/stave/cmd/exportsir"
 	staveforensics "github.com/sufield/stave/cmd/forensics"
 	staveforge "github.com/sufield/stave/cmd/forge"
+	contract "github.com/sufield/stave/cmd/contract"
 	stavegaps "github.com/sufield/stave/cmd/gaps"
 	"github.com/sufield/stave/cmd/initcmd"
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
@@ -265,6 +266,14 @@ func WireCommands(app *App) error {
 		NewCtlRepo:     f.NewCtlRepo,
 		NewChainLoader: f.NewChainLoader,
 		NewObsRepo:     f.NewObsRepo,
+	}))
+
+	// Per-asset-type contract introspection — joins the per-asset
+	// JSON Schema, the predicate-path index, and the Steampipe
+	// mapping directory into one agent-facing view.
+	root.AddCommand(contract.NewCmd(contract.Deps{
+		NewCtlRepo:     f.NewCtlRepo,
+		NewChainLoader: f.NewChainLoader,
 	}))
 
 	// Terminal posture monitor

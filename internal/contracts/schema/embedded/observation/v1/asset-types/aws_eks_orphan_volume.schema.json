@@ -1,0 +1,34 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eks_orphan_volume",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eks_orphan_volume observations. 1 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "k8s": {
+      "additionalProperties": true,
+      "properties": {
+        "orphan_volume": {
+          "additionalProperties": true,
+          "properties": {
+            "is_eks_tagged": {
+              "description": "Read by control(s): CTL.EKS.EBS.ORPHAN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_orphan": {
+              "description": "Read by control(s): CTL.EKS.EBS.ORPHAN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_eks_orphan_volume Properties",
+  "type": "object"
+}

@@ -1,0 +1,48 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_iam_federated_role",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_iam_federated_role observations. 3 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "identity": {
+      "additionalProperties": true,
+      "properties": {
+        "federation": {
+          "additionalProperties": true,
+          "properties": {
+            "requires_session_tags": {
+              "description": "Read by control(s): CTL.IAM.FEDERATION.SESSIONTAG.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "session_exceeds_threshold": {
+              "description": "Read by control(s): CTL.IAM.FEDERATION.SESSION.DURATION.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "trust_scoped_to_groups": {
+              "description": "Read by control(s): CTL.IAM.FEDERATION.ROLEMAPPING.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by control(s): CTL.IAM.FEDERATION.ROLEMAPPING.001, CTL.IAM.FEDERATION.SESSION.DURATION.001, CTL.IAM.FEDERATION.SESSIONTAG.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_iam_federated_role Properties",
+  "type": "object"
+}

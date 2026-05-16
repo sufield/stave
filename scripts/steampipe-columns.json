@@ -1,0 +1,222 @@
+{
+  "_meta": {
+    "description": "Cached column catalog for the Steampipe AWS plugin. Drive the steampipe-mapping generator from this file rather than from a live Steampipe instance — the file is committed so the generator runs offline. To refresh, run `steampipe query \"SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_schema = 'aws'\" --output json` and overwrite this file.",
+    "plugin": "turbot/aws",
+    "plugin_version_anchor": "0.x",
+    "common_columns_skipped": ["_ctx", "sp_connection_name", "sp_ctx", "akas", "title", "partition"],
+    "note": "Coverage is partial. Tables listed here have hand-verified column subsets sufficient for the steampipe-mapping generator. Tables not listed cause the generator to skip the asset type with a clear message."
+  },
+  "tables": {
+    "aws_s3_bucket": {
+      "table_name": "aws_s3_bucket",
+      "columns": [
+        "name", "arn", "creation_date", "region", "account_id",
+        "versioning_enabled", "versioning_mfa_delete",
+        "block_public_acls", "block_public_policy",
+        "ignore_public_acls", "restrict_public_buckets",
+        "server_side_encryption_configuration",
+        "policy", "acl", "lifecycle_rules", "logging",
+        "object_lock_configuration", "replication", "website",
+        "tags", "tags_src"
+      ]
+    },
+    "aws_iam_role": {
+      "table_name": "aws_iam_role",
+      "columns": [
+        "name", "arn", "role_id", "path", "create_date",
+        "max_session_duration", "description",
+        "assume_role_policy_document", "assume_role_policy_std",
+        "inline_policies", "inline_policies_std",
+        "attached_policy_arns", "permissions_boundary_arn",
+        "permissions_boundary_type", "instance_profile_arns",
+        "tags", "tags_src", "region", "account_id"
+      ]
+    },
+    "aws_iam_user": {
+      "table_name": "aws_iam_user",
+      "columns": [
+        "name", "arn", "user_id", "path", "create_date",
+        "password_last_used", "permissions_boundary_arn",
+        "permissions_boundary_type", "mfa_enabled",
+        "mfa_devices", "attached_policy_arns",
+        "inline_policies", "inline_policies_std",
+        "groups", "login_profile", "tags", "tags_src",
+        "region", "account_id"
+      ]
+    },
+    "aws_lambda_function": {
+      "table_name": "aws_lambda_function",
+      "columns": [
+        "name", "arn", "function_arn", "version", "runtime",
+        "handler", "code_size", "description", "timeout",
+        "memory_size", "last_modified", "code_sha_256",
+        "package_type", "role", "kms_key_arn", "vpc_id",
+        "vpc_security_group_ids", "vpc_subnet_ids",
+        "dead_letter_config_target_arn", "environment_variables",
+        "tracing_config_mode", "reserved_concurrent_executions",
+        "code_signing_config_arn", "architectures",
+        "policy", "policy_std",
+        "tags", "tags_src", "region", "account_id"
+      ]
+    },
+    "aws_cloudtrail_trail": {
+      "table_name": "aws_cloudtrail_trail",
+      "columns": [
+        "name", "arn", "home_region", "include_global_service_events",
+        "is_logging", "is_multi_region_trail", "is_organization_trail",
+        "kms_key_id", "log_file_validation_enabled",
+        "log_group_arn", "cloud_watch_logs_role_arn",
+        "s3_bucket_name", "s3_key_prefix", "sns_topic_arn",
+        "event_selectors", "advanced_event_selectors",
+        "tags", "tags_src", "region", "account_id"
+      ]
+    },
+    "aws_kms_key": {
+      "table_name": "aws_kms_key",
+      "columns": [
+        "id", "arn", "key_id", "creation_date", "deletion_date",
+        "description", "enabled", "key_manager", "key_state",
+        "key_usage", "origin", "valid_to", "key_spec",
+        "key_rotation_enabled", "policy", "policy_std",
+        "aliases", "tags", "tags_src", "region", "account_id"
+      ]
+    },
+    "aws_ec2_instance": {
+      "table_name": "aws_ec2_instance",
+      "columns": [
+        "instance_id", "arn", "instance_type", "instance_state",
+        "image_id", "launch_time", "key_name", "vpc_id",
+        "subnet_id", "private_ip_address", "public_ip_address",
+        "iam_instance_profile_arn", "iam_instance_profile_id",
+        "metadata_options", "monitoring_state",
+        "ebs_optimized", "disable_api_termination",
+        "security_groups", "network_interfaces",
+        "block_device_mappings", "enclave_options",
+        "tags", "tags_src", "region", "account_id"
+      ]
+    },
+    "aws_sqs_queue": {
+      "table_name": "aws_sqs_queue",
+      "columns": [
+        "name", "queue_arn", "queue_url",
+        "approximate_number_of_messages", "delay_seconds",
+        "kms_master_key_id", "kms_data_key_reuse_period_seconds",
+        "message_retention_seconds", "visibility_timeout_seconds",
+        "max_message_size", "receive_wait_time_seconds",
+        "policy", "policy_std", "redrive_policy",
+        "fifo_queue", "content_based_deduplication",
+        "tags", "tags_src", "region", "account_id", "owner_account_id"
+      ]
+    },
+    "aws_cognito_user_pool": {
+      "table_name": "aws_cognito_user_pool",
+      "columns": [
+        "id", "name", "arn", "creation_date", "last_modified_date",
+        "estimated_number_of_users", "mfa_configuration",
+        "admin_create_user_config", "auto_verified_attributes",
+        "alias_attributes", "username_attributes",
+        "policies", "schema_attributes", "lambda_config",
+        "user_pool_add_ons", "device_configuration",
+        "email_configuration", "sms_configuration",
+        "verification_message_template",
+        "tags", "tags_src", "region", "account_id"
+      ]
+    },
+    "aws_opensearch_domain": {
+      "table_name": "aws_opensearch_domain",
+      "columns": [
+        "domain_name", "arn", "domain_id", "engine_version",
+        "endpoint", "endpoints",
+        "encryption_at_rest_options", "node_to_node_encryption_options",
+        "vpc_options", "advanced_security_options",
+        "access_policies", "cluster_config",
+        "ebs_options", "snapshot_options",
+        "log_publishing_options", "domain_endpoint_options",
+        "tags", "tags_src", "region", "account_id"
+      ]
+    },
+    "aws_sfn_state_machine": {
+      "table_name": "aws_sfn_state_machine",
+      "columns": [
+        "name", "arn", "status", "type", "definition",
+        "role_arn", "creation_date",
+        "logging_configuration", "tracing_configuration",
+        "tags", "tags_src", "region", "account_id"
+      ]
+    },
+    "aws_sns_topic": {
+      "table_name": "aws_sns_topic",
+      "columns": [
+        "topic_arn", "display_name", "owner", "subscriptions_confirmed",
+        "subscriptions_pending", "subscriptions_deleted",
+        "kms_master_key_id", "delivery_policy",
+        "policy", "policy_std",
+        "tags", "tags_src", "region", "account_id"
+      ]
+    },
+    "aws_vpc": {
+      "table_name": "aws_vpc",
+      "columns": [
+        "vpc_id", "arn", "state", "cidr_block",
+        "ipv6_cidr_block_association_set",
+        "is_default", "dhcp_options_id", "instance_tenancy",
+        "owner_id", "tags", "tags_src", "region", "account_id"
+      ]
+    },
+    "aws_vpc_security_group": {
+      "table_name": "aws_vpc_security_group",
+      "columns": [
+        "group_id", "group_name", "arn", "description",
+        "vpc_id", "owner_id", "ip_permissions", "ip_permissions_egress",
+        "tags", "tags_src", "region", "account_id"
+      ]
+    },
+    "aws_ebs_volume": {
+      "table_name": "aws_ebs_volume",
+      "columns": [
+        "volume_id", "arn", "volume_type", "size", "iops", "throughput",
+        "state", "create_time", "availability_zone",
+        "encrypted", "kms_key_id", "snapshot_id",
+        "attachments", "multi_attach_enabled",
+        "tags", "tags_src", "region", "account_id"
+      ]
+    },
+    "aws_rds_db_instance": {
+      "table_name": "aws_rds_db_instance",
+      "columns": [
+        "db_instance_identifier", "arn", "class", "engine", "engine_version",
+        "status", "publicly_accessible", "storage_encrypted",
+        "kms_key_id", "iam_database_authentication_enabled",
+        "deletion_protection", "auto_minor_version_upgrade",
+        "backup_retention_period", "preferred_backup_window",
+        "multi_az", "endpoint_address", "endpoint_port",
+        "vpc_security_groups", "db_subnet_group_name",
+        "cloudwatch_logs_exports", "performance_insights_enabled",
+        "create_time",
+        "tags", "tags_src", "region", "account_id"
+      ]
+    },
+    "aws_eks_cluster": {
+      "table_name": "aws_eks_cluster",
+      "columns": [
+        "name", "arn", "version", "status", "endpoint",
+        "platform_version", "role_arn",
+        "resources_vpc_config", "kubernetes_network_config",
+        "logging", "identity", "encryption_config",
+        "certificate_authority", "created_at",
+        "tags", "tags_src", "region", "account_id"
+      ]
+    },
+    "aws_cognito_identity_pool": {
+      "table_name": "aws_cognito_identity_pool",
+      "columns": [
+        "identity_pool_id", "identity_pool_name", "arn",
+        "allow_unauthenticated_identities", "allow_classic_flow",
+        "cognito_identity_providers", "developer_provider_name",
+        "open_id_connect_provider_arns", "saml_provider_arns",
+        "supported_login_providers",
+        "tags", "tags_src", "region", "account_id"
+      ]
+    }
+  }
+}

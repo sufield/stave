@@ -1,0 +1,86 @@
+# Steampipe → Stave mapping for aws_iam_user.
+#
+# The Steampipe `aws_iam_user` table provides the user record, MFA
+# devices, attached + inline policies, and last-used metadata. The
+# catalog's user property surface adds escalation-primitive
+# detection (computed from policy analysis), credential lifecycle
+# (computed from last_used + creation timestamps), and password
+# policy state (cross-table join with aws_iam_account_password_policy).
+asset_type: aws_iam_user
+steampipe_table: aws_iam_user
+schema_version: obs.v0.1
+
+asset_id_column: arn
+vendor: aws
+
+operations:
+  - kind: static
+    path: properties.identity.kind
+    value: user
+
+  - kind: field
+    path: properties.identity.id
+    column: arn
+    use_asset_id: true
+  - kind: field
+    path: properties.identity.user_name
+    column: name
+  - kind: field
+    path: properties.identity.path
+    column: path
+  - kind: field
+    path: properties.identity.create_date
+    column: create_date
+  - kind: field
+    path: properties.identity.password_last_used
+    column: password_last_used
+
+  - kind: field
+    path: properties.identity.tags
+    column: tags_src
+    default: {}
+    type: dict
+
+  - kind: field
+    path: properties.identity.console_access.enabled
+    column: login_profile
+    coerce: bool
+
+# Properties that need collector-side computation.
+derived_properties:
+  - path: properties.identity.access_keys.active_count
+    source: aws_iam_access_key cross-join; count where status=Active
+  - path: properties.identity.access_keys.created_at_setup
+    source: aws_iam_access_key — flag keys where CreateDate equals user CreateDate
+  - path: properties.identity.access_keys.has_stale_key
+    source: aws_iam_access_key — flag keys where LastUsedDate is null or older than rotation policy
+  - path: properties.identity.console_access.mfa_enabled
+    source: aws_iam_user_mfa_virtual or aws_iam_virtual_mfa_device — non-empty for this user
+  - path: properties.identity.credentials.has_expiry
+    source: aws_iam_credential_report — `password_next_rotation` non-null
+  - path: properties.identity.credentials.ttl_exceeded
+    source: aws_iam_credential_report — `password_last_changed` older than policy max age
+  - path: properties.identity.credentials.unused
+    source: password_last_used older than policy unused-credential threshold
+  - path: properties.identity.credentials.unused_days
+    source: (now - password_last_used).days
+  - path: properties.identity.escalation.add_user_to_group.present
+    source: Policy analysis — detect iam:AddUserToGroup on self target
+  - path: properties.identity.escalation.attach_group_policy.present
+    source: Policy analysis — detect iam:AttachGroupPolicy with admin policy target
+  - path: properties.identity.escalation.attach_user_policy_self.present
+    source: Policy analysis — detect iam:AttachUserPolicy where Resource includes self ARN
+  - path: properties.identity.escalation.put_group_policy.present
+    source: Policy analysis — detect iam:PutGroupPolicy where target is a group the user is in
+  - path: properties.identity.escalation.put_user_policy_self.present
+    source: Policy analysis — detect iam:PutUserPolicy where Resource includes self ARN
+  - path: properties.identity.password.has_stale_password
+    source: aws_iam_credential_report — password_last_changed older than rotation threshold
+  - path: properties.identity.policies.has_admin_access
+    source: Policy analysis — any attached/inline policy with Action=* on Resource=*
+  - path: properties.identity.policies.has_direct_policies
+    source: Length of attached_policy_arns or inline_policies > 0
+  - path: properties.identity.policies.has_inline_policies
+    source: Length of inline_policies > 0
+  - path: properties.identity.policies.service_wildcards_granted
+    source: Walk every statement; collect Action wildcards by service

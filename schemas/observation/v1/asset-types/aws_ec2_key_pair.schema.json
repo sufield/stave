@@ -1,0 +1,41 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_ec2_key_pair",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_ec2_key_pair observations. 2 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "compute": {
+      "additionalProperties": true,
+      "properties": {
+        "keypair": {
+          "additionalProperties": true,
+          "properties": {
+            "is_referenced": {
+              "description": "Read by control(s): CTL.EC2.KEYPAIR.ORPHAN.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "shared_excessively": {
+              "description": "Read by control(s): CTL.EC2.KEYPAIR.SHARED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by control(s): CTL.EC2.KEYPAIR.ORPHAN.001, CTL.EC2.KEYPAIR.SHARED.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_ec2_key_pair Properties",
+  "type": "object"
+}

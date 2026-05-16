@@ -1,0 +1,18 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_securityhub_account",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_securityhub_account observations. 1 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "security_hub": {
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "description": "Read by control(s): CTL.SECURITYHUB.INCOMPLETE.001"
+        }
+      }
+    }
+  },
+  "title": "aws_securityhub_account Properties",
+  "type": "object"
+}

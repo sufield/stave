@@ -1,0 +1,62 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eventbridge_replay",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eventbridge_replay observations. 4 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "governance": {
+      "additionalProperties": true,
+      "properties": {
+        "events": {
+          "additionalProperties": true,
+          "properties": {
+            "replay_filter_subset_of_archive": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.REPLAY.FILTER.WIDE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "replay_to_different_bus": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.REPLAY.CROSSBUS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "replay_window_hours": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.REPLAY.UNTHROTTLED.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "running_hours": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.REPLAY.SESSION.STALE.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "state": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.REPLAY.SESSION.STALE.001",
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by 4 controls: CTL.EVENTBRIDGE.REPLAY.CROSSBUS.001, CTL.EVENTBRIDGE.REPLAY.FILTER.WIDE.001, CTL.EVENTBRIDGE.REPLAY.SESSION.STALE.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_eventbridge_replay Properties",
+  "type": "object"
+}

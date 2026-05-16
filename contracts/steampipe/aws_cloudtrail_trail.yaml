@@ -1,0 +1,107 @@
+# Steampipe → Stave mapping for aws_cloudtrail_trail.
+#
+# The Steampipe `aws_cloudtrail_trail` table yields the trail
+# record (regions, S3 destination, KMS key, log file validation,
+# event selectors). The catalog adds CloudWatch alarm presence
+# checks against the trail's CloudWatch log group plus ghost-
+# reference checks across S3, SNS, and IAM — documented in
+# derived_properties.
+asset_type: aws_cloudtrail_trail
+steampipe_table: aws_cloudtrail_trail
+schema_version: obs.v0.1
+
+asset_id_column: arn
+vendor: aws
+
+operations:
+  - kind: static
+    path: properties.audit.kind
+    value: trail
+
+  - kind: field
+    path: properties.audit.id
+    column: arn
+    use_asset_id: true
+  - kind: field
+    path: properties.audit.name
+    column: name
+  - kind: field
+    path: properties.audit.cloudtrail.is_multi_region
+    column: is_multi_region_trail
+    coerce: bool
+    default: false
+  - kind: field
+    path: properties.audit.cloudtrail.is_logging
+    column: is_logging
+    coerce: bool
+    default: false
+  - kind: field
+    path: properties.audit.cloudtrail.log_file_validation_enabled
+    column: log_file_validation_enabled
+    coerce: bool
+    default: false
+  - kind: field
+    path: properties.audit.cloudtrail.include_global_events
+    column: include_global_service_events
+    coerce: bool
+    default: false
+  - kind: field
+    path: properties.audit.cloudtrail.s3_bucket_name
+    column: s3_bucket_name
+  - kind: field
+    path: properties.audit.cloudtrail.kms_key_id
+    column: kms_key_id
+  - kind: field
+    path: properties.audit.cloudtrail.cloud_watch_logs_log_group_arn
+    column: log_group_arn
+  - kind: field
+    path: properties.audit.cloudtrail.cloud_watch_logs_role_arn
+    column: cloud_watch_logs_role_arn
+  - kind: field
+    path: properties.audit.cloudtrail.sns_topic_arn
+    column: sns_topic_arn
+  - kind: field
+    path: properties.audit.tags
+    column: tags_src
+    default: {}
+    type: dict
+
+derived_properties:
+  - path: properties.audit.cloudtrail.alarm_bulk_deletion
+    source: aws_cloudwatch_log_metric_filter on trail's log group matching DeleteBucket bulk pattern + matching alarm
+  - path: properties.audit.cloudtrail.alarm_delete_trail
+    source: Metric filter on DeleteTrail event + alarm presence
+  - path: properties.audit.cloudtrail.alarm_failed_login
+    source: Metric filter on ConsoleLogin failure + alarm presence
+  - path: properties.audit.cloudtrail.alarm_guardduty
+    source: Metric filter on GuardDuty findings + alarm presence
+  - path: properties.audit.cloudtrail.alarm_natgw
+    source: Metric filter on NAT Gateway change events + alarm presence
+  - path: properties.audit.cloudtrail.alarm_org_change
+    source: Metric filter on organizations:* events + alarm presence
+  - path: properties.audit.cloudtrail.alarm_put_event_selectors
+    source: Metric filter on PutEventSelectors + alarm presence
+  - path: properties.audit.cloudtrail.alarm_s3_policy
+    source: Metric filter on PutBucketPolicy + alarm presence
+  - path: properties.audit.cloudtrail.alarm_stop_logging
+    source: Metric filter on StopLogging + alarm presence
+  - path: properties.audit.cloudtrail.cw_logs_delivery_configured
+    source: log_group_arn AND cloud_watch_logs_role_arn both non-null
+  - path: properties.audit.cloudtrail.cw_logs_encrypted_cmk
+    source: aws_cloudwatch_log_group lookup on this trail's log group — kms_key_id non-null AND not aws-managed
+  - path: properties.audit.cloudtrail.cw_logs_retention_compliant
+    source: aws_cloudwatch_log_group lookup — retention_in_days >= compliance threshold
+  - path: properties.audit.cloudtrail.digest_same_bucket
+    source: digest_bucket_name (when set) equals s3_bucket_name
+  - path: properties.audit.cloudtrail.has_ghost_cw_logs
+    source: log_group_arn non-null AND aws_cloudwatch_log_group lookup returns empty
+  - path: properties.audit.cloudtrail.has_ghost_cw_role
+    source: cloud_watch_logs_role_arn non-null AND aws_iam_role lookup returns empty
+  - path: properties.audit.cloudtrail.has_ghost_s3_bucket
+    source: s3_bucket_name non-null AND aws_s3_bucket lookup returns empty
+  - path: properties.audit.cloudtrail.has_ghost_sns_topic
+    source: sns_topic_arn non-null AND aws_sns_topic lookup returns empty
+  - path: properties.audit.cloudtrail.has_s3_data_event_gap
+    source: aws_cloudtrail_trail_event_selector — S3 buckets tagged sensitive not in any DataResource entry
+  - path: properties.audit.cloudtrail.log_bucket_same_account
+    source: aws_s3_bucket lookup on s3_bucket_name — owner account matches trail account

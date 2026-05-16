@@ -1,0 +1,41 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_eventbridge_global_endpoint",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_eventbridge_global_endpoint observations. 2 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "governance": {
+      "additionalProperties": true,
+      "properties": {
+        "events": {
+          "additionalProperties": true,
+          "properties": {
+            "healthcheck_configured": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.GLOBALENDPOINT.NOHEALTHCHECK.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "secondary_rule_count": {
+              "description": "Read by control(s): CTL.EVENTBRIDGE.GLOBALENDPOINT.SECONDARY.NORULES.001",
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by control(s): CTL.EVENTBRIDGE.GLOBALENDPOINT.NOHEALTHCHECK.001, CTL.EVENTBRIDGE.GLOBALENDPOINT.SECONDARY.NORULES.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_eventbridge_global_endpoint Properties",
+  "type": "object"
+}

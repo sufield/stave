@@ -1,0 +1,76 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_vpc_network_acl",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_vpc_network_acl observations. 5 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "network": {
+      "additionalProperties": true,
+      "properties": {
+        "allows_admin_from_internet": {
+          "description": "Read by control(s): CTL.VPC.NACL.ADMIN.001",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "Read by 5 controls: CTL.VPC.IPV6.NACL.001, CTL.VPC.NACL.ADMIN.001, CTL.VPC.NACL.DEFAULT.INUSE.001, …",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "nacl": {
+          "additionalProperties": true,
+          "properties": {
+            "allows_all": {
+              "description": "Read by control(s): CTL.VPC.NACL.UNRESTRICTED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ineffective_deny": {
+              "description": "Read by control(s): CTL.VPC.NACL.RULE.ORDER.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ipv4_restrictions": {
+              "description": "Read by control(s): CTL.VPC.IPV6.NACL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_ipv6_parity": {
+              "description": "Read by control(s): CTL.VPC.IPV6.NACL.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_custom": {
+              "description": "Read by control(s): CTL.VPC.NACL.UNRESTRICTED.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "is_default": {
+              "description": "Read by control(s): CTL.VPC.NACL.DEFAULT.INUSE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "title": "aws_vpc_network_acl Properties",
+  "type": "object"
+}

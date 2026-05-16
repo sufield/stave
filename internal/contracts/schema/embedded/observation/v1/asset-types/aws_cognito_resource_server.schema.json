@@ -1,0 +1,41 @@
+{
+  "$id": "urn:stave:schema:asset-type:aws_cognito_resource_server",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "description": "Property schema for aws_cognito_resource_server observations. 2 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "properties": {
+    "identity": {
+      "additionalProperties": true,
+      "properties": {
+        "cognito": {
+          "additionalProperties": true,
+          "properties": {
+            "is_resource_server_orphan": {
+              "description": "Read by control(s): CTL.COGNITO.ORPHAN.RESOURCESRV.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "resource_server_broad_scope": {
+              "description": "Read by control(s): CTL.COGNITO.RESOURCESRV.BROADSCOPE.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        "kind": {
+          "description": "Read by control(s): CTL.COGNITO.ORPHAN.RESOURCESRV.001, CTL.COGNITO.RESOURCESRV.BROADSCOPE.001",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  },
+  "title": "aws_cognito_resource_server Properties",
+  "type": "object"
+}
