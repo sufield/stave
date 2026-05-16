@@ -33,7 +33,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	contractschema "github.com/sufield/stave/internal/contracts/schema"
-	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predindex"
 )
@@ -45,12 +44,12 @@ type Deps struct {
 }
 
 type options struct {
-	AssetType     string
-	List          bool
-	Format        string
-	ControlsDir   string
-	ChainsDir     string
-	SteampipeDir  string
+	AssetType    string
+	List         bool
+	Format       string
+	ControlsDir  string
+	ChainsDir    string
+	SteampipeDir string
 }
 
 // NewCmd constructs the `contract` parent command. Today it ships
@@ -167,9 +166,9 @@ func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
 	idx := predindex.Build(controls, chains)
 
 	if opts.List {
-		return renderList(w, opts.Format, idx, opts.SteampipeDir, controls)
+		return renderList(w, opts.Format, idx, opts.SteampipeDir)
 	}
-	return renderType(w, opts.Format, opts.AssetType, idx, opts.SteampipeDir, controls)
+	return renderType(w, opts.Format, opts.AssetType, idx, opts.SteampipeDir)
 }
 
 // pathRow is the per-path row that ships in both text and JSON
@@ -192,7 +191,7 @@ type typeReport struct {
 	SteampipeMapping string    `json:"steampipe_mapping,omitempty"`
 }
 
-func renderType(w io.Writer, format, assetType string, idx predindex.Index, steampipeDir string, controls []policy.ControlDefinition) error {
+func renderType(w io.Writer, format, assetType string, idx predindex.Index, steampipeDir string) error {
 	at := kernel.AssetType(assetType)
 	paths := idx.TypeToPaths[at]
 	if len(paths) == 0 {
@@ -258,13 +257,13 @@ type listRow struct {
 }
 
 type listReport struct {
-	Types           []listRow `json:"types"`
-	TotalTypes      int       `json:"total_types"`
-	WithSchema      int       `json:"with_schema"`
-	WithSteampipe   int       `json:"with_steampipe"`
+	Types         []listRow `json:"types"`
+	TotalTypes    int       `json:"total_types"`
+	WithSchema    int       `json:"with_schema"`
+	WithSteampipe int       `json:"with_steampipe"`
 }
 
-func renderList(w io.Writer, format string, idx predindex.Index, steampipeDir string, controls []policy.ControlDefinition) error {
+func renderList(w io.Writer, format string, idx predindex.Index, steampipeDir string) error {
 	types := make([]string, 0, len(idx.TypeToPaths))
 	for t := range idx.TypeToPaths {
 		types = append(types, string(t))

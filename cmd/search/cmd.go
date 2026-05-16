@@ -128,10 +128,10 @@ func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
 
 	if opts.Format == "json" {
 		return jsonutil.WriteIndented(w, struct {
-			Query     string `json:"query"`
-			Top       int    `json:"top"`
-			Total     int    `json:"total_hits"`
-			Hits      []Hit  `json:"hits"`
+			Query string `json:"query"`
+			Top   int    `json:"top"`
+			Total int    `json:"total_hits"`
+			Hits  []Hit  `json:"hits"`
 		}{
 			Query: opts.Query, Top: opts.Top, Total: len(hits), Hits: hits,
 		})
@@ -153,13 +153,13 @@ func rank(catalog []appcaps.Capability, query string) []Hit {
 
 	out := make([]Hit, 0, 32)
 	for i := range catalog {
-		cap := &catalog[i]
+		c := &catalog[i]
 		score := 0.0
 		var matched []string
 
-		titleLow := strings.ToLower(cap.Title)
-		useWhenLow := strings.ToLower(cap.UseWhen)
-		descLow := strings.ToLower(cap.Description)
+		titleLow := strings.ToLower(c.Title)
+		useWhenLow := strings.ToLower(c.UseWhen)
+		descLow := strings.ToLower(c.Description)
 
 		// Phrase bonus — verbatim multi-word match
 		if len(strings.Fields(phrase)) > 1 {
@@ -185,7 +185,7 @@ func rank(catalog []appcaps.Capability, query string) []Hit {
 			if strings.Contains(useWhenLow, tok) {
 				score += 2
 			}
-			for _, kw := range cap.Keywords {
+			for _, kw := range c.Keywords {
 				if kw == tok || strings.Contains(kw, tok) {
 					score += 1
 					break
@@ -206,7 +206,7 @@ func rank(catalog []appcaps.Capability, query string) []Hit {
 		if titleHits > 0 {
 			matched = append(matched, fmt.Sprintf("title×%d", titleHits))
 		}
-		out = append(out, Hit{Capability: *cap, Score: score, MatchedOn: matched})
+		out = append(out, Hit{Capability: *c, Score: score, MatchedOn: matched})
 	}
 	sort.Slice(out, func(i, j int) bool {
 		if out[i].Score != out[j].Score {
@@ -244,8 +244,8 @@ func renderText(w io.Writer, query string, hits []Hit) error {
 		return nil
 	}
 	fmt.Fprintf(w, "Matches for %q (%d):\n\n", query, len(hits))
-	for i, h := range hits {
-		c := h.Capability
+	for i := range hits {
+		c := &hits[i].Capability
 		fmt.Fprintf(w, "#%d  %s", i+1, c.Title)
 		if c.Severity != "" {
 			fmt.Fprintf(w, "   [%s]", strings.ToUpper(c.Severity))
@@ -262,15 +262,12 @@ func renderText(w io.Writer, query string, hits []Hit) error {
 		}
 		if len(c.ControlIDs) > 0 {
 			n := len(c.ControlIDs)
-			cap := 3
-			if n < cap {
-				cap = n
-			}
+			limit := min(n, 3)
 			extra := ""
-			if n > cap {
-				extra = fmt.Sprintf(" (+%d more)", n-cap)
+			if n > limit {
+				extra = fmt.Sprintf(" (+%d more)", n-limit)
 			}
-			fmt.Fprintf(w, "    Controls: %s%s\n", strings.Join(c.ControlIDs[:cap], ", "), extra)
+			fmt.Fprintf(w, "    Controls: %s%s\n", strings.Join(c.ControlIDs[:limit], ", "), extra)
 		}
 		if len(c.ChainIDs) > 0 {
 			fmt.Fprintf(w, "    Chains:   %s\n", strings.Join(c.ChainIDs, ", "))

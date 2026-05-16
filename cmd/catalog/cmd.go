@@ -129,7 +129,8 @@ func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
 
 func filter(in []appcaps.Capability, opts *options) []appcaps.Capability {
 	out := make([]appcaps.Capability, 0, len(in))
-	for _, c := range in {
+	for i := range in {
+		c := &in[i]
 		if opts.KindFilter != "" && c.Kind != opts.KindFilter {
 			continue
 		}
@@ -139,7 +140,7 @@ func filter(in []appcaps.Capability, opts *options) []appcaps.Capability {
 		if opts.Category != "" && c.Category != opts.Category {
 			continue
 		}
-		out = append(out, c)
+		out = append(out, *c)
 	}
 	return out
 }
@@ -149,9 +150,10 @@ func renderText(w io.Writer, catalog []appcaps.Capability) error {
 		kind, service string
 	}
 	buckets := map[bucketKey][]appcaps.Capability{}
-	for _, c := range catalog {
+	for i := range catalog {
+		c := &catalog[i]
 		k := bucketKey{c.Kind, c.Service}
-		buckets[k] = append(buckets[k], c)
+		buckets[k] = append(buckets[k], *c)
 	}
 	// Stable order: by kind, then service
 	keys := make([]bucketKey, 0, len(buckets))
@@ -177,7 +179,8 @@ func renderText(w io.Writer, catalog []appcaps.Capability) error {
 		header := headerFor(k.kind, k.service, caps)
 		fmt.Fprintln(w, header)
 		tw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
-		for _, c := range caps {
+		for i := range caps {
+			c := &caps[i]
 			switch c.Kind {
 			case "control_group":
 				totalControls += len(c.ControlIDs)
@@ -207,8 +210,8 @@ func headerFor(kind, service string, caps []appcaps.Capability) string {
 	switch kind {
 	case "control_group":
 		ctlCount := 0
-		for _, c := range caps {
-			ctlCount += len(c.ControlIDs)
+		for i := range caps {
+			ctlCount += len(caps[i].ControlIDs)
 		}
 		return fmt.Sprintf("%s — %d capabilities, %d controls",
 			strings.ToUpper(service), len(caps), ctlCount)

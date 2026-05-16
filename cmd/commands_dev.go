@@ -244,7 +244,7 @@ Examples:
 
   # Check security-audit capabilities
   stave capabilities | jq '.security_audit'` + OfflineHelpSuffix,
-		Example:       `  stave capabilities | jq '.version'`,
+		Example: `  stave capabilities | jq '.version'`,
 		// Allow subcommands; explicit args check keeps the default
 		// RunE strict.
 		SilenceUsage:  true,

@@ -17,21 +17,21 @@ import (
 //   - Control groups   (service + category buckets across controls)
 //   - Compound chains  (chains/*.yaml)
 //   - Operational      (hard-coded list of CLI features: readiness,
-//                       gaps, drift, validate, export-sir, etc.)
+//     gaps, drift, validate, export-sir, etc.)
 type Capability struct {
-	ID           string   `json:"id"`
-	Kind         string   `json:"kind"` // "control_group" | "chain" | "operational"
-	Title        string   `json:"title"`
-	Description  string   `json:"description,omitempty"`
-	UseWhen      string   `json:"use_when,omitempty"`
-	Service      string   `json:"service,omitempty"`
-	Category     string   `json:"category,omitempty"`
-	AssetTypes   []string `json:"asset_types,omitempty"`
-	Severity     string   `json:"severity,omitempty"`
-	ControlIDs   []string `json:"control_ids,omitempty"`
-	ChainIDs     []string `json:"chain_ids,omitempty"`
-	Keywords     []string `json:"keywords,omitempty"`
-	ExampleCmd   string   `json:"example_command,omitempty"`
+	ID          string   `json:"id"`
+	Kind        string   `json:"kind"` // "control_group" | "chain" | "operational"
+	Title       string   `json:"title"`
+	Description string   `json:"description,omitempty"`
+	UseWhen     string   `json:"use_when,omitempty"`
+	Service     string   `json:"service,omitempty"`
+	Category    string   `json:"category,omitempty"`
+	AssetTypes  []string `json:"asset_types,omitempty"`
+	Severity    string   `json:"severity,omitempty"`
+	ControlIDs  []string `json:"control_ids,omitempty"`
+	ChainIDs    []string `json:"chain_ids,omitempty"`
+	Keywords    []string `json:"keywords,omitempty"`
+	ExampleCmd  string   `json:"example_command,omitempty"`
 }
 
 // Build aggregates the catalog from controls + chains + the
@@ -269,8 +269,7 @@ func titleForGroup(service, category string, n int) string {
 }
 
 func humaniseCategory(c string) string {
-	switch c {
-	case "":
+	if c == "" {
 		return "general"
 	}
 	// Replace underscores and capitalise per word
