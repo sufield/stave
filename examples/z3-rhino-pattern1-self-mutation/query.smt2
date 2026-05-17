@@ -8,7 +8,7 @@
 ; join a privileged group, drop a permissions boundary.
 ;
 ; Rhino enumerated 9 named methods in this pattern (methods
-; 1, 2, 7, 8, 9, 10, 11, 12, 13). The iter-15 prover identified
+; 1, 2, 7, 8, 9, 10, 11, 12, 13). The companion prover identified
 ; 4 more (CreatePolicy + Attach pair, Delete + Put inline pair,
 ; Detach + Attach swap, DeleteRolePermissionsBoundary). The
 ; structural shape is the same: any one of these actions on a
@@ -18,7 +18,7 @@
 ; The compound query asks Z3 to find a principal with at least
 ; one Pattern 1 action AND a wildcard resource scope — the SMT
 ; equivalent of "did Pattern 1 fire on any principal?" The
-; iter-15 example already does this via the go-z3 binding;
+; the companion example already does this via the go-z3 binding;
 ; this query does it through file-as-language-boundary so any
 ; SMT solver consumes the same artefact.
 ;
@@ -45,7 +45,7 @@
 ; The principal grants at least one Pattern 1 action on its
 ; effective permission set. The list mirrors the registry in
 ; examples/iam-21-privesc-5-patterns/z3prove/patterns.go —
-; Rhino's 9 named methods plus the 4 the iter-15 prover added.
+; Rhino's 9 named methods plus the 4 the companion prover added.
 (assert (has_action principal action))
 (assert (or
   ; Rhino's enumeration

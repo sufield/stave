@@ -37,7 +37,7 @@ COMPOUND_RULES: list[dict[str, object]] = [
             "Cognito self-registration enabled AND MFA disabled. "
             "Either gate alone is bad; together they hand AWS-"
             "credential issuance to anyone who completes the public "
-            "sign-up flow without a second factor — the iter-16 "
+            "sign-up flow without a second factor — the cognito-self-register "
             "choke-point shape."
         ),
         "controls": [
@@ -133,7 +133,7 @@ COMPOUND_RULES: list[dict[str, object]] = [
             "role that the autoscaling-PassRole privesc primitive "
             "flags. Wildcard = breadth, PassRole-bypass = vector. "
             "Combined: any compute service the role trusts becomes "
-            "a privesc launcher. Mirrors the iter-13 article."
+            "a privesc launcher. Mirrors the overperm-plus-compute-trust article."
         ),
         "controls": [
             "CTL.IAM.POLICY.RESOURCE.WILDCARD.001",

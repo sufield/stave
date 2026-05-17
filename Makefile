@@ -785,11 +785,18 @@ consistency-check: sync-schemas sync-controls sync-alternatives
 #   make sync              # sync and show summary
 
 PUBLIC_DEST ?= $(HOME)/work/stave/
+# Excludes for the public-repo mirror. The contract: anything internal
+# (audit reports, design plans, project tracking, contributor process,
+# point-in-time cleanup notes) stays in the private monorepo and is
+# NOT shipped to adopters. The classification mirrors the docs-drift
+# CI gate's exclude list so the two stay aligned — a file that's
+# internal for drift purposes is also internal for sync.
+#
 # skills/ is excluded because sync-skills writes that subtree from a
 # different source (../skills/superpowers/ at the monorepo root, NOT
 # under stave/). Without the exclude, the main rsync's --delete walks
-# the dest, sees skills/ has no counterpart under ./ (this Makefile's
-# directory), and deletes the work sync-skills just did.
+# the dest, sees skills/ has no counterpart under ./, and deletes the
+# work sync-skills just did.
 SYNC_EXCLUDES = \
 	--exclude='.git/' \
 	--exclude='dev/' \
@@ -800,7 +807,29 @@ SYNC_EXCLUDES = \
 	--exclude='dist-local/' \
 	--exclude='skills/' \
 	--exclude='__pycache__/' \
-	--exclude='*.pyc'
+	--exclude='*.pyc' \
+	--exclude='docs/audits/' \
+	--exclude='docs/plans/' \
+	--exclude='docs/ontology/' \
+	--exclude='docs/design/' \
+	--exclude='docs/design-notes/' \
+	--exclude='docs/project/' \
+	--exclude='docs/contrib/' \
+	--exclude='docs/*-audit.md' \
+	--exclude='docs/*-backlog.md' \
+	--exclude='docs/aggregation_decisions.md' \
+	--exclude='docs/bisect-timeline.md' \
+	--exclude='docs/bug-template.md' \
+	--exclude='docs/cli-style-guide.md' \
+	--exclude='docs/developer-workflow.md' \
+	--exclude='docs/examples-experiments.md' \
+	--exclude='docs/fixture-drift-cleanup-*.md' \
+	--exclude='docs/go-idioms.md' \
+	--exclude='docs/graph-experiments.md' \
+	--exclude='docs/methodology-coverage-*.md' \
+	--exclude='docs/new-readme.md' \
+	--exclude='docs/pending-items.md' \
+	--exclude='docs/sir-pending-discussion.md'
 
 ## sync: Sync to public repo (calls sync-skills automatically so the
 ##       monorepo's external-but-published assets ride along)

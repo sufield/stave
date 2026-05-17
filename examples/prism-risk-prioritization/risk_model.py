@@ -58,7 +58,7 @@ P_PER_HOP = 0.90  # 90% chance the attacker succeeds at each AssumeRole
 # Floor for chains of any length (attacker has SOMETHING to assume)
 P_PRIVESC_FLOOR = 0.05
 
-# Shape: overperm + compute trust (the iter-13 / iter-15 compound)
+# Shape: overperm + compute trust (the overperm + compute-trust compound)
 P_OVERPERM_COMPUTE = 0.65
 
 # Shape: wildcard resource surface — broad-write

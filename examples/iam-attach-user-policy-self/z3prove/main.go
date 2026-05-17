@@ -9,7 +9,7 @@
 //
 // # Modelling note
 //
-// Same int-enum encoding pattern as iter-4 / iter-5 / iter-7a.
+// Same int-enum encoding pattern as the other Z3 provers in examples/.
 // The witnesses here are AWS managed policy ARNs the user could
 // attach to itself if iam:AttachUserPolicy on self is admitted:
 //

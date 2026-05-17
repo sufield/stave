@@ -8,7 +8,7 @@
 //
 // # Modelling note
 //
-// Same int-enum encoding pattern as iter-1's Z3 prover (and
+// Same int-enum encoding pattern as the other Z3 provers in examples/ (and
 // the rest of the Z3-suited iterations). The witnesses are
 // named (principal, action, resource) triples encoded as
 // integer constants:

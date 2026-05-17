@@ -42,7 +42,7 @@ anonymous_access(Pool, Resource, Action, [
 % open + any identity pool's auth role grants. The user pool
 % (cognito-idp:...) and identity pool (cognito-identity:...)
 % are distinct ARNs in the SIR; the rule joins on existence
-% (matches the iter-16 reveal that any open user pool taints
+% (matches the cognito-self-register reveal that any open user pool taints
 % linked identity pools).
 % ===========================================================
 self_register_access(IdentityPool, Resource, Action, [

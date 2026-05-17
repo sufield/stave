@@ -15,7 +15,7 @@
   --- Compound: Write Access + No Audit Trail ---
   verdict: SAT
   witness: any principal with s3:PutObject on the gap bucket can modify objects without a CloudTrail data-event record
-  rationale: this iter-8 example doesn't enumerate IAM policies; iter-7a's bybit-pattern prover discharges the write_admitted side of the conjunction on a real fixture
+  rationale: this example doesn't enumerate IAM policies; the iam-overpermission-wildcard bybit-pattern prover discharges the write_admitted side of the conjunction on a real fixture
 
   assertion: gap=true (expected) OK
 

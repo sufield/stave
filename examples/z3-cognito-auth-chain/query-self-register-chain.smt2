@@ -1,6 +1,6 @@
 ; Query — Cognito self-register → authenticated AWS creds → S3 access
 ;
-; The full chain from the iter-16 writeup. Where the
+; The full chain from the cognito-self-register writeup. Where the
 ; sibling query z3-cognito-unauth-chain proves a NO-AUTH
 ; visitor reaches IAM-granted S3 access (open identity pool +
 ; unauth role with S3 grants), this query proves the SELF-

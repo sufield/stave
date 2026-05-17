@@ -15,7 +15,7 @@
 % =============================
 % V1: Exploitable overperm — overpermissioned IAM role
 % that is also assumable by a compute service. The compound
-% the iter-13/iter-15 articles describe: each half is a
+% the overperm-plus-trust articles describe: each half is a
 % known-finding control output (contributed_by binds the
 % finding); the conjunction is the privesc primitive.
 % =============================
@@ -59,7 +59,7 @@ violation(P, "self_register_broad_s3", R) :-
     has_action(R, "s3:*").
 
 % =============================
-% V5: Wildcard action on wildcard resource — the iter-7a
+% V5: Wildcard action on wildcard resource — the iam-overpermission-wildcard
 % over-broad pattern. CEL flags this directly; included to
 % show ASP shadowing the existing control as a cross-check.
 % =============================

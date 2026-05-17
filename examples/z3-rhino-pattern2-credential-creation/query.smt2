@@ -4,7 +4,7 @@
 ; or hijacks credentials for a more privileged principal —
 ; without modifying any policy. Rhino's named methods 4, 5, 6,
 ; 14: CreateAccessKey, CreateLoginProfile, UpdateLoginProfile,
-; UpdateAssumeRolePolicy. The iter-15 prover added MFA-virtual-
+; UpdateAssumeRolePolicy. The companion go-z3 prover added MFA-virtual-
 ; device methods, MFA-deactivation, sts:GetFederationToken — all
 ; same shape: actions that issue or reset credentials.
 ;

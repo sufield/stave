@@ -1,5 +1,5 @@
 // Command z3prove demonstrates Z3-based reachability reasoning
-// over the s3-broad-write-scope pattern. Where the iter-4 CEL
+// over the s3-broad-write-scope pattern. Where the CEL
 // example (sibling main.go) detects the unsafe configuration
 // state ("the policy is in prefix mode"), this program answers
 // the deeper question: *given the prefix the policy admits, is

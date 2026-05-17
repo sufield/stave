@@ -4,7 +4,7 @@
 ; compute execution WITHOUT direct invoke permission — by
 ; manipulating the event source that triggers the compute.
 ; Rhino's named example: write to a DynamoDB table whose stream
-; triggers a Lambda with a privileged role. The iter-15 prover
+; triggers a Lambda with a privileged role. The companion prover
 ; generalised: SQS/SNS/Kinesis publishers, S3 PutObject events,
 ; EventBridge rules, IoT topic rules, SES receipt rules,
 ; CloudWatch alarms — every event source that fans out to

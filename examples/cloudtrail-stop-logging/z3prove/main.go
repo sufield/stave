@@ -14,7 +14,7 @@
 //
 // # Modelling note
 //
-// Same library/module isolation as iter-7a: aclements/go-z3
+// Same library/module isolation as the other go-z3 provers in examples/: aclements/go-z3
 // has no string theory, so each query enumerates buckets and
 // asks Z3 to find a SAT witness over the integer index.
 //
@@ -225,9 +225,9 @@ func queryDataEventGap(fix fixture) verdict {
 
 // queryWriteWithoutAudit reports the compound: a sensitive
 // bucket that is both writable by some principal AND not
-// covered by data events. This iter-8 example doesn't ship
+// covered by data events. This example doesn't ship
 // IAM principals — when none are observed, the query reports
-// the abstract conjunction that the iter-7a Bybit prover
+// the abstract conjunction that the Bybit prover in examples/iam-overpermission-wildcard/
 // resolves.
 func queryWriteWithoutAudit(fix fixture, gap verdict) verdict {
 	ctx := z3.NewContext(nil)
@@ -237,7 +237,7 @@ func queryWriteWithoutAudit(fix fixture, gap verdict) verdict {
 	// branch is unconstrained — represented as a free Bool.
 	// The compound reports SAT iff the gap is real (gap.sat) AND
 	// some principal admits writes (assumed when no policies
-	// are observed; iter-7a's Bybit prover discharges this).
+	// are observed; the iam-overpermission-wildcard Bybit prover discharges this).
 	writeAdmitted := ctx.BoolConst("write_admitted_by_some_principal")
 	compound := hasGap.And(writeAdmitted)
 
@@ -256,7 +256,7 @@ func queryWriteWithoutAudit(fix fixture, gap verdict) verdict {
 	return verdict{
 		sat: true,
 		witness: "any principal with s3:PutObject on the gap bucket can modify objects without a CloudTrail data-event record",
-		rationale: "this iter-8 example doesn't enumerate IAM policies; iter-7a's bybit-pattern prover discharges the write_admitted side of the conjunction on a real fixture",
+		rationale: "this example doesn't enumerate IAM policies; the iam-overpermission-wildcard bybit-pattern prover discharges the write_admitted side of the conjunction on a real fixture",
 	}
 }
 

@@ -8,8 +8,8 @@
 //
 // # Modelling note
 //
-// Same int-enum encoding pattern as iter-4 / iter-5 / iter-7a /
-// iter-7. The witnesses are named (principal, action, resource)
+// Same int-enum encoding pattern as the other Z3 provers in
+// examples/. The witnesses are named (principal, action, resource)
 // triples encoded as integer constants; the Go side walks each
 // Allow statement to decide which witnesses each statement
 // admits, and Z3 enumerates a witness in

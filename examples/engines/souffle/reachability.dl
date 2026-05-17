@@ -124,7 +124,7 @@ anonymous_reachable(P, R, A) :-
 // when ANY user pool in the configuration admits self-
 // registration. The user pool (cognito-idp) and identity pool
 // (cognito-identity) are distinct ARNs in the SIR with no
-// projected link — the iter-16 reveal is "self-register on any
+// projected link — the cognito-self-register reveal is "self-register on any
 // user pool taints all linked identity pools", so the
 // conservative rule says: if any user pool is self-register-
 // open, every auth-mapped principal is reachable. Vanishes on
@@ -151,7 +151,7 @@ production_reachable(P, R, A) :-
 
 // exploitable_overperm — role is both findings-bound (some
 // CEL control fired on it) and assumable by a compute service.
-// Mirrors the iter-13/iter-15 PassRole-on-compute compound;
+// Mirrors the PassRole-on-compute compound (see examples/iam-overpermission-wildcard/);
 // Soufflé enumerates every (role, control, service) triple.
 .decl exploitable_overperm(role: symbol, control: symbol, service: symbol)
 .output exploitable_overperm

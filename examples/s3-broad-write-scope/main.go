@@ -3,7 +3,7 @@
 // policy that admits writes to *any* object key under a prefix
 // rather than binding each upload to a single exact key.
 //
-// This is the CEL half of the iter-4 example. The companion
+// This is the CEL half of the s3-broad-write-scope example. The companion
 // program at examples/s3-broad-write-scope/z3prove/ uses Z3 to
 // answer the deeper question — "given the prefix the policy
 // admits, is there a concrete key outside the intended pattern

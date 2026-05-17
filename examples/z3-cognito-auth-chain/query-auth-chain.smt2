@@ -13,7 +13,7 @@
 ;     → Cognito identity pool with maps_auth_to → IAM role
 ;     → role grants S3 read/write on a wildcard / S3 resource
 ;
-; SAT on BOTH fixtures of the iter-16 cognito-self-register-to-
+; SAT on BOTH fixtures of the cognito-self-register-to-
 ; aws-creds example. That's the pedagogical reveal:
 ;
 ;   writeup-config:  user pool open + auth role broad → sat

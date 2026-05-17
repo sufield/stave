@@ -53,22 +53,37 @@ jobs:
           set -euo pipefail
           bad=0
 
-          # The scan set is every Markdown file under docs/ EXCEPT
-          # the snapshot/historical docs below, plus the four root
-          # docs the audit found ungated. Snapshot docs reference
-          # paths and line numbers as they existed at the time of
-          # writing — treating them as live drift creates CI noise
-          # without value, since those docs are intentionally point-
-          # in-time inventories.
+          # Scan set: every Markdown under docs/ EXCEPT internal
+          # content + the four root docs the audit found ungated.
+          # Internal content classification matches the Makefile's
+          # SYNC_EXCLUDES — anything excluded from the public-repo
+          # sync is also excluded from the drift gate.
           #
-          # Excluded:
-          #   docs/plans/      - design plans (path references frozen)
-          #   docs/audits/     - audit reports (point-in-time analyses)
-          #   docs/ontology/   - versioned ontology snapshots
-          #   docs/go-idioms.md - file:line inventory (rotten by design)
+          # Excluded subdirs (point-in-time / internal-process):
+          #   docs/plans/        design plans (paths frozen at write)
+          #   docs/audits/       audit reports (point-in-time analyses)
+          #   docs/ontology/     versioned ontology snapshots
+          #   docs/design/       design discussions
+          #   docs/design-notes/ design notes
+          #   docs/project/      project tracking
+          #   docs/contrib/      contributor process notes
           #
-          # Each check is a single grep across the scan set; a hit
-          # means the pattern (and reason) need updating in the doc.
+          # Excluded top-level files (internal-by-pattern + named):
+          #   docs/*-audit.md            audit reports
+          #   docs/*-backlog.md          backlog tracking
+          #   docs/aggregation_decisions.md
+          #   docs/bisect-timeline.md
+          #   docs/bug-template.md
+          #   docs/cli-style-guide.md
+          #   docs/developer-workflow.md
+          #   docs/examples-experiments.md
+          #   docs/fixture-drift-cleanup-*.md
+          #   docs/go-idioms.md          file:line inventory
+          #   docs/graph-experiments.md
+          #   docs/methodology-coverage-*.md
+          #   docs/new-readme.md
+          #   docs/pending-items.md
+          #   docs/sir-pending-discussion.md
           check_pattern() {
             local pattern="$1"
             local reason="$2"
@@ -79,7 +94,25 @@ jobs:
                 --exclude-dir=plans \
                 --exclude-dir=audits \
                 --exclude-dir=ontology \
-                --exclude=go-idioms.md \
+                --exclude-dir=design \
+                --exclude-dir=design-notes \
+                --exclude-dir=project \
+                --exclude-dir=contrib \
+                --exclude='*-audit.md' \
+                --exclude='*-backlog.md' \
+                --exclude='aggregation_decisions.md' \
+                --exclude='bisect-timeline.md' \
+                --exclude='bug-template.md' \
+                --exclude='cli-style-guide.md' \
+                --exclude='developer-workflow.md' \
+                --exclude='examples-experiments.md' \
+                --exclude='fixture-drift-cleanup-*.md' \
+                --exclude='go-idioms.md' \
+                --exclude='graph-experiments.md' \
+                --exclude='methodology-coverage-*.md' \
+                --exclude='new-readme.md' \
+                --exclude='pending-items.md' \
+                --exclude='sir-pending-discussion.md' \
                 2>/dev/null; then
               echo "::error::Stale reference: $reason (pattern: $pattern)"
               bad=1

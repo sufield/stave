@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Rhino Pattern 1 (self-mutation) reachability against the
-# iter-15 fixture. SAT on rhino-vulnerable iff any principal
+# Rhino-attack fixture. SAT on rhino-vulnerable iff any principal
 # in the snapshot has at least one Pattern 1 action on a
 # wildcard resource. UNSAT on remediated.
 #

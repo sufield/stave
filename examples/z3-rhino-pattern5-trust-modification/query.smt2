@@ -4,7 +4,7 @@
 ; a role's trust policy to allow self-assumption — or creates a
 ; new role whose trust the principal controls. Rhino's named
 ; method: iam:UpdateAssumeRolePolicy on an admin role. The
-; iter-15 prover added the create-and-assume pair (CreateRole +
+; The companion prover added the create-and-assume pair (CreateRole +
 ; AttachRolePolicy on a fresh role) and the strip-and-assume
 ; flow (DeleteRolePolicy to widen, then AssumeRole).
 ;

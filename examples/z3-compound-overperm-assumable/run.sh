@@ -6,7 +6,7 @@
 #     AND
 #   role with trusts_service in compute-principal set
 #
-# Both fixtures from iter-7a's iam-overpermission-wildcard:
+# Both fixtures from examples/iam-overpermission-wildcard/:
 #   before  → overpermissioned Lambda role with lambda.amazonaws.com
 #             trust → SAT (PassRole exploit shape present)
 #   after   → scoped policy, no overpermission finding → UNSAT

@@ -188,7 +188,7 @@ The 20 scenarios above came from two streams of work:
   a published HackerOne disclosure or technique to demonstrate
   what Stave detects on the same configuration shape.
 - **InfoSec writeup iterations** — Iter 11 through Iter 16 plus
-  the Ext A / Ext B / iter-15-ext extensions. Each iteration
+  the Ext A / Ext B extensions. Each iteration
   produced a fixture pair, the corresponding control(s), and a
   Dev.to article (`channels/devto/<scenario>.md`).
 

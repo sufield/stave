@@ -6,8 +6,8 @@
 //
 // CEL only — this is a compound presence check (public_read
 // or public_list AND exposed_repo_artifacts), not a logic
-// question. The iter-3 article covered the converse case
-// for bucket takeover; iter-6 is the same Z3-not-needed
+// question. A companion article covered the converse case
+// for bucket takeover; this is the same Z3-not-needed
 // shape, this time over the content side of the bucket.
 package main
 

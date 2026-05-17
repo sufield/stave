@@ -33,8 +33,8 @@
 //
 // # Modelling note
 //
-// Same int-enum encoding pattern as iter-1 / iter-2 / iter-4
-// / iter-5 / iter-7a / iter-7. Each query has its own
+// Same int-enum encoding pattern as the other Z3 provers in
+// examples/. Each query has its own
 // witness set; the matcher logic (action / resource /
 // principal) is shared with the IAM iterations and adapted
 // here for the bucket-policy domain plus a KMS-specific

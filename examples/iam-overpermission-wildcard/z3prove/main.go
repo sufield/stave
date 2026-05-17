@@ -9,7 +9,7 @@
 //
 // # Modelling note
 //
-// Same structural pattern as iter-4 / iter-5: aclements/go-z3
+// Same structural pattern as the other Z3 provers in examples/: aclements/go-z3
 // has no string theory, so the search space is encoded as a
 // finite enum of named (action, resource) pairs as integer
 // constants:

@@ -8,7 +8,7 @@
 //
 // # Modelling note
 //
-// Same constraint as iter-4: the aclements/go-z3 binding does
+// Same constraint as the other go-z3 provers in examples/: the aclements/go-z3 binding does
 // not expose Z3's string theory, so the search space is encoded
 // as a finite enum of named witness requests. Each request is a
 // (requesting_tenant, target_key) pair encoded as an integer:

@@ -67,7 +67,7 @@ run_one() {
     echo
 }
 
-# Cognito self-register chain — the iter-16 four-finding cascade.
+# Cognito self-register chain — the four-finding cascade.
 # anonymous_reachable + self_register_reachable both shrink to 0
 # on remediated.
 run_one "Cognito writeup-config" \
@@ -88,7 +88,7 @@ run_one "Multi-hop remediated" \
     "$example_root/iam-multi-hop-trust/fixtures/remediated/observations"
 
 # Rhino — exploitable_overperm fires when contributed_by AND
-# trusts_service overlap. The iter-15 fixture has contributed_by
+# trusts_service overlap. The Rhino-attack fixture has contributed_by
 # on the rhino-attacker user (not on the trusted roles), so the
 # join produces zero — but the *components* are visible in
 # reachable, which is the blast-radius read.

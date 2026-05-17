@@ -243,5 +243,5 @@ policies, Allow-and-Deny effective-permission
 resolution with `iam:PassedToService`,
 cross-service data-flow conjunctions, and
 **registry-based exhaustive method enumeration** (this
-iter — extending this example's compute-launch idea to all
+extension — extending this example's compute-launch idea to all
 five Rhino patterns).
