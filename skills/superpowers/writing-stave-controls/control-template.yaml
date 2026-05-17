@@ -1,0 +1,132 @@
+# Stave Control Template (ctrl.v1)
+#
+# Fill in every field marked TODO. Remove the TODO comment when done.
+# Run `stave test --control this-file.yaml` to exercise the embedded
+# tests block as you author.
+
+dsl_version: ctrl.v1
+
+# Naming convention: CTL.<SERVICE>.<CATEGORY>.<SHORTNAME>.<NNN>
+# Service slug matches asset-type prefix (S3, IAM, COGNITO, ...).
+# Three-digit counter for unique IDs per (service, category) family.
+id: CTL.SERVICE.CATEGORY.SHORTNAME.001  # TODO
+
+name: Short human-readable name  # TODO
+
+description: >
+  Single paragraph. Explain WHAT misconfiguration this detects and WHY
+  it is unsafe. No marketing language. No "best practice violation" —
+  name the concrete attack or data-loss path the misconfiguration enables.
+
+# governance | exposure | identity | encryption | logging | network |
+# delegation | ai-agent | lifecycle | drift | secrets-management
+domain: TODO
+
+# low | medium | high | critical
+# Match the blast radius of exploitation, not detection difficulty.
+severity: TODO
+
+# unsafe_state | marker | drift_signal | composition_member
+# Use unsafe_state for the common case. marker for fact-recording
+# controls that compose into chains but never fail on their own.
+type: unsafe_state
+
+# state_assertion | temporal_assertion | composition_assertion
+# state_assertion: one snapshot tells you the answer.
+# temporal_assertion: needs two or more snapshots (duration, change).
+classification: state_assertion
+
+# The asset types this control evaluates. The engine only runs the
+# predicate against assets whose `type` is in this list.
+# Run `stave contract show --list` for the full set of asset types.
+applicable_asset_types:
+  - aws_s3_bucket  # TODO replace with your asset type(s)
+
+# Compliance citations. Optional but encouraged — appears in evidence
+# packets and helps operators map findings to audit frameworks.
+compliance:
+  # nist_800_53_r5: "AC-3"
+  # cis_aws_v3.0: "1.16"
+  # soc2: "CC6.1"
+  # hipaa: "164.312(a)(1)"
+  # pci_dss_v4.0: "7.1"
+
+# Tags surface in the catalog and search. Lower-case, hyphen-separated.
+scope_tags:
+  - aws
+  # - service-name
+  # - category
+
+# Optional attack metadata. attack_stage maps to MITRE ATT&CK kill chain;
+# blast_radius is consumed by the risk model.
+params:
+  # attack_stage: persistence | initial_access | credential_access |
+  #               privilege_escalation | exfiltration | impact
+  # blast_radius:
+  #   type: data | identity | network
+  #   scope: account | region | resource
+  #   multiplier: 1.0
+
+# What the operator should do to fix this. action is a verbal verb;
+# example is a YAML snippet showing the fixed shape.
+remediation:
+  description: >
+    Single paragraph. What the operator must change to fix this.
+  action: >
+    Concrete verb-led step. Include CLI command or console click path.
+  example: |
+    # YAML snippet of the property tree in its safe shape.
+
+# The predicate. all = AND, any = OR; both nest. Operators:
+# eq, ne, in, not_in, missing, present, any_match, all_match,
+# prefix, suffix, regex, gt, gte, lt, lte.
+#
+# Fields read from `properties.<path>`. Discover available paths with:
+#   stave contract show --asset-type <T> --format json | jq '.property_paths[].path'
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind  # TODO change to your asset's kind path
+      op: eq
+      value: bucket
+    # TODO add the specific check(s) for your misconfiguration
+    # - field: properties.<path>
+    #   op: eq
+    #   value: <unsafe value>
+
+# Defect / infection / failure language surfaces in evidence packets and
+# remediation reports. Three short paragraphs.
+defect: >
+  TODO Short statement of what is mis-set.
+
+infection: >
+  TODO Short statement of how this becomes exploit / loss / breach.
+
+failure: >
+  TODO Short statement of what the operator's posture looks like at the
+  moment the misconfiguration is triggered.
+
+# Embedded test cases. Stave runs these via `stave test --control <file>`.
+# Each case must have a verdict (VIOLATION or PASS) and a fully-shaped
+# asset. Use exactly two cases minimum: one VIOLATION (the writeup) and
+# one PASS (the remediated state).
+tests:
+  - name: writeup fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::test-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          # TODO add the unsafe property values your predicate reads
+  - name: remediated passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::test-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          # TODO same shape with the property in its safe state

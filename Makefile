@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-unit test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check
+.PHONY: all build build-dev test test-unit test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check
 # Binary name
 BINARY=stave
 
@@ -785,6 +785,11 @@ consistency-check: sync-schemas sync-controls sync-alternatives
 #   make sync              # sync and show summary
 
 PUBLIC_DEST ?= $(HOME)/work/stave/
+# skills/ is excluded because sync-skills writes that subtree from a
+# different source (../skills/superpowers/ at the monorepo root, NOT
+# under stave/). Without the exclude, the main rsync's --delete walks
+# the dest, sees skills/ has no counterpart under ./ (this Makefile's
+# directory), and deletes the work sync-skills just did.
 SYNC_EXCLUDES = \
 	--exclude='.git/' \
 	--exclude='dev/' \
@@ -792,10 +797,14 @@ SYNC_EXCLUDES = \
 	--exclude='/stave' \
 	--exclude='.lychee.toml' \
 	--exclude='dist/' \
-	--exclude='dist-local/'
+	--exclude='dist-local/' \
+	--exclude='skills/' \
+	--exclude='__pycache__/' \
+	--exclude='*.pyc'
 
-## sync: Sync to public repo
-sync:
+## sync: Sync to public repo (calls sync-skills automatically so the
+##       monorepo's external-but-published assets ride along)
+sync: sync-skills
 	@if [ ! -d "$(PUBLIC_DEST)/.git" ]; then \
 		echo "Error: $(PUBLIC_DEST) is not a git repository."; \
 		echo "Initialize it first:"; \
@@ -810,3 +819,35 @@ ifdef MSG
 	cd $(PUBLIC_DEST) && git add -A && git commit -m "$(MSG)"
 	@echo "Committed: $(MSG)"
 endif
+
+## sync-skills: Push the Superpowers skills (../skills/superpowers/) to
+## the public repo. The skills tree lives at the monorepo root — OUTSIDE
+## the stave/ subdirectory the main `sync` target walks — so they would
+## otherwise be left behind. Same PUBLIC_DEST variable so a single
+## override flows through to both targets.
+##
+## Source: ../skills/superpowers/   (canonical, in this private monorepo)
+## Dest:   $(PUBLIC_DEST)/skills/superpowers/
+##
+## --delete keeps the public copy a pure mirror; a skill removed here
+## is removed there. Run `make sync-skills` standalone, or let `make
+## sync` invoke it automatically.
+SKILLS_SRC = ../skills/superpowers/
+SKILLS_DST = $(PUBLIC_DEST)/skills/superpowers/
+
+sync-skills:
+	@if [ ! -d "$(SKILLS_SRC)" ]; then \
+		echo "Error: $(SKILLS_SRC) does not exist relative to the stave/ Makefile."; \
+		echo "The Superpowers skills tree should be at the monorepo root."; \
+		exit 1; \
+	fi
+	@if [ ! -d "$(PUBLIC_DEST)" ]; then \
+		echo "Error: $(PUBLIC_DEST) does not exist."; \
+		echo "Set PUBLIC_DEST or initialise the public repo first:"; \
+		echo "  mkdir -p $(PUBLIC_DEST) && cd $(PUBLIC_DEST) && git init"; \
+		exit 1; \
+	fi
+	@echo "Syncing Superpowers skills..."
+	@mkdir -p $(SKILLS_DST)
+	@rsync -a --delete $(SKILLS_SRC) $(SKILLS_DST)
+	@echo "Synced $$(find $(SKILLS_DST) -type f \( -name '*.md' -o -name '*.yaml' \) | wc -l | tr -d ' ') files to $(SKILLS_DST)"

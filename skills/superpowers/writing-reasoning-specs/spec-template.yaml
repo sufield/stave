@@ -1,0 +1,70 @@
+# Reasoning Spec Template
+#
+# Fill in every TODO. Run the spec against a known-answer fixture
+# (Phase 4 in SKILL.md) before considering it trialled.
+
+# Phase 1: the question, single sentence, no analyze/check/evaluate verbs.
+question: >
+  TODO single-sentence security question
+
+# Phase 2: the engine that matches the question shape.
+# z3 | cvc5 | yices  — reachability / SAT-UNSAT
+# souffle            — enumeration (Datalog)
+# clingo             — violation enumeration (ASP)
+# prolog             — proof tree / derivation
+# prism              — probability
+engine: TODO
+
+# reachability | enumeration | derivation | probability
+reasoning_kind: TODO
+
+# Phase 4: input artefacts.
+input:
+  # Exact command line that produces the facts this spec consumes.
+  fact_source: stave export-sir --format smt2 --observations TODO --now TODO_RFC3339
+  # Path to the query file the engine appends/loads.
+  query_file: TODO_query.smt2
+
+# Phase 3: precise reasoning steps. Each `action:` is an executable
+# rule, not narrative. Use formal connectives only: if, then, and,
+# or, exists, for all. Do NOT use "analyze", "evaluate", "consider",
+# "look at" — those are not executable.
+reasoning:
+  steps:
+    - step: 1
+      action: |
+        TODO
+    - step: 2
+      action: |
+        TODO
+    - step: 3
+      action: |
+        TODO
+
+# Phase 4 + 6: the known answer + scope.
+output:
+  # The verdict the engine must return for the spec to be considered
+  # trialled. sat | unsat | <list-of-grounded-facts> | <real-number>
+  expected_result: TODO
+
+  # If the verdict is sat / model-found, the shape of the constructive
+  # witness. Use null if the verdict is unsat / no model.
+  expected_witness: null
+
+  # REQUIRED: name the scope the verdict is valid within.
+  # The SIR projects 13 top-level configuration domains today. An
+  # unsat verdict on a chain whose member lives in an uncovered
+  # domain is meaningless — the engine simply doesn't see those facts.
+  scope_caveat: >
+    The verdict is valid for chains the SIR projects. See
+    `stave export-sir --help` and the Fact Export reference at
+    https://github.com/sufield/stave-guide/blob/main/reference/fact-export.md
+    for the covered-domain list.
+
+# Phase 5: trial record. Updated after each blind-trial run.
+trial_history:
+  # - date: 2026-05-17
+  #   agent: <fresh-agent-id>
+  #   verdict: <agent's output>
+  #   matched_expected: true | false
+  #   notes: <if not matched, what was ambiguous in the spec>

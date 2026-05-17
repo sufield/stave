@@ -1,0 +1,97 @@
+# Steampipe → Stave mapping template
+#
+# Place at contracts/steampipe/<asset_type>.yaml. Fill in every TODO
+# and run `stave validate-mapping --file <this-file>` to check the
+# structure before exercising the transform.
+
+asset_type: TODO_aws_resource_type
+steampipe_table: TODO_steampipe_table_name
+schema_version: obs.v0.1
+
+# The Steampipe column whose value becomes the observation's asset_id.
+# Almost always `arn` for AWS resources; check the table's schema first.
+asset_id_column: arn
+
+# Fallback template when asset_id_column is null/empty. Template variables
+# in {braces} are filled from other columns in the same row. Most tables
+# don't need this — `arn` is reliably set — but it's available for tables
+# (e.g. aws_iam_policy) where the canonical ARN must be reconstructed
+# from parts.
+asset_id_fallback_template: ""
+
+vendor: aws
+
+# Operations are processed in declared YAML order. Each writes to one
+# property path; later operations can read paths set by earlier ones.
+# Order matters because JSON object key order is preserved in the
+# output observation file.
+operations:
+
+  # ── kind: static ───────────────────────────────────────────────
+  # Fixed value. Always start with the asset's `kind` discriminator;
+  # many control predicates gate on it.
+  - kind: static
+    path: properties.<top-level>.kind   # TODO
+    value: <discriminator>              # TODO
+
+  # ── kind: field ────────────────────────────────────────────────
+  # Direct column → property path. Use this for the bulk of the
+  # mapping.
+  #
+  # Optional subfields:
+  #   coerce: bool | str | int | float
+  #   default: <value used when the column is null/missing>
+  #   use_asset_id: true   (replace column value with the row's asset_id)
+  #   type: dict           (force {} when the column is missing)
+  - kind: field
+    path: properties.<top-level>.name    # TODO
+    column: name                          # TODO
+
+  - kind: field
+    path: properties.<top-level>.tags
+    column: tags
+    default: {}
+    type: dict
+
+  # Common boolean coercion pattern: Steampipe returns text/integer
+  # for a boolean-shaped column; coerce: bool normalizes it.
+  - kind: field
+    path: properties.<top-level>.<flag>   # TODO
+    column: <column>                       # TODO
+    coerce: bool
+    default: false
+
+  # ── kind: extract ──────────────────────────────────────────────
+  # Pull a nested value from a JSON-shaped column. json_path is dot-
+  # segmented; numeric segments index lists. key_variants maps a
+  # canonical key → fallback key tried when the canonical one is
+  # absent (handles PascalCase vs snake_case across Steampipe plugin
+  # versions).
+  - kind: extract
+    path: properties.<top-level>.policy.has_wildcard_principal  # TODO
+    column: policy_json
+    json_path: "Statement.0.Principal.AWS"
+    key_variants:
+      Statement: statement
+      Principal: principal
+    default: false
+
+  # ── kind: computed ─────────────────────────────────────────────
+  # Boolean reduction over previously-populated paths. op: any | all.
+  # Use this when a control reads a derived "fully blocked" / "any
+  # public" flag — compute it here so the control predicate stays
+  # simple.
+  - kind: computed
+    path: properties.<top-level>.controls.public_access_fully_blocked  # TODO
+    op: all
+    inputs:
+      - properties.<top-level>.controls.block_public_acls
+      - properties.<top-level>.controls.block_public_policy
+      - properties.<top-level>.controls.ignore_public_acls
+      - properties.<top-level>.controls.restrict_public_buckets
+
+# Source of truth for valid target paths:
+#   schemas/observation/v1/asset-types/<asset_type>.schema.json
+#
+# Discover what the catalog actually reads:
+#   stave contract show --asset-type <asset_type> --format json
