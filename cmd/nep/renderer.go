@@ -59,11 +59,11 @@ func NewPrincipalRenderer(format string, opts *principalOpts) (PrincipalRenderer
 // DOT renders the full graph from AllEntries + Designated. All
 // three need the resource ARN and the ShowDesignated flag.
 type ResourcePayload struct {
-	ResourceARN     string
-	DisplayEntries  []iam.ResourceAccessEntry
-	AllEntries      []iam.ResourceAccessEntry
-	Designated      map[string]bool
-	ShowDesignated  bool
+	ResourceARN    string
+	DisplayEntries []iam.ResourceAccessEntry
+	AllEntries     []iam.ResourceAccessEntry
+	Designated     map[string]bool
+	ShowDesignated bool
 }
 
 // ResourceRenderer renders the per-resource NEP entries view.

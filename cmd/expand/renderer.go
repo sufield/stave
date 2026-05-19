@@ -15,10 +15,10 @@ import (
 // migration; bundling them here means new formats add one
 // implementation rather than a new function-call shape.
 type Payload struct {
-	Archetype       archetype.Archetype
-	Matched         []policy.ControlDefinition
-	SnapshotStatus  *expand.SnapshotStatus
-	Finding         *policy.ControlDefinition
+	Archetype      archetype.Archetype
+	Matched        []policy.ControlDefinition
+	SnapshotStatus *expand.SnapshotStatus
+	Finding        *policy.ControlDefinition
 }
 
 // Renderer is the polymorphic format-dispatch interface for
