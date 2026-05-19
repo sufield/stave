@@ -239,20 +239,20 @@ stave apply \
 2. **Generate report**:
 
    ```bash
-   stave report --in output/evaluation.json --out output/report.md
+   stave diagnose report --in output/evaluation.json --out output/report.md
    ```
 
 3. **Filter findings** with unix tools:
 
    ```bash
    # Find all public-exposure violations
-   stave report --in output/evaluation.json | grep '^CTL.S3.PUBLIC'
+   stave diagnose report --in output/evaluation.json | grep '^CTL.S3.PUBLIC'
 
    # Sort by duration (longest first)
-   stave report --in output/evaluation.json | awk '/^CTL\./' | sort -t$'\t' -k5 -nr
+   stave diagnose report --in output/evaluation.json | awk '/^CTL\./' | sort -t$'\t' -k5 -nr
 
    # Count violations per control
-   stave report --in output/evaluation.json | awk -F'\t' '/^CTL\./{print $1}' | sort | uniq -c | sort -rn
+   stave diagnose report --in output/evaluation.json | awk -F'\t' '/^CTL\./{print $1}' | sort | uniq -c | sort -rn
    ```
 
 ---
@@ -355,7 +355,7 @@ stave alias delete ev
    stave ci gate --in output/evaluation.json
 
    # Step 3: Report
-   stave report --in output/evaluation.json --out output/report.md
+   stave diagnose report --in output/evaluation.json --out output/report.md
 
    # Step 4: Remediation guidance for a specific finding
    stave fix --input output/evaluation.json --finding CTL.S3.PUBLIC.001@my-bucket

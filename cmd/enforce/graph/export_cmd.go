@@ -83,18 +83,11 @@ func runExport(stdout io.Writer, opts *exportOptions) error {
 		SourcePath:    opts.OutputFile,
 	})
 
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return rendErr
+	}
 	return cmdutil.WriteTo(stdout, opts.OutPath, func(out io.Writer) error {
-		switch opts.Format {
-		case "stix":
-			return graphpkg.MarshalSTIX(out, g)
-		case "jsonld":
-			return graphpkg.MarshalJSONLD(out, g)
-		case "graphml":
-			return graphpkg.MarshalGraphML(out, g)
-		default:
-			enc := json.NewEncoder(out)
-			enc.SetIndent("", "  ")
-			return enc.Encode(g)
-		}
+		return renderer.Render(out, g)
 	})
 }

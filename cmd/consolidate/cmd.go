@@ -4,7 +4,6 @@ package consolidate
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -195,16 +194,12 @@ func run(ctx context.Context, stdout, stderr io.Writer, opts *options) error {
 	}
 
 	// Output.
+	renderer, rendErr := NewConsolidatedRenderer(opts.Format, opts.FocusAccount)
+	if rendErr != nil {
+		return rendErr
+	}
 	return cmdutil.WriteTo(stdout, opts.OutPath, func(out io.Writer) error {
-		switch opts.Format {
-		case "json":
-			enc := json.NewEncoder(out)
-			enc.SetIndent("", "  ")
-			return enc.Encode(report)
-		default:
-			appconsolidate.WriteTextReport(out, report, opts.FocusAccount)
-		}
-		return nil
+		return renderer.Render(out, report)
 	})
 }
 

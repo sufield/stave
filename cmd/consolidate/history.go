@@ -2,7 +2,6 @@ package consolidate
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -54,18 +53,12 @@ func runHistory(ctx context.Context, w io.Writer, opts *options) error {
 	})
 
 	// Write output.
+	renderer, rendErr := NewHistoryRenderer(opts.Format)
+	if rendErr != nil {
+		return rendErr
+	}
 	return cmdutil.WriteTo(w, opts.OutPath, func(out io.Writer) error {
-		switch opts.Format {
-		case "json":
-			enc := json.NewEncoder(out)
-			enc.SetIndent("", "  ")
-			return enc.Encode(trendReport)
-		case "markdown":
-			writeHistoryMarkdown(out, trendReport)
-		default:
-			writeHistoryTable(out, trendReport)
-		}
-		return nil
+		return renderer.Render(out, trendReport)
 	})
 }
 

@@ -20,7 +20,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appcaps "github.com/sufield/stave/internal/app/capabilities"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // Deps holds the catalog-loading factories.
@@ -101,10 +100,9 @@ func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
 	if strings.TrimSpace(opts.Query) == "" {
 		return &ui.UserError{Err: errors.New("query is required")}
 	}
-	switch opts.Format {
-	case "text", "json":
-	default:
-		return &ui.UserError{Err: fmt.Errorf("--format must be text | json (got %q)", opts.Format)}
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return &ui.UserError{Err: rendErr}
 	}
 
 	controls, err := compose.LoadControlsFrom(ctx, deps.NewCtlRepo, opts.ControlsDir)
@@ -126,17 +124,12 @@ func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
 		hits = hits[:opts.Top]
 	}
 
-	if opts.Format == "json" {
-		return jsonutil.WriteIndented(w, struct {
-			Query string `json:"query"`
-			Top   int    `json:"top"`
-			Total int    `json:"total_hits"`
-			Hits  []Hit  `json:"hits"`
-		}{
-			Query: opts.Query, Top: opts.Top, Total: len(hits), Hits: hits,
-		})
-	}
-	return renderText(w, opts.Query, hits)
+	return renderer.Render(w, searchReport{
+		Query: opts.Query,
+		Top:   opts.Top,
+		Total: len(hits),
+		Hits:  hits,
+	})
 }
 
 // Hit is one ranked capability + score breakdown.

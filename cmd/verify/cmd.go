@@ -3,7 +3,6 @@
 package verify
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"time"
@@ -115,26 +114,12 @@ func runVerify(stdout io.Writer, opts *options) error {
 		return fmt.Errorf("verify archive: %w", verifyErr)
 	}
 
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return &ui.UserError{Err: rendErr}
+	}
 	if writeErr := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
-		switch opts.Format {
-		case "json":
-			enc := json.NewEncoder(w)
-			enc.SetIndent("", "  ")
-			if encErr := enc.Encode(attestation); encErr != nil {
-				return fmt.Errorf("encode json: %w", encErr)
-			}
-			return nil
-		case "markdown":
-			if mdErr := av.WriteMarkdown(w, attestation); mdErr != nil {
-				return fmt.Errorf("render markdown: %w", mdErr)
-			}
-			return nil
-		default:
-			if tblErr := av.WriteTable(w, attestation); tblErr != nil {
-				return fmt.Errorf("render table: %w", tblErr)
-			}
-			return nil
-		}
+		return renderer.Render(w, attestation)
 	}); writeErr != nil {
 		return writeErr
 	}

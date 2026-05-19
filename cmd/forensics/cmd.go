@@ -4,7 +4,6 @@ package forensics
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -16,6 +15,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	appbisect "github.com/sufield/stave/internal/app/bisect"
 	appforensics "github.com/sufield/stave/internal/app/forensics"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -107,16 +107,12 @@ func runForensics(ctx context.Context, stdout io.Writer, opts *options, deps Dep
 		return tlErr
 	}
 
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return &ui.UserError{Err: rendErr}
+	}
 	return cmdutil.WriteTo(stdout, opts.OutPath, func(out io.Writer) error {
-		switch opts.Format {
-		case "json":
-			enc := json.NewEncoder(out)
-			enc.SetIndent("", "  ")
-			return enc.Encode(tl)
-		default:
-			writeTableTimeline(out, tl)
-		}
-		return nil
+		return renderer.Render(out, tl)
 	})
 }
 

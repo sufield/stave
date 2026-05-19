@@ -143,10 +143,9 @@ func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
 	if opts.List && opts.AssetType != "" {
 		return &ui.UserError{Err: errors.New("--asset-type and --list are mutually exclusive")}
 	}
-	switch opts.Format {
-	case "text", "json":
-	default:
-		return &ui.UserError{Err: fmt.Errorf("--format must be text | json (got %q)", opts.Format)}
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return &ui.UserError{Err: rendErr}
 	}
 
 	controls, err := compose.LoadControlsFrom(ctx, deps.NewCtlRepo, opts.ControlsDir)
@@ -166,9 +165,9 @@ func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
 	idx := predindex.Build(controls, chains)
 
 	if opts.List {
-		return renderList(w, opts.Format, idx, opts.SteampipeDir)
+		return renderList(w, renderer, idx, opts.SteampipeDir)
 	}
-	return renderType(w, opts.Format, opts.AssetType, idx, opts.SteampipeDir)
+	return renderType(w, renderer, opts.AssetType, idx, opts.SteampipeDir)
 }
 
 // pathRow is the per-path row that ships in both text and JSON
@@ -191,7 +190,7 @@ type typeReport struct {
 	SteampipeMapping string    `json:"steampipe_mapping,omitempty"`
 }
 
-func renderType(w io.Writer, format, assetType string, idx predindex.Index, steampipeDir string) error {
+func renderType(w io.Writer, renderer Renderer, assetType string, idx predindex.Index, steampipeDir string) error {
 	at := kernel.AssetType(assetType)
 	paths := idx.TypeToPaths[at]
 	if len(paths) == 0 {
@@ -242,10 +241,7 @@ func renderType(w io.Writer, format, assetType string, idx predindex.Index, stea
 		report.SteampipeMapping = mapping
 	}
 
-	if format == "json" {
-		return writeJSON(w, report)
-	}
-	return writeTypeText(w, report)
+	return renderer.Render(w, report)
 }
 
 type listRow struct {
@@ -263,7 +259,7 @@ type listReport struct {
 	WithSteampipe int       `json:"with_steampipe"`
 }
 
-func renderList(w io.Writer, format string, idx predindex.Index, steampipeDir string) error {
+func renderList(w io.Writer, renderer Renderer, idx predindex.Index, steampipeDir string) error {
 	types := make([]string, 0, len(idx.TypeToPaths))
 	for t := range idx.TypeToPaths {
 		types = append(types, string(t))
@@ -305,10 +301,7 @@ func renderList(w io.Writer, format string, idx predindex.Index, steampipeDir st
 		WithSteampipe: withSteampipe,
 	}
 
-	if format == "json" {
-		return writeJSON(w, report)
-	}
-	return writeListText(w, report)
+	return renderer.Render(w, report)
 }
 
 // findSteampipeMapping returns the (workspace-relative) path of the

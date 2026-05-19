@@ -131,7 +131,7 @@ Use this table when you know your goal but want the fastest path to the right co
 | Resume from where you stopped | `stave status` then `stave status` | [`README.md`](../README.md) |
 | Visualize which controls cover which assets | `stave graph coverage --controls ./controls --observations ./observations` | [`README.md`](../README.md) |
 | Debug why a specific control matched or didn't match an asset | `stave trace --control CTL.S3.PUBLIC.001 --observation obs/snap.json --asset-id my-bucket` | [`README.md`](../README.md) |
-| Generate a human-readable report from evaluation output | `stave report --in output/evaluation.json` | [`README.md`](../README.md) |
+| Generate a human-readable report from evaluation output | `stave diagnose report --in output/evaluation.json` | [`README.md`](../README.md) |
 | Analyze a bucket policy directly | `stave inspect policy --file policy.json` | [Command Reference](command-reference.md) |
 | Extract specific fields from validation output | `stave validate --template '{{json .Summary}}'` | [`README.md`](../README.md) |
 | Create a shortcut for a frequently used command | `stave alias set ev "apply --controls controls/s3 --observations observations --max-unsafe 24h"` | [`README.md`](../README.md) |
@@ -447,7 +447,7 @@ The default CI pattern saves intermediate results to files:
 ```bash
 stave apply ... --format json > output/evaluation.json
 stave ci gate --in output/evaluation.json
-stave report --in output/evaluation.json
+stave diagnose report --in output/evaluation.json
 stave fix --input output/evaluation.json --finding CTL.S3.PUBLIC.001@my-bucket
 stave enforce --in output/evaluation.json --mode pab
 ```
@@ -932,25 +932,25 @@ stave report [flags]
 
 ```bash
 # Generate report from evaluation output
-stave report --in evaluation.json
+stave diagnose report --in evaluation.json
 
 # Write report to file
-stave report --in evaluation.json --out report.md
+stave diagnose report --in evaluation.json --out report.md
 
 # Filter findings by control pattern
-stave report --in evaluation.json | grep '^CTL.S3.PUBLIC'
+stave diagnose report --in evaluation.json | grep '^CTL.S3.PUBLIC'
 
 # Sort findings by duration (longest first)
-stave report --in evaluation.json | awk '/^CTL\./' | sort -t$'\t' -k5 -nr
+stave diagnose report --in evaluation.json | awk '/^CTL\./' | sort -t$'\t' -k5 -nr
 
 # Top 5 longest-running violations
-stave report --in evaluation.json | awk '/^CTL\./' | sort -t$'\t' -k5 -nr | head -5
+stave diagnose report --in evaluation.json | awk '/^CTL\./' | sort -t$'\t' -k5 -nr | head -5
 
 # Count violations per control
-stave report --in evaluation.json | awk -F'\t' '/^CTL\./{print $1}' | sort | uniq -c | sort -rn
+stave diagnose report --in evaluation.json | awk -F'\t' '/^CTL\./{print $1}' | sort | uniq -c | sort -rn
 
 # JSON output for programmatic consumption
-stave report --in evaluation.json --format json
+stave diagnose report --in evaluation.json --format json
 ```
 
 **TSV columns:**

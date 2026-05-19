@@ -2,7 +2,6 @@ package consolidate
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -43,15 +42,11 @@ func runDiff(ctx context.Context, stdout io.Writer, opts *options) error {
 		result.FailingAccounts = result.FailingAccounts[:opts.Top]
 	}
 
-	switch opts.Format {
-	case "json":
-		enc := json.NewEncoder(stdout)
-		enc.SetIndent("", "  ")
-		return enc.Encode(result)
-	default:
-		writeDiffTable(stdout, result)
-		return nil
+	renderer, rendErr := NewDiffRenderer(opts.Format)
+	if rendErr != nil {
+		return rendErr
 	}
+	return renderer.Render(stdout, result)
 }
 
 func writeDiffTable(w io.Writer, r outlieranalysis.OutlierReport) {

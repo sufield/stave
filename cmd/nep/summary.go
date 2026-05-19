@@ -143,12 +143,11 @@ func runSummary(w io.Writer, opts *summaryOpts) error {
 		// present on input. For now, skip this metric when not available.
 	}
 
-	switch opts.Format {
-	case "json":
-		return renderSummaryJSON(w, summary)
-	default:
-		return renderSummaryTable(w, summary, opts)
+	renderer, rendErr := NewSummaryRenderer(opts.Format, opts)
+	if rendErr != nil {
+		return rendErr
 	}
+	return renderer.Render(w, summary)
 }
 
 func renderSummaryJSON(w io.Writer, summary nepSummary) error {

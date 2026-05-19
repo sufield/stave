@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -95,25 +94,11 @@ func runSimulate(stdout io.Writer, opts *options) error {
 		CurrentScore:  70, // approximate — would need score computation
 	})
 
+	renderer, rendErr := NewRenderer(opts.Format, opts.Fix)
+	if rendErr != nil {
+		return &ui.UserError{Err: rendErr}
+	}
 	return cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
-		switch opts.Format {
-		case "json":
-			enc := json.NewEncoder(w)
-			enc.SetIndent("", "  ")
-			return enc.Encode(result)
-		default:
-			fmt.Fprintf(w, "REMEDIATION SIMULATION\nFixing: %s\n\n", strings.Join(opts.Fix, ", "))
-			fmt.Fprintf(w, "POSTURE SCORE\n  Current:    %.1f\n  Simulated:  %.1f  (%+.1f)\n\n",
-				result.ScoreCurrent, result.ScoreSimulated, result.ScoreDelta)
-			if len(result.ChainsDeactivated) > 0 {
-				fmt.Fprintln(w, "CHAINS DEACTIVATED")
-				for _, c := range result.ChainsDeactivated {
-					fmt.Fprintf(w, "  %-40s %s → %s\n", c.ChainID, c.DisplaySeverity(), c.Status)
-				}
-				fmt.Fprintln(w)
-			}
-			fmt.Fprintf(w, "FINDINGS ELIMINATED: %d\n", result.FindingsRemoved)
-		}
-		return nil
+		return renderer.Render(w, result)
 	})
 }

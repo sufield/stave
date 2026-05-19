@@ -2,7 +2,6 @@ package readiness
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -105,11 +104,9 @@ Caveats:
 }
 
 func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
-	switch opts.Format {
-	case "text", "json":
-		// ok
-	default:
-		return &ui.UserError{Err: fmt.Errorf("--format must be text | json (got %q)", opts.Format)}
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return &ui.UserError{Err: rendErr}
 	}
 
 	snapshots, err := compose.LoadSnapshotsFrom(ctx, deps.NewObsRepo, opts.ObservationsDir)
@@ -139,19 +136,7 @@ func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
 		return nil
 	}
 
-	switch opts.Format {
-	case "json":
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		if err := enc.Encode(report); err != nil {
-			return fmt.Errorf("encode json: %w", err)
-		}
-	default:
-		if err := writeText(w, report); err != nil {
-			return fmt.Errorf("render text: %w", err)
-		}
-	}
-	return nil
+	return renderer.Render(w, report)
 }
 
 // isMissingChainsDir returns true when the chain-loader failure

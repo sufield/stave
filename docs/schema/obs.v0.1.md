@@ -133,7 +133,7 @@ Validation also runs automatically at the start of `stave apply`, so inputs are 
 
 | Constraint | Detail |
 |------------|--------|
-| `additionalProperties: false` | Extra fields are rejected at every level. A `"snapshots"` wrapper array, for example, causes immediate failure. |
+| `additionalProperties: false` | Extra fields are rejected at every level when the schema is applied. The schema applies to per-timestamp files; the directory loader detects bundle-shaped files (`{"snapshots":[…]}`) and routes them through `ParseBundle` instead of this schema — so the bundle wrapper is accepted at the loader level, not because the schema permits it. |
 | Required fields | `schema_version`, `captured_at`, `assets` |
 | `const` version | `schema_version` must be exactly `"obs.v0.1"` |
 | Timestamp format | `captured_at` must be RFC 3339 (`date-time`) |

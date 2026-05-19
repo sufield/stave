@@ -391,3 +391,88 @@ func TestObservationLoader_SignedIntegrityManifest_Success(t *testing.T) {
 		t.Fatalf("expected signed integrity verification success, got: %v", err)
 	}
 }
+
+// TestObservationLoader_AcceptsBundleFormatFile tests that a directory
+// containing a single file in the multi-snapshot bundle shape
+// (`{"schema_version":"obs.v0.1","snapshots":[...]}`) loads as
+// multiple snapshots without per-file schema validation rejecting
+// the `snapshots` wrapper. Regression test for the user-reported
+// error: `additional properties 'snapshots' not allowed`. The
+// directory loader now auto-detects bundles and routes them through
+// ParseBundle instead of requiring the operator to split the file.
+func TestObservationLoader_AcceptsBundleFormatFile(t *testing.T) {
+	dir := t.TempDir()
+	bundle := `{
+  "schema_version": "obs.v0.1",
+  "snapshots": [
+    {
+      "schema_version": "obs.v0.1",
+      "captured_at": "2026-01-01T00:00:00Z",
+      "source": "deployed",
+      "assets": []
+    },
+    {
+      "schema_version": "obs.v0.1",
+      "captured_at": "2026-01-15T00:00:00Z",
+      "source": "deployed",
+      "assets": []
+    }
+  ]
+}`
+	if err := os.WriteFile(filepath.Join(dir, "observations.json"), []byte(bundle), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	loader := NewObservationLoader()
+	result, err := loader.LoadSnapshots(context.Background(), dir)
+	if err != nil {
+		t.Fatalf("expected bundle-shaped file to load, got: %v", err)
+	}
+	if got, want := len(result.Snapshots), 2; got != want {
+		t.Errorf("snapshot count: got %d, want %d", got, want)
+	}
+	// File-level hash is one entry per file even when the file
+	// expands to multiple snapshots.
+	if got, want := len(result.Hashes.Files), 1; got != want {
+		t.Errorf("file hash count: got %d, want %d", got, want)
+	}
+}
+
+// TestObservationLoader_MixedBundleAndFlatFiles tests that a
+// directory containing both a bundle file and a per-timestamp flat
+// file loads all snapshots, merging the two intake paths.
+func TestObservationLoader_MixedBundleAndFlatFiles(t *testing.T) {
+	dir := t.TempDir()
+	bundle := `{
+  "schema_version": "obs.v0.1",
+  "snapshots": [
+    {
+      "schema_version": "obs.v0.1",
+      "captured_at": "2026-01-01T00:00:00Z",
+      "source": "deployed",
+      "assets": []
+    }
+  ]
+}`
+	flat := `{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-02-01T00:00:00Z",
+  "source": "deployed",
+  "assets": []
+}`
+	if err := os.WriteFile(filepath.Join(dir, "01-bundle.json"), []byte(bundle), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "02-flat.json"), []byte(flat), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	loader := NewObservationLoader()
+	result, err := loader.LoadSnapshots(context.Background(), dir)
+	if err != nil {
+		t.Fatalf("expected mixed bundle+flat to load, got: %v", err)
+	}
+	if got, want := len(result.Snapshots), 2; got != want {
+		t.Errorf("snapshot count: got %d, want %d", got, want)
+	}
+}

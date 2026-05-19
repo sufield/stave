@@ -141,17 +141,12 @@ func runTrend(ctx context.Context, w, stderr io.Writer, opts *trendOptions) erro
 	}
 
 	// Write output.
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return rendErr
+	}
 	return cmdutil.WriteTo(w, opts.Out, func(out io.Writer) error {
-		switch opts.Format {
-		case "json":
-			return renderTrendJSON(out, &report)
-		case "openmetrics":
-			return renderTrendOpenMetrics(out, &report)
-		case "executive-summary":
-			return renderExecutiveSummary(out, &report)
-		default:
-			return renderTrendTable(out, &report)
-		}
+		return renderer.Render(out, &report)
 	})
 }
 

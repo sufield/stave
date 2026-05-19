@@ -4,7 +4,6 @@ package snapshotdiff
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -98,15 +97,11 @@ func runCatalogDiff(ctx context.Context, stdout io.Writer, opts *options, newCtl
 
 	delta := appdiff.Compute(before, after)
 
-	switch opts.Format {
-	case "json":
-		enc := json.NewEncoder(stdout)
-		enc.SetIndent("", "  ")
-		return enc.Encode(delta)
-	default:
-		_, _ = fmt.Fprint(stdout, appdiff.FormatTable(delta))
-		return nil
+	renderer, rendErr := NewCatalogRenderer(opts.Format)
+	if rendErr != nil {
+		return rendErr
 	}
+	return renderer.Render(stdout, delta)
 }
 
 func runSnapshotDiff(stdout io.Writer, opts *options) error {
@@ -136,14 +131,11 @@ func runSnapshotDiff(stdout io.Writer, opts *options) error {
 
 	result := snapshotdiff.Diff(before, after)
 
-	switch opts.Format {
-	case "json":
-		enc := json.NewEncoder(stdout)
-		enc.SetIndent("", "  ")
-		return enc.Encode(result)
-	default:
-		return writeText(stdout, result)
+	renderer, rendErr := NewSnapshotRenderer(opts.Format)
+	if rendErr != nil {
+		return rendErr
 	}
+	return renderer.Render(stdout, result)
 }
 
 func writeText(w io.Writer, r *snapshotdiff.DiffResult) error {

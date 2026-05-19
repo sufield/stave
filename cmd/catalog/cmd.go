@@ -18,7 +18,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appcaps "github.com/sufield/stave/internal/app/capabilities"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // Deps holds the catalog-loading factories.
@@ -89,10 +88,9 @@ Exit codes:
 }
 
 func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
-	switch opts.Format {
-	case "text", "json":
-	default:
-		return &ui.UserError{Err: fmt.Errorf("--format must be text | json (got %q)", opts.Format)}
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return &ui.UserError{Err: rendErr}
 	}
 	switch opts.KindFilter {
 	case "", "control_group", "chain", "operational":
@@ -115,16 +113,10 @@ func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
 	catalog := appcaps.Build(controls, chains)
 	catalog = filter(catalog, opts)
 
-	if opts.Format == "json" {
-		return jsonutil.WriteIndented(w, struct {
-			TotalCapabilities int                  `json:"total_capabilities"`
-			Capabilities      []appcaps.Capability `json:"capabilities"`
-		}{
-			TotalCapabilities: len(catalog),
-			Capabilities:      catalog,
-		})
-	}
-	return renderText(w, catalog)
+	return renderer.Render(w, catalogReport{
+		TotalCapabilities: len(catalog),
+		Capabilities:      catalog,
+	})
 }
 
 func filter(in []appcaps.Capability, opts *options) []appcaps.Capability {

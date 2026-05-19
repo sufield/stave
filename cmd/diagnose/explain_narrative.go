@@ -144,22 +144,12 @@ func runExplainNarrative(stdout io.Writer, opts *explainNarrativeOpts) error {
 		})
 	}
 
-	// Write output.
+	renderer, rendErr := NewExplainNarrativeRenderer(opts.Format, opts.Depth)
+	if rendErr != nil {
+		return rendErr
+	}
 	return cmdutil.WriteTo(stdout, opts.Out, func(out io.Writer) error {
-		switch opts.Format {
-		case "json":
-			enc := json.NewEncoder(out)
-			enc.SetIndent("", "  ")
-			if len(playbooks) == 1 {
-				return enc.Encode(playbooks[0])
-			}
-			return enc.Encode(playbooks)
-		case "markdown":
-			writeMarkdownPlaybooks(out, playbooks, opts.Depth)
-		default:
-			writeNarrativePlaybooks(out, playbooks, opts.Depth)
-		}
-		return nil
+		return renderer.Render(out, playbooks)
 	})
 }
 

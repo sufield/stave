@@ -82,8 +82,14 @@ and matching rules.
 
 ## Observation Contract (`obs.v0.1`)
 
-A point-in-time snapshot of asset state. Structure is flat JSON (no
-`"snapshots"` wrapper — the schema rejects it).
+A point-in-time snapshot of asset state. The directory loader accepts
+two file shapes: a flat per-timestamp JSON object (one snapshot per
+file, fields below) or a bundle file with
+`{"schema_version":"obs.v0.1","snapshots":[{…},{…}]}` that expands
+inline. Per-timestamp files run the strict `obs.v0.1` schema validator;
+bundle files route through `ParseBundle` and skip per-file validation.
+The single-snapshot stdin/composition path requires per-timestamp
+shape and errors explicitly on bundles.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|

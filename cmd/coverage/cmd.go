@@ -4,7 +4,6 @@ package coverage
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"time"
@@ -107,20 +106,12 @@ func runCoverage(ctx context.Context, stdout io.Writer, opts *options, newCtlRep
 		Snapshots:    snapshots,
 	})
 
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return &ui.UserError{Err: rendErr}
+	}
 	if writeErr := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
-		switch opts.Format {
-		case "table":
-			fieldcov.WriteTable(w, report)
-		case "json":
-			enc := json.NewEncoder(w)
-			enc.SetIndent("", "  ")
-			if encErr := enc.Encode(report); encErr != nil {
-				return fmt.Errorf("encode json: %w", encErr)
-			}
-		default:
-			return &ui.UserError{Err: fmt.Errorf("unknown format %q (valid: table, json)", opts.Format)}
-		}
-		return nil
+		return renderer.Render(w, report)
 	}); writeErr != nil {
 		return writeErr
 	}

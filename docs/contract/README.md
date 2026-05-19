@@ -45,8 +45,13 @@ For MVP 1.0, `obs.v0.1` is treated as stable for supported S3 fields.
 
 ## Envelope
 
-Every observation file is a flat JSON object (no `"snapshots"` wrapper —
-the schema rejects `additionalProperties`).
+An observation file in a directory may take one of two shapes: a flat
+per-timestamp JSON object (the fields below) or a bundle of multiple
+snapshots wrapped as `{"schema_version":"obs.v0.1","snapshots":[…]}`.
+The directory loader auto-detects the bundle shape and expands it
+inline. Per-timestamp files run the strict `obs.v0.1` schema
+(`additionalProperties: false`); bundle files route through the
+bundle parser, which carries its own shape contract.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|

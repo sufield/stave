@@ -177,14 +177,9 @@ func run(ctx context.Context, stdout, _ io.Writer, opts *options, deps Deps) err
 // internal/app/rank/formatter; this dispatch is the only CLI-side
 // formatting concern remaining (which format the user picked).
 func dispatchRoadmap(w io.Writer, opts *options, rm apprank.Roadmap, assessment *report.Assessment) error {
-	var f formatter.RoadmapFormatter
-	switch opts.Format {
-	case "json":
-		f = formatter.JSON{}
-	case "csv":
-		f = formatter.CSV{}
-	default:
-		f = &formatter.TextRoadmap{ShowReach: opts.SortsByBlastRadius()}
+	f, err := NewRoadmapRenderer(opts.Format, opts)
+	if err != nil {
+		return err
 	}
 	return f.Render(w, rm, assessment)
 }
@@ -201,30 +196,14 @@ func runGroupByOwner(stdout io.Writer, opts *options, assessment *report.Assessm
 
 	teamRoadmaps := apprank.GroupByOwner(assessment, roadmap, manifest)
 
-	switch opts.Format {
-	case "json":
-		output := struct {
-			Roadmap      apprank.Roadmap       `json:"roadmap"`
-			TeamRoadmaps []apprank.TeamRoadmap `json:"team_roadmaps"`
-		}{Roadmap: roadmap, TeamRoadmaps: teamRoadmaps}
-		data, marshalErr := json.MarshalIndent(output, "", "  ")
-		if marshalErr != nil {
-			return fmt.Errorf("marshal grouped roadmap: %w", marshalErr)
-		}
-		fmt.Fprintln(stdout, string(data))
-	default:
-		for _, tr := range teamRoadmaps {
-			fmt.Fprintf(stdout, "\nTEAM: %s (%s)\n", tr.TeamName, tr.TeamID)
-			fmt.Fprintf(stdout, "  Findings: %d  |  Risk Score: %.0f  |  SLA Breaches: %d  |  Active Chains: %d\n",
-				tr.FindingCount, tr.TotalRisk, tr.SLABreaches, tr.ActiveChains)
-			fmt.Fprintln(stdout, strings.Repeat("-", 60))
-			for j := range tr.Entries {
-				e := &tr.Entries[j]
-				fmt.Fprintf(stdout, "  [#%d]  %.1f  %s on %s\n", e.Rank, e.PriorityScore, e.ControlID, e.AssetID)
-			}
-		}
+	renderer, rendErr := NewTeamRoadmapsRenderer(opts.Format)
+	if rendErr != nil {
+		return rendErr
 	}
-	return nil
+	return renderer.Render(stdout, formatter.TeamRoadmaps{
+		Roadmap:      roadmap,
+		TeamRoadmaps: teamRoadmaps,
+	})
 }
 
 func runIdentity(ctx context.Context, stdout io.Writer, opts *options, assessment *report.Assessment, deps Deps) error {
@@ -250,15 +229,11 @@ func runIdentity(ctx context.Context, stdout io.Writer, opts *options, assessmen
 		BuildResourceAccessIndex: iam.BuildResourceAccessIndex,
 	})
 
-	if opts.Format == "json" {
-		output, marshalErr := json.MarshalIndent(ranking, "", "  ")
-		if marshalErr != nil {
-			return fmt.Errorf("marshal identity ranking: %w", marshalErr)
-		}
-		fmt.Fprintln(stdout, string(output))
-		return nil
+	renderer, rendErr := NewIdentityRankingRenderer(opts.Format)
+	if rendErr != nil {
+		return rendErr
 	}
-	return formatter.TextIdentityRanking{}.Render(stdout, ranking)
+	return renderer.Render(stdout, ranking)
 }
 
 func runSprint(stdout io.Writer, opts *options, assessment *report.Assessment) error {
@@ -287,15 +262,9 @@ func runSprint(stdout io.Writer, opts *options, assessment *report.Assessment) e
 		ControlHours:  controlHours,
 	})
 
-	switch opts.Format {
-	case "json":
-		output, marshalErr := json.MarshalIndent(result, "", "  ")
-		if marshalErr != nil {
-			return fmt.Errorf("marshal sprint result: %w", marshalErr)
-		}
-		fmt.Fprintln(stdout, string(output))
-	default:
-		return formatter.TextSprint{}.Render(stdout, result)
+	renderer, rendErr := NewSprintRenderer(opts.Format)
+	if rendErr != nil {
+		return rendErr
 	}
-	return nil
+	return renderer.Render(stdout, result)
 }

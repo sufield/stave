@@ -151,18 +151,11 @@ func runPath(stdout io.Writer, opts *options) error {
 		ControlLookup:  controlLookup,
 	})
 
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return rendErr
+	}
 	return cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
-		switch opts.Format {
-		case "json":
-			enc := json.NewEncoder(w)
-			enc.SetIndent("", "  ")
-			return enc.Encode(graph)
-		case "dot":
-			return attackpath.WriteDOT(w, graph)
-		case "csv-edges":
-			return attackpath.WriteCSVEdges(w, graph)
-		default:
-			return fmt.Errorf("unknown format %q (valid: json, dot, csv-edges)", opts.Format)
-		}
+		return renderer.Render(w, graph)
 	})
 }

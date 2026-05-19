@@ -156,20 +156,12 @@ func runBudget(ctx context.Context, stdout io.Writer, opts *options) error {
 		appbudget.EvaluateGate(&result, opts.FailBurnRate, sevs)
 	}
 
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return rendErr
+	}
 	if writeErr := cmdutil.WriteTo(stdout, opts.Out, func(out io.Writer) error {
-		switch opts.Format {
-		case "json":
-			enc := json.NewEncoder(out)
-			enc.SetIndent("", "  ")
-			return enc.Encode(result)
-		case "openmetrics":
-			writeOpenMetrics(out, result)
-		case "markdown":
-			writeMarkdown(out, result)
-		default:
-			writeTable(out, result)
-		}
-		return nil
+		return renderer.Render(out, result)
 	}); writeErr != nil {
 		return writeErr
 	}

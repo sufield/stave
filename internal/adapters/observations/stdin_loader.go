@@ -43,7 +43,7 @@ func (l *ObservationLoader) LoadSnapshotFromReader(ctx context.Context, r io.Rea
 		return asset.Snapshot{}, fmt.Errorf("read from %s: %w", sourceName, err)
 	}
 
-	// Intentional discard: process() returns (snap, hash, err) where
+	// Intentional discard: process() returns (snaps, hash, err) where
 	// `hash` is platformcrypto.HashBytes(data) — the same digest the
 	// caller (StdinObservationLoader.LoadSnapshots) already
 	// computes from the same `data` bytes before invoking us. The
@@ -58,12 +58,26 @@ func (l *ObservationLoader) LoadSnapshotFromReader(ctx context.Context, r io.Rea
 	// upfront HashBytes call and reuse this one instead, removing
 	// the duplicate hash work. Worth doing if the hash function
 	// becomes more expensive than SHA-256.
-	snap, _, err := l.process(data, sourceName)
+	snaps, _, err := l.process(data, sourceName)
 	if err != nil {
 		return asset.Snapshot{}, err
 	}
 
-	return snap, nil
+	// SnapshotReader is contractually a single-snapshot port (see
+	// app/contracts/ports.go). Bundle inputs over this path are a
+	// misuse — stdin/composition callers must hand off a single
+	// per-timestamp document. Surfacing this as an explicit error
+	// (rather than silently returning snaps[0]) keeps the callers
+	// honest: dropping N-1 snapshots from a bundle would be a
+	// silent data loss that the user has no way to notice.
+	if len(snaps) != 1 {
+		return asset.Snapshot{}, fmt.Errorf(
+			"%s contains %d snapshots; single-snapshot reader (stdin / composition) supports only per-timestamp observations — use directory mode for multi-snapshot bundles",
+			sourceName, len(snaps),
+		)
+	}
+
+	return snaps[0], nil
 }
 
 // StdinObservationLoader wraps a SnapshotReader to read from stdin.

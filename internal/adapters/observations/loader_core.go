@@ -89,11 +89,11 @@ func (l *ObservationLoader) LoadSnapshots(ctx context.Context, dir string) (appc
 			return appcontracts.LoadResult{}, fmt.Errorf("load snapshot %s: %w", path, err)
 		}
 
-		snap, hash, err := l.process(data, path)
+		snaps, hash, err := l.process(data, path)
 		if err != nil {
 			return appcontracts.LoadResult{}, fmt.Errorf("load snapshot %s: %w", path, err)
 		}
-		snapshots = append(snapshots, snap)
+		snapshots = append(snapshots, snaps...)
 		fileHashes[entry.Name()] = hash
 
 		l.onProgress(i+1, total)
@@ -123,14 +123,41 @@ func listObservationFiles(dir string) ([]os.DirEntry, error) {
 	return entries, nil
 }
 
-// process is the single processing pipeline: validate → unmarshal → hash.
-func (l *ObservationLoader) process(data []byte, source string) (asset.Snapshot, string, error) {
+// process is the single processing pipeline: detect shape →
+// validate (single-file) or parse (bundle) → return snapshots + hash.
+//
+// Two accepted intake shapes:
+//
+//	{"schema_version":"obs.v0.1","captured_at":...,"assets":[...]}      // per-timestamp
+//	{"schema_version":"obs.v0.1","snapshots":[{captured_at,assets},...]} // bundle
+//
+// Per-timestamp files run the full obs.v0.1 schema validator
+// (additionalProperties: false rejects unexpected keys). Bundle
+// files skip the per-file validator — bundle entries omit
+// `schema_version` at the entry level so they would not pass the
+// single-file schema by construction — and instead route through
+// ParseBundle, which carries the bundle's own shape contract.
+//
+// The file-level hash is one entry per file regardless of how many
+// snapshots a bundle expands to. The hash identifies the input
+// artifact, not the snapshot count.
+func (l *ObservationLoader) process(data []byte, source string) ([]asset.Snapshot, string, error) {
+	hash := string(platformcrypto.HashBytes(data))
+
+	if isBundleFormat(data) {
+		snaps, err := ParseBundle(data)
+		if err != nil {
+			return nil, "", err
+		}
+		return snaps, hash, nil
+	}
+
 	issues, err := l.validator.ValidateObservationJSON(data, contractvalidator.WithPrefix(source))
 	if err != nil {
-		return asset.Snapshot{}, "", fmt.Errorf("schema validation error: %w", err)
+		return nil, "", fmt.Errorf("schema validation error: %w", err)
 	}
 	if issues.Failed() {
-		return asset.Snapshot{}, "", fmt.Errorf("%w: %w", contractvalidator.ErrSchemaValidationFailed, issues)
+		return nil, "", fmt.Errorf("%w: %w", contractvalidator.ErrSchemaValidationFailed, issues)
 	}
 	// Schema warnings are advisory: log them so the authoring
 	// problem is visible without dropping the whole snapshot.
@@ -143,14 +170,29 @@ func (l *ObservationLoader) process(data []byte, source string) (asset.Snapshot,
 
 	var snap asset.Snapshot
 	if err := json.Unmarshal(data, &snap); err != nil {
-		return asset.Snapshot{}, "", fmt.Errorf("unmarshal: %w", err)
+		return nil, "", fmt.Errorf("unmarshal: %w", err)
 	}
 	if err := normalizeSnapshotTypes(&snap); err != nil {
-		return asset.Snapshot{}, "", fmt.Errorf("invalid observation semantics: %w", err)
+		return nil, "", fmt.Errorf("invalid observation semantics: %w", err)
 	}
 
-	hash := string(platformcrypto.HashBytes(data))
-	return snap, hash, nil
+	return []asset.Snapshot{snap}, hash, nil
+}
+
+// isBundleFormat reports whether data is the multi-snapshot bundle
+// shape — i.e. a JSON object with a top-level `snapshots` array.
+// Unmarshal into a probe struct rather than parsing the full document;
+// cheap enough to run unconditionally on every loaded file. Returns
+// false for malformed JSON so the per-file schema validator can emit
+// the canonical parse-error message instead.
+func isBundleFormat(data []byte) bool {
+	var probe struct {
+		Snapshots json.RawMessage `json:"snapshots"`
+	}
+	if err := json.Unmarshal(data, &probe); err != nil {
+		return false
+	}
+	return len(probe.Snapshots) > 0
 }
 
 func buildInputHashes(fileHashes map[string]string) *evaluation.InputHashes {

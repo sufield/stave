@@ -121,12 +121,11 @@ func runPrincipal(w io.Writer, opts *principalOpts) error {
 		}
 	}
 
-	switch opts.Format {
-	case "json":
-		return renderPrincipalJSON(w, result)
-	default:
-		return renderPrincipalTable(w, result, opts)
+	renderer, rendErr := NewPrincipalRenderer(opts.Format, opts)
+	if rendErr != nil {
+		return rendErr
 	}
+	return renderer.Render(w, result)
 }
 
 // identityRef wraps either a CloudIdentity or Asset for resolution input.

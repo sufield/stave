@@ -122,14 +122,11 @@ func runTest(ctx context.Context, stdout io.Writer, opts *options, deps Deps) er
 		FailFast:  opts.FailFast,
 	})
 
-	switch opts.Format {
-	case "json":
-		return writeJSON(stdout, results, summary)
-	case "tap":
-		return writeTAP(stdout, results, summary)
-	default:
-		return writeTable(stdout, results, summary, opts.Verbose)
+	renderer, rendErr := NewRenderer(opts.Format, opts.Verbose)
+	if rendErr != nil {
+		return rendErr
 	}
+	return renderer.Render(stdout, results, summary)
 }
 
 func writeTable(w io.Writer, results []controltest.Result, summary controltest.Summary, verbose bool) error {

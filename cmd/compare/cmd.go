@@ -125,18 +125,12 @@ func runCompare(ctx context.Context, stdout io.Writer, opts *options) error {
 		Findings:     assessment.Findings,
 	})
 
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return &ui.UserError{Err: rendErr}
+	}
 	return cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
-		switch opts.Format {
-		case "json":
-			enc := json.NewEncoder(w)
-			enc.SetIndent("", "  ")
-			return enc.Encode(result)
-		case "markdown":
-			appcompare.WriteMarkdown(w, result)
-		default:
-			appcompare.WriteTable(w, result)
-		}
-		return nil
+		return renderer.Render(w, result)
 	})
 }
 

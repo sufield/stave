@@ -124,15 +124,12 @@ func runInventory(w io.Writer, opts *inventoryOptions) error {
 	}
 	report.Summary = computeSummary(snapshots)
 
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return rendErr
+	}
 	return cmdutil.WriteTo(w, opts.Out, func(out io.Writer) error {
-		switch opts.Format {
-		case "json":
-			return renderInventoryJSON(out, &report)
-		case "openmetrics":
-			return renderInventoryOpenMetrics(out, &report)
-		default:
-			return renderInventoryTable(out, &report)
-		}
+		return renderer.Render(out, &report)
 	})
 }
 

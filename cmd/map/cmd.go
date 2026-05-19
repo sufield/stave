@@ -87,23 +87,12 @@ func runMap(ctx context.Context, stdout io.Writer, opts *options, deps Deps) err
 
 	coverageReport := appcoverage.Build(input)
 
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return rendErr
+	}
 	return cmdutil.WriteTo(stdout, opts.OutPath, func(out io.Writer) error {
-		switch opts.Format {
-		case "json":
-			enc := json.NewEncoder(out)
-			enc.SetIndent("", "  ")
-			return enc.Encode(coverageReport)
-		case "navigator":
-			layer := appcoverage.NavigatorLayer(coverageReport)
-			enc := json.NewEncoder(out)
-			enc.SetIndent("", "  ")
-			return enc.Encode(layer)
-		case "markdown":
-			writeMarkdown(out, coverageReport)
-		default:
-			writeTable(out, coverageReport)
-		}
-		return nil
+		return renderer.Render(out, coverageReport)
 	})
 }
 

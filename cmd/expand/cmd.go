@@ -143,12 +143,16 @@ func runExpand(ctx context.Context, w io.Writer, opts *options, newCtlRepo compo
 	matched := expand.FilterByArchetype(controls, archID)
 	snap := expand.ScanSnapshots(opts.Snapshots, arch.Services)
 
-	switch opts.Format {
-	case "json":
-		return renderJSON(w, arch, matched, snap, finding)
-	default:
-		return renderText(w, arch, matched, snap, finding)
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return inputErrorf("%s", rendErr.Error())
 	}
+	return renderer.Render(w, Payload{
+		Archetype:      arch,
+		Matched:        matched,
+		SnapshotStatus: snap,
+		Finding:        finding,
+	})
 }
 
 // renderText writes the human-readable form of a single-archetype expand.

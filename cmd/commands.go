@@ -136,6 +136,25 @@ func WireCommands(app *App) error {
 	diagnoseCmd := diagnose.NewDiagnoseCmd(f.NewObsRepo, f.NewCtlRepo)
 	diagnoseCmd.AddCommand(diagnose.NewTraceCmd(f.NewCtlRepo, f.NewSnapshotRepo))
 	diagnoseCmd.AddCommand(diagnose.NewExplainNarrativeCmd())
+	// diagreport (cmd/diagnose/report) renders an evaluation JSON
+	// document as text/JSON. It lives under `diagnose` because that
+	// is where its source package lives and because two different
+	// commands previously declared Use:"report" at the root —
+	// stavereport.NewCmd (executive posture report, wired below) and
+	// this one. Cobra last-write-wins resolved the collision in favour
+	// of the executive command, leaving the diagnostic renderer
+	// unreachable. Wiring it as a subcommand of `diagnose` matches the
+	// package path and resolves the collision; the executive
+	// `stave report` keeps the root namespace.
+	reportLoader, rlErr := infrareport.NewEvaluationLoader(func(ctx context.Context, path string) (*report.Assessment, error) {
+		return artifact.NewLoader().Evaluation(ctx, fsutil.CleanUserPath(path))
+	})
+	if rlErr != nil {
+		return fmt.Errorf("wire report loader: %w", rlErr)
+	}
+	diagnoseCmd.AddCommand(diagreport.NewReportCmd(diagreport.Deps{
+		UseCaseDeps: reporting.ReportDeps{Loader: reportLoader},
+	}))
 	root.AddCommand(diagnoseCmd)
 	root.AddCommand(diagnose.NewExplainCmd(f.NewCtlRepo))
 	root.AddCommand(expand.NewCmd(f.NewCtlRepo))
@@ -170,15 +189,6 @@ func WireCommands(app *App) error {
 
 	// Data & Artifacts
 	root.AddCommand(enforce.NewGenerateCmd())
-	reportLoader, rlErr := infrareport.NewEvaluationLoader(func(ctx context.Context, path string) (*report.Assessment, error) {
-		return artifact.NewLoader().Evaluation(ctx, fsutil.CleanUserPath(path))
-	})
-	if rlErr != nil {
-		return fmt.Errorf("wire report loader: %w", rlErr)
-	}
-	root.AddCommand(diagreport.NewReportCmd(diagreport.Deps{
-		UseCaseDeps: reporting.ReportDeps{Loader: reportLoader},
-	}))
 	root.AddCommand(artifacts.NewLintCmd())
 	root.AddCommand(artifacts.NewFmtCmd())
 	root.AddCommand(artifacts.NewControlsCmd(f.NewCtlRepo))

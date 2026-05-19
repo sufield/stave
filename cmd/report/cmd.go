@@ -4,7 +4,6 @@ package report
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -178,15 +177,14 @@ func writeReport(stdout io.Writer, opts *options, report *er.Report) error {
 		w = f
 	}
 
-	var writeErr error
-	switch opts.Format {
-	case contracts.FormatMarkdown:
-		writeErr = er.WriteMarkdown(w, report)
-	default:
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		writeErr = enc.Encode(report)
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		if f != nil {
+			_ = f.Close()
+		}
+		return rendErr
 	}
+	writeErr := renderer.Render(w, report)
 
 	if f != nil {
 		closeErr := f.Close()

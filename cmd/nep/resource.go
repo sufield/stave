@@ -114,19 +114,18 @@ func runResource(w io.Writer, stderr io.Writer, opts *resourceOpts) error {
 		displayEntries = filterNonDesignated(entries, designated)
 	}
 
-	switch opts.Format {
-	case "json":
-		if err := renderResourceJSON(w, opts.ResourceARN, displayEntries, opts.ShowDesignated); err != nil {
-			return err
-		}
-	case "dot":
-		if err := renderResourceDOT(w, opts.ResourceARN, entries, designated, opts.ShowDesignated); err != nil {
-			return err
-		}
-	default:
-		if err := renderResourceTable(w, opts.ResourceARN, displayEntries, opts.ShowDesignated); err != nil {
-			return err
-		}
+	renderer, rendErr := NewResourceRenderer(opts.Format)
+	if rendErr != nil {
+		return rendErr
+	}
+	if err := renderer.Render(w, ResourcePayload{
+		ResourceARN:    opts.ResourceARN,
+		DisplayEntries: displayEntries,
+		AllEntries:     entries,
+		Designated:     designated,
+		ShowDesignated: opts.ShowDesignated,
+	}); err != nil {
+		return err
 	}
 
 	if hasNonDesignatedAccess(entries, snap) {

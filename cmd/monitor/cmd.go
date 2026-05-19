@@ -4,7 +4,6 @@ package monitor
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -132,30 +131,20 @@ func runMonitor(ctx context.Context, stdout, _ io.Writer, opts *options) error {
 		return state, nil
 	}
 
-	switch opts.Format {
-	case "json":
-		state, err := loadState()
-		if err != nil {
-			return &ui.UserError{Err: err}
-		}
-		enc := json.NewEncoder(stdout)
-		enc.SetIndent("", "  ")
-		return enc.Encode(state)
-
-	case "plain":
-		state, err := loadState()
-		if err != nil {
-			return &ui.UserError{Err: err}
-		}
-		appmon.RenderPlain(stdout, state, false)
-		return nil
-
-	case "live":
-		return runLiveLoop(ctx, stdout, opts, loadState)
-
-	default:
-		return &ui.UserError{Err: fmt.Errorf("unknown format %q (valid: live, json, plain)", opts.Format)}
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return &ui.UserError{Err: rendErr}
 	}
+	if err := renderer.Render(ctx, stdout, opts, loadState); err != nil {
+		// Live mode owns its own error wrapping. Snapshot modes
+		// (json / plain) bubbled loadState errors as UserError
+		// before; preserve that to keep CLI exit-code semantics.
+		if _, ok := renderer.(LiveRenderer); ok {
+			return err
+		}
+		return &ui.UserError{Err: err}
+	}
+	return nil
 }
 
 func runLiveLoop(ctx context.Context, stdout io.Writer, opts *options, loadState func() (*appmon.State, error)) error {

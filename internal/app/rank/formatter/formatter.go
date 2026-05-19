@@ -35,3 +35,19 @@ type SprintFormatter interface {
 type IdentityRankingFormatter interface {
 	Render(w io.Writer, ranking apprank.IdentityRanking) error
 }
+
+// TeamRoadmaps bundles the inputs needed to render a grouped-by-owner
+// roadmap. Extracted from a previously inline anonymous struct in
+// cmd/rank/cmd.go so the JSON contract is named and the renderer
+// pattern can take a single payload value.
+type TeamRoadmaps struct {
+	Roadmap      apprank.Roadmap       `json:"roadmap"`
+	TeamRoadmaps []apprank.TeamRoadmap `json:"team_roadmaps"`
+}
+
+// TeamRoadmapsFormatter renders the grouped-by-owner output —
+// the per-team breakdown of a roadmap as produced by
+// apprank.GroupByOwner.
+type TeamRoadmapsFormatter interface {
+	Render(w io.Writer, payload TeamRoadmaps) error
+}

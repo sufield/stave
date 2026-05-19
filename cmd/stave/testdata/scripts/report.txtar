@@ -4,8 +4,10 @@
 ! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format json
 cp stdout evaluation.json
 
-# Report from evaluation
-exec stave report --in evaluation.json
+# Report from evaluation (diagnostic renderer — under diagnose subtree
+# after the cmd/diagnose/report Use:"report" collision was resolved in
+# favour of the executive `stave report` at the root).
+exec stave diagnose report --in evaluation.json
 stdout 'CTL.S3.PUBLIC.001'
 
 -- controls/CTL.S3.PUBLIC.001.yaml --

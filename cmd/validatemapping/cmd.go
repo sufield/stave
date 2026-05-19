@@ -178,10 +178,9 @@ func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
 	if strings.TrimSpace(opts.File) == "" {
 		return &ui.UserError{Err: errors.New("--file is required")}
 	}
-	switch opts.Format {
-	case "text", "json":
-	default:
-		return &ui.UserError{Err: fmt.Errorf("--format must be text | json (got %q)", opts.Format)}
+	renderer, rendErr := NewRenderer(opts.Format)
+	if rendErr != nil {
+		return &ui.UserError{Err: rendErr}
 	}
 
 	raw, err := os.ReadFile(opts.File)
@@ -234,13 +233,7 @@ func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
 
 	r.OverallStatus = overall(r, opts.Strict)
 
-	if opts.Format == "json" {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		if err := enc.Encode(r); err != nil {
-			return err
-		}
-	} else if err := writeText(w, r); err != nil {
+	if err := renderer.Render(w, r); err != nil {
 		return err
 	}
 

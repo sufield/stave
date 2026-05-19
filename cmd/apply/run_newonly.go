@@ -2,7 +2,6 @@ package apply
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -61,14 +60,11 @@ func runNewOnlyOutput(ctx context.Context, stdout, stderr io.Writer, opts *Optio
 		Now:             now,
 	})
 
-	switch opts.Format {
-	case "json":
-		enc := json.NewEncoder(stdout)
-		enc.SetIndent("", "  ")
-		return enc.Encode(filterResult)
-	default:
-		return writeNewOnlyText(stdout, filterResult)
+	renderer, rendErr := NewNewOnlyRenderer(string(opts.Format))
+	if rendErr != nil {
+		return rendErr
 	}
+	return renderer.Render(stdout, filterResult)
 }
 
 // stickyWriter wraps an io.Writer and remembers the first write
