@@ -22,17 +22,17 @@ type exportOptions struct {
 }
 
 func newExportCmd() *cobra.Command {
-	opts := &exportOptions{Format: "graph-json"}
+	opts := &exportOptions{Format: "json"}
 
 	cmd := &cobra.Command{
 		Use:   "export",
-		Short: "Export assessment as graph-json, STIX 2.1, JSON-LD, or GraphML",
+		Short: "Export assessment as JSON, STIX 2.1, JSON-LD, or GraphML",
 		Long: `Export reads assessment JSON (from stave apply) and produces a
 standards-based graph document. Every node and edge maps to
 OCSF, STIX 2.1, ATT&CK, or OSCAL per docs/ontology/README.md.
 
 Formats:
-  graph-json   Stave graph-json (default)
+  json         Native graph JSON (default)
   stix         STIX 2.1 Bundle JSON
   jsonld       JSON-LD against the Stave ontology — universal RDF
                format consumable by Neo4j GDS, igraph, NetworkX,
@@ -59,7 +59,7 @@ Exit Codes:
 
 	cmd.Flags().StringVar(&opts.OutputFile, "output", "", "Path to out.v0.1 assessment JSON")
 	cmd.Flags().StringVar(&opts.OutPath, "out", "", "Write output to file instead of stdout")
-	cmd.Flags().StringVarP(&opts.Format, "format", "f", "graph-json", "Output format: graph-json | stix | jsonld | graphml")
+	cmd.Flags().StringVarP(&opts.Format, "format", "f", "json", "Output format: json | stix | jsonld | graphml")
 	_ = cmd.MarkFlagRequired("output")
 
 	return cmd

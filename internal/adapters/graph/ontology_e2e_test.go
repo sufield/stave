@@ -30,10 +30,10 @@ func buildStaveBinary(t *testing.T) (bin, repoRoot string) {
 }
 
 // runGraphExport runs stave graph export on an assessment file and
-// returns the parsed graph-json.
+// returns the parsed JSON graph.
 func runGraphExport(t *testing.T, bin, repoRoot, assessmentPath string) map[string]any {
 	t.Helper()
-	cmd := exec.Command(bin, "graph", "export", "--output", assessmentPath)
+	cmd := exec.Command(bin, "graph", "export", "--output", assessmentPath, "--format", "json")
 	cmd.Dir = repoRoot
 	stdout, err := cmd.Output()
 	if err != nil {

@@ -143,7 +143,7 @@ func newFeatureManifest(lib contracts.PolicyLibrary) *featureManifest {
 
 	complianceFeatures := ComplianceSupport{
 		Enabled:            true,
-		ReportFormats:      []string{"text", "json", "sarif", "markdown", "oscal", "graph-json", "stix", "jsonld", "graphml", "openmetrics"},
+		ReportFormats:      []string{"text", "json", "sarif", "markdown", "oscal", "stix", "jsonld", "graphml", "openmetrics"},
 		SLAThresholds:      []string{"critical", "high", "medium", "low", "none"},
 		SecurityFrameworks: compliance.FrameworkStrings(compliance.SupportedFrameworks()),
 	}

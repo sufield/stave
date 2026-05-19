@@ -13,8 +13,9 @@ import (
 )
 
 // TestGraphExportE2E builds the stave binary and runs
-// `stave graph export --output <assessment>` against an existing
-// H1 fixture, then validates the graph-json output structure.
+// `stave graph export --output <assessment> --format json` against
+// an existing H1 fixture, then validates the JSON graph output
+// structure.
 func TestGraphExportE2E(t *testing.T) {
 	t.Parallel()
 	if testing.Short() {
@@ -49,7 +50,7 @@ func TestGraphExportE2E(t *testing.T) {
 	// pure JSON for json.Unmarshal while diagnostic output remains
 	// available when the binary exits non-zero (e.g., chain
 	// validation failure during global init).
-	cmd := exec.Command(bin, "graph", "export", "--output", assessment)
+	cmd := exec.Command(bin, "graph", "export", "--output", assessment, "--format", "json")
 	cmd.Dir = repoRoot
 	var stderrBuf bytes.Buffer
 	cmd.Stderr = &stderrBuf

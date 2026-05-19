@@ -119,7 +119,7 @@ func checkGraphviz(ctx *SystemEnvironment) Diagnostic {
 		Binary:      "dot",
 		Name:        CheckGraphviz,
 		WarnMessage: "dot (graphviz) not found; stave graph coverage DOT output requires graphviz for rendering",
-		Remediation: "install graphviz (https://graphviz.org/download/) or use stave graph export --format graph-json with docs/integrations/ adapters",
+		Remediation: "install graphviz (https://graphviz.org/download/) or use stave graph export --format json with docs/integrations/ adapters",
 	})
 }
 

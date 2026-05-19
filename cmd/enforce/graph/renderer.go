@@ -55,7 +55,7 @@ func (JSONRenderer) Render(w io.Writer, g *graphpkg.GraphData) error {
 
 // NewRenderer maps a format string to its concrete Renderer.
 // Returns an error for unknown formats; the previous default branch
-// silently rendered as JSON, which masked typos like "stix2" ->
+// silently rendered as JSON, which masked typos like "stix2" →
 // "json fallback".
 func NewRenderer(format string) (Renderer, error) {
 	switch format {

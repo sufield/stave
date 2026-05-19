@@ -15,7 +15,7 @@ import (
 	"github.com/sufield/stave/internal/util/sets"
 )
 
-// GraphData is the top-level graph-json output.
+// GraphData is the top-level JSON graph output.
 type GraphData struct {
 	SchemaVersion   string        `json:"schema_version"`
 	OntologyVersion string        `json:"ontology_version"`
