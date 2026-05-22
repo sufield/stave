@@ -156,6 +156,8 @@ jobs:
           check_pattern 'stave enrich\b'             '`stave enrich` removed — external enrichment is out of scope'
           check_pattern 'stave inventory\b'          '`stave inventory` removed — external enrichment is out of scope'
           check_pattern 'stave consolidate\b'        '`stave consolidate` removed — multi-account orchestration is out of scope'
+          check_pattern 'stave deadline\b'           '`stave deadline` removed — SLA-deadline policy authoring is out of scope (SLA evaluation stays)'
+          check_pattern 'stave simulate\b'           '`stave simulate` removed — remediation planning is out of scope'
 
           # Stale vocabulary — file/format language only; "Invariants
           # as Code" and "System Invariant" stay as the brand/concept.

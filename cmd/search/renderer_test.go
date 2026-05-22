@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+
+	appcaps "github.com/sufield/stave/internal/app/capabilities"
 )
 
 func TestNewRenderer_KnownFormats(t *testing.T) {
@@ -43,7 +45,7 @@ func TestRenderers_NonEmptyOutput(t *testing.T) {
 		Query: "phi-bucket",
 		Top:   10,
 		Total: 0,
-		Hits:  []Hit{},
+		Hits:  []appcaps.Hit{},
 	}
 	cases := []struct {
 		name     string

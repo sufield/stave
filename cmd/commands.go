@@ -55,7 +55,6 @@ import (
 	stavescore "github.com/sufield/stave/cmd/score"
 	stavescorecard "github.com/sufield/stave/cmd/scorecard"
 	search "github.com/sufield/stave/cmd/search"
-	stavesla "github.com/sufield/stave/cmd/sla"
 	stavesnapshotdiff "github.com/sufield/stave/cmd/snapshotdiff"
 	stavetelemetry "github.com/sufield/stave/cmd/telemetry"
 	stavetest "github.com/sufield/stave/cmd/test"
@@ -300,9 +299,6 @@ func WireCommands(app *App) error {
 		NewSnapshotBundleLoader: f.NewSnapshotBundleLoader,
 		NewCtlRepo:              f.NewCtlRepo,
 	}))
-
-	// SLA policy management
-	root.AddCommand(stavesla.NewCmd())
 
 	// Posture score
 	root.AddCommand(stavescore.NewCmd())

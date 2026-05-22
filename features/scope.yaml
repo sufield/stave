@@ -75,10 +75,10 @@ out_of_scope:
     label: "Remediation Planning"
     reason: "Delegated to ticketing/IaC; Stave emits findings, not plans"
     alternatives: ["Jira", "Terraform", "your remediation workflow"]
-    # `simulate` is intentionally absent: `stave sla simulate` is a kept,
-    # in-scope subcommand of `sla`, and the lint matches by bare command
-    # name. Re-adding a top-level remediation `simulate` relies on review.
-    forbids: ["plan", "rank", "budget"]
+    # `deadline` managed SLA-deadline policy files (remediation timelines);
+    # SLA *evaluation* stays (apply/ci-gate/score), only the authoring
+    # command is gone. `simulate` was its posture-impact subcommand.
+    forbids: ["plan", "rank", "budget", "deadline", "simulate"]
 
   - id: incident_forensics
     label: "Incident Forensics"

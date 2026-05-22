@@ -51,14 +51,14 @@ Exit Codes:
   3   - Remaining or introduced violations exist
   130 - Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,
 		Example: `  # Compare before/after observations
-  stave verify --before ./obs-before --after ./obs-after --controls ./controls
+  stave check --before ./obs-before --after ./obs-after --controls ./controls
 
   # Deterministic output for CI
-  stave verify --before ./obs-before --after ./obs-after --controls ./controls \
+  stave check --before ./obs-before --after ./obs-after --controls ./controls \
     --now 2026-01-15T00:00:00Z
 
   # With a custom unsafe duration threshold
-  stave verify --before ./obs-before --after ./obs-after --controls ./controls \
+  stave check --before ./obs-before --after ./obs-after --controls ./controls \
     --max-unsafe 72h`,
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {

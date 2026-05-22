@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-unit test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check
+.PHONY: all build build-dev test test-unit test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test
 # Binary name
 BINARY=stave
 
@@ -61,6 +61,14 @@ build: sync-schemas sync-controls sync-alternatives
 ## build-dev: Build the dev binary with all commands
 build-dev: sync-schemas sync-controls sync-alternatives
 	$(GOBUILD) $(LDFLAGS) -tags stavedev -o stave-dev ./cmd/stave-dev
+
+## mcp: Build the MCP server binary (stave-mcp)
+mcp: sync-schemas sync-controls sync-alternatives
+	$(GOBUILD) $(LDFLAGS) -o stave-mcp ./cmd/stave-mcp
+
+## mcp-test: Run the MCP server's protocol validation tests
+mcp-test: sync-schemas sync-controls sync-alternatives
+	$(GOTEST) ./cmd/stave-mcp/ -count=1
 
 ## Testing pyramid:
 ##

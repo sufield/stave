@@ -1,0 +1,11 @@
+{
+  "mcp": {
+    "servers": {
+      "stave": {
+        "type": "stdio",
+        "command": "stave-mcp",
+        "args": []
+      }
+    }
+  }
+}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	appcaps "github.com/sufield/stave/internal/app/capabilities"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
@@ -12,10 +13,10 @@ import (
 // named payload type — making the JSON contract grep-able and
 // stable across the migration.
 type searchReport struct {
-	Query string `json:"query"`
-	Top   int    `json:"top"`
-	Total int    `json:"total_hits"`
-	Hits  []Hit  `json:"hits"`
+	Query string        `json:"query"`
+	Top   int           `json:"top"`
+	Total int           `json:"total_hits"`
+	Hits  []appcaps.Hit `json:"hits"`
 }
 
 // Renderer is the polymorphic format-dispatch interface for

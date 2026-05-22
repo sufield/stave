@@ -1,0 +1,32 @@
+{
+  "name": "stave",
+  "description": "Deterministic cloud security evaluation — 2,650+ invariant controls against configuration snapshots. Air-gapped, no credentials, reproducible verdicts.",
+  "version": "0.1.0",
+  "transport": "stdio",
+  "repository": "https://github.com/sufield/stave",
+  "license": "Apache-2.0",
+  "categories": ["security", "cloud", "compliance", "devops"],
+  "install": {
+    "go": "go install github.com/sufield/stave/cmd/stave-mcp@latest"
+  },
+  "modes": {
+    "local": "All tools. Snapshot-touching tools evaluate observation files on the local machine.",
+    "hosted": "Catalog-query tools only (--hosted or STAVE_MCP_HOSTED=true). Snapshot data never leaves the customer's machine."
+  },
+  "tools": [
+    { "name": "stave.version", "description": "Build version + capability counts (controls, packs, frameworks, ATT&CK tactics, formats).", "mode": "any" },
+    { "name": "stave.search", "description": "Rank the capability catalog against a free-form intent.", "mode": "any" },
+    { "name": "stave.catalog_explain", "description": "Explain one control from the catalog: predicate, required fields, frameworks, severity.", "mode": "any" },
+    { "name": "stave.explain", "description": "Explain why one finding fired (reasoning trace, chain membership).", "mode": "any" },
+    { "name": "stave.suggest_fix", "description": "One finding's delta paths and catalog-authored remediation.", "mode": "any" },
+    { "name": "stave.verify", "description": "Evaluate a snapshot directory; summary | detailed | raw output.", "mode": "local" },
+    { "name": "stave.dashboard", "description": "Render an interactive HTML posture dashboard for a snapshot (saved to a file).", "mode": "local" },
+    { "name": "stave.scorecard", "description": "Render an interactive HTML compliance scorecard across frameworks (saved to a file).", "mode": "local" },
+    { "name": "stave.chains", "description": "Detect compound risk chains and render an interactive HTML chain visualizer (saved to a file).", "mode": "local" },
+    { "name": "stave.context", "description": "Drill into one finding, asset, chain, requirement, or framework by {type, id}.", "mode": "local" },
+    { "name": "stave.diff", "description": "Structured delta between two snapshot directories.", "mode": "local" },
+    { "name": "stave.gaps", "description": "Absent observation fields and the controls each would unlock.", "mode": "local" },
+    { "name": "stave.readiness", "description": "Forecast which controls can fire against a snapshot, plus an action plan.", "mode": "local" },
+    { "name": "stave.compliance", "description": "Requirement-level posture for one framework.", "mode": "local" }
+  ]
+}
