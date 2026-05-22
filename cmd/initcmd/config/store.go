@@ -3,10 +3,8 @@ package config
 import (
 	"fmt"
 	"path/filepath"
-	"strconv"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
-	"github.com/sufield/stave/internal/core/retention"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -62,28 +60,8 @@ func (s projectConfigStore) CurrentValue(cfg *appconfig.WorkspacePolicy, key, cf
 	}
 	eval := appconfig.NewResolver(cfg, cfgPath, nil, "")
 
-	parsed, err := appconfig.IdentifySetting(key)
-	if err != nil {
+	if _, err := appconfig.IdentifySetting(key); err != nil {
 		return "", false
-	}
-
-	if parsed.TierName != "" {
-		if parsed.Property != "" {
-			return s.tierSubFieldValue(cfg, parsed)
-		}
-		v := eval.ResolveSnapshotRetention(parsed.TierName)
-		if v.Value == "" {
-			return "", false
-		}
-		return v.Value, true
-	}
-
-	if parsed.Attribute == "snapshot_retention" {
-		v := eval.ResolveSnapshotRetention(eval.RetentionTier())
-		if v.Value == "" {
-			return "", false
-		}
-		return v.Value, true
 	}
 
 	v, ok := appconfig.ResolveAuditSetting(eval, key)
@@ -93,35 +71,11 @@ func (s projectConfigStore) CurrentValue(cfg *appconfig.WorkspacePolicy, key, cf
 	return v.Value, true
 }
 
-func (s projectConfigStore) tierSubFieldValue(cfg *appconfig.WorkspacePolicy, parsed appconfig.SettingPath) (string, bool) {
-	if cfg == nil || len(cfg.RetentionTiers) == 0 {
-		return "", false
-	}
-	tc, exists := cfg.RetentionTiers[parsed.TierName]
-	if !exists {
-		return "", false
-	}
-	switch parsed.Property {
-	case "older_than":
-		if tc.OlderThan == "" {
-			return "", false
-		}
-		return tc.OlderThan, true
-	case "keep_min":
-		return strconv.Itoa(retention.Tier{KeepMin: tc.KeepMin}.MinRetained()), true
-	default:
-		return "", false
-	}
-}
-
 // Set updates a specific key in the provided config struct.
 func (s projectConfigStore) Set(cfg *appconfig.WorkspacePolicy, key, value string) error {
 	parsed, err := appconfig.IdentifySetting(key)
 	if err != nil {
 		return err
-	}
-	if parsed.TierName != "" {
-		return appconfig.ConfigureLifecycleTier(cfg, parsed.TierName, parsed.Property, value)
 	}
 	return appconfig.UpdateAttribute(cfg, parsed.Attribute, value)
 }
@@ -131,10 +85,6 @@ func (s projectConfigStore) Delete(cfg *appconfig.WorkspacePolicy, key string) e
 	parsed, err := appconfig.IdentifySetting(key)
 	if err != nil {
 		return err
-	}
-	if parsed.TierName != "" {
-		appconfig.RemoveLifecycleTier(cfg, parsed.TierName)
-		return nil
 	}
 	return appconfig.ResetAttribute(cfg, parsed.Attribute)
 }

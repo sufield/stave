@@ -313,14 +313,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-azure-recovery-softdelete-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-azure-recovery-softdelete-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0b931e4f400afa40fcbd6a6224548968bba6f0b4",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-azure-recovery-softdelete-001-fail/controls/"
-      ]
     }
   }
 }

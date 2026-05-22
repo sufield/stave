@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-azure-identity-breakglass-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-azure-identity-breakglass-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "b9ffb86fa84452e30aa54258292ab0e369c31652",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-azure-identity-breakglass-001-pass/controls/"
-      ]
     }
   }
 }

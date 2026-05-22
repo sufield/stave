@@ -314,14 +314,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-gcp-compute-defaultsa-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-gcp-compute-defaultsa-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "54e3939788c59440bd046159fccd0aa9bd03518c",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-gcp-compute-defaultsa-001-fail/controls/"
-      ]
     }
   }
 }

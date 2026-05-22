@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-m365-sharepoint-modernauth-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-m365-sharepoint-modernauth-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e763fe77bc5bb2e9c4d3877c9828b004407c25f6",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-m365-sharepoint-modernauth-001-pass/controls/"
-      ]
     }
   }
 }

@@ -29,7 +29,6 @@ stdout 'baseline'
 stdout 'gate'
 
 exec stave snapshot --help
-stdout 'archive'
 stdout 'diff'
 
 exec stave config --help

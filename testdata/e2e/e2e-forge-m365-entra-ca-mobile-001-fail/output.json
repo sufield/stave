@@ -313,14 +313,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-m365-entra-ca-mobile-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-m365-entra-ca-mobile-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1c649b1c859068de57179053751063fe657f34b0",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-m365-entra-ca-mobile-001-fail/controls/"
-      ]
     }
   }
 }

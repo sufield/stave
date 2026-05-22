@@ -308,14 +308,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-iam-escalate-editlambda-fail/controls",
       "observations": "testdata/e2e/e2e-forge-iam-escalate-editlambda-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "9ac89e5b2e05d3938633df2ed26295684360c01e",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-iam-escalate-editlambda-fail/controls/"
-      ]
     }
   }
 }

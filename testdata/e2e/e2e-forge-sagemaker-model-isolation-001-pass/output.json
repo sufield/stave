@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-sagemaker-model-isolation-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-sagemaker-model-isolation-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "d2f40a53110b8788bc2d03b00b74978c81945397",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-sagemaker-model-isolation-001-pass/controls/"
-      ]
     }
   }
 }

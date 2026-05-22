@@ -314,14 +314,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-k8s-pod-seccomp-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-k8s-pod-seccomp-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "b8319f9e0a896bb62036ff456fbf9d85dae43172",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-k8s-pod-seccomp-001-fail/controls/"
-      ]
     }
   }
 }

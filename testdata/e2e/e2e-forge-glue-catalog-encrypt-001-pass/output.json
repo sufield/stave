@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-glue-catalog-encrypt-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-glue-catalog-encrypt-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "909fe98c4556e651cfa4345497f5acfb5b16775f",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-glue-catalog-encrypt-001-pass/controls/"
-      ]
     }
   }
 }

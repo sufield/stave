@@ -56,7 +56,7 @@ func TestEvaluationMetadataToMap_DirSource(t *testing.T) {
 	}
 }
 
-func TestEvaluationMetadataToMap_PacksAndGit(t *testing.T) {
+func TestEvaluationMetadataToMap_Packs(t *testing.T) {
 	meta := Metadata{
 		ContextName: "stave",
 		ControlSource: ControlSourceInfo{
@@ -65,12 +65,6 @@ func TestEvaluationMetadataToMap_PacksAndGit(t *testing.T) {
 			ResolvedControlIDs: []kernel.ControlID{"CTL.S3.PUBLIC.001"},
 			RegistryVersion:    "v1",
 			RegistryHash:       "abc123",
-		},
-		Git: &GitInfo{
-			RepoRoot:  "/repo",
-			Head:      "deadbeef",
-			Dirty:     false,
-			DirtyList: []FilePath{"stave.yaml"},
 		},
 		ResolvedPaths: ResolvedPaths{
 			Controls:     "/repo/controls",
@@ -85,32 +79,5 @@ func TestEvaluationMetadataToMap_PacksAndGit(t *testing.T) {
 	}
 	if got["pack_registry_hash"] != "abc123" {
 		t.Fatalf("pack_registry_hash = %v, want abc123", got["pack_registry_hash"])
-	}
-
-	gitMap, ok := got["git"].(map[string]any)
-	if !ok {
-		t.Fatalf("git type = %T, want map[string]any", got["git"])
-	}
-	if gitMap["repo_root"] != "/repo" {
-		t.Fatalf("git.repo_root = %v, want /repo", gitMap["repo_root"])
-	}
-	if gitMap["head_commit"] != "deadbeef" {
-		t.Fatalf("git.head_commit = %v, want deadbeef", gitMap["head_commit"])
-	}
-
-	dirty, ok := gitMap["dirty"].(bool)
-	if !ok {
-		t.Fatalf("git.dirty type = %T, want bool", gitMap["dirty"])
-	}
-	if dirty {
-		t.Fatalf("git.dirty = true, want false")
-	}
-
-	paths, ok := gitMap["modified_paths"].([]any)
-	if !ok {
-		t.Fatalf("git.modified_paths type = %T, want []any", gitMap["modified_paths"])
-	}
-	if len(paths) != 1 || paths[0] != "stave.yaml" {
-		t.Fatalf("git.modified_paths = %#v, want [stave.yaml]", paths)
 	}
 }

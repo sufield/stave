@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-waf-evasion-observe-incomplete/controls",
       "observations": "testdata/e2e/e2e-forge-waf-evasion-observe-incomplete/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "141175c4a50833d93e0b6c4c4efd2fb534c8b030",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-waf-evasion-observe-incomplete/controls/"
-      ]
     }
   }
 }

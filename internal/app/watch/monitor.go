@@ -118,6 +118,25 @@ func (m *Monitor) Run(ctx context.Context) error {
 		defer ticker.Stop()
 	}
 
+	return m.runLoop(ctx, watcher.Events, watcher.Errors, ticker)
+}
+
+// runLoop is the select-driven body of Run, extracted so the
+// channel-close contract (a closed Events or Errors channel must
+// exit the loop, not spin) can be exercised by direct unit tests
+// without creating a real fsnotify watcher. The two `<-chan` types
+// match what fsnotify.Watcher exposes; production callers always
+// pass watcher.Events and watcher.Errors.
+//
+// Cleanup of the debounce timer and any in-flight pendingDone
+// channel happens via the deferred cleanup at the bottom, so every
+// return from this method releases the same resources.
+func (m *Monitor) runLoop(
+	ctx context.Context,
+	events <-chan fsnotify.Event,
+	errs <-chan error,
+	ticker *time.Ticker,
+) error {
 	var debounce *time.Timer
 	defer func() {
 		// Stop the debounce timer on shutdown, then wait for any
@@ -136,7 +155,21 @@ func (m *Monitor) Run(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 
-		case event := <-watcher.Events:
+		case event, ok := <-events:
+			// Closed channel means the watcher was shut down (Close()
+			// called, or the underlying file descriptor died). Without
+			// the ok check, a closed channel keeps delivering zero
+			// values immediately and this select case fires forever in
+			// a tight loop, pegging CPU and flooding logs. Treat
+			// channel close as terminal — surface a warning and exit
+			// the loop so the caller can decide whether to restart
+			// the monitor.
+			if !ok {
+				if m.cfg.Logger != nil {
+					m.cfg.Logger.Warn("watcher events channel closed; monitor loop exiting")
+				}
+				return nil
+			}
 			if !isObservationFile(event.Name) {
 				continue
 			}
@@ -176,7 +209,16 @@ func (m *Monitor) Run(ctx context.Context) error {
 				})
 			}
 
-		case err := <-watcher.Errors:
+		case err, ok := <-errs:
+			// Mirror the Events-channel close handling: a closed
+			// Errors channel left unguarded would spin this case
+			// forever on a nil error. Treat close as terminal.
+			if !ok {
+				if m.cfg.Logger != nil {
+					m.cfg.Logger.Warn("watcher errors channel closed; monitor loop exiting")
+				}
+				return nil
+			}
 			if m.cfg.Logger != nil {
 				m.cfg.Logger.Warn("watcher error", "error", err)
 			}

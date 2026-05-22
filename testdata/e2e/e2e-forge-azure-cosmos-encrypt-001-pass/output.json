@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-azure-cosmos-encrypt-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-azure-cosmos-encrypt-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "bb00053b0bec93a5121ebde75609fb9f8842b009",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-azure-cosmos-encrypt-001-pass/controls/"
-      ]
     }
   }
 }

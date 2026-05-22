@@ -23,10 +23,10 @@ func wireHelpGroups(root *cobra.Command) {
 	// a soft-skip slog.Warn on every `stave --help` invocation.
 	groupMap := map[string][]string{
 		groupGettingStarted: {"generate"},
-		groupCore:           {"validate", "apply", "diagnose", "explain", "expand", "verify"},
+		groupCore:           {"validate", "apply", "diagnose", "explain", "expand"},
 		groupWorkflow:       {"ci", "snapshot", "status"},
 		groupArtifacts:      {"enforce", "report"},
-		groupIntrospection:  {"inspect"},
+		groupIntrospection:  {"inspect", "features"},
 		groupSettings:       {"config"},
 	}
 	for groupID, names := range groupMap {

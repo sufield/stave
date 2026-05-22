@@ -14,7 +14,7 @@ import (
 
 // TestNoBannedImportsInRuntime inspects all .go files in the runtime binary's
 // package tree for imports that must never appear in the shipped binary.
-// Restrictions are sourced from internal/domain/kernel/airgap.go.
+// Restrictions are sourced from internal/core/kernel/airgap.go.
 // Vendored dependencies are excluded.
 func TestNoBannedImportsInRuntime(t *testing.T) {
 	t.Parallel()
@@ -185,7 +185,7 @@ func TestNoHTTPSchemaIdentifiers(t *testing.T) {
 
 // TestNoCredentialEnvReads inspects runtime source for references to cloud
 // credential environment variables. Stave must never read credential env vars.
-// Restrictions are sourced from internal/domain/kernel/airgap.go.
+// Restrictions are sourced from internal/core/kernel/airgap.go.
 // The only allowed env var read is NO_COLOR.
 func TestNoCredentialEnvReads(t *testing.T) {
 	t.Parallel()

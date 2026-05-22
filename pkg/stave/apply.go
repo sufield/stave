@@ -41,10 +41,10 @@ func Apply(ctx context.Context, cfg Config) (*Assessment, error) {
 // sees the engine form (evaluation.SLAConfig); the public type
 // stays decoupled from the engine struct.
 //
-// GitMetadata, ProjectConfig, and Tracer are aliased types — they
-// pass through unchanged. Library callers leave them nil; CLI
-// callers populate them so the library run produces the same
-// output as the direct cmd/apply path.
+// ProjectConfig and Tracer are aliased types — they pass through
+// unchanged. Library callers leave them nil; CLI callers populate
+// them so the library run produces the same output as the direct
+// cmd/apply path.
 func applyInputs(cfg Config) applycore.Inputs {
 	return applycore.Inputs{
 		SnapshotsDir:        cfg.SnapshotsDir,
@@ -58,7 +58,6 @@ func applyInputs(cfg Config) applycore.Inputs {
 		ExemptionRules:      cfg.ExemptionRules,
 		AcknowledgmentRules: cfg.AcknowledgmentRules,
 		SLAConfig:           toEvalSLAConfig(cfg.SLAConfig),
-		GitMetadata:         cfg.GitMetadata,
 		ProjectConfig:       cfg.ProjectConfig,
 		Tracer:              cfg.Tracer,
 		ContextName:         cfg.ContextName,

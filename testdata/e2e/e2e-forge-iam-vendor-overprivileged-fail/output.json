@@ -113,11 +113,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-iam-vendor-overprivileged-fail/controls",
       "observations": "testdata/e2e/e2e-forge-iam-vendor-overprivileged-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "a103b46539bf2153a77deb92ccf417b762b1f17c",
-      "dirty": false
     }
   }
 }

@@ -1,23 +1,10 @@
-# Exercise snapshot subcommands with real data
+# Exercise the snapshot diff subcommand with real data. The lifecycle
+# subcommands (quality, upcoming, plan, status, risk) were removed —
+# snapshot lifecycle management is the upstream system's job.
 
 # Snapshot diff
 exec stave snapshot diff --observations observations --format json
 stdout 'start_time'
-
-# Snapshot quality
-exec stave snapshot quality --observations observations --now 2026-01-11T00:00:00Z
-
-# Snapshot upcoming
-exec stave snapshot upcoming --controls controls --observations observations --now 2026-01-11T00:00:00Z
-
-# Snapshot plan
-exec stave snapshot plan --observations-root observations --now 2026-01-11T00:00:00Z
-
-# Snapshot status
-exec stave snapshot status --observations observations --now 2026-01-11T00:00:00Z
-
-# Snapshot risk
-exec stave snapshot risk --controls controls --observations observations --now 2026-01-11T00:00:00Z
 
 -- controls/CTL.S3.PUBLIC.001.yaml --
 dsl_version: ctrl.v1

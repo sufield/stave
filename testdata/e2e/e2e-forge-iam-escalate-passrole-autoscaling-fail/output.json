@@ -321,14 +321,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-iam-escalate-passrole-autoscaling-fail/controls",
       "observations": "testdata/e2e/e2e-forge-iam-escalate-passrole-autoscaling-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "bce61e8996fc709467ef09ffd90c9caa0cc782d7",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-iam-escalate-passrole-autoscaling-fail/controls/"
-      ]
     }
   }
 }

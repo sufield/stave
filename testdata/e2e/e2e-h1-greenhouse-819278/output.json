@@ -178,11 +178,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-h1-greenhouse-819278/controls",
       "observations": "testdata/e2e/e2e-h1-greenhouse-819278/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "a103b46539bf2153a77deb92ccf417b762b1f17c",
-      "dirty": false
     }
   }
 }

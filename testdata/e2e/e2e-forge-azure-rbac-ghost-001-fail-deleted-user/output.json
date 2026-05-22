@@ -313,14 +313,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-azure-rbac-ghost-001-fail-deleted-user/controls",
       "observations": "testdata/e2e/e2e-forge-azure-rbac-ghost-001-fail-deleted-user/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "2e261ecc9a8acf36e8f80c787a2875660bfc73cd",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-azure-rbac-ghost-001-fail-deleted-user/controls/"
-      ]
     }
   }
 }

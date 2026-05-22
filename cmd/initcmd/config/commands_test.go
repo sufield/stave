@@ -14,8 +14,6 @@ import (
 
 func TestConfigShow_DefaultsText(t *testing.T) {
 	t.Setenv(env.MaxUnsafe.Name, "")
-	t.Setenv(env.SnapshotRetention.Name, "")
-	t.Setenv(env.RetentionTier.Name, "")
 	t.Setenv(env.CIFailurePolicy.Name, "")
 
 	temp := t.TempDir()
@@ -34,12 +32,6 @@ func TestConfigShow_DefaultsText(t *testing.T) {
 	if !strings.Contains(out, "max_unsafe: 168h (default)") {
 		t.Fatalf("expected default max_unsafe in output, got: %s", out)
 	}
-	if !strings.Contains(out, "snapshot_retention: 30d (default)") {
-		t.Fatalf("expected default snapshot_retention in output, got: %s", out)
-	}
-	if !strings.Contains(out, "default_retention_tier: critical (default)") {
-		t.Fatalf("expected default retention tier in output, got: %s", out)
-	}
 }
 
 func TestConfigShow_ConfigAndEnvSourcesJSON(t *testing.T) {
@@ -47,12 +39,10 @@ func TestConfigShow_ConfigAndEnvSourcesJSON(t *testing.T) {
 	chdirForConfigTest(t, temp)
 
 	cfgPath := filepath.Join(temp, appconfig.AuditPolicyFile)
-	cfg := "max_unsafe: 96h\nsnapshot_retention: 45d\ndefault_retention_tier: non_critical\nsnapshot_retention_tiers:\n  critical:\n    older_than: 30d\n  non_critical:\n    older_than: 14d\nci_failure_policy: fail_on_new_violation\n"
+	cfg := "max_unsafe: 96h\nci_failure_policy: fail_on_new_violation\n"
 	if err := os.WriteFile(cfgPath, []byte(cfg), 0o644); err != nil {
 		t.Fatalf("write config: %v", err)
 	}
-
-	t.Setenv(env.SnapshotRetention.Name, "7d")
 
 	root := getTestRootCmd()
 	buf := new(bytes.Buffer)
@@ -77,12 +67,6 @@ func TestConfigShow_ConfigAndEnvSourcesJSON(t *testing.T) {
 	}
 	if !strings.HasSuffix(out.MaxUnsafeDuration.Source, appconfig.AuditPolicyFile+":max_unsafe") {
 		t.Fatalf("max_unsafe source=%q", out.MaxUnsafeDuration.Source)
-	}
-	if out.SnapshotRetention.Value != "7d" {
-		t.Fatalf("snapshot_retention=%q want 7d", out.SnapshotRetention.Value)
-	}
-	if out.SnapshotRetention.Source != "env:"+env.SnapshotRetention.Name {
-		t.Fatalf("snapshot_retention source=%q", out.SnapshotRetention.Source)
 	}
 }
 
@@ -111,27 +95,6 @@ func TestConfigGetAndSet(t *testing.T) {
 	}
 	if got := strings.TrimSpace(buf.String()); got != "72h" {
 		t.Fatalf("got %q want 72h", got)
-	}
-}
-
-func TestConfigSetRetentionTierKey(t *testing.T) {
-	temp := t.TempDir()
-	chdirForConfigTest(t, temp)
-
-	root := getTestRootCmd()
-	root.SetOut(new(bytes.Buffer))
-	root.SetErr(new(bytes.Buffer))
-	root.SetArgs([]string{"config", "set", "snapshot_retention_tiers.non_critical", "14d"})
-	if err := root.Execute(); err != nil {
-		t.Fatalf("config set failed: %v", err)
-	}
-
-	cfgBytes, err := os.ReadFile(filepath.Join(temp, appconfig.AuditPolicyFile))
-	if err != nil {
-		t.Fatalf("read config: %v", err)
-	}
-	if !strings.Contains(string(cfgBytes), "older_than: 14d") {
-		t.Fatalf("expected tier older_than value in config, got:\n%s", string(cfgBytes))
 	}
 }
 

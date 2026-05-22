@@ -128,16 +128,6 @@ func LoadSnapshotsFromDir(t *testing.T, dir string) []asset.Snapshot {
 	return cloneSnapshots(snapshots)
 }
 
-// ResetFixtureCache drops every cached entry. Tests that mutate
-// fixtures on disk during their run can call this from t.Cleanup
-// to make subsequent loads see the new state.
-func ResetFixtureCache() {
-	globalFixtureCache.mu.Lock()
-	globalFixtureCache.controls = make(map[string][]policy.ControlDefinition)
-	globalFixtureCache.snapshots = make(map[string][]asset.Snapshot)
-	globalFixtureCache.mu.Unlock()
-}
-
 // ErrFixtureNotCached is returned by callers that expected a hit.
 // Reserved for future use; not currently raised by the helpers.
 var ErrFixtureNotCached = errors.New("fixture not in cache")

@@ -318,14 +318,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-msk-auth-mtls-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-msk-auth-mtls-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "7f4467c185c2eda7ba12f0e4f5879011a16ee456",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-msk-auth-mtls-001-fail/controls/"
-      ]
     }
   }
 }

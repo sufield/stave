@@ -241,11 +241,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-ec2-imdsv2-container-bypass/controls",
       "observations": "testdata/e2e/e2e-ec2-imdsv2-container-bypass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "a103b46539bf2153a77deb92ccf417b762b1f17c",
-      "dirty": false
     }
   }
 }

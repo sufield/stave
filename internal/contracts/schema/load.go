@@ -216,11 +216,11 @@ func extractSchemaID(data []byte) string {
 		return ""
 	}
 	rest = rest[1:]
-	end := strings.IndexByte(rest, '"')
-	if end < 0 {
+	before, _, ok := strings.Cut(rest, `"`)
+	if !ok {
 		return ""
 	}
-	return rest[:end]
+	return before
 }
 
 // SupportedVersions returns all registered versions for a specific kind.

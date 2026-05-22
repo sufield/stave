@@ -317,14 +317,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-ecs-secret-ghost-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-ecs-secret-ghost-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "fb4df7081ce0c839cb2e81eae5c0d58df9aca610",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-ecs-secret-ghost-001-fail/controls/"
-      ]
     }
   }
 }

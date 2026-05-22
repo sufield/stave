@@ -118,12 +118,6 @@ func TestDefaultPolicy_IsImportAllowed(t *testing.T) {
 		want    bool
 	}{
 		{
-			name:    "allowed os/exec in gitinfo",
-			relPath: "internal/adapters/gitinfo/repo.go",
-			imp:     `"os/exec"`,
-			want:    true,
-		},
-		{
 			name:    "allowed os/exec in govulncheck",
 			relPath: "internal/adapters/govulncheck/runner.go",
 			imp:     `"os/exec"`,
@@ -143,7 +137,7 @@ func TestDefaultPolicy_IsImportAllowed(t *testing.T) {
 		},
 		{
 			name:    "disallowed net/http in allowed file",
-			relPath: "internal/adapters/gitinfo/repo.go",
+			relPath: "internal/adapters/govulncheck/runner.go",
 			imp:     `"net/http"`,
 			want:    false,
 		},

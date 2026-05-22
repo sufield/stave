@@ -312,14 +312,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-azure-app-insights-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-azure-app-insights-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "f686e77569736a1f0bf55f10b654122ed15dc844",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-azure-app-insights-001-fail/controls/"
-      ]
     }
   }
 }

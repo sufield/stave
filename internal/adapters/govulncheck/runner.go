@@ -35,5 +35,15 @@ func Run(ctx context.Context, cwd string) ([]byte, error) {
 		}
 		return output, fmt.Errorf("govulncheck: %w", err)
 	}
+	// Subprocess-boundary contract (bug-1 class): exit 0 from
+	// govulncheck means "no vulnerabilities found" — but the JSON
+	// report is still expected on stdout (header + scan metadata
+	// even when findings are empty). Empty output under exit 0 is
+	// a contract violation by the binary; surface it as an error
+	// rather than letting the caller's JSON parse silently fail
+	// later or, worse, record an empty report as "clean."
+	if len(output) == 0 {
+		return nil, errors.New("govulncheck exited 0 but produced no output (expected JSON report)")
+	}
 	return output, nil
 }

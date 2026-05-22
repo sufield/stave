@@ -15,8 +15,8 @@ import (
 )
 
 // Weights tunes the relative importance of each score dimension.
-// Aliased from the internal scorer; ParseWeights and DefaultWeights
-// are re-exported for callers that build weights from CLI strings.
+// Aliased from the internal scorer; DefaultWeights is re-exported so
+// callers can start from the standard distribution and adjust fields.
 type Weights = appscore.Weights
 
 // ScoreResult is the full posture score breakdown. Aliased from the
@@ -31,12 +31,6 @@ type ScoreResult = appscore.Result
 // (Severity 0.45, SLA 0.25, Chain 0.20, Coverage 0.10).
 func DefaultWeights() Weights {
 	return appscore.DefaultWeights()
-}
-
-// ParseWeights parses a "severity=0.45,sla=0.25,chain=0.20,coverage=0.10"
-// override string. Missing keys retain DefaultWeights values.
-func ParseWeights(s string) (Weights, error) {
-	return appscore.ParseWeights(s)
 }
 
 // ScoreConfig parameterizes a [Score] call.

@@ -148,82 +148,11 @@ References:
 - [SecurityWeek: AWS Trusted Advisor Tricked Into Showing Unprotected S3 Buckets as Secure](https://www.securityweek.com/aws-trusted-advisor-tricked-into-showing-unprotected-s3-buckets-as-secure/)
 - [CheckRed: AWS Bypass — Misconfigurations Still Threaten Cloud Security](https://checkred.com/resources/blog/when-secure-isnt-what-the-trusted-advisor-s3-bypass-reveals-about-aws-misconfigurations/)
 
-## Why does `verify` exist when `ci diff` already compares evaluations?
-
-They answer different questions for different personas.
-
-`verify` answers: **"did my specific fix work?"** An engineer remediates three bucket misconfigurations, re-runs `apply`, and needs to know: are those three findings gone, and did the fix introduce anything new? `verify` closes the remediation loop with a formal answer.
-
-`ci diff` answers: **"did the overall security posture regress?"** A CI pipeline compares the current evaluation against an accepted baseline to detect new findings introduced by a code change or configuration drift.
-
-| | `verify` | `ci diff` |
-|---|---|---|
-| Question | Did my remediation resolve the findings? | Did the posture regress since baseline? |
-| Persona | Engineer who just fixed something | CI pipeline checking for regressions |
-| Input | Before/after evaluation files from the same remediation cycle | Current evaluation vs accepted baseline |
-| Cares about | Resolved findings | New findings |
-| Typical exit | 0 (all resolved) | 3 (new findings detected) |
-
-Without `verify`, the remediation workflow has no formal end. You find the problem with `apply`, fix it, re-run `apply`, and manually scan the output hoping you didn't miss anything. `verify` makes the fix provable:
-
-```bash
-stave apply ... -f json > before.json    # 3 findings
-# fix the cloud config, retake snapshot
-stave apply ... -f json > after.json     # 0 findings
-stave verify --before before.json --after after.json
-# Resolved: 3, New: 0, Unchanged: 0
-```
-
-This is also why `verify` is a production command and not dev-only — it's part of the operational remediation cycle, not a debugging tool.
-
-## Why does `stave snapshot archive` exist when Unix has `mv`?
-
-`stave snapshot archive` is not a file mover — it is a retention-aware lifecycle command that understands your project's snapshot policies. A plain `mv` knows nothing about observation files, retention tiers, or evaluation requirements.
-
-| Capability | `mv` | `stave snapshot archive` |
-|---|---|---|
-| Retention policy | None — you decide what to move | Reads `--older-than` and `--retention-tier` from `stave.yaml` |
-| Safety guard | None — will move everything you tell it to | `--keep-min` (default 2) prevents archiving below the minimum needed for duration evaluation |
-| Dry-run default | No — acts immediately | Dry-run by default; requires `--force` to move files |
-| Determinism | Depends on wall clock | `--now` flag pins the reference time for reproducible decisions in CI |
-| Tier awareness | None | Pulls per-tier retention settings (e.g., `critical: 30d`, `non_critical: 14d`) from project config |
-| Machine-readable output | None | `--format json` produces structured results for pipeline integration |
-
-The equivalent Unix script would need to: parse each JSON filename as a timestamp, look up the retention tier config, compare against a policy, verify the remaining count stays above `keep_min`, preview the plan, then move — a non-trivial amount of logic that `stave snapshot archive` encapsulates in a single command with safety defaults.
-
-The same reasoning applies to `stave snapshot prune` (delete instead of move) and `stave snapshot plan` (preview without acting). These commands exist because snapshot lifecycle management is a first-class concern in Stave's safety engineering model — observation history is evidence, and managing it carelessly can break duration calculations.
-
-## Can snapshot pruning or archiving conflict with compliance?
-
-Yes. Observation snapshots are evidence — they prove what state your infrastructure was in at a specific point in time. Deleting or relocating that evidence can conflict with regulatory retention mandates.
-
-| Framework | Minimum retention | What it covers |
-|---|---|---|
-| HIPAA | 6 years | Records documenting PHI safeguards |
-| SOX (Sarbanes-Oxley) | 7 years | Audit records for financial system controls |
-| PCI-DSS | 1 year | Security event logs and access records |
-| FedRAMP / NIST 800-53 | 3 years | System security evidence and audit trails |
-| GDPR | Varies by purpose | Processing records (but also right-to-erasure tension) |
-
-**Pruning is the higher risk.** It permanently deletes snapshots. If your `stave.yaml` sets `snapshot_retention: 30d` but your compliance framework requires 6 years of evidence, pruning destroys records you are legally required to keep.
-
-**Archiving is safer** because the data is preserved, but the archive location must be documented and accessible to auditors. Moving files to a path that is not part of your audit trail can create gaps if an auditor asks for evidence from a specific date range.
-
-**`keep_min` protects evaluation, not compliance.** The default `keep_min: 2` ensures Stave can still calculate unsafe duration. It does not ensure you retain enough snapshots to satisfy an audit. Two snapshots out of a year is fine for duration math but useless for proving continuous compliance.
-
-**Recommendations for regulated environments:**
-
-1. **Set retention to match your longest compliance mandate** — if you are subject to HIPAA and SOX, set `snapshot_retention: 2557d` (7 years), not `30d`.
-2. **Use archive, not prune** — move aged snapshots to cold storage rather than deleting them. Configure `--archive-dir` to point to a durable, backed-up location.
-3. **Never prune without legal review** — if you are subject to any retention mandate, treat `stave snapshot prune --force` as a destructive operation that requires the same approval as deleting database backups.
-4. **Use retention tiers to separate concerns** — configure a `compliance` tier with long retention for regulated assets and a shorter `operational` tier for non-regulated ones.
-5. **Document your archive location** — auditors need to know where evidence lives. If you archive to `s3://audit-archive/stave/`, document that path in your security plan.
-
-Stave's snapshot lifecycle commands give you the tooling to manage retention. They do not make compliance decisions for you — your retention settings must reflect your regulatory obligations.
-
 ## How does Stave protect against accidental destruction in production?
 
-Stave uses a **two-key safety model** for destructive commands like `snapshot prune`. Both conditions must be true for the production guard to activate:
+Stave uses a **two-key safety model** for any commands an operator marks
+as sensitive via the `blocked_commands` config. Both conditions must be
+true for the production guard to activate:
 
 1. **Key 1: Edition** — the binary must be built with the dev edition label (`stave-dev`)
 2. **Key 2: Environment** — the runtime must be detected as production (`STAVE_ENV=production` or a context with `production: true`)
@@ -251,13 +180,14 @@ contexts:
 ```
 
 When detected, the dev binary:
-- **Hard-blocks** destructive commands (`snapshot prune`) with a clear error
+- **Hard-blocks** any command listed in `blocked_commands` with a clear error
 - **Warns** on read-only commands (allows break-glass debugging)
 
 ```bash
 export STAVE_ENV=production
-stave-dev snapshot prune --force   # BLOCKED: "command 'prune' is blocked in production"
-stave-dev doctor                   # WARNING printed, then runs (read-only)
+# With `blocked_commands: [enforce]` configured:
+stave-dev enforce   # BLOCKED: "command 'enforce' is blocked in production"
+stave-dev doctor    # WARNING printed, then runs (read-only)
 ```
 
 ### Layer 2: IAM boundaries (the gold standard)
@@ -266,13 +196,13 @@ The most robust defense ensures developer credentials cannot modify production d
 
 | Environment | Binary | Credentials | Can read | Can write/delete |
 |---|---|---|---|---|
-| CI/CD pipeline | `stave` | Service account | Yes | Yes (archive only) |
+| CI/CD pipeline | `stave` | Service account | Yes | Yes |
 | Developer laptop | `stave-dev` | Developer IAM role | Yes (break-glass) | No |
 | Local sandbox | `stave` or `stave-dev` | Sandbox credentials | Yes | Yes |
 
 ## Why are there two binaries (`stave` and `stave-dev`)?
 
-Both binaries contain **identical commands**. Every command — `apply`, `diagnose`, `trace`, `controls`, `lint`, `inspect`, `doctor`, `snapshot prune` — ships in both.
+Both binaries contain **identical commands**. Every command — `apply`, `diagnose`, `trace`, `controls`, `lint`, `inspect`, `doctor`, `snapshot diff` — ships in both.
 
 The only difference is the **edition label**:
 
@@ -297,7 +227,7 @@ Every `stave apply` command produces JSON conforming to the `out.v0.1` schema. T
 The schema defines two output kinds:
 
 - **`evaluation`** (`stave apply`) — findings from running controls against observations
-- **`verification`** (`stave verify`) — before/after comparison showing resolved, remaining, and introduced findings
+- **`verification`** (`stave check`) — before/after comparison showing resolved, remaining, and introduced findings
 
 ### Evaluation output structure
 
@@ -526,8 +456,8 @@ There are 21 scripts covering the full CLI surface:
 | `report.txtar` | `report` command |
 | `sanitize.txtar` | `--sanitize` redacts infrastructure identifiers |
 | `sarif_output.txtar` | `--format sarif` produces valid SARIF v2.1.0 |
-| `snapshot_commands.txtar` | `snapshot plan/prune/archive` commands |
-| `snapshot_operations.txtar` | Snapshot lifecycle operations with retention tiers |
+| `snapshot_commands.txtar` | `snapshot diff` subcommand surface |
+| `snapshot_operations.txtar` | `snapshot diff` with real observation data |
 | `streams.txtar` | stdout/stderr separation |
 | `validate_lint_fmt.txtar` | `validate` command with lint and format checks |
 

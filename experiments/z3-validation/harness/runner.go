@@ -3,6 +3,7 @@ package harness
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -148,6 +149,15 @@ func runStaveApply(ctx context.Context, binary, controlsDir, observationsDir str
 		}
 		// Exit 3: findings on stdout, fatal-style summary on stderr.
 		// stdout was captured by .Output() before the exit error fired.
+	}
+	// Subprocess-boundary contract (bug-1 class): exit 0 (clean) or
+	// 3 (findings) MUST carry the JSON document on stdout. Empty
+	// stdout under either exit is a contract violation by stave
+	// apply — surface it explicitly so the harness records an
+	// upstream regression instead of letting parseStaveFindings
+	// return nil findings and quietly mark the fixture "agreed."
+	if len(stdout) == 0 {
+		return nil, errors.New("stave apply exited cleanly but produced no output (expected out.v0.1 JSON)")
 	}
 	return parseStaveFindings(stdout)
 }

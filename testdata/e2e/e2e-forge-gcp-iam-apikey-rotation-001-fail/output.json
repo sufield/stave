@@ -313,14 +313,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-gcp-iam-apikey-rotation-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-gcp-iam-apikey-rotation-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "24aec6ac80cbb01dc7c9bb06a28568cbe29d88af",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-gcp-iam-apikey-rotation-001-fail/controls/"
-      ]
     }
   }
 }

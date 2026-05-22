@@ -313,14 +313,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-azure-keyvault-private-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-azure-keyvault-private-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "455fc5c817267c8b7b4726b3b5ee543a089a6e97",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-azure-keyvault-private-001-fail/controls/"
-      ]
     }
   }
 }

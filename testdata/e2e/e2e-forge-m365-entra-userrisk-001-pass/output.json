@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-m365-entra-userrisk-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-m365-entra-userrisk-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "5099745d6f5d0f219ed9ba0e7079a03860733f29",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-m365-entra-userrisk-001-pass/controls/"
-      ]
     }
   }
 }

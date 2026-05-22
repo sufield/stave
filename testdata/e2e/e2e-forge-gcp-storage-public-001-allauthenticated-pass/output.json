@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-gcp-storage-public-001-allauthenticated-pass/controls",
       "observations": "testdata/e2e/e2e-forge-gcp-storage-public-001-allauthenticated-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8e56381cf8d7654f5061c76e0849cb809cc2fdf3",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-gcp-storage-public-001-allauthenticated-pass/controls/"
-      ]
     }
   }
 }

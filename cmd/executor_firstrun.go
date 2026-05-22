@@ -90,7 +90,7 @@ func (a *App) printNoProjectHintIfNeeded(args []string) {
 		return
 	}
 	switch subcommand {
-	case "init", "generate", "completion", "help", "version":
+	case "init", "generate", "completion", "help", "version", "features":
 		// Subcommands that DO NOT require an existing project; the
 		// hint would mis-direct the user mid-init.
 		return

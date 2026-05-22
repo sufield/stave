@@ -9,7 +9,6 @@ import (
 	"time"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/ports"
 )
 
@@ -382,23 +381,6 @@ func TestPrepareEvaluationContext_BadFormat(t *testing.T) {
 	}
 }
 
-// --- WarnGitDirty ---
-
-func TestWarnGitDirty_NilGit(_ *testing.T) {
-	// Should not panic
-	WarnGitDirty(io.Discard, nil, "test")
-}
-
-func TestWarnGitDirty_NotDirty(t *testing.T) {
-	// Should not panic or write
-	var buf bytes.Buffer
-	WarnGitDirty(&buf, &evaluation.GitInfo{Dirty: false}, "test")
-}
-
-func TestWarnGitDirty_DirtyLogsWarning(t *testing.T) {
-	// Caller skips this call in quiet mode; here we test the non-quiet path.
-	WarnGitDirty(io.Discard, &evaluation.GitInfo{Dirty: true}, "test")
-}
 
 // --- isManifestArtifact (via output) ---
 

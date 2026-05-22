@@ -442,54 +442,22 @@ func TestFromExtensions_Nil(t *testing.T) {
 	}
 }
 
-func TestFromExtensions_WithGit(t *testing.T) {
-	ext := &evaluation.Extensions{
-		SelectedSource: "dir",
-		ContextName:    "dev",
-		ResolvedPaths:  map[string]string{"controls": "/ctl"},
-		EnabledPacks:   []kernel.PackName{"s3/public"},
-		Git: &evaluation.GitMetadata{
-			RepoRoot: "/repo",
-			Head:     "abc123",
-			Dirty:    true,
-			Modified: []string{"main.tf"},
-		},
-	}
-	dto := NewExtensionsDTO(ext)
-	if dto == nil {
-		t.Fatal("fromExtensions returned nil")
-	}
-	if dto.SelectedSource != "dir" {
-		t.Errorf("SelectedSource = %q", dto.SelectedSource)
-	}
-	if dto.ContextName != "dev" {
-		t.Errorf("ContextName = %q", dto.ContextName)
-	}
-	if dto.Git == nil {
-		t.Fatal("Git is nil")
-	}
-	if dto.Git.RepoRoot != "/repo" {
-		t.Errorf("Git.RepoRoot = %q", dto.Git.RepoRoot)
-	}
-	if !dto.Git.Dirty {
-		t.Error("Git.Dirty = false, want true")
-	}
-	if len(dto.Git.Modified) != 1 {
-		t.Errorf("Git.Modified = %v", dto.Git.Modified)
-	}
-}
-
-func TestFromExtensions_WithoutGit(t *testing.T) {
+func TestFromExtensions(t *testing.T) {
 	ext := &evaluation.Extensions{
 		SelectedSource: "packs",
+		ContextName:    "dev",
+		ResolvedPaths:  map[string]string{"controls": "/ctl"},
 		EnabledPacks:   []kernel.PackName{"s3/all"},
 	}
 	dto := NewExtensionsDTO(ext)
 	if dto == nil {
 		t.Fatal("fromExtensions returned nil")
 	}
-	if dto.Git != nil {
-		t.Error("Git should be nil")
+	if dto.SelectedSource != "packs" {
+		t.Errorf("SelectedSource = %q", dto.SelectedSource)
+	}
+	if dto.ContextName != "dev" {
+		t.Errorf("ContextName = %q", dto.ContextName)
 	}
 	if len(dto.EnabledPacks) != 1 || dto.EnabledPacks[0] != "s3/all" {
 		t.Errorf("EnabledPacks = %v", dto.EnabledPacks)

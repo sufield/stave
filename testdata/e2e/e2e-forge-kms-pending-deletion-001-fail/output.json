@@ -318,14 +318,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-kms-pending-deletion-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-kms-pending-deletion-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "869ef735fb2d1af625c0309271c858e6ddebf13e",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-kms-pending-deletion-001-fail/controls/"
-      ]
     }
   }
 }

@@ -22,10 +22,6 @@ func TestEvaluationMetadata_ToMap_Golden(t *testing.T) {
 			Controls:     "/tmp/ctl.yaml",
 			Observations: "/tmp/obs.json",
 		},
-		Git: &GitInfo{
-			RepoRoot: "/work/stave",
-			Dirty:    true,
-		},
 	}
 
 	got := meta.ToMap()

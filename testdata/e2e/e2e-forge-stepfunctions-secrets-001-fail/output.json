@@ -317,14 +317,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-stepfunctions-secrets-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-stepfunctions-secrets-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ded8758c4e763c3654251bc1d128d6160a8fcc8f",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-stepfunctions-secrets-001-fail/controls/"
-      ]
     }
   }
 }

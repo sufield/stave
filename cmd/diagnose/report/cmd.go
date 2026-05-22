@@ -2,14 +2,11 @@ package report
 
 import (
 	_ "embed"
-	"log/slog"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	reportrender "github.com/sufield/stave/internal/adapters/output/report"
 	"github.com/sufield/stave/internal/core/reporting"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -76,18 +73,6 @@ Examples:
 				return err
 			}
 
-			// Audit git state before running the report (CLI concern).
-			res, resolverErr := projctx.NewResolver()
-			if resolverErr != nil {
-				slog.Warn("failed to resolve project context", "error", resolverErr)
-			}
-			if res != nil {
-				gitInfo := compose.AuditGitStatus(cmd.Context(), res.ProjectRoot(), resolveAuditPaths(res))
-				if flags.ShouldEmit() {
-					compose.WarnGitDirty(cmd.ErrOrStderr(), gitInfo, "report")
-				}
-			}
-
 			// Use case: load evaluation
 			ucReq := reporting.ReportRequest{
 				InputFile:    opts.InputFile,
@@ -121,26 +106,4 @@ Examples:
 	opts.BindFlags(cmd)
 
 	return cmd
-}
-
-// resolveAuditPaths determines which files should be checked for uncommitted changes.
-func resolveAuditPaths(res *projctx.Resolver) []string {
-	var paths []string
-
-	configRes, err := projconfig.NewResolver()
-	if err == nil {
-		_, cfgPath, cfgErr := configRes.FindProjectConfig("")
-		if cfgErr == nil {
-			paths = append(paths, cfgPath)
-		}
-	}
-
-	sc, err := res.ResolveSelected()
-	if err == nil && sc.Active && sc.Context != nil {
-		paths = append(paths, sc.Context.AbsPath(sc.Context.EffectiveControlsDir()))
-	} else {
-		paths = append(paths, "controls")
-	}
-
-	return paths
 }

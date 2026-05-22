@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-m365-defender-safeattach-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-m365-defender-safeattach-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "2e67b7c118e21cc9901d43e9d80ef775565e5e54",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-m365-defender-safeattach-001-pass/controls/"
-      ]
     }
   }
 }

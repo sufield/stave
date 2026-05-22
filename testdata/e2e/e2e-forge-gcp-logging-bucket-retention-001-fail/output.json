@@ -313,14 +313,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-gcp-logging-bucket-retention-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-gcp-logging-bucket-retention-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "fdf741bfe3085242f8e5970d1b8421d646f13396",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-gcp-logging-bucket-retention-001-fail/controls/"
-      ]
     }
   }
 }

@@ -34,7 +34,7 @@ func TestDomainLayerBoundary(t *testing.T) {
 	// Engine packages live under internal/core/.
 	engineDirs := []string{
 		"kernel", "asset", "evaluation", "controldef", "predicate",
-		"ports", "maps", "retention", "snapplan", "schemaval",
+		"ports", "maps", "retention", "schemaval",
 		"diag", "s3",
 	}
 

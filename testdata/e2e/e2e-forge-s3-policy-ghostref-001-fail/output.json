@@ -317,14 +317,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-s3-policy-ghostref-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-s3-policy-ghostref-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "5290239f885833284a97cfcff8033725cfe39df0",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-s3-policy-ghostref-001-fail/controls/"
-      ]
     }
   }
 }

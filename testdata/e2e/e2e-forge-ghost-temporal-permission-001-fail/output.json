@@ -315,14 +315,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-ghost-temporal-permission-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-ghost-temporal-permission-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "6d3825a56b5cc1e32bcb89898ec79897866d19c4",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-ghost-temporal-permission-001-fail/controls/"
-      ]
     }
   }
 }

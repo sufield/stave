@@ -455,26 +455,6 @@
             },
             "pack_registry_hash": {
               "type": "string"
-            },
-            "git": {
-              "type": "object",
-              "properties": {
-                "repo_root": {
-                  "type": "string"
-                },
-                "head_commit": {
-                  "type": "string"
-                },
-                "dirty": {
-                  "type": "boolean"
-                },
-                "modified_paths": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                }
-              }
             }
           }
         },

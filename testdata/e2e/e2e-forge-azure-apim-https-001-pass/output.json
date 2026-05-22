@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-azure-apim-https-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-azure-apim-https-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "47f3287f6f3eab6c0cb6e70c821374530ff52964",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-azure-apim-https-001-pass/controls/"
-      ]
     }
   }
 }

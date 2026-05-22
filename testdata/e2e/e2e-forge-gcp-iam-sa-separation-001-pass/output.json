@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-gcp-iam-sa-separation-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-gcp-iam-sa-separation-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "24aec6ac80cbb01dc7c9bb06a28568cbe29d88af",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-gcp-iam-sa-separation-001-pass/controls/"
-      ]
     }
   }
 }

@@ -315,14 +315,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-emr-log-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-emr-log-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "3a9b508b5ab2d0daf2ff2a1749d4ae76fa628d78",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-emr-log-001-fail/controls/"
-      ]
     }
   }
 }

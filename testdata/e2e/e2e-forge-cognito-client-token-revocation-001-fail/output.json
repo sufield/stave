@@ -314,14 +314,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-cognito-client-token-revocation-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-cognito-client-token-revocation-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c5863837fe8f53a54cf87fe9d714a4204bce8f40",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-cognito-client-token-revocation-001-fail/controls/"
-      ]
     }
   }
 }

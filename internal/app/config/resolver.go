@@ -136,51 +136,6 @@ func (r *GovernanceResolver) ResolveMaxUnsafeDuration() PolicyValue[string] {
 	)
 }
 
-// ResolveRetentionTier returns the default retention tier with provenance.
-func (r *GovernanceResolver) ResolveRetentionTier() PolicyValue[string] {
-	return r.mergeLayers(env.RetentionTier, "default_retention_tier",
-		func(c *WorkspacePolicy) string { return c.RetentionTier },
-		func(c *OperatorSettings) string { return c.RetentionTier },
-		DefaultRetentionTier, NormalizeTier,
-	)
-}
-
-// ResolveSnapshotRetention returns the retention duration for a specific tier.
-func (r *GovernanceResolver) ResolveSnapshotRetention(tier string) PolicyValue[string] {
-	if v := strings.TrimSpace(r.Getenv(env.SnapshotRetention.Name)); v != "" {
-		return PolicyValue[string]{Value: v, Source: "env:" + env.SnapshotRetention.Name, Layer: LayerEnvironment}
-	}
-	if v, ok := r.retentionFromPolicy(tier); ok {
-		return v
-	}
-	if r.Settings != nil {
-		if v := strings.TrimSpace(r.Settings.SnapshotRetention); v != "" {
-			return PolicyValue[string]{Value: v, Source: r.SettingsPath + ":snapshot_retention", Layer: LayerUserConfig}
-		}
-	}
-	return PolicyValue[string]{Value: DefaultSnapshotRetention, Source: "default", Layer: LayerDefault}
-}
-
-func (r *GovernanceResolver) retentionFromPolicy(tier string) (PolicyValue[string], bool) {
-	if r.Policy == nil {
-		return PolicyValue[string]{}, false
-	}
-	normalizedTier := NormalizeTier(tier)
-	if tc, exists := r.Policy.RetentionTiers[normalizedTier]; exists {
-		if v := strings.TrimSpace(tc.OlderThan); v != "" {
-			return PolicyValue[string]{
-				Value:  v,
-				Source: r.PolicyPath + ":snapshot_retention_tiers." + normalizedTier,
-				Layer:  LayerProjectConfig,
-			}, true
-		}
-	}
-	if v := strings.TrimSpace(r.Policy.SnapshotRetention); v != "" {
-		return PolicyValue[string]{Value: v, Source: r.PolicyPath + ":snapshot_retention", Layer: LayerProjectConfig}, true
-	}
-	return PolicyValue[string]{}, false
-}
-
 // ResolveCIFailurePolicy returns the enforcement gate policy with provenance.
 func (r *GovernanceResolver) ResolveCIFailurePolicy() PolicyValue[string] {
 	return r.mergeLayers(env.CIFailurePolicy, "ci_failure_policy",
@@ -260,26 +215,6 @@ func (r *GovernanceResolver) MaxUnsafeDuration() string {
 	return r.ResolveMaxUnsafeDuration().Value
 }
 
-func (r *GovernanceResolver) SnapshotRetention() string {
-	return r.SnapshotRetentionForTier(r.RetentionTier())
-}
-
-func (r *GovernanceResolver) SnapshotRetentionForTier(tier string) string {
-	return r.ResolveSnapshotRetention(tier).Value
-}
-
-func (r *GovernanceResolver) RetentionTier() string {
-	return r.ResolveRetentionTier().Value
-}
-
-func (r *GovernanceResolver) HasConfiguredTier(tier string) bool {
-	if r.Policy == nil || len(r.Policy.RetentionTiers) == 0 {
-		return false
-	}
-	_, exists := r.Policy.RetentionTiers[NormalizeTier(tier)]
-	return exists
-}
-
 func (r *GovernanceResolver) CIFailurePolicy() EnforcementGate {
 	return EnforcementGate(r.ResolveCIFailurePolicy().Value)
 }
@@ -324,13 +259,6 @@ func (r *GovernanceResolver) ConfidenceMedMultiplier() int {
 		return 0
 	}
 	return r.Policy.ConfidenceMedMultiplier
-}
-
-func (r *GovernanceResolver) MaxSnapshotFiles() int {
-	if r == nil || r.Policy == nil {
-		return 0
-	}
-	return r.Policy.MaxSnapshotFiles
 }
 
 func (r *GovernanceResolver) BlockedCommands() []string {

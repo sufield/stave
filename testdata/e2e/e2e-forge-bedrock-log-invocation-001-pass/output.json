@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-bedrock-log-invocation-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-bedrock-log-invocation-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "87c85ecd370f6541d2b0b2baf12ac306e8432460",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-bedrock-log-invocation-001-pass/controls/"
-      ]
     }
   }
 }

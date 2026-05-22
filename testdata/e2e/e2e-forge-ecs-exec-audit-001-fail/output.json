@@ -349,14 +349,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-ecs-exec-audit-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-ecs-exec-audit-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "217b2174b053ed5d4ae6462771d5c6d3cd5dc2fc",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-ecs-exec-audit-001-fail/controls/"
-      ]
     }
   }
 }

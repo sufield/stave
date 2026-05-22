@@ -40,7 +40,6 @@ func buildStaveConfig(ec evalContext, deps *appeval.ApplyDeps) stave.Config {
 
 		// Decoration / wire-format fields preserved from deps so
 		// JSON output stays byte-identical.
-		GitMetadata: deps.Config.Metadata.Git,
 		Tracer:      deps.Config.Tracer,
 		ContextName: ec.Plan.ContextName,
 	}

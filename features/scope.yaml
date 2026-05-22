@@ -1,0 +1,56 @@
+# features/scope.yaml
+#
+# Source of truth for what Stave deliberately does NOT do. The IN SCOPE
+# half of `stave features` is discovered dynamically from the real
+# registries the evaluation engine uses (controls, packs, frameworks,
+# schemas, attack tactics, source types) and is not listed here.
+#
+# This OUT OF SCOPE manifest is reviewed in PRs alongside code changes.
+# Rule for reviewers: if a PR adds a capability that matches an
+# out_of_scope id, either remove that entry or the PR is blocked.
+#
+# Stave is a snapshot evaluator / formal proof system: snapshots in,
+# findings out. The boundaries below are by design — the work belongs
+# to the upstream system that produces snapshots, or to the downstream
+# system that consumes findings.
+
+out_of_scope:
+  - id: snapshot_generation
+    label: "Snapshot Generation"
+    reason: "Upstream responsibility"
+    alternatives: ["Steampipe", "Pulumi", "AWS CLI", "custom scripts"]
+
+  - id: snapshot_storage
+    label: "Snapshot Storage"
+    reason: "Upstream responsibility"
+    alternatives: ["S3", "local filesystem", "artifact store"]
+
+  - id: snapshot_retention
+    label: "Snapshot Retention"
+    reason: "Upstream responsibility"
+    alternatives: ["storage lifecycle policies"]
+
+  - id: continuous_scheduling
+    label: "Continuous Scheduling"
+    reason: "Delegated to orchestration"
+    alternatives: ["CI/CD cron", "K8s CronJob", "your scheduler"]
+
+  - id: remediation_execution
+    label: "Remediation Execution"
+    reason: "Delegated to IaC tools"
+    alternatives: ["Terraform", "kubectl", "AWS CLI"]
+
+  - id: alert_routing
+    label: "Alert Routing"
+    reason: "Consume Stave output formats"
+    alternatives: ["Slack", "PagerDuty", "Jira"]
+
+  - id: credential_management
+    label: "Credential Management"
+    reason: "Not needed — evaluates snapshots, not live APIs"
+    alternatives: []
+
+  - id: agent_installation
+    label: "Agent Installation"
+    reason: "Not needed — CLI binary, not daemon"
+    alternatives: []

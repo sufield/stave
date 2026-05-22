@@ -320,11 +320,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-waf-rules-owasp-fail/controls",
       "observations": "testdata/e2e/e2e-forge-waf-rules-owasp-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "38f1719276e8671abc59b56a69dff5d0830a2ff1",
-      "dirty": false
     }
   }
 }

@@ -21,12 +21,6 @@ func TestMetadataToMap_PacksSource(t *testing.T) {
 			RegistryVersion:    "v1.0.0",
 			RegistryHash:       "sha256:abc",
 		},
-		Git: &GitInfo{
-			RepoRoot:  "/repo",
-			Head:      "abc123",
-			Dirty:     true,
-			DirtyList: []FilePath{"file.go"},
-		},
 		ResolvedPaths: ResolvedPaths{
 			Controls:     "/repo/controls",
 			Observations: "/repo/observations",
@@ -42,18 +36,6 @@ func TestMetadataToMap_PacksSource(t *testing.T) {
 	}
 	if result["selected_controls_source"] != "packs" {
 		t.Fatalf("selected_controls_source = %v", result["selected_controls_source"])
-	}
-	// Git metadata should be present
-	gitRaw, ok := result["git"]
-	if !ok {
-		t.Fatal("expected git key")
-	}
-	gitMap, ok := gitRaw.(map[string]any)
-	if !ok {
-		t.Fatalf("git is %T, not map", gitRaw)
-	}
-	if gitMap["dirty"] != true {
-		t.Fatalf("git.dirty = %v", gitMap["dirty"])
 	}
 }
 

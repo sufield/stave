@@ -311,14 +311,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-cloudflare-dns-ghost-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-cloudflare-dns-ghost-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e8e74df5a433c93efa3fd0a610bbafac7a77bc07",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-cloudflare-dns-ghost-001-fail/controls/"
-      ]
     }
   }
 }

@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-lambda-url-auth-incomplete/controls",
       "observations": "testdata/e2e/e2e-forge-lambda-url-auth-incomplete/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "b4ab4623e5753082f42bcebf7adcce6d2d8b945b",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-lambda-url-auth-incomplete/controls/"
-      ]
     }
   }
 }

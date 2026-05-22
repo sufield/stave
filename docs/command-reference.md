@@ -67,21 +67,19 @@ Telemetry supports `--severity` and `--resource` filters. Output is append-safe 
 
 Bisect supports two modes: `--mode bisect` (O(log N) binary search, default) finds the transition into the current violation window. `--mode scan` (O(N) linear scan) finds ALL violation windows including Patient Zero. Use scan when the history is non-monotonic (fix-then-re-break patterns).
 
-## Snapshot Lifecycle
+## Snapshot Inspection
+
+Stave evaluates snapshots; it does not generate, retain, prune, or
+archive them. Snapshot lifecycle management is the responsibility of
+the upstream system that produces the snapshots (Steampipe, Pulumi,
+cloud collectors, etc.). Stave provides comparison only.
 
 | Command | Purpose | Input | Output | When to use |
 |---|---|---|---|---|
-| `snapshot plan` | Preview retention actions | `--observations-root` dir | Tier assignments and planned keep/prune/archive actions | Before pruning or archiving to review what will happen |
-| `snapshot prune` | Delete stale snapshots by age | `--observations` dir, `--older-than` duration | Deleted file list (dry-run by default, `--force` to delete) | Destructive cleanup of old snapshot files |
-| `snapshot archive` | Move aged snapshots to cold storage | `--observations` dir, `--archive-dir` path | Moved files (dry-run by default) | Periodically, to keep observation directories fast |
-| `snapshot quality` | Check snapshot health | `--observations` dir | Staleness, cadence gaps, missing fields report | Regularly, to ensure observation data is fresh |
-| `snapshot upcoming` | Snapshots approaching retention deadlines | `--controls` dir, `--observations` dir | Action items for at-risk snapshots | Weekly, to stay ahead of retention deadlines |
-| `snapshot status` | Snapshot health summary | `--controls` dir, `--observations` dir | Markdown or JSON status report | Scheduled reporting on snapshot health |
-| `snapshot risk` | Snapshot risk report | `--controls` dir, `--observations` dir | Markdown or JSON risk report | Scheduled reporting on snapshot risk signals |
 | `snapshot diff` | Compare two snapshots for drift | `--observations` dir (or `--before`/`--after` files) | Changed, added, removed fields per asset | When investigating configuration drift |
-| `snapshot manifest generate` | Generate unsigned integrity manifest | `--observations` dir | Manifest JSON with SHA-256 hashes | Establishing snapshot provenance |
-| `snapshot manifest sign` | Sign manifest with Ed25519 key | Manifest file, private key | Signed manifest | Tamper-evidence for compliance workflows |
-| `snapshot manifest keygen` | Generate an Ed25519 keypair | None | Public/private key pair | One-time setup for manifest signing |
+
+For tamper-evidence and provenance, use the `attest` command
+(`attest sign` / `attest verify` / `attest keygen`).
 
 ## Data & Artifacts
 

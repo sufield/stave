@@ -312,14 +312,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-m365-exchange-storage-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-m365-exchange-storage-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75c6b10f5a38ae9575c64710ed47a658e9c2900",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-m365-exchange-storage-001-fail/controls/"
-      ]
     }
   }
 }

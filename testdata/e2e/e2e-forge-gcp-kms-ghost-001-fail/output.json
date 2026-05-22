@@ -312,14 +312,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-gcp-kms-ghost-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-gcp-kms-ghost-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "b23c6761a6ee5d316e20627b4e7672324b9c7abe",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-gcp-kms-ghost-001-fail/controls/"
-      ]
     }
   }
 }

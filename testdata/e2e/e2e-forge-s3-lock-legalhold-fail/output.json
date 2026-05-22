@@ -315,14 +315,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-s3-lock-legalhold-fail/controls",
       "observations": "testdata/e2e/e2e-forge-s3-lock-legalhold-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0854a5adb322ccdb81ca8bf3330ef3e05a2e4c3d",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-s3-lock-legalhold-fail/controls/"
-      ]
     }
   }
 }

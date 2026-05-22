@@ -49,7 +49,6 @@ type OutputWriters struct {
 // ProjectScope holds project configuration and control filtering inputs.
 type ProjectScope struct {
 	Config      ProjectConfigInput
-	GitMetadata *evaluation.GitInfo
 	Filters     ControlFilter
 	ControlsDir string
 }
@@ -103,7 +102,6 @@ func BuildDependencies(ctx context.Context, in *BuildDependenciesInput) (BuildDe
 		WithExceptionConfig(resolved.ExceptionConfig),
 		WithAcknowledgmentConfig(in.Runtime.AcknowledgmentConfig),
 		WithPreloadedControls(preloaded),
-		WithGitMetadata(in.Project.GitMetadata),
 		WithPredicateParser(in.Runtime.PredicateParser),
 		WithCELEvaluator(in.Runtime.CELEvaluator),
 		WithTracer(in.Runtime.Tracer),

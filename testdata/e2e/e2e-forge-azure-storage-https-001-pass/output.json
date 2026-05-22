@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-azure-storage-https-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-azure-storage-https-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "342dd9b238e1cd9b09bcdc94f009c08e278838b9",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-azure-storage-https-001-pass/controls/"
-      ]
     }
   }
 }

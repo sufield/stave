@@ -83,19 +83,12 @@ const (
 // ExemptionConfig holds asset-level exemption rules. Aliased from the
 // internal controldef package because the type carries internal
 // indexing state (sync.Once-guarded lookup maps); mirroring would
-// duplicate the indexing logic. Construct via NewExemptionConfig.
+// duplicate the indexing logic.
 type ExemptionConfig = policy.ExemptionConfig
 
 // ExemptionRule is a single exemption pattern. Aliased so
 // callers can build ExemptionConfig values directly.
 type ExemptionRule = policy.ExemptionRule
-
-// NewExemptionConfig constructs an ExemptionConfig from a version
-// string and a slice of rules. Re-exported from controldef so callers
-// don't have to import the internal package.
-func NewExemptionConfig(version string, rules []ExemptionRule) *ExemptionConfig {
-	return policy.NewExemptionConfig(version, rules)
-}
 
 // AcknowledgmentConfig holds accepted-risk acknowledgments.
 // Aliased from controldef for the same reason as ExemptionConfig.
@@ -103,13 +96,6 @@ type AcknowledgmentConfig = policy.AcknowledgmentConfig
 
 // AcknowledgmentRule is a single accepted-risk record.
 type AcknowledgmentRule = policy.AcknowledgmentRule
-
-// NewAcknowledgmentConfig constructs an AcknowledgmentConfig from a
-// slice of rules. Returns nil for an empty slice — the engine treats
-// nil as "no acknowledgments", which is the correct semantic.
-func NewAcknowledgmentConfig(rules []AcknowledgmentRule) *AcknowledgmentConfig {
-	return policy.NewAcknowledgmentConfig(rules)
-}
 
 // SLAConfig captures the SLA policy parameters used to flag SLA
 // breaches on findings during evaluation. Mirrored intentionally

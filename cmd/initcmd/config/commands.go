@@ -2,7 +2,6 @@ package config
 
 import (
 	"io"
-	"log/slog"
 
 	"github.com/spf13/cobra"
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -10,7 +9,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/initcmd/contextcmd"
 	initenv "github.com/sufield/stave/cmd/initcmd/env"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -71,25 +69,9 @@ func mutationOptsFrom(gf cliflags.GlobalFlags, format appcontracts.OutputFormat)
 	}
 }
 
-// configKeyCompletions returns config key completions including retention tier
-// variants from the project config.
+// configKeyCompletions returns the available config key completions.
 func configKeyCompletions() []string {
-	tiers := []string{appconfig.DefaultRetentionTier}
-
-	if cfg, ok, cfgErr := projconfig.FindProjectConfig(); cfgErr != nil {
-		slog.Warn("failed to load project config for completions", "error", cfgErr)
-	} else if ok {
-		if t := appconfig.NormalizeTier(cfg.RetentionTier); t != "" {
-			tiers = append(tiers, t)
-		}
-		for tier := range cfg.RetentionTiers {
-			if t := appconfig.NormalizeTier(tier); t != "" {
-				tiers = append(tiers, t)
-			}
-		}
-	}
-
-	return appconfig.BuildSettingCompletions(tiers)
+	return appconfig.BuildSettingCompletions()
 }
 
 func newGetCmd(rt *ui.Runtime, format *string) *cobra.Command {

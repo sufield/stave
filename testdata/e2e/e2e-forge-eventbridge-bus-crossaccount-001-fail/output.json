@@ -317,14 +317,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-eventbridge-bus-crossaccount-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-eventbridge-bus-crossaccount-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "3aae4c7a360a5cc259dd59acb1e8b4cd826bde40",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-eventbridge-bus-crossaccount-001-fail/controls/"
-      ]
     }
   }
 }

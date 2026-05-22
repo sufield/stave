@@ -4,8 +4,6 @@ import (
 	"slices"
 	"strings"
 	"testing"
-
-	"github.com/sufield/stave/internal/core/retention"
 )
 
 func TestParseEnforcementGate(t *testing.T) {
@@ -36,52 +34,13 @@ func TestParseEnforcementGate(t *testing.T) {
 }
 
 func TestIdentifySetting_TopLevel(t *testing.T) {
-	// GovernanceSettings should include max_unsafe, snapshot_retention, etc.
+	// GovernanceSettings should include max_unsafe, ci_failure_policy, etc.
 	pk, err := IdentifySetting("max_unsafe")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if pk.Attribute != "max_unsafe" {
 		t.Errorf("TopLevel = %q, want max_unsafe", pk.Attribute)
-	}
-	if pk.TierName != "" {
-		t.Error("TierName should be empty for top-level key")
-	}
-}
-
-func TestIdentifySetting_TierKey(t *testing.T) {
-	pk, err := IdentifySetting("snapshot_retention_tiers.hot.older_than")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if pk.TierName != "hot" {
-		t.Errorf("TierName = %q, want hot", pk.TierName)
-	}
-	if pk.Property != "older_than" {
-		t.Errorf("SubField = %q, want older_than", pk.Property)
-	}
-}
-
-func TestIdentifySetting_TierKeyNoSubField(t *testing.T) {
-	pk, err := IdentifySetting("snapshot_retention_tiers.hot")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if pk.TierName != "hot" {
-		t.Errorf("TierName = %q, want hot", pk.TierName)
-	}
-	if pk.Property != "" {
-		t.Errorf("SubField = %q, want empty", pk.Property)
-	}
-}
-
-func TestIdentifySetting_TierKeyNormalized(t *testing.T) {
-	pk, err := IdentifySetting("snapshot_retention_tiers.HOT.keep_min")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if pk.TierName != "hot" {
-		t.Errorf("TierName = %q, want hot (normalized)", pk.TierName)
 	}
 }
 
@@ -92,8 +51,6 @@ func TestIdentifySetting_Errors(t *testing.T) {
 	}{
 		{"empty", ""},
 		{"unknown key", "unknown_key"},
-		{"empty tier name", "snapshot_retention_tiers."},
-		{"bad tier sub-field", "snapshot_retention_tiers.hot.bad_field"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -129,9 +86,9 @@ func TestGetAttribute(t *testing.T) {
 	})
 
 	t.Run("empty value", func(t *testing.T) {
-		v, ok := GetAttribute(cfg, "snapshot_retention")
+		v, ok := GetAttribute(cfg, "capture_cadence")
 		if !ok {
-			t.Fatal("expected ok=true for snapshot_retention")
+			t.Fatal("expected ok=true for capture_cadence")
 		}
 		if v != "" {
 			t.Errorf("Value = %q, want empty", v)
@@ -222,82 +179,6 @@ func TestResetAttribute(t *testing.T) {
 	}
 }
 
-func TestConfigureLifecycleTier(t *testing.T) {
-	t.Run("older_than", func(t *testing.T) {
-		cfg := &WorkspacePolicy{}
-		if err := ConfigureLifecycleTier(cfg, "hot", "older_than", "7d"); err != nil {
-			t.Fatalf("error: %v", err)
-		}
-		if cfg.RetentionTiers["hot"].OlderThan != "7d" {
-			t.Errorf("OlderThan = %q, want 7d", cfg.RetentionTiers["hot"].OlderThan)
-		}
-	})
-
-	t.Run("keep_min", func(t *testing.T) {
-		cfg := &WorkspacePolicy{}
-		if err := ConfigureLifecycleTier(cfg, "hot", "keep_min", "5"); err != nil {
-			t.Fatalf("error: %v", err)
-		}
-		if cfg.RetentionTiers["hot"].KeepMin != 5 {
-			t.Errorf("KeepMin = %d, want 5", cfg.RetentionTiers["hot"].KeepMin)
-		}
-	})
-
-	t.Run("default subfield is older_than", func(t *testing.T) {
-		cfg := &WorkspacePolicy{}
-		if err := ConfigureLifecycleTier(cfg, "hot", "", "14d"); err != nil {
-			t.Fatalf("error: %v", err)
-		}
-		if cfg.RetentionTiers["hot"].OlderThan != "14d" {
-			t.Errorf("OlderThan = %q, want 14d", cfg.RetentionTiers["hot"].OlderThan)
-		}
-	})
-
-	t.Run("invalid duration", func(t *testing.T) {
-		cfg := &WorkspacePolicy{}
-		err := ConfigureLifecycleTier(cfg, "hot", "older_than", "bad")
-		if err == nil {
-			t.Fatal("expected error for invalid duration")
-		}
-	})
-
-	t.Run("invalid keep_min", func(t *testing.T) {
-		cfg := &WorkspacePolicy{}
-		err := ConfigureLifecycleTier(cfg, "hot", "keep_min", "not-a-number")
-		if err == nil {
-			t.Fatal("expected error for invalid keep_min")
-		}
-	})
-
-	t.Run("negative keep_min", func(t *testing.T) {
-		cfg := &WorkspacePolicy{}
-		err := ConfigureLifecycleTier(cfg, "hot", "keep_min", "-1")
-		if err == nil {
-			t.Fatal("expected error for negative keep_min")
-		}
-	})
-
-	t.Run("unsupported subfield", func(t *testing.T) {
-		cfg := &WorkspacePolicy{}
-		err := ConfigureLifecycleTier(cfg, "hot", "bad_field", "value")
-		if err == nil {
-			t.Fatal("expected error for unsupported sub-field")
-		}
-	})
-}
-
-func TestRemoveLifecycleTier(t *testing.T) {
-	cfg := &WorkspacePolicy{
-		RetentionTiers: map[string]retention.Tier{
-			"hot": {OlderThan: "7d"},
-		},
-	}
-	RemoveLifecycleTier(cfg, "hot")
-	if _, exists := cfg.RetentionTiers["hot"]; exists {
-		t.Error("tier 'hot' should be deleted")
-	}
-}
-
 func TestResolveAuditSetting(t *testing.T) {
 	e := newTestEvaluator(&WorkspacePolicy{MaxUnsafe: "72h"}, nil)
 
@@ -330,29 +211,12 @@ func TestResolveAuditSetting(t *testing.T) {
 }
 
 func TestBuildSettingCompletions(t *testing.T) {
-	tiers := []string{"hot", "cold"}
-	comps := BuildSettingCompletions(tiers)
-
-	// Should include base config keys + tier expansions
-	if len(comps) < len(GovernanceSettings)+6 { // 2 tiers * 3 variants
-		t.Errorf("completions len = %d, expected at least %d", len(comps), len(GovernanceSettings)+6)
+	comps := BuildSettingCompletions()
+	if len(comps) != len(GovernanceSettings) {
+		t.Errorf("completions len = %d, want %d", len(comps), len(GovernanceSettings))
 	}
-
-	// Check tier completions exist
-	found := map[string]bool{
-		"snapshot_retention_tiers.hot":            false,
-		"snapshot_retention_tiers.hot.older_than": false,
-		"snapshot_retention_tiers.hot.keep_min":   false,
-	}
-	for _, c := range comps {
-		if _, ok := found[c]; ok {
-			found[c] = true
-		}
-	}
-	for k, v := range found {
-		if !v {
-			t.Errorf("missing completion: %q", k)
-		}
+	if !slices.Contains(comps, "max_unsafe") {
+		t.Error("missing completion: max_unsafe")
 	}
 }
 
@@ -361,9 +225,6 @@ func TestBuildEffectiveConfig(t *testing.T) {
 		&WorkspacePolicy{
 			MaxUnsafe:       "72h",
 			CIFailurePolicy: "fail_on_any_violation",
-			RetentionTiers: map[string]retention.Tier{
-				"hot": {OlderThan: "7d", KeepMin: 2},
-			},
 		},
 		&OperatorSettings{
 			CLIDefaults: OperatorCLIConfig{Output: "json"},
@@ -387,12 +248,6 @@ func TestBuildEffectiveConfig(t *testing.T) {
 	if eff.UserConfigFile != "/home/.config/stave/config.yaml" {
 		t.Errorf("UserConfigFile = %q", eff.UserConfigFile)
 	}
-	if _, ok := eff.DefinedRetentionTiers["hot"]; !ok {
-		t.Error("missing 'hot' in DefinedRetentionTiers")
-	}
-	if _, ok := eff.EffectiveRetentionByTier["hot"]; !ok {
-		t.Error("missing 'hot' in EffectiveRetentionByTier")
-	}
 }
 
 func TestBuildEffectiveConfig_NoProject(t *testing.T) {
@@ -402,14 +257,10 @@ func TestBuildEffectiveConfig_NoProject(t *testing.T) {
 	if eff.ConfigFile != "" {
 		t.Errorf("ConfigFile = %q, want empty", eff.ConfigFile)
 	}
-	// Should still have default retention tier
-	if _, ok := eff.DefinedRetentionTiers[DefaultRetentionTier]; !ok {
-		t.Errorf("missing default tier %q in %v", DefaultRetentionTier, eff.DefinedRetentionTiers)
-	}
 }
 
 func TestGovernanceSettings_ContainsExpected(t *testing.T) {
-	expected := []string{"max_unsafe", "snapshot_retention", "ci_failure_policy", "capture_cadence"}
+	expected := []string{"max_unsafe", "ci_failure_policy", "capture_cadence"}
 	for _, k := range expected {
 		found := slices.Contains(GovernanceSettings, k)
 		if !found {
@@ -432,20 +283,9 @@ func TestValidateField_CaptureAdence(t *testing.T) {
 func TestValidateField_EmptyValues(t *testing.T) {
 	cfg := &WorkspacePolicy{}
 	// Empty values should pass validation
-	for _, field := range []string{"MaxUnsafe", "SnapshotRetention", "RetentionTier", "CIFailurePolicy", "CaptureCadence", "SnapshotFilenameTemplate"} {
+	for _, field := range []string{"MaxUnsafe", "CIFailurePolicy", "CaptureCadence", "SnapshotFilenameTemplate"} {
 		if err := validateAuditSetting(cfg, field); err != nil {
 			t.Errorf("validateAuditSetting(%q) with empty value: %v", field, err)
 		}
-	}
-}
-
-func TestSnapshotRetentionForTier(t *testing.T) {
-	e := newTestEvaluator(&WorkspacePolicy{
-		RetentionTiers: map[string]retention.Tier{
-			"hot": {OlderThan: "3d"},
-		},
-	}, nil)
-	if got := e.SnapshotRetentionForTier("hot"); got != "3d" {
-		t.Errorf("got %q, want 3d", got)
 	}
 }

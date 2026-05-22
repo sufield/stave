@@ -546,12 +546,18 @@ func runStave(fixDir string) ([]byte, int, error) {
 		}
 		return runCmd(args)
 	default:
+		// --format json: the CLI default is text (optimized for first-time
+		// human users), but these fixtures store JSON-family goldens
+		// (expected.out.json + summary/count/source_evidence derived from
+		// it). A fixture that needs a different format (e.g. sarif) sets it
+		// via args.txt, which is appended after this flag and so wins.
 		args := []string{
 			"apply",
 			"--controls", filepath.Join(fixDir, "controls"),
 			"--observations", filepath.Join(fixDir, "observations"),
 			"--max-unsafe", maxUnsafe,
 			"--now", nowFlag,
+			"--format", "json",
 		}
 		if argsData, err := os.ReadFile(filepath.Join(fixDir, "args.txt")); err == nil {
 			extra := strings.ReplaceAll(strings.TrimSpace(string(argsData)), "$CASE_DIR", fixDir)

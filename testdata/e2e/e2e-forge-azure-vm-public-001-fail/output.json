@@ -369,14 +369,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-azure-vm-public-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-azure-vm-public-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "c8f8624ac31d6cfb3cd39c265855ec15e056f7d2",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-azure-vm-public-001-fail/controls/"
-      ]
     }
   }
 }

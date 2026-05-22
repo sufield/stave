@@ -6,7 +6,6 @@ import (
 	"time"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 	clockadp "github.com/sufield/stave/internal/core/ports"
 )
@@ -65,11 +64,6 @@ func TestNewConfig_EndToEnd(t *testing.T) {
 		WithRuntime(io.Discard, io.Discard, clockadp.FixedClock(time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)), "test"),
 		WithExceptionConfig(exceptionCfg),
 		WithPreloadedControls(filtered),
-		WithGitMetadata(&evaluation.GitInfo{
-			RepoRoot: "/repo",
-			Head:     "abc123",
-			Dirty:    true,
-		}),
 	)
 
 	if cfg.ExceptionRules == nil || len(cfg.ExceptionRules.Rules()) != 1 {
@@ -77,8 +71,5 @@ func TestNewConfig_EndToEnd(t *testing.T) {
 	}
 	if len(cfg.ActivePolicies) != 1 || cfg.ActivePolicies[0].ID != "CTL.A" {
 		t.Fatalf("active policies = %#v", cfg.ActivePolicies)
-	}
-	if cfg.Metadata.Git == nil || cfg.Metadata.Git.RepoRoot != "/repo" || cfg.Metadata.Git.Head != "abc123" {
-		t.Fatalf("git metadata = %+v", cfg.Metadata.Git)
 	}
 }

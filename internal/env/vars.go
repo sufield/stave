@@ -101,18 +101,6 @@ var (
 		Description: "Override project root directory for path inference",
 		Category:    "config",
 	}
-	RetentionTier = Entry{
-		Name:         "STAVE_RETENTION_TIER",
-		Description:  "Override default retention tier",
-		Category:     "config",
-		DefaultValue: "critical",
-	}
-	SnapshotRetention = Entry{
-		Name:         "STAVE_SNAPSHOT_RETENTION",
-		Description:  "Override default snapshot retention period",
-		Category:     "config",
-		DefaultValue: "30d",
-	}
 	UserConfig = Entry{
 		Name:        "STAVE_USER_CONFIG",
 		Description: "Path to user-level CLI config file",
@@ -180,8 +168,6 @@ var all = []Entry{
 	Observations,
 	ProjectRoot,
 	Quiet,
-	RetentionTier,
-	SnapshotRetention,
 	UserConfig,
 }
 

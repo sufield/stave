@@ -21,7 +21,6 @@ import (
 	catalog "github.com/sufield/stave/cmd/catalog"
 	stavecelcmd "github.com/sufield/stave/cmd/cel"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	stavecollect "github.com/sufield/stave/cmd/collect"
 	stavecompare "github.com/sufield/stave/cmd/compare"
 	staveconsolidate "github.com/sufield/stave/cmd/consolidate"
 	contract "github.com/sufield/stave/cmd/contract"
@@ -41,6 +40,7 @@ import (
 	staveexport "github.com/sufield/stave/cmd/export"
 	staveexportinvariants "github.com/sufield/stave/cmd/exportinvariants"
 	staveexportsir "github.com/sufield/stave/cmd/exportsir"
+	stavefeatures "github.com/sufield/stave/cmd/features"
 	staveforensics "github.com/sufield/stave/cmd/forensics"
 	staveforge "github.com/sufield/stave/cmd/forge"
 	stavegaps "github.com/sufield/stave/cmd/gaps"
@@ -56,7 +56,6 @@ import (
 	stavepath "github.com/sufield/stave/cmd/path"
 	staveplan "github.com/sufield/stave/cmd/plan"
 	staveprofile "github.com/sufield/stave/cmd/profile"
-	"github.com/sufield/stave/cmd/prune"
 	staverank "github.com/sufield/stave/cmd/rank"
 	stavereadiness "github.com/sufield/stave/cmd/readiness"
 	stavereport "github.com/sufield/stave/cmd/report"
@@ -71,7 +70,6 @@ import (
 	stavetest "github.com/sufield/stave/cmd/test"
 	stavetrend "github.com/sufield/stave/cmd/trend"
 	validatemapping "github.com/sufield/stave/cmd/validatemapping"
-	staveverify "github.com/sufield/stave/cmd/verify"
 	stavewatch "github.com/sufield/stave/cmd/watch"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	infrabaseline "github.com/sufield/stave/internal/adapters/baseline"
@@ -113,9 +111,6 @@ func WireCommands(app *App) error {
 	// Convenience closures for commands that need composed loaders.
 	loadSnapshots := func(ctx context.Context, dir string) ([]asset.Snapshot, error) {
 		return compose.LoadSnapshotsFrom(ctx, f.NewObsRepo, dir)
-	}
-	loadAssets := func(ctx context.Context, obsDir, ctlDir string) (compose.Assets, error) {
-		return compose.LoadAssets(ctx, f.NewObsRepo, f.NewCtlRepo, obsDir, ctlDir)
 	}
 
 	// Getting started
@@ -164,12 +159,12 @@ func WireCommands(app *App) error {
 
 	snapshotCmd := &cobra.Command{
 		Use:   "snapshot",
-		Short: "Snapshot lifecycle commands",
-		Long:  "Grouped snapshot lifecycle commands: cleanup, archive, upcoming, quality, plan, hygiene, diff, manifest." + OfflineHelpSuffix,
+		Short: "Snapshot inspection commands",
+		Long:  "Grouped snapshot commands: diff." + OfflineHelpSuffix,
 		Args:  cobra.NoArgs,
 	}
 	root.AddCommand(snapshotCmd)
-	wireSnapshotSubtree(snapshotCmd, f.NewObsRepo, f.NewSnapshotRepo, loadAssets, loadSnapshots)
+	wireSnapshotSubtree(snapshotCmd, loadSnapshots)
 
 	ciCmd := &cobra.Command{
 		Use:   "ci",
@@ -181,6 +176,9 @@ func WireCommands(app *App) error {
 	if err := wireCISubtree(ciCmd, f.NewCELEvaluator, f.NewCtlRepo, f.NewObsRepo); err != nil {
 		return err
 	}
+
+	// Capability scope
+	root.AddCommand(stavefeatures.NewCmd())
 
 	// Export & Interop
 	root.AddCommand(staveexport.NewCmd(f.NewCtlRepo, f.NewCELEvaluator))
@@ -236,9 +234,6 @@ func WireCommands(app *App) error {
 	root.AddCommand(staveexempt.NewCmd(staveexempt.Deps{
 		NewBuiltinControlStore: f.NewBuiltinControlStore,
 	}))
-
-	// Automated evidence collection
-	root.AddCommand(stavecollect.NewCmd())
 
 	// Forensic timeline reconstruction
 	root.AddCommand(staveforensics.NewCmd(staveforensics.Deps{
@@ -348,9 +343,6 @@ func WireCommands(app *App) error {
 		NewCtlRepo:              f.NewCtlRepo,
 	}))
 
-	// Evidence archive verification
-	root.AddCommand(staveverify.NewCmd())
-
 	// SLA policy management
 	root.AddCommand(stavesla.NewCmd())
 
@@ -390,18 +382,9 @@ func WireCommands(app *App) error {
 
 func wireSnapshotSubtree(
 	snapshotCmd *cobra.Command,
-	newObs compose.ObsRepoFactory,
-	newSnapshot compose.SnapshotRepoFactory,
-	loadAssets compose.AssetLoaderFunc,
 	loadSnapshots compose.SnapshotLoader,
 ) {
 	snapshotCmd.AddCommand(enforce.NewDiffCmd(loadSnapshots))
-	for _, subCmd := range prune.Commands(newObs, newSnapshot, loadAssets, loadSnapshots) {
-		snapshotCmd.AddCommand(subCmd)
-	}
-	for _, subCmd := range prune.DevCommands(newSnapshot) {
-		snapshotCmd.AddCommand(subCmd)
-	}
 }
 
 func wireCISubtree(

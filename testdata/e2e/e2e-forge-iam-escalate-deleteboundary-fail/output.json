@@ -304,14 +304,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-iam-escalate-deleteboundary-fail/controls",
       "observations": "testdata/e2e/e2e-forge-iam-escalate-deleteboundary-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ef433296c8e7013eeb90a6cde4ba3b820dadf76b",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-iam-escalate-deleteboundary-fail/controls/"
-      ]
     }
   }
 }

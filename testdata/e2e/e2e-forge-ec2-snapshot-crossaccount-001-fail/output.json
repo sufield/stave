@@ -316,14 +316,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-ec2-snapshot-crossaccount-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-ec2-snapshot-crossaccount-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "32c6e452cc0e4d95ea064fa8e03a71c775c18d03",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-ec2-snapshot-crossaccount-001-fail/controls/"
-      ]
     }
   }
 }

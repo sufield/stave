@@ -106,9 +106,6 @@ func DefaultPolicy() AirgapPolicy {
 			`"unsafe"`, `"net/http"`, `"net/rpc"`, `"crypto/tls"`,
 		},
 		allowedImports: map[string]map[string]struct{}{
-			"internal/adapters/gitinfo/repo.go": {
-				`"os/exec"`: {},
-			},
 			"internal/adapters/govulncheck/runner.go": {
 				`"os/exec"`: {},
 			},

@@ -311,14 +311,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-cloudflare-dns-internalip-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-cloudflare-dns-internalip-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "78d2fe0cc9c1b69582429048c902415cdf9a21b2",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-cloudflare-dns-internalip-001-fail/controls/"
-      ]
     }
   }
 }

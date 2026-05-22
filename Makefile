@@ -112,6 +112,24 @@ test-unit: sync-schemas sync-controls sync-alternatives
 test-fast: sync-schemas sync-controls sync-alternatives
 	$(GOTEST) -short -timeout 5m ./...
 
+## test-pkg PKG=...: Path-aware fast-test for the package(s) currently
+## being changed. Skips sync-schemas / sync-controls / sync-alternatives
+## because those only affect the embedded catalog packages — every
+## other package can run without re-syncing. Pass the package selector
+## verbatim:
+##
+##   make test-pkg PKG=./cmd/apply/...
+##   make test-pkg PKG=./internal/core/evaluation/...
+##   make test-pkg PKG=./cmd/gaps/...
+##
+## Use this in the pre-PR loop after a focused change. If the change
+## touches controls/ or schemas/, fall back to `make test-unit`.
+test-pkg:
+	@if [ -z "$(PKG)" ]; then \
+		echo "Usage: make test-pkg PKG=./path/to/pkg/..."; exit 2; \
+	fi
+	$(GOTEST) -short -timeout 5m $(PKG)
+
 ## test-integration: Fixture-loading tests that don't spawn the binary.
 ##
 ## ./internal/... covers fixture-loaders, evaluation engine,
@@ -224,8 +242,34 @@ run: build
 run-now: build
 	./$(BINARY) apply --controls examples/public-bucket/controls --observations examples/public-bucket/observations --max-unsafe 168h --now 2026-01-11T00:00:00Z --allow-unknown-input
 
-## check: Run all checks (fmt, vet, lint, test)
-check: fmt vet lint test
+## stale-terminology-check: Fail if active source/doc files reference
+## architectural terms that have been renamed. Cheap drift gate.
+##
+## The package map moved from `internal/domain/...` to
+## `internal/core/...` long ago, but stale references keep reappearing
+## in docs and test comments. This target greps for the old name in
+## files that ship to users / contributors (docs, root markdown, Go
+## source). It excludes:
+##   - MEMORY.md (Claude's auto-memory, may carry historical context)
+##   - testdata/ (e2e justify.md files are point-in-time evidence)
+##   - vendor/, node_modules/, .git/
+## A clean run means no stale terminology in any file a contributor
+## would read while onboarding.
+stale-terminology-check:
+	@bad=$$(grep -rln "internal/domain" \
+		--include='*.go' --include='*.md' \
+		--exclude-dir=vendor --exclude-dir=node_modules \
+		--exclude-dir=.git --exclude-dir=testdata \
+		--exclude=MEMORY.md \
+		. 2>/dev/null); \
+	if [ -n "$$bad" ]; then \
+		echo "Stale 'internal/domain' references (renamed to 'internal/core'):"; \
+		echo "$$bad" | sed 's/^/  /'; \
+		exit 1; \
+	fi
+
+## check: Run all checks (fmt, vet, lint, terminology, test)
+check: fmt vet lint stale-terminology-check test
 
 ## ci: CI pipeline (tidy, check, build)
 ci: tidy check build
@@ -336,8 +380,12 @@ golden-fixture:
 	$(MAKE) regenerate-goldens ARGS='-filter $(FILTER)'
 
 ## e2e: Run end-to-end tests
+##
+## -timeout 30m: the full TestE2E fixture loop spawns the stave binary
+## per fixture across thousands of fixtures and reliably trips the
+## default 10-minute go test timeout. Matches test / test-e2e.
 e2e: build
-	go test ./e2e/ -run E2E -count=1 -timeout 5m
+	go test ./e2e/ -run E2E -count=1 -timeout 30m
 
 ## determinism: Verify apply --profile aws-s3 output is deterministic (run twice, diff)
 determinism: build

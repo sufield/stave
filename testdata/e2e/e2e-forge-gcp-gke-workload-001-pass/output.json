@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-gcp-gke-workload-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-gcp-gke-workload-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "891b23d16c4b5212133ce42ece86b397d6ac011f",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-gcp-gke-workload-001-pass/controls/"
-      ]
     }
   }
 }

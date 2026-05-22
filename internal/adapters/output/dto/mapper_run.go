@@ -79,13 +79,5 @@ func NewExtensionsDTO(e *evaluation.Extensions) *ExtensionsDTO {
 		PackRegistryVersion: e.PackRegistryVersion,
 		PackRegistryHash:    e.PackRegistryHash,
 	}
-	if e.Git != nil {
-		dto.Git = &GitMetadataDTO{
-			RepoRoot: e.Git.RepoRoot,
-			Head:     e.Git.Head,
-			Dirty:    e.Git.Dirty,
-			Modified: e.Git.Modified,
-		}
-	}
 	return dto
 }

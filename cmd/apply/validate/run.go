@@ -45,10 +45,7 @@ type Input struct {
 
 // runValidate is the primary entry point for the cobra command.
 func runValidate(ctx context.Context, in Input) error {
-	// 1. Audit git status and log environment context.
-	if err := in.Opts.auditGitStatus(ctx, in.Stderr, in.Global); err != nil {
-		return err
-	}
+	// 1. Log environment context.
 	in.Opts.logEnvironment()
 
 	// 2. Initialize Reporter

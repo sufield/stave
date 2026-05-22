@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-azure-waf-mode-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-azure-waf-mode-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "ab9afd3697b20bd6fff636dc322784bb86446649",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-azure-waf-mode-001-pass/controls/"
-      ]
     }
   }
 }

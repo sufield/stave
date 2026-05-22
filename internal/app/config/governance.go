@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/core/retention"
 )
 
 // GovernanceSettings is the set of top-level audit parameters exposed to the CLI.
@@ -39,14 +38,9 @@ func discoverGovernanceSettings() []string {
 	return settings
 }
 
-// RetentionPrefix is the key prefix for snapshot lifecycle tier configuration.
-const RetentionPrefix = "snapshot_retention_tiers."
-
 // SettingPath represents a validated reference to an audit configuration attribute.
 type SettingPath struct {
 	Attribute string
-	TierName  string
-	Property  string
 	Raw       string
 }
 
@@ -55,23 +49,6 @@ func IdentifySetting(raw string) (SettingPath, error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {
 		return SettingPath{}, errors.New("governance setting name cannot be empty")
-	}
-
-	if after, ok := strings.CutPrefix(raw, RetentionPrefix); ok {
-		parts := strings.SplitN(after, ".", 2)
-		tier := NormalizeTier(parts[0])
-		if tier == "" {
-			return SettingPath{}, fmt.Errorf("lifecycle tier name required in %q", raw)
-		}
-		sp := SettingPath{TierName: tier, Raw: raw}
-		if len(parts) > 1 {
-			prop := parts[1]
-			if prop != "older_than" && prop != "keep_min" {
-				return SettingPath{}, fmt.Errorf("unsupported lifecycle property %q", prop)
-			}
-			sp.Property = prop
-		}
-		return sp, nil
 	}
 
 	if slices.Contains(GovernanceSettings, raw) {
@@ -138,10 +115,6 @@ func validateAuditSetting(cfg *WorkspacePolicy, fieldName string) error {
 	switch fieldName {
 	case "MaxUnsafe":
 		return validateDuration(cfg.MaxUnsafe, "max_unsafe")
-	case "SnapshotRetention":
-		return validateDuration(cfg.SnapshotRetention, "snapshot_retention")
-	case "RetentionTier":
-		return validateNonEmpty(cfg.RetentionTier, "default_retention_tier")
 	case "CIFailurePolicy":
 		return validateEnforcementGate(cfg.CIFailurePolicy)
 	case "CaptureCadence":
@@ -202,46 +175,12 @@ func ResetAttribute(cfg *WorkspacePolicy, name string) error {
 	return nil
 }
 
-// ConfigureLifecycleTier sets specific retention rules for an snapshot tier.
-func ConfigureLifecycleTier(cfg *WorkspacePolicy, tierName, property, value string) error {
-	if cfg.RetentionTiers == nil {
-		cfg.RetentionTiers = make(map[string]retention.Tier)
-	}
-	tc := cfg.RetentionTiers[tierName]
-	if property == "" {
-		property = "older_than"
-	}
-	switch property {
-	case "older_than":
-		if _, err := kernel.ParseDuration(value); err != nil {
-			return fmt.Errorf("invalid duration %q for tier %s: %w", value, tierName, err)
-		}
-		tc.OlderThan = value
-	case "keep_min":
-		tmp := 0
-		if err := json.Unmarshal([]byte(value), &tmp); err != nil || tmp < 0 {
-			return errors.New("keep_min must be a non-negative integer")
-		}
-		tc.KeepMin = tmp
-	default:
-		return fmt.Errorf("unsupported lifecycle property %q", property)
-	}
-	cfg.RetentionTiers[tierName] = tc
-	return nil
-}
-
-// RemoveLifecycleTier deletes a custom retention policy for a specific tier.
-func RemoveLifecycleTier(cfg *WorkspacePolicy, tierName string) {
-	delete(cfg.RetentionTiers, tierName)
-}
-
 // attributeResolvers maps audit settings to their evaluation logic.
 var attributeResolvers = map[string]func(*GovernanceResolver) PolicyValue[string]{
-	"max_unsafe":             (*GovernanceResolver).ResolveMaxUnsafeDuration,
-	"default_retention_tier": (*GovernanceResolver).ResolveRetentionTier,
-	"ci_failure_policy":      (*GovernanceResolver).ResolveCIFailurePolicy,
-	"cli_output":             (*GovernanceResolver).ResolveCLIOutput,
-	"cli_path_mode":          (*GovernanceResolver).ResolveCLIPathMode,
+	"max_unsafe":        (*GovernanceResolver).ResolveMaxUnsafeDuration,
+	"ci_failure_policy": (*GovernanceResolver).ResolveCIFailurePolicy,
+	"cli_output":        (*GovernanceResolver).ResolveCLIOutput,
+	"cli_path_mode":     (*GovernanceResolver).ResolveCLIPathMode,
 }
 
 // ResolveAuditSetting uses the GovernanceResolver to determine the effective value
@@ -255,16 +194,9 @@ func ResolveAuditSetting(eval *GovernanceResolver, name string) (PolicyValue[str
 }
 
 // BuildSettingCompletions generates shell completion strings for governance settings.
-func BuildSettingCompletions(tiers []string) []string {
-	completions := make([]string, 0, len(GovernanceSettings)+len(tiers)*3)
+func BuildSettingCompletions() []string {
+	completions := make([]string, 0, len(GovernanceSettings))
 	completions = append(completions, GovernanceSettings...)
-	for _, t := range tiers {
-		completions = append(completions,
-			RetentionPrefix+t,
-			RetentionPrefix+t+".older_than",
-			RetentionPrefix+t+".keep_min",
-		)
-	}
 	return completions
 }
 

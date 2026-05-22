@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-gcp-bigquery-public-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-gcp-bigquery-public-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "21348e416104237e2894f92d780f2cd18f1dab38",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-gcp-bigquery-public-001-pass/controls/"
-      ]
     }
   }
 }

@@ -12,7 +12,6 @@ import (
 
 func TestResolveMaxUnsafeDefault_Fallback(t *testing.T) {
 	t.Setenv(env.MaxUnsafe.Name, "")
-	t.Setenv(env.SnapshotRetention.Name, "")
 	tmp := t.TempDir()
 	chdirForTest(t, tmp)
 
@@ -24,7 +23,6 @@ func TestResolveMaxUnsafeDefault_Fallback(t *testing.T) {
 
 func TestResolveMaxUnsafeDefault_EnvOverridesProjectFile(t *testing.T) {
 	t.Setenv(env.MaxUnsafe.Name, "24h")
-	t.Setenv(env.SnapshotRetention.Name, "")
 	tmp := t.TempDir()
 	if err := os.WriteFile(filepath.Join(tmp, appconfig.AuditPolicyFile), []byte("max_unsafe: 48h\n"), 0o644); err != nil {
 		t.Fatalf("write project config file: %v", err)
@@ -39,7 +37,6 @@ func TestResolveMaxUnsafeDefault_EnvOverridesProjectFile(t *testing.T) {
 
 func TestResolveMaxUnsafeDefault_ProjectFile(t *testing.T) {
 	t.Setenv(env.MaxUnsafe.Name, "")
-	t.Setenv(env.SnapshotRetention.Name, "")
 	tmp := t.TempDir()
 	root := filepath.Join(tmp, "project")
 	nested := filepath.Join(root, "a", "b")
@@ -59,7 +56,6 @@ func TestResolveMaxUnsafeDefault_ProjectFile(t *testing.T) {
 
 func TestResolveMaxUnsafeDefault_UserConfigFallback(t *testing.T) {
 	t.Setenv(env.MaxUnsafe.Name, "")
-	t.Setenv(env.SnapshotRetention.Name, "")
 	tmp := t.TempDir()
 	userCfgPath := filepath.Join(tmp, "user-config.yaml")
 	t.Setenv(env.UserConfig.Name, userCfgPath)
@@ -71,66 +67,6 @@ func TestResolveMaxUnsafeDefault_UserConfigFallback(t *testing.T) {
 	got := projconfig.BuildResolver().Resolver.MaxUnsafeDuration()
 	if got != "60h" {
 		t.Fatalf("ResolveMaxUnsafeDefault() = %q, want %q", got, "60h")
-	}
-}
-
-func TestResolveSnapshotRetentionDefault_Fallback(t *testing.T) {
-	t.Setenv(env.SnapshotRetention.Name, "")
-	tmp := t.TempDir()
-	chdirForTest(t, tmp)
-
-	got := projconfig.BuildResolver().Resolver.SnapshotRetention()
-	if got != appconfig.DefaultSnapshotRetention {
-		t.Fatalf("ResolveSnapshotRetentionDefault() = %q, want %q", got, appconfig.DefaultSnapshotRetention)
-	}
-}
-
-func TestResolveSnapshotRetentionDefault_EnvOverridesProjectFile(t *testing.T) {
-	t.Setenv(env.SnapshotRetention.Name, "10d")
-	tmp := t.TempDir()
-	if err := os.WriteFile(filepath.Join(tmp, appconfig.AuditPolicyFile), []byte("snapshot_retention: 45d\n"), 0o644); err != nil {
-		t.Fatalf("write project config file: %v", err)
-	}
-	chdirForTest(t, tmp)
-
-	got := projconfig.BuildResolver().Resolver.SnapshotRetention()
-	if got != "10d" {
-		t.Fatalf("ResolveSnapshotRetentionDefault() = %q, want %q", got, "10d")
-	}
-}
-
-func TestResolveSnapshotRetentionDefault_ProjectFile(t *testing.T) {
-	t.Setenv(env.SnapshotRetention.Name, "")
-	tmp := t.TempDir()
-	root := filepath.Join(tmp, "project")
-	nested := filepath.Join(root, "x", "y")
-	if err := os.MkdirAll(nested, 0o755); err != nil {
-		t.Fatalf("mkdir nested: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(root, appconfig.AuditPolicyFile), []byte("snapshot_retention: 21d\n"), 0o644); err != nil {
-		t.Fatalf("write project config file: %v", err)
-	}
-	chdirForTest(t, nested)
-
-	got := projconfig.BuildResolver().Resolver.SnapshotRetention()
-	if got != "21d" {
-		t.Fatalf("ResolveSnapshotRetentionDefault() = %q, want %q", got, "21d")
-	}
-}
-
-func TestResolveSnapshotRetentionDefault_UserConfigFallback(t *testing.T) {
-	t.Setenv(env.SnapshotRetention.Name, "")
-	tmp := t.TempDir()
-	userCfgPath := filepath.Join(tmp, "user-config.yaml")
-	t.Setenv(env.UserConfig.Name, userCfgPath)
-	if err := os.WriteFile(userCfgPath, []byte("snapshot_retention: 21d\n"), 0o644); err != nil {
-		t.Fatalf("write user config file: %v", err)
-	}
-	chdirForTest(t, tmp)
-
-	got := projconfig.BuildResolver().Resolver.SnapshotRetention()
-	if got != "21d" {
-		t.Fatalf("ResolveSnapshotRetentionDefault() = %q, want %q", got, "21d")
 	}
 }
 
@@ -219,49 +155,6 @@ func TestResolveCLIPathModeDefault_FromUserConfig(t *testing.T) {
 
 	if got := projconfig.BuildResolver().Resolver.PathMode(); got != "full" {
 		t.Fatalf("ResolvePathModeDefault() = %q, want %q", got, "full")
-	}
-}
-
-func TestResolveRetentionTierDefault_Fallback(t *testing.T) {
-	t.Setenv(env.RetentionTier.Name, "")
-	tmp := t.TempDir()
-	chdirForTest(t, tmp)
-
-	got := projconfig.BuildResolver().Resolver.RetentionTier()
-	if got != appconfig.DefaultRetentionTier {
-		t.Fatalf("ResolveRetentionTierDefault() = %q, want %q", got, appconfig.DefaultRetentionTier)
-	}
-}
-
-func TestResolveSnapshotRetentionForTier_FromProjectTiers(t *testing.T) {
-	t.Setenv(env.SnapshotRetention.Name, "")
-	t.Setenv(env.RetentionTier.Name, "")
-	tmp := t.TempDir()
-	cfg := "snapshot_retention: 30d\nsnapshot_retention_tiers:\n  critical:\n    older_than: 30d\n  non_critical:\n    older_than: 14d\n"
-	if err := os.WriteFile(filepath.Join(tmp, appconfig.AuditPolicyFile), []byte(cfg), 0o644); err != nil {
-		t.Fatalf("write project config file: %v", err)
-	}
-	chdirForTest(t, tmp)
-
-	got := projconfig.BuildResolver().Resolver.SnapshotRetentionForTier("non_critical")
-	if got != "14d" {
-		t.Fatalf("ResolveSnapshotRetentionForTier(non_critical) = %q, want %q", got, "14d")
-	}
-}
-
-func TestResolveSnapshotRetentionForTier_FallsBackToGlobal(t *testing.T) {
-	t.Setenv(env.SnapshotRetention.Name, "")
-	t.Setenv(env.RetentionTier.Name, "")
-	tmp := t.TempDir()
-	cfg := "snapshot_retention: 45d\nsnapshot_retention_tiers:\n  critical:\n    older_than: 30d\n"
-	if err := os.WriteFile(filepath.Join(tmp, appconfig.AuditPolicyFile), []byte(cfg), 0o644); err != nil {
-		t.Fatalf("write project config file: %v", err)
-	}
-	chdirForTest(t, tmp)
-
-	got := projconfig.BuildResolver().Resolver.SnapshotRetentionForTier("non_critical")
-	if got != "45d" {
-		t.Fatalf("ResolveSnapshotRetentionForTier(non_critical) = %q, want %q", got, "45d")
 	}
 }
 

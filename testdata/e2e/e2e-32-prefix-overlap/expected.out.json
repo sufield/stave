@@ -314,11 +314,6 @@
     "resolved_paths": {
       "controls": "controls",
       "observations": "observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "fae56e4784467edc1179a62a383617ef23343841",
-      "dirty": false
     }
   }
 }

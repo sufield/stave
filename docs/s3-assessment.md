@@ -35,7 +35,7 @@ Output:
 ## 3) Verify remediation (before vs after)
 
 ```bash
-stave verify \
+stave check \
   --before ./obs-before \
   --after ./obs-after \
   --controls ./controls/s3 \

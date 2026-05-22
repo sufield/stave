@@ -36,8 +36,6 @@ func (p *ShowPresenter) renderText(out appconfig.EffectiveConfig) error {
 	}
 	lines = append(lines,
 		fmt.Sprintf("max_unsafe: %s (%s)", out.MaxUnsafeDuration.Value, out.MaxUnsafeDuration.Source),
-		fmt.Sprintf("snapshot_retention: %s (%s)", out.SnapshotRetention.Value, out.SnapshotRetention.Source),
-		fmt.Sprintf("default_retention_tier: %s (%s)", out.DefaultRetentionTier.Value, out.DefaultRetentionTier.Source),
 		fmt.Sprintf("ci_failure_policy: %s (%s)", out.CIFailurePolicy.Value, out.CIFailurePolicy.Source),
 	)
 	if err := writeLines(w, lines...); err != nil {
@@ -55,28 +53,6 @@ func (p *ShowPresenter) renderText(out appconfig.EffectiveConfig) error {
 	}
 	if err := writeLines(w, cliLines...); err != nil {
 		return err
-	}
-
-	// Defined retention tiers
-	if err := writeLines(w, "\nDefined retention tiers:"); err != nil {
-		return err
-	}
-	for _, name := range sortedKeys(out.DefinedRetentionTiers) {
-		tier := out.DefinedRetentionTiers[name]
-		if _, err := fmt.Fprintf(w, "  - %s: older_than=%s keep_min=%d\n", name, tier.OlderThan, tier.MinRetained()); err != nil {
-			return err
-		}
-	}
-
-	// Effective retention by tier
-	if err := writeLines(w, "\nEffective retention by tier:"); err != nil {
-		return err
-	}
-	for _, name := range sortedKeys(out.EffectiveRetentionByTier) {
-		field := out.EffectiveRetentionByTier[name]
-		if _, err := fmt.Fprintf(w, "  - %s: %s (%s)\n", name, field.Value, field.Source); err != nil {
-			return err
-		}
 	}
 
 	return nil

@@ -200,83 +200,117 @@ func buildAssessFunc(binary string, opts *options) watch.AssessFunc {
 		cmd.Stderr = &stderr
 
 		runErr := cmd.Run()
-
-		// Stave's CLI exit-code contract (CLAUDE.md):
-		//   0   = success, JSON on stdout
-		//   3   = violations found, JSON on stdout
-		//   2   = input error
-		//   4   = internal error
-		//   130 = SIGINT / interrupted
-		//
-		// Only exits 0 and 3 produce authoritative JSON. The other
-		// exits may emit partial or no output, so the subprocess
-		// error is the load-bearing signal — surface it to the
-		// watch loop instead of trusting whatever stdout happens to
-		// contain.
-		// isBinaryExecutionFailure: any non-nil runErr that is NOT an
-		// exec.ExitError is a spawn-time failure (binary not found,
-		// permission denied, fork failure, context cancellation).
-		// The earlier "exit code 0 && err non-nil" gate missed cases
-		// where runErr was a sentinel like context.DeadlineExceeded
-		// that does not satisfy errors.As(*ExitError) — those slipped
-		// through as if the assessment had succeeded.
-		exitCode := 0
-		isBinaryExecutionFailure := false
-		if runErr != nil {
-			var exitErr *exec.ExitError
-			if errors.As(runErr, &exitErr) {
-				exitCode = exitErr.ExitCode()
-			} else {
-				isBinaryExecutionFailure = true
-			}
-		}
-		if isBinaryExecutionFailure {
-			// Spawn-time failure (binary not found, permission denied,
-			// fork failure). No exit code, just a Go-level error from
-			// cmd.Run().
-			return "", 0, 0, 0, nil, fmt.Errorf("failed to launch assessment: %w", runErr)
-		}
-		isSuccessfulEvaluation := exitCode == 0 || exitCode == 3
-		if !isSuccessfulEvaluation {
-			return "", 0, 0, 0, nil, fmt.Errorf(
-				"assessment terminated by system (exit %d): %s",
-				exitCode, strings.TrimSpace(stderr.String()))
-		}
-
-		// Authoritative JSON path: exit 0 (clean) or 3 (violations).
-		if stdout.Len() == 0 {
-			return "COMPLIANT", 0, 0, 0, nil, nil
-		}
-
-		var result watchAssessment
-
-		if jsonErr := json.Unmarshal(stdout.Bytes(), &result); jsonErr != nil {
-			return "", 0, 0, 0, nil, fmt.Errorf("parse assessment output: %w", jsonErr)
-		}
-
-		// Count SLA breaches via the domain ThresholdStatus.IsOverdue
-		// predicate so the OVERDUE vocabulary stays on the typed
-		// status, not in the watch decode.
-		for i := range result.RiskSignals {
-			if result.RiskSignals[i].Status.IsOverdue() {
-				slaBreaches++
-			}
-		}
-
-		// Max dwell time from top exposures.
-		for _, te := range result.TopExposures {
-			if te.DaysBlind*24 > maxDwellHours {
-				maxDwellHours = te.DaysBlind * 24
-			}
-		}
-
-		// Violation IDs (control:asset pairs for regression detection).
-		for _, f := range result.Findings {
-			violationIDs = append(violationIDs, f.ControlID+":"+f.AssetID)
-		}
-
-		return result.Status, result.Summary.Violations, slaBreaches, maxDwellHours, violationIDs, nil
+		exitCode, spawnErr := classifyRunErr(runErr)
+		return parseAssessResult(stdout.Bytes(), stderr.Bytes(), exitCode, spawnErr)
 	}
+}
+
+// classifyRunErr splits a cmd.Run() error into the two cases
+// parseAssessResult needs as separate inputs:
+//
+//   - An *exec.ExitError carries the subprocess's exit code; we
+//     extract it and return spawnErr=nil. nil runErr also maps here
+//     with exitCode=0.
+//   - Anything else (binary not found, permission denied, context
+//     cancellation, fork failure) is a spawn-time failure; we
+//     return exitCode=0 and the original error as spawnErr.
+//
+// Splitting the classification from the interpretation keeps
+// parseAssessResult a pure function that unit tests can drive
+// without fabricating a real *exec.ExitError (which wraps an
+// *os.ProcessState and isn't constructible from outside os/exec).
+func classifyRunErr(runErr error) (exitCode int, spawnErr error) {
+	if runErr == nil {
+		return 0, nil
+	}
+	var exitErr *exec.ExitError
+	if errors.As(runErr, &exitErr) {
+		return exitErr.ExitCode(), nil
+	}
+	return 0, runErr
+}
+
+// parseAssessResult interprets the result of a single `stave apply`
+// subprocess invocation into the watch loop's six-value return shape.
+// Extracted from buildAssessFunc so the post-subprocess contract can
+// be locked in by direct unit tests without spawning subprocesses.
+//
+// Stave's CLI exit-code contract (see CLAUDE.md):
+//
+//	0   = success, JSON on stdout
+//	3   = violations found, JSON on stdout
+//	2   = input error
+//	4   = internal error
+//	130 = SIGINT / interrupted
+//
+// Only exits 0 and 3 produce authoritative JSON. Anything else may
+// emit partial or no output, so the subprocess error is the
+// load-bearing signal — surface it to the watch loop instead of
+// trusting whatever stdout happens to contain.
+//
+// Invariants this function enforces, in order:
+//
+//  1. A spawn-time failure (spawnErr != nil) is surfaced as "failed
+//     to launch assessment" — no exit code, no output to parse.
+//  2. Any exit code outside {0, 3} produces an error, regardless of
+//     stdout content.
+//  3. Exit 0 or 3 with EMPTY stdout produces an error, not an
+//     implicit COMPLIANT. An empty stdout under a successful exit is
+//     a contract violation by stave apply (e.g. a recovered panic);
+//     surfacing it loud at the watch boundary prevents a high-risk
+//     false-negative "clean state" alert downstream. This invariant
+//     is the regression guard for the original bug.
+//  4. Non-empty stdout under exit 0 or 3 is parsed as out.v0.1 JSON;
+//     unmarshal failure is surfaced as a wrapped error.
+func parseAssessResult(stdoutBytes, stderrBytes []byte, exitCode int, spawnErr error) (state string, violations int, slaBreaches int, maxDwellHours float64, violationIDs []string, err error) {
+	if spawnErr != nil {
+		// Spawn-time failure (binary not found, permission denied,
+		// fork failure, context cancellation). No exit code, just a
+		// Go-level error from cmd.Run().
+		return "", 0, 0, 0, nil, fmt.Errorf("failed to launch assessment: %w", spawnErr)
+	}
+	if exitCode != 0 && exitCode != 3 {
+		return "", 0, 0, 0, nil, fmt.Errorf(
+			"assessment terminated by system (exit %d): %s",
+			exitCode, strings.TrimSpace(string(stderrBytes)))
+	}
+
+	// Authoritative JSON path: exit 0 (clean) or 3 (violations)
+	// MUST carry a JSON document on stdout. Empty stdout is a
+	// contract violation by the subprocess — see invariant 3 above.
+	if len(stdoutBytes) == 0 {
+		return "", 0, 0, 0, nil, fmt.Errorf(
+			"assessment exited %d but produced no output on stdout (expected out.v0.1 JSON); stderr: %s",
+			exitCode, strings.TrimSpace(string(stderrBytes)))
+	}
+
+	var result watchAssessment
+	if jsonErr := json.Unmarshal(stdoutBytes, &result); jsonErr != nil {
+		return "", 0, 0, 0, nil, fmt.Errorf("parse assessment output: %w", jsonErr)
+	}
+
+	// Count SLA breaches via the domain ThresholdStatus.IsOverdue
+	// predicate so the OVERDUE vocabulary stays on the typed status,
+	// not in the watch decode.
+	for i := range result.RiskSignals {
+		if result.RiskSignals[i].Status.IsOverdue() {
+			slaBreaches++
+		}
+	}
+
+	// Max dwell time from top exposures.
+	for _, te := range result.TopExposures {
+		if te.DaysBlind*24 > maxDwellHours {
+			maxDwellHours = te.DaysBlind * 24
+		}
+	}
+
+	// Violation IDs (control:asset pairs for regression detection).
+	for _, f := range result.Findings {
+		violationIDs = append(violationIDs, f.ControlID+":"+f.AssetID)
+	}
+
+	return result.Status, result.Summary.Violations, slaBreaches, maxDwellHours, violationIDs, nil
 }
 
 func buildSinks(stdout io.Writer, specs []string) ([]ports.AlertSink, error) {

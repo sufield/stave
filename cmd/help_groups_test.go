@@ -19,7 +19,6 @@ func TestRootHelpGroupsAssigned(t *testing.T) {
 		"apply":    groupCore,
 		"diagnose": groupCore,
 		"explain":  groupCore,
-		"verify":   groupCore,
 		"ci":       groupWorkflow,
 		"snapshot": groupWorkflow,
 		"status":   groupWorkflow,

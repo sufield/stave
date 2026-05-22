@@ -97,7 +97,6 @@ type Inputs struct {
 	ExemptionRules      *policy.ExemptionConfig
 	AcknowledgmentRules *policy.AcknowledgmentConfig
 	SLAConfig           *evaluation.SLAConfig
-	GitMetadata         *evaluation.GitInfo
 	ProjectConfig       *appeval.ProjectConfigInput
 	Tracer              ports.Tracer
 
@@ -224,7 +223,6 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 		appeval.WithExceptionConfig(exceptionCfg),
 		appeval.WithAcknowledgmentConfig(in.AcknowledgmentRules),
 		appeval.WithPreloadedControls(controls),
-		appeval.WithGitMetadata(in.GitMetadata),
 		appeval.WithPredicateParser(ctlyaml.ParsePredicate),
 		appeval.WithCELEvaluator(celEval),
 		appeval.WithTracer(in.Tracer),

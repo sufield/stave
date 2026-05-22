@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-gcp-cloudsql-mysql-localinfile-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-gcp-cloudsql-mysql-localinfile-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "9fd3f3e52d05328714f7ee5e093eacf959995dee",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-gcp-cloudsql-mysql-localinfile-001-pass/controls/"
-      ]
     }
   }
 }

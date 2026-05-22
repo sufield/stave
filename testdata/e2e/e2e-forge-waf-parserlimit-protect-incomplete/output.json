@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-waf-parserlimit-protect-incomplete/controls",
       "observations": "testdata/e2e/e2e-forge-waf-parserlimit-protect-incomplete/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "9dacb52ec150fee0e8b183cd5339f62ded12b196",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-waf-parserlimit-protect-incomplete/controls/"
-      ]
     }
   }
 }

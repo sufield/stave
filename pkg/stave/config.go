@@ -4,16 +4,8 @@ import (
 	"time"
 
 	appeval "github.com/sufield/stave/internal/app/eval"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/ports"
 )
-
-// GitMetadata captures git repository state at evaluation time.
-// Aliased from evaluation.GitInfo because the type is already part
-// of the persisted assessment wire format (under run.git_metadata)
-// and consumers re-using these structs against on-disk artifacts
-// benefit from type identity.
-type GitMetadata = evaluation.GitInfo
 
 // ProjectConfigInput holds project configuration that affects
 // evaluation. Aliased from internal/app/eval to avoid mirroring
@@ -85,15 +77,13 @@ type Config struct {
 	// excluded from evaluation entirely and surfaced under
 	// Assessment.ExemptedAssets (subject to consumer-visible
 	// surface; see Assessment). Nil disables exemption matching.
-	// Build with [NewExemptionConfig].
 	ExemptionRules *ExemptionConfig
 
 	// AcknowledgmentRules suppresses findings for control/asset
 	// pairs explicitly accepted as residual risk. Acknowledged
 	// findings are not omitted from the assessment — they are
 	// retained on Assessment.AcknowledgedFindings (when surfaced)
-	// so audit posture is preserved. Build with
-	// [NewAcknowledgmentConfig].
+	// so audit posture is preserved.
 	AcknowledgmentRules *AcknowledgmentConfig
 
 	// SLAConfig parameterizes SLA breach detection. When non-nil,
@@ -118,15 +108,6 @@ type Config struct {
 	// is set; ignored when manifest is empty. Maps to
 	// --integrity-public-key.
 	IntegrityPublicKey string
-
-	// GitMetadata, when non-nil, is stamped into the assessment
-	// output under run.git_metadata. CLI callers populate it via
-	// compose.AuditGitStatus(ctx, projectRoot, watchPaths) so the
-	// JSON output records the repository state at evaluation time.
-	// Library callers can leave this nil — the field is decorative
-	// from the engine's perspective; it doesn't change which
-	// findings fire.
-	GitMetadata *GitMetadata
 
 	// ProjectConfig, when non-nil, supplies project-scoped settings
 	// that affect evaluation: control-pack selection, exception

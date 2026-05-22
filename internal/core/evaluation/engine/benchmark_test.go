@@ -14,7 +14,7 @@ import (
 )
 
 // BenchmarkEvaluate measures evaluation of controls across asset lifecycles.
-// Run with: go test -bench=BenchmarkEvaluate -benchmem ./internal/domain/evaluation/engine/
+// Run with: go test -bench=BenchmarkEvaluate -benchmem ./internal/core/evaluation/engine/
 func BenchmarkEvaluate(b *testing.B) {
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	controls := []policy.ControlDefinition{

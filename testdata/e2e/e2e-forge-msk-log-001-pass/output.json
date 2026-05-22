@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-msk-log-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-msk-log-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "7f4467c185c2eda7ba12f0e4f5879011a16ee456",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-msk-log-001-pass/controls/"
-      ]
     }
   }
 }

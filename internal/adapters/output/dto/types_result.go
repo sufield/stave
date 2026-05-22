@@ -42,15 +42,6 @@ type ExtensionsDTO struct {
 	ResolvedControlIDs  []kernel.ControlID `json:"resolved_control_ids,omitempty"`
 	PackRegistryVersion string             `json:"pack_registry_version,omitempty"`
 	PackRegistryHash    kernel.Digest      `json:"pack_registry_hash,omitempty"`
-	Git                 *GitMetadataDTO    `json:"git,omitempty"`
-}
-
-// GitMetadataDTO mirrors evaluation.GitMetadata.
-type GitMetadataDTO struct {
-	RepoRoot string   `json:"repo_root,omitempty"`
-	Head     string   `json:"head_commit,omitempty"`
-	Dirty    bool     `json:"dirty"`
-	Modified []string `json:"modified_paths,omitempty"`
 }
 
 // IssueDTO mirrors evaluation.Issue for JSON output.

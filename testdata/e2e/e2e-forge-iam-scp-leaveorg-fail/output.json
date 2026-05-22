@@ -316,11 +316,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-iam-scp-leaveorg-fail/controls",
       "observations": "testdata/e2e/e2e-forge-iam-scp-leaveorg-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "0d5b549721a23bf70b12731ef3d9d1c3168b17f5",
-      "dirty": false
     }
   }
 }

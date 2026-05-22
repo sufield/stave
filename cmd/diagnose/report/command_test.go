@@ -51,12 +51,6 @@ func sampleEvaluation() corereport.Assessment {
 		},
 		Extensions: &evaluation.Extensions{
 			ContextName: "prod-aws",
-			Git: &evaluation.GitMetadata{
-				RepoRoot: "/repo",
-				Head:     "abc123def456",
-				Dirty:    true,
-				Modified: []string{"controls/CTL.S3.PUBLIC.901.yaml", "stave.yaml"},
-			},
 		},
 	}
 }
@@ -75,12 +69,6 @@ func TestOutputReportTextDefaultTemplate(t *testing.T) {
 
 	if !strings.Contains(out, "context: prod-aws") {
 		t.Fatalf("missing context in report: %s", out)
-	}
-	if !strings.Contains(out, "git_head_commit: abc123def456") {
-		t.Fatalf("missing git commit in report: %s", out)
-	}
-	if !strings.Contains(out, "git_dirty: true") {
-		t.Fatalf("missing git dirty state in report: %s", out)
 	}
 	if strings.Index(out, "CTL.S3.PUBLIC.001") > strings.Index(out, "CTL.S3.PUBLIC.002") {
 		t.Fatalf("findings not sorted by severity/control/resource: %s", out)

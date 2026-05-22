@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-m365-exchange-mailtips-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-m365-exchange-mailtips-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "e75c6b10f5a38ae9575c64710ed47a658e9c2900",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-m365-exchange-mailtips-001-pass/controls/"
-      ]
     }
   }
 }

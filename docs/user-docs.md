@@ -8,8 +8,6 @@ For MVP, Stave assumes you are capturing snapshots from **production** environme
 
 Design implications:
 
-- `stave snapshot upcoming` is optimized for action-oriented, chronological next snapshots
-- `stave snapshot prune` defaults to bounded retention so observation directories do not grow indefinitely
 - `stave.yaml` centralizes lifecycle defaults (`max_unsafe`, `snapshot_retention`, `capture_cadence`, `snapshot_filename_template`) so command behavior stays consistent in local and CI/CD workflows
 
 ## Installation
@@ -117,17 +115,13 @@ Use this table when you know your goal but want the fastest path to the right co
 | Start a new project with sane defaults | `stave init --profile aws-s3` | [`README.md`](../README.md) |
 | Validate controls and observations before evaluating | `stave validate --controls ./controls --observations ./observations` | [`README.md`](../README.md) |
 | Evaluate current risk status | `stave apply --controls ./controls --observations ./observations --format json > output/evaluation.json` | [`README.md`](../README.md) |
-| See what snapshot actions are due next | `stave snapshot upcoming --controls ./controls --observations ./observations --out output/upcoming.md` | [`README.md`](../README.md) |
 | Inspect effective project defaults and override sources | `stave config show --format json` | [`README.md`](../README.md) |
 | Query/update project config from terminal | `stave config get max_unsafe` / `stave config set max_unsafe 72h` | [`README.md`](../README.md) |
-| Check if snapshots are stale/sparse before evaluation | `stave snapshot quality --observations ./observations --strict` | [`README.md`](../README.md) |
 | Compare drift between latest snapshots | `stave snapshot diff --observations ./observations --format text` | [`README.md`](../README.md) |
-| Keep observations folder bounded | `stave snapshot prune --observations ./observations --dry-run` | [`README.md`](../README.md) |
-| Keep auditability while reducing active set | `stave snapshot archive --observations ./observations --archive-dir ./observations/archive --dry-run` | [`README.md`](../README.md) |
 | Fail CI only for policy-relevant findings | `stave ci gate --in output/evaluation.json --baseline output/baseline.json` | [`README.md`](../README.md) |
 | Run the full remediation verification loop | `stave ci fix-loop --before ./obs-before --after ./obs-after --controls ./controls --out output` | [`README.md`](../README.md) |
-| Search docs without leaving terminal | `stave docs search "snapshot upcoming"` | [`README.md`](../README.md) |
-| Open the best-matching docs page path + summary | `stave docs open "snapshot upcoming"` | [`README.md`](../README.md) |
+| Search docs without leaving terminal | `stave docs search "snapshot diff"` | [`README.md`](../README.md) |
+| Open the best-matching docs page path + summary | `stave docs open "snapshot diff"` | [`README.md`](../README.md) |
 | Resume from where you stopped | `stave status` then `stave status` | [`README.md`](../README.md) |
 | Visualize which controls cover which assets | `stave graph coverage --controls ./controls --observations ./observations` | [`README.md`](../README.md) |
 | Debug why a specific control matched or didn't match an asset | `stave trace --control CTL.S3.PUBLIC.001 --observation obs/snap.json --asset-id my-bucket` | [`README.md`](../README.md) |
@@ -219,13 +213,7 @@ For snapshot operations, use the lifecycle command set:
 
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
-| `snapshot upcoming` | Chronological next actions | Generate due-now/due-soon/overdue items from current unsafe assets |
-| `snapshot prune` | Retention enforcement | Remove stale snapshots so `observations/` remains bounded |
-| `snapshot archive` | Audit-preserving retention | Move stale snapshots to archive directory instead of deleting |
 | `snapshot diff` | Snapshot drift comparison | Focus remediation on what changed between latest two snapshots |
-| `snapshot quality` | Snapshot quality gate | Warn/fail on sparse, stale, or missing-key-asset snapshots |
-| `snapshot status` | Snapshot health summary | Generate markdown with snapshot totals, retention posture, and trend vs last week |
-| `snapshot risk` | Snapshot risk report | Generate markdown with violations, upcoming items, and risk signals |
 | `ci baseline save/check` | Fail-on-new CI policy | Preserve accepted findings and fail only on newly introduced findings |
 | `ci gate` | CI policy enforcement | Apply configurable fail modes (`any`, `new`, `overdue`) |
 | `ci fix-loop` | Fix verification loop | Apply before/after snapshots, verify changes, and generate remediation report |
@@ -261,173 +249,6 @@ validate → apply → diagnose
 2. **apply** - Run with `--dry-run` to check readiness, then without it to detect violations
 3. **diagnose** - Run when evaluation output differs from what you expected from your controls, snapshots, or prior runs
 4. **trace** - Run for clause-level detail on why a specific control matched or didn't match a single asset
-
-## Snapshot Lifecycle Workflow
-
-### Centralized project config (`stave.yaml`)
-
-Keep lifecycle defaults in one place per project:
-
-```yaml
-max_unsafe: 168h
-snapshot_retention: 30d
-default_retention_tier: critical
-snapshot_retention_tiers:
-  critical: 30d
-  non_critical: 14d
-ci_failure_policy: fail_on_any_violation
-capture_cadence: daily
-snapshot_filename_template: YYYY-MM-DDT000000Z.json
-```
-
-Optional user-level CLI defaults:
-
-```yaml
-# ~/.config/stave/config.yaml
-cli_defaults:
-  output: json
-  quiet: false
-  sanitize: false
-  path_mode: base
-  allow_unknown_input: false
-```
-
-`stave init` creates `cli.yaml` with commented keys you can uncomment.
-
-This is useful for frequently used flags such as `--output`, `--quiet`, `--sanitize`,
-`--path-mode`, and `--allow-unknown-input`.
-
-Default resolution order:
-1. Explicit flags
-2. Environment variables
-3. Project config (`stave.yaml`)
-4. User config (`~/.config/stave/config.yaml`, or `STAVE_USER_CONFIG`)
-5. Built-in defaults
-
-- `max_unsafe` drives default thresholds for commands like `apply` and `snapshot upcoming`.
-- `snapshot_retention` is global fallback retention when no tier-specific value is set.
-- `default_retention_tier` + `snapshot_retention_tiers` drive defaults for `snapshot prune` and `snapshot archive`.
-- `ci_failure_policy` drives `stave ci gate` behavior in CI.
-- `capture_cadence` and `snapshot_filename_template` document/standardize how snapshots are captured and named.
-
-Manage these keys from terminal:
-
-```bash
-stave config get max_unsafe
-stave config set max_unsafe 72h
-stave config set snapshot_retention_tiers.non_critical 14d
-```
-
-Supported `stave config get/set` keys:
-- `max_unsafe`
-- `snapshot_retention`
-- `default_retention_tier`
-- `ci_failure_policy`
-- `capture_cadence`
-- `snapshot_filename_template`
-- `snapshot_retention_tiers.<tier>`
-
-### Why `daily` vs `hourly` cadence options exist
-
-`stave init --capture-cadence` sets scaffold defaults to avoid ad-hoc snapshot timing:
-
-- `daily`: lower cost and lower noise, good default for most teams.
-- `hourly`: tighter feedback loops for critical production incidents and fast-changing environments.
-
-Without a cadence convention, teams capture snapshots irregularly, which makes duration windows less reliable and causes inconsistent CI behavior.
-
-### Safety defaults for destructive commands
-
-Both `snapshot prune` (deletes files) and `snapshot archive` (moves files) share the same safety model:
-
-- **Safe by default**: When neither `--dry-run` nor `--force` is specified, both commands default to a dry run — previewing operations without applying them.
-- **Explicit opt-in**: Use `--force` to apply the operation.
-- **Minimum retention**: Both keep at least `--keep-min` snapshots (default: 2), regardless of age filters.
-
-### Lifecycle command examples
-
-```bash
-# Generate action items and CI summary
-stave snapshot upcoming \
-  --controls ./controls \
-  --observations ./observations \
-  --due-soon 24h \
-  --status OVERDUE \
-  --control-id CTL.S3.PUBLIC.001 \
-  --format json \
-  --out output/upcoming.md \
-  --summary-out "$GITHUB_STEP_SUMMARY"
-
-# Prune old snapshots (preview first)
-stave snapshot prune --observations ./observations --older-than 30d --dry-run
-stave snapshot prune --observations ./observations --older-than 30d --force
-stave snapshot prune --observations ./observations --older-than 30d --dry-run --format json
-
-# Tier-based retention (reads snapshot_retention_tiers from stave.yaml)
-stave snapshot prune --observations ./observations --retention-tier non_critical --dry-run
-
-# Archive old snapshots instead of deleting
-stave snapshot archive --observations ./observations --archive-dir ./observations/archive --older-than 30d --dry-run
-stave snapshot archive --observations ./observations --archive-dir ./observations/archive --older-than 30d --force
-stave snapshot archive --observations ./observations --archive-dir ./observations/archive --retention-tier critical --dry-run
-stave snapshot archive --observations ./observations --archive-dir ./observations/archive --older-than 30d --dry-run --format json
-
-# Diff latest two snapshots
-stave snapshot diff --observations ./observations --format json --out output/diff.json
-
-# Diff filters for focused triage
-stave snapshot diff --observations ./observations --change-type modified --asset-type res:aws:s3:bucket --asset-id prod-
-
-# Quality gate before evaluation
-stave snapshot quality --observations ./observations --strict
-
-# Weekly status report (markdown)
-stave snapshot status \
-  --controls ./controls \
-  --observations ./observations \
-  --archive-dir ./observations/archive \
-  --out output/weekly-status.md
-
-# Weekly risk report (json)
-stave snapshot risk \
-  --controls ./controls \
-  --observations ./observations \
-  --format json \
-  --out output/weekly-risk.json
-
-# Filter risk upcoming metrics
-stave snapshot risk \
-  --controls ./controls \
-  --observations ./observations \
-  --status OVERDUE \
-  --control-id CTL.S3.PUBLIC.001
-
-# Baseline for fail-on-new CI policy
-stave ci baseline save --in output/evaluation.json --out output/baseline.json
-stave ci baseline check --in output/evaluation.json --baseline output/baseline.json --fail-on-new
-
-# Policy-driven CI gate from stave.yaml defaults
-stave ci gate --in output/evaluation.json --baseline output/baseline.json
-
-# Run full fix verification loop and generate remediation artifacts
-stave ci fix-loop \
-  --before ./obs-before \
-  --after ./obs-after \
-  --controls ./controls \
-  --out output
-```
-
-### CI failure policy modes
-
-`stave ci gate --policy ...` supports:
-
-- `fail_on_any_violation`: fail when current evaluation has any findings.
-- `fail_on_new_violation`: fail only when findings are new compared to baseline.
-- `fail_on_overdue_upcoming`: fail when snapshot action items are already overdue.
-
-You can set project default in `stave.yaml` and override per-run via:
-- config: `ci_failure_policy: fail_on_new_violation`
-- env override: `STAVE_CI_FAILURE_POLICY=fail_on_overdue_upcoming`
 
 ## Command Composition
 
@@ -1243,43 +1064,6 @@ stave trace \
   --observation observations/2026-01-15T000000Z.json \
   --asset-id my-bucket \
   --format json
-```
-
----
-
-### verify
-
-Compares before/after observations to confirm a remediation resolved violations.
-
-```bash
-stave verify [flags]
-```
-
-**Flags:**
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--before` | (required) | Path to before-state observations directory |
-| `--after` | (required) | Path to after-state observations directory |
-| `--controls` | `controls/s3` | Path to control definitions directory |
-| `--now` | (current time) | Override evaluation time |
-| `--max-unsafe` | `168h` | Maximum allowed unsafe duration |
-
-**Exit Codes:**
-
-| Code | Meaning |
-|------|---------|
-| 0 | All violations resolved, none introduced |
-| 3 | Remaining or new violations |
-
-**Examples:**
-
-```bash
-stave verify \
-  --before ./obs-before \
-  --after ./obs-after \
-  --controls controls/s3 \
-  --now 2026-01-15T00:00:00Z
 ```
 
 ---

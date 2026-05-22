@@ -2,8 +2,6 @@ package config
 
 import (
 	"testing"
-
-	"github.com/sufield/stave/internal/core/retention"
 )
 
 func noEnv(string) string { return "" }
@@ -68,92 +66,6 @@ func TestResolveMaxUnsafeDuration_Layers(t *testing.T) {
 		}
 		if v.Layer != LayerEnvironment {
 			t.Errorf("Layer = %d, want LayerEnvironment", v.Layer)
-		}
-	})
-}
-
-func TestResolveRetentionTier(t *testing.T) {
-	t.Run("default", func(t *testing.T) {
-		e := newTestEvaluator(nil, nil)
-		v := e.ResolveRetentionTier()
-		if v.Value != DefaultRetentionTier {
-			t.Errorf("Value = %q, want %q", v.Value, DefaultRetentionTier)
-		}
-	})
-
-	t.Run("project config normalizes", func(t *testing.T) {
-		e := newTestEvaluator(&WorkspacePolicy{RetentionTier: "  HOT  "}, nil)
-		v := e.ResolveRetentionTier()
-		if v.Value != "hot" {
-			t.Errorf("Value = %q, want hot", v.Value)
-		}
-	})
-
-	t.Run("env override", func(t *testing.T) {
-		e := newTestEvaluator(nil, nil)
-		e.Getenv = func(key string) string {
-			if key == "STAVE_RETENTION_TIER" {
-				return "COLD"
-			}
-			return ""
-		}
-		v := e.ResolveRetentionTier()
-		if v.Value != "cold" {
-			t.Errorf("Value = %q, want cold", v.Value)
-		}
-	})
-}
-
-func TestResolveSnapshotRetention(t *testing.T) {
-	t.Run("default", func(t *testing.T) {
-		e := newTestEvaluator(nil, nil)
-		v := e.ResolveSnapshotRetention("critical")
-		if v.Value != DefaultSnapshotRetention {
-			t.Errorf("Value = %q, want %q", v.Value, DefaultSnapshotRetention)
-		}
-	})
-
-	t.Run("project tier-specific", func(t *testing.T) {
-		e := newTestEvaluator(&WorkspacePolicy{
-			RetentionTiers: map[string]retention.Tier{
-				"hot": {OlderThan: "7d"},
-			},
-		}, nil)
-		v := e.ResolveSnapshotRetention("hot")
-		if v.Value != "7d" {
-			t.Errorf("Value = %q, want 7d", v.Value)
-		}
-	})
-
-	t.Run("project fallback to top-level", func(t *testing.T) {
-		e := newTestEvaluator(&WorkspacePolicy{
-			SnapshotRetention: "14d",
-		}, nil)
-		v := e.ResolveSnapshotRetention("unknown")
-		if v.Value != "14d" {
-			t.Errorf("Value = %q, want 14d", v.Value)
-		}
-	})
-
-	t.Run("user config", func(t *testing.T) {
-		e := newTestEvaluator(nil, &OperatorSettings{SnapshotRetention: "60d"})
-		v := e.ResolveSnapshotRetention("any")
-		if v.Value != "60d" {
-			t.Errorf("Value = %q, want 60d", v.Value)
-		}
-	})
-
-	t.Run("env override", func(t *testing.T) {
-		e := newTestEvaluator(&WorkspacePolicy{SnapshotRetention: "14d"}, nil)
-		e.Getenv = func(key string) string {
-			if key == "STAVE_SNAPSHOT_RETENTION" {
-				return "3d"
-			}
-			return ""
-		}
-		v := e.ResolveSnapshotRetention("any")
-		if v.Value != "3d" {
-			t.Errorf("Value = %q, want 3d", v.Value)
 		}
 	})
 }
@@ -292,50 +204,9 @@ func TestValueAccessors(t *testing.T) {
 		t.Errorf("CIFailurePolicy() = %q, want %q", got, GateRegression)
 	}
 
-	if got := e.RetentionTier(); got != DefaultRetentionTier {
-		t.Errorf("RetentionTier() = %q, want %q", got, DefaultRetentionTier)
-	}
-
-	if got := e.SnapshotRetention(); got != DefaultSnapshotRetention {
-		t.Errorf("SnapshotRetention() = %q, want %q", got, DefaultSnapshotRetention)
-	}
-
 	if got := e.Quiet(); got != false {
 		t.Error("Quiet() should be false")
 	}
-}
-
-func TestHasConfiguredTier(t *testing.T) {
-	t.Run("nil project", func(t *testing.T) {
-		e := newTestEvaluator(nil, nil)
-		if e.HasConfiguredTier("hot") {
-			t.Error("nil project should not have tier")
-		}
-	})
-
-	t.Run("empty tiers", func(t *testing.T) {
-		e := newTestEvaluator(&WorkspacePolicy{}, nil)
-		if e.HasConfiguredTier("hot") {
-			t.Error("empty tiers should not have tier")
-		}
-	})
-
-	t.Run("tier exists", func(t *testing.T) {
-		e := newTestEvaluator(&WorkspacePolicy{
-			RetentionTiers: map[string]retention.Tier{
-				"hot": {OlderThan: "7d"},
-			},
-		}, nil)
-		if !e.HasConfiguredTier("hot") {
-			t.Error("expected hot tier to exist")
-		}
-		if !e.HasConfiguredTier("HOT") {
-			t.Error("expected case-insensitive match")
-		}
-		if e.HasConfiguredTier("cold") {
-			t.Error("cold tier should not exist")
-		}
-	})
 }
 
 func TestWithPolicy(t *testing.T) {

@@ -374,14 +374,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-secretsmanager-policy-public-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-secretsmanager-policy-public-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "b840fe3156edbc50520865eefa1196cb25baa77d",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-secretsmanager-policy-public-001-fail/controls/"
-      ]
     }
   }
 }

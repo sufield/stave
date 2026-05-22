@@ -70,12 +70,6 @@ func WithControlSource(source evaluation.ControlSourceInfo) Option {
 	}
 }
 
-// WithGitMetadata constructs the withgitmetadata component.
-func WithGitMetadata(git *evaluation.GitInfo) Option {
-	return func(cfg *AssessmentConfig) {
-		cfg.Metadata.Git = git
-	}
-}
 
 // WithSLAConfig sets the SLA policy for deadline enforcement on findings.
 func WithSLAConfig(cfg *evaluation.SLAConfig) Option {

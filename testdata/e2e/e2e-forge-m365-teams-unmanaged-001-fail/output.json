@@ -313,14 +313,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-m365-teams-unmanaged-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-m365-teams-unmanaged-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "314cb7f7cba908c8e1cae0694e36c05e59cd18ce",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-m365-teams-unmanaged-001-fail/controls/"
-      ]
     }
   }
 }

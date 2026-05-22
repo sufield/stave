@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-apigateway-waf-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-apigateway-waf-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "9ca8e797299a0d24f6b73e66ffc9ed29808c56f4",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-apigateway-waf-001-pass/controls/"
-      ]
     }
   }
 }

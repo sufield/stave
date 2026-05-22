@@ -311,14 +311,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-github-org-verified-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-github-org-verified-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "f21890a1e3f863fecb644fb9f203473e16d93143",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-github-org-verified-001-fail/controls/"
-      ]
     }
   }
 }

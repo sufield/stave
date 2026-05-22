@@ -114,11 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-iam-policy-ghostref-pass/controls",
       "observations": "testdata/e2e/e2e-forge-iam-policy-ghostref-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "f77b0ddd94c710e158c2cd0135da5725406ea242",
-      "dirty": false
     }
   }
 }

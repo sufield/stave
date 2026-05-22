@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-vpc-endpoint-ghost-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-vpc-endpoint-ghost-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "bad78792bef790b4d6615f6fa5982de38e469743",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-vpc-endpoint-ghost-001-pass/controls/"
-      ]
     }
   }
 }

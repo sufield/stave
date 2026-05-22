@@ -54,7 +54,7 @@ How Stave addresses the 7 cloud security lessons from the Cloud Security Allianc
 
 **The problem:** Cloud environments evolve continuously. Without continuous visibility, risk accumulates quietly.
 
-**How Stave helps:** Continuous exposure assessment via snapshot cadence. `snapshot quality` detects staleness and cadence gaps. `snapshot upcoming` shows what's approaching retention deadlines. The CI pipeline runs `stave apply` on every new snapshot, so risk accumulation is visible — not quiet.
+**How Stave helps:** Continuous exposure assessment via snapshot cadence. The CI pipeline runs `stave apply` on every new snapshot produced by the upstream collector, so risk accumulation is visible — not quiet.
 
 **Workflow:** Capture snapshots on a regular cadence (daily or weekly). Run `stave apply` in CI. `stave status` shows when the last evaluation ran and what to do next.
 

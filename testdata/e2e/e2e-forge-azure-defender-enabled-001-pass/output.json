@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-azure-defender-enabled-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-azure-defender-enabled-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "b8ea2d8480eced84e168a219d33dbbf465411757",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-azure-defender-enabled-001-pass/controls/"
-      ]
     }
   }
 }

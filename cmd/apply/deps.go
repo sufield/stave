@@ -104,8 +104,6 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 		return nil, fmt.Errorf("load acknowledgment config: %w", err)
 	}
 
-	gitMeta := compose.AuditGitStatus(ctx, plan.ProjectRoot, []string{b.Opts.ControlsDir, b.ProjectConfigPath})
-
 	projCfgInput, err := b.buildProjectConfigFromLoaded(b.ProjectConfig)
 	if err != nil {
 		return nil, fmt.Errorf("resolve project config: %w", err)
@@ -158,7 +156,6 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 		},
 		Project: appeval.ProjectScope{
 			Config:      projCfgInput,
-			GitMetadata: gitMeta,
 			Filters:     appeval.ControlFilter{},
 			ControlsDir: b.Opts.ControlsDir,
 		},

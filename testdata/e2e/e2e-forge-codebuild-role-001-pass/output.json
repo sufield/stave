@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-codebuild-role-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-codebuild-role-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "b12a4e86bd8cae87fe0e3596361026c1ca1231e6",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-codebuild-role-001-pass/controls/"
-      ]
     }
   }
 }

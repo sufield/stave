@@ -17,15 +17,6 @@ type Extensions struct {
 	ResolvedControlIDs  []kernel.ControlID `json:"resolved_control_ids,omitempty"`
 	PackRegistryVersion string             `json:"pack_registry_version,omitempty"`
 	PackRegistryHash    kernel.Digest      `json:"pack_registry_hash,omitempty"`
-	Git                 *GitMetadata       `json:"git,omitempty"`
-}
-
-// GitMetadata is the external (JSON-stable) representation of git state.
-type GitMetadata struct {
-	RepoRoot string   `json:"repo_root,omitempty"`
-	Head     string   `json:"head_commit,omitempty"`
-	Dirty    bool     `json:"dirty"`
-	Modified []string `json:"modified_paths,omitempty"`
 }
 
 // ToExtensions projects the internal Metadata into the report-friendly Extensions DTO.
@@ -49,19 +40,6 @@ func (m Metadata) ToExtensions() *Extensions {
 		ext.ResolvedControlIDs = slices.Clone(m.ControlSource.ResolvedControlIDs)
 		ext.PackRegistryVersion = m.ControlSource.RegistryVersion
 		ext.PackRegistryHash = m.ControlSource.RegistryHash
-	}
-
-	if m.Git != nil {
-		modified := make([]string, len(m.Git.DirtyList))
-		for i, p := range m.Git.DirtyList {
-			modified[i] = string(p)
-		}
-		ext.Git = &GitMetadata{
-			RepoRoot: string(m.Git.RepoRoot),
-			Head:     m.Git.Head,
-			Dirty:    m.Git.Dirty,
-			Modified: modified,
-		}
 	}
 
 	return ext

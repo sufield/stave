@@ -12,16 +12,12 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/core/retention"
 )
 
 // Constants for config files and built-in defaults.
 const (
 	AuditPolicyFile          = "stave.yaml"
 	DefaultMaxUnsafeDuration = "168h"
-	DefaultSnapshotRetention = "30d"
-	DefaultRetentionTier     = "critical"
-	DefaultTierKeepMin       = 2
 )
 
 // --- Policy Provenance ---
@@ -112,10 +108,6 @@ func ParseEnforcementGate(raw string) (EnforcementGate, error) {
 // membership explicit at the field site.
 type WorkspacePolicy struct {
 	MaxUnsafe                string                    `yaml:"max_unsafe"                   governance:"include"`
-	SnapshotRetention        string                    `yaml:"snapshot_retention"           governance:"include"`
-	RetentionTier            string                    `yaml:"default_retention_tier"       governance:"include"`
-	RetentionTiers           map[string]retention.Tier `yaml:"snapshot_retention_tiers"`
-	ObservationTierMapping   []retention.Rule          `yaml:"observation_tier_mapping"`
 	CIFailurePolicy          string                    `yaml:"ci_failure_policy"            governance:"include"`
 	CaptureCadence           string                    `yaml:"capture_cadence"              governance:"include"`
 	SnapshotFilenameTemplate string                    `yaml:"snapshot_filename_template"   governance:"include"`
@@ -126,7 +118,6 @@ type WorkspacePolicy struct {
 	MaxGapThreshold          string                    `yaml:"max_gap_threshold"            governance:"include"`
 	ConfidenceHighMultiplier int                       `yaml:"confidence_high_multiplier"   governance:"include"`
 	ConfidenceMedMultiplier  int                       `yaml:"confidence_medium_multiplier" governance:"include"`
-	MaxSnapshotFiles         int                       `yaml:"max_snapshot_files"           governance:"include"`
 	BlockedCommands          []string                  `yaml:"blocked_commands"`
 	MaxValidationErrors      int                       `yaml:"max_validation_errors"        governance:"include"`
 	TeamManifest             string                    `yaml:"team_manifest"                governance:"include"`
@@ -154,8 +145,6 @@ func (p *WorkspacePolicy) Validate() error {
 	}
 	for _, field := range []string{
 		"MaxUnsafe",
-		"SnapshotRetention",
-		"RetentionTier",
 		"CIFailurePolicy",
 		"CaptureCadence",
 		"SnapshotFilenameTemplate",
@@ -183,8 +172,6 @@ type PolicyException struct {
 // OperatorSettings represents the local preferences of the security operator.
 type OperatorSettings struct {
 	MaxUnsafe         string            `yaml:"max_unsafe"`
-	SnapshotRetention string            `yaml:"snapshot_retention"`
-	RetentionTier     string            `yaml:"default_retention_tier"`
 	CIFailurePolicy   string            `yaml:"ci_failure_policy"`
 	CLIDefaults       OperatorCLIConfig `yaml:"cli_defaults"`
 	Aliases           map[string]string `yaml:"aliases,omitempty"`

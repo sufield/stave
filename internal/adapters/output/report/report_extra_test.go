@@ -172,29 +172,14 @@ func TestExtractTemplateMetadata_NilExtensions(t *testing.T) {
 	}
 }
 
-func TestExtractTemplateMetadata_WithGit(t *testing.T) {
+func TestExtractTemplateMetadata_WithContext(t *testing.T) {
 	run := reportRun{}
 	ext := &evaluation.Extensions{
 		ContextName: "test-ctx",
-		Git: &evaluation.GitMetadata{
-			RepoRoot: "/repo",
-			Head:     "abc123",
-			Dirty:    true,
-			Modified: []string{"file.go"},
-		},
 	}
 	meta := extractTemplateMetadata(run, ext)
 	if meta.ContextName != "test-ctx" {
 		t.Fatalf("ContextName = %q", meta.ContextName)
-	}
-	if meta.GitHeadCommit != "abc123" {
-		t.Fatalf("GitHeadCommit = %q", meta.GitHeadCommit)
-	}
-	if !meta.GitDirty {
-		t.Fatal("expected GitDirty")
-	}
-	if meta.GitPathsDirty != "file.go" {
-		t.Fatalf("GitPathsDirty = %q", meta.GitPathsDirty)
 	}
 }
 

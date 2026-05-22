@@ -311,14 +311,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-azure-storage-ghost-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-azure-storage-ghost-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "2e261ecc9a8acf36e8f80c787a2875660bfc73cd",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-azure-storage-ghost-001-fail/controls/"
-      ]
     }
   }
 }

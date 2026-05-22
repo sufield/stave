@@ -315,14 +315,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-route53-log-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-route53-log-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "b1b510377c489795da3ab96117a10a64d28af056",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-route53-log-001-fail/controls/"
-      ]
     }
   }
 }

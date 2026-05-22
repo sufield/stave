@@ -334,14 +334,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-iam-escalate-kmskeypolicy-fail/controls",
       "observations": "testdata/e2e/e2e-forge-iam-escalate-kmskeypolicy-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "1d319fb1a55ef1206404a275b8c4510ce93a9f5e",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-iam-escalate-kmskeypolicy-fail/controls/"
-      ]
     }
   }
 }

@@ -375,14 +375,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-azure-defender-arm-001-fail/controls",
       "observations": "testdata/e2e/e2e-forge-azure-defender-arm-001-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "8e6605f6d9f1da5bc050bce62f57a4acc451e2fc",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-azure-defender-arm-001-fail/controls/"
-      ]
     }
   }
 }

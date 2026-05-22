@@ -13,11 +13,7 @@ import (
 
 type reportTemplateMetadata struct {
 	reportRun
-	ContextName   string `json:"context_name,omitempty"`
-	GitRepoRoot   string `json:"git_repo_root,omitempty"`
-	GitHeadCommit string `json:"git_head_commit,omitempty"`
-	GitDirty      bool   `json:"git_dirty"`
-	GitPathsDirty string `json:"git_paths_dirty,omitempty"`
+	ContextName string `json:"context_name,omitempty"`
 }
 
 type reportSeverityGroup struct {
@@ -96,14 +92,6 @@ func extractTemplateMetadata(run reportRun, ext *evaluation.Extensions) reportTe
 		return meta
 	}
 	meta.ContextName = ext.ContextName
-	if ext.Git != nil {
-		meta.GitRepoRoot = ext.Git.RepoRoot
-		meta.GitHeadCommit = ext.Git.Head
-		meta.GitDirty = ext.Git.Dirty
-		if len(ext.Git.Modified) > 0 {
-			meta.GitPathsDirty = strings.Join(ext.Git.Modified, ", ")
-		}
-	}
 	return meta
 }
 

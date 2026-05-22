@@ -293,14 +293,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-ghostref-001-missing-lambda-fail/controls",
       "observations": "testdata/e2e/e2e-forge-ghostref-001-missing-lambda-fail/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "f77b0ddd94c710e158c2cd0135da5725406ea242",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-ghostref-001-missing-lambda-fail/controls/"
-      ]
     }
   }
 }

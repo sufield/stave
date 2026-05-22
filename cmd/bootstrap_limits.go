@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"math"
 
-	"github.com/sufield/stave/internal/adapters/pruner"
 	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -20,11 +19,6 @@ import (
 // done in the bootstrap path with a warning so operators see what
 // they asked for and what they got.
 const (
-	// MaxConfigurableSnapshotFiles bounds pruner.SetDefaultMaxFiles
-	// at 1M — a flat directory of 1M JSON files is already absurd
-	// for any realistic snapshot workload, and the upstream Walk
-	// allocates a metadata struct per file.
-	MaxConfigurableSnapshotFiles = 1_000_000
 	// MaxConfigurableValidationErrors bounds the per-document
 	// validation-error count at 10K. Above that, downstream
 	// reporters (text, JSON, SARIF) all become unreadable; SARIF
@@ -155,16 +149,6 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 			}
 			a.Confidence.MedMultiplier = m
 		}
-	}
-
-	// Max snapshot files for directory enumeration (default 100,000)
-	if n := eval.MaxSnapshotFiles(); n > 0 {
-		if n > MaxConfigurableSnapshotFiles {
-			logger.Warn("config: clamping max_snapshot_files to configured maximum",
-				"requested", n, "max", MaxConfigurableSnapshotFiles)
-			n = MaxConfigurableSnapshotFiles
-		}
-		pruner.SetDefaultMaxFiles(n)
 	}
 
 	// Production guard blocked commands

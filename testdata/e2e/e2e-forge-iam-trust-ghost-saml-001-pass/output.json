@@ -114,14 +114,6 @@
     "resolved_paths": {
       "controls": "testdata/e2e/e2e-forge-iam-trust-ghost-saml-001-pass/controls",
       "observations": "testdata/e2e/e2e-forge-iam-trust-ghost-saml-001-pass/observations"
-    },
-    "git": {
-      "repo_root": "/home/zepho/work/bizacademy",
-      "head_commit": "4be67f8f3024fed6469d47034acad930bae17933",
-      "dirty": true,
-      "modified_paths": [
-        "stave/testdata/e2e/e2e-forge-iam-trust-ghost-saml-001-pass/controls/"
-      ]
     }
   }
 }
