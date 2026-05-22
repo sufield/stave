@@ -16,13 +16,11 @@ import (
 	applyverify "github.com/sufield/stave/cmd/apply/verify"
 	staveattest "github.com/sufield/stave/cmd/attest"
 	stavebisect "github.com/sufield/stave/cmd/bisect"
-	stavebudget "github.com/sufield/stave/cmd/budget"
 	stavebundle "github.com/sufield/stave/cmd/bundle"
 	catalog "github.com/sufield/stave/cmd/catalog"
 	stavecelcmd "github.com/sufield/stave/cmd/cel"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	stavecompare "github.com/sufield/stave/cmd/compare"
-	staveconsolidate "github.com/sufield/stave/cmd/consolidate"
 	contract "github.com/sufield/stave/cmd/contract"
 	stavecoverage "github.com/sufield/stave/cmd/coverage"
 	"github.com/sufield/stave/cmd/diagnose"
@@ -34,43 +32,35 @@ import (
 	"github.com/sufield/stave/cmd/enforce/cidiff"
 	"github.com/sufield/stave/cmd/enforce/fix"
 	"github.com/sufield/stave/cmd/enforce/gate"
-	staveenrich "github.com/sufield/stave/cmd/enrich"
 	staveexempt "github.com/sufield/stave/cmd/exempt"
 	"github.com/sufield/stave/cmd/expand"
 	staveexport "github.com/sufield/stave/cmd/export"
 	staveexportinvariants "github.com/sufield/stave/cmd/exportinvariants"
 	staveexportsir "github.com/sufield/stave/cmd/exportsir"
 	stavefeatures "github.com/sufield/stave/cmd/features"
-	staveforensics "github.com/sufield/stave/cmd/forensics"
 	staveforge "github.com/sufield/stave/cmd/forge"
 	stavegaps "github.com/sufield/stave/cmd/gaps"
 	"github.com/sufield/stave/cmd/initcmd"
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
 	"github.com/sufield/stave/cmd/inspect"
-	staveinventory "github.com/sufield/stave/cmd/inventory"
 	stavemap "github.com/sufield/stave/cmd/map"
 	stavemetrics "github.com/sufield/stave/cmd/metrics"
-	stavemonitor "github.com/sufield/stave/cmd/monitor"
 	stavenep "github.com/sufield/stave/cmd/nep"
 	stavepath "github.com/sufield/stave/cmd/path"
-	staveplan "github.com/sufield/stave/cmd/plan"
 	staveprofile "github.com/sufield/stave/cmd/profile"
-	staverank "github.com/sufield/stave/cmd/rank"
 	stavereadiness "github.com/sufield/stave/cmd/readiness"
 	stavereport "github.com/sufield/stave/cmd/report"
 	stavesanitize "github.com/sufield/stave/cmd/sanitize"
 	stavescore "github.com/sufield/stave/cmd/score"
 	stavescorecard "github.com/sufield/stave/cmd/scorecard"
 	search "github.com/sufield/stave/cmd/search"
-	stavesimulate "github.com/sufield/stave/cmd/simulate"
 	stavesla "github.com/sufield/stave/cmd/sla"
 	stavesnapshotdiff "github.com/sufield/stave/cmd/snapshotdiff"
 	stavetelemetry "github.com/sufield/stave/cmd/telemetry"
 	stavetest "github.com/sufield/stave/cmd/test"
 	stavetrend "github.com/sufield/stave/cmd/trend"
 	validatemapping "github.com/sufield/stave/cmd/validatemapping"
-	stavewatch "github.com/sufield/stave/cmd/watch"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	infrabaseline "github.com/sufield/stave/internal/adapters/baseline"
 	infradoctor "github.com/sufield/stave/internal/adapters/doctor"
@@ -207,9 +197,6 @@ func WireCommands(app *App) error {
 		NewCELEvaluator: f.NewCELEvaluator,
 	}))
 
-	// Continuous monitoring
-	root.AddCommand(stavewatch.NewCmd())
-
 	// Evidence bundling
 	root.AddCommand(stavebundle.NewCmd())
 
@@ -222,23 +209,9 @@ func WireCommands(app *App) error {
 	// Posture trending
 	root.AddCommand(stavetrend.NewCmd())
 
-	// Remediation ranking
-	root.AddCommand(staverank.NewCmd(staverank.Deps{
-		NewSnapshotBundleLoader: f.NewSnapshotBundleLoader,
-	}))
-
-	// Multi-account consolidation
-	root.AddCommand(staveconsolidate.NewCmd())
-
 	// Risk acceptance management
 	root.AddCommand(staveexempt.NewCmd(staveexempt.Deps{
 		NewBuiltinControlStore: f.NewBuiltinControlStore,
-	}))
-
-	// Forensic timeline reconstruction
-	root.AddCommand(staveforensics.NewCmd(staveforensics.Deps{
-		NewCtlRepo:      f.NewCtlRepo,
-		NewCELEvaluator: f.NewCELEvaluator,
 	}))
 
 	// ATT&CK coverage map
@@ -301,9 +274,6 @@ func WireCommands(app *App) error {
 		NewChainLoader: f.NewChainLoader,
 	}))
 
-	// Terminal posture monitor
-	root.AddCommand(stavemonitor.NewCmd())
-
 	// Multi-framework scorecard
 	root.AddCommand(stavescorecard.NewCmd())
 
@@ -316,23 +286,11 @@ func WireCommands(app *App) error {
 	// Prometheus metrics export
 	root.AddCommand(stavemetrics.NewCmd())
 
-	// CVE/NVD enrichment
-	root.AddCommand(staveenrich.NewCmd())
-
 	// Profile management
 	root.AddCommand(staveprofile.NewCmd())
 
-	// Version inventory for CVE correlation
-	root.AddCommand(staveinventory.NewCmd())
-
-	// Remediation simulation
-	root.AddCommand(stavesimulate.NewCmd())
-
 	// Compliance gap analysis
 	root.AddCommand(stavecompare.NewCmd())
-
-	// Team remediation plans
-	root.AddCommand(staveplan.NewCmd())
 
 	// Executive report
 	root.AddCommand(stavereport.NewCmd(stavereport.Deps{
@@ -348,9 +306,6 @@ func WireCommands(app *App) error {
 
 	// Posture score
 	root.AddCommand(stavescore.NewCmd())
-
-	// Security budget / burn rate
-	root.AddCommand(stavebudget.NewCmd())
 
 	// Telemetry bridge
 	root.AddCommand(stavetelemetry.NewCmd())

@@ -4,24 +4,21 @@ Identify controls that fail repeatedly in a pattern.
 
 ---
 
-## Run Forensics
+## Scan for All Violation Windows
 
 ```bash
-stave forensics \
-  --history ./snapshots \
-  --control CTL.S3.PUBLIC.001
+stave bisect \
+  --controls ./controls \
+  --observations ./snapshots \
+  --control-id CTL.S3.PUBLIC.001 \
+  --mode scan
 ```
 
-## Read the Recurrence Score
-
-The recurrence score (0-10) indicates how frequently a violation appears, resolves, and reappears:
-
-| Score | Meaning |
-|-------|---------|
-| 0-2 | One-time violation, likely a configuration error |
-| 3-5 | Occasional recurrence, possible deployment regression |
-| 6-8 | Frequent recurrence, systemic pipeline issue |
-| 9-10 | Persistent recurrence, possible attacker activity |
+`--mode scan` walks the full history (O(N)) and reports every violation
+window — each PASS → VIOLATION → PASS cycle — rather than just the most
+recent transition. A control that repeatedly re-enters violation after
+being fixed is a regression pattern: the more windows, the more frequent
+the recurrence.
 
 ## Correlate with Git Log
 

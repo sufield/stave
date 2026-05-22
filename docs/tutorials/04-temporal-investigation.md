@@ -62,12 +62,14 @@ This is what "evaluate, not guess" means. You are not reconstructing what happen
 ## Check for Recurrence
 
 ```bash
-stave forensics \
-  --history ./snapshots \
-  --control CTL.S3.PUBLIC.001
+stave bisect \
+  --controls ./controls \
+  --observations ./snapshots \
+  --control-id CTL.S3.PUBLIC.001 \
+  --mode scan
 ```
 
-If the violation has appeared, been fixed, and reappeared, forensics reports the recurrence pattern and score.
+If the violation has appeared, been fixed, and reappeared, `--mode scan` reports each violation window across the history.
 
 ## What to Explore Next
 

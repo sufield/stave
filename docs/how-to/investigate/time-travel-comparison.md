@@ -39,15 +39,17 @@ diff <(jq '[.findings[].control_id] | sort' assessment-jan-01.json) \
 diff snapshots/2026-01-01.json snapshots/2026-03-31.json | head -50
 ```
 
-## Use stave forensics for the Full Period
+## Scan Every Transition Across the Full Period
 
 ```bash
-stave forensics \
-  --history ./snapshots \
-  --control CTL.S3.PUBLIC.001
+stave bisect \
+  --controls ./controls \
+  --observations ./snapshots \
+  --control-id CTL.S3.PUBLIC.001 \
+  --mode scan
 ```
 
-This shows every transition (PASS → VIOLATION, VIOLATION → PASS) across the full history for a specific control.
+This shows every violation window (PASS → VIOLATION → PASS) across the full history for a specific control.
 
 ## Collect Evidence for an Investigation Period
 

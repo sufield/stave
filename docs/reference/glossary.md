@@ -14,7 +14,7 @@ A single configurable infrastructure resource with an identifier, type, vendor, 
 A MITRE ATT&CK tactic mapped to a [control](#control) via the `attack_stage` parameter. Determines which tactic the control detects conditions for. Valid values: `initial_access`, `execution`, `credential_access`, `persistence`, `privilege_escalation`, `lateral_movement`, `discovery`, `collection`, `exfiltration`, `detection_evasion`, `impact`, `resilience`. See [attack-stages.md](attack-stages.md).
 
 **Blast Radius**
-The count of downstream assets reachable from a compromised asset via the infrastructure graph. Used by `stave rank` as a priority multiplier. A finding with blast radius 47 means 47 other assets could be affected if the violating asset is compromised.
+The count of downstream assets reachable from a compromised asset via the infrastructure graph. A finding with blast radius 47 means 47 other assets could be affected if the violating asset is compromised.
 
 **Capability**
 A string from the closed vocabulary used in chain `preconditions:` and `postconditions:` fields. Enables `stave path` to derive attack path edges between chains. Examples: `internet_access`, `iam_credential_theft`, `rds_data_access`. See [capability-vocabulary.md](capability-vocabulary.md).
@@ -32,7 +32,7 @@ A YAML file (schema `ctrl.v1`) defining a single [System Invariant](#system-inva
 A specific control violation on a specific asset at a specific time. Carries: control ID, asset ID, verdict, severity, dwell time, blast radius, SLA status, and compliance citations. The primary unit of assessment output.
 
 **History Directory**
-A directory of assessment JSON files, one per run. The input to `stave trend`, `stave score`, `stave budget`, `stave bisect`, `stave forensics`, and `stave monitor`.
+A directory of assessment JSON files, one per run. The input to `stave trend`, `stave score`, and `stave bisect`.
 
 **INCONCLUSIVE**
 A [verdict](#verdict) produced when a control cannot evaluate an asset because a required property is absent from the observation or a CEL runtime error occurred. Distinct from PASS (property present and satisfies the invariant) and VIOLATION (property present and violates the invariant). INCONCLUSIVE preserves the SLA clock without changing exposure state.
@@ -53,7 +53,7 @@ A 0-100 composite metric computed from four weighted dimensions: severity distri
 A named set of controls representing a compliance framework or organizational policy. Built-in profiles include `hipaa`, `fedramp`, `soc2`, `pci-dss-v4.0`, `cis-aws-v3.0`. Custom profiles are YAML files loaded with `--profile-file`. Domain profiles like `aws-s3` and `aws-efs` scope evaluation to a single service.
 
 **Recurrence**
-A pattern where a control violation appears, resolves, and reappears on the same asset. Measured by `stave forensics` and expressed as a recurrence score 0-10. High recurrence indicates either attacker activity or deployment-introduced regression.
+A pattern where a control violation appears, resolves, and reappears on the same asset. Surfaced by `stave bisect --mode scan`, which finds all violation windows across a history. High recurrence indicates either attacker activity or deployment-introduced regression.
 
 **Snapshot**
 A JSON file (schema `obs.v0.1`) containing an array of asset observations captured at a specific point in time. The input to `stave apply`. Snapshots are files — they go in git. This is the foundation of time travel evaluation.

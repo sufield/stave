@@ -9,6 +9,13 @@
 # Rule for reviewers: if a PR adds a capability that matches an
 # out_of_scope id, either remove that entry or the PR is blocked.
 #
+# The `forbids` list on an entry names CLI commands that would
+# re-introduce that capability. The scope-drift lint
+# (cmd/features_scope_lint_test.go) fails the build if any forbidden
+# command name is registered, so a regression (e.g. re-adding `collect`)
+# is caught in CI. Commands that are differently named but semantically
+# in an out-of-scope area are still the PR reviewer's call.
+#
 # Stave is a snapshot evaluator / formal proof system: snapshots in,
 # findings out. The boundaries below are by design — the work belongs
 # to the upstream system that produces snapshots, or to the downstream
@@ -19,16 +26,19 @@ out_of_scope:
     label: "Snapshot Generation"
     reason: "Upstream responsibility"
     alternatives: ["Steampipe", "Pulumi", "AWS CLI", "custom scripts"]
+    forbids: ["collect"]
 
   - id: snapshot_storage
     label: "Snapshot Storage"
     reason: "Upstream responsibility"
     alternatives: ["S3", "local filesystem", "artifact store"]
+    forbids: []
 
   - id: snapshot_retention
     label: "Snapshot Retention"
     reason: "Upstream responsibility"
     alternatives: ["storage lifecycle policies"]
+    forbids: ["prune", "archive"]
 
   - id: continuous_scheduling
     label: "Continuous Scheduling"
@@ -54,3 +64,36 @@ out_of_scope:
     label: "Agent Installation"
     reason: "Not needed — CLI binary, not daemon"
     alternatives: []
+
+  - id: continuous_monitoring
+    label: "Continuous Monitoring"
+    reason: "Delegated to orchestration; Stave evaluates a snapshot on demand"
+    alternatives: ["CI/CD on every snapshot", "K8s CronJob", "your scheduler"]
+    forbids: ["monitor", "watch"]
+
+  - id: remediation_planning
+    label: "Remediation Planning"
+    reason: "Delegated to ticketing/IaC; Stave emits findings, not plans"
+    alternatives: ["Jira", "Terraform", "your remediation workflow"]
+    # `simulate` is intentionally absent: `stave sla simulate` is a kept,
+    # in-scope subcommand of `sla`, and the lint matches by bare command
+    # name. Re-adding a top-level remediation `simulate` relies on review.
+    forbids: ["plan", "rank", "budget"]
+
+  - id: incident_forensics
+    label: "Incident Forensics"
+    reason: "Out of scope — Stave evaluates state, it is not a timeline/IR tool"
+    alternatives: ["CloudTrail", "SIEM", "stave bisect for first-violation point"]
+    forbids: ["forensics"]
+
+  - id: external_enrichment
+    label: "External Data Enrichment"
+    reason: "Consume Stave output; enrich downstream"
+    alternatives: ["CVE/NVD feeds", "your enrichment pipeline"]
+    forbids: ["enrich", "inventory"]
+
+  - id: multi_account_orchestration
+    label: "Multi-Account Orchestration"
+    reason: "Delegated to orchestration; evaluate each account's snapshot"
+    alternatives: ["CI matrix per account", "your orchestrator"]
+    forbids: ["consolidate"]

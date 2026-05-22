@@ -70,7 +70,6 @@ func WithControlSource(source evaluation.ControlSourceInfo) Option {
 	}
 }
 
-
 // WithSLAConfig sets the SLA policy for deadline enforcement on findings.
 func WithSLAConfig(cfg *evaluation.SLAConfig) Option {
 	return func(acfg *AssessmentConfig) {

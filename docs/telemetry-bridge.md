@@ -103,7 +103,6 @@ exactly this without requiring a new security tool.
 | Command | Purpose |
 |---------|---------|
 | `stave apply` | Evaluate current safety state |
-| `stave rank` | Prioritize remediation from assessment |
 | `stave telemetry` | Stream findings to dashboards and SIEM |
 | `stave bundle` | Package evidence for air-gap GRC |
 

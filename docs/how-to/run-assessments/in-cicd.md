@@ -68,11 +68,13 @@ stave apply \
 
 ## SLA Gating
 
-Fail when any finding exceeds its SLA deadline:
+Fail when a finding is overdue against its SLA deadline:
 
 ```bash
-stave budget \
-  --history ./history \
-  --sla-profile-file sla-policy.yaml
-# Exit code 1 if burn rate exceeds threshold
+stave ci gate \
+  --policy fail_on_overdue_upcoming \
+  --controls controls \
+  --observations observations/ \
+  --max-unsafe 168h
+# Exit code 3 if any finding is overdue
 ```

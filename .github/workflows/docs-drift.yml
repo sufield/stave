@@ -140,8 +140,22 @@ jobs:
 
           # Commands that were removed or renamed
           check_pattern 'stave-dev extractor'        'extractor command was removed'
-          check_pattern 'stave check\b'              '`stave check` retired — use `stave apply`'
           check_pattern 'stave invariants\b'         '`stave invariants` retired — there is no such command'
+          # The 11 out-of-scope commands removed in the scope-narrowing
+          # pass. See features/scope.yaml; re-adding any is blocked by the
+          # scope-drift lint (cmd/features_scope_lint_test.go). `stave check`
+          # (before/after evaluation comparison) is NOT in this list — it is
+          # a live, in-scope command.
+          check_pattern 'stave monitor\b'            '`stave monitor` removed — continuous monitoring is out of scope'
+          check_pattern 'stave watch\b'              '`stave watch` removed — continuous monitoring is out of scope'
+          check_pattern 'stave plan\b'               '`stave plan` removed — remediation planning is out of scope'
+          check_pattern 'stave rank\b'               '`stave rank` removed — remediation planning is out of scope'
+          check_pattern 'stave simulate\b'           '`stave simulate` removed — remediation planning is out of scope'
+          check_pattern 'stave forensics\b'          '`stave forensics` removed — incident response is out of scope'
+          check_pattern 'stave budget\b'             '`stave budget` removed — out of scope'
+          check_pattern 'stave enrich\b'             '`stave enrich` removed — external enrichment is out of scope'
+          check_pattern 'stave inventory\b'          '`stave inventory` removed — external enrichment is out of scope'
+          check_pattern 'stave consolidate\b'        '`stave consolidate` removed — multi-account orchestration is out of scope'
 
           # Stale vocabulary — file/format language only; "Invariants
           # as Code" and "System Invariant" stay as the brand/concept.

@@ -381,7 +381,6 @@ func TestPrepareEvaluationContext_BadFormat(t *testing.T) {
 	}
 }
 
-
 // --- isManifestArtifact (via output) ---
 
 func TestEvalContextRequest_Defaults(t *testing.T) {

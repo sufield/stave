@@ -17,10 +17,18 @@ var scopeYAML []byte
 
 // OutOfScopeEntry is one deliberately-excluded capability.
 type OutOfScopeEntry struct {
-	ID           string   `yaml:"id"`
-	Label        string   `yaml:"label"`
-	Reason       string   `yaml:"reason"`
-	Alternatives []string `yaml:"alternatives"`
+	ID           string   `yaml:"id"           json:"id"`
+	Label        string   `yaml:"label"        json:"label"`
+	Reason       string   `yaml:"reason"       json:"reason"`
+	Alternatives []string `yaml:"alternatives" json:"alternatives"`
+	// Forbids lists CLI command names (at any depth of the command
+	// tree) that would re-introduce this out-of-scope capability. The
+	// scope-drift lint (cmd/features_scope_lint_test.go) fails if any
+	// of these names is registered. Empty when the capability has no
+	// command-name guard (it is enforced by other means, e.g. the
+	// air-gap policy for credential_management). It is a lint-internal
+	// detail, so it is omitted from the `stave features` JSON output.
+	Forbids []string `yaml:"forbids" json:"-"`
 }
 
 type scopeDoc struct {

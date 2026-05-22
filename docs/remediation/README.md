@@ -36,8 +36,8 @@ Each finding's `remediation.changes[]` array contains `PropertyChange` entries:
 ## Pipeline
 
 ```bash
-# Prioritized remediation data
-stave rank --in ./output.json --format json > remediation.json
+# Assessment findings (JSON)
+stave apply --observations ./observations --format json > remediation.json
 
 # Generate Terraform patches
 python3 docs/remediation/to-terraform.py < remediation.json > patches.tf

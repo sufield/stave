@@ -107,24 +107,24 @@ func ParseEnforcementGate(raw string) (EnforcementGate, error) {
 // from string to a typed wrapper. The tag makes governance
 // membership explicit at the field site.
 type WorkspacePolicy struct {
-	MaxUnsafe                string                    `yaml:"max_unsafe"                   governance:"include"`
-	CIFailurePolicy          string                    `yaml:"ci_failure_policy"            governance:"include"`
-	CaptureCadence           string                    `yaml:"capture_cadence"              governance:"include"`
-	SnapshotFilenameTemplate string                    `yaml:"snapshot_filename_template"   governance:"include"`
-	Exceptions               []PolicyException         `yaml:"exceptions"`
-	EnabledControlPacks      []string                  `yaml:"enabled_control_packs"`
-	ExcludeControls          []kernel.ControlID        `yaml:"exclude_controls"`
-	MaxInputFileSize         string                    `yaml:"max_input_file_size"          governance:"include"`
-	MaxGapThreshold          string                    `yaml:"max_gap_threshold"            governance:"include"`
-	ConfidenceHighMultiplier int                       `yaml:"confidence_high_multiplier"   governance:"include"`
-	ConfidenceMedMultiplier  int                       `yaml:"confidence_medium_multiplier" governance:"include"`
-	BlockedCommands          []string                  `yaml:"blocked_commands"`
-	MaxValidationErrors      int                       `yaml:"max_validation_errors"        governance:"include"`
-	TeamManifest             string                    `yaml:"team_manifest"                governance:"include"`
-	OwnerTagKey              string                    `yaml:"owner_tag_key"                governance:"include"`
-	BudgetPeriod             string                    `yaml:"budget_period"                governance:"include"`
-	BudgetFailBurnRate       float64                   `yaml:"budget_fail_on_burn_rate"     governance:"include"`
-	BudgetFailSeverity       []string                  `yaml:"budget_fail_severity"`
+	MaxUnsafe                string             `yaml:"max_unsafe"                   governance:"include"`
+	CIFailurePolicy          string             `yaml:"ci_failure_policy"            governance:"include"`
+	CaptureCadence           string             `yaml:"capture_cadence"              governance:"include"`
+	SnapshotFilenameTemplate string             `yaml:"snapshot_filename_template"   governance:"include"`
+	Exceptions               []PolicyException  `yaml:"exceptions"`
+	EnabledControlPacks      []string           `yaml:"enabled_control_packs"`
+	ExcludeControls          []kernel.ControlID `yaml:"exclude_controls"`
+	MaxInputFileSize         string             `yaml:"max_input_file_size"          governance:"include"`
+	MaxGapThreshold          string             `yaml:"max_gap_threshold"            governance:"include"`
+	ConfidenceHighMultiplier int                `yaml:"confidence_high_multiplier"   governance:"include"`
+	ConfidenceMedMultiplier  int                `yaml:"confidence_medium_multiplier" governance:"include"`
+	BlockedCommands          []string           `yaml:"blocked_commands"`
+	MaxValidationErrors      int                `yaml:"max_validation_errors"        governance:"include"`
+	TeamManifest             string             `yaml:"team_manifest"                governance:"include"`
+	OwnerTagKey              string             `yaml:"owner_tag_key"                governance:"include"`
+	BudgetPeriod             string             `yaml:"budget_period"                governance:"include"`
+	BudgetFailBurnRate       float64            `yaml:"budget_fail_on_burn_rate"     governance:"include"`
+	BudgetFailSeverity       []string           `yaml:"budget_fail_severity"`
 }
 
 // Validate runs the same field-level validators that
@@ -171,10 +171,10 @@ type PolicyException struct {
 
 // OperatorSettings represents the local preferences of the security operator.
 type OperatorSettings struct {
-	MaxUnsafe         string            `yaml:"max_unsafe"`
-	CIFailurePolicy   string            `yaml:"ci_failure_policy"`
-	CLIDefaults       OperatorCLIConfig `yaml:"cli_defaults"`
-	Aliases           map[string]string `yaml:"aliases,omitempty"`
+	MaxUnsafe       string            `yaml:"max_unsafe"`
+	CIFailurePolicy string            `yaml:"ci_failure_policy"`
+	CLIDefaults     OperatorCLIConfig `yaml:"cli_defaults"`
+	Aliases         map[string]string `yaml:"aliases,omitempty"`
 }
 
 // OperatorCLIConfig holds CLI-specific operator defaults.
