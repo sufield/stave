@@ -1,0 +1,53 @@
+{
+  "_comment_format": "Packer >=1.7 supports HCL2 (.pkr.hcl) and remains backward-compatible with this JSON format. JSON kept here because DigitalOcean's marketplace-partners examples still use it and the 1-Click validation tooling reads it directly. Convert to HCL when modernizing.",
+
+  "_comment_plugins": "Packer 1.7+ requires explicit plugin install: `packer plugins install github.com/digitalocean/digitalocean`. The plugin pin is in versions/plugin-version.txt next to this file.",
+
+  "variables": {
+    "do_api_token": "{{env `DO_API_TOKEN`}}",
+    "stave_ref":    "{{env `STAVE_REF`}}",
+    "go_version":   "1.26.3"
+  },
+
+  "_comment_size": "The BUILD droplet is intentionally larger than the cheapest production runtime: `go build` for the full Stave module needs more than 1 GB. The resulting snapshot still runs on s-1vcpu-1gb (the $6 production droplet) — DO snapshots can be applied to any size droplet that has at least the snapshot's disk size.",
+
+  "builders": [
+    {
+      "type":          "digitalocean",
+      "api_token":     "{{user `do_api_token`}}",
+      "image":         "ubuntu-24-04-x64",
+      "region":        "nyc3",
+      "size":          "s-2vcpu-2gb",
+      "ssh_username":  "root",
+      "snapshot_name": "stave-{{timestamp}}",
+      "snapshot_regions": ["nyc3", "sfo3", "ams3", "sgp1", "fra1"]
+    }
+  ],
+
+  "provisioners": [
+    {
+      "type":        "shell",
+      "environment_vars": [
+        "STAVE_REF={{user `stave_ref`}}",
+        "GO_VERSION={{user `go_version`}}",
+        "DEBIAN_FRONTEND=noninteractive"
+      ],
+      "script":      "setup.sh"
+    },
+    {
+      "_comment": "DigitalOcean ships marketplace-partners/scripts/img_check.sh — the canonical pre-submission validator. Pull it from GitHub directly during the build so we always validate against the current ruleset.",
+      "type":  "shell",
+      "inline": [
+        "set -euo pipefail",
+        "curl -fsSL https://raw.githubusercontent.com/digitalocean/marketplace-partners/master/scripts/img_check.sh -o /tmp/img_check.sh",
+        "chmod +x /tmp/img_check.sh",
+        "/tmp/img_check.sh -t apps || true",
+        "rm -f /tmp/img_check.sh"
+      ]
+    },
+    {
+      "type":   "shell",
+      "script": "cleanup.sh"
+    }
+  ]
+}

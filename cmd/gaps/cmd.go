@@ -4,28 +4,24 @@
 // many observed assets are missing that property, what controls
 // and chains the absence blocks, and the priority order in which
 // the operator should close them.
+//
+// The command is a thin shell over [stave.Gaps]: flag binding,
+// one library call, output formatting. All loading (snapshots,
+// controls, chains) is the library's responsibility. See
+// docs/architecture/pkg-stave-facade.md for the design and
+// architecture_test.go for the test-time ratchet that pins
+// cmd/gaps's import surface to pkg/stave + cmd/cmdutil + stdlib.
 package gaps
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	appgaps "github.com/sufield/stave/internal/app/gaps"
-	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/pkg/stave"
 )
-
-// Deps holds the adapter factories the gaps command needs. No
-// CEL evaluator — gaps does not invoke the evaluation engine.
-type Deps struct {
-	NewCtlRepo     compose.CtlRepoFactory
-	NewChainLoader compose.ChainLoaderFactory
-	NewObsRepo     compose.ObsRepoFactory
-}
 
 type options struct {
 	ObservationsDir string
@@ -38,7 +34,7 @@ type options struct {
 
 // NewCmd constructs the gaps command. Wired into the root in
 // cmd/commands.go.
-func NewCmd(deps Deps) *cobra.Command {
+func NewCmd() *cobra.Command {
 	opts := &options{
 		Format:    "text",
 		TopN:      5,
@@ -114,7 +110,7 @@ Caveats:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return run(cmd.Context(), cmd.OutOrStdout(), opts, deps)
+			return run(cmd.Context(), cmd.OutOrStdout(), opts)
 		},
 	}
 
@@ -129,41 +125,24 @@ Caveats:
 	return cmd
 }
 
-func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
-	renderer, rendErr := NewRenderer(opts.Format, opts.TopN)
-	if rendErr != nil {
-		return &ui.UserError{Err: rendErr}
-	}
-
-	snapshots, err := compose.LoadSnapshotsFrom(ctx, deps.NewObsRepo, opts.ObservationsDir)
+func run(ctx context.Context, w io.Writer, opts *options) error {
+	renderer, err := NewRenderer(opts.Format, opts.TopN)
 	if err != nil {
-		return fmt.Errorf("load observations: %w", err)
+		return err
 	}
 
-	controls, err := compose.LoadControlsFrom(ctx, deps.NewCtlRepo, opts.ControlsDir)
+	report, err := stave.Gaps(ctx, stave.GapsOptions{
+		SnapshotsDir: opts.ObservationsDir,
+		ControlsDir:  opts.ControlsDir,
+		ChainsDir:    opts.ChainsDir,
+		TopN:         opts.TopN,
+	})
 	if err != nil {
-		return fmt.Errorf("load controls: %w", err)
+		return fmt.Errorf("analyze gaps: %w", err)
 	}
-
-	chains, err := compose.LoadChainDefinitions(ctx, deps.NewChainLoader, opts.ChainsDir)
-	if err != nil {
-		// Missing chains dir is non-fatal: the analyzer still
-		// reports control-level gaps.
-		var notFound interface{ NotFound() bool }
-		if !errors.As(err, &notFound) || !notFound.NotFound() {
-			return fmt.Errorf("load chains: %w", err)
-		}
-		chains = nil
-	}
-
-	report := appgaps.Analyze(controls, chains, snapshots, opts.TopN)
 
 	if opts.Quiet {
 		return nil
 	}
-
-	if err := renderer.Render(w, report); err != nil {
-		return err
-	}
-	return nil
+	return renderer.Render(w, *report)
 }

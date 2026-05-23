@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	appgaps "github.com/sufield/stave/internal/app/gaps"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 func TestNewRenderer_KnownFormats(t *testing.T) {
@@ -57,7 +57,7 @@ func TestNewRenderer_UnknownFormatErrors(t *testing.T) {
 }
 
 func TestRenderers_NonEmptyOutput(t *testing.T) {
-	rep := appgaps.Report{}
+	rep := stave.GapReport{}
 	cases := []struct {
 		name     string
 		renderer Renderer

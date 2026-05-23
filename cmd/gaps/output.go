@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	appgaps "github.com/sufield/stave/internal/app/gaps"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // writeText renders the human-readable gap report. Same style
@@ -12,7 +12,7 @@ import (
 // orchestrated by writeText, each section in its own small
 // helper to keep cyclomatic complexity below the project's
 // gocyclo threshold.
-func writeText(w io.Writer, r appgaps.Report, topN int) error {
+func writeText(w io.Writer, r stave.GapReport, topN int) error {
 	if err := writeHeader(w); err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func writeHeader(w io.Writer) error {
 	})
 }
 
-func writeGapList(w io.Writer, r appgaps.Report, topN int) error {
+func writeGapList(w io.Writer, r stave.GapReport, topN int) error {
 	if len(r.Gaps) == 0 {
 		_, err := fmt.Fprintln(w, "\nNo declared property paths are missing on the observed assets.")
 		return err
@@ -52,7 +52,7 @@ func writeGapList(w io.Writer, r appgaps.Report, topN int) error {
 	return nil
 }
 
-func writeGap(w io.Writer, g *appgaps.FieldGap) error {
+func writeGap(w io.Writer, g *stave.FieldGap) error {
 	if _, err := fmt.Fprintf(w, "\n  #%d  %s\n", g.Priority, g.PropertyPath); err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func writeGap(w io.Writer, g *appgaps.FieldGap) error {
 	return nil
 }
 
-func writeSummary(w io.Writer, r appgaps.Report) error {
+func writeSummary(w io.Writer, r stave.GapReport) error {
 	// The per-type breakdown lets the operator read the agent-vs-
 	// human split at a glance: tag + derived = "agent loop closes
 	// this," api + collector = "needs the human."
@@ -110,7 +110,7 @@ func writeSummary(w io.Writer, r appgaps.Report) error {
 	return writeLines(w, lines)
 }
 
-func writeNotes(w io.Writer, r appgaps.Report) error {
+func writeNotes(w io.Writer, r stave.GapReport) error {
 	lines := []string{"\nNotes:"}
 	if r.Summary.IndeterminateDisclaimer != "" {
 		lines = append(lines, "  - "+r.Summary.IndeterminateDisclaimer)

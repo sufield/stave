@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	appgaps "github.com/sufield/stave/internal/app/gaps"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // Renderer is the polymorphic format-dispatch interface for
@@ -20,14 +20,14 @@ import (
 // New formats add an implementation here and a factory case in
 // NewRenderer.
 type Renderer interface {
-	Render(w io.Writer, r appgaps.Report) error
+	Render(w io.Writer, r stave.GapReport) error
 }
 
 // JSONRenderer encodes the report as indented JSON.
 type JSONRenderer struct{}
 
 // Render implements Renderer.
-func (JSONRenderer) Render(w io.Writer, r appgaps.Report) error {
+func (JSONRenderer) Render(w io.Writer, r stave.GapReport) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	if err := enc.Encode(r); err != nil {
@@ -44,7 +44,7 @@ type TextRenderer struct {
 }
 
 // Render implements Renderer.
-func (t TextRenderer) Render(w io.Writer, r appgaps.Report) error {
+func (t TextRenderer) Render(w io.Writer, r stave.GapReport) error {
 	if err := writeText(w, r, t.TopN); err != nil {
 		return fmt.Errorf("render text: %w", err)
 	}

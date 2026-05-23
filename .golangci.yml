@@ -74,6 +74,33 @@ linters:
           deny:
             - pkg: "github.com/*/stave/internal/infra/**"
               desc: "CLI adapters must not know about infrastructure"
+        gaps-facade-only:
+          # Facade ratchet: cmd/gaps consumes pkg/stave only. The
+          # orchestration (loading snapshots/controls/chains, calling
+          # the gap analyzer) moved into pkg/stave.Gaps in the Step 0
+          # migration probe (see docs/architecture/pkg-stave-facade.md).
+          # When a future cmd/gaps change tempts a quick `internal/`
+          # import, this rule rejects it at lint time and the sibling
+          # cmd/gaps/architecture_test.go rejects it at test time.
+          # Add commands to this list as they migrate; do not weaken
+          # an existing entry.
+          files:
+            - "cmd/gaps/**"
+          deny:
+            - pkg: "github.com/sufield/stave/internal/**"
+              desc: "cmd/gaps is facade-only — add capability to pkg/stave, then consume it"
+        readiness-facade-only:
+          # Step 2 of the facade migration. Same rule shape as
+          # gaps-facade-only; cmd/readiness now consumes
+          # pkg/stave.Readiness exclusively. The orchestration and
+          # loading code that used to live here moved into
+          # pkg/stave/readiness.go and shares the loadControlsOrBuiltin
+          # + loadChainsOptional helpers with [Gaps].
+          files:
+            - "cmd/readiness/**"
+          deny:
+            - pkg: "github.com/sufield/stave/internal/**"
+              desc: "cmd/readiness is facade-only — add capability to pkg/stave, then consume it"
     gocritic:
       disable-all: true
       enabled-checks:

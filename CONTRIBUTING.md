@@ -4,13 +4,45 @@ Thank you for considering contributing to Stave. This document explains how to s
 
 ## Development Environment
 
-### Prerequisites
+### Option 1 — Coder workspace (recommended)
+
+Launch a pre-configured workspace with the right Go toolchain,
+Steampipe, every test fixture, and pre-built `stave`/`stave-mcp`
+binaries already in place:
+
+```bash
+# From a checkout of this repo:
+coder templates push stave --directory stave-workspace
+coder create my-stave --template stave
+```
+
+Inside the workspace:
+
+```bash
+make test-unit   # < 2 min, the dev-loop test tier
+make lint        # golangci-lint (pre-installed)
+make build       # rebuild ./stave after changes
+make mcp         # rebuild ./stave-mcp after changes
+```
+
+See [`stave-workspace/README.md`](./stave-workspace/README.md) for
+what the image includes, how to customize it, and the honest
+caveats (no code-server, no AWS creds, no extra Steampipe plugins).
+The workspace is the lowest-friction contributor path: no Go install
+to manage, no toolchain-version drift between contributors, no
+"works on my machine" — the image pins everything.
+
+### Option 2 — Local setup
+
+If you'd rather work in your own environment:
+
+**Prerequisites**
 
 - Go 1.26.3 or later
 - golangci-lint (optional, for linting)
 - Make (for convenience targets)
 
-### Setup
+**Setup**
 
 ```bash
 # Clone the repository
@@ -29,6 +61,10 @@ make build
 # Run tests
 make test
 ```
+
+The local path also works for adopters who only want the CLI on
+their host (see [README Option 3](./README.md#option-3--local-install-contributors-and-power-users)
+for `go install` instructions that skip the clone).
 
 ## Running Tests
 

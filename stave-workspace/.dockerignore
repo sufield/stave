@@ -1,0 +1,45 @@
+# Build context for the workspace image is the stave module root.
+# Exclude the artifacts and trees the image doesn't need at build time
+# so layer churn and final image size both stay bounded.
+
+# Build outputs
+stave
+stave-mcp
+stave-dev
+/bin
+/dist
+.artifacts/
+.stave/
+
+# Local caches (the content-hash sync caches are local-dev only)
+.sync-schemas-hash
+.sync-controls-hash
+.sync-alternatives-hash
+
+# Test artifacts
+coverage.out
+*.test
+testdata/golden-tmp/
+
+# Editor / VCS state
+.git/
+.github/
+.vscode/
+.idea/
+
+# Documentation that lives outside the workspace image. The image
+# ships docs/workflows/ explicitly via COPY in the Dockerfile; the
+# rest of docs/ is left out to keep the image lean.
+docs/
+!docs/workflows/
+
+# Channel content, business docs, experiments
+channels/
+business/
+experiments/
+stave-coverage/
+stave-explorer/
+stave-guide/
+
+# The workspace directory itself — already inlined by the Dockerfile
+stave-workspace/

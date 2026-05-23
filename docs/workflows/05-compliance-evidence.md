@@ -4,6 +4,13 @@ Your auditor wants evidence. Stave produces it deterministically — the
 same snapshot always yields the same verdicts, so the artifact is a
 verifiable record, not a point-in-time screenshot.
 
+> **Environment:** `stave-mcp --render-scorecard` and `stave apply
+> --format json` are on `$PATH` in the [Coder workspace](../../stave-workspace/README.md)
+> and after [README Option 3](../../README.md#option-3--local-install-contributors-and-power-users)
+> install. The `./obs/` path is wherever your collector saves
+> snapshots; `~/examples/demo-s3-public-read/obs` in the workspace
+> is a quick sanity-check target.
+
 ## Step 1: Render a compliance scorecard
 
 ```bash

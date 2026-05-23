@@ -812,7 +812,10 @@ func runGaps(ctx context.Context, args gapsArgs) (any, error) {
 	if args.TopN <= 0 {
 		args.TopN = 10
 	}
-	return stave.Gaps(ctx, args.ObservationsDir, args.TopN)
+	return stave.Gaps(ctx, stave.GapsOptions{
+		SnapshotsDir: args.ObservationsDir,
+		TopN:         args.TopN,
+	})
 }
 
 // runReadiness is a thin wrapper over pkg/stave.Readiness. It shares
@@ -825,7 +828,10 @@ func runReadiness(ctx context.Context, args gapsArgs) (any, error) {
 	if args.TopN <= 0 {
 		args.TopN = 10
 	}
-	return stave.Readiness(ctx, args.ObservationsDir, args.TopN)
+	return stave.Readiness(ctx, stave.ReadinessOptions{
+		SnapshotsDir: args.ObservationsDir,
+		TopN:         args.TopN,
+	})
 }
 
 // runCompliance is a thin wrapper over pkg/stave.Compliance. Returns
@@ -950,7 +956,7 @@ func evaluateScorecard(ctx context.Context, obsDir string, frameworks []string) 
 // blanks. An empty string yields nil (caller defaults to all).
 func parseFrameworks(s string) []string {
 	var out []string
-	for _, part := range strings.Split(s, ",") {
+	for part := range strings.SplitSeq(s, ",") {
 		if p := strings.TrimSpace(part); p != "" {
 			out = append(out, p)
 		}

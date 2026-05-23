@@ -4,9 +4,14 @@ No cloud credentials. No Steampipe. No setup. Evaluate a bundled
 example snapshot and read the result in about a minute.
 
 Stave is a **risk reasoning engine**: it takes observation snapshots
-(JSON describing your cloud state) plus a catalog of invariants, and
+(JSON describing your cloud state) plus a catalog of controls, and
 produces deterministic verdicts. Same input → same output, every time.
 All evaluation is offline — no network, no credentials.
+
+> **Environment:** The commands below assume a [Coder workspace](../../stave-workspace/README.md) —
+> `stave` on `$PATH`, examples at `~/examples/`. From a local clone
+> ([README Option 3](../../README.md#option-3--local-install-contributors-and-power-users))
+> they work the same; just run from the repo root.
 
 ## Step 1: Clone and run (60 seconds)
 

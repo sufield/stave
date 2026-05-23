@@ -71,9 +71,36 @@ See [docs/index.md](docs/index.md) for the full feature index: drift, watch, ran
 
 ## Install
 
+Three options, lowest-friction first. All three end at the same first command — `bash examples/demo-ai-security/run.sh` — and all three honor every flag/path in the [workflow guides](docs/workflows/).
+
+### Option 1 — Coder workspace (recommended; zero setup)
+
+A pre-configured workspace with `stave`, `stave-mcp`, Steampipe, the full catalog, and every example already in place:
+
 ```bash
-go install github.com/sufield/stave@latest
-# or build from source:
+# From a checkout of this repo:
+coder templates push stave --directory stave-workspace
+coder create my-stave --template stave
+```
+
+See [`stave-workspace/README.md`](stave-workspace/README.md) for import, customization (own fork, additional Steampipe plugins), and what the template does and doesn't include.
+
+### Option 2 — Docker (no Coder required)
+
+Same image, run directly:
+
+```bash
+# Build from this checkout (no daemon-side Coder needed):
+cd stave && docker build -f stave-workspace/Dockerfile -t stave-workspace:edge .
+docker run --rm -it stave-workspace:edge bash -lc 'bash ~/examples/demo-ai-security/run.sh'
+```
+
+### Option 3 — Local install (contributors and power users)
+
+```bash
+go install github.com/sufield/stave/cmd/stave@latest
+go install github.com/sufield/stave/cmd/stave-mcp@latest
+# Or build from a clone:
 git clone https://github.com/sufield/stave.git && cd stave && make build
 ```
 

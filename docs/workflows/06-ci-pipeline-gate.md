@@ -1,8 +1,14 @@
 # Add Stave to Your CI Pipeline
 
 The finding you just fixed? Make sure it never comes back. A CI gate
-evaluates every change and **blocks the merge** when an invariant is
+evaluates every change and **blocks the merge** when a control is
 violated — so the unsafe state never reaches production.
+
+> **Environment:** Both YAML blocks below install `stave` from source
+> in the CI runner — they do NOT assume the Coder workspace. The
+> workspace is for adopters' interactive work; CI runs ephemeral
+> jobs and the `go install` step in each block puts `stave` on
+> `$PATH` for the gate step that follows.
 
 The pattern is two steps: produce an evaluation, then gate on it.
 

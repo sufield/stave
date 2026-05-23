@@ -5,8 +5,7 @@ import (
 	"io"
 	"slices"
 
-	"github.com/sufield/stave/internal/app/readiness"
-	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // writeText renders the human-readable readiness report. The
@@ -17,8 +16,8 @@ import (
 // stays a thin orchestrator; cyclomatic complexity would otherwise
 // climb past the gocyclo threshold once every Fprintln contributes
 // its own error branch.
-func writeText(w io.Writer, r readiness.Report) error {
-	sections := []func(io.Writer, readiness.Report) error{
+func writeText(w io.Writer, r stave.ReadinessReport) error {
+	sections := []func(io.Writer, stave.ReadinessReport) error{
 		writeHeader,
 		writeSnapshotSummary,
 		writeObservedTypes,
@@ -36,7 +35,7 @@ func writeText(w io.Writer, r readiness.Report) error {
 	return nil
 }
 
-func writeHeader(w io.Writer, _ readiness.Report) error {
+func writeHeader(w io.Writer, _ stave.ReadinessReport) error {
 	if _, err := fmt.Fprintln(w, "Stave Readiness Assessment"); err != nil {
 		return err
 	}
@@ -44,7 +43,7 @@ func writeHeader(w io.Writer, _ readiness.Report) error {
 	return err
 }
 
-func writeSnapshotSummary(w io.Writer, r readiness.Report) error {
+func writeSnapshotSummary(w io.Writer, r stave.ReadinessReport) error {
 	if _, err := fmt.Fprintf(w, "\nObservations:        %d assets across %d asset types\n",
 		r.ObservationCount, len(r.ObservedTypes)); err != nil {
 		return err
@@ -54,7 +53,7 @@ func writeSnapshotSummary(w io.Writer, r readiness.Report) error {
 	return err
 }
 
-func writeObservedTypes(w io.Writer, r readiness.Report) error {
+func writeObservedTypes(w io.Writer, r stave.ReadinessReport) error {
 	if len(r.ObservedTypes) == 0 {
 		return nil
 	}
@@ -69,7 +68,7 @@ func writeObservedTypes(w io.Writer, r readiness.Report) error {
 	return nil
 }
 
-func writeControlForecast(w io.Writer, r readiness.Report) error {
+func writeControlForecast(w io.Writer, r stave.ReadinessReport) error {
 	// Three buckets shown with share-of-total percentages so the
 	// operator reads "n controls, X% of the catalog" without
 	// confusing the share-of-total with the readiness score
@@ -85,7 +84,7 @@ func writeControlForecast(w io.Writer, r readiness.Report) error {
 	return writeLines(w, lines)
 }
 
-func writeChainForecast(w io.Writer, r readiness.Report) error {
+func writeChainForecast(w io.Writer, r stave.ReadinessReport) error {
 	c := r.Chains
 	lines := []string{
 		"\nChain effectiveness:",
@@ -97,7 +96,7 @@ func writeChainForecast(w io.Writer, r readiness.Report) error {
 	return writeLines(w, lines)
 }
 
-func writeScore(w io.Writer, r readiness.Report) error {
+func writeScore(w io.Writer, r stave.ReadinessReport) error {
 	if _, err := fmt.Fprintf(w, "\nReadiness score:     %.1f%% (of classifiable controls)\n",
 		r.ReadinessScore*100); err != nil {
 		return err
@@ -109,7 +108,7 @@ func writeScore(w io.Writer, r readiness.Report) error {
 	return err
 }
 
-func writeActionPlan(w io.Writer, r readiness.Report) error {
+func writeActionPlan(w io.Writer, r stave.ReadinessReport) error {
 	if len(r.Actions) == 0 {
 		return nil
 	}
@@ -129,7 +128,7 @@ func writeActionPlan(w io.Writer, r readiness.Report) error {
 	return nil
 }
 
-func writeNotes(w io.Writer, _ readiness.Report) error {
+func writeNotes(w io.Writer, _ stave.ReadinessReport) error {
 	return writeLines(w, []string{
 		"\nNotes:",
 		"  - For field-level gaps (which observation properties are absent",
@@ -152,8 +151,8 @@ func writeLines(w io.Writer, lines []string) error {
 	return nil
 }
 
-func sortedKeys(m map[kernel.AssetType]int) []kernel.AssetType {
-	keys := make([]kernel.AssetType, 0, len(m))
+func sortedKeys(m map[stave.AssetType]int) []stave.AssetType {
+	keys := make([]stave.AssetType, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)
 	}

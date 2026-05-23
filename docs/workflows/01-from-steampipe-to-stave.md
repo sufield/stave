@@ -3,6 +3,11 @@
 You already collect cloud state with Steampipe. This guide turns that
 state into a Stave-conforming snapshot and evaluates it.
 
+> **Environment:** Steampipe + `jq` + `stave` are pre-installed in the
+> [Coder workspace](../../stave-workspace/README.md). From a local clone
+> ([README Option 3](../../README.md#option-3--local-install-contributors-and-power-users))
+> ensure all three are on `$PATH` and the steps below work identically.
+
 > **Key point:** Stave evaluates `obs.v0.1` snapshots — a specific
 > schema (`schema_version`, `captured_at`, `assets[]` with
 > `type`/`vendor`/`properties`). A raw `select *` dump is **not** that

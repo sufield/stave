@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/sufield/stave/internal/app/readiness"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // Renderer is the polymorphic format-dispatch interface for
@@ -19,14 +19,14 @@ import (
 // New formats add an implementation here and a factory case in
 // NewRenderer.
 type Renderer interface {
-	Render(w io.Writer, r readiness.Report) error
+	Render(w io.Writer, r stave.ReadinessReport) error
 }
 
 // JSONRenderer encodes the report as indented JSON.
 type JSONRenderer struct{}
 
 // Render implements Renderer.
-func (JSONRenderer) Render(w io.Writer, r readiness.Report) error {
+func (JSONRenderer) Render(w io.Writer, r stave.ReadinessReport) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	if err := enc.Encode(r); err != nil {
@@ -39,7 +39,7 @@ func (JSONRenderer) Render(w io.Writer, r readiness.Report) error {
 type TextRenderer struct{}
 
 // Render implements Renderer.
-func (TextRenderer) Render(w io.Writer, r readiness.Report) error {
+func (TextRenderer) Render(w io.Writer, r stave.ReadinessReport) error {
 	if err := writeText(w, r); err != nil {
 		return fmt.Errorf("render text: %w", err)
 	}

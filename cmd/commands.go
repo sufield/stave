@@ -232,21 +232,17 @@ func WireCommands(app *App) error {
 
 	// Pre-evaluation readiness assessment (catalog coverage
 	// vs observation surface — distinct from `apply --dry-run`,
-	// which is schema-validity only).
-	root.AddCommand(stavereadiness.NewCmd(stavereadiness.Deps{
-		NewCtlRepo:     f.NewCtlRepo,
-		NewChainLoader: f.NewChainLoader,
-		NewObsRepo:     f.NewObsRepo,
-	}))
+	// which is schema-validity only). Migrated to the pkg/stave
+	// facade in Step 2; takes no Deps (loading is the library's
+	// responsibility — see docs/architecture/pkg-stave-facade.md).
+	root.AddCommand(stavereadiness.NewCmd())
 
 	// Field-level gap analysis — drills past asset-type
 	// coverage (stave readiness) into per-property absence
-	// and the controls/chains each absence blocks.
-	root.AddCommand(stavegaps.NewCmd(stavegaps.Deps{
-		NewCtlRepo:     f.NewCtlRepo,
-		NewChainLoader: f.NewChainLoader,
-		NewObsRepo:     f.NewObsRepo,
-	}))
+	// and the controls/chains each absence blocks. Migrated to
+	// the pkg/stave facade; takes no Deps (loading is the
+	// library's responsibility — see docs/architecture/pkg-stave-facade.md).
+	root.AddCommand(stavegaps.NewCmd())
 
 	// Per-asset-type contract introspection — joins the per-asset
 	// JSON Schema, the predicate-path index, and the Steampipe

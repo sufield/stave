@@ -4,6 +4,13 @@ Chain findings are Stave's distinctive output — compound risks that
 emerge from a *combination* of conditions, invisible to single-resource
 scanners that check one setting at a time.
 
+> **Environment:** The chain catalog is at `~/chains` (and
+> `$STAVE_CHAINS`) in the [Coder workspace](../../stave-workspace/README.md);
+> from a local clone, it's `./chains` at the repo root. Chain
+> detection auto-discovers from `./chains` relative to cwd, so the
+> commands below work in both contexts when you run them from where
+> a `chains` directory (or symlink) resolves.
+
 ## What a chain finding is
 
 A chain is a set of **co-failing controls** (its *legs*) that together

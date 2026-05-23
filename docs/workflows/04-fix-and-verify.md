@@ -3,6 +3,12 @@
 The remediation loop: **explain → fix → re-snapshot → verify**. Each
 step is deterministic, so "fixed" is a fact you can prove, not a claim.
 
+> **Environment:** Works identically in the [Coder workspace](../../stave-workspace/README.md)
+> (`stave` on `$PATH`) and from a local clone
+> ([README Option 3](../../README.md#option-3--local-install-contributors-and-power-users)).
+> The snapshot paths (`./obs-before`, `./obs-after`) are wherever you
+> save your collector's output.
+
 ## Step 1: Understand what to change
 
 ```bash

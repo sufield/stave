@@ -1,16 +1,23 @@
+// Package readiness implements the 'stave readiness' command —
+// a pre-evaluation report describing what Stave's catalog CAN'T
+// detect against a given observation snapshot due to missing
+// collector domains. Distinct from `stave apply --dry-run`,
+// which checks input schema validity; readiness measures
+// catalog effectiveness against the observed asset surface.
+//
+// The command is a thin shell over [stave.Readiness]: flag
+// binding, one library call, output formatting. Step 2 of the
+// migration plan in docs/architecture/pkg-stave-facade.md.
 package readiness
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/app/readiness"
-	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type options struct {
@@ -24,7 +31,7 @@ type options struct {
 
 // NewCmd constructs the readiness command. Wired into the root
 // in cmd/commands.go.
-func NewCmd(deps Deps) *cobra.Command {
+func NewCmd() *cobra.Command {
 	opts := &options{
 		Format:    "text",
 		TopN:      5,
@@ -88,7 +95,7 @@ Caveats:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return run(cmd.Context(), cmd.OutOrStdout(), opts, deps)
+			return run(cmd.Context(), cmd.OutOrStdout(), opts)
 		},
 	}
 
@@ -103,54 +110,24 @@ Caveats:
 	return cmd
 }
 
-func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
-	renderer, rendErr := NewRenderer(opts.Format)
-	if rendErr != nil {
-		return &ui.UserError{Err: rendErr}
-	}
-
-	snapshots, err := compose.LoadSnapshotsFrom(ctx, deps.NewObsRepo, opts.ObservationsDir)
+func run(ctx context.Context, w io.Writer, opts *options) error {
+	renderer, err := NewRenderer(opts.Format)
 	if err != nil {
-		return fmt.Errorf("load observations: %w", err)
+		return err
 	}
 
-	controls, err := compose.LoadControlsFrom(ctx, deps.NewCtlRepo, opts.ControlsDir)
+	report, err := stave.Readiness(ctx, stave.ReadinessOptions{
+		SnapshotsDir: opts.ObservationsDir,
+		ControlsDir:  opts.ControlsDir,
+		ChainsDir:    opts.ChainsDir,
+		TopN:         opts.TopN,
+	})
 	if err != nil {
-		return fmt.Errorf("load controls: %w", err)
+		return fmt.Errorf("analyze readiness: %w", err)
 	}
-
-	chains, err := compose.LoadChainDefinitions(ctx, deps.NewChainLoader, opts.ChainsDir)
-	if err != nil {
-		// Missing chains dir is not fatal — the analyzer can
-		// still report on controls. Surface as a stderr note,
-		// not a hard failure.
-		if !isMissingChainsDir(err) {
-			return fmt.Errorf("load chains: %w", err)
-		}
-		chains = nil
-	}
-
-	report := readiness.Analyze(controls, chains, snapshots, opts.TopN)
 
 	if opts.Quiet {
 		return nil
 	}
-
-	return renderer.Render(w, report)
-}
-
-// isMissingChainsDir returns true when the chain-loader failure
-// is a "directory not present" condition. The loader treats this
-// as valid (returns nil, nil from LoadChains), so this branch
-// only fires for genuinely-wrapped not-found errors when the
-// caller probed for a non-default path.
-func isMissingChainsDir(err error) bool {
-	if err == nil {
-		return false
-	}
-	// The loader at internal/adapters/controls/yaml/chain_loader.go
-	// already returns (nil, nil) when the directory is absent.
-	// Anything that surfaces here is a different failure mode.
-	var notFound interface{ NotFound() bool }
-	return errors.As(err, &notFound) && notFound.NotFound()
+	return renderer.Render(w, *report)
 }

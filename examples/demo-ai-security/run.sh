@@ -12,6 +12,10 @@ script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)
 stave_root=$(cd "$example_root/.." && pwd)
 STAVE=${STAVE_BIN:-$stave_root/stave}
+# Workspace fallback: when the script lives outside a built
+# repo (e.g. the Coder image installs the binary at
+# /usr/local/bin/stave), fall back to the one on PATH.
+[ -x "${STAVE}" ] || STAVE="$(command -v stave || echo "${STAVE}")"
 WRITEUP="$script_dir/fixtures/writeup-config/observations"
 REMEDIATED="$script_dir/fixtures/remediated-config/observations"
 NOW="2026-05-10T00:00:00Z"

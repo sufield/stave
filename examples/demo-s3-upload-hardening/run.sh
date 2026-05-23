@@ -8,6 +8,10 @@ script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)
 stave_root=$(cd "$example_root/.." && pwd)
 stave_bin=${STAVE_BIN:-$stave_root/stave}
+# Workspace fallback: when the script lives outside a built
+# repo (e.g. the Coder image installs the binary at
+# /usr/local/bin/stave), fall back to the one on PATH.
+[ -x "${stave_bin}" ] || stave_bin="$(command -v stave || echo "${stave_bin}")"
 # shellcheck source=../lib/format.sh
 source "$example_root/lib/format.sh"
 

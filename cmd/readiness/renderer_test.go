@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/internal/app/readiness"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 func TestNewRenderer_KnownFormats(t *testing.T) {
@@ -44,7 +44,7 @@ func TestNewRenderer_UnknownFormatErrors(t *testing.T) {
 }
 
 func TestRenderers_NonEmptyOutput(t *testing.T) {
-	rep := readiness.Report{}
+	rep := stave.ReadinessReport{}
 	cases := []struct {
 		name     string
 		renderer Renderer

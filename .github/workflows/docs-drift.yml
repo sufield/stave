@@ -12,6 +12,7 @@ on:
       - 'CONTRIBUTING.md'
       - 'ARCHITECTURE.md'
       - 'TESTING.md'
+      - 'DOCTRINE.md'
       # Code paths that the docs name. A move under any of these
       # could leave a doc referencing a now-dead location, so we
       # want the drift gate to fire on the PR that does the move.
@@ -30,6 +31,7 @@ on:
       - 'CONTRIBUTING.md'
       - 'ARCHITECTURE.md'
       - 'TESTING.md'
+      - 'DOCTRINE.md'
       - 'cmd/**'
       - 'pkg/**'
       - 'internal/**'
@@ -88,7 +90,7 @@ jobs:
             local pattern="$1"
             local reason="$2"
             if grep -rn -E "$pattern" \
-                README.md CONTRIBUTING.md ARCHITECTURE.md TESTING.md \
+                README.md CONTRIBUTING.md ARCHITECTURE.md TESTING.md DOCTRINE.md \
                 docs/ \
                 --include='*.md' \
                 --exclude-dir=plans \
