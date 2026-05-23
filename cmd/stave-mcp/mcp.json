@@ -1,6 +1,6 @@
 {
   "name": "stave",
-  "description": "Deterministic cloud security evaluation — 2,650+ invariant controls against configuration snapshots. Air-gapped, no credentials, reproducible verdicts.",
+  "description": "Deterministic cloud security evaluation — 2,650+ controls against configuration snapshots. Air-gapped, no credentials, reproducible verdicts.",
   "version": "0.1.0",
   "transport": "stdio",
   "repository": "https://github.com/sufield/stave",

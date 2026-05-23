@@ -161,8 +161,8 @@ func renderOSCAL(
 				Activities: []oscalActivity{
 					{
 						UUID:        uuidV5("activity", "invariant-evaluation"),
-						Title:       "Stave Invariant Evaluation",
-						Description: "Deterministic evaluation of infrastructure configuration against invariant controls using local snapshots",
+						Title:       "Stave Control Evaluation",
+						Description: "Deterministic evaluation of infrastructure configuration against the control catalog using local snapshots",
 					},
 				},
 			},
@@ -212,7 +212,7 @@ func renderOSCAL(
 					Collected:   rec.EvaluatedAt.Format(time.RFC3339),
 					RelevantEvidence: []oscalEvidence{
 						{
-							Description: "Stave invariant evaluation",
+							Description: "Stave control evaluation",
 							Props: []oscalProp{
 								{Name: "control-id", Value: rec.ControlID},
 								{Name: "verdict", Value: rec.Verdict.String()},

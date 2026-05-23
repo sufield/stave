@@ -1,13 +1,17 @@
-// Package exportinvariants implements the `stave export-invariants`
-// command. The command projects Stave's control catalog as a list
-// of solver-ready invariants — each carrying the predicate tree,
-// authored intent rationale, and the optional forbidden_state
-// block external Z3 / SMT compilers consume.
+// Package exportinvariants implements the `stave export-controls`
+// command (with `export-invariants` retained as a deprecated alias).
+// The command projects Stave's control catalog as a JSON document —
+// each entry carries the predicate tree, authored intent rationale,
+// and the optional forbidden_state block external Z3 / SMT
+// compilers consume.
 //
-// The output format is a stable JSON document. The same controls
+// The output format is a stable JSON document; the top-level array
+// is keyed `invariants` as the solver-side data contract (separate
+// from Stave's user-facing "control" vocabulary). The same controls
 // produce byte-identical output across runs, so downstream
 // compilers (e.g. examples/z3-forbidden-state/compile.py) can be
-// pinned with goldens.
+// pinned with goldens. The Go package keeps its historical name to
+// preserve import paths.
 package exportinvariants
 
 import (
@@ -29,34 +33,35 @@ type options struct {
 	Format      string
 }
 
-// NewCmd constructs the export-invariants command. The command
+// NewCmd constructs the export-controls command. The command
 // reads the control catalog (built-in by default, YAML directory
-// when --controls is set) and writes the invariant export to
-// stdout.
+// when --controls is set) and writes the export to stdout.
 func NewCmd() *cobra.Command {
 	opts := &options{}
 
 	cmd := &cobra.Command{
-		Use:   "export-invariants",
-		Short: "Export control catalog as solver-ready invariants",
-		Long: `Export the control catalog as a list of solver-ready invariants.
-
-Each invariant carries the control's predicate tree, authored intent
-rationale, and the optional forbidden_state block — the high-level
-"this configuration must never exist" claim external SMT compilers
-consume to generate Z3 satisfiability queries.
+		Use:     "export-controls",
+		Aliases: []string{"export-invariants"},
+		Short:   "Export the control catalog for external solver consumption",
+		Long: `Export the control catalog as a JSON document — each entry carries the
+control's predicate tree, authored intent rationale, and the optional
+forbidden_state block (the high-level "this configuration must never
+exist" claim external SMT compilers consume to generate Z3
+satisfiability queries).
 
 The export is metadata-only: no observation reads, no findings, no
-clock. External solvers receive a pure description of "the rules
-Stave checks" without inheriting any of Stave's evaluation
-semantics.
+clock. External solvers receive a pure description of "the controls
+Stave evaluates" without inheriting any of Stave's evaluation
+semantics. The JSON shape itself is the stable solver-import format,
+so the top-level array is keyed ` + "`invariants`" + ` — that name is the
+solver-side data contract, not Stave's user-facing vocabulary.
 
 Inputs:
   --controls, -i      Control definitions directory (default: built-in catalog)
   --format, -f        Output format: json (default: json)
 
 Outputs:
-  stdout: invariant export as a JSON array (sorted by control ID).
+  stdout: control export as a JSON document (sorted by control ID).
   stderr: errors.
 
 Exit codes:
@@ -66,16 +71,25 @@ Exit codes:
   130 SIGINT
 `,
 		Example: `  # Built-in catalog → JSON to stdout
-  stave export-invariants > invariants.json
+  stave export-controls > controls.json
 
   # Filter to controls that author a forbidden_state block
-  stave export-invariants | jq '[.invariants[] | select(.forbidden_state.combine != "")]'
+  stave export-controls | jq '[.invariants[] | select(.forbidden_state.combine != "")]'
 
   # Custom controls directory
-  stave export-invariants --controls ./my-controls > invariants.json`,
+  stave export-controls --controls ./my-controls > controls.json`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		PreRun: func(cmd *cobra.Command, _ []string) {
+			// Deprecation hint when invoked via the legacy alias.
+			// The alias is retained for backward compatibility and
+			// will be removed in v1.0; vocabulary unified on "control".
+			if cmd.CalledAs() == "export-invariants" {
+				fmt.Fprintln(cmd.ErrOrStderr(),
+					"warning: `stave export-invariants` is deprecated — use `stave export-controls`. The alias will be removed in v1.0.")
+			}
+		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return run(cmd.Context(), cmd.OutOrStdout(), opts)
 		},
@@ -104,13 +118,13 @@ func run(ctx context.Context, w io.Writer, opts *options) error {
 		ControlsDir: opts.ControlsDir,
 	})
 	if err != nil {
-		return fmt.Errorf("export invariants: %w", err)
+		return fmt.Errorf("export controls: %w", err)
 	}
 
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	if err := enc.Encode(out); err != nil {
-		return fmt.Errorf("encode invariants: %w", err)
+		return fmt.Errorf("encode controls: %w", err)
 	}
 	return nil
 }

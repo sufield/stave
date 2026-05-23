@@ -16,7 +16,7 @@ func TestFeatures_TextOutput(t *testing.T) {
 		t.Fatalf("execute: %v", err)
 	}
 	out := buf.String()
-	for _, want := range []string{"IN SCOPE", "OUT OF SCOPE", "Invariant Catalog", "Snapshot Generation"} {
+	for _, want := range []string{"IN SCOPE", "OUT OF SCOPE", "Control Catalog", "Snapshot Generation"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("text output missing %q:\n%s", want, out)
 		}
@@ -44,12 +44,12 @@ func TestFeatures_JSONOutput(t *testing.T) {
 	// The catalog detail must be discovered (real count), not a placeholder.
 	var catalog string
 	for _, f := range p.InScope {
-		if f.Label == "Invariant Catalog" {
+		if f.Label == "Control Catalog" {
 			catalog = f.Detail
 		}
 	}
 	if !strings.Contains(catalog, "controls across") {
-		t.Errorf("Invariant Catalog detail looks undiscovered: %q", catalog)
+		t.Errorf("Control Catalog detail looks undiscovered: %q", catalog)
 	}
 }
 

@@ -72,7 +72,7 @@ into answers:
 
 - Persona-specific logic (CISO views, developer views, auditor
   views — apps own persona).
-- Domain-specific business logic beyond invariant evaluation.
+- Domain-specific business logic beyond control evaluation.
 - Report composition. Structured exports are primitives;
   reports composed from them are app-shaped.
 - Answers to market questions. Core provides primitives; apps

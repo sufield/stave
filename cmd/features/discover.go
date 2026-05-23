@@ -29,7 +29,7 @@ type InScopeFeature struct {
 // data — no network, no cwd dependence.
 func discoverInScope() []InScopeFeature {
 	return []InScopeFeature{
-		{Label: "Invariant Catalog", Detail: catalogDetail()},
+		{Label: "Control Catalog", Detail: catalogDetail()},
 		{Label: "Observation Schemas", Detail: schemaDetail()},
 		{Label: "Predicate Evaluation", Detail: predicateDetail()},
 		{Label: "Output Formats", Detail: "text, json, sarif (apply evaluation output)"},

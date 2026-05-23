@@ -19,6 +19,41 @@ The targets above call `sync-schemas`, `sync-controls`, and
 `sync-alternatives` first so the embedded data matches the
 source-of-truth `controls/`, `schemas/`, and `data/` directories.
 
+### Fast-loop sync (local-only)
+
+The three `sync-*` targets are **content-hash-gated**: each hashes
+its source tree and skips the `rm`/`cp` when the hash matches a
+cached value AND the destination still exists. On unchanged
+source, the three syncs together cost ~100 ms instead of ~800 ms,
+shaving most of the prelude off every `make test` / `make lint`
+during iteration. The cache files (`.sync-*-hash`) are gitignored
+— CI has no cache, so clean checkouts re-sync every time and
+correctness is unchanged. To force a re-sync locally, delete the
+relevant `.sync-*-hash` file.
+
+### Incremental golden regeneration
+
+`regenerate-goldens` accepts a name-filter regex via `ARGS`:
+
+```bash
+# Regenerate only S3-related fixtures
+make regenerate-goldens ARGS="-filter s3"
+
+# Regenerate one specific fixture
+make regenerate-goldens ARGS="-filter s3-public-read-policy"
+```
+
+Use this when you touched a single domain's controls. Drop the
+filter (`make regenerate-goldens`) only when an engine-wide change
+could shift output across the catalog.
+
+For in-process Go goldens (the ones updated via `UPDATE_GOLDEN=1`):
+
+```bash
+make golden-update PKG=./internal/profile/reporter/...    # one package
+make golden-one    PKG=./internal/profile/reporter RUN=TestTextReporter_Golden
+```
+
 ## `-short` flag behavior
 
 A test that calls `testing.Short()` and `t.Skip(...)` self-skips

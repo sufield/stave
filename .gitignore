@@ -6,3 +6,11 @@ stave-dev
 .stave/
 python/solver/tests/__pycache__/
 ../.tools-venv/
+
+# Local content-hash caches for the sync-* Makefile targets (see the
+# top of Makefile). They let the syncs skip rm/cp when source is
+# unchanged. CI never has these — clean checkouts re-sync every time,
+# so correctness is unaffected.
+.sync-schemas-hash
+.sync-controls-hash
+.sync-alternatives-hash

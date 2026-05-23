@@ -159,10 +159,16 @@ jobs:
           check_pattern 'stave deadline\b'           '`stave deadline` removed — SLA-deadline policy authoring is out of scope (SLA evaluation stays)'
           check_pattern 'stave simulate\b'           '`stave simulate` removed — remediation planning is out of scope'
 
-          # Stale vocabulary — file/format language only; "Invariants
-          # as Code" and "System Invariant" stay as the brand/concept.
+          # Stale vocabulary — phrase-level only; "Invariants as Code"
+          # and "System Invariant" stay as the brand/concept, and
+          # docs/explanation/ is already off the scan path. See
+          # TERMINOLOGY.md for the canonical → deprecated mapping and
+          # the "where invariant deliberately stays" carve-outs.
           check_pattern 'invariant file'             '"invariant file" is stale — use "control file"'
           check_pattern 'invariant YAML'             '"invariant YAML" is stale — use "control YAML"'
+          check_pattern '[Ii]nvariant catalog'       '"invariant catalog" is stale — use "control catalog" (see TERMINOLOGY.md)'
+          check_pattern '[Ii]nvariant evaluation'    '"invariant evaluation" is stale — use "control evaluation" (see TERMINOLOGY.md)'
+          check_pattern 'authored invariant'         '"authored invariant" is stale — use "authored control" (see TERMINOLOGY.md)'
 
           # Stale binary split language
           check_pattern 'stave-dev only'             'no dev-only commands — all ship in one binary'

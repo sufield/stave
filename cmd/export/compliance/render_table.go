@@ -82,7 +82,7 @@ func renderVerboseTrace(w io.Writer, export *EvidenceExport, controlID, resource
 	}
 	fmt.Fprintln(w, "  Reasoning trace:")
 	if e.ReasoningTrace.InvariantEvaluated != "" {
-		fmt.Fprintf(w, "    Invariant: %s\n", e.ReasoningTrace.InvariantEvaluated)
+		fmt.Fprintf(w, "    Control: %s\n", e.ReasoningTrace.InvariantEvaluated)
 	}
 	if len(e.ReasoningTrace.Observations) > 0 {
 		fmt.Fprintln(w, "    Observations:")

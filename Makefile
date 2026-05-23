@@ -36,23 +36,60 @@ LDFLAGS=-ldflags "-s -w -X github.com/sufield/stave/internal/version.String=$(VE
 # Default target
 all: lint test build
 
-## sync-schemas: Copy canonical schemas into embed directory
+## Sync targets are content-hash-gated for the local dev loop: each
+## hashes its source tree and skips the rm/cp when the hash matches a
+## cached value AND the destination still exists. CI's clean checkouts
+## have no cache file, so they re-sync every time — correctness is
+## unchanged; only the no-op work on repeated local runs is removed.
+## The hash files (.sync-*-hash) are gitignored — local cache only.
+##
+## The hash covers file content AND tree structure: every file in the
+## source is hashed under its path-sorted order, then those lines are
+## hashed once more. A rename or a one-byte content change invalidates
+## the cache and triggers a re-sync.
+
+SCHEMA_HASH_FILE       := .sync-schemas-hash
+CONTROL_HASH_FILE      := .sync-controls-hash
+ALTERNATIVES_HASH_FILE := .sync-alternatives-hash
+
+## sync-schemas: Copy canonical schemas into embed directory (hash-gated)
 sync-schemas:
-	@mkdir -p $(SCHEMA_DST)
-	rm -rf $(SCHEMA_DST)/*
-	cp -R $(SCHEMA_SRC)/* $(SCHEMA_DST)/
+	@new_hash=$$(find $(SCHEMA_SRC) -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1); \
+	if [ -f $(SCHEMA_HASH_FILE) ] && [ "$$(cat $(SCHEMA_HASH_FILE))" = "$$new_hash" ] && [ -d $(SCHEMA_DST) ]; then \
+	  echo "schemas unchanged ($$new_hash) — skipping sync"; \
+	else \
+	  mkdir -p $(SCHEMA_DST); \
+	  rm -rf $(SCHEMA_DST)/*; \
+	  cp -R $(SCHEMA_SRC)/* $(SCHEMA_DST)/; \
+	  echo "$$new_hash" > $(SCHEMA_HASH_FILE); \
+	  echo "schemas synced ($$new_hash)"; \
+	fi
 
-## sync-controls: Copy canonical controls into embed directory
+## sync-controls: Copy canonical controls into embed directory (hash-gated)
 sync-controls:
-	@mkdir -p $(CONTROL_DST)
-	rm -rf $(CONTROL_DST)/*
-	cp -R $(CONTROL_SRC)/* $(CONTROL_DST)/
+	@new_hash=$$(find $(CONTROL_SRC) -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1); \
+	if [ -f $(CONTROL_HASH_FILE) ] && [ "$$(cat $(CONTROL_HASH_FILE))" = "$$new_hash" ] && [ -d $(CONTROL_DST) ]; then \
+	  echo "controls unchanged ($$new_hash) — skipping sync"; \
+	else \
+	  mkdir -p $(CONTROL_DST); \
+	  rm -rf $(CONTROL_DST)/*; \
+	  cp -R $(CONTROL_SRC)/* $(CONTROL_DST)/; \
+	  echo "$$new_hash" > $(CONTROL_HASH_FILE); \
+	  echo "controls synced ($$new_hash)"; \
+	fi
 
-## sync-alternatives: Copy canonical alternative-tool inventories into embed directory
+## sync-alternatives: Copy canonical alternative-tool inventories into embed directory (hash-gated)
 sync-alternatives:
-	@mkdir -p $(ALTERNATIVES_DST)
-	rm -rf $(ALTERNATIVES_DST)/*
-	cp -R $(ALTERNATIVES_SRC)/* $(ALTERNATIVES_DST)/
+	@new_hash=$$(find $(ALTERNATIVES_SRC) -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1); \
+	if [ -f $(ALTERNATIVES_HASH_FILE) ] && [ "$$(cat $(ALTERNATIVES_HASH_FILE))" = "$$new_hash" ] && [ -d $(ALTERNATIVES_DST) ]; then \
+	  echo "alternatives unchanged ($$new_hash) — skipping sync"; \
+	else \
+	  mkdir -p $(ALTERNATIVES_DST); \
+	  rm -rf $(ALTERNATIVES_DST)/*; \
+	  cp -R $(ALTERNATIVES_SRC)/* $(ALTERNATIVES_DST)/; \
+	  echo "$$new_hash" > $(ALTERNATIVES_HASH_FILE); \
+	  echo "alternatives synced ($$new_hash)"; \
+	fi
 
 ## build: Build the production binary
 build: sync-schemas sync-controls sync-alternatives

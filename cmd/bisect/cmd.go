@@ -28,7 +28,7 @@ func NewCmd(deps Deps) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "bisect",
-		Short: "Find when a security invariant was first violated",
+		Short: "Find when a control was first violated",
 		Long: `Bisect searches through timestamped snapshot history to find the exact
 point in time when a control was first violated. Like git bisect for commits,
 it binary-searches through a snapshot archive.

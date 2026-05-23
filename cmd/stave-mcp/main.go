@@ -21,7 +21,7 @@
 //	stave.verify       Run pkg/stave.Apply over an observation
 //	                   directory and return the Assessment.
 //	stave.explain      Re-run verify and project one finding's
-//	                   reasoning_trace + invariant context.
+//	                   reasoning_trace + control context.
 //	stave.suggest_fix  Re-run verify and project one finding's
 //	                   delta_paths and catalog-authored remediation.
 //
@@ -518,7 +518,7 @@ func handleToolsList(hosted bool) any {
 		},
 		{
 			"name":        toolExplain,
-			"description": "Return the reasoning trace and invariant context for one finding by FindingID.",
+			"description": "Return the reasoning trace and control context for one finding by FindingID.",
 			"inputSchema": map[string]any{
 				"type":     "object",
 				"required": []string{"observations_dir", "finding_id"},
@@ -1186,7 +1186,7 @@ func scoreOrNil(ctx context.Context, a *stave.Assessment) *stave.ScoreResult {
 }
 
 // runExplain re-runs Apply, then projects one finding's reasoning
-// trace + invariant context. The schema is intentionally narrow —
+// trace + control context. The schema is intentionally narrow —
 // the agent gets exactly what it needs to decide WHY the finding
 // fired, without the rest of the Assessment surface.
 func runExplain(ctx context.Context, args findingArgs) (any, error) {

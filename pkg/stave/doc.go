@@ -56,6 +56,34 @@
 // behavior change ships in one place — anything the CLI does that
 // the library can't is a gap that should be closed, not a feature.
 //
+// # Public API surface (today)
+//
+// Every function below corresponds to one user intent. Adding a
+// function that does not is a smell; it probably belongs in
+// internal/.
+//
+//	Apply              — run an evaluation over a snapshot directory.
+//	Score              — compute the posture score for an Assessment.
+//	Gate               — apply a CI failure policy to an evaluation.
+//	Compliance         — per-framework compliance posture (one).
+//	ComplianceMulti    — per-framework compliance posture (many; single-pass).
+//	AvailableFrameworks — list every embedded framework profile ID.
+//	SearchCatalog      — rank the catalog against a free-form intent.
+//	ExplainControl     — catalog-only explanation of one control.
+//	SuggestControlIDs  — fuzzy-suggest control IDs for a partial query.
+//	AssetTypeExamples  — example control ID per asset type.
+//	Gaps               — field-level observation coverage gaps.
+//	Readiness          — control fire/blocked forecast + action plan.
+//	DiffSnapshots      — structured diff of two snapshot directories.
+//	GetCapabilities    — version + capability counts (controls, packs, frameworks).
+//	ExportInvariants   — catalog projected as solver-ready invariants
+//	                     (the data shape an external SMT compiler consumes).
+//	ExportPolicies     — parsed resource/trust policies for solver export.
+//
+// See docs/architecture/pkg-stave-facade.md for the facade pattern,
+// the rule cmd/ should obey ("imports only pkg/stave"), and the
+// current migration state.
+//
 // # The standard pattern
 //
 // Every use case in this package follows the same shape:

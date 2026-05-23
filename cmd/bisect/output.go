@@ -23,13 +23,13 @@ func writeText(stdout, stderr io.Writer, result appbisect.Result, _ *slog.Logger
 
 	if !result.HasViolation() {
 		fmt.Fprintf(stdout, "%s COMPLETE: No violation found across %d snapshots.\n\n", modeName, result.SnapshotsTotal)
-		fmt.Fprintf(stdout, "Invariant: %s has never been violated in this snapshot archive.\n", result.ControlID)
+		fmt.Fprintf(stdout, "Control: %s has never been violated in this snapshot archive.\n", result.ControlID)
 		return nil
 	}
 
 	fmt.Fprintf(stdout, "%s COMPLETE: %d violation window(s) found in %d steps (%d snapshots searched).\n\n",
 		modeName, len(result.Windows), result.AssessmentsRun, result.SnapshotsTotal)
-	fmt.Fprintf(stdout, "Invariant: %s\n", result.ControlID)
+	fmt.Fprintf(stdout, "Control: %s\n", result.ControlID)
 	if result.ResourceARN != "" {
 		fmt.Fprintf(stdout, "Resource:  %s\n", result.ResourceARN)
 	}

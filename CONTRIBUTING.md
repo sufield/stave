@@ -342,3 +342,15 @@ When filing a bug report, include a minimal, deterministic reproduction. See the
 ## Scope note
 
 Stave MVP scope is AWS S3 public exposure only.
+
+## Vocabulary
+
+Stave uses one canonical term per concept in user-facing surfaces
+(CLI help, docs, MCP descriptions, external articles): `control`,
+`finding`, `catalog`, `evaluation`, `verdict`, `chain`, `observation`.
+The canonical → deprecated mapping, the "why control not invariant"
+rationale, and the carve-outs where `invariant` deliberately stays
+(internal type names, the solver-import JSON contract, research and
+explanation docs) are in [`TERMINOLOGY.md`](./TERMINOLOGY.md). The
+Docs Drift CI check enforces the phrase-level renames on the
+user-facing surfaces.

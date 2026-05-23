@@ -6,7 +6,7 @@ Copilot, etc.) over JSON-RPC 2.0 / stdio.
 
 The premise: an agent proposes a configuration change, calls
 `stave.verify` to check it against the catalog of formally-
-authored invariants, calls `stave.explain` if a finding fires,
+authored controls, calls `stave.explain` if a finding fires,
 calls `stave.suggest_fix` to read the deterministic delta-path
 and remediation guidance the engine produced. Around that core
 loop sit catalog-exploration tools (`stave.search`,
