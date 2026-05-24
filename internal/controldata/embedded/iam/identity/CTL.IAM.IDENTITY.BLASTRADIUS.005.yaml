@@ -17,6 +17,8 @@ description: >
   CTL.IAM.IDENTITY.BLASTRADIUS.001 for roles.
 domain: identity
 severity: high
+scope: compound
+corpus_reference: MITRE:T1550
 compliance:
   soc2: "CC6.1"
   nist_800_53_r5: "AC-6"

@@ -13,6 +13,8 @@ description: >
   inventory believe the queue is being watched. It is not.
 domain: governance
 severity: medium
+archetype: ghost-reference
+scope: compound
 compliance:
   soc2: "CC6.1, CC7.2"
   nist_800_53_r5: "CM-2, SI-4"

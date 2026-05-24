@@ -17,6 +17,8 @@ description: >
   briefly in the dangling state.
 domain: exposure
 severity: medium
+archetype: ghost-reference
+scope: compound
 compliance:
   nist_800_53_r5: "CM-2, CM-3, SC-7"
   fedramp_moderate: "CM-2, CM-3, SC-7"

@@ -9,6 +9,8 @@ description: >
   in the chain potentially widens the blast radius.
 domain: identity
 severity: medium
+scope: compound
+corpus_reference: MITRE:T1550
 compliance:
   soc2: "CC6.1"
   nist_800_53_r5: "AC-6"

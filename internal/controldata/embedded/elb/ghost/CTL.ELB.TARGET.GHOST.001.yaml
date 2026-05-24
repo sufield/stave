@@ -11,6 +11,8 @@ description: >
   return 502/503 for every matching request.
 domain: hygiene
 severity: medium
+archetype: ghost-reference
+scope: compound
 compliance:
   nist_800_53_r5: "CM-8"
   fedramp_moderate: "CM-8"

@@ -10,6 +10,8 @@ description: >
   effective permissions exceed a deployment-appropriate scope.
 domain: identity
 severity: high
+scope: compound
+corpus_reference: snyk:gh-oidc-sub-broad
 compliance:
   owasp_nhi: "NHI3"
   soc2: "CC6.1"

@@ -9,6 +9,7 @@ description: >
 domain: identity
 severity: high
 archetype: ghost-reference
+scope: compound
 compliance:
   owasp_nhi: "NHI3"
   soc2: "CC6.1, CC8.1"

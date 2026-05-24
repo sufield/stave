@@ -1,0 +1,22 @@
+id: capital_one_principal_path
+description: >
+  The Capital One incident shape: SSRF-vulnerable EC2 instance with
+  IMDSv1 enabled (CTL.EC2.IMDSV2.001), reachable from the internet
+  via a public IP (CTL.EC2.PUBLIC.001), running with an IAM role
+  that reaches sensitive data resources
+  (CTL.IAM.IDENTITY.BLASTRADIUS.004). Any one of these is a posture
+  concern; all three together are the exact pattern that exfiltrated
+  100M+ records in 2019. The chain fires when all three member
+  controls fire — escalation threshold of 3 reflects the high
+  specificity of the composition (no false-positive triage cost),
+  not a lowered confidence in any single member's signal.
+controls:
+  - CTL.EC2.IMDSV2.001
+  - CTL.EC2.PUBLIC.001
+  - CTL.IAM.IDENTITY.BLASTRADIUS.004
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - network_access_ec2
+postconditions:
+  - data_access

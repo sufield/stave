@@ -10,6 +10,8 @@ description: >
   maximum blast radius configuration.
 domain: identity
 severity: critical
+scope: compound
+corpus_reference: MITRE:T1550
 compliance:
   soc2: "CC6.1"
   pci_dss_v4.0: "7.2.1"

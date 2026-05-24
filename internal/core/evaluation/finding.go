@@ -103,6 +103,18 @@ type Finding struct {
 	// control's archetype field. Empty when the control has no archetype.
 	Archetype kernel.ArchetypeID `json:"archetype,omitempty"`
 
+	// Scope is the cardinality of the control's predicate reasoning:
+	// "atomic" (single asset) or "compound" (multi-asset). Copied
+	// from the control's scope field. Empty for unclassified
+	// controls.
+	Scope string `json:"control_scope,omitempty"`
+
+	// CorpusReference cites the real-world attack pattern this
+	// control detects. Copied from the control's corpus_reference
+	// field. Required when Scope == "compound" — the build-time
+	// validator enforces it on the catalog side.
+	CorpusReference string `json:"corpus_reference,omitempty"`
+
 	// Delta is the mechanically-derived set of fix paths. Each
 	// DeltaPath is an independent change that eliminates this finding.
 	Delta []policy.DeltaPath `json:"delta,omitempty"`
@@ -1256,6 +1268,8 @@ func NewFindingFromMetadata(m policy.ControlMetadata) Finding {
 		Infection:          m.Infection,
 		Failure:            m.Failure,
 		Archetype:          m.Archetype,
+		Scope:              m.Scope,
+		CorpusReference:    m.CorpusReference,
 	}
 }
 

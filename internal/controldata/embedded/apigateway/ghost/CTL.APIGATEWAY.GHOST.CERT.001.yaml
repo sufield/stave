@@ -14,6 +14,8 @@ description: >
   outage.
 domain: exposure
 severity: high
+archetype: ghost-reference
+scope: compound
 compliance:
   nist_800_53_r5: "SC-17"
   fedramp_moderate: "SC-17"

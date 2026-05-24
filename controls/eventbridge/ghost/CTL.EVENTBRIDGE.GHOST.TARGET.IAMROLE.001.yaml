@@ -12,6 +12,8 @@ description: >
   point is the IAM role rather than the downstream service.
 domain: governance
 severity: high
+archetype: ghost-reference
+scope: compound
 compliance:
   soc2: "CC6.1, CC6.3, CC8.1"
   nist_800_53_r5: "AC-3, CM-2, CM-3"

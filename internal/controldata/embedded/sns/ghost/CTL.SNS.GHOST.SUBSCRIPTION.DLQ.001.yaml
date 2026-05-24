@@ -13,6 +13,8 @@ description: >
   fail, and the safety-net DLQ is also broken.
 domain: governance
 severity: high
+archetype: ghost-reference
+scope: compound
 compliance:
   soc2: "CC6.1, CC7.4, A1.2"
   nist_800_53_r5: "CM-2, CM-3, SI-11"

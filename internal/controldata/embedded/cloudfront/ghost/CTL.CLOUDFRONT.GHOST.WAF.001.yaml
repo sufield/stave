@@ -18,6 +18,8 @@ description: >
   configured but the ACL was silently removed.
 domain: governance
 severity: high
+archetype: ghost-reference
+scope: compound
 compliance:
   nist_800_53_r5: "SC-7"
   soc2: "CC6.6"

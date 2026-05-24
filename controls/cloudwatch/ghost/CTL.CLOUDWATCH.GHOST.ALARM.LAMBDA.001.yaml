@@ -14,6 +14,7 @@ description: >
 domain: exposure
 severity: high
 archetype: ghost-reference
+scope: compound
 compliance:
   soc2: "CC7.1, CC7.2"
   nist_800_53_r5: "AU-6, IR-4, CM-2, CM-3"

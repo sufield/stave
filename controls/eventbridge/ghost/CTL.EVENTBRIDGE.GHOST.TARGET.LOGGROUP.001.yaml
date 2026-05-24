@@ -10,6 +10,8 @@ description: >
   the audit trail is incomplete.
 domain: governance
 severity: high
+archetype: ghost-reference
+scope: compound
 compliance:
   soc2: "CC6.1, CC7.2, CC7.4"
   nist_800_53_r5: "AU-3, AU-9, CM-2"

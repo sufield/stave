@@ -15,6 +15,8 @@ description: >
   user's attached and inline policies.
 domain: identity
 severity: critical
+scope: compound
+corpus_reference: MITRE:T1550
 compliance:
   hipaa: "164.312(a)(1)"
   soc2: "CC6.1"

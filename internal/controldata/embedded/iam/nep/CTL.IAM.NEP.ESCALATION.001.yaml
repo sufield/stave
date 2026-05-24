@@ -14,6 +14,8 @@ description: >
   role appears dangerous, but the chain is the finding.
 domain: identity
 severity: critical
+scope: compound
+corpus_reference: MITRE:T1098
 compliance:
   owasp_nhi: "NHI5"
   nist_800_53_r5: "AC-6"

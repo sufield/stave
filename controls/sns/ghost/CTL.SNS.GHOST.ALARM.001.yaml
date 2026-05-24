@@ -18,6 +18,8 @@ description: >
   perfectly. The notification is silently broken.
 domain: governance
 severity: critical
+archetype: ghost-reference
+scope: compound
 compliance:
   cis_aws_v3.0: "4.1, 4.13"
   soc2: "CC7.2, CC7.3, CC8.1"

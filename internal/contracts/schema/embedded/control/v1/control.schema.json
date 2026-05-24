@@ -178,6 +178,17 @@
           "title": "Archetype",
           "description": "Structural defect classification (e.g. 'ghost-reference', 'confused-deputy'). Optional; consumed by `stave expand` to surface every control sharing the same defect shape across services."
         },
+        "scope": {
+          "type": "string",
+          "enum": ["atomic", "compound"],
+          "title": "Scope",
+          "description": "Whether the control's predicate reasons over a single asset (atomic) or across multiple related assets (compound). Orthogonal to `classification` (which names predicate shape: state_assertion/parameterized_check/absence_check/aggregate_check). Compound is Stave-distinctive territory — cross-resource attack patterns that per-resource framework checks miss by construction. Optional today; future iterations may enforce that compound controls also carry `corpus_reference`. See docs/control-classification-baseline.md for the per-domain breakdown."
+        },
+        "corpus_reference": {
+          "type": "string",
+          "title": "Corpus Reference",
+          "description": "Citation to the real-world attack pattern this control detects. Required when scope=compound (enforced by the build-time validator). Prefix-schema strings recommended: `MITRE:T1078.004`, `incident:capital-one-2019`, `stratus:aws.persistence.iam-create-admin-user`, `hackerone:1234567`, `csa:top-threats-2024:t1`, `rhino:iam-passrole-to-ec2`, `triz:<contradiction-id>`. Free-text accepted; the recommendation is for grep-ability."
+        },
         "intent_rationale": {
           "type": "string",
           "title": "Intent Rationale",

@@ -63,6 +63,31 @@ type ControlDefinition struct {
 	// excluded from `stave expand` results. See internal/archetype.
 	Archetype kernel.ArchetypeID
 
+	// Scope names the cardinality of the predicate's reasoning:
+	// "atomic" when the predicate evaluates a single asset's
+	// properties, "compound" when it reasons across multiple related
+	// assets. Orthogonal to [Classification] (which names predicate
+	// shape). Compound is Stave-distinctive territory — per-resource
+	// framework scanners miss these by construction. Populated by the
+	// build-time scope classifier (internal/tools/scope-classifier)
+	// when authors don't set it explicitly; explicit value wins. Empty
+	// string means "unclassified" for legacy / in-flight controls.
+	Scope string
+
+	// CorpusReference cites the real-world attack pattern this
+	// control detects. The build-time validator requires it when
+	// Scope=="compound". Prefix-schema recommended for grep-ability:
+	//   MITRE:T1078.004
+	//   incident:capital-one-2019
+	//   stratus:aws.persistence.iam-create-admin-user
+	//   hackerone:1234567
+	//   csa:top-threats-2024:t1
+	//   rhino:iam-passrole-to-ec2
+	//   triz:<contradiction-id>
+	// Optional for atomic controls (typically framework-cited via
+	// [Compliance] already).
+	CorpusReference string
+
 	// IntentRationale states WHY the control exists — the security
 	// invariant it preserves. Distinct from Description (what the
 	// control checks). Surfaces verbatim into SIR.ControlFact so an
@@ -693,6 +718,8 @@ type ControlMetadata struct {
 	Infection      string
 	Failure        string
 	Archetype      kernel.ArchetypeID
+	Scope           string
+	CorpusReference string
 }
 
 // Fingerprint computes a stable hash of the control's identity and logic
@@ -726,9 +753,11 @@ func (ctl *ControlDefinition) Metadata() ControlMetadata {
 		Alternatives:   ctl.Alternatives,
 		Classification: ctl.Classification,
 		ScopeTags:      ctl.ScopeTags,
-		Defect:         ctl.Defect,
-		Infection:      ctl.Infection,
-		Failure:        ctl.Failure,
-		Archetype:      ctl.Archetype,
+		Defect:          ctl.Defect,
+		Infection:       ctl.Infection,
+		Failure:         ctl.Failure,
+		Archetype:       ctl.Archetype,
+		Scope:           ctl.Scope,
+		CorpusReference: ctl.CorpusReference,
 	}
 }

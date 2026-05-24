@@ -11,6 +11,8 @@ description: >
   driven processing — a ghost ECS target silently halts that work.
 domain: governance
 severity: high
+archetype: ghost-reference
+scope: compound
 compliance:
   soc2: "CC6.1, CC8.1, CC7.4"
   nist_800_53_r5: "CM-2, CM-3, SI-4"

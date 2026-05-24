@@ -44,6 +44,8 @@ type FindingDTO struct {
 	Infection            string                    `json:"infection,omitempty"`
 	Failure              string                    `json:"failure,omitempty"`
 	Archetype            string                    `json:"archetype,omitempty"`
+	ControlScope         string                    `json:"control_scope,omitempty"`
+	CorpusReference      string                    `json:"corpus_reference,omitempty"`
 	Delta                []DeltaPathDTO            `json:"delta,omitempty"`
 	// ContributingFactIDs links a CEL finding to the SIR fact_ids
 	// that describe the same asset. Each id matches the `fact_id`

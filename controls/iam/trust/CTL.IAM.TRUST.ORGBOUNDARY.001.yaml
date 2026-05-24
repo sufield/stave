@@ -11,6 +11,8 @@ description: >
   denying all outsiders.
 domain: identity
 severity: high
+scope: compound
+corpus_reference: MITRE:T1199
 compliance:
   owasp_nhi: "NHI6"
   soc2: "CC6.1"

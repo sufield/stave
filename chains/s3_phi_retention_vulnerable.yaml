@@ -1,0 +1,27 @@
+id: s3_phi_retention_vulnerable
+description: >
+  PHI bucket has a retention-vulnerable composition: object lock is
+  not in COMPLIANCE mode (CTL.S3.LOCK.002 — GOVERNANCE mode or no
+  lock at all permits administrator-side deletion) AND the bucket's
+  lifecycle rules permit expiration before the minimum retention
+  period (CTL.S3.LIFECYCLE.002). Either failure individually is a
+  PHI-retention concern; their co-presence is the canonical "write-
+  once intent vs effective deletion paths" shape that the AWS
+  compound authoring plan's sub-family 6 names. Compliance frameworks
+  (HIPAA, PCI-DSS retention requirements, SOX, FedRAMP audit
+  retention) require the WORM intent the LOCK control enforces; the
+  LIFECYCLE rules are the cheapest path to lose data that was
+  supposed to be locked. Threshold of 2 because each leg is a
+  configuration concern on its own but the conjunction describes a
+  bucket where the audit/compliance retention story is structurally
+  broken — the bucket carries the PHI tag (the catalog's intent
+  signal) but neither defense holds.
+controls:
+  - CTL.S3.LOCK.002
+  - CTL.S3.LIFECYCLE.002
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - data_warehouse_compromise
+postconditions:
+  - data_destruction

@@ -15,6 +15,7 @@ description: >
 domain: exposure
 severity: critical
 archetype: ghost-reference
+scope: compound
 compliance:
   cis_aws_v3.0: "2.6"
   soc2: "CC6.1, CC6.6, CC7.2"

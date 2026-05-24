@@ -11,6 +11,8 @@ description: >
   Ingress configured; clients see TLS handshake failures.
 domain: governance
 severity: high
+archetype: ghost-reference
+scope: compound
 compliance:
   soc2: "CC6.1, CC6.7, CC8.1"
   nist_800_53_r5: "CM-2, CM-3, SC-13"

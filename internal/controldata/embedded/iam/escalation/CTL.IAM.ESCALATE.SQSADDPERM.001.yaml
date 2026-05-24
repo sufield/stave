@@ -9,6 +9,8 @@ description: >
   account access to consume or inject messages.
 domain: identity
 severity: medium
+scope: compound
+corpus_reference: MITRE:T1098
 compliance:
   owasp_nhi: "NHI5"
   soc2: "CC6.1"

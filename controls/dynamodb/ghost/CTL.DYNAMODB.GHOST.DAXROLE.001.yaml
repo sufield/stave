@@ -18,6 +18,8 @@ description: >
   minutes for short TTLs, hours for long ones.
 domain: governance
 severity: critical
+archetype: ghost-reference
+scope: compound
 compliance:
   nist_800_53_r5: "CM-3"
   fedramp_moderate: "CM-3"

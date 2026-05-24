@@ -13,6 +13,8 @@ description: >
   with what authentication strength.
 domain: identity
 severity: medium
+scope: compound
+corpus_reference: MITRE:T1550.001
 compliance:
   owasp_nhi: "NHI4"
   soc2: "CC6.1"

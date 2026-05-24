@@ -16,6 +16,8 @@ description: >
   obtain credentials for a role intended for a single backend service.
 domain: identity
 severity: high
+scope: compound
+corpus_reference: MITRE:T1199
 compliance:
   owasp_nhi: "NHI6"
   soc2: "CC6.1"

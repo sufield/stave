@@ -1,0 +1,36 @@
+id: iam_cross_account_unscoped_assume
+description: >
+  Cross-account assume-role exposure without compensating
+  authentication controls.
+
+  CTL.IAM.IDENTITY.BLASTRADIUS.002 — IAM role with cross-
+  account blast radius does not require external ID condition
+  on the trust policy. Any principal in the trusted account
+  can assume.
+
+  CTL.IAM.CONSOLE.MFA.001 — IAM users in the trusting account
+  do not all have MFA enabled. The source-account caller can
+  reach the role with a single compromised long-lived
+  credential.
+
+  Threshold of 2 (both required) because the cross-account
+  trust failure alone is documented hygiene, and missing MFA
+  alone is documented hygiene, but the conjunction describes
+  a complete cross-account-via-leaked-key path: a leaked key
+  in the source account becomes a high-privilege role
+  assumption in the target account with no second factor
+  required.
+
+  Severity critical because cross-account compromise paths
+  are the highest-blast-radius variant of IAM exposure —
+  detected post-hoc only via the destination account's
+  cloudtrail, which makes attribution and containment slow.
+controls:
+  - CTL.IAM.IDENTITY.BLASTRADIUS.002
+  - CTL.IAM.CONSOLE.MFA.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - cross_account_injection

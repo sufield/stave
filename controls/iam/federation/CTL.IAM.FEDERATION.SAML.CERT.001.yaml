@@ -10,6 +10,8 @@ description: >
   certificates.
 domain: identity
 severity: medium
+scope: compound
+corpus_reference: MITRE:T1078.004
 compliance:
   owasp_nhi: "NHI3"
   nist_800_53_r5: "IA-5"

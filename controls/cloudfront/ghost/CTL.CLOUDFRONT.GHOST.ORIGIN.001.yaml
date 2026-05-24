@@ -18,6 +18,8 @@ description: >
   the ALB/custom origin failure modes and the S3 takeover narrative.
 domain: governance
 severity: critical
+archetype: ghost-reference
+scope: compound
 compliance:
   nist_800_53_r5: "CM-3"
   pci_dss_v4.0: "6.5.6"

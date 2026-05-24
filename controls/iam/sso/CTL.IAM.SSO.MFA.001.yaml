@@ -9,6 +9,8 @@ description: >
   defense-in-depth.
 domain: identity
 severity: high
+scope: compound
+corpus_reference: csa:top-threats-2024:t1
 compliance:
   owasp_nhi: "NHI4"
   nist_800_53_r5: "IA-2(1)"

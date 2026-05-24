@@ -198,6 +198,9 @@ func (l *ControlLoader) enrichAndPrepare(ctl *policy.ControlDefinition) error {
 	if err := validateArchetype(ctl); err != nil {
 		return err
 	}
+	if err := validateScopeCorpus(ctl); err != nil {
+		return err
+	}
 	if err := ctl.Prepare(); err != nil {
 		return fmt.Errorf("semantic error: %w", err)
 	}
@@ -253,6 +256,49 @@ func validateArchetype(ctl *policy.ControlDefinition) error {
 		return fmt.Errorf("control %s: unknown archetype %q (run `stave expand --list` to see valid IDs)", ctl.ID, ctl.Archetype)
 	}
 	return nil
+}
+
+// validateScopeCorpus enforces the I0 contract from the
+// AWS compound control authoring plan: any control with
+// scope == "compound" must carry an attribution — either
+// corpus_reference (external citation) or archetype (the
+// catalog's own structural taxonomy entry). The Goodhart guard:
+// without this, "compound count" as a metric invites synthetic
+// compounds that pass the classifier's structural heuristic
+// without representing a real attack pattern.
+//
+// Why archetype counts. The shipped catalog uses archetype to
+// classify structural defect families (ghost-reference,
+// confused-deputy, etc.). An archetype-tagged control IS
+// referencing a documented pattern — it's just the catalog's own
+// codification rather than an external one. Requiring an
+// external citation in addition would force a synthetic
+// "archetype:ghost-reference" citation prefix that re-states what
+// the archetype field already says. The rule treats either
+// attribution mechanism as sufficient.
+//
+// Scope values other than "atomic" / "compound" / empty are
+// rejected upstream by the JSON Schema validator that runs
+// before the YAML loader; this function only handles the
+// conditional attribution rule.
+func validateScopeCorpus(ctl *policy.ControlDefinition) error {
+	if strings.TrimSpace(ctl.Scope) != "compound" {
+		return nil
+	}
+	hasCorpus := strings.TrimSpace(ctl.CorpusReference) != ""
+	hasArchetype := !ctl.Archetype.IsEmpty()
+	if hasCorpus || hasArchetype {
+		return nil
+	}
+	return fmt.Errorf(
+		"control %s: scope=compound requires either corpus_reference "+
+			"(MITRE:<id>, incident:<slug-year>, stratus:<technique>, "+
+			"rhino:<technique>, csa:<doc>:<section>, hackerone:<id>, "+
+			"snyk:<slug>, triz:<id>) or archetype (the catalog's own "+
+			"structural taxonomy) — see docs/taxonomies/iam-compound.md "+
+			"for the canonical schema",
+		ctl.ID,
+	)
 }
 
 // resolveAlias expands a predicate alias if set on the control definition.

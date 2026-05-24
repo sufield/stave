@@ -72,6 +72,21 @@ type Finding struct {
 	Infection string
 	Failure   string
 
+	// ControlScope is the cardinality of the control's predicate
+	// reasoning: "atomic" (single asset) or "compound" (multi-
+	// asset). Orthogonal to [Classification]. Compound is Stave-
+	// distinctive territory — per-resource framework scanners miss
+	// these by construction. Empty for legacy / in-flight controls
+	// the build-time classifier hasn't run on yet.
+	ControlScope string
+
+	// CorpusReference cites the real-world attack pattern the
+	// control detects (MITRE technique, incident, Stratus Red
+	// Team scenario, etc.). Required on catalog side when
+	// ControlScope == "compound". Format is free-text with a
+	// recommended prefix schema; see DOCTRINE.md for examples.
+	CorpusReference string
+
 	// Delta is the mechanically-derived set of fix paths. Each
 	// DeltaPath is an independent change that eliminates this
 	// finding. For AND predicates, any single path suffices. Nil

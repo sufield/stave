@@ -15,6 +15,8 @@ description: >
   StorageClass references a key the cluster can still use.
 domain: governance
 severity: high
+archetype: ghost-reference
+scope: compound
 compliance:
   soc2: "CC6.1, CC8.1, CC7.4"
   nist_800_53_r5: "CM-2, CM-3, SC-12"

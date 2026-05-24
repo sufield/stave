@@ -1,0 +1,44 @@
+# Scope-classifier overrides.
+#
+# The build-time classifier (internal/tools/scope-classifier)
+# proposes a scope value per control based on structural
+# heuristics. When the heuristic produces a false positive or
+# false negative, the human reviewer records the override here
+# with a rationale.
+#
+# The classifier re-reads this file on each run and treats the
+# overrides as authoritative — its proposal report shows
+# disagreements only for entries NOT in this file. CI fails the
+# build if a control has an explicit `scope:` field that
+# disagrees with the classifier's proposal AND no override entry
+# justifies the disagreement.
+#
+# Override format:
+#   - control_id: <ID>
+#     scope: atomic | compound
+#     rationale: <one-line explanation>
+#
+# Add entries below as the catalog evolves. Keep alphabetical by
+# control_id for grep-ability.
+
+overrides:
+  - control_id: CTL.ELB.INCOMPLETE.001
+    scope: atomic
+    rationale: >
+      Multi-asset-type heuristic false-positive. The control is a
+      data-completeness absence check that applies to both
+      aws_elb_load_balancer (classic) and aws_elbv2_load_balancer
+      because the catalog targets both types — but the predicate
+      reasons about a single load-balancer's TLS configuration at
+      a time, not across the two types. Polymorphic, not compound.
+
+  - control_id: CTL.IAM.POLICY.SERVICEWILDCARD.001
+    scope: atomic
+    rationale: >
+      Multi-asset-type heuristic false-positive. The control
+      checks for service-wildcard grants on the denied-service
+      list (cloudtrail, kms, aws-marketplace) against single-
+      principal policy sets. Applies to both aws_iam_user and
+      aws_iam_role because either identity type can carry the
+      grant — but the predicate reasons about one principal at a
+      time. Polymorphic, not compound.

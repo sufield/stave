@@ -13,6 +13,8 @@ description: >
   configuration-time signal.
 domain: exposure
 severity: critical
+archetype: ghost-reference
+scope: compound
 compliance:
   nist_800_53_r5: "CM-2"
   fedramp_moderate: "CM-2"

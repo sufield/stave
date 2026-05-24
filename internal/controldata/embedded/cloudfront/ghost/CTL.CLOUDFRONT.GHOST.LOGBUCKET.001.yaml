@@ -17,6 +17,8 @@ description: >
   configured but the destination was removed.
 domain: governance
 severity: medium
+archetype: ghost-reference
+scope: compound
 compliance:
   nist_800_53_r5: "AU-9"
   pci_dss_v4.0: "10.3.2"

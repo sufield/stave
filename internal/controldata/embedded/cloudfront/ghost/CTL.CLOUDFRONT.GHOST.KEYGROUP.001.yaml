@@ -16,6 +16,8 @@ description: >
   key is missing.
 domain: governance
 severity: high
+archetype: ghost-reference
+scope: compound
 compliance:
   nist_800_53_r5: "SC-13"
   pci_dss_v4.0: "3.7.5"

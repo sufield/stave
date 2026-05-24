@@ -1,0 +1,23 @@
+id: compute_role_sensitive_data_path
+description: >
+  Capital One generalization without requiring the public-network
+  leg: EC2 instance with IMDSv1 enabled (CTL.EC2.IMDSV2.001) running
+  with a role that reaches sensitive resources
+  (CTL.IAM.IDENTITY.BLASTRADIUS.004). The two-leg variant catches
+  internal-network attack paths the three-leg `capital_one_principal_path`
+  doesn't — a compromised internal application or sidecar can SSRF
+  into IMDS and assume the role even when the instance isn't
+  internet-facing. Threshold of 2 reflects "the role reach matters
+  the moment IMDS becomes accessible, regardless of how the IMDS
+  reach happens." Lower compound severity (high vs critical) because
+  the internal-only variant requires an intermediate compromise; the
+  full three-leg chain doesn't.
+controls:
+  - CTL.EC2.IMDSV2.001
+  - CTL.IAM.IDENTITY.BLASTRADIUS.004
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - container_code_execution
+postconditions:
+  - data_access

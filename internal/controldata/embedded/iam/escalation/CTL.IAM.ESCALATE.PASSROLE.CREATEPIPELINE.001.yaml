@@ -13,6 +13,8 @@ description: >
   technique.
 domain: identity
 severity: high
+scope: compound
+corpus_reference: MITRE:T1098
 compliance:
   owasp_nhi: "NHI5"
   soc2: "CC6.1"

@@ -12,6 +12,8 @@ description: >
   faster but the failure mode is identical.
 domain: governance
 severity: medium
+archetype: ghost-reference
+scope: compound
 compliance:
   soc2: "CC8.1, CC7.4"
   nist_800_53_r5: "CM-2, CM-3"

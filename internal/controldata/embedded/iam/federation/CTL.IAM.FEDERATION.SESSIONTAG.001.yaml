@@ -9,6 +9,8 @@ description: >
   IdP attributes into the AWS session for attribution and ABAC.
 domain: identity
 severity: medium
+scope: compound
+corpus_reference: MITRE:T1550.001
 compliance:
   owasp_nhi: "NHI3"
   nist_800_53_r5: "AC-2"

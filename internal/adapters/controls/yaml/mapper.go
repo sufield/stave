@@ -49,6 +49,8 @@ func (y yamlControlDefinition) ToDomain() (policy.ControlDefinition, error) {
 		Infection:            y.Infection,
 		Failure:              y.Failure,
 		Archetype:            kernel.ArchetypeID(strings.TrimSpace(y.Archetype)),
+		Scope:                strings.TrimSpace(y.Scope),
+		CorpusReference:      strings.TrimSpace(y.CorpusReference),
 		IntentRationale:      strings.TrimSpace(y.IntentRationale),
 		ForbiddenState:       unsafePredicateToDomain(y.ForbiddenState),
 	}, nil

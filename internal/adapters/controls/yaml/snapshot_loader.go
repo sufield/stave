@@ -112,6 +112,13 @@ func walkForControlFiles(ctx context.Context, root string) ([]string, error) {
 
 // isControlFile returns true if the file is a YAML control and not a template
 // example or hidden file.
+//
+// `_`-prefixed and `.`-prefixed names are skipped. This mirrors the
+// directory-walk convention (line 93 above) — `_triage/`, `_registry/`,
+// `.git/` are recognized as non-control content. The same convention
+// extends to files at the catalog root: `_scope-overrides.yaml`,
+// `_taxonomy.yaml`, `.gitkeep`, etc. are operator-facing artefacts
+// living alongside the controls but not loaded as control YAML.
 func isControlFile(path string) bool {
 	ext := strings.ToLower(filepath.Ext(path))
 	if ext != ".yaml" && ext != ".yml" {
@@ -121,7 +128,7 @@ func isControlFile(path string) bool {
 	if strings.Contains(name, ".example.") {
 		return false
 	}
-	if strings.HasPrefix(name, ".") {
+	if strings.HasPrefix(name, ".") || strings.HasPrefix(name, "_") {
 		return false
 	}
 	return true

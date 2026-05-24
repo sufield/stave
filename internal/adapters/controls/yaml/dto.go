@@ -44,6 +44,18 @@ type yamlControlDefinition struct {
 	// excluded from `stave expand` results. See internal/archetype.
 	Archetype string `yaml:"archetype,omitempty"`
 
+	// Scope is "atomic" (single-asset predicate) or "compound"
+	// (multi-asset predicate). Orthogonal to Classification.
+	// Populated by the build-time scope classifier when not set
+	// explicitly. See internal/tools/scope-classifier.
+	Scope string `yaml:"scope,omitempty"`
+
+	// CorpusReference cites the real-world attack pattern (MITRE
+	// technique, incident, Stratus Red Team scenario, etc.).
+	// Required when Scope == "compound" — enforced by build-time
+	// validator.
+	CorpusReference string `yaml:"corpus_reference,omitempty"`
+
 	// IntentRationale is the WHY-prose flowing into ControlFact.
 	// See policy.ControlDefinition.IntentRationale for full semantics.
 	IntentRationale string `yaml:"intent_rationale,omitempty"`

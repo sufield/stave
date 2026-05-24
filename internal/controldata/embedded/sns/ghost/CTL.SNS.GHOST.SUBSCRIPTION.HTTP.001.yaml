@@ -15,6 +15,8 @@ description: >
   level (e.g., 50% over the past 24h).
 domain: governance
 severity: medium
+archetype: ghost-reference
+scope: compound
 compliance:
   soc2: "CC6.1, CC7.4, CC8.1"
   nist_800_53_r5: "CM-2, IR-4"

@@ -201,6 +201,8 @@ func convertFinding(f *evaluation.Finding) Finding {
 		Defect:               f.Defect,
 		Infection:            f.Infection,
 		Failure:              f.Failure,
+		ControlScope:         f.Scope,
+		CorpusReference:      f.CorpusReference,
 		Delta:                convertDelta(f.Delta),
 		SLABreached:          f.SLABreachedFlag(),
 		SLADeadlineHours:     f.SLADeadlinePtr(),

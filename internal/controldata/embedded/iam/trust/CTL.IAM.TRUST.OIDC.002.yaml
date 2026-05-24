@@ -10,6 +10,8 @@ description: >
   s3:* on Resource "*".
 domain: identity
 severity: critical
+scope: compound
+corpus_reference: snyk:gh-oidc-sub-broad
 compliance:
   owasp_nhi: "NHI3"
   soc2: "CC6.1"

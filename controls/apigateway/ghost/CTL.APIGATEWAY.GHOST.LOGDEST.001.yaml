@@ -12,6 +12,8 @@ description: >
   reports compliance; the operator who looks for logs finds none.
 domain: governance
 severity: high
+archetype: ghost-reference
+scope: compound
 compliance:
   nist_800_53_r5: "AU-12"
   fedramp_moderate: "AU-12"

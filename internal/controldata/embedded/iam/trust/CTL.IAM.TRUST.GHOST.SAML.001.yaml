@@ -11,6 +11,7 @@ description: >
   equivalent of subdomain takeover.
 domain: identity
 severity: high
+archetype: ghost-reference
 compliance:
   owasp_nhi: "NHI1"
   nist_800_53_r5: "IA-5"

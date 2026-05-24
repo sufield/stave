@@ -9,6 +9,7 @@ description: >
   (availability failure) or broadening access (security failure).
 domain: identity
 severity: medium
+archetype: ghost-reference
 compliance:
   owasp_nhi: "NHI1"
   nist_800_53_r5: "AC-3"

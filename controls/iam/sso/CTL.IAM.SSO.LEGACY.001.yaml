@@ -9,6 +9,8 @@ description: >
   credentials bypasses every SSO security control.
 domain: identity
 severity: high
+scope: compound
+corpus_reference: MITRE:T1078.004
 compliance:
   nist_800_53_r5: "IA-2"
   soc2: "CC6.1"

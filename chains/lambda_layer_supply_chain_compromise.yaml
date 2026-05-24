@@ -1,0 +1,30 @@
+id: lambda_layer_supply_chain_compromise
+description: >
+  A Lambda function's layer dependencies are a supply-chain risk:
+  layer contains secrets (CTL.LAMBDA.LAYER.SECRETS.001 — secrets
+  baked into layer ZIP propagate to every consumer), AND either
+  layer references a now-deleted layer ARN (CTL.LAMBDA.LAYER.GHOST.001
+  — function deployment will fail or fall back to a stale version
+  AWS still serves) or layer originates from an untrusted publisher
+  (CTL.LAMBDA.LAYER.ORIGIN.001 — layer ARN points outside the
+  trusted account/publisher set). Each leg is a known supply-chain
+  concern; their conjunction describes the actual exploitable
+  shape — sensitive material plus a deployment dependency that
+  the function operator cannot control. Threshold 2 because
+  secrets-in-layer alone is a hygiene failure and ghost/untrusted-
+  origin alone is a stability or governance concern; together
+  they're the compound supply-chain compromise pattern (layer
+  consumers inherit the secret material via an upstream the
+  function team doesn't own). compound_severity high reflects the
+  cross-tenant amplification: one compromised layer cascades to
+  every function that imports it.
+controls:
+  - CTL.LAMBDA.LAYER.SECRETS.001
+  - CTL.LAMBDA.LAYER.GHOST.001
+  - CTL.LAMBDA.LAYER.ORIGIN.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - container_code_execution
+postconditions:
+  - iam_credential_theft

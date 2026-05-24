@@ -1,0 +1,35 @@
+id: iam_old_key_high_privilege
+description: >
+  Long-lived credential plus broad reach — the canonical AWS
+  breach setup pattern.
+
+  CTL.IAM.CRED.ROTATION.001 — IAM access keys not rotated
+  within the 90-day policy window. The key is the leaked-or-
+  not-leaked variable; the longer it lives the bigger the
+  detection-window failure.
+
+  CTL.IAM.IDENTITY.BLASTRADIUS.005 — the user the key belongs
+  to reaches more than the threshold resource count. Broad
+  access reach means a single compromised key produces
+  account-wide impact.
+
+  Threshold of 2 (both legs required) because the conjunction
+  is the canonical AWS-incident shape that recurs across
+  published breach analyses: Imperva 2019, Twitch 2021, and
+  many others reduce to "long-lived high-privilege key was
+  the entry point." Each leg individually is a hygiene concern;
+  their co-presence on the same user IS the breach setup.
+
+  Severity critical because the blast radius of a key under
+  this composition is the same as the user's effective
+  permissions, which the BLASTRADIUS.005 leg already
+  established as broad.
+controls:
+  - CTL.IAM.CRED.ROTATION.001
+  - CTL.IAM.IDENTITY.BLASTRADIUS.005
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - data_access

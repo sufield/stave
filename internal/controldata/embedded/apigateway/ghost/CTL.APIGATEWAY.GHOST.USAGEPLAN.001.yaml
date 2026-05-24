@@ -12,6 +12,8 @@ description: >
   is per-client (the holder of the deleted key) rather than per-API.
 domain: governance
 severity: medium
+archetype: ghost-reference
+scope: compound
 compliance:
   nist_800_53_r5: "CM-3"
   fedramp_moderate: "CM-3"

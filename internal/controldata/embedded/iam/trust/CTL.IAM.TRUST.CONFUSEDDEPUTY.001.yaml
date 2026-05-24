@@ -13,6 +13,8 @@ description: >
   if the vendor's IAM system is compromised.
 domain: identity
 severity: critical
+scope: compound
+corpus_reference: MITRE:T1199
 compliance:
   owasp_nhi: "NHI4"
   hipaa: "164.312(a)(1)"

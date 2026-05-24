@@ -44,6 +44,8 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 		Infection:           f.Infection,
 		Failure:             f.Failure,
 		Archetype:           f.Archetype.String(),
+		ControlScope:        f.Scope,
+		CorpusReference:     f.CorpusReference,
 		Delta:               fromDeltaPaths(f.Delta),
 		ContributingFactIDs: f.ContributingFactIDs,
 	}
