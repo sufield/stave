@@ -703,21 +703,21 @@ func (ctl *ControlDefinition) IsEvaluatable() bool {
 
 // ControlMetadata provides a read-only snapshot of core identity and classification.
 type ControlMetadata struct {
-	ID             kernel.ControlID
-	Name           string
-	Description    string
-	Severity       Severity
-	Compliance     ComplianceMapping
-	CCMV4          []string
-	Remediation    *RemediationSpec
-	Exposure       *Exposure
-	Alternatives   []Alternative
-	Classification Classification
-	ScopeTags      []kernel.ScopeTag
-	Defect         string
-	Infection      string
-	Failure        string
-	Archetype      kernel.ArchetypeID
+	ID              kernel.ControlID
+	Name            string
+	Description     string
+	Severity        Severity
+	Compliance      ComplianceMapping
+	CCMV4           []string
+	Remediation     *RemediationSpec
+	Exposure        *Exposure
+	Alternatives    []Alternative
+	Classification  Classification
+	ScopeTags       []kernel.ScopeTag
+	Defect          string
+	Infection       string
+	Failure         string
+	Archetype       kernel.ArchetypeID
 	Scope           string
 	CorpusReference string
 }
@@ -742,17 +742,17 @@ func (ctl *ControlDefinition) Fingerprint(h ports.Digester) kernel.Digest {
 // packaged for Finding construction.
 func (ctl *ControlDefinition) Metadata() ControlMetadata {
 	return ControlMetadata{
-		ID:             ctl.ID,
-		Name:           ctl.Name,
-		Description:    ctl.Description,
-		Severity:       ctl.Severity,
-		Compliance:     ctl.Compliance,
-		CCMV4:          ctl.CCMV4,
-		Remediation:    ctl.Remediation,
-		Exposure:       ctl.Exposure,
-		Alternatives:   ctl.Alternatives,
-		Classification: ctl.Classification,
-		ScopeTags:      ctl.ScopeTags,
+		ID:              ctl.ID,
+		Name:            ctl.Name,
+		Description:     ctl.Description,
+		Severity:        ctl.Severity,
+		Compliance:      ctl.Compliance,
+		CCMV4:           ctl.CCMV4,
+		Remediation:     ctl.Remediation,
+		Exposure:        ctl.Exposure,
+		Alternatives:    ctl.Alternatives,
+		Classification:  ctl.Classification,
+		ScopeTags:       ctl.ScopeTags,
 		Defect:          ctl.Defect,
 		Infection:       ctl.Infection,
 		Failure:         ctl.Failure,

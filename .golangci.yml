@@ -118,16 +118,22 @@ linters:
         - unnecessaryBlock
       settings:
         hugeParam:
-          # ControlDefinition is 584 bytes after the Iter 5.1 ForbiddenState
-          # UnsafePredicate addition. Raising the threshold avoids cascading
-          # pointer rewrites across the public-API callsites that pass the
-          # struct by value to satisfy the PredicateEval signature
-          # (controldef.PredicateEval is fixed; changing it ripples through
-          # every CEL evaluator + every test stub). Hot-path internal sites
-          # (isTriggered, checkUnsafe, computeAssetStates) DO take the
-          # struct by pointer to skip the per-call copy — those are
-          # narrower internal helpers, not signature-bound boundaries.
-          sizeThreshold: 600
+          # ControlDefinition is 616 bytes after the P0a session
+          # addition of `scope` + `corpus_reference` fields (the
+          # compound-control classification infrastructure).
+          # Previous size was 584 after the Iter 5.1 ForbiddenState
+          # UnsafePredicate addition. Raising the threshold avoids
+          # cascading pointer rewrites across the public-API
+          # callsites that pass the struct by value to satisfy the
+          # PredicateEval signature (controldef.PredicateEval is
+          # fixed; changing it ripples through every CEL evaluator
+          # + every test stub). Hot-path internal sites
+          # (isTriggered, checkUnsafe, computeAssetStates) DO take
+          # the struct by pointer to skip the per-call copy — those
+          # are narrower internal helpers, not signature-bound
+          # boundaries. Threshold set to 700 to give headroom for
+          # the next small addition without immediate re-bump.
+          sizeThreshold: 700
         rangeValCopy:
           sizeThreshold: 128
     govet:
