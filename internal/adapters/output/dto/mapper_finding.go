@@ -17,7 +17,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/translation"
 	"github.com/sufield/stave/internal/platform/providers/aws/iam"
@@ -356,11 +356,11 @@ func fromExemptedAssets(as []asset.ExemptedAsset) []ExemptedAssetDTO {
 	})
 }
 
-func fromAtRiskItems(items risk.ThresholdItems) []AtRiskItemDTO {
+func fromAtRiskItems(items findings.ThresholdItems) []AtRiskItemDTO {
 	if len(items) == 0 {
 		return nil
 	}
-	return mapSlice(items, func(item risk.ThresholdItem) AtRiskItemDTO {
+	return mapSlice(items, func(item findings.ThresholdItem) AtRiskItemDTO {
 		return AtRiskItemDTO{
 			ControlID:      item.ControlID,
 			AssetID:        item.AssetID,

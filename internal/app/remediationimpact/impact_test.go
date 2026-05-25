@@ -7,7 +7,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
 )
@@ -83,19 +83,19 @@ func TestAnalyze_EfficiencyRatioComputed(t *testing.T) {
 // branch (chains present in Before but absent in After). The branch
 // was untested in the pre-untangle test suite; added when the helper
 // buildChainSet was inlined so the rewrite has positive coverage.
-// risk.CompoundFinding is used here in test setup to populate
+// findings.CompoundFinding is used here in test setup to populate
 // report.Assessment.ChainFindings — the production code path no
 // longer names the type explicitly.
 func TestAnalyze_ChainDeactivationDetected(t *testing.T) {
-	chain := func(id string, sev policy.Severity) risk.CompoundFinding {
-		return risk.CompoundFinding{
+	chain := func(id string, sev policy.Severity) findings.CompoundFinding {
+		return findings.CompoundFinding{
 			ChainID:  kernel.ChainID(id),
 			Severity: sev,
 		}
 	}
 	before := &report.Assessment{
 		Summary: evaluation.ComplianceSummary{TotalAssets: 10, Violations: 3},
-		ChainFindings: []risk.CompoundFinding{
+		ChainFindings: []findings.CompoundFinding{
 			chain("chain.capital-one", policy.SeverityCritical),
 			chain("chain.ghost-ref", policy.SeverityHigh),
 			chain("chain.persisting", policy.SeverityMedium),
@@ -103,7 +103,7 @@ func TestAnalyze_ChainDeactivationDetected(t *testing.T) {
 	}
 	after := &report.Assessment{
 		Summary: evaluation.ComplianceSummary{TotalAssets: 10, Violations: 1},
-		ChainFindings: []risk.CompoundFinding{
+		ChainFindings: []findings.CompoundFinding{
 			chain("chain.persisting", policy.SeverityMedium),
 		},
 	}

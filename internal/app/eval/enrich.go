@@ -8,7 +8,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -65,7 +65,7 @@ func PrepareMarkerFindings(enricher remediation.FindingEnricher, sanitizer kerne
 // the main collection does. Mutates the result copy in place.
 func sanitizeResultSidecars(s kernel.Sanitizer, r *evaluation.ComplianceReport) {
 	if len(r.RiskSignals) > 0 {
-		signals := make(risk.ThresholdItems, len(r.RiskSignals))
+		signals := make(findings.ThresholdItems, len(r.RiskSignals))
 		for i := range r.RiskSignals {
 			item := r.RiskSignals[i]
 			item.AssetID = asset.ID(s.ID(string(item.AssetID)))
@@ -91,7 +91,7 @@ func sanitizeResultSidecars(s kernel.Sanitizer, r *evaluation.ComplianceReport) 
 		r.AcknowledgedFindings = acks
 	}
 	if len(r.TopExposures) > 0 {
-		exposures := make([]risk.ExposureRank, len(r.TopExposures))
+		exposures := make([]findings.ExposureRank, len(r.TopExposures))
 		for i, e := range r.TopExposures {
 			e.AssetID = asset.ID(s.ID(string(e.AssetID)))
 			exposures[i] = e

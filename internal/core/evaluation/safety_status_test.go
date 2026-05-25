@@ -3,14 +3,14 @@ package evaluation
 import (
 	"testing"
 
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 )
 
 func TestDeriveSecurityState(t *testing.T) {
 	tests := []struct {
 		name       string
 		violations int
-		risks      []risk.ThresholdItem
+		risks      []findings.ThresholdItem
 		want       SecurityState
 	}{
 		{
@@ -22,31 +22,31 @@ func TestDeriveSecurityState(t *testing.T) {
 		{
 			name:       "no violations empty risks",
 			violations: 0,
-			risks:      []risk.ThresholdItem{},
+			risks:      []findings.ThresholdItem{},
 			want:       StateCompliant,
 		},
 		{
 			name:       "no violations upcoming risk",
 			violations: 0,
-			risks:      []risk.ThresholdItem{{Status: risk.StatusUpcoming}},
+			risks:      []findings.ThresholdItem{{Status: findings.StatusUpcoming}},
 			want:       StateAtRisk,
 		},
 		{
 			name:       "no violations due now risk",
 			violations: 0,
-			risks:      []risk.ThresholdItem{{Status: risk.StatusDueNow}},
+			risks:      []findings.ThresholdItem{{Status: findings.StatusDueNow}},
 			want:       StateAtRisk,
 		},
 		{
 			name:       "no violations overdue risk",
 			violations: 0,
-			risks:      []risk.ThresholdItem{{Status: risk.StatusOverdue}},
+			risks:      []findings.ThresholdItem{{Status: findings.StatusOverdue}},
 			want:       StateAtRisk,
 		},
 		{
 			name:       "violations with risks",
 			violations: 3,
-			risks:      []risk.ThresholdItem{{Status: risk.StatusUpcoming}},
+			risks:      []findings.ThresholdItem{{Status: findings.StatusUpcoming}},
 			want:       StateNonCompliant,
 		},
 		{

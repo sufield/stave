@@ -11,7 +11,7 @@ import (
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 )
 
 // weightSumEpsilon is the floating-point tolerance for "weights sum
@@ -319,7 +319,7 @@ func (r Result) RubricBandNumeric() int {
 // Input holds data for score computation.
 type Input struct {
 	Findings         []remediation.Finding
-	ChainFindings    []risk.CompoundFinding
+	ChainFindings    []findings.CompoundFinding
 	ChainDefs        int     // total chain definitions count (for detail output)
 	MaxChainWeight   float64 // severity-weighted total for all chain definitions; 0 = ChainDefs * 10.0 fallback
 	SLABreached      int

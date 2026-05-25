@@ -8,7 +8,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	findingsdata "github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/metadata"
 )
@@ -100,7 +100,7 @@ func TestBuild_ChainsProduceCorrectNodes(t *testing.T) {
 		},
 	}
 
-	chains := []risk.CompoundFinding{
+	chains := []findingsdata.CompoundFinding{
 		{
 			ChainID:         "detection_blindness",
 			Description:     "Multiple detection controls disabled",

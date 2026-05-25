@@ -8,7 +8,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/attack"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/metadata"
 	"github.com/sufield/stave/internal/platform/providers/aws/iam"
@@ -139,7 +139,7 @@ func (e *Edge) DebugLabel() string {
 // BuildInput holds the data for graph construction.
 type BuildInput struct {
 	Findings      []remediation.Finding
-	ChainFindings []risk.CompoundFinding
+	ChainFindings []findings.CompoundFinding
 	Now           time.Time
 	SourcePath    string
 }
@@ -418,7 +418,7 @@ func (b *builderState) emitRemediation(f *remediation.Finding, findingID string)
 // nodes for a chain finding, the PRODUCES edge between them, and the
 // MEMBER_OF edges from each member finding back to the chain.
 func (b *builderState) processChainFinding(
-	cf *risk.CompoundFinding,
+	cf *findings.CompoundFinding,
 	findingsByControl map[kernel.ControlID][]int,
 	findings []remediation.Finding,
 ) {

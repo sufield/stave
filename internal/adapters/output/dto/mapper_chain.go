@@ -1,12 +1,12 @@
 package dto
 
 import (
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 )
 
 // fromCompoundFindings projects core chain findings into wire DTOs.
 // Returns nil for an empty input to keep `omitempty` JSON shape.
-func fromCompoundFindings(in []risk.CompoundFinding) []ChainFindingDTO {
+func fromCompoundFindings(in []findings.CompoundFinding) []ChainFindingDTO {
 	if len(in) == 0 {
 		return nil
 	}
@@ -20,7 +20,7 @@ func fromCompoundFindings(in []risk.CompoundFinding) []ChainFindingDTO {
 // fromCompoundFinding projects one core chain finding into the DTO.
 // The Severity field is rendered via SeverityLabel() so consumers
 // don't depend on policy.Severity's enum representation.
-func fromCompoundFinding(c risk.CompoundFinding) ChainFindingDTO {
+func fromCompoundFinding(c findings.CompoundFinding) ChainFindingDTO {
 	return ChainFindingDTO{
 		ChainID:            c.ChainID,
 		AssetID:            c.AssetID,
@@ -38,7 +38,7 @@ func fromCompoundFinding(c risk.CompoundFinding) ChainFindingDTO {
 }
 
 // fromExposureRanks projects core exposure ranks into wire DTOs.
-func fromExposureRanks(in []risk.ExposureRank) []ExposureRankDTO {
+func fromExposureRanks(in []findings.ExposureRank) []ExposureRankDTO {
 	if len(in) == 0 {
 		return nil
 	}
@@ -50,7 +50,7 @@ func fromExposureRanks(in []risk.ExposureRank) []ExposureRankDTO {
 }
 
 // fromExposureRank projects one core exposure rank into the DTO.
-func fromExposureRank(r risk.ExposureRank) ExposureRankDTO {
+func fromExposureRank(r findings.ExposureRank) ExposureRankDTO {
 	return ExposureRankDTO{
 		FindingIndex:  r.FindingIndex,
 		ControlID:     r.ControlID,
@@ -61,7 +61,7 @@ func fromExposureRank(r risk.ExposureRank) ExposureRankDTO {
 	}
 }
 
-func fromScoreBreakdown(b risk.ScoreBreakdown) ScoreBreakdownDTO {
+func fromScoreBreakdown(b findings.ScoreBreakdown) ScoreBreakdownDTO {
 	return ScoreBreakdownDTO{
 		BaseScore:          b.BaseScore,
 		DurationFactor:     b.DurationFactor,

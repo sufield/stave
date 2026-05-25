@@ -5,9 +5,9 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// ChainFindingDTO mirrors risk.CompoundFinding for wire output.
+// ChainFindingDTO mirrors findings.CompoundFinding for wire output.
 // Mapping is centralised in mapper_chain.go so callers outside the
-// dto package never reach into internal/core/evaluation/risk.
+// dto package never reach into internal/core/findings.
 //
 // JSON tags must remain identical to the source type — the
 // schema is part of the out.v0.1 contract.
@@ -26,7 +26,7 @@ type ChainFindingDTO struct {
 	AttackStages       []kernel.AttackStage `json:"attack_stages,omitempty"`
 }
 
-// ExposureRankDTO mirrors risk.ExposureRank for wire output.
+// ExposureRankDTO mirrors findings.ExposureRank for wire output.
 type ExposureRankDTO struct {
 	FindingIndex  int                  `json:"finding_index"`
 	ControlID     kernel.ControlID     `json:"control_id"`
@@ -36,7 +36,7 @@ type ExposureRankDTO struct {
 	SilentKiller  bool                 `json:"silent_killer"`
 }
 
-// ScoreBreakdownDTO mirrors risk.ScoreBreakdown for wire output.
+// ScoreBreakdownDTO mirrors findings.ScoreBreakdown for wire output.
 type ScoreBreakdownDTO struct {
 	BaseScore          int                `json:"base_score"`
 	DurationFactor     float64            `json:"duration_factor"`

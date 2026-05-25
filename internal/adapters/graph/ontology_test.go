@@ -9,7 +9,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	findingsdata "github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/metadata"
 )
@@ -155,7 +155,7 @@ func TestExperiment02_ActiveChain(t *testing.T) {
 		},
 	}
 
-	chains := []risk.CompoundFinding{
+	chains := []findingsdata.CompoundFinding{
 		{
 			ChainID: "data_exfiltration_path", Description: "PHI data exfiltration path",
 			ControlsFailing: []kernel.ControlID{"CTL.S3.PUBLIC.001", "CTL.KMS.ROTATION.001", "CTL.CLOUDTRAIL.ENABLED.001"},

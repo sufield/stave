@@ -10,7 +10,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	findingsdata "github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -211,11 +211,11 @@ func scoreFindingsFromAssessment(a *Assessment) []remediation.Finding {
 // scoreChainFindingsFromAssessment converts the public ChainFinding
 // slice to the engine form the scorer reads. Only ChainID and
 // Severity are needed for chain weighting.
-func scoreChainFindingsFromAssessment(a *Assessment) []risk.CompoundFinding {
+func scoreChainFindingsFromAssessment(a *Assessment) []findingsdata.CompoundFinding {
 	if len(a.ChainFindings) == 0 {
 		return nil
 	}
-	out := make([]risk.CompoundFinding, len(a.ChainFindings))
+	out := make([]findingsdata.CompoundFinding, len(a.ChainFindings))
 	for i := range a.ChainFindings {
 		c := &a.ChainFindings[i]
 		sev := severityFromString(c.Severity)
@@ -223,7 +223,7 @@ func scoreChainFindingsFromAssessment(a *Assessment) []risk.CompoundFinding {
 			slog.Warn("score: unknown chain severity coerced to none",
 				"chain_id", c.ChainID, "severity", c.Severity)
 		}
-		out[i] = risk.CompoundFinding{
+		out[i] = findingsdata.CompoundFinding{
 			ChainID:  c.ChainID,
 			Severity: sev,
 		}

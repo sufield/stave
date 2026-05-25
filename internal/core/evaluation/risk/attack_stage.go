@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	findingsdata "github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -78,7 +79,7 @@ func BuildAttackStageSummary(
 
 // AttackStagesFromFindings extracts the unique, sorted attack stages
 // from a set of compound findings.
-func AttackStagesFromFindings(findings []CompoundFinding) []kernel.AttackStage {
+func AttackStagesFromFindings(findings []findingsdata.CompoundFinding) []kernel.AttackStage {
 	seen := make(map[kernel.AttackStage]bool)
 	for i := range findings {
 		for _, s := range findings[i].AttackStages {

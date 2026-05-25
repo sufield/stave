@@ -12,6 +12,7 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
 )
@@ -76,7 +77,7 @@ type Finding struct {
 
 	// ScoreBreakdown decomposes ExposureScore into the factors that produced
 	// it. Populated alongside ExposureScore. Nil on unscored findings.
-	ScoreBreakdown *risk.ScoreBreakdown `json:"score_breakdown,omitempty"`
+	ScoreBreakdown *findings.ScoreBreakdown `json:"score_breakdown,omitempty"`
 
 	// ReasoningTrace lists the predicate leaf clauses that the engine
 	// evaluated to produce this finding, each paired with the observed
@@ -615,16 +616,16 @@ func (f *Finding) ChainMembershipProperties() []map[string]any {
 // multiplier. Callers receive the score and the breakdown together
 // so the roadmap entry can populate ScoreBreakdown without a second
 // pass over the same fields.
-func (f *Finding) ComputeBaseScore() (float64, risk.ScoreBreakdown) {
+func (f *Finding) ComputeBaseScore() (float64, findings.ScoreBreakdown) {
 	if f == nil {
-		return 0, risk.ScoreBreakdown{}
+		return 0, findings.ScoreBreakdown{}
 	}
 	base := f.ControlSeverity.Weight()
 	daysBlind := f.Evidence.UnsafeDurationHours / 24.0
 	durFactor := risk.DurationFactor(f.Evidence.UnsafeDurationHours)
 	blindMult := risk.BlindMultiplier(daysBlind)
 	score := float64(base) * durFactor * blindMult
-	return score, risk.ScoreBreakdown{
+	return score, findings.ScoreBreakdown{
 		BaseScore:          base,
 		DurationFactor:     durFactor,
 		BlastMultiplier:    1.0,

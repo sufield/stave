@@ -2,7 +2,7 @@ package stave
 
 import (
 	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -70,10 +70,10 @@ type ChainMembershipEntry struct {
 	Narrative string
 }
 
-// convertCompoundFinding converts an internal risk.CompoundFinding into
+// convertCompoundFinding converts an internal findings.CompoundFinding into
 // the library's ChainFinding shape, applying the typed-ChainID
 // conversion at the boundary.
-func convertCompoundFinding(cf *risk.CompoundFinding) ChainFinding {
+func convertCompoundFinding(cf *findings.CompoundFinding) ChainFinding {
 	return ChainFinding{
 		ChainID:           cf.ChainID,
 		Description:       cf.Description,

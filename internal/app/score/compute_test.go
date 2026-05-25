@@ -7,7 +7,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	findingsdata "github.com/sufield/stave/internal/core/findings"
 )
 
 func TestCompute_AllPassing(t *testing.T) {
@@ -142,7 +142,7 @@ func TestCompute_SLABreachDecreases(t *testing.T) {
 
 func TestCompute_ActiveChainDecreases(t *testing.T) {
 	r := Compute(Input{
-		ChainFindings: []risk.CompoundFinding{
+		ChainFindings: []findingsdata.CompoundFinding{
 			{Severity: policy.SeverityCritical},
 		},
 		ChainDefs: 10,
@@ -187,7 +187,7 @@ func TestCompute_WeightsOverrideProducesCorrectSum(t *testing.T) {
 		HasSLA:      true,
 		SLATotal:    2,
 		SLABreached: 1, // SLA = 0.5
-		ChainFindings: []risk.CompoundFinding{
+		ChainFindings: []findingsdata.CompoundFinding{
 			{Severity: policy.SeverityHigh},
 		},
 		ChainDefs:   2, // chainMax=20, active=4 → chainScore = 1 - 4/20 = 0.8

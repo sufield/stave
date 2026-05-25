@@ -7,7 +7,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
 )
@@ -32,11 +32,12 @@ func TestMarshalASFF_NilAssessment(t *testing.T) {
 //   - Severity label + normalized value derived from cf.Severity
 //   - ChainId / CompoundScore appear in ProductFields
 //
-// risk.CompoundFinding is named here in test setup to populate
-// report.Assessment fixtures — production code no longer names it.
+// findings.CompoundFinding is named here in test setup to populate
+// report.Assessment fixtures — production code routes through the
+// dto mapper instead.
 func TestMarshalASFF_ChainFindings(t *testing.T) {
 	assessment := &report.Assessment{
-		ChainFindings: []risk.CompoundFinding{
+		ChainFindings: []findings.CompoundFinding{
 			{
 				ChainID:       kernel.ChainID("chain.capital-one"),
 				AssetID:       asset.ID("arn:aws:s3:::data-bucket"),

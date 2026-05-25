@@ -7,52 +7,9 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	findingsdata "github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
-
-// ExposureRank captures a finding's priority score with full factor
-// breakdown for traceability. The breakdown lets operators understand
-// WHY a finding ranks where it does — not just that it does.
-type ExposureRank struct {
-	FindingIndex  int                  `json:"finding_index"`
-	ControlID     kernel.ControlID     `json:"control_id"`
-	AssetID       asset.ID             `json:"asset_id"`
-	ExposureScore kernel.ExposureScore `json:"exposure_score"`
-	Breakdown     ScoreBreakdown       `json:"breakdown"`
-	SilentKiller  bool                 `json:"silent_killer"`
-}
-
-// IsDanglingReference reports whether this rank entry points at a
-// finding index outside the supplied findings count — a referential
-// integrity failure caused by a stale ranker, an upstream filter
-// that removed findings without updating indices, or a hand-built
-// fixture with mismatched parallel arrays. Encapsulates the
-// (idx<0 || idx>=len) bounds probe so the caller describes the
-// *relationship* (dangling pointer) instead of the slice arithmetic.
-// A future move from index-based to ID-based correlation lands here
-// without touching the call site.
-func (r *ExposureRank) IsDanglingReference(findingsCount int) bool {
-	if r == nil {
-		return true
-	}
-	return r.FindingIndex < 0 || r.FindingIndex >= findingsCount
-}
-
-// ScoreBreakdown provides the traceable factor decomposition.
-type ScoreBreakdown struct {
-	BaseScore          int                `json:"base_score"`
-	DurationFactor     float64            `json:"duration_factor"`
-	BlastMultiplier    kernel.BlastRadius `json:"blast_multiplier"`
-	ExposureMultiplier float64            `json:"exposure_multiplier"`
-	ChainBonus         float64            `json:"chain_bonus"`
-	// BlindMultiplier scales the score continuously with how long the
-	// finding has been unsafe. DurationFactor steps in coarse buckets
-	// (1.0/1.5/2.0/3.0/5.0) for traceability; BlindMultiplier breaks
-	// ties within a bucket so a 360-day exposure outranks a 100-day
-	// exposure even though both fall in the same DurationFactor bucket.
-	BlindMultiplier float64 `json:"blind_multiplier"`
-	DaysBlind       float64 `json:"days_blind"`
-}
 
 // RankInput carries the data needed to score one finding without
 // importing the evaluation package (which already imports risk).
@@ -144,12 +101,12 @@ func RankExposures(
 	inputs []RankInput,
 	controlLookup map[kernel.ControlID]*policy.ControlDefinition,
 	topN int,
-) []ExposureRank {
+) []findingsdata.ExposureRank {
 	if len(inputs) == 0 {
 		return nil
 	}
 
-	ranks := make([]ExposureRank, 0, len(inputs))
+	ranks := make([]findingsdata.ExposureRank, 0, len(inputs))
 	for i := range inputs {
 		f := &inputs[i]
 
@@ -195,13 +152,13 @@ func RankExposures(
 		// tiebreakers.
 		score := min(float64(base)*durFactor*blast*expMult*chainBonus*blindMult, float64(ScoreCatastrophic))
 
-		ranks = append(ranks, ExposureRank{
+		ranks = append(ranks, findingsdata.ExposureRank{
 			FindingIndex:  i,
 			ControlID:     f.ControlID,
 			AssetID:       f.AssetID,
 			ExposureScore: kernel.ExposureScore(score),
 			SilentKiller:  daysBlind > silentKillerDaysThreshold,
-			Breakdown: ScoreBreakdown{
+			Breakdown: findingsdata.ScoreBreakdown{
 				BaseScore:          base,
 				DurationFactor:     durFactor,
 				BlastMultiplier:    kernel.BlastRadius(blast),
@@ -213,7 +170,7 @@ func RankExposures(
 		})
 	}
 
-	slices.SortFunc(ranks, func(a, b ExposureRank) int {
+	slices.SortFunc(ranks, func(a, b findingsdata.ExposureRank) int {
 		// Descending by score.
 		if c := cmp.Compare(b.ExposureScore, a.ExposureScore); c != 0 {
 			return c

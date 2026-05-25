@@ -3,8 +3,8 @@ package evaluation
 import (
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/evidence"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/util/sets"
 )
@@ -47,7 +47,7 @@ const (
 // argument because risk-signal computation lives outside the
 // summary's own state — the summary owns counts, not the timeline
 // data that produces signals.
-func (s ComplianceSummary) SecurityState(upcoming risk.ThresholdItems) SecurityState {
+func (s ComplianceSummary) SecurityState(upcoming findings.ThresholdItems) SecurityState {
 	if s.Violations > 0 {
 		return StateNonCompliant
 	}
@@ -62,7 +62,7 @@ func (s ComplianceSummary) SecurityState(upcoming risk.ThresholdItems) SecurityS
 // count in hand without a full summary value yet (assessor at the
 // moment it constructs the report). New code should prefer the
 // method when a summary already exists.
-func DeriveSecurityState(violations int, upcoming risk.ThresholdItems) SecurityState {
+func DeriveSecurityState(violations int, upcoming findings.ThresholdItems) SecurityState {
 	return ComplianceSummary{Violations: violations}.SecurityState(upcoming)
 }
 
@@ -307,13 +307,13 @@ type ComplianceReport struct {
 	Run                  RunInfo                       `json:"run"`
 	Summary              ComplianceSummary             `json:"summary"`
 	SecurityState        SecurityState                 `json:"security_state"`
-	RiskSignals          risk.ThresholdItems           `json:"risk_signals,omitempty"`
+	RiskSignals          findings.ThresholdItems           `json:"risk_signals,omitempty"`
 	Findings             []Finding                     `json:"findings"`
 	MarkerFindings       []Finding                     `json:"marker_findings,omitempty"`
 	Issues               []Issue                       `json:"issues,omitempty"`
-	ChainFindings        []risk.CompoundFinding        `json:"chain_findings,omitempty"`
+	ChainFindings        []findings.CompoundFinding        `json:"chain_findings,omitempty"`
 	AttackStageSummary   map[kernel.AttackStage]string `json:"attack_stage_summary,omitempty"`
-	TopExposures         []risk.ExposureRank           `json:"top_exposures,omitempty"`
+	TopExposures         []findings.ExposureRank           `json:"top_exposures,omitempty"`
 	ExceptedFindings     []ExceptedFinding             `json:"excepted_findings,omitempty"`
 	AcknowledgedFindings []policy.AcknowledgedFinding  `json:"acknowledged_findings,omitempty"`
 	SkippedControls      []SkippedControl              `json:"skipped_controls,omitempty"`

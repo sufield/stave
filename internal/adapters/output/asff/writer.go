@@ -130,7 +130,7 @@ func mapFinding(f *remediation.Finding, timestamp string) ASFFinding {
 // mapChainFindings adds compound chain findings as ASFF entries.
 // Reads cf.ChainID / .AssetID / .Severity.String() / .CompoundScore /
 // .Narrative / .Description through range with `:=` so this file
-// never names risk.CompoundFinding directly. The chain-description
+// never names findings.CompoundFinding directly. The chain-description
 // fallback (Narrative preferred, Description as fallback) is inlined
 // here — it used to live in a separate helper that pulled the
 // risk type into its signature.

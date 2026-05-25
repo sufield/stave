@@ -5,6 +5,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	findingsdata "github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -101,7 +102,7 @@ func TestSortStagesByKillChain(t *testing.T) {
 }
 
 func TestAttackStagesFromFindings(t *testing.T) {
-	findings := []CompoundFinding{
+	findings := []findingsdata.CompoundFinding{
 		{AttackStages: []kernel.AttackStage{"exfiltration", "initial_access"}},
 		{AttackStages: []kernel.AttackStage{"initial_access", "persistence"}},
 	}

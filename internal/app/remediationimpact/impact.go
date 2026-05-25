@@ -87,7 +87,7 @@ func Analyze(in Input) *Report {
 	}
 
 	// Find deactivated chains. Project (ChainID, severity-label)
-	// off the assessment without naming risk.CompoundFinding —
+	// off the assessment without naming findings.CompoundFinding —
 	// the only fields read are c.ChainID and c.Severity.String().
 	// Iterates Before first to build the set, then deletes any
 	// chain still active in After, matching the original semantics

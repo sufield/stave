@@ -6,51 +6,17 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	findingsdata "github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // FailingControl is a (control, asset) pair for a detected violation.
 // Used as input to chain and attack-stage analysis to preserve asset context.
+// Stays in risk/ as a chain-engine input type — it isn't carried on
+// report.Assessment, so it doesn't migrate to findings/.
 type FailingControl struct {
 	ControlID kernel.ControlID
 	AssetID   asset.ID
-}
-
-// CompoundFinding represents a chain-detected compound risk — multiple
-// co-failing controls that together create a risk greater than their sum.
-//
-// AssetID is one representative contributing asset (deterministic — the
-// lowest asset.ID under string sort among the assets that fed the
-// chain). When the chain uses ScopeField, multiple distinct assets may
-// have contributed; ScopeID carries the shared scope value, ScopeField
-// records which property path produced it, and ContributingAssets lists
-// every asset.ID that fed the chain. When ScopeField is empty (default),
-// ScopeID is empty and ContributingAssets contains the single asset
-// whose failures triggered the chain — preserving the legacy shape.
-type CompoundFinding struct {
-	ChainID            kernel.ChainID       `json:"chain"`
-	AssetID            asset.ID             `json:"asset_id,omitempty"`
-	ScopeID            string               `json:"scope_id,omitempty"`
-	ScopeField         string               `json:"scope_field,omitempty"`
-	ContributingAssets []asset.ID           `json:"contributing_assets,omitempty"`
-	Description        string               `json:"description,omitempty"`
-	ControlsFailing    []kernel.ControlID   `json:"controls_failing"`
-	MissingSafeguards  []kernel.ControlID   `json:"missing_safeguards,omitempty"`
-	CompoundScore      float64              `json:"compound_score"`
-	Severity           policy.Severity      `json:"severity"`
-	Narrative          string               `json:"narrative"`
-	AttackStages       []kernel.AttackStage `json:"attack_stages,omitempty"`
-}
-
-// SeverityLabel returns the canonical lowercase severity string
-// for the chain finding (e.g. "critical"). Mirrors the shape on
-// Finding so renderers can ask either type for its label without
-// knowing which variant is in hand.
-func (c *CompoundFinding) SeverityLabel() string {
-	if c == nil {
-		return ""
-	}
-	return c.Severity.String()
 }
 
 // ScopeResolver returns the value at the given property path on the
@@ -79,8 +45,8 @@ func DetectChains(
 	chains []policy.ChainDefinition,
 	controlLookup map[kernel.ControlID]*policy.ControlDefinition,
 	scopeResolver ScopeResolver,
-) []CompoundFinding {
-	var findings []CompoundFinding
+) []findingsdata.CompoundFinding {
+	var findings []findingsdata.CompoundFinding
 
 	for i := range chains {
 		chain := &chains[i]
@@ -179,7 +145,7 @@ func DetectChains(
 			narrative := buildNarrative(chain, failing)
 
 			contributing := sortedAssetIDs(assetsByScope[scope])
-			finding := CompoundFinding{
+			finding := findingsdata.CompoundFinding{
 				ChainID:           chain.ID,
 				AssetID:           contributing[0], // representative; deterministic via sort
 				Description:       chain.Description,
@@ -210,7 +176,7 @@ func DetectChains(
 	// Go randomizes map iteration order — without a final sort, two runs
 	// on identical input produce different chain_findings orderings, which
 	// surfaces as fixture flakes.
-	slices.SortFunc(findings, func(a, b CompoundFinding) int {
+	slices.SortFunc(findings, func(a, b findingsdata.CompoundFinding) int {
 		if c := strings.Compare(string(a.ChainID), string(b.ChainID)); c != 0 {
 			return c
 		}

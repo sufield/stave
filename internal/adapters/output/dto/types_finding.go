@@ -5,7 +5,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -34,7 +34,7 @@ type FindingDTO struct {
 	SLAEscalatedSeverity string                    `json:"sla_escalated_severity,omitempty"`
 	SLAPolicySource      string                    `json:"sla_policy_source,omitempty"`
 	ExposureScore        float64                   `json:"exposure_score,omitempty"`
-	ScoreBreakdown       *risk.ScoreBreakdown      `json:"score_breakdown,omitempty"`
+	ScoreBreakdown       *findings.ScoreBreakdown  `json:"score_breakdown,omitempty"`
 	ReasoningTrace       []MatchedClauseDTO        `json:"reasoning_trace,omitempty"`
 	RemediationContext   *RemediationContextDTO    `json:"remediation_context,omitempty"`
 	Alternatives         []AlternativeDTO          `json:"alternatives,omitempty"`
@@ -239,7 +239,7 @@ type RowDTO struct {
 	Reason       string                     `json:"reason,omitempty"`
 }
 
-// AtRiskItemDTO mirrors risk.ThresholdItem.
+// AtRiskItemDTO mirrors findings.ThresholdItem.
 type AtRiskItemDTO struct {
 	ControlID      kernel.ControlID `json:"control_id"`
 	AssetID        asset.ID         `json:"asset_id"`

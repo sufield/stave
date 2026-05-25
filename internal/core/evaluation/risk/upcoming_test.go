@@ -6,6 +6,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	findingsdata "github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
 )
@@ -32,7 +33,7 @@ func TestComputeItems_DeterministicOrder(t *testing.T) {
 	}
 
 	celEval := mustPredicateEval()
-	var expected []ThresholdItem
+	var expected []findingsdata.ThresholdItem
 	for i := range 20 {
 		items := ComputeItems(ThresholdRequest{
 			Controls:                controls,
@@ -86,8 +87,8 @@ func TestComputeItems_ResetsOnSafeTransition(t *testing.T) {
 	if !items[0].DueAt.Equal(wantDueAt) {
 		t.Fatalf("dueAt = %s, want %s", items[0].DueAt, wantDueAt)
 	}
-	if items[0].Status != StatusUpcoming {
-		t.Fatalf("status = %s, want %s", items[0].Status, StatusUpcoming)
+	if items[0].Status != findingsdata.StatusUpcoming {
+		t.Fatalf("status = %s, want %s", items[0].Status, findingsdata.StatusUpcoming)
 	}
 }
 
@@ -132,15 +133,15 @@ func TestComputeItems_UsesFallbackThresholdRules(t *testing.T) {
 
 func TestSortItems_StatusUrgencyOrder(t *testing.T) {
 	due := time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)
-	items := []ThresholdItem{
-		{DueAt: due, Status: StatusUpcoming, ControlID: "CTL.A", AssetID: "r1"},
-		{DueAt: due, Status: StatusDueNow, ControlID: "CTL.A", AssetID: "r1"},
-		{DueAt: due, Status: StatusOverdue, ControlID: "CTL.A", AssetID: "r1"},
+	items := []findingsdata.ThresholdItem{
+		{DueAt: due, Status: findingsdata.StatusUpcoming, ControlID: "CTL.A", AssetID: "r1"},
+		{DueAt: due, Status: findingsdata.StatusDueNow, ControlID: "CTL.A", AssetID: "r1"},
+		{DueAt: due, Status: findingsdata.StatusOverdue, ControlID: "CTL.A", AssetID: "r1"},
 	}
 	sortItems(items)
 
 	// OVERDUE is most urgent, then DUE_NOW, then UPCOMING.
-	want := []ThresholdStatus{StatusOverdue, StatusDueNow, StatusUpcoming}
+	want := []findingsdata.ThresholdStatus{findingsdata.StatusOverdue, findingsdata.StatusDueNow, findingsdata.StatusUpcoming}
 	for i, w := range want {
 		if items[i].Status != w {
 			t.Fatalf("items[%d].Status = %s, want %s", i, items[i].Status, w)
@@ -149,15 +150,15 @@ func TestSortItems_StatusUrgencyOrder(t *testing.T) {
 }
 
 func TestFilter_ByControlAndStatus(t *testing.T) {
-	items := ThresholdItems{
-		{ControlID: "CTL.A", AssetType: kernel.AssetType("storage_bucket"), Status: StatusOverdue, Remaining: -1 * time.Hour},
-		{ControlID: "CTL.B", AssetType: kernel.AssetType("iam_role"), Status: StatusUpcoming, Remaining: 4 * time.Hour},
-		{ControlID: "CTL.C", AssetType: kernel.AssetType("storage_bucket"), Status: StatusUpcoming, Remaining: 1 * time.Hour},
+	items := findingsdata.ThresholdItems{
+		{ControlID: "CTL.A", AssetType: kernel.AssetType("storage_bucket"), Status: findingsdata.StatusOverdue, Remaining: -1 * time.Hour},
+		{ControlID: "CTL.B", AssetType: kernel.AssetType("iam_role"), Status: findingsdata.StatusUpcoming, Remaining: 4 * time.Hour},
+		{ControlID: "CTL.C", AssetType: kernel.AssetType("storage_bucket"), Status: findingsdata.StatusUpcoming, Remaining: 1 * time.Hour},
 	}
 
-	filtered := items.Filter(ThresholdFilter{
+	filtered := items.Filter(findingsdata.ThresholdFilter{
 		AssetTypes:   map[kernel.AssetType]struct{}{kernel.AssetType("storage_bucket"): {}},
-		Statuses:     map[ThresholdStatus]struct{}{StatusUpcoming: {}},
+		Statuses:     map[findingsdata.ThresholdStatus]struct{}{findingsdata.StatusUpcoming: {}},
 		MaxRemaining: 2 * time.Hour,
 	})
 
@@ -170,11 +171,11 @@ func TestFilter_ByControlAndStatus(t *testing.T) {
 }
 
 func TestFilter_EmptyPassesAll(t *testing.T) {
-	items := ThresholdItems{
-		{ControlID: "CTL.A", Status: StatusOverdue},
-		{ControlID: "CTL.B", Status: StatusUpcoming},
+	items := findingsdata.ThresholdItems{
+		{ControlID: "CTL.A", Status: findingsdata.StatusOverdue},
+		{ControlID: "CTL.B", Status: findingsdata.StatusUpcoming},
 	}
-	filtered := items.Filter(ThresholdFilter{})
+	filtered := items.Filter(findingsdata.ThresholdFilter{})
 	if len(filtered) != 2 {
 		t.Fatalf("empty filter should pass all items, got %d", len(filtered))
 	}

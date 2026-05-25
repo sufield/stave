@@ -9,7 +9,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/exposure"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
 	"github.com/sufield/stave/internal/core/report"
@@ -365,12 +365,12 @@ func TestFromAtRiskItems_Empty(t *testing.T) {
 
 func TestFromAtRiskItems_WithData(t *testing.T) {
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
-	input := risk.ThresholdItems{
+	input := findings.ThresholdItems{
 		{
 			ControlID:     "CTL.A",
 			AssetID:       "res-1",
 			AssetType:     "aws:s3:bucket",
-			Status:        risk.StatusUpcoming,
+			Status:        findings.StatusUpcoming,
 			DueAt:         now.Add(2 * time.Hour),
 			Remaining:     2 * time.Hour,
 			FirstUnsafeAt: now.Add(-22 * time.Hour),
@@ -390,7 +390,7 @@ func TestFromAtRiskItems_WithData(t *testing.T) {
 	if result[0].ThresholdHours != 24 {
 		t.Errorf("ThresholdHours = %f", result[0].ThresholdHours)
 	}
-	if result[0].Status != string(risk.StatusUpcoming) {
+	if result[0].Status != string(findings.StatusUpcoming) {
 		t.Errorf("Status = %q", result[0].Status)
 	}
 }

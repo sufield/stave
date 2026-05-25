@@ -11,7 +11,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/coverage"
 	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -32,12 +32,12 @@ type AssessmentRequest struct {
 	Run                  evaluation.RunInfo
 	Summary              evaluation.ComplianceSummary
 	SecurityState        evaluation.SecurityState
-	RiskSignals          risk.ThresholdItems
+	RiskSignals          findings.ThresholdItems
 	Findings             []remediation.Finding
 	MarkerFindings       []remediation.Finding
-	ChainFindings        []risk.CompoundFinding
+	ChainFindings        []findings.CompoundFinding
 	AttackStageSummary   map[kernel.AttackStage]string
-	TopExposures         []risk.ExposureRank
+	TopExposures         []findings.ExposureRank
 	Issues               []evaluation.Issue
 	SkippedControls      []evaluation.SkippedControl
 	ExemptedAssets       []asset.ExemptedAsset
@@ -241,12 +241,12 @@ type Assessment struct {
 	Run                  evaluation.RunInfo            `json:"run"`
 	Summary              evaluation.ComplianceSummary  `json:"summary"`
 	Status               evaluation.SecurityState      `json:"status"`
-	RiskSignals          risk.ThresholdItems           `json:"risk_signals,omitempty"`
+	RiskSignals          findings.ThresholdItems           `json:"risk_signals,omitempty"`
 	Findings             []remediation.Finding         `json:"findings"`
 	MarkerFindings       []remediation.Finding         `json:"marker_findings,omitempty"`
-	ChainFindings        []risk.CompoundFinding        `json:"chain_findings,omitempty"`
+	ChainFindings        []findings.CompoundFinding        `json:"chain_findings,omitempty"`
 	AttackStageSummary   map[kernel.AttackStage]string `json:"attack_stage_summary,omitempty"`
-	TopExposures         []risk.ExposureRank           `json:"top_exposures,omitempty"`
+	TopExposures         []findings.ExposureRank           `json:"top_exposures,omitempty"`
 	Issues               []evaluation.Issue            `json:"issues,omitempty"`
 	ExceptedFindings     []evaluation.ExceptedFinding  `json:"excepted_findings,omitempty"`
 	AcknowledgedFindings []policy.AcknowledgedFinding  `json:"acknowledged_findings,omitempty"`

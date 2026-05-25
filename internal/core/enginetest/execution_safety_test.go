@@ -74,6 +74,18 @@ func TestNoBannedImportsInRuntime(t *testing.T) {
 		}
 		content := string(data)
 
+		// Skip build-ignored tooling. Files carrying `//go:build ignore`
+		// are not linked into the runtime binary — they're
+		// `go run`-only developer scripts (Soufflé extractors, fact
+		// generators, etc.). The air-gap policy applies to shipped
+		// code, not to repo-local scaffolding, so checking those
+		// files for runtime-banned imports is a category error.
+		// Catches scripts anywhere in the tree without needing to
+		// enumerate per-directory exclusions.
+		if isBuildIgnored(content) {
+			return nil
+		}
+
 		for _, banned := range kernel.DefaultPolicy().BannedImports() {
 			if strings.Contains(content, banned) {
 				if kernel.DefaultPolicy().IsImportAllowed(rel, banned) {
@@ -92,6 +104,24 @@ func TestNoBannedImportsInRuntime(t *testing.T) {
 	for _, v := range violations {
 		t.Errorf("banned import found: %s", v)
 	}
+}
+
+// isBuildIgnored reports whether the file declares `//go:build ignore`,
+// the canonical marker for `go run`-only tooling that the Go toolchain
+// excludes from package compilation. Detects both the new build-tag
+// syntax and the legacy `// +build ignore` form.
+func isBuildIgnored(content string) bool {
+	// Build constraints must appear before the package clause,
+	// optionally preceded by other comments. Scan only the header
+	// (everything before the package clause) so a stray string
+	// literal containing the directive elsewhere does not match.
+	idx := strings.Index(content, "\npackage ")
+	if idx < 0 {
+		idx = len(content)
+	}
+	header := content[:idx]
+	return strings.Contains(header, "//go:build ignore") ||
+		strings.Contains(header, "// +build ignore")
 }
 
 // TestOperatorList_MatchesDocumentation ensures the operator list in code

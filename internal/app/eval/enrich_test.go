@@ -8,7 +8,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 )
 
 // stubEnricher returns its configured findings unchanged so the test
@@ -70,7 +70,7 @@ func TestEnrich_SanitizesReasoningTraceAndDelta(t *testing.T) {
 func TestEnrich_SanitizesSidecars(t *testing.T) {
 	enricher := &stubEnricher{findings: nil}
 	res := &evaluation.ComplianceReport{
-		RiskSignals: risk.ThresholdItems{
+		RiskSignals: findings.ThresholdItems{
 			{AssetID: asset.ID("arn:aws:s3:::risky"), DueAt: time.Now()},
 		},
 		ExceptedFindings: []evaluation.ExceptedFinding{
@@ -79,7 +79,7 @@ func TestEnrich_SanitizesSidecars(t *testing.T) {
 		AcknowledgedFindings: []policy.AcknowledgedFinding{
 			{AssetID: asset.ID("arn:aws:s3:::ack")},
 		},
-		TopExposures: []risk.ExposureRank{
+		TopExposures: []findings.ExposureRank{
 			{AssetID: asset.ID("arn:aws:s3:::top"), ExposureScore: 1},
 		},
 		Metadata: evaluation.Metadata{

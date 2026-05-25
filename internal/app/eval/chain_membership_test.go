@@ -5,7 +5,7 @@ import (
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -16,7 +16,7 @@ func TestAnnotateChainMembership_SingleChain(t *testing.T) {
 			{ControlID: "CTL.B"},
 			{ControlID: "CTL.C"},
 		},
-		ChainFindings: []risk.CompoundFinding{
+		ChainFindings: []findings.CompoundFinding{
 			{
 				ChainID:         "test_chain",
 				Description:     "Test chain fires",
@@ -62,7 +62,7 @@ func TestAnnotateChainMembership_MultipleChains(t *testing.T) {
 			{ControlID: "CTL.SHARED"},
 			{ControlID: "CTL.ONLY_A"},
 		},
-		ChainFindings: []risk.CompoundFinding{
+		ChainFindings: []findings.CompoundFinding{
 			{
 				ChainID:         "chain_a",
 				Description:     "Chain A",

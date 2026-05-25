@@ -9,184 +9,26 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	findingsdata "github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// ThresholdStatus represents urgency for when an unsafe threshold is due.
-type ThresholdStatus string
-
-// StatusOverdue and related constants.
-const (
-	// StatusOverdue constants.
-	StatusOverdue  ThresholdStatus = "OVERDUE"
-	StatusDueNow   ThresholdStatus = "DUE_NOW"
-	StatusUpcoming ThresholdStatus = "UPCOMING"
-)
-
-// IsOverdue reports whether the status string identifies the
-// OVERDUE bucket. Wraps the constant comparison so wire-decode
-// callers (cmd/watch) can route through the typed predicate
-// instead of comparing against the magic "OVERDUE" literal.
-func (s ThresholdStatus) IsOverdue() bool {
-	return s == StatusOverdue
-}
-
-// String returns the canonical wire-format label for the status
-// (OVERDUE / DUE_NOW / UPCOMING). DTO mappers route through this
-// instead of `string(item.Status)` so the conversion is named.
-func (s ThresholdStatus) String() string {
-	return string(s)
-}
-
 // ValidateStatuses normalizes and validates a slice of status strings.
-func ValidateStatuses(statuses []string) ([]ThresholdStatus, error) {
-	out := make([]ThresholdStatus, 0, len(statuses))
+// Stays in risk/ — it's a producer-side helper, not a data shape.
+func ValidateStatuses(statuses []string) ([]findingsdata.ThresholdStatus, error) {
+	out := make([]findingsdata.ThresholdStatus, 0, len(statuses))
 	for _, raw := range statuses {
-		norm := ThresholdStatus(strings.ToUpper(strings.TrimSpace(raw)))
+		norm := findingsdata.ThresholdStatus(strings.ToUpper(strings.TrimSpace(raw)))
 		switch norm {
 		case "":
 			continue
-		case StatusOverdue, StatusDueNow, StatusUpcoming:
+		case findingsdata.StatusOverdue, findingsdata.StatusDueNow, findingsdata.StatusUpcoming:
 			out = append(out, norm)
 		default:
 			return nil, fmt.Errorf("invalid status %q (expected: OVERDUE, DUE_NOW, UPCOMING)", raw)
 		}
 	}
 	return out, nil
-}
-
-// ThresholdItem captures one control/asset threshold approaching or exceeding its limit.
-type ThresholdItem struct {
-	DueAt          time.Time
-	Status         ThresholdStatus
-	Remaining      time.Duration
-	ControlID      kernel.ControlID
-	AssetID        asset.ID
-	AssetType      kernel.AssetType
-	FirstUnsafeAt  time.Time
-	LastSeenUnsafe time.Time
-	Threshold      time.Duration
-}
-
-// IsOverdue reports whether this item has crossed its SLA
-// threshold. Routes through ThresholdStatus.IsOverdue so the
-// "OVERDUE" comparison lives on the status type, not the item
-// wrapper.
-func (t *ThresholdItem) IsOverdue() bool {
-	return t != nil && t.Status.IsOverdue()
-}
-
-// IsDueNow reports whether this item is at the SLA boundary —
-// the StatusDueNow bucket Summarize / renderers treat as a
-// distinct urgency tier from Overdue and Upcoming.
-func (t *ThresholdItem) IsDueNow() bool {
-	return t != nil && t.Status == StatusDueNow
-}
-
-// IsDueSoon reports whether this upcoming item will reach its
-// SLA boundary within `threshold`. Exclusive of items that have
-// already breached (IsOverdue) or hit the boundary (IsDueNow);
-// Summarize uses this to bin upcoming items into "due-soon" vs
-// "later" without re-implementing the time-window math.
-func (t *ThresholdItem) IsDueSoon(threshold time.Duration) bool {
-	if t == nil || t.IsOverdue() || t.IsDueNow() {
-		return false
-	}
-	return t.Remaining > 0 && t.Remaining <= threshold
-}
-
-// ThresholdItems is a collection of upcoming risk it.
-type ThresholdItems []ThresholdItem
-
-// CountOverdue returns the number of items with OVERDUE status.
-func (it ThresholdItems) CountOverdue() int {
-	count := 0
-	for i := range it {
-		if it[i].IsOverdue() {
-			count++
-		}
-	}
-	return count
-}
-
-// HasAnyRisk reports whether any item is overdue, due now, or upcoming.
-func (it ThresholdItems) HasAnyRisk() bool {
-	return len(it) > 0
-}
-
-// ThresholdSummary holds aggregate counts of risk items bucketed by urgency.
-type ThresholdSummary struct {
-	Overdue int
-	DueNow  int
-	DueSoon int
-	Later   int
-	Total   int
-}
-
-// ThresholdFilter specifies which items to include in a view.
-type ThresholdFilter struct {
-	ControlIDs   map[kernel.ControlID]struct{}
-	AssetTypes   map[kernel.AssetType]struct{}
-	Statuses     map[ThresholdStatus]struct{}
-	MaxRemaining time.Duration
-}
-
-// Filter returns items matching the criteria.
-func (it ThresholdItems) Filter(c ThresholdFilter) ThresholdItems {
-	if len(it) == 0 {
-		return nil
-	}
-
-	out := make(ThresholdItems, 0, len(it))
-	for i := range it {
-		threshold := &it[i]
-		if c.matches(*threshold) {
-			out = append(out, *threshold)
-		}
-	}
-	return out
-}
-
-func (c ThresholdFilter) matches(item ThresholdItem) bool {
-	if len(c.ControlIDs) > 0 {
-		if _, ok := c.ControlIDs[item.ControlID]; !ok {
-			return false
-		}
-	}
-	if len(c.AssetTypes) > 0 {
-		if _, ok := c.AssetTypes[item.AssetType]; !ok {
-			return false
-		}
-	}
-	if len(c.Statuses) > 0 {
-		if _, ok := c.Statuses[item.Status]; !ok {
-			return false
-		}
-	}
-	if c.MaxRemaining > 0 && item.Remaining > c.MaxRemaining {
-		return false
-	}
-	return true
-}
-
-// Summarize buckets items by urgency relative to a "due soon" threshold.
-func (it ThresholdItems) Summarize(dueSoonThreshold time.Duration) ThresholdSummary {
-	var s ThresholdSummary
-	s.Total = len(it)
-	for i := range it {
-		threshold := &it[i]
-		switch {
-		case threshold.IsOverdue():
-			s.Overdue++
-		case threshold.IsDueNow():
-			s.DueNow++
-		case threshold.IsDueSoon(dueSoonThreshold):
-			s.DueSoon++
-		default:
-			s.Later++
-		}
-	}
-	return s
 }
 
 // ThresholdRequest provides the inputs required to compute upcoming risk.
@@ -238,7 +80,7 @@ type assetState struct {
 // applicability, ignoring acceptance state — accepting risk did
 // not erase the AT_RISK posture, which is the wrong default for
 // most operators (the "I have decided this is OK" workflow).
-func ComputeItems(req ThresholdRequest) ThresholdItems {
+func ComputeItems(req ThresholdRequest) findingsdata.ThresholdItems {
 	if len(req.Snapshots) == 0 || len(req.Controls) == 0 {
 		return nil
 	}
@@ -250,7 +92,7 @@ func ComputeItems(req ThresholdRequest) ThresholdItems {
 	})
 
 	// 2. Identify relevant controls
-	var items ThresholdItems
+	var items findingsdata.ThresholdItems
 	for i := range req.Controls {
 		ctl := &req.Controls[i]
 		if !ctl.IsTemporalControl() {
@@ -270,7 +112,7 @@ func ComputeItems(req ThresholdRequest) ThresholdItems {
 			}
 
 			dueAt := st.FirstUnsafeAt.Add(threshold).UTC()
-			items = append(items, ThresholdItem{
+			items = append(items, findingsdata.ThresholdItem{
 				DueAt:          dueAt,
 				Status:         classifyStatus(req.Now, dueAt),
 				Remaining:      dueAt.Sub(req.Now),
@@ -365,29 +207,29 @@ func computeAssetStates(
 	return states
 }
 
-func classifyStatus(now, dueAt time.Time) ThresholdStatus {
+func classifyStatus(now, dueAt time.Time) findingsdata.ThresholdStatus {
 	if now.After(dueAt) {
-		return StatusOverdue
+		return findingsdata.StatusOverdue
 	}
 	if now.Equal(dueAt) {
-		return StatusDueNow
+		return findingsdata.StatusDueNow
 	}
-	return StatusUpcoming
+	return findingsdata.StatusUpcoming
 }
 
-func sortItems(items ThresholdItems) {
-	rank := func(s ThresholdStatus) int {
+func sortItems(items findingsdata.ThresholdItems) {
+	rank := func(s findingsdata.ThresholdStatus) int {
 		switch s {
-		case StatusOverdue:
+		case findingsdata.StatusOverdue:
 			return 0
-		case StatusDueNow:
+		case findingsdata.StatusDueNow:
 			return 1
 		default:
 			return 2
 		}
 	}
 
-	slices.SortFunc(items, func(a, b ThresholdItem) int {
+	slices.SortFunc(items, func(a, b findingsdata.ThresholdItem) int {
 		// Status rank is the primary key so all Overdue items sort
 		// before all DueNow items, and DueNow before later. The
 		// previous primary-by-DueAt order interleaved overdue rows

@@ -10,7 +10,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/coverage"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/pkg/stave/internal/applycore"
 )
@@ -163,7 +163,7 @@ func convertFrameworkReadiness(rs []evaluation.FrameworkReadiness) []FrameworkRe
 // convertChainFindings copies compound-finding records from the
 // internal report into the library's typed ChainFinding slice,
 // applying ChainID typing at the boundary.
-func convertChainFindings(cfs []risk.CompoundFinding) []ChainFinding {
+func convertChainFindings(cfs []findings.CompoundFinding) []ChainFinding {
 	if len(cfs) == 0 {
 		return nil
 	}
