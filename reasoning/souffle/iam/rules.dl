@@ -1,0 +1,294 @@
+// reasoning/souffle/iam/rules.dl — G1 transitive closure + effective-access rules.
+//
+// Imports schema.dl (G0) input + view relations. Computes effective
+// access across the IAM access graph under Option B (per the
+// "Decisions locked at G0 entry" section of
+// aws-compound-control-authoring-plan.md): sirfacts already evaluated
+// policy-level Allow/Deny logic; these rules only compose across
+// role-assumption chains.
+//
+// =============================================================
+// OPTION B CAVEATS (recorded at G1 entry):
+//
+// 1. effective_allow is the CARTESIAN PRODUCT of reachable_action and
+//    reachable_resource PER PRINCIPAL — not a per-statement join.
+//    Sirfacts emits (principal, action) and (principal, resource)
+//    facts independently of which policy statement produced them.
+//    The result: if a principal has two policy statements — one
+//    granting `s3:GetObject` on bucket A, another granting
+//    `s3:PutObject` on bucket B — Option B's effective_allow includes
+//    all four combinations (GetObject×A, GetObject×B, PutObject×A,
+//    PutObject×B), where per-statement Datalog would emit only the
+//    two original (action, resource) pairs.
+//    Consequence: CIA queries under Option B are MORE PERMISSIVE
+//    than per-statement reasoning. CIA findings represent supersets
+//    of the per-statement violation set. The over-permission is
+//    acceptable for first-iteration CIA detection; the loss is
+//    triage precision, not safety.
+//
+// 2. Deny override (effective_permission = allow AND NOT deny) works
+//    only when sirfacts emitted BOTH has_deny_action AND has_action
+//    for the same principal × action pair. If sirfacts pre-evaluated
+//    the policy logic and dropped one of them, deny-override at this
+//    layer cannot reproduce per-statement semantics.
+//    Consequence: G2 cross-validation against the I2-I7 CEL
+//    predicates is where this matters or doesn't. If CEL findings
+//    align with effective_permission output, the deny-override
+//    approximation is good enough. If they diverge, G6 surfaces
+//    specific cases as concrete evidence for the Option A migration.
+//
+// 3. arn_matches handles the AWS resource-pattern wildcards the
+//    sirfacts emission preserves: exact match, universal "*", and
+//    trailing-segment "*" (e.g., "arn:aws:s3:::bucket/*"). Mid-
+//    pattern wildcards and full regex matching are not implemented;
+//    AWS resource patterns rarely use them in practice. Extend
+//    arn_matches when a real CIA finding requires the unhandled
+//    cases.
+// =============================================================
+
+#include "schema.dl"
+
+// =====================================================
+// transitive_assume — closure of can_assume over role
+// chains. Base case: direct can_assume edge. Recursive:
+// extend an existing chain by one hop. Soufflé's
+// stratification guarantees termination; the depth cap
+// is implicit in Soufflé's bottom-up fixpoint (the
+// closure terminates when no new tuples are derived),
+// but we still bound the explicit privesc_chain depth
+// in reachability.dl per AWS's documented role-chain
+// limits.
+// =====================================================
+
+.decl transitive_assume(principal_id: symbol, role_id: symbol)
+.output transitive_assume
+
+transitive_assume(P, R) :- can_assume(P, R).
+transitive_assume(P, R) :- transitive_assume(P, R1), can_assume(R1, R).
+
+// =====================================================
+// reachable_action / reachable_resource — the principal's
+// own emitted facts plus all facts on transitively-
+// assumable roles. The CIA queries reason over these
+// instead of has_action / has_resource directly because
+// a user who can assume an admin role inherits that
+// role's actions for the purposes of effective access.
+// =====================================================
+
+.decl reachable_action(principal_id: symbol, action: symbol)
+.output reachable_action
+
+reachable_action(P, A) :- has_action(P, A).
+reachable_action(P, A) :- transitive_assume(P, R), has_action(R, A).
+
+.decl reachable_resource(principal_id: symbol, resource_pattern: symbol)
+.output reachable_resource
+
+reachable_resource(P, R) :- has_resource(P, R).
+reachable_resource(P, R) :- transitive_assume(P, Role), has_resource(Role, R).
+
+// Same shape for the Deny side. Sirfacts emits has_deny_*
+// only when the principal's effective Deny set is non-
+// empty, so under Option B these are typically sparse.
+
+.decl reachable_deny_action(principal_id: symbol, action: symbol)
+.output reachable_deny_action
+
+reachable_deny_action(P, A) :- has_deny_action(P, A).
+reachable_deny_action(P, A) :- transitive_assume(P, R), has_deny_action(R, A).
+
+.decl reachable_deny_resource(principal_id: symbol, resource_pattern: symbol)
+.output reachable_deny_resource
+
+reachable_deny_resource(P, R) :- has_deny_resource(P, R).
+reachable_deny_resource(P, R) :- transitive_assume(P, Role), has_deny_resource(Role, R).
+
+// =====================================================
+// effective_allow / effective_deny — the cartesian
+// product of reachable_action × reachable_resource per
+// principal. See Caveat 1 in the file header for why
+// this is necessarily an over-approximation under
+// Option B.
+// =====================================================
+
+.decl effective_allow(principal_id: symbol, action: symbol, resource_pattern: symbol)
+.output effective_allow
+
+effective_allow(P, A, R) :- reachable_action(P, A), reachable_resource(P, R).
+
+.decl effective_deny(principal_id: symbol, action: symbol, resource_pattern: symbol)
+.output effective_deny
+
+effective_deny(P, A, R) :- reachable_deny_action(P, A), reachable_deny_resource(P, R).
+
+// =====================================================
+// effective_permission — allow minus deny. Per Caveat 2,
+// the deny override fidelity depends on sirfacts emitting
+// both Allow and Deny halves for the same (principal,
+// action) pair. G2 cross-validation tells us whether
+// this approximation produces the same verdicts the I2-I7
+// compound CEL predicates produce.
+// =====================================================
+
+.decl effective_permission(principal_id: symbol, action: symbol, resource_pattern: symbol)
+.output effective_permission
+
+effective_permission(P, A, R) :-
+    effective_allow(P, A, R),
+    !effective_deny(P, A, R).
+
+// =====================================================
+// arn_matches — pattern matching for AWS resource ARNs.
+// Per Caveat 3, handles exact match, universal "*", and
+// trailing "*" wildcard segments. Mid-pattern wildcards
+// are not implemented (rare in real AWS policy usage).
+//
+// The relation is materialized over the cross product of
+// (patterns the principals have, resource ARNs in the
+// snapshot). Souffle computes this lazily during
+// effective_access derivation; no separate .output is
+// needed unless an operator wants to spot-check the
+// matcher.
+// =====================================================
+
+.decl arn_matches(pattern: symbol, arn: symbol)
+
+// Exact match — the simplest case.
+arn_matches(P, A) :-
+    has_resource(_, P),
+    resource(A, _),
+    P = A.
+
+// Universal wildcard — "*" matches every resource in the snapshot.
+arn_matches("*", A) :- resource(A, _).
+
+// Trailing-segment wildcard — pattern ends with "*",
+// arn starts with the pattern's prefix (minus the trailing
+// "*"). Handles common AWS shapes:
+//   arn:aws:s3:::bucket/*  matches  arn:aws:s3:::bucket/obj
+//   arn:aws:lambda:::function:*  matches  arn:aws:lambda:::function:fn
+.decl _trailing_wildcard_pattern(pattern: symbol, prefix_len: number)
+_trailing_wildcard_pattern(P, PL - 1) :-
+    has_resource(_, P),
+    PL = strlen(P),
+    PL > 1,
+    substr(P, PL - 1, 1) = "*".
+
+arn_matches(P, A) :-
+    _trailing_wildcard_pattern(P, PrefixLen),
+    resource(A, _),
+    AL = strlen(A),
+    AL >= PrefixLen,
+    substr(P, 0, PrefixLen) = substr(A, 0, PrefixLen).
+
+// =====================================================
+// effective_access — the final reachability relation.
+// "Principal P can perform action A against resource R"
+// where R is a concrete resource in the snapshot whose
+// ARN matches one of P's effective resource patterns.
+// =====================================================
+
+.decl effective_access(principal_id: symbol, resource_id: symbol, action: symbol)
+.output effective_access
+
+effective_access(P, Rid, A) :-
+    effective_permission(P, A, Rpat),
+    arn_matches(Rpat, Rid).
+
+// Resource-first index. Same relation, transposed. Useful
+// for resource-centric queries: "who can touch this PHI
+// bucket?"
+.decl resource_effective_access(resource_id: symbol, principal_id: symbol, action: symbol)
+.output resource_effective_access
+
+resource_effective_access(Rid, P, A) :- effective_access(P, Rid, A).
+
+// =====================================================
+// G3 — unauthorized_access derivation.
+//
+// The raw violation set BEFORE CIA tier filtering. CIA
+// queries (G4 Confidentiality, G5 Integrity) layer the
+// read/write action class + the sensitivity filter on
+// top of this relation.
+//
+// The authorized/sensitivity input relations are emitted
+// by the G3-extended extractor; see schema.dl §G3 +
+// docs/authorization-model.md for the product-decision
+// shape (tag equality on Owner/Team; fail-open for
+// untagged resources, fail-closed for tagged-resource +
+// untagged-principal).
+// =====================================================
+
+.decl unauthorized_access(principal_id: symbol, resource_id: symbol, action: symbol)
+.output unauthorized_access
+
+unauthorized_access(P, R, A) :-
+    effective_access(P, R, A),
+    !authorized(P, R).
+
+// =====================================================
+// G4 — Confidentiality query.
+//
+// "Does there exist an unauthorized principal with effective
+// access to a sensitive resource via read-equivalent actions?"
+//
+// Joins unauthorized_access × sensitivity=high × is_read_action.
+// The is_read_action predicate (action_classes.dl) handles
+// literal action matches plus trailing-wildcard expansion
+// (principal action s3:* matches read_action s3:GetObject).
+// =====================================================
+
+#include "action_classes.dl"
+
+.decl violation_c(principal_id: symbol, resource_id: symbol, action: symbol)
+.output violation_c
+
+violation_c(P, R, A) :-
+    unauthorized_access(P, R, A),
+    sensitivity(R, "high"),
+    is_read_action(A).
+
+// =====================================================
+// G5 — Integrity query.
+//
+// "Does there exist an unauthorized principal with effective
+// access to a sensitive resource via write/modify/delete
+// actions?"
+//
+// Mirrors violation_c with is_write_action substituted.
+//
+// A principal action like `s3:*` fires BOTH violation_c AND
+// violation_i because it grants both read AND write. This is
+// correct: the principal can both read and modify; the dual
+// finding accurately describes both risk dimensions. See the
+// honest caveat at the top of action_classes.dl.
+// =====================================================
+
+.decl violation_i(principal_id: symbol, resource_id: symbol, action: symbol)
+.output violation_i
+
+violation_i(P, R, A) :-
+    unauthorized_access(P, R, A),
+    sensitivity(R, "high"),
+    is_write_action(A).
+
+// =====================================================
+// Sanity counts — G1 + G3 + G4/G5 acceptance verifiable via these.
+// =====================================================
+
+.decl _g1_derived_count(relation: symbol, n: number)
+.output _g1_derived_count
+
+_g1_derived_count("transitive_assume",      n) :- n = count : { transitive_assume(_, _) }.
+_g1_derived_count("reachable_action",       n) :- n = count : { reachable_action(_, _) }.
+_g1_derived_count("reachable_resource",     n) :- n = count : { reachable_resource(_, _) }.
+_g1_derived_count("reachable_deny_action",  n) :- n = count : { reachable_deny_action(_, _) }.
+_g1_derived_count("reachable_deny_resource", n) :- n = count : { reachable_deny_resource(_, _) }.
+_g1_derived_count("effective_allow",        n) :- n = count : { effective_allow(_, _, _) }.
+_g1_derived_count("effective_deny",         n) :- n = count : { effective_deny(_, _, _) }.
+_g1_derived_count("effective_permission",   n) :- n = count : { effective_permission(_, _, _) }.
+_g1_derived_count("arn_matches",            n) :- n = count : { arn_matches(_, _) }.
+_g1_derived_count("effective_access",       n) :- n = count : { effective_access(_, _, _) }.
+_g1_derived_count("unauthorized_access",    n) :- n = count : { unauthorized_access(_, _, _) }.
+_g1_derived_count("violation_c",            n) :- n = count : { violation_c(_, _, _) }.
+_g1_derived_count("violation_i",            n) :- n = count : { violation_i(_, _, _) }.

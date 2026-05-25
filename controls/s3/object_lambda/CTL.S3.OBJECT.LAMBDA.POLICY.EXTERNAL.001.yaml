@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.S3.OBJECT.LAMBDA.POLICY.EXTERNAL.001
+name: S3 Object Lambda Access Point Allows External Account Invocation
+description: >
+  S3 Object Lambda Access Point's resource policy grants invocation
+  to principals outside the access point's own AWS account. External
+  callers reach the transformation function — which in turn reads
+  the underlying bucket data on their behalf — bypassing any
+  account-boundary controls the bucket policy itself enforces.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  pci_dss_v4.0: "7.2.1"
+  fedramp_moderate: "AC-3"
+  ccm_v4: ["DSP-13", "IAM-16"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+scope: compound
+corpus_reference: "csa:top-threats-2024:t1"
+applicable_asset_types:
+  - aws_s3_object_lambda_access_point
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - access_point.policy_allows_external
+remediation:
+  description: >
+    Object Lambda Access Point policy grants invocation to external
+    accounts — bucket data reachable via transformation by callers
+    outside the access point's own account.
+  action: >
+    Restrict the access point resource policy's Principal to
+    accounts inside the organization. If cross-account access is
+    intentional, pair it with explicit Condition keys naming the
+    expected aws:SourceAccount and aws:SourceArn values and verify
+    the underlying bucket policy also permits the same accounts
+    directly — never let the access point be the looser layer.
+  example: |
+    {
+      "access_point": {
+        "policy_allows_external": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.access_point.policy_allows_external
+      op: eq
+      value: true
+defect: >
+  Object Lambda Access Point policy permits invocation by principals
+  outside the access point's own account.
+infection: >
+  S3 Object Lambda Access Points sit on the read path: a
+  GetObject invocation triggers the configured Lambda which
+  retrieves the underlying object and returns a transformed
+  result. The access point's resource policy controls who can
+  invoke that read path. When the policy permits external
+  account principals, those principals reach the transformation
+  Lambda — which then reads the underlying bucket using its own
+  IAM role, not the caller's. The caller's account identity is
+  irrelevant to the bucket-side authorization; only the access
+  point's policy gate matters.
+failure: >
+  Cross-account data exposure via Object Lambda invocation. External
+  principals retrieve transformed data from buckets whose own
+  policies may explicitly deny their account.
+tests:
+  - name: external invocation allowed fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3-object-lambda:us-east-1:111122223333:accesspoint/redact"
+      asset_type: aws_s3_object_lambda_access_point
+      vendor: aws
+      properties:
+        access_point:
+          policy_allows_external: true
+  - name: account-scoped invocation passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3-object-lambda:us-east-1:111122223333:accesspoint/redact"
+      asset_type: aws_s3_object_lambda_access_point
+      vendor: aws
+      properties:
+        access_point:
+          policy_allows_external: false

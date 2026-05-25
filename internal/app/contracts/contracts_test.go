@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
 )
 
 func TestOutputFormat_String(t *testing.T) {
@@ -128,18 +127,3 @@ func TestLoadSnapshots_Error(t *testing.T) {
 	}
 }
 
-func TestNewSLAPosture(t *testing.T) {
-	summary := risk.ThresholdSummary{
-		Overdue: 1,
-		DueNow:  2,
-		DueSoon: 3,
-		Later:   4,
-	}
-	r := NewSLAPosture(5, summary)
-	if r.ActiveFindings != 5 {
-		t.Errorf("ActiveFindings = %d", r.ActiveFindings)
-	}
-	if r.SLABreaches != 1 || r.BreachingNow != 2 || r.NearBreach != 3 || r.CompliantWindow != 4 {
-		t.Errorf("SLA posture mismatch: %+v", r)
-	}
-}

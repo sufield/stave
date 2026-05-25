@@ -1,0 +1,38 @@
+id: s3_bucket_endpoint_unrestricted
+description: >
+  Bucket-side delegation to VPC endpoint enforcement that the
+  endpoint doesn't actually enforce. CTL.S3.NETWORK.POLICY.001
+  fires when the bucket either has no VPC endpoint policy
+  attached or the attached policy is the default full-access
+  policy — meaning the bucket trusts the network tier to
+  restrict reach. Either of two endpoint-side controls then
+  documents the broken trust: CTL.VPC.ENDPOINT.BUCKET.RESTRICT.001
+  if the endpoint policy doesn't restrict which buckets are
+  reachable, or CTL.VPC.ENDPOINT.ANON.001 if the endpoint policy
+  allows anonymous principals.
+
+  The compositional shape is the architectural contradiction:
+  the bucket *trusts* the VPC endpoint to be the isolation
+  layer; the VPC endpoint *isn't* the isolation layer it's
+  trusted to be. Either leg alone is a hygiene concern; the
+  conjunction is the "VPC endpoint as security theatre"
+  pattern — an enforcement primitive present in the inventory,
+  costing per-hour, providing no meaningful isolation.
+
+  Threshold of 2 makes the bucket-side delegation + any one of
+  the endpoint-side enforcement failures the firing condition.
+  Distinct from vpc_endpoint_bypass (Private DNS off + SG/anon)
+  and vpc_endpoint_evasion (endpoint-side failures + missing
+  CloudTrail Network Activity logging) — those two model
+  endpoint-internal failures; this chain models the
+  bucket-endpoint trust-handoff failure.
+controls:
+  - CTL.S3.NETWORK.POLICY.001
+  - CTL.VPC.ENDPOINT.BUCKET.RESTRICT.001
+  - CTL.VPC.ENDPOINT.ANON.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_vpc
+postconditions:
+  - data_access

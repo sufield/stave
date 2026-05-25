@@ -57,9 +57,9 @@ Static configuration snapshots in, deterministic findings out. No cloud credenti
 
 ## Catalog at a glance
 
-- **2658 built-in controls across 74 domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, EKS, CloudTrail, KMS, OpenSearch, SageMaker, Bedrock, Cognito, and [60 more](docs/controls/reference.md).
+- **2662 built-in controls across 74 domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, EKS, CloudTrail, KMS, OpenSearch, SageMaker, Bedrock, Cognito, and [60 more](docs/controls/reference.md).
 - **23 ghost-reference controls** — cross-inventory detection of pointers to deleted resources (IAM → role, agent → Lambda, CNAME → S3 bucket). Single-resource scanners can't see absence.
-- **595 compound chain definitions** — multi-step attack paths across identity, data, audit, and recovery surfaces; 5 of those land on AI agent identity (Bedrock + Lambda + S3 PHI, RAG → PHI, notebook → prod role).
+- **597 compound chain definitions** — multi-step attack paths across identity, data, audit, and recovery surfaces; 5 of those land on AI agent identity (Bedrock + Lambda + S3 PHI, RAG → PHI, notebook → prod role).
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0.
 - **Coverage benchmarks** — Full OWASP Top 10, 15/15 ATT&CK cloud techniques tested by Atomic Red Team, 20/21 Rhino Security Labs privilege-escalation techniques.
 
@@ -174,7 +174,7 @@ New controls are YAML — no Go changes. Write an `unsafe_predicate`, point `sta
 
 ## Built-in controls
 
-2658 controls across 74 domains. Largest surfaces today: AWS S3 (118), AWS IAM (168), AWS OpenSearch (132), GCP Cloud Storage (7), DNS (3, vendor-agnostic dangling-reference detection).
+2662 controls across 74 domains. Largest surfaces today: AWS S3 (122), AWS IAM (168), AWS OpenSearch (132), GCP Cloud Storage (7), DNS (3, vendor-agnostic dangling-reference detection).
 
 Full reference and per-domain breakdowns: [`docs/controls/reference.md`](docs/controls/reference.md).
 

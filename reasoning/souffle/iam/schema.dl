@@ -1,0 +1,300 @@
+// reasoning/souffle/iam/schema.dl — G0 access-graph Datalog schema.
+//
+// Phase 7 (CIA-derived intensional detection) reads its base relations
+// from this file. Downstream programs in this directory (rules.dl in G1,
+// CIA queries in G4-G5) import these declarations.
+//
+// =============================================================
+// COVERAGE LIMITATIONS (recorded at G0 entry, Option B locked):
+//
+// 1. group_membership relation NOT POPULATED. No aws_iam_group asset
+//    type in the observation contract today. Group-inherited permissions
+//    are a real access path the CIA queries cannot detect under
+//    Option B. Modern AWS practice uses roles over groups; this is a
+//    minority gap but a real one. Triggering this gap in production
+//    CIA findings motivates extending the observation contract in a
+//    future iteration.
+//
+// 2. policy_statement granularity NOT PRESERVED. Sirfacts emits
+//    per-principal-effective permissions; the Datalog rules reason
+//    over has_action / has_resource directly without statement-level
+//    decomposition. CIA findings can name principal + resource + action
+//    but cannot point at the specific Allow statement (or the missing
+//    Deny statement) that caused the violation. G6 is the gate where
+//    the need for statement-level provenance either materializes or
+//    doesn't — if CIA findings prove triageable without statement
+//    provenance, Option A was unnecessary. If they don't, extending
+//    sirfacts to preserve policy structure becomes a scoped follow-up.
+//
+// 3. trust_policy(condition_key) PARTIAL. Trust edges populated via
+//    trust_principal + trust_service. Condition-aware trust queries
+//    (e.g., "trust without external_id") need extended sirfacts
+//    emission of has_trust_condition. Same Option A migration trigger
+//    as #2 above.
+// =============================================================
+//
+// Pipeline:
+//   snapshot → stave export-sir --format jsonl → (subject, predicate, object) JSONL
+//   JSONL → extract.go (this directory) → per-predicate TSV .facts files
+//   .facts → souffle -F<facts-dir> schema.dl (this file) + downstream G1+
+//
+// Input relations below use the SIR-facts predicate names verbatim
+// (matching what `internal/core/sirfacts/facts.go` emits and what
+// `examples/engines/souffle/convert.sh` produces .facts files for).
+// This keeps the existing reference programs in
+// `examples/engines/souffle/*.dl` working under the same fact set
+// G0 produces — the regression baseline.
+//
+// Renamed view relations below the input block (principal_type,
+// trust_principal, trust_service, resource) provide Option-B-flavored
+// names for downstream CIA queries. They're .decl + rule, not .input,
+// so they don't conflict with the reference-program facts.
+
+// =====================================================
+// Input relations — verbatim SIR-facts vocabulary.
+// =====================================================
+
+.decl has_type(asset: symbol, asset_type: symbol)
+.input has_type
+
+.decl has_vendor(asset: symbol, vendor: symbol)
+.input has_vendor
+
+.decl has_severity(asset: symbol, severity: symbol)
+.input has_severity
+
+.decl has_action(principal: symbol, action: symbol)
+.input has_action
+
+.decl has_resource(principal: symbol, resource: symbol)
+.input has_resource
+
+.decl has_deny_action(principal: symbol, action: symbol)
+.input has_deny_action
+
+.decl has_deny_resource(principal: symbol, resource: symbol)
+.input has_deny_resource
+
+.decl has_permission_action(principal: symbol, action: symbol)
+.input has_permission_action
+
+.decl has_permission_resource(principal: symbol, resource: symbol)
+.input has_permission_resource
+
+.decl has_condition(principal: symbol, condition_key: symbol)
+.input has_condition
+
+.decl has_condition_value(principal: symbol, value: symbol)
+.input has_condition_value
+
+.decl has_tag(asset: symbol, kv: symbol)
+.input has_tag
+
+.decl can_assume(from_principal: symbol, to_role: symbol)
+.input can_assume
+
+.decl cross_account_assumes(role: symbol, target: symbol)
+.input cross_account_assumes
+
+.decl trusts_service(role: symbol, service: symbol)
+.input trusts_service
+
+.decl has_delegated_principal(role: symbol, principal: symbol)
+.input has_delegated_principal
+
+.decl has_unknown_delegated_principal(role: symbol, marker: symbol)
+.input has_unknown_delegated_principal
+
+.decl has_delegation_scope_exceeded_for(role: symbol, scope: symbol)
+.input has_delegation_scope_exceeded_for
+
+.decl resource_policy_principal(resource: symbol, principal: symbol)
+.input resource_policy_principal
+
+.decl resource_policy_action(resource: symbol, action: symbol)
+.input resource_policy_action
+
+.decl maps_unauth_to(pool: symbol, role: symbol)
+.input maps_unauth_to
+
+.decl maps_auth_to(pool: symbol, role: symbol)
+.input maps_auth_to
+
+.decl allows_unauthenticated(pool: symbol, flag: symbol)
+.input allows_unauthenticated
+
+.decl self_registration_unrestricted(pool: symbol, flag: symbol)
+.input self_registration_unrestricted
+
+.decl contributed_by(asset: symbol, control: symbol)
+.input contributed_by
+
+.decl is_decommissioned(asset: symbol, flag: symbol)
+.input is_decommissioned
+
+.decl is_provisioned(asset: symbol, flag: symbol)
+.input is_provisioned
+
+.decl first_seen_at(asset: symbol, timestamp: symbol)
+.input first_seen_at
+
+.decl last_seen_at(asset: symbol, timestamp: symbol)
+.input last_seen_at
+
+.decl has_exposure_window(asset: symbol, flag: symbol)
+.input has_exposure_window
+
+.decl has_forbidden_state(asset: symbol, state: symbol)
+.input has_forbidden_state
+
+.decl has_forbidden_category(asset: symbol, category: symbol)
+.input has_forbidden_category
+
+.decl has_incompatible_pair(asset: symbol, pair: symbol)
+.input has_incompatible_pair
+
+.decl has_intent_rationale(asset: symbol, rationale: symbol)
+.input has_intent_rationale
+
+.decl has_privilege_level(principal: symbol, level: symbol)
+.input has_privilege_level
+
+.decl has_unused_service(principal: symbol, service: symbol)
+.input has_unused_service
+
+.decl has_data_event_logging(asset: symbol, flag: symbol)
+.input has_data_event_logging
+
+.decl has_mfa_enforced(asset: symbol, flag: symbol)
+.input has_mfa_enforced
+
+.decl has_advanced_security_enabled(asset: symbol, flag: symbol)
+.input has_advanced_security_enabled
+
+// =====================================================
+// G3 — Authorization + sensitivity model.
+//
+// These three relations are emitted by the G0 extractor
+// after consulting stave-authorization.yaml (or its
+// hardcoded default). They are .input — base facts the
+// extractor materialises — because the tag-equality
+// computation is one-pass over has_tag and fits naturally
+// in Go rather than recursive Datalog.
+//
+// See docs/authorization-model.md for the product-decision
+// shape, fail-open/fail-closed semantics, and limitations.
+// =====================================================
+
+.decl authorized(principal_id: symbol, resource_id: symbol)
+.input authorized
+
+.decl sensitivity(resource_id: symbol, level: symbol)
+.input sensitivity
+
+// =====================================================
+// Derived views — Option B Datalog-readability renames.
+//
+// These are .decl + rule, NOT .input — they project from the
+// raw SIR-facts vocabulary into the Option-B-flavored names
+// CIA queries downstream consume.
+// =====================================================
+
+// is_principal_type — which asset_type strings count as an
+// IAM principal for the access graph.
+.decl is_principal_type(t: symbol)
+is_principal_type("aws_iam_user").
+is_principal_type("aws_iam_role").
+is_principal_type("aws_iam_federated_role").
+is_principal_type("aws_iam_saml_provider").
+is_principal_type("aws_iam_sso_config").
+
+// principal_type — has_type restricted to principal asset types.
+// Phase 7 G1 rules and CIA queries reason over principals; this
+// view filters out non-principal assets (S3 buckets, KMS keys,
+// etc.) which appear in has_type as resources.
+.decl principal_type(id: symbol, type: symbol)
+.output principal_type
+principal_type(P, T) :- has_type(P, T), is_principal_type(T).
+
+// resource — has_type restricted to non-principal AWS asset types.
+// Inverse of principal_type, with a substr filter requiring the
+// type string to start with "aws_". Sirfacts emits has_type for
+// both assets ("aws_s3_bucket", "aws_kms_key") AND control records
+// ("unsafe_state", "ghost_reference"); without the prefix filter
+// the resource view would include control records as "resources",
+// which is a category error for CIA reachability queries.
+//
+// The prefix is the standard discriminator: every asset type in
+// the observation contract starts with "aws_", "gcp_", or
+// (when those land) "azure_" / "k8s_". Extend the substr check
+// when non-AWS providers join the contract.
+.decl resource(id: symbol, type: symbol)
+.output resource
+resource(R, T) :-
+    has_type(R, T),
+    !is_principal_type(T),
+    substr(T, 0, 4) = "aws_".
+
+// trust_principal — union of cross_account_assumes and
+// has_delegated_principal. Both predicates describe "this role
+// trusts this non-service principal to assume it"; the SIR
+// emits them separately because they come from different
+// observation projections (cross-account chains vs delegated
+// principal lists).
+.decl trust_principal(role_id: symbol, principal_id: symbol)
+.output trust_principal
+trust_principal(R, P) :- cross_account_assumes(R, P).
+trust_principal(R, P) :- has_delegated_principal(R, P).
+
+// trust_service — alias of trusts_service for Option B naming
+// consistency with trust_principal. Same semantics; just a
+// view for downstream readability.
+.decl trust_service(role_id: symbol, service_principal: symbol)
+.output trust_service
+trust_service(R, S) :- trusts_service(R, S).
+
+// resource_tag_split — convenience splitter for the packed
+// has_tag(asset, "key=value") form. Sirfacts packs the kv pair
+// because the SMT serializer is binary-only; the Datalog layer
+// can use either the packed has_tag or this split form. The
+// split implementation lives at the call site (Soufflé string
+// functors) and is not pre-materialized here — leaving the
+// .decl signature documented so a future call site has the
+// shape ready.
+//
+// .decl resource_tag_split(asset: symbol, key: symbol, value: symbol)
+// (Implementation: see CIA-tier query when first needed.)
+
+// =====================================================
+// Sanity outputs — for G0 acceptance and inspection.
+//
+// The .output directives below mean a vanilla `souffle
+// schema.dl -F<facts-dir> -D<out-dir>` produces TSV files
+// the operator can spot-check.
+// =====================================================
+
+.decl _g0_input_count(predicate: symbol, n: number)
+.output _g0_input_count
+
+_g0_input_count("has_type",            n) :- n = count : { has_type(_, _) }.
+_g0_input_count("has_action",          n) :- n = count : { has_action(_, _) }.
+_g0_input_count("has_resource",        n) :- n = count : { has_resource(_, _) }.
+_g0_input_count("has_deny_action",     n) :- n = count : { has_deny_action(_, _) }.
+_g0_input_count("has_deny_resource",   n) :- n = count : { has_deny_resource(_, _) }.
+_g0_input_count("can_assume",          n) :- n = count : { can_assume(_, _) }.
+_g0_input_count("trusts_service",      n) :- n = count : { trusts_service(_, _) }.
+_g0_input_count("cross_account_assumes", n) :- n = count : { cross_account_assumes(_, _) }.
+_g0_input_count("has_delegated_principal", n) :- n = count : { has_delegated_principal(_, _) }.
+_g0_input_count("has_tag",             n) :- n = count : { has_tag(_, _) }.
+_g0_input_count("has_condition",       n) :- n = count : { has_condition(_, _) }.
+_g0_input_count("resource_policy_principal", n) :- n = count : { resource_policy_principal(_, _) }.
+_g0_input_count("resource_policy_action",    n) :- n = count : { resource_policy_action(_, _) }.
+_g0_input_count("maps_unauth_to",      n) :- n = count : { maps_unauth_to(_, _) }.
+_g0_input_count("maps_auth_to",        n) :- n = count : { maps_auth_to(_, _) }.
+_g0_input_count("allows_unauthenticated", n) :- n = count : { allows_unauthenticated(_, _) }.
+_g0_input_count("self_registration_unrestricted", n) :- n = count : { self_registration_unrestricted(_, _) }.
+_g0_input_count("contributed_by",      n) :- n = count : { contributed_by(_, _) }.
+
+.decl _g0_principal_count(type: symbol, n: number)
+.output _g0_principal_count
+_g0_principal_count(T, n) :- principal_type(_, T), n = count : { principal_type(_, T) }.

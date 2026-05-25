@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.S3.OBJECT.LAMBDA.POLICY.BYPASS.001
+name: S3 Object Lambda Access Point Exposes More Than The Underlying Bucket
+description: >
+  S3 Object Lambda Access Point grants external invocation while
+  the underlying bucket's policy explicitly does not permit
+  external access. The access point is a privilege-escalation
+  bypass of the bucket policy: external callers who would be
+  denied at the bucket layer reach the bucket's data indirectly
+  by invoking the transformation function whose Lambda role does
+  have bucket access.
+domain: exposure
+severity: critical
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  pci_dss_v4.0: "7.2.1"
+  fedramp_moderate: "AC-3"
+  ccm_v4: ["DSP-13", "IAM-16"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+scope: compound
+corpus_reference: "incident:capital-one-2019"
+applicable_asset_types:
+  - aws_s3_object_lambda_access_point
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - access_point.policy_allows_external
+  - access_point.underlying_bucket_arn
+  - access_point.underlying_bucket_policy_allows_external
+remediation:
+  description: >
+    Object Lambda Access Point exposes the underlying bucket to
+    external accounts that the bucket policy itself denies. The
+    access point's resource policy is the architectural bypass —
+    callers route around the bucket policy by invoking the
+    transformation function.
+  action: >
+    Either tighten the access point policy to match the bucket
+    policy (deny the same external accounts), or relax the bucket
+    policy to match the access point's intentional exposure
+    (rarely the right answer for sensitive data). The two policies
+    should never disagree in the direction of "access point looser
+    than bucket." If the access point is intentionally cross-
+    account, document the bucket-policy carve-out explicitly so
+    auditors don't read the bucket policy as the source of truth.
+  example: |
+    {
+      "access_point": {
+        "policy_allows_external": false,
+        "underlying_bucket_arn": "arn:aws:s3:::prod-pii-bucket",
+        "underlying_bucket_policy_allows_external": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.access_point.policy_allows_external
+      op: eq
+      value: true
+    - field: properties.access_point.underlying_bucket_policy_allows_external
+      op: eq
+      value: false
+defect: >
+  Object Lambda Access Point policy grants external access that
+  the underlying bucket policy denies.
+infection: >
+  S3 Object Lambda Access Points and the buckets they wrap have
+  independent resource policies. When the access point's policy
+  is more permissive than the bucket's policy, the access point
+  becomes a side channel around the bucket's intended access
+  controls. External callers denied at the bucket layer route
+  through the access point; the transformation Lambda reads the
+  bucket using its own IAM role (which the bucket implicitly
+  trusts because the role is in-account); the result returns
+  to the external caller. The bucket policy reads as the
+  source-of-truth boundary but isn't.
+failure: >
+  Cross-account data exposure that the bucket policy explicitly
+  denies. Auditors reading the bucket policy see the data as
+  externally inaccessible; the access point makes it accessible.
+  This is the Capital One pattern in the Object Lambda variant:
+  a permissive intermediate hop reaches data the source policy
+  denies.
+tests:
+  - name: access-point looser than bucket fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3-object-lambda:us-east-1:111122223333:accesspoint/redact"
+      asset_type: aws_s3_object_lambda_access_point
+      vendor: aws
+      properties:
+        access_point:
+          policy_allows_external: true
+          underlying_bucket_arn: "arn:aws:s3:::prod-pii-bucket"
+          underlying_bucket_policy_allows_external: false
+  - name: matched access-point and bucket policies pass
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3-object-lambda:us-east-1:111122223333:accesspoint/redact"
+      asset_type: aws_s3_object_lambda_access_point
+      vendor: aws
+      properties:
+        access_point:
+          policy_allows_external: false
+          underlying_bucket_arn: "arn:aws:s3:::prod-pii-bucket"
+          underlying_bucket_policy_allows_external: false

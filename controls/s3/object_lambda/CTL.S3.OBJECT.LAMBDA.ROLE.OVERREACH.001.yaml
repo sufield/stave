@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.S3.OBJECT.LAMBDA.ROLE.OVERREACH.001
+name: S3 Object Lambda Function Role Reaches Buckets Beyond The Access Point
+description: >
+  The Lambda function backing an S3 Object Lambda Access Point has
+  an execution role with S3 read permission on more buckets than
+  the access point's underlying bucket. An attacker who can invoke
+  the access point gets the Lambda's full reach, not the access
+  point's narrower promise — the transformation function reads
+  buckets the access-point policy never exposes.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - s3
+  - iam
+type: unsafe_state
+classification: state_assertion
+scope: compound
+corpus_reference: "MITRE:T1098"
+applicable_asset_types:
+  - aws_s3_object_lambda_access_point
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - transformation.lambda_role_arn
+  - transformation.lambda_role_reach_count
+remediation:
+  description: >
+    Object Lambda transformation function's execution role reaches
+    more buckets than the access point exposes — privilege
+    escalation surface on every access-point invocation.
+  action: >
+    Scope the Lambda's execution role to the single underlying
+    bucket the access point exposes. Use a resource-bounded
+    s3:GetObject policy with the access point's underlying bucket
+    ARN as the only resource. Audit the role's other bucket
+    references and remove any that aren't required for the
+    transformation logic.
+  example: |
+    {
+      "transformation": {
+        "lambda_role_arn": "arn:aws:iam::111122223333:role/redact-pii-exec",
+        "lambda_role_reach_count": 1
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.transformation.lambda_role_reach_count
+      op: gt
+      value: 1
+defect: >
+  Object Lambda transformation role reaches more buckets than the
+  access point exposes.
+infection: >
+  S3 Object Lambda Access Points scope what callers see, not what
+  the transformation function can reach. The Lambda's IAM role
+  determines the transformation's actual data reach. When that
+  role grants s3:GetObject on multiple buckets, any caller who can
+  invoke the access point can trick the transformation into
+  reading from any of those buckets — by manipulating object keys
+  or transformation parameters the function passes downstream.
+  The access-point policy promises "callers see only this
+  bucket's data, transformed"; the IAM role makes the actual
+  promise "callers see whatever data the Lambda decides to read."
+failure: >
+  Cross-bucket data exposure via Object Lambda invocation. Callers
+  who passed the access-point's authorization gate read data from
+  buckets the access point was never intended to expose.
+tests:
+  - name: lambda role reaches multiple buckets fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3-object-lambda:us-east-1:111122223333:accesspoint/redact"
+      asset_type: aws_s3_object_lambda_access_point
+      vendor: aws
+      properties:
+        transformation:
+          lambda_role_arn: "arn:aws:iam::111122223333:role/over-scoped-exec"
+          lambda_role_reach_count: 5
+  - name: lambda role scoped to one bucket passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3-object-lambda:us-east-1:111122223333:accesspoint/redact"
+      asset_type: aws_s3_object_lambda_access_point
+      vendor: aws
+      properties:
+        transformation:
+          lambda_role_arn: "arn:aws:iam::111122223333:role/scoped-exec"
+          lambda_role_reach_count: 1

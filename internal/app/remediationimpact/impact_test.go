@@ -7,6 +7,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
 )
@@ -75,5 +76,56 @@ func TestAnalyze_EfficiencyRatioComputed(t *testing.T) {
 	}
 	if r.Efficiency.Verdict == "" {
 		t.Error("verdict should be set")
+	}
+}
+
+// TestAnalyze_ChainDeactivationDetected exercises the set-difference
+// branch (chains present in Before but absent in After). The branch
+// was untested in the pre-untangle test suite; added when the helper
+// buildChainSet was inlined so the rewrite has positive coverage.
+// risk.CompoundFinding is used here in test setup to populate
+// report.Assessment.ChainFindings — the production code path no
+// longer names the type explicitly.
+func TestAnalyze_ChainDeactivationDetected(t *testing.T) {
+	chain := func(id string, sev policy.Severity) risk.CompoundFinding {
+		return risk.CompoundFinding{
+			ChainID:  kernel.ChainID(id),
+			Severity: sev,
+		}
+	}
+	before := &report.Assessment{
+		Summary: evaluation.ComplianceSummary{TotalAssets: 10, Violations: 3},
+		ChainFindings: []risk.CompoundFinding{
+			chain("chain.capital-one", policy.SeverityCritical),
+			chain("chain.ghost-ref", policy.SeverityHigh),
+			chain("chain.persisting", policy.SeverityMedium),
+		},
+	}
+	after := &report.Assessment{
+		Summary: evaluation.ComplianceSummary{TotalAssets: 10, Violations: 1},
+		ChainFindings: []risk.CompoundFinding{
+			chain("chain.persisting", policy.SeverityMedium),
+		},
+	}
+
+	r := Analyze(Input{Before: before, After: after})
+
+	if len(r.ChainsDeactivated) != 2 {
+		t.Fatalf("deactivated chains = %d, want 2", len(r.ChainsDeactivated))
+	}
+	// Map iteration is non-deterministic; check both expected
+	// chain IDs are present without asserting order.
+	seen := map[string]string{}
+	for _, d := range r.ChainsDeactivated {
+		seen[d.ChainID] = d.PreviousSeverity
+	}
+	if seen["chain.capital-one"] != "critical" {
+		t.Errorf("chain.capital-one severity = %q, want critical", seen["chain.capital-one"])
+	}
+	if seen["chain.ghost-ref"] != "high" {
+		t.Errorf("chain.ghost-ref severity = %q, want high", seen["chain.ghost-ref"])
+	}
+	if _, present := seen["chain.persisting"]; present {
+		t.Error("chain.persisting should not be deactivated (present in After)")
 	}
 }

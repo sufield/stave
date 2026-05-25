@@ -1,0 +1,35 @@
+id: s3_object_lambda_privesc
+description: >
+  S3 Object Lambda Access Point as a privilege-escalation side
+  channel around the underlying bucket's access policy. The
+  combination of CTL.S3.OBJECT.LAMBDA.POLICY.EXTERNAL.001 (access
+  point permits external invocation), CTL.S3.OBJECT.LAMBDA.POLICY.BYPASS.001
+  (access-point policy looser than the bucket's own policy), and
+  CTL.S3.OBJECT.LAMBDA.ROLE.OVERREACH.001 (the transformation
+  Lambda's IAM role reaches buckets beyond the access point's
+  underlying bucket) is the full privesc shape — external callers
+  cross the access-point gate, the transformation runs as a Lambda
+  role with broader reach, and the bucket policy that would have
+  blocked their direct access never sees the call.
+
+  Threshold of 2: any two of the three legs co-firing signals the
+  side-channel pattern. BYPASS alone is the
+  bypass-of-bucket-policy half; OVERREACH alone is the
+  bypass-of-access-point-scope half; EXTERNAL alone is the
+  invocation-availability half. Two together describe the actual
+  attack path — the third makes it a complete chain.
+
+  Compound severity critical because this is the Object-Lambda
+  variant of the Capital One pattern: a permissive intermediate
+  hop reaches data the source policy denies, with the side
+  channel invisible to anyone reading only the bucket policy.
+controls:
+  - CTL.S3.OBJECT.LAMBDA.POLICY.EXTERNAL.001
+  - CTL.S3.OBJECT.LAMBDA.POLICY.BYPASS.001
+  - CTL.S3.OBJECT.LAMBDA.ROLE.OVERREACH.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - cross_account_injection
+postconditions:
+  - data_access

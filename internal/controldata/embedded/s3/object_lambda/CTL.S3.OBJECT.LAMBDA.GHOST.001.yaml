@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.S3.OBJECT.LAMBDA.GHOST.001
+name: S3 Object Lambda Access Point References Missing Lambda
+description: >
+  S3 Object Lambda Access Point references a Lambda function that
+  no longer exists. GetObject calls against the access point fail
+  silently or fall back to insecure paths depending on the caller's
+  retry logic. The access point exists in the inventory, is
+  reachable, and produces non-deterministic behavior on access.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "CM-8"
+  ccm_v4: ["DSP-17"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+archetype: ghost-reference
+scope: compound
+corpus_reference: "triz:ghost-reference-vs-presence-invariant"
+applicable_asset_types:
+  - aws_s3_object_lambda_access_point
+params:
+  attack_stage: persistence
+observation_fields:
+  - transformation.lambda_arn
+  - transformation.lambda_exists
+remediation:
+  description: >
+    Object Lambda Access Point references a Lambda function that
+    no longer exists in the account.
+  action: >
+    Either delete the orphaned access point or repoint it at an
+    existing Lambda function. Validate the function ARN against
+    the live IAM inventory before re-attaching.
+  example: |
+    {
+      "transformation": {
+        "lambda_arn": "arn:aws:lambda:us-east-1:111122223333:function:redact-pii",
+        "lambda_exists": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.transformation.lambda_exists
+      op: eq
+      value: false
+defect: >
+  Object Lambda Access Point references a deleted Lambda function.
+infection: >
+  S3 Object Lambda Access Points are read-side transformation hooks:
+  a GetObject call against the access point invokes a configured
+  Lambda which retrieves the underlying object, transforms it
+  (PII redaction, format conversion, decryption), and returns the
+  result. When the Lambda is deleted but the access point isn't,
+  subsequent GetObject calls hit a missing transformation target.
+  AWS's documented behavior is a 500-class error; client retry
+  logic varies, and applications that fall back to direct bucket
+  access on access-point failure expose the un-transformed
+  underlying objects to callers who were intended to see only
+  the transformed view.
+failure: >
+  Either complete service outage on the access point's read path
+  or, where client fallback exists, exposure of un-transformed
+  data to callers the transformation was designed to gate.
+tests:
+  - name: missing lambda fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3-object-lambda:us-east-1:111122223333:accesspoint/redact"
+      asset_type: aws_s3_object_lambda_access_point
+      vendor: aws
+      properties:
+        transformation:
+          lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:deleted-fn"
+          lambda_exists: false
+  - name: present lambda passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3-object-lambda:us-east-1:111122223333:accesspoint/redact"
+      asset_type: aws_s3_object_lambda_access_point
+      vendor: aws
+      properties:
+        transformation:
+          lambda_arn: "arn:aws:lambda:us-east-1:111122223333:function:redact-pii"
+          lambda_exists: true

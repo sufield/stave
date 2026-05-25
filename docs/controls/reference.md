@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2658
-**Pack hash:** `9f302927ca59ccbf68deeb00a20654e562c4a2a6040881b95e69234a0c116355`
+**Total controls:** 2662
+**Pack hash:** `14ee35e3a65749f38325fe2bfeda993b10128b1e6bdd372e938eed42cfdf3d8b`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 272 |
-| high | 1154 |
+| critical | 273 |
+| high | 1157 |
 | info | 16 |
 | low | 204 |
 | medium | 1012 |
@@ -23,10 +23,10 @@
 | capacity | 3 |
 | detection | 134 |
 | encryption | 113 |
-| exposure | 1191 |
-| governance | 577 |
+| exposure | 1193 |
+| governance | 578 |
 | hygiene | 18 |
-| identity | 416 |
+| identity | 417 |
 | lifecycle | 31 |
 | network | 32 |
 | resilience | 33 |
@@ -33907,6 +33907,66 @@ S3 bucket access must be restricted by a VPC endpoint condition (aws:SourceVpce)
 S3 bucket event notification configurations must not target deleted SNS topics, SQS queues, or Lambda functions. Object events (PutObject, DeleteObject) go undelivered when the target is absent. If notifications feed security monitoring, the monitoring stops.
 
 **Remediation:** Update the notification configuration to reference existing resources.
+
+---
+
+### CTL.S3.OBJECT.LAMBDA.GHOST.001
+
+**S3 Object Lambda Access Point References Missing Lambda**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-8; soc2: CC6.1;
+
+S3 Object Lambda Access Point references a Lambda function that no longer exists. GetObject calls against the access point fail silently or fall back to insecure paths depending on the caller's retry logic. The access point exists in the inventory, is reachable, and produces non-deterministic behavior on access.
+
+**Remediation:** Either delete the orphaned access point or repoint it at an existing Lambda function. Validate the function ARN against the live IAM inventory before re-attaching.
+
+---
+
+### CTL.S3.OBJECT.LAMBDA.POLICY.BYPASS.001
+
+**S3 Object Lambda Access Point Exposes More Than The Underlying Bucket**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+S3 Object Lambda Access Point grants external invocation while the underlying bucket's policy explicitly does not permit external access. The access point is a privilege-escalation bypass of the bucket policy: external callers who would be denied at the bucket layer reach the bucket's data indirectly by invoking the transformation function whose Lambda role does have bucket access.
+
+**Remediation:** Either tighten the access point policy to match the bucket policy (deny the same external accounts), or relax the bucket policy to match the access point's intentional exposure (rarely the right answer for sensitive data). The two policies should never disagree in the direction of "access point looser than bucket." If the access point is intentionally cross- account, document the bucket-policy carve-out explicitly so auditors don't read the bucket policy as the source of truth.
+
+---
+
+### CTL.S3.OBJECT.LAMBDA.POLICY.EXTERNAL.001
+
+**S3 Object Lambda Access Point Allows External Account Invocation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+S3 Object Lambda Access Point's resource policy grants invocation to principals outside the access point's own AWS account. External callers reach the transformation function — which in turn reads the underlying bucket data on their behalf — bypassing any account-boundary controls the bucket policy itself enforces.
+
+**Remediation:** Restrict the access point resource policy's Principal to accounts inside the organization. If cross-account access is intentional, pair it with explicit Condition keys naming the expected aws:SourceAccount and aws:SourceArn values and verify the underlying bucket policy also permits the same accounts directly — never let the access point be the looser layer.
+
+---
+
+### CTL.S3.OBJECT.LAMBDA.ROLE.OVERREACH.001
+
+**S3 Object Lambda Function Role Reaches Buckets Beyond The Access Point**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+The Lambda function backing an S3 Object Lambda Access Point has an execution role with S3 read permission on more buckets than the access point's underlying bucket. An attacker who can invoke the access point gets the Lambda's full reach, not the access point's narrower promise — the transformation function reads buckets the access-point policy never exposes.
+
+**Remediation:** Scope the Lambda's execution role to the single underlying bucket the access point exposes. Use a resource-bounded s3:GetObject policy with the access point's underlying bucket ARN as the only resource. Audit the role's other bucket references and remove any that aren't required for the transformation logic.
 
 ---
 

@@ -6,7 +6,6 @@ package remediationimpact
 import (
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
 )
@@ -87,17 +86,26 @@ func Analyze(in Input) *Report {
 		}
 	}
 
-	// Find deactivated chains.
-	beforeChains := buildChainSet(in.Before.ChainFindings)
-	afterChains := buildChainSet(in.After.ChainFindings)
+	// Find deactivated chains. Project (ChainID, severity-label)
+	// off the assessment without naming risk.CompoundFinding —
+	// the only fields read are c.ChainID and c.Severity.String().
+	// Iterates Before first to build the set, then deletes any
+	// chain still active in After, matching the original semantics
+	// of two-map set difference (with the same non-deterministic
+	// output ordering the original carried).
+	beforeSev := make(map[kernel.ChainID]string, len(in.Before.ChainFindings))
+	for _, c := range in.Before.ChainFindings {
+		beforeSev[c.ChainID] = c.Severity.String()
+	}
+	for _, c := range in.After.ChainFindings {
+		delete(beforeSev, c.ChainID)
+	}
 	var deactivated []DeactivatedChain
-	for id, cf := range beforeChains {
-		if _, active := afterChains[id]; !active {
-			deactivated = append(deactivated, DeactivatedChain{
-				ChainID:          string(id),
-				PreviousSeverity: cf.Severity.String(),
-			})
-		}
+	for id, sev := range beforeSev {
+		deactivated = append(deactivated, DeactivatedChain{
+			ChainID:          string(id),
+			PreviousSeverity: sev,
+		})
 	}
 
 	// Score delta.
@@ -157,14 +165,6 @@ func buildKeySet(findings []remediation.Finding) map[findingKey]*remediation.Fin
 	for i := range findings {
 		k := findingKey{ControlID: findings[i].ControlID, AssetID: findings[i].AssetID}
 		m[k] = &findings[i]
-	}
-	return m
-}
-
-func buildChainSet(chains []risk.CompoundFinding) map[kernel.ChainID]*risk.CompoundFinding {
-	m := make(map[kernel.ChainID]*risk.CompoundFinding, len(chains))
-	for i := range chains {
-		m[chains[i].ChainID] = &chains[i]
 	}
 	return m
 }

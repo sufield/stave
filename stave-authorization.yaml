@@ -1,0 +1,44 @@
+# Stave default authorization + sensitivity config (Phase 7 / G3).
+#
+# Consumed by reasoning/souffle/iam/extract.go to emit `authorized`
+# and `sensitivity` Soufflé facts. See
+# `stave/docs/authorization-model.md` for the full product-decision
+# shape and worked examples.
+#
+# Override values by editing this file or passing -config <path>
+# to the extractor:
+#
+#   go run ./reasoning/souffle/iam/extract.go \
+#       -snapshot ./observations \
+#       -config   ./stave-authorization.yaml \
+#       -out      ./facts
+
+authorization:
+  # Tag keys whose values define ownership/team membership.
+  # A principal is "authorized" for a resource iff the principal
+  # and the resource carry the same value for ANY of these keys.
+  #
+  # Override to match your tagging convention (e.g., CostCenter,
+  # Squad, BusinessUnit). Leave empty to disable authorization
+  # entirely (all principal-resource pairs become authorized; CIA
+  # queries effectively short-circuit and produce zero findings).
+  ownership_tag_keys:
+    - Owner
+    - Team
+
+sensitivity:
+  # Tag key whose values mark a resource as high-sensitivity.
+  classification_tag_key: DataClassification
+
+  # Values that, when present in classification_tag_key, mark the
+  # resource as high-sensitivity. CIA queries fire on
+  # (unauthorized_access × high_sensitivity) joins; expanding this
+  # list expands the "what's worth alerting on" surface.
+  high_values:
+    - PII
+    - PHI
+    - PCI
+
+  # Framework-based sensitivity (deferred to follow-up iteration —
+  # see authorization-model.md G3 deferral rationale).
+  framework_keys: []

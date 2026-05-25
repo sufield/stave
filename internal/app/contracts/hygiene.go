@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
 )
 
 // HygieneAssessment bundles the metrics required to evaluate the health of the
@@ -70,13 +69,3 @@ func (s SLAPosture) MarshalJSON() ([]byte, error) {
 	}{raw: raw(s), PendingRemediations: s.PendingRemediations()})
 }
 
-// NewSLAPosture maps risk threshold summaries into the SLA compliance domain.
-func NewSLAPosture(activeFindings int, summary risk.ThresholdSummary) SLAPosture {
-	return SLAPosture{
-		ActiveFindings:  activeFindings,
-		SLABreaches:     summary.Overdue,
-		BreachingNow:    summary.DueNow,
-		NearBreach:      summary.DueSoon,
-		CompliantWindow: summary.Later,
-	}
-}

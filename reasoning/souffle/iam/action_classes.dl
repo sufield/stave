@@ -1,0 +1,220 @@
+// reasoning/souffle/iam/action_classes.dl — read/write action classification.
+//
+// G4 Confidentiality + G5 Integrity queries (in rules.dl) join
+// unauthorized_access × sensitivity=high × {read_action, write_action}
+// to surface the violation tuples downstream emitters lift into
+// CIA PostureFindings.
+//
+// The action lists cover data-holding services where C and I matter
+// most: S3, DynamoDB, KMS, Secrets Manager, RDS, Redshift, Glue.
+// Err on the side of INCLUSION — a missed read action is a false
+// negative on a Confidentiality violation; a missed write action
+// is the same on Integrity. Operators can extend at the call site
+// for service-specific actions Stave hasn't seen yet.
+//
+// =============================================================
+// HONEST CAVEAT (recorded at G4/G5 entry):
+//
+// is_read_action / is_write_action use prefix-wildcard matching
+// against has_action emissions, so the principal action `s3:*`
+// matches BOTH read_action("s3:GetObject") AND
+// write_action("s3:PutObject"). A single `s3:*` grant on an
+// unauthorized + high-sensitivity resource therefore fires BOTH
+// violation_c AND violation_i. This is correct: `s3:*` does grant
+// read AND write; the principal can both read and modify. The
+// dual-finding behavior is desirable, not a defect.
+//
+// What this does NOT do: distinguish "narrower" wildcards like
+// `s3:Get*` from broader ones. `s3:Get*` correctly matches
+// read_action("s3:GetObject") via prefix; the implementation
+// treats it the same as `s3:*` matching `s3:GetObject`. That's
+// fine — both wildcards are over-approximations the CIA tier
+// flags conservatively.
+// =============================================================
+
+// =====================================================
+// G4 — read_action: every action class that exposes data
+// content (read, list, describe, decrypt, query).
+// =====================================================
+
+// Declared without .input — facts asserted literally below.
+.decl read_action(action: symbol)
+
+// S3 read operations.
+read_action("s3:GetObject").
+read_action("s3:GetObjectVersion").
+read_action("s3:GetObjectAcl").
+read_action("s3:GetObjectAttributes").
+read_action("s3:ListBucket").
+read_action("s3:ListObjects").
+read_action("s3:ListObjectsV2").
+read_action("s3:HeadObject").
+read_action("s3:HeadBucket").
+read_action("s3:GetBucketAcl").
+read_action("s3:GetBucketPolicy").
+
+// DynamoDB read operations.
+read_action("dynamodb:GetItem").
+read_action("dynamodb:Query").
+read_action("dynamodb:Scan").
+read_action("dynamodb:BatchGetItem").
+read_action("dynamodb:ConditionCheckItem").
+read_action("dynamodb:DescribeTable").
+
+// KMS read/decrypt operations.
+read_action("kms:Decrypt").
+read_action("kms:ReEncryptFrom").
+read_action("kms:GenerateDataKey").
+read_action("kms:GenerateDataKeyWithoutPlaintext").
+read_action("kms:DescribeKey").
+read_action("kms:ListAliases").
+
+// Secrets Manager read operations.
+read_action("secretsmanager:GetSecretValue").
+read_action("secretsmanager:DescribeSecret").
+read_action("secretsmanager:ListSecretVersionIds").
+
+// RDS read operations.
+read_action("rds:DownloadDBLogFilePortion").
+read_action("rds:CopyDBSnapshot").
+read_action("rds:DescribeDBInstances").
+read_action("rds:DescribeDBSnapshots").
+
+// Redshift read operations.
+read_action("redshift:GetClusterCredentials").
+read_action("redshift:DescribeClusters").
+read_action("redshift:DescribeClusterSnapshots").
+
+// Glue read operations.
+read_action("glue:GetTable").
+read_action("glue:GetTables").
+read_action("glue:GetDatabase").
+read_action("glue:GetDatabases").
+read_action("glue:GetPartitions").
+read_action("glue:GetPartition").
+
+// =====================================================
+// G5 — write_action: every action class that mutates,
+// modifies, or destroys data or its protective config.
+// =====================================================
+
+// Declared without .input — facts asserted literally below.
+.decl write_action(action: symbol)
+
+// S3 write operations.
+write_action("s3:PutObject").
+write_action("s3:PutObjectAcl").
+write_action("s3:DeleteObject").
+write_action("s3:DeleteObjectVersion").
+write_action("s3:DeleteBucket").
+write_action("s3:PutBucketPolicy").
+write_action("s3:DeleteBucketPolicy").
+write_action("s3:PutBucketAcl").
+write_action("s3:PutBucketPublicAccessBlock").
+
+// DynamoDB write operations.
+write_action("dynamodb:PutItem").
+write_action("dynamodb:DeleteItem").
+write_action("dynamodb:UpdateItem").
+write_action("dynamodb:BatchWriteItem").
+write_action("dynamodb:DeleteTable").
+
+// KMS write/destructive operations.
+write_action("kms:ScheduleKeyDeletion").
+write_action("kms:DisableKey").
+write_action("kms:PutKeyPolicy").
+write_action("kms:UpdateKeyDescription").
+write_action("kms:EnableKeyRotation").
+write_action("kms:DisableKeyRotation").
+
+// Secrets Manager write operations.
+write_action("secretsmanager:PutSecretValue").
+write_action("secretsmanager:DeleteSecret").
+write_action("secretsmanager:UpdateSecret").
+write_action("secretsmanager:RotateSecret").
+
+// RDS write operations.
+write_action("rds:DeleteDBInstance").
+write_action("rds:ModifyDBInstance").
+write_action("rds:DeleteDBSnapshot").
+write_action("rds:CreateDBSnapshot").
+write_action("rds:ModifyDBClusterParameterGroup").
+
+// Redshift write operations.
+write_action("redshift:DeleteCluster").
+write_action("redshift:ModifyCluster").
+write_action("redshift:DeleteClusterSnapshot").
+
+// Glue write operations.
+write_action("glue:DeleteTable").
+write_action("glue:UpdateTable").
+write_action("glue:DeleteDatabase").
+write_action("glue:DeletePartition").
+write_action("glue:UpdatePartition").
+
+// =====================================================
+// is_read_action / is_write_action — match the principal's
+// emitted has_action against the literal action lists with
+// trailing-wildcard expansion.
+//
+// Principal action `s3:*` matches every read_action AND every
+// write_action starting with "s3:" — the conservative
+// interpretation. Principal action `s3:Get*` matches every
+// read_action whose name starts with "s3:Get". Literal match
+// is the trivial case.
+// =====================================================
+
+.decl is_read_action(action: symbol)
+.output is_read_action
+
+// Literal match.
+is_read_action(A) :- read_action(A).
+
+// Wildcard expansion: principal action ends in "*"; literal
+// read_action starts with the principal's prefix.
+is_read_action(A) :-
+    has_action(_, A),
+    AL = strlen(A),
+    AL > 1,
+    substr(A, AL - 1, 1) = "*",
+    PrefixLen = AL - 1,
+    read_action(B),
+    strlen(B) >= PrefixLen,
+    substr(A, 0, PrefixLen) = substr(B, 0, PrefixLen).
+
+// reachable_action variant: include actions inherited via
+// transitive role-assumption chains (per G1 reachable_action).
+is_read_action(A) :-
+    reachable_action(_, A),
+    AL = strlen(A),
+    AL > 1,
+    substr(A, AL - 1, 1) = "*",
+    PrefixLen = AL - 1,
+    read_action(B),
+    strlen(B) >= PrefixLen,
+    substr(A, 0, PrefixLen) = substr(B, 0, PrefixLen).
+
+.decl is_write_action(action: symbol)
+.output is_write_action
+
+is_write_action(A) :- write_action(A).
+
+is_write_action(A) :-
+    has_action(_, A),
+    AL = strlen(A),
+    AL > 1,
+    substr(A, AL - 1, 1) = "*",
+    PrefixLen = AL - 1,
+    write_action(B),
+    strlen(B) >= PrefixLen,
+    substr(A, 0, PrefixLen) = substr(B, 0, PrefixLen).
+
+is_write_action(A) :-
+    reachable_action(_, A),
+    AL = strlen(A),
+    AL > 1,
+    substr(A, AL - 1, 1) = "*",
+    PrefixLen = AL - 1,
+    write_action(B),
+    strlen(B) >= PrefixLen,
+    substr(A, 0, PrefixLen) = substr(B, 0, PrefixLen).

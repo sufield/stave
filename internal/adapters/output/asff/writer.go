@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 )
@@ -128,11 +127,24 @@ func mapFinding(f *remediation.Finding, timestamp string) ASFFinding {
 	return af
 }
 
-// MapChainFindings adds compound chain findings as ASFF entries.
-func MapChainFindings(chains []risk.CompoundFinding, timestamp string) []ASFFinding {
-	findings := make([]ASFFinding, 0, len(chains))
-	for i := range chains {
-		cf := &chains[i]
+// mapChainFindings adds compound chain findings as ASFF entries.
+// Reads cf.ChainID / .AssetID / .Severity.String() / .CompoundScore /
+// .Narrative / .Description through range with `:=` so this file
+// never names risk.CompoundFinding directly. The chain-description
+// fallback (Narrative preferred, Description as fallback) is inlined
+// here — it used to live in a separate helper that pulled the
+// risk type into its signature.
+func mapChainFindings(assessment *report.Assessment, timestamp string) []ASFFinding {
+	if assessment == nil || len(assessment.ChainFindings) == 0 {
+		return nil
+	}
+	findings := make([]ASFFinding, 0, len(assessment.ChainFindings))
+	for _, cf := range assessment.ChainFindings {
+		desc := strings.TrimSpace(cf.Narrative)
+		if desc == "" {
+			desc = strings.TrimSpace(cf.Description)
+		}
+		sev := cf.Severity.String()
 		findings = append(findings, ASFFinding{
 			SchemaVersion: "2018-10-08",
 			ID:            "stave/chain/" + string(cf.ChainID),
@@ -143,11 +155,11 @@ func MapChainFindings(chains []risk.CompoundFinding, timestamp string) []ASFFind
 			CreatedAt:     timestamp,
 			UpdatedAt:     timestamp,
 			Severity: ASFFSeverity{
-				Label:      cf.Severity.String(),
-				Normalized: severityToNormalized(cf.Severity.String()),
+				Label:      sev,
+				Normalized: severityToNormalized(sev),
 			},
 			Title:       "Compound Risk: " + string(cf.ChainID),
-			Description: chainDescription(cf),
+			Description: desc,
 			Resources:   []ASFFResource{{Type: "Other", ID: string(cf.ChainID)}},
 			ProductFields: map[string]string{
 				"ChainId":       string(cf.ChainID),
@@ -167,7 +179,7 @@ func MarshalASFF(assessment *report.Assessment) ([]byte, error) {
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
 	findings := MapAssessment(assessment)
-	findings = append(findings, MapChainFindings(assessment.ChainFindings, now)...)
+	findings = append(findings, mapChainFindings(assessment, now)...)
 	return json.MarshalIndent(findings, "", "  ")
 }
 
@@ -193,23 +205,6 @@ func mapSeverity(sev string) ASFFSeverity {
 		Label:      sev,
 		Normalized: severityToNormalized(sev),
 	}
-}
-
-// chainDescription picks the most informative text available on a
-// CompoundFinding for the ASFF Description slot. Narrative is the
-// per-finding personalised explanation built from the actual failing
-// controls (preferred); Description is the static text from the
-// chain definition (fallback). Either alone could be empty, so the
-// helper covers the gap rather than emitting an empty Description
-// to AWS Security Hub.
-func chainDescription(cf *risk.CompoundFinding) string {
-	if cf == nil {
-		return ""
-	}
-	if narrative := strings.TrimSpace(cf.Narrative); narrative != "" {
-		return narrative
-	}
-	return strings.TrimSpace(cf.Description)
 }
 
 func severityToNormalized(sev string) int {

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -65,13 +64,13 @@ type ResultDTO struct {
 	RiskSignals       []AtRiskItemDTO          `json:"risk_signals,omitempty"`
 	Findings          []FindingDTO             `json:"findings"`
 	MarkerFindings    []FindingDTO             `json:"marker_findings,omitempty"`
-	ChainFindings     []risk.CompoundFinding   `json:"chain_findings,omitempty"`
+	ChainFindings     []ChainFindingDTO        `json:"chain_findings,omitempty"`
 	Issues            []IssueDTO               `json:"issues,omitempty"`
 	ExceptedFindings  []ExceptedFindingDTO     `json:"excepted_findings,omitempty"`
 	RemediationGroups []RemediationGroupDTO    `json:"remediation_groups,omitempty"`
 	SkippedControls   []SkippedControlDTO      `json:"skipped_controls,omitempty"`
 	ExemptedAssets    []ExemptedAssetDTO       `json:"exempted_assets,omitempty"`
-	TopExposures      []risk.ExposureRank      `json:"top_exposures,omitempty"`
+	TopExposures      []ExposureRankDTO        `json:"top_exposures,omitempty"`
 	CoveragePosture   CoveragePostureDTO       `json:"coverage_posture,omitempty"`
 	Extensions        *ExtensionsDTO           `json:"extensions,omitempty"`
 }

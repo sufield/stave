@@ -47,12 +47,12 @@ preconditions (`data_warehouse_compromise`, `data_access`).
 |---|---|---|---|
 | 1 | Bucket policy + ACL + public access block intersection | partial | `public_phi_exposure` (the bucket-policy + encryption + logging composition; ACL-leg not yet explicit) |
 | 2 | Replication source/destination + KMS keys | covered | `s3_encryption_trust` |
-| 3 | Bucket policy + VPC endpoint policy intersection | **observation-contract gap** | none — no S3-VPC-endpoint controls exist in `controls/`; requires new observation extractor for endpoint-policy + bucket-policy intersection |
-| 4 | Object Lambda permissions | **observation-contract gap** | none — no Object-Lambda controls exist in `controls/lambda/`; requires new observation extractor |
+| 3 | Bucket policy + VPC endpoint policy intersection | covered (this iteration) | **NEW** `s3_bucket_endpoint_unrestricted` (bucket-side delegation via CTL.S3.NETWORK.POLICY.001 + endpoint-side enforcement failures via CTL.VPC.ENDPOINT.BUCKET.RESTRICT.001 / CTL.VPC.ENDPOINT.ANON.001). Re-audit in `bizacademy/s3-extractor-iteration-scope.md` corrected the prior "observation-contract gap" classification: all member controls + observation fields already existed; only the composing chain was missing. |
+| 4 | Object Lambda permissions | covered (this iteration) | **NEW** asset type `aws_s3_object_lambda_access_point` at `schemas/observation/v1/asset-types/` (auto-generated from the new controls). **NEW** 4 controls at `controls/s3/object_lambda/`: `CTL.S3.OBJECT.LAMBDA.GHOST.001`, `CTL.S3.OBJECT.LAMBDA.ROLE.OVERREACH.001`, `CTL.S3.OBJECT.LAMBDA.POLICY.EXTERNAL.001`, `CTL.S3.OBJECT.LAMBDA.POLICY.BYPASS.001`. **NEW** chain `s3_object_lambda_privesc` composing the privesc variant of the Capital One pattern (Object Lambda access point as a side channel around the underlying bucket's policy). |
 | 5 | Cross-region replication + IAM role + destination | covered | `s3_replication_exposure` (destination + delete + replication-encryption legs) |
-| 6 | Object lock + bucket policy + lifecycle | covered (this Phase 4) | `audit_trail_destruction_path` (log-bucket variant) + **NEW** `s3_phi_retention_vulnerable` (PHI-data variant — COMPLIANCE-mode lock + lifecycle-before-retention conjunction) |
+| 6 | Object lock + bucket policy + lifecycle | covered (Phase 4) | `audit_trail_destruction_path` (log-bucket variant) + `s3_phi_retention_vulnerable` (PHI-data variant — COMPLIANCE-mode lock + lifecycle-before-retention conjunction) |
 
-**Summary:** 4 covered, 1 partial, 2 gap.
+**Summary:** 6 covered, 1 partial, 0 gap. All 6 sub-families addressed — the last remaining "observation-contract gap" closed in this iteration via the new `aws_s3_object_lambda_access_point` asset type.
 
 ## What this Phase 4 commit ships
 
