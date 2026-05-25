@@ -307,13 +307,13 @@ type ComplianceReport struct {
 	Run                  RunInfo                       `json:"run"`
 	Summary              ComplianceSummary             `json:"summary"`
 	SecurityState        SecurityState                 `json:"security_state"`
-	RiskSignals          findings.ThresholdItems           `json:"risk_signals,omitempty"`
+	RiskSignals          findings.ThresholdItems       `json:"risk_signals,omitempty"`
 	Findings             []Finding                     `json:"findings"`
 	MarkerFindings       []Finding                     `json:"marker_findings,omitempty"`
 	Issues               []Issue                       `json:"issues,omitempty"`
-	ChainFindings        []findings.CompoundFinding        `json:"chain_findings,omitempty"`
+	ChainFindings        []findings.CompoundFinding    `json:"chain_findings,omitempty"`
 	AttackStageSummary   map[kernel.AttackStage]string `json:"attack_stage_summary,omitempty"`
-	TopExposures         []findings.ExposureRank           `json:"top_exposures,omitempty"`
+	TopExposures         []findings.ExposureRank       `json:"top_exposures,omitempty"`
 	ExceptedFindings     []ExceptedFinding             `json:"excepted_findings,omitempty"`
 	AcknowledgedFindings []policy.AcknowledgedFinding  `json:"acknowledged_findings,omitempty"`
 	SkippedControls      []SkippedControl              `json:"skipped_controls,omitempty"`

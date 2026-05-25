@@ -68,4 +68,3 @@ func (s SLAPosture) MarshalJSON() ([]byte, error) {
 		PendingRemediations int `json:"pending_remediations"`
 	}{raw: raw(s), PendingRemediations: s.PendingRemediations()})
 }
-

@@ -126,4 +126,3 @@ func TestLoadSnapshots_Error(t *testing.T) {
 		t.Fatalf("expected wrapped error, got: %v", err)
 	}
 }
-

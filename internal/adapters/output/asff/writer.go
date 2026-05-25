@@ -139,7 +139,8 @@ func mapChainFindings(assessment *report.Assessment, timestamp string) []ASFFind
 		return nil
 	}
 	findings := make([]ASFFinding, 0, len(assessment.ChainFindings))
-	for _, cf := range assessment.ChainFindings {
+	for i := range assessment.ChainFindings {
+		cf := &assessment.ChainFindings[i]
 		desc := strings.TrimSpace(cf.Narrative)
 		if desc == "" {
 			desc = strings.TrimSpace(cf.Description)

@@ -94,11 +94,12 @@ func Analyze(in Input) *Report {
 	// of two-map set difference (with the same non-deterministic
 	// output ordering the original carried).
 	beforeSev := make(map[kernel.ChainID]string, len(in.Before.ChainFindings))
-	for _, c := range in.Before.ChainFindings {
+	for i := range in.Before.ChainFindings {
+		c := &in.Before.ChainFindings[i]
 		beforeSev[c.ChainID] = c.Severity.String()
 	}
-	for _, c := range in.After.ChainFindings {
-		delete(beforeSev, c.ChainID)
+	for i := range in.After.ChainFindings {
+		delete(beforeSev, in.After.ChainFindings[i].ChainID)
 	}
 	var deactivated []DeactivatedChain
 	for id, sev := range beforeSev {

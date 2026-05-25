@@ -11,16 +11,17 @@ func fromCompoundFindings(in []findings.CompoundFinding) []ChainFindingDTO {
 		return nil
 	}
 	out := make([]ChainFindingDTO, len(in))
-	for i, c := range in {
-		out[i] = fromCompoundFinding(c)
+	for i := range in {
+		out[i] = fromCompoundFinding(&in[i])
 	}
 	return out
 }
 
 // fromCompoundFinding projects one core chain finding into the DTO.
 // The Severity field is rendered via SeverityLabel() so consumers
-// don't depend on policy.Severity's enum representation.
-func fromCompoundFinding(c findings.CompoundFinding) ChainFindingDTO {
+// don't depend on policy.Severity's enum representation. Takes a
+// pointer to avoid per-call copies of the 12-field struct.
+func fromCompoundFinding(c *findings.CompoundFinding) ChainFindingDTO {
 	return ChainFindingDTO{
 		ChainID:            c.ChainID,
 		AssetID:            c.AssetID,
