@@ -3,8 +3,11 @@ package ui
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/sufield/stave/pkg/stave"
 )
 
 func TestExitCode(t *testing.T) {
@@ -52,6 +55,24 @@ func TestExitCode(t *testing.T) {
 			name:     "unrecognized errors return 4 (internal)",
 			err:      errors.New("some error"),
 			expected: ExitInternal,
+		},
+		{
+			// Facade-bar commands wrap their flag-validation errors
+			// with stave.ErrInvalidInput so they can map to exit 2
+			// without importing internal/cli/ui. This test pins
+			// that the roundtrip works through errors.Is on a
+			// fmt.Errorf chain (the actual usage pattern).
+			name:     "stave.ErrInvalidInput wrapped via fmt.Errorf returns 2",
+			err:      fmt.Errorf("--format must be json (got %q): %w", "xml", stave.ErrInvalidInput),
+			expected: ExitInputError,
+		},
+		{
+			// Bare sentinel also maps correctly — covers the case
+			// of returning stave.ErrInvalidInput directly without
+			// a wrapping message.
+			name:     "bare stave.ErrInvalidInput returns 2",
+			err:      stave.ErrInvalidInput,
+			expected: ExitInputError,
 		},
 	}
 

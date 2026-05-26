@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // Exit codes following the platform contract.
@@ -99,6 +100,21 @@ func ExitCode(err error) int {
 		return ExitViolations
 	case errors.Is(err, ErrValidationWarnings), errors.Is(err, ErrValidationFailed):
 		return ExitInputError
+	case errors.Is(err, stave.ErrInvalidInput):
+		// Public sentinel for facade-bar commands (cmd/score,
+		// cmd/exportinvariants, ...) that cannot import this
+		// package per their architecture tests. They wrap their
+		// flag-validation errors with `%w stave.ErrInvalidInput`
+		// instead of *UserError; the resulting exit code is the
+		// same as the legacy *UserError path.
+		return ExitInputError
+	case errors.Is(err, stave.ErrFailingTests):
+		// Same public-sentinel mechanism for facade-bar commands
+		// that need ExitViolations (3) for a "completed but with
+		// findings" failure shape — emitted by stave.RunControlTests
+		// when at least one control test case didn't match its
+		// expected verdict.
+		return ExitViolations
 	case errors.Is(err, ErrSecurityAuditFindings):
 		return ExitSecurity
 	case errors.Is(err, ErrInternal):

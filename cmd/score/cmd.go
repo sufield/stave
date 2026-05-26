@@ -3,7 +3,6 @@ package score
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -86,12 +85,14 @@ Exit Codes:
 
 func runScore(ctx context.Context, stdout io.Writer, opts *options) error {
 	if opts.OutputFile == "" && opts.HistoryDir == "" {
-		return errors.New("either --output or --history is required")
+		return fmt.Errorf("either --output or --history is required: %w", stave.ErrInvalidInput)
 	}
 
 	weights, err := stave.ParseWeights(opts.WeightsStr)
 	if err != nil {
-		return fmt.Errorf("parse weights: %w", err)
+		// Weights parse failures are bad user input — wrap so the
+		// root exit-code shim maps to exit 2, not exit 4.
+		return fmt.Errorf("parse weights: %w: %w", err, stave.ErrInvalidInput)
 	}
 
 	budget, err := stave.BuiltinChainBudget()

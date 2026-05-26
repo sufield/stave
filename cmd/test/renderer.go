@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/sufield/stave/internal/app/controltest"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // Renderer is the polymorphic format-dispatch interface for
@@ -17,14 +17,14 @@ import (
 // New formats add an implementation here and a factory case in
 // NewRenderer.
 type Renderer interface {
-	Render(w io.Writer, results []controltest.Result, summary controltest.Summary) error
+	Render(w io.Writer, results []stave.TestResult, summary stave.TestSummary) error
 }
 
 // JSONRenderer emits the test results as JSON.
 type JSONRenderer struct{}
 
 // Render implements Renderer.
-func (JSONRenderer) Render(w io.Writer, results []controltest.Result, summary controltest.Summary) error {
+func (JSONRenderer) Render(w io.Writer, results []stave.TestResult, summary stave.TestSummary) error {
 	return writeJSON(w, results, summary)
 }
 
@@ -33,7 +33,7 @@ func (JSONRenderer) Render(w io.Writer, results []controltest.Result, summary co
 type TAPRenderer struct{}
 
 // Render implements Renderer.
-func (TAPRenderer) Render(w io.Writer, results []controltest.Result, summary controltest.Summary) error {
+func (TAPRenderer) Render(w io.Writer, results []stave.TestResult, summary stave.TestSummary) error {
 	return writeTAP(w, results, summary)
 }
 
@@ -45,7 +45,7 @@ type TableRenderer struct {
 }
 
 // Render implements Renderer.
-func (r TableRenderer) Render(w io.Writer, results []controltest.Result, summary controltest.Summary) error {
+func (r TableRenderer) Render(w io.Writer, results []stave.TestResult, summary stave.TestSummary) error {
 	return writeTable(w, results, summary, r.Verbose)
 }
 
@@ -62,5 +62,5 @@ func NewRenderer(format string, verbose bool) (Renderer, error) {
 	case "table", "":
 		return TableRenderer{Verbose: verbose}, nil
 	}
-	return nil, fmt.Errorf("unsupported format %q (expected: table | json | tap)", format)
+	return nil, fmt.Errorf("unsupported format %q (expected: table | json | tap): %w", format, stave.ErrInvalidInput)
 }

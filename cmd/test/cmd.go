@@ -11,8 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/internal/app/controltest"
-	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type options struct {
@@ -24,9 +23,8 @@ type options struct {
 	Verbose     bool
 }
 
-// NewCmd constructs the test command with the given dependencies.
-// cmd/commands.go is responsible for resolving the production factories.
-func NewCmd(deps Deps) *cobra.Command {
+// NewCmd constructs the test command.
+func NewCmd() *cobra.Command {
 	opts := &options{Format: "table"}
 
 	cmd := &cobra.Command{
@@ -50,8 +48,8 @@ Inputs:
 
 Exit Codes:
   0   All tests passed
-  1   One or more tests failed
-  2   Invalid input`,
+  2   Invalid input
+  3   One or more tests failed`,
 		Example: `  # Test all controls
   stave test --controls ./controls
 
@@ -66,7 +64,7 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runTest(cmd.Context(), cmd.OutOrStdout(), opts, deps)
+			return runTest(cmd.Context(), cmd.OutOrStdout(), opts)
 		},
 	}
 
@@ -80,56 +78,38 @@ Exit Codes:
 	return cmd
 }
 
-func runTest(ctx context.Context, stdout io.Writer, opts *options, deps Deps) error {
+func runTest(ctx context.Context, stdout io.Writer, opts *options) error {
 	if opts.ControlPath == "" && opts.ControlsDir == "" {
 		opts.ControlsDir = "controls"
 	}
 
-	repo, err := deps.NewCtlRepo()
-	if err != nil {
-		return fmt.Errorf("init control loader: %w", err)
-	}
-
-	ctlDir := opts.ControlsDir
-	if opts.ControlPath != "" {
-		// For single file, load from its parent directory with filter.
-		ctlDir = opts.ControlPath
-		// Use the file's directory.
-		idx := strings.LastIndex(ctlDir, "/")
-		if idx >= 0 {
-			ctlDir = ctlDir[:idx]
-		} else {
-			ctlDir = "."
-		}
-	}
-
-	controls, err := repo.LoadControls(ctx, ctlDir)
-	if err != nil {
-		return fmt.Errorf("load controls: %w", err)
-	}
-
-	// Single control path already scoped the directory.
-
-	eval, err := deps.NewCELEvaluator()
-	if err != nil {
-		return fmt.Errorf("init CEL evaluator: %w", err)
-	}
-
-	results, summary := controltest.Run(controltest.RunInput{
-		Controls:  controls,
-		Evaluator: eval,
-		Filter:    opts.Filter,
-		FailFast:  opts.FailFast,
+	results, summary, runErr := stave.RunControlTests(ctx, stave.TestConfig{
+		ControlsDir: opts.ControlsDir,
+		ControlPath: opts.ControlPath,
+		Filter:      opts.Filter,
+		FailFast:    opts.FailFast,
 	})
+	// runErr is non-nil for any failure, including
+	// stave.ErrFailingTests (the expected "tests ran, some failed"
+	// signal). Renderers always print results + summary even on
+	// runErr so the operator sees the failing cases; the error
+	// propagates after for the exit-code shim to act on.
+	if results == nil && runErr != nil {
+		// Load / evaluator-init failure — no results to render.
+		return runErr
+	}
 
 	renderer, rendErr := NewRenderer(opts.Format, opts.Verbose)
 	if rendErr != nil {
 		return rendErr
 	}
-	return renderer.Render(stdout, results, summary)
+	if err := renderer.Render(stdout, results, summary); err != nil {
+		return err
+	}
+	return runErr
 }
 
-func writeTable(w io.Writer, results []controltest.Result, summary controltest.Summary, verbose bool) error {
+func writeTable(w io.Writer, results []stave.TestResult, summary stave.TestSummary, verbose bool) error {
 	fmt.Fprintf(w, "STAVE CONTROL TEST\n")
 	fmt.Fprintf(w, "Controls with tests: %d  (%d test cases)\n\n", summary.ControlsTested, summary.TotalCases)
 
@@ -171,19 +151,16 @@ func writeTable(w io.Writer, results []controltest.Result, summary controltest.S
 	fmt.Fprintf(w, "  Passed:  %d\n", summary.Passed)
 	fmt.Fprintf(w, "  Failed:  %d\n", summary.Failed)
 
-	if summary.Failed > 0 {
-		return ui.ErrViolationsFound
-	}
-	if summary.TotalCases > 0 {
+	if summary.Failed == 0 && summary.TotalCases > 0 {
 		fmt.Fprintf(w, "\nAll %d tests passed.\n", summary.TotalCases)
 	}
 	return nil
 }
 
-func writeJSON(w io.Writer, results []controltest.Result, summary controltest.Summary) error {
+func writeJSON(w io.Writer, results []stave.TestResult, summary stave.TestSummary) error {
 	output := struct {
-		Summary  controltest.Summary      `json:"summary"`
-		Failures []controltest.CaseResult `json:"failures,omitempty"`
+		Summary  stave.TestSummary      `json:"summary"`
+		Failures []stave.TestCaseResult `json:"failures,omitempty"`
 	}{
 		Summary: summary,
 	}
@@ -199,7 +176,7 @@ func writeJSON(w io.Writer, results []controltest.Result, summary controltest.Su
 	return enc.Encode(output)
 }
 
-func writeTAP(w io.Writer, results []controltest.Result, summary controltest.Summary) error {
+func writeTAP(w io.Writer, results []stave.TestResult, summary stave.TestSummary) error {
 	fmt.Fprintf(w, "TAP version 14\n1..%d\n", summary.TotalCases)
 	n := 0
 	for i := range results {
@@ -220,9 +197,6 @@ func writeTAP(w io.Writer, results []controltest.Result, summary controltest.Sum
 				fmt.Fprintf(w, "  ...\n")
 			}
 		}
-	}
-	if summary.Failed > 0 {
-		return ui.ErrViolationsFound
 	}
 	return nil
 }

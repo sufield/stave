@@ -31,8 +31,6 @@
 - [Telemetry Bridge](telemetry-bridge.md) — NDJSON telemetry for dashboards, SIEM, and compliance trending
 - [Evidence Bundling](evidence-bundling.md) — Signed portable evidence for air-gap GRC integration
 - [Multi-Profile Evaluation](multi-profile.md) — Compliance compression, per-framework readiness, remediation ROI
-- [Remediation Ranking](remediation-ranking.md) — Prioritized roadmap, SLA urgency, remediation bundles
-- [Evaluation Engine Capabilities](evaluation-engine-capabilities.md) — Predicate operators and matching
 - [Observation Contract](contract/README.md) — Observation data requirements
 - [Contract-First Schemas](contracts.md) — Schema-driven design
 - [Scope and Support](scope-and-support.md) — What Stave covers
@@ -92,7 +90,3 @@
 - [Bug Reproduction Guide](contrib/bug-repro-guide.md)
 - [Bug Reproduction Template](contrib/bug-repro-template.md)
 - [Bug Template](bug-template.md)
-
-## Reports
-
-- [Documentation QC Report](reports/docs-qc.md)

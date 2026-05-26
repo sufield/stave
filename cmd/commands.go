@@ -224,11 +224,11 @@ func WireCommands(app *App) error {
 	// Field coverage analysis
 	root.AddCommand(stavecoverage.NewCmd(f.NewCtlRepo))
 
-	// Control test runner
-	root.AddCommand(stavetest.NewCmd(stavetest.Deps{
-		NewCtlRepo:      f.NewCtlRepo,
-		NewCELEvaluator: f.NewCELEvaluator,
-	}))
+	// Control test runner. cmd/test migrated to the pkg/stave
+	// facade (commit X); construction (control loader + CEL
+	// evaluator) moved inside stave.RunControlTests so deps
+	// injection is no longer needed at registration time.
+	root.AddCommand(stavetest.NewCmd())
 
 	// Pre-evaluation readiness assessment (catalog coverage
 	// vs observation surface — distinct from `apply --dry-run`,

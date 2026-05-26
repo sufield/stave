@@ -24,7 +24,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/stave"
 )
 
@@ -102,16 +101,18 @@ Exit codes:
 	return cmd
 }
 
-// run is the testable command body. UserError wraps input
-// problems (mapped to exit code 2 by ui.ExitCode); plain errors
-// fall through to exit code 4.
+// run is the testable command body. Flag-validation errors wrap
+// stave.ErrInvalidInput so ui.ExitCode (via root.go) maps them to
+// exit code 2; other errors fall through to exit code 4. Both
+// paths are pure pkg/stave consumption — no internal/cli/ui
+// import needed to keep the standard exit-code contract.
 func run(ctx context.Context, w io.Writer, opts *options) error {
 	format := strings.ToLower(strings.TrimSpace(opts.Format))
 	switch format {
 	case "", "json":
 		// supported
 	default:
-		return &ui.UserError{Err: fmt.Errorf("--format must be json (got %q)", opts.Format)}
+		return fmt.Errorf("--format must be json (got %q): %w", opts.Format, stave.ErrInvalidInput)
 	}
 
 	out, err := stave.ExportInvariants(ctx, stave.InvariantExportConfig{
