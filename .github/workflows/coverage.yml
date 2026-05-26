@@ -25,7 +25,11 @@ jobs:
           cache: true
 
       - name: Regenerate goldens and sync
-        run: make regenerate-goldens golden-update-all sync-schemas sync-controls sync-alternatives
+        # ARGS=-fail-on-behavioral: auto-accept CLEAN / FINGERPRINT-ONLY /
+        # METADATA-ONLY golden diffs; exit non-zero on BEHAVIORAL /
+        # MIXED / ERROR. Matches ci.yml so coverage and CI agree on
+        # what "passes". See internal/tools/regengoldens/main.go.
+        run: make regenerate-goldens golden-update-all sync-schemas sync-controls sync-alternatives ARGS="-fail-on-behavioral"
 
       - name: Generate coverage (single test run)
         run: |

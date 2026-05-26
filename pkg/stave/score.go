@@ -19,6 +19,27 @@ import (
 // callers can start from the standard distribution and adjust fields.
 type Weights = appscore.Weights
 
+// ScoreMover is a single entry in the score-movers list — the
+// per-dimension delta between the latest score and the previous
+// run, used by the table + JSON renderers to surface "what
+// improved, what regressed." Aliased so cmd/score renderers
+// don't need to reach into the internal scorer package.
+type ScoreMover = appscore.ScoreMover
+
+// TrendPoint is one (timestamp, score) sample in a score-history
+// trend. Aliased so cmd/score's trend builder consumes a public
+// type without bypassing the facade.
+type TrendPoint = appscore.TrendPoint
+
+// ParseWeights parses the `--weights` CLI flag value into a
+// [Weights] struct. The wire format is the same one the score
+// command has accepted since the beginning
+// ("severity=0.45,sla=0.25,chain=0.20,coverage=0.10"); pass-through
+// to the internal parser to keep that contract in one place.
+func ParseWeights(s string) (Weights, error) {
+	return appscore.ParseWeights(s)
+}
+
 // ScoreResult is the full posture score breakdown. Aliased from the
 // internal scorer because the wire format is already stable (the score
 // command's --format json output is a public artifact); a pkg/stave

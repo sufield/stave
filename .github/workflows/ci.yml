@@ -104,7 +104,15 @@ jobs:
           check-latest: true
           cache: true
       - name: Regenerate goldens and sync
-        run: make regenerate-goldens golden-update-all sync-schemas sync-controls sync-alternatives ARGS="-workers 4"
+        # ARGS includes -fail-on-behavioral: the regen tool auto-accepts
+        # CLEAN / FINGERPRINT-ONLY / METADATA-ONLY diffs (writes them
+        # silently), and exits non-zero on BEHAVIORAL / MIXED / ERROR
+        # so the human PR review step is the gate, not this regen step.
+        # Without the flag, controller upgrades that touched 200 fixture
+        # fingerprints landed as 200 file diffs the reviewer scrolled
+        # past; with it, only behavior changes attract attention. See
+        # internal/tools/regengoldens/main.go for the category definitions.
+        run: make regenerate-goldens golden-update-all sync-schemas sync-controls sync-alternatives ARGS="-workers 4 -fail-on-behavioral"
       - name: Upload regen tree
         uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808 # v7.0.1
         with:

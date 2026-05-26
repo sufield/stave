@@ -90,6 +90,14 @@ func main() {
 	changedOnly := flag.Bool("changed-only", false, "convenience for -since=HEAD; regenerate only fixtures affected by working-tree changes")
 	workers := flag.Int("workers", 4, "number of fixtures to process in parallel (default 4, max 8)")
 	sequential := flag.Bool("sequential", false, "force sequential processing (overrides -workers); useful for debugging")
+	// failOnBehavioral turns the human-discipline rule ("review BEHAVIORAL
+	// + MIXED before commit") into an exit-code gate suitable for CI.
+	// Default off keeps day-to-day local regen unchanged. CI uses
+	// `-fail-on-behavioral` to fail the build if any fixture's diff
+	// category isn't auto-acceptable (CLEAN / FINGERPRINT-ONLY /
+	// METADATA-ONLY). Mixed and behavioral diffs require explicit
+	// PR approval, not silent acceptance.
+	failOnBehavioral := flag.Bool("fail-on-behavioral", false, "exit non-zero if any fixture has a BEHAVIORAL or MIXED diff; benign categories (CLEAN/FINGERPRINT-ONLY/METADATA-ONLY) are auto-accepted")
 	flag.Parse()
 
 	if *changedOnly && *since == "" {
@@ -227,6 +235,27 @@ func main() {
 
 	sort.Slice(reports, func(i, j int) bool { return reports[i].Fixture < reports[j].Fixture })
 	printReport(reports, *dryRun)
+
+	// Exit-code gate: when -fail-on-behavioral is set, surface a
+	// non-zero exit if any fixture landed in a category that
+	// requires human review. The benign categories (CLEAN /
+	// FINGERPRINT-ONLY / METADATA-ONLY) flow through silently —
+	// that's the "auto-accept" half of the rule. BEHAVIORAL +
+	// MIXED + ERROR force CI to fail so the human PR step is the
+	// gate, not the regen step.
+	if *failOnBehavioral {
+		var needsReview int
+		for _, r := range reports {
+			switch r.Category {
+			case catBehavioral, catMixed, catError:
+				needsReview++
+			}
+		}
+		if needsReview > 0 {
+			fmt.Fprintf(os.Stderr, "\n%d fixture(s) need human review (BEHAVIORAL / MIXED / ERROR). See sections above. Failing exit because -fail-on-behavioral is set.\n", needsReview)
+			os.Exit(3)
+		}
+	}
 }
 
 // affectedDomains returns the set of domain tokens (lowercase) whose

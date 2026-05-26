@@ -361,10 +361,26 @@ golden: build
 ## Investigate before committing: BEHAVIORAL, MIXED.
 ##
 ## Flags (pass via ARGS):
-##   ARGS="-dry-run"           preview diffs without writing
-##   ARGS="-filter pattern"    limit to fixture names matching regex
+##   ARGS="-dry-run"             preview diffs without writing
+##   ARGS="-filter pattern"      limit to fixture names matching regex
+##   ARGS="-fail-on-behavioral"  exit non-zero on BEHAVIORAL/MIXED/ERROR
+##                               (CI gate; CLEAN/FINGERPRINT-ONLY/METADATA-ONLY
+##                                still flow through silently)
 regenerate-goldens: build
 	$(GOCMD) run ./internal/tools/regengoldens $(ARGS)
+
+## regenerate-goldens-ci: Regenerate and fail loudly on behavioral diffs
+##
+## What CI uses: rewrites all benign goldens (CLEAN / FINGERPRINT-ONLY /
+## METADATA-ONLY) silently, exits non-zero (3) if any fixture lands in
+## BEHAVIORAL / MIXED / ERROR. PRs see noise only when there's a real
+## detection-behavior change to review — the categorized-diff that's
+## already running just got an exit code that gates CI on it.
+##
+## Local equivalent: `make regenerate-goldens ARGS="-fail-on-behavioral"`
+.PHONY: regenerate-goldens-ci
+regenerate-goldens-ci: build
+	$(GOCMD) run ./internal/tools/regengoldens -fail-on-behavioral $(ARGS)
 
 ## --- Targeted golden regeneration ---------------------------------------
 ##

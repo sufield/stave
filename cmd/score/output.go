@@ -7,10 +7,10 @@ import (
 	"math"
 	"strings"
 
-	appscore "github.com/sufield/stave/internal/app/score"
+	"github.com/sufield/stave/pkg/stave"
 )
 
-func renderResult(w io.Writer, r appscore.Result, format string) error {
+func renderResult(w io.Writer, r stave.ScoreResult, format string) error {
 	switch format {
 	case "json":
 		enc := json.NewEncoder(w)
@@ -25,7 +25,7 @@ func renderResult(w io.Writer, r appscore.Result, format string) error {
 	}
 }
 
-func writeTable(w io.Writer, r appscore.Result) {
+func writeTable(w io.Writer, r stave.ScoreResult) {
 	fmt.Fprintln(w, "SECURITY POSTURE SCORE")
 
 	if r.SnapshotID != "" {
@@ -72,7 +72,7 @@ func writeTable(w io.Writer, r appscore.Result) {
 	}
 }
 
-func scoreMovers(r appscore.Result) []string {
+func scoreMovers(r stave.ScoreResult) []string {
 	moversData := r.Movers()
 	if len(moversData) == 0 {
 		return nil
@@ -88,7 +88,7 @@ func scoreMovers(r appscore.Result) []string {
 // prefix and points-lost suffix used by the CLI render. The
 // component-to-message mapping lives on ScoreMover.Label so
 // adding a new mover component is one edit on the type.
-func formatMover(m appscore.ScoreMover) string {
+func formatMover(m stave.ScoreMover) string {
 	return fmt.Sprintf("\u2193 %-40s (\u2212%.1f pts)", m.Label(), m.PointsLost)
 }
 
@@ -102,7 +102,7 @@ func scoreBar(score float64) string {
 	return strings.Repeat("\u2588", filled) + strings.Repeat("\u2591", empty)
 }
 
-func writeOpenMetrics(w io.Writer, r appscore.Result) {
+func writeOpenMetrics(w io.Writer, r stave.ScoreResult) {
 	tsMs := r.GeneratedAt.UnixMilli()
 
 	fmt.Fprintln(w, "# HELP stave_posture_score Security posture score (0-100)")

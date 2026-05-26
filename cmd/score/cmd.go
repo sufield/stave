@@ -3,23 +3,14 @@ package score
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	artifact "github.com/sufield/stave/internal/adapters/artifacts"
-	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
-	appscore "github.com/sufield/stave/internal/app/score"
-	"github.com/sufield/stave/internal/core/capabilities"
-	"github.com/sufield/stave/internal/core/report"
-	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/stave"
 )
 
@@ -98,28 +89,25 @@ func runScore(ctx context.Context, stdout io.Writer, opts *options) error {
 		return errors.New("either --output or --history is required")
 	}
 
-	weights, err := appscore.ParseWeights(opts.WeightsStr)
+	weights, err := stave.ParseWeights(opts.WeightsStr)
 	if err != nil {
 		return fmt.Errorf("parse weights: %w", err)
 	}
 
-	// Load chain definitions for accurate chain weight.
-	chains, chainsErr := ctlyaml.LoadChains("chains", capabilities.Builtin())
-	if chainsErr != nil {
-		return fmt.Errorf("loading chains: %w", chainsErr)
+	budget, err := stave.BuiltinChainBudget()
+	if err != nil {
+		return err
 	}
-	chainDefs := len(chains)
-	maxChainWeight := appscore.ChainMaxWeight(chains)
 
 	if opts.HistoryDir != "" {
-		return runScoreTrend(ctx, stdout, opts, weights, chainDefs, maxChainWeight)
+		return runScoreTrend(ctx, stdout, opts, weights, budget)
 	}
 
-	return runScoreSingle(ctx, stdout, opts, weights, chainDefs, maxChainWeight)
+	return runScoreSingle(ctx, stdout, opts, weights, budget)
 }
 
-func runScoreSingle(ctx context.Context, stdout io.Writer, opts *options, weights appscore.Weights, chainDefs int, maxChainWeight float64) error {
-	assessment, err := loadAssessment(ctx, opts.OutputFile)
+func runScoreSingle(ctx context.Context, stdout io.Writer, opts *options, weights stave.Weights, budget stave.ChainBudget) error {
+	assessment, err := stave.LoadAssessment(ctx, opts.OutputFile)
 	if err != nil {
 		return err
 	}
@@ -135,15 +123,15 @@ func runScoreSingle(ctx context.Context, stdout io.Writer, opts *options, weight
 			opts.OutputFile)
 	}
 
-	result, err := computeFromAssessment(ctx, assessment, weights, chainDefs, maxChainWeight, opts.Compliance)
+	result, err := computeFromAssessment(ctx, assessment, weights, budget, opts.Compliance)
 	if err != nil {
 		return err
 	}
 	return renderResult(stdout, result, opts.Format)
 }
 
-func runScoreTrend(ctx context.Context, stdout io.Writer, opts *options, weights appscore.Weights, chainDefs int, maxChainWeight float64) error {
-	assessments, err := loadHistoryAssessments(ctx, opts.HistoryDir)
+func runScoreTrend(ctx context.Context, stdout io.Writer, opts *options, weights stave.Weights, budget stave.ChainBudget) error {
+	assessments, err := stave.LoadAssessments(ctx, opts.HistoryDir)
 	if err != nil {
 		return err
 	}
@@ -151,26 +139,17 @@ func runScoreTrend(ctx context.Context, stdout io.Writer, opts *options, weights
 		return fmt.Errorf("no assessment files found in %s", opts.HistoryDir)
 	}
 
-	// Sort by timestamp via Assessment.Before. Stable sort keeps the
-	// directory-load order intact when two assessments share an
-	// identical timestamp — without it, `slices.SortFunc` would emit
-	// non-deterministic trend output run-to-run for sequential
-	// assessments produced inside the same wall-clock second.
-	slices.SortStableFunc(assessments, func(a, b *report.Assessment) int {
-		switch {
-		case a.Before(b):
-			return -1
-		case b.Before(a):
-			return 1
-		default:
-			return 0
-		}
-	})
+	// Stable sort keeps the directory-load order intact when two
+	// assessments share an identical timestamp — without it, the
+	// scorer would emit non-deterministic trend output run-to-run
+	// for sequential assessments produced inside the same
+	// wall-clock second.
+	stave.SortAssessmentsByTime(assessments)
 
 	// Compute score for each run.
-	results := make([]appscore.Result, len(assessments))
+	results := make([]stave.ScoreResult, len(assessments))
 	for i, a := range assessments {
-		r, err := computeFromAssessment(ctx, a, weights, chainDefs, maxChainWeight, opts.Compliance)
+		r, err := computeFromAssessment(ctx, a, weights, budget, opts.Compliance)
 		if err != nil {
 			return fmt.Errorf("score history entry %d: %w", i, err)
 		}
@@ -187,30 +166,23 @@ func runScoreTrend(ctx context.Context, stdout io.Writer, opts *options, weights
 // computeFromAssessment delegates to stave.Score so library and
 // CLI verdicts share the same code path.
 //
-// The internal *report.Assessment loaded from disk is converted to
-// the public *stave.Assessment shape (lossless for scoring inputs)
-// and passed through the library's pure-arithmetic Score entry
-// point. The library replicates the same SLA tally, coverage
-// average, and TotalCheckWeight estimation that used to live here.
-//
 // Returns the underlying error so callers fail loud on misuse —
 // the previous shape silently returned a zero-value result that
 // rendered as "score 0", indistinguishable from a real
 // "everything broken" verdict.
-func computeFromAssessment(ctx context.Context, a *report.Assessment, weights appscore.Weights, chainDefs int, maxChainWeight float64, compliance string) (appscore.Result, error) {
-	pubAsmt := stave.FromReportAssessment(a)
+func computeFromAssessment(ctx context.Context, a *stave.Assessment, weights stave.Weights, budget stave.ChainBudget, compliance string) (stave.ScoreResult, error) {
 	w := weights
 	cfg := stave.ScoreConfig{
-		Assessment:     pubAsmt,
+		Assessment:     a,
 		Weights:        &w,
-		ChainMaxWeight: maxChainWeight,
-		ChainDefs:      chainDefs,
+		ChainMaxWeight: budget.MaxWeight,
+		ChainDefs:      budget.ChainDefs,
 		Compliance:     parseComplianceList(compliance),
 		SnapshotID:     a.SnapshotID(),
 	}
 	res, err := stave.Score(ctx, cfg)
 	if err != nil {
-		return appscore.Result{}, fmt.Errorf("score assessment: %w", err)
+		return stave.ScoreResult{}, fmt.Errorf("score assessment: %w", err)
 	}
 	return *res, nil
 }
@@ -231,48 +203,13 @@ func parseComplianceList(s string) []string {
 	return out
 }
 
-func buildTrend(results []appscore.Result) []appscore.TrendPoint {
-	points := make([]appscore.TrendPoint, len(results))
+func buildTrend(results []stave.ScoreResult) []stave.TrendPoint {
+	points := make([]stave.TrendPoint, len(results))
 	for i := range results {
-		points[i] = appscore.TrendPoint{
+		points[i] = stave.TrendPoint{
 			Timestamp: results[i].GeneratedAt,
 			Score:     results[i].Score,
 		}
 	}
 	return points
-}
-
-func loadAssessment(_ context.Context, path string) (*report.Assessment, error) {
-	data, err := fsutil.ReadFileLimited(path)
-	if err != nil {
-		return nil, fmt.Errorf("read assessment: %w", err)
-	}
-	var assessment report.Assessment
-	if jsonErr := json.Unmarshal(data, &assessment); jsonErr != nil {
-		return nil, fmt.Errorf("parse assessment: %w", jsonErr)
-	}
-	return &assessment, nil
-}
-
-func loadHistoryAssessments(ctx context.Context, dir string) ([]*report.Assessment, error) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, fmt.Errorf("read history directory: %w", err)
-	}
-
-	loader := artifact.NewLoader()
-	var assessments []*report.Assessment
-	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
-			continue
-		}
-		path := filepath.Join(dir, entry.Name())
-		a, loadErr := loader.Evaluation(ctx, path)
-		if loadErr != nil {
-			fmt.Fprintf(os.Stderr, "warning: skipping %s: %v\n", entry.Name(), loadErr)
-			continue
-		}
-		assessments = append(assessments, a)
-	}
-	return assessments, nil
 }
