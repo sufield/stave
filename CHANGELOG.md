@@ -7,7 +7,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Architecture & Library
+
+- **Chain-engine untangle: data types relocated to
+  `internal/core/findings/`.** The chain-engine output types
+  (`CompoundFinding`, `ExposureRank`, `ScoreBreakdown`,
+  `ThresholdItem` / `ThresholdItems` / `ThresholdStatus` /
+  `ThresholdSummary` / `ThresholdFilter` and constants) moved
+  out of `internal/core/evaluation/risk/` into a new leaf
+  package `internal/core/findings/`. `report/` no longer
+  imports `risk/`; the structural cycle that prevented the
+  chain engine from being separable is gone. `risk/` retains
+  producer logic (`DetectChains`, `RankExposures`, formula
+  helpers, threshold pipeline). The 13-commit sequence is
+  tracked in `may8.md`; the final-cleanup commit deleted all
+  transitional aliases in `risk/`. Nothing in the user-facing
+  YAML or output shape changed — code-organization win that
+  unblocks future chain-engine substitution.
+
+- **Public sentinel errors for facade-bar commands:
+  `stave.ErrInvalidInput` and `stave.ErrFailingTests`.** Commands
+  that have migrated to the `pkg/stave` facade cannot import
+  `internal/cli/ui` per their architecture tests. The two
+  public sentinels in `pkg/stave/errors.go` give them a way
+  to communicate "this was a user-input error" (→ exit code 2)
+  and "tests completed but some failed" (→ exit code 3) without
+  violating the facade rule. Wrap with
+  `fmt.Errorf("... : %w", stave.ErrInvalidInput)`. The
+  exit-code mapping happens in `internal/cli/ui.ExitCode` via
+  `errors.Is`. Reusable by every future facade-bar migration.
+
+- **`pkg/stave` facade migration: 6 commands at the bar.**
+  `cmd/stave-mcp/`, `cmd/gaps/`, `cmd/readiness/`,
+  `cmd/score/`, `cmd/exportinvariants/`, and `cmd/test/` now
+  import only `pkg/stave`, `cmd/cmdutil`, cobra, and the
+  standard library. Each has an `architecture_test.go` that
+  fails the build if any file in the command's directory
+  reintroduces an `internal/*` import. New public helpers
+  landed in `pkg/stave/` to enable the migrations:
+  `LoadAssessment`, `LoadAssessments`, `SortAssessmentsByTime`,
+  `BuiltinChainBudget`, `ParseWeights`, `RunControlTests`,
+  plus the type aliases `ScoreMover`, `TrendPoint`,
+  `TestResult`, `TestCaseResult`, `TestSummary`. Future
+  facade-bar migrations get correct exit codes and shared
+  helpers for free. Migration plan + tracker:
+  `docs/architecture/pkg-stave-facade.md`.
+
 ### Added
+
+- **Phase 7 — CIA-derived intensional detection (G0–G6 +
+  closeout candidates B and D).** Soufflé Datalog reasoning
+  over the IAM access graph that detects Confidentiality and
+  Integrity violations *intensionally* — derived from
+  reachability + sensitivity, not from a pattern catalog.
+  Catches the **novel violation class** that pattern-based
+  scanners miss by construction. Lives at
+  `reasoning/souffle/iam/` (schema.dl + rules.dl +
+  action_classes.dl + Go extractor / validator / findings
+  emitter). G3 added the authorization model
+  (`docs/authorization-model.md` + `stave-authorization.yaml`
+  default with Owner/Team + DataClassification PII/PHI/PCI).
+  G4–G5 added `violation_c` and `violation_i` queries that
+  emit PostureFindings with `control_id` =
+  `CIA.C.UNAUTHORIZED_READ` / `CIA.I.UNAUTHORIZED_WRITE`.
+  G6 triaged the first round of novel violations and added
+  Shape-B fixtures (Capital One pattern + Cognito-anon
+  pattern). Closeout D shipped Powerpipe CIA rendering at
+  `powerpipe-mod-stave/benchmarks/cia_findings.pp`. Full
+  rationale + structural finding ("~95% of catalog fires on
+  Shape-A escalation booleans, not access-graph edges") in
+  `docs/coverage/cia-novel-violations.md` +
+  `aws-compound-authoring.md` status marker. Phase 7 is the
+  structural defensibility tier the substrate framing
+  (stave-guide/explanation/reasoning-contract.md) points at —
+  the CIA intensional layer is what no framework-coverage
+  mod can replicate.
+
+### Changed
+
+- **`docs/comparison/aws-compliance-mod.md` refreshed against
+  current catalog (2026-05-26).** Numbers: 95.5% atomic
+  (3,784 of 3,962) / 4.5% compound (178 of 3,962) — was 96/4
+  in the previous snapshot. Ghost-reference controls: 104
+  across 18 AWS services with per-service breakdown — was
+  "~100 across 11 services." Footnote now includes total
+  catalog size (3,962), compound chain count (597), and
+  asset-schema count (109); explicit verification date;
+  honest framing on the AWS compound authoring plan target
+  (Phase 1 + Phase 7 shipped, ~8.6% headline target wasn't
+  met because catalog grew faster than compound — see
+  `may8.md`). Pointer added to the substrate-vs-implementation
+  framing that reduces the load-bearing weight on the
+  share-percentage argument.
+
 - **Lambda-2 — environment-variable security, KMS deepening,
   and Secrets Manager integration (6 new controls, 3 chains).**
   Second Lambda gap-closure iteration. Closes the

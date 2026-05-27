@@ -50,15 +50,16 @@ auditors and CI/CD can treat as evidence.
 
 The catalog has two axes:
 
-- **Atomic controls** (~96% of the catalog today) — single-asset
-  property checks. Stave doesn't compete with the AWS Compliance
-  Mod on this axis; the framework coverage and ecosystem
-  maturity are AWS Compliance Mod's territory.
-- **Compound controls** (~4% today, growing) — predicates that
-  reason across multiple related assets. Cross-resource
-  invariants, chain failures, ghost references (dangling
-  cross-resource pointers single-resource scanners can't see).
-  This is Stave's defensible territory.
+- **Atomic controls** (95.5% of the catalog today, 3,784 of
+  3,962) — single-asset property checks. Stave doesn't compete
+  with the AWS Compliance Mod on this axis; the framework
+  coverage and ecosystem maturity are AWS Compliance Mod's
+  territory.
+- **Compound controls** (4.5% today, 178 of 3,962 — growing) —
+  predicates that reason across multiple related assets.
+  Cross-resource invariants, chain failures, ghost references
+  (dangling cross-resource pointers single-resource scanners
+  can't see). This is Stave's defensible territory.
 
 Three additional properties that distinguish Stave architecturally:
 
@@ -99,7 +100,7 @@ this axis are tactical, not strategic:
 
 **Stave doesn't compete on framework coverage of atomic controls.**
 For the atomic set, install AWS Compliance Mod. The current
-baseline is honest: 96% of Stave's catalog is atomic
+baseline is honest: 95.5% of Stave's catalog is atomic
 ([control-classification-baseline](../control-classification-baseline.md)
 once populated; `docs/control-classification-proposal.md` has the
 proposal pass numbers). The catalog will grow more compound
@@ -127,9 +128,12 @@ represent by construction:
    one asset's configuration; the absence is in another asset's
    inventory. Per-resource scanners that don't model
    cross-resource invariants miss every one of these. Stave's
-   catalog has ~100 ghost-reference controls today across
-   APIGateway, CloudFront, Cognito, DynamoDB, ECS, EKS, ELB,
-   EventBridge, Secrets Manager, SNS, SQS.
+   catalog has 104 ghost-reference controls today across 18 AWS
+   services — APIGateway (7), CloudFront (7), CloudTrail (4),
+   CloudWatch (6), Cognito (16 — the densest surface),
+   Config (6), DynamoDB (3), EC2 (4), ECS (4), EKS (11),
+   ELB (9), EventBridge (9), IAM (4), Route53 (1), S3 (1),
+   Secrets Manager (3), SNS (6), SQS (3).
 3. **Snapshot-anchored reproducibility.** Re-running the same
    `obs.v0.1` snapshot produces byte-identical output. Two
    weeks later, a different engineer points the same snapshot
@@ -301,19 +305,29 @@ the AWS Compliance Mod does not render compound-risk chains
   references the comparison all link here and reuse the
   Capital One wedge phrasing verbatim. Don't paraphrase across
   surfaces.
-- Numbers cited (96% atomic, 4% compound, ~100 ghost-reference
-  controls) are pinned to the
-  [`docs/control-classification-proposal.md`](../control-classification-proposal.md)
-  snapshot. The classifier-output is a conservative
-  lower-bound; the
+- Numbers cited (95.5% atomic, 4.5% compound, 104
+  ghost-reference controls; 3,962 total controls; 597 compound
+  chains; 109 asset-type schemas) verified 2026-05-26 against
+  the live catalog. The classifier-output is still a
+  conservative lower-bound; the
   [`docs/coverage/iam-compound.md`](../coverage/iam-compound.md)
   map documents the larger semantic-compound surface (~25
   additional IAM controls that reason cross-asset via
-  observation extractors). The "growing" framing references the
-  AWS compound authoring plan
-  ([`aws-compound-control-authoring-plan.md`](../../../aws-compound-control-authoring-plan.md))
-  whose IAM phase targets ~5.4% compound share after I2–I7 and
-  ~8.6% after all six service phases.
+  observation extractors that the classifier doesn't count).
+  The "growing" framing references the AWS compound authoring
+  plan ([`aws-compound-control-authoring-plan.md`](../../../aws-compound-control-authoring-plan.md))
+  whose Phase 1 (IAM) + Phase 7 (CIA-derived intensional
+  detection) have shipped; the headline compound-share target
+  (~8.6%) wasn't met because catalog growth outpaced compound
+  authoring (catalog went from 2,658 → 3,962, compound from
+  101 → 178). The
+  [`may8.md`](../../../may8.md)
+  status marker carries the honest accounting. The
+  substrate-vs-implementation positioning that landed in
+  parallel ([`channels/devto/stave-as-reasoning-substrate.md`](../../../channels/devto/stave-as-reasoning-substrate.md))
+  reduces the load-bearing weight on the share-percentage
+  framing as the top-of-funnel argument — the CIA intensional
+  tier is now the structural defensibility claim.
 - This doc reads charitably about the AWS Compliance Mod by
   design. A Turbot security engineer reading it should find the
   characterization fair. If any phrasing slips into competitive

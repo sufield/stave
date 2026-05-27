@@ -31,7 +31,7 @@ It is never bundled into the Stave Go binary, the Docker image, or
 any of the OS packages listed below. Operators that want the Z3
 backend install it independently — see [Enable the Z3
 Solver](../how-to/enable-z3-solver.md) for the install steps and
-the [Z3 Solver explainer](z3-solver.md) for what each backend does.
+the [Z3 Solver explainer](../../../docs-content/explanation/z3-solver.md) for what each backend does.
 
 This split is intentional:
 
