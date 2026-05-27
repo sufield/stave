@@ -13,10 +13,10 @@
 // named (principal, action, resource) triples encoded as
 // integer constants:
 //
-//   0 = (AppRole,    s3:ListBucket,        bucket)             intended
-//   1 = (Principal:*, s3:ListBucket,        bucket)             DANGEROUS (key inventory leak)
-//   2 = (Principal:*, s3:ListBucketVersions, bucket)            DANGEROUS (version-history inventory)
-//   3 = (Principal:*, s3:GetBucketLocation, bucket)             DANGEROUS (region/metadata leak)
+//	0 = (AppRole,    s3:ListBucket,        bucket)             intended
+//	1 = (Principal:*, s3:ListBucket,        bucket)             DANGEROUS (key inventory leak)
+//	2 = (Principal:*, s3:ListBucketVersions, bucket)            DANGEROUS (version-history inventory)
+//	3 = (Principal:*, s3:GetBucketLocation, bucket)             DANGEROUS (region/metadata leak)
 //
 // The bucket-level Resource ARN is the bucket itself, not
 // `bucket/*` — see the README's authoring note. ListBucket-

@@ -3,11 +3,13 @@ package cel
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"regexp"
 	"strings"
 	"sync"
 
 	"github.com/google/cel-go/cel"
+	exprpb "google.golang.org/genproto/googleapis/api/expr/v1alpha1"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/predicate"
@@ -49,22 +51,136 @@ func (cp CompiledPredicate) IsValid() bool {
 
 // Compiler translates UnsafePredicate structures into compiled CEL programs.
 // Compiled programs are cached by expression string for thread-safe reuse.
+//
+// Persistence layer (optional, opt-in via cacheDir != ""):
+// the disk cache holds CheckedExpr protos keyed by SHA-256 of the
+// expression string. On Compile(), a cache hit skips parse +
+// type-check and only re-runs env.Program (the cheaper planning
+// step). Every cached entry's SHA is recomputed from the live
+// expression before the AST is trusted — see persist.go for the
+// poisoning-defense contract. Persistence is short-circuited by the
+// STAVE_DISABLE_CEL_CACHE env var so an operator can roll back the
+// optimisation without redeploying.
 type Compiler struct {
 	env   *cel.Env
 	mu    sync.RWMutex
 	cache map[string]CompiledPredicate
+
+	// cacheDir is the directory holding cache.pb. Empty disables
+	// the disk layer entirely.
+	cacheDir string
+
+	// diskCache is the live-process projection of what was loaded
+	// from disk. Population happens once in NewCompiler when a
+	// cacheDir is set; lookups thereafter are read-only against
+	// this map. Distinct from `cache` (the post-Program in-memory
+	// store) so a disk hit still has to pass through env.Program.
+	diskCache map[string]*exprpb.CheckedExpr
+
+	// dirty tracks expressions compiled in this process that did
+	// not come from the disk cache. PersistCache emits the union
+	// of (diskCache ∪ dirty) so a long-running process gradually
+	// extends the cache file as new controls appear.
+	dirtyMu sync.Mutex
+	dirty   map[string]*exprpb.CheckedExpr
+}
+
+// CompilerOption configures a Compiler at construction.
+type CompilerOption func(*compilerConfig)
+
+type compilerConfig struct {
+	cacheDir string
+}
+
+// WithCacheDir directs the Compiler to read and write the on-disk
+// CEL compile cache under the given directory. The empty string
+// disables the disk layer (the default — preserves the behaviour
+// callers had before the cache landed). When the env var
+// STAVE_DISABLE_CEL_CACHE is set, this option is honoured at
+// construction time but every load/persist short-circuits.
+func WithCacheDir(dir string) CompilerOption {
+	return func(c *compilerConfig) { c.cacheDir = dir }
 }
 
 // NewCompiler creates a Compiler with a pre-configured CEL environment.
-func NewCompiler() (*Compiler, error) {
+// Defaults to in-memory caching only; pass WithCacheDir to enable
+// the on-disk cache.
+func NewCompiler(opts ...CompilerOption) (*Compiler, error) {
+	cfg := compilerConfig{}
+	for _, o := range opts {
+		o(&cfg)
+	}
 	env, err := NewEnv()
 	if err != nil {
 		return nil, fmt.Errorf("create CEL environment: %w", err)
 	}
-	return &Compiler{
-		env:   env,
-		cache: make(map[string]CompiledPredicate),
-	}, nil
+	c := &Compiler{
+		env:       env,
+		cache:     make(map[string]CompiledPredicate),
+		cacheDir:  cfg.cacheDir,
+		diskCache: make(map[string]*exprpb.CheckedExpr),
+		dirty:     make(map[string]*exprpb.CheckedExpr),
+	}
+	if cfg.cacheDir != "" && !IsCacheDisabled() {
+		c.loadDiskCache()
+	}
+	return c, nil
+}
+
+// loadDiskCache reads the on-disk file into c.diskCache. Logs a
+// warning and returns silently on any failure — a missing or
+// corrupt cache must never block compilation.
+func (c *Compiler) loadDiskCache() {
+	entries, err := loadCacheFile(cacheFilePath(c.cacheDir))
+	if err != nil {
+		slog.Warn("cel: cache load failed; starting cold", "err", err)
+		return
+	}
+	for _, e := range entries {
+		// Per-entry poisoning defense (load-bearing): the stored
+		// SHA must match the live SHA of the stored expression.
+		// Mismatch means the file was edited or corrupted — drop
+		// that entry, keep the rest.
+		if hashExpression(e.Expression) != e.ExpressionSHA {
+			slog.Warn("cel: cache entry SHA mismatch; dropping",
+				"sha", hashExpressionHex(e.Expression))
+			continue
+		}
+		c.diskCache[e.Expression] = e.CheckedExpr
+	}
+}
+
+// PersistCache writes the union of (diskCache ∪ dirty) to disk.
+// Safe to call multiple times; the rename-based persist makes
+// concurrent calls last-write-wins with no torn files.
+//
+// Returns nil and writes nothing when the compiler was built
+// without a cacheDir or when STAVE_DISABLE_CEL_CACHE is set.
+func (c *Compiler) PersistCache() error {
+	if c.cacheDir == "" || IsCacheDisabled() {
+		return nil
+	}
+	c.dirtyMu.Lock()
+	entries := make([]cachedEntry, 0, len(c.diskCache)+len(c.dirty))
+	for expr, ce := range c.diskCache {
+		entries = append(entries, cachedEntry{
+			ExpressionSHA: hashExpression(expr),
+			Expression:    expr,
+			CheckedExpr:   ce,
+		})
+	}
+	for expr, ce := range c.dirty {
+		if _, already := c.diskCache[expr]; already {
+			continue
+		}
+		entries = append(entries, cachedEntry{
+			ExpressionSHA: hashExpression(expr),
+			Expression:    expr,
+			CheckedExpr:   ce,
+		})
+	}
+	c.dirtyMu.Unlock()
+	return persistCacheFile(cacheFilePath(c.cacheDir), entries)
 }
 
 // Compile translates an UnsafePredicate into a compiled CEL program.
@@ -83,21 +199,44 @@ func (c *Compiler) Compile(pred policy.UnsafePredicate) (CompiledPredicate, erro
 		return cached, nil
 	}
 
-	// Compile under no lock — env.Compile is safe to call concurrently and
-	// holding the write lock during compilation would serialize all
-	// compiles across goroutines.
-	//
-	// Thread-safety contract for the cached value: cel.Program (per
-	// the cel-go contract documented at
-	// https://pkg.go.dev/github.com/google/cel-go/cel#Program) is
-	// safe to call Eval on from multiple goroutines after Program()
-	// has returned. This compiler caches the *cel.Program directly,
-	// so concurrent readers of `cached` can call Eval without
-	// further synchronisation. The cache map itself is the only
-	// mutable state and is guarded by c.mu.
-	ast, issues := c.env.Compile(expr)
-	if issues != nil && issues.Err() != nil {
-		return CompiledPredicate{}, fmt.Errorf("compile CEL expression: %w\n  expression: %s", issues.Err(), expr)
+	// Disk-cache hit path: if we have a CheckedExpr on disk for
+	// this exact expression string, skip parse + type-check and
+	// rebuild only the cel.Program (the cheaper planning step).
+	// The diskCache is populated once at NewCompiler time and is
+	// read-only thereafter — no lock needed for the lookup.
+	var ast *cel.Ast
+	if ce, hit := c.diskCache[expr]; hit {
+		ast = checkedExprToAst(ce)
+	} else {
+		// Cold path: full parse + type-check + plan. env.Compile
+		// is safe to call concurrently; holding the write lock
+		// during compilation would serialize all compiles across
+		// goroutines.
+		//
+		// Thread-safety contract for the cached value: cel.Program
+		// (per the cel-go contract documented at
+		// https://pkg.go.dev/github.com/google/cel-go/cel#Program)
+		// is safe to call Eval on from multiple goroutines after
+		// Program() has returned. This compiler caches the
+		// *cel.Program directly, so concurrent readers of `cached`
+		// can call Eval without further synchronisation. The cache
+		// map itself is the only mutable state and is guarded by
+		// c.mu.
+		var issues *cel.Issues
+		ast, issues = c.env.Compile(expr)
+		if issues != nil && issues.Err() != nil {
+			return CompiledPredicate{}, fmt.Errorf("compile CEL expression: %w\n  expression: %s", issues.Err(), expr)
+		}
+		// Stash for the next persist. Best-effort: if the conversion
+		// fails we still serve the predicate from memory; we just
+		// won't have a cache entry for it on the next cold start.
+		if c.cacheDir != "" {
+			if ce, convErr := astToCheckedExpr(ast); convErr == nil {
+				c.dirtyMu.Lock()
+				c.dirty[expr] = ce
+				c.dirtyMu.Unlock()
+			}
+		}
 	}
 
 	prg, err := c.env.Program(ast)

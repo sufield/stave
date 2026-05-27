@@ -89,11 +89,11 @@ type snsTopic struct {
 }
 
 type apiGateway struct {
-	arn                            string
-	authType                       string
-	iamAuthRequired                bool
-	functionReadsSecretsManager    bool
-	functionARN                    string
+	arn                         string
+	authType                    string
+	iamAuthRequired             bool
+	functionReadsSecretsManager bool
+	functionARN                 string
 }
 
 func main() {
@@ -263,11 +263,11 @@ func finding2APIGwDenyGap(key string, f fixture) bool {
 // finding3DataFlowChain: is the five-hop credential-flow
 // chain satisfiable?
 //
-//   hop1: principal can subscribe to the topic (Finding 1)
-//   hop2: topic delivers credentials to subscribers
-//   hop3: API Gateway accepts the credential (key-only auth, no IAM gate)
-//   hop4: API Gateway integrates with a function that reads Secrets Manager
-//   hop5: function actually accesses Secrets Manager
+//	hop1: principal can subscribe to the topic (Finding 1)
+//	hop2: topic delivers credentials to subscribers
+//	hop3: API Gateway accepts the credential (key-only auth, no IAM gate)
+//	hop4: API Gateway integrates with a function that reads Secrets Manager
+//	hop5: function actually accesses Secrets Manager
 //
 // All five hops are booleans on the fixture observation.
 // Z3 conjuncts them and discharges.

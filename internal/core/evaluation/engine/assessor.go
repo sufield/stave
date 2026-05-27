@@ -6,10 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"runtime"
 	"slices"
 	"strings"
-	"sync/atomic"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -252,20 +254,18 @@ type AssessmentOptions struct {
 
 // assessmentSession maintains the state of a single execution of the engine.
 //
-// Concurrency: applyControl is invoked sequentially from Assess, and the
-// activeSpan field is mutated without synchronization. If a future
-// change parallelizes per-control evaluation, activeSpan must be moved
-// into per-call state (or guarded by a mutex) before doing so —
-// otherwise concurrent writers will race and the strategy will see the
-// wrong span. The collector's own RecordCheck path is mutex-protected
-// independently, so it is safe to call from a future concurrent caller.
+// Concurrency: applyControl is safe to invoke from multiple goroutines
+// concurrently. The trace span for each control×asset evaluation is
+// carried as a per-call parameter (see strategyFor); no mutable span
+// state lives on the session. The collector's own RecordCheck path is
+// mutex-protected independently, so concurrent applyControl callers
+// can write findings without contention beyond the collector's mu.
 //
-// applyControlInUse is the runtime assertion guard. It is set
-// non-zero while applyControl is executing; a second concurrent
-// caller would see it already non-zero and panic with a clear
-// message identifying the contract violation. The cost is one
-// atomic load/store per applyControl call, negligible against the
-// per-asset CEL evaluation that dominates the runtime.
+// Earlier revisions stored activeSpan on the session and used an
+// atomic.Bool guard (applyControlInUse) to detect accidental
+// concurrent callers; both were removed when per-control
+// parallelisation landed. The contract is now structural: there is
+// nothing to race because there is nothing shared-and-mutable.
 type assessmentSession struct {
 	assessor  *Assessor
 	snapshots []asset.Snapshot
@@ -273,28 +273,6 @@ type assessmentSession struct {
 	collector *AssessmentCollector
 	idIndex   IdentityIndex
 	opts      AssessmentOptions
-	// CONCURRENCY: activeSpan is the live control×asset span the
-	// strategy reads via sessionDeps. It is plain memory — no mutex,
-	// no atomic. Today the field is safe because applyControlInUse
-	// (the atomic.Bool below) serialises every applyControl call,
-	// giving the field a single writer at a time and a happens-before
-	// edge to the strategy's read.
-	//
-	// Any future change that parallelises applyControl (one goroutine
-	// per control, per-asset workers, etc.) MUST stop writing to this
-	// field. The fix is to pass the span as a parameter into
-	// strategy.Evaluate (or carry it on a per-call sessionDeps copy);
-	// adding a mutex around the assignment does NOT help because the
-	// strategy still reads "the wrong span" — whichever was set last,
-	// not the one for the asset it is evaluating. See the
-	// applyControl doc comment for the full contract.
-	activeSpan ports.AssessmentSpan
-	// applyControlInUse is the runtime assertion guard for the
-	// CONCURRENCY contract above. CompareAndSwap to true on entry
-	// and Store(false) on exit make the second concurrent caller
-	// observable as a panic with a clear message rather than a
-	// silent data race on activeSpan.
-	applyControlInUse atomic.Bool
 }
 
 // beginTrace starts a trace span for a control×asset evaluation.
@@ -372,10 +350,21 @@ func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts 
 		opts:      opt,
 	}
 
+	// Per-control evaluation runs concurrently up to runtime.NumCPU().
+	// Each goroutine drives CEL evaluation for one control across the
+	// asset set; writes that escape the goroutine all flow through
+	// the AssessmentCollector's per-record mutex (see collector.go).
+	// Determinism is preserved because compileReport sorts every
+	// output slice — the order in which controls complete does not
+	// reach the caller.
+	//
+	// Skipped (non-evaluatable) controls are recorded inline rather
+	// than launching a goroutine per skip: the collector write is
+	// trivial and a goroutine-per-skip would add scheduling overhead
+	// for no benefit.
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(runtime.NumCPU())
 	for i := range a.controls {
-		if err := ctx.Err(); err != nil {
-			return evaluation.ComplianceReport{}, fmt.Errorf("assess: cancelled before control %s (%d/%d): %w", a.controls[i].ID, i, len(a.controls), err)
-		}
 		ctl := &a.controls[i]
 		if !ctl.IsEvaluatable() {
 			sess.collector.RecordSkippedControl(
@@ -385,9 +374,24 @@ func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts 
 			)
 			continue
 		}
-		if err := sess.applyControl(ctx, ctl, lifecycles[ctl.ID]); err != nil {
-			return evaluation.ComplianceReport{}, err
-		}
+		pos := i // captured for the error message; gctx-derived cancellation does not preserve loop position
+		g.Go(func() error {
+			// gctx is cancelled when the parent ctx is cancelled
+			// OR when any sibling goroutine returns a non-nil
+			// error. Either way the remaining controls bail out
+			// at the next per-asset cancellation check inside
+			// applyControl.
+			if err := gctx.Err(); err != nil {
+				return fmt.Errorf("assess: cancelled before control %s (%d/%d): %w", ctl.ID, pos, len(a.controls), err)
+			}
+			if err := sess.applyControl(gctx, ctl, lifecycles[ctl.ID]); err != nil {
+				return fmt.Errorf("apply control %s (%d/%d): %w", ctl.ID, pos, len(a.controls), err)
+			}
+			return nil
+		})
+	}
+	if err := g.Wait(); err != nil {
+		return evaluation.ComplianceReport{}, fmt.Errorf("assess: %w", err)
 	}
 
 	return sess.compileReport(), nil
@@ -395,30 +399,17 @@ func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts 
 
 // applyControl evaluates a single control across the asset set.
 //
-// Concurrency contract: this method MUST remain sequential. It writes
-// `s.activeSpan` mid-loop without synchronization, so any future
-// parallelization (e.g., one goroutine per control) would race the
-// per-asset span assignment with the strategy's read of activeSpan.
-// If parallelization becomes necessary, move activeSpan into a per-
-// call local that the strategy receives as a parameter — do NOT add a
-// mutex around the field assignment, because that only serializes the
-// write and the strategy still reads the wrong span.
+// Concurrency: safe to invoke from multiple goroutines for different
+// controls. The trace span for each control×asset pair is created
+// inside this method and passed as a parameter into strategyFor —
+// there is no shared mutable span state to race on. Writes into the
+// collector go through its mutex-protected RecordX methods, which
+// already serialise concurrent writers correctly.
 func (s *assessmentSession) applyControl(
 	ctx context.Context,
 	ctl *policy.ControlDefinition,
 	lifecycles map[asset.ID]*asset.ExposureLifecycle,
 ) error {
-	// Detect any future caller that violates the sequential
-	// contract. CompareAndSwap returns false when the flag is
-	// already set, which means another goroutine is in
-	// applyControl right now — bug, not a recoverable runtime
-	// condition, so panic with a message that points at the
-	// type-doc explanation.
-	if !s.applyControlInUse.CompareAndSwap(false, true) {
-		panic("engine: applyControl invoked concurrently — see assessmentSession concurrency contract; activeSpan is not goroutine-safe")
-	}
-	defer s.applyControlInUse.Store(false)
-
 	// Ensure deterministic output by processing assets in ID order.
 	assetIDs := make([]asset.ID, 0, len(lifecycles))
 	for id := range lifecycles {
@@ -497,22 +488,10 @@ func (s *assessmentSession) applyControl(
 		// exempted assets are still counted in TotalAssets.)
 
 		// 3. Evaluate the security strategy against the asset lifecycle.
-		//    Set the active span so strategies can record their decision steps,
-		//    then create the strategy (which captures the span via sessionDeps).
+		//    The strategy receives the span as a per-call parameter via
+		//    strategyFor, so concurrent applyControl invocations for
+		//    different controls do not contend on shared span state.
 		//
-		// CONCURRENCY: this assignment is plain-memory, single-writer.
-		// The contract that protects it lives on the assessmentSession
-		// type doc (see the activeSpan field comment) and on
-		// applyControl's doc comment. In short: applyControlInUse
-		// serialises applyControl, so writes to s.activeSpan are
-		// totally ordered with the strategy's read. A future
-		// parallelism patch that drops that atomic MUST replace
-		// this store with a parameter-passed span — adding a mutex
-		// around the assignment alone does not fix the read race,
-		// because the strategy would still see whichever span was
-		// stored last instead of the one for the asset under
-		// evaluation.
-		s.activeSpan = span
 		// Defensive nil-check: strategy.Evaluate dereferences lifecycle.
 		// A nil here would panic the assessor; record an inconclusive
 		// check + log instead.
@@ -529,7 +508,7 @@ func (s *assessmentSession) applyControl(
 			span.End()
 			continue
 		}
-		strat := s.strategyFor(ctl)
+		strat := s.strategyFor(ctl, span)
 		check, findings := strat.Evaluate(lifecycle, s.auditTime, s.idIndex)
 
 		// 4. Record verdict and finding linkage in the trace span

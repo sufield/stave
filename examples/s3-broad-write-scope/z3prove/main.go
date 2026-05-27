@@ -18,9 +18,9 @@
 // program models the search space as a finite enum of named
 // keys, encoded as integer constants:
 //
-//   0 = "files/abc-uuid/photo.png"   (intended)
-//   1 = "files/admin.html"            (admitted by prefix, NOT intended)
-//   2 = "files/../etc/passwd"         (admitted, path traversal)
+//	0 = "files/abc-uuid/photo.png"   (intended)
+//	1 = "files/admin.html"            (admitted by prefix, NOT intended)
+//	2 = "files/../etc/passwd"         (admitted, path traversal)
 //
 // The constraint set encodes:
 //   - admitted = (key in admitted_set), the set the bucket policy
@@ -29,7 +29,8 @@
 //     key generator produces.
 //
 // The unsafe predicate the solver discharges:
-//   admitted AND NOT intended
+//
+//	admitted AND NOT intended
 //
 // SAT → at least one concrete key the policy admits is outside
 // the intended set; the solver returns its index, and the program
@@ -64,10 +65,10 @@ var witnessLabels = []string{
 }
 
 const (
-	idxIntended    = 0 // the only key the application actually wants
-	idxFlatNoUUID  = 1 // admitted by prefix; missing UUID layer
-	idxTraversal   = 2 // admitted by prefix; classic path traversal
-	witnessCount   = 3
+	idxIntended   = 0 // the only key the application actually wants
+	idxFlatNoUUID = 1 // admitted by prefix; missing UUID layer
+	idxTraversal  = 2 // admitted by prefix; classic path traversal
+	witnessCount  = 3
 )
 
 func main() {
@@ -264,4 +265,3 @@ func exampleRoot() (string, error) {
 	}
 	return filepath.Dir(filepath.Dir(file)), nil
 }
-

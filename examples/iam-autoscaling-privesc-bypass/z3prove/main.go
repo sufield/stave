@@ -27,9 +27,10 @@
 // # The residual
 //
 // On the remediated config:
-//   Finding 1: UNSAT — all 9 vectors blocked.
-//   Finding 2: SAT   — PassRole still scoped only by service.
-//   Finding 3: UNSAT — no compound path open today.
+//
+//	Finding 1: UNSAT — all 9 vectors blocked.
+//	Finding 2: SAT   — PassRole still scoped only by service.
+//	Finding 3: UNSAT — no compound path open today.
 //
 // Finding 2's residual SAT is the article's central
 // teaching beat. The remediated config closes today's

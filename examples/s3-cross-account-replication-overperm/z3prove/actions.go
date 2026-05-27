@@ -51,10 +51,10 @@ var s3GetActions = []string{
 // + ObjectOwnerOverrideToBucketOwner; the only `Get` action it
 // needs is GetBucketVersioning to verify versioning is on.
 var replicationRequiredOnDestination = map[string]bool{
-	"s3:GetBucketVersioning":             true,
-	"s3:PutBucketVersioning":             true,
-	"s3:ReplicateObject":                 true,
-	"s3:ReplicateDelete":                 true,
+	"s3:GetBucketVersioning":              true,
+	"s3:PutBucketVersioning":              true,
+	"s3:ReplicateObject":                  true,
+	"s3:ReplicateDelete":                  true,
 	"s3:ObjectOwnerOverrideToBucketOwner": true,
 }
 

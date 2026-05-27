@@ -20,18 +20,18 @@
 //
 // Two queries:
 //
-//   queryDataEventGap(fix)
-//     Encodes: ∃ bucket b: is_sensitive(b) ∧ ¬covered(b),
-//     where covered means some trail's data_resources
-//     pattern matches b.arn.
+//	queryDataEventGap(fix)
+//	  Encodes: ∃ bucket b: is_sensitive(b) ∧ ¬covered(b),
+//	  where covered means some trail's data_resources
+//	  pattern matches b.arn.
 //
-//   queryWriteWithoutAudit(fix)
-//     Compounds Extension A's exposure with Extension B's gap.
-//     Encodes: ∃ b: write_admitted(developer, "s3:PutObject", b)
-//                 ∧ is_sensitive(b)
-//                 ∧ ¬covered(b).
-//     Without an IAM principal in the fixture, the prover
-//     reports "no principal — query NA" rather than guessing.
+//	queryWriteWithoutAudit(fix)
+//	  Compounds Extension A's exposure with Extension B's gap.
+//	  Encodes: ∃ b: write_admitted(developer, "s3:PutObject", b)
+//	              ∧ is_sensitive(b)
+//	              ∧ ¬covered(b).
+//	  Without an IAM principal in the fixture, the prover
+//	  reports "no principal — query NA" rather than guessing.
 package main
 
 import (
@@ -254,8 +254,8 @@ func queryWriteWithoutAudit(fix fixture, gap verdict) verdict {
 		}
 	}
 	return verdict{
-		sat: true,
-		witness: "any principal with s3:PutObject on the gap bucket can modify objects without a CloudTrail data-event record",
+		sat:       true,
+		witness:   "any principal with s3:PutObject on the gap bucket can modify objects without a CloudTrail data-event record",
 		rationale: "this example doesn't enumerate IAM policies; the iam-overpermission-wildcard bybit-pattern prover discharges the write_admitted side of the conjunction on a real fixture",
 	}
 }

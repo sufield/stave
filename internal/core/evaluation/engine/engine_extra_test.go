@@ -56,28 +56,36 @@ func TestAssessmentCollectorAddSkippedControl(t *testing.T) {
 func TestAssessmentCollectorAddExemptedAsset(t *testing.T) {
 	acc := NewCollector(0)
 	acc.RecordExemptedAsset("bucket-1", "bucket-*", "temp data")
-	if len(acc.exemptedAssets) != 1 {
-		t.Fatalf("len = %d", len(acc.exemptedAssets))
+	// Read via the public Snapshot API rather than poking unexported
+	// fields directly — the per-asset state lives on stripes keyed
+	// by asset.ID hash, so there is no single backing slice to
+	// inspect. Snapshot merges across stripes and returns the
+	// consolidated view callers (compileReport, tests) need.
+	snap := acc.Snapshot()
+	if len(snap.ExemptedAssets) != 1 {
+		t.Fatalf("len = %d", len(snap.ExemptedAssets))
 	}
-	if acc.exemptedAssets[0].ID != "bucket-1" {
-		t.Fatalf("ID = %v", acc.exemptedAssets[0].ID)
+	if snap.ExemptedAssets[0].ID != "bucket-1" {
+		t.Fatalf("ID = %v", snap.ExemptedAssets[0].ID)
 	}
 }
 
 func TestAssessmentCollectorAddRow(t *testing.T) {
 	acc := NewCollector(0)
 	acc.RecordCheck(evaluation.ResourceCheck{ControlID: "CTL.A.001", AssetID: "res-1"})
-	if len(acc.checks) != 1 {
-		t.Fatalf("len = %d", len(acc.checks))
+	snap := acc.Snapshot()
+	if len(snap.Checks) != 1 {
+		t.Fatalf("len = %d", len(snap.Checks))
 	}
 }
 
 func TestAssessmentCollectorAddFindings(t *testing.T) {
 	acc := NewCollector(0)
-	f := &evaluation.Finding{ControlID: "CTL.A.001"}
+	f := &evaluation.Finding{ControlID: "CTL.A.001", AssetID: "res-1"}
 	acc.RecordFindings([]*evaluation.Finding{f, nil})
-	if len(acc.findings) != 1 {
-		t.Fatalf("len = %d (nil should be filtered)", len(acc.findings))
+	snap := acc.Snapshot()
+	if len(snap.Findings) != 1 {
+		t.Fatalf("len = %d (nil should be filtered)", len(snap.Findings))
 	}
 }
 

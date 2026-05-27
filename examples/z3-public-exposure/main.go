@@ -10,22 +10,22 @@
 // public access to be possible?" The point is the SHAPE of the
 // pipeline, not feature parity with Stave's own evaluator:
 //
-//   observations dir
-//     -> Stave loader (library API)
-//     -> []asset.Snapshot
-//     -> per-bucket Z3 model
-//     -> Z3 solver SAT/UNSAT verdict
+//	observations dir
+//	  -> Stave loader (library API)
+//	  -> []asset.Snapshot
+//	  -> per-bucket Z3 model
+//	  -> Z3 solver SAT/UNSAT verdict
 //
 // Stave's main binary is built with CGO_ENABLED=0; this example
 // is the only Go program in the repo that links libz3. Build it
 // with:
 //
-//   apt install libz3-dev pkg-config
-//   CGO_ENABLED=1 go build -o z3-example ./examples/z3-public-exposure
+//	apt install libz3-dev pkg-config
+//	CGO_ENABLED=1 go build -o z3-example ./examples/z3-public-exposure
 //
 // Run it against any directory of obs.v0.1 snapshot files:
 //
-//   z3-example examples/public-bucket/observations
+//	z3-example examples/public-bucket/observations
 //
 // The Z3 binding used here is github.com/aclements/go-z3. Other
 // Go bindings to libz3 work the same way; the encoding logic
@@ -84,8 +84,8 @@ func main() {
 // bucket. The model has two boolean facts read from
 // asset.Properties:
 //
-//   policy_allows_public_read     — bucket policy admits Principal:*
-//   public_access_block_enabled   — PAB blocks public access
+//	policy_allows_public_read     — bucket policy admits Principal:*
+//	public_access_block_enabled   — PAB blocks public access
 //
 // Unsafe predicate: policy_allows_public_read AND NOT pab.
 // SAT  → public read is reachable; print UNSAFE.

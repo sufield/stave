@@ -15,10 +15,10 @@
 // admits, and Z3 enumerates a witness in
 // (admitted ∧ dangerous ∧ ¬intended).
 //
-//   0 = (AppRole,  s3:GetObject, bucket/intended-input.csv)        intended
-//   1 = (Principal:*, s3:GetObject, bucket/customer-data.csv)      DANGEROUS (anonymous read)
-//   2 = (Principal:*, s3:GetObject, bucket/.env)                   DANGEROUS (anonymous secret read)
-//   3 = (Principal:*, s3:GetObject, bucket/intended-input.csv)     DANGEROUS (anonymous read of intended object)
+//	0 = (AppRole,  s3:GetObject, bucket/intended-input.csv)        intended
+//	1 = (Principal:*, s3:GetObject, bucket/customer-data.csv)      DANGEROUS (anonymous read)
+//	2 = (Principal:*, s3:GetObject, bucket/.env)                   DANGEROUS (anonymous secret read)
+//	3 = (Principal:*, s3:GetObject, bucket/intended-input.csv)     DANGEROUS (anonymous read of intended object)
 //
 // "Dangerous" here means Principal=`*` — the request is
 // unauthenticated. The intended set is the single AppRole

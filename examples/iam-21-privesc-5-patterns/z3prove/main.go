@@ -10,28 +10,28 @@
 //
 // # The five patterns
 //
-//   Pattern 1: Policy Self-Mutation
-//     Principal modifies its own effective permissions —
-//     create policy version, attach policy, join group,
-//     delete permissions boundary, etc. Rhino: methods
-//     1, 2, 7-13.
+//	Pattern 1: Policy Self-Mutation
+//	  Principal modifies its own effective permissions —
+//	  create policy version, attach policy, join group,
+//	  delete permissions boundary, etc. Rhino: methods
+//	  1, 2, 7-13.
 //
-//   Pattern 2: Credential Creation / Theft
-//     Principal creates or modifies credentials for a more
-//     privileged principal — access key, login profile,
-//     MFA. Rhino: methods 4, 5, 6, 14.
+//	Pattern 2: Credential Creation / Theft
+//	  Principal creates or modifies credentials for a more
+//	  privileged principal — access key, login profile,
+//	  MFA. Rhino: methods 4, 5, 6, 14.
 //
-//   Pattern 3: Compute + PassRole
-//     Principal launches compute with a privileged role
-//     via iam:PassRole. Rhino: methods 3, 15-21.
+//	Pattern 3: Compute + PassRole
+//	  Principal launches compute with a privileged role
+//	  via iam:PassRole. Rhino: methods 3, 15-21.
 //
-//   Pattern 4: Indirect Compute Invocation
-//     Principal triggers compute execution by writing to an
-//     event source. Rhino: method 16 (DynamoDB streams).
+//	Pattern 4: Indirect Compute Invocation
+//	  Principal triggers compute execution by writing to an
+//	  event source. Rhino: method 16 (DynamoDB streams).
 //
-//   Pattern 5: Role Trust Modification
-//     Principal modifies role trust to allow self-
-//     assumption. Rhino: method 14 (overlap with Pattern 2).
+//	Pattern 5: Role Trust Modification
+//	  Principal modifies role trust to allow self-
+//	  assumption. Rhino: method 14 (overlap with Pattern 2).
 //
 // # The collapse ratio
 //
@@ -86,12 +86,12 @@ type fixture struct {
 // queryResult tracks the methods Z3 found reachable for
 // a single pattern.
 type queryResult struct {
-	patternNum    int
-	patternName   string
-	totalMethods  int
-	reachable     []method
-	rhinoFound    []int
-	newFound      int
+	patternNum   int
+	patternName  string
+	totalMethods int
+	reachable    []method
+	rhinoFound   []int
+	newFound     int
 }
 
 func main() {
@@ -478,9 +478,9 @@ func loadFixture(snapshotsDir string) (fixture, error) {
 				Type       string `json:"type"`
 				Properties struct {
 					Identity struct {
-						TrustedServices    []string `json:"trusted_services"`
-						IsAdminEquivalent  bool     `json:"is_admin_equivalent"`
-						Policies           struct {
+						TrustedServices   []string `json:"trusted_services"`
+						IsAdminEquivalent bool     `json:"is_admin_equivalent"`
+						Policies          struct {
 							AttachedPolicies []struct {
 								Name       string      `json:"name"`
 								Statements []statement `json:"statements"`

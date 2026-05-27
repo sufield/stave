@@ -52,7 +52,7 @@ import (
 )
 
 const (
-	intendedVpc        = "vpc-0b52ca08e7db8531f"
+	intendedVpc         = "vpc-0b52ca08e7db8531f"
 	intendedVpcEndpoint = "vpce-0abc123def456789"
 )
 
@@ -116,8 +116,8 @@ func main() {
 }
 
 type apiState struct {
-	statements         []statement
-	authorizationType  string
+	statements        []statement
+	authorizationType string
 }
 
 // finding1ResourcePatternMismatch asks: "is there a (stage,

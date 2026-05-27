@@ -40,9 +40,9 @@ import (
 )
 
 type securityGroup struct {
-	groupID  string
-	name     string
-	vpcID    string
+	groupID   string
+	name      string
+	vpcID     string
 	hasEgress bool
 }
 
@@ -52,11 +52,11 @@ type subnet struct {
 }
 
 type realWorldFixture struct {
-	allow         []statement
-	deny          []statement
-	adminRoles    []adminRole
+	allow          []statement
+	deny           []statement
+	adminRoles     []adminRole
 	securityGroups []securityGroup
-	subnets       []subnet
+	subnets        []subnet
 }
 
 func runRealWorldProof(snapshotsDir, label string) bool {
@@ -208,8 +208,8 @@ func queryPattern3CompoundFor(f realWorldFixture, sgID, comment string) rwVerdic
 
 	if !sat {
 		return rwVerdict{
-			sat:      false,
-			failedAt: identifyFailedClause(passrole, runInstances, canDiscover, roleAdminTrustsEC2, hasEgressSG, hasValidSubnet, sg),
+			sat:       false,
+			failedAt:  identifyFailedClause(passrole, runInstances, canDiscover, roleAdminTrustsEC2, hasEgressSG, hasValidSubnet, sg),
 			rationale: comment,
 		}
 	}

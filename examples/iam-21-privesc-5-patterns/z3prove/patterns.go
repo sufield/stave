@@ -4,11 +4,11 @@ package main
 // Rhino-numbered methods carry their original method number;
 // methods Rhino didn't enumerate carry rhino=0.
 type method struct {
-	rhino       int      // Rhino method number (1..21), or 0 if not in Rhino's list
-	label       string   // human-readable name
-	actions     []string // every required action must be effectively allowed
-	target      string   // semantic target: "self", "another_principal", "compute_role", "trust"
-	serviceTrust string  // for compute methods: the service principal the target role must trust
+	rhino        int      // Rhino method number (1..21), or 0 if not in Rhino's list
+	label        string   // human-readable name
+	actions      []string // every required action must be effectively allowed
+	target       string   // semantic target: "self", "another_principal", "compute_role", "trust"
+	serviceTrust string   // for compute methods: the service principal the target role must trust
 }
 
 // pattern1Methods — Policy Self-Mutation

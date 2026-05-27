@@ -59,14 +59,14 @@ import (
 
 // proposal is one control's classification result.
 type proposal struct {
-	Path     string // absolute path to the YAML file
-	Rel      string // path relative to the controls root
-	ID       string // control_id
-	Domain   string // first path component under controls/ (e.g. "iam", "s3")
-	Existing string // explicit `scope` value in the YAML, if any
-	Proposed string // classifier's proposal (heuristic-derived; overrides not yet applied)
-	Override string // override value from _scope-overrides.yaml, if any
-	Final    string // Override when set, else Proposed
+	Path      string // absolute path to the YAML file
+	Rel       string // path relative to the controls root
+	ID        string // control_id
+	Domain    string // first path component under controls/ (e.g. "iam", "s3")
+	Existing  string // explicit `scope` value in the YAML, if any
+	Proposed  string // classifier's proposal (heuristic-derived; overrides not yet applied)
+	Override  string // override value from _scope-overrides.yaml, if any
+	Final     string // Override when set, else Proposed
 	Rationale string // override rationale, if any
 	Heuristic string // which rule fired
 }
@@ -84,10 +84,10 @@ type overrideEntry struct {
 
 // controlYAML is the subset of fields the classifier reads.
 type controlYAML struct {
-	ID                   string                 `yaml:"id"`
-	Archetype            string                 `yaml:"archetype"`
-	Scope                string                 `yaml:"scope"`
-	ApplicableAssetTypes []string               `yaml:"applicable_asset_types"`
+	ID                   string         `yaml:"id"`
+	Archetype            string         `yaml:"archetype"`
+	Scope                string         `yaml:"scope"`
+	ApplicableAssetTypes []string       `yaml:"applicable_asset_types"`
 	UnsafePredicate      map[string]any `yaml:"unsafe_predicate"`
 }
 

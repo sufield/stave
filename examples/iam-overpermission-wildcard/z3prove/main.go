@@ -14,18 +14,18 @@
 // finite enum of named (action, resource) pairs as integer
 // constants:
 //
-//   0 = (s3:GetObject,        app-data-production/input/file.csv)   intended
-//   1 = (s3:PutObject,        app-data-production/output/result.json) intended
-//   2 = (s3:PutBucketPolicy,  customer-pii-bucket)                   DANGEROUS
-//   3 = (s3:DeleteObject,     billing-archives/jan-2026.csv)         DANGEROUS
-//   4 = (s3:PutBucketAcl,     audit-logs-bucket)                     DANGEROUS
+//	0 = (s3:GetObject,        app-data-production/input/file.csv)   intended
+//	1 = (s3:PutObject,        app-data-production/output/result.json) intended
+//	2 = (s3:PutBucketPolicy,  customer-pii-bucket)                   DANGEROUS
+//	3 = (s3:DeleteObject,     billing-archives/jan-2026.csv)         DANGEROUS
+//	4 = (s3:PutBucketAcl,     audit-logs-bucket)                     DANGEROUS
 //
 // Constraint encoding:
 //
-//   admitted_by_policy(req)    derived from the role's statements
-//   in_intended_scope(req)     req in {0, 1}
-//   is_dangerous(req)          req in {2, 3, 4}
-//   unsafe = admitted ∧ is_dangerous ∧ ¬in_intended_scope
+//	admitted_by_policy(req)    derived from the role's statements
+//	in_intended_scope(req)     req in {0, 1}
+//	is_dangerous(req)          req in {2, 3, 4}
+//	unsafe = admitted ∧ is_dangerous ∧ ¬in_intended_scope
 //
 // SAT → there exists a dangerous action the role can perform
 // outside its intended scope; the model returns the witness

@@ -82,9 +82,9 @@ func runBybitProof(snapshotsDir, label string, expectSAT bool) bool {
 }
 
 type bybitVerdict struct {
-	sat        bool
-	witness    string
-	rationale  string
+	sat       bool
+	witness   string
+	rationale string
 }
 
 func (v bybitVerdict) print() {

@@ -6,10 +6,10 @@ package main
 // Allow, not in Deny) plus iam:PassRole eligibility for
 // PassedToService.
 type computeLaunchVector struct {
-	Service          string
-	Description      string
-	RequiredActions  []string
-	PassedToService  string
+	Service         string
+	Description     string
+	RequiredActions []string
+	PassedToService string
 }
 
 // computeLaunchVectors enumerates the AWS services through

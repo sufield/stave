@@ -13,6 +13,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -184,10 +185,26 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 	}
 	clock := buildClock(in.Now)
 
-	celEval, err := stavecel.NewPredicateEval()
+	// Stave-apply is the only hot path that runs the full control
+	// catalog repeatedly; wire it through the persistent on-disk
+	// compile cache so warm runs skip parse + type-check.
+	// DefaultCacheDir falls back to "" on platforms without an
+	// XDG cache dir, which makes the compiler an in-memory-only
+	// no-op — identical to the pre-cache behaviour.
+	cacheDir, _ := stavecel.DefaultCacheDir()
+	var celCompiler *stavecel.Compiler
+	celEval, celCompiler, err := stavecel.NewPredicateEvalWithCompiler(stavecel.WithCacheDir(cacheDir))
 	if err != nil {
 		return nil, fmt.Errorf("initialize CEL evaluator: %w", err)
 	}
+	defer func() {
+		// Best-effort persist on exit. A failed persist is a
+		// missed optimisation, not a correctness problem, so we
+		// log and move on rather than poisoning the apply result.
+		if persistErr := celCompiler.PersistCache(); persistErr != nil {
+			slog.Warn("cel: persist cache failed", "err", persistErr)
+		}
+	}()
 
 	obsOpts := []observations.LoaderOption{}
 	if in.IntegrityManifest != "" {

@@ -272,7 +272,7 @@ func finding2ExcessActions(label string, statements []statement) bool {
 // suspicion is refuted; the author got this right).
 func finding3KMSScopeCheck(label string, statements []statement) bool {
 	type witness struct {
-		key   string
+		key    string
 		isThis bool
 	}
 	witnesses := []witness{

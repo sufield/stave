@@ -13,10 +13,10 @@
 // The witnesses here are AWS managed policy ARNs the user could
 // attach to itself if iam:AttachUserPolicy on self is admitted:
 //
-//   0 = arn:aws:iam::aws:policy/ReadOnlyAccess         intended (no privesc)
-//   1 = arn:aws:iam::aws:policy/AdministratorAccess    DANGEROUS (full admin)
-//   2 = arn:aws:iam::aws:policy/IAMFullAccess          DANGEROUS (escalate further)
-//   3 = arn:aws:iam::aws:policy/PowerUserAccess        DANGEROUS (near-admin)
+//	0 = arn:aws:iam::aws:policy/ReadOnlyAccess         intended (no privesc)
+//	1 = arn:aws:iam::aws:policy/AdministratorAccess    DANGEROUS (full admin)
+//	2 = arn:aws:iam::aws:policy/IAMFullAccess          DANGEROUS (escalate further)
+//	3 = arn:aws:iam::aws:policy/PowerUserAccess        DANGEROUS (near-admin)
 //
 // The Go side walks each Allow statement to decide whether
 // iam:AttachUserPolicy with the user's own ARN as Resource is
@@ -25,10 +25,10 @@
 //
 // Z3 then discharges:
 //
-//   admitted    = self_attach_admitted ∧ (witness ∈ all_indices)
-//   dangerous   = witness ∈ {1, 2, 3}
-//   intended    = witness == 0
-//   unsafe      = admitted ∧ dangerous ∧ ¬intended
+//	admitted    = self_attach_admitted ∧ (witness ∈ all_indices)
+//	dangerous   = witness ∈ {1, 2, 3}
+//	intended    = witness == 0
+//	unsafe      = admitted ∧ dangerous ∧ ¬intended
 //
 // SAT → there exists an admin-granting policy the user can
 // attach. The witness is the specific ARN.

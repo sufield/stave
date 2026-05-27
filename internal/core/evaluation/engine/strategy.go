@@ -153,9 +153,14 @@ func (a *Assessor) strategyFor(ctl *policy.ControlDefinition) strategy {
 	return buildStrategy(&sessionDeps{Assessor: a, span: nopSpan{}}, ctl)
 }
 
-// strategyFor returns the appropriate evaluator with the active trace span.
-func (s *assessmentSession) strategyFor(ctl *policy.ControlDefinition) strategy {
-	return buildStrategy(&sessionDeps{Assessor: s.assessor, span: s.activeSpan}, ctl)
+// strategyFor returns the appropriate evaluator for ctl, with span
+// carried as a per-call parameter. The span is the live control×asset
+// trace span the strategy will record its decision steps into; passing
+// it as a parameter (rather than storing it on the session) is what
+// makes applyControl safe to invoke concurrently across controls. See
+// the applyControl doc comment for the full concurrency contract.
+func (s *assessmentSession) strategyFor(ctl *policy.ControlDefinition, span ports.AssessmentSpan) strategy {
+	return buildStrategy(&sessionDeps{Assessor: s.assessor, span: span}, ctl)
 }
 
 // StrategyFactory constructs the appropriate strategy for a control of a

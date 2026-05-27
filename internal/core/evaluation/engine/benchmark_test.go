@@ -13,6 +13,71 @@ import (
 	"github.com/sufield/stave/internal/core/predicate"
 )
 
+// benchPredicateEval is the always-unsafe predicate evaluator the
+// benchmarks wire into Assessor.predicateEval. Every asset×control
+// pair evaluates true, so the full per-asset finding-generation
+// path runs (collector writes, span lifecycle, recordings). Mirrors
+// testbuilder_test.go's newTestAssessor.alwaysUnsafe() pattern.
+//
+// Wiring this matters: before it was added, every Bench*Evaluate*
+// benchmark constructed Assessor via struct literal without
+// predicateEval, and Assess() bailed at the precondition check
+// returning errors.New("precondition failed: Assessor requires a
+// PredicateEval"). The reported ~200 ns/op figures were the
+// error-string-construction cost, not the evaluation cost.
+var benchPredicateEval policy.PredicateEval = func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	return true, nil
+}
+
+// benchPredicateParser pairs with benchPredicateEval. Returns an
+// empty UnsafePredicate so the parser-required precondition passes
+// without affecting evaluation (the predicates are pre-built on
+// the controls themselves).
+var benchPredicateParser = func(_ any) (*policy.UnsafePredicate, error) {
+	return &policy.UnsafePredicate{}, nil
+}
+
+// benchNopDigester satisfies ports.Digester so FingerprintPolicy()
+// stops logging "called without a Digester" warnings that
+// interleave with benchmark output. Production wires a real
+// crypto.NewHasher() via WithHasher; the benchmark only needs the
+// interface satisfied, not a real digest.
+type benchNopDigester struct{}
+
+func (benchNopDigester) Digest(_ []string, _ byte) kernel.Digest { return "" }
+
+// benchAssessor returns a *Assessor pre-wired with every
+// precondition Assess() requires (clock, SLA, predicate eval +
+// parser, hasher) so callers only have to supply controls. Builds
+// the spine the four benchmarks share; the per-benchmark caller
+// only varies controls and slaThreshold via the returned struct's
+// fields. Centralising the wiring is what prevents future
+// benchmarks from reintroducing the precondition-error-path bug.
+func benchAssessor(now time.Time, sla time.Duration, controls []policy.ControlDefinition) *Assessor {
+	return &Assessor{
+		controls:        controls,
+		slaThreshold:    sla,
+		clock:           ports.FixedClock(now),
+		predicateEval:   benchPredicateEval,
+		predicateParser: benchPredicateParser,
+		hasher:          benchNopDigester{},
+	}
+}
+
+// mustAssessSucceed runs Assess once outside the timer and fails
+// the benchmark immediately if it returns an error. The original
+// benchmarks discarded errors via `_, _ = ...`, which is how the
+// precondition-error bug went unnoticed for so long. Calling this
+// at the top of every benchmark catches future precondition
+// regressions (forgot to wire predicateEval, missing clock, etc.)
+// before they inflate the ns/op number with the error-return path.
+func mustAssessSucceed(b *testing.B, a *Assessor, snapshots []asset.Snapshot) {
+	b.Helper()
+	if _, err := a.Assess(context.Background(), snapshots); err != nil {
+		b.Fatalf("Assess returned error (benchmark precondition not wired): %v", err)
+	}
+}
+
 // BenchmarkEvaluate measures evaluation of controls across asset lifecycles.
 // Run with: go test -bench=BenchmarkEvaluate -benchmem ./internal/core/evaluation/engine/
 func BenchmarkEvaluate(b *testing.B) {
@@ -48,11 +113,12 @@ func BenchmarkEvaluate(b *testing.B) {
 		}
 	}
 
-	assessor := &Assessor{
-		controls:     controls,
-		slaThreshold: 12 * time.Hour,
-		clock:        ports.FixedClock(now),
-	}
+	assessor := benchAssessor(now, 12*time.Hour, controls)
+
+	// Sanity-check the precondition once outside the timer so a
+	// future config regression fails loudly instead of inflating
+	// the ns/op number with the error-return path.
+	mustAssessSucceed(b, assessor, snapshots)
 
 	b.ResetTimer()
 	for b.Loop() {
@@ -132,11 +198,9 @@ func BenchmarkEvaluate10kAssets(b *testing.B) {
 		}
 	}
 
-	assessor := &Assessor{
-		controls:     controls,
-		slaThreshold: 168 * time.Hour,
-		clock:        ports.FixedClock(now),
-	}
+	assessor := benchAssessor(now, 168*time.Hour, controls)
+
+	mustAssessSucceed(b, assessor, snapshots)
 
 	b.ResetTimer()
 	for b.Loop() {
@@ -169,11 +233,9 @@ func BenchmarkEvaluateMultiControlScaling(b *testing.B) {
 			}
 		}
 
-		assessor := &Assessor{
-			controls:     controls,
-			slaThreshold: 168 * time.Hour,
-			clock:        ports.FixedClock(now),
-		}
+		assessor := benchAssessor(now, 168*time.Hour, controls)
+
+		mustAssessSucceed(b, assessor, snapshots)
 
 		b.Run(fmt.Sprintf("controls=%d", ctlCount), func(b *testing.B) {
 			for b.Loop() {
@@ -263,5 +325,90 @@ func buildBenchmarkAsset(i int) asset.Asset {
 				},
 			},
 		}
+	}
+}
+
+// BenchmarkEvaluateLargeScale exercises the per-control parallelism added
+// in Phase 2 of the evaluation optimisation track. The pre-Phase-2
+// sequential baseline (captured 2026-05-21 in docs/perf/evaluation-baseline.md)
+// reported sub-microsecond per-op cost on the small-N benchmarks — because
+// those benchmarks have so few controls that the per-control loop is
+// dominated by setup. The realistic case is 2,000+ controls × 100+ assets,
+// where the parallel dispatch actually has work to spread across cores.
+//
+// Run sequential vs parallel comparison with:
+//
+//	go test -run=^$ -bench=BenchmarkEvaluateLargeScale -benchtime=3s \
+//	  -cpu=1,8 ./internal/core/evaluation/engine/
+//
+// The -cpu=1 invocation pins GOMAXPROCS=1 (errgroup still schedules
+// goroutines, but they all run on one OS thread — close to sequential
+// behaviour). The -cpu=8 invocation uses all 8 cores. The ratio between
+// the two is the apples-to-apples parallelism speedup.
+//
+// Acceptance criteria from docs/perf/evaluation-baseline.md:
+//   - No regression at -cpu=1 vs the historical sequential baseline.
+//   - 3-5× speedup at -cpu=8 if the per-control work parallelises cleanly.
+func BenchmarkEvaluateLargeScale(b *testing.B) {
+	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
+
+	// Build 2,000 synthetic controls across four predicate shapes —
+	// enough to make per-control dispatch visible against setup.
+	const controlCount = 2_000
+	controls := make([]policy.ControlDefinition, controlCount)
+	for i := range controlCount {
+		var pred policy.UnsafePredicate
+		switch i % 4 {
+		case 0: // public-read check
+			pred = policy.UnsafePredicate{
+				Any: []policy.PredicateRule{
+					{Field: predicate.NewFieldPath("properties.storage.access.public_read"), Op: predicate.OpEq, Value: policy.Bool(true)},
+				},
+			}
+		case 1: // encryption check
+			pred = policy.UnsafePredicate{
+				All: []policy.PredicateRule{
+					{Field: predicate.NewFieldPath("properties.storage.kind"), Op: predicate.OpEq, Value: policy.Str("bucket")},
+					{Field: predicate.NewFieldPath("properties.storage.encryption.at_rest_enabled"), Op: predicate.OpEq, Value: policy.Bool(false)},
+				},
+			}
+		case 2: // public-list check
+			pred = policy.UnsafePredicate{
+				Any: []policy.PredicateRule{
+					{Field: predicate.NewFieldPath("properties.storage.access.public_list"), Op: predicate.OpEq, Value: policy.Bool(true)},
+				},
+			}
+		default: // PAB check
+			pred = policy.UnsafePredicate{
+				All: []policy.PredicateRule{
+					{Field: predicate.NewFieldPath("properties.storage.kind"), Op: predicate.OpEq, Value: policy.Str("bucket")},
+					{Field: predicate.NewFieldPath("properties.storage.controls.public_access_fully_blocked"), Op: predicate.OpEq, Value: policy.Bool(false)},
+				},
+			}
+		}
+		controls[i] = policy.ControlDefinition{
+			ID:              kernel.ControlID(fmt.Sprintf("CTL.LARGE.%04d", i)),
+			Name:            fmt.Sprintf("large-control-%d", i),
+			Type:            policy.TypeUnsafeState,
+			UnsafePredicate: pred,
+		}
+		if err := controls[i].Prepare(); err != nil {
+			b.Fatal(err)
+		}
+	}
+
+	// 200 assets per snapshot — large enough that the per-control inner
+	// loop has real work, small enough to keep benchmark wall time
+	// reasonable.
+	snapshots := buildBenchmarkSnapshots(now, 200)
+
+	assessor := benchAssessor(now, 168*time.Hour, controls)
+
+	mustAssessSucceed(b, assessor, snapshots)
+
+	b.ResetTimer()
+	b.ReportAllocs()
+	for b.Loop() {
+		_, _ = assessor.Assess(context.Background(), snapshots)
 	}
 }

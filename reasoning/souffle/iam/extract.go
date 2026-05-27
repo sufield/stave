@@ -223,15 +223,17 @@ func main() {
 // in docs/authorization-model.md.
 //
 // Authorization (default config: ownership_tag_keys = [Owner, Team]):
-//   For each (resource, principal) pair where both carry the same
-//   value under any ownership tag key, emit authorized(P, R).
-//   Resources with no ownership tag are fail-open: emit
-//   authorized(P, R) for EVERY principal (so untagged resources
-//   don't generate false-positive unauthorized_access).
+//
+//	For each (resource, principal) pair where both carry the same
+//	value under any ownership tag key, emit authorized(P, R).
+//	Resources with no ownership tag are fail-open: emit
+//	authorized(P, R) for EVERY principal (so untagged resources
+//	don't generate false-positive unauthorized_access).
 //
 // Sensitivity (default config: DataClassification ∈ {PII, PHI, PCI}):
-//   For each resource with a high-value tag, emit sensitivity(R, "high").
-//   Resources without the tag emit sensitivity(R, "standard").
+//
+//	For each resource with a high-value tag, emit sensitivity(R, "high").
+//	Resources without the tag emit sensitivity(R, "standard").
 //
 // Returns per-relation counts for the report.
 func emitG3Facts(outDir string) (map[string]int, error) {

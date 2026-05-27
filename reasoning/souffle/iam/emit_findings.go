@@ -4,38 +4,40 @@
 // CSV output into Stave PostureFindings JSON.
 //
 // Reads:
-//   <souffle-out>/violation_c.csv
-//   <souffle-out>/violation_i.csv
+//
+//	<souffle-out>/violation_c.csv
+//	<souffle-out>/violation_i.csv
 //
 // Writes a single JSON document modelling the out.v0.1 finding shape:
 //
-//   {
-//     "schema_version": "out.v0.1",
-//     "source": "phase7-cia-tier",
-//     "findings": [ ...one per violation row ... ]
-//   }
+//	{
+//	  "schema_version": "out.v0.1",
+//	  "source": "phase7-cia-tier",
+//	  "findings": [ ...one per violation row ... ]
+//	}
 //
 // Each finding carries:
-//   control_id          — CIA.C.UNAUTHORIZED_READ or
-//                          CIA.I.UNAUTHORIZED_WRITE
-//   control_name        — human-readable
-//   control_severity    — critical (high-sensitivity violation)
-//   asset_id            — the principal (the actor)
-//   asset_type          — aws_iam_user / aws_iam_role (where known
-//                          from has_type; else aws_iam_principal)
-//   classification      — state_assertion
-//   scope               — compound
-//   corpus_reference    — "CIA-derived: <description>"
-//   evidence.misconfigurations[0]
-//                       — names the resource + action that triggered
-//   control_compliance.cia_triad
-//                       — "C" or "I"
+//
+//	control_id          — CIA.C.UNAUTHORIZED_READ or
+//	                       CIA.I.UNAUTHORIZED_WRITE
+//	control_name        — human-readable
+//	control_severity    — critical (high-sensitivity violation)
+//	asset_id            — the principal (the actor)
+//	asset_type          — aws_iam_user / aws_iam_role (where known
+//	                       from has_type; else aws_iam_principal)
+//	classification      — state_assertion
+//	scope               — compound
+//	corpus_reference    — "CIA-derived: <description>"
+//	evidence.misconfigurations[0]
+//	                    — names the resource + action that triggered
+//	control_compliance.cia_triad
+//	                    — "C" or "I"
 //
 // Usage:
 //
-//   go run ./reasoning/souffle/iam/emit_findings.go \
-//       -souffle-out /tmp/g45-syn-out \
-//       -out         /tmp/cia-findings.json
+//	go run ./reasoning/souffle/iam/emit_findings.go \
+//	    -souffle-out /tmp/g45-syn-out \
+//	    -out         /tmp/cia-findings.json
 //
 // The output is intentionally a SUBSET of the full out.v0.1 schema
 // — enough for downstream tooling to consume CIA findings as

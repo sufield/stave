@@ -59,15 +59,15 @@ import (
 )
 
 type options struct {
-	fixture     string
-	controls    string
+	fixture      string
+	controls     string
 	observations string
-	staveBinary string
-	souffleBin  string
-	schemaDl    string
-	rulesDl     string
-	out         string
-	now         string
+	staveBinary  string
+	souffleBin   string
+	schemaDl     string
+	rulesDl      string
+	out          string
+	now          string
 }
 
 func parseFlags() *options {
@@ -109,10 +109,10 @@ func parseFlags() *options {
 // The full out.v0.1 has many more fields; we only need the ones
 // that drive classification.
 type finding struct {
-	ControlID  string `json:"control_id"`
-	AssetID    string `json:"asset_id"`
-	AssetType  string `json:"asset_type"`
-	Evidence   struct {
+	ControlID string `json:"control_id"`
+	AssetID   string `json:"asset_id"`
+	AssetType string `json:"asset_type"`
+	Evidence  struct {
 		Misconfigurations []struct {
 			Property string `json:"property"`
 		} `json:"misconfigurations"`

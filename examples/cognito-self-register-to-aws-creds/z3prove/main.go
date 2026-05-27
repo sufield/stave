@@ -73,20 +73,20 @@ type statement struct {
 }
 
 type fixture struct {
-	userPool            userPoolFacts
-	appClient           appClientFacts
-	identityPool        identityPoolFacts
-	unauthRoleStmts     []statement
-	authRoleStmts       []statement
+	userPool        userPoolFacts
+	appClient       appClientFacts
+	identityPool    identityPoolFacts
+	unauthRoleStmts []statement
+	authRoleStmts   []statement
 }
 
 type userPoolFacts struct {
-	selfRegRestricted     bool
-	mfaEnforced           bool
-	advancedSecurity      bool
-	preSignupTriggerARN   string
-	preTokenTriggerARN    string
-	autoVerifyAttributes  []string
+	selfRegRestricted    bool
+	mfaEnforced          bool
+	advancedSecurity     bool
+	preSignupTriggerARN  string
+	preTokenTriggerARN   string
+	autoVerifyAttributes []string
 }
 
 type appClientFacts struct {
@@ -97,9 +97,9 @@ type appClientFacts struct {
 }
 
 type identityPoolFacts struct {
-	allowUnauthenticated bool
-	unauthRoleARN        string
-	authRoleARN          string
+	allowUnauthenticated  bool
+	unauthRoleARN         string
+	authRoleARN           string
 	roleMappingConfigured bool
 }
 
@@ -476,14 +476,14 @@ func loadFixture(snapshotsDir string) (fixture, error) {
 							SelfRegistrationRestricted bool `json:"self_registration_restricted"`
 						} `json:"governance"`
 						LambdaConfig struct {
-							PreSignUp           string `json:"pre_sign_up"`
-							PreTokenGeneration  string `json:"pre_token_generation"`
+							PreSignUp          string `json:"pre_sign_up"`
+							PreTokenGeneration string `json:"pre_token_generation"`
 						} `json:"lambda_config"`
 						AutoVerifyAttributes []string `json:"auto_verified_attributes"`
 						AppClient            struct {
-							ClientID         string   `json:"client_id"`
-							HasSecret        bool     `json:"has_secret"`
-							WriteAttributes  []string `json:"write_attributes"`
+							ClientID          string   `json:"client_id"`
+							HasSecret         bool     `json:"has_secret"`
+							WriteAttributes   []string `json:"write_attributes"`
 							AllowedOAuthFlows []string `json:"allowed_oauth_flows"`
 						} `json:"app_client"`
 						IdentityPool struct {

@@ -13,15 +13,15 @@
 // as a finite enum of named witness requests. Each request is a
 // (requesting_tenant, target_key) pair encoded as an integer:
 //
-//   0 = (tenant=A, target="tenants/A/photo.png")        intended
-//   1 = (tenant=A, target="tenants/B/photo.png")        cross-tenant
-//   2 = (tenant=A, target="tenants/A/../B/secret.json") path traversal
+//	0 = (tenant=A, target="tenants/A/photo.png")        intended
+//	1 = (tenant=A, target="tenants/B/photo.png")        cross-tenant
+//	2 = (tenant=A, target="tenants/A/../B/secret.json") path traversal
 //
 // Constraint encoding:
 //
-//   admitted = key ∈ admitted_set            depends on signer flags
-//   intended = (key == 0)                    each tenant only its own prefix
-//   unsafe   = admitted AND NOT intended
+//	admitted = key ∈ admitted_set            depends on signer flags
+//	intended = (key == 0)                    each tenant only its own prefix
+//	unsafe   = admitted AND NOT intended
 //
 // Permissive signer (enforce_prefix=false OR allow_traversal=true):
 // admitted_set = {0, 1, 2}, so unsafe is SAT.
@@ -49,10 +49,10 @@ var witnessLabels = []string{
 }
 
 const (
-	idxOwnPrefix    = 0
-	idxCrossTenant  = 1
-	idxTraversal    = 2
-	witnessCount    = 3
+	idxOwnPrefix   = 0
+	idxCrossTenant = 1
+	idxTraversal   = 2
+	witnessCount   = 3
 )
 
 func main() {

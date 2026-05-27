@@ -27,6 +27,16 @@ type FailingControl struct {
 // asset.ID grouping.
 type ScopeResolver func(assetID asset.ID, path string) (string, bool)
 
+// chainBuckets is the per-chain accumulator built during the
+// failure walk. Held as a slice indexed by chain index so chains
+// that never fire pay only the nil-check at emission time, not the
+// per-chain map allocation.
+type chainBuckets struct {
+	byScope         map[string]map[kernel.ControlID]bool
+	assetsByScope   map[string]map[asset.ID]bool
+	resolvedByScope map[string]bool
+}
+
 // DetectChains checks each chain definition: a chain fires only when
 // enough of its member controls fail within a single grouping bucket.
 // The grouping bucket is asset.ID by default; when the chain declares
@@ -40,142 +50,85 @@ type ScopeResolver func(assetID asset.ID, path string) (string, bool)
 // blast multiplier).
 // scopeResolver may be nil; when nil, every chain falls back to
 // asset.ID grouping regardless of ScopeField.
+//
+// Algorithm: build a control→chains inverted index once, walk
+// failures exactly once, route each failure into per-chain
+// per-scope buckets. The earlier shape iterated chains and scanned
+// the full failure slice per chain — O(chains × failures). The
+// inverted-index form is O(Σ |chain.ControlIDs|) for the index
+// build plus O(failures × avg_chains_per_control) for the walk —
+// roughly fan-out 1-3 chains per control, so essentially O(failures)
+// in practice. The terminal sort guarantees the original
+// determinism contract regardless of the new map-iteration order.
 func DetectChains(
 	failures []FailingControl,
 	chains []policy.ChainDefinition,
 	controlLookup map[kernel.ControlID]*policy.ControlDefinition,
 	scopeResolver ScopeResolver,
 ) []findingsdata.CompoundFinding {
-	var findings []findingsdata.CompoundFinding
-
+	// Build the inverted index once.
+	controlToChains := make(map[kernel.ControlID][]int, len(chains))
 	for i := range chains {
-		chain := &chains[i]
-
-		// chainMembers is a set of the chain's member control IDs so we
-		// can ignore failures of unrelated controls when bucketing.
-		chainMembers := make(map[kernel.ControlID]bool, len(chain.ControlIDs))
-		for _, cid := range chain.ControlIDs {
-			chainMembers[cid] = true
+		for _, cid := range chains[i].ControlIDs {
+			controlToChains[cid] = append(controlToChains[cid], i)
 		}
+	}
 
-		// Group failing controls by either asset.ID (default) or the
-		// resolved scope value. The chain-local map mirrors the legacy
-		// per-asset map, plus a parallel map of scope -> contributing
-		// asset IDs so the compound finding can surface every asset
-		// that fed the chain. resolvedByScope tracks whether AT LEAST
-		// one member of a bucket resolved via scope_field — used at
-		// emission to decide whether to populate ScopeID/ScopeField on
-		// the output. A bucket where every member fell back to asset.ID
-		// is a pure asset.ID bucket (legacy semantics) even when
-		// chain.ScopeField is set.
-		//
-		// Only failures whose ControlID is one of the chain's members
-		// participate. A user-pool client with RESOURCESRV failing in
-		// the same scope as IDCHAIN's user-pool-side findings would
-		// otherwise inflate contributing_assets with an asset that
-		// fired no chain control — surface noise that misrepresents
-		// what the chain actually saw.
-		byScope := make(map[string]map[kernel.ControlID]bool)
-		assetsByScope := make(map[string]map[asset.ID]bool)
-		resolvedByScope := make(map[string]bool)
-		for j := range failures {
-			f := &failures[j]
-			if !chainMembers[f.ControlID] {
-				continue
+	// Walk failures once. Allocate per-chain buckets lazily so
+	// chains with zero matching failures pay nothing.
+	buckets := make([]*chainBuckets, len(chains))
+	for j := range failures {
+		f := &failures[j]
+		chainIdxs := controlToChains[f.ControlID]
+		if len(chainIdxs) == 0 {
+			continue
+		}
+		for _, ci := range chainIdxs {
+			chain := &chains[ci]
+			b := buckets[ci]
+			if b == nil {
+				b = &chainBuckets{
+					byScope:         make(map[string]map[kernel.ControlID]bool),
+					assetsByScope:   make(map[string]map[asset.ID]bool),
+					resolvedByScope: make(map[string]bool),
+				}
+				buckets[ci] = b
 			}
 			scope, resolved := groupingKey(chain, f.AssetID, scopeResolver)
-			if byScope[scope] == nil {
-				byScope[scope] = make(map[kernel.ControlID]bool)
-				assetsByScope[scope] = make(map[asset.ID]bool)
+			if b.byScope[scope] == nil {
+				b.byScope[scope] = make(map[kernel.ControlID]bool)
+				b.assetsByScope[scope] = make(map[asset.ID]bool)
 			}
-			byScope[scope][f.ControlID] = true
-			assetsByScope[scope][f.AssetID] = true
+			b.byScope[scope][f.ControlID] = true
+			b.assetsByScope[scope][f.AssetID] = true
 			if resolved {
-				resolvedByScope[scope] = true
+				b.resolvedByScope[scope] = true
 			}
 		}
+	}
 
-		for scope, scopeFailing := range byScope {
-			var failing []kernel.ControlID
-			var holding []kernel.ControlID
-			for _, cid := range chain.ControlIDs {
-				if scopeFailing[cid] {
-					failing = append(failing, cid)
-				} else {
-					holding = append(holding, cid)
-				}
+	// Emit findings: iterate chains in catalog order (so iteration
+	// order is stable for the few cases where the terminal sort is
+	// a no-op — single chain, single scope), skipping chains with
+	// no buckets.
+	var findings []findingsdata.CompoundFinding
+	for i := range chains {
+		b := buckets[i]
+		if b == nil {
+			continue
+		}
+		chain := &chains[i]
+		for scope, scopeFailing := range b.byScope {
+			if finding, ok := emitChainFinding(chain, scope, scopeFailing, b, controlLookup); ok {
+				findings = append(findings, finding)
 			}
-
-			if len(failing) < chain.EscalationThreshold {
-				continue
-			}
-
-			// Collect attack stages and compute scope-aware blast multiplier.
-			stageSet := make(map[kernel.AttackStage]bool)
-			maxBlast := 1.0
-			for _, cid := range failing {
-				if ctl, ok := controlLookup[cid]; ok {
-					if stage := ctl.AttackStage(); stage != "" {
-						stageSet[stage] = true
-					}
-					mult := scopeAdjustedBlast(ctl)
-					if mult > maxBlast {
-						maxBlast = mult
-					}
-				}
-			}
-
-			stages := make([]kernel.AttackStage, 0, len(stageSet))
-			for s := range stageSet {
-				stages = append(stages, s)
-			}
-			slices.SortFunc(stages, func(a, b kernel.AttackStage) int {
-				return strings.Compare(string(a), string(b))
-			})
-
-			escalation := ChainEscalation(len(failing))
-			// Derive base score from the highest severity among failing
-			// member controls rather than a hardcoded default.
-			base := baseScoreFromMembers(failing, controlLookup)
-			score := Compound(base, escalation, maxBlast)
-			if score > float64(ScoreCatastrophic) {
-				score = float64(ScoreCatastrophic)
-			}
-
-			narrative := buildNarrative(chain, failing)
-
-			contributing := sortedAssetIDs(assetsByScope[scope])
-			finding := findingsdata.CompoundFinding{
-				ChainID:           chain.ID,
-				AssetID:           contributing[0], // representative; deterministic via sort
-				Description:       chain.Description,
-				ControlsFailing:   failing,
-				MissingSafeguards: holding,
-				CompoundScore:     score,
-				Severity:          chain.CompoundSeverity,
-				Narrative:         narrative,
-				AttackStages:      stages,
-			}
-			// ContributingAssets and ScopeID/ScopeField surface only on
-			// scope-grouped chains. For legacy asset.ID-grouped chains
-			// every contributing asset.ID equals AssetID, so the slice
-			// would duplicate the existing field — and adding it
-			// unconditionally would churn every chain golden in the
-			// repo. Emit only when scope_field actually drove grouping.
-			if chain.ScopeField != "" && resolvedByScope[scope] {
-				finding.ScopeID = scope
-				finding.ScopeField = chain.ScopeField
-				finding.ContributingAssets = contributing
-			}
-			findings = append(findings, finding)
 		}
 	}
 
 	// Sort by (chain id, scope id, asset id) so the output is deterministic
-	// across runs. The inner loop above iterates a map keyed by scope, and
-	// Go randomizes map iteration order — without a final sort, two runs
-	// on identical input produce different chain_findings orderings, which
-	// surfaces as fixture flakes.
+	// across runs. Both the inner failure walk above and the bucket
+	// emission iterate maps with randomised order, so the sort is the
+	// load-bearing source of determinism for chain_findings output.
 	slices.SortFunc(findings, func(a, b findingsdata.CompoundFinding) int {
 		if c := strings.Compare(string(a.ChainID), string(b.ChainID)); c != 0 {
 			return c
@@ -187,6 +140,93 @@ func DetectChains(
 	})
 
 	return findings
+}
+
+// emitChainFinding turns one (chain, scope, bucket) into a
+// CompoundFinding when the failing-control count meets the chain's
+// escalation threshold. Returns (zero, false) when the threshold
+// is not met so the caller can skip silently.
+//
+// Extracted from the body of DetectChains so the new index-driven
+// loop reads as data-flow (build index, walk failures, emit), with
+// the per-bucket bookkeeping isolated here.
+func emitChainFinding(
+	chain *policy.ChainDefinition,
+	scope string,
+	scopeFailing map[kernel.ControlID]bool,
+	b *chainBuckets,
+	controlLookup map[kernel.ControlID]*policy.ControlDefinition,
+) (findingsdata.CompoundFinding, bool) {
+	var failing []kernel.ControlID
+	var holding []kernel.ControlID
+	for _, cid := range chain.ControlIDs {
+		if scopeFailing[cid] {
+			failing = append(failing, cid)
+		} else {
+			holding = append(holding, cid)
+		}
+	}
+
+	if len(failing) < chain.EscalationThreshold {
+		return findingsdata.CompoundFinding{}, false
+	}
+
+	// Collect attack stages and compute scope-aware blast multiplier.
+	stageSet := make(map[kernel.AttackStage]bool)
+	maxBlast := 1.0
+	for _, cid := range failing {
+		if ctl, ok := controlLookup[cid]; ok {
+			if stage := ctl.AttackStage(); stage != "" {
+				stageSet[stage] = true
+			}
+			mult := scopeAdjustedBlast(ctl)
+			if mult > maxBlast {
+				maxBlast = mult
+			}
+		}
+	}
+
+	stages := make([]kernel.AttackStage, 0, len(stageSet))
+	for s := range stageSet {
+		stages = append(stages, s)
+	}
+	slices.SortFunc(stages, func(a, b kernel.AttackStage) int {
+		return strings.Compare(string(a), string(b))
+	})
+
+	escalation := ChainEscalation(len(failing))
+	base := baseScoreFromMembers(failing, controlLookup)
+	score := Compound(base, escalation, maxBlast)
+	if score > float64(ScoreCatastrophic) {
+		score = float64(ScoreCatastrophic)
+	}
+
+	narrative := buildNarrative(chain, failing)
+	contributing := sortedAssetIDs(b.assetsByScope[scope])
+
+	finding := findingsdata.CompoundFinding{
+		ChainID:           chain.ID,
+		AssetID:           contributing[0], // representative; deterministic via sort
+		Description:       chain.Description,
+		ControlsFailing:   failing,
+		MissingSafeguards: holding,
+		CompoundScore:     score,
+		Severity:          chain.CompoundSeverity,
+		Narrative:         narrative,
+		AttackStages:      stages,
+	}
+	// ContributingAssets and ScopeID/ScopeField surface only on
+	// scope-grouped chains. For legacy asset.ID-grouped chains every
+	// contributing asset.ID equals AssetID, so the slice would
+	// duplicate AssetID — and adding it unconditionally would churn
+	// every chain golden in the repo. Emit only when scope_field
+	// actually drove grouping.
+	if chain.ScopeField != "" && b.resolvedByScope[scope] {
+		finding.ScopeID = scope
+		finding.ScopeField = chain.ScopeField
+		finding.ContributingAssets = contributing
+	}
+	return finding, true
 }
 
 // groupingKey returns the scope value to use when bucketing one failing
