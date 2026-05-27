@@ -119,7 +119,13 @@ func cacheFilePath(dir string) string { return filepath.Join(dir, cacheFileName)
 // start. Any other decode failure surfaces so the caller can warn
 // and fall back to recompilation.
 func loadCacheFile(path string) ([]cachedEntry, error) {
-	data, err := os.ReadFile(path)
+	// gosec G304: the path is derived from the operator-controlled
+	// cache directory option (WithCacheDir) or the OS user-cache
+	// dir; both are trusted inputs. The contents are validated by
+	// magic, format-version, cel-go-version, and per-entry SHA
+	// before any cached AST is trusted — see decodeCache + the
+	// loadDiskCache poisoning defense in compiler.go.
+	data, err := os.ReadFile(path) //nolint:gosec // see comment above
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			return nil, nil
@@ -136,25 +142,25 @@ func loadCacheFile(path string) ([]cachedEntry, error) {
 func decodeCache(data []byte) ([]cachedEntry, error) {
 	r := byteReader{buf: data}
 	if !r.consumeMagic() {
-		return nil, fmt.Errorf("cache: bad magic")
+		return nil, errors.New("cache: bad magic")
 	}
 	formatVer, ok := r.readUint32()
 	if !ok {
-		return nil, fmt.Errorf("cache: truncated header")
+		return nil, errors.New("cache: truncated header")
 	}
 	if formatVer != cacheFormatVersion {
 		return nil, fmt.Errorf("cache: format version %d, want %d", formatVer, cacheFormatVersion)
 	}
 	celVer, ok := r.readLengthPrefixed()
 	if !ok {
-		return nil, fmt.Errorf("cache: truncated cel-go version")
+		return nil, errors.New("cache: truncated cel-go version")
 	}
 	if string(celVer) != celGoVersion() {
 		return nil, fmt.Errorf("cache: cel-go version mismatch (%s != %s)", string(celVer), celGoVersion())
 	}
 	count, ok := r.readUint64()
 	if !ok {
-		return nil, fmt.Errorf("cache: truncated entry count")
+		return nil, errors.New("cache: truncated entry count")
 	}
 	entries := make([]cachedEntry, 0, count)
 	for i := uint64(0); i < count; i++ {
@@ -194,7 +200,7 @@ func decodeCache(data []byte) ([]cachedEntry, error) {
 // one extra warm-up.
 func persistCacheFile(path string, entries []cachedEntry) error {
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, 0o750); err != nil {
 		return fmt.Errorf("create cache dir: %w", err)
 	}
 	tmp, err := os.CreateTemp(dir, ".cache-*.tmp")
@@ -225,28 +231,52 @@ func persistCacheFile(path string, entries []cachedEntry) error {
 	return nil
 }
 
-// encodeCache produces the binary blob written to disk.
+// encodeCache produces the binary blob written to disk. The wire
+// format uses uint32 length prefixes, so any field exceeding ~4 GB
+// would silently truncate. Real CEL expressions and CheckedExpr
+// protos are kilobyte-scale, so the bound is a sanity check rather
+// than a feature: an entry that hits it indicates upstream corruption
+// and is dropped (logged at write time would be wrong since this
+// helper is also called from tests; the drop is silent and the next
+// cold start regenerates).
 func encodeCache(entries []cachedEntry) []byte {
 	var buf []byte
 	buf = append(buf, []byte(cacheMagic)...)
 	buf = appendUint32(buf, cacheFormatVersion)
 	cv := []byte(celGoVersion())
-	buf = appendUint32(buf, uint32(len(cv)))
+	if !fitsUint32(len(cv)) {
+		return nil
+	}
+	buf = appendUint32(buf, uint32(len(cv))) //nolint:gosec // guarded by fitsUint32
 	buf = append(buf, cv...)
 	buf = appendUint64(buf, uint64(len(entries)))
 	for _, e := range entries {
 		buf = append(buf, e.ExpressionSHA[:]...)
-		buf = appendUint32(buf, uint32(len(e.Expression)))
+		if !fitsUint32(len(e.Expression)) {
+			continue
+		}
+		buf = appendUint32(buf, uint32(len(e.Expression))) //nolint:gosec // guarded by fitsUint32
 		buf = append(buf, e.Expression...)
 		// proto.Marshal on a CheckedExpr is deterministic enough for
 		// cache stability across runs of the same cel-go version; we
 		// don't enforce stable byte equality because the cache is
 		// keyed by SHA-of-expression, not SHA-of-program-bytes.
 		ceBytes, _ := proto.Marshal(e.CheckedExpr)
-		buf = appendUint32(buf, uint32(len(ceBytes)))
+		if !fitsUint32(len(ceBytes)) {
+			continue
+		}
+		buf = appendUint32(buf, uint32(len(ceBytes))) //nolint:gosec // guarded by fitsUint32
 		buf = append(buf, ceBytes...)
 	}
 	return buf
+}
+
+// fitsUint32 guards length-prefix conversions against the int → uint32
+// narrowing that gosec G115 flags. Centralised so the bound is named
+// once and the per-field check sites are uniform.
+func fitsUint32(n int) bool {
+	const uint32Max = int(^uint32(0))
+	return n >= 0 && n <= uint32Max
 }
 
 // hashExpression computes the SHA-256 used as the cache key for a

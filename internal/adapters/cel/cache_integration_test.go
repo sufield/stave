@@ -45,11 +45,11 @@ func TestCache_WarmStartHitsDiskCache(t *testing.T) {
 	if err != nil {
 		t.Fatalf("cold compile: %v", err)
 	}
-	if err := cold.PersistCache(); err != nil {
-		t.Fatalf("persist: %v", err)
+	if persistErr := cold.PersistCache(); persistErr != nil {
+		t.Fatalf("persist: %v", persistErr)
 	}
-	if _, err := os.Stat(cacheFilePath(dir)); err != nil {
-		t.Fatalf("cache file missing after persist: %v", err)
+	if _, statErr := os.Stat(cacheFilePath(dir)); statErr != nil {
+		t.Fatalf("cache file missing after persist: %v", statErr)
 	}
 
 	// Warm compiler: should pick up the cached CheckedExpr.
