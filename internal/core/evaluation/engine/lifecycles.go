@@ -1,12 +1,16 @@
 package engine
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
+	"runtime"
 	"slices"
 	"strings"
 	"sync"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -34,20 +38,41 @@ func BuildLifecyclesPerControl(
 ) (map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle, error) {
 
 	lifecyclesByControl := make(map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle, len(controls))
+	mutexes := make(map[kernel.ControlID]*sync.Mutex, len(controls))
 	for i := range controls {
 		ctl := &controls[i]
 		lifecyclesByControl[ctl.ID] = make(map[asset.ID]*asset.ExposureLifecycle)
+		mutexes[ctl.ID] = &sync.Mutex{}
 	}
 
 	// Pre-index controls by vendor scope tag.
 	ctlIndex := buildControlVendorIndex(controls)
 
+	// Per-snapshot loop stays sequential so the chronological
+	// ordering downstream consumers depend on is preserved. Within
+	// each snapshot, fan out per-asset work across NumCPU workers:
+	// the CEL evaluator is stateless and PredicateEval is read-only,
+	// so the only synchronisation cost is a per-control mutex
+	// guarding the per-asset lifecycle map (taken briefly AFTER the
+	// CEL eval — see recordAssetObservation).
+	//
+	// applyControl elsewhere in the engine is already parallelised,
+	// but that phase is pure-Go timeline logic that's already cheap.
+	// At production scale (2,662 controls × thousands of assets ×
+	// multiple snapshots) the dominant cost is CEL evaluation here.
+	maxWorkers := runtime.NumCPU()
 	for _, snap := range snapshots {
+		g, _ := errgroup.WithContext(context.Background())
+		g.SetLimit(maxWorkers)
 		for _, a := range snap.Assets {
-			relevant := ctlIndex.controlsFor(a.Vendor, controls)
-			if err := recordAssetObservation(a, snap, relevant, celEval, lifecyclesByControl); err != nil {
-				return nil, err
-			}
+			a, snap := a, snap
+			g.Go(func() error {
+				relevant := ctlIndex.controlsFor(a.Vendor, controls)
+				return recordAssetObservation(a, snap, relevant, celEval, lifecyclesByControl, mutexes)
+			})
+		}
+		if err := g.Wait(); err != nil {
+			return nil, fmt.Errorf("build lifecycles for snapshot %s: %w", snap.CapturedAt, err)
 		}
 	}
 
@@ -152,12 +177,27 @@ func (idx *controlVendorIndex) controlsFor(vendor kernel.Vendor, all []policy.Co
 // recordAssetObservation evaluates a single asset against all controls at one
 // point in time, updating the corresponding lifecycles. Extracted from the
 // triple-nested loop to reduce indentation and clarify the per-asset logic.
+//
+// Concurrency contract:
+//   - Multiple goroutines may run this function concurrently for different
+//     assets within the same snapshot.
+//   - The CEL eval (checkUnsafe) runs WITHOUT the per-control lock so the
+//     CPU-heavy phase parallelises across cores.
+//   - Map access to lifecyclesByControl[ctl.ID] is guarded by mutexes[ctl.ID].
+//     The lock is held only for the get-or-create + per-lifecycle mutation,
+//     which is microseconds compared to the CEL eval.
+//   - Per-asset lifecycle objects are never touched by more than one goroutine
+//     at a time: within one snapshot, only the goroutine handling THIS asset
+//     touches its lifecycle; across snapshots, the per-snapshot errgroup
+//     waits at the snapshot boundary, so the next snapshot's workers see
+//     fully-written state.
 func recordAssetObservation(
 	a asset.Asset,
 	snap asset.Snapshot,
 	controls []policy.ControlDefinition,
 	celEval policy.PredicateEval,
 	lifecyclesByControl map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle,
+	mutexes map[kernel.ControlID]*sync.Mutex,
 ) error {
 	for i := range controls {
 		ctl := &controls[i]
@@ -169,24 +209,35 @@ func recordAssetObservation(
 		if !ctl.AppliesToAssetType(a.Type) {
 			continue
 		}
+
+		// CEL evaluation runs FIRST and OUTSIDE the lock — this is the
+		// expensive call we parallelise across cores. The earlier shape
+		// did the map work inside the loop body intertwined with the
+		// eval; with parallel callers, that pattern would either serialise
+		// every eval on a shared lock or require per-lifecycle locking
+		// that's harder to reason about.
+		isUnsafe, evalErr := checkUnsafe(ctl, a, snap, celEval)
+
+		mu := mutexes[ctl.ID]
 		lcs := lifecyclesByControl[ctl.ID]
-		if lcs == nil {
-			// BuildLifecyclesPerControl pre-registers a map for every
-			// control ID up front, so this branch only fires when the
-			// caller passed a control whose ID wasn't in the
+		if mu == nil || lcs == nil {
+			// BuildLifecyclesPerControl pre-registers a map AND a mutex
+			// for every control ID up front, so this branch only fires
+			// when the caller passed a control whose ID wasn't in the
 			// pre-registration set — typically a hand-built test
-			// fixture or a future caller that forgets the
-			// initialisation step. Skip + warn instead of panicking
-			// on the lcs[a.ID] = t write below.
+			// fixture or a future caller that forgets the initialisation
+			// step. Skip + warn instead of panicking on a nil map write.
 			slog.Warn("recordAssetObservation: control ID not pre-registered in lifecycles map; skipping",
 				"control", ctl.ID, "asset", a.ID)
 			continue
 		}
 
+		mu.Lock()
 		t, exists := lcs[a.ID]
 		if !exists {
 			newLC, lcErr := asset.NewExposureLifecycle(a)
 			if lcErr != nil {
+				mu.Unlock()
 				// Empty asset ID means upstream produced a
 				// malformed observation row. Skip this asset
 				// only — the rest of the assessment must keep
@@ -202,8 +253,8 @@ func recordAssetObservation(
 			t = newLC
 			lcs[a.ID] = t
 		}
+		mu.Unlock()
 
-		isUnsafe, evalErr := checkUnsafe(ctl, a, snap, celEval)
 		if evalErr != nil {
 			// Per AGENTS.md, core/ avoids stderr-level side effects:
 			// the inconclusive condition is the return-value channel
@@ -219,12 +270,18 @@ func recordAssetObservation(
 			}
 			slog.Info("control evaluation inconclusive",
 				"control", ctl.ID, "asset", a.ID, "category", category, "error", evalErr)
-			if recErr := t.RecordInconclusive(snap.CapturedAt); recErr != nil {
+			mu.Lock()
+			recErr := t.RecordInconclusive(snap.CapturedAt)
+			mu.Unlock()
+			if recErr != nil {
 				return fmt.Errorf("record inconclusive for control %s, asset %s: %w", ctl.ID, a.ID, recErr)
 			}
 			continue
 		}
-		if err := t.RecordCheck(snap.CapturedAt, isUnsafe); err != nil {
+		mu.Lock()
+		err := t.RecordCheck(snap.CapturedAt, isUnsafe)
+		mu.Unlock()
+		if err != nil {
 			// A lifecycle with an empty ID is upstream-input malformed —
 			// the previous shape panicked here and aborted the whole
 			// assessment. Skip just this lifecycle and keep going so
@@ -236,8 +293,11 @@ func recordAssetObservation(
 			}
 			return fmt.Errorf("record observation for control %s, asset %s: %w", ctl.ID, a.ID, err)
 		}
-		if err := t.SetAsset(a); err != nil {
-			return fmt.Errorf("set asset for control %s, asset %s: %w", ctl.ID, a.ID, err)
+		mu.Lock()
+		setErr := t.SetAsset(a)
+		mu.Unlock()
+		if setErr != nil {
+			return fmt.Errorf("set asset for control %s, asset %s: %w", ctl.ID, a.ID, setErr)
 		}
 	}
 	return nil

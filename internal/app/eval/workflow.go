@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/sufield/stave/internal/adapters/assessmentcache"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -169,29 +170,77 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 	w.loadedSnapshots = auditData.Snapshots
 	w.cacheMu.Unlock()
 
-	report, err := Evaluate(ctx, EvaluateInput{
-		Controls:             auditData.Controls,
-		Snapshots:            auditData.Snapshots,
-		MaxUnsafeDuration:    cfg.SLAThreshold,
-		Clock:                cfg.Clock,
-		Hasher:               cfg.Hasher,
-		ExemptionConfig:      cfg.ExemptionRules,
-		ExceptionConfig:      cfg.ExceptionRules,
-		AcknowledgmentConfig: cfg.AcknowledgmentRules,
-		StaveVersion:         cfg.BuildVersion,
-		InputHashes:          auditData.Hashes,
-		PredicateParser:      cfg.PredicateParser,
-		CELEvaluator:         cfg.PredicateEval,
-		Metadata:             cfg.Metadata,
-		Tracer:               cfg.Tracer,
-	})
-	if err != nil {
-		return evaluation.ComplianceReport{}, evaluation.StateUnknown, fmt.Errorf("security assessment failed: %w", err)
+	// Content-addressed cache: skip the entire engine + risk-
+	// reasoning pass when (controls, observations, chains, config)
+	// hash to a key we have already evaluated. The cache pays off
+	// hard on the CI/CD case where a typical push doesn't touch
+	// the catalog or the observation snapshot at all.
+	//
+	// SLA annotation is intentionally outside the cache scope —
+	// clock-dependent and cheap to re-run, so cached reports stay
+	// fresh on deadlines.
+	cacheKey := assessmentcache.Key{
+		StaveVersion:    cfg.BuildVersion,
+		ControlsDigest:  assessmentcache.ComputeControlsDigest(auditData.Controls),
+		InputHashesHash: assessmentcache.ComputeInputHashesKey(auditData.Hashes),
+		ChainsDigest:    assessmentcache.ComputeChainsDigest(cfg.ChainDefs),
+		ConfigDigest: assessmentcache.ComputeConfigDigest(assessmentcache.ConfigForDigest{
+			SLAThreshold:        cfg.SLAThreshold.String(),
+			ExemptionRules:      cfg.ExemptionRules,
+			ExceptionRules:      cfg.ExceptionRules,
+			AcknowledgmentRules: cfg.AcknowledgmentRules,
+			BuildVersion:        cfg.BuildVersion,
+		}),
+	}
+	cacheDir, _ := assessmentcache.DefaultCacheDir()
+	cache := assessmentcache.New(cacheDir)
+
+	var report evaluation.ComplianceReport
+	cacheHit := false
+	if cached, ok := cache.Load(cacheKey); ok {
+		report = cached
+		cacheHit = true
+		if w.Logger != nil {
+			w.Logger.Info("assessment cache hit", "key", cacheKey.Hex())
+		}
 	}
 
-	// Run the risk reasoning engine: detect chain-based compound findings
-	// and build an attack stage summary from the evaluation results.
-	w.enrichWithRiskReasoning(&report, auditData.Controls, cfg.ChainDefs, auditData.Snapshots)
+	if !cacheHit {
+		var err error
+		report, err = Evaluate(ctx, EvaluateInput{
+			Controls:             auditData.Controls,
+			Snapshots:            auditData.Snapshots,
+			MaxUnsafeDuration:    cfg.SLAThreshold,
+			Clock:                cfg.Clock,
+			Hasher:               cfg.Hasher,
+			ExemptionConfig:      cfg.ExemptionRules,
+			ExceptionConfig:      cfg.ExceptionRules,
+			AcknowledgmentConfig: cfg.AcknowledgmentRules,
+			StaveVersion:         cfg.BuildVersion,
+			InputHashes:          auditData.Hashes,
+			PredicateParser:      cfg.PredicateParser,
+			CELEvaluator:         cfg.PredicateEval,
+			Metadata:             cfg.Metadata,
+			Tracer:               cfg.Tracer,
+		})
+		if err != nil {
+			return evaluation.ComplianceReport{}, evaluation.StateUnknown, fmt.Errorf("security assessment failed: %w", err)
+		}
+
+		// Run the risk reasoning engine: detect chain-based compound findings
+		// and build an attack stage summary from the evaluation results.
+		w.enrichWithRiskReasoning(&report, auditData.Controls, cfg.ChainDefs, auditData.Snapshots)
+
+		// Persist BEFORE the SLA pass so the cached report stays
+		// clock-independent. Best-effort: a persist failure is a
+		// missed optimisation, not a correctness problem, so log
+		// and continue rather than poisoning the assessment.
+		if persistErr := cache.Persist(cacheKey, report); persistErr != nil {
+			if w.Logger != nil {
+				w.Logger.Warn("assessment cache persist failed", "err", persistErr)
+			}
+		}
+	}
 
 	// Annotate findings with SLA deadline data.
 	if cfg.SLAConfig != nil {
