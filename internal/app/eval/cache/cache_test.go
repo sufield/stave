@@ -1,4 +1,4 @@
-package assessmentcache
+package cache
 
 import (
 	"os"
@@ -215,5 +215,32 @@ func TestComputeInputHashesKey_FallsBackToPerFile(t *testing.T) {
 func TestComputeChainsDigest_NoChainsIsConstant(t *testing.T) {
 	if ComputeChainsDigest(nil) != ComputeChainsDigest([]policy.ChainDefinition{}) {
 		t.Fatal("nil and empty chain slices should produce the same digest")
+	}
+}
+
+func TestComputeSourcePathsKey_DriftsOnPathChange(t *testing.T) {
+	// Two e2e fixtures with byte-identical controls + observations
+	// at different on-disk paths must produce different cache keys.
+	// The report embeds those paths in Run.ResolvedPaths, so a
+	// shared key would let the second run serve a report with the
+	// wrong embedded paths — the actual bug this digest closes.
+	a := ComputeSourcePathsKey("testdata/e2e/e2e-s3-latent/controls",
+		"testdata/e2e/e2e-s3-latent/observations")
+	b := ComputeSourcePathsKey("testdata/e2e/e2e-s3-outdir/controls",
+		"testdata/e2e/e2e-s3-outdir/observations")
+	if a == b {
+		t.Fatal("different controls/observations dirs must produce different keys")
+	}
+}
+
+func TestKey_HexRotatesOnSourcePathsChange(t *testing.T) {
+	// End-to-end: same content, different paths => different
+	// composite hex => different cache file => no cross-pollution.
+	a := sampleKey()
+	a.SourcePaths = ComputeSourcePathsKey("dirA/controls", "dirA/observations")
+	b := sampleKey()
+	b.SourcePaths = ComputeSourcePathsKey("dirB/controls", "dirB/observations")
+	if a.Hex() == b.Hex() {
+		t.Fatal("composite key must rotate when source paths differ")
 	}
 }

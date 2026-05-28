@@ -279,6 +279,15 @@ type IdentityFact struct {
 	Validity    []ValidityWindow `json:"validity,omitempty"`
 	RoleChains  []RoleChainFact  `json:"role_chains,omitempty"`
 	Source      SourceRef        `json:"source"`
+	// Properties mirrors asset.CloudIdentity.Properties — the
+	// per-identity attribute bag the observation loader populates.
+	// Carried through to SIR so identity-side projectors
+	// (purposeFlagFacts, future tag / lifecycle / vendor
+	// projectors) can emit facts about identity attributes the
+	// way the asset-side projectors do for AssetFact.Properties.
+	// Omit when empty so the JSON wire format stays stable for
+	// identities without populated attributes.
+	Properties map[string]any `json:"properties,omitempty"`
 }
 
 // RoleHopFact is one step in a transitive role-assumption path.

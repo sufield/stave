@@ -495,7 +495,8 @@ func buildIdentityFacts(snapshots []asset.Snapshot, chains map[asset.ID][]RoleCh
 	out := make([]IdentityFact, 0)
 	for i := range snapshots {
 		for j := range snapshots[i].Identities {
-			id := snapshots[i].Identities[j].ID
+			ci := &snapshots[i].Identities[j]
+			id := ci.ID
 			if _, ok := seen[id]; ok {
 				continue
 			}
@@ -503,6 +504,18 @@ func buildIdentityFacts(snapshots []asset.Snapshot, chains map[asset.ID][]RoleCh
 			fact := IdentityFact{
 				PrincipalID: string(id),
 				Source:      SourceRef{Kind: "identity", ID: string(id)},
+			}
+			// Clone Properties so a downstream consumer that
+			// mutates the SIR fact's map cannot leak edits back
+			// into the original observation snapshot. Empty maps
+			// are dropped (omitempty on the JSON tag handles the
+			// wire side; this skips the allocation on the Go side).
+			if len(ci.Properties) > 0 {
+				props := make(map[string]any, len(ci.Properties))
+				for k, v := range ci.Properties {
+					props[k] = v
+				}
+				fact.Properties = props
 			}
 			if chain, ok := chains[id]; ok && len(chain) > 0 {
 				cloned := make([]RoleChainFact, len(chain))

@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sufield/stave/internal/adapters/assessmentcache"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/app/eval/cache"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -179,21 +179,34 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 	// SLA annotation is intentionally outside the cache scope —
 	// clock-dependent and cheap to re-run, so cached reports stay
 	// fresh on deadlines.
-	cacheKey := assessmentcache.Key{
+	cacheKey := cache.Key{
 		StaveVersion:    cfg.BuildVersion,
-		ControlsDigest:  assessmentcache.ComputeControlsDigest(auditData.Controls),
-		InputHashesHash: assessmentcache.ComputeInputHashesKey(auditData.Hashes),
-		ChainsDigest:    assessmentcache.ComputeChainsDigest(cfg.ChainDefs),
-		ConfigDigest: assessmentcache.ComputeConfigDigest(assessmentcache.ConfigForDigest{
+		ControlsDigest:  cache.ComputeControlsDigest(auditData.Controls),
+		InputHashesHash: cache.ComputeInputHashesKey(auditData.Hashes),
+		ChainsDigest:    cache.ComputeChainsDigest(cfg.ChainDefs),
+		ConfigDigest: cache.ComputeConfigDigest(cache.ConfigForDigest{
 			SLAThreshold:        cfg.SLAThreshold.String(),
 			ExemptionRules:      cfg.ExemptionRules,
 			ExceptionRules:      cfg.ExceptionRules,
 			AcknowledgmentRules: cfg.AcknowledgmentRules,
 			BuildVersion:        cfg.BuildVersion,
 		}),
+		// PolicySource + ObservationSource are the directories the
+		// user passed via --controls / --observations. These flow
+		// into Run.ResolvedPaths on the report; two runs with
+		// identical CONTENT at different PATHS must NOT share a
+		// cache key, otherwise the second run serves a report with
+		// the wrong embedded paths. Discovered when two e2e fixtures
+		// with byte-identical controls/observations at different
+		// testdata/e2e/<name>/ dirs cross-polluted each other's
+		// outputs.
+		SourcePaths: cache.ComputeSourcePathsKey(
+			cfg.PolicySource,
+			cfg.ObservationSource,
+		),
 	}
-	cacheDir, _ := assessmentcache.DefaultCacheDir()
-	cache := assessmentcache.New(cacheDir)
+	cacheDir, _ := cache.DefaultCacheDir()
+	cache := cache.New(cacheDir)
 
 	var report evaluation.ComplianceReport
 	cacheHit := false

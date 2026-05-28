@@ -216,6 +216,7 @@ func ExtractFacts(doc *sir.Document) []Fact {
 	facts = append(facts, annotateProvenance(trustPolicyFacts(doc.Assets), "trustPolicyFacts", assetByID)...)
 	facts = append(facts, annotateProvenance(assumeEdgeFacts(doc.Assets), "assumeEdgeFacts", assetByID)...)
 	facts = append(facts, annotateProvenance(identityFacts(doc.Identities), "identityFacts", assetByID)...)
+	facts = append(facts, annotateProvenance(purposeFlagFacts(doc.Assets, doc.Identities), "purposeFlagFacts", assetByID)...)
 	facts = append(facts, annotateProvenance(exposureFacts(doc.Temporal.Windows), "exposureFacts", assetByID)...)
 	return facts
 }
@@ -309,7 +310,12 @@ func assetFacts(assets []sir.AssetFact) []Fact {
 
 func identityFacts(identities []sir.IdentityFact) []Fact {
 	var out []Fact
-	for i, id := range identities {
+	// Index loop (rather than range-by-value) because IdentityFact
+	// now carries a Properties map and the per-iter copy crosses
+	// gocritic's rangeValCopy threshold. Pointer indexing keeps the
+	// hot path allocation-free.
+	for i := range identities {
+		id := &identities[i]
 		evid := fmt.Sprintf("identities[%d]", i)
 		for ci, chain := range id.RoleChains {
 			cevid := fmt.Sprintf("%s.role_chains[%d]", evid, ci)
@@ -1703,6 +1709,86 @@ func coerceStringList(v any) []string {
 	return nil
 }
 
+// purposeFlagFacts parses semicolon-delimited key=value strings on
+// the per-asset `properties.purpose` field and emits one
+// `has_purpose_flag(asset, "key=value")` triple per parsed pair.
+//
+// Why a dedicated projector: the `purpose` field is a Stave-side
+// convention for asset-tag-like metadata that callers compress
+// into a single string (e.g. "signs_uploads;enforce_prefix=false;
+// allow_traversal=true" on an app_signer asset). CEL queries
+// substring-match the field, but external solvers see no triples
+// because propertyFacts emits the whole string as one opaque
+// object. Splitting at the projection boundary lets a Z3 / cvc5
+// query test each key=value independently — closes the
+// substring-extraction gap that `s3-tenant-prefix-isolation`
+// surfaced in SMT-QUERY-GAPS.md.
+//
+// Format contract:
+//   - Tokens split on ";". Empty tokens are skipped.
+//   - Each token must contain at least one "=". Tokens without
+//     "=" are skipped silently (they're declarative tags like
+//     "signs_uploads", not key=value pairs, and emitting them
+//     would conflate two distinct concerns).
+//   - Whitespace around the token, key, and value is trimmed.
+//   - The full "key=value" string (lowercased on the key half) is
+//     the object so queries can ask
+//     `has_purpose_flag(asset, "enforce_prefix=false")` directly.
+func purposeFlagFacts(assets []sir.AssetFact, identities []sir.IdentityFact) []Fact {
+	var out []Fact
+	for i := range assets {
+		a := &assets[i]
+		evidBase := fmt.Sprintf("assets[%d].properties.purpose", i)
+		out = append(out, emitPurposeFlags(a.ID, a.Properties, evidBase)...)
+	}
+	// Identity side. IdentityFact.Properties was added in the
+	// 2026-05-28 SIR-boundary change so the identity attribute
+	// bag the observation loader populates survives projection.
+	// Until then the s3-tenant-prefix-isolation fixture's
+	// discriminating `purpose` field (which lives on an
+	// `app_signer` identity, not an asset) was structurally
+	// invisible to any solver-side query.
+	for i := range identities {
+		id := &identities[i]
+		evidBase := fmt.Sprintf("identities[%d].properties.purpose", i)
+		out = append(out, emitPurposeFlags(id.PrincipalID, id.Properties, evidBase)...)
+	}
+	return out
+}
+
+// emitPurposeFlags is the shared per-entity body of purposeFlagFacts.
+// Extracted so the asset and identity loops carry identical parsing
+// + key-normalisation semantics — any future change to the
+// semicolon-KV grammar lands in one place.
+func emitPurposeFlags(subject string, props map[string]any, evidence string) []Fact {
+	raw, ok := props["purpose"].(string)
+	if !ok || raw == "" {
+		return nil
+	}
+	var out []Fact
+	tokens := strings.Split(raw, ";")
+	for _, t := range tokens {
+		t = strings.TrimSpace(t)
+		if t == "" || !strings.Contains(t, "=") {
+			continue
+		}
+		eq := strings.SplitN(t, "=", 2)
+		key := strings.ToLower(strings.TrimSpace(eq[0]))
+		val := strings.TrimSpace(eq[1])
+		if key == "" {
+			continue
+		}
+		out = append(out, Fact{
+			Subject:   subject,
+			Predicate: "has_purpose_flag",
+			Object:    key + "=" + val,
+			Source:    "purpose_field",
+			Evidence:  evidence,
+		})
+	}
+	return out
+}
+
 func exposureFacts(windows []sir.ExposureWindow) []Fact {
 	var out []Fact
 	for i, w := range windows {
@@ -1808,6 +1894,7 @@ var baselineSMT2Predicates = []string{
 	"has_public_access_blocked",
 	"has_public_list",
 	"has_public_read",
+	"has_purpose_flag",
 	"has_read_via_resource",
 	"has_resource",
 	"has_role_age_days",

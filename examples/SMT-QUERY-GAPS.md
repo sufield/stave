@@ -191,6 +191,66 @@ documented at the top of this doc:
 - `staging-stale-endpoint` — fixture-pair-selection blocker
   (matrix tooling, not a projector).
 
+### PR 3.5 follow-up (2026-05-28): purposeFlagFacts primitive
+
+Added `purposeFlagFacts` projector — parses semicolon-delimited
+`key=value` strings on `properties.purpose` and emits
+`has_purpose_flag(asset, "key=value")` per pair. Designed to close
+the substring-extraction gap for `s3-tenant-prefix-isolation`.
+
+Empirical recheck against the target fixture: **still blocked**.
+The discriminating `purpose` field on that fixture lives on an
+`identity` entry, not an `asset`. The SIR-side `IdentityFact`
+type (`internal/core/sir/types.go:277`) carries `PrincipalID`,
+`Validity`, `RoleChains`, `Source` — NO `Properties` field. The
+identity's observation properties are dropped at the SIR
+projection boundary before any projector runs, so
+`purposeFlagFacts` (or any other identity-properties-aware
+projector) cannot see them.
+
+The primitive ships and is unit-tested against asset-side
+fixtures that DO carry `purpose`. Closing
+`s3-tenant-prefix-isolation` requires a wider SIR-boundary
+change:
+
+  1. Add `Properties map[string]any` to `sir.IdentityFact`.
+  2. Update the platform/sirbridge projector to carry the
+     identity's observation properties through.
+  3. Extend `purposeFlagFacts` (or split into asset / identity
+     variants) to walk identities too.
+
+That's a separate scoped change. Coverage after PR 3.5 is still
+**18/20** — the primitive is in place, the structural blocker is
+documented, the asset-side wins come for free on any future
+fixture that uses the `purpose` convention on an asset rather
+than an identity.
+
+### PR 3.6 (2026-05-28): IdentityFact.Properties at the SIR boundary
+
+The structural blocker from PR 3.5 closed in the same session.
+
+Changes:
+  - `sir.IdentityFact` gained a `Properties map[string]any` field
+    (`internal/core/sir/types.go`). JSON tag is `omitempty` so the
+    wire format stays stable for identities with no attributes.
+  - `buildIdentityFacts` in `internal/core/sir/builder.go` clones
+    the identity's observation Properties into the SIR fact.
+    Clone (rather than share) so a downstream consumer cannot
+    leak edits back into the source snapshot.
+  - `purposeFlagFacts` extended to walk identities. Extracted the
+    per-entity body into an `emitPurposeFlags` helper so the
+    asset and identity loops use identical semicolon-KV parsing.
+
+Verified:
+  `examples/s3-tenant-prefix-isolation/run.sh` shipped:
+  | fixture | expected | z3    | cvc5  |
+  |---------|----------|-------|-------|
+  | before  | sat      | sat   | sat   |
+  | after   | unsat    | unsat | unsat |
+
+Coverage now **19/20**. The remaining `staging-stale-endpoint`
+has a different blocker (fixture-pair-selection, not projector).
+
 ## What this iteration ships
 
 - Two new `query.smt2` files (iam-attach-user-policy-self,

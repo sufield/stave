@@ -13,7 +13,7 @@
 // Wire format mirrors internal/adapters/cel/persist.go's atomic-
 // rename + magic-header + format-version pattern so a reader who
 // learned that one reads this one without re-learning.
-package assessmentcache
+package cache
 
 import (
 	"crypto/sha256"
@@ -76,12 +76,22 @@ func DefaultCacheDir() (string, error) {
 //   - Clock now-value: cached reports may have stale SLA deadlines
 //     when replayed later; the caller should re-run SLA annotation
 //     after a cache hit if it wants fresh deadlines.
+//
+// SourcePaths is load-bearing for correctness: the report embeds
+// the controls / observations directory paths in Run.ResolvedPaths.
+// Two assessment runs with structurally identical inputs at
+// different on-disk locations (e.g. two e2e fixtures with the
+// same YAML at different testdata/e2e/<name>/ dirs) would
+// otherwise share a cache key, and the second run would
+// short-circuit and serve the first run's report with the wrong
+// embedded paths.
 type Key struct {
 	StaveVersion    string
 	ControlsDigest  string
 	InputHashesHash string
 	ChainsDigest    string
 	ConfigDigest    string
+	SourcePaths     string // SHA-256 of controls-dir|observations-dir
 }
 
 // Hex returns the hex-encoded composite key. Used as the cache
@@ -94,6 +104,7 @@ func (k Key) Hex() string {
 		k.InputHashesHash,
 		k.ChainsDigest,
 		k.ConfigDigest,
+		k.SourcePaths,
 	} {
 		h.Write([]byte(field))
 		h.Write([]byte{0})
@@ -210,6 +221,26 @@ func ComputeConfigDigest(c ConfigForDigest) string {
 	}
 	h := sha256.Sum256(b)
 	return hex.EncodeToString(h[:])
+}
+
+// ComputeSourcePathsKey hashes the controls and observations source
+// paths so two assessment runs with structurally identical inputs
+// at different on-disk locations get distinct cache keys. The
+// report embeds these paths in Run.ResolvedPaths; serving a cached
+// report under a different path produces the wrong output.
+//
+// Empty input is fine — produces a stable empty-paths digest that
+// older callers without this field continue to hash to. Going
+// forward, every caller should pass the real values; the empty-
+// digest constant is preserved only so an in-flight cache file from
+// the previous schema version can be invalidated cleanly when the
+// field is added to a key.
+func ComputeSourcePathsKey(controlsDir, observationsDir string) string {
+	h := sha256.New()
+	h.Write([]byte(controlsDir))
+	h.Write([]byte{0})
+	h.Write([]byte(observationsDir))
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 // ComputeInputHashesKey returns the canonical key derived from an
