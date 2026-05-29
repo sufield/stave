@@ -25,7 +25,7 @@ type OutputPipeline struct {
 // Run executes the pipeline, writing the marshaled result to w.
 func (p *OutputPipeline) Run(ctx context.Context, w io.Writer, result *evaluation.ComplianceReport) error {
 	if err := ctx.Err(); err != nil {
-		return err
+		return fmt.Errorf("output pipeline canceled before enrich: %w", err)
 	}
 
 	enriched, err := runStep(p.Logger, "enrich", func() (appcontracts.EnrichedResult, error) {
@@ -37,7 +37,7 @@ func (p *OutputPipeline) Run(ctx context.Context, w io.Writer, result *evaluatio
 	enriched.CoveragePosture = p.CoveragePosture
 
 	if err = ctx.Err(); err != nil {
-		return err
+		return fmt.Errorf("output pipeline canceled before marshal: %w", err)
 	}
 
 	data, err := runStep(p.Logger, "marshal", func() ([]byte, error) {
@@ -48,7 +48,7 @@ func (p *OutputPipeline) Run(ctx context.Context, w io.Writer, result *evaluatio
 	}
 
 	if err = ctx.Err(); err != nil {
-		return err
+		return fmt.Errorf("output pipeline canceled before write: %w", err)
 	}
 
 	if len(data) == 0 {

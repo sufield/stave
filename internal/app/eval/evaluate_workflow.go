@@ -121,7 +121,7 @@ func Evaluate(ctx context.Context, input EvaluateInput) (evaluation.ComplianceRe
 		GenerateEvidence: input.GenerateEvidence,
 	})
 	if err != nil {
-		return evaluation.ComplianceReport{}, err
+		return evaluation.ComplianceReport{}, fmt.Errorf("assess snapshots: %w", err)
 	}
 	result.Metadata = input.Metadata
 	return result, nil

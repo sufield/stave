@@ -256,7 +256,7 @@ linters:
       # the same iteration. See docs/audits/lint-wrapcheck-rollout.md for the chip-away
       # plan.
       - linters: [wrapcheck]
-        path-except: '^internal/core/evaluation/engine/'
+        path-except: '^(internal/core/evaluation/engine/|internal/app/eval/)'
       - path: _test\.go
         linters:
           - forcetypeassert

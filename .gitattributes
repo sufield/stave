@@ -1,0 +1,14 @@
+# Embedded runtime trees are GENERATED copies of canonical sources, not
+# hand-edited files. The canonical sources live above the embedding Go
+# package, and go:embed cannot reach a parent directory, so `make build`
+# copies them down (see Makefile sync_tree + docs/audits/sync-audit.md).
+#
+# linguist-generated:
+#   - collapses these paths in GitHub diffs/reviews (they're noise — the
+#     real change is in the canonical source),
+#   - excludes them from language stats.
+# Edit the canonical source (schemas/, controls/, data/alternatives/),
+# then `make sync-schemas` / `sync-controls` / `sync-alternatives`.
+internal/contracts/schema/embedded/**      linguist-generated=true
+internal/controldata/embedded/**           linguist-generated=true
+internal/adapters/coverage/embedded/**     linguist-generated=true

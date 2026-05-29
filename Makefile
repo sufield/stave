@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-unit test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test
+.PHONY: all build build-dev test test-unit test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test
 # Binary name
 BINARY=stave
 
@@ -52,44 +52,36 @@ SCHEMA_HASH_FILE       := .sync-schemas-hash
 CONTROL_HASH_FILE      := .sync-controls-hash
 ALTERNATIVES_HASH_FILE := .sync-alternatives-hash
 
+## sync_tree: single source for the three identical embed-copy targets.
+##
+## $(call sync_tree,<target>,<label>,<src>,<dst>,<hashfile>) defines a
+## hash-gated copy target: hash the source tree; skip the rm/cp when the
+## hash matches the cached value and the destination still exists;
+## otherwise wipe and re-copy. The embedded trees are committed copies of
+## canonical sources that live ABOVE the embedding package — go:embed
+## cannot reach a parent directory (`..`), so the copy is structural, not
+## accidental. See docs/audits/sync-audit.md ("Why a copy, not a direct
+## embed"). Drift is caught by `make consistency-check` in CI.
+define sync_tree
+$(1):
+	@new_hash=$$$$(find $(3) -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1); \
+	if [ -f $(5) ] && [ "$$$$(cat $(5))" = "$$$$new_hash" ] && [ -d $(4) ]; then \
+	  echo "$(2) unchanged ($$$$new_hash) — skipping sync"; \
+	else \
+	  mkdir -p $(4); \
+	  rm -rf $(4)/*; \
+	  cp -R $(3)/* $(4)/; \
+	  echo "$$$$new_hash" > $(5); \
+	  echo "$(2) synced ($$$$new_hash)"; \
+	fi
+endef
+
 ## sync-schemas: Copy canonical schemas into embed directory (hash-gated)
-sync-schemas:
-	@new_hash=$$(find $(SCHEMA_SRC) -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1); \
-	if [ -f $(SCHEMA_HASH_FILE) ] && [ "$$(cat $(SCHEMA_HASH_FILE))" = "$$new_hash" ] && [ -d $(SCHEMA_DST) ]; then \
-	  echo "schemas unchanged ($$new_hash) — skipping sync"; \
-	else \
-	  mkdir -p $(SCHEMA_DST); \
-	  rm -rf $(SCHEMA_DST)/*; \
-	  cp -R $(SCHEMA_SRC)/* $(SCHEMA_DST)/; \
-	  echo "$$new_hash" > $(SCHEMA_HASH_FILE); \
-	  echo "schemas synced ($$new_hash)"; \
-	fi
-
+$(eval $(call sync_tree,sync-schemas,schemas,$(SCHEMA_SRC),$(SCHEMA_DST),$(SCHEMA_HASH_FILE)))
 ## sync-controls: Copy canonical controls into embed directory (hash-gated)
-sync-controls:
-	@new_hash=$$(find $(CONTROL_SRC) -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1); \
-	if [ -f $(CONTROL_HASH_FILE) ] && [ "$$(cat $(CONTROL_HASH_FILE))" = "$$new_hash" ] && [ -d $(CONTROL_DST) ]; then \
-	  echo "controls unchanged ($$new_hash) — skipping sync"; \
-	else \
-	  mkdir -p $(CONTROL_DST); \
-	  rm -rf $(CONTROL_DST)/*; \
-	  cp -R $(CONTROL_SRC)/* $(CONTROL_DST)/; \
-	  echo "$$new_hash" > $(CONTROL_HASH_FILE); \
-	  echo "controls synced ($$new_hash)"; \
-	fi
-
+$(eval $(call sync_tree,sync-controls,controls,$(CONTROL_SRC),$(CONTROL_DST),$(CONTROL_HASH_FILE)))
 ## sync-alternatives: Copy canonical alternative-tool inventories into embed directory (hash-gated)
-sync-alternatives:
-	@new_hash=$$(find $(ALTERNATIVES_SRC) -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1); \
-	if [ -f $(ALTERNATIVES_HASH_FILE) ] && [ "$$(cat $(ALTERNATIVES_HASH_FILE))" = "$$new_hash" ] && [ -d $(ALTERNATIVES_DST) ]; then \
-	  echo "alternatives unchanged ($$new_hash) — skipping sync"; \
-	else \
-	  mkdir -p $(ALTERNATIVES_DST); \
-	  rm -rf $(ALTERNATIVES_DST)/*; \
-	  cp -R $(ALTERNATIVES_SRC)/* $(ALTERNATIVES_DST)/; \
-	  echo "$$new_hash" > $(ALTERNATIVES_HASH_FILE); \
-	  echo "alternatives synced ($$new_hash)"; \
-	fi
+$(eval $(call sync_tree,sync-alternatives,alternatives,$(ALTERNATIVES_SRC),$(ALTERNATIVES_DST),$(ALTERNATIVES_HASH_FILE)))
 
 ## build: Build the production binary
 build: sync-schemas sync-controls sync-alternatives
@@ -255,6 +247,39 @@ lint:
 ## lint-fix: Auto-format code (gofmt only — most lint issues require manual fixes)
 lint-fix:
 	$(GOFMT) ./...
+
+## lint-debt: Burn-down metric for grandfathered wrapcheck violations.
+##
+## Background: wrapcheck is enforced only in internal/core/evaluation/engine/
+## today (see .golangci.yml + docs/audits/lint-wrapcheck-rollout.md). The rest
+## of the codebase carries grandfathered violations. This target MEASURES that
+## debt and ratchets it: the count may only go down, never up.
+##
+## It derives the measurement config from the canonical .golangci.yml at
+## runtime (dropping the wrapcheck path-except rule) so there is no committed
+## duplicate config to drift. The committed baseline is docs/audits/lint-debt-baseline.
+##
+## CI fails if debt grew (new boundary error left unwrapped). When debt drops,
+## it prints the command to lower the baseline so the ratchet tightens.
+LINT_DEBT_BASELINE := docs/audits/lint-debt-baseline
+lint-debt:
+	@cfg=$$(mktemp --suffix=.yml); \
+	awk '/- linters: \[wrapcheck\]/{skip=2} skip>0{skip--;next} {print}' .golangci.yml > "$$cfg"; \
+	count=$$($(GOLINT) run -c "$$cfg" --enable-only=wrapcheck ./... 2>/dev/null | grep -c '(wrapcheck)'); \
+	rm -f "$$cfg"; \
+	baseline=$$(cat $(LINT_DEBT_BASELINE)); \
+	echo "wrapcheck debt: $$count  (baseline ceiling: $$baseline)"; \
+	if [ "$$count" -gt "$$baseline" ]; then \
+		echo "ERROR: wrapcheck debt grew ($$baseline -> $$count)."; \
+		echo "  Wrap the new boundary error(s) with fmt.Errorf(\"...: %w\", err),"; \
+		echo "  or if you fixed a package, widen the .golangci.yml path-except allow-list."; \
+		exit 1; \
+	elif [ "$$count" -lt "$$baseline" ]; then \
+		echo "Debt decreased — ratchet it down by committing the new floor:"; \
+		echo "  echo $$count > $(LINT_DEBT_BASELINE)"; \
+	else \
+		echo "No change. Debt holds at the baseline ceiling."; \
+	fi
 
 ## fmt: Format code
 fmt:
@@ -624,6 +649,14 @@ docs-controls: sync-controls
 docs-controls-check: sync-controls
 	$(GOCMD) run ./internal/tools/gencontroldocs -check
 
+## docs-commands: Generate the CLI command reference from the cobra tree
+docs-commands:
+	$(GOCMD) run ./internal/tools/gencommanddocs
+
+## docs-commands-check: Verify the command reference matches the binary
+docs-commands-check:
+	$(GOCMD) run ./internal/tools/gencommanddocs -check
+
 ## attack-stage-check: Reject deprecated attack_stage values in control YAMLs
 ##
 ## The canonical 12-stage taxonomy is enforced by the JSON Schema enum
@@ -856,6 +889,7 @@ consistency-check: sync-schemas sync-controls sync-alternatives
 	@$(GOCMD) run ./internal/tools/genreadme
 	@$(GOCMD) run ./internal/tools/gencontroldocs
 	@$(GOCMD) run ./internal/tools/genmethodologycoverage
+	@$(GOCMD) run ./internal/tools/gencommanddocs
 	@# Scope the drift check to paths the gate's targets actually write to.
 	@# Globally `git status` would also surface unrelated working-tree state
 	@# (e.g. when stave/ is checked out inside a monorepo), which is noise
@@ -866,6 +900,7 @@ consistency-check: sync-schemas sync-controls sync-alternatives
 		internal/adapters/coverage/embedded \
 		README.md \
 		docs/controls/reference.md \
+		docs/command-reference.md \
 		'docs/methodology-coverage-*.md' \
 	); \
 	if [ -n "$$drift" ]; then \
