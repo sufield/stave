@@ -155,4 +155,23 @@ COMPOUND_RULES: list[dict[str, object]] = [
             "CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001",
         ],
     },
+    {
+        "name": "staging_endpoint_exposed",
+        "description": (
+            "A non-production (staging/dev/demo) resource is stale "
+            "AND publicly listable on the same asset: the environment-"
+            "aware staleness control fires together with the public-"
+            "list control. Either alone is medium; together they are "
+            "the HIGH-severity compound the staging_endpoint_exposed "
+            "chain escalates — a forgotten non-prod endpoint left open "
+            "to the internet. This is the matrix's one multi-control "
+            "fixture (staging-stale-endpoint/stale-staging-public), so "
+            "it is also the H1 fixture that exercises the SAT compound "
+            "layer at all."
+        ),
+        "controls": [
+            "CTL.LIFECYCLE.STAGING.STALE.001",
+            "CTL.S3.PUBLIC.LIST.002",
+        ],
+    },
 ]

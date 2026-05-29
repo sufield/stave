@@ -18,8 +18,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 15 lines / `smt2` 174 lines
-- *runtime*: 1.65s
+- *fact export*: `jsonl` 15 lines / `smt2` 291 lines
+- *runtime*: 10.28s
 
 ### `before`
 
@@ -34,8 +34,8 @@ against each fixture's observation snapshots.
 - **TLA+** — UNSAFE
 - **Game theory** — $900
 
-- *fact export*: `jsonl` 15 lines / `smt2` 174 lines
-- *runtime*: 2.06s
+- *fact export*: `jsonl` 15 lines / `smt2` 291 lines
+- *runtime*: 11.1s
 
 ### `bybit-pattern-after`
 
@@ -49,8 +49,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 29 lines / `smt2` 244 lines
-- *runtime*: 1.75s
+- *fact export*: `jsonl` 29 lines / `smt2` 375 lines
+- *runtime*: 10.45s
 
 ### `bybit-pattern-before`
 
@@ -64,8 +64,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 25 lines / `smt2` 224 lines
-- *runtime*: 2.1s
+- *fact export*: `jsonl` 25 lines / `smt2` 351 lines
+- *runtime*: 10.98s
 
 ## Reading the matrix
 

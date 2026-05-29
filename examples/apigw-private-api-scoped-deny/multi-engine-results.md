@@ -9,47 +9,47 @@ against each fixture's observation snapshots.
 ### `broadened-allow`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — —
+- **SMT (Z3 / cvc5 / Yices)** — query: sat
 - **Soufflé** — 0 reachable
-- **Clingo** — no violations
-- **Prolog** — no proof
+- **Clingo** — 1 kind(s): broad_resource_policy_principal
+- **Prolog** — 2 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=0% (MINIMAL)
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 6 lines / `smt2` 129 lines
-- *runtime*: 1.46s
+- *fact export*: `jsonl` 12 lines / `smt2` 273 lines
+- *runtime*: 10.07s
 
 ### `remediated-config`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — —
+- **SMT (Z3 / cvc5 / Yices)** — query: unsat
 - **Soufflé** — 0 reachable
-- **Clingo** — no violations
-- **Prolog** — no proof
+- **Clingo** — 1 kind(s): broad_resource_policy_principal
+- **Prolog** — 2 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=0% (MINIMAL)
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 6 lines / `smt2` 129 lines
-- *runtime*: 1.37s
+- *fact export*: `jsonl` 12 lines / `smt2` 273 lines
+- *runtime*: 9.08s
 
 ### `writeup-config`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — —
+- **SMT (Z3 / cvc5 / Yices)** — query: sat
 - **Soufflé** — 0 reachable
-- **Clingo** — no violations
-- **Prolog** — no proof
+- **Clingo** — 1 kind(s): broad_resource_policy_principal
+- **Prolog** — 2 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=0% (MINIMAL)
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 6 lines / `smt2` 129 lines
-- *runtime*: 1.43s
+- *fact export*: `jsonl` 12 lines / `smt2` 273 lines
+- *runtime*: 8.94s
 
 ## Reading the matrix
 

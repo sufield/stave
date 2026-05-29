@@ -8,30 +8,6 @@ Every scenario ships a vulnerable fixture and a remediated
 fixture. The matrix below shows what each engine reveals.
 Pick the scenario closest to your environment and adapt it.
 
-## Demo Scenarios (Start Here)
-
-Entry-level S3 misconfiguration walkthroughs migrated from the
-legacy `docs-content/demo/` Docker surface. Every demo runs in
-the Codespaces devcontainer with `bash run.sh` — no Docker
-image to build, no separate launcher.
-
-- **[demo-s3-public-read](demo-s3-public-read/)** — Bucket policy with `Principal: "*"` + Public Access Block disabled
-- **[demo-s3-acl-escalation](demo-s3-acl-escalation/)** — ACL grants broader access than the bucket policy admits
-- **[demo-s3-acl-write](demo-s3-acl-write/)** — Public write via ACL misconfiguration
-- **[demo-s3-hipaa-compliance](demo-s3-hipaa-compliance/)** — Multi-violation PHI bucket against the HIPAA profile
-- **[demo-s3-upload-hardening](demo-s3-upload-hardening/)** — Unrestricted upload surface
-- **[demo-s3-data-governance](demo-s3-data-governance/)** — Data classification + lifecycle hygiene
-- **[demo-s3-tool-blind-spot](demo-s3-tool-blind-spot/)** — What single-resource scanners miss
-
-### AI Security
-- **[demo-ai-security](demo-ai-security/)** — Bedrock agent overprivilege + Lambda tool reaching PHI + RAG indexing PHI bucket. 5 violations compose into 3 CRITICAL compound chains; remediation drives all chains silent. The talk demo — five acts in under five minutes.
-
-These are the first stops for an early adopter — a single
-asset, a clear violation, encoding-verified output. Once the
-shape is familiar, the multi-engine examples below show how
-external reasoning engines (Z3, Soufflé, Clingo, PySAT) score
-the same fact base.
-
 ## By Attack Pattern
 
 ### Anonymous Access via Identity Pools
@@ -44,17 +20,11 @@ the same fact base.
 - **[iam-overpermission-wildcard](iam-overpermission-wildcard/multi-engine-results.md)** — 4 fixture(s): after, before, bybit-pattern-after, bybit-pattern-before. CEL findings — after: 0, before: 1, bybit-pattern-after: 0, bybit-pattern-before: 0.
 - **[iam-attach-user-policy-self](iam-attach-user-policy-self/multi-engine-results.md)** — 2 fixture(s): after, before. CEL findings — after: 0, before: 1.
 - **[iam-autoscaling-privesc-bypass](iam-autoscaling-privesc-bypass/multi-engine-results.md)** — 2 fixture(s): remediated-config, writeup-config. CEL findings — remediated-config: 0, writeup-config: 1.
-- **[shadow-admin-detection](shadow-admin-detection/)** — IAM role privilege creep: drift + category mixing + intent mismatch compose into two CRITICAL chains (`shadow_admin_by_accumulation`, `privilege_creep_lateral_movement`). A role tagged `readonly` that can retrieve any secret and invoke any Lambda — no admin policy attached.
 
 ### Cross-Service Trust Chains
 
 - **[iam-multi-hop-trust](iam-multi-hop-trust/multi-engine-results.md)** — 2 fixture(s): remediated, vulnerable. CEL findings — remediated: 0, vulnerable: 0.
 - **[sns-secrets-compound-chain](sns-secrets-compound-chain/multi-engine-results.md)** — 2 fixture(s): remediated-config, writeup-config. CEL findings — remediated-config: 0, writeup-config: 0.
-
-### SSRF → Credential Theft Chains
-
-- **[ecs-ssrf-credential-theft](ecs-ssrf-credential-theft/multi-engine-results.md)** — 2 fixture(s): remediated-config, writeup-config. ECS task-metadata variant of the SSRF credential-theft pattern; chain fires when 2 of `{TASKMETADATA.001, METADATA.CREDENTIAL.001, VPC.SG.EGRESS.001}` are set. CEL findings — remediated-config: 0, writeup-config: 3.
-- **[imds-ssrf-chain](imds-ssrf-chain/multi-engine-results.md)** — 2 fixture(s): remediated-config, writeup-config. EC2-instance variant — Capital One breach pattern (IMDSv1 + hop > 1). Chain fires when 2 of `{IMDSV2.001, IMDSV2.002, IMDS.HOPLIMIT.001}` are set. CEL findings — remediated-config: 0, writeup-config: 2.
 
 ### S3 Exposure & Tenant Boundaries
 
@@ -65,10 +35,6 @@ the same fact base.
 - **[s3-bucket-name-dangling](s3-bucket-name-dangling/multi-engine-results.md)** — 2 fixture(s): after, before. CEL findings — after: 0, before: 1.
 - **[s3-cross-account-replication-overperm](s3-cross-account-replication-overperm/multi-engine-results.md)** — 2 fixture(s): remediated-config, writeup-config. CEL findings — remediated-config: 0, writeup-config: 0.
 - **[s3-dotgit-readable](s3-dotgit-readable/multi-engine-results.md)** — 2 fixture(s): after, before. CEL findings — after: 0, before: 1.
-
-### Supply Chain
-
-- **[s3-delegation-failure](s3-delegation-failure/)** — Vendor control exceeds the assurance boundary. The `delegated_control_failure` chain (threshold 3 of 5, CRITICAL) composes unknown principals, scope creep, overdue review, irrevocability, and public-escalation capability onto one bucket. Complementary to `vendor_attack_path` (confused-deputy) — same bucket, different failure mode.
 
 ### Cognito User Pools
 
@@ -86,8 +52,6 @@ the same fact base.
 ### Network / API Boundaries
 
 - **[apigw-private-api-scoped-deny](apigw-private-api-scoped-deny/multi-engine-results.md)** — 3 fixture(s): broadened-allow, remediated-config, writeup-config. CEL findings — broadened-allow: 0, remediated-config: 0, writeup-config: 0.
-- **[vpc-peering-exfiltration](vpc-peering-exfiltration/)** — Forgotten VPC peering to an external AWS account combined with a `/16` route to the full peer CIDR. The `vpc_peering_exposure` chain (threshold 2, CRITICAL) composes a peering-connection finding with a route-table finding via `scope_field` on the peering ID.
-- **[shadow-ec2-lateral-movement](shadow-ec2-lateral-movement/)** — Dormant EC2 instance with an overprivileged role and ENIs spanning staging + production. The `shadow_ec2_lateral_movement` chain (threshold 3 of 3, CRITICAL) joins lifecycle staleness, profile overprivilege, and dual-homed network reachability onto one instance asset — the cheapest path from low-trust into prod.
 
 ### Lifecycle Drift
 
@@ -160,9 +124,9 @@ through for full per-fixture detail.
 |---|---:|---:|---:|---:|
 | cel | 18 | 31 | 0 | 0 |
 | souffle | 49 | 0 | 0 | 0 |
-| clingo | 3 | 46 | 0 | 0 |
-| prolog | 4 | 45 | 0 | 0 |
-| pysat | 0 | 49 | 0 | 0 |
+| clingo | 22 | 27 | 0 | 0 |
+| prolog | 23 | 26 | 0 | 0 |
+| pysat | 1 | 48 | 0 | 0 |
 | risk | 6 | 43 | 0 | 0 |
 | tla | 6 | 43 | 0 | 0 |
 | game | 7 | 42 | 0 | 0 |
@@ -179,38 +143,3 @@ fixture's predicate shape.
 Regenerate this catalog with `python3 scripts/h1-matrix/run.py`
 followed by `python3 scripts/h1-matrix/render.py` (see
 [`scripts/h1-matrix/README.md`](../scripts/h1-matrix/README.md)).
-
-## Lineage: H1 vs InfoSec writeup origins
-
-The 20 scenarios above came from two streams of work:
-
-- **H1 / HackerOne validation** — each scenario reverse-engineers
-  a published HackerOne disclosure or technique to demonstrate
-  what Stave detects on the same configuration shape.
-- **InfoSec writeup iterations** — Iter 11 through Iter 16 plus
-  the Ext A / Ext B extensions. Each iteration
-  produced a fixture pair, the corresponding control(s), and a
-  Dev.to article (`channels/devto/<scenario>.md`).
-
-[`INFOSEC-VALIDATION.md`](INFOSEC-VALIDATION.md) maps each
-InfoSec iteration to its on-disk example directory.
-
-## SMT query coverage
-
-**18 of 20** scenarios have a paired `query.smt2` after PR 5
-(resource-policy Principal/Action projector) landed. The 2
-remaining gaps are not projector-blocked — they're query-shape
-gaps:
-
-- `s3-tenant-prefix-isolation` — discriminator is a structured
-  string (`signs_uploads;enforce_prefix=true;allow_traversal=false`)
-  inside a single property; needs either a substring-extracting
-  projector or a query-side string-equality match.
-- `staging-stale-endpoint` — four fixtures modeling distinct
-  states rather than a vulnerable/remediated pair; the matrix
-  harness needs explicit pair selection per query.
-
-18/20 is the practical ceiling without substring SMT theory
-queries or matrix tooling changes. See
-[`SMT-QUERY-GAPS.md`](SMT-QUERY-GAPS.md) for the per-fixture
-rationale and the projector-to-fixture mapping.

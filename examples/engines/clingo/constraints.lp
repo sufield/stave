@@ -168,5 +168,58 @@ violation(A, "broad_resource_policy_principal", "*") :-
 violation(B, "data_event_logging_missing", "false") :-
     has_data_event_logging(B, "false").
 
+% V18: Tenant prefix isolation not enforced — an app-signer
+% identity whose `purpose` declares enforce_prefix=false can mint
+% signed URLs outside the requesting tenant's prefix scope. The
+% purposeFlagFacts projector (PR 3.6) lifts each key=value pair off
+% the identity's `purpose` into has_purpose_flag(identity, "k=v").
+% Mirrors examples/s3-tenant-prefix-isolation/query.smt2.
+% Targets: s3-tenant-prefix-isolation.
+violation(I, "tenant_isolation_not_enforced", "enforce_prefix=false") :-
+    has_purpose_flag(I, "enforce_prefix=false").
+
+% V19: Self-service IAM escalation — a principal can attach a policy
+% to itself (iam:AttachUserPolicy with its own ARN as resource).
+% has_resource(U, U) binds the same principal on both sides.
+% Targets: iam-attach-user-policy-self.
+violation(U, "self_attach_user_policy", U) :-
+    has_action(U, "iam:AttachUserPolicy"),
+    has_resource(U, U).
+
+% V20: Cross-account replication destination grants broad wildcard
+% read (s3:Get*/s3:List*) through its resource policy — the
+% over-permission the writeup adds and remediation removes.
+% Targets: s3-cross-account-replication-overperm.
+violation(B, "resource_policy_broad_read", "s3:Get*") :-
+    resource_policy_action(B, "s3:Get*").
+violation(B, "resource_policy_broad_read", "s3:List*") :-
+    resource_policy_action(B, "s3:List*").
+
+% V21: SNS-secrets enumeration compound — one principal that can read
+% API Gateway, inspect SNS topic attributes, AND read its own IAM
+% policy simultaneously. Targets: sns-secrets-compound-chain.
+violation(U, "sns_secrets_enumeration", U) :-
+    has_action(U, "apigateway:GET"),
+    has_action(U, "sns:GetTopicAttributes"),
+    has_action(U, "iam:GetUserPolicy").
+
+% V22: Signed-upload write scope bound to a key PREFIX rather than an
+% exact object key. has_upload_key_mode is emitted by propertyFacts
+% from properties.s3_upload.allowed_key_mode; remediation flips it to
+% "exact". Targets: s3-broad-write-scope.
+violation(B, "broad_write_scope", "prefix") :-
+    has_upload_key_mode(B, "prefix").
+
+% V23: PassRole → autoscaling privesc bypass, DENY-AWARE.
+% Negation-as-failure models effective permission = wildcard allow ∩
+% ¬explicit-deny; remediation adds the concrete autoscaling:Create*
+% denies. Closes the deny-aware gap with no projector change
+% (has_deny_action is already lifted).
+% Targets: iam-autoscaling-privesc-bypass.
+violation(P, "passrole_autoscaling_bypass", "autoscaling:CreateLaunchConfiguration") :-
+    has_action(P, "iam:PassRole"),
+    has_action(P, "autoscaling:*"),
+    not has_deny_action(P, "autoscaling:CreateLaunchConfiguration").
+
 #show violation/3.
 #show latent_risk/2.

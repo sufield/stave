@@ -13,7 +13,7 @@ import (
 // in-memory cache hits within a single run.
 func buildPredicateCatalog(n int) []policy.UnsafePredicate {
 	out := make([]policy.UnsafePredicate, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		out[i] = policy.UnsafePredicate{
 			Any: []policy.PredicateRule{{
 				Field: predicate.NewFieldPath(fmt.Sprintf("properties.field_%d", i)),

@@ -40,7 +40,7 @@ func slowPredicateEval(_ policy.ControlDefinition, _ asset.Asset, _ []asset.Clou
 // catalog size, matching the production hot path.
 func buildSyntheticInputs(numControls, numAssets, numSnapshots int) ([]policy.ControlDefinition, []asset.Snapshot) {
 	controls := make([]policy.ControlDefinition, 0, numControls)
-	for i := 0; i < numControls; i++ {
+	for i := range numControls {
 		controls = append(controls, policy.ControlDefinition{
 			ID:        kernel.ControlID(fmt.Sprintf("CTL.BENCH.%05d", i)),
 			Name:      fmt.Sprintf("bench-%05d", i),
@@ -49,10 +49,10 @@ func buildSyntheticInputs(numControls, numAssets, numSnapshots int) ([]policy.Co
 		})
 	}
 	snapshots := make([]asset.Snapshot, 0, numSnapshots)
-	for s := 0; s < numSnapshots; s++ {
+	for s := range numSnapshots {
 		assets := make([]asset.Asset, 0, numAssets)
 		captured := time.Date(2026, 1, 1+s, 0, 0, 0, 0, time.UTC)
-		for i := 0; i < numAssets; i++ {
+		for i := range numAssets {
 			assets = append(assets, asset.Asset{
 				ID:     asset.ID(fmt.Sprintf("asset-%05d", i)),
 				Type:   "aws_s3_bucket",

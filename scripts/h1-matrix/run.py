@@ -171,7 +171,8 @@ def cell_export(fix: dict, fmt: str, dest: pathlib.Path) -> dict:
                         "--controls", fix["controls"],
                         "--observations", fix["obs"],
                         "--now", NOW,
-                        "--format", fmt])
+                        "--format", fmt,
+                        "--allow-unknown-input"])
     if rc != 0 or not out:
         return {"verdict": "error", "lines": 0, "detail": err.strip()[:120]}
     dest.write_text(out)
@@ -183,6 +184,8 @@ def cell_smt(facts_smt2: pathlib.Path, query: pathlib.Path, solver: str) -> dict
         return {"verdict": "n/a", "detail": "no query.smt2 paired"}
     if not shutil.which(solver):
         return {"verdict": "n/a", "detail": f"{solver} not on PATH"}
+    if not facts_smt2.is_file():
+        return {"verdict": "error", "detail": "smt2 export missing"}
     payload = facts_smt2.read_text() + query.read_text()
     if solver == "z3":
         cmd = ["z3", "-in"]

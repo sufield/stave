@@ -18,8 +18,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 12 lines / `smt2` 159 lines
-- *runtime*: 1.67s
+- *fact export*: `jsonl` 14 lines / `smt2` 285 lines
+- *runtime*: 9.81s
 
 ### `before`
 
@@ -27,15 +27,15 @@ against each fixture's observation snapshots.
   - controls fired: `CTL.S3.PUBLIC.LIST.001`
 - **SMT (Z3 / cvc5 / Yices)** — query: sat
 - **Soufflé** — 0 reachable
-- **Clingo** — no violations
-- **Prolog** — no proof
+- **Clingo** — 2 kind(s): broad_resource_policy_principal, public_list
+- **Prolog** — 2 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=0% (MINIMAL)
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 14 lines / `smt2` 169 lines
-- *runtime*: 1.84s
+- *fact export*: `jsonl` 16 lines / `smt2` 297 lines
+- *runtime*: 10.71s
 
 ## Reading the matrix
 

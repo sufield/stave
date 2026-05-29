@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"sync"
 
@@ -261,7 +262,7 @@ func ComputeInputHashesKey(h *evaluation.InputHashes) string {
 	for p := range h.Files {
 		paths = append(paths, p)
 	}
-	sort.Slice(paths, func(i, j int) bool { return paths[i] < paths[j] })
+	slices.Sort(paths)
 	hash := sha256.New()
 	for _, p := range paths {
 		hash.Write([]byte(p))

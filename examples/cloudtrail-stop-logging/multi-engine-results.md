@@ -18,8 +18,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 7 lines / `smt2` 134 lines
-- *runtime*: 1.45s
+- *fact export*: `jsonl` 7 lines / `smt2` 243 lines
+- *runtime*: 9.44s
 
 ### `before`
 
@@ -27,15 +27,15 @@ against each fixture's observation snapshots.
   - controls fired: `CTL.CLOUDTRAIL.STOP.DETECT.001`
 - **SMT (Z3 / cvc5 / Yices)** — query-data-events: unsat; query-mgmt: sat
 - **Soufflé** — 0 reachable
-- **Clingo** — no violations
-- **Prolog** — no proof
+- **Clingo** — 1 kind(s): logging_disabled
+- **Prolog** — 1 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=0% (MINIMAL)
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 9 lines / `smt2` 144 lines
-- *runtime*: 1.61s
+- *fact export*: `jsonl` 9 lines / `smt2` 255 lines
+- *runtime*: 9.34s
 
 ### `data-events-after`
 
@@ -49,8 +49,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 35 lines / `smt2` 274 lines
-- *runtime*: 1.48s
+- *fact export*: `jsonl` 35 lines / `smt2` 411 lines
+- *runtime*: 9.63s
 
 ### `data-events-before`
 
@@ -64,8 +64,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 32 lines / `smt2` 259 lines
-- *runtime*: 1.8s
+- *fact export*: `jsonl` 32 lines / `smt2` 393 lines
+- *runtime*: 9.87s
 
 ## Reading the matrix
 

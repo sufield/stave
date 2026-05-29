@@ -18,8 +18,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 17 lines / `smt2` 184 lines
-- *runtime*: 1.68s
+- *fact export*: `jsonl` 17 lines / `smt2` 303 lines
+- *runtime*: 10.02s
 
 ### `before`
 
@@ -27,15 +27,15 @@ against each fixture's observation snapshots.
   - controls fired: `CTL.S3.WRITE.SCOPE.001`
 - **SMT (Z3 / cvc5 / Yices)** — query: sat
 - **Soufflé** — 0 reachable
-- **Clingo** — no violations
-- **Prolog** — no proof
+- **Clingo** — 1 kind(s): broad_write_scope
+- **Prolog** — 1 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=0% (MINIMAL)
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 19 lines / `smt2` 194 lines
-- *runtime*: 1.87s
+- *fact export*: `jsonl` 19 lines / `smt2` 315 lines
+- *runtime*: 10.5s
 
 ## Reading the matrix
 

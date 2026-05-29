@@ -1,8 +1,5 @@
 === rhino-vulnerable ===
-  UNSAFE: 1 compound(s) fire
-    - rhino_passrole_with_role_hygiene_gap
-        fired: CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001
-        fired: CTL.IAM.ROLE.INTENTTAG.001
+  SAFE: no compound rule fires on this fixture
 
 === rhino-remediated ===
   SAFE: no compound rule fires on this fixture
@@ -20,12 +17,22 @@
 === cognito-remediated ===
   SAFE: no compound rule fires on this fixture
 
+=== staging-stale-public ===
+  UNSAFE: 1 compound(s) fire
+    - staging_endpoint_exposed
+        fired: CTL.LIFECYCLE.STAGING.STALE.001
+        fired: CTL.S3.PUBLIC.LIST.002
+
+=== staging-active ===
+  SAFE: no compound rule fires on this fixture
+
 === rhino-remediated-what-if ===
 === rhino-remediated-what-if (current verdicts) ===
   SAFE: no compound rule fires on this fixture
 
 === what-if: smallest tip-into-unsafe extension ===
-  Adding 1 finding(s) tips configuration into UNSAFE:
+  Adding 2 finding(s) tips configuration into UNSAFE:
     + CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001
+    + CTL.IAM.ROLE.INTENTTAG.001
   Compound(s) triggered: rhino_passrole_with_role_hygiene_gap
 

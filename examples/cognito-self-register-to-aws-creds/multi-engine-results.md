@@ -18,8 +18,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 28 lines / `smt2` 239 lines
-- *runtime*: 1.98s
+- *fact export*: `jsonl` 30 lines / `smt2` 381 lines
+- *runtime*: 10.22s
 
 ### `writeup-config`
 
@@ -27,15 +27,15 @@ against each fixture's observation snapshots.
   - controls fired: `CTL.COGNITO.SELFREG.001`
 - **SMT (Z3 / cvc5 / Yices)** — query: sat; query-auth-chain: sat; query-self-register-chain: sat
 - **Soufflé** — 42 reach / 12 anon / 9 self-reg
-- **Clingo** — 2 kind(s): unauth_cognito_s3_read, wildcard_action_resource
-- **Prolog** — 84 proof step(s)
+- **Clingo** — 4 kind(s): advanced_security_off, mfa_disabled, unauth_cognito_s3_read, wildcard_action_resource
+- **Prolog** — 86 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=41% (CRITICAL)
 - **TLA+** — UNSAFE
 - **Game theory** — $300
 
-- *fact export*: `jsonl` 43 lines / `smt2` 314 lines
-- *runtime*: 3.87s
+- *fact export*: `jsonl` 43 lines / `smt2` 459 lines
+- *runtime*: 14.51s
 
 ## Reading the matrix
 

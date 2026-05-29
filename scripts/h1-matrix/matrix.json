@@ -11,13 +11,27 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 129
+        "lines": 273
       },
       "export_jsonl": {
         "verdict": "ok",
-        "lines": 6
+        "lines": 12
       },
-      "smt_queries": [],
+      "smt_queries": [
+        {
+          "query": "apigw-private-api-scoped-deny/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "sat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
       "souffle": {
         "verdict": "ok",
         "rels": {
@@ -30,13 +44,15 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "broad_resource_policy_principal"
+        ],
+        "count": 1
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 2
       },
       "pysat": {
         "verdict": "SAFE"
@@ -52,7 +68,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.46
+      "elapsed_s": 10.07
     },
     {
       "label": "apigw-private-api-scoped-deny/remediated-config",
@@ -65,13 +81,27 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 129
+        "lines": 273
       },
       "export_jsonl": {
         "verdict": "ok",
-        "lines": 6
+        "lines": 12
       },
-      "smt_queries": [],
+      "smt_queries": [
+        {
+          "query": "apigw-private-api-scoped-deny/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
       "souffle": {
         "verdict": "ok",
         "rels": {
@@ -84,13 +114,15 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "broad_resource_policy_principal"
+        ],
+        "count": 1
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 2
       },
       "pysat": {
         "verdict": "SAFE"
@@ -106,7 +138,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.37
+      "elapsed_s": 9.08
     },
     {
       "label": "apigw-private-api-scoped-deny/writeup-config",
@@ -119,13 +151,27 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 129
+        "lines": 273
       },
       "export_jsonl": {
         "verdict": "ok",
-        "lines": 6
+        "lines": 12
       },
-      "smt_queries": [],
+      "smt_queries": [
+        {
+          "query": "apigw-private-api-scoped-deny/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "sat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
       "souffle": {
         "verdict": "ok",
         "rels": {
@@ -138,13 +184,15 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "broad_resource_policy_principal"
+        ],
+        "count": 1
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 2
       },
       "pysat": {
         "verdict": "SAFE"
@@ -160,7 +208,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.43
+      "elapsed_s": 8.94
     },
     {
       "label": "cloudtrail-stop-logging/after",
@@ -173,7 +221,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 134
+        "lines": 243
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -241,7 +289,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.45
+      "elapsed_s": 9.44
     },
     {
       "label": "cloudtrail-stop-logging/before",
@@ -256,7 +304,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 144
+        "lines": 255
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -302,13 +350,15 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "logging_disabled"
+        ],
+        "count": 1
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 1
       },
       "pysat": {
         "verdict": "SAFE"
@@ -324,7 +374,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.61
+      "elapsed_s": 9.34
     },
     {
       "label": "cloudtrail-stop-logging/data-events-after",
@@ -337,7 +387,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 274
+        "lines": 411
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -405,7 +455,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.48
+      "elapsed_s": 9.63
     },
     {
       "label": "cloudtrail-stop-logging/data-events-before",
@@ -418,7 +468,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 259
+        "lines": 393
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -486,7 +536,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.8
+      "elapsed_s": 9.87
     },
     {
       "label": "cognito-no-mfa-advanced-security/after",
@@ -499,11 +549,11 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 139
+        "lines": 255
       },
       "export_jsonl": {
         "verdict": "ok",
-        "lines": 8
+        "lines": 9
       },
       "smt_queries": [
         {
@@ -554,7 +604,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.46
+      "elapsed_s": 9.36
     },
     {
       "label": "cognito-no-mfa-advanced-security/before",
@@ -569,7 +619,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 149
+        "lines": 261
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -602,13 +652,16 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "advanced_security_off",
+          "mfa_disabled"
+        ],
+        "count": 2
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 2
       },
       "pysat": {
         "verdict": "SAFE"
@@ -624,7 +677,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.63
+      "elapsed_s": 10.35
     },
     {
       "label": "cognito-self-register-to-aws-creds/remediated-config",
@@ -637,11 +690,11 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 239
+        "lines": 381
       },
       "export_jsonl": {
         "verdict": "ok",
-        "lines": 28
+        "lines": 30
       },
       "smt_queries": [
         {
@@ -718,7 +771,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.98
+      "elapsed_s": 10.22
     },
     {
       "label": "cognito-self-register-to-aws-creds/writeup-config",
@@ -733,7 +786,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 314
+        "lines": 459
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -794,14 +847,16 @@
       "clingo": {
         "verdict": "ok",
         "violations": [
+          "advanced_security_off",
+          "mfa_disabled",
           "unauth_cognito_s3_read",
           "wildcard_action_resource"
         ],
-        "count": 2
+        "count": 4
       },
       "prolog": {
         "verdict": "ok",
-        "proof_steps": 84
+        "proof_steps": 86
       },
       "pysat": {
         "verdict": "SAFE"
@@ -818,7 +873,7 @@
         "verdict": "$300",
         "cost": 300
       },
-      "elapsed_s": 3.87
+      "elapsed_s": 14.51
     },
     {
       "label": "eks-aws-auth-template-injection/after",
@@ -831,7 +886,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 134
+        "lines": 243
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -886,7 +941,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.46
+      "elapsed_s": 8.56
     },
     {
       "label": "eks-aws-auth-template-injection/before",
@@ -901,7 +956,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 144
+        "lines": 255
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -934,13 +989,15 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "access_key_template_injection"
+        ],
+        "count": 1
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 1
       },
       "pysat": {
         "verdict": "SAFE"
@@ -956,7 +1013,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.56
+      "elapsed_s": 9.05
     },
     {
       "label": "eks-rbac-webhook-config-access/after",
@@ -969,7 +1026,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 134
+        "lines": 243
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -1024,7 +1081,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.45
+      "elapsed_s": 9.82
     },
     {
       "label": "eks-rbac-webhook-config-access/before",
@@ -1039,7 +1096,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 144
+        "lines": 255
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -1072,13 +1129,15 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "webhook_config_access"
+        ],
+        "count": 1
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 1
       },
       "pysat": {
         "verdict": "SAFE"
@@ -1094,7 +1153,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.55
+      "elapsed_s": 9.26
     },
     {
       "label": "iam-21-privesc-5-patterns/partial-deny",
@@ -1109,7 +1168,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 614
+        "lines": 819
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -1222,7 +1281,7 @@
         "verdict": "$1100",
         "cost": 1100
       },
-      "elapsed_s": 161.54
+      "elapsed_s": 177.54
     },
     {
       "label": "iam-21-privesc-5-patterns/real-world-pattern3",
@@ -1235,7 +1294,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 289
+        "lines": 429
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -1342,7 +1401,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 2.22
+      "elapsed_s": 11.09
     },
     {
       "label": "iam-21-privesc-5-patterns/remediated",
@@ -1355,7 +1414,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 184
+        "lines": 303
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -1462,7 +1521,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.69
+      "elapsed_s": 8.53
     },
     {
       "label": "iam-21-privesc-5-patterns/rhino-vulnerable",
@@ -1477,7 +1536,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 559
+        "lines": 753
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -1590,7 +1649,7 @@
         "verdict": "$1100",
         "cost": 1100
       },
-      "elapsed_s": 161.9
+      "elapsed_s": 175.72
     },
     {
       "label": "iam-attach-user-policy-self/after",
@@ -1603,7 +1662,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 149
+        "lines": 261
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -1658,7 +1717,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.51
+      "elapsed_s": 10.46
     },
     {
       "label": "iam-attach-user-policy-self/before",
@@ -1673,7 +1732,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 164
+        "lines": 279
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -1706,13 +1765,15 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "self_attach_user_policy"
+        ],
+        "count": 1
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 4
       },
       "pysat": {
         "verdict": "SAFE"
@@ -1728,7 +1789,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.68
+      "elapsed_s": 10.31
     },
     {
       "label": "iam-autoscaling-privesc-bypass/remediated-config",
@@ -1741,11 +1802,11 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 354
+        "lines": 519
       },
       "export_jsonl": {
         "verdict": "ok",
-        "lines": 51
+        "lines": 53
       },
       "smt_queries": [
         {
@@ -1796,7 +1857,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.9
+      "elapsed_s": 10.8
     },
     {
       "label": "iam-autoscaling-privesc-bypass/writeup-config",
@@ -1811,11 +1872,11 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 314
+        "lines": 471
       },
       "export_jsonl": {
         "verdict": "ok",
-        "lines": 43
+        "lines": 45
       },
       "smt_queries": [
         {
@@ -1844,13 +1905,15 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "passrole_autoscaling_bypass"
+        ],
+        "count": 1
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 3
       },
       "pysat": {
         "verdict": "SAFE"
@@ -1867,7 +1930,7 @@
         "verdict": "$900",
         "cost": 900
       },
-      "elapsed_s": 20.02
+      "elapsed_s": 40.69
     },
     {
       "label": "iam-multi-hop-trust/remediated",
@@ -1880,7 +1943,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 239
+        "lines": 369
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -1936,7 +1999,7 @@
         "verdict": "$1500",
         "cost": 1500
       },
-      "elapsed_s": 1.53
+      "elapsed_s": 10.0
     },
     {
       "label": "iam-multi-hop-trust/vulnerable",
@@ -1949,7 +2012,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 244
+        "lines": 375
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -2007,7 +2070,7 @@
         "verdict": "$2300",
         "cost": 2300
       },
-      "elapsed_s": 1.91
+      "elapsed_s": 10.53
     },
     {
       "label": "iam-overpermission-wildcard/after",
@@ -2020,7 +2083,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 174
+        "lines": 291
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -2101,7 +2164,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.65
+      "elapsed_s": 10.28
     },
     {
       "label": "iam-overpermission-wildcard/before",
@@ -2116,7 +2179,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 174
+        "lines": 291
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -2201,7 +2264,7 @@
         "verdict": "$900",
         "cost": 900
       },
-      "elapsed_s": 2.06
+      "elapsed_s": 11.1
     },
     {
       "label": "iam-overpermission-wildcard/bybit-pattern-after",
@@ -2214,7 +2277,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 244
+        "lines": 375
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -2295,7 +2358,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.75
+      "elapsed_s": 10.45
     },
     {
       "label": "iam-overpermission-wildcard/bybit-pattern-before",
@@ -2308,7 +2371,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 224
+        "lines": 351
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -2389,7 +2452,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 2.1
+      "elapsed_s": 10.98
     },
     {
       "label": "s3-broad-write-scope/after",
@@ -2402,7 +2465,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 184
+        "lines": 303
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -2457,7 +2520,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.68
+      "elapsed_s": 10.02
     },
     {
       "label": "s3-broad-write-scope/before",
@@ -2472,7 +2535,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 194
+        "lines": 315
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -2505,13 +2568,15 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "broad_write_scope"
+        ],
+        "count": 1
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 1
       },
       "pysat": {
         "verdict": "SAFE"
@@ -2527,7 +2592,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.87
+      "elapsed_s": 10.5
     },
     {
       "label": "s3-bucket-name-dangling/after",
@@ -2540,7 +2605,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 139
+        "lines": 249
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -2595,7 +2660,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.66
+      "elapsed_s": 10.19
     },
     {
       "label": "s3-bucket-name-dangling/before",
@@ -2610,7 +2675,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 149
+        "lines": 261
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -2643,13 +2708,16 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "bucket_not_exists",
+          "bucket_not_owned"
+        ],
+        "count": 2
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 2
       },
       "pysat": {
         "verdict": "SAFE"
@@ -2665,7 +2733,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.79
+      "elapsed_s": 10.46
     },
     {
       "label": "s3-cross-account-replication-overperm/remediated-config",
@@ -2678,13 +2746,27 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 294
+        "lines": 507
       },
       "export_jsonl": {
         "verdict": "ok",
-        "lines": 39
+        "lines": 51
       },
-      "smt_queries": [],
+      "smt_queries": [
+        {
+          "query": "s3-cross-account-replication-overperm/query",
+          "z3": {
+            "verdict": "unsat"
+          },
+          "cvc5": {
+            "verdict": "unsat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
       "souffle": {
         "verdict": "ok",
         "rels": {
@@ -2719,7 +2801,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.65
+      "elapsed_s": 10.42
     },
     {
       "label": "s3-cross-account-replication-overperm/writeup-config",
@@ -2732,13 +2814,27 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 294
+        "lines": 525
       },
       "export_jsonl": {
         "verdict": "ok",
-        "lines": 39
+        "lines": 54
       },
-      "smt_queries": [],
+      "smt_queries": [
+        {
+          "query": "s3-cross-account-replication-overperm/query",
+          "z3": {
+            "verdict": "sat"
+          },
+          "cvc5": {
+            "verdict": "sat"
+          },
+          "yices": {
+            "verdict": "n/a",
+            "detail": "yices-smt2 not on PATH"
+          }
+        }
+      ],
       "souffle": {
         "verdict": "ok",
         "rels": {
@@ -2751,13 +2847,15 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "resource_policy_broad_read"
+        ],
+        "count": 1
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 2
       },
       "pysat": {
         "verdict": "SAFE"
@@ -2773,7 +2871,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.64
+      "elapsed_s": 11.64
     },
     {
       "label": "s3-dotgit-readable/after",
@@ -2786,7 +2884,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 159
+        "lines": 273
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -2819,13 +2917,15 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "public_read"
+        ],
+        "count": 1
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 1
       },
       "pysat": {
         "verdict": "SAFE"
@@ -2841,7 +2941,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.72
+      "elapsed_s": 10.37
     },
     {
       "label": "s3-dotgit-readable/before",
@@ -2856,7 +2956,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 169
+        "lines": 285
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -2889,13 +2989,16 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "exposed_repo_artifacts",
+          "public_read"
+        ],
+        "count": 2
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 2
       },
       "pysat": {
         "verdict": "SAFE"
@@ -2911,7 +3014,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.82
+      "elapsed_s": 10.45
     },
     {
       "label": "s3-public-list-policy/after",
@@ -2924,11 +3027,11 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 159
+        "lines": 285
       },
       "export_jsonl": {
         "verdict": "ok",
-        "lines": 12
+        "lines": 14
       },
       "smt_queries": [
         {
@@ -2979,7 +3082,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.67
+      "elapsed_s": 9.81
     },
     {
       "label": "s3-public-list-policy/before",
@@ -2994,11 +3097,11 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 169
+        "lines": 297
       },
       "export_jsonl": {
         "verdict": "ok",
-        "lines": 14
+        "lines": 16
       },
       "smt_queries": [
         {
@@ -3027,13 +3130,16 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "broad_resource_policy_principal",
+          "public_list"
+        ],
+        "count": 2
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 2
       },
       "pysat": {
         "verdict": "SAFE"
@@ -3049,7 +3155,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.84
+      "elapsed_s": 10.71
     },
     {
       "label": "s3-public-read-policy/after",
@@ -3062,11 +3168,11 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 154
+        "lines": 279
       },
       "export_jsonl": {
         "verdict": "ok",
-        "lines": 11
+        "lines": 13
       },
       "smt_queries": [
         {
@@ -3117,7 +3223,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.68
+      "elapsed_s": 10.37
     },
     {
       "label": "s3-public-read-policy/before",
@@ -3132,11 +3238,11 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 164
+        "lines": 291
       },
       "export_jsonl": {
         "verdict": "ok",
-        "lines": 13
+        "lines": 15
       },
       "smt_queries": [
         {
@@ -3165,13 +3271,16 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "broad_resource_policy_principal",
+          "public_read"
+        ],
+        "count": 2
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 2
       },
       "pysat": {
         "verdict": "SAFE"
@@ -3187,7 +3296,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.83
+      "elapsed_s": 10.51
     },
     {
       "label": "s3-tenant-prefix-isolation/after",
@@ -3200,63 +3309,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 149
-      },
-      "export_jsonl": {
-        "verdict": "ok",
-        "lines": 10
-      },
-      "smt_queries": [],
-      "souffle": {
-        "verdict": "ok",
-        "rels": {
-          "anonymous_reachable": 0,
-          "exploitable_overperm": 0,
-          "privesc_chain": 0,
-          "production_reachable": 0,
-          "reachable": 0,
-          "self_register_reachable": 0
-        }
-      },
-      "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
-      },
-      "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
-      },
-      "pysat": {
-        "verdict": "SAFE"
-      },
-      "risk": {
-        "verdict": "MINIMAL",
-        "p_exploit_pct": 0.0
-      },
-      "tla": {
-        "verdict": "AT_RISK",
-        "drift_margin": null
-      },
-      "game": {
-        "verdict": "no-path"
-      },
-      "elapsed_s": 1.77
-    },
-    {
-      "label": "s3-tenant-prefix-isolation/before",
-      "example": "s3-tenant-prefix-isolation",
-      "fixture": "before",
-      "cel": {
-        "verdict": "NON_COMPLIANT",
-        "findings": 1,
-        "controls": [
-          "CTL.S3.TENANT.ISOLATION.001"
-        ]
-      },
-      "export_smt2": {
-        "verdict": "ok",
-        "lines": 159
+        "lines": 269
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -3297,7 +3350,65 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.68
+      "elapsed_s": 10.57
+    },
+    {
+      "label": "s3-tenant-prefix-isolation/before",
+      "example": "s3-tenant-prefix-isolation",
+      "fixture": "before",
+      "cel": {
+        "verdict": "NON_COMPLIANT",
+        "findings": 1,
+        "controls": [
+          "CTL.S3.TENANT.ISOLATION.001"
+        ]
+      },
+      "export_smt2": {
+        "verdict": "ok",
+        "lines": 281
+      },
+      "export_jsonl": {
+        "verdict": "ok",
+        "lines": 14
+      },
+      "smt_queries": [],
+      "souffle": {
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
+      },
+      "clingo": {
+        "verdict": "ok",
+        "violations": [
+          "tenant_isolation_not_enforced"
+        ],
+        "count": 1
+      },
+      "prolog": {
+        "verdict": "ok",
+        "proof_steps": 1
+      },
+      "pysat": {
+        "verdict": "SAFE"
+      },
+      "risk": {
+        "verdict": "MINIMAL",
+        "p_exploit_pct": 0.0
+      },
+      "tla": {
+        "verdict": "AT_RISK",
+        "drift_margin": null
+      },
+      "game": {
+        "verdict": "no-path"
+      },
+      "elapsed_s": 10.19
     },
     {
       "label": "sns-secrets-compound-chain/remediated-config",
@@ -3310,7 +3421,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 244
+        "lines": 375
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -3365,7 +3476,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.7
+      "elapsed_s": 9.95
     },
     {
       "label": "sns-secrets-compound-chain/writeup-config",
@@ -3378,7 +3489,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 284
+        "lines": 423
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -3411,13 +3522,15 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "sns_secrets_enumeration"
+        ],
+        "count": 1
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 3
       },
       "pysat": {
         "verdict": "SAFE"
@@ -3433,7 +3546,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 2.12
+      "elapsed_s": 11.18
     },
     {
       "label": "staging-stale-endpoint/active-staging",
@@ -3446,7 +3559,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 147
+        "lines": 257
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -3487,7 +3600,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.71
+      "elapsed_s": 9.57
     },
     {
       "label": "staging-stale-endpoint/prod-dormant",
@@ -3500,7 +3613,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 152
+        "lines": 263
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -3541,7 +3654,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.69
+      "elapsed_s": 9.88
     },
     {
       "label": "staging-stale-endpoint/stale-staging",
@@ -3556,7 +3669,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 162
+        "lines": 275
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -3597,7 +3710,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.7
+      "elapsed_s": 9.69
     },
     {
       "label": "staging-stale-endpoint/stale-staging-public",
@@ -3613,7 +3726,7 @@
       },
       "export_smt2": {
         "verdict": "ok",
-        "lines": 177
+        "lines": 293
       },
       "export_jsonl": {
         "verdict": "ok",
@@ -3632,16 +3745,19 @@
         }
       },
       "clingo": {
-        "verdict": "empty",
-        "violations": [],
-        "count": 0
+        "verdict": "ok",
+        "violations": [
+          "public_list"
+        ],
+        "count": 1
       },
       "prolog": {
-        "verdict": "empty",
-        "proof_steps": 0
+        "verdict": "ok",
+        "proof_steps": 1
       },
       "pysat": {
-        "verdict": "SAFE"
+        "verdict": "UNSAFE",
+        "compounds": []
       },
       "risk": {
         "verdict": "MINIMAL",
@@ -3654,7 +3770,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.7
+      "elapsed_s": 10.09
     }
   ],
   "z3_runners": {
@@ -3787,6 +3903,18 @@
     "s3-public-read-policy": [
       [
         "s3-public-read-policy",
+        "query.smt2"
+      ]
+    ],
+    "apigw-private-api-scoped-deny": [
+      [
+        "apigw-private-api-scoped-deny",
+        "query.smt2"
+      ]
+    ],
+    "s3-cross-account-replication-overperm": [
+      [
+        "s3-cross-account-replication-overperm",
         "query.smt2"
       ]
     ]

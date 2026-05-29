@@ -48,7 +48,7 @@ run_one() {
         --controls "$controls" \
         --observations "$obs_dir" \
         --now 2026-01-09T00:00:00Z \
-        --format jsonl > "$facts" 2>/dev/null
+        --format jsonl --allow-unknown-input > "$facts" 2>/dev/null
 
     "$venv_python" "$runner" "$label" "$facts" "$mode"
 }
@@ -73,6 +73,20 @@ run_one "cognito-writeup" \
 run_one "cognito-remediated" \
     "$stave_root/controls" \
     "$example_root/cognito-self-register-to-aws-creds/fixtures/remediated-config/observations"
+
+# Staging endpoint exposed — the environment-aware staleness control
+# AND the public-list control fire on the same demo-tagged bucket,
+# triggering the staging_endpoint_exposed compound. The public negative
+# (active-staging) is stale-but-not-public, so no compound fires. Uses
+# the example's local controls (CTL.LIFECYCLE.STAGING.STALE.001 +
+# CTL.S3.PUBLIC.LIST.002 are not in the default catalog).
+run_one "staging-stale-public" \
+    "$example_root/staging-stale-endpoint/controls" \
+    "$example_root/staging-stale-endpoint/fixtures/stale-staging-public/observations"
+
+run_one "staging-active" \
+    "$example_root/staging-stale-endpoint/controls" \
+    "$example_root/staging-stale-endpoint/fixtures/active-staging/observations"
 
 # Rhino-remediated → what-if: smallest set of additional
 # findings that would tip the configuration into unsafe.

@@ -11,15 +11,15 @@ against each fixture's observation snapshots.
 - **CEL** — 0 finding(s) (COMPLIANT)
 - **SMT (Z3 / cvc5 / Yices)** — query: unsat
 - **Soufflé** — 0 reachable
-- **Clingo** — no violations
-- **Prolog** — no proof
+- **Clingo** — 1 kind(s): public_read
+- **Prolog** — 1 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=0% (MINIMAL)
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 12 lines / `smt2` 159 lines
-- *runtime*: 1.72s
+- *fact export*: `jsonl` 12 lines / `smt2` 273 lines
+- *runtime*: 10.37s
 
 ### `before`
 
@@ -27,15 +27,15 @@ against each fixture's observation snapshots.
   - controls fired: `CTL.S3.REPO.ARTIFACT.001`
 - **SMT (Z3 / cvc5 / Yices)** — query: sat
 - **Soufflé** — 0 reachable
-- **Clingo** — no violations
-- **Prolog** — no proof
+- **Clingo** — 2 kind(s): exposed_repo_artifacts, public_read
+- **Prolog** — 2 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=0% (MINIMAL)
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 14 lines / `smt2` 169 lines
-- *runtime*: 1.82s
+- *fact export*: `jsonl` 14 lines / `smt2` 285 lines
+- *runtime*: 10.45s
 
 ## Reading the matrix
 

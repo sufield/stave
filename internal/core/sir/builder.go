@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
 	"strconv"
 	"time"
@@ -512,9 +513,7 @@ func buildIdentityFacts(snapshots []asset.Snapshot, chains map[asset.ID][]RoleCh
 			// wire side; this skips the allocation on the Go side).
 			if len(ci.Properties) > 0 {
 				props := make(map[string]any, len(ci.Properties))
-				for k, v := range ci.Properties {
-					props[k] = v
-				}
+				maps.Copy(props, ci.Properties)
 				fact.Properties = props
 			}
 			if chain, ok := chains[id]; ok && len(chain) > 0 {

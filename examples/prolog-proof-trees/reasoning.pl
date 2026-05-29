@@ -184,6 +184,80 @@ broad_resource_policy(R, [
 ]) :-
     resource_policy_principal(R, "*").
 
+% Tenant prefix isolation gap — an app-signer identity whose
+% `purpose` declares enforce_prefix=false can mint signed URLs
+% outside the requesting tenant's prefix scope. The purposeFlagFacts
+% projector (PR 3.6) lifts each key=value pair off the identity's
+% `purpose` into has_purpose_flag(identity, "k=v"). Mirrors the SMT
+% query at examples/s3-tenant-prefix-isolation/query.smt2.
+tenant_isolation_gap(I, [
+    step(I, has_purpose_flag, "enforce_prefix=false"),
+    conclusion(I, tenant_isolation_not_enforced)
+]) :-
+    has_purpose_flag(I, "enforce_prefix=false").
+
+% Self-service IAM escalation — a principal that can attach a policy
+% to itself (iam:AttachUserPolicy with its own ARN as resource). The
+% same variable U on both sides of has_resource binds the self-target.
+self_attach(U, [
+    step(U, grants, "iam:AttachUserPolicy"),
+    step(U, on_resource, U),
+    conclusion(U, can_attach_policy_to_self)
+]) :-
+    has_action(U, "iam:AttachUserPolicy"),
+    has_resource(U, U).
+
+% Cross-account replication destination granting broad wildcard read
+% (s3:Get*/s3:List*) via its resource policy — the over-permission the
+% writeup adds and remediation removes. resource_policy_action is
+% emitted by the stringifiedPolicyFacts projector (PR 5).
+replication_overperm(B, A, [
+    step(B, resource_policy_grants, A),
+    conclusion(B, broad_read_via_resource_policy)
+]) :-
+    member(A, ["s3:Get*", "s3:List*"]),
+    resource_policy_action(B, A).
+
+% SNS-secrets enumeration compound — one principal that can read API
+% Gateway, inspect SNS topic attributes, AND read its own IAM policy.
+% apigateway:GET is dropped on remediation, collapsing the chain.
+sns_secrets_enum(U, [
+    step(U, grants, "apigateway:GET"),
+    step(U, grants, "sns:GetTopicAttributes"),
+    step(U, grants, "iam:GetUserPolicy"),
+    conclusion(U, sns_secrets_enumeration_path)
+]) :-
+    has_action(U, "apigateway:GET"),
+    has_action(U, "sns:GetTopicAttributes"),
+    has_action(U, "iam:GetUserPolicy").
+
+% Signed-upload write scope bound to a key prefix rather than an exact
+% object key — enables arbitrary overwrite / cross-tenant tampering.
+% has_upload_key_mode is emitted from properties.s3_upload.allowed_key_mode;
+% remediation flips it to "exact".
+broad_write_scope(B, [
+    step(B, has_upload_key_mode, "prefix"),
+    conclusion(B, write_scope_not_bound_to_exact_key)
+]) :-
+    has_upload_key_mode(B, "prefix").
+
+% PassRole -> autoscaling privesc bypass, DENY-AWARE. A principal can
+% pass a role and create an autoscaling launch configuration that runs
+% with it; autoscaling:CreateLaunchConfiguration is granted via the
+% autoscaling:* wildcard. Negation-as-failure (\+ has_deny_action)
+% models effective permission = wildcard allow minus explicit deny —
+% exactly what remediation changes (it adds the concrete
+% autoscaling:Create* denies). No projector change needed.
+passrole_autoscaling_bypass(P, [
+    step(P, grants, "iam:PassRole"),
+    step(P, grants, "autoscaling:*"),
+    step(P, not_denied, "autoscaling:CreateLaunchConfiguration"),
+    conclusion(P, passrole_autoscaling_escalation)
+]) :-
+    has_action(P, "iam:PassRole"),
+    has_action(P, "autoscaling:*"),
+    \+ has_deny_action(P, "autoscaling:CreateLaunchConfiguration").
+
 % ===========================================================
 % Proof tree formatting.
 % ===========================================================
@@ -279,6 +353,36 @@ run_broad_policy :-
         ( format("~nbroad resource policy on ~w:~n", [R]),
           print_proof(Proof) )).
 
+run_tenant_isolation :-
+    forall(tenant_isolation_gap(I, Proof),
+        ( format("~ntenant isolation gap on ~w:~n", [I]),
+          print_proof(Proof) )).
+
+run_self_attach :-
+    forall(self_attach(U, Proof),
+        ( format("~nself-attach escalation on ~w:~n", [U]),
+          print_proof(Proof) )).
+
+run_replication_overperm :-
+    forall(replication_overperm(B, A, Proof),
+        ( format("~nreplication overperm on ~w via ~w:~n", [B, A]),
+          print_proof(Proof) )).
+
+run_sns_secrets :-
+    forall(sns_secrets_enum(U, Proof),
+        ( format("~nsns-secrets enumeration on ~w:~n", [U]),
+          print_proof(Proof) )).
+
+run_broad_write :-
+    forall(broad_write_scope(B, Proof),
+        ( format("~nbroad write scope on ~w:~n", [B]),
+          print_proof(Proof) )).
+
+run_passrole_autoscaling :-
+    forall(passrole_autoscaling_bypass(P, Proof),
+        ( format("~npassrole autoscaling bypass on ~w:~n", [P]),
+          print_proof(Proof) )).
+
 run_queries :-
     run_section("Anonymous Access Chains",
                 anonymous_access(_, _, _, _), run_anonymous),
@@ -303,4 +407,16 @@ run_queries :-
     run_section("EKS aws-auth Template Injection",
                 aws_auth_injection(_, _), run_aws_auth),
     run_section("Broad Resource Policy",
-                broad_resource_policy(_, _), run_broad_policy).
+                broad_resource_policy(_, _), run_broad_policy),
+    run_section("Tenant Prefix Isolation Gaps",
+                tenant_isolation_gap(_, _), run_tenant_isolation),
+    run_section("Self-Attach IAM Escalation",
+                self_attach(_, _), run_self_attach),
+    run_section("Cross-Account Replication Overperm",
+                replication_overperm(_, _, _), run_replication_overperm),
+    run_section("SNS-Secrets Enumeration Compound",
+                sns_secrets_enum(_, _), run_sns_secrets),
+    run_section("Broad Write Scope (Signed Upload)",
+                broad_write_scope(_, _), run_broad_write),
+    run_section("PassRole Autoscaling Bypass (deny-aware)",
+                passrole_autoscaling_bypass(_, _), run_passrole_autoscaling).

@@ -58,6 +58,7 @@ OUTPUT_FILE=$2
     echo ":- discontiguous has_condition_value/2."
     echo ":- discontiguous has_deny_action/2."
     echo ":- discontiguous has_deny_resource/2."
+    echo ":- discontiguous has_purpose_flag/2."
     echo ""
     jq -r '"\(.predicate)(\"\(.subject | gsub("\\\\"; "\\\\\\\\") | gsub("\""; "\\\""))\", \"\(.object | gsub("\\\\"; "\\\\\\\\") | gsub("\""; "\\\""))\")."' \
         "$JSONL_FILE"

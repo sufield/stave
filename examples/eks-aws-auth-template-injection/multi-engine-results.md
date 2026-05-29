@@ -18,8 +18,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 7 lines / `smt2` 134 lines
-- *runtime*: 1.46s
+- *fact export*: `jsonl` 7 lines / `smt2` 243 lines
+- *runtime*: 8.56s
 
 ### `before`
 
@@ -27,15 +27,15 @@ against each fixture's observation snapshots.
   - controls fired: `CTL.K8S.AUTH.ACCESSKEYMAP.001`
 - **SMT (Z3 / cvc5 / Yices)** — query: sat
 - **Soufflé** — 0 reachable
-- **Clingo** — no violations
-- **Prolog** — no proof
+- **Clingo** — 1 kind(s): access_key_template_injection
+- **Prolog** — 1 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=0% (MINIMAL)
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 9 lines / `smt2` 144 lines
-- *runtime*: 1.56s
+- *fact export*: `jsonl` 9 lines / `smt2` 255 lines
+- *runtime*: 9.05s
 
 ## Reading the matrix
 

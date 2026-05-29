@@ -18,8 +18,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 8 lines / `smt2` 139 lines
-- *runtime*: 1.66s
+- *fact export*: `jsonl` 8 lines / `smt2` 249 lines
+- *runtime*: 10.19s
 
 ### `before`
 
@@ -27,15 +27,15 @@ against each fixture's observation snapshots.
   - controls fired: `CTL.S3.BUCKET.TAKEOVER.001`
 - **SMT (Z3 / cvc5 / Yices)** — query: sat
 - **Soufflé** — 0 reachable
-- **Clingo** — no violations
-- **Prolog** — no proof
+- **Clingo** — 2 kind(s): bucket_not_exists, bucket_not_owned
+- **Prolog** — 2 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=0% (MINIMAL)
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 10 lines / `smt2` 149 lines
-- *runtime*: 1.79s
+- *fact export*: `jsonl` 10 lines / `smt2` 261 lines
+- *runtime*: 10.46s
 
 ## Reading the matrix
 

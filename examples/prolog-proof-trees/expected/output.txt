@@ -169,6 +169,24 @@ arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool --[has_adv
 === Broad Resource Policy ===
 (none)
 
+=== Tenant Prefix Isolation Gaps ===
+(none)
+
+=== Self-Attach IAM Escalation ===
+(none)
+
+=== Cross-Account Replication Overperm ===
+(none)
+
+=== SNS-Secrets Enumeration Compound ===
+(none)
+
+=== Broad Write Scope (Signed Upload) ===
+(none)
+
+=== PassRole Autoscaling Bypass (deny-aware) ===
+(none)
+
 ============================================================
   Cognito remediated
 ============================================================
@@ -207,6 +225,24 @@ arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_appPool --[has_adv
 (none)
 
 === Broad Resource Policy ===
+(none)
+
+=== Tenant Prefix Isolation Gaps ===
+(none)
+
+=== Self-Attach IAM Escalation ===
+(none)
+
+=== Cross-Account Replication Overperm ===
+(none)
+
+=== SNS-Secrets Enumeration Compound ===
+(none)
+
+=== Broad Write Scope (Signed Upload) ===
+(none)
+
+=== PassRole Autoscaling Bypass (deny-aware) ===
 (none)
 
 ============================================================
@@ -270,6 +306,24 @@ arn:aws:iam::444455556666:user/developer --[assumes]--> arn:aws:iam::44445555666
 === Broad Resource Policy ===
 (none)
 
+=== Tenant Prefix Isolation Gaps ===
+(none)
+
+=== Self-Attach IAM Escalation ===
+(none)
+
+=== Cross-Account Replication Overperm ===
+(none)
+
+=== SNS-Secrets Enumeration Compound ===
+(none)
+
+=== Broad Write Scope (Signed Upload) ===
+(none)
+
+=== PassRole Autoscaling Bypass (deny-aware) ===
+(none)
+
 ============================================================
   Multi-hop remediated
 ============================================================
@@ -315,6 +369,24 @@ arn:aws:iam::444455556666:user/developer --[assumes]--> arn:aws:iam::44445555666
 === Broad Resource Policy ===
 (none)
 
+=== Tenant Prefix Isolation Gaps ===
+(none)
+
+=== Self-Attach IAM Escalation ===
+(none)
+
+=== Cross-Account Replication Overperm ===
+(none)
+
+=== SNS-Secrets Enumeration Compound ===
+(none)
+
+=== Broad Write Scope (Signed Upload) ===
+(none)
+
+=== PassRole Autoscaling Bypass (deny-aware) ===
+(none)
+
 ============================================================
   Rhino vulnerable
 ============================================================
@@ -326,71 +398,7 @@ arn:aws:iam::444455556666:user/developer --[assumes]--> arn:aws:iam::44445555666
 (none)
 
 === Exploitable Overpermissioned Roles ===
-
-exploitable role arn:aws:iam::111122223333:role/admin-ec2-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: ec2.amazonaws.com):
-arn:aws:iam::111122223333:role/admin-ec2-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
-  arn:aws:iam::111122223333:role/admin-ec2-role --[trusts_compute]--> ec2.amazonaws.com
-    therefore arn:aws:iam::111122223333:role/admin-ec2-role :: exploitable_via_passrole
-
-exploitable role arn:aws:iam::111122223333:role/admin-lambda-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: lambda.amazonaws.com):
-arn:aws:iam::111122223333:role/admin-lambda-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
-  arn:aws:iam::111122223333:role/admin-lambda-role --[trusts_compute]--> lambda.amazonaws.com
-    therefore arn:aws:iam::111122223333:role/admin-lambda-role :: exploitable_via_passrole
-
-exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: ec2.amazonaws.com):
-arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
-  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> ec2.amazonaws.com
-    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
-
-exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: lambda.amazonaws.com):
-arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
-  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> lambda.amazonaws.com
-    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
-
-exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: ecs-tasks.amazonaws.com):
-arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
-  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> ecs-tasks.amazonaws.com
-    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
-
-exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: glue.amazonaws.com):
-arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
-  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> glue.amazonaws.com
-    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
-
-exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: cloudformation.amazonaws.com):
-arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
-  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> cloudformation.amazonaws.com
-    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
-
-exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: codebuild.amazonaws.com):
-arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
-  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> codebuild.amazonaws.com
-    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
-
-exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: sagemaker.amazonaws.com):
-arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
-  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> sagemaker.amazonaws.com
-    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
-
-exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: batch.amazonaws.com):
-arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
-  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> batch.amazonaws.com
-    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
-
-exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: states.amazonaws.com):
-arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
-  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> states.amazonaws.com
-    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
-
-exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: apprunner.amazonaws.com):
-arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
-  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> apprunner.amazonaws.com
-    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
-
-exploitable role arn:aws:iam::111122223333:role/admin-multi-trust-role (control: CTL.IAM.ROLE.INTENTTAG.001, service: datapipeline.amazonaws.com):
-arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM.ROLE.INTENTTAG.001
-  arn:aws:iam::111122223333:role/admin-multi-trust-role --[trusts_compute]--> datapipeline.amazonaws.com
-    therefore arn:aws:iam::111122223333:role/admin-multi-trust-role :: exploitable_via_passrole
+(none)
 
 === Privilege Escalation Paths ===
 (none)
@@ -417,5 +425,23 @@ arn:aws:iam::111122223333:role/admin-multi-trust-role --[has_finding]--> CTL.IAM
 (none)
 
 === Broad Resource Policy ===
+(none)
+
+=== Tenant Prefix Isolation Gaps ===
+(none)
+
+=== Self-Attach IAM Escalation ===
+(none)
+
+=== Cross-Account Replication Overperm ===
+(none)
+
+=== SNS-Secrets Enumeration Compound ===
+(none)
+
+=== Broad Write Scope (Signed Upload) ===
+(none)
+
+=== PassRole Autoscaling Bypass (deny-aware) ===
 (none)
 

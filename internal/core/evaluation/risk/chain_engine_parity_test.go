@@ -150,7 +150,7 @@ func makeSyntheticCatalog(numChains, numControls int) (
 ) {
 	const fanOut = 4
 	controls := make(map[kernel.ControlID]*policy.ControlDefinition, numControls)
-	for i := 0; i < numControls; i++ {
+	for i := range numControls {
 		id := kernel.ControlID(fmt.Sprintf("CTL.%05d", i))
 		controls[id] = &policy.ControlDefinition{
 			ID:       id,
@@ -159,9 +159,9 @@ func makeSyntheticCatalog(numChains, numControls int) (
 	}
 
 	chains := make([]policy.ChainDefinition, 0, numChains)
-	for i := 0; i < numChains; i++ {
+	for i := range numChains {
 		ids := make([]kernel.ControlID, 0, fanOut)
-		for j := 0; j < fanOut; j++ {
+		for j := range fanOut {
 			// Stride by i+j so most chains share at least one
 			// control with another — exercises the multi-index
 			// branch of the inverted index.
@@ -184,7 +184,7 @@ func makeSyntheticCatalog(numChains, numControls int) (
 // of chains land multi-asset findings.
 func makeSyntheticFailures(numControls, numFailures int) []FailingControl {
 	out := make([]FailingControl, 0, numFailures)
-	for i := 0; i < numFailures; i++ {
+	for i := range numFailures {
 		out = append(out, FailingControl{
 			ControlID: kernel.ControlID(fmt.Sprintf("CTL.%05d", i%numControls)),
 			AssetID:   asset.ID(fmt.Sprintf("asset-%d", i%50)),
@@ -268,11 +268,8 @@ func TestDetectChains_NilResolverFallsBackToAssetID(t *testing.T) {
 }
 
 func firstDiff(a, b []findingsdata.CompoundFinding) string {
-	n := len(a)
-	if len(b) < n {
-		n = len(b)
-	}
-	for i := 0; i < n; i++ {
+	n := min(len(b), len(a))
+	for i := range n {
 		if !reflect.DeepEqual(a[i], b[i]) {
 			return fmt.Sprintf("index %d: %+v vs %+v", i, a[i], b[i])
 		}

@@ -163,7 +163,7 @@ func decodeCache(data []byte) ([]cachedEntry, error) {
 		return nil, errors.New("cache: truncated entry count")
 	}
 	entries := make([]cachedEntry, 0, count)
-	for i := uint64(0); i < count; i++ {
+	for i := range count {
 		var sha [32]byte
 		if !r.readInto(sha[:]) {
 			return nil, fmt.Errorf("cache: truncated SHA at entry %d", i)

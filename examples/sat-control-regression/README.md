@@ -40,15 +40,17 @@ set the solver finds.
 
 ## The compound rules
 
-Three rules in `compound_rules.py`, all conjunctions of
+Nine rules in `compound_rules.py`, all conjunctions of
 control-firing flags. Each is an unsafe shape that holds
-*only* when every conjunct fires:
+*only* when every conjunct fires. The most illustrative are
+shown here; see `compound_rules.py` for the full set:
 
 | Rule | Conjuncts | Catches |
 |---|---|---|
-| `rhino_passrole_with_role_hygiene_gap` | `IAM.ESCALATE.PASSROLE.AUTOSCALING.001` ∧ `IAM.ROLE.INTENTTAG.001` | The this example deny-list bypass on a fixture without role-attribution tagging — the lateral targets aren't reviewable. |
+| `rhino_passrole_with_role_hygiene_gap` | `IAM.ESCALATE.PASSROLE.AUTOSCALING.001` ∧ `IAM.ROLE.INTENTTAG.001` | The deny-list bypass on a fixture without role-attribution tagging — the lateral targets aren't reviewable. |
 | `cognito_anon_to_aws_2of3` | `COGNITO.SELFREG.001` ∧ `COGNITO.MFA.001` | Self-register + no MFA — the anonymous-to-AWS-credentials path. |
 | `cognito_full_id_bypass_3of3` | `COGNITO.SELFREG.001` ∧ `COGNITO.MFA.001` ∧ `COGNITO.ADVANCED.SECURITY.001` | Strict variant: the complete identity-bypass cascade — no rate-limit, no second factor, no anomaly detection. |
+| `staging_endpoint_exposed` | `LIFECYCLE.STAGING.STALE.001` ∧ `S3.PUBLIC.LIST.002` | A stale non-production resource that is also publicly listable — the HIGH-severity compound the `staging_endpoint_exposed` chain escalates. |
 
 The 2-of-3 and 3-of-3 are deliberately stratified — the
 relaxed compound matches more configurations; the strict
@@ -59,39 +61,53 @@ wants both views.
 
 ```
 === rhino-vulnerable ===
- UNSAFE: 1 compound(s) fire
- - rhino_passrole_with_role_hygiene_gap
- fired: CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001
- fired: CTL.IAM.ROLE.INTENTTAG.001
+  SAFE: no compound rule fires on this fixture
 
 === rhino-remediated ===
- SAFE: no compound rule fires on this fixture
+  SAFE: no compound rule fires on this fixture
 
 === cognito-writeup ===
- UNSAFE: 2 compound(s) fire
- - cognito_anon_to_aws_2of3
- - cognito_full_id_bypass_3of3
+  UNSAFE: 2 compound(s) fire
+    - cognito_anon_to_aws_2of3
+    - cognito_full_id_bypass_3of3
 
 === cognito-remediated ===
- SAFE: no compound rule fires on this fixture
+  SAFE: no compound rule fires on this fixture
+
+=== staging-stale-public ===
+  UNSAFE: 1 compound(s) fire
+    - staging_endpoint_exposed
+        fired: CTL.LIFECYCLE.STAGING.STALE.001
+        fired: CTL.S3.PUBLIC.LIST.002
+
+=== staging-active ===
+  SAFE: no compound rule fires on this fixture
 
 === rhino-remediated-what-if (current verdicts) ===
- SAFE: no compound rule fires on this fixture
+  SAFE: no compound rule fires on this fixture
 
 === what-if: smallest tip-into-unsafe extension ===
- Adding 1 finding(s) tips configuration into UNSAFE:
- + CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001
- Compound(s) triggered: rhino_passrole_with_role_hygiene_gap
+  Adding 2 finding(s) tips configuration into UNSAFE:
+    + CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001
+    + CTL.IAM.ROLE.INTENTTAG.001
+  Compound(s) triggered: rhino_passrole_with_role_hygiene_gap
 ```
 
 The cognito writeup-config triggers two stratified
 compounds simultaneously (the 2-of-3 is implied by the
 3-of-3 in the firing set). The remediated config silences
-both. The what-if demonstrates the regression-prediction
-shape: a single new finding (`PASSROLE.AUTOSCALING`) is
-enough to tip the rhino-remediated fixture back into
-unsafe — a clean signal for "do not let this control start
-firing on this fixture without re-reviewing."
+both. `staging-stale-public` is the single-asset compound:
+one demo-tagged bucket trips both the staleness and the
+public-list control, so `staging_endpoint_exposed` fires;
+`staging-active` is stale-but-not-public, so it stays clean.
+The rhino fixtures are SAFE on their own — only
+`PASSROLE.AUTOSCALING` fires there, not the role-hygiene
+conjunct — so the what-if demonstrates the regression-
+prediction shape: adding *both* missing findings
+(`PASSROLE.AUTOSCALING` + `ROLE.INTENTTAG`) is the smallest
+set that tips rhino-remediated into unsafe, a clean signal
+for "do not let these controls start co-firing without
+re-reviewing."
 
 ## Why SAT not Z3 / Clingo
 
@@ -131,11 +147,15 @@ bash examples/sat-control-regression/run.sh
 If `PYSAT_VENV` is unset, the runner expects `.tools-venv`
 at the repository root (sibling of `stave/`).
 
-The fixtures use `--controls controls/` (the full Stave
+Most fixtures use `--controls controls/` (the full Stave
 catalog) rather than per-example dirs, because the compound
-rules need multiple controls to fire on the same fixture.
-A narrow per-example controls dir would have only one
-control fire — no compound ever satisfied.
+rules need multiple controls to fire on the same fixture
+and a narrow per-example controls dir would usually have
+only one control fire. The `staging-*` fixtures are the
+exception: they use the `staging-stale-endpoint/controls`
+dir because both conjuncts of `staging_endpoint_exposed`
+(`LIFECYCLE.STAGING.STALE.001` and `S3.PUBLIC.LIST.002`)
+live there and are not in the default catalog.
 
 ## What this is not
 

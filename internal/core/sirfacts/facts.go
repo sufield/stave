@@ -1766,8 +1766,8 @@ func emitPurposeFlags(subject string, props map[string]any, evidence string) []F
 		return nil
 	}
 	var out []Fact
-	tokens := strings.Split(raw, ";")
-	for _, t := range tokens {
+	tokens := strings.SplitSeq(raw, ";")
+	for t := range tokens {
 		t = strings.TrimSpace(t)
 		if t == "" || !strings.Contains(t, "=") {
 			continue

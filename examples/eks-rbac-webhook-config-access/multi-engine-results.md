@@ -18,8 +18,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 7 lines / `smt2` 134 lines
-- *runtime*: 1.45s
+- *fact export*: `jsonl` 7 lines / `smt2` 243 lines
+- *runtime*: 9.82s
 
 ### `before`
 
@@ -27,15 +27,15 @@ against each fixture's observation snapshots.
   - controls fired: `CTL.K8S.RBAC.WEBHOOK.001`
 - **SMT (Z3 / cvc5 / Yices)** — query: sat
 - **Soufflé** — 0 reachable
-- **Clingo** — no violations
-- **Prolog** — no proof
+- **Clingo** — 1 kind(s): webhook_config_access
+- **Prolog** — 1 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=0% (MINIMAL)
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 9 lines / `smt2` 144 lines
-- *runtime*: 1.55s
+- *fact export*: `jsonl` 9 lines / `smt2` 255 lines
+- *runtime*: 9.26s
 
 ## Reading the matrix
 

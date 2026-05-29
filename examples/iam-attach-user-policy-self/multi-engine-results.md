@@ -18,8 +18,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 10 lines / `smt2` 149 lines
-- *runtime*: 1.51s
+- *fact export*: `jsonl` 10 lines / `smt2` 261 lines
+- *runtime*: 10.46s
 
 ### `before`
 
@@ -27,15 +27,15 @@ against each fixture's observation snapshots.
   - controls fired: `CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001`
 - **SMT (Z3 / cvc5 / Yices)** — query: sat
 - **Soufflé** — 3 reach / 0 anon / 0 self-reg
-- **Clingo** — no violations
-- **Prolog** — no proof
+- **Clingo** — 1 kind(s): self_attach_user_policy
+- **Prolog** — 4 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=0% (MINIMAL)
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 13 lines / `smt2` 164 lines
-- *runtime*: 1.68s
+- *fact export*: `jsonl` 13 lines / `smt2` 279 lines
+- *runtime*: 10.31s
 
 ## Reading the matrix
 

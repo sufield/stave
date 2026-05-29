@@ -18,8 +18,8 @@ against each fixture's observation snapshots.
 - **TLA+** — UNSAFE
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 51 lines / `smt2` 354 lines
-- *runtime*: 1.9s
+- *fact export*: `jsonl` 53 lines / `smt2` 519 lines
+- *runtime*: 10.8s
 
 ### `writeup-config`
 
@@ -27,15 +27,15 @@ against each fixture's observation snapshots.
   - controls fired: `CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001`
 - **SMT (Z3 / cvc5 / Yices)** — query: sat
 - **Soufflé** — 19 reach / 0 anon / 0 self-reg
-- **Clingo** — no violations
-- **Prolog** — no proof
+- **Clingo** — 1 kind(s): passrole_autoscaling_bypass
+- **Prolog** — 3 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=40% (CRITICAL)
 - **TLA+** — UNSAFE
 - **Game theory** — $900
 
-- *fact export*: `jsonl` 43 lines / `smt2` 314 lines
-- *runtime*: 20.02s
+- *fact export*: `jsonl` 45 lines / `smt2` 471 lines
+- *runtime*: 40.69s
 
 ## Reading the matrix
 

@@ -251,6 +251,41 @@ Verified:
 Coverage now **19/20**. The remaining `staging-stale-endpoint`
 has a different blocker (fixture-pair-selection, not projector).
 
+### staging-stale-endpoint (2026-05-28): explicit fixture selection
+
+The final gap closed without any projector change — the blocker
+was always fixture-pair selection, as recorded above.
+
+`staging-stale-endpoint` ships four fixtures (`stale-staging`,
+`active-staging`, `prod-dormant`, `stale-staging-public`) modeling
+distinct states, so there is no auto-paired before/after for the
+matrix to diff. The new `run.sh` selects all four explicitly and
+asserts a per-fixture verdict.
+
+The query targets the **compound** dimension, which is decidable
+from raw projected facts:
+
+  (or (has_tag a "environment=staging") … "environment=demo" …)
+  (has_public_list a "true")
+
+- `stale-staging-public` → **sat** (env=demo AND public_list=true)
+- `stale-staging`, `active-staging`, `prod-dormant` → **unsat**
+
+Verified sat/unsat across all four fixtures with Z3 + cvc5
+(agreement on every fixture).
+
+The pure staleness dimension (`appears_unused` /
+`last_deployment_days`) is intentionally NOT queried: dormancy is
+not projected as a raw fact, so it surfaces only through the
+CEL-derived `contributed_by` / `has_exposure_window` predicates.
+Querying those would be circular — it asks the solver to trust the
+verdict CEL already reached rather than re-deriving it. The
+compound query stays within the data the projector actually emits,
+matching the `staging_endpoint_exposed` chain's HIGH-severity
+escalation.
+
+Coverage now **20/20**. Full SMT query coverage achieved.
+
 ## What this iteration ships
 
 - Two new `query.smt2` files (iam-attach-user-policy-self,

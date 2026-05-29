@@ -18,8 +18,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 10 lines / `smt2` 147 lines
-- *runtime*: 1.71s
+- *fact export*: `jsonl` 10 lines / `smt2` 257 lines
+- *runtime*: 9.57s
 
 ### `prod-dormant`
 
@@ -33,8 +33,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 11 lines / `smt2` 152 lines
-- *runtime*: 1.69s
+- *fact export*: `jsonl` 11 lines / `smt2` 263 lines
+- *runtime*: 9.88s
 
 ### `stale-staging`
 
@@ -49,8 +49,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 13 lines / `smt2` 162 lines
-- *runtime*: 1.7s
+- *fact export*: `jsonl` 13 lines / `smt2` 275 lines
+- *runtime*: 9.69s
 
 ### `stale-staging-public`
 
@@ -58,15 +58,15 @@ against each fixture's observation snapshots.
   - controls fired: `CTL.LIFECYCLE.STAGING.STALE.001`, `CTL.S3.PUBLIC.LIST.002`
 - **SMT (Z3 / cvc5 / Yices)** — —
 - **Soufflé** — 0 reachable
-- **Clingo** — no violations
-- **Prolog** — no proof
-- **PySAT** — SAFE
+- **Clingo** — 1 kind(s): public_list
+- **Prolog** — 1 proof step(s)
+- **PySAT** — UNSAFE
 - **Risk model** — P=0% (MINIMAL)
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 16 lines / `smt2` 177 lines
-- *runtime*: 1.7s
+- *fact export*: `jsonl` 16 lines / `smt2` 293 lines
+- *runtime*: 10.09s
 
 ## Reading the matrix
 

@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -160,10 +161,5 @@ func TestHasPath_RejectsPathsWithoutPrefix(t *testing.T) {
 }
 
 func containsString(haystack []string, needle string) bool {
-	for _, s := range haystack {
-		if s == needle {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(haystack, needle)
 }

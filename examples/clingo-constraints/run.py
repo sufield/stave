@@ -76,6 +76,11 @@ LIFTED_PREDICATES = {
     "has_vendor_put_bucket_policy",
     "has_delegated_principal", "has_unknown_delegated_principal",
     "has_delegation_scope_exceeded_for",
+    # Identity purpose flags (PR 3.6 — purposeFlagFacts over
+    # IdentityFact.Properties). Each semicolon-delimited key=value
+    # pair on an identity's `purpose` becomes
+    # has_purpose_flag(identity, "k=v"). Rule V18 in constraints.lp.
+    "has_purpose_flag",
 }
 
 

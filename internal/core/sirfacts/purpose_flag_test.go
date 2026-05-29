@@ -1,6 +1,7 @@
 package sirfacts
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -156,10 +157,5 @@ func factsToMap(facts []Fact) map[string][]string {
 
 func hasFact(m map[string][]string, subject, predicate, object string) bool {
 	want := predicate + "=" + object
-	for _, s := range m[subject] {
-		if s == want {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(m[subject], want)
 }

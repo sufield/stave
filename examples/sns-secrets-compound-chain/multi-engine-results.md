@@ -18,23 +18,23 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 29 lines / `smt2` 244 lines
-- *runtime*: 1.7s
+- *fact export*: `jsonl` 29 lines / `smt2` 375 lines
+- *runtime*: 9.95s
 
 ### `writeup-config`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
 - **SMT (Z3 / cvc5 / Yices)** — query: sat
 - **Soufflé** — 10 reach / 0 anon / 0 self-reg
-- **Clingo** — no violations
-- **Prolog** — no proof
+- **Clingo** — 1 kind(s): sns_secrets_enumeration
+- **Prolog** — 3 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=0% (MINIMAL)
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 37 lines / `smt2` 284 lines
-- *runtime*: 2.12s
+- *fact export*: `jsonl` 37 lines / `smt2` 423 lines
+- *runtime*: 11.18s
 
 ## Reading the matrix
 

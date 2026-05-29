@@ -168,5 +168,77 @@ violation(A, "broad_resource_policy_principal", "*") :-
 violation(B, "data_event_logging_missing", "false") :-
     has_data_event_logging(B, "false").
 
+% V18: Tenant prefix isolation not enforced — an app-signer
+% identity whose `purpose` declares enforce_prefix=false can mint
+% signed URLs outside the requesting tenant's prefix scope. The
+% purposeFlagFacts projector (PR 3.6) lifts each semicolon-delimited
+% key=value pair off the identity's `purpose` into
+% has_purpose_flag(identity, "k=v"). Mirrors the SMT query at
+% examples/s3-tenant-prefix-isolation/query.smt2 (enforce_prefix=false
+% is the unsafe state; the remediated fixture carries
+% enforce_prefix=true). Targets: s3-tenant-prefix-isolation.
+violation(I, "tenant_isolation_not_enforced", "enforce_prefix=false") :-
+    has_purpose_flag(I, "enforce_prefix=false").
+
+% V19: Self-service IAM escalation — a principal can attach a policy
+% to itself (iam:AttachUserPolicy with its own ARN as resource). The
+% canonical self-mutation privesc: attach AdministratorAccess to your
+% own user. has_resource(U, U) binds the same principal on both sides.
+% Targets: iam-attach-user-policy-self. (Soufflé reaches this; CEL
+% flags it via CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001.)
+violation(U, "self_attach_user_policy", U) :-
+    has_action(U, "iam:AttachUserPolicy"),
+    has_resource(U, U).
+
+% V20: Cross-account replication destination grants broad wildcard
+% read (s3:Get*/s3:List*) through its resource policy — the
+% over-permission the replication-overperm writeup adds and the
+% remediation removes (which scopes the policy to the specific
+% replication role + replication actions only). resource_policy_action
+% is emitted by the stringifiedPolicyFacts projector (PR 5). Mirrors
+% examples/s3-cross-account-replication-overperm/query.smt2.
+% Targets: s3-cross-account-replication-overperm.
+violation(B, "resource_policy_broad_read", "s3:Get*") :-
+    resource_policy_action(B, "s3:Get*").
+violation(B, "resource_policy_broad_read", "s3:List*") :-
+    resource_policy_action(B, "s3:List*").
+
+% V21: SNS-secrets enumeration compound — one principal that can read
+% API Gateway, inspect SNS topic attributes, AND read its own IAM
+% policy simultaneously. The three-way conjunction is the compound the
+% writeup exposes (apigateway:GET is dropped on remediation). Mirrors
+% examples/sns-secrets-compound-chain/query.smt2.
+% Targets: sns-secrets-compound-chain.
+violation(U, "sns_secrets_enumeration", U) :-
+    has_action(U, "apigateway:GET"),
+    has_action(U, "sns:GetTopicAttributes"),
+    has_action(U, "iam:GetUserPolicy").
+
+% V22: Signed-upload write scope bound to a key PREFIX rather than an
+% exact object key — enables arbitrary overwrite / cross-tenant
+% tampering. The propertyFacts projector already emits
+% has_upload_key_mode(asset, "prefix"|"exact") from
+% properties.s3_upload.allowed_key_mode; remediation flips it to
+% "exact". Targets: s3-broad-write-scope. (CEL flags it via
+% CTL.S3.WRITE.SCOPE.001.)
+violation(B, "broad_write_scope", "prefix") :-
+    has_upload_key_mode(B, "prefix").
+
+% V23: PassRole → autoscaling privesc bypass, DENY-AWARE. A principal
+% can pass a role AND create an autoscaling launch configuration that
+% runs with it. autoscaling:CreateLaunchConfiguration is granted via
+% the autoscaling:* wildcard; the escalation only works if it is not
+% explicitly denied. Negation-as-failure (`not has_deny_action`)
+% models effective permission = wildcard allow ∩ ¬explicit-deny, which
+% is exactly what the remediation changes (it adds the concrete
+% autoscaling:Create* denies). This closes the deny-aware gap without a
+% projector change — has_deny_action is already lifted. Mirrors
+% examples/iam-autoscaling-privesc-bypass/query.smt2.
+% Targets: iam-autoscaling-privesc-bypass.
+violation(P, "passrole_autoscaling_bypass", "autoscaling:CreateLaunchConfiguration") :-
+    has_action(P, "iam:PassRole"),
+    has_action(P, "autoscaling:*"),
+    not has_deny_action(P, "autoscaling:CreateLaunchConfiguration").
+
 #show violation/3.
 #show latent_risk/2.

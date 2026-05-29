@@ -221,7 +221,7 @@ func TestPersist_ConcurrentWritersLastWriteWins(t *testing.T) {
 	in := []cachedEntry{entryFor(t, env, `1 == 1`)}
 	var wg sync.WaitGroup
 	wg.Add(writers)
-	for i := 0; i < writers; i++ {
+	for range writers {
 		go func() {
 			defer wg.Done()
 			if err := persistCacheFile(path, in); err != nil {
