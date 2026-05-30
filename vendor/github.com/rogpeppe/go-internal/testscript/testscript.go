@@ -494,16 +494,10 @@ func (ts *TestScript) setup() string {
 			env.Vars = append(env.Vars, name+"="+val)
 		}
 	}
-	// Must preserve SYSTEMROOT on Windows: https://github.com/golang/go/issues/25513 et al
 	if runtime.GOOS == "windows" {
-		env.Vars = append(env.Vars,
-			"SYSTEMROOT="+os.Getenv("SYSTEMROOT"),
-			"exe=.exe",
-		)
+		env.Vars = append(env.Vars, "exe=.exe")
 	} else {
-		env.Vars = append(env.Vars,
-			"exe=",
-		)
+		env.Vars = append(env.Vars, "exe=")
 	}
 	ts.cd = env.Cd
 	// Unpack archive.
@@ -531,8 +525,8 @@ func (ts *TestScript) setup() string {
 
 	ts.envMap = make(map[string]string)
 	for _, kv := range ts.env {
-		if i := strings.Index(kv, "="); i >= 0 {
-			ts.envMap[envvarname(kv[:i])] = kv[i+1:]
+		if before, after, ok := strings.Cut(kv, "="); ok {
+			ts.envMap[envvarname(before)] = after
 		}
 	}
 	return string(a.Comment)
@@ -561,6 +555,12 @@ func (ts *TestScript) run() {
 	}
 
 	failed := false
+
+	// lastBlockFailed tracks the failure state of the last block.
+	// This allows us to rewind the last block if it didn't fail,
+	// but an earlier block _did_ fail, in the case of ContinueOnError.
+	lastBlockFailed := false
+
 	defer func() {
 		// On a normal exit from the test loop, background processes are cleaned up
 		// before we print PASS. If we return early (e.g., due to a test failure),
@@ -603,8 +603,8 @@ func (ts *TestScript) run() {
 		// Extract next line.
 		ts.lineno++
 		var line string
-		if i := strings.Index(script, "\n"); i >= 0 {
-			line, script = script[:i], script[i+1:]
+		if before, after, ok := strings.Cut(script, "\n"); ok {
+			line, script = before, after
 		} else {
 			line, script = script, ""
 		}
@@ -622,6 +622,15 @@ func (ts *TestScript) run() {
 				rewind()
 				markTime()
 			}
+
+			// "Reset" verbose in the case that we are using ContinueOnError
+			// so that the next block only shows verbose output in case it
+			// is also in error. This ensures that later blocks that are not
+			// in error, do not needlessly show verbose output because of an
+			// earlier block that was in error.
+			verbose = ts.t.Verbose()
+			lastBlockFailed = false
+
 			// Print phase heading and mark start of phase output.
 			fmt.Fprintf(&ts.log, "%s\n", line)
 			ts.mark = ts.log.Len()
@@ -632,6 +641,7 @@ func (ts *TestScript) run() {
 		ok := ts.runLine(line)
 		if !ok {
 			failed = true
+			lastBlockFailed = true
 			if ts.params.ContinueOnError {
 				verbose = true
 			} else {
@@ -656,6 +666,10 @@ func (ts *TestScript) run() {
 	// Once we've reached the end of the script, ignore the status of background commands.
 	ts.waitBackground(false)
 
+	if !lastBlockFailed {
+		rewind()
+	}
+
 	// If we reached here but we've failed (probably because ContinueOnError
 	// was set), don't wipe the log and print "PASS".
 	if failed {
@@ -663,7 +677,6 @@ func (ts *TestScript) run() {
 	}
 
 	// Final phase ended.
-	rewind()
 	markTime()
 	if !ts.stopped {
 		fmt.Fprintf(&ts.log, "PASS\n")
