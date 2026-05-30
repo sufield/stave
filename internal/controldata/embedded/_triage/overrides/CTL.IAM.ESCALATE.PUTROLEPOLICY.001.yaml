@@ -1,16 +1,17 @@
 control: CTL.IAM.ESCALATE.PUTROLEPOLICY.001
 defect: >
-  The role has iam:PutRolePolicy scoped to its own role ARN. Any
-  workload running under this role can write an arbitrary inline
-  policy onto itself.
+  The principal (user or role) has iam:PutRolePolicy scoped to a
+  reachable role — its own ARN (role self-write), an assumable role's
+  ARN (user case), wildcard "*", or a role-set that includes one. It
+  can write an arbitrary inline policy onto that role.
 infection: >
   A single PutRolePolicy call authors an inline policy granting
-  "Action": "*" on "Resource": "*" on the role. The role's
+  "Action": "*" on "Resource": "*" on the target role. That role's
   effective permissions expand immediately. Unlike managed policy
   attachment, inline policies are embedded directly in the role and
   don't appear in the managed policy console view — they are easier
   to overlook in audit.
 failure: >
-  Privilege escalation to admin via self-authored inline policy.
-  Any workload or principal under this role can grant itself
-  unrestricted permissions with a single API call.
+  Privilege escalation to admin via an inline policy authored onto a
+  reachable role. The principal — or any identity that assumes the
+  target role — gains unrestricted permissions with a single API call.

@@ -21829,14 +21829,14 @@ Scope: gated on `identity.kind == "user"`. IAM groups are a user-only concept �
 
 ### CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001
 
-**Role Must Not Escalate via iam:AttachRolePolicy On Self**
+**Principal Must Not Escalate via iam:AttachRolePolicy**
 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
 - **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
-A role with `iam:AttachRolePolicy` whose Resource field includes its own role ARN can attach any managed policy — including `arn:aws:iam::aws:policy/AdministratorAccess` — to itself and gain that policy's permissions with a single API call. This is the role-side analogue of `CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001`: distinct AWS action (`iam:AttachRolePolicy` vs `iam:AttachUserPolicy`), distinct principal kind (role vs user), same one-step escalation outcome. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate this technique on roles as well as users. The companion Cluster 1 user-side control intentionally stays user-gated because its action is user-scoped; this control mirrors it for the role-action.
+A principal (IAM user or role) holding `iam:AttachRolePolicy` on a role it can reach can attach any managed policy — including `arn:aws:iam::aws:policy/AdministratorAccess` — to that role and gain the policy's permissions with a single API call. Two shapes share one outcome: a ROLE whose Resource field includes its own ARN self-attaches admin (one step), or a USER with `iam:AttachRolePolicy` scoped to a role it can assume attaches admin to that role and then assumes it (the Rhino/Bishop Fox privesc9 technique). The escalating principal is the one holding the permission; the victim is the role. Distinct AWS action from `iam:AttachUserPolicy`, which targets users (see `CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001`) — this control covers `iam:AttachRolePolicy` whether the holding principal is a user or a role. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate it.
 
 **Remediation:** Remove `iam:AttachRolePolicy` from the role, or scope its Resource to role ARNs that do not include the role itself (admin-only role-creation workflows, for example). Enforce at the organization level with an SCP that denies `iam:AttachRolePolicy` on `${aws:PrincipalArn}`. A permissions boundary on the role that prevents the attached policy from taking effect is an additional defensive layer.
 
@@ -22251,14 +22251,14 @@ Scope: gated on `identity.kind == "user"`. IAM groups are a user-only concept �
 
 ### CTL.IAM.ESCALATE.PUTROLEPOLICY.001
 
-**Role Must Not Escalate via iam:PutRolePolicy On Self**
+**Principal Must Not Escalate via iam:PutRolePolicy**
 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
 - **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
-A role with `iam:PutRolePolicy` whose Resource field includes its own role ARN can write an arbitrary inline policy onto itself — including one that grants `"Action": "*"` on `"Resource": "*"`. This is the role-side analogue of `CTL.IAM.ESCALATE.PUTUSERPOLICY.001`: distinct AWS action (`iam:PutRolePolicy` vs `iam:PutUserPolicy`), distinct principal kind (role vs user), same one-step escalation outcome. A single `PutRolePolicy` call produces full admin authority without touching any managed policy or other principal. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate this technique on roles.
+A principal (IAM user or role) holding `iam:PutRolePolicy` on a role it can reach can write an arbitrary inline policy onto that role — including one that grants `"Action": "*"` on `"Resource": "*"`. Two shapes share one outcome: a ROLE whose Resource field includes its own ARN self-writes admin (one step), or a USER with `iam:PutRolePolicy` scoped to a role it can assume writes an admin inline policy onto that role and then assumes it (the Rhino/Bishop Fox privesc12 technique). A single `PutRolePolicy` call produces full admin authority without touching any managed policy. Distinct AWS action from `iam:PutUserPolicy`, which targets users (see `CTL.IAM.ESCALATE.PUTUSERPOLICY.001`) — this control covers `iam:PutRolePolicy` whether the holding principal is a user or a role. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate it.
 
 **Remediation:** Remove `iam:PutRolePolicy` from the role, or scope its Resource to role ARNs that do not include the role itself. Organization SCPs denying `iam:PutRolePolicy` on `${aws:PrincipalArn}` close the path at the boundary. A permissions boundary on the role that forbids self-write of inline policies is an additional defensive layer.
 

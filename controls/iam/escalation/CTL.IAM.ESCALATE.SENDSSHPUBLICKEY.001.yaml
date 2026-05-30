@@ -1,0 +1,120 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.SENDSSHPUBLICKEY.001
+name: Principal Must Not Escalate via ec2-instance-connect:SendSSHPublicKey
+description: >
+  Principals with `ec2-instance-connect:SendSSHPublicKey` reaching an
+  EC2 instance whose instance-profile role carries permissions
+  exceeding the principal's own can escalate. The principal pushes a
+  temporary SSH public key to the instance via the EC2 Instance Connect
+  API (valid ~60 seconds), opens an SSH session within that window, and
+  reads the instance-profile role's credentials from the Instance
+  Metadata Service (IMDS), then operates with that role's full
+  authority. Unlike `ssm:SendCommand` / `ssm:StartSession` (control-
+  plane code execution, no SSH), this technique establishes an
+  interactive SSH session and requires no SSM agent — only that EC2
+  Instance Connect is installed on the instance. Rhino Security Labs'
+  iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation
+  enumerate it; Bishop Fox iam-vulnerable ships it as
+  privesc-ec2InstanceConnect.
+domain: identity
+severity: critical
+scope: compound
+corpus_reference: MITRE:T1098
+compliance:
+  owasp_nhi: "NHI5"
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - ec2
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_user
+  - aws_iam_role
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.send_ssh_public_key.present
+  - identity.escalation.send_ssh_public_key.target_instance_id
+  - identity.escalation.send_ssh_public_key.target_role_arn
+  - identity.escalation.send_ssh_public_key.permission_delta
+remediation:
+  description: >
+    Principal can push a temporary SSH key to an EC2 instance via EC2
+    Instance Connect and connect to it, gaining the instance-profile
+    role's credentials from IMDS — a role whose permissions exceed the
+    principal's own.
+  action: >
+    Scope `ec2-instance-connect:SendSSHPublicKey` (and
+    `SendSerialConsoleSSHPublicKey`) to specific instance ARNs via
+    resource conditions, or restrict it with an
+    `ec2:osuser` / `aws:ResourceTag` condition so it cannot reach
+    instances whose instance-profile role exceeds the principal's
+    permissions. Enforce IMDSv2 with a low hop limit
+    (CTL.EC2.IMDS.HOPLIMIT.001) to raise the cost of credential theft,
+    and prefer SSM Session Manager (logged, keyless) over EC2 Instance
+    Connect where interactive access is required.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "send_ssh_public_key": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.send_ssh_public_key.present
+      op: eq
+      value: true
+tests:
+  - name: user with EC2 Instance Connect escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            send_ssh_public_key:
+              present: true
+              target_instance_id: i-0123456789abcdef0
+              target_role_arn: arn:aws:iam::111122223333:role/app-instance-role
+              permission_delta:
+                - s3:*
+                - secretsmanager:GetSecretValue
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            send_ssh_public_key:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.

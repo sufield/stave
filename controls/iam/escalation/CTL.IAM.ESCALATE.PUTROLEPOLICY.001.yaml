@@ -1,18 +1,21 @@
 dsl_version: ctrl.v1
 id: CTL.IAM.ESCALATE.PUTROLEPOLICY.001
-name: Role Must Not Escalate via iam:PutRolePolicy On Self
+name: Principal Must Not Escalate via iam:PutRolePolicy
 description: >
-  A role with `iam:PutRolePolicy` whose Resource field includes its
-  own role ARN can write an arbitrary inline policy onto itself —
-  including one that grants `"Action": "*"` on `"Resource": "*"`.
-  This is the role-side analogue of
-  `CTL.IAM.ESCALATE.PUTUSERPOLICY.001`: distinct AWS action
-  (`iam:PutRolePolicy` vs `iam:PutUserPolicy`), distinct principal
-  kind (role vs user), same one-step escalation outcome. A single
-  `PutRolePolicy` call produces full admin authority without touching
-  any managed policy or other principal. Rhino Security Labs'
-  iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation
-  both enumerate this technique on roles.
+  A principal (IAM user or role) holding `iam:PutRolePolicy` on a role
+  it can reach can write an arbitrary inline policy onto that role —
+  including one that grants `"Action": "*"` on `"Resource": "*"`. Two
+  shapes share one outcome: a ROLE whose Resource field includes its own
+  ARN self-writes admin (one step), or a USER with `iam:PutRolePolicy`
+  scoped to a role it can assume writes an admin inline policy onto that
+  role and then assumes it (the Rhino/Bishop Fox privesc12 technique). A
+  single `PutRolePolicy` call produces full admin authority without
+  touching any managed policy. Distinct AWS action from
+  `iam:PutUserPolicy`, which targets users (see
+  `CTL.IAM.ESCALATE.PUTUSERPOLICY.001`) — this control covers
+  `iam:PutRolePolicy` whether the holding principal is a user or a role.
+  Rhino Security Labs' iam__privesc_scan and Prowler's
+  iam_policy_allows_privilege_escalation both enumerate it.
 domain: identity
 severity: critical
 scope: compound
@@ -32,6 +35,7 @@ type: unsafe_state
 classification: state_assertion
 applicable_asset_types:
   - aws_iam_role
+  - aws_iam_user
 params:
   attack_stage: privilege_escalation
   base_impact: 10
@@ -46,11 +50,11 @@ observation_fields:
   - identity.escalation.put_role_policy.resource_scope
 remediation:
   description: >
-    Role has `iam:PutRolePolicy` scoped to its own role ARN. Any
-    workload running under this role — or any principal that has
-    assumed it — can author an inline policy granting
-    `"Action": "*"` on `"Resource": "*"` and immediately operate
-    with admin authority.
+    Principal has `iam:PutRolePolicy` scoped to a reachable role (its
+    own ARN, an assumable role's ARN, or `"*"`). The principal — or any
+    identity that has assumed it — can author an inline policy granting
+    `"Action": "*"` on `"Resource": "*"` on that role and immediately
+    operate with admin authority.
   action: >
     Remove `iam:PutRolePolicy` from the role, or scope its Resource
     to role ARNs that do not include the role itself. Organization
@@ -71,12 +75,50 @@ remediation:
     }
 unsafe_predicate:
   all:
-    - field: properties.identity.kind
-      op: eq
-      value: role
     - field: properties.identity.escalation.put_role_policy.present
       op: eq
       value: true
+tests:
+  - name: role with self-write escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:role/self-write
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          escalation:
+            put_role_policy:
+              present: true
+              target_role_arn: arn:aws:iam::111122223333:role/self-write
+              resource_scope: "*"
+  - name: user holding PutRolePolicy on an assumable role fires (Bishop Fox privesc12)
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/attacker
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            put_role_policy:
+              present: true
+              target_role_arn: arn:aws:iam::111122223333:role/assumable-admin
+              resource_scope: "*"
+  - name: user without the escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/alice
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            put_role_policy:
+              present: false
 alternatives:
   - tool: prowler
     check_id: iam_inline_policy_allows_privilege_escalation
