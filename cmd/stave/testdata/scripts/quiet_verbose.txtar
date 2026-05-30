@@ -1,12 +1,12 @@
 # Verify --quiet and --verbose flags (clig.dev § Verbosity)
 
 # --quiet suppresses non-essential output
-exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --quiet --format json --allow-unknown-input
+exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --quiet --format json
 ! stderr 'No violations'
 stdout '"schema_version"'
 
 # --quiet with violations still exits 3
-! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --quiet --format json --allow-unknown-input
+! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --quiet --format json
 
 -- controls/CTL.TEST.001.yaml --
 dsl_version: ctrl.v1

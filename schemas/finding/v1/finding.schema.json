@@ -57,6 +57,16 @@
         "type": "string"
       }
     },
+    "control_scope": {
+      "type": "string",
+      "title": "Control Scope",
+      "description": "Cardinality of the control's predicate reasoning: \"atomic\" (single asset) or \"compound\" (multi-asset). Copied from the control's scope field. Empty for unclassified controls."
+    },
+    "corpus_reference": {
+      "type": "string",
+      "title": "Corpus Reference",
+      "description": "Citation of the real-world attack pattern the control detects (MITRE technique, incident, Stratus Red Team scenario, etc.). Copied from the control's corpus_reference field; required on the catalog side when control_scope is \"compound\"."
+    },
     "asset_id": {
       "type": "string",
       "title": "Asset ID",

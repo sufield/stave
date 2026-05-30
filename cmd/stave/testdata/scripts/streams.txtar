@@ -1,7 +1,7 @@
 # Verify stdout/stderr separation (clig.dev § Output)
 
 # Data (JSON findings) goes to stdout, not stderr
-exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --format json --allow-unknown-input
+exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --format json
 stdout '"schema_version"'
 stdout '"status"'
 

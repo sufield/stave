@@ -38,6 +38,14 @@ type ControlRepository interface {
 	LoadControls(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
 }
 
+// BuiltinControlLoader returns the embedded built-in control catalog.
+// Application services consume it for the "--controls absent" fallback
+// without importing internal/adapters/controls/builtin — the hexagonal
+// boundary forbids app/* from importing adapters/*. The composition
+// root (cmd/*) wires the concrete embedded store, mirroring the
+// SnapshotEnricher pattern above.
+type BuiltinControlLoader func() ([]policy.ControlDefinition, error)
+
 // SnapshotEnricher mutates a snapshot in place to project facts
 // derived from cross-resource analysis (transitive role chains,
 // service-resource bindings, scheduled deletions) back onto each

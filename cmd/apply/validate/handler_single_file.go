@@ -83,6 +83,7 @@ func NewReadinessValidator(
 		}
 
 		runner := appvalidation.NewRun(obsRepo, ctlRepo)
+		runner.BuiltinCatalog = compose.BuiltinControlCatalog
 		result, err := runner.Execute(ctx, appvalidation.Config{
 			ControlsDir:       ctlDir,
 			ObservationsDir:   obsDir,

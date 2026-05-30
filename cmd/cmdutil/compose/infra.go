@@ -93,6 +93,20 @@ type Factories struct {
 	NewS3Resolver           S3ResolverFactory
 }
 
+// BuiltinControlCatalog loads the embedded built-in control catalog
+// with the standard alias resolver. It is the
+// appcontracts.BuiltinControlLoader wired into the diagnose and
+// validate application services for the "--controls absent" fallback,
+// keeping the adapters/controls/builtin import inside the composition
+// root rather than in internal/app/*.
+func BuiltinControlCatalog() ([]policy.ControlDefinition, error) {
+	store := ctlbuiltin.NewControlStore(
+		ctlbuiltin.EmbeddedFS(), "embedded",
+		ctlbuiltin.WithAliasResolver(predicate.ResolverFunc()),
+	)
+	return store.All()
+}
+
 // DefaultFactories returns factory functions configured with standard adapters.
 func DefaultFactories() Factories {
 	return Factories{

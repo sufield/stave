@@ -1,6 +1,6 @@
 # Verify --sanitize flag redacts infrastructure identifiers
 
-! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format json --sanitize --allow-unknown-input
+! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format json --sanitize
 stdout 'SANITIZED'
 
 -- controls/CTL.TEST.001.yaml --

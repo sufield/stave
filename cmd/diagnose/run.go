@@ -154,7 +154,15 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 }
 
 func (r *Runner) newDiagnosticEngine() (*appdiagnose.DiagnosticEngine, error) {
-	return appdiagnose.NewEngine(r.ObsRepo, r.CtlRepo)
+	engine, err := appdiagnose.NewEngine(r.ObsRepo, r.CtlRepo)
+	if err != nil {
+		return nil, err
+	}
+	// Composition root wires the built-in catalog loader so the app
+	// layer can fall back to the embedded catalog when --controls is
+	// absent without importing adapters/* itself.
+	engine.BuiltinCatalog = compose.BuiltinControlCatalog
+	return engine, nil
 }
 
 func (r *Runner) buildAuditRequest(cfg Config, maxDuration time.Duration) (appdiagnose.AuditRequest, error) {

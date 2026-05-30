@@ -1,13 +1,13 @@
 # Verify exit codes match documentation (clig.dev § Exit Codes)
 
 # Exit 0: clean evaluation (no violations)
-exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --format json --allow-unknown-input
+exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --format json
 
 # Exit 3: violations found
-! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format json --allow-unknown-input
+! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format json
 
 # Exit non-zero: invalid --now
-! exec stave apply --controls controls --observations observations --now bad --allow-unknown-input
+! exec stave apply --controls controls --observations observations --now bad
 
 # Exit non-zero: nonexistent paths
 ! exec stave apply --controls /nonexistent --observations /nonexistent

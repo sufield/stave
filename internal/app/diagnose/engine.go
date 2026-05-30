@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
-	"github.com/sufield/stave/internal/adapters/predicate"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/core/asset"
@@ -33,6 +31,11 @@ type AuditRequest struct {
 type DiagnosticEngine struct {
 	ObservationRepo appcontracts.ObservationRepository
 	PolicyRepo      appcontracts.ControlRepository
+	// BuiltinCatalog loads the embedded control catalog for the
+	// "--controls absent" fallback. Wired by the composition root
+	// (cmd/*); nil when the caller never exercises the empty-source
+	// path. Keeps this package free of an adapters/* import.
+	BuiltinCatalog appcontracts.BuiltinControlLoader
 }
 
 type auditContext struct {
@@ -125,8 +128,10 @@ func (e *DiagnosticEngine) loadAuditData(
 	// CLI's built-in-catalog fallback when --controls is absent).
 	var policies []policy.ControlDefinition
 	if policySrc == "" {
-		store := ctlbuiltin.NewControlStore(ctlbuiltin.EmbeddedFS(), "embedded", ctlbuiltin.WithAliasResolver(predicate.ResolverFunc()))
-		all, builtinErr := store.All()
+		if e.BuiltinCatalog == nil {
+			return auditContext{}, errors.New("no controls source provided and no built-in catalog loader configured")
+		}
+		all, builtinErr := e.BuiltinCatalog()
 		if builtinErr != nil {
 			return auditContext{}, fmt.Errorf("load built-in control catalog: %w", builtinErr)
 		}

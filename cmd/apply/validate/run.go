@@ -156,6 +156,7 @@ func executeValidateRun(ctx context.Context, in Input, params validateParams) (*
 
 	// Execute Domain Logic
 	runner := appvalidation.NewRun(obsLoader, ctlLoader)
+	runner.BuiltinCatalog = compose.BuiltinControlCatalog
 	cfg := appvalidation.Config{
 		ControlsDir:       in.Opts.Controls,
 		ObservationsDir:   in.Opts.Observations,

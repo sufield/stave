@@ -2,11 +2,10 @@ package validation
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
-	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
-	"github.com/sufield/stave/internal/adapters/predicate"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
@@ -27,6 +26,11 @@ type Config struct {
 type Run struct {
 	ObservationRepo appcontracts.ObservationRepository
 	ControlRepo     appcontracts.ControlRepository
+	// BuiltinCatalog loads the embedded control catalog for the
+	// "--controls absent" fallback. Wired by the composition root
+	// (cmd/*); nil when the caller never exercises the empty-source
+	// path. Keeps this package free of an adapters/* import.
+	BuiltinCatalog appcontracts.BuiltinControlLoader
 }
 
 // NewRun creates a new validate run instance.
@@ -47,8 +51,10 @@ func (v *Run) Execute(ctx context.Context, cfg Config) (*Report, error) {
 	// CLI's built-in-catalog fallback when --controls is absent).
 	var controls []policy.ControlDefinition
 	if cfg.ControlsDir == "" {
-		store := ctlbuiltin.NewControlStore(ctlbuiltin.EmbeddedFS(), "embedded", ctlbuiltin.WithAliasResolver(predicate.ResolverFunc()))
-		all, builtinErr := store.All()
+		if v.BuiltinCatalog == nil {
+			return nil, errors.New("no controls source provided and no built-in catalog loader configured")
+		}
+		all, builtinErr := v.BuiltinCatalog()
 		if builtinErr != nil {
 			return nil, fmt.Errorf("load built-in control catalog: %w", builtinErr)
 		}

@@ -1,9 +1,9 @@
 # Verify deterministic output (same inputs = same output)
 
-exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --format json --allow-unknown-input
+exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --format json
 cp stdout run1.json
 
-exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --format json --allow-unknown-input
+exec stave apply --controls controls --observations observations-clean --max-unsafe 168h --now 2026-01-11T00:00:00Z --format json
 cp stdout run2.json
 
 cmp run1.json run2.json
