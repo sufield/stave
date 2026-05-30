@@ -6,6 +6,31 @@ Stave finds dangerous **combinations** in your cloud configuration that single-c
 [![codecov](https://codecov.io/gh/sufield/stave/graph/badge.svg?token=OQ72PYGVPZ)](https://codecov.io/gh/sufield/stave)
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sufield/stave?quickstart=1)
 
+## Getting Started
+
+**One-click:** [Open in GitHub Codespaces](https://codespaces.new/sufield/stave?quickstart=1) — pre-configured; start at Skill 2.
+
+**VS Code / Cursor:** Clone and reopen in the devcontainer (`.devcontainer/`) — start at Skill 2.
+
+**Docker:** `docker run --rm -v ~/snapshot:/data:ro ghcr.io/sufield/stave apply --observations /data/`
+
+**Manual:** See [`_skills/_setup`](./_skills/_setup/SKILL.md), then follow the progression.
+
+### Onboarding skills (`_skills/`)
+
+Six executable skills guide you from install to real-environment evaluation. Each skill is a markdown file your AI coding agent (Claude Code, Cursor) can read and execute — or you can follow manually.
+
+| # | Skill | Time | AWS needed? |
+|---|-------|------|-------------|
+| 1 | [_setup](./_skills/_setup/SKILL.md) | 5 min | No |
+| 2 | [first-evaluation](./_skills/first-evaluation/SKILL.md) | 10 min | No |
+| 3 | [lab-validation](./_skills/lab-validation/SKILL.md) | 30 min | Sandbox ($0) |
+| 4 | [write-your-first-control](./_skills/write-your-first-control/SKILL.md) | 20 min | No |
+| 5 | [reasoning-engines](./_skills/reasoning-engines/SKILL.md) | 30 min | No |
+| 6 | [snapshot-your-account](./_skills/snapshot-your-account/SKILL.md) | 30 min | Yes (read-only) |
+
+Devcontainer and Codespaces users skip Skill 1 — the environment is pre-configured.
+
 ## What it finds
 
 Your AI agent has admin access. Your scanner says you're compliant.
