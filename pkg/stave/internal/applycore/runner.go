@@ -94,7 +94,6 @@ type Inputs struct {
 	IntegrityPublicKey  string
 	MaxUnsafe           time.Duration
 	Now                 time.Time
-	AllowUnknownInput   bool
 	ExemptionRules      *policy.ExemptionConfig
 	AcknowledgmentRules *policy.AcknowledgmentConfig
 	SLAConfig           *evaluation.SLAConfig
@@ -235,7 +234,6 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 	opts := []appeval.Option{
 		appeval.WithMaxUnsafeDuration(maxUnsafe),
 		appeval.WithHasher(crypto.NewHasher()),
-		appeval.WithAllowUnknownInput(in.AllowUnknownInput),
 		appeval.WithExemptionConfig(in.ExemptionRules),
 		appeval.WithExceptionConfig(exceptionCfg),
 		appeval.WithAcknowledgmentConfig(in.AcknowledgmentRules),
@@ -249,7 +247,6 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 	assessmentCfg := appeval.NewConfig(plan, opts...)
 	assessmentCfg.Clock = clock
 	assessmentCfg.BuildVersion = version.String
-	assessmentCfg.AcceptUnknownData = in.AllowUnknownInput
 	assessmentCfg.ActivePolicies = controls
 
 	report, _, err := wf.PerformAssessment(ctx, assessmentCfg)

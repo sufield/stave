@@ -20,7 +20,6 @@ type featureManifest struct {
 	observationSchemas []string
 	policySchemas      []string
 	connectors         []ConnectorSupport
-	connectorIndex     map[kernel.ObservationSourceType]struct{}
 	policyLibrary      []PolicyPack
 	complianceFeatures ComplianceSupport
 	riskFeatures       RiskReasoning
@@ -120,11 +119,6 @@ func newFeatureManifest(lib contracts.PolicyLibrary) *featureManifest {
 		{Type: "cisco.ios", Description: "Cisco IOS Network Device Configuration"},
 	}
 
-	connectorIndex := make(map[kernel.ObservationSourceType]struct{}, len(connectors))
-	for _, c := range connectors {
-		connectorIndex[c.Type] = struct{}{}
-	}
-
 	discovered, err := lib.ListPacks()
 	if err != nil {
 		// newFeatureManifest is a constructor with no error return —
@@ -154,7 +148,6 @@ func newFeatureManifest(lib contracts.PolicyLibrary) *featureManifest {
 		observationSchemas: observationSchemas,
 		policySchemas:      policySchemas,
 		connectors:         connectors,
-		connectorIndex:     connectorIndex,
 		policyLibrary:      library,
 		complianceFeatures: complianceFeatures,
 		riskFeatures: RiskReasoning{

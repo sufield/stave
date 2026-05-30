@@ -19,16 +19,24 @@ import (
 // The translation is plumbing — once this lands, cmd/apply's
 // evaluation core is fully library-driven.
 func buildStaveConfig(ec evalContext, deps *appeval.ApplyDeps) stave.Config {
+	// Built-in catalog fallback: when --controls was not given and no
+	// controls/ directory exists, pass an empty ControlsDir so the
+	// applycore pipeline (resolveControls) selects the embedded catalog
+	// instead of trying to load a non-existent directory.
+	controlsDir := ec.Plan.ControlsPath
+	if ec.UseBuiltinCatalog {
+		controlsDir = ""
+	}
+
 	cfg := stave.Config{
 		// Source paths: same fields cmd/apply has used for years,
 		// surfaced through Plan + Opts after PreRunE resolution.
 		SnapshotsDir: ec.Plan.ObservationsPath,
-		ControlsDir:  ec.Plan.ControlsPath,
+		ControlsDir:  controlsDir,
 		ChainsDir:    "chains",
 
-		MaxUnsafe:         ec.Params.maxUnsafeDuration,
-		Now:               clockTime(deps.Config.Clock),
-		AllowUnknownInput: ec.Opts.AllowUnknown,
+		MaxUnsafe: ec.Params.maxUnsafeDuration,
+		Now:       clockTime(deps.Config.Clock),
 
 		IntegrityManifest:  ec.Opts.IntegrityManifest,
 		IntegrityPublicKey: ec.Opts.IntegrityPublicKey,

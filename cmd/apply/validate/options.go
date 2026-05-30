@@ -49,6 +49,10 @@ type options struct {
 
 	// Staleness
 	AssertRecent string
+
+	// useBuiltinControls is set when --controls is absent and no controls
+	// directory exists: validate against the embedded catalog.
+	useBuiltinControls bool
 }
 
 func (o *options) hintCtx() hintContext {
@@ -138,12 +142,14 @@ func (o *options) normalizeAndValidate(controlsChanged, obsChanged bool) error {
 		SkipMaxUnsafe:              true,
 		SkipClock:                  true,
 		SkipFormat:                 true,
+		AllowBuiltinFallback:       !singleFileMode,
 	})
 	if err != nil {
 		return err
 	}
 	o.Controls = ec.ControlsDir
 	o.Observations = ec.ObservationsDir
+	o.useBuiltinControls = ec.UseBuiltinControls
 
 	// Validate context resolution (fail-fast if context state is broken).
 	if ec.Resolver != nil {

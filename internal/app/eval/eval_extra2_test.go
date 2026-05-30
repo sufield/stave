@@ -200,23 +200,3 @@ func TestFilterControls_NoMatchByID(t *testing.T) {
 		t.Fatalf("expected 0, got %d", len(filtered))
 	}
 }
-
-// ---------------------------------------------------------------------------
-// classifySnapshotSourceType (uses Snapshot input)
-// ---------------------------------------------------------------------------
-
-func TestClassifySnapshotSourceType_Missing(t *testing.T) {
-	s := asset.Snapshot{}
-	verdict := classifySnapshotSourceType(s)
-	if verdict != sourceTypeMissing {
-		t.Fatalf("expected sourceTypeMissing, got %v", verdict)
-	}
-}
-
-func TestClassifySnapshotSourceType_NilGeneratedBy(t *testing.T) {
-	s := asset.Snapshot{GeneratedBy: nil}
-	verdict := classifySnapshotSourceType(s)
-	if verdict != sourceTypeMissing {
-		t.Fatalf("expected sourceTypeMissing, got %v", verdict)
-	}
-}

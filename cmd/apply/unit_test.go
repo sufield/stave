@@ -129,12 +129,16 @@ func TestResolveApplyOptions(t *testing.T) {
 		wantContain string
 	}{
 		{
-			name: "controls dir not found",
+			// Explicit --controls to a missing path still errors. When
+			// --controls is NOT set and the path is absent, apply instead
+			// falls back to the built-in catalog (verified separately).
+			name: "controls dir not found (explicit flag)",
 			opts: Options{
 				SharedOptions: SharedOptions{
 					ControlsDir:       "/nonexistent/path",
 					ObservationsDir:   filepath.Join(fixture, "observations"),
 					MaxUnsafeDuration: "168h",
+					controlsSet:       true,
 				},
 			},
 			wantContain: "--controls path",

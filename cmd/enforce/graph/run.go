@@ -43,7 +43,6 @@ type config struct {
 	ControlsDir     string
 	ObservationsDir string
 	Format          Format
-	AllowUnknown    bool
 	Sanitizer       kernel.Sanitizer
 	Stdout          io.Writer
 	PredicateEval   policy.PredicateEval

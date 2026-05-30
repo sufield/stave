@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
+	"github.com/sufield/stave/internal/adapters/predicate"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/core/asset"
@@ -119,9 +121,22 @@ func (e *DiagnosticEngine) loadAuditData(
 	policySrc string,
 	observationSrc string,
 ) (auditContext, error) {
-	policies, err := appcontracts.LoadControls(ctx, e.PolicyRepo, policySrc)
-	if err != nil {
-		return auditContext{}, fmt.Errorf("fetch policies: %w", err)
+	// Empty policySrc selects the embedded built-in catalog (set by the
+	// CLI's built-in-catalog fallback when --controls is absent).
+	var policies []policy.ControlDefinition
+	if policySrc == "" {
+		store := ctlbuiltin.NewControlStore(ctlbuiltin.EmbeddedFS(), "embedded", ctlbuiltin.WithAliasResolver(predicate.ResolverFunc()))
+		all, builtinErr := store.All()
+		if builtinErr != nil {
+			return auditContext{}, fmt.Errorf("load built-in control catalog: %w", builtinErr)
+		}
+		policies = all
+	} else {
+		loaded, err := appcontracts.LoadControls(ctx, e.PolicyRepo, policySrc)
+		if err != nil {
+			return auditContext{}, fmt.Errorf("fetch policies: %w", err)
+		}
+		policies = loaded
 	}
 
 	invResult, err := appcontracts.LoadSnapshots(ctx, e.ObservationRepo, observationSrc)

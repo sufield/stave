@@ -24,7 +24,6 @@ type LoopRequest struct {
 	ControlsDir       string
 	OutDir            string
 	MaxUnsafeDuration time.Duration
-	AllowUnknown      bool
 	Stdout            io.Writer
 	Stderr            io.Writer
 }
@@ -178,7 +177,6 @@ func (s *Service) evaluateState(
 		Controls:          params.Controls,
 		MaxUnsafeDuration: params.Req.MaxUnsafeDuration,
 		Clock:             s.Clock,
-		AllowUnknownType:  params.Req.AllowUnknown,
 		StaveVersion:      version.String,
 		ObservationLoader: params.Deps.ObservationRepo,
 		CELEvaluator:      s.CELEvaluator,

@@ -16,13 +16,8 @@ import (
 // directory [Apply] reads. The export reuses the public
 // observation loader, so any directory accepted by Apply is
 // accepted here.
-//
-// AllowUnknownInput mirrors [Config.AllowUnknownInput] for callers
-// extracting from sources that emit asset types Stave's catalog
-// does not formally know about.
 type ExportConfig struct {
-	SnapshotsDir      string
-	AllowUnknownInput bool
+	SnapshotsDir string
 
 	// EffectivePermissionResolver computes the post-aggregation
 	// permission set for every principal in each loaded
@@ -145,7 +140,6 @@ func ExportPolicies(ctx context.Context, cfg ExportConfig) (*PolicyExport, error
 	}
 	r, err := policyexport.Run(ctx, policyexport.Config{
 		SnapshotsDir:         cfg.SnapshotsDir,
-		AllowUnknownInput:    cfg.AllowUnknownInput,
 		EffectivePermissions: resolver,
 	})
 	if err != nil {

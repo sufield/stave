@@ -421,7 +421,6 @@ func runExportSIR(opts *options) ([]byte, error) {
 		"--format", "jsonl",
 		"--controls", opts.controls,
 		"--observations", opts.snapshot,
-		"--allow-unknown-input",
 	}
 	cmd := exec.Command(opts.staveBinary, args...)
 	var stdout, stderr bytes.Buffer

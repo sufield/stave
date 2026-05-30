@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
+	"github.com/sufield/stave/internal/adapters/predicate"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
@@ -41,9 +43,22 @@ func NewRun(
 // Execute loads data and runs domain validation.
 // App layer handles file I/O; domain handles validation logic.
 func (v *Run) Execute(ctx context.Context, cfg Config) (*Report, error) {
-	controls, ctlErr := appcontracts.LoadControls(ctx, v.ControlRepo, cfg.ControlsDir)
-	if ctlErr != nil {
-		return nil, fmt.Errorf("load controls from %s: %w", cfg.ControlsDir, ctlErr)
+	// Empty ControlsDir selects the embedded built-in catalog (set by the
+	// CLI's built-in-catalog fallback when --controls is absent).
+	var controls []policy.ControlDefinition
+	if cfg.ControlsDir == "" {
+		store := ctlbuiltin.NewControlStore(ctlbuiltin.EmbeddedFS(), "embedded", ctlbuiltin.WithAliasResolver(predicate.ResolverFunc()))
+		all, builtinErr := store.All()
+		if builtinErr != nil {
+			return nil, fmt.Errorf("load built-in control catalog: %w", builtinErr)
+		}
+		controls = all
+	} else {
+		loaded, ctlErr := appcontracts.LoadControls(ctx, v.ControlRepo, cfg.ControlsDir)
+		if ctlErr != nil {
+			return nil, fmt.Errorf("load controls from %s: %w", cfg.ControlsDir, ctlErr)
+		}
+		controls = loaded
 	}
 	obsResult, obsErr := appcontracts.LoadSnapshots(ctx, v.ObservationRepo, cfg.ObservationsDir)
 	if obsErr != nil {

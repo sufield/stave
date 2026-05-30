@@ -229,7 +229,6 @@ func TestExportPolicies_EffectivePermissionsWiring(t *testing.T) {
 
 	out, err := stave.ExportPolicies(context.Background(), stave.ExportConfig{
 		SnapshotsDir:                dir,
-		AllowUnknownInput:           true,
 		EffectivePermissionResolver: resolver,
 	})
 	if err != nil {
@@ -280,7 +279,6 @@ func TestExportPolicies_EffectivePermissionsDedupAcrossSnapshots(t *testing.T) {
 	}
 	out, err := stave.ExportPolicies(context.Background(), stave.ExportConfig{
 		SnapshotsDir:                dir,
-		AllowUnknownInput:           true,
 		EffectivePermissionResolver: resolver,
 	})
 	if err != nil {
@@ -307,8 +305,7 @@ func TestExportPolicies_NilResolverDefaultsToAWS(t *testing.T) {
 	// Resolver field intentionally omitted — tests the default
 	// wiring path.
 	if _, err := stave.ExportPolicies(context.Background(), stave.ExportConfig{
-		SnapshotsDir:      dir,
-		AllowUnknownInput: true,
+		SnapshotsDir: dir,
 	}); err != nil {
 		t.Fatalf("ExportPolicies with nil resolver: %v", err)
 	}

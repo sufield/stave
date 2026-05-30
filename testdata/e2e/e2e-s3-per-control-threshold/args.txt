@@ -1,1 +1,1 @@
---max-unsafe 24h --allow-unknown-input
+--max-unsafe 24h 

@@ -56,10 +56,6 @@ type GlobalSettings struct {
 
 	// AllowSymlinkOut permits symlinks in the output tree.
 	AllowSymlinkOut bool
-
-	// AllowUnknownInput accepts observations whose source type is
-	// not recognized.
-	AllowUnknownInput bool
 }
 
 // Validate checks the GlobalSettings shape. The CLI flag layer

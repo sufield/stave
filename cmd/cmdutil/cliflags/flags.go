@@ -49,16 +49,15 @@ const DynamicDefaultHelpSuffix = " Resolved default may come from STAVE_* env va
 
 // GlobalFlags represents the state of persistent flags registered at the root.
 type GlobalFlags struct {
-	Quiet             bool
-	Yes               bool
-	Force             bool
-	Sanitize          bool
-	PathMode          sanitize.PathMode
-	Strict            bool
-	LogFile           string
-	RequireOffline    bool
-	AllowSymlinkOut   bool
-	AllowUnknownInput bool
+	Quiet           bool
+	Yes             bool
+	Force           bool
+	Sanitize        bool
+	PathMode        sanitize.PathMode
+	Strict          bool
+	LogFile         string
+	RequireOffline  bool
+	AllowSymlinkOut bool
 }
 
 // GetGlobalFlags extracts the root persistent flags into a typed struct.

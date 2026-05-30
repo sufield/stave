@@ -37,13 +37,12 @@ const (
 )
 
 type options struct {
-	ControlsDir       string
-	ObservationsDir   string
-	Format            string
-	Now               string
-	Validate          bool
-	AllowlistMode     string
-	AllowUnknownInput bool
+	ControlsDir     string
+	ObservationsDir string
+	Format          string
+	Now             string
+	Validate        bool
+	AllowlistMode   string
 }
 
 // NewCmd constructs the export-sir command. The command routes
@@ -147,8 +146,6 @@ Exit codes:
 			"full (experimental — emit one auto_prop_<path> triple per control-read property "+
 			"path the predicate index advertises; measures coverage gain, no downstream solver "+
 			"consumes the auto_prop_* names yet)")
-	flags.BoolVar(&opts.AllowUnknownInput, "allow-unknown-input", false,
-		"accept observations missing generated_by.source_type (matches `stave apply --allow-unknown-input`)")
 
 	return cmd
 }
@@ -192,10 +189,9 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error 
 	// SIR document, the active controls, and the compliance
 	// report (used by --validate). No duplicate orchestration.
 	res, err := cliapi.Apply(ctx, stave.Config{
-		ControlsDir:       opts.ControlsDir,
-		SnapshotsDir:      opts.ObservationsDir,
-		Now:               now,
-		AllowUnknownInput: opts.AllowUnknownInput,
+		ControlsDir:  opts.ControlsDir,
+		SnapshotsDir: opts.ObservationsDir,
+		Now:          now,
 	})
 	if err != nil {
 		return fmt.Errorf("evaluate: %w", err)
@@ -216,6 +212,17 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error 
 	var facts []sirfacts.Fact
 	if format != "json" || opts.Validate {
 		facts = sirfacts.ExtractFacts(doc)
+		// Raw observation primitives — every scalar leaf of each
+		// asset's properties tree, projected under its literal
+		// dot-joined path with source "observation". Appended
+		// unconditionally (both allowlist modes): these are
+		// observation facts, not derived auto_prop values, and they
+		// are what lets a reasoning engine derive a finding from
+		// first principles instead of re-confirming Stave's
+		// contributed_by conclusions. Kept out of ExtractFacts so
+		// applycore's per-finding ContributingFactIDs trace — and
+		// thus `stave apply` output — stays byte-identical.
+		facts = append(facts, sirfacts.ObservationFacts(doc.Assets)...)
 		// --allowlist-mode full appends auto_prop_<path> triples
 		// for every control-read property path the predicate index
 		// advertises. Auto-generated names live in their own

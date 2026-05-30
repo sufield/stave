@@ -166,13 +166,6 @@ func TestDecorateError_NoSnapshots(t *testing.T) {
 	}
 }
 
-func TestDecorateError_SourceTypeMissing(t *testing.T) {
-	err := decorateError(appeval.ErrSourceTypeMissing)
-	if err == nil {
-		t.Fatal("expected non-nil error")
-	}
-}
-
 func TestDecorateError_SchemaValidation(t *testing.T) {
 	err := decorateError(contractvalidator.ErrSchemaValidationFailed)
 	if err == nil {

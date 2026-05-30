@@ -39,7 +39,6 @@ Inputs:
   --controls, -i           Path to control definitions directory (default: controls)
   --max-unsafe             Maximum allowed unsafe duration
   --now                    Override current time (RFC3339) for deterministic output
-  --allow-unknown-input    Allow observations with unknown source types
 
 Outputs:
   stdout                   Verification report JSON showing resolved, remaining,
@@ -99,7 +98,6 @@ Exit Codes:
 					PolicySource:   exec.ControlsDir,
 					SLAThreshold:   exec.MaxUnsafeDuration,
 					Clock:          exec.Clock,
-					AllowUnknown:   exec.AllowUnknown,
 					Quiet:          gf.Quiet,
 					Sanitizer:      gf.GetSanitizer(),
 					Stdout:         cmd.OutOrStdout(),

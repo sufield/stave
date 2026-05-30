@@ -73,7 +73,6 @@ type FixLoopRequest struct {
 	OutDir            string `json:"out_dir,omitempty"`
 	MaxUnsafeDuration string `json:"max_unsafe_duration,omitempty"`
 	NowTime           string `json:"now_time,omitempty"`
-	AllowUnknownInput bool   `json:"allow_unknown_input,omitempty"`
 }
 
 // FixLoopResponse is the output of the fix-loop use case.

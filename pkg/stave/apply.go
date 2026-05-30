@@ -54,7 +54,6 @@ func applyInputs(cfg Config) applycore.Inputs {
 		IntegrityPublicKey:  cfg.IntegrityPublicKey,
 		MaxUnsafe:           cfg.MaxUnsafe,
 		Now:                 cfg.Now,
-		AllowUnknownInput:   cfg.AllowUnknownInput,
 		ExemptionRules:      cfg.ExemptionRules,
 		AcknowledgmentRules: cfg.AcknowledgmentRules,
 		SLAConfig:           toEvalSLAConfig(cfg.SLAConfig),

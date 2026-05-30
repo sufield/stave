@@ -23,8 +23,7 @@ func TestApply_ReturnsBothViews(t *testing.T) {
 		MaxUnsafe:    168 * time.Hour,
 		// --now matches cmd/apply test convention so evaluations
 		// are deterministic and don't depend on wall clock.
-		Now:               time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
-		AllowUnknownInput: true,
+		Now: time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
 	}
 
 	res, err := cliapi.Apply(context.Background(), cfg)

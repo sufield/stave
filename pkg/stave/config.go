@@ -48,16 +48,6 @@ type Config struct {
 	// Zero uses the real current time. Maps to --now.
 	Now time.Time
 
-	// AllowUnknownInput permits observations whose
-	// generated_by.source_type is missing or not in Stave's
-	// supported-connector registry. Default (false) rejects such
-	// observations with a clear error. Set true when feeding
-	// observations from tools that don't annotate with Stave's
-	// expected metadata — common when adopting Stave alongside
-	// existing collection pipelines. Maps to the CLI's
-	// --allow-unknown-input flag.
-	AllowUnknownInput bool
-
 	// ChainsDir is the directory containing chain definition YAML
 	// files. Chains declare compound-risk patterns — sets of
 	// co-failing controls that together represent an attack path.

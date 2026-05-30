@@ -97,11 +97,10 @@ type scenario struct {
 func runScenario(ctx context.Context, s scenario) {
 	root, _ := exampleRoot()
 	cfg := stave.Config{
-		SnapshotsDir:      s.dir,
-		ControlsDir:       filepath.Join(root, "controls"),
-		MaxUnsafe:         maxUnsafe,
-		Now:               s.now,
-		AllowUnknownInput: true,
+		SnapshotsDir: s.dir,
+		ControlsDir:  filepath.Join(root, "controls"),
+		MaxUnsafe:    maxUnsafe,
+		Now:          s.now,
 	}
 	a, err := stave.Apply(ctx, cfg)
 	if err != nil {

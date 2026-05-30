@@ -3088,13 +3088,5 @@
         ]
       }
     }
-  },
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "controls",
-      "observations": "observations"
-    }
   }
 }

@@ -26,8 +26,7 @@ import (
 // query) is comfortably met.
 func (e *Experiment) RunZ3(ctx context.Context, fixtureDir string) ([]harness.Z3Finding, error) {
 	exports, err := stave.ExportPolicies(ctx, stave.ExportConfig{
-		SnapshotsDir:      fixtureDir + "/observations",
-		AllowUnknownInput: true,
+		SnapshotsDir: fixtureDir + "/observations",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("export policies: %w", err)

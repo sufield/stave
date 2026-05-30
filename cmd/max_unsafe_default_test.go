@@ -130,20 +130,6 @@ func TestResolveCIFailurePolicyDefault_UserConfigFallback(t *testing.T) {
 	}
 }
 
-func TestResolveAllowUnknownInputDefault_FromUserConfig(t *testing.T) {
-	tmp := t.TempDir()
-	userCfgPath := filepath.Join(tmp, "user-config.yaml")
-	t.Setenv(env.UserConfig.Name, userCfgPath)
-	if err := os.WriteFile(userCfgPath, []byte("cli_defaults:\n  allow_unknown_input: true\n"), 0o644); err != nil {
-		t.Fatalf("write user config file: %v", err)
-	}
-	chdirForTest(t, tmp)
-
-	if !projconfig.BuildResolver().Resolver.AllowUnknownInput() {
-		t.Fatal("ResolveAllowUnknownInputDefault() = false, want true")
-	}
-}
-
 func TestResolveCLIPathModeDefault_FromUserConfig(t *testing.T) {
 	tmp := t.TempDir()
 	userCfgPath := filepath.Join(tmp, "user-config.yaml")

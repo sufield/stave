@@ -198,7 +198,6 @@ func runStaveApply(opts *options) ([]finding, error) {
 		"--controls", opts.controls,
 		"--observations", opts.observations,
 		"--now", opts.now,
-		"--allow-unknown-input",
 		"--format", "json",
 	}
 	cmd := exec.Command(opts.staveBinary, args...)

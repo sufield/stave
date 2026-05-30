@@ -140,7 +140,6 @@ This explains why findings did not trigger — threshold too high, time span too
 
 The error tells you which field is missing or malformed. Common fixes:
 
-- **Missing `source_type`**: add `"source_type": "aws-s3-snapshot"` to your observation JSON, or pass `--allow-unknown-input`
 - **Missing `captured_at`**: add a timestamp to your observation: `"captured_at": "2026-03-15T00:00:00Z"`
 - **Schema mismatch**: ensure observations use `obs.v0.1` format — flat JSON, no `"snapshots"` wrapper
 

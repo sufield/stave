@@ -9,10 +9,4 @@ var (
 
 	// ErrNoSnapshots is returned when the observations directory contains no valid snapshots.
 	ErrNoSnapshots = errors.New("no snapshots found")
-
-	// ErrSourceTypeMissing is returned when a snapshot lacks generated_by.source_type.
-	ErrSourceTypeMissing = errors.New("source_type missing")
-
-	// ErrSourceTypeUnsupported is returned when a snapshot has an unrecognized source_type.
-	ErrSourceTypeUnsupported = errors.New("source_type unsupported")
 )

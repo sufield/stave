@@ -107,11 +107,10 @@ func main() {
 
 func runScenario(ctx context.Context, controlsDir string, now time.Time, s scenario) bool {
 	cfg := stave.Config{
-		SnapshotsDir:      s.dir,
-		ControlsDir:       controlsDir,
-		MaxUnsafe:         maxUnsafe,
-		Now:               now,
-		AllowUnknownInput: true,
+		SnapshotsDir: s.dir,
+		ControlsDir:  controlsDir,
+		MaxUnsafe:    maxUnsafe,
+		Now:          now,
 	}
 	a, err := stave.Apply(ctx, cfg)
 	if err != nil {

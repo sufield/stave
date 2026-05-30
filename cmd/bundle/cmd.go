@@ -31,7 +31,6 @@ type options struct {
 	SignKeyPath     string
 	OutputPath      string
 	IncludeASFF     bool
-	AllowUnknown    bool
 }
 
 // NewCmd constructs the top-level bundle command.
@@ -83,7 +82,6 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.SignKeyPath, "sign-key", "", "Path to Ed25519 private key PEM for signing")
 	cmd.Flags().StringVar(&opts.OutputPath, "output", "", "Output file path")
 	cmd.Flags().BoolVar(&opts.IncludeASFF, "include-asff", false, "Include ASFF-formatted findings")
-	cmd.Flags().BoolVar(&opts.AllowUnknown, "allow-unknown-input", false, "Allow unknown observation source types")
 
 	cmd.AddCommand(newAuditCmd())
 
@@ -196,9 +194,6 @@ func runAssessment(ctx context.Context, binary string, opts *options) ([]byte, e
 		"--max-unsafe", opts.MaxUnsafe,
 		"--now", time.Now().UTC().Format(time.RFC3339),
 		"--format", "json",
-	}
-	if opts.AllowUnknown {
-		args = append(args, "--allow-unknown-input")
 	}
 
 	cmd := exec.CommandContext(ctx, binary, args...) //nolint:gosec // binary is os.Executable()

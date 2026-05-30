@@ -401,7 +401,7 @@ extraction is in scope here.
 `pkg/stave/` is the programmatic entry point into Stave core for
 Go consumers. It exposes evaluation as a typed API — `stave.Apply`
 takes a [Config] (snapshots dir, optional controls dir, optional
-clock override, optional allow-unknown-input escape hatch) and
+clock override) and
 returns a typed `*Assessment` with `Findings`, `Issues`,
 `Coverage`, `Summary`, and `Status`. The library wraps
 `usecase.Apply` with a production [EvaluationRunnerPort]
@@ -415,16 +415,6 @@ evidence justifies them. The same rule that governs core /
 app-shape decisions applies here — additional operations enter
 the library only when a real consumer's needs demonstrate the
 shape is right.
-
-`Config.AllowUnknownInput` is an example of this rule working
-as intended. The initial library iteration excluded
-`--allow-unknown-input` as a CLI-only adapter concern. Two
-HackerOne-conversion cases in `stave-hackerone-tests/` then
-independently blocked on its absence (cloudfront #2805173 and
-Kubernetes #1580493, both with observations lacking a
-`generated_by.source_type` field). That durable adopter
-evidence — two cases, same wall — justified adding the field.
-Revisions are evidence-driven, not speculation-driven.
 
 The library is the recommended Go consumer interface.
 `stave-explorer` and `bucket-intent` both consume it directly via

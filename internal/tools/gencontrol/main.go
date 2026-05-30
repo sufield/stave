@@ -229,7 +229,7 @@ func writeFixture(dir string, cfg config, t1, t2 time.Time, valueT1, valueT2, ex
 	if err := writeJSON(filepath.Join(obsDir, "2026-01-11T000000Z.json"), obs2); err != nil {
 		return err
 	}
-	if err := os.WriteFile(filepath.Join(dir, "args.txt"), []byte("--allow-unknown-input\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "args.txt"), []byte(""), 0o644); err != nil {
 		return err
 	}
 	if err := os.WriteFile(filepath.Join(dir, "expected.exit"), []byte(exitCode+"\n"), 0o644); err != nil {

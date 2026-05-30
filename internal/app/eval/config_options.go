@@ -27,13 +27,6 @@ func WithMaxUnsafeDuration(maxUnsafeDuration time.Duration) Option {
 	}
 }
 
-// WithAllowUnknownInput constructs the withallowunknowninput component.
-func WithAllowUnknownInput(allow bool) Option {
-	return func(cfg *AssessmentConfig) {
-		cfg.AcceptUnknownData = allow
-	}
-}
-
 // WithExemptionConfig constructs the withexemptionconfig component.
 func WithExemptionConfig(exemptionConfig *policy.ExemptionConfig) Option {
 	return func(cfg *AssessmentConfig) {

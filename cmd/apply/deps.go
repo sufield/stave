@@ -141,7 +141,6 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 			Clock:                b.Params.clock,
 			Hasher:               b.Digester,
 			StaveVersion:         version.String,
-			AllowUnknownInput:    b.Opts.AllowUnknown,
 			ExemptionConfig:      exemptionCfg,
 			AcknowledgmentConfig: ackCfg,
 			PredicateParser:      ctlyaml.ParsePredicate,

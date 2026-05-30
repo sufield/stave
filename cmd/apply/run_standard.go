@@ -32,6 +32,7 @@ type evalContext struct {
 	Logger            *slog.Logger
 	ProjectConfig     *appconfig.WorkspacePolicy
 	ProjectConfigPath string
+	UseBuiltinCatalog bool
 }
 
 // runStandardApply executes the standard plan → evaluate → output pipeline.
@@ -75,6 +76,14 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts 
 		Logger:            logger,
 		ProjectConfig:     cfg.projectConfig,
 		ProjectConfigPath: cfg.projectConfigPath,
+		UseBuiltinCatalog: cfg.UseBuiltinCatalog,
+	}
+
+	// Disclosed fallback (per the repo's "fallbacks only when disclosed"
+	// rule): no --controls and no controls/ dir → the embedded catalog.
+	if cfg.UseBuiltinCatalog {
+		fmt.Fprintf(sio.Stderr, "note: no --controls given and no controls/ directory found — "+
+			"evaluating against the built-in control catalog. Pass --controls <dir> to use your own.\n")
 	}
 
 	// Staleness check: --assert-recent. Run BEFORE evaluation so a

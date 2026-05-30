@@ -46,9 +46,6 @@ func (o *Options) resolveApplyConfigDefaults(cmd *cobra.Command) {
 	if !cmd.Flags().Changed("max-unsafe") {
 		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}
-	if !cmd.Flags().Changed("allow-unknown-input") {
-		o.AllowUnknown = eval.AllowUnknownInput()
-	}
 }
 
 // SharedOptions contains flags common to both plan and apply.
@@ -88,7 +85,6 @@ func (o *SharedOptions) normalize() {
 type Options struct {
 	SharedOptions
 	DryRun             bool
-	AllowUnknown       bool
 	ExemptionFile      string
 	AcknowledgmentFile string
 	IntegrityManifest  string
@@ -194,7 +190,6 @@ Inputs:
   --now                     Override current time (RFC3339) for deterministic output
   --format, -f              Output format: text, json, or sarif (default: text)
   --dry-run                 Run readiness checks only
-  --allow-unknown-input     Allow observations with unknown source types
 
 Outputs:
   stdout                    Evaluation findings (JSON, text, or SARIF)
@@ -267,7 +262,6 @@ Remediation scope:
 
 func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f := cmd.Flags()
-	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", false, cliflags.WithDynamicDefaultHelp("Allow unknown source types"))
 	f.StringVar(&o.ExemptionFile, "exemption-file", "", "Path to asset exemption list YAML file")
 	f.StringVar(&o.AcknowledgmentFile, "acknowledgment-file", "", "Path to acknowledgment config YAML file")
 	f.StringVar(&o.IntegrityManifest, "integrity-manifest", "", "Path to manifest JSON containing expected hashes")

@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-unit test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test
+.PHONY: all build build-dev test test-unit test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test
 # Binary name
 BINARY=stave
 
@@ -657,6 +657,24 @@ docs-commands:
 docs-commands-check:
 	$(GOCMD) run ./internal/tools/gencommanddocs -check
 
+## docs-commands-catalog: Generate the curated root commands-catalog.md
+## from catalog_meta.go annotations + the live cobra tree. Edit the
+## when-to-use text / grouping in catalog_meta.go, not the markdown.
+## The catalog lives at the repo root (outside this module).
+COMMANDS_CATALOG ?= ../commands-catalog.md
+docs-commands-catalog:
+	$(GOCMD) run ./internal/tools/gencommanddocs -catalog $(COMMANDS_CATALOG)
+
+## docs-commands-catalog-check: Verify the curated catalog matches the
+## annotations + binary (fails on phantom/missing-leaf or stale prose).
+## Skips cleanly when the root doc isn't present in the checkout.
+docs-commands-catalog-check:
+	@if [ -f $(COMMANDS_CATALOG) ]; then \
+	  $(GOCMD) run ./internal/tools/gencommanddocs -catalog-check $(COMMANDS_CATALOG); \
+	else \
+	  echo "skip: $(COMMANDS_CATALOG) not present in this checkout"; \
+	fi
+
 ## attack-stage-check: Reject deprecated attack_stage values in control YAMLs
 ##
 ## The canonical 12-stage taxonomy is enforced by the JSON Schema enum
@@ -890,6 +908,12 @@ consistency-check: sync-schemas sync-controls sync-alternatives
 	@$(GOCMD) run ./internal/tools/gencontroldocs
 	@$(GOCMD) run ./internal/tools/genmethodologycoverage
 	@$(GOCMD) run ./internal/tools/gencommanddocs
+	@# Verify the curated root catalog matches its annotations + the binary
+	@# (phantom / missing-leaf / stale prose). Skips cleanly if the root
+	@# doc isn't in this checkout. Runs before the git-clean drift check.
+	@if [ -f ../commands-catalog.md ]; then \
+	  $(GOCMD) run ./internal/tools/gencommanddocs -catalog-check ../commands-catalog.md; \
+	fi
 	@# Scope the drift check to paths the gate's targets actually write to.
 	@# Globally `git status` would also surface unrelated working-tree state
 	@# (e.g. when stave/ is checked out inside a monorepo), which is noise

@@ -50,8 +50,7 @@ func LoadFromObservations(ctx context.Context, snapshotsDir string) (*StaveExpor
 	}
 
 	cfg := stave.Config{
-		SnapshotsDir:      snapshotsDir,
-		AllowUnknownInput: true,
+		SnapshotsDir: snapshotsDir,
 	}
 
 	assessment, err := stave.Apply(ctx, cfg)
@@ -60,8 +59,7 @@ func LoadFromObservations(ctx context.Context, snapshotsDir string) (*StaveExpor
 	}
 
 	policies, err := stave.ExportPolicies(ctx, stave.ExportConfig{
-		SnapshotsDir:      snapshotsDir,
-		AllowUnknownInput: true,
+		SnapshotsDir: snapshotsDir,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("stave.ExportPolicies: %w", err)

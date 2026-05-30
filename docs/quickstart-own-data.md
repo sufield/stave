@@ -42,19 +42,17 @@ policies are AWS-managed and don't produce actionable findings.
 ## Evaluate
 
 ```bash
-stave apply --observations ./my-snapshot --allow-unknown-input
+stave apply --observations ./my-snapshot
 ```
 
-`--allow-unknown-input` is required because the snapshot's
-`source_type` is `aws.cli` — descriptive but not in stave's built-in
-connector manifest. The flag tells stave to evaluate the snapshot
-anyway. You'll see the same warning that fires for any third-party
-collector; it's not a sign of a problem.
+The snapshot's `source_type` is `aws.cli` — descriptive but not one of
+stave's built-in connector types. Stave evaluates the snapshot anyway;
+any `source_type` value (or none at all) is accepted.
 
 For machine-readable output:
 
 ```bash
-stave apply --observations ./my-snapshot --allow-unknown-input --format json \
+stave apply --observations ./my-snapshot --format json \
     | jq '{summary, findings_count: (.findings | length), chains: .chains}'
 ```
 

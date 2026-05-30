@@ -103,11 +103,10 @@ type scenario struct {
 // failing the run.
 func runScenario(ctx context.Context, s scenario) bool {
 	cfg := stave.Config{
-		SnapshotsDir:      s.dir,
-		ControlsDir:       s.controlsDir,
-		MaxUnsafe:         maxUnsafe,
-		Now:               s.now,
-		AllowUnknownInput: true,
+		SnapshotsDir: s.dir,
+		ControlsDir:  s.controlsDir,
+		MaxUnsafe:    maxUnsafe,
+		Now:          s.now,
 	}
 	a, err := stave.Apply(ctx, cfg)
 	if err != nil {

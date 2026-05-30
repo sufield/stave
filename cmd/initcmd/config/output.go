@@ -49,7 +49,6 @@ func (p *ShowPresenter) renderText(out appconfig.EffectiveConfig) error {
 		fmt.Sprintf("  - quiet: %s (%s)", out.CLIQuiet.Value, out.CLIQuiet.Source),
 		fmt.Sprintf("  - sanitize: %s (%s)", out.CLISanitize.Value, out.CLISanitize.Source),
 		fmt.Sprintf("  - path_mode: %s (%s)", out.CLIPathMode.Value, out.CLIPathMode.Source),
-		fmt.Sprintf("  - allow_unknown_input: %s (%s)", out.CLIAllowUnknownInput.Value, out.CLIAllowUnknownInput.Source),
 	}
 	if err := writeLines(w, cliLines...); err != nil {
 		return err

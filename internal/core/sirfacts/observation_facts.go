@@ -1,0 +1,118 @@
+package sirfacts
+
+import (
+	"fmt"
+	"sort"
+
+	"github.com/sufield/stave/internal/core/sir"
+)
+
+// ObservationFacts walks the full properties tree of every asset and
+// emits one triple per scalar leaf, with the dot-joined property path
+// as the predicate and source "observation".
+//
+// # Why this exists alongside propertyFacts and AutoPropertyFacts
+//
+// propertyFacts projects a hand-curated has_<leaf> allowlist; the
+// curated set is governance, not coverage, so it deliberately omits
+// most observation fields. AutoPropertyFacts walks the predicate index
+// (only paths some control reads) under a sanitized auto_prop_*
+// namespace, gated to --allowlist-mode full.
+//
+// Neither gives a reasoning engine the RAW observation primitives in
+// their original namespace. Without them an engine can only confirm
+// Stave's own conclusions (the contributed_by exposure edges) — it
+// cannot independently derive a finding from first principles. With
+// them, a Datalog/SMT consumer computes, e.g.:
+//
+//	escalation(U, T) :-
+//	  observation(U, "identity.escalation.create_access_key.present", "true"),
+//	  observation(U, "identity.escalation.create_access_key.target_user_arn", T),
+//	  observation(T, "identity.policies.has_admin_access", "true").
+//
+// That derivation never touches a contributed_by edge.
+//
+// # Scope
+//
+// Scalars only: nested maps are descended; slice and map leaves are
+// skipped (closed-world axioms over non-scalar values are ill-defined,
+// the same rule lookupScalar and propertyFacts apply). Null leaves and
+// empty-string scalars are skipped. Map keys are visited in sorted
+// order at every level so the output is deterministic regardless of
+// Go's randomized map iteration.
+//
+// # Namespace
+//
+// The predicate is the literal dot-joined path (e.g.
+// "identity.escalation.create_access_key.present") — not the sanitized
+// auto_prop_ form — so JSONL consumers read the property path directly
+// and SMT consumers can quote it. This is a distinct namespace from
+// the has_* / can_* curated predicates; existing solvers reading those
+// see no new assertions on the predicates they know.
+//
+// # Layering
+//
+// ObservationFacts is NOT part of ExtractFacts. ExtractFacts feeds both
+// `stave export-sir` and applycore's per-finding ContributingFactIDs
+// trace; folding raw observation facts in there would silently expand
+// every finding's fact-id list and churn the apply goldens. Instead the
+// export-sir command appends ObservationFacts unconditionally (both
+// allowlist modes), keeping `stave apply` output byte-identical while
+// the reasoning-engine export gains the primitives.
+func ObservationFacts(assets []sir.AssetFact) []Fact {
+	var out []Fact
+	for i := range assets {
+		a := &assets[i]
+		capturedAt := ""
+		if a.Lifecycle != nil && !a.Lifecycle.LastSeen.IsZero() {
+			capturedAt = a.Lifecycle.LastSeen.UTC().Format("2006-01-02T15:04:05Z")
+		}
+		out = appendObservationLeaves(out, a.ID, "", a.Properties, capturedAt)
+	}
+	return out
+}
+
+// appendObservationLeaves recurses into a property map, emitting a
+// fact for each scalar leaf reachable through nested maps. prefix is
+// the dot-joined path accumulated so far ("" at the asset root).
+func appendObservationLeaves(out []Fact, assetID, prefix string, node map[string]any, capturedAt string) []Fact {
+	keys := make([]string, 0, len(node))
+	for k := range node {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		path := k
+		if prefix != "" {
+			path = prefix + "." + k
+		}
+		switch val := node[k].(type) {
+		case map[string]any:
+			out = appendObservationLeaves(out, assetID, path, val, capturedAt)
+		case []any, nil:
+			// Slices and nulls are skipped: scalars-only, matching
+			// lookupScalar and propertyFacts.
+			continue
+		default:
+			obj := fmt.Sprintf("%v", val)
+			if obj == "" {
+				continue
+			}
+			out = append(out, Fact{
+				FactID:    factID(assetID, path, obj),
+				Subject:   assetID,
+				Predicate: path,
+				Object:    obj,
+				Source:    "observation",
+				Evidence:  "assets." + assetID + ".properties." + path,
+				Provenance: &Provenance{
+					PropertyPath: "properties." + path,
+					CapturedAt:   capturedAt,
+					Projector:    "observationFacts",
+				},
+			})
+		}
+	}
+	return out
+}

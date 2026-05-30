@@ -43,9 +43,8 @@ The schema uses `additionalProperties: false` at every level. Extra fields cause
 | `provider` | string | No | Provider name |
 | `provider_version` | string | No | Provider version |
 
-The `source_type` field is validated against a built-in allowlist by default. Use `--allow-unknown-input` to accept custom source types not in the allowlist.
-
-Run `stave capabilities` to see the current allowlist.
+The `source_type` field is optional. Any value is accepted, including
+custom source types from third-party collectors.
 
 ## Asset
 

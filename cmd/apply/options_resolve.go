@@ -2,6 +2,7 @@ package apply
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/dircheck"
@@ -64,8 +65,27 @@ func Resolve(o *Options, cs cobraState) (RunConfig, error) {
 		)
 	}
 
-	if err := validateDirsWithConfig(controlsDir, observationsDir, o.controlsSet, projCfg); err != nil {
-		return RunConfig{}, err
+	// Built-in catalog fallback: when --controls was not passed AND no
+	// controls/ directory exists, evaluate against the embedded catalog
+	// instead of erroring. An explicit --controls flag (even to a missing
+	// path) and enabled_control_packs both take precedence and are
+	// validated normally.
+	hasPacks := !o.controlsSet && projCfg != nil && len(projCfg.EnabledControlPacks) > 0
+	// Fall back to the built-in catalog only when the controls path is
+	// genuinely absent. A path that exists but is a file (or otherwise not
+	// a directory) is a misconfiguration and must still surface the normal
+	// "is not a directory" error via validateDirsWithConfig.
+	useBuiltin := !o.controlsSet && !hasPacks && !pathExists(controlsDir)
+
+	if !useBuiltin {
+		if err := validateDirsWithConfig(controlsDir, observationsDir, o.controlsSet, projCfg); err != nil {
+			return RunConfig{}, err
+		}
+	} else if observationsDir != "-" {
+		// Still validate observations when controls fall back to builtin.
+		if err := dircheck.ValidateFlagDir("--observations", observationsDir, "observations", ui.ErrHintObservationsNotAccessible, nil); err != nil {
+			return RunConfig{}, err
+		}
 	}
 
 	params := &applyParams{
@@ -80,7 +100,20 @@ func Resolve(o *Options, cs cobraState) (RunConfig, error) {
 		ObservationsDir:   observationsDir,
 		projectConfig:     projCfg,
 		projectConfigPath: cfgPath,
+		UseBuiltinCatalog: useBuiltin,
 	}, nil
+}
+
+// pathExists reports whether path exists (file or directory). Used to
+// decide the built-in-catalog fallback: only when the controls path is
+// entirely absent. An existing-but-non-directory path is left to the
+// normal directory validator so its misconfiguration still errors.
+func pathExists(path string) bool {
+	if path == "" || path == "-" {
+		return false
+	}
+	_, err := os.Stat(path)
+	return err == nil
 }
 
 // projectContext holds resolved project-level paths and identity.

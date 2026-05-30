@@ -19,7 +19,6 @@ type LoopRequest struct {
 	ControlsDir       string
 	OutDir            string
 	MaxUnsafeDuration time.Duration
-	AllowUnknown      bool
 	Stdout            io.Writer
 	Stderr            io.Writer
 }
@@ -111,7 +110,6 @@ func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
 		ControlsDir:       req.ControlsDir,
 		OutDir:            req.OutDir,
 		MaxUnsafeDuration: req.MaxUnsafeDuration,
-		AllowUnknown:      req.AllowUnknown,
 		Stdout:            req.Stdout,
 		Stderr:            req.Stderr,
 	}, infra.deps, infra.writer, infra.eb)

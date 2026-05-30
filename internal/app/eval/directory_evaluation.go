@@ -19,7 +19,6 @@ type DirectoryEvaluationRequest struct {
 	Controls          []policy.ControlDefinition
 	MaxUnsafeDuration time.Duration
 	Clock             ports.Clock
-	AllowUnknownType  bool
 	StaveVersion      string
 	ObservationLoader appcontracts.ObservationRepository
 	CELEvaluator      policy.PredicateEval
@@ -38,10 +37,6 @@ func RunDirectoryEvaluation(ctx context.Context, req DirectoryEvaluationRequest)
 	snapshots := loadResult.Snapshots
 	if len(snapshots) == 0 {
 		return nil, 0, fmt.Errorf("%w: no snapshots in %s", ErrNoSnapshots, req.ObservationsDir)
-	}
-
-	if err = ValidateSourceTypeCompatibility(snapshots, req.AllowUnknownType, nil); err != nil {
-		return nil, 0, fmt.Errorf("source_type compatibility in %s: %w", req.ObservationsDir, err)
 	}
 
 	result, err := EvaluateLoaded(ctx, EvaluationRequest{

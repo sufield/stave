@@ -49,6 +49,10 @@ type RunConfig struct {
 	// Shared by buildEvaluatorInput and Build to avoid repeated disk reads.
 	projectConfig     *appconfig.WorkspacePolicy
 	projectConfigPath string
+
+	// UseBuiltinCatalog is set when --controls was not given and no
+	// controls/ directory exists: evaluate against the embedded catalog.
+	UseBuiltinCatalog bool
 }
 
 // IsProfileMode reports whether the run is in profile mode (the

@@ -1,1 +1,1 @@
---exemption-file $CASE_DIR/exempt.yaml --allow-unknown-input
+--exemption-file $CASE_DIR/exempt.yaml 

@@ -45,6 +45,12 @@ type Input struct {
 
 // runValidate is the primary entry point for the cobra command.
 func runValidate(ctx context.Context, in Input) error {
+	// Disclosed fallback: no --controls and no controls/ dir → embedded catalog.
+	if in.Opts.useBuiltinControls && !in.Global.Quiet {
+		fmt.Fprintf(in.Stderr, "note: no --controls given and no controls/ directory found — "+
+			"validating against the built-in control catalog. Pass --controls <dir> to use your own.\n")
+	}
+
 	// 1. Log environment context.
 	in.Opts.logEnvironment()
 

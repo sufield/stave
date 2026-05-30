@@ -16,7 +16,6 @@ type coverageOptions struct {
 	ControlsDir     string
 	ObservationsDir string
 	Format          string
-	AllowUnknown    bool
 }
 
 func defaultCoverageOptions() *coverageOptions {
@@ -33,7 +32,6 @@ func (o *coverageOptions) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.ControlsDir, "controls", "i", o.ControlsDir, "Path to control definitions directory")
 	f.StringVarP(&o.ObservationsDir, "observations", "o", o.ObservationsDir, "Path to observation snapshots directory")
 	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format: dot or json")
-	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", o.AllowUnknown, cliflags.WithDynamicDefaultHelp("Allow observations with unknown or missing source types"))
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("dot", "json"))
 }
 
@@ -47,7 +45,6 @@ func toConfig(o *coverageOptions, gf cliflags.GlobalFlags, stdout io.Writer) (co
 		ControlsDir:     fsutil.CleanUserPath(o.ControlsDir),
 		ObservationsDir: fsutil.CleanUserPath(o.ObservationsDir),
 		Format:          format,
-		AllowUnknown:    o.AllowUnknown,
 		Sanitizer:       gf.GetSanitizer(),
 		Stdout:          stdout,
 	}, nil

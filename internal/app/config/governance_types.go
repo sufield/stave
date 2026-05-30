@@ -179,9 +179,8 @@ type OperatorSettings struct {
 
 // OperatorCLIConfig holds CLI-specific operator defaults.
 type OperatorCLIConfig struct {
-	Output            string `yaml:"output"`
-	Quiet             *bool  `yaml:"quiet"`
-	Sanitize          *bool  `yaml:"sanitize"`
-	PathMode          string `yaml:"path_mode"`
-	AllowUnknownInput *bool  `yaml:"allow_unknown_input"`
+	Output   string `yaml:"output"`
+	Quiet    *bool  `yaml:"quiet"`
+	Sanitize *bool  `yaml:"sanitize"`
+	PathMode string `yaml:"path_mode"`
 }

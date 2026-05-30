@@ -18,7 +18,6 @@ import (
 // configDefaults provides project-level defaults for loop options.
 type configDefaults interface {
 	MaxUnsafeDuration() string
-	AllowUnknownInput() bool
 }
 
 // loopOptions holds the raw CLI flag values for the fix-loop command.
@@ -28,7 +27,6 @@ type loopOptions struct {
 	ControlsDir  string
 	MaxUnsafeRaw string
 	NowRaw       string
-	AllowUnknown bool
 	OutDir       string
 }
 
@@ -40,7 +38,6 @@ func (o *loopOptions) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.ControlsDir, "controls", "i", o.ControlsDir, "Path to control definitions directory")
 	f.StringVar(&o.MaxUnsafeRaw, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.NowRaw, "now", "", "Override current time (RFC3339). Required for deterministic output")
-	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", false, cliflags.WithDynamicDefaultHelp("Allow observations with unknown source types"))
 	f.StringVar(&o.OutDir, "out", "", "Write remediation artifacts to this directory")
 	_ = cmd.MarkFlagRequired("before")
 	_ = cmd.MarkFlagRequired("after")
@@ -60,9 +57,6 @@ func (o *loopOptions) resolveConfigDefaults(defaults configDefaults, flags *pfla
 	}
 	if !flags.Changed("max-unsafe") {
 		o.MaxUnsafeRaw = defaults.MaxUnsafeDuration()
-	}
-	if !flags.Changed("allow-unknown-input") {
-		o.AllowUnknown = defaults.AllowUnknownInput()
 	}
 }
 
@@ -89,7 +83,6 @@ func toRequest(o *loopOptions, stdout, stderr io.Writer) (loopResolved, error) {
 			ControlsDir:       o.ControlsDir,
 			OutDir:            o.OutDir,
 			MaxUnsafeDuration: maxUnsafe,
-			AllowUnknown:      o.AllowUnknown,
 			Stdout:            stdout,
 			Stderr:            stderr,
 		},

@@ -35,7 +35,6 @@ type Request struct {
 	PolicySource   string
 	SLAThreshold   time.Duration
 	Clock          ports.Clock
-	AllowUnknown   bool
 	Quiet          bool
 	Sanitizer      kernel.Sanitizer
 	Stdout         io.Writer
@@ -113,7 +112,6 @@ func conductAssessment(ctx context.Context, deps WorkflowDeps, req Request, cont
 		Controls:          controls,
 		MaxUnsafeDuration: req.SLAThreshold,
 		Clock:             req.Clock,
-		AllowUnknownType:  req.AllowUnknown,
 		StaveVersion:      staveversion.String,
 		ObservationLoader: loader,
 		CELEvaluator:      req.PredicateEval,

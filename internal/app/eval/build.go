@@ -30,7 +30,6 @@ type RuntimeConfig struct {
 	Clock                ports.Clock
 	Hasher               ports.Digester
 	StaveVersion         string
-	AllowUnknownInput    bool
 	ExemptionConfig      *policy.ExemptionConfig
 	AcknowledgmentConfig *policy.AcknowledgmentConfig
 	PredicateParser      func(any) (*policy.UnsafePredicate, error)
@@ -97,7 +96,6 @@ func BuildDependencies(ctx context.Context, in *BuildDependenciesInput) (BuildDe
 		WithRuntime(output, stderr, in.Runtime.Clock, in.Runtime.StaveVersion),
 		WithMaxUnsafeDuration(in.Runtime.MaxUnsafeDuration),
 		WithHasher(in.Runtime.Hasher),
-		WithAllowUnknownInput(in.Runtime.AllowUnknownInput),
 		WithExemptionConfig(in.Runtime.ExemptionConfig),
 		WithExceptionConfig(resolved.ExceptionConfig),
 		WithAcknowledgmentConfig(in.Runtime.AcknowledgmentConfig),

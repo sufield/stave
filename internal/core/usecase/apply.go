@@ -18,7 +18,6 @@ type ApplyRequest struct {
 	NowTime            string   `json:"now_time,omitempty"`
 	Format             string   `json:"format,omitempty"`
 	DryRun             bool     `json:"dry_run,omitempty"`
-	AllowUnknownInput  bool     `json:"allow_unknown_input,omitempty"`
 	ExemptionFile      string   `json:"exemption_file,omitempty"`
 	IntegrityManifest  string   `json:"integrity_manifest,omitempty"`
 	IntegrityPublicKey string   `json:"integrity_public_key,omitempty"`

@@ -20,7 +20,6 @@ type options struct {
 	ControlsDir       string
 	MaxUnsafeDuration string
 	Now               string
-	AllowUnknown      bool
 }
 
 // newOptions initializes options with zero values for config-derived fields.
@@ -38,9 +37,6 @@ func (o *options) resolveConfigDefaults(cmd *cobra.Command) {
 	if !cmd.Flags().Changed("max-unsafe") {
 		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}
-	if !cmd.Flags().Changed("allow-unknown-input") {
-		o.AllowUnknown = eval.AllowUnknownInput()
-	}
 }
 
 func (o *options) BindFlags(cmd *cobra.Command) {
@@ -52,7 +48,6 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 
 	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.Now, "now", "", "Override current time (RFC3339) for deterministic output")
-	f.BoolVar(&o.AllowUnknown, "allow-unknown-input", false, cliflags.WithDynamicDefaultHelp("Allow observations with unknown source types"))
 
 	_ = cmd.MarkFlagRequired("before")
 	_ = cmd.MarkFlagRequired("after")
@@ -86,7 +81,6 @@ type Execution struct {
 	ControlsDir       string
 	MaxUnsafeDuration time.Duration
 	Clock             ports.Clock
-	AllowUnknown      bool
 }
 
 // Complete transforms the raw options into a validated Execution object.
@@ -107,6 +101,5 @@ func (o *options) Complete() (Execution, error) {
 		ControlsDir:       o.ControlsDir,
 		MaxUnsafeDuration: maxDuration,
 		Clock:             clock,
-		AllowUnknown:      o.AllowUnknown,
 	}, nil
 }

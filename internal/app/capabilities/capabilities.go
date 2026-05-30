@@ -5,13 +5,6 @@ import (
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
-// IsConnectorSupported verifies if a specific cloud resource source has
-// an active connector in this version of the tool.
-func IsConnectorSupported(sourceType kernel.ObservationSourceType) bool {
-	_, ok := Manifest().connectorIndex[sourceType]
-	return ok
-}
-
 // AuditCapabilities describes the security frameworks, cloud connectors,
 // and policy versions supported by this build of Stave.
 type AuditCapabilities struct {

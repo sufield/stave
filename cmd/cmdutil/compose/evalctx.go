@@ -2,6 +2,7 @@ package compose
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
@@ -36,6 +37,12 @@ type EvalContextRequest struct {
 	SkipMaxUnsafe              bool // skip --max-unsafe parsing
 	SkipClock                  bool // skip --now / clock resolution
 	SkipFormat                 bool // skip --format parsing
+
+	// AllowBuiltinFallback: when --controls was not set and no controls
+	// directory exists/infers, use the embedded catalog instead of erroring.
+	// The resolved ControlsDir becomes "" (the builtin sentinel) and
+	// EvalContext.UseBuiltinControls is set so the caller can disclose it.
+	AllowBuiltinFallback bool
 }
 
 // EvalContext holds resolved evaluation parameters. Fields are populated
@@ -48,6 +55,10 @@ type EvalContext struct {
 	// Resolved directory paths (inferred and cleaned).
 	ControlsDir     string
 	ObservationsDir string
+
+	// UseBuiltinControls is true when AllowBuiltinFallback kicked in:
+	// ControlsDir is "" and the embedded catalog should be used.
+	UseBuiltinControls bool
 
 	// Parsed common flag values.
 	MaxUnsafe time.Duration
@@ -109,7 +120,15 @@ func resolvePaths(ec *EvalContext, req EvalContextRequest) error {
 		}
 	}
 
-	if !req.SkipControlsValidation {
+	// Built-in catalog fallback: --controls not set and the resolved path
+	// is absent. Use the embedded catalog ("" sentinel) instead of erroring.
+	// A path that exists but is not a directory still fails validation below.
+	if req.AllowBuiltinFallback && !req.ControlsChanged && !pathExists(ec.ControlsDir) {
+		ec.ControlsDir = ""
+		ec.UseBuiltinControls = true
+	}
+
+	if !req.SkipControlsValidation && !ec.UseBuiltinControls {
 		if err := dircheck.ValidateFlagDir("--controls", ec.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, engine.Log); err != nil {
 			return err
 		}
@@ -120,6 +139,17 @@ func resolvePaths(ec *EvalContext, req EvalContextRequest) error {
 		}
 	}
 	return nil
+}
+
+// pathExists reports whether path exists (file or directory). A path that
+// exists but is not a directory is left to the directory validator so its
+// misconfiguration still errors rather than silently falling back.
+func pathExists(path string) bool {
+	if path == "" || path == "-" {
+		return false
+	}
+	_, err := os.Stat(path)
+	return err == nil
 }
 
 // resolveFlags parses common flag values (max-unsafe, clock, format).

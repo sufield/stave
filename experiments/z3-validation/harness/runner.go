@@ -126,7 +126,6 @@ func runStaveApply(ctx context.Context, binary, controlsDir, observationsDir str
 		"apply",
 		"--observations", filepath.Join(observationsDir, "observations"),
 		"--format", "json",
-		"--allow-unknown-input",
 	}
 	if controlsDir != "" {
 		args = append(args, "--controls", controlsDir)

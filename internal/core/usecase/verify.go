@@ -15,7 +15,6 @@ type Request struct {
 	ControlsDir       string `json:"controls_dir,omitempty"`
 	MaxUnsafeDuration string `json:"max_unsafe_duration,omitempty"`
 	NowTime           string `json:"now_time,omitempty"`
-	AllowUnknownInput bool   `json:"allow_unknown_input,omitempty"`
 }
 
 // VerifyResponse is the output of the verify use case.

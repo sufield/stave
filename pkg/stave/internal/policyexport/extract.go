@@ -33,7 +33,6 @@ import (
 // opt in to permission resolution.
 type Config struct {
 	SnapshotsDir         string
-	AllowUnknownInput    bool
 	EffectivePermissions ports.EffectivePermissionResolver
 }
 

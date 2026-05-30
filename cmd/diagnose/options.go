@@ -67,33 +67,35 @@ func (o *diagnoseOptions) Prepare(cmd *cobra.Command) error {
 // Does not take *cobra.Command — all Cobra state was captured in Prepare.
 func toConfig(o *diagnoseOptions, flags cliflags.GlobalFlags, stdout, stderr io.Writer, stdin io.Reader) (Config, error) {
 	ec, err := compose.PrepareEvaluationContext(compose.EvalContextRequest{
-		ControlsDir:       o.ControlsDir,
-		ObservationsDir:   o.ObservationsDir,
-		ControlsChanged:   o.controlsSet,
-		ObsChanged:        o.obsSet,
-		MaxUnsafeDuration: o.MaxUnsafeDuration,
-		NowTime:           o.NowTime,
-		Format:            o.Format,
-		FormatChanged:     o.formatSet,
+		ControlsDir:          o.ControlsDir,
+		ObservationsDir:      o.ObservationsDir,
+		ControlsChanged:      o.controlsSet,
+		ObsChanged:           o.obsSet,
+		MaxUnsafeDuration:    o.MaxUnsafeDuration,
+		NowTime:              o.NowTime,
+		Format:               o.Format,
+		FormatChanged:        o.formatSet,
+		AllowBuiltinFallback: true,
 	})
 	if err != nil {
 		return Config{}, err
 	}
 
 	return Config{
-		ControlsDir:       ec.ControlsDir,
-		ObservationsDir:   ec.ObservationsDir,
-		PreviousOutput:    fsutil.CleanUserPath(o.PreviousOutput),
-		MaxUnsafeDuration: ec.MaxUnsafe,
-		Format:            ec.Format,
-		Quiet:             flags.Quiet,
-		Cases:             o.Cases,
-		SignalContains:    o.SignalContains,
-		Template:          o.Template,
-		Stdout:            stdout,
-		Stderr:            stderr,
-		Stdin:             stdin,
-		Clock:             ec.Clock,
-		Sanitizer:         flags.GetSanitizer(),
+		ControlsDir:        ec.ControlsDir,
+		UseBuiltinControls: ec.UseBuiltinControls,
+		ObservationsDir:    ec.ObservationsDir,
+		PreviousOutput:     fsutil.CleanUserPath(o.PreviousOutput),
+		MaxUnsafeDuration:  ec.MaxUnsafe,
+		Format:             ec.Format,
+		Quiet:              flags.Quiet,
+		Cases:              o.Cases,
+		SignalContains:     o.SignalContains,
+		Template:           o.Template,
+		Stdout:             stdout,
+		Stderr:             stderr,
+		Stdin:              stdin,
+		Clock:              ec.Clock,
+		Sanitizer:          flags.GetSanitizer(),
 	}, nil
 }

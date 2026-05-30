@@ -101,8 +101,7 @@ All 2 tests passed.
 ```bash
 stave apply \
   --controls controls/custom \
-  --observations observations \
-  --allow-unknown-input
+  --observations observations
 ```
 
 Any S3 bucket in your snapshot without a `team` tag will produce a VIOLATION finding with your control ID.

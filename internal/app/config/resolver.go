@@ -201,14 +201,6 @@ func (r *GovernanceResolver) ResolveCLIPathMode() PolicyValue[string] {
 	return PolicyValue[string]{Value: "base", Source: "default", Layer: LayerDefault}
 }
 
-// ResolveCLIAllowUnknownInput returns the CLI allow-unknown-input value with provenance.
-func (r *GovernanceResolver) ResolveCLIAllowUnknownInput() PolicyValue[bool] {
-	if r.Settings != nil && r.Settings.CLIDefaults.AllowUnknownInput != nil {
-		return PolicyValue[bool]{Value: *r.Settings.CLIDefaults.AllowUnknownInput, Source: r.SettingsPath + ":cli_defaults.allow_unknown_input", Layer: LayerUserConfig}
-	}
-	return PolicyValue[bool]{Value: false, Source: "default", Layer: LayerDefault}
-}
-
 // --- Value-Only Accessors ---
 
 func (r *GovernanceResolver) MaxUnsafeDuration() string {
@@ -273,8 +265,4 @@ func (r *GovernanceResolver) MaxValidationErrors() int {
 		return 0
 	}
 	return r.Policy.MaxValidationErrors
-}
-
-func (r *GovernanceResolver) AllowUnknownInput() bool {
-	return r.ResolveCLIAllowUnknownInput().Value
 }

@@ -72,7 +72,6 @@ func TestRunFixLoopWritesArtifacts(t *testing.T) {
 		ControlsDir:       filepath.Join(fixture, "controls"),
 		OutDir:            outDir,
 		MaxUnsafeDuration: 168 * time.Hour,
-		AllowUnknown:      false,
 		Stdout:            &bytes.Buffer{},
 		Stderr:            &bytes.Buffer{},
 	})

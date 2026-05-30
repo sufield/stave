@@ -259,7 +259,7 @@ func (d Diagnostic) IncludeInResults(strict bool) bool {
 //     when the validator only carried the human-readable
 //     description).
 //
-// Callers — primarily the --allow-unknown-input filter and lint
+// Callers — primarily lint
 // strict-mode toggles — branch on this to decide whether an extra
 // field is allowed to slip through or must fail the validation.
 func (d Diagnostic) IsUnknownField() bool {

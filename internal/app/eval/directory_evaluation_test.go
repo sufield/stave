@@ -97,32 +97,6 @@ func TestRunDirectoryEvaluation_EmptySnapshots(t *testing.T) {
 	}
 }
 
-func TestRunDirectoryEvaluation_SourceTypeIncompatible(t *testing.T) {
-	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	snaps := []asset.Snapshot{
-		{
-			CapturedAt:  base,
-			Assets:      []asset.Asset{{ID: "b-1", Type: "s3_bucket"}},
-			GeneratedBy: &asset.GeneratedBy{SourceType: "unknown_custom_tool"},
-		},
-	}
-	repo := &mockObsRepo{result: appcontracts.LoadResult{Snapshots: snaps}}
-
-	_, _, err := RunDirectoryEvaluation(context.Background(), DirectoryEvaluationRequest{
-
-		ObservationsDir:   "/tmp/obs",
-		Controls:          testControls(),
-		ObservationLoader: repo,
-		AllowUnknownType:  false,
-	})
-	if err == nil {
-		t.Fatal("expected error for incompatible source type")
-	}
-	if !containsString(err.Error(), "source_type compatibility") {
-		t.Fatalf("expected source_type error, got: %v", err)
-	}
-}
-
 func TestRunDirectoryEvaluation_Success(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	repo := &mockObsRepo{result: appcontracts.LoadResult{Snapshots: testSnapshots(base)}}
@@ -139,7 +113,6 @@ func TestRunDirectoryEvaluation_Success(t *testing.T) {
 		Clock:             ports.FixedClock(base.Add(2 * time.Hour)),
 		StaveVersion:      "test",
 		ObservationLoader: repo,
-		AllowUnknownType:  true,
 		CELEvaluator:      celEval,
 	})
 	if err != nil {
@@ -153,45 +126,6 @@ func TestRunDirectoryEvaluation_Success(t *testing.T) {
 	}
 	if len(result.Findings) != 0 {
 		t.Fatalf("expected 0 findings (all safe), got %d", len(result.Findings))
-	}
-}
-
-func TestRunDirectoryEvaluation_AllowUnknownType(t *testing.T) {
-	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
-	snaps := []asset.Snapshot{
-		{
-			CapturedAt:  base,
-			Assets:      []asset.Asset{{ID: "b-1", Type: "s3_bucket"}},
-			GeneratedBy: &asset.GeneratedBy{SourceType: "unknown_custom_tool"},
-		},
-		{
-			CapturedAt:  base.Add(time.Hour),
-			Assets:      []asset.Asset{{ID: "b-1", Type: "s3_bucket"}},
-			GeneratedBy: &asset.GeneratedBy{SourceType: "unknown_custom_tool"},
-		},
-	}
-	repo := &mockObsRepo{result: appcontracts.LoadResult{Snapshots: snaps}}
-
-	celEval := func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
-		return false, nil
-	}
-
-	result, _, err := RunDirectoryEvaluation(context.Background(), DirectoryEvaluationRequest{
-
-		ObservationsDir:   "/tmp/obs",
-		Controls:          testControls(),
-		MaxUnsafeDuration: 168 * time.Hour,
-		Clock:             ports.FixedClock(base.Add(2 * time.Hour)),
-		StaveVersion:      "test",
-		ObservationLoader: repo,
-		AllowUnknownType:  true,
-		CELEvaluator:      celEval,
-	})
-	if err != nil {
-		t.Fatalf("--allow-unknown-input should bypass source type check: %v", err)
-	}
-	if result == nil {
-		t.Fatal("expected non-nil result")
 	}
 }
 

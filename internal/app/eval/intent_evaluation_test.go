@@ -65,33 +65,6 @@ func TestIntentEvaluationLoadArtifacts_CollectsBothErrors(t *testing.T) {
 	}
 }
 
-func TestIntentEvaluationLoadArtifacts_SourceTypeCheckOptional(t *testing.T) {
-	snapshots := []asset.Snapshot{{}}
-	intent := NewIntentEvaluation(
-		evalObservationRepoStub{snapshots: snapshots},
-		evalControlRepoStub{controls: []policy.ControlDefinition{{ID: "CTL.TEST.001"}}},
-	)
-
-	result := intent.LoadArtifacts(context.Background(), IntentEvaluationConfig{
-		ControlsDir:         "ctl",
-		ObservationsDir:     "obs",
-		OptionalSnapshots:   true,
-		SkipSourceTypeCheck: true,
-	})
-	if result.ObservationErr != nil {
-		t.Fatalf("expected no observation compatibility error when check disabled, got: %v", result.ObservationErr)
-	}
-
-	result = intent.LoadArtifacts(context.Background(), IntentEvaluationConfig{
-		ControlsDir:       "ctl",
-		ObservationsDir:   "obs",
-		OptionalSnapshots: true,
-	})
-	if result.ObservationErr == nil || !errors.Is(result.ObservationErr, ErrSourceTypeMissing) {
-		t.Fatalf("expected source_type compatibility error, got: %v", result.ObservationErr)
-	}
-}
-
 func TestIntentEvaluationLoadArtifacts_RequireArtifacts(t *testing.T) {
 	intent := NewIntentEvaluation(evalObservationRepoStub{}, evalControlRepoStub{})
 	result := intent.LoadArtifacts(context.Background(), IntentEvaluationConfig{

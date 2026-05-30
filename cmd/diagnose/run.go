@@ -22,15 +22,16 @@ import (
 
 // Config holds the inputs for the diagnostic engine.
 type Config struct {
-	ControlsDir       string
-	ObservationsDir   string
-	PreviousOutput    string
-	MaxUnsafeDuration time.Duration
-	Format            appcontracts.OutputFormat
-	Quiet             bool
-	Cases             []string
-	SignalContains    string
-	Template          string
+	ControlsDir        string
+	UseBuiltinControls bool
+	ObservationsDir    string
+	PreviousOutput     string
+	MaxUnsafeDuration  time.Duration
+	Format             appcontracts.OutputFormat
+	Quiet              bool
+	Cases              []string
+	SignalContains     string
+	Template           string
 
 	// Detail Mode — used by `diagnose finding` subcommand.
 	ControlID string
@@ -64,6 +65,12 @@ func NewRunner(obsRepo appcontracts.ObservationRepository, ctlRepo appcontracts.
 
 // Run executes the standard diagnostic workflow.
 func (r *Runner) Run(ctx context.Context, cfg Config) error {
+	// Disclosed fallback: no --controls and no controls/ dir → embedded catalog.
+	if cfg.UseBuiltinControls && !cfg.Quiet && cfg.Stderr != nil {
+		fmt.Fprintf(cfg.Stderr, "note: no --controls given and no controls/ directory found — "+
+			"diagnosing against the built-in control catalog. Pass --controls <dir> to use your own.\n")
+	}
+
 	diagnoseRun, err := r.newDiagnosticEngine()
 	if err != nil {
 		return err

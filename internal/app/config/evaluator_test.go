@@ -173,23 +173,6 @@ func TestResolveCLIPathMode(t *testing.T) {
 	})
 }
 
-func TestResolveCLIAllowUnknownInput(t *testing.T) {
-	t.Run("default false", func(t *testing.T) {
-		e := newTestEvaluator(nil, nil)
-		if e.AllowUnknownInput() {
-			t.Error("expected false by default")
-		}
-	})
-
-	t.Run("user true", func(t *testing.T) {
-		val := true
-		e := newTestEvaluator(nil, &OperatorSettings{CLIDefaults: OperatorCLIConfig{AllowUnknownInput: &val}})
-		if !e.AllowUnknownInput() {
-			t.Error("expected true from user config")
-		}
-	})
-}
-
 func TestValueAccessors(t *testing.T) {
 	e := newTestEvaluator(&WorkspacePolicy{
 		MaxUnsafe:       "72h",

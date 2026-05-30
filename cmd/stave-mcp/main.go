@@ -123,10 +123,9 @@ type toolCallParams struct {
 
 // verifyArgs is the schema for stave.verify.
 type verifyArgs struct {
-	ObservationsDir   string `json:"observations_dir"`
-	ControlsDir       string `json:"controls_dir,omitempty"`
-	AllowUnknownInput bool   `json:"allow_unknown_input,omitempty"`
-	Format            string `json:"format,omitempty"` // summary (default) | detailed | raw
+	ObservationsDir string `json:"observations_dir"`
+	ControlsDir     string `json:"controls_dir,omitempty"`
+	Format          string `json:"format,omitempty"` // summary (default) | detailed | raw
 }
 
 // searchArgs is the schema for stave.search.
@@ -138,18 +137,16 @@ type searchArgs struct {
 
 // dashboardArgs is the schema for stave.dashboard.
 type dashboardArgs struct {
-	Observations      string `json:"observations"`
-	Controls          string `json:"controls,omitempty"`
-	AllowUnknownInput bool   `json:"allow_unknown_input,omitempty"`
+	Observations string `json:"observations"`
+	Controls     string `json:"controls,omitempty"`
 }
 
 // chainsArgs is the schema for stave.chains.
 type chainsArgs struct {
-	Observations      string `json:"observations"`
-	Controls          string `json:"controls,omitempty"`
-	Chains            string `json:"chains,omitempty"`
-	Severity          string `json:"severity,omitempty"`
-	AllowUnknownInput bool   `json:"allow_unknown_input,omitempty"`
+	Observations string `json:"observations"`
+	Controls     string `json:"controls,omitempty"`
+	Chains       string `json:"chains,omitempty"`
+	Severity     string `json:"severity,omitempty"`
 }
 
 // scorecardArgs is the schema for stave.scorecard.
@@ -453,9 +450,8 @@ func handleToolsList(hosted bool) any {
 				"type":     "object",
 				"required": []string{"observations"},
 				"properties": map[string]any{
-					"observations":        map[string]string{"type": "string", "description": "Path to the observation snapshot directory."},
-					"controls":            map[string]string{"type": "string", "description": "Optional control directory; empty = embedded built-in catalog."},
-					"allow_unknown_input": map[string]string{"type": "boolean", "description": "Tolerate observation asset types unknown to the catalog."},
+					"observations": map[string]string{"type": "string", "description": "Path to the observation snapshot directory."},
+					"controls":     map[string]string{"type": "string", "description": "Optional control directory; empty = embedded built-in catalog."},
 				},
 			},
 		},
@@ -478,11 +474,10 @@ func handleToolsList(hosted bool) any {
 				"type":     "object",
 				"required": []string{"observations"},
 				"properties": map[string]any{
-					"observations":        map[string]string{"type": "string", "description": "Path to the observation snapshot directory."},
-					"controls":            map[string]string{"type": "string", "description": "Optional control directory; empty = embedded built-in catalog."},
-					"chains":              map[string]string{"type": "string", "description": "Optional chain-definition directory; empty = ./chains if present."},
-					"severity":            map[string]string{"type": "string", "description": "Optional minimum severity: CRITICAL | HIGH | MEDIUM | LOW."},
-					"allow_unknown_input": map[string]string{"type": "boolean", "description": "Tolerate observation asset types unknown to the catalog."},
+					"observations": map[string]string{"type": "string", "description": "Path to the observation snapshot directory."},
+					"controls":     map[string]string{"type": "string", "description": "Optional control directory; empty = embedded built-in catalog."},
+					"chains":       map[string]string{"type": "string", "description": "Optional chain-definition directory; empty = ./chains if present."},
+					"severity":     map[string]string{"type": "string", "description": "Optional minimum severity: CRITICAL | HIGH | MEDIUM | LOW."},
 				},
 			},
 		},
@@ -509,10 +504,9 @@ func handleToolsList(hosted bool) any {
 				"type":     "object",
 				"required": []string{"observations_dir"},
 				"properties": map[string]any{
-					"observations_dir":    map[string]string{"type": "string", "description": "Path to the observation snapshot directory."},
-					"controls_dir":        map[string]string{"type": "string", "description": "Optional control directory; empty = embedded built-in catalog."},
-					"allow_unknown_input": map[string]string{"type": "boolean", "description": "Tolerate observation asset types unknown to the catalog."},
-					"format":              map[string]string{"type": "string", "description": "summary (default) | detailed | raw."},
+					"observations_dir": map[string]string{"type": "string", "description": "Path to the observation snapshot directory."},
+					"controls_dir":     map[string]string{"type": "string", "description": "Optional control directory; empty = embedded built-in catalog."},
+					"format":           map[string]string{"type": "string", "description": "summary (default) | detailed | raw."},
 				},
 			},
 		},
@@ -854,9 +848,8 @@ func runVerify(ctx context.Context, args verifyArgs) (*stave.Assessment, error) 
 		return nil, errors.New("observations_dir is required")
 	}
 	cfg := stave.Config{
-		SnapshotsDir:      args.ObservationsDir,
-		ControlsDir:       args.ControlsDir,
-		AllowUnknownInput: args.AllowUnknownInput,
+		SnapshotsDir: args.ObservationsDir,
+		ControlsDir:  args.ControlsDir,
 	}
 	return stave.Apply(ctx, cfg)
 }
@@ -894,9 +887,8 @@ func runDashboardTool(ctx context.Context, args dashboardArgs) (any, error) {
 		return nil, errors.New("observations is required")
 	}
 	assess, err := stave.Apply(ctx, stave.Config{
-		SnapshotsDir:      args.Observations,
-		ControlsDir:       args.Controls,
-		AllowUnknownInput: args.AllowUnknownInput,
+		SnapshotsDir: args.Observations,
+		ControlsDir:  args.Controls,
 	})
 	if err != nil {
 		return nil, err
@@ -1016,7 +1008,7 @@ func runChainsTool(ctx context.Context, args chainsArgs) (any, error) {
 
 // runRenderChains is the --render-chains CLI path.
 func runRenderChains(ctx context.Context, obsDir string) error {
-	assess, chains, err := evaluateChains(ctx, chainsArgs{Observations: obsDir, AllowUnknownInput: true})
+	assess, chains, err := evaluateChains(ctx, chainsArgs{Observations: obsDir})
 	if err != nil {
 		return err
 	}
@@ -1042,10 +1034,9 @@ func evaluateChains(ctx context.Context, args chainsArgs) (*stave.Assessment, []
 		return nil, nil, errors.New("observations is required")
 	}
 	assess, err := stave.Apply(ctx, stave.Config{
-		SnapshotsDir:      args.Observations,
-		ControlsDir:       args.Controls,
-		ChainsDir:         resolveChainsDir(args.Chains),
-		AllowUnknownInput: args.AllowUnknownInput,
+		SnapshotsDir: args.Observations,
+		ControlsDir:  args.Controls,
+		ChainsDir:    resolveChainsDir(args.Chains),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -1137,8 +1128,7 @@ func runDemoDashboard(ctx context.Context, obsDir string) error {
 		return errors.New("--demo-dashboard requires --observations <dir>")
 	}
 	assess, err := stave.Apply(ctx, stave.Config{
-		SnapshotsDir:      obsDir,
-		AllowUnknownInput: true,
+		SnapshotsDir: obsDir,
 	})
 	if err != nil {
 		return err

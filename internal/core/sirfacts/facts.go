@@ -1968,7 +1968,7 @@ func SerializeSMT2(facts []Fact, w io.Writer) error {
 	predicates := allDeclaredPredicates(facts)
 	bw.writeLine("; --- Predicate declarations ---")
 	for _, p := range predicates {
-		bw.writeLine(fmt.Sprintf("(declare-fun %s (String String) Bool)", p))
+		bw.writeLine(fmt.Sprintf("(declare-fun %s (String String) Bool)", smt2Symbol(p)))
 	}
 	bw.writeLine("")
 
@@ -1998,7 +1998,7 @@ func SerializeSMT2(facts []Fact, w io.Writer) error {
 			days := f.Freshness.AgeSeconds / 86400
 			bw.writeLine(fmt.Sprintf(";; age: %ds (%dd)", f.Freshness.AgeSeconds, days))
 		}
-		bw.writeLine(fmt.Sprintf("(assert (%s %s %s))", f.Predicate, smt2Quote(f.Subject), smt2Quote(f.Object)))
+		bw.writeLine(fmt.Sprintf("(assert (%s %s %s))", smt2Symbol(f.Predicate), smt2Quote(f.Subject), smt2Quote(f.Object)))
 	}
 
 	bw.writeLine("")
@@ -2075,8 +2075,9 @@ func factsByPredicate(facts []Fact, predicate string) []Fact {
 // tuple counts the SIR projection produces (typically tens to
 // low hundreds per predicate).
 func closedWorldAxiom(predicate string, tuples []Fact) string {
+	sym := smt2Symbol(predicate)
 	if len(tuples) == 0 {
-		return fmt.Sprintf("(assert (forall ((x String) (y String)) (not (%s x y))))", predicate)
+		return fmt.Sprintf("(assert (forall ((x String) (y String)) (not (%s x y))))", sym)
 	}
 	disjuncts := make([]string, 0, len(tuples))
 	for _, t := range tuples {
@@ -2087,13 +2088,54 @@ func closedWorldAxiom(predicate string, tuples []Fact) string {
 	if len(disjuncts) > 1 {
 		body = "(or " + strings.Join(disjuncts, " ") + ")"
 	}
-	return fmt.Sprintf("(assert (forall ((x String) (y String)) (=> (%s x y) %s)))", predicate, body)
+	return fmt.Sprintf("(assert (forall ((x String) (y String)) (=> (%s x y) %s)))", sym, body)
 }
 
 // smt2Quote renders a Go string as an SMT-LIB v2 string
 // literal: surrounded by ", embedded " escaped as "".
 func smt2Quote(s string) string {
 	return `"` + strings.ReplaceAll(s, `"`, `""`) + `"`
+}
+
+// smt2Symbol renders a predicate name as an SMT-LIB v2 symbol.
+//
+// Curated has_* / can_* predicates and the dot-joined observation
+// paths are valid SMT-LIB *simple symbols* and pass through bare —
+// so existing output is byte-identical. Names carrying characters
+// outside the simple-symbol charset (IAM condition keys such as
+// "iam:PassedToService" reach the projector as raw property keys)
+// are wrapped in |…| *quoted symbols*, which admit any character
+// except '|' and '\'. Property keys never contain those, so the
+// quoted form is always well-formed.
+//
+// Simple-symbol rule (SMT-LIB v2.6 §3.1): a non-empty sequence of
+// letters, digits, and the characters ~ ! @ $ % ^ & * _ - + = < >
+// . ? / that does not start with a digit.
+func smt2Symbol(name string) string {
+	if isSimpleSMTSymbol(name) {
+		return name
+	}
+	return "|" + name + "|"
+}
+
+func isSimpleSMTSymbol(name string) bool {
+	if name == "" {
+		return false
+	}
+	const extra = "~!@$%^&*_-+=<>.?/"
+	for i, r := range name {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z':
+		case r >= '0' && r <= '9':
+			if i == 0 {
+				return false // simple symbols cannot start with a digit
+			}
+		case strings.ContainsRune(extra, r):
+		default:
+			return false
+		}
+	}
+	return true
 }
 
 // bufferedWriter is a minimal error-sticky line writer so the

@@ -28,8 +28,7 @@ cp testdata/e2e/aws-s3-obs-public/observations.json observations/
 stave apply \
   --controls controls \
   --observations observations \
-  --now 2026-01-15T00:00:00Z \
-  --allow-unknown-input
+  --now 2026-01-15T00:00:00Z
 ```
 
 You will see output like:

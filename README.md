@@ -119,7 +119,7 @@ bash examples/demo-ai-security/run.sh           # Bedrock + Lambda + S3 PHI
 
 ```bash
 bash scripts/aws-snapshot.sh ./my-snapshot      # read-only AWS CLI calls; AES/SecurityAudit creds suffice
-stave apply --observations ./my-snapshot --allow-unknown-input
+stave apply --observations ./my-snapshot
 ```
 
 See [`docs/quickstart-own-data.md`](docs/quickstart-own-data.md) for prerequisites, the property mapping, and the time-budget breakdown.

@@ -25,7 +25,6 @@ var (
 	ErrHintNoControls                = errors.New("hints: no controls")
 	ErrHintNoSnapshots               = errors.New("hints: no snapshots")
 	ErrHintSchemaValidation          = errors.New("hints: schema validation")
-	ErrHintSourceType                = errors.New("hints: source_type mismatch")
 	ErrHintControlSourceConflict     = errors.New("hints: control source conflict")
 	ErrHintProjectContext            = errors.New("hints: project context resolution failed")
 	ErrHintProjectConfig             = errors.New("hints: project config invalid")
@@ -91,15 +90,6 @@ var hintRegistry = []hintRule{
 			Reason:      "Input files do not conform to schema.",
 			NextCommand: "stave validate --controls ./controls --observations ./observations",
 			SearchQuery: "validate schema validation failed",
-		},
-	},
-	{
-		err:      ErrHintSourceType,
-		patterns: []string{"missing generated_by.source_type", "unsupported source_type"},
-		hint: RemediationHint{
-			Reason:      "Observation source_type is missing or unsupported.",
-			NextCommand: "stave apply --controls ./controls --observations ./observations --allow-unknown-input",
-			SearchQuery: "allow-unknown-input source_type",
 		},
 	},
 	{

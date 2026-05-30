@@ -115,7 +115,6 @@ Reusable multi-command workflows. Each recipe shows the exact commands, expected
    stave graph coverage \
      --controls controls/s3 \
      --observations observations/ \
-     --allow-unknown-input \
    | dot -Tpng > coverage.png
    ```
 

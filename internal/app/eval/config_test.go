@@ -20,7 +20,6 @@ func TestNewConfig_SetsExpectedFields(t *testing.T) {
 	cfg := NewConfig(plan,
 		WithMaxUnsafeDuration(24*time.Hour),
 		WithRuntime(io.Discard, io.Discard, clock, "test"),
-		WithAllowUnknownInput(true),
 	)
 
 	if cfg.PolicySource != plan.ControlsPath || cfg.ObservationSource != plan.ObservationsPath {

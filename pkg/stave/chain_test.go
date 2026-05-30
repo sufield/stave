@@ -147,10 +147,9 @@ postconditions:
 // or property-path resolution.
 func TestApply_CrossAssetMarkerChainFires(t *testing.T) {
 	a, err := stave.Apply(context.Background(), stave.Config{
-		SnapshotsDir:      "../../examples/cognito-iteration2-unauth/fixtures/cross-resource-config/observations",
-		ChainsDir:         "../../chains",
-		Now:               time.Date(2026, 5, 9, 0, 0, 0, 0, time.UTC),
-		AllowUnknownInput: true,
+		SnapshotsDir: "../../examples/cognito-iteration2-unauth/fixtures/cross-resource-config/observations",
+		ChainsDir:    "../../chains",
+		Now:          time.Date(2026, 5, 9, 0, 0, 0, 0, time.UTC),
 	})
 	if err != nil {
 		t.Fatalf("Apply: %v", err)

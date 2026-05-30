@@ -1,2 +1,0 @@
-warning: snapshot[0] has no generated_by.source_type, proceeding anyway
-warning: snapshot[1] has no generated_by.source_type, proceeding anyway

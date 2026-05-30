@@ -432,7 +432,6 @@ stave apply [flags]
 | `--observations` | `observations` | Path to observation snapshots directory |
 | `--max-unsafe` | `168h` | Maximum allowed unsafe duration |
 | `--now` | (current time) | Override evaluation time (RFC3339 format) |
-| `--allow-unknown-input` | `false` | Allow observations with unknown source types |
 | `--integrity-manifest` | (none) | Verify loaded observation files against expected SHA-256 hashes in a manifest JSON |
 | `--integrity-public-key` | (none) | Verify signed manifest with Ed25519 public key (requires `--integrity-manifest`) |
 | `--min-severity` | (none) | Only evaluate controls at or above this severity level |
@@ -470,9 +469,6 @@ stave apply --max-unsafe 7d
 
 # Deterministic evaluation (for CI/testing)
 stave apply --now 2026-01-15T00:00:00Z
-
-# Allow unknown source types
-stave apply --allow-unknown-input
 
 # Integrity-checked evaluation (unsigned manifest)
 stave apply \
@@ -696,7 +692,6 @@ stave graph coverage [flags]
 | `--controls` | `controls/s3` | Path to control definitions directory |
 | `--observations` | `observations` | Path to observation snapshots directory |
 | `--format` | `dot` | Output format: `dot` or `json` |
-| `--allow-unknown-input` | `false` | Allow observations with unknown source types |
 | `--sanitize` | `false` | Sanitize asset identifiers (global flag) |
 
 **Examples:**
@@ -1311,7 +1306,7 @@ Observations capture the state of your infrastructure at a point in time.
 | `captured_at` | RFC3339 timestamp of when snapshot was taken |
 | `assets[].id` | Unique asset identifier |
 | `assets[].type` | Asset type (e.g., `storage_bucket`) |
-| `generated_by.source_type` | Required unless `--allow-unknown-input` is set |
+| `generated_by.source_type` | Optional; any value accepted |
 
 **Optional Fields:**
 

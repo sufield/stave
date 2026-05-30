@@ -24,7 +24,6 @@ import (
 type ObservationConfig struct {
 	PolicySource      string
 	ObservationSource string
-	AcceptUnknownData bool
 	Stderr            io.Writer
 	ActivePolicies    []policy.ControlDefinition
 }
@@ -213,6 +212,12 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 	if cached, ok := cache.Load(cacheKey); ok {
 		report = cached
 		cacheHit = true
+		// ControlRemediation is json:"-", so the cache's JSON
+		// round-trip drops it. Re-attach it from the live control
+		// set, otherwise cache hits fall back to generic
+		// class-default remediation instead of the control's
+		// authored guidance (cache-miss runs keep it in memory).
+		rehydrateControlRemediation(&report, auditData.Controls)
 		if w.Logger != nil {
 			w.Logger.Info("assessment cache hit", "key", cacheKey.Hex())
 		}
@@ -285,6 +290,34 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 	return report, report.SecurityState, nil
 }
 
+// rehydrateControlRemediation re-attaches each finding's
+// ControlRemediation from the live control set. That field is
+// json:"-" and so does not survive the assessment cache's JSON
+// round-trip; without this, cache hits would resolve remediation to
+// the generic class-default instead of the control's authored
+// guidance. Findings whose control is absent from the catalog (e.g.
+// chain-emitted) are left untouched and fall back as before.
+func rehydrateControlRemediation(report *evaluation.ComplianceReport, controls []policy.ControlDefinition) {
+	if report == nil {
+		return
+	}
+	remediationByID := make(map[kernel.ControlID]*policy.RemediationSpec, len(controls))
+	for i := range controls {
+		remediationByID[controls[i].ID] = controls[i].Remediation
+	}
+	attach := func(fs []evaluation.Finding) {
+		for i := range fs {
+			if fs[i].ControlRemediation == nil {
+				if rem, ok := remediationByID[fs[i].ControlID]; ok {
+					fs[i].ControlRemediation = rem
+				}
+			}
+		}
+	}
+	attach(report.Findings)
+	attach(report.MarkerFindings)
+}
+
 func (w *AuditWorkflow) prepareAuditData(ctx context.Context, cfg ObservationConfig) IntentEvaluationResult {
 	intent := NewIntentEvaluation(w.ObservationRepo, w.PolicyRepo)
 
@@ -298,12 +331,10 @@ func (w *AuditWorkflow) prepareAuditData(ctx context.Context, cfg ObservationCon
 	callerSupplied := cfg.ActivePolicies != nil
 
 	data := intent.LoadArtifacts(ctx, IntentEvaluationConfig{
-		ControlsDir:       cfg.PolicySource,
-		ObservationsDir:   cfg.ObservationSource,
-		RequireControls:   !callerSupplied,
-		SkipControlsLoad:  callerSupplied,
-		AllowUnknownInput: cfg.AcceptUnknownData,
-		Stderr:            cfg.Stderr,
+		ControlsDir:      cfg.PolicySource,
+		ObservationsDir:  cfg.ObservationSource,
+		RequireControls:  !callerSupplied,
+		SkipControlsLoad: callerSupplied,
 	})
 	if callerSupplied {
 		data.Controls = cfg.ActivePolicies

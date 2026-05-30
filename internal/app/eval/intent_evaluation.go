@@ -4,9 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 
-	"github.com/sufield/stave/internal/app/capabilities"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -29,17 +27,13 @@ func NewIntentEvaluation(obsRepo appcontracts.ObservationRepository, ctlRepo app
 }
 
 // IntentEvaluationConfig controls artifact loading and preflight checks.
-// By default, snapshots are required and source type compatibility is checked.
-// Set OptionalSnapshots or SkipSourceTypeCheck to opt out.
+// By default, snapshots are required. Set OptionalSnapshots to opt out.
 type IntentEvaluationConfig struct {
-	ControlsDir         string
-	ObservationsDir     string
-	RequireControls     bool
-	SkipControlsLoad    bool // true when controls come from packs, not disk
-	OptionalSnapshots   bool
-	SkipSourceTypeCheck bool
-	AllowUnknownInput   bool
-	Stderr              io.Writer
+	ControlsDir       string
+	ObservationsDir   string
+	RequireControls   bool
+	SkipControlsLoad  bool // true when controls come from packs, not disk
+	OptionalSnapshots bool
 }
 
 // IntentEvaluationResult contains loaded artifacts and independent load errors.
@@ -94,9 +88,6 @@ func (i *IntentEvaluation) LoadArtifacts(ctx context.Context, cfg IntentEvaluati
 	if obsErr == nil && !cfg.OptionalSnapshots && len(loadResult.Snapshots) == 0 {
 		obsErr = fmt.Errorf("%w: no snapshots in %s (expected .json files with schema_version: obs.v0.1)", ErrNoSnapshots, cfg.ObservationsDir)
 	}
-	if obsErr == nil && !cfg.SkipSourceTypeCheck {
-		obsErr = validateSourceTypeCompatibility(loadResult.Snapshots, cfg.AllowUnknownInput, stderrWarnf(cfg.Stderr))
-	}
 
 	return IntentEvaluationResult{
 		Controls:       controls,
@@ -105,73 +96,4 @@ func (i *IntentEvaluation) LoadArtifacts(ctx context.Context, cfg IntentEvaluati
 		Hashes:         loadResult.Hashes,
 		ObservationErr: obsErr,
 	}
-}
-
-type sourceTypeVerdict int
-
-const (
-	sourceTypeOK sourceTypeVerdict = iota
-	sourceTypeMissing
-	sourceTypeUnsupported
-)
-
-func classifySnapshotSourceType(s asset.Snapshot) sourceTypeVerdict {
-	if s.GeneratedBy == nil || s.GeneratedBy.SourceType == "" {
-		return sourceTypeMissing
-	}
-	if !capabilities.IsConnectorSupported(s.GeneratedBy.SourceType) {
-		return sourceTypeUnsupported
-	}
-	return sourceTypeOK
-}
-
-func handleSourceTypeIssue(i int, s asset.Snapshot, verdict sourceTypeVerdict, allowUnknown bool, warnf func(string, ...any)) error {
-	switch verdict {
-	case sourceTypeMissing:
-		if allowUnknown {
-			if warnf != nil {
-				warnf("warning: snapshot[%d] has no generated_by.source_type, proceeding anyway\n", i)
-			}
-			return nil
-		}
-		return fmt.Errorf("%w: snapshot[%d] missing generated_by.source_type (use --allow-unknown-input to skip)", ErrSourceTypeMissing, i)
-	case sourceTypeUnsupported:
-		if allowUnknown {
-			if warnf != nil {
-				warnf("warning: snapshot[%d] has unsupported source_type %q, proceeding anyway\n", i, s.GeneratedBy.SourceType)
-			}
-			return nil
-		}
-		return fmt.Errorf("%w: snapshot[%d] has unsupported source_type %q (use --allow-unknown-input to skip)", ErrSourceTypeUnsupported, i, s.GeneratedBy.SourceType)
-	default:
-		return nil
-	}
-}
-
-// validateSourceTypeCompatibility checks that all snapshots have supported source types.
-func validateSourceTypeCompatibility(snapshots []asset.Snapshot, allowUnknownInput bool, warnf func(format string, args ...any)) error {
-	for i, s := range snapshots {
-		verdict := classifySnapshotSourceType(s)
-		if verdict == sourceTypeOK {
-			continue
-		}
-		if err := handleSourceTypeIssue(i, s, verdict, allowUnknownInput, warnf); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func stderrWarnf(stderr io.Writer) func(format string, args ...any) {
-	if stderr == nil {
-		return nil
-	}
-	return func(format string, args ...any) {
-		_, _ = fmt.Fprintf(stderr, format, args...)
-	}
-}
-
-// ValidateSourceTypeCompatibility validates generated_by.source_type values on snapshots.
-func ValidateSourceTypeCompatibility(snapshots []asset.Snapshot, allowUnknownInput bool, stderr io.Writer) error {
-	return validateSourceTypeCompatibility(snapshots, allowUnknownInput, stderrWarnf(stderr))
 }

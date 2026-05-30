@@ -17,13 +17,12 @@ import (
 // event bridge in the dashboard/scorecard/chains templates), but it is
 // equally useful when a user just asks about a specific item.
 type contextArgs struct {
-	Type              string `json:"type"`
-	ID                string `json:"id"`
-	Observations      string `json:"observations,omitempty"`
-	Controls          string `json:"controls,omitempty"`
-	Chains            string `json:"chains,omitempty"`
-	Framework         string `json:"framework,omitempty"`
-	AllowUnknownInput bool   `json:"allow_unknown_input,omitempty"`
+	Type         string `json:"type"`
+	ID           string `json:"id"`
+	Observations string `json:"observations,omitempty"`
+	Controls     string `json:"controls,omitempty"`
+	Chains       string `json:"chains,omitempty"`
+	Framework    string `json:"framework,omitempty"`
 }
 
 // runContextTool routes a drill-down request by type. Returns an
@@ -60,10 +59,9 @@ func contextApply(ctx context.Context, args contextArgs) (*stave.Assessment, err
 		return nil, errors.New("observations is required for this context type")
 	}
 	return stave.Apply(ctx, stave.Config{
-		SnapshotsDir:      args.Observations,
-		ControlsDir:       args.Controls,
-		ChainsDir:         resolveChainsDir(args.Chains),
-		AllowUnknownInput: args.AllowUnknownInput,
+		SnapshotsDir: args.Observations,
+		ControlsDir:  args.Controls,
+		ChainsDir:    resolveChainsDir(args.Chains),
 	})
 }
 

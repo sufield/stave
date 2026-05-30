@@ -80,8 +80,7 @@ stave apply \
   --controls controls/iam \
   --observations observations \
   --max-unsafe 168h \
-  --now 2026-01-11T00:00:00Z \
-  --allow-unknown-input
+  --now 2026-01-11T00:00:00Z
 
 # Profile mode
 stave apply --profile aws-iam --input observations/bundle.json

@@ -210,9 +210,6 @@ func decorateError(err error) error {
 		hint = ui.ErrHintNoControls
 	case errors.Is(err, appeval.ErrNoSnapshots):
 		hint = ui.ErrHintNoSnapshots
-	case errors.Is(err, appeval.ErrSourceTypeMissing),
-		errors.Is(err, appeval.ErrSourceTypeUnsupported):
-		hint = ui.ErrHintSourceType
 	case errors.Is(err, contractvalidator.ErrSchemaValidationFailed):
 		hint = ui.ErrHintSchemaValidation
 	default:
