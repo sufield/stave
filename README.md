@@ -8,7 +8,7 @@ Stave finds dangerous **combinations** in your cloud configuration that single-c
 
 ## Getting Started
 
-**One-click:** [Open in GitHub Codespaces](https://codespaces.new/sufield/stave?quickstart=1) — pre-configured; start at Skill 2.
+**One-click:** Use the **Open in GitHub Codespaces** badge above — pre-configured; start at Skill 2.
 
 **VS Code / Cursor:** Clone and reopen in the devcontainer (`.devcontainer/`) — start at Skill 2.
 
