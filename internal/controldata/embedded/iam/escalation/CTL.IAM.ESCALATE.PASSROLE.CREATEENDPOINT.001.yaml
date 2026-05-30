@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.PASSROLE.CREATEENDPOINT.001
+name: Principal Must Not Escalate via SageMaker Inference Endpoint Execution Role
+description: >
+  Principals with iam:PassRole on a role R and sagemaker:CreateEndpointConfig + sagemaker:CreateEndpoint can create a SageMaker endpoint configuration and endpoint under role R with an attacker-controlled model/container; the inference container runs as R, so it reads R's credentials from the container credential endpoint and exfiltrates them. The
+  SageMaker compute executes under R, so any code or container the principal
+  controls runs with R's authority. When R's effective permissions exceed the
+  principal's own, this is a privilege escalation path. Same IAM structure as
+  the other PassRole compute-execution controls (Lambda, EC2, Glue,
+  CloudFormation, Data Pipeline) — only the SageMaker action differs. Rhino
+  Security Labs' iam__privesc_scan and Prowler's
+  iam_policy_allows_privilege_escalation enumerate the SageMaker variants;
+  Bishop Fox iam-vulnerable ships them as privesc-sageMaker* users.
+domain: identity
+severity: high
+scope: compound
+corpus_reference: MITRE:T1098
+compliance:
+  owasp_nhi: "NHI5"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_user
+  - aws_iam_role
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.passrole_createendpoint.present
+  - identity.escalation.passrole_createendpoint.target_role
+  - identity.escalation.passrole_createendpoint.permission_delta
+remediation:
+  description: >
+    Principal has a SageMaker-mediated escalation path: its iam:PassRole
+    reaches a role whose effective permissions exceed the principal's own, and
+    sagemaker:CreateEndpointConfig + sagemaker:CreateEndpoint lets it run compute under that role. Any code or container the
+    principal supplies runs with the target role's full authority and can read
+    its credentials.
+  action: >
+    Scope iam:PassRole to a role whose effective permissions do not exceed the
+    principal's, or restrict it with a Condition
+    (`iam:PassedToService == sagemaker.amazonaws.com` plus a narrowly-scoped
+    Resource ARN set). Alternatively remove the SageMaker create permission
+    from non-admin principals, or use a permissions boundary on the passed
+    role so the SageMaker compute cannot exceed least privilege.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "passrole_createendpoint": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.passrole_createendpoint.present
+      op: eq
+      value: true
+tests:
+  - name: user with SageMaker CREATEENDPOINT PassRole escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            passrole_createendpoint:
+              present: true
+              target_role: arn:aws:iam::111122223333:role/sagemaker-exec
+              permission_delta:
+                - s3:*
+                - secretsmanager:GetSecretValue
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            passrole_createendpoint:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 38 per-technique controls covering the aggregated Prowler check.

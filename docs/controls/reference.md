@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2662
-**Pack hash:** `14ee35e3a65749f38325fe2bfeda993b10128b1e6bdd372e938eed42cfdf3d8b`
+**Total controls:** 2667
+**Pack hash:** `7e1c3adb327b01b397ba700812c4dbeeea2557e8a9d6baffece4666a85144483`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 273 |
-| high | 1157 |
+| critical | 274 |
+| high | 1161 |
 | info | 16 |
 | low | 204 |
 | medium | 1012 |
@@ -26,7 +26,7 @@
 | exposure | 1193 |
 | governance | 578 |
 | hygiene | 18 |
-| identity | 417 |
+| identity | 422 |
 | lifecycle | 31 |
 | network | 32 |
 | resilience | 33 |
@@ -22143,6 +22143,21 @@ Principals with iam:PassRole on a role R plus glue:CreateDevEndpoint can escalat
 
 ---
 
+### CTL.IAM.ESCALATE.PASSROLE.CREATEENDPOINT.001
+
+**Principal Must Not Escalate via SageMaker Inference Endpoint Execution Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with iam:PassRole on a role R and sagemaker:CreateEndpointConfig + sagemaker:CreateEndpoint can create a SageMaker endpoint configuration and endpoint under role R with an attacker-controlled model/container; the inference container runs as R, so it reads R's credentials from the container credential endpoint and exfiltrates them. The SageMaker compute executes under R, so any code or container the principal controls runs with R's authority. When R's effective permissions exceed the principal's own, this is a privilege escalation path. Same IAM structure as the other PassRole compute-execution controls (Lambda, EC2, Glue, CloudFormation, Data Pipeline) — only the SageMaker action differs. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation enumerate the SageMaker variants; Bishop Fox iam-vulnerable ships them as privesc-sageMaker* users.
+
+**Remediation:** Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or restrict it with a Condition (`iam:PassedToService == sagemaker.amazonaws.com` plus a narrowly-scoped Resource ARN set). Alternatively remove the SageMaker create permission from non-admin principals, or use a permissions boundary on the passed role so the SageMaker compute cannot exceed least privilege.
+
+---
+
 ### CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001
 
 **Principal Must Not Escalate via Lambda CreateFunction Execution Role**
@@ -22155,6 +22170,21 @@ Principals with iam:PassRole on a role R plus glue:CreateDevEndpoint can escalat
 Principals with iam:PassRole on a role R, lambda:CreateFunction, and a path to invoke the function (lambda:InvokeFunction directly, creation of a function URL, or wiring to another trigger) can escalate to R's permissions. The created Lambda executes under R, so any code the principal uploads runs with R's authority. When R's effective permissions exceed the principal's own, this is a privilege escalation path. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate this technique. The invocation step is folded into the .present boolean upstream — a CreateFunction grant without any invocation path is not an escalation; the diagnostic fields expose which invocation vector was observed.
 
 **Remediation:** Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or remove lambda:CreateFunction. If broader function-creation is required for deployment workflows, restrict iam:PassRole with a Condition (`iam:PassedToService == lambda.amazonaws.com` plus a narrowly- scoped Resource ARN set). Alternatively, deny lambda:InvokeFunction and lambda:CreateFunctionUrlConfig on non-admin principals so the created function cannot be triggered.
+
+---
+
+### CTL.IAM.ESCALATE.PASSROLE.CREATENOTEBOOK.001
+
+**Principal Must Not Escalate via SageMaker Notebook CreateNotebookInstance Execution Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with iam:PassRole on a role R and sagemaker:CreateNotebookInstance can create a SageMaker notebook instance under role R, then open the Jupyter UI (via sagemaker:CreatePresignedNotebookInstanceUrl) and run arbitrary code from a notebook cell or terminal with R's credentials, read from the instance metadata / attached role. The SageMaker compute executes under R, so any code or container the principal controls runs with R's authority. When R's effective permissions exceed the principal's own, this is a privilege escalation path. Same IAM structure as the other PassRole compute-execution controls (Lambda, EC2, Glue, CloudFormation, Data Pipeline) — only the SageMaker action differs. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation enumerate the SageMaker variants; Bishop Fox iam-vulnerable ships them as privesc-sageMaker* users.
+
+**Remediation:** Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or restrict it with a Condition (`iam:PassedToService == sagemaker.amazonaws.com` plus a narrowly-scoped Resource ARN set). Alternatively remove the SageMaker create permission from non-admin principals, or use a permissions boundary on the passed role so the SageMaker compute cannot exceed least privilege.
 
 ---
 
@@ -22173,6 +22203,21 @@ Principals with iam:PassRole on a role R plus datapipeline:CreatePipeline and da
 
 ---
 
+### CTL.IAM.ESCALATE.PASSROLE.CREATEPROCESSINGJOB.001
+
+**Principal Must Not Escalate via SageMaker Processing CreateProcessingJob Execution Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with iam:PassRole on a role R and sagemaker:CreateProcessingJob can submit a SageMaker processing job under role R with an attacker-controlled container image; the processing container runs as R, so its entrypoint reads R's credentials from the container credential endpoint and exfiltrates them. The SageMaker compute executes under R, so any code or container the principal controls runs with R's authority. When R's effective permissions exceed the principal's own, this is a privilege escalation path. Same IAM structure as the other PassRole compute-execution controls (Lambda, EC2, Glue, CloudFormation, Data Pipeline) — only the SageMaker action differs. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation enumerate the SageMaker variants; Bishop Fox iam-vulnerable ships them as privesc-sageMaker* users.
+
+**Remediation:** Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or restrict it with a Condition (`iam:PassedToService == sagemaker.amazonaws.com` plus a narrowly-scoped Resource ARN set). Alternatively remove the SageMaker create permission from non-admin principals, or use a permissions boundary on the passed role so the SageMaker compute cannot exceed least privilege.
+
+---
+
 ### CTL.IAM.ESCALATE.PASSROLE.CREATESTACK.001
 
 **Principal Must Not Escalate via CloudFormation CreateStack**
@@ -22185,6 +22230,21 @@ Principals with iam:PassRole on a role R plus datapipeline:CreatePipeline and da
 Principals with iam:PassRole on a role R plus cloudformation:CreateStack (without a condition that denies CAPABILITY_IAM / CAPABILITY_NAMED_IAM) can escalate to R's permissions by submitting a template that CloudFormation executes under R. When R's effective permissions exceed the principal's own, this is a privilege escalation path. The attacker submits a template that performs IAM mutations (attach user policy, put user policy, create access key), and CloudFormation executes those mutations under R. The principal never gains R directly — but gains R's authority through CloudFormation's template execution.
 
 **Remediation:** Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or restrict cloudformation:CreateStack with a condition that denies CAPABILITY_IAM / CAPABILITY_NAMED_IAM. Alternatively, remove the escalation-enabling permissions from the target role (iam:PutUserPolicy, iam:AttachUserPolicy, iam:CreateAccessKey, iam:UpdateAssumeRolePolicy).
+
+---
+
+### CTL.IAM.ESCALATE.PASSROLE.CREATETRAININGJOB.001
+
+**Principal Must Not Escalate via SageMaker Training CreateTrainingJob Execution Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with iam:PassRole on a role R and sagemaker:CreateTrainingJob can submit a SageMaker training job under role R with an attacker-controlled container image; the training container runs as R, so its entrypoint reads R's credentials from the container credential endpoint and exfiltrates them. The SageMaker compute executes under R, so any code or container the principal controls runs with R's authority. When R's effective permissions exceed the principal's own, this is a privilege escalation path. Same IAM structure as the other PassRole compute-execution controls (Lambda, EC2, Glue, CloudFormation, Data Pipeline) — only the SageMaker action differs. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation enumerate the SageMaker variants; Bishop Fox iam-vulnerable ships them as privesc-sageMaker* users.
+
+**Remediation:** Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or restrict it with a Condition (`iam:PassedToService == sagemaker.amazonaws.com` plus a narrowly-scoped Resource ARN set). Alternatively remove the SageMaker create permission from non-admin principals, or use a permissions boundary on the passed role so the SageMaker compute cannot exceed least privilege.
 
 ---
 
@@ -22292,6 +22352,21 @@ Scope: gated on `identity.kind == "user"`. The `iam:PutUserPolicy` AWS action ta
 A principal with `iam:ResyncMFADevice` whose Resource field reaches another IAM user — one whose attached permissions exceed the principal's own — can resynchronize or manipulate that user's MFA device. In combination with a password reset (`iam:UpdateLoginProfile`, covered separately) this clears the MFA barrier on console login; on its own it enables temporary MFA bypass by forcing the device into a resync window where a chosen code pair is accepted. This is one of Rhino Security Labs' credential-manipulation techniques and is covered by Prowler's iam_policy_allows_privilege_escalation and Pacu's iam__privesc_scan. The finding fires whenever the permission reaches a privileged user; whether the attack has already been chained with a password reset is a RiskEngine-level compounding concern, not something the single-resource control gates on.
 
 **Remediation:** Scope `iam:ResyncMFADevice` to the principal's own user ARN (or remove it from non-admin principals). MFA-device management is an admin-role operation; direct user grants for it are rarely intentional. Alert on CloudTrail `ResyncMFADevice` events where the subject user differs from the caller.
+
+---
+
+### CTL.IAM.ESCALATE.SENDSSHPUBLICKEY.001
+
+**Principal Must Not Escalate via ec2-instance-connect:SendSSHPublicKey**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
+
+Principals with `ec2-instance-connect:SendSSHPublicKey` reaching an EC2 instance whose instance-profile role carries permissions exceeding the principal's own can escalate. The principal pushes a temporary SSH public key to the instance via the EC2 Instance Connect API (valid ~60 seconds), opens an SSH session within that window, and reads the instance-profile role's credentials from the Instance Metadata Service (IMDS), then operates with that role's full authority. Unlike `ssm:SendCommand` / `ssm:StartSession` (control- plane code execution, no SSH), this technique establishes an interactive SSH session and requires no SSM agent — only that EC2 Instance Connect is installed on the instance. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation enumerate it; Bishop Fox iam-vulnerable ships it as privesc-ec2InstanceConnect.
+
+**Remediation:** Scope `ec2-instance-connect:SendSSHPublicKey` (and `SendSerialConsoleSSHPublicKey`) to specific instance ARNs via resource conditions, or restrict it with an `ec2:osuser` / `aws:ResourceTag` condition so it cannot reach instances whose instance-profile role exceeds the principal's permissions. Enforce IMDSv2 with a low hop limit (CTL.EC2.IMDS.HOPLIMIT.001) to raise the cost of credential theft, and prefer SSM Session Manager (logged, keyless) over EC2 Instance Connect where interactive access is required.
 
 ---
 
