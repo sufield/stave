@@ -367,6 +367,72 @@
             }
           }
         },
+        "mitre_attack": {
+          "type": "array",
+          "title": "MITRE ATT&CK Mappings",
+          "description": "Structured MITRE ATT&CK technique mappings with sub-technique precision. Provides machine-readable technique IDs for cross-tool correlation. Supplements corpus_reference (which is a free-text citation string).",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name", "tactic"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^T[0-9]{4}(\\.[0-9]{3})?$",
+                "title": "Technique ID",
+                "description": "MITRE ATT&CK technique or sub-technique ID (e.g., T1098.001, T1525)."
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "title": "Technique Name",
+                "description": "Human-readable MITRE ATT&CK technique name."
+              },
+              "tactic": {
+                "type": "string",
+                "minLength": 1,
+                "title": "Tactic",
+                "description": "MITRE ATT&CK tactic (e.g., privilege-escalation, persistence)."
+              }
+            }
+          }
+        },
+        "validated_against": {
+          "type": "array",
+          "title": "Lab Validation Records",
+          "description": "Records of vendor lab environments where this control's detection was verified. Links controls to specific lab exercises for traceability.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["vendor", "lab", "result", "verified"],
+            "properties": {
+              "vendor": {
+                "type": "string",
+                "minLength": 1,
+                "title": "Vendor",
+                "description": "Lab vendor name (e.g., datadog, bishopfox)."
+              },
+              "lab": {
+                "type": "string",
+                "minLength": 1,
+                "title": "Lab Exercise",
+                "description": "Lab exercise identifier (e.g., iam-002-to-admin, privesc4-CreateAccessKey)."
+              },
+              "result": {
+                "type": "string",
+                "enum": ["detected", "partial", "missed"],
+                "title": "Detection Result",
+                "description": "Whether the control detected the technique in the lab."
+              },
+              "verified": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+                "title": "Verification Date",
+                "description": "ISO 8601 date when the verification was performed."
+              }
+            }
+          }
+        },
         "alternatives": {
           "type": "array",
           "title": "Alternative-Tool Coverage",

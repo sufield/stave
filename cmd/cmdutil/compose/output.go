@@ -13,11 +13,11 @@ import (
 )
 
 // DefaultFindingWriter is the standard implementation for finding marshalers.
-func DefaultFindingWriter(format appcontracts.OutputFormat, _ bool) (appcontracts.FindingMarshaler, error) {
+func DefaultFindingWriter(format appcontracts.OutputFormat, verbose bool) (appcontracts.FindingMarshaler, error) {
 	const indented = true
 	switch format {
 	case appcontracts.FormatText:
-		return &outtext.FindingWriter{}, nil
+		return &outtext.FindingWriter{Verbose: verbose}, nil
 	case appcontracts.FormatJSON:
 		return outjson.NewFindingWriter(indented), nil
 	case appcontracts.FormatSARIF:

@@ -28,6 +28,8 @@ type yamlControlDefinition struct {
 	Exposure             *yamlExposure        `yaml:"exposure,omitempty"`
 	ObservationFields    []string             `yaml:"observation_fields,omitempty"`
 	Alternatives         []yamlAlternative    `yaml:"alternatives,omitempty"`
+	MitreAttack          []yamlMitreAttack    `yaml:"mitre_attack,omitempty"`
+	ValidatedAgainst     []yamlLabValidation  `yaml:"validated_against,omitempty"`
 	Tests                []policy.ControlTest `yaml:"tests,omitempty"`
 
 	// Defect / Infection / Failure carry the authored triage
@@ -102,4 +104,17 @@ type yamlRemediationSpec struct {
 type yamlExposure struct {
 	Type           string `yaml:"type"`
 	PrincipalScope string `yaml:"principal_scope"`
+}
+
+type yamlMitreAttack struct {
+	ID     string `yaml:"id"`
+	Name   string `yaml:"name"`
+	Tactic string `yaml:"tactic"`
+}
+
+type yamlLabValidation struct {
+	Vendor   string `yaml:"vendor"`
+	Lab      string `yaml:"lab"`
+	Result   string `yaml:"result"`
+	Verified string `yaml:"verified"`
 }

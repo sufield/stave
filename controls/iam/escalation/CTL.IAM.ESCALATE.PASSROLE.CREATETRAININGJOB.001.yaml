@@ -14,7 +14,7 @@ description: >
 domain: identity
 severity: high
 scope: compound
-corpus_reference: MITRE:T1098
+corpus_reference: MITRE:T1578.002
 compliance:
   owasp_nhi: "NHI5"
   soc2: "CC6.1"
@@ -69,6 +69,15 @@ remediation:
         }
       }
     }
+mitre_attack:
+  - id: T1578.002
+    name: "Modify Cloud Compute Infrastructure: Create Cloud Instance"
+    tactic: defense-evasion
+validated_against:
+  - vendor: bishopfox
+    lab: privesc-sageMakerTraining
+    result: detected
+    verified: "2026-05-30"
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.passrole_createtrainingjob.present

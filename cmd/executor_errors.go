@@ -50,12 +50,11 @@ var sentinelTemplates = map[int]errorTemplate{
 	},
 }
 
-func (a *App) writeCommandError(err error, args []string) {
+func (a *App) writeCommandError(err error) {
 	if err == nil {
 		return
 	}
-	errMsg := ensureFirstRunRunHint(err.Error(), args)
-	errMsg = a.sanitizeExecuteMessage(errMsg)
+	errMsg := a.sanitizeExecuteMessage(err.Error())
 	a.writeErrorInfo(a.errorInfoFromError(err, errMsg))
 }
 

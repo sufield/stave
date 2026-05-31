@@ -47,11 +47,10 @@ func (a *App) execute() {
 	// consumers see the resolved command name. Root.SetArgs writes
 	// to Cobra's internal slot but does NOT mutate os.Args; the
 	// earlier `args := os.Args[1:]` after expandAliasIfMatch left
-	// the caller's view at the pre-expansion alias name, so the
-	// first-run hint, no-project hint, and session persistence
-	// all keyed off "enf" instead of "enforce" when the user
-	// invoked `stave enf ...`. Returning the resolved argv keeps
-	// the two views in lockstep.
+	// the caller's view at the pre-expansion alias name, so
+	// session persistence keyed off "enf" instead of "enforce"
+	// when the user invoked `stave enf ...`. Returning the
+	// resolved argv keeps the two views in lockstep.
 	expandedArgs := a.expandAliasIfMatch()
 	// Guard the [1:] slice. expandAliasIfMatch normally returns os.Args
 	// (length ≥ 1: the binary name) or `slices.Concat(tokens, os.Args[2:])`
@@ -65,8 +64,6 @@ func (a *App) execute() {
 		args = expandedArgs[1:]
 	}
 
-	showFirstRunHint, firstRunMarkerPath := prepareFirstRunHint(args)
-
 	cleanup := a.installInterruptHandler()
 	a.cleanupInterrupt.Store(&cleanup)
 	defer func() {
@@ -76,7 +73,7 @@ func (a *App) execute() {
 	}()
 	defer a.recoverExecutePanic()
 
-	a.executeRootCommand(args)
+	a.executeRootCommand()
 
 	// If a signal canceled the root context, exit with the interrupt code.
 	// Deferred cleanup (cleanupInterrupt, recoverExecutePanic) runs
@@ -89,7 +86,7 @@ func (a *App) execute() {
 		return
 	}
 
-	a.finalizeExecute(args, showFirstRunHint, firstRunMarkerPath)
+	a.finalizeExecute(args)
 }
 
 // installInterruptHandler uses os.Stderr directly because signal handlers
@@ -195,10 +192,10 @@ func (a *App) installInterruptHandler() func() {
 	return cleanup
 }
 
-func (a *App) executeRootCommand(args []string) {
+func (a *App) executeRootCommand() {
 	if err := a.Root.Execute(); err != nil {
 		err = a.suggestCommandIfUnknown(err)
-		a.handleExecutionError(err, args)
+		a.handleExecutionError(err)
 	}
 }
 
@@ -224,7 +221,7 @@ func collectVisibleCommandNames(root *cobra.Command) []string {
 	return names
 }
 
-func (a *App) handleExecutionError(err error, args []string) {
+func (a *App) handleExecutionError(err error) {
 	exitCode := ExitCode(err)
 
 	// Log only the root error message, not presentation decoration
@@ -288,7 +285,7 @@ func (a *App) handleExecutionError(err error, args []string) {
 		// this entirely — the originating command already
 		// printed the actionable diagnostics, so a stderr
 		// banner duplicated the message.
-		a.writeCommandError(err, args)
+		a.writeCommandError(err)
 	}
 
 	// postRun is skipped on the error-exit path (Cobra's RunE returned
@@ -335,7 +332,7 @@ func (a *App) cleanupBeforeExit() {
 	})
 }
 
-func (a *App) finalizeExecute(args []string, showFirstRunHint bool, firstRunMarkerPath string) {
+func (a *App) finalizeExecute(args []string) {
 	// Release the bootstrap-allocated context so its goroutine and any
 	// timer associated with WithCancel are reclaimed. Without this, a
 	// normal (non-signal) command exit leaves the cancelCtx pinned for
@@ -346,8 +343,6 @@ func (a *App) finalizeExecute(args []string, showFirstRunHint bool, firstRunMark
 	if cancel := a.cancel.Swap(nil); cancel != nil {
 		(*cancel)()
 	}
-	markFirstRunHintSeenIfNeeded(showFirstRunHint, firstRunMarkerPath)
-	a.printNoProjectHintIfNeeded(args)
 
 	// Resolver failures are non-fatal during finalization — the rest of
 	// the command already ran successfully; we just lose

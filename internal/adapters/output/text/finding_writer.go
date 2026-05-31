@@ -29,7 +29,9 @@ import (
 )
 
 // FindingWriter marshals findings as human-readable text.
-type FindingWriter struct{}
+type FindingWriter struct {
+	Verbose bool
+}
 
 var _ appcontracts.FindingMarshaler = (*FindingWriter)(nil)
 
@@ -43,6 +45,13 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 	if enriched == nil {
 		return nil, errors.New("text: nil EnrichedResult")
 	}
+	if w.Verbose {
+		return w.marshalVerbose(enriched)
+	}
+	return w.marshalConcise(enriched)
+}
+
+func (w *FindingWriter) marshalVerbose(enriched *appcontracts.EnrichedResult) ([]byte, error) {
 	var buf bytes.Buffer
 	d := &drawer{w: &buf}
 	result := enriched.Result
@@ -77,6 +86,86 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 		return nil, d.err
 	}
 	return buf.Bytes(), nil
+}
+
+func (w *FindingWriter) marshalConcise(enriched *appcontracts.EnrichedResult) ([]byte, error) {
+	var buf bytes.Buffer
+	d := &drawer{w: &buf}
+	result := enriched.Result
+
+	w.writeHeader(d, &result)
+	if len(result.Findings) == 0 {
+		w.writeNoViolationsSummary(d)
+		if d.err != nil {
+			return nil, d.err
+		}
+		return buf.Bytes(), nil
+	}
+
+	w.writeConciseTable(d, enriched)
+
+	if len(result.ChainFindings) > 0 {
+		d.f("\nCompound Chains: %d\n", len(result.ChainFindings))
+		for _, cf := range result.ChainFindings {
+			d.f("  [%s] %s\n", cf.Severity, cf.ChainID)
+		}
+	}
+
+	if !env.Demo.IsTrue() {
+		d.f("\nRun with --verbose for full evidence, reasoning, and remediation.\n")
+	}
+
+	if d.err != nil {
+		return nil, d.err
+	}
+	return buf.Bytes(), nil
+}
+
+func (w *FindingWriter) writeConciseTable(d *drawer, enriched *appcontracts.EnrichedResult) {
+	d.ln("Findings")
+	d.ln("--------")
+	d.f("  %-4s %-10s %-12s %-40s %s\n", "#", "Severity", "MITRE", "Control", "Asset")
+	for i, f := range enriched.Findings {
+		mitre := extractMITRE(f.CorpusReference)
+		control := shortControlID(string(f.ControlID))
+		assetName := shortAssetID(string(f.AssetID))
+		d.f("  %-4d %-10s %-12s %-40s %s\n",
+			i+1,
+			f.ControlSeverity,
+			mitre,
+			control,
+			assetName,
+		)
+	}
+}
+
+func extractMITRE(ref string) string {
+	if strings.HasPrefix(ref, "MITRE:") {
+		return ref[len("MITRE:"):]
+	}
+	return ""
+}
+
+func shortControlID(id string) string {
+	// Strip the CTL.<domain>. prefix if present, keep the rest.
+	// CTL.IAM.ESCALATE.CREATEACCESSKEY.001 → ESCALATE.CREATEACCESSKEY.001
+	// CTL.IAM.POLICY.ADMIN.001 → POLICY.ADMIN.001
+	// CTL.S3.PUBLIC.READ.001 → PUBLIC.READ.001
+	parts := strings.Split(id, ".")
+	if len(parts) > 3 && parts[0] == "CTL" {
+		return strings.Join(parts[2:], ".")
+	}
+	return id
+}
+
+func shortAssetID(id string) string {
+	if idx := strings.LastIndex(id, "/"); idx >= 0 {
+		return id[idx+1:]
+	}
+	if idx := strings.LastIndex(id, ":"); idx >= 0 {
+		return id[idx+1:]
+	}
+	return id
 }
 
 func (w *FindingWriter) writeHeader(d *drawer, result *evaluation.ComplianceReport) {

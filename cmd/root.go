@@ -289,10 +289,6 @@ const (
 	CLILockfile       = metadata.CLILockfile
 )
 
-func cliCommand(command string) string {
-	return metadata.Command(command)
-}
-
 // ExitCode delegates to ui.ExitCode for centralized exit code logic.
 func ExitCode(err error) int {
 	return ui.ExitCode(err)

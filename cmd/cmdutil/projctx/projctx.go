@@ -24,7 +24,7 @@ const (
 )
 
 // ErrNotInProject is returned when the current directory is not inside a Stave project.
-var ErrNotInProject = errors.New("not inside a Stave project; run `stave init` first")
+var ErrNotInProject = errors.New("not inside a Stave project")
 
 // --- Context Resolver ---
 

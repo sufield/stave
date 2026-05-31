@@ -21,9 +21,7 @@ import (
 // `args` variable in sync with what Cobra actually parsed. The earlier
 // shape called Root.SetArgs() in-place but left the caller's `args`
 // pointing at the pre-expansion form, which made downstream consumers
-// (writeCommandError, prepareFirstRunHint, ensureFirstRunRunHint)
-// look at the alias name rather than the resolved command — the
-// first-run hint then misclassified `stave myalias` invocations.
+// look at the alias name rather than the resolved command.
 // When no expansion happens the function returns os.Args unchanged.
 func (a *App) expandAliasIfMatch() []string {
 	// Empty-string guard: os.Args[1] could be the empty string when

@@ -18,7 +18,7 @@ import (
 )
 
 func TestFindingWriter_NoViolations(t *testing.T) {
-	w := &FindingWriter{}
+	w := &FindingWriter{Verbose: true}
 	enricher := remediation.NewPlanner()
 	result := evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
@@ -58,7 +58,7 @@ func TestFindingWriter_NoViolations(t *testing.T) {
 }
 
 func TestFindingWriter_ViolationsWithSections(t *testing.T) {
-	w := &FindingWriter{}
+	w := &FindingWriter{Verbose: true}
 	enricher := remediation.NewPlanner()
 	sanitizer := sanitize.New(sanitize.WithIDSanitization(true))
 	now := time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC)
@@ -151,7 +151,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 }
 
 func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
-	w := &FindingWriter{}
+	w := &FindingWriter{Verbose: true}
 	enricher := remediation.NewPlanner()
 	now := time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC)
 

@@ -85,11 +85,6 @@ var (
 		Description: "Suppress hints, tips, and next-step suggestions for demo/tutorial output",
 		Category:    "config",
 	}
-	FirstRunHintFile = Entry{
-		Name:        "STAVE_FIRST_RUN_HINT_FILE",
-		Description: "Override path to first-run hint marker file",
-		Category:    "config",
-	}
 	MaxUnsafe = Entry{
 		Name:         "STAVE_MAX_UNSAFE",
 		Description:  "Override default max-unsafe duration threshold",
@@ -160,7 +155,6 @@ var all = []Entry{
 	DevValidateFindings,
 	DocsURL,
 	Demo,
-	FirstRunHintFile,
 	Format,
 	IssuesURL,
 	MaxUnsafe,

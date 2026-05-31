@@ -20,6 +20,7 @@ scope_tags:
   - iam
 type: unsafe_state
 classification: state_assertion
+corpus_reference: MITRE:T1078.004
 applicable_asset_types:
   - aws_iam_user
 params:
@@ -41,6 +42,19 @@ remediation:
         }
       }
     }
+mitre_attack:
+  - id: T1078.004
+    name: "Valid Accounts: Cloud Accounts"
+    tactic: privilege-escalation
+validated_against:
+  - vendor: datadog
+    lab: iam-002-to-admin
+    result: detected
+    verified: "2026-05-29"
+  - vendor: datadog
+    lab: lambda-004-to-iam-002
+    result: detected
+    verified: "2026-05-29"
 unsafe_predicate:
   all:
     - field: properties.identity.kind

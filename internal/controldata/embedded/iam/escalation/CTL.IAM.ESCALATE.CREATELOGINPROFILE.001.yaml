@@ -17,7 +17,7 @@ description: >
 domain: identity
 severity: critical
 scope: compound
-corpus_reference: MITRE:T1098
+corpus_reference: MITRE:T1098.001
 compliance:
   owasp_nhi: "NHI5"
   soc2: "CC6.1"
@@ -70,6 +70,15 @@ remediation:
         }
       }
     }
+mitre_attack:
+  - id: T1098.001
+    name: "Account Manipulation: Additional Cloud Credentials"
+    tactic: privilege-escalation
+validated_against:
+  - vendor: bishopfox
+    lab: privesc5-CreateLoginProfile
+    result: detected
+    verified: "2026-05-30"
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.create_login_profile.present

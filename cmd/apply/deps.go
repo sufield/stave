@@ -173,7 +173,7 @@ type adapters struct {
 }
 
 func (b *Builder) buildAdapters() (adapters, error) {
-	marshaler, err := b.NewFindingWriter(b.Format, false)
+	marshaler, err := b.NewFindingWriter(b.Format, b.Opts.Verbose)
 	if err != nil {
 		return adapters{}, fmt.Errorf("create finding writer: %w", err)
 	}

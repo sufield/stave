@@ -14,7 +14,7 @@ description: >
 domain: identity
 severity: high
 scope: compound
-corpus_reference: MITRE:T1098
+corpus_reference: MITRE:T1195.002
 compliance:
   owasp_nhi: "NHI5"
   soc2: "CC6.1"
@@ -69,6 +69,15 @@ remediation:
         }
       }
     }
+mitre_attack:
+  - id: T1195.002
+    name: "Supply Chain Compromise: Compromise Software Supply Chain"
+    tactic: initial-access
+validated_against:
+  - vendor: bishopfox
+    lab: privesc-codeBuild
+    result: detected
+    verified: "2026-05-30"
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.startbuild_source_write.present

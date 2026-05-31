@@ -14,7 +14,7 @@ description: >
 domain: identity
 severity: high
 scope: compound
-corpus_reference: MITRE:T1098
+corpus_reference: MITRE:T1525
 compliance:
   owasp_nhi: "NHI5"
   soc2: "CC6.1"
@@ -69,6 +69,19 @@ remediation:
         }
       }
     }
+mitre_attack:
+  - id: T1525
+    name: "Implant Internal Image"
+    tactic: persistence
+validated_against:
+  - vendor: datadog
+    lab: lambda-004-to-iam-002
+    result: detected
+    verified: "2026-05-29"
+  - vendor: bishopfox
+    lab: privesc17-EditLambdaFunction
+    result: detected
+    verified: "2026-05-30"
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.editlambda.present

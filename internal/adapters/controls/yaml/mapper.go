@@ -44,6 +44,8 @@ func (y yamlControlDefinition) ToDomain() (policy.ControlDefinition, error) {
 		Exposure:             exp,
 		ObservationFields:    y.ObservationFields,
 		Alternatives:         alternativesToDomain(y.Alternatives),
+		MitreAttack:          mitreAttackToDomain(y.MitreAttack),
+		ValidatedAgainst:     labValidationToDomain(y.ValidatedAgainst),
 		Tests:                y.Tests,
 		Defect:               y.Defect,
 		Infection:            y.Infection,
@@ -261,6 +263,37 @@ func exposureToDomain(y *yamlExposure) (*policy.Exposure, error) {
 // legitimate catalog entries.
 func asCatalogExposureType(raw string) exposure.Type {
 	return exposure.Type(raw)
+}
+
+func mitreAttackToDomain(in []yamlMitreAttack) []policy.MitreAttackRef {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]policy.MitreAttackRef, len(in))
+	for i, m := range in {
+		out[i] = policy.MitreAttackRef{
+			ID:     m.ID,
+			Name:   m.Name,
+			Tactic: m.Tactic,
+		}
+	}
+	return out
+}
+
+func labValidationToDomain(in []yamlLabValidation) []policy.LabValidation {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]policy.LabValidation, len(in))
+	for i, v := range in {
+		out[i] = policy.LabValidation{
+			Vendor:   v.Vendor,
+			Lab:      v.Lab,
+			Result:   v.Result,
+			Verified: v.Verified,
+		}
+	}
+	return out
 }
 
 // UnmarshalControlDefinition unmarshals YAML bytes into a domain ControlDefinition.

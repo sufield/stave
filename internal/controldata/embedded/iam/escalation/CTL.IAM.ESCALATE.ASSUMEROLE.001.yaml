@@ -17,7 +17,7 @@ description: >
 domain: identity
 severity: critical
 scope: compound
-corpus_reference: MITRE:T1098
+corpus_reference: MITRE:T1550.001
 compliance:
   owasp_nhi: "NHI5"
   soc2: "CC6.1"
@@ -73,6 +73,15 @@ remediation:
         }
       }
     }
+mitre_attack:
+  - id: T1550.001
+    name: "Use Alternate Authentication Material: Application Access Token"
+    tactic: privilege-escalation
+validated_against:
+  - vendor: bishopfox
+    lab: privesc-AssumeRole
+    result: detected
+    verified: "2026-05-30"
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.assume_role.present

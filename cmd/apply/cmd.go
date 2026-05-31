@@ -108,6 +108,7 @@ type Options struct {
 	NewSince           string
 	SARIFBaseline      string
 	AssertRecent       string
+	Verbose            bool
 }
 
 // IsNewOnlyMode reports whether the run is in new-only mode —
@@ -285,6 +286,7 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.StringVar(&o.NewSince, "new-since", "", "Show only findings not present in assessments within this window (e.g. 7d)")
 	f.StringVar(&o.SARIFBaseline, "baseline", "", "SARIF baseline file for baseline state comparison")
 	f.StringVar(&o.AssertRecent, "assert-recent", "", "Fail if no snapshot newer than this duration (e.g. 48h)")
+	f.BoolVarP(&o.Verbose, "verbose", "v", false, "Show full evidence, reasoning, and remediation for each finding")
 }
 
 // validSLAPolicyValues is the closed set of accepted --sla-policy

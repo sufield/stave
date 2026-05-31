@@ -47,9 +47,11 @@ type ControlDefinition struct {
 	UnsafePredicateAlias string
 	Remediation          *RemediationSpec
 	Exposure             *Exposure
-	ObservationFields    []string      // property paths for compliance evidence extraction
-	Alternatives         []Alternative // mappings to alternative detection tools' checks
-	Tests                []ControlTest `yaml:"tests,omitempty" json:"-"`
+	ObservationFields    []string         // property paths for compliance evidence extraction
+	Alternatives         []Alternative    // mappings to alternative detection tools' checks
+	MitreAttack          []MitreAttackRef // structured MITRE ATT&CK technique mappings
+	ValidatedAgainst     []LabValidation  // vendor lab verification records
+	Tests                []ControlTest    `yaml:"tests,omitempty" json:"-"`
 
 	// Defect / Infection / Failure carry authored triage prose
 	// following Andreas Zeller's Why Programs Fail failure-theory
