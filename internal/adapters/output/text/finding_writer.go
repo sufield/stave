@@ -106,8 +106,8 @@ func (w *FindingWriter) marshalConcise(enriched *appcontracts.EnrichedResult) ([
 
 	if len(result.ChainFindings) > 0 {
 		d.f("\nCompound Chains: %d\n", len(result.ChainFindings))
-		for _, cf := range result.ChainFindings {
-			d.f("  [%s] %s\n", cf.Severity, cf.ChainID)
+		for i := range result.ChainFindings {
+			d.f("  [%s] %s\n", result.ChainFindings[i].Severity, result.ChainFindings[i].ChainID)
 		}
 	}
 
@@ -125,7 +125,8 @@ func (w *FindingWriter) writeConciseTable(d *drawer, enriched *appcontracts.Enri
 	d.ln("Findings")
 	d.ln("--------")
 	d.f("  %-4s %-10s %-12s %-40s %s\n", "#", "Severity", "MITRE", "Control", "Asset")
-	for i, f := range enriched.Findings {
+	for i := range enriched.Findings {
+		f := &enriched.Findings[i]
 		mitre := extractMITRE(f.CorpusReference)
 		control := shortControlID(string(f.ControlID))
 		assetName := shortAssetID(string(f.AssetID))
