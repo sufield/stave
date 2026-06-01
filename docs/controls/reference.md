@@ -22881,14 +22881,14 @@ The IAM account password policy must require uppercase, lowercase, numbers, and 
 
 ### CTL.IAM.PASSWORD.EXPIRATION.001
 
-**Password Policy Must Enforce Expiration**
+**Password Policy Must Enforce Expiration Within 90 Days**
 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
 - **Compliance:** cis_aws_v1.4.0: 1.11; cis_aws_v3.0: 1.11; fedramp_moderate: IA-5(1); hipaa: 164.312(a)(2)(i); iso_27001_2022: A.5.17; nist_800_53_r5: IA-5(1); nist_csf_2.0: PR.AA; pci_dss_v4.0: 8.3.9; soc2: CC6.1;
 
-IAM account password policy must enforce password expiration. A max_password_age of 0 means passwords never expire, allowing credentials to remain valid indefinitely. Compromised passwords that are never rotated give attackers persistent access. CIS AWS Foundations Benchmark requires max_password_age ≤ 90 days.
+IAM account password policy must enforce password expiration within 90 days. Two unsafe states: max_password_age = 0 (passwords never expire, credentials valid indefinitely) or max_password_age > 90 (expiration too infrequent, exceeds CIS AWS Foundations Benchmark threshold). Either gives compromised passwords an unnecessarily long validity window.
 
 **Remediation:** Set password expiration to 90 days or less: aws iam update-account-password-policy --max-password-age 90
 

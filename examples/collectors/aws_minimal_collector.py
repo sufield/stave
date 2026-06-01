@@ -80,6 +80,30 @@ def map_s3(sess, account_id):
             log = "LoggingEnabled" in s3.get_bucket_logging(Bucket=name)
         except ClientError:
             log = False
+        # In-transit enforcement: bucket policy denies non-SSL requests
+        in_transit = False
+        try:
+            pol = s3.get_bucket_policy(Bucket=name)
+            import json as _json
+            stmts = _json.loads(pol["Policy"]).get("Statement", [])
+            for st in stmts:
+                cond = st.get("Condition", {}).get("Bool", {})
+                if st.get("Effect") == "Deny" and cond.get("aws:SecureTransport") == "false":
+                    in_transit = True
+        except ClientError:
+            pass
+        # Public read access: bucket policy grants Principal:* read actions
+        public_read = False
+        try:
+            pol = s3.get_bucket_policy(Bucket=name)
+            import json as _json
+            stmts = _json.loads(pol["Policy"]).get("Statement", [])
+            for st in stmts:
+                princ = st.get("Principal", {})
+                if st.get("Effect") == "Allow" and (princ == "*" or (isinstance(princ, dict) and princ.get("AWS") == "*")):
+                    public_read = True
+        except ClientError:
+            pass
         out.append(asset(
             f"arn:aws:s3:::{name}", "aws_s3_bucket",
             {"storage": {
@@ -87,6 +111,8 @@ def map_s3(sess, account_id):
                 "name": name,
                 "versioning": {"enabled": ver},
                 "logging": {"enabled": log},
+                "encryption": {"in_transit_enforced": in_transit},
+                "access": {"public_read": public_read},
             }}))
     return out
 
@@ -138,7 +164,29 @@ def map_security_groups(sess, account_id):
     return out
 
 
-COLLECTORS = [map_password_policy, map_s3, map_security_groups]
+def map_iam_roles(sess, account_id):
+    iam = sess.client("iam")
+    out = []
+    for role in iam.list_roles().get("Roles", []):
+        name = role["RoleName"]
+        has_inline = len(iam.list_role_policies(RoleName=name).get("PolicyNames", [])) > 0
+        trust = role.get("AssumeRolePolicyDocument", {})
+        has_wildcard_trust = False
+        for st in trust.get("Statement", []):
+            p = st.get("Principal", {})
+            if p == "*" or (isinstance(p, dict) and p.get("AWS") == "*"):
+                has_wildcard_trust = True
+        out.append(asset(
+            role["Arn"], "aws_iam_role",
+            {"identity": {
+                "kind": "role",
+                "policies": {"has_inline_policies": has_inline},
+                "trust_policy": {"has_wildcard_principal": has_wildcard_trust},
+            }}))
+    return out
+
+
+COLLECTORS = [map_password_policy, map_s3, map_security_groups, map_iam_roles]
 
 
 def main():
