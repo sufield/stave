@@ -9,7 +9,7 @@ var iamRoleSchema = Schema{
 		{Path: "properties.identity.kind", Required: true,
 			Doc: "type discriminator; every IAM-role control gates on this"},
 		{Path: "properties.identity.trust_policy.has_cross_account_trust", Required: true,
-			Doc: "cross-account-trust detection — load-bearing for confused-deputy controls"},
+			Doc: "cross-account-trust detection — foundational for confused-deputy controls"},
 		{Path: "properties.identity.policies.service_wildcards_granted", Required: true,
 			Doc: "service-wildcard privilege detection"},
 		{Path: "properties.identity.vendor_trust.is_external_vendor", Required: false,

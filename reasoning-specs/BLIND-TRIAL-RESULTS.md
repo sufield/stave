@@ -49,7 +49,7 @@ The agent's confidence note flagged two spec gaps:
 Neither is a defect — the validation block was authored with
 ordering and whitespace explicitly in the `ignore:` list. The
 agent's flag confirms the spec's ignore-list lines are
-load-bearing; they prevent false-FAIL outcomes on a correct
+foundational; they prevent false-FAIL outcomes on a correct
 answer.
 
 ## Clingo — PASS (high confidence)

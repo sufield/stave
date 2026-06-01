@@ -17,7 +17,7 @@ infection: >
   permissions or a misconfigured cross-region replication
   silently moves plaintext through a region that residency
   rules did not authorize. The key's regional placement is
-  load-bearing for the data residency claim; residency
+  foundational for the data residency claim; residency
   requires every replica region to be a compliant region.
 failure: >
   Decryption capability exists outside the data-residency

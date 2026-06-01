@@ -97,7 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (Phase 1 + Phase 7 shipped, ~8.6% headline target wasn't
   met because catalog grew faster than compound — see
   `may8.md`). Pointer added to the substrate-vs-implementation
-  framing that reduces the load-bearing weight on the
+  framing that reduces the foundational weight on the
   share-percentage argument.
 
 - **Lambda-2 — environment-variable security, KMS deepening,

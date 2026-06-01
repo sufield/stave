@@ -38,7 +38,7 @@ func TestNewRenderer_UnknownFormatErrors(t *testing.T) {
 	}
 }
 
-// TestRenderers_HandleBothPayloadTypes is the load-bearing check for
+// TestRenderers_HandleBothPayloadTypes is the foundational check for
 // contract — JSONRenderer must accept both typeReport and listReport
 // (it just delegates to writeJSON which takes `any`), and the text
 // renderer must dispatch correctly between writeTypeText and

@@ -21,7 +21,7 @@ var frozenNow = time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
 
 // TestApply_LordofheavenBuiltinControls runs the library against
 // the lordofheaven snapshot using the embedded builtin catalog
-// (Config.ControlsDir empty). The expected shape is load-bearing
+// (Config.ControlsDir empty). The expected shape is foundational
 // for both prototypes: 42 findings after asset-type gating + the
 // collector's per-FindingID dedup, 18 Issues after consolidation,
 // NON_COMPLIANT status. The numbers dropped:

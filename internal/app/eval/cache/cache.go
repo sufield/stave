@@ -78,7 +78,7 @@ func DefaultCacheDir() (string, error) {
 //     when replayed later; the caller should re-run SLA annotation
 //     after a cache hit if it wants fresh deadlines.
 //
-// SourcePaths is load-bearing for correctness: the report embeds
+// SourcePaths is foundational for correctness: the report embeds
 // the controls / observations directory paths in Run.ResolvedPaths.
 // Two assessment runs with structurally identical inputs at
 // different on-disk locations (e.g. two e2e fixtures with the

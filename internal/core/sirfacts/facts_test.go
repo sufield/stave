@@ -813,7 +813,7 @@ func TestAssumeEdgeFacts_AsymmetricNoEmit(t *testing.T) {
 	}
 }
 
-// TestAssumeEdgeFacts_MultiHopChain pins the load-bearing case
+// TestAssumeEdgeFacts_MultiHopChain pins the foundational case
 // for multi-hop reasoning: a 3-hop A→B→C→D chain produces three
 // independent can_assume edges. Transitive reachability is the
 // SMT solver's job, not the extractor's; the extractor emits

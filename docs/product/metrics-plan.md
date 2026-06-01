@@ -6,7 +6,7 @@ Each metric section opens with the surveyed problem, names the solution formulat
 
 ## Standing architectural constraint
 
-Stave's core vocabulary is vendor-agnostic. Vendor-specific translation — AWS, GCP, Azure, Kubernetes — lives in adapter layers and does not propagate into the observation contract, control predicates, core scoring, or core dedup logic. When a metric's solution shape would require vendor vocabulary inside the core, that metric's implementation moves the vendor-specific portion to an adapter. This constraint is load-bearing for every metric below; when in tension with a metric's solution shape, the constraint wins and the metric's implementation shape adapts.
+Stave's core vocabulary is vendor-agnostic. Vendor-specific translation — AWS, GCP, Azure, Kubernetes — lives in adapter layers and does not propagate into the observation contract, control predicates, core scoring, or core dedup logic. When a metric's solution shape would require vendor vocabulary inside the core, that metric's implementation moves the vendor-specific portion to an adapter. This constraint is foundational for every metric below; when in tension with a metric's solution shape, the constraint wins and the metric's implementation shape adapts.
 
 ## Metric 1 — Prioritization: partial → full
 

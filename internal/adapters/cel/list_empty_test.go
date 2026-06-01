@@ -18,7 +18,7 @@ import (
 //	non-empty collection  → false
 //	non-collection (int/bool/number) → true (logically empty)
 //
-// The non-collection case is the load-bearing one: an upstream
+// The non-collection case is the foundational one: an upstream
 // extractor that emits an int where a list was expected used to
 // surface as a CEL runtime error and crash the predicate; now the
 // rule short-circuits to "empty" so evaluation stays robust.

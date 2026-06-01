@@ -10,7 +10,7 @@
 // per-asset-type Go structs. The full migration would let CEL
 // type-check predicates at compile time and eliminate the
 // translation/fields.go maintenance burden. This package alone
-// already delivers the load-bearing value: distinguishing
+// already delivers the foundational value: distinguishing
 // "extractor incomplete" from "asset compliant" via a structured
 // slog warning at the ingest boundary.
 //
@@ -91,7 +91,7 @@ func Lookup(t kernel.AssetType) (Schema, bool) {
 // ValidationResult is the outcome of one asset's validation pass.
 // Empty MissingRequired + empty MissingOptional means everything
 // the schema expects is present. Callers typically only act on
-// MissingRequired (the load-bearing signal).
+// MissingRequired (the foundational signal).
 type ValidationResult struct {
 	AssetID         asset.ID
 	AssetType       kernel.AssetType

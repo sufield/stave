@@ -128,7 +128,7 @@ func DetectChains(
 	// Sort by (chain id, scope id, asset id) so the output is deterministic
 	// across runs. Both the inner failure walk above and the bucket
 	// emission iterate maps with randomised order, so the sort is the
-	// load-bearing source of determinism for chain_findings output.
+	// foundational source of determinism for chain_findings output.
 	slices.SortFunc(findings, func(a, b findingsdata.CompoundFinding) int {
 		if c := strings.Compare(string(a.ChainID), string(b.ChainID)); c != 0 {
 			return c

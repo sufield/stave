@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2669
-**Pack hash:** `4e849290431cc86900910e293cd6def05b883b165db0e7d8d931f691ed9a181f`
+**Total controls:** 2670
+**Pack hash:** `08c864c03da827750ea0b74c8ff2ec867878802d4b10af6b8c4a0b3c1737732e`
 
 ## Summary
 
@@ -14,7 +14,7 @@
 | high | 1161 |
 | info | 16 |
 | low | 204 |
-| medium | 1013 |
+| medium | 1014 |
 
 | Domain | Count |
 |--------|-------|
@@ -26,7 +26,7 @@
 | exposure | 1193 |
 | governance | 578 |
 | hygiene | 18 |
-| identity | 424 |
+| identity | 425 |
 | lifecycle | 31 |
 | network | 32 |
 | resilience | 33 |
@@ -21499,7 +21499,7 @@ Expired SSL/TLS server certificates must be removed from IAM. Expired certificat
 
 A principal has a transitive role-assumption chain whose target is scheduled for deletion at a known future time. The chain is reachable now, but every consumer caching the reachability decision is stale once the deletion completes — the time-of-check / time-of-use pattern. After the deletion window closes, the chain has a future-ghost reference: any policy that re-evaluated against the cached chain would assume permissions that no longer exist (or — worse — that another team has recreated under the same ARN with different intent). Same ghost-reference primitive as CTL.SECRETS.GHOST.DELETION.REFERENCED.001, lifted from per-asset to multi-hop chain analysis. The .present boolean is folded upstream from Stave's chain walker, which stamps each emitted RoleChainFact with `scheduled_deletion_at` whenever the chain crosses an identity scheduled for future deletion (the earliest such timestamp wins per chain).
 
-**Remediation:** Decide intent: (a) if the deletion is unintended, cancel it and restore the role; (b) if intentional, remove the intermediate hops that lead to this role BEFORE the deletion window closes — typically by tightening sts:AssumeRole on the trust policies of the upstream roles, or by removing iam:PassRole grants that aim at the doomed role. After the deletion completes, audit any IaC / Terraform state that references the role's ARN; recreating the role under the same name is the load-bearing TOCTOU step the attacker would race for.
+**Remediation:** Decide intent: (a) if the deletion is unintended, cancel it and restore the role; (b) if intentional, remove the intermediate hops that lead to this role BEFORE the deletion window closes — typically by tightening sts:AssumeRole on the trust policies of the upstream roles, or by removing iam:PassRole grants that aim at the doomed role. After the deletion completes, audit any IaC / Terraform state that references the role's ARN; recreating the role under the same name is the foundational TOCTOU step the attacker would race for.
 
 ---
 
@@ -22876,6 +22876,21 @@ A delegated administrator account for an AWS service has permissions beyond what
 The IAM account password policy must require uppercase, lowercase, numbers, and symbols. Missing any character type requirement reduces the keyspace and makes passwords easier to crack.
 
 **Remediation:** Update the IAM password policy to require all four character types.
+
+---
+
+### CTL.IAM.PASSWORD.EXPIRATION.001
+
+**Password Policy Must Enforce Expiration**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v1.4.0: 1.11; cis_aws_v3.0: 1.11; fedramp_moderate: IA-5(1); hipaa: 164.312(a)(2)(i); iso_27001_2022: A.5.17; nist_800_53_r5: IA-5(1); nist_csf_2.0: PR.AA; pci_dss_v4.0: 8.3.9; soc2: CC6.1;
+
+IAM account password policy must enforce password expiration. A max_password_age of 0 means passwords never expire, allowing credentials to remain valid indefinitely. Compromised passwords that are never rotated give attackers persistent access. CIS AWS Foundations Benchmark requires max_password_age ≤ 90 days.
+
+**Remediation:** Set password expiration to 90 days or less: aws iam update-account-password-policy --max-password-age 90
 
 ---
 
@@ -28621,7 +28636,7 @@ OpenSearch domain has no CloudWatch alarm on `KMSKeyError` or `KMSKeyInaccessibl
 - **Domain:** detection
 - **Compliance:** fedramp_moderate: AU-12; iso_27001_2022: A.8.16; nist_800_53_r5: AU-12, SI-4; soc2: CC7.2, A1.1;
 
-OpenSearch domain has no CloudWatch alarms on master-node health metrics: `MasterReachableFromNode`, `MasterCPUUtilization`, or `MasterJVMMemoryPressure`. The master node drives shard allocation, cluster-state propagation, and routing — degradation here manifests as cluster-wide stalls. The set is load-bearing for any production-tier domain.
+OpenSearch domain has no CloudWatch alarms on master-node health metrics: `MasterReachableFromNode`, `MasterCPUUtilization`, or `MasterJVMMemoryPressure`. The master node drives shard allocation, cluster-state propagation, and routing — degradation here manifests as cluster-wide stalls. The set is foundational for any production-tier domain.
 
 **Remediation:** Create alarms: MasterReachableFromNode < 1 (page), MasterCPUUtilization > 80% sustained 15min (warn), MasterJVMMemoryPressure > 85% (page).
 

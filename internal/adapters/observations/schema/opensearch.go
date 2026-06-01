@@ -11,7 +11,7 @@ var opensearchSchema = Schema{
 		{Path: "properties.search_service.kind", Required: true,
 			Doc: "type discriminator; every opensearch control gates on this"},
 		{Path: "properties.search_service.access.fgac_enabled", Required: true,
-			Doc: "fine-grained access control — load-bearing for the access family"},
+			Doc: "fine-grained access control — foundational for the access family"},
 		{Path: "properties.search_service.audit.enabled", Required: true,
 			Doc: "audit-logging core for the audit control family"},
 		{Path: "properties.search_service.backup.manual_repo_registered", Required: false,

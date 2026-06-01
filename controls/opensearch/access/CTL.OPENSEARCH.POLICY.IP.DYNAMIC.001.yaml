@@ -77,7 +77,7 @@ infection: >
 failure: >
   Effectively unlocked access policy with the
   appearance of restriction. The allowlist is
-  load-bearing in compliance review but porous in
+  foundational in compliance review but porous in
   practice.
 tests:
   - name: dynamic isp range in allowlist fires

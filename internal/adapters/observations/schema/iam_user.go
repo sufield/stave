@@ -9,7 +9,7 @@ var iamUserSchema = Schema{
 		{Path: "properties.identity.kind", Required: true,
 			Doc: "type discriminator; every IAM-user control gates on this"},
 		{Path: "properties.identity.policies.has_admin_access", Required: true,
-			Doc: "admin-grant detection — load-bearing for the privilege controls"},
+			Doc: "admin-grant detection — foundational for the privilege controls"},
 		{Path: "properties.identity.policies.service_wildcards_granted", Required: true,
 			Doc: "service-wildcard privilege detection"},
 		{Path: "properties.identity.console_access.mfa_enabled", Required: false,

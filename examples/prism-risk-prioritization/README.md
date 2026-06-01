@@ -128,7 +128,7 @@ report needs. The Python multiplications shipped here are
 the closed-form solution for the same DTMC under
 sequential-step independence; the result agrees with what
 PRISM would compute for the same parameters. Switch to
-PRISM when temporal properties become load-bearing — the
+PRISM when temporal properties become foundational — the
 `model.pm` template documents the upgrade path. Today the
 calibrated constants are the lever; the verification engine
 is bookkeeping.

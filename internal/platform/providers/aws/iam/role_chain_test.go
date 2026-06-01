@@ -255,7 +255,7 @@ func trustDocTagConditional(t *testing.T, principal string) *PolicyDocument {
 	return &doc
 }
 
-// TestResolveChains_TagMutationPrivesc pins the load-bearing
+// TestResolveChains_TagMutationPrivesc pins the foundational
 // Iter 2 detection: a principal with iam:TagRole on a target
 // role whose trust policy is conditioned on aws:ResourceTag/*
 // can self-tag the role to satisfy the condition and assume
@@ -512,7 +512,7 @@ func trustDocServiceRaw(servicePrincipal string) string {
 }
 
 // TestResolveChains_LambdaExecutionRolePrivesc pins the
-// load-bearing Iter 3 detection: principal P with iam:PassRole
+// foundational Iter 3 detection: principal P with iam:PassRole
 // on R AND lambda:InvokeFunction on any function reaches R's
 // permissions by attaching R as a Lambda execution role and
 // invoking the function.
@@ -849,7 +849,7 @@ func TestExtractServiceTrusts_ServicePrincipalShapes(t *testing.T) {
 // admits every principal in the named account via
 // `Principal: AWS: arn:aws:iam::<acct>:root`. Built using the
 // real-world AWS shape so ExtractAWSTrustedPrincipals (which
-// probes the raw bytes) recognises it. This is the load-bearing
+// probes the raw bytes) recognises it. This is the foundational
 // test fixture for Iter 4: the iam.Statement parser drops the
 // Principal field, so a role using this trust pattern is invisible
 // to the legacy walker without the side-channel.
@@ -1352,7 +1352,7 @@ func TestExtractScheduledDeletions_ReadsCanonicalKeys(t *testing.T) {
 }
 
 // TestResolveChains_LambdaInvokeExisting_ConfusedDeputy pins the
-// load-bearing Iter 6 detection: a principal P with
+// foundational Iter 6 detection: a principal P with
 // `lambda:InvokeFunction` on a SPECIFIC existing function ARN
 // reaches the role bound to that function, even though P has no
 // iam:PassRole. This is the confused-deputy "use-existing"

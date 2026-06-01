@@ -195,7 +195,19 @@ stave apply --format json | stave ci gate --fail-on new
 
 ## Custom controls
 
-New controls are YAML — no Go changes. Write an `unsafe_predicate`, point `stave apply --controls ./my-controls` at the directory, and the engine evaluates them alongside the built-in catalog. See [authoring controls](docs/controls/authoring.md).
+New controls are YAML — no Go changes required. The `forge` toolchain handles the full lifecycle:
+
+```bash
+stave forge paths --snapshot obs.json --asset-type aws_s3_bucket    # 1. discover fields
+stave forge preview --snapshot obs.json --field ... --op eq --value true  # 2. test predicate
+stave forge new --id CTL.S3.TAGS.001 --name "..." --field ... --severity high  # 3. generate control + fixtures
+stave forge test --control controls/s3/... --pass fix-pass.json --fail fix-fail.json  # 4. TDD
+stave forge lint --control controls/s3/ --semantic --strict         # 5. static analysis
+stave validate --controls controls/ --observations obs/             # 6. structural check
+stave apply --controls ./my-controls --observations obs/            # 7. end-to-end proof
+```
+
+Controls are `unsafe_predicate:` match rules (`all:`/`any:` groups of `field`/`op`/`value`). Point `stave apply --controls ./my-controls` at any directory and the engine evaluates them alongside the built-in catalog. See [authoring controls](docs/controls/authoring.md).
 
 ## Built-in controls
 
@@ -209,7 +221,7 @@ Full reference and per-domain breakdowns: [`docs/controls/reference.md`](docs/co
 |---|---|
 | [Quickstart](docs/time-to-first-finding.md) | Get your first finding in 5 minutes |
 | [Building an extractor](docs/extractor-prompt.md) | Steampipe, CloudQuery, AWS Config, or custom |
-| [Authoring controls](docs/controls/authoring.md) | Write custom YAML controls |
+| [Authoring controls](docs/controls/authoring.md) | Write custom YAML controls with the forge toolchain |
 | [Pre-commit hook](docs/integrations/pre-commit.md) | Block unsafe configs before commit |
 | [Atlantis integration](docs/integrations/atlantis.md) | Evaluate Terraform plans before apply |
 | [Risk reasoning](docs/risk-reasoning.md) | Compound risk scoring and safety chains |

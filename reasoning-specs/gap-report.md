@@ -156,7 +156,7 @@ No defects. Spec passed first-try same-session; step probabilities exact-match, 
 
 ## Cross-cutting patterns
 
-1. **The `has_<property>` naming convention is load-bearing.** The Clingo failure was rooted in stripping the prefix. Future specs that reference per-asset boolean facts must include a note about the convention in their `required_fields:` block. The Soufflé and Prolog specs happened to escape because they referenced predicates the catalog also exports without the prefix (`allows_unauthenticated`, `maps_unauth_to`, `has_action`, `has_resource` — the last two have the prefix; the first two don't).
+1. **The `has_<property>` naming convention is foundational.** The Clingo failure was rooted in stripping the prefix. Future specs that reference per-asset boolean facts must include a note about the convention in their `required_fields:` block. The Soufflé and Prolog specs happened to escape because they referenced predicates the catalog also exports without the prefix (`allows_unauthenticated`, `maps_unauth_to`, `has_action`, `has_resource` — the last two have the prefix; the first two don't).
 
 2. **Cartesian-product semantics need to be stated explicitly.** The Prolog spec said "for every (resource, action) tuple derivable" — that was correct, but the inventory transcription mis-counted because the inventory author (me) assumed action-resource pairing was filtered by service compatibility. The catalog rule does NOT filter; the spec now states this explicitly with a worked example.
 

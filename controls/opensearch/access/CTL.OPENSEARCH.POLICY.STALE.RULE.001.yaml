@@ -71,7 +71,7 @@ infection: >
   IP / principal it allowed may have moved on but
   the allow path remains. Periodic review skips
   these rules because operators don't know which
-  are still load-bearing.
+  are still foundational.
 failure: >
   Allow-path debt. Policy review is incomplete
   because reviewers can't tell which temporary

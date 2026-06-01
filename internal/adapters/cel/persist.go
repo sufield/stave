@@ -35,7 +35,7 @@ import (
 // minor versions, even if rare). Format version is bumped if this
 // layout ever changes.
 //
-// The per-entry SHA is the load-bearing correctness check: every
+// The per-entry SHA is the foundational correctness check: every
 // load recomputes the SHA from the live expression string and
 // compares it against the on-disk header before handing the
 // CheckedExpr to env.Program. A mismatch means the cache file was

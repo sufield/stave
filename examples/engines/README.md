@@ -42,7 +42,7 @@ Stave's stable inputs are two formats:
   ```json
   {"fact_id":"...","subject":"...","predicate":"...","object":"...","source":"...","evidence":"...","provenance":{...}}
   ```
-  The `subject` / `predicate` / `object` fields are the load-bearing
+  The `subject` / `predicate` / `object` fields are the foundational
   triple; the rest is provenance metadata.
 
 - **`facts.smt2`** — SMT-LIB v2 declarations + assertions. Solver-portable

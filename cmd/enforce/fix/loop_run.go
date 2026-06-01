@@ -88,7 +88,7 @@ func (r *Runner) buildLoopInfra(req LoopRequest) (loopInfra, error) {
 
 // Loop delegates to the app-layer fix-loop service.
 func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
-	// r.service is the load-bearing dependency for the entire
+	// r.service is the foundational dependency for the entire
 	// fix-loop pipeline (verify, apply, verify-again). A nil
 	// service here means the runner was hand-constructed without
 	// going through the standard wiring; the next line would

@@ -9,7 +9,7 @@ description: >
   drives shard allocation, cluster-state
   propagation, and routing — degradation here
   manifests as cluster-wide stalls. The set is
-  load-bearing for any production-tier domain.
+  foundational for any production-tier domain.
 domain: detection
 severity: high
 compliance:

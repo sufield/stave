@@ -289,7 +289,7 @@ func remediationSpecFor(f *evaluation.Finding) policy.RemediationSpec {
 // using the same path the CLI uses: load the embedded alternative-
 // tool inventories and aggregate them against the active controls.
 // Inventory load errors are treated as absence — coverage posture
-// is decorative, not load-bearing.
+// is decorative, not foundational.
 func buildCoverage(controls []policy.ControlDefinition) CoveragePosture {
 	if len(controls) == 0 {
 		return CoveragePosture{}

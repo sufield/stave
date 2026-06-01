@@ -92,7 +92,7 @@ curl -fsSL -o tla2tools.jar \
 java -cp tla2tools.jar tlc2.TLC CognitoSafety.tla -config CognitoSafety.cfg
 ```
 
-Java 17+ recommended. The Python runner is the load-bearing
+Java 17+ recommended. The Python runner is the foundational
 path for the example; TLC is the upgrade route when temporal
 properties become required.
 

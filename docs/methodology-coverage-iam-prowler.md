@@ -32,7 +32,7 @@ Cross-reference of Prowler's 47 IAM checks against Stave's IAM control catalog.
 | 13 | `iam_no_custom_policy_permissive_role_assumption` | COVERED | `CTL.IAM.POLICY.ASSUMEROLE.001` | Both require sts:AssumeRole to be scoped to specific role ARNs. |
 | 14 | `iam_no_expired_server_certificates_stored` | COVERED | `CTL.IAM.CERT.EXPIRED.001` | Both check IAM server certificate expiry. |
 | 15 | `iam_no_root_access_key` | COVERED | `CTL.IAM.ROOT.ACCESSKEY.001` | Both check identity.root.has_access_keys. |
-| 16 | `iam_password_policy_expires_passwords_within_90_days_or_less` | COVERED | `CTL.IAM.PASSWORD.ROTATION.001` | Both check password expiration window. |
+| 16 | `iam_password_policy_expires_passwords_within_90_days_or_less` | COVERED | `CTL.IAM.PASSWORD.EXPIRATION.001`, `CTL.IAM.PASSWORD.ROTATION.001` | Prowler checks the policy-level expiration setting. CTL.IAM.PASSWORD.ROTATION.001 covers per-user stale passwords; this control covers the account-level policy enforcement. |
 | 17 | `iam_password_policy_lowercase` | COVERED | `CTL.IAM.PASSWORD.COMPLEXITY.001` | Stave's complexity control checks all four character classes in one; Prowler splits them. |
 | 18 | `iam_password_policy_minimum_length_14` | COVERED | `CTL.IAM.PASSWORD.LENGTH.001` | Both enforce minimum 14. |
 | 19 | `iam_password_policy_number` | COVERED | `CTL.IAM.PASSWORD.COMPLEXITY.001` | Same complexity umbrella covers numeric class. |

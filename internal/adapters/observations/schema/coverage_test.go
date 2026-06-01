@@ -63,7 +63,7 @@ func TestCoverage_HighVolumeAssetTypesRegistered(t *testing.T) {
 }
 
 // TestCoverage_EveryRegisteredSchemaHasARequiredField asserts the
-// load-bearing invariant: a schema with NO Required fields
+// foundational invariant: a schema with NO Required fields
 // produces no warnings even when the extractor is completely
 // broken. The warning is the value, so the schema is worthless
 // without at least one Required entry — unless the asset type

@@ -100,7 +100,7 @@ Pure stdlib Python; no pip install required. The model uses
 manual maximin (sort remediations by ROI, take the first);
 multi-remediation Nash equilibria via `nashpy` are a future
 extension when multi-step defender strategies become
-load-bearing.
+foundational.
 
 ## What this is not
 

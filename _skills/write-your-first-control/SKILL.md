@@ -1,12 +1,13 @@
 ---
 name: stave-write-your-first-control
-description: Author, test, and verify a custom Stave control YAML for an organization-specific security policy, using an existing control as a template
+description: Author, test, and verify a custom Stave control using the forge toolchain
 triggers:
   - write a control
   - author a control
   - custom detection
   - add a security policy to Stave
   - new control YAML
+  - forge a control
 requires:
   - a built stave binary (run stave-setup first)
 ---
@@ -14,56 +15,92 @@ requires:
 # stave-write-your-first-control
 
 ## What this skill does
-Walks you through authoring a new control YAML, then proves it fires on the
-positive case and stays quiet on the negative case. Always start from the
-closest existing control — do NOT invent a new field-naming convention.
+Walks you through authoring a new control using the `forge` toolchain, then
+proves it fires on the positive case and stays quiet on the negative case.
 
 **Time:** ~20 minutes. **No AWS needed.**
+
+Controls are YAML match rules (`unsafe_predicate:` with `all:`/`any:` groups of
+`field`/`op`/`value`). CEL is the internal evaluation engine — you never write it.
+The `forge` commands generate, test, and lint the YAML for you.
 
 ## Steps
 
 ### 1. State the property to detect
-e.g. "An IAM user must not have admin access" (you'll generalize from here).
+e.g. "An S3 bucket must have access logging enabled."
 
-### 2. Find the closest existing control and read it
+### 2. Discover available fields
+Point `forge paths` at an observation snapshot to see what fields exist:
 ```
-./stave search "<keywords for your property>"
-find controls -name '*<ID-fragment>*'
-cat controls/.../<that-control>.yaml
+./stave forge paths --snapshot examples/demo-s3-public-read/fixtures/writeup-config/observations/2026-01-10T000000Z.json \
+  --asset-type aws_s3_bucket
 ```
-Note the shape: `id`, `name`, `domain`, `severity`, `type`,
-`unsafe_predicate` (the field + op + value that triggers), `observation_fields`
-(every field it reads), `remediation`, and embedded `tests:`.
+This lists every property path, its type, and values. Find the field for your property.
 
-### 3. Copy and adapt into your own controls dir
+### 3. Test the predicate before writing anything
 ```
-mkdir -p ~/my-controls
-cp controls/.../<template>.yaml ~/my-controls/CTL.MYORG.EXAMPLE.001.yaml
+./stave forge preview --snapshot <same-snapshot> \
+  --field properties.storage.logging.enabled --op eq --value false
 ```
-Edit: `id`, `name`, the `unsafe_predicate` field path, `observation_fields`, and
-`remediation`. Keep field naming consistent with the template family — reuse the
-existing `properties.identity.…` / `properties.storage.…` paths; don't invent new ones.
+`FAIL` means the predicate catches the unsafe state. `PASS` means the asset is safe.
+If nothing fires on a known-unsafe snapshot, revise the predicate before proceeding.
 
-### 4. Add embedded tests (a VIOLATION and a PASS case)
-In the YAML, add a `tests:` block with one asset that should fire (`present: true`)
-and one that should not (`present: false`). Then:
+### 4. Generate the control + fixtures
 ```
-./stave test --controls ~/my-controls
+./stave forge new --non-interactive \
+  --id CTL.S3.LOG.CUSTOM.001 \
+  --name "S3 buckets must have access logging" \
+  --field properties.storage.logging.enabled \
+  --op eq --value false \
+  --severity high \
+  --domain exposure \
+  --remediation "Enable S3 server access logging" \
+  --out ~/my-controls/
 ```
-Expect your control's tests to pass (it fires on the VIOLATION asset, not the PASS asset).
+This generates the control YAML AND pass/fail test fixtures in one step.
 
-### 5. Test against a standalone observation
-Positive (must fire):
+### 5. Hand-edit the YAML (what forge doesn't cover)
+Open `~/my-controls/.../CTL.S3.LOG.CUSTOM.001.yaml` and add:
+- `classification: state_assertion`
+- `applicable_asset_types: [aws_s3_bucket]`
+- `scope_tags: [aws, s3]`
+- `observation_fields:` listing every field the predicate reads
+- `defect:` / `infection:` / `failure:` narrative (what's wrong / how it spreads / what fails)
+- `tests:` with VIOLATION and PASS inline fixtures
+
+Use an existing control as reference for the shape:
 ```
-mkdir -p ~/ctl-test/pos
-# write an obs.v0.1 file (source: deployed) with your trigger field == true
-./stave apply --controls ~/my-controls --observations ~/ctl-test/pos/ --now 2026-01-02T00:00:00Z
+cat controls/s3/logging/CTL.S3.LOG.001.yaml
 ```
-Negative (must NOT fire): same but with the trigger field == false → 0 violations.
+
+### 6. TDD — verify pass/fail
+```
+./stave forge test \
+  --control ~/my-controls/.../CTL.S3.LOG.CUSTOM.001.yaml \
+  --pass <pass-fixture>.json \
+  --fail <fail-fixture>.json
+```
+The fail fixture must produce VIOLATION. The pass fixture must not fire.
+
+### 7. Lint
+```
+./stave forge lint --control ~/my-controls/ --semantic --strict
+```
+Must pass with 0 errors, 0 warnings. `--semantic` catches always-firing and never-firing predicates.
+
+### 8. End-to-end proof
+```
+./stave apply --controls ~/my-controls --observations <obs-dir>/ \
+  --now 2026-01-02T00:00:00Z
+```
+Your control fires alongside the built-in catalog.
 
 ## Success
-You authored a control, gave it pass/fail tests, and watched it fire on the
-positive case only. You can now encode org-specific policy in Stave.
+You authored a control using the forge pipeline, gave it pass/fail tests, linted it,
+and watched it fire on the positive case only. You can now encode org-specific policy
+in Stave.
 
-(To add it to the built-in catalog rather than a side dir, drop the YAML under
-`controls/<domain>/` and run `make build` to sync it into the embedded catalog.)
+## Advanced: adding to the built-in catalog
+Drop the YAML under `controls/<domain>/<aspect>/` and run `make build` to sync it into
+the embedded catalog. See `docs/controls/authoring.md` for the full convention
+(ID format, compliance mappings, evidence citations, the forge-to-PR pipeline).

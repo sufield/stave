@@ -30,7 +30,7 @@ The equally important direction: include at least one fixture where Prowler's ou
 
 **Not in the image:** real AWS credentials, a network connection that isn't needed, anything that changes between runs. The image is deterministic — running the comparison today and a year from now produces the same outputs. That determinism is what lets the artifact survive. If a practitioner running it in six months sees different output than the README promises, trust breaks.
 
-**Version pinning is load-bearing.** Compose file names the exact Stave and Prowler versions. When either updates, the comparison harness bumps with a new tag — users who want "Stave 0.8 vs Prowler 5.12" can still get it. Floating latest tags will produce output drift that makes the artifact untrustworthy within weeks.
+**Version pinning is foundational.** Compose file names the exact Stave and Prowler versions. When either updates, the comparison harness bumps with a new tag — users who want "Stave 0.8 vs Prowler 5.12" can still get it. Floating latest tags will produce output drift that makes the artifact untrustworthy within weeks.
 
 ## The repository layout this implies
 

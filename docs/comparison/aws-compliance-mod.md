@@ -325,7 +325,7 @@ the AWS Compliance Mod does not render compound-risk chains
   status marker carries the honest accounting. The
   substrate-vs-implementation positioning that landed in
   parallel ([`channels/devto/stave-as-reasoning-substrate.md`](../../../channels/devto/stave-as-reasoning-substrate.md))
-  reduces the load-bearing weight on the share-percentage
+  reduces the foundational weight on the share-percentage
   framing as the top-of-funnel argument — the CIA intensional
   tier is now the structural defensibility claim.
 - This doc reads charitably about the AWS Compliance Mod by

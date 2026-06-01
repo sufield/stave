@@ -82,7 +82,7 @@ Static configuration snapshots in, deterministic findings out. No cloud credenti
 
 ## Catalog at a glance
 
-- **2669 built-in controls across 74 domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, EKS, CloudTrail, KMS, OpenSearch, SageMaker, Bedrock, Cognito, and [60 more](docs/controls/reference.md).
+- **2670 built-in controls across 74 domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, EKS, CloudTrail, KMS, OpenSearch, SageMaker, Bedrock, Cognito, and [60 more](docs/controls/reference.md).
 - **23 ghost-reference controls** — cross-inventory detection of pointers to deleted resources (IAM → role, agent → Lambda, CNAME → S3 bucket). Single-resource scanners can't see absence.
 - **597 compound chain definitions** — multi-step attack paths across identity, data, audit, and recovery surfaces; 5 of those land on AI agent identity (Bedrock + Lambda + S3 PHI, RAG → PHI, notebook → prod role).
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0.
@@ -195,11 +195,23 @@ stave apply --format json | stave ci gate --fail-on new
 
 ## Custom controls
 
-New controls are YAML — no Go changes. Write an `unsafe_predicate`, point `stave apply --controls ./my-controls` at the directory, and the engine evaluates them alongside the built-in catalog. See [authoring controls](docs/controls/authoring.md).
+New controls are YAML — no Go changes required. The `forge` toolchain handles the full lifecycle:
+
+```bash
+stave forge paths --snapshot obs.json --asset-type aws_s3_bucket    # 1. discover fields
+stave forge preview --snapshot obs.json --field ... --op eq --value true  # 2. test predicate
+stave forge new --id CTL.S3.TAGS.001 --name "..." --field ... --severity high  # 3. generate control + fixtures
+stave forge test --control controls/s3/... --pass fix-pass.json --fail fix-fail.json  # 4. TDD
+stave forge lint --control controls/s3/ --semantic --strict         # 5. static analysis
+stave validate --controls controls/ --observations obs/             # 6. structural check
+stave apply --controls ./my-controls --observations obs/            # 7. end-to-end proof
+```
+
+Controls are `unsafe_predicate:` match rules (`all:`/`any:` groups of `field`/`op`/`value`). Point `stave apply --controls ./my-controls` at any directory and the engine evaluates them alongside the built-in catalog. See [authoring controls](docs/controls/authoring.md).
 
 ## Built-in controls
 
-2669 controls across 74 domains. Largest surfaces today: AWS S3 (122), AWS IAM (175), AWS OpenSearch (132), GCP Cloud Storage (7), DNS (3, vendor-agnostic dangling-reference detection).
+2670 controls across 74 domains. Largest surfaces today: AWS S3 (122), AWS IAM (176), AWS OpenSearch (132), GCP Cloud Storage (7), DNS (3, vendor-agnostic dangling-reference detection).
 
 Full reference and per-domain breakdowns: [`docs/controls/reference.md`](docs/controls/reference.md).
 
@@ -209,7 +221,7 @@ Full reference and per-domain breakdowns: [`docs/controls/reference.md`](docs/co
 |---|---|
 | [Quickstart](docs/time-to-first-finding.md) | Get your first finding in 5 minutes |
 | [Building an extractor](docs/extractor-prompt.md) | Steampipe, CloudQuery, AWS Config, or custom |
-| [Authoring controls](docs/controls/authoring.md) | Write custom YAML controls |
+| [Authoring controls](docs/controls/authoring.md) | Write custom YAML controls with the forge toolchain |
 | [Pre-commit hook](docs/integrations/pre-commit.md) | Block unsafe configs before commit |
 | [Atlantis integration](docs/integrations/atlantis.md) | Evaluate Terraform plans before apply |
 | [Risk reasoning](docs/risk-reasoning.md) | Compound risk scoring and safety chains |

@@ -66,7 +66,7 @@ remediation:
     iam:PassRole grants that aim at the doomed role. After the
     deletion completes, audit any IaC / Terraform state that
     references the role's ARN; recreating the role under the
-    same name is the load-bearing TOCTOU step the attacker
+    same name is the foundational TOCTOU step the attacker
     would race for.
   example: |
     {

@@ -9,7 +9,7 @@
 \*     https://github.com/tlaplus/tlaplus/releases/latest/download/tla2tools.jar
 \*   java -cp tla2tools.jar tlc2.TLC CognitoSafety.tla -config CognitoSafety.cfg
 \*
-\* The Python runner is the load-bearing path for the example; this
+\* The Python runner is the foundational path for the example; this
 \* spec is here for organisations that want temporal-property
 \* verification (eventually-safe, infinitely-often-detected, etc.)
 \* on top of the boolean state-space search.

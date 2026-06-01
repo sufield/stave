@@ -57,7 +57,7 @@ func executeEvaluation(ctx context.Context, ec evalContext) (_ EvaluateResult, r
 	// Capture deps.Close's error through retErr only when the
 	// function is otherwise about to return cleanly. If a real
 	// failure already populated retErr, that failure is the
-	// load-bearing signal — overwriting it with a downstream
+	// foundational signal — overwriting it with a downstream
 	// close error would obscure the actual root cause. Today
 	// Close is a no-op and returns nil, but the merge contract
 	// keeps the call site correct for any future Close

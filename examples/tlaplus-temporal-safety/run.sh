@@ -6,7 +6,7 @@
 #   temporal_check.py                →  initial state + reachable
 #                                       states + drift margin
 #
-# The Python runner is the load-bearing path; the .tla / .cfg
+# The Python runner is the foundational path; the .tla / .cfg
 # files in this directory model the same state machine for TLC,
 # which is the right tool when you need temporal-logic
 # properties (always/eventually) on top of safety.

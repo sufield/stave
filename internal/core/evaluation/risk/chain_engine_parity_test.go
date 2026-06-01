@@ -23,7 +23,7 @@ import (
 // Deliberately not exported and not reachable from non-test code.
 // Delete this file only when the index-driven path has lived in
 // production long enough that the parity net is no longer
-// load-bearing.
+// foundational.
 func detectChainsLegacy(
 	failures []FailingControl,
 	chains []policy.ChainDefinition,

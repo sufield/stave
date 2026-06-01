@@ -14,7 +14,7 @@ import (
 // signals "no coverage posture to report" to the output pipeline.
 //
 // Inventory load errors are logged and treated as absence rather than
-// fatal — coverage posture is decorative metadata, not load-bearing
+// fatal — coverage posture is decorative metadata, not foundational
 // for evaluation correctness.
 func buildCoveragePosture(controls []policy.ControlDefinition, logger *slog.Logger) *corecov.CoverageIndex {
 	if len(controls) == 0 {

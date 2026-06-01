@@ -22,7 +22,7 @@ import (
 // fixtures stuff principals into the Resource field as a
 // workaround; real-world AWS trust policies use Principal: {AWS:
 // "..."}, which is invisible to the existing walker. Iter 4
-// closes the gap for the account-root pattern — the load-bearing
+// closes the gap for the account-root pattern — the foundational
 // case for cross-account compromise propagation per
 // gap-prompt.md:16.
 type AWSTrustedPrincipals struct {

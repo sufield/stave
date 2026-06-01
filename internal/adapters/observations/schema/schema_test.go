@@ -58,7 +58,7 @@ func TestValidateAsset_MissingRequiredSurfaces(t *testing.T) {
 	if len(res.MissingRequired) == 0 {
 		t.Fatal("empty property bag must surface required misses")
 	}
-	// The required count is the load-bearing signal — exact paths
+	// The required count is the foundational signal — exact paths
 	// are not pinned (they evolve as the schema grows) but the
 	// most important one must always be present in this set.
 	if !containsString(res.MissingRequired, "properties.storage.access.has_wildcard_principal") {

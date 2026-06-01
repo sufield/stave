@@ -174,7 +174,7 @@ type controlParams struct {
 // signals corrupted build artifacts rather than a runtime IO
 // problem. Log at debug so the gap surfaces under -vv without
 // failing the manifest derivation: callers consume the returned
-// list as a presentation-layer hint, not a load-bearing
+// list as a presentation-layer hint, not a foundational
 // invariant.
 func deriveAttackStages() []string {
 	seen := make(map[string]struct{})

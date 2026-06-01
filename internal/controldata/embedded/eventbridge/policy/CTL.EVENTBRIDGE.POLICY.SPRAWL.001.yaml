@@ -65,7 +65,7 @@ infection: >
   accumulates statements that may no longer correspond to live
   publishers. Stale statements continue to authorize publishers
   that may have been compromised or repurposed; the operational
-  team typically can't identify which grants are still load-bearing
+  team typically can't identify which grants are still foundational
   without a service-by-service audit. The risk of a stale grant
   being exploited grows linearly with statement count.
 failure: >

@@ -178,7 +178,7 @@ func (s *Sanitizer) ScrubMessage(msg string) string {
 			// the leading "/").
 			//
 			// Three named leak categories, ordered by specificity.
-			// Order is load-bearing: a single-component
+			// Order is foundational: a single-component
 			// trailing-slash path like "/secret/" matches Case 1
 			// but would also satisfy isRootLevelFile after stripping
 			// the slash — putting Case 1 first ensures the

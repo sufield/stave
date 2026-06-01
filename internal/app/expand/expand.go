@@ -73,7 +73,7 @@ type SnapshotStatus struct {
 //
 // Errors during walk degrade to "all services missing" rather than
 // failing the whole expand — this is decorative coverage data, not
-// load-bearing for the user's primary archetype lookup.
+// foundational for the user's primary archetype lookup.
 func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 	if dir == "" {
 		return nil

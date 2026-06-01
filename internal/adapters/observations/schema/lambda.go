@@ -9,7 +9,7 @@ var lambdaSchema = Schema{
 		{Path: "properties.compute.kind", Required: true,
 			Doc: "type discriminator; every lambda control gates on this"},
 		{Path: "properties.compute.logging.log_group_exists", Required: true,
-			Doc: "log-group presence — load-bearing for the logging audit family"},
+			Doc: "log-group presence — foundational for the logging audit family"},
 		{Path: "properties.compute.async.dlq_configured", Required: false,
 			Doc: "async-invocation DLQ; sparse when no async invocation path"},
 		{Path: "properties.network.lambda.vpc_configured", Required: false,

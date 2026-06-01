@@ -137,7 +137,7 @@ func (c *Compiler) loadDiskCache() {
 		return
 	}
 	for _, e := range entries {
-		// Per-entry poisoning defense (load-bearing): the stored
+		// Per-entry poisoning defense (foundational): the stored
 		// SHA must match the live SHA of the stored expression.
 		// Mismatch means the file was edited or corrupted — drop
 		// that entry, keep the rest.

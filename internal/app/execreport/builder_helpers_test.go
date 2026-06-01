@@ -10,7 +10,7 @@ import (
 
 // TestAssessmentClosestTo_PicksWithinWindow asserts the helper picks
 // the assessment whose timestamp is nearest the target instant — not
-// the oldest in history. This is the load-bearing fix for the report
+// the oldest in history. This is the foundational fix for the report
 // 30-day trajectory: comparing against assessments[0] made the delta
 // drift unboundedly with how long history had been accumulating.
 func TestAssessmentClosestTo_PicksWithinWindow(t *testing.T) {

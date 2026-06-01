@@ -9,7 +9,7 @@ var ec2InstanceSchema = Schema{
 		{Path: "properties.compute.kind", Required: true,
 			Doc: "type discriminator; every EC2-instance control gates on this"},
 		{Path: "properties.compute.network.imdsv2_required", Required: true,
-			Doc: "IMDSv2 enforcement — load-bearing for the SSRF-defence control"},
+			Doc: "IMDSv2 enforcement — foundational for the SSRF-defence control"},
 		{Path: "properties.compute.network.has_public_ip", Required: true,
 			Doc: "public-IP exposure signal"},
 		{Path: "properties.compute.instance.sg_allows_ssh", Required: false,

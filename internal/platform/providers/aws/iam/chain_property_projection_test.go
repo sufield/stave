@@ -111,7 +111,7 @@ func snapshotForProjector(t *testing.T) *asset.Snapshot {
 	}
 }
 
-// TestProjectChainProperties_LambdaInvoke pins the load-bearing
+// TestProjectChainProperties_LambdaInvoke pins the foundational
 // wiring: after running the projector, the dev principal must
 // carry `identity.escalation.confused_lambda_invoke.present=true`,
 // matching the predicate that

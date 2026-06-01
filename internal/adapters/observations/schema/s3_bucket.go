@@ -28,7 +28,7 @@ var s3BucketSchema = Schema{
 		{Path: "properties.storage.access.has_wildcard_principal", Required: true,
 			Doc: "drives the PublicAccess family of controls"},
 		{Path: "properties.storage.access.has_external_write", Required: true,
-			Doc: "load-bearing for CrossAccountWrite controls"},
+			Doc: "foundational for CrossAccountWrite controls"},
 		{Path: "properties.storage.access.allows_anonymous_list", Required: true,
 			Doc: "drives the AnonymousList family"},
 		{Path: "properties.storage.access.exposes_bucket_policy", Required: true,

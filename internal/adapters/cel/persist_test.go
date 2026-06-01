@@ -153,7 +153,7 @@ func TestPersist_CelGoVersionMismatchIsDetected(t *testing.T) {
 
 func TestPersist_ShaMismatchPoisoningDefense(t *testing.T) {
 	// The on-disk format stores both the expression string and an
-	// independent SHA of it. The load-bearing correctness check
+	// independent SHA of it. The foundational correctness check
 	// happens at the compiler boundary (TestCompiler_PoisonedCache),
 	// but the persist layer should still expose enough information
 	// for that check to run: an entry whose stored SHA does not

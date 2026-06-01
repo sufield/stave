@@ -104,7 +104,7 @@ func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.Enforcement
 				ui.WriteHint(r.Stderr, res.DiagnoseCommand)
 			}
 			// Skip the next-steps hint when no runtime is wired.
-			// The violation error is the load-bearing signal here;
+			// The violation error is the foundational signal here;
 			// the hint is purely advisory UI.
 			if r.hasInteractiveUI() {
 				r.Runtime.PrintNextSteps(res.NextSteps...)

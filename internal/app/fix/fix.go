@@ -70,7 +70,7 @@ func (s *Service) Fix(ctx context.Context, req Request) error {
 
 	if s.ParseFindings == nil {
 		// Match the ReadFile guard above: ParseFindings is a
-		// load-bearing dependency. Hand-built Service instances
+		// foundational dependency. Hand-built Service instances
 		// (tests, alternative composition roots) that forgot to
 		// supply it would otherwise hit a nil-function-call panic
 		// here. Surface as a wiring error so the call site sees

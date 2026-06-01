@@ -17,7 +17,7 @@ Pure stdlib; no Java, no TLC. The TLA+/TLC counterparts in
 this directory model the same state machine and give identical
 verdicts but require a Java runtime and the tla2tools.jar
 download. Switch to TLC when temporal logic over infinite or
-parameterized state spaces becomes load-bearing.
+parameterized state spaces becomes foundational.
 """
 from __future__ import annotations
 

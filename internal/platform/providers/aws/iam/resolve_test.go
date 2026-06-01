@@ -216,7 +216,7 @@ func TestClassifyPrivilege_Elevated(t *testing.T) {
 	}
 }
 
-// TestResolve_ConditionedDeny_DoesNotCover pins the load-bearing
+// TestResolve_ConditionedDeny_DoesNotCover pins the foundational
 // Iter 7 (scoped Deny) detection. A Deny scoped by
 // `aws:PrincipalOrgID = o-other-org` does NOT block a principal
 // in our org from performing iam:CreatePolicy. Pre-Iter-7 the
