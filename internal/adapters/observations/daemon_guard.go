@@ -22,15 +22,6 @@ type daemonContextKey struct{}
 // that closes the underlying fd on cancellation) instead.
 var ErrDaemonUnsafe = errors.New("observations: loader is DAEMON-UNSAFE; goroutine may leak when ctx is cancelled before disk read returns")
 
-// DaemonContext returns a context tagged as a daemon-mode caller.
-// Daemon entry points wrap the inbound context once at startup; the
-// tag propagates to every observation-load call site so the loader
-// guards refuse to run rather than silently leaking a read goroutine
-// per cancellation.
-func DaemonContext(ctx context.Context) context.Context {
-	return context.WithValue(ctx, daemonContextKey{}, true)
-}
-
 // isDaemonContext reports whether the context was tagged via
 // DaemonContext. Used by the daemon-unsafe loaders to fail-fast
 // before kicking off the leakable goroutine.

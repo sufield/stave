@@ -119,22 +119,6 @@ var exposureVector = map[string]float64{
 	"no_network":      noNetworkMultiplier,
 }
 
-// GetAssetSensitivity returns the sensitivity multiplier for a
-// classification, or 0 when the classification is not in the table.
-// ok lets callers distinguish "unknown classification" from
-// "classification with multiplier 0".
-func GetAssetSensitivity(class string) (float64, bool) {
-	v, ok := assetSensitivity[class]
-	return v, ok
-}
-
-// GetExposureScore returns the exposure multiplier for a network
-// reachability vector. ok is false when the vector is unknown.
-func GetExposureScore(vector string) (float64, bool) {
-	v, ok := exposureVector[vector]
-	return v, ok
-}
-
 // LookupSensitivity returns the sensitivity multiplier for a classification.
 // Returns 1.0 for unknown classifications.
 func LookupSensitivity(classification string) float64 {

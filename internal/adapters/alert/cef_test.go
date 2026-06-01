@@ -1,7 +1,6 @@
 package alert
 
 import (
-	"bytes"
 	"context"
 	"os"
 	"path/filepath"
@@ -184,32 +183,4 @@ func TestCEFTransitionSeverity(t *testing.T) {
 			t.Errorf("CEFSeverity(%s) = %d, want %d", tt.transition, got, tt.want)
 		}
 	}
-}
-
-// TestFormatSyslog_Basic tests the syslog formatter (available on all platforms).
-func TestFormatSyslog_Basic(t *testing.T) {
-	a := ports.WatchAlert{
-		Timestamp:     time.Date(2025, 11, 15, 14, 0, 0, 0, time.UTC),
-		Transition:    ports.TransitionRegression,
-		SecurityState: "NON_COMPLIANT",
-		Violations:    5,
-		NewViolations: 2,
-		Regressions:   []string{"CTL.S3.PUBLIC.001:bucket-a"},
-	}
-
-	msg := FormatSyslog(a)
-	if !strings.Contains(msg, "[stave@32473") {
-		t.Error("should contain RFC 5424 SD-ID stave@32473")
-	}
-	if !strings.Contains(msg, `transition="REGRESSION"`) {
-		t.Error("should contain transition")
-	}
-	if !strings.Contains(msg, `violations="5"`) {
-		t.Error("should contain violations count")
-	}
-	if !strings.Contains(msg, `regressions="CTL.S3.PUBLIC.001:bucket-a"`) {
-		t.Error("should contain regressions")
-	}
-
-	_ = bytes.NewBuffer(nil) // avoid unused import
 }

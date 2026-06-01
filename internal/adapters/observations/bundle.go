@@ -166,22 +166,3 @@ func LoadBundle(path string) ([]asset.Snapshot, error) {
 	}
 	return ParseBundle(data)
 }
-
-// LoadBundleSync is the synchronous, no-goroutine variant of
-// BundleLoader.LoadBundle. It blocks until fsutil.ReadFileLimited
-// returns and ignores ctx cancellation entirely. Use it from
-// contexts where:
-//
-//   - Spawning a reader goroutine is undesirable (a daemon already
-//     guarded by DaemonContext, a process that must avoid any
-//     potential leak).
-//   - The caller has accepted that a wedged read will block
-//     indefinitely and has no other option to escape.
-//
-// LoadBundle is the better choice for CLI runs because it lets a
-// SIGINT cancel the operation visibly. LoadBundleSync exists as the
-// fallback for daemon-mode callers that explicitly opted out of the
-// leak via DaemonContext but still need to load a bundle.
-func LoadBundleSync(path string) ([]asset.Snapshot, error) {
-	return LoadBundle(path)
-}

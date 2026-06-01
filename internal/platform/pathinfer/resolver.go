@@ -76,27 +76,6 @@ type baseDirConfig struct {
 	getwd  func() (string, error)
 }
 
-// WithEnviron overrides the env-lookup function (defaults to os.Getenv).
-func WithEnviron(lookup func(string) string) BaseDirOption {
-	return func(c *baseDirConfig) {
-		if lookup != nil {
-			c.lookup = lookup
-		}
-	}
-}
-
-// WithGetwd overrides the cwd-lookup function (defaults to os.Getwd).
-// Tests that exercise the STAVE_PROJECT_ROOT-unset / fallback path
-// inject a deterministic getwd here instead of chdir'ing the test
-// process.
-func WithGetwd(getwd func() (string, error)) BaseDirOption {
-	return func(c *baseDirConfig) {
-		if getwd != nil {
-			c.getwd = getwd
-		}
-	}
-}
-
 // Unique looks for a directory named name under base.
 //
 // Resolution order:

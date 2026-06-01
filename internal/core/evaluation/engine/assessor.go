@@ -55,9 +55,6 @@ type Assessor struct {
 // AssessorOption configures an Assessor at construction time.
 type AssessorOption func(*Assessor)
 
-// WithLogger sets the structured logger.
-func WithLogger(l *slog.Logger) AssessorOption { return func(a *Assessor) { a.logger = l } }
-
 // WithClock sets the wall-clock source.
 func WithClock(c ports.Clock) AssessorOption { return func(a *Assessor) { a.clock = c } }
 
@@ -109,11 +106,6 @@ func WithAcknowledgments(ack *policy.AcknowledgmentConfig) AssessorOption {
 // WithSLAThreshold sets the global max-unsafe-duration default.
 func WithSLAThreshold(d time.Duration) AssessorOption {
 	return func(a *Assessor) { a.slaThreshold = d }
-}
-
-// WithContinuityLimit overrides the default continuity limit.
-func WithContinuityLimit(d time.Duration) AssessorOption {
-	return func(a *Assessor) { a.continuityLimit = d }
 }
 
 // NewAssessor creates an engine with sensible defaults for security

@@ -50,15 +50,6 @@ const (
 // other domains.
 type ExposureScore float64
 
-// NewExposureScore returns an ExposureScore. No bounds clamping —
-// scores legitimately exceed 1.0 when chain-bonus multipliers stack
-// on top of the base 0–1 surface, and clamping silently would lose
-// information that callers do read (Band returns BandCatastrophic
-// at >= 1.0). Negative values return BandUnscored from Band().
-func NewExposureScore(v float64) ExposureScore {
-	return ExposureScore(v)
-}
-
 // Value returns the underlying float64.
 func (s ExposureScore) Value() float64 { return float64(s) }
 

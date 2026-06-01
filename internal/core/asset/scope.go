@@ -38,15 +38,6 @@ func GetGlobalScope() *AuditScope {
 	return globalScope
 }
 
-// SetGlobalScope installs s as the process-wide unbounded scope.
-// Intended for tests that need to inject a stub boundary; production
-// code should never call this.
-func SetGlobalScope(s *AuditScope) {
-	globalScopeMu.Lock()
-	defer globalScopeMu.Unlock()
-	globalScope = s
-}
-
 // PHIBoundary returns the default scope for HIPAA/Healthcare compliance,
 // targeting assets tagged as containing Protected Health Information.
 func PHIBoundary() *AuditScope {

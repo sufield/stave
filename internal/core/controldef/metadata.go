@@ -1,9 +1,6 @@
 package controldef
 
 import (
-	"errors"
-	"strings"
-
 	"github.com/sufield/stave/internal/core/evaluation/exposure"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -24,17 +21,6 @@ func (r RequirementID) String() string { return string(r) }
 
 // IsEmpty reports whether the requirement is unset.
 func (r RequirementID) IsEmpty() bool { return r == "" }
-
-// ParseRequirementID returns a validated RequirementID. Trims
-// surrounding whitespace and rejects the empty case so silently-blank
-// compliance entries don't survive YAML loading.
-func ParseRequirementID(raw string) (RequirementID, error) {
-	trimmed := strings.TrimSpace(raw)
-	if trimmed == "" {
-		return "", errors.New("requirement ID must not be empty")
-	}
-	return RequirementID(trimmed), nil
-}
 
 // ComplianceMapping links compliance standards to specific
 // requirement IDs. The value type is RequirementID rather than a raw

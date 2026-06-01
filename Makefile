@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test
+.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check
 # Binary name
 BINARY=stave
 
@@ -326,8 +326,22 @@ stale-terminology-check:
 		exit 1; \
 	fi
 
-## check: Run all checks (fmt, vet, lint, terminology, test)
-check: fmt vet lint stale-terminology-check test
+## deadcode-check: Fail on unreachable exported functions (whole-program analysis)
+##
+## Known false positive: byteReader.Read in cel/persist.go implements io.Reader
+## via interface satisfaction (var _ io.Reader = (*byteReader)(nil)); deadcode
+## can't trace implicit interface dispatch.
+deadcode-check:
+	@echo "==> Dead code check..."
+	@out=$$(deadcode -test ./... 2>&1 | grep -v "byteReader.Read"); \
+	if [ -n "$$out" ]; then \
+		echo "deadcode found unreachable functions:"; \
+		echo "$$out"; \
+		exit 1; \
+	fi
+
+## check: Run all checks (fmt, vet, lint, terminology, deadcode, test)
+check: fmt vet lint stale-terminology-check deadcode-check test
 
 ## ci: CI pipeline (tidy, check, build)
 ci: tidy check build

@@ -31,12 +31,3 @@ var leakedReadGoroutines atomic.Int64
 func recordLeakedReadGoroutine() {
 	leakedReadGoroutines.Add(1)
 }
-
-// LeakedReadGoroutines returns the running total of read goroutines
-// that outlived their parent context across this process's
-// lifetime. Useful for daemon-style operators verifying their
-// DaemonContext discipline, and for stress-test harnesses
-// validating the future cancellable-reader migration.
-func LeakedReadGoroutines() int64 {
-	return leakedReadGoroutines.Load()
-}

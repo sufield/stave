@@ -1,8 +1,6 @@
 package config
 
 import (
-	"errors"
-
 	"github.com/sufield/stave/internal/sanitize"
 )
 
@@ -56,30 +54,4 @@ type GlobalSettings struct {
 
 	// AllowSymlinkOut permits symlinks in the output tree.
 	AllowSymlinkOut bool
-}
-
-// Validate checks the GlobalSettings shape. The CLI flag layer
-// already constrains each value individually (cobra rejects
-// unknown PathMode strings, log paths are sanitized by fsutil),
-// so this method is a programmatic safety net for callers that
-// build a GlobalSettings outside of the cobra entry point.
-//
-// PathMode accepts three forms:
-//
-//   - "" — zero value, equal to sanitize.PathBase by definition;
-//     the in-process default for callers that don't set the field.
-//   - "base" — the operator-facing alias that PathMode.String()
-//     renders for the zero value. YAML round-trips through this
-//     spelling because the stringer emits "base" for the empty
-//     string. Validate must accept it; the earlier shape rejected
-//     "base" because the redundant `g.PathMode != sanitize.PathBase`
-//     check duplicated `g.PathMode != ""` and made the documented
-//     "use \"base\"" error message a lie.
-//   - "full" — equal to sanitize.PathFull.
-func (g GlobalSettings) Validate() error {
-	switch g.PathMode {
-	case "", "base", sanitize.PathFull:
-		return nil
-	}
-	return errors.New(`invalid PathMode (use "", "base", or "full")`)
 }

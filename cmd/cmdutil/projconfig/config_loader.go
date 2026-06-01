@@ -156,18 +156,6 @@ func defaultResolver() (*Resolver, error) {
 	return NewResolver()
 }
 
-// FindNearestFile walks up from cwd looking for filename.
-// Returns a non-nil error if the resolver cannot be constructed
-// (e.g., working directory or home directory unavailable).
-func FindNearestFile(filename string) (string, bool, error) {
-	r, err := defaultResolver()
-	if err != nil {
-		return "", false, fmt.Errorf("resolve environment: %w", err)
-	}
-	path, ok := r.NearestFile(filename)
-	return path, ok, nil
-}
-
 // FindProjectConfig returns the nearest project config.
 // Returns (nil, false, nil) when no config file is found.
 // Returns a non-nil error for parse or permission failures.

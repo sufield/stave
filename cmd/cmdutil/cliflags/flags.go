@@ -340,11 +340,6 @@ func ResolveNowEnv(cmd *cobra.Command, current string) string {
 	return current
 }
 
-// AllThresholdStatuses returns all valid risk threshold status labels for CLI completion.
-func AllThresholdStatuses() []string {
-	return []string{"OVERDUE", "DUE_NOW", "UPCOMING"}
-}
-
 // DefaultControlsDir is the conventional default path for control definitions.
 // Used as the flag default across all commands that accept --controls.
 const DefaultControlsDir = "controls"

@@ -20,7 +20,6 @@ type EnforcementOutcome struct {
 // outcome rather than switching on Signal at every site.
 func (o EnforcementOutcome) IsAllow() bool    { return o.Signal == LevelAllow }
 func (o EnforcementOutcome) IsAdvisory() bool { return o.Signal == LevelAdvisory }
-func (o EnforcementOutcome) IsBlock() bool    { return o.Signal == LevelBlock }
 
 // SummaryMessage returns the human-readable line a CLI handler
 // should emit before applying its own hints / next-steps. Centralises

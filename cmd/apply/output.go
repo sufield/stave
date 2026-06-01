@@ -49,15 +49,6 @@ func (r *Reporter) Emit(w io.Writer, msg string) {
 	_, _ = fmt.Fprintln(w, msg)
 }
 
-// Emitf wraps Emit for the printf-style call sites; same quiet
-// guard, same swallow-on-nil semantics.
-func (r *Reporter) Emitf(w io.Writer, format string, args ...any) {
-	if r == nil || r.Quiet {
-		return
-	}
-	_, _ = fmt.Fprintf(w, format, args...)
-}
-
 // ShouldEmit reports whether the reporter is currently emitting
 // output. Used by call sites that wrap multiple prints in a single
 // branch (the LevelBlock case below).

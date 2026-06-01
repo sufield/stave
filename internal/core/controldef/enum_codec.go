@@ -1,7 +1,6 @@
 package controldef
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -39,25 +38,4 @@ func NewEnumCodec[T comparable](caseFold bool, pairs map[T]string) EnumCodec[T] 
 // "empty" should consult Has first.
 func (c EnumCodec[T]) Encode(v T) string {
 	return c.forward[v]
-}
-
-// Decode parses s back into the enum type. Whitespace is trimmed; if
-// caseFold is set, comparison is lowercased.
-func (c EnumCodec[T]) Decode(s string) (T, error) {
-	var zero T
-	key := strings.TrimSpace(s)
-	if c.caseFold {
-		key = strings.ToLower(key)
-	}
-	v, ok := c.reverse[key]
-	if !ok {
-		return zero, fmt.Errorf("invalid enum value %q", s)
-	}
-	return v, nil
-}
-
-// Has reports whether v is a registered member.
-func (c EnumCodec[T]) Has(v T) bool {
-	_, ok := c.forward[v]
-	return ok
 }

@@ -31,13 +31,6 @@ type BlastRadius float64
 // resource is affected.
 const blastRadiusSignificantMin = 1.0
 
-// NewBlastRadius returns a BlastRadius. No bounds enforcement —
-// values legitimately exceed any fixed cap when an asset is
-// reachable from many accounts.
-func NewBlastRadius(v float64) BlastRadius {
-	return BlastRadius(v)
-}
-
 // Value returns the underlying float64.
 func (b BlastRadius) Value() float64 { return float64(b) }
 

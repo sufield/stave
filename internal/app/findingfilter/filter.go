@@ -103,14 +103,6 @@ func (a *appearance) IsChronic() bool {
 	return a != nil && a.inLatest
 }
 
-// IsReturned reports whether this appearance describes a finding
-// that was previously open, briefly resolved, and has now
-// returned. The classification loop tags such findings
-// ClassReturned so the operator sees the cycle count.
-func (a *appearance) IsReturned() bool {
-	return a != nil && !a.inLatest
-}
-
 // DwellDays returns the dwell time in days from this finding's
 // first historical sighting to the supplied current time. Used
 // by the per-finding "how long has this been an issue?" rendering;

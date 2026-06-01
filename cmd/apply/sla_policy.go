@@ -15,9 +15,6 @@ const (
 	SLAPolicyCriticalOnly SLAPolicy = "critical-only"
 )
 
-// String returns the wire value.
-func (p SLAPolicy) String() string { return string(p) }
-
 // FailureMessage returns the operator-facing line printed to stderr
 // when this policy gates the apply run to a non-zero exit. Returns
 // "" for SLAPolicyWarn (the default never fails) and any

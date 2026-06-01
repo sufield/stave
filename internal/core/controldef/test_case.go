@@ -22,9 +22,3 @@ var validTestVerdicts = map[string]bool{
 	"VIOLATION":    true,
 	"INCONCLUSIVE": true,
 }
-
-// IsValidVerdict reports whether v is a recognised test verdict
-// (PASS / VIOLATION / INCONCLUSIVE).
-func IsValidVerdict(v string) bool {
-	return validTestVerdicts[v]
-}

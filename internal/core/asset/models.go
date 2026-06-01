@@ -105,23 +105,6 @@ func (r Asset) IdentityClassification() string {
 	return identityAssetTypes[r.Type]
 }
 
-// IsIdentityAssetType reports whether the supplied asset type maps
-// to an IAM principal. Useful for callers that have an
-// kernel.AssetType in hand without an enclosing Asset (e.g.
-// Finding.AssetType in rank/identity.go).
-func IsIdentityAssetType(t kernel.AssetType) bool {
-	_, ok := identityAssetTypes[t]
-	return ok
-}
-
-// IdentityClassificationFor returns the short identity-type label
-// for a kernel.AssetType, or "" when the type is not an identity.
-// Companion to IdentityClassification for callers without an
-// enclosing Asset value.
-func IdentityClassificationFor(t kernel.AssetType) string {
-	return identityAssetTypes[t]
-}
-
 // CloudIdentity represents an IAM identity such as a user, role, or service account.
 // Identity attributes are stored in a flexible properties map so predicate evaluation
 // can use a unified model across both assets and identities.
