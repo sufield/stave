@@ -1,0 +1,15 @@
+{
+  "$schema": "../../ctf/claude/lab-manifest-schema.json",
+  "lab": "sadcloud",
+  "source": {
+    "repo": "https://github.com/nccgroup/sadcloud",
+    "ref": "master",
+    "captured_at": "2026-06-01T00:00:00Z"
+  },
+  "observations": {
+    "dir": "labs/sadcloud/observations",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "collector": "aws_minimal_collector.py"
+  },
+  "expectations": []
+}
