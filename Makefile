@@ -540,7 +540,8 @@ gofixer:
 	@echo "5) Final go fix pass"
 	$(GOCMD) fix ./...
 	@echo "6) Dead code detection"
-	deadcode -test ./...
+	@out=$$(deadcode -test ./... 2>&1 | grep -v "byteReader.Read"); \
+	if [ -n "$$out" ]; then echo "$$out"; exit 1; fi
 	@echo "7) Validation"
 	find . -name '*.go' -not -path './vendor/*' | xargs goimports -w
 	$(MAKE) lint
