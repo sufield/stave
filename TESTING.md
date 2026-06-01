@@ -9,7 +9,6 @@ to.
 | Target | Scope | Typical duration | When to run |
 |--------|-------|------------------|-------------|
 | `make test-fast` | `-short` across `./...` | sub-minute (cold), seconds (cached) | While iterating on a single change |
-| `make test-unit` | `-short` across `./internal` and `./cmd` | sub-minute | Same as test-fast; alias kept for muscle memory |
 | `make test-integration` | `./internal`, `./cmd/apply` (no `-short`) | 1–3 minutes | Before opening a PR |
 | `make test-e2e` | Builds the binary and runs `./e2e` + `./cmd/stave` testscript fixtures | 5–10 minutes | Before merging when you touched eval, output, or fixture-driven paths |
 | `make test` | Everything, with `-race`, `-parallel 16`, `-tags stavedev` | 10–30 minutes | Final pre-merge check on a fast machine |

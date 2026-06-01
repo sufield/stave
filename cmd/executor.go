@@ -99,7 +99,7 @@ func (a *App) execute() {
 //     with ctx.Err()==Canceled, finalizeExecute runs the normal
 //     cleanup path, and the process exits.
 //  2. Pre-bootstrap: phaseContext has not run yet (signal landed
-//     during alias expansion, first-run hint setup, or
+//     during alias expansion or
 //     installInterruptHandler itself). a.cancel is nil and there is
 //     no in-flight Cobra command to cancel — the handler runs the
 //     same cleanupBeforeExit as the normal path and then exits.

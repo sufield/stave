@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-unit test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check golden regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test
+.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test
 # Binary name
 BINARY=stave
 
@@ -102,7 +102,6 @@ mcp-test: sync-schemas sync-controls sync-alternatives
 ## Testing pyramid:
 ##
 ##   test-fast        sub-minute dev iteration (`-short`, no binary spawn).
-##   test-unit        same as test-fast plus race detector / coverage off.
 ##   test-integration internal/ tests that load fixtures but do not spawn
 ##                    the stave binary; targets the middle tier.
 ##   test-e2e         binary-driven E2E (./e2e and testscript). Slowest.
@@ -129,23 +128,12 @@ mcp-test: sync-schemas sync-controls sync-alternatives
 test: sync-schemas sync-controls sync-alternatives
 	$(GOTEST) -tags stavedev -race -v -timeout 30m -parallel 16 ./...
 
-## test-unit: Fast dev loop — unit tests only, skips e2e / golden / profile suites
-##
-## Targets only ./internal/... and ./cmd/... and passes -short so any test
-## that gates on testing.Short() (e2e, profile, fixture-binary
-## determinism) self-skips. The ./e2e/ tree is excluded outright. Designed
-## to finish under 30 seconds so adding a control does not pay a 2000+
-## golden-regeneration tax on the dev machine.
-test-unit: sync-schemas sync-controls sync-alternatives
-	$(GOTEST) -short ./internal/... ./cmd/...
-
 ## test-fast: Sub-minute dev feedback loop.
 ##
-## Identical to test-unit at present (same -short scope, same
-## packages) but kept as a separate target so the documented
-## intent ("targeted at sub-minute") is stable even if test-unit
-## later grows extra concerns (race detector, vet, etc.). Use this
-## while iterating on a single change.
+## Passes -short so any test that gates on testing.Short() (e2e,
+## profile, fixture-binary determinism) self-skips. Designed to
+## finish under 30 seconds so adding a control does not pay a
+## 2000+ golden-regeneration tax on the dev machine.
 test-fast: sync-schemas sync-controls sync-alternatives
 	$(GOTEST) -short -timeout 5m ./...
 
@@ -343,34 +331,6 @@ check: fmt vet lint stale-terminology-check test
 
 ## ci: CI pipeline (tidy, check, build)
 ci: tidy check build
-
-## golden: Update e2e expected outputs from current behavior (legacy narrow target)
-##
-## This target predates regenerate-goldens and only updates expected.summary.json
-## + expected.findings.count for fixtures without command.txt. Prefer
-## `make regenerate-goldens` for full coverage (expected.out.json, profile
-## goldens, command.txt fixtures) and a categorized diff report.
-golden: build
-	@echo "Updating golden files (narrow legacy target — consider regenerate-goldens instead)..."
-	@for case in testdata/e2e/e2e-*; do \
-		if [ -f "$$case/command.txt" ]; then continue; fi; \
-		extra=""; \
-		if [ -f "$$case/args.txt" ]; then \
-			extra="$$(sed "s|\$$CASE_DIR|$$case|g" "$$case/args.txt" | tr '\n' ' ')"; \
-		fi; \
-		./stave apply \
-			--controls "$$case/controls" \
-			--observations "$$case/observations" \
-			--max-unsafe 168h \
-			--now 2026-01-11T00:00:00Z \
-			$$extra \
-			> "$$case/output.json" 2> "$$case/err.txt" || true; \
-		if [ -f "$$case/output.json" ] && jq -e '.summary' "$$case/output.json" > /dev/null 2>&1; then \
-			jq -S '.summary' "$$case/output.json" > "$$case/expected.summary.json"; \
-			jq '.findings | length' "$$case/output.json" | tr -d '\n' > "$$case/expected.findings.count"; \
-		fi; \
-	done
-	@echo "Golden files updated"
 
 ## regenerate-goldens: Batch-regenerate all fixture goldens and report a categorized diff
 ##

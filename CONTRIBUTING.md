@@ -19,7 +19,7 @@ coder create my-stave --template stave
 Inside the workspace:
 
 ```bash
-make test-unit   # < 2 min, the dev-loop test tier
+make test-fast   # < 2 min, the dev-loop test tier
 make lint        # golangci-lint (pre-installed)
 make build       # rebuild ./stave after changes
 make mcp         # rebuild ./stave-mcp after changes
@@ -71,7 +71,7 @@ for `go install` instructions that skip the clone).
 ```bash
 # Fast dev loop — unit tests only, skips e2e / golden / profile suites.
 # Designed to finish under 30 seconds.
-make test-unit
+make test-fast
 
 # Full local suite — runs everything assuming goldens are current.
 # Use this before opening a PR if you want a final local check.
@@ -104,7 +104,7 @@ golden fixtures. Regenerating those goldens locally on every control
 addition is slow churn that adds no signal — the diffs are catalog
 growth, not behavior. So:
 
-- `make test-unit` is the dev feedback loop. It uses `go test -short`
+- `make test-fast` is the dev feedback loop. It uses `go test -short`
   and excludes `./e2e/`, so any test that gates on `testing.Short()`
   (e2e, profile, fixture-binary determinism) self-skips.
 - `make test-ci` is what CI runs. It regenerates goldens fresh and

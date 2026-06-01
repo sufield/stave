@@ -157,7 +157,7 @@ shape. The differences:
   `requirements.yaml` could reference a catalog control by
   ID (`invariant_id: CTL.S3.ACCESS.EXTERNAL.ORG.001`) and
   the compiler would pull the forbidden_state predicate from
-  `stave export-invariants` and emit its negation
+  `stave export-controls` and emit its negation
   automatically. This couples the compatibility check to the
   catalog vocabulary; useful when the requirement IS a
   catalog invariant.

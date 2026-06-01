@@ -110,9 +110,9 @@ Use this table when you know your goal but want the fastest path to the right co
 | I want to... | Run this command | Read this doc |
 |--------------|------------------|---------------|
 | Get my first finding in 60 seconds | `stave apply --observations examples/public-bucket/observations/ --max-unsafe 168h --now 2026-01-11T00:00:00Z` | [`time-to-first-finding.md`](time-to-first-finding.md) |
-| Evaluate my own snapshots instantly | `stave init && stave validate && stave apply` | [`time-to-first-finding.md`](time-to-first-finding.md) |
+| Evaluate my own snapshots instantly | `stave validate && stave apply` | [`time-to-first-finding.md`](time-to-first-finding.md) |
 | See where I am and what to do next | `stave status` | [`README.md`](../README.md) |
-| Start a new project with sane defaults | `stave init --profile aws-s3` | [`README.md`](../README.md) |
+| Start a new project with sane defaults | `stave config context create` | [`README.md`](../README.md) |
 | Validate controls and observations before evaluating | `stave validate --controls ./controls --observations ./observations` | [`README.md`](../README.md) |
 | Evaluate current risk status | `stave apply --controls ./controls --observations ./observations --format json > output/evaluation.json` | [`README.md`](../README.md) |
 | Inspect effective project defaults and override sources | `stave config show --format json` | [`README.md`](../README.md) |
@@ -886,41 +886,6 @@ stave doctor
 ```
 
 Output shows `[PASS]`, `[WARN]`, or `[FAIL]` for each check (Go version, required tools, project structure).
-
----
-
-### init
-
-Scaffolds a new Stave project directory with controls, observations, and config.
-
-```bash
-stave init [flags]
-```
-
-**Flags:**
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--profile` | (none) | Project profile (e.g., `aws-s3`) |
-| `--dir` | `.` | Target directory |
-| `--dry-run` | `false` | Preview without creating files |
-| `--with-github-actions` | `false` | Include GitHub Actions workflow |
-| `--capture-cadence` | `daily` | Snapshot capture cadence (`daily` or `hourly`) |
-
-**Exit Codes:**
-
-| Code | Meaning |
-|------|---------|
-| 0 | Project created |
-| 2 | Invalid flags or target exists |
-
-**Examples:**
-
-```bash
-stave init --profile aws-s3 --dir my-project
-stave init --profile aws-s3 --with-github-actions
-stave init --dry-run
-```
 
 ---
 

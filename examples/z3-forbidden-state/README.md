@@ -7,7 +7,7 @@ to add a new Z3-checkable invariant.
 
 ```
 controls/*.yaml (forbidden_state)
-   -> stave export-invariants --format json
+   -> stave export-controls --format json
    -> compile.py     (predicate tree -> SMT-LIB query)
    -> obs_to_facts.py (observation values -> SMT-LIB assertions)
    -> z3 -in
@@ -49,7 +49,7 @@ optional.
 2. Export the catalog as solver-ready invariants:
 
    ```bash
-   stave export-invariants --format json > invariants.json
+   stave export-controls --format json > invariants.json
    ```
 
 3. Compile every `forbidden_state` block into a `*.query.smt2`:
@@ -164,7 +164,7 @@ become Z3-ready queries with no per-control glue code.
 1. Open the control YAML.
 2. Add a `forbidden_state:` block beside `unsafe_predicate`,
    reusing the same `any` / `all` shape.
-3. Run `stave export-invariants` and `compile.py`.
+3. Run `stave export-controls` and `compile.py`.
 4. Confirm the generated `*.query.smt2` looks right.
 5. Validate against a fixture with `run.sh`.
 

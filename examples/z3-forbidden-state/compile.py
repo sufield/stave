@@ -3,7 +3,7 @@
 Compile forbidden_state predicate trees from InvariantExport into
 SMT-LIB satisfiability queries.
 
-Input  : InvariantExport JSON (stave export-invariants --format json)
+Input  : InvariantExport JSON (stave export-controls --format json)
 Output : one query.smt2 per control whose forbidden_state is non-empty
 
 The forbidden_state predicate carries the same vocabulary as

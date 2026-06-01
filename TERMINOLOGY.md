@@ -28,9 +28,6 @@ catalog actually contains.
 
 ## Migration
 
-- `stave export-invariants` → **`stave export-controls`**. The old
-  name is retained as a deprecated alias and prints a warning; it
-  will be removed in v1.0.
 - The solver-import JSON keeps its top-level `invariants` array — that
   shape is a data contract with external SMT/Z3 compilers, not a
   user-facing surface.

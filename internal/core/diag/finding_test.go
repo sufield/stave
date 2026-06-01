@@ -35,9 +35,9 @@ func TestBuilder_Action(t *testing.T) {
 }
 
 func TestBuilder_Command(t *testing.T) {
-	finding := NewFinding(RuleNoControls).FixCommand("stave init").Build()
-	if finding.FixCommand != "stave init" {
-		t.Fatalf("command=%q, want %q", finding.FixCommand, "stave init")
+	finding := NewFinding(RuleNoControls).FixCommand("stave config show").Build()
+	if finding.FixCommand != "stave config show" {
+		t.Fatalf("command=%q, want %q", finding.FixCommand, "stave config show")
 	}
 }
 

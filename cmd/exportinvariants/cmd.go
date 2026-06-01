@@ -1,6 +1,5 @@
 // Package exportinvariants implements the `stave export-controls`
-// command (with `export-invariants` retained as a deprecated alias).
-// The command projects Stave's control catalog as a JSON document —
+// command. The command projects Stave's control catalog as a JSON document —
 // each entry carries the predicate tree, authored intent rationale,
 // and the optional forbidden_state block external Z3 / SMT
 // compilers consume.
@@ -39,9 +38,8 @@ func NewCmd() *cobra.Command {
 	opts := &options{}
 
 	cmd := &cobra.Command{
-		Use:     "export-controls",
-		Aliases: []string{"export-invariants"},
-		Short:   "Export the control catalog for external solver consumption",
+		Use:   "export-controls",
+		Short: "Export the control catalog for external solver consumption",
 		Long: `Export the control catalog as a JSON document — each entry carries the
 control's predicate tree, authored intent rationale, and the optional
 forbidden_state block (the high-level "this configuration must never
@@ -80,15 +78,6 @@ Exit codes:
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		PreRun: func(cmd *cobra.Command, _ []string) {
-			// Deprecation hint when invoked via the legacy alias.
-			// The alias is retained for backward compatibility and
-			// will be removed in v1.0; vocabulary unified on "control".
-			if cmd.CalledAs() == "export-invariants" {
-				fmt.Fprintln(cmd.ErrOrStderr(),
-					"warning: `stave export-invariants` is deprecated — use `stave export-controls`. The alias will be removed in v1.0.")
-			}
-		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return run(cmd.Context(), cmd.OutOrStdout(), opts)
 		},

@@ -3,7 +3,7 @@
 #
 #   stave export-sir (before, after) → JSONL fact pairs
 #   diff.py JSONL pair               → delta.json
-#   stave export-invariants          → invariants.json
+#   stave export-controls          → invariants.json
 #   impact.py obs pair + invariants  → impact.json (regressions / improvements)
 
 set -euo pipefail
@@ -50,7 +50,7 @@ fi
     > "$work_dir/after.jsonl" 2>/dev/null
 
 python3 "$script_dir/diff.py" "$work_dir/before.jsonl" "$work_dir/after.jsonl" "$work_dir/delta.json" >/dev/null 2>&1
-"$stave_bin" export-invariants --format json > "$work_dir/invariants.json" 2>/dev/null
+"$stave_bin" export-controls --format json > "$work_dir/invariants.json" 2>/dev/null
 python3 "$script_dir/impact.py" \
     "$fixtures/writeup-config/observations" \
     "$fixtures/remediated-config/observations" \

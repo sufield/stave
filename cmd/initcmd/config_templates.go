@@ -3,7 +3,7 @@ package initcmd
 import "github.com/sufield/stave/internal/core/kernel"
 
 // templateObservation is the starter observation file written by
-// `stave init generate observation`. It includes one asset per common
+// `stave generate observation`. It includes one asset per common
 // type so a new project can run `stave apply` end-to-end without first
 // learning the wire format. Real workloads replace this with output
 // from an extractor (Steampipe, Terraform State, AWS Config — see

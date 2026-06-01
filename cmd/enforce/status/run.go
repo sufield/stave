@@ -36,7 +36,7 @@ func (r *Runner) Run(cfg config) error {
 	if err != nil {
 		return ui.WithNextCommand(
 			fmt.Errorf("project root not found in %s: %w", cfg.Dir, err),
-			"stave init",
+			"stave config context create",
 		)
 	}
 

@@ -208,7 +208,7 @@ func run(cfg config) error {
 	fmt.Fprintln(cfg.Stdout)
 	fmt.Fprintln(cfg.Stdout, "Next steps:")
 	fmt.Fprintf(cfg.Stdout, "  1. Review: %s\n", filepath.Join(failDir, "controls", cfg.ID+".yaml"))
-	fmt.Fprintln(cfg.Stdout, "  2. Generate golden files: make golden")
+	fmt.Fprintln(cfg.Stdout, "  2. Generate golden files: make regenerate-goldens")
 	fmt.Fprintln(cfg.Stdout, "  3. Run E2E tests: make e2e")
 
 	return nil

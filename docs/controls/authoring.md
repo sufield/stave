@@ -117,7 +117,7 @@ This generates:
 Then generate golden files and run tests:
 
 ```bash
-make golden
+make regenerate-goldens
 make e2e
 ```
 
@@ -413,7 +413,7 @@ make forge ID=CTL.S3.NEW.001 NAME="My Control" \
   REMEDIATION="Disable public read."
 
 # Generate golden expected output
-make golden
+make regenerate-goldens
 
 # Run all E2E tests including the new fixture
 make e2e

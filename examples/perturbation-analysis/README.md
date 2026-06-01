@@ -10,7 +10,7 @@ reports verdict flips.
 ```
 stave export-sir (before, after)            → JSONL fact pairs
 diff.py JSONL pair                          → delta.json (added / removed / unchanged)
-stave export-invariants                     → invariants.json
+stave export-controls                     → invariants.json
 impact.py obs pair + invariants + delta     → impact.json (regressions, improvements)
 ```
 
@@ -111,7 +111,7 @@ from the impact.
 - **External tool only** — no Stave core changes. `diff.py`,
   `impact.py`, and `run.sh` live in `examples/`.
 - **Reads existing exports** — `stave export-sir --format jsonl`
-  for the diff side, `stave export-invariants` for the
+  for the diff side, `stave export-controls` for the
   catalog of forbidden_state queries.
 - **Does not generate new queries** — the same auto-generated
   forbidden_state queries from `examples/z3-forbidden-state/`

@@ -166,8 +166,6 @@ These terms are final. The renames are done. Use the canonical term.
 
 - Signal handler (`executor.go`): runs outside Cobra lifecycle
 - Error rendering (`executor_errors.go`): runs after command teardown
-- First-run hint (`executor_firstrun.go`): runs before bootstrap
-- No-project hint (`executor_firstrun.go`): runs after command teardown
 - Alias resolution (`runtime_helpers.go`): runs before bootstrap
 - Bug report inspector (`bugreport/inspect_run.go`): diagnostic tool output
 
@@ -233,13 +231,13 @@ After adding or modifying controls, golden files must be regenerated. There are
 
 ### E2E forge fixtures (`testdata/e2e/e2e-*`)
 
-`make golden` regenerates `output.json`, `expected.summary.json`, and
+`make regenerate-goldens` regenerates `output.json`, `expected.summary.json`, and
 `expected.findings.count` for all `e2e-*` directories. These use
 `--controls`/`--observations` flags and `--now 2026-01-11T00:00:00Z`.
 
 ### Profile-based golden files (`testdata/e2e/{profile-name}`)
 
-`make golden` does NOT handle profile tests. These must be regenerated manually:
+`make regenerate-goldens` does NOT handle profile tests. These must be regenerated manually:
 
 ```bash
 # HIPAA profile (if control added to hipaa pack)
@@ -265,7 +263,7 @@ observations, also update `wantViol` count in the test.
 
 ```bash
 make sync-controls        # controls/ → internal/controldata/embedded/
-make golden               # regenerate e2e fixture golden files
+make regenerate-goldens               # regenerate e2e fixture golden files
 # Regenerate profile goldens (hipaa, s3, etc.) manually per above
 make docs-controls        # regenerate docs/controls/reference.md
 make readme               # regenerate README.md with control counts

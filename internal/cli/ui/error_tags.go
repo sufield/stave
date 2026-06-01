@@ -43,8 +43,8 @@ var hintRegistry = []hintRule{
 		patterns: []string{"--controls not accessible"},
 		hint: RemediationHint{
 			Reason:      "Control directory is missing or unreadable.",
-			NextCommand: "stave init --profile aws-s3",
-			SearchQuery: "init controls directory not accessible",
+			NextCommand: "stave apply --controls ./controls --observations ./observations",
+			SearchQuery: "controls directory not accessible",
 		},
 	},
 	{
@@ -106,8 +106,8 @@ var hintRegistry = []hintRule{
 		patterns: []string{"resolve project context"},
 		hint: RemediationHint{
 			Reason:      "Could not resolve the project root or working directory.",
-			NextCommand: "stave init",
-			SearchQuery: "init project context",
+			NextCommand: "stave config context create",
+			SearchQuery: "config project context",
 		},
 	},
 	{
@@ -115,8 +115,8 @@ var hintRegistry = []hintRule{
 		patterns: []string{"load project config", "parse project config"},
 		hint: RemediationHint{
 			Reason:      "Project configuration (stave.yaml) is missing or invalid.",
-			NextCommand: "stave init",
-			SearchQuery: "init project config stave.yaml",
+			NextCommand: "stave config show",
+			SearchQuery: "config project stave.yaml",
 		},
 	},
 }

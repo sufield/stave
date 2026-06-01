@@ -4,7 +4,7 @@ Bind observation property values to the SMT-LIB variables the
 compiled forbidden_state queries reference.
 
 Input:
-  invariants.json  — output of `stave export-invariants`
+  invariants.json  — output of `stave export-controls`
   observations/    — directory of obs.v0.1 JSON snapshots
   output facts file path
 

@@ -189,7 +189,7 @@ func (a *App) checkConfigHealth(cmd *cobra.Command, cfgErr error) error {
 	}
 	return &ui.UserError{Err: fmt.Errorf(
 		"project configuration is invalid: %w\n"+
-			"Fix: check stave.yaml syntax or run 'stave init' to create a new one",
+			"Fix: check stave.yaml syntax or run 'stave config show' to inspect",
 		cfgErr,
 	)}
 }

@@ -3,7 +3,7 @@
 # remediated fixtures: export invariants → compile each
 # forbidden_state to SMT-LIB → bind observation values → run Z3.
 #
-#   stave export-invariants --format json        →  invariants.json
+#   stave export-controls --format json        →  invariants.json
 #   compile.py invariants.json queries/          →  *.query.smt2
 #   obs_to_facts.py + observations/              →  facts.smt2
 #   z3 -in (cat facts.smt2 query.smt2)           →  sat / unsat per control
@@ -42,7 +42,7 @@ fi
 invariants="$work_dir/invariants.json"
 queries_dir="$work_dir/queries"
 
-"$stave_bin" export-invariants --format json > "$invariants" 2>/dev/null
+"$stave_bin" export-controls --format json > "$invariants" 2>/dev/null
 total=$(jq '.invariants | length' "$invariants")
 fs_count=$(jq '[.invariants[] | select((.forbidden_state.combine // "") != "")] | length' "$invariants")
 if [[ "$FMT_RAW" != "1" ]]; then
