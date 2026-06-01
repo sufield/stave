@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2667
-**Pack hash:** `7e1c3adb327b01b397ba700812c4dbeeea2557e8a9d6baffece4666a85144483`
+**Total controls:** 2669
+**Pack hash:** `4e849290431cc86900910e293cd6def05b883b165db0e7d8d931f691ed9a181f`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
-| critical | 274 |
+| critical | 275 |
 | high | 1161 |
 | info | 16 |
 | low | 204 |
-| medium | 1012 |
+| medium | 1013 |
 
 | Domain | Count |
 |--------|-------|
@@ -26,7 +26,7 @@
 | exposure | 1193 |
 | governance | 578 |
 | hygiene | 18 |
-| identity | 422 |
+| identity | 424 |
 | lifecycle | 31 |
 | network | 32 |
 | resilience | 33 |
@@ -22939,6 +22939,21 @@ No IAM policy with Effect Allow on Action "*" and Resource "*" should be attache
 
 ---
 
+### CTL.IAM.POLICY.ADMIN.002
+
+**No Full Admin Policies on IAM Groups**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-6; ffiec: CAT-D3; gdpr: Art.32; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; nist_csf_2.0: PR.AA; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM groups must not have policies granting Effect Allow on Action "*" and Resource "*". An admin policy on a group grants every member full admin access by group membership alone — the group becomes a shadow admin factory. Adding a user to the group (iam:AddUserToGroup) is a single API call that bypasses all per-user permission review. CTL.IAM.POLICY.ADMIN.001 enforces this for users; this control enforces it for groups.
+
+**Remediation:** Replace the wildcard admin policy with scoped policies granting only the permissions the group's members require. Use AWS Access Analyzer to generate least-privilege policies from CloudTrail activity for each group member.
+
+---
+
 ### CTL.IAM.POLICY.ASSUMEROLE.001
 
 **AssumeRole Must Be Scoped to Specific Roles**
@@ -23191,6 +23206,21 @@ IAM users must not have inline policies attached directly. Inline policies are h
 IAM roles must not have inline policies attached. Inline policies are embedded directly in the role and cannot be versioned, audited, or reused independently. They create shadow permission grants that are invisible to policy-listing tools that only enumerate managed policies. Use managed policies attached to the role instead. CTL.IAM.POLICY.INLINE.001 enforces this for users; this control enforces it for roles.
 
 **Remediation:** Convert inline policies to managed policies. Use aws iam list-role-policies to enumerate inline policies, then aws iam create-policy to create equivalent managed policies, attach them, and delete the inline policies.
+
+---
+
+### CTL.IAM.POLICY.INLINE.003
+
+**No Inline Policies on IAM Groups**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v1.4.0: 1.15; cis_aws_v3.0: 1.15; fedramp_moderate: AC-6; ffiec: CAT-D3; gdpr: Art.32; hipaa: 164.312(a)(1); iso_27001_2022: A.8.2; nist_800_53_r5: AC-6; nist_csf_2.0: PR.AA; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.2; soc2: CC6.3;
+
+IAM groups must not have inline policies attached. Inline policies on groups are inherited by every member immediately, magnifying the blast radius per policy. They are harder to audit than managed policies, cannot be versioned independently, and create shadow permission grants invisible to tools that only enumerate managed policy attachments. CTL.IAM.POLICY.INLINE.001 enforces this for users; CTL.IAM.POLICY.INLINE.002 enforces it for roles; this control enforces it for groups.
+
+**Remediation:** Convert inline policies to managed policies and attach them to the group. Delete the inline policies using aws iam delete-group-policy --group-name <name> --policy-name <policy>.
 
 ---
 

@@ -177,7 +177,7 @@ func TestSerializeSMT2_QuotesUnsafeObservationPredicate(t *testing.T) {
 		{Subject: "asset-1", Predicate: "identity.condition.iam:PassedToService", Object: "ec2.amazonaws.com", Source: "observation"},
 	}
 	var buf bytes.Buffer
-	if err := SerializeSMT2(facts, &buf); err != nil {
+	if err := SerializeSMT2(facts, &buf, SMT2Options{ClosedWorld: true}); err != nil {
 		t.Fatalf("SerializeSMT2: %v", err)
 	}
 	out := buf.String()

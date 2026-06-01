@@ -166,7 +166,7 @@ func TestSerializeSMT2_FactsOnlyNoQueries(t *testing.T) {
 	t.Parallel()
 	facts := ExtractFacts(fixtureDoc())
 	var buf bytes.Buffer
-	if err := SerializeSMT2(facts, &buf); err != nil {
+	if err := SerializeSMT2(facts, &buf, SMT2Options{ClosedWorld: true}); err != nil {
 		t.Fatalf("SerializeSMT2: %v", err)
 	}
 	body := buf.String()
@@ -184,7 +184,7 @@ func TestSerializeSMT2_DeclaresEachPredicate(t *testing.T) {
 	t.Parallel()
 	facts := ExtractFacts(fixtureDoc())
 	var buf bytes.Buffer
-	if err := SerializeSMT2(facts, &buf); err != nil {
+	if err := SerializeSMT2(facts, &buf, SMT2Options{ClosedWorld: true}); err != nil {
 		t.Fatalf("SerializeSMT2: %v", err)
 	}
 	body := buf.String()
@@ -222,7 +222,7 @@ func TestSerializeSMT2_DeclaresBaselinePredicates(t *testing.T) {
 	// the projection should still yield a complete declaration
 	// header.
 	var buf bytes.Buffer
-	if err := SerializeSMT2(nil, &buf); err != nil {
+	if err := SerializeSMT2(nil, &buf, SMT2Options{ClosedWorld: true}); err != nil {
 		t.Fatalf("SerializeSMT2: %v", err)
 	}
 	body := buf.String()
@@ -242,7 +242,7 @@ func TestSerializeSMT2_ClosedWorldAxiomsPresent(t *testing.T) {
 	t.Parallel()
 	facts := ExtractFacts(fixtureDoc())
 	var buf bytes.Buffer
-	if err := SerializeSMT2(facts, &buf); err != nil {
+	if err := SerializeSMT2(facts, &buf, SMT2Options{ClosedWorld: true}); err != nil {
 		t.Fatalf("SerializeSMT2: %v", err)
 	}
 	body := buf.String()

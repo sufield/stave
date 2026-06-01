@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.ADMIN.002
+name: No Full Admin Policies on IAM Groups
+description: >
+  IAM groups must not have policies granting Effect Allow on
+  Action "*" and Resource "*". An admin policy on a group grants
+  every member full admin access by group membership alone — the
+  group becomes a shadow admin factory. Adding a user to the group
+  (iam:AddUserToGroup) is a single API call that bypasses all
+  per-user permission review. CTL.IAM.POLICY.ADMIN.001 enforces
+  this for users; this control enforces it for groups.
+domain: identity
+severity: critical
+compliance:
+  owasp_nhi: "NHI5"
+  cis_aws_v3.0: "1.16"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  gdpr: "Art.32"
+  ffiec: "CAT-D3"
+  iso_27001_2022: "A.8.3"
+  nist_csf_2.0: "PR.AA"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+corpus_reference: MITRE:T1078.004
+applicable_asset_types:
+  - aws_iam_group
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.group.has_admin_policy
+remediation:
+  description: >
+    IAM group has a policy granting full *:* administrative access.
+    Every member of the group is a full admin.
+  action: >
+    Replace the wildcard admin policy with scoped policies granting
+    only the permissions the group's members require. Use AWS Access
+    Analyzer to generate least-privilege policies from CloudTrail
+    activity for each group member.
+  example: |
+    {
+      "identity": {
+        "group": {
+          "has_admin_policy": false
+        }
+      }
+    }
+mitre_attack:
+  - id: T1078.004
+    name: "Valid Accounts: Cloud Accounts"
+    tactic: privilege-escalation
+unsafe_predicate:
+  all:
+    - field: properties.identity.group.has_admin_policy
+      op: eq
+      value: true
+defect: >
+  IAM group has a policy granting Action:* Resource:* with Effect Allow.
+infection: >
+  A group with admin policy is a privilege-escalation multiplier.
+  Any principal with iam:AddUserToGroup can add themselves or
+  another user to the group, inheriting full admin immediately.
+  Unlike per-user admin attachment, group admin is invisible in
+  most access review workflows — reviewers check user policies
+  and role trust, not transitive group membership. The group name
+  may not indicate admin access (SadCloud's "sadcloud_superuser"
+  uses a non-standard name), defeating name-based audit heuristics.
+failure: >
+  Shadow admin via group membership. Every group member has
+  unrestricted access; adding a user to the group is a one-call
+  privilege escalation.
+tests:
+  - name: group with admin policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:group/admins"
+      asset_type: aws_iam_group
+      vendor: aws
+      properties:
+        identity:
+          group:
+            name: "admins"
+            has_admin_policy: true
+            member_count: 2
+            policy_count: 1
+  - name: group without admin policy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:group/developers"
+      asset_type: aws_iam_group
+      vendor: aws
+      properties:
+        identity:
+          group:
+            name: "developers"
+            has_admin_policy: false
+            member_count: 5
+            policy_count: 3
+alternatives:
+  - tool: prowler
+    check_id: iam_group_administrator_access_policy
+    coverage: covered
+    note: >-
+      Prowler checks for AdministratorAccess managed policy on groups;
+      Stave checks the computed has_admin_policy flag which covers
+      both managed and inline admin-equivalent policies.
+validated_against:
+  - vendor: nccgroup
+    lab: sadcloud
+    result: detected
+    verified: "2026-06-01"

@@ -43,6 +43,8 @@ type options struct {
 	Now             string
 	Validate        bool
 	AllowlistMode   string
+	ClosedWorld     bool
+	StripCatalog    bool
 }
 
 // NewCmd constructs the export-sir command. The command routes
@@ -146,6 +148,13 @@ Exit codes:
 			"full (experimental — emit one auto_prop_<path> triple per control-read property "+
 			"path the predicate index advertises; measures coverage gain, no downstream solver "+
 			"consumes the auto_prop_* names yet)")
+	flags.BoolVar(&opts.ClosedWorld, "closed-world", false,
+		"emit closed-world forall axioms in SMT2 output (restricts each predicate to its "+
+			"asserted tuples only; needed for negative proofs but causes solver timeout on "+
+			"large fact sets)")
+	flags.BoolVar(&opts.StripCatalog, "strip-catalog", false,
+		"omit control catalog metadata (has_severity, has_type, has_domain) from the fact "+
+			"stream; reduces SMT2/JSONL output to observation-derived facts only")
 
 	return cmd
 }
@@ -249,6 +258,10 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error 
 		}
 	}
 
+	if opts.StripCatalog && (format == "jsonl" || format == "smt2") {
+		facts = sirfacts.FilterOutCatalog(facts)
+	}
+
 	switch format {
 	case "jsonl":
 		if encErr := sirfacts.SerializeJSONL(facts, w); encErr != nil {
@@ -256,7 +269,7 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error 
 		}
 		return nil
 	case "smt2":
-		if encErr := sirfacts.SerializeSMT2(facts, w); encErr != nil {
+		if encErr := sirfacts.SerializeSMT2(facts, w, sirfacts.SMT2Options{ClosedWorld: opts.ClosedWorld}); encErr != nil {
 			return fmt.Errorf("encode smt2: %w", encErr)
 		}
 		return nil

@@ -1953,19 +1953,39 @@ var baselineSMT2Predicates = []string{
 // so no escaping is needed for predicate symbols. String literals
 // follow SMT-LIB v2.6 string theory: surrounded by ", embedded "
 // escaped as "" (per the standard).
-func SerializeSMT2(facts []Fact, w io.Writer) error {
+// SMT2Options controls SMT-LIB v2 serialization behavior.
+type SMT2Options struct {
+	ClosedWorld bool
+}
+
+func SerializeSMT2(facts []Fact, w io.Writer, opts SMT2Options) error {
 	bw := newBufferedWriter(w)
 	bw.writeLine("; Stave SIR facts export — SMT-LIB v2")
 	bw.writeLine("; Predicates declared as Bool functions over String args.")
-	bw.writeLine("; Closed-world axioms emitted per predicate: the predicate is true")
-	bw.writeLine("; ONLY for the (subject, object) pairs explicitly asserted; for")
-	bw.writeLine("; every other input it is false. This is the standard fact-base")
-	bw.writeLine("; encoding for SAT/SMT consumers.")
+	if opts.ClosedWorld {
+		bw.writeLine("; Closed-world axioms emitted per predicate: the predicate is true")
+		bw.writeLine("; ONLY for the (subject, object) pairs explicitly asserted; for")
+		bw.writeLine("; every other input it is false.")
+	} else {
+		bw.writeLine("; Open-world mode: no closed-world axioms. Predicates may be true")
+		bw.writeLine("; for inputs beyond those explicitly asserted. Use --closed-world")
+		bw.writeLine("; for small targeted queries where completeness matters.")
+	}
 	bw.writeLine("; This file contains FACTS ONLY. Append your query (check-sat / get-model / etc.) before invoking the solver.")
 	bw.writeLine("(set-logic ALL)")
 	bw.writeLine("")
 
 	predicates := allDeclaredPredicates(facts)
+	bw.writeLine(fmt.Sprintf("; total_facts: %d", len(facts)))
+	bw.writeLine(fmt.Sprintf("; total_predicates: %d", len(predicates)))
+	if opts.ClosedWorld {
+		bw.writeLine("; mode: closed-world (forall axioms emitted)")
+	} else {
+		bw.writeLine("; mode: open-world (no forall axioms)")
+		bw.writeLine("; recommended: souffle, clingo (enumeration at scale)")
+		bw.writeLine("; scoped_queries: z3, cvc5, prolog (append targeted query)")
+	}
+	bw.writeLine("")
 	bw.writeLine("; --- Predicate declarations ---")
 	for _, p := range predicates {
 		bw.writeLine(fmt.Sprintf("(declare-fun %s (String String) Bool)", smt2Symbol(p)))
@@ -2001,13 +2021,15 @@ func SerializeSMT2(facts []Fact, w io.Writer) error {
 		bw.writeLine(fmt.Sprintf("(assert (%s %s %s))", smt2Symbol(f.Predicate), smt2Quote(f.Subject), smt2Quote(f.Object)))
 	}
 
-	bw.writeLine("")
-	bw.writeLine("; --- Closed-world axioms ---")
-	bw.writeLine("; Each axiom restricts the predicate to its asserted positive facts.")
-	bw.writeLine("; For predicates with no facts, the axiom asserts the predicate is")
-	bw.writeLine("; false everywhere.")
-	for _, p := range predicates {
-		bw.writeLine(closedWorldAxiom(p, factsByPredicate(facts, p)))
+	if opts.ClosedWorld {
+		bw.writeLine("")
+		bw.writeLine("; --- Closed-world axioms ---")
+		bw.writeLine("; Each axiom restricts the predicate to its asserted positive facts.")
+		bw.writeLine("; For predicates with no facts, the axiom asserts the predicate is")
+		bw.writeLine("; false everywhere.")
+		for _, p := range predicates {
+			bw.writeLine(closedWorldAxiom(p, factsByPredicate(facts, p)))
+		}
 	}
 	return bw.err
 }

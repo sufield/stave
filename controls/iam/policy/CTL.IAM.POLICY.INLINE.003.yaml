@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.INLINE.003
+name: No Inline Policies on IAM Groups
+description: >
+  IAM groups must not have inline policies attached. Inline policies
+  on groups are inherited by every member immediately, magnifying
+  the blast radius per policy. They are harder to audit than managed
+  policies, cannot be versioned independently, and create shadow
+  permission grants invisible to tools that only enumerate managed
+  policy attachments. CTL.IAM.POLICY.INLINE.001 enforces this for
+  users; CTL.IAM.POLICY.INLINE.002 enforces it for roles; this
+  control enforces it for groups.
+domain: identity
+severity: medium
+compliance:
+  owasp_nhi: "NHI5"
+  cis_aws_v1.4.0: "1.15"
+  cis_aws_v3.0: "1.15"
+  hipaa: "164.312(a)(1)"
+  soc2: "CC6.3"
+  pci_dss_v4.0: "7.2.2"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  gdpr: "Art.32"
+  ffiec: "CAT-D3"
+  iso_27001_2022: "A.8.2"
+  nist_csf_2.0: "PR.AA"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_group
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.group.has_inline_policies
+remediation:
+  description: >
+    IAM group has inline policies attached. All group members inherit
+    these policies immediately. Inline policies bypass centralized
+    policy management and are invisible to IAM Access Analyzer.
+  action: >
+    Convert inline policies to managed policies and attach them to
+    the group. Delete the inline policies using
+    aws iam delete-group-policy --group-name <name> --policy-name <policy>.
+  example: |
+    {
+      "identity": {
+        "group": {
+          "has_inline_policies": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.group.has_inline_policies
+      op: eq
+      value: true
+defect: >
+  IAM group has inline policies attached directly.
+infection: >
+  Inline policies on groups bypass the managed-policy governance
+  boundary. Every member of the group inherits the inline policy
+  immediately — there is no separate attachment step to audit. If
+  the inline policy uses NotAction (allow-everything-except), the
+  effective permission set is nearly admin-equivalent but invisible
+  to tools that check for Action:* patterns. The combination of
+  hidden permission grants and automatic inheritance makes inline
+  group policies the highest-leverage shadow permission surface in
+  IAM.
+failure: >
+  Shadow permissions via group membership. Inline policies are
+  invisible to managed-policy enumeration; every group member
+  inherits them without explicit attachment.
+tests:
+  - name: group with inline policies fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:group/dev-team"
+      asset_type: aws_iam_group
+      vendor: aws
+      properties:
+        identity:
+          group:
+            name: "dev-team"
+            has_inline_policies: true
+            member_count: 3
+            policy_count: 2
+  - name: group without inline policies passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:group/dev-team"
+      asset_type: aws_iam_group
+      vendor: aws
+      properties:
+        identity:
+          group:
+            name: "dev-team"
+            has_inline_policies: false
+            member_count: 3
+            policy_count: 1
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_no_administrative_privileges
+    coverage: partial
+    note: >-
+      Prowler checks inline policies on users and roles;
+      Stave .003 extends coverage to groups.
+validated_against:
+  - vendor: nccgroup
+    lab: sadcloud
+    result: detected
+    verified: "2026-06-01"
