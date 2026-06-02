@@ -33,7 +33,20 @@
             "block_public_acls": false,
             "ignore_public_acls": false
           },
-          "acl_grants": []
+          "acl_grants": [],
+          "prefix_exposure": {
+            "has_identity_evidence": true,
+            "has_resource_evidence": false,
+            "identity_read_scopes": [
+              "images/*"
+            ],
+            "identity_source_by_scope": {
+              "images/*": "AllowPublicImages"
+            },
+            "identity_read_blocked": false,
+            "resource_read_all": false,
+            "resource_read_blocked": false
+          }
         }
       }
     }

@@ -9,12 +9,12 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2026-01-10T000000Z.json": "db5d9769711840da028fc9a2abec7bb0668ebe0c93969aa5b186b050942c2eb1",
-        "2026-01-11T000000Z.json": "743f68c86248191f218b22e8274ab2cc567475381158ad0f6cdde23dddff7a17"
+        "2026-01-10T000000Z.json": "5b2bec5bd460b56fce58f11df00aa7339de756a8895b397d7744aedd203cf1b0",
+        "2026-01-11T000000Z.json": "a6f2b903d5c6829616c012a35a74d69f5d9e75ddd56f15dea9d880e43456d51e"
       },
-      "overall": "56831c983028769ea34202886a170757b38805bf57261813b1d6344b892dc9d3"
+      "overall": "d68eb102719d040df7865ec46ce3fb0a865f6c1d297023c0003d354234cbac78"
     },
-    "policy_fingerprint": "10c79a5e0ee1cd1c8ef7785b05ed62f7a48848a5a7fb9ecc615ff6fad3720fc9",
+    "policy_fingerprint": "0555b4413f5a32154a855e9beaee0d4cf08ae4dff08c247ac8dc9d1e8c4b23de",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -36,9 +36,9 @@
         "misconfigurations": [
           {
             "property": "exposure_source",
-            "actual_value": "missing_evidence",
+            "actual_value": "identity:AllowPublicAll",
             "operator": "eq",
-            "unsafe_value": "missing_evidence"
+            "unsafe_value": "identity:AllowPublicAll"
           },
           {
             "property": "protected_prefix",
@@ -47,7 +47,7 @@
             "unsafe_value": "invoices/"
           }
         ],
-        "temporal_risk": "Protected prefix \"invoices/\" is publicly readable via missing_evidence."
+        "temporal_risk": "Protected prefix \"invoices/\" is publicly readable via identity:AllowPublicAll."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -77,11 +77,11 @@
       },
       "reasoning_trace": [
         {
-          "predicate_expr": "exposure_source eq \"missing_evidence\"",
+          "predicate_expr": "exposure_source eq \"identity:AllowPublicAll\"",
           "observation_key": "exposure_source",
           "operator": "eq",
-          "expected_value": "missing_evidence",
-          "observed_value": "missing_evidence"
+          "expected_value": "identity:AllowPublicAll",
+          "observed_value": "identity:AllowPublicAll"
         },
         {
           "predicate_expr": "protected_prefix eq \"invoices/\"",
@@ -102,9 +102,9 @@
           "control_name": "Public Read Allowed Only for Approved Prefixes",
           "reasoning": [
             {
-              "clause": "the exposure source = \"missing_evidence\"",
+              "clause": "the exposure source = \"identity:AllowPublicAll\"",
               "observation_key": "exposure_source",
-              "observed_value": "missing_evidence"
+              "observed_value": "identity:AllowPublicAll"
             },
             {
               "clause": "the protected prefix = \"invoices/\"",
@@ -116,10 +116,10 @@
         "changes": [
           {
             "path": "exposure_source",
-            "current_value": "missing_evidence",
-            "required_value": "any value other than missing_evidence",
+            "current_value": "identity:AllowPublicAll",
+            "required_value": "any value other than identity:AllowPublicAll",
             "has_safe_default": false,
-            "description": "Change exposure_source away from missing_evidence"
+            "description": "Change exposure_source away from identity:AllowPublicAll"
           },
           {
             "path": "protected_prefix",

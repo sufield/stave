@@ -14,7 +14,7 @@
       },
       "overall": "b8317fb0654894c2d67c770376237335430371fc27be946dc32a02b28f0f11e9"
     },
-    "policy_fingerprint": "069f10e0d7c7b77f8819a3c0000c5ee416d7d588ccc050267f8cb41a11ff7acc",
+    "policy_fingerprint": "a48d893f2ca0f829619f26fd637dd67b1d234669cd5b054e5ce29d5b49af6cd2",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -97,6 +97,16 @@
         },
         "action": "Remove `iam:AttachUserPolicy` from the principal, or scope its Resource field to user ARNs that do not include the principal itself (admin-only bootstrap roles, for example). Enforce at the organization level with an SCP that denies `iam:AttachUserPolicy` on `${aws:PrincipalArn}`. Also consider a permissions boundary on the principal that prevents the attached policy from taking effect."
       },
+      "chain_membership": [
+        {
+          "chain_id": "iam_privesc_by_attachment",
+          "chain_severity": "critical",
+          "stage_span": [
+            "privilege_escalation"
+          ],
+          "narrative": "IAM privilege escalation via policy attachment. A user or role has iam:AttachUserPolicy, iam:AttachRolePolicy, or iam:AttachGroupPolicy permission — enabling them to attach an admin-grade managed policy to any principal they can reach, including themselves. This is a single-API-call escalation path documented in Rhino Security's CloudGoat and Bishop Fox's IAM Vulnerable. The escalation is latent: the principal currently has low privileges, but one API call (AttachUserPolicy) grants full admin. No runtime exploit is required — the configuration alone enables the path. Threshold of 1: AttachUserPolicy alone is sufficient for escalation. The inline-policy member is an amplifier — if the account also has roles with inline policies (shadow permissions), the escalation target surface is broader than managed-policy auditing reveals.\n"
+        }
+      ],
       "sla_deadline_hours": 72,
       "sla_breached": true,
       "sla_overdue_hours": 67416,
@@ -107,7 +117,7 @@
         "duration_factor": 5,
         "blast_multiplier": 2.5,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "blind_multiplier": 5,
         "days_blind": 2812
       },
@@ -206,6 +216,26 @@
       ]
     }
   ],
+  "chain_findings": [
+    {
+      "chain": "iam_privesc_by_attachment",
+      "asset_id": "arn:aws:iam::111122223333:user/eve",
+      "description": "IAM privilege escalation via policy attachment. A user or role has iam:AttachUserPolicy, iam:AttachRolePolicy, or iam:AttachGroupPolicy permission — enabling them to attach an admin-grade managed policy to any principal they can reach, including themselves. This is a single-API-call escalation path documented in Rhino Security's CloudGoat and Bishop Fox's IAM Vulnerable. The escalation is latent: the principal currently has low privileges, but one API call (AttachUserPolicy) grants full admin. No runtime exploit is required — the configuration alone enables the path. Threshold of 1: AttachUserPolicy alone is sufficient for escalation. The inline-policy member is an amplifier — if the account also has roles with inline policies (shadow permissions), the escalation target surface is broader than managed-policy auditing reveals.\n",
+      "controls_failing": [
+        "CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001"
+      ],
+      "missing_safeguards": [
+        "CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001",
+        "CTL.IAM.ESCALATE.ATTACHGROUPPOLICY.001"
+      ],
+      "compound_score": 100,
+      "severity": "critical",
+      "narrative": "IAM privilege escalation via policy attachment. A user or role has iam:AttachUserPolicy, iam:AttachRolePolicy, or iam:AttachGroupPolicy permission — enabling them to attach an admin-grade managed policy to any principal they can reach, including themselves. This is a single-API-call escalation path documented in Rhino Security's CloudGoat and Bishop Fox's IAM Vulnerable. The escalation is latent: the principal currently has low privileges, but one API call (AttachUserPolicy) grants full admin. No runtime exploit is required — the configuration alone enables the path. Threshold of 1: AttachUserPolicy alone is sufficient for escalation. The inline-policy member is an amplifier — if the account also has roles with inline policies (shadow permissions), the escalation target surface is broader than managed-policy auditing reveals.\n Failing: CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001.",
+      "attack_stages": [
+        "privilege_escalation"
+      ]
+    }
+  ],
   "issues": [
     {
       "issue_id": "sha256:f08bc51594537b5c",
@@ -251,7 +281,7 @@
         "duration_factor": 5,
         "blast_multiplier": 2.5,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "blind_multiplier": 5,
         "days_blind": 2812
       },
@@ -338,14 +368,6 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
-    }
-  },
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "controls",
-      "observations": "observations"
     }
   }
 }

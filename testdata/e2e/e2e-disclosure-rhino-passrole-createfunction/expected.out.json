@@ -14,7 +14,7 @@
       },
       "overall": "280f29c9be064d00c742805e4876c089aad9b3f694c6e1c8ce25fe3d49fc27df"
     },
-    "policy_fingerprint": "8bc638726486eef9739eff35a389e33d519dd412faa7588498a98871aecbba74",
+    "policy_fingerprint": "b306f878f7b7d3a55c7375789a1f44fa9648dcd1bd9d3443b1b7e4858d4cc95c",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -90,6 +90,16 @@
         },
         "action": "Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or remove lambda:CreateFunction. If broader function-creation is required for deployment workflows, restrict iam:PassRole with a Condition (`iam:PassedToService == lambda.amazonaws.com` plus a narrowly- scoped Resource ARN set). Alternatively, deny lambda:InvokeFunction and lambda:CreateFunctionUrlConfig on non-admin principals so the created function cannot be triggered."
       },
+      "chain_membership": [
+        {
+          "chain_id": "lambda_privesc",
+          "chain_severity": "critical",
+          "stage_span": [
+            "privilege_escalation"
+          ],
+          "narrative": "IAM privilege escalation via Lambda function creation with a privileged execution role. A principal with sts:AssumeRole reaches a role that has iam:PassRole + lambda:CreateFunction + an invocation vector. The principal assumes the intermediary role, creates a Lambda function passing a high-privilege execution role, and invokes it — the function runs with the execution role's full authority. This is a two-hop path: AssumeRole → PassRole+CreateFunction → admin. Documented in Rhino Security's CloudGoat (lambda_privesc) and Bishop Fox's IAM Vulnerable. Threshold 1: detection of either hop alone is sufficient to flag the path.\n"
+        }
+      ],
       "sla_deadline_hours": 336,
       "sla_breached": true,
       "sla_overdue_hours": 67152,
@@ -101,7 +111,7 @@
         "duration_factor": 5,
         "blast_multiplier": 2,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "blind_multiplier": 5,
         "days_blind": 2812
       },
@@ -182,6 +192,25 @@
       ]
     }
   ],
+  "chain_findings": [
+    {
+      "chain": "lambda_privesc",
+      "asset_id": "arn:aws:iam::111122223333:user/mallory",
+      "description": "IAM privilege escalation via Lambda function creation with a privileged execution role. A principal with sts:AssumeRole reaches a role that has iam:PassRole + lambda:CreateFunction + an invocation vector. The principal assumes the intermediary role, creates a Lambda function passing a high-privilege execution role, and invokes it — the function runs with the execution role's full authority. This is a two-hop path: AssumeRole → PassRole+CreateFunction → admin. Documented in Rhino Security's CloudGoat (lambda_privesc) and Bishop Fox's IAM Vulnerable. Threshold 1: detection of either hop alone is sufficient to flag the path.\n",
+      "controls_failing": [
+        "CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001"
+      ],
+      "missing_safeguards": [
+        "CTL.IAM.ESCALATE.ASSUMEROLE.001"
+      ],
+      "compound_score": 100,
+      "severity": "critical",
+      "narrative": "IAM privilege escalation via Lambda function creation with a privileged execution role. A principal with sts:AssumeRole reaches a role that has iam:PassRole + lambda:CreateFunction + an invocation vector. The principal assumes the intermediary role, creates a Lambda function passing a high-privilege execution role, and invokes it — the function runs with the execution role's full authority. This is a two-hop path: AssumeRole → PassRole+CreateFunction → admin. Documented in Rhino Security's CloudGoat (lambda_privesc) and Bishop Fox's IAM Vulnerable. Threshold 1: detection of either hop alone is sufficient to flag the path.\n Failing: CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001.",
+      "attack_stages": [
+        "privilege_escalation"
+      ]
+    }
+  ],
   "issues": [
     {
       "issue_id": "sha256:ffd6257619361c33",
@@ -227,7 +256,7 @@
         "duration_factor": 5,
         "blast_multiplier": 2,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "blind_multiplier": 5,
         "days_blind": 2812
       },
@@ -314,14 +343,6 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
-    }
-  },
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "controls",
-      "observations": "observations"
     }
   }
 }
