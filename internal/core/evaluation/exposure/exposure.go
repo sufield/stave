@@ -40,9 +40,9 @@ func (s Source) String() string {
 // ComplianceReport captures whether a prefix is publicly exposed and, if so,
 // the evidence source that proved it.
 type ComplianceReport struct {
-	Exposed       bool
-	Inconclusive  bool
-	Source        Source
+	Exposed      bool
+	Inconclusive bool
+	Source       Source
 }
 
 func (r ComplianceReport) String() string { return r.Source.String() }

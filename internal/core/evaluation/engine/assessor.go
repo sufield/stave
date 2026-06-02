@@ -953,6 +953,7 @@ func (a *Assessor) canComputeDigests() bool {
 //     audit gap — the audit-trail consumer expected a fingerprint and
 //     gets nothing back. Surface a slog.Warn so the gap is visible
 //     instead of a silent empty digest in compliance reports.
+//
 // PolicyPreimage returns the canonical sorted lines that feed the
 // policy fingerprint hash. Format: eval_version:<version> as the
 // first logical entry (sorts after CTL.* due to ASCII ordering),
