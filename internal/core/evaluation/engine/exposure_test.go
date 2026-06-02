@@ -80,17 +80,17 @@ func TestExposure_OverlappingPrefixes(t *testing.T) {
 	}
 }
 
-func TestExposure_NoEvidence_IsViolation(t *testing.T) {
-	// Missing exposure evidence is security-conservative → violation
+func TestExposure_NoEvidence_IsInconclusive(t *testing.T) {
+	// Missing exposure evidence → inconclusive (not violation)
 	ctl := exposureControl("CTL.EXP.001", []string{"data/sensitive"}, nil)
 	tl := exposureLifecycle(t, map[string]any{})
 
 	row, findings := EvaluatePrefixExposureForRow(tl, ctl)
-	if row.Verdict != evaluation.VerdictViolation {
-		t.Fatalf("expected Violation for missing evidence, got %v", row.Verdict)
+	if row.Verdict != evaluation.VerdictInconclusive {
+		t.Fatalf("expected Inconclusive for missing evidence, got %v", row.Verdict)
 	}
-	if len(findings) == 0 {
-		t.Fatal("expected findings for missing evidence")
+	if len(findings) != 0 {
+		t.Fatalf("expected 0 findings for inconclusive, got %d", len(findings))
 	}
 }
 

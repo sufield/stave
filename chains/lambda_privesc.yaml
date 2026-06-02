@@ -1,0 +1,21 @@
+id: lambda_privesc
+description: >
+  IAM privilege escalation via Lambda function creation with a
+  privileged execution role. A principal with sts:AssumeRole reaches
+  a role that has iam:PassRole + lambda:CreateFunction + an invocation
+  vector. The principal assumes the intermediary role, creates a Lambda
+  function passing a high-privilege execution role, and invokes it —
+  the function runs with the execution role's full authority. This is
+  a two-hop path: AssumeRole → PassRole+CreateFunction → admin.
+  Documented in Rhino Security's CloudGoat (lambda_privesc) and
+  Bishop Fox's IAM Vulnerable. Threshold 1: detection of either hop
+  alone is sufficient to flag the path.
+controls:
+  - CTL.IAM.ESCALATE.ASSUMEROLE.001
+  - CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - initial_access
+postconditions:
+  - iam_credential_theft

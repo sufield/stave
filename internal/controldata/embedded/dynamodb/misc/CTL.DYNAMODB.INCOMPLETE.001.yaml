@@ -10,6 +10,8 @@ compliance:
 scope_tags:
   - aws
   - dynamodb
+applicable_asset_types:
+  - aws_dynamodb_table
 type: unsafe_state
 classification: state_assertion
 params: {}

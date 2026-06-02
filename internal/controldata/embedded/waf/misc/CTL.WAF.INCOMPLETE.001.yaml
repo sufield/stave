@@ -11,6 +11,8 @@ severity: low
 scope_tags:
   - aws
   - waf
+applicable_asset_types:
+  - aws_wafv2_web_acl
 type: unsafe_state
 classification: state_assertion
 params: {}

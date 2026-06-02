@@ -40,8 +40,9 @@ func (s Source) String() string {
 // ComplianceReport captures whether a prefix is publicly exposed and, if so,
 // the evidence source that proved it.
 type ComplianceReport struct {
-	Exposed bool
-	Source  Source
+	Exposed       bool
+	Inconclusive  bool
+	Source        Source
 }
 
 func (r ComplianceReport) String() string { return r.Source.String() }
@@ -130,9 +131,9 @@ func (f AccessSummary) CheckExposure(prefix kernel.ObjectPrefix) ComplianceRepor
 		return ComplianceReport{Exposed: true, Source: NewSource(SourceResource, "")}
 	}
 
-	// Rule 3: Fail closed on missing evidence.
+	// Rule 3: Missing evidence → inconclusive, not exposed.
 	if f.LacksEvidence() {
-		return ComplianceReport{Exposed: true, Source: NewSource(SourceMissingEvidence, "")}
+		return ComplianceReport{Inconclusive: true, Source: NewSource(SourceMissingEvidence, "")}
 	}
 
 	return NewSafeResult()

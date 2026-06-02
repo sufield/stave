@@ -26,6 +26,8 @@ compliance:
 scope_tags:
   - aws
   - apigateway
+applicable_asset_types:
+  - aws_apigateway_rest_api
 type: unsafe_state
 classification: state_assertion
 params:

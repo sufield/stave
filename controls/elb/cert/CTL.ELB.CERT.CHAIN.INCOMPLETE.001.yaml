@@ -20,6 +20,8 @@ compliance:
 scope_tags:
   - aws
   - elb
+applicable_asset_types:
+  - aws_elbv2_load_balancer
 type: unsafe_state
 classification: state_assertion
 params:

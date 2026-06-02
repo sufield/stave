@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_138 commands across 7 groups._
+_140 commands across 7 groups._
 
 ## Getting Started
 
@@ -139,6 +139,8 @@ _138 commands across 7 groups._
 | `export tickets` | Export findings as canonical ticket records |
 | `export-controls` | Export the control catalog for external solver consumption |
 | `export-sir` | Export the Stave Intermediate Representation as JSON |
+| `fingerprint` | Policy fingerprint diagnostics |
+| `fingerprint explain` | Show the policy fingerprint preimage and diagnosis |
 | `fmt` | Format control and observation files deterministically |
 | `forge` | Author and test custom controls |
 | `forge chain` | Author and validate custom chains |

@@ -736,6 +736,7 @@ func (ctl *ControlDefinition) Fingerprint(h ports.Digester) kernel.Digest {
 		ctl.Severity.String(),
 		ctl.Type.String(),
 		fmt.Sprintf("%v", ctl.UnsafePredicate),
+		fmt.Sprintf("%v", ctl.ApplicableAssetTypes),
 	}
 	return h.Digest(components, '\n')
 }

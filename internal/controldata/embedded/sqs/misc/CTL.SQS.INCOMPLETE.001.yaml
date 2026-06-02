@@ -10,6 +10,8 @@ compliance:
 scope_tags:
   - aws
   - sqs
+applicable_asset_types:
+  - aws_sqs_queue
 type: unsafe_state
 classification: state_assertion
 params: {}

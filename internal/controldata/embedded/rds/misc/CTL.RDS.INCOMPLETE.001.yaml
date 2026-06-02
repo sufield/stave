@@ -12,6 +12,8 @@ severity: low
 scope_tags:
   - aws
   - rds
+applicable_asset_types:
+  - aws_rds_instance
 type: unsafe_state
 classification: state_assertion
 params: {}

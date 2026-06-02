@@ -12,6 +12,8 @@ severity: low
 scope_tags:
   - gcp
   - gcs
+applicable_asset_types:
+  - gcp_storage_bucket
 type: unsafe_state
 classification: absence_check
 params: {}

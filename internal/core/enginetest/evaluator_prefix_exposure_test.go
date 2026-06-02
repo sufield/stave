@@ -140,10 +140,10 @@ func TestCheckExposure(t *testing.T) {
 			wantPub: false,
 		},
 		{
-			name:     "missing evidence fail-closed",
+			name:     "missing evidence inconclusive",
 			prefix:   "invoices/",
 			facts:    exposure.AccessSummary{},
-			wantPub:  true,
+			wantPub:  false,
 			wantEvid: "missing_evidence",
 		},
 	}
@@ -307,21 +307,18 @@ func TestEvaluatePrefixExposureForRow(t *testing.T) {
 		}
 	})
 
-	t.Run("unsafe - missing evidence", func(t *testing.T) {
+	t.Run("inconclusive - missing evidence", func(t *testing.T) {
 		ctl := makeInv([]string{"images/"}, []string{"invoices/"})
 		lifecycle := makeLifecycle(map[string]any{"kind": "bucket", "name": "example-bucket"})
 
 		policyInv := *ctl
 		row, findings := engine.EvaluatePrefixExposureForRow(lifecycle, &policyInv)
 
-		if row.Verdict != evaluation.VerdictViolation {
-			t.Errorf("decision=%s, want VIOLATION", row.Verdict)
+		if row.Verdict != evaluation.VerdictInconclusive {
+			t.Errorf("decision=%s, want INCONCLUSIVE", row.Verdict)
 		}
-		if len(findings) != 1 {
-			t.Fatalf("findings=%d, want 1", len(findings))
-		}
-		if v := findMisconfiguration(findings[0].Evidence.Misconfigurations); v != "missing_evidence" {
-			t.Errorf("exposure_source=%v, want missing_evidence", v)
+		if len(findings) != 0 {
+			t.Fatalf("findings=%d, want 0 (inconclusive produces no findings)", len(findings))
 		}
 	})
 

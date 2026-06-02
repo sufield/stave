@@ -38,6 +38,7 @@ import (
 	staveexportinvariants "github.com/sufield/stave/cmd/exportinvariants"
 	staveexportsir "github.com/sufield/stave/cmd/exportsir"
 	stavefeatures "github.com/sufield/stave/cmd/features"
+	stavefingerprint "github.com/sufield/stave/cmd/fingerprint"
 	staveforge "github.com/sufield/stave/cmd/forge"
 	stavegaps "github.com/sufield/stave/cmd/gaps"
 	"github.com/sufield/stave/cmd/initcmd"
@@ -168,6 +169,9 @@ func WireCommands(app *App) error {
 
 	// Capability scope
 	root.AddCommand(stavefeatures.NewCmd())
+
+	// Policy fingerprint diagnostics
+	root.AddCommand(stavefingerprint.NewCmd())
 
 	// Export & Interop
 	root.AddCommand(staveexport.NewCmd(f.NewCtlRepo, f.NewCELEvaluator))

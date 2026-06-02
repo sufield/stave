@@ -82,6 +82,10 @@ func (e *prefixEvaluator) assetExposure(
 
 	for _, prefix := range protected.Prefixes() {
 		exposureResult := facts.CheckExposure(prefix)
+		if exposureResult.Inconclusive {
+			row.Verdict = evaluation.VerdictInconclusive
+			continue
+		}
 		if !exposureResult.Exposed {
 			continue
 		}

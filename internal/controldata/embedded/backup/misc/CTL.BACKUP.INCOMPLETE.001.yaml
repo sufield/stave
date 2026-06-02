@@ -11,6 +11,8 @@ severity: low
 scope_tags:
   - aws
   - backup
+applicable_asset_types:
+  - aws_backup_plan
 type: unsafe_state
 classification: absence_check
 params: {}

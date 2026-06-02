@@ -154,6 +154,14 @@ func computeAssetStates(
 				continue
 			}
 
+			// Asset-type applicability filter — mirrors the gate
+			// in engine/lifecycles.go. Without this, controls
+			// with applicable_asset_types declarations produce
+			// risk signals on unrelated asset types.
+			if !ctl.AppliesToAssetType(a.Type) {
+				continue
+			}
+
 			// Asset-level exemptions: an exempted asset must not
 			// surface as a risk signal, mirroring the main
 			// finding pipeline's exemption check in

@@ -11,6 +11,8 @@ domain: exposure
 severity: low
 scope_tags:
   - kubernetes
+applicable_asset_types:
+  - k8s_cluster
 type: unsafe_state
 classification: state_assertion
 params: {}

@@ -88,6 +88,7 @@ func DefaultCacheDir() (string, error) {
 // embedded paths.
 type Key struct {
 	StaveVersion    string
+	EvalVersion     string // engine evaluation semantics version (stave-cel/1.x)
 	ControlsDigest  string
 	InputHashesHash string
 	ChainsDigest    string
@@ -101,6 +102,7 @@ func (k Key) Hex() string {
 	h := sha256.New()
 	for _, field := range []string{
 		k.StaveVersion,
+		k.EvalVersion,
 		k.ControlsDigest,
 		k.InputHashesHash,
 		k.ChainsDigest,

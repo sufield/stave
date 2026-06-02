@@ -13,6 +13,8 @@ severity: low
 scope_tags:
   - aws
   - cross-service
+applicable_asset_types:
+  - aws_reachability_analysis
 type: unsafe_state
 classification: state_assertion
 params: {}

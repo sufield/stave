@@ -449,8 +449,11 @@ func TestFacts_CheckExposure_Resource(t *testing.T) {
 
 func TestFacts_CheckExposure_MissingEvidence(t *testing.T) {
 	result := AccessSummary{}.CheckExposure(kernel.ObjectPrefix("any-prefix"))
-	if !result.Exposed {
-		t.Error("expected exposed when missing evidence")
+	if result.Exposed {
+		t.Error("missing evidence should not be exposed (now inconclusive)")
+	}
+	if !result.Inconclusive {
+		t.Error("missing evidence should be inconclusive")
 	}
 	if result.Source.Kind != SourceMissingEvidence {
 		t.Errorf("expected missing_evidence, got %s", result.Source.Kind)

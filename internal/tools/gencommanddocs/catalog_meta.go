@@ -151,4 +151,5 @@ var catalogAnnotations = []catalogAnnotation{
 	{Path: "alias list", Group: "Settings", When: "Reviewing configured shortcuts"},
 	{Path: "alias delete", Group: "Settings", When: "Removing a stale shortcut"},
 	{Path: "completion", Group: "Settings", When: "Tab-completion setup for bash/zsh/fish/ps"},
+	{Path: "fingerprint explain", Group: "Introspection", When: "Diagnosing or auditing the policy fingerprint"},
 }

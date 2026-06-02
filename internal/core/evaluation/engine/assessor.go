@@ -386,7 +386,8 @@ func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts 
 		return evaluation.ComplianceReport{}, fmt.Errorf("assess: %w", err)
 	}
 
-	return sess.compileReport(), nil
+	report := sess.compileReport()
+	return report, nil
 }
 
 // applyControl evaluates a single control across the asset set.
@@ -952,31 +953,38 @@ func (a *Assessor) canComputeDigests() bool {
 //     audit gap — the audit-trail consumer expected a fingerprint and
 //     gets nothing back. Surface a slog.Warn so the gap is visible
 //     instead of a silent empty digest in compliance reports.
-func (a *Assessor) FingerprintPolicy() kernel.Digest {
-	// Case 1: nothing to fingerprint.
-	if a.hasEmptyPolicy() {
-		return ""
+// PolicyPreimage returns the canonical sorted lines that feed the
+// policy fingerprint hash. Format: eval_version:<version> as the
+// first logical entry (sorts after CTL.* due to ASCII ordering),
+// then one <control_id>:<per-control-hash> line per control,
+// sorted ascending. PolicyFingerprint() is exactly
+// sha256(join(PolicyPreimage(), '\n')).
+func (a *Assessor) PolicyPreimage() []string {
+	if a.hasEmptyPolicy() || !a.canComputeDigests() {
+		return nil
 	}
-
-	// Case 2: controls present but no way to hash them — audit gap.
-	if !a.canComputeDigests() {
-		slog.Warn("assessor: FingerprintPolicy called without a Digester; emitting empty digest",
-			"controls", len(a.controls))
-		return ""
-	}
-
-	// Case 3: ready to fingerprint.
-	// Include evaluator identity — prevents silent evaluator swap.
-	// Hash per-control fingerprints (which include predicate, severity,
-	// type — not just IDs) sorted by ID for determinism.
-	fingerprints := make([]string, 0, len(a.controls)+1)
-	fingerprints = append(fingerprints, "eval_version:"+EvalVersion)
+	lines := make([]string, 0, len(a.controls)+1)
+	lines = append(lines, "eval_version:"+EvalVersion)
 	for i := range a.controls {
 		ctl := &a.controls[i]
-		fingerprints = append(fingerprints, string(ctl.ID)+":"+string(ctl.Fingerprint(a.hasher)))
+		lines = append(lines, string(ctl.ID)+":"+string(ctl.Fingerprint(a.hasher)))
 	}
-	slices.Sort(fingerprints)
-	return a.hasher.Digest(fingerprints, '\n')
+	slices.Sort(lines)
+	return lines
+}
+
+// FingerprintPolicy returns sha256(PolicyPreimage()). This is the
+// single source — there is no second hash path.
+func (a *Assessor) FingerprintPolicy() kernel.Digest {
+	lines := a.PolicyPreimage()
+	if lines == nil {
+		if !a.hasEmptyPolicy() {
+			slog.Warn("assessor: FingerprintPolicy called without a Digester; emitting empty digest",
+				"controls", len(a.controls))
+		}
+		return ""
+	}
+	return a.hasher.Digest(lines, '\n')
 }
 
 // DefaultContinuityLimit defines the maximum gap allowed between observations

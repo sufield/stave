@@ -13,6 +13,8 @@ severity: low
 scope_tags:
   - aws
   - opensearch
+applicable_asset_types:
+  - aws_opensearch_domain
 type: unsafe_state
 classification: state_assertion
 params: {}

@@ -12,6 +12,7 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/app/eval/cache"
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/evaluation/engine"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
@@ -180,6 +181,7 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 	// fresh on deadlines.
 	cacheKey := cache.Key{
 		StaveVersion:    cfg.BuildVersion,
+		EvalVersion:     engine.EvalVersion,
 		ControlsDigest:  cache.ComputeControlsDigest(auditData.Controls),
 		InputHashesHash: cache.ComputeInputHashesKey(auditData.Hashes),
 		ChainsDigest:    cache.ComputeChainsDigest(cfg.ChainDefs),

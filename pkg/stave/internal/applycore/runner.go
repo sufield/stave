@@ -343,6 +343,34 @@ func annotateContributingFactIDs(
 	return doc
 }
 
+// LoadControls loads the control catalog for read-only inspection
+// (e.g. fingerprint explain). Empty dir uses the embedded catalog.
+func LoadControls(dir string) ([]policy.ControlDefinition, error) {
+	libraryOnce.Do(func() {
+		defer func() {
+			if r := recover(); r != nil {
+				errLibraryInit = fmt.Errorf("applycore: library init panicked: %v", r)
+			}
+		}()
+		aws.Register()
+		appcapabilities.Configure(pack.MustNewLibrary())
+	})
+	if err := isLibraryReady(); err != nil {
+		return nil, err
+	}
+	controls, repo, err := resolveControls(dir)
+	if err != nil {
+		return nil, err
+	}
+	if repo != nil {
+		controls, err = appcontracts.LoadControls(context.Background(), repo, dir)
+		if err != nil {
+			return nil, fmt.Errorf("load controls from dir: %w", err)
+		}
+	}
+	return controls, nil
+}
+
 // resolveControls loads the control set used by the evaluation.
 // Empty dir uses the embedded builtin catalog. Non-empty dir defers
 // loading to the workflow's PolicyRepo.

@@ -176,17 +176,145 @@ def map_iam_roles(sess, account_id):
             p = st.get("Principal", {})
             if p == "*" or (isinstance(p, dict) and p.get("AWS") == "*"):
                 has_wildcard_trust = True
+        actions = set()
+        for pol_name in iam.list_role_policies(RoleName=name).get("PolicyNames", []):
+            doc = iam.get_role_policy(RoleName=name, PolicyName=pol_name)["PolicyDocument"]
+            actions |= _collect_actions_from_statements(doc.get("Statement", []))
+        actions |= _collect_attached_policy_actions(
+            iam, iam.list_attached_role_policies(RoleName=name).get("AttachedPolicies", []))
+        escalation, has_admin = _compute_escalation(actions)
         out.append(asset(
             role["Arn"], "aws_iam_role",
             {"identity": {
                 "kind": "role",
-                "policies": {"has_inline_policies": has_inline},
+                "policies": {
+                    "has_inline_policies": has_inline,
+                    "has_admin_access": has_admin,
+                },
                 "trust_policy": {"has_wildcard_principal": has_wildcard_trust},
+                "escalation": escalation,
             }}))
     return out
 
 
-COLLECTORS = [map_password_policy, map_s3, map_security_groups, map_iam_roles]
+ESCALATION_ACTIONS = {
+    "attach_user_policy_self": {"iam:AttachUserPolicy"},
+    "attach_role_policy": {"iam:AttachRolePolicy"},
+    "attach_group_policy": {"iam:AttachGroupPolicy"},
+    "put_user_policy_self": {"iam:PutUserPolicy"},
+    "put_role_policy": {"iam:PutRolePolicy"},
+    "put_group_policy": {"iam:PutGroupPolicy"},
+    "add_user_to_group": {"iam:AddUserToGroup"},
+    "create_policy_version": {"iam:CreatePolicyVersion"},
+    "set_default_policy_version": {"iam:SetDefaultPolicyVersion"},
+    "create_access_key": {"iam:CreateAccessKey"},
+    "create_login_profile": {"iam:CreateLoginProfile"},
+    "update_login_profile": {"iam:UpdateLoginProfile"},
+    "assume_role": {"sts:AssumeRole"},
+}
+
+COMPOUND_ESCALATION_ACTIONS = {
+    "passrole_createfunction": {
+        "required": [{"iam:PassRole"}, {"lambda:CreateFunction"}],
+        "invocation": {"lambda:InvokeFunction", "lambda:CreateFunctionUrlConfig"},
+    },
+}
+
+
+def _collect_actions_from_statements(statements):
+    """Extract Allow actions from a list of policy statements."""
+    actions = set()
+    for st in statements:
+        if st.get("Effect") != "Allow":
+            continue
+        acts = st.get("Action", [])
+        if isinstance(acts, str):
+            acts = [acts]
+        actions.update(acts)
+    return actions
+
+
+def _collect_attached_policy_actions(iam, attached_policies):
+    """Extract Allow actions from attached managed policies."""
+    actions = set()
+    for att in attached_policies:
+        try:
+            arn = att["PolicyArn"]
+            ver = iam.get_policy(PolicyArn=arn)["Policy"]["DefaultVersionId"]
+            doc = iam.get_policy_version(PolicyArn=arn, VersionId=ver)["PolicyVersion"]["Document"]
+            actions |= _collect_actions_from_statements(doc.get("Statement", []))
+        except ClientError:
+            pass
+    return actions
+
+
+def _compute_escalation(actions):
+    """Compute escalation booleans from a set of IAM actions."""
+    def _has_action(required):
+        if "*" in actions:
+            return True
+        for act in required:
+            if act in actions:
+                return True
+            svc = act.split(":")[0] + ":*"
+            if svc in actions:
+                return True
+        return False
+
+    escalation = {}
+    for key, required_actions in ESCALATION_ACTIONS.items():
+        escalation[key] = {"present": _has_action(required_actions)}
+
+    for key, spec in COMPOUND_ESCALATION_ACTIONS.items():
+        all_required = all(_has_action(grp) for grp in spec["required"])
+        has_invoke = _has_action(spec["invocation"])
+        escalation[key] = {"present": all_required and has_invoke}
+
+    has_admin = "*" in actions or "iam:*" in actions
+    return escalation, has_admin
+
+
+def _policy_grants(iam, user_name):
+    """Transcribe policy shape as flat escalation booleans."""
+    actions = set()
+    for pol_name in iam.list_user_policies(UserName=user_name).get("PolicyNames", []):
+        doc = iam.get_user_policy(UserName=user_name, PolicyName=pol_name)["PolicyDocument"]
+        actions |= _collect_actions_from_statements(doc.get("Statement", []))
+    actions |= _collect_attached_policy_actions(
+        iam, iam.list_attached_user_policies(UserName=user_name).get("AttachedPolicies", []))
+    for grp in iam.list_groups_for_user(UserName=user_name).get("Groups", []):
+        gname = grp["GroupName"]
+        for pol_name in iam.list_group_policies(GroupName=gname).get("PolicyNames", []):
+            doc = iam.get_group_policy(GroupName=gname, PolicyName=pol_name)["PolicyDocument"]
+            actions |= _collect_actions_from_statements(doc.get("Statement", []))
+        actions |= _collect_attached_policy_actions(
+            iam, iam.list_attached_group_policies(GroupName=gname).get("AttachedPolicies", []))
+
+    escalation, has_admin = _compute_escalation(actions)
+    return escalation, has_admin, actions
+
+
+def map_iam_users(sess, account_id):
+    iam = sess.client("iam")
+    out = []
+    for user in iam.list_users().get("Users", []):
+        name = user["UserName"]
+        has_inline = len(iam.list_user_policies(UserName=name).get("PolicyNames", [])) > 0
+        escalation, has_admin, _ = _policy_grants(iam, name)
+        out.append(asset(
+            user["Arn"], "aws_iam_user",
+            {"identity": {
+                "kind": "user",
+                "policies": {
+                    "has_inline_policies": has_inline,
+                    "has_admin_access": has_admin,
+                },
+                "escalation": escalation,
+            }}))
+    return out
+
+
+COLLECTORS = [map_password_policy, map_s3, map_security_groups, map_iam_roles, map_iam_users]
 
 
 def main():
@@ -209,7 +337,7 @@ def main():
     ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H%M%SZ")
     snapshot = {
         "schema_version": "obs.v0.1",
-        "source": "collected",
+        "source": "deployed",
         "generated_by": {"source_type": "aws.boto3"},
         "captured_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "assets": assets,

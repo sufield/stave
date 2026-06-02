@@ -11,6 +11,8 @@ severity: low
 scope_tags:
   - aws
   - guardrail
+applicable_asset_types:
+  - aws_bedrock_guardrail
 type: unsafe_state
 classification: state_assertion
 params:
