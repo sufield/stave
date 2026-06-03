@@ -153,7 +153,42 @@ test-pkg:
 	@if [ -z "$(PKG)" ]; then \
 		echo "Usage: make test-pkg PKG=./path/to/pkg/..."; exit 2; \
 	fi
+	@case "$(PKG)" in \
+		*controldata*|*contracts/schema*|*adapters/coverage*) \
+			for h in .sync-controls-hash .sync-schemas-hash .sync-alternatives-hash; do \
+				if [ ! -f "$$h" ]; then \
+					echo "WARNING: $$h missing — embedded data may be stale. Run 'make sync-controls sync-schemas sync-alternatives' first." >&2; \
+					break; \
+				fi; \
+			done ;; \
+	esac
 	$(GOTEST) -short -timeout 5m $(PKG)
+
+## test-shard SHARD=N: Run the same package set as CI shard N (0-3).
+## Reproduces a CI shard failure locally without copy-pasting filters
+## from .github/workflows/ci.yml.
+##
+##   make test-shard SHARD=0   # enginetest (heaviest, ~383s)
+##   make test-shard SHARD=1   # cmd/stave + graph + cel (~351s)
+##   make test-shard SHARD=2   # controls/builtin + pack + pkg/stave + cmd/apply (~255s)
+##   make test-shard SHARD=3   # everything else (~150 packages)
+SHARD_FILTER_0 = internal/core/enginetest$$
+SHARD_FILTER_1 = (cmd/stave|internal/graph|internal/cel)$$
+SHARD_FILTER_2 = (internal/adapters/controls/builtin|internal/builtin/pack|pkg/stave)$$|cmd/apply
+test-shard: sync-schemas sync-controls sync-alternatives
+	@if [ -z "$(SHARD)" ]; then \
+		echo "Usage: make test-shard SHARD=0|1|2|3"; exit 2; \
+	fi
+	@all_pkgs=$$($(GOCMD) list ./... | grep -vE '/e2e$$'); \
+	case "$(SHARD)" in \
+		0) pkgs=$$(echo "$$all_pkgs" | grep -E '$(SHARD_FILTER_0)') ;; \
+		1) pkgs=$$(echo "$$all_pkgs" | grep -E '$(SHARD_FILTER_1)') ;; \
+		2) pkgs=$$(echo "$$all_pkgs" | grep -E '$(SHARD_FILTER_2)') ;; \
+		3) pkgs=$$(echo "$$all_pkgs" | grep -vE '$(SHARD_FILTER_0)|$(SHARD_FILTER_1)|$(SHARD_FILTER_2)') ;; \
+		*) echo "Invalid SHARD=$(SHARD); use 0-3"; exit 2 ;; \
+	esac; \
+	echo "Shard $(SHARD): $$(echo "$$pkgs" | wc -l) packages"; \
+	$(GOTEST) -timeout 30m $$pkgs
 
 ## test-integration: Fixture-loading tests that don't spawn the binary.
 ##

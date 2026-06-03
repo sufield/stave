@@ -312,7 +312,6 @@ func (a *App) handleExecutionError(err error) {
 // underlying close is idempotent.
 func (a *App) cleanupBeforeExit() {
 	a.cleanupOnce.Do(func() {
-		a.stopCPUProfile()
 		// Swap(nil) atomically takes ownership of the cancel func: a
 		// concurrent peer racing cleanupBeforeExit gets nil here even
 		// though the outer cleanupOnce normally serialises us.
@@ -322,13 +321,7 @@ func (a *App) cleanupBeforeExit() {
 		if cancel := a.cancel.Swap(nil); cancel != nil {
 			(*cancel)()
 		}
-		// Write the memory profile on error too. The success path
-		// runs it via postRun -> writeMemProfile; without this hook a
-		// command that crashed before postRun never produced the
-		// requested --mem-profile artifact, hiding the very
-		// allocation pattern an operator was trying to capture.
-		a.writeMemProfileTo(os.Stderr)
-		a.closeLogCloser()
+		a.releaseResources(nil)
 	})
 }
 

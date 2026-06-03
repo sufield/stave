@@ -43,7 +43,12 @@ the sha256 fingerprint.
 
 JSON mode: machine-readable with diagnosis flags:
   eval_version_present  — is the engine version in the hashed bytes?
-  asset_types_hashed    — per control, did scope contribute to the hash?`,
+  asset_types_hashed    — per control, did scope contribute to the hash?
+
+Exit codes:
+  0   success
+  2   input error (bad flag, missing controls directory)
+  4   internal error (control load failure)`,
 		Example: `  stave fingerprint explain
   stave fingerprint explain --controls ./my-controls --format json`,
 		Args:          cobra.NoArgs,

@@ -34,6 +34,38 @@ type Deps struct {
 	NewSLALoader     compose.SLALoaderFactory
 }
 
+// Validate checks that all required factory fields are non-nil.
+// Called at WireCommands time so a wiring bug surfaces at startup,
+// not when the user runs the command.
+func (d Deps) Validate() error {
+	var missing []string
+	if d.NewObsRepo == nil {
+		missing = append(missing, "NewObsRepo")
+	}
+	if d.NewCtlRepo == nil {
+		missing = append(missing, "NewCtlRepo")
+	}
+	if d.NewStdinObsRepo == nil {
+		missing = append(missing, "NewStdinObsRepo")
+	}
+	if d.NewFindingWriter == nil {
+		missing = append(missing, "NewFindingWriter")
+	}
+	if d.NewCELEvaluator == nil {
+		missing = append(missing, "NewCELEvaluator")
+	}
+	if d.NewChainLoader == nil {
+		missing = append(missing, "NewChainLoader")
+	}
+	if d.NewSLALoader == nil {
+		missing = append(missing, "NewSLALoader")
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("apply.Deps: nil factory fields: %v", missing)
+	}
+	return nil
+}
+
 // Builder encapsulates the cmd-layer resolution needed before building
 // apply dependencies. It resolves adapters, loads exemptions, audits
 // git status, and delegates final assembly to BuildDependencies.

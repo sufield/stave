@@ -108,7 +108,7 @@ func WireCommands(app *App) error {
 
 	// Control Engine
 	root.AddCommand(applyvalidate.NewCmd(f.NewObsRepo, f.NewCtlRepo, f.NewCELEvaluator, ui.DefaultRuntime()))
-	root.AddCommand(apply.NewApplyCmd(apply.Deps{
+	applyDeps := apply.Deps{
 		NewObsRepo:       f.NewObsRepo,
 		NewCtlRepo:       f.NewCtlRepo,
 		NewStdinObsRepo:  f.NewStdinObsRepo,
@@ -116,7 +116,11 @@ func WireCommands(app *App) error {
 		NewCELEvaluator:  f.NewCELEvaluator,
 		NewChainLoader:   f.NewChainLoader,
 		NewSLALoader:     f.NewSLALoader,
-	}))
+	}
+	if err := applyDeps.Validate(); err != nil {
+		return err
+	}
+	root.AddCommand(apply.NewApplyCmd(applyDeps))
 	root.AddCommand(applyverify.NewCmd(f.NewObsRepo, f.NewCtlRepo, f.NewCELEvaluator, ui.DefaultRuntime()))
 	diagnoseCmd := diagnose.NewDiagnoseCmd(f.NewObsRepo, f.NewCtlRepo)
 	diagnoseCmd.AddCommand(diagnose.NewTraceCmd(f.NewCtlRepo, f.NewSnapshotRepo))
@@ -292,13 +296,17 @@ func WireCommands(app *App) error {
 	root.AddCommand(stavecompare.NewCmd())
 
 	// Executive report
-	root.AddCommand(stavereport.NewCmd(stavereport.Deps{
+	reportDeps := stavereport.Deps{
 		NewChainLoader:          f.NewChainLoader,
 		NewSLALoader:            f.NewSLALoader,
 		NewArtifactLoader:       f.NewArtifactLoader,
 		NewSnapshotBundleLoader: f.NewSnapshotBundleLoader,
 		NewCtlRepo:              f.NewCtlRepo,
-	}))
+	}
+	if err := reportDeps.Validate(); err != nil {
+		return err
+	}
+	root.AddCommand(stavereport.NewCmd(reportDeps))
 
 	// Posture score
 	root.AddCommand(stavescore.NewCmd())

@@ -207,8 +207,21 @@ func hasAnnotation(cmd *cobra.Command, key string) bool {
 }
 
 func (a *App) postRun(cmd *cobra.Command, _ []string) {
+	a.releaseResources(cmd)
+}
+
+// releaseResources stops the CPU profile, writes the memory profile,
+// and closes the log file. Called from both the normal exit path
+// (postRun) and the error/signal path (cleanupBeforeExit). Each
+// individual method has its own idempotency guard so calling both
+// paths is safe.
+func (a *App) releaseResources(cmd *cobra.Command) {
 	a.stopCPUProfile()
-	a.writeMemProfile(cmd)
+	if cmd != nil {
+		a.writeMemProfile(cmd)
+	} else {
+		a.writeMemProfileTo(os.Stderr)
+	}
 	a.closeLogCloser()
 }
 
