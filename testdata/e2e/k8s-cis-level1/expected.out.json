@@ -15,7 +15,7 @@
       },
       "overall": "98d6ea9656c6a032a802937950763804cb282f32e02100bd72d5b72288686cda"
     },
-    "policy_fingerprint": "d0b3f132ddac641536b77acbadcf9be6f325791defaac5c93d912a478aab47a3",
+    "policy_fingerprint": "8c4f633e4748b9e380958bfdfca57aa8587f99a8befe16cc8a3c3d250c1cc2a8",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -178,7 +178,7 @@
           },
           {
             "property": "type",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "k8s_apiserver",
             "operator": "eq",
             "unsafe_value": "k8s_apiserver"
           }
@@ -256,7 +256,7 @@
           "observation_key": "type",
           "operator": "eq",
           "expected_value": "k8s_apiserver",
-          "observed_value": "[SANITIZED]"
+          "observed_value": "k8s_apiserver"
         }
       ],
       "remediation_context": {
@@ -276,9 +276,9 @@
               "observed_value": true
             },
             {
-              "clause": "the asset type = \"[SANITIZED]\"",
+              "clause": "the asset type = \"k8s_apiserver\"",
               "observation_key": "type",
-              "observed_value": "[SANITIZED]"
+              "observed_value": "k8s_apiserver"
             }
           ]
         },
@@ -292,7 +292,7 @@
           },
           {
             "path": "type",
-            "current_value": "[SANITIZED]",
+            "current_value": "k8s_apiserver",
             "required_value": "any value other than k8s_apiserver",
             "has_safe_default": false,
             "description": "Change type away from k8s_apiserver"
@@ -345,7 +345,7 @@
           },
           {
             "property": "type",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "k8s_apiserver",
             "operator": "eq",
             "unsafe_value": "k8s_apiserver"
           }
@@ -423,7 +423,7 @@
           "observation_key": "type",
           "operator": "eq",
           "expected_value": "k8s_apiserver",
-          "observed_value": "[SANITIZED]"
+          "observed_value": "k8s_apiserver"
         }
       ],
       "remediation_context": {
@@ -443,9 +443,9 @@
               "observed_value": true
             },
             {
-              "clause": "the asset type = \"[SANITIZED]\"",
+              "clause": "the asset type = \"k8s_apiserver\"",
               "observation_key": "type",
-              "observed_value": "[SANITIZED]"
+              "observed_value": "k8s_apiserver"
             }
           ]
         },
@@ -459,7 +459,7 @@
           },
           {
             "path": "type",
-            "current_value": "[SANITIZED]",
+            "current_value": "k8s_apiserver",
             "required_value": "any value other than k8s_apiserver",
             "has_safe_default": false,
             "description": "Change type away from k8s_apiserver"
@@ -514,7 +514,7 @@
           },
           {
             "property": "type",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "k8s_apiserver",
             "operator": "eq",
             "unsafe_value": "k8s_apiserver"
           }
@@ -593,7 +593,7 @@
           "observation_key": "type",
           "operator": "eq",
           "expected_value": "k8s_apiserver",
-          "observed_value": "[SANITIZED]"
+          "observed_value": "k8s_apiserver"
         }
       ],
       "remediation_context": {
@@ -613,9 +613,9 @@
               "observed_value": false
             },
             {
-              "clause": "the asset type = \"[SANITIZED]\"",
+              "clause": "the asset type = \"k8s_apiserver\"",
               "observation_key": "type",
-              "observed_value": "[SANITIZED]"
+              "observed_value": "k8s_apiserver"
             }
           ]
         },
@@ -629,7 +629,7 @@
           },
           {
             "path": "type",
-            "current_value": "[SANITIZED]",
+            "current_value": "k8s_apiserver",
             "required_value": "any value other than k8s_apiserver",
             "has_safe_default": false,
             "description": "Change type away from k8s_apiserver"
@@ -682,7 +682,7 @@
           },
           {
             "property": "type",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "k8s_apiserver",
             "operator": "eq",
             "unsafe_value": "k8s_apiserver"
           }
@@ -761,7 +761,7 @@
           "observation_key": "type",
           "operator": "eq",
           "expected_value": "k8s_apiserver",
-          "observed_value": "[SANITIZED]"
+          "observed_value": "k8s_apiserver"
         }
       ],
       "remediation_context": {
@@ -781,9 +781,9 @@
               "observed_value": false
             },
             {
-              "clause": "the asset type = \"[SANITIZED]\"",
+              "clause": "the asset type = \"k8s_apiserver\"",
               "observation_key": "type",
-              "observed_value": "[SANITIZED]"
+              "observed_value": "k8s_apiserver"
             }
           ]
         },
@@ -797,7 +797,7 @@
           },
           {
             "path": "type",
-            "current_value": "[SANITIZED]",
+            "current_value": "k8s_apiserver",
             "required_value": "any value other than k8s_apiserver",
             "has_safe_default": false,
             "description": "Change type away from k8s_apiserver"
@@ -858,7 +858,7 @@
           },
           {
             "property": "type",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "k8s_apiserver",
             "operator": "eq",
             "unsafe_value": "k8s_apiserver"
           }
@@ -923,7 +923,7 @@
           "observation_key": "type",
           "operator": "eq",
           "expected_value": "k8s_apiserver",
-          "observed_value": "[SANITIZED]"
+          "observed_value": "k8s_apiserver"
         }
       ],
       "remediation_context": {
@@ -948,9 +948,9 @@
               "observed_value": "AlwaysAllow"
             },
             {
-              "clause": "the asset type = \"[SANITIZED]\"",
+              "clause": "the asset type = \"k8s_apiserver\"",
               "observation_key": "type",
-              "observed_value": "[SANITIZED]"
+              "observed_value": "k8s_apiserver"
             }
           ]
         },
@@ -971,7 +971,7 @@
           },
           {
             "path": "type",
-            "current_value": "[SANITIZED]",
+            "current_value": "k8s_apiserver",
             "required_value": "any value other than k8s_apiserver",
             "has_safe_default": false,
             "description": "Change type away from k8s_apiserver"
@@ -1038,7 +1038,7 @@
           },
           {
             "property": "type",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "k8s_etcd",
             "operator": "eq",
             "unsafe_value": "k8s_etcd"
           }
@@ -1121,7 +1121,7 @@
           "observation_key": "type",
           "operator": "eq",
           "expected_value": "k8s_etcd",
-          "observed_value": "[SANITIZED]"
+          "observed_value": "k8s_etcd"
         }
       ],
       "remediation_context": {
@@ -1146,9 +1146,9 @@
               "observed_value": ""
             },
             {
-              "clause": "the asset type = \"[SANITIZED]\"",
+              "clause": "the asset type = \"k8s_etcd\"",
               "observation_key": "type",
-              "observed_value": "[SANITIZED]"
+              "observed_value": "k8s_etcd"
             }
           ]
         },
@@ -1169,7 +1169,7 @@
           },
           {
             "path": "type",
-            "current_value": "[SANITIZED]",
+            "current_value": "k8s_etcd",
             "required_value": "any value other than k8s_etcd",
             "has_safe_default": false,
             "description": "Change type away from k8s_etcd"
@@ -1234,7 +1234,7 @@
           },
           {
             "property": "type",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "k8s_etcd",
             "operator": "eq",
             "unsafe_value": "k8s_etcd"
           }
@@ -1317,7 +1317,7 @@
           "observation_key": "type",
           "operator": "eq",
           "expected_value": "k8s_etcd",
-          "observed_value": "[SANITIZED]"
+          "observed_value": "k8s_etcd"
         }
       ],
       "remediation_context": {
@@ -1342,9 +1342,9 @@
               "observed_value": ""
             },
             {
-              "clause": "the asset type = \"[SANITIZED]\"",
+              "clause": "the asset type = \"k8s_etcd\"",
               "observation_key": "type",
-              "observed_value": "[SANITIZED]"
+              "observed_value": "k8s_etcd"
             }
           ]
         },
@@ -1365,7 +1365,7 @@
           },
           {
             "path": "type",
-            "current_value": "[SANITIZED]",
+            "current_value": "k8s_etcd",
             "required_value": "any value other than k8s_etcd",
             "has_safe_default": false,
             "description": "Change type away from k8s_etcd"
@@ -1424,7 +1424,7 @@
           },
           {
             "property": "type",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "k8s_etcd",
             "operator": "eq",
             "unsafe_value": "k8s_etcd"
           }
@@ -1500,7 +1500,7 @@
           "observation_key": "type",
           "operator": "eq",
           "expected_value": "k8s_etcd",
-          "observed_value": "[SANITIZED]"
+          "observed_value": "k8s_etcd"
         }
       ],
       "remediation_context": {
@@ -1520,9 +1520,9 @@
               "observed_value": false
             },
             {
-              "clause": "the asset type = \"[SANITIZED]\"",
+              "clause": "the asset type = \"k8s_etcd\"",
               "observation_key": "type",
-              "observed_value": "[SANITIZED]"
+              "observed_value": "k8s_etcd"
             }
           ]
         },
@@ -1536,7 +1536,7 @@
           },
           {
             "path": "type",
-            "current_value": "[SANITIZED]",
+            "current_value": "k8s_etcd",
             "required_value": "any value other than k8s_etcd",
             "has_safe_default": false,
             "description": "Change type away from k8s_etcd"
@@ -1589,7 +1589,7 @@
           },
           {
             "property": "type",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "k8s_etcd",
             "operator": "eq",
             "unsafe_value": "k8s_etcd"
           }
@@ -1665,7 +1665,7 @@
           "observation_key": "type",
           "operator": "eq",
           "expected_value": "k8s_etcd",
-          "observed_value": "[SANITIZED]"
+          "observed_value": "k8s_etcd"
         }
       ],
       "remediation_context": {
@@ -1685,9 +1685,9 @@
               "observed_value": false
             },
             {
-              "clause": "the asset type = \"[SANITIZED]\"",
+              "clause": "the asset type = \"k8s_etcd\"",
               "observation_key": "type",
-              "observed_value": "[SANITIZED]"
+              "observed_value": "k8s_etcd"
             }
           ]
         },
@@ -1701,7 +1701,7 @@
           },
           {
             "path": "type",
-            "current_value": "[SANITIZED]",
+            "current_value": "k8s_etcd",
             "required_value": "any value other than k8s_etcd",
             "has_safe_default": false,
             "description": "Change type away from k8s_etcd"
@@ -1754,7 +1754,7 @@
           },
           {
             "property": "type",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "k8s_kubelet",
             "operator": "eq",
             "unsafe_value": "k8s_kubelet"
           }
@@ -1812,7 +1812,7 @@
           "observation_key": "type",
           "operator": "eq",
           "expected_value": "k8s_kubelet",
-          "observed_value": "[SANITIZED]"
+          "observed_value": "k8s_kubelet"
         }
       ],
       "remediation_context": {
@@ -1832,9 +1832,9 @@
               "observed_value": true
             },
             {
-              "clause": "the asset type = \"[SANITIZED]\"",
+              "clause": "the asset type = \"k8s_kubelet\"",
               "observation_key": "type",
-              "observed_value": "[SANITIZED]"
+              "observed_value": "k8s_kubelet"
             }
           ]
         },
@@ -1848,7 +1848,7 @@
           },
           {
             "path": "type",
-            "current_value": "[SANITIZED]",
+            "current_value": "k8s_kubelet",
             "required_value": "any value other than k8s_kubelet",
             "has_safe_default": false,
             "description": "Change type away from k8s_kubelet"
@@ -1899,7 +1899,7 @@
           },
           {
             "property": "type",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "k8s_kubelet",
             "operator": "eq",
             "unsafe_value": "k8s_kubelet"
           }
@@ -1957,7 +1957,7 @@
           "observation_key": "type",
           "operator": "eq",
           "expected_value": "k8s_kubelet",
-          "observed_value": "[SANITIZED]"
+          "observed_value": "k8s_kubelet"
         }
       ],
       "remediation_context": {
@@ -1977,9 +1977,9 @@
               "observed_value": true
             },
             {
-              "clause": "the asset type = \"[SANITIZED]\"",
+              "clause": "the asset type = \"k8s_kubelet\"",
               "observation_key": "type",
-              "observed_value": "[SANITIZED]"
+              "observed_value": "k8s_kubelet"
             }
           ]
         },
@@ -1993,7 +1993,7 @@
           },
           {
             "path": "type",
-            "current_value": "[SANITIZED]",
+            "current_value": "k8s_kubelet",
             "required_value": "any value other than k8s_kubelet",
             "has_safe_default": false,
             "description": "Change type away from k8s_kubelet"
@@ -2048,7 +2048,7 @@
           },
           {
             "property": "type",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "k8s_kubelet",
             "operator": "eq",
             "unsafe_value": "k8s_kubelet"
           }
@@ -2106,7 +2106,7 @@
           "observation_key": "type",
           "operator": "eq",
           "expected_value": "k8s_kubelet",
-          "observed_value": "[SANITIZED]"
+          "observed_value": "k8s_kubelet"
         }
       ],
       "remediation_context": {
@@ -2126,9 +2126,9 @@
               "observed_value": "AlwaysAllow"
             },
             {
-              "clause": "the asset type = \"[SANITIZED]\"",
+              "clause": "the asset type = \"k8s_kubelet\"",
               "observation_key": "type",
-              "observed_value": "[SANITIZED]"
+              "observed_value": "k8s_kubelet"
             }
           ]
         },
@@ -2142,7 +2142,7 @@
           },
           {
             "path": "type",
-            "current_value": "[SANITIZED]",
+            "current_value": "k8s_kubelet",
             "required_value": "any value other than k8s_kubelet",
             "has_safe_default": false,
             "description": "Change type away from k8s_kubelet"
@@ -2197,7 +2197,7 @@
           },
           {
             "property": "type",
-            "actual_value": "[SANITIZED]",
+            "actual_value": "k8s_kubelet",
             "operator": "eq",
             "unsafe_value": "k8s_kubelet"
           }
@@ -2255,7 +2255,7 @@
           "observation_key": "type",
           "operator": "eq",
           "expected_value": "k8s_kubelet",
-          "observed_value": "[SANITIZED]"
+          "observed_value": "k8s_kubelet"
         }
       ],
       "remediation_context": {
@@ -2275,9 +2275,9 @@
               "observed_value": 10255
             },
             {
-              "clause": "the asset type = \"[SANITIZED]\"",
+              "clause": "the asset type = \"k8s_kubelet\"",
               "observation_key": "type",
-              "observed_value": "[SANITIZED]"
+              "observed_value": "k8s_kubelet"
             }
           ]
         },
@@ -2291,7 +2291,7 @@
           },
           {
             "path": "type",
-            "current_value": "[SANITIZED]",
+            "current_value": "k8s_kubelet",
             "required_value": "any value other than k8s_kubelet",
             "has_safe_default": false,
             "description": "Change type away from k8s_kubelet"
@@ -3000,14 +3000,6 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
-    }
-  },
-  "extensions": {
-    "selected_controls_source": "dir",
-    "context_name": "stave",
-    "resolved_paths": {
-      "controls": "controls",
-      "observations": "observations"
     }
   }
 }

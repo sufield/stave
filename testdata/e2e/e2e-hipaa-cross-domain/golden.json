@@ -7,7 +7,7 @@
     "now": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "70533b7f5f9ce0eac47ba8bd2b9ef66333c72d129cc3c76203ff4fb7e83e71f2",
+    "policy_fingerprint": "689501adba1894a5939e4a06768c89e140abfbe4165a80dd74e44094df3694a7",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -131,26 +131,6 @@
       "control_id": "CTL.DYNAMODB.ENCRYPT.001",
       "asset_id": "phi-events-table",
       "asset_type": "aws_dynamodb_table",
-      "status": "UPCOMING",
-      "due_at": "2026-01-17T00:00:00Z",
-      "remaining_hours": 48,
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 168
-    },
-    {
-      "control_id": "CTL.EC2.EBS.ENCRYPT.001",
-      "asset_id": "i-0abc123def",
-      "asset_type": "aws_instance",
-      "status": "UPCOMING",
-      "due_at": "2026-01-17T00:00:00Z",
-      "remaining_hours": 48,
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 168
-    },
-    {
-      "control_id": "CTL.EC2.PUBLIC.001",
-      "asset_id": "i-0abc123def",
-      "asset_type": "aws_instance",
       "status": "UPCOMING",
       "due_at": "2026-01-17T00:00:00Z",
       "remaining_hours": 48,
