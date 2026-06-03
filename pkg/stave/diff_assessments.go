@@ -42,35 +42,36 @@ func DiffAssessments(previous, current *Assessment) *AssessmentDiff {
 		CurrentStatus:  current.Status,
 	}
 
-	prevByID := make(map[FindingID]Finding, len(previous.Findings))
-	for _, f := range previous.Findings {
-		prevByID[f.FindingID] = f
+	prevByID := make(map[FindingID]int, len(previous.Findings))
+	for i := range previous.Findings {
+		prevByID[previous.Findings[i].FindingID] = i
 	}
 
-	currByID := make(map[FindingID]Finding, len(current.Findings))
-	for _, f := range current.Findings {
-		currByID[f.FindingID] = f
+	currByID := make(map[FindingID]bool, len(current.Findings))
+	for i := range current.Findings {
+		currByID[current.Findings[i].FindingID] = true
 	}
 
-	for _, f := range current.Findings {
-		prev, existed := prevByID[f.FindingID]
+	for i := range current.Findings {
+		f := &current.Findings[i]
+		pi, existed := prevByID[f.FindingID]
 		if !existed {
-			diff.Added = append(diff.Added, f)
+			diff.Added = append(diff.Added, *f)
 			continue
 		}
-		if f.Severity != prev.Severity {
+		if f.Severity != previous.Findings[pi].Severity {
 			diff.SeverityChanged = append(diff.SeverityChanged, SeverityChange{
-				Finding:          f,
-				PreviousSeverity: prev.Severity,
+				Finding:          *f,
+				PreviousSeverity: previous.Findings[pi].Severity,
 			})
 			continue
 		}
-		diff.Unchanged = append(diff.Unchanged, f)
+		diff.Unchanged = append(diff.Unchanged, *f)
 	}
 
-	for _, f := range previous.Findings {
-		if _, exists := currByID[f.FindingID]; !exists {
-			diff.Removed = append(diff.Removed, f)
+	for i := range previous.Findings {
+		if !currByID[previous.Findings[i].FindingID] {
+			diff.Removed = append(diff.Removed, previous.Findings[i])
 		}
 	}
 

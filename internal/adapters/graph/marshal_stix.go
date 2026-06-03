@@ -3,6 +3,7 @@ package graph
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"time"
@@ -119,7 +120,10 @@ func MarshalSTIX(w io.Writer, g *GraphData) error {
 
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
-	return enc.Encode(bundle)
+	if err := enc.Encode(bundle); err != nil {
+		return fmt.Errorf("encode STIX bundle: %w", err)
+	}
+	return nil
 }
 
 func stixID(objectType, content string) string {

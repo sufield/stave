@@ -23,7 +23,7 @@ import (
 //   - "identity" as map<string, dyn> — single identity context
 //   - missing(field) — custom function matching Stave's three-way absence check
 func NewEnv() (*cel.Env, error) {
-	return cel.NewEnv(
+	env, err := cel.NewEnv(
 		cel.Variable("properties", cel.MapType(cel.StringType, cel.DynType)),
 		cel.Variable("params", cel.MapType(cel.StringType, cel.DynType)),
 		cel.Variable("identities", cel.ListType(cel.DynType)),
@@ -36,12 +36,6 @@ func NewEnv() (*cel.Env, error) {
 				[]*cel.Type{cel.DynType},
 				cel.BoolType,
 				cel.UnaryBinding(func(val ref.Val) ref.Val {
-					// Propagate type errors instead of silently
-					// classifying them as "not missing" — a wrong-type
-					// argument to size() or a comparison between
-					// incompatible types is a flawed predicate, not a
-					// safe verdict. CEL handles error propagation by
-					// returning the error value verbatim.
 					if IsTypeError(val) {
 						return val
 					}
@@ -50,6 +44,10 @@ func NewEnv() (*cel.Env, error) {
 			),
 		),
 	)
+	if err != nil {
+		return nil, fmt.Errorf("create CEL environment: %w", err)
+	}
+	return env, nil
 }
 
 // missingErrorPatterns lists substrings that cel-go uses (across versions)

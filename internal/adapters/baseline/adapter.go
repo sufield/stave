@@ -39,7 +39,7 @@ func (l *EvaluationLoader) LoadFindings(ctx context.Context, path string) ([]rep
 	loader := evaljson.NewLoader().WithStrictSchema()
 	eval, err := loader.LoadEnvelopeFromFile(ctx, fsutil.CleanUserPath(path))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load evaluation findings %s: %w", path, err)
 	}
 	entries := remediation.BaselineEntriesFromFindings(eval.Findings)
 	return entriesToDomain(entries), nil
@@ -58,7 +58,7 @@ func (l *Loader) LoadBaseline(ctx context.Context, path string) ([]reporting.Bas
 	loader := evaljson.NewLoader().WithStrictSchema()
 	base, err := loader.LoadBaselineFromFile(ctx, fsutil.CleanUserPath(path), kernel.KindBaseline)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load baseline %s: %w", path, err)
 	}
 	return entriesToDomain(base.Findings), nil
 }
@@ -87,7 +87,7 @@ func NewWriter(opener FileOpener) (*Writer, error) {
 // half-written hybrid.
 func (w *Writer) WriteBaseline(ctx context.Context, path string, findings []reporting.BaselineFinding, createdAt time.Time, sourcePath string) (retErr error) {
 	if err := ctx.Err(); err != nil {
-		return err
+		return fmt.Errorf("write baseline: %w", err)
 	}
 	entries, err := domainToEntries(findings)
 	if err != nil {
@@ -145,14 +145,10 @@ func (w *Writer) WriteBaseline(ctx context.Context, path string, findings []repo
 	// while the temp file was being created. The committed=false
 	// defer cleans up the partial temp.
 	if err := ctx.Err(); err != nil {
-		// Propagate Close failures alongside the ctx error — a Close
-		// that fails after a cancelled write can mask the cancel
-		// reason, but errors.Join keeps both visible. Mirrors the
-		// happy-path Close-error handling below.
 		if closeErr := f.Close(); closeErr != nil {
-			return errors.Join(err, fmt.Errorf("close %s: %w", path, closeErr))
+			return errors.Join(fmt.Errorf("write baseline: %w", err), fmt.Errorf("close %s: %w", path, closeErr))
 		}
-		return err
+		return fmt.Errorf("write baseline: %w", err)
 	}
 
 	if writeErr := jsonutil.WriteIndented(f, baseline); writeErr != nil {

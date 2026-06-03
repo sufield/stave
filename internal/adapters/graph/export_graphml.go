@@ -86,7 +86,10 @@ func MarshalGraphMLWithDiagnostics(w io.Writer, g *GraphData) ([]UnmappedEdge, e
 	if xw.err != nil {
 		return rdf.UnmappedEdges, xw.err
 	}
-	return rdf.UnmappedEdges, xw.w.Flush()
+	if err := xw.w.Flush(); err != nil {
+		return rdf.UnmappedEdges, fmt.Errorf("flush graphml output: %w", err)
+	}
+	return rdf.UnmappedEdges, nil
 }
 
 // graphmlWriter wraps a *bufio.Writer with a sticky first error so each

@@ -42,7 +42,7 @@ func (r *TraceResult) RenderText(w io.Writer) error {
 	}
 	fmt.Fprintf(tw, "\nCEL Expression:\n%s\n", r.Expression)
 	if flushErr := tw.Flush(); flushErr != nil {
-		return flushErr
+		return fmt.Errorf("flush trace output: %w", flushErr)
 	}
 	return sw.err
 }
@@ -62,7 +62,7 @@ func (s *stickyTraceWriter) Write(p []byte) (int, error) {
 	}
 	n, err := s.w.Write(p)
 	if err != nil {
-		s.err = err
+		s.err = fmt.Errorf("write trace: %w", err)
 	}
 	return n, err
 }
@@ -71,7 +71,10 @@ func (s *stickyTraceWriter) Write(p []byte) (int, error) {
 func (r *TraceResult) RenderJSON(w io.Writer) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
-	return enc.Encode(r)
+	if err := enc.Encode(r); err != nil {
+		return fmt.Errorf("encode trace JSON: %w", err)
+	}
+	return nil
 }
 
 // sharedTraceCompiler is the package-level compiler used by

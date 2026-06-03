@@ -2,6 +2,7 @@ package baseline
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -124,7 +125,7 @@ func TestWriteBaseline_CloseErrorPropagated(t *testing.T) {
 		openFile: func(p string) (*os.File, error) {
 			f, err := os.Create(p)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("create test file: %w", err)
 			}
 			_ = f.Close()
 			return f, nil

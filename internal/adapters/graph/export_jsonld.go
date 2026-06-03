@@ -79,7 +79,7 @@ func MarshalJSONLDWithDiagnostics(w io.Writer, g *GraphData) ([]UnmappedEdge, er
 	// rather than constructing the full document in memory. This
 	// matters because @graph itself is the big array.
 	if _, err := bw.WriteString(jsonldHeader); err != nil {
-		return rdf.UnmappedEdges, err
+		return rdf.UnmappedEdges, fmt.Errorf("write jsonld header: %w", err)
 	}
 
 	first := true
@@ -89,18 +89,21 @@ func MarshalJSONLDWithDiagnostics(w io.Writer, g *GraphData) ([]UnmappedEdge, er
 		out := enc.encodeNode(n, edgesBySubject[n.ID])
 		if !first {
 			if _, err := bw.WriteString(",\n"); err != nil {
-				return rdf.UnmappedEdges, err
+				return rdf.UnmappedEdges, fmt.Errorf("write jsonld separator: %w", err)
 			}
 		}
 		if _, err := bw.Write(out); err != nil {
-			return rdf.UnmappedEdges, err
+			return rdf.UnmappedEdges, fmt.Errorf("write jsonld node: %w", err)
 		}
 		first = false
 	}
 	if _, err := bw.WriteString(jsonldFooter); err != nil {
-		return rdf.UnmappedEdges, err
+		return rdf.UnmappedEdges, fmt.Errorf("write jsonld footer: %w", err)
 	}
-	return rdf.UnmappedEdges, bw.Flush()
+	if err := bw.Flush(); err != nil {
+		return rdf.UnmappedEdges, fmt.Errorf("flush jsonld output: %w", err)
+	}
+	return rdf.UnmappedEdges, nil
 }
 
 // jsonldHeader is the literal start of the JSON-LD output. The

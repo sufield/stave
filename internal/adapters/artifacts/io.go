@@ -3,6 +3,7 @@ package artifacts
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -28,7 +29,11 @@ func (l *Loader) Evaluation(ctx context.Context, path string) (*report.Assessmen
 	if path == "" {
 		return nil, errors.New("evaluation path is required")
 	}
-	return l.adapter.LoadEnvelopeFromFile(ctx, path)
+	a, err := l.adapter.LoadEnvelopeFromFile(ctx, path)
+	if err != nil {
+		return nil, fmt.Errorf("load evaluation %s: %w", path, err)
+	}
+	return a, nil
 }
 
 // Baseline loads a baseline finding file and ensures findings are sorted deterministically.
@@ -36,5 +41,9 @@ func (l *Loader) Baseline(ctx context.Context, path string, expectedKind kernel.
 	if path == "" {
 		return nil, errors.New("baseline path is required")
 	}
-	return l.adapter.LoadBaselineFromFile(ctx, path, expectedKind)
+	b, err := l.adapter.LoadBaselineFromFile(ctx, path, expectedKind)
+	if err != nil {
+		return nil, fmt.Errorf("load baseline %s: %w", path, err)
+	}
+	return b, nil
 }

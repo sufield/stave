@@ -166,7 +166,7 @@ func (l *Loader) parseResult(data []byte, source string) (*evaluation.Compliance
 // missing required fields (schema_version, run, summary, status).
 func (l *Loader) LoadEnvelopeFromFile(ctx context.Context, path string) (*report.Assessment, error) {
 	if err := ctx.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load evaluation: %w", err)
 	}
 	path = fsutil.CleanUserPath(path)
 
@@ -175,14 +175,9 @@ func (l *Loader) LoadEnvelopeFromFile(ctx context.Context, path string) (*report
 		return nil, fmt.Errorf("reading evaluation file %q: %w", path, err)
 	}
 	if err := ctx.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load evaluation: %w", err)
 	}
 
-	// Schema-validate before unmarshaling into the typed struct so
-	// required-field omissions produce a precise validator diagnostic
-	// rather than a silent zero-valued Assessment. Opt-in (strict
-	// callers must use WithStrictSchema) — this preserves backward
-	// compatibility for callers feeding stub envelopes.
 	if err := l.validateIfStrict(data, path); err != nil {
 		return nil, err
 	}
@@ -193,7 +188,7 @@ func (l *Loader) LoadEnvelopeFromFile(ctx context.Context, path string) (*report
 	}
 
 	if err := eval.ValidateKind(report.KindAssessment, path); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validate evaluation kind %q: %w", path, err)
 	}
 
 	return &eval, nil
@@ -202,7 +197,7 @@ func (l *Loader) LoadEnvelopeFromFile(ctx context.Context, path string) (*report
 // LoadBaselineFromFile loads a baseline finding file and ensures findings are sorted deterministically.
 func (l *Loader) LoadBaselineFromFile(ctx context.Context, path string, expectedKind kernel.OutputKind) (*evaluation.Baseline, error) {
 	if err := ctx.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load baseline: %w", err)
 	}
 	path = fsutil.CleanUserPath(path)
 
@@ -211,7 +206,7 @@ func (l *Loader) LoadBaselineFromFile(ctx context.Context, path string, expected
 		return nil, fmt.Errorf("reading baseline file %q: %w", path, err)
 	}
 	if err := ctx.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load baseline: %w", err)
 	}
 
 	var base evaluation.Baseline
@@ -220,7 +215,7 @@ func (l *Loader) LoadBaselineFromFile(ctx context.Context, path string, expected
 	}
 
 	if err := PrepareBaseline(&base, expectedKind, path); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("prepare baseline %q: %w", path, err)
 	}
 	return &base, nil
 }
@@ -229,7 +224,7 @@ func (l *Loader) LoadBaselineFromFile(ctx context.Context, path string, expected
 // It checks the kind field, initializes nil slices, and sorts findings deterministically.
 func PrepareBaseline(base *evaluation.Baseline, expectedKind kernel.OutputKind, source string) error {
 	if err := base.ValidateKind(expectedKind, source); err != nil {
-		return err
+		return fmt.Errorf("validate baseline kind %q: %w", source, err)
 	}
 	if base.Findings == nil {
 		base.Findings = []evaluation.BaselineEntry{}
