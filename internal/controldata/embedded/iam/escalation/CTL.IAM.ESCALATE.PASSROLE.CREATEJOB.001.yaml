@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.PASSROLE.CREATEJOB.001
+name: Principal Must Not Escalate via Glue CreateJob Execution Role
+description: >
+  Principals with iam:PassRole on a role R, glue:CreateJob or
+  glue:UpdateJob, and glue:StartJobRun can escalate to R's
+  permissions. The Glue job executes under R, so any ETL script
+  the principal supplies runs with R's authority. When R's effective
+  permissions exceed the principal's own, this is a privilege
+  escalation path. Rhino Security Labs' CloudGoat (glue_privesc)
+  documents this technique. The invocation step (StartJobRun) is
+  folded into the .present boolean upstream — PassRole + CreateJob
+  without a run path is not an escalation.
+domain: identity
+severity: high
+scope: compound
+corpus_reference: MITRE:T1525
+compliance:
+  owasp_nhi: "NHI5"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - glue
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.passrole_createjob.present
+remediation:
+  description: >
+    Principal has a Glue-mediated escalation path. Its iam:PassRole
+    reaches a role whose effective permissions exceed the principal's
+    own, its glue:CreateJob or glue:UpdateJob lets it author new jobs
+    under that role, and glue:StartJobRun lets it execute them.
+  action: >
+    Scope iam:PassRole to a role whose effective permissions do not
+    exceed the principal's, or remove glue:CreateJob/glue:UpdateJob.
+    If Glue job authoring is required for ETL workflows, restrict
+    iam:PassRole with a Condition on the target role ARN.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "passrole_createjob": {
+            "present": false
+          }
+        }
+      }
+    }
+mitre_attack:
+  - id: T1525
+    name: "Implant Internal Image"
+    tactic: persistence
+validated_against:
+  - vendor: rhinosecurity
+    lab: glue_privesc
+    result: detected
+    verified: "2026-06-03"
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.passrole_createjob.present
+      op: eq
+      value: true
+tests:
+  - name: user with Glue CreateJob escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/glue-admin
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            passrole_createjob:
+              present: true
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/analyst
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            passrole_createjob:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 24 per-technique controls covering the aggregated Prowler check.
