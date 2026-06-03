@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2670
-**Pack hash:** `08c864c03da827750ea0b74c8ff2ec867878802d4b10af6b8c4a0b3c1737732e`
+**Total controls:** 2671
+**Pack hash:** `b23fa9fb6bdad73dea621f9ce08735f9c0a0dc1bb7c78003ccb9df2d9166dd61`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 275 |
-| high | 1161 |
+| high | 1162 |
 | info | 16 |
 | low | 204 |
 | medium | 1014 |
@@ -26,7 +26,7 @@
 | exposure | 1193 |
 | governance | 578 |
 | hygiene | 18 |
-| identity | 425 |
+| identity | 426 |
 | lifecycle | 31 |
 | network | 32 |
 | resilience | 33 |
@@ -22170,6 +22170,21 @@ Principals with iam:PassRole on a role R and sagemaker:CreateEndpointConfig + sa
 Principals with iam:PassRole on a role R, lambda:CreateFunction, and a path to invoke the function (lambda:InvokeFunction directly, creation of a function URL, or wiring to another trigger) can escalate to R's permissions. The created Lambda executes under R, so any code the principal uploads runs with R's authority. When R's effective permissions exceed the principal's own, this is a privilege escalation path. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate this technique. The invocation step is folded into the .present boolean upstream — a CreateFunction grant without any invocation path is not an escalation; the diagnostic fields expose which invocation vector was observed.
 
 **Remediation:** Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or remove lambda:CreateFunction. If broader function-creation is required for deployment workflows, restrict iam:PassRole with a Condition (`iam:PassedToService == lambda.amazonaws.com` plus a narrowly- scoped Resource ARN set). Alternatively, deny lambda:InvokeFunction and lambda:CreateFunctionUrlConfig on non-admin principals so the created function cannot be triggered.
+
+---
+
+### CTL.IAM.ESCALATE.PASSROLE.CREATEJOB.001
+
+**Principal Must Not Escalate via Glue CreateJob Execution Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with iam:PassRole on a role R, glue:CreateJob or glue:UpdateJob, and glue:StartJobRun can escalate to R's permissions. The Glue job executes under R, so any ETL script the principal supplies runs with R's authority. When R's effective permissions exceed the principal's own, this is a privilege escalation path. Rhino Security Labs' CloudGoat (glue_privesc) documents this technique. The invocation step (StartJobRun) is folded into the .present boolean upstream — PassRole + CreateJob without a run path is not an escalation.
+
+**Remediation:** Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or remove glue:CreateJob/glue:UpdateJob. If Glue job authoring is required for ETL workflows, restrict iam:PassRole with a Condition on the target role ARN.
 
 ---
 
