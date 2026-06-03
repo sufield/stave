@@ -13,7 +13,10 @@ import (
 
 func writeOutput(stdout, stderr io.Writer, result appbisect.Result, format string, logger *slog.Logger) error {
 	if format == "json" {
-		return jsonutil.WriteIndented(stdout, result)
+		if err := jsonutil.WriteIndented(stdout, result); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
 	return writeText(stdout, stderr, result, logger)
 }

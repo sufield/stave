@@ -83,7 +83,7 @@ Exit Codes:
 
 			resp, ucErr := setup.Doctor(cmd.Context(), req, deps.UseCaseDeps)
 			if ucErr != nil {
-				return ucErr
+				return fmt.Errorf("run doctor checks: %w", ucErr)
 			}
 
 			stdout := cliflags.GetGlobalFlags(cmd).ResolveStdout(cmd.OutOrStdout())
@@ -123,17 +123,20 @@ func reportJSON(w io.Writer, resp setup.DoctorResponse) error {
 	}
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
-	return enc.Encode(payload)
+	if err := enc.Encode(payload); err != nil {
+		return fmt.Errorf("encode doctor report JSON: %w", err)
+	}
+	return nil
 }
 
 func reportText(w io.Writer, resp setup.DoctorResponse) error {
 	for _, c := range resp.Checks {
 		if _, err := fmt.Fprintf(w, "[%s] %s: %s\n", c.Status, c.Name, c.Message); err != nil {
-			return err
+			return fmt.Errorf("write doctor check status: %w", err)
 		}
 		if c.Fix != "" {
 			if _, err := fmt.Fprintf(w, "      Fix: %s\n", c.Fix); err != nil {
-				return err
+				return fmt.Errorf("write doctor check fix: %w", err)
 			}
 		}
 	}

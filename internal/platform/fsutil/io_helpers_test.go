@@ -16,7 +16,7 @@ func IsSymlink(path string) (bool, error) {
 		if os.IsNotExist(err) {
 			return false, nil
 		}
-		return false, err
+		return false, fmt.Errorf("lstat: %w", err)
 	}
 	return fi.Mode()&os.ModeSymlink != 0, nil
 }

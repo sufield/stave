@@ -148,9 +148,12 @@ func runExplainNarrative(stdout io.Writer, opts *explainNarrativeOpts) error {
 	if rendErr != nil {
 		return rendErr
 	}
-	return cmdutil.WriteTo(stdout, opts.Out, func(out io.Writer) error {
+	if err := cmdutil.WriteTo(stdout, opts.Out, func(out io.Writer) error {
 		return renderer.Render(out, playbooks)
-	})
+	}); err != nil {
+		return fmt.Errorf("write narrative output: %w", err)
+	}
+	return nil
 }
 
 func writeNarrativePlaybooks(w io.Writer, playbooks []narrative.Playbook, depth string) {

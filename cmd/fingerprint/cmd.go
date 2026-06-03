@@ -75,7 +75,10 @@ func runExplain(ctx context.Context, w io.Writer, opts *options) error {
 	case "json":
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
-		return enc.Encode(result)
+		if err := enc.Encode(result); err != nil {
+			return fmt.Errorf("encode fingerprint JSON: %w", err)
+		}
+		return nil
 	default:
 		fmt.Fprintln(w, result.Preimage)
 		fmt.Fprintln(w, result.Fingerprint)

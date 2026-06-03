@@ -234,7 +234,7 @@ func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
 	r.OverallStatus = overall(r, opts.Strict)
 
 	if err := renderer.Render(w, r); err != nil {
-		return err
+		return fmt.Errorf("render validation report: %w", err)
 	}
 
 	if r.OverallStatus == "INVALID" {
@@ -493,7 +493,7 @@ func writeText(w io.Writer, r report) error {
 	}
 	fmt.Fprintf(tw, "  total\t%d\n", r.Operations.Total)
 	if err := tw.Flush(); err != nil {
-		return err
+		return fmt.Errorf("flush operations table: %w", err)
 	}
 	fmt.Fprintln(w)
 
@@ -533,7 +533,7 @@ func writeText(w io.Writer, r report) error {
 				fmt.Fprintf(gw, "    %s\t%d controls\t%d chains\n", g.Path, g.Controls, g.Chains)
 			}
 			if err := gw.Flush(); err != nil {
-				return err
+				return fmt.Errorf("flush coverage table: %w", err)
 			}
 		}
 	}

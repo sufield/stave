@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -48,5 +49,9 @@ type localWorkspace struct {
 }
 
 func (s *localWorkspace) Fetch(ctx context.Context) ([]policy.ControlDefinition, error) {
-	return s.repo.LoadControls(ctx, strings.TrimSpace(s.path))
+	controls, err := s.repo.LoadControls(ctx, strings.TrimSpace(s.path))
+	if err != nil {
+		return nil, fmt.Errorf("load workspace controls from %s: %w", s.path, err)
+	}
+	return controls, nil
 }

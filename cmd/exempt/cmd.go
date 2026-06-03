@@ -80,7 +80,7 @@ type acknowledgeResult struct {
 func runAcknowledge(opts acknowledgeOptions) (acknowledgeResult, error) {
 	f, err := appexempt.Load(opts.File)
 	if err != nil {
-		return acknowledgeResult{}, err
+		return acknowledgeResult{}, fmt.Errorf("load acceptance file: %w", err)
 	}
 	var comps []string
 	if opts.Compensating != "" {
@@ -94,17 +94,19 @@ func runAcknowledge(opts acknowledgeOptions) (acknowledgeResult, error) {
 		ExpiryDate:           opts.Expires,
 		CompensatingControls: comps,
 	}, appexempt.NewTimestamp(ports.RealClock{})); addErr != nil {
-		return acknowledgeResult{}, addErr
+		return acknowledgeResult{}, fmt.Errorf("add acknowledgment: %w", addErr)
 	}
 	if saveErr := appexempt.Save(opts.File, f, "stave exempt acknowledge", appexempt.NewTimestamp(ports.RealClock{})); saveErr != nil {
-		return acknowledgeResult{}, saveErr
+		return acknowledgeResult{}, fmt.Errorf("save acceptance file: %w", saveErr)
 	}
 	return acknowledgeResult{ControlID: opts.ControlID, AssetID: opts.AssetID, Expires: opts.Expires}, nil
 }
 
 func renderAcknowledge(w io.Writer, r acknowledgeResult) error {
-	_, err := fmt.Fprintf(w, "Acknowledged: %s@%s (expires %s)\n", r.ControlID, r.AssetID, r.Expires)
-	return err
+	if _, err := fmt.Fprintf(w, "Acknowledged: %s@%s (expires %s)\n", r.ControlID, r.AssetID, r.Expires); err != nil {
+		return fmt.Errorf("write output: %w", err)
+	}
+	return nil
 }
 
 func newAcknowledgeCmd() *cobra.Command {
@@ -173,7 +175,7 @@ func (o *exceptOptions) Normalize() error { return nil }
 func runExcept(opts exceptOptions) error {
 	f, err := appexempt.Load(opts.File)
 	if err != nil {
-		return err
+		return fmt.Errorf("load acceptance file: %w", err)
 	}
 	if addErr := f.AddException(appexempt.ExceptionEntry{
 		ControlID:  opts.ControlID,
@@ -181,9 +183,12 @@ func runExcept(opts exceptOptions) error {
 		ExpiryDate: opts.Expires,
 		Reason:     opts.Reason,
 	}); addErr != nil {
-		return addErr
+		return fmt.Errorf("add exception: %w", addErr)
 	}
-	return appexempt.Save(opts.File, f, "stave exempt except", appexempt.NewTimestamp(ports.RealClock{}))
+	if saveErr := appexempt.Save(opts.File, f, "stave exempt except", appexempt.NewTimestamp(ports.RealClock{})); saveErr != nil {
+		return fmt.Errorf("save acceptance file: %w", saveErr)
+	}
+	return nil
 }
 
 func newExceptCmd() *cobra.Command {
@@ -234,15 +239,18 @@ func (o *assetOptions) Normalize() error { return nil }
 func runAsset(opts assetOptions) error {
 	f, err := appexempt.Load(opts.File)
 	if err != nil {
-		return err
+		return fmt.Errorf("load acceptance file: %w", err)
 	}
 	if addErr := f.AddExemption(appexempt.ExemptionEntry{
 		AssetPattern: opts.Pattern,
 		Reason:       opts.Reason,
 	}); addErr != nil {
-		return addErr
+		return fmt.Errorf("add exemption: %w", addErr)
 	}
-	return appexempt.Save(opts.File, f, "stave exempt asset", appexempt.NewTimestamp(ports.RealClock{}))
+	if saveErr := appexempt.Save(opts.File, f, "stave exempt asset", appexempt.NewTimestamp(ports.RealClock{})); saveErr != nil {
+		return fmt.Errorf("save acceptance file: %w", saveErr)
+	}
+	return nil
 }
 
 func newExemptSubCmd() *cobra.Command {
@@ -290,7 +298,11 @@ type listOptions struct {
 func (o *listOptions) Normalize() error { return nil }
 
 func runList(opts listOptions) (*appexempt.AcceptanceFile, error) {
-	return appexempt.Load(opts.File)
+	f, err := appexempt.Load(opts.File)
+	if err != nil {
+		return nil, fmt.Errorf("load acceptance file: %w", err)
+	}
+	return f, nil
 }
 
 func newListCmd() *cobra.Command {
@@ -342,20 +354,22 @@ type removeResult struct{ ID string }
 func runRemove(opts removeOptions) (removeResult, error) {
 	f, err := appexempt.Load(opts.File)
 	if err != nil {
-		return removeResult{}, err
+		return removeResult{}, fmt.Errorf("load acceptance file: %w", err)
 	}
 	if rmErr := f.Remove(opts.ID, appexempt.NewTimestamp(ports.RealClock{})); rmErr != nil {
-		return removeResult{}, rmErr
+		return removeResult{}, fmt.Errorf("revoke entry: %w", rmErr)
 	}
 	if saveErr := appexempt.Save(opts.File, f, "stave exempt remove", appexempt.NewTimestamp(ports.RealClock{})); saveErr != nil {
-		return removeResult{}, saveErr
+		return removeResult{}, fmt.Errorf("save acceptance file: %w", saveErr)
 	}
 	return removeResult{ID: opts.ID}, nil
 }
 
 func renderRemove(w io.Writer, r removeResult) error {
-	_, err := fmt.Fprintf(w, "Revoked: %s\n", r.ID)
-	return err
+	if _, err := fmt.Fprintf(w, "Revoked: %s\n", r.ID); err != nil {
+		return fmt.Errorf("write output: %w", err)
+	}
+	return nil
 }
 
 func newRemoveCmd() *cobra.Command {
@@ -419,7 +433,7 @@ type upcomingResult struct {
 func runUpcoming(opts upcomingOptions) (upcomingResult, error) {
 	f, err := appexempt.Load(opts.File)
 	if err != nil {
-		return upcomingResult{}, err
+		return upcomingResult{}, fmt.Errorf("load acceptance file: %w", err)
 	}
 	return upcomingResult{
 		Days:    opts.Days,
@@ -430,14 +444,16 @@ func runUpcoming(opts upcomingOptions) (upcomingResult, error) {
 
 func renderUpcoming(w io.Writer, r upcomingResult) error {
 	if len(r.Entries) == 0 {
-		_, err := fmt.Fprintf(w, "No acceptances expiring within %d days.\n", r.Days)
-		return err
+		if _, err := fmt.Fprintf(w, "No acceptances expiring within %d days.\n", r.Days); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
 	if _, err := fmt.Fprintf(w, "ACCEPTANCES EXPIRING WITHIN %d DAYS\n", r.Days); err != nil {
-		return err
+		return fmt.Errorf("write output: %w", err)
 	}
 	if _, err := fmt.Fprintln(w, strings.Repeat("-", 70)); err != nil {
-		return err
+		return fmt.Errorf("write output: %w", err)
 	}
 	for i := range r.Entries {
 		a := &r.Entries[i]
@@ -498,20 +514,25 @@ func (o *historyOptions) Normalize() error { return nil }
 func runHistory(opts historyOptions) ([]appexempt.AcknowledgmentEntry, error) {
 	f, err := appexempt.Load(opts.File)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load acceptance file: %w", err)
 	}
 	return f.History(), nil
 }
 
 func renderHistory(w io.Writer, entries []appexempt.AcknowledgmentEntry, format string) error {
 	if len(entries) == 0 {
-		_, err := fmt.Fprintln(w, "No acknowledgment history.")
-		return err
+		if _, err := fmt.Fprintln(w, "No acknowledgment history."); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
 	if format == "json" {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
-		return enc.Encode(entries)
+		if err := enc.Encode(entries); err != nil {
+			return fmt.Errorf("encode history JSON: %w", err)
+		}
+		return nil
 	}
 	appexempt.WriteHistory(w, entries)
 	return nil
@@ -566,7 +587,7 @@ type validateResult struct {
 func runValidate(opts validateOptions, newStore compose.BuiltinControlStoreFactory) (validateResult, error) {
 	f, err := appexempt.Load(opts.File)
 	if err != nil {
-		return validateResult{}, err
+		return validateResult{}, fmt.Errorf("load acceptance file: %w", err)
 	}
 
 	// Load built-in catalog for compensating-control validation. The
@@ -588,8 +609,10 @@ func runValidate(opts validateOptions, newStore compose.BuiltinControlStoreFacto
 
 func renderValidate(w io.Writer, r validateResult) error {
 	if len(r.Errors) == 0 {
-		_, err := fmt.Fprintln(w, "Acceptance file is valid.")
-		return err
+		if _, err := fmt.Fprintln(w, "Acceptance file is valid."); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
 	for _, e := range r.Errors {
 		if _, err := fmt.Fprintf(w, "  ERROR: %s\n", e); err != nil {

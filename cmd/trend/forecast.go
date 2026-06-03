@@ -93,7 +93,7 @@ Exit Codes:
 				MTTRHistory:  mttrHistory,
 			})
 			if err != nil {
-				return err
+				return fmt.Errorf("compute forecast: %w", err)
 			}
 
 			return renderForecast(cmd.OutOrStdout(), result, format)

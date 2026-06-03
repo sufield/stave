@@ -39,7 +39,7 @@ Examples:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			fmtValue, err := compose.ResolveFormatValue(format)
 			if err != nil {
-				return err
+				return fmt.Errorf("resolve format: %w", err)
 			}
 			return writeSchemas(cmd.OutOrStdout(), fmtValue)
 		},
@@ -97,7 +97,10 @@ func writeSchemas(w io.Writer, format appcontracts.OutputFormat) error {
 	}
 
 	if format.IsJSON() {
-		return jsonutil.WriteIndented(w, out)
+		if err := jsonutil.WriteIndented(w, out); err != nil {
+			return fmt.Errorf("write schemas JSON: %w", err)
+		}
+		return nil
 	}
 
 	groups := []struct {

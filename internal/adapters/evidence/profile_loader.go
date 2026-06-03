@@ -91,7 +91,7 @@ func LoadEmbeddedProfiles() ([]*coreevidence.FrameworkProfile, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("walk profiles: %w", err)
 	}
 	return profiles, nil
 }

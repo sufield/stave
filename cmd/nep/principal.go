@@ -125,7 +125,10 @@ func runPrincipal(w io.Writer, opts *principalOpts) error {
 	if rendErr != nil {
 		return rendErr
 	}
-	return renderer.Render(w, result)
+	if err := renderer.Render(w, result); err != nil {
+		return fmt.Errorf("render principal: %w", err)
+	}
+	return nil
 }
 
 // identityRef wraps either a CloudIdentity or Asset for resolution input.

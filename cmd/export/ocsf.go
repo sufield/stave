@@ -58,7 +58,7 @@ func runOCSF(stdout io.Writer, assessmentPath, outputPath string) error {
 
 	events := appocsf.Export(assessment.Findings)
 
-	return cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
+	if err := cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
 		// NDJSON: one event per line.
 		enc := json.NewEncoder(w)
 		for i := range events {
@@ -67,5 +67,8 @@ func runOCSF(stdout io.Writer, assessmentPath, outputPath string) error {
 			}
 		}
 		return nil
-	})
+	}); err != nil {
+		return fmt.Errorf("write OCSF export: %w", err)
+	}
+	return nil
 }

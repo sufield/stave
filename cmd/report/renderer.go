@@ -36,7 +36,10 @@ type MarkdownRenderer struct{}
 
 // Render implements Renderer.
 func (MarkdownRenderer) Render(w io.Writer, r *er.Report) error {
-	return er.WriteMarkdown(w, r)
+	if err := er.WriteMarkdown(w, r); err != nil {
+		return fmt.Errorf("write markdown report: %w", err)
+	}
+	return nil
 }
 
 // NewRenderer maps a contracts.OutputFormat to its concrete Renderer.

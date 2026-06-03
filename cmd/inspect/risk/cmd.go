@@ -1,6 +1,8 @@
 package risk
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	domainrisk "github.com/sufield/stave/internal/core/evaluation/risk"
@@ -32,7 +34,7 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			input, err := fsutil.ReadFileOrStdin(file, cmd.InOrStdin())
 			if err != nil {
-				return err
+				return fmt.Errorf("read input: %w", err)
 			}
 			output, err := Analyze(input, resolver)
 			if err != nil {

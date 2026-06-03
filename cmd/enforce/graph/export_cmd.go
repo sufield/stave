@@ -87,7 +87,10 @@ func runExport(stdout io.Writer, opts *exportOptions) error {
 	if rendErr != nil {
 		return rendErr
 	}
-	return cmdutil.WriteTo(stdout, opts.OutPath, func(out io.Writer) error {
+	if err := cmdutil.WriteTo(stdout, opts.OutPath, func(out io.Writer) error {
 		return renderer.Render(out, g)
-	})
+	}); err != nil {
+		return fmt.Errorf("write graph export: %w", err)
+	}
+	return nil
 }

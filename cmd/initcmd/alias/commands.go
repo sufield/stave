@@ -46,7 +46,7 @@ type Runner struct {
 // Set creates or updates an alias in the user's global config.
 func (r *Runner) Set(ctx context.Context, name, command string) error {
 	if err := ctx.Err(); err != nil {
-		return err
+		return fmt.Errorf("context cancelled: %w", err)
 	}
 	name = strings.TrimSpace(name)
 	if !namePattern.MatchString(name) {
@@ -64,7 +64,7 @@ func (r *Runner) Set(ctx context.Context, name, command string) error {
 
 	cfg, path, err := r.Resolver.LoadUserConfig()
 	if err != nil {
-		return err
+		return fmt.Errorf("load user config: %w", err)
 	}
 	if cfg.Aliases == nil {
 		cfg.Aliases = map[string]string{}
@@ -82,11 +82,11 @@ func (r *Runner) Set(ctx context.Context, name, command string) error {
 // List retrieves all defined aliases and outputs them in the requested format.
 func (r *Runner) List(ctx context.Context, format appcontracts.OutputFormat) error {
 	if err := ctx.Err(); err != nil {
-		return err
+		return fmt.Errorf("context cancelled: %w", err)
 	}
 	cfg, _, err := r.Resolver.LoadUserConfig()
 	if err != nil {
-		return err
+		return fmt.Errorf("load user config: %w", err)
 	}
 
 	var entries []Entry
@@ -101,7 +101,10 @@ func (r *Runner) List(ctx context.Context, format appcontracts.OutputFormat) err
 		if entries == nil {
 			entries = []Entry{}
 		}
-		return jsonutil.WriteIndented(r.Stdout, entries)
+		if err := jsonutil.WriteIndented(r.Stdout, entries); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
 
 	if len(entries) == 0 {
@@ -117,11 +120,11 @@ func (r *Runner) List(ctx context.Context, format appcontracts.OutputFormat) err
 // Delete removes an existing alias from the user's config.
 func (r *Runner) Delete(ctx context.Context, name string) error {
 	if err := ctx.Err(); err != nil {
-		return err
+		return fmt.Errorf("context cancelled: %w", err)
 	}
 	cfg, path, err := r.Resolver.LoadUserConfig()
 	if err != nil {
-		return err
+		return fmt.Errorf("load user config: %w", err)
 	}
 
 	if _, ok := cfg.Aliases[name]; !ok {
@@ -229,7 +232,7 @@ Exit Codes:
 			}
 			fmtValue, fmtErr := compose.ResolveFormatValue(format)
 			if fmtErr != nil {
-				return fmtErr
+				return fmt.Errorf("resolve output format: %w", fmtErr)
 			}
 			return runner.List(cmd.Context(), fmtValue)
 		},

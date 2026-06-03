@@ -187,7 +187,7 @@ func (v *Validator) Validate(req Request) ([]Diagnostic, error) {
 func (v *Validator) getSchema(kind schemas.Kind, version string) (*jsonschema.Schema, error) {
 	ver, err := schemas.ResolveVersion(kind, version)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve schema version: %w", err)
 	}
 
 	cacheKey := fmt.Sprintf("%s:%s", kind, ver)
@@ -211,7 +211,7 @@ func (v *Validator) getSchema(kind schemas.Kind, version string) (*jsonschema.Sc
 
 	raw, err := schemas.LoadSchema(kind, ver)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load schema %s/%s: %w", kind, ver, err)
 	}
 
 	var doc any

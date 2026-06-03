@@ -129,9 +129,12 @@ func runCompare(ctx context.Context, stdout io.Writer, opts *options) error {
 	if rendErr != nil {
 		return &ui.UserError{Err: rendErr}
 	}
-	return cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
+	if err := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
 		return renderer.Render(w, result)
-	})
+	}); err != nil {
+		return fmt.Errorf("write comparison output: %w", err)
+	}
+	return nil
 }
 
 func runRemediationImpact(ctx context.Context, stdout io.Writer, opts *options) error {
@@ -156,9 +159,12 @@ func runRemediationImpact(ctx context.Context, stdout io.Writer, opts *options) 
 		After:  after,
 	})
 
-	return cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
+	if err := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
 		return enc.Encode(result)
-	})
+	}); err != nil {
+		return fmt.Errorf("write remediation impact: %w", err)
+	}
+	return nil
 }

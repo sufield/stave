@@ -62,7 +62,10 @@ func (r *Runner) Run(cfg config) error {
 
 func (r *Runner) report(cfg config, res appstatus.Result) error {
 	if cfg.Format.IsJSON() {
-		return jsonutil.WriteIndented(cfg.Stdout, res)
+		if err := jsonutil.WriteIndented(cfg.Stdout, res); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
 	if err := appstatus.FormatText(cfg.Stdout, res); err != nil {
 		return fmt.Errorf("render status text: %w", err)

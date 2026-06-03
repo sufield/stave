@@ -129,5 +129,8 @@ func run(ctx context.Context, w io.Writer, opts *options) error {
 	if opts.Quiet {
 		return nil
 	}
-	return renderer.Render(w, *report)
+	if err := renderer.Render(w, *report); err != nil {
+		return fmt.Errorf("render readiness: %w", err)
+	}
+	return nil
 }

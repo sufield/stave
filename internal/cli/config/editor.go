@@ -45,7 +45,7 @@ type MutationResult struct {
 func (m *Editor[T]) Set(key, value string) (MutationResult, error) {
 	cfg, cfgPath, err := m.SetStore.LoadOrCreate()
 	if err != nil {
-		return MutationResult{}, err
+		return MutationResult{}, fmt.Errorf("load or create: %w", err)
 	}
 
 	oldValue, oldSet := m.SetStore.CurrentValue(cfg, key, cfgPath)
@@ -54,13 +54,13 @@ func (m *Editor[T]) Set(key, value string) (MutationResult, error) {
 	}
 
 	if err := m.SetStore.Set(cfg, key, value); err != nil {
-		return MutationResult{}, err
+		return MutationResult{}, fmt.Errorf("set: %w", err)
 	}
 	if !m.confirmSetChange(key, oldValue, value, cfgPath) {
 		return MutationResult{Key: key, Value: value, Path: cfgPath, Applied: false}, nil
 	}
 	if err := m.SetStore.Write(cfgPath, cfg); err != nil {
-		return MutationResult{}, err
+		return MutationResult{}, fmt.Errorf("write: %w", err)
 	}
 	return MutationResult{Key: key, Value: value, Path: cfgPath, Applied: true}, nil
 }
@@ -73,13 +73,13 @@ func (m *Editor[T]) Delete(key string) (MutationResult, error) {
 	}
 
 	if err := m.DeleteStore.Delete(cfg, key); err != nil {
-		return MutationResult{}, err
+		return MutationResult{}, fmt.Errorf("delete: %w", err)
 	}
 	if !m.confirmDeleteChange(key, cfgPath) {
 		return MutationResult{Key: key, Path: cfgPath, Applied: false}, nil
 	}
 	if err := m.DeleteStore.Write(cfgPath, cfg); err != nil {
-		return MutationResult{}, err
+		return MutationResult{}, fmt.Errorf("write: %w", err)
 	}
 	return MutationResult{Key: key, Path: cfgPath, Applied: true}, nil
 }

@@ -48,7 +48,7 @@ Exit Codes:
 			canonicalizer := &appartifacts.Canonicalizer{}
 			res, err := canonicalizer.Normalize(cmd.Context(), cfg)
 			if err != nil {
-				return err
+				return fmt.Errorf("normalize artifacts: %w", err)
 			}
 			out := cmd.OutOrStdout()
 			if checkOnly {

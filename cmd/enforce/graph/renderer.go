@@ -23,7 +23,10 @@ type STIXRenderer struct{}
 
 // Render implements Renderer.
 func (STIXRenderer) Render(w io.Writer, g *graphpkg.GraphData) error {
-	return graphpkg.MarshalSTIX(w, g)
+	if err := graphpkg.MarshalSTIX(w, g); err != nil {
+		return fmt.Errorf("marshal STIX: %w", err)
+	}
+	return nil
 }
 
 // JSONLDRenderer emits the graph in JSON-LD form.
@@ -31,7 +34,10 @@ type JSONLDRenderer struct{}
 
 // Render implements Renderer.
 func (JSONLDRenderer) Render(w io.Writer, g *graphpkg.GraphData) error {
-	return graphpkg.MarshalJSONLD(w, g)
+	if err := graphpkg.MarshalJSONLD(w, g); err != nil {
+		return fmt.Errorf("marshal JSON-LD: %w", err)
+	}
+	return nil
 }
 
 // GraphMLRenderer emits the graph in GraphML form.
@@ -39,7 +45,10 @@ type GraphMLRenderer struct{}
 
 // Render implements Renderer.
 func (GraphMLRenderer) Render(w io.Writer, g *graphpkg.GraphData) error {
-	return graphpkg.MarshalGraphML(w, g)
+	if err := graphpkg.MarshalGraphML(w, g); err != nil {
+		return fmt.Errorf("marshal GraphML: %w", err)
+	}
+	return nil
 }
 
 // JSONRenderer emits the graph as the package's native indented JSON

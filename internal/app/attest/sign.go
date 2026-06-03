@@ -88,5 +88,8 @@ func WriteSig(snapshotPath string, sig *Signature) error {
 	if err != nil {
 		return fmt.Errorf("marshal signature: %w", err)
 	}
-	return os.WriteFile(snapshotPath+".sig", data, 0o644) //nolint:gosec // G306: .sig sidecar is world-readable by design; verification tools run as non-owner
+	if err = os.WriteFile(snapshotPath+".sig", data, 0o644); err != nil { //nolint:gosec // G306: .sig sidecar is world-readable by design; verification tools run as non-owner
+		return fmt.Errorf("write signature file: %w", err)
+	}
+	return nil
 }

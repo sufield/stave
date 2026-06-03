@@ -2,6 +2,7 @@ package sirbridge
 
 import (
 	"cmp"
+	"fmt"
 	"slices"
 	"time"
 
@@ -31,7 +32,7 @@ type EngineCoverageSource struct {
 func NewEngineCoverageSource(minSpan, maxGap time.Duration) (*EngineCoverageSource, error) {
 	v, err := engine.NewCoverageValidator(minSpan, maxGap)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create coverage validator: %w", err)
 	}
 	return &EngineCoverageSource{
 		validator:       *v,

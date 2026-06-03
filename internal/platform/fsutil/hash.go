@@ -1,6 +1,7 @@
 package fsutil
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
@@ -24,7 +25,7 @@ func HashFile(path string) (kernel.Digest, error) {
 func HashDirByExt(dir string, exts ...string) (kernel.Digest, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("read dir: %w", err)
 	}
 	matches := buildExtMatcher(exts)
 

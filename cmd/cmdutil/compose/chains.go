@@ -17,7 +17,11 @@ func LoadChainDefinitions(ctx context.Context, newLoader ChainLoaderFactory, dir
 	if err != nil {
 		return nil, fmt.Errorf("create chain loader: %w", err)
 	}
-	return loader.LoadChains(ctx, dir, capabilities.Builtin())
+	chains, loadErr := loader.LoadChains(ctx, dir, capabilities.Builtin())
+	if loadErr != nil {
+		return nil, fmt.Errorf("load chains: %w", loadErr)
+	}
+	return chains, nil
 }
 
 // Compile-time check: the ChainLoaderFactory must produce a value satisfying

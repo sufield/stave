@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -11,8 +12,14 @@ import (
 func ReadInput(stdin io.Reader, path string) (data []byte, resolvedPath string, err error) {
 	if path == "-" {
 		data, err = fsutil.LimitedReadAll(stdin, "stdin")
-		return data, "stdin", err
+		if err != nil {
+			return nil, "stdin", fmt.Errorf("read stdin: %w", err)
+		}
+		return data, "stdin", nil
 	}
 	data, err = fsutil.ReadFileLimited(path)
-	return data, path, err
+	if err != nil {
+		return nil, path, fmt.Errorf("read file %s: %w", path, err)
+	}
+	return data, path, nil
 }

@@ -1,6 +1,8 @@
 package cidiff
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/cli/ui"
@@ -50,11 +52,11 @@ Exit Codes:
 
 			resp, err := reporting.CIDiff(cmd.Context(), req, deps.UseCaseDeps)
 			if err != nil {
-				return err
+				return fmt.Errorf("run CI diff: %w", err)
 			}
 
 			if renderErr := jsonutil.WriteIndented(cmd.OutOrStdout(), resp); renderErr != nil {
-				return renderErr
+				return fmt.Errorf("write output: %w", renderErr)
 			}
 
 			if req.FailOnNew && resp.HasNew {

@@ -330,7 +330,10 @@ func writeSBOM(w io.Writer, _ Edition) error {
 	doc.Metadata.Component.Name = "stave"
 	doc.Metadata.Component.Version = Version()
 
-	return jsonutil.WriteIndented(w, doc)
+	if err := jsonutil.WriteIndented(w, doc); err != nil {
+		return fmt.Errorf("write SBOM: %w", err)
+	}
+	return nil
 }
 
 // versionOutput represents the structured metadata for the binary.

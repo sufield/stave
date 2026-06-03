@@ -173,7 +173,7 @@ func (e *DiagnosticEngine) resolveAssessment(
 		CELEvaluator:      req.PredicateEval,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("evaluate compliance: %w", err)
 	}
 	return &assessment, nil
 }

@@ -1,6 +1,7 @@
 package diagnose
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/spf13/cobra"
@@ -78,7 +79,7 @@ func toConfig(o *diagnoseOptions, flags cliflags.GlobalFlags, stdout, stderr io.
 		AllowBuiltinFallback: true,
 	})
 	if err != nil {
-		return Config{}, err
+		return Config{}, fmt.Errorf("prepare evaluation context: %w", err)
 	}
 
 	return Config{

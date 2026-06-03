@@ -1,6 +1,8 @@
 package fix
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
@@ -71,10 +73,13 @@ Exit Codes:
 
 			resp, err := usecase.Fix(cmd.Context(), req, usecase.FixDeps{Loader: loader})
 			if err != nil {
-				return err
+				return fmt.Errorf("run fix: %w", err)
 			}
 
-			return jsonutil.WriteIndented(cmd.OutOrStdout(), resp.Data)
+			if writeErr := jsonutil.WriteIndented(cmd.OutOrStdout(), resp.Data); writeErr != nil {
+				return fmt.Errorf("write output: %w", writeErr)
+			}
+			return nil
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

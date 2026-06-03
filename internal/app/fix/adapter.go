@@ -60,7 +60,7 @@ func (l *FindingLoader) LoadFindingWithPlan(_ context.Context, inputPath, findin
 
 	selected, err := remediation.SelectFinding(findings, findingRef)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("select finding: %w", err)
 	}
 
 	EnsurePlan(&selected)

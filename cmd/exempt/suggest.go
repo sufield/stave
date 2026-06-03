@@ -84,13 +84,18 @@ func runSuggest(ctx context.Context, opts suggestOptions) (*exemptionsuggest.Res
 
 func renderSuggest(w io.Writer, result *exemptionsuggest.Result, format string) error {
 	if result == nil {
-		_, err := fmt.Fprintln(w, "No assessment history found.")
-		return err
+		if _, err := fmt.Fprintln(w, "No assessment history found."); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
 	if format == "json" {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
-		return enc.Encode(result)
+		if err := enc.Encode(result); err != nil {
+			return fmt.Errorf("encode suggestions JSON: %w", err)
+		}
+		return nil
 	}
 	return writeSuggestTable(w, result)
 }
@@ -226,5 +231,9 @@ func parseSuggestDuration(s string) (time.Duration, error) {
 		}
 		return time.Duration(days) * 24 * time.Hour, nil
 	}
-	return time.ParseDuration(s)
+	d, err := time.ParseDuration(s)
+	if err != nil {
+		return 0, fmt.Errorf("parse duration: %w", err)
+	}
+	return d, nil
 }

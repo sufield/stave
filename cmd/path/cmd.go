@@ -155,7 +155,10 @@ func runPath(stdout io.Writer, opts *options) error {
 	if rendErr != nil {
 		return rendErr
 	}
-	return cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
+	if err := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
 		return renderer.Render(w, graph)
-	})
+	}); err != nil {
+		return fmt.Errorf("write attack path: %w", err)
+	}
+	return nil
 }

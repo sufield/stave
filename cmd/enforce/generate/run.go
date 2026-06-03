@@ -79,7 +79,7 @@ type Plan struct {
 // Run executes the template generation workflow.
 func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	if err := ctx.Err(); err != nil {
-		return err
+		return fmt.Errorf("context cancelled: %w", err)
 	}
 	p, err := r.BuildPlan(ctx, cfg)
 	if err != nil {
@@ -181,7 +181,10 @@ func (r *Runner) writeOutputFile(outPath, rendered string) (err error) {
 }
 
 func (r *Runner) writeResult(w io.Writer, res Result) error {
-	return jsonutil.WriteIndented(w, res)
+	if err := jsonutil.WriteIndented(w, res); err != nil {
+		return fmt.Errorf("write output: %w", err)
+	}
+	return nil
 }
 
 func buildOutput(mode Mode, outDir string, targets []outenforce.BucketTarget) (filePath, content string, err error) {

@@ -33,7 +33,10 @@ type DOTRenderer struct{}
 
 // Render implements Renderer.
 func (DOTRenderer) Render(w io.Writer, g *attackpath.Graph) error {
-	return attackpath.WriteDOT(w, g)
+	if err := attackpath.WriteDOT(w, g); err != nil {
+		return fmt.Errorf("write DOT: %w", err)
+	}
+	return nil
 }
 
 // CSVEdgesRenderer emits the edge list as CSV.
@@ -41,7 +44,10 @@ type CSVEdgesRenderer struct{}
 
 // Render implements Renderer.
 func (CSVEdgesRenderer) Render(w io.Writer, g *attackpath.Graph) error {
-	return attackpath.WriteCSVEdges(w, g)
+	if err := attackpath.WriteCSVEdges(w, g); err != nil {
+		return fmt.Errorf("write CSV edges: %w", err)
+	}
+	return nil
 }
 
 // NewRenderer maps a format string to its concrete Renderer.

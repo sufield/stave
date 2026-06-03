@@ -47,11 +47,11 @@ Exit Codes:
 			}
 			inspector, err := artifacts.NewInspector(lib)
 			if err != nil {
-				return err
+				return fmt.Errorf("create inspector: %w", err)
 			}
 			packs, err := inspector.AvailablePacks()
 			if err != nil {
-				return err
+				return fmt.Errorf("list packs: %w", err)
 			}
 			return artifacts.RenderSummary(cmd.OutOrStdout(), packs)
 		},
@@ -81,11 +81,11 @@ Exit Codes:
 			}
 			inspector, err := artifacts.NewInspector(lib)
 			if err != nil {
-				return err
+				return fmt.Errorf("create inspector: %w", err)
 			}
 			pack, err := inspector.Inspect(args[0])
 			if err != nil {
-				return err
+				return fmt.Errorf("inspect pack %q: %w", args[0], err)
 			}
 			return artifacts.ExportManifest(cmd.OutOrStdout(), pack)
 		},

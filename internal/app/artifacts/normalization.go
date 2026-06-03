@@ -99,7 +99,7 @@ func (c *Canonicalizer) processManifest(path string, cfg NormalizationConfig, re
 func DiscoverManifests(ctx context.Context, root string) ([]string, error) {
 	info, err := os.Stat(root)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("stat manifest root %s: %w", root, err)
 	}
 
 	if !info.IsDir() {
@@ -112,7 +112,7 @@ func DiscoverManifests(ctx context.Context, root string) ([]string, error) {
 			return walkErr
 		}
 		if ctxErr := ctx.Err(); ctxErr != nil {
-			return ctxErr
+			return fmt.Errorf("discover manifests cancelled: %w", ctxErr)
 		}
 		if d.IsDir() {
 			if d.Name() == ".git" {
@@ -127,6 +127,10 @@ func DiscoverManifests(ctx context.Context, root string) ([]string, error) {
 		return nil
 	})
 
+	if err != nil {
+		return nil, fmt.Errorf("walk manifest directory %s: %w", root, err)
+	}
+
 	slices.Sort(manifests)
-	return manifests, err
+	return manifests, nil
 }

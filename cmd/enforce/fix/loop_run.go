@@ -117,5 +117,8 @@ func (r *Runner) Loop(ctx context.Context, req LoopRequest) error {
 	if errors.Is(err, appfix.ErrViolationsRemaining) {
 		return ui.ErrViolationsFound
 	}
-	return err
+	if err != nil {
+		return fmt.Errorf("run fix loop: %w", err)
+	}
+	return nil
 }

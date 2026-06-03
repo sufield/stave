@@ -1,6 +1,8 @@
 package status
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
 	"github.com/sufield/stave/internal/platform/metadata"
@@ -49,7 +51,7 @@ Examples:
 			}
 			resolver, err := projctx.NewResolver()
 			if err != nil {
-				return err
+				return fmt.Errorf("resolve project context: %w", err)
 			}
 			return NewRunner(resolver).Run(cfg)
 		},

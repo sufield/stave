@@ -66,13 +66,13 @@ func (r *GenerateRunner) writeFile(path string, content []byte) error {
 		}
 	}
 	if err := fsutil.SafeMkdirAll(filepath.Dir(path), fsutil.WriteOptions{Perm: 0o700, AllowSymlink: r.AllowSymlink}); err != nil {
-		return err
+		return fmt.Errorf("create output directory: %w", err)
 	}
 	opts := fsutil.ConfigWriteOpts()
 	opts.Overwrite = r.Force
 	opts.AllowSymlink = r.AllowSymlink
 	if err := fsutil.SafeWriteFile(path, content, opts); err != nil {
-		return err
+		return fmt.Errorf("write file: %w", err)
 	}
 	if r.ShouldEmitText() {
 		fmt.Fprintf(r.Out, "Generated %s\n", path)

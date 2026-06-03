@@ -57,7 +57,7 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			resolved, err := compose.ResolveFormatValue(format)
 			if err != nil {
-				return err
+				return fmt.Errorf("resolve output format: %w", err)
 			}
 			return runContextList(ListInput{Stdout: cmd.OutOrStdout(), Format: resolved})
 		},
@@ -144,7 +144,7 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			resolved, err := compose.ResolveFormatValue(format)
 			if err != nil {
-				return err
+				return fmt.Errorf("resolve output format: %w", err)
 			}
 			return runContextShow(ShowInput{Stdout: cmd.OutOrStdout(), Format: resolved})
 		},
@@ -216,7 +216,7 @@ type DeleteInput struct {
 func runContextList(in ListInput) error {
 	st, _, err := contexts.Load()
 	if err != nil {
-		return err
+		return fmt.Errorf("load context store: %w", err)
 	}
 	runner := &Runner{Stdout: in.Stdout}
 	return runner.List(st, in.Format)
@@ -234,7 +234,7 @@ func runContextCreate(in CreateInput) error {
 
 	st, _, err := contexts.Load()
 	if err != nil {
-		return err
+		return fmt.Errorf("load context store: %w", err)
 	}
 
 	c := contexts.Context{ProjectRoot: rootAbs}
@@ -249,7 +249,7 @@ func runContextCreate(in CreateInput) error {
 func runContextUse(in UseInput) error {
 	st, _, err := contexts.Load()
 	if err != nil {
-		return err
+		return fmt.Errorf("load context store: %w", err)
 	}
 	runner := &Runner{Stdout: in.Stdout}
 	return runner.Use(st, in.Name)
@@ -258,11 +258,11 @@ func runContextUse(in UseInput) error {
 func runContextShow(in ShowInput) error {
 	st, path, err := contexts.Load()
 	if err != nil {
-		return err
+		return fmt.Errorf("load context store: %w", err)
 	}
 	name, ctx, ok, resolveErr := st.ResolveSelected()
 	if resolveErr != nil {
-		return resolveErr
+		return fmt.Errorf("resolve selected context: %w", resolveErr)
 	}
 	if !ok || ctx == nil {
 		return &ui.UserError{Err: errors.New("no context selected; use `stave context create <name> --dir <path>` then `stave context use <name>`")}
@@ -288,7 +288,7 @@ func runContextShow(in ShowInput) error {
 func runContextDelete(in DeleteInput) error {
 	st, _, err := contexts.Load()
 	if err != nil {
-		return err
+		return fmt.Errorf("load context store: %w", err)
 	}
 	runner := &Runner{Stdout: in.Stdout}
 	return runner.Delete(st, in.Name)

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"go/parser"
 	"go/token"
 	"os"
@@ -51,7 +52,7 @@ func TestCoreRuntimeNoHardwiredSideEffects(t *testing.T) {
 
 			data, readErr := os.ReadFile(path)
 			if readErr != nil {
-				return readErr
+				return fmt.Errorf("read file: %w", readErr)
 			}
 
 			rel, relErr := filepath.Rel(root, path)
@@ -121,7 +122,7 @@ func TestCoreTestsAreIsolated(t *testing.T) {
 
 			file, parseErr := parser.ParseFile(fset, path, nil, parser.ImportsOnly)
 			if parseErr != nil {
-				return parseErr
+				return fmt.Errorf("parse file: %w", parseErr)
 			}
 
 			rel, relErr := filepath.Rel(root, path)

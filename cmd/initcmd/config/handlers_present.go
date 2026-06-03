@@ -10,7 +10,10 @@ import (
 
 func (r *Runner) presentValue(res ValueResult, format appcontracts.OutputFormat) error {
 	if format.IsJSON() {
-		return jsonutil.WriteIndented(r.Stdout, res)
+		if err := jsonutil.WriteIndented(r.Stdout, res); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
 	_, err := fmt.Fprintf(r.Stdout, "%s\n", res.Value)
 	return err
@@ -18,7 +21,10 @@ func (r *Runner) presentValue(res ValueResult, format appcontracts.OutputFormat)
 
 func (r *Runner) presentMutation(opts MutationOpts, res ValueResult, text string, showHint bool) error {
 	if opts.Format.IsJSON() {
-		return jsonutil.WriteIndented(r.Stdout, res)
+		if err := jsonutil.WriteIndented(r.Stdout, res); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
 
 	if _, err := fmt.Fprintln(r.Stdout, text); err != nil {

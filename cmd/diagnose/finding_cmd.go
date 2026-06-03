@@ -106,7 +106,7 @@ Examples:
 				FormatChanged:     formatChanged,
 			})
 			if err != nil {
-				return err
+				return fmt.Errorf("prepare evaluation context: %w", err)
 			}
 
 			obsRepo, err := newObsRepo()

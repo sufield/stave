@@ -307,13 +307,17 @@ type AttestationRunInfo struct {
 // (e.g. "168h0m0s") instead of raw nanoseconds.
 func (v AttestationRunInfo) MarshalJSON() ([]byte, error) {
 	type alias AttestationRunInfo
-	return json.Marshal(&struct {
+	data, err := json.Marshal(&struct {
 		SLA string `json:"sla_threshold"`
 		alias
 	}{
 		SLA:   v.SLAThreshold.String(),
 		alias: alias(v),
 	})
+	if err != nil {
+		return nil, fmt.Errorf("marshal attestation run info: %w", err)
+	}
+	return data, nil
 }
 
 // AttestationSummary provides aggregate counts for remediation verification.

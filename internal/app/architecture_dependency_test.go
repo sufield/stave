@@ -77,7 +77,7 @@ func TestHexagonalDependencyDirection(t *testing.T) {
 
 			file, parseErr := parser.ParseFile(fset, path, nil, parser.ImportsOnly)
 			if parseErr != nil {
-				return parseErr
+				return fmt.Errorf("parse file: %w", parseErr)
 			}
 
 			rel, relErr := filepath.Rel(root, path)
@@ -211,7 +211,7 @@ func TestNoVendorStringsInCore(t *testing.T) {
 
 		file, parseErr := parser.ParseFile(fset, path, nil, parser.ParseComments)
 		if parseErr != nil {
-			return parseErr
+			return fmt.Errorf("parse file: %w", parseErr)
 		}
 
 		rel, relErr := filepath.Rel(root, path)

@@ -249,14 +249,11 @@ linters:
       - (^|/)examples($|/)
       - internal/tools/
     rules:
-      # Iteration scope: wrapcheck is enforced only in internal/core/evaluation/engine/
-      # (5 violations fixed in this iteration). 397 other production violations
-      # are grandfathered. Future iterations widen this allow-list package by
-      # package — remove a path from this exclusion and fix its violations in
-      # the same iteration. See docs/audits/lint-wrapcheck-rollout.md for the chip-away
-      # plan.
+      # wrapcheck is enforced everywhere except generated code,
+      # internal/tools/ (code-gen utilities), and cmd/stave-mcp/
+      # (SDK-free MCP server with its own conventions).
       - linters: [wrapcheck]
-        path-except: '^(internal/core/evaluation/engine/|internal/app/eval/|cmd/apply/|internal/adapters/controls/|internal/adapters/observations/|internal/adapters/graph/|internal/adapters/cel/|internal/adapters/baseline/|internal/adapters/artifacts/|internal/adapters/evaluation/)'
+        path: ^(internal/tools/|cmd/stave-mcp/)
       - path: _test\.go
         linters:
           - forcetypeassert

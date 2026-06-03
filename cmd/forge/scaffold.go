@@ -138,7 +138,10 @@ func writeFixtureFile(path string, f fixtureFile) error {
 	if err != nil {
 		return fmt.Errorf("marshal fixture: %w", err)
 	}
-	return os.WriteFile(path, append(data, '\n'), 0o644) //nolint:gosec // user file
+	if err = os.WriteFile(path, append(data, '\n'), 0o644); err != nil { //nolint:gosec // user file
+		return fmt.Errorf("write fixture: %w", err)
+	}
+	return nil
 }
 
 // extractPredicatePaths extracts property field paths from a predicate.

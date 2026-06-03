@@ -1,6 +1,8 @@
 package doctor
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
@@ -26,5 +28,9 @@ func (o *options) Prepare(cmd *cobra.Command) error {
 
 // resolveFormat resolves the output format without needing *cobra.Command.
 func (o *options) resolveFormat() (appcontracts.OutputFormat, error) {
-	return compose.ResolveFormatValue(o.Format)
+	f, err := compose.ResolveFormatValue(o.Format)
+	if err != nil {
+		return "", fmt.Errorf("resolve output format: %w", err)
+	}
+	return f, nil
 }

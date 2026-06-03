@@ -180,7 +180,7 @@ type fixtureResource struct {
 func loadFixture(path string) ([]asset.Asset, error) {
 	data, err := os.ReadFile(fsutil.CleanUserPath(path)) //nolint:gosec // user path
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read fixture %s: %w", path, err)
 	}
 
 	var f fixtureFile

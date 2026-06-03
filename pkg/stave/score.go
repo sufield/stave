@@ -3,6 +3,7 @@ package stave
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"slices"
 
@@ -37,7 +38,11 @@ type TrendPoint = appscore.TrendPoint
 // ("severity=0.45,sla=0.25,chain=0.20,coverage=0.10"); pass-through
 // to the internal parser to keep that contract in one place.
 func ParseWeights(s string) (Weights, error) {
-	return appscore.ParseWeights(s)
+	w, err := appscore.ParseWeights(s)
+	if err != nil {
+		return Weights{}, fmt.Errorf("parse weights: %w", err)
+	}
+	return w, nil
 }
 
 // ScoreResult is the full posture score breakdown. Aliased from the

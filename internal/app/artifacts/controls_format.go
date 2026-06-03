@@ -17,12 +17,15 @@ func FormatControlOutput(w io.Writer, cfg catalog.DiscoveryRequest, rows []catal
 	format := appcontracts.OutputFormat(strings.ToLower(strings.TrimSpace(cfg.OutputFormat)))
 
 	if format == appcontracts.FormatJSON {
-		return jsonutil.WriteIndented(w, rows)
+		if err := jsonutil.WriteIndented(w, rows); err != nil {
+			return fmt.Errorf("write control JSON: %w", err)
+		}
+		return nil
 	}
 
 	cols, err := catalog.SelectFields(cfg.Fields)
 	if err != nil {
-		return err
+		return fmt.Errorf("select control fields: %w", err)
 	}
 
 	switch format {
@@ -40,7 +43,7 @@ func WriteCSV(w io.Writer, rows []catalog.PolicyEntry, cols []string, header boo
 	cw := csv.NewWriter(w)
 	if header {
 		if err := cw.Write(cols); err != nil {
-			return err
+			return fmt.Errorf("write CSV header: %w", err)
 		}
 	}
 	for _, row := range rows {
@@ -49,18 +52,23 @@ func WriteCSV(w io.Writer, rows []catalog.PolicyEntry, cols []string, header boo
 			record[i] = catalog.GetAttribute(row, c)
 		}
 		if err := cw.Write(record); err != nil {
-			return err
+			return fmt.Errorf("write CSV row: %w", err)
 		}
 	}
 	cw.Flush()
-	return cw.Error()
+	if err := cw.Error(); err != nil {
+		return fmt.Errorf("flush CSV: %w", err)
+	}
+	return nil
 }
 
 // WriteTable writes control rows as a formatted table.
 func WriteTable(w io.Writer, rows []catalog.PolicyEntry, cols []string, header bool) error {
 	if len(rows) == 0 {
-		_, err := fmt.Fprintln(w, "No controls found.")
-		return err
+		if _, err := fmt.Fprintln(w, "No controls found."); err != nil {
+			return fmt.Errorf("write empty table message: %w", err)
+		}
+		return nil
 	}
 
 	tw := tabwriter.NewWriter(w, 0, 8, 2, ' ', 0)
@@ -77,5 +85,8 @@ func WriteTable(w io.Writer, rows []catalog.PolicyEntry, cols []string, header b
 		fmt.Fprintln(tw, strings.Join(vals, "\t"))
 	}
 
-	return tw.Flush()
+	if err := tw.Flush(); err != nil {
+		return fmt.Errorf("flush control table: %w", err)
+	}
+	return nil
 }

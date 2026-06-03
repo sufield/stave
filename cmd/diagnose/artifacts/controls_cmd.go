@@ -73,7 +73,7 @@ Exit Codes:
 			runner := &catalog.CatalogBrowser{Provider: provider}
 			rows, err := runner.Browse(cmd.Context(), cfg)
 			if err != nil {
-				return err
+				return fmt.Errorf("browse controls: %w", err)
 			}
 			return appartifacts.FormatControlOutput(stdout, cfg, rows)
 		},
@@ -96,15 +96,18 @@ Exit Codes:
 func runListPacks(w io.Writer, cfg catalog.DiscoveryRequest) error {
 	reg, err := packs.NewEmbeddedRegistry()
 	if err != nil {
-		return err
+		return fmt.Errorf("create pack registry: %w", err)
 	}
 	items, err := reg.ListPacks()
 	if err != nil {
-		return err
+		return fmt.Errorf("list packs: %w", err)
 	}
 
 	if appcontracts.OutputFormat(cfg.OutputFormat) == appcontracts.FormatJSON {
-		return jsonutil.WriteIndented(w, items)
+		if werr := jsonutil.WriteIndented(w, items); werr != nil {
+			return fmt.Errorf("write packs JSON: %w", werr)
+		}
+		return nil
 	}
 
 	if len(items) == 0 {
@@ -151,7 +154,7 @@ Exit Codes:
 				ControlsDir: controlsDir,
 			})
 			if err != nil {
-				return err
+				return fmt.Errorf("explain control: %w", err)
 			}
 			return diagnose.WriteExplainResult(cmd.OutOrStdout(), result, appcontracts.FormatText)
 		},
@@ -219,12 +222,15 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			expanded, err := predicates.Resolve(strings.TrimSpace(args[0]))
 			if err != nil {
-				return err
+				return fmt.Errorf("resolve alias %q: %w", args[0], err)
 			}
-			return jsonutil.WriteIndented(cmd.OutOrStdout(), map[string]any{
+			if werr := jsonutil.WriteIndented(cmd.OutOrStdout(), map[string]any{
 				"alias":    args[0],
 				"expanded": expanded,
-			})
+			}); werr != nil {
+				return fmt.Errorf("write alias JSON: %w", werr)
+			}
+			return nil
 		},
 	}
 }
@@ -281,7 +287,10 @@ Exit Codes:
 // cobra boundary; this function stays off the cobra import graph.
 func renderControlSearch(w io.Writer, results []catalogsearch.SearchResult, format string) error {
 	if format == "json" {
-		return jsonutil.WriteIndented(w, results)
+		if err := jsonutil.WriteIndented(w, results); err != nil {
+			return fmt.Errorf("write search JSON: %w", err)
+		}
+		return nil
 	}
 	if len(results) == 0 {
 		_, err := fmt.Fprintln(w, "No matching controls found.")

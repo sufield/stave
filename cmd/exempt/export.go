@@ -98,7 +98,10 @@ func renderExport(r exportResult) (err error) {
 	}
 	enc := json.NewEncoder(r.Dest)
 	enc.SetIndent("", "  ")
-	return enc.Encode(r.Document)
+	if encErr := enc.Encode(r.Document); encErr != nil {
+		return fmt.Errorf("encode POAM document: %w", encErr)
+	}
+	return nil
 }
 
 func newExportCmd() *cobra.Command {

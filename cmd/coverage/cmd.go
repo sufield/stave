@@ -113,7 +113,7 @@ func runCoverage(ctx context.Context, stdout io.Writer, opts *options, newCtlRep
 	if writeErr := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
 		return renderer.Render(w, report)
 	}); writeErr != nil {
-		return writeErr
+		return fmt.Errorf("write coverage output: %w", writeErr)
 	}
 
 	if report.Summary.SilentRisk > 0 {

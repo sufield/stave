@@ -181,7 +181,7 @@ func checkOfflineProxyEnv(ctx *SystemEnvironment) Diagnostic {
 func IsDirectoryWritable(dir string) error {
 	f, err := os.CreateTemp(dir, ".stave-probe-*")
 	if err != nil {
-		return err
+		return fmt.Errorf("create temp: %w", err)
 	}
 	path := f.Name()
 	// Best-effort close before removal; writability was already proven.

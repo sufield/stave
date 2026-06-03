@@ -39,7 +39,7 @@ func (e *Explainer) Run(ctx context.Context, input Input) (contracts.ExplainResu
 	controlsDir := strings.TrimSpace(input.ControlsDir)
 	ctl, err := e.Finder.FindByID(ctx, controlsDir, input.ControlID)
 	if err != nil {
-		return contracts.ExplainResult{}, err
+		return contracts.ExplainResult{}, fmt.Errorf("find by i d: %w", err)
 	}
 	return analyze(ctl), nil
 }

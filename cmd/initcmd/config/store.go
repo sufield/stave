@@ -75,18 +75,24 @@ func (s projectConfigStore) CurrentValue(cfg *appconfig.WorkspacePolicy, key, cf
 func (s projectConfigStore) Set(cfg *appconfig.WorkspacePolicy, key, value string) error {
 	parsed, err := appconfig.IdentifySetting(key)
 	if err != nil {
-		return err
+		return fmt.Errorf("identify setting: %w", err)
 	}
-	return appconfig.UpdateAttribute(cfg, parsed.Attribute, value)
+	if updateErr := appconfig.UpdateAttribute(cfg, parsed.Attribute, value); updateErr != nil {
+		return fmt.Errorf("update attribute: %w", updateErr)
+	}
+	return nil
 }
 
 // Delete removes a specific key from the provided config struct.
 func (s projectConfigStore) Delete(cfg *appconfig.WorkspacePolicy, key string) error {
 	parsed, err := appconfig.IdentifySetting(key)
 	if err != nil {
-		return err
+		return fmt.Errorf("identify setting: %w", err)
 	}
-	return appconfig.ResetAttribute(cfg, parsed.Attribute)
+	if resetErr := appconfig.ResetAttribute(cfg, parsed.Attribute); resetErr != nil {
+		return fmt.Errorf("reset attribute: %w", resetErr)
+	}
+	return nil
 }
 
 // Write serializes the configuration back to the stave.yaml file.

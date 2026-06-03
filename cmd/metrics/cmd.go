@@ -95,7 +95,7 @@ func run(ctx context.Context, stdout io.Writer, opts *options) error {
 		appmetrics.Write(w, input)
 		return nil
 	}); err != nil {
-		return err
+		return fmt.Errorf("write metrics: %w", err)
 	}
 
 	fmt.Fprintf(stdout, "Wrote metrics to %s\n", opts.OutPath)

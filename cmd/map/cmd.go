@@ -91,9 +91,12 @@ func runMap(ctx context.Context, stdout io.Writer, opts *options, deps Deps) err
 	if rendErr != nil {
 		return rendErr
 	}
-	return cmdutil.WriteTo(stdout, opts.OutPath, func(out io.Writer) error {
+	if err := cmdutil.WriteTo(stdout, opts.OutPath, func(out io.Writer) error {
 		return renderer.Render(out, coverageReport)
-	})
+	}); err != nil {
+		return fmt.Errorf("write coverage map: %w", err)
+	}
+	return nil
 }
 
 func writeTable(w io.Writer, r *appcoverage.CoverageReport) {

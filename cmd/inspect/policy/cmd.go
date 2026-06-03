@@ -1,6 +1,8 @@
 package policy
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/core/evaluation/risk"
@@ -40,7 +42,7 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			input, err := fsutil.ReadFileOrStdin(file, cmd.InOrStdin())
 			if err != nil {
-				return err
+				return fmt.Errorf("read input: %w", err)
 			}
 			report, err := Analyze(input, resolver)
 			if err != nil {

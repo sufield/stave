@@ -257,7 +257,7 @@ func (s *Store) UnmarshalYAML(value *yaml.Node) error {
 		Contexts map[string]Context `yaml:"contexts,omitempty"`
 	}
 	if err := value.Decode(&aux); err != nil {
-		return err
+		return fmt.Errorf("decode: %w", err)
 	}
 	if err := validateContextsMap(aux.Contexts); err != nil {
 		return err
@@ -435,10 +435,13 @@ func (s *Store) Save() error {
 		return fmt.Errorf("failed to marshal context config: %w", err)
 	}
 
-	return fsutil.SafeWriteFile(s.path, out, fsutil.WriteOptions{
+	if err = fsutil.SafeWriteFile(s.path, out, fsutil.WriteOptions{
 		Perm:      0o600,
 		Overwrite: true,
-	})
+	}); err != nil {
+		return fmt.Errorf("write config: %w", err)
+	}
+	return nil
 }
 
 // NormalizeName trims whitespace from a context name. The result is not

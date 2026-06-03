@@ -40,10 +40,14 @@ func (e *Explainer) Run(ctx context.Context, req ExplainRequest) (appcontracts.E
 	}
 
 	runner := &appexplain.Explainer{Finder: e.Finder}
-	return runner.Run(ctx, appexplain.Input{
+	result, err := runner.Run(ctx, appexplain.Input{
 		ControlID:   req.ControlID,
 		ControlsDir: req.ControlsDir,
 	})
+	if err != nil {
+		return appcontracts.ExplainResult{}, fmt.Errorf("explain control %s: %w", req.ControlID, err)
+	}
+	return result, nil
 }
 
 // NewExplainerWithFinder creates an Explainer from an initialized repository.
@@ -54,9 +58,15 @@ func NewExplainerWithFinder(repo appcontracts.ControlRepository) *Explainer {
 // WriteExplainResult renders an ExplainResult to the writer in the given format.
 func WriteExplainResult(w io.Writer, result appcontracts.ExplainResult, format appcontracts.OutputFormat) error {
 	if format.IsJSON() {
-		return jsonutil.WriteIndented(w, result)
+		if err := jsonutil.WriteIndented(w, result); err != nil {
+			return fmt.Errorf("write explain JSON: %w", err)
+		}
+		return nil
 	}
-	return text.WriteExplainText(w, result)
+	if err := text.WriteExplainText(w, result); err != nil {
+		return fmt.Errorf("write explain text: %w", err)
+	}
+	return nil
 }
 
 // repoFinder implements appexplain.ControlFinder using an initialized repo.
@@ -100,7 +110,7 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmtValue, err := compose.ResolveFormatValue(format)
 			if err != nil {
-				return err
+				return fmt.Errorf("resolve format: %w", err)
 			}
 
 			repo, err := newCtlRepo()

@@ -1,6 +1,7 @@
 package attestation
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -60,7 +61,7 @@ func Compare(req CompareRequest) (CompareResult, error) {
 	})
 
 	if err := report.ValidateAttestation(v); err != nil {
-		return CompareResult{}, err
+		return CompareResult{}, fmt.Errorf("validate attestation: %w", err)
 	}
 
 	return CompareResult{

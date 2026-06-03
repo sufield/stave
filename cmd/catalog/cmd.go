@@ -113,10 +113,13 @@ func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
 	catalog := appcaps.Build(controls, chains)
 	catalog = filter(catalog, opts)
 
-	return renderer.Render(w, catalogReport{
+	if err := renderer.Render(w, catalogReport{
 		TotalCapabilities: len(catalog),
 		Capabilities:      catalog,
-	})
+	}); err != nil {
+		return fmt.Errorf("render catalog: %w", err)
+	}
+	return nil
 }
 
 func filter(in []appcaps.Capability, opts *options) []appcaps.Capability {
@@ -188,7 +191,7 @@ func renderText(w io.Writer, catalog []appcaps.Capability) error {
 			}
 		}
 		if err := tw.Flush(); err != nil {
-			return err
+			return fmt.Errorf("flush catalog table: %w", err)
 		}
 		fmt.Fprintln(w)
 	}

@@ -2,6 +2,7 @@ package report
 
 import (
 	_ "embed"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -82,7 +83,7 @@ Examples:
 			}
 			ucResp, ucErr := reporting.Report(cmd.Context(), ucReq, reportDeps)
 			if ucErr != nil {
-				return ucErr
+				return fmt.Errorf("generate report: %w", ucErr)
 			}
 
 			// Adapter: render in requested format

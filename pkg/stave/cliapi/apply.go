@@ -21,6 +21,7 @@ package cliapi
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -79,7 +80,7 @@ func Apply(ctx context.Context, cfg stave.Config) (*ApplyResult, error) {
 
 	r, err := applycore.Run(ctx, stave.ApplyInputsFromConfig(cfg))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("run: %w", err)
 	}
 
 	return &ApplyResult{

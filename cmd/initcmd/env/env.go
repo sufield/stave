@@ -53,7 +53,10 @@ func listEnvVars(cfg ListConfig) error {
 	}
 
 	if cfg.Format.IsJSON() {
-		return jsonutil.WriteIndented(cfg.Stdout, entries)
+		if err := jsonutil.WriteIndented(cfg.Stdout, entries); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
 	return renderEnvText(cfg.Stdout, entries)
 }
@@ -85,7 +88,7 @@ func renderEnvText(w io.Writer, entries []Entry) error {
 			fmt.Fprintf(tw, "  %s\t%s\t%s\n", e.Name, e.Description, display)
 		}
 		if err := tw.Flush(); err != nil {
-			return err
+			return fmt.Errorf("flush table output: %w", err)
 		}
 	}
 	return nil
@@ -129,7 +132,7 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			fmtValue, err := compose.ResolveFormatValue(format)
 			if err != nil {
-				return err
+				return fmt.Errorf("resolve output format: %w", err)
 			}
 			return listEnvVars(ListConfig{
 				Format: fmtValue,

@@ -31,7 +31,7 @@ import (
 // on those exact field names.
 func renderGate(w io.Writer, result *stave.GateResult, isJSON, quiet bool) error {
 	if isJSON {
-		return jsonutil.WriteIndented(w, gateJSON{
+		if err := jsonutil.WriteIndented(w, gateJSON{
 			Policy:            string(result.Policy),
 			Pass:              result.Passed,
 			Reason:            result.Reason,
@@ -39,7 +39,10 @@ func renderGate(w io.Writer, result *stave.GateResult, isJSON, quiet bool) error
 			CurrentViolations: result.CurrentViolations,
 			NewViolations:     result.NewViolations,
 			OverdueUpcoming:   result.OverdueCount,
-		})
+		}); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
 	if quiet {
 		return nil
@@ -128,7 +131,7 @@ Exit Codes:
 				MaxUnsafe:       cfg.MaxUnsafeDuration,
 			})
 			if err != nil {
-				return err
+				return fmt.Errorf("run gate: %w", err)
 			}
 
 			// Per-team gate: filter findings to one team and evaluate

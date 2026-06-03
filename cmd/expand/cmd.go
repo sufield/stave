@@ -147,12 +147,15 @@ func runExpand(ctx context.Context, w io.Writer, opts *options, newCtlRepo compo
 	if rendErr != nil {
 		return inputErrorf("%s", rendErr.Error())
 	}
-	return renderer.Render(w, Payload{
+	if err := renderer.Render(w, Payload{
 		Archetype:      arch,
 		Matched:        matched,
 		SnapshotStatus: snap,
 		Finding:        finding,
-	})
+	}); err != nil {
+		return fmt.Errorf("render expansion: %w", err)
+	}
+	return nil
 }
 
 // renderText writes the human-readable form of a single-archetype expand.

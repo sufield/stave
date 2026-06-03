@@ -70,7 +70,10 @@ func (r *Runner) List(st *contexts.Store, format appcontracts.OutputFormat) erro
 	}
 
 	if format.IsJSON() {
-		return jsonutil.WriteIndented(r.Stdout, items)
+		if err := jsonutil.WriteIndented(r.Stdout, items); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
 
 	if len(items) == 0 {
@@ -132,7 +135,10 @@ func (r *Runner) Use(st *contexts.Store, name string) error {
 // Show renders the currently selected context.
 func (r *Runner) Show(format appcontracts.OutputFormat, res ShowResult) error {
 	if format.IsJSON() {
-		return jsonutil.WriteIndented(r.Stdout, res)
+		if err := jsonutil.WriteIndented(r.Stdout, res); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
 
 	_, err := fmt.Fprintf(r.Stdout, "Context: %s (%s)\nStore: %s\nProject root: %s\nConfig: %s\nControls default: %s\nObservations default: %s\n",

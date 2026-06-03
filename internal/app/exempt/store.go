@@ -200,7 +200,10 @@ func Save(path string, f *AcceptanceFile, modifiedBy, timestamp string) error {
 	if err != nil {
 		return fmt.Errorf("marshal: %w", err)
 	}
-	return os.WriteFile(path, data, 0o644) //nolint:gosec // user-managed file
+	if err = os.WriteFile(path, data, 0o644); err != nil { //nolint:gosec // user-managed file
+		return fmt.Errorf("write acceptance file: %w", err)
+	}
+	return nil
 }
 
 // AddAcknowledgment adds a formal risk acceptance. timestamp is RFC3339.

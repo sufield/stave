@@ -97,7 +97,7 @@ func runScore(ctx context.Context, stdout io.Writer, opts *options) error {
 
 	budget, err := stave.BuiltinChainBudget()
 	if err != nil {
-		return err
+		return fmt.Errorf("load chain budget: %w", err)
 	}
 
 	if opts.HistoryDir != "" {
@@ -110,7 +110,7 @@ func runScore(ctx context.Context, stdout io.Writer, opts *options) error {
 func runScoreSingle(ctx context.Context, stdout io.Writer, opts *options, weights stave.Weights, budget stave.ChainBudget) error {
 	assessment, err := stave.LoadAssessment(ctx, opts.OutputFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("load assessment: %w", err)
 	}
 
 	// A zero-finding assessment is technically a valid input, but it
@@ -134,7 +134,7 @@ func runScoreSingle(ctx context.Context, stdout io.Writer, opts *options, weight
 func runScoreTrend(ctx context.Context, stdout io.Writer, opts *options, weights stave.Weights, budget stave.ChainBudget) error {
 	assessments, err := stave.LoadAssessments(ctx, opts.HistoryDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("load assessments: %w", err)
 	}
 	if len(assessments) == 0 {
 		return fmt.Errorf("no assessment files found in %s", opts.HistoryDir)

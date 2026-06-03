@@ -251,7 +251,7 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 
 	report, _, err := wf.PerformAssessment(ctx, assessmentCfg)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("perform assessment: %w", err)
 	}
 	if loaded := wf.Controls(); len(loaded) > 0 {
 		controls = loaded
@@ -398,7 +398,11 @@ func loadChainDefs(dir string) ([]policy.ChainDefinition, error) {
 	if dir == "" {
 		return nil, nil
 	}
-	return ctlyaml.LoadChains(dir, capabilities.Builtin())
+	chains, err := ctlyaml.LoadChains(dir, capabilities.Builtin())
+	if err != nil {
+		return nil, fmt.Errorf("load chains: %w", err)
+	}
+	return chains, nil
 }
 
 // buildClock returns a FixedClock when now is non-zero, otherwise a

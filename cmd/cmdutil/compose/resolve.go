@@ -2,6 +2,7 @@ package compose
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -26,7 +27,11 @@ func ResolveNow(raw string) (time.Time, error) {
 	if raw == "" {
 		return time.Now().UTC(), nil
 	}
-	return cliflags.ParseRFC3339(raw, "--now")
+	t, err := cliflags.ParseRFC3339(raw, "--now")
+	if err != nil {
+		return time.Time{}, fmt.Errorf("parse --now: %w", err)
+	}
+	return t, nil
 }
 
 // ResolveClock returns a FixedClock if a timestamp is provided, otherwise RealClock.
@@ -36,7 +41,7 @@ func ResolveClock(raw string) (ports.Clock, error) {
 	}
 	t, err := cliflags.ParseRFC3339(raw, "--now")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parse --now: %w", err)
 	}
 	return ports.FixedClock(t), nil
 }
@@ -50,7 +55,11 @@ func ResolveClock(raw string) (ports.Clock, error) {
 // and reference it from there; format resolution itself does not
 // need the information.
 func ResolveFormatValue(raw string) (appcontracts.OutputFormat, error) {
-	return ui.ParseOutputFormat(strings.ToLower(strings.TrimSpace(raw)))
+	f, err := ui.ParseOutputFormat(strings.ToLower(strings.TrimSpace(raw)))
+	if err != nil {
+		return "", fmt.Errorf("parse output format: %w", err)
+	}
+	return f, nil
 }
 
 // ResolveNowDiag parses a --now flag value and returns a diagnostic issue on failure.

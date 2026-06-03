@@ -34,7 +34,10 @@ type JSONRenderer struct{}
 
 // Render implements Renderer.
 func (JSONRenderer) Render(w io.Writer, r searchReport) error {
-	return jsonutil.WriteIndented(w, r)
+	if err := jsonutil.WriteIndented(w, r); err != nil {
+		return fmt.Errorf("write search JSON: %w", err)
+	}
+	return nil
 }
 
 // TextRenderer writes the human-readable search results.

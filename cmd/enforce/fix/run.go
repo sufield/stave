@@ -2,6 +2,7 @@ package fix
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
@@ -48,11 +49,14 @@ type Request struct {
 
 // Run delegates to the app-layer fix service.
 func (r *Runner) Run(ctx context.Context, req Request) error {
-	return r.service.Fix(ctx, appfix.Request{
+	if err := r.service.Fix(ctx, appfix.Request{
 		InputPath:  req.InputPath,
 		FindingRef: req.FindingRef,
 		Stdout:     req.Stdout,
-	})
+	}); err != nil {
+		return fmt.Errorf("run fix: %w", err)
+	}
+	return nil
 }
 
 // newEnvelopeBuilder creates an EnvelopeBuilder with adapter wiring.

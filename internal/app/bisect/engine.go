@@ -86,7 +86,7 @@ func (e *Engine) runBisect(ctx context.Context, snapshots []asset.Snapshot, resu
 	low, high := 0, n-1
 	for high-low > 1 {
 		if err := ctx.Err(); err != nil {
-			return result, err
+			return result, fmt.Errorf("err: %w", err)
 		}
 		mid := (low + high) / 2
 		violated, evalErr := e.eval(ctx, snapshots[mid], &result)
@@ -162,7 +162,7 @@ func (e *Engine) runScan(ctx context.Context, snapshots []asset.Snapshot, result
 
 	for i, snap := range snapshots {
 		if err := ctx.Err(); err != nil {
-			return result, err
+			return result, fmt.Errorf("err: %w", err)
 		}
 		violated, evalErr := e.eval(ctx, snap, &result)
 		if evalErr != nil {
@@ -223,7 +223,7 @@ func (e *Engine) eval(ctx context.Context, snap asset.Snapshot, result *Result) 
 func computeDelta(before, after asset.Snapshot) (*asset.InfrastructureDrift, error) {
 	drift, err := asset.ComputeDrift(before, after)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("compute drift: %w", err)
 	}
 	return &drift, nil
 }
@@ -247,7 +247,7 @@ func MakeEvaluator(
 ) Evaluator {
 	return func(ctx context.Context, snap asset.Snapshot) (bool, error) {
 		if err := ctx.Err(); err != nil {
-			return false, err
+			return false, fmt.Errorf("err: %w", err)
 		}
 		report, err := assess([]asset.Snapshot{snap, snap}) // two identical snapshots for lifecycle
 		if err != nil {

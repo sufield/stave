@@ -2,6 +2,7 @@ package enginetest
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -39,7 +40,10 @@ func getSharedCompiler() (*stavecel.Compiler, error) {
 	sharedCompilerOnce.Do(func() {
 		sharedCompiler, errSharedCompiler = stavecel.NewCompiler()
 	})
-	return sharedCompiler, errSharedCompiler
+	if errSharedCompiler != nil {
+		return nil, fmt.Errorf("create CEL compiler: %w", errSharedCompiler)
+	}
+	return sharedCompiler, nil
 }
 
 // testCELEvaluator returns a CEL-based PredicateEval for domain tests.
@@ -51,7 +55,7 @@ func testCELEvaluator() policy.PredicateEval {
 	return func(ctl policy.ControlDefinition, a asset.Asset, identities []asset.CloudIdentity) (bool, error) {
 		cp, err := compiler.Compile(ctl.UnsafePredicate)
 		if err != nil {
-			return false, err
+			return false, fmt.Errorf("compile: %w", err)
 		}
 		return stavecel.Evaluate(cp, a, identities, ctl.Params.Raw())
 	}

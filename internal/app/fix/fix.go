@@ -51,7 +51,7 @@ type Request struct {
 // Fix reads an evaluation artifact and generates a remediation plan for one finding.
 func (s *Service) Fix(ctx context.Context, req Request) error {
 	if err := ctx.Err(); err != nil {
-		return err
+		return fmt.Errorf("err: %w", err)
 	}
 	needle := strings.TrimSpace(req.FindingRef)
 	if needle == "" {
@@ -112,7 +112,11 @@ func EnsurePlan(f *remediation.Finding) {
 // SelectFinding locates a finding by its canonical key (<control_id>@<asset_id>).
 // Delegates to remediation.SelectFinding in core.
 func SelectFinding(findings []remediation.Finding, needle string) (remediation.Finding, error) {
-	return remediation.SelectFinding(findings, needle)
+	f, err := remediation.SelectFinding(findings, needle)
+	if err != nil {
+		return remediation.Finding{}, fmt.Errorf("select finding: %w", err)
+	}
+	return f, nil
 }
 
 // WriteFixResult writes the fix plan as JSON with structured changes.
@@ -144,7 +148,10 @@ func WriteFixResult(w io.Writer, f remediation.Finding) error {
 		Changes:     changes,
 		FixPlan:     f.RemediationPlan,
 	}
-	return jsonutil.WriteIndented(w, out)
+	if err := jsonutil.WriteIndented(w, out); err != nil {
+		return fmt.Errorf("write indented: %w", err)
+	}
+	return nil
 }
 
 // deriveConfidence returns a confidence score based on whether all

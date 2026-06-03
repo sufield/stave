@@ -2,6 +2,7 @@ package stave
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/evaluation/engine"
@@ -33,7 +34,7 @@ type FingerprintControlEntry struct {
 func FingerprintExplain(ctx context.Context, cfg Config) (*FingerprintExplainResult, error) {
 	controls, err := applycore.LoadControls(cfg.ControlsDir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load controls: %w", err)
 	}
 
 	hasher := crypto.NewHasher()

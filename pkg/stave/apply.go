@@ -3,6 +3,7 @@ package stave
 import (
 	"context"
 	"errors"
+	"fmt"
 	"maps"
 	"time"
 
@@ -31,7 +32,7 @@ func Apply(ctx context.Context, cfg Config) (*Assessment, error) {
 
 	r, err := applycore.Run(ctx, applyInputs(cfg))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("run: %w", err)
 	}
 	return BuildAssessment(r.Report, r.Controls), nil
 }

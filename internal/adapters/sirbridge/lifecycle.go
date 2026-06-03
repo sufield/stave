@@ -1,6 +1,8 @@
 package sirbridge
 
 import (
+	"fmt"
+
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/engine"
@@ -34,5 +36,9 @@ func NewEngineLifecycleSource(eval controldef.PredicateEval) *EngineLifecycleSou
 
 // Lifecycles satisfies sir.LifecycleSource.
 func (s *EngineLifecycleSource) Lifecycles(controls []controldef.ControlDefinition, snapshots []asset.Snapshot) (map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle, error) {
-	return engine.BuildLifecyclesPerControl(controls, snapshots, s.predicateEval)
+	lc, err := engine.BuildLifecyclesPerControl(controls, snapshots, s.predicateEval)
+	if err != nil {
+		return nil, fmt.Errorf("build lifecycles: %w", err)
+	}
+	return lc, nil
 }

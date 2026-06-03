@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/spf13/cobra"
@@ -101,7 +102,7 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmtValue, err := compose.ResolveFormatValue(*format)
 			if err != nil {
-				return err
+				return fmt.Errorf("resolve output format: %w", err)
 			}
 			runner := newRunner(rt, cmd.InOrStdin(), cmd.OutOrStdout(), cmd.ErrOrStderr())
 			return runner.Get(cmd.Context(), GetRequest{Key: args[0], Format: fmtValue})
@@ -148,7 +149,7 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmtValue, err := compose.ResolveFormatValue(*format)
 			if err != nil {
-				return err
+				return fmt.Errorf("resolve output format: %w", err)
 			}
 			gf := cliflags.GetGlobalFlags(cmd)
 			runner := newRunner(rt, cmd.InOrStdin(), cmd.OutOrStdout(), cmd.ErrOrStderr())
@@ -184,7 +185,7 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmtValue, err := compose.ResolveFormatValue(*format)
 			if err != nil {
-				return err
+				return fmt.Errorf("resolve output format: %w", err)
 			}
 			gf := cliflags.GetGlobalFlags(cmd)
 			runner := newRunner(rt, cmd.InOrStdin(), cmd.OutOrStdout(), cmd.ErrOrStderr())
@@ -213,7 +214,7 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			fmtValue, err := compose.ResolveFormatValue(*format)
 			if err != nil {
-				return err
+				return fmt.Errorf("resolve output format: %w", err)
 			}
 			runner := newRunner(rt, cmd.InOrStdin(), cmd.OutOrStdout(), cmd.ErrOrStderr())
 			return runner.Show(cmd.Context(), cmdctx.ResolverFromCmd(cmd), fmtValue)
@@ -239,7 +240,7 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			fmtValue, err := compose.ResolveFormatValue(*format)
 			if err != nil {
-				return err
+				return fmt.Errorf("resolve output format: %w", err)
 			}
 			runner := newRunner(rt, cmd.InOrStdin(), cmd.OutOrStdout(), cmd.ErrOrStderr())
 			return runner.Show(cmd.Context(), cmdctx.ResolverFromCmd(cmd), fmtValue)

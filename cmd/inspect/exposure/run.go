@@ -100,7 +100,7 @@ type Input struct {
 func run(in Input) error {
 	data, err := fsutil.ReadFileOrStdin(in.File, in.Stdin)
 	if err != nil {
-		return err
+		return fmt.Errorf("read input: %w", err)
 	}
 
 	var payload Payload

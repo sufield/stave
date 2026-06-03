@@ -1,6 +1,7 @@
 package readiness
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/sufield/stave/internal/core/diag"
@@ -62,7 +63,7 @@ func recordValidationIssues(req readinessValidationRequest) error {
 
 	val, err := req.Input.RunEvaluation(req.MaxUnsafeDuration, req.Now)
 	if err != nil {
-		return err
+		return fmt.Errorf("operation: %w", err)
 	}
 	req.Report.Summary.ControlsVerified = val.LoadMetrics.ControlsLoaded
 	req.Report.Summary.StatesVerified = val.LoadMetrics.SnapshotsLoaded

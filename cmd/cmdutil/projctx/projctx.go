@@ -62,11 +62,11 @@ func (sc *SelectedContext) IsUsable() bool {
 func (r *Resolver) ResolveSelected() (SelectedContext, error) {
 	st, _, err := contexts.Load()
 	if err != nil {
-		return SelectedContext{}, err
+		return SelectedContext{}, fmt.Errorf("load contexts: %w", err)
 	}
 	name, ctx, ok, err := st.ResolveSelected()
 	if err != nil {
-		return SelectedContext{}, err
+		return SelectedContext{}, fmt.Errorf("resolve selected context: %w", err)
 	}
 	return SelectedContext{Name: name, Context: ctx, Active: ok}, nil
 }
@@ -89,7 +89,7 @@ func (r *Resolver) ProjectRoot() string {
 func (r *Resolver) DetectProjectRoot(start string) (string, error) {
 	curr, err := filepath.Abs(start)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("resolve absolute path: %w", err)
 	}
 	for {
 		if r.IsProjectRoot(curr) {
@@ -209,9 +209,12 @@ func SaveSession(projectRoot string, argv []string) error {
 	}
 	path := filepath.Join(projectRoot, SessionFileRel)
 	if err := fsutil.SafeMkdirAll(filepath.Dir(path), fsutil.WriteOptions{Perm: 0o700}); err != nil {
-		return err
+		return fmt.Errorf("create session dir: %w", err)
 	}
-	return fsutil.SafeWriteFile(path, data, fsutil.ConfigWriteOpts())
+	if err := fsutil.SafeWriteFile(path, data, fsutil.ConfigWriteOpts()); err != nil {
+		return fmt.Errorf("write session file: %w", err)
+	}
+	return nil
 }
 
 // LoadSession reads session state from disk.
@@ -222,7 +225,7 @@ func LoadSession(projectRoot string) (*SessionState, error) {
 		if os.IsNotExist(err) {
 			return nil, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("read session: %w", err)
 	}
 	var state SessionState
 	if err := json.Unmarshal(data, &state); err != nil {

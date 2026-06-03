@@ -31,7 +31,7 @@ func FormatJSON(data []byte) ([]byte, error) {
 	}
 	out, err := json.MarshalIndent(snap, "", "  ")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("marshal observation json: %w", err)
 	}
 	return append(out, '\n'), nil
 }

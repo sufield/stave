@@ -158,7 +158,10 @@ func runCELEval(stdout, stderr io.Writer, stdin io.Reader, expr, inputPath, asse
 	}
 
 	if format == "json" {
-		return jsonutil.WriteIndented(stdout, result)
+		if err := jsonutil.WriteIndented(stdout, result); err != nil {
+			return fmt.Errorf("write JSON output: %w", err)
+		}
+		return nil
 	}
 
 	return renderCELText(stdout, result)

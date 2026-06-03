@@ -3,6 +3,7 @@ package stave
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/sufield/stave/internal/core/ports"
@@ -143,7 +144,7 @@ func ExportPolicies(ctx context.Context, cfg ExportConfig) (*PolicyExport, error
 		EffectivePermissions: resolver,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("run: %w", err)
 	}
 	return &PolicyExport{
 		GeneratedAt:          r.GeneratedAt,

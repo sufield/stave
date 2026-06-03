@@ -251,5 +251,8 @@ func writeJSON(w io.Writer, result CoverageResult, sanitizer kernel.Sanitizer) e
 		result.UncoveredAssets[i] = asset.ID(sanitizer.ID(rid.String()))
 	}
 
-	return jsonutil.WriteIndented(w, result)
+	if err := jsonutil.WriteIndented(w, result); err != nil {
+		return fmt.Errorf("write output: %w", err)
+	}
+	return nil
 }

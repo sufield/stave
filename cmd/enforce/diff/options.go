@@ -51,7 +51,7 @@ func (o *Options) Prepare(_ *cobra.Command) error {
 func toConfig(o *Options) (config, error) {
 	format, err := compose.ResolveFormatValue(o.Format)
 	if err != nil {
-		return config{}, err
+		return config{}, fmt.Errorf("resolve output format: %w", err)
 	}
 
 	filter, err := buildFilter(o)

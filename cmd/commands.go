@@ -118,7 +118,7 @@ func WireCommands(app *App) error {
 		NewSLALoader:     f.NewSLALoader,
 	}
 	if err := applyDeps.Validate(); err != nil {
-		return err
+		return fmt.Errorf("validate apply deps: %w", err)
 	}
 	root.AddCommand(apply.NewApplyCmd(applyDeps))
 	root.AddCommand(applyverify.NewCmd(f.NewObsRepo, f.NewCtlRepo, f.NewCELEvaluator, ui.DefaultRuntime()))
@@ -304,7 +304,7 @@ func WireCommands(app *App) error {
 		NewCtlRepo:              f.NewCtlRepo,
 	}
 	if err := reportDeps.Validate(); err != nil {
-		return err
+		return fmt.Errorf("validate report deps: %w", err)
 	}
 	root.AddCommand(stavereport.NewCmd(reportDeps))
 

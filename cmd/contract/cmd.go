@@ -241,7 +241,10 @@ func renderType(w io.Writer, renderer Renderer, assetType string, idx predindex.
 		report.SteampipeMapping = mapping
 	}
 
-	return renderer.Render(w, report)
+	if err := renderer.Render(w, report); err != nil {
+		return fmt.Errorf("render contract: %w", err)
+	}
+	return nil
 }
 
 type listRow struct {
@@ -301,7 +304,10 @@ func renderList(w io.Writer, renderer Renderer, idx predindex.Index, steampipeDi
 		WithSteampipe: withSteampipe,
 	}
 
-	return renderer.Render(w, report)
+	if err := renderer.Render(w, report); err != nil {
+		return fmt.Errorf("render contract list: %w", err)
+	}
+	return nil
 }
 
 // findSteampipeMapping returns the (workspace-relative) path of the
@@ -372,7 +378,7 @@ func writeTypeText(w io.Writer, r typeReport) error {
 			p.ControlsCount, p.ChainsCount, p.MaxSeverity, note)
 	}
 	if err := tw.Flush(); err != nil {
-		return err
+		return fmt.Errorf("flush contract table: %w", err)
 	}
 
 	if r.SteampipeMapping != "" {
@@ -401,5 +407,8 @@ func writeListText(w io.Writer, r listReport) error {
 		fmt.Fprintf(tw, "  %s\t%s\t%d\t%d\t%s\n",
 			t.AssetType, schema, t.ControlsCount, t.ChainsCount, mapping)
 	}
-	return tw.Flush()
+	if err := tw.Flush(); err != nil {
+		return fmt.Errorf("flush list table: %w", err)
+	}
+	return nil
 }

@@ -19,5 +19,9 @@ func LoadSLAPolicy(ctx context.Context, newLoader SLALoaderFactory, profileID, f
 	if err != nil {
 		return nil, fmt.Errorf("create sla loader: %w", err)
 	}
-	return loader.LoadSLAConfig(ctx, profileID, filePath)
+	cfg, loadErr := loader.LoadSLAConfig(ctx, profileID, filePath)
+	if loadErr != nil {
+		return nil, fmt.Errorf("load sla config: %w", loadErr)
+	}
+	return cfg, nil
 }

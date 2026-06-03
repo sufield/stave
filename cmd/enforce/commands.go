@@ -1,6 +1,8 @@
 package enforce
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/enforce/baseline"
@@ -59,7 +61,7 @@ func NextCommandForProject(projectRoot string) (string, error) {
 	inspector := appstatus.NewInspector()
 	state, err := inspector.Inspect(projectRoot)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("inspect project: %w", err)
 	}
 	return state.RecommendNext(), nil
 }

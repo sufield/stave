@@ -32,7 +32,11 @@ func NewInspector(lib contracts.PolicyLibrary) (*PolicyInspector, error) {
 
 // AvailablePacks returns the full collection of embedded security control sets.
 func (i *PolicyInspector) AvailablePacks() ([]contracts.PolicyPack, error) {
-	return i.Library.ListPacks()
+	packs, err := i.Library.ListPacks()
+	if err != nil {
+		return nil, fmt.Errorf("list policy packs: %w", err)
+	}
+	return packs, nil
 }
 
 // Inspect retrieves the detailed technical definition of a specific security pack.
@@ -60,10 +64,16 @@ func RenderSummary(w io.Writer, items []contracts.PolicyPack) error {
 		fmt.Fprintf(tw, "%s\t%s\n", p.Name, p.Description)
 	}
 
-	return tw.Flush()
+	if err := tw.Flush(); err != nil {
+		return fmt.Errorf("flush policy pack table: %w", err)
+	}
+	return nil
 }
 
 // ExportManifest renders a policy pack definition as a raw JSON manifest.
 func ExportManifest(w io.Writer, p contracts.PolicyPack) error {
-	return jsonutil.WriteIndented(w, p)
+	if err := jsonutil.WriteIndented(w, p); err != nil {
+		return fmt.Errorf("write policy pack manifest: %w", err)
+	}
+	return nil
 }

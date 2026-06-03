@@ -104,7 +104,11 @@ func BuiltinControlCatalog() ([]policy.ControlDefinition, error) {
 		ctlbuiltin.EmbeddedFS(), "embedded",
 		ctlbuiltin.WithAliasResolver(predicate.ResolverFunc()),
 	)
-	return store.All()
+	controls, err := store.All()
+	if err != nil {
+		return nil, fmt.Errorf("load builtin controls: %w", err)
+	}
+	return controls, nil
 }
 
 // DefaultFactories returns factory functions configured with standard adapters.
@@ -194,7 +198,7 @@ func LoadAssets(ctx context.Context, newObs ObsRepoFactory, newCtl CtlRepoFactor
 	})
 
 	if err := g.Wait(); err != nil {
-		return Assets{}, err
+		return Assets{}, fmt.Errorf("load assets: %w", err)
 	}
 	return Assets{Snapshots: snapshots, Controls: controls}, nil
 }

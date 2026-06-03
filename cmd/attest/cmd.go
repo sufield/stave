@@ -225,11 +225,14 @@ func runSign(stdout io.Writer, snapshotPath, keyPath, keyID, outPath string) err
 		Assets:        snapshot.Assets,
 	}
 
-	return cmdutil.WriteTo(stdout, outPath, func(w io.Writer) error {
+	if err := cmdutil.WriteTo(stdout, outPath, func(w io.Writer) error {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
 		return enc.Encode(attested)
-	})
+	}); err != nil {
+		return fmt.Errorf("write attested snapshot: %w", err)
+	}
+	return nil
 }
 
 func runVerify(stdout io.Writer, snapshotPath, keyPath string) error {

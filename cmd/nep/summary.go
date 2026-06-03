@@ -147,7 +147,10 @@ func runSummary(w io.Writer, opts *summaryOpts) error {
 	if rendErr != nil {
 		return rendErr
 	}
-	return renderer.Render(w, summary)
+	if err := renderer.Render(w, summary); err != nil {
+		return fmt.Errorf("render summary: %w", err)
+	}
+	return nil
 }
 
 func renderSummaryJSON(w io.Writer, summary nepSummary) error {

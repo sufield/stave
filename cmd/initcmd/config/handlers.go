@@ -67,13 +67,13 @@ func (r *Runner) Get(_ context.Context, req GetRequest) error {
 	key := strings.TrimSpace(req.Key)
 	cfg, cfgPath, err := projconfig.FindProjectConfigWithPath("")
 	if err != nil {
-		return err
+		return fmt.Errorf("find project config: %w", err)
 	}
 	eval := appconfig.NewResolver(cfg, cfgPath, nil, "")
 
 	parsed, err := appconfig.IdentifySetting(key)
 	if err != nil {
-		return err
+		return fmt.Errorf("identify setting: %w", err)
 	}
 
 	res, err := resolveConfigValue(cfg, cfgPath, eval, parsed)
@@ -87,7 +87,7 @@ func (r *Runner) Get(_ context.Context, req GetRequest) error {
 // Set updates the stave.yaml file in the nearest project root.
 func (r *Runner) Set(ctx context.Context, req SetRequest, opts MutationOpts) error {
 	if err := ctx.Err(); err != nil {
-		return err
+		return fmt.Errorf("context cancelled: %w", err)
 	}
 	key := strings.TrimSpace(req.Key)
 	value := strings.TrimSpace(req.Value)
@@ -101,7 +101,7 @@ func (r *Runner) Set(ctx context.Context, req SetRequest, opts MutationOpts) err
 	}
 	result, err := editor.Set(key, value)
 	if err != nil {
-		return err
+		return fmt.Errorf("set config value: %w", err)
 	}
 	if !result.Applied {
 		return nil
@@ -115,7 +115,7 @@ func (r *Runner) Set(ctx context.Context, req SetRequest, opts MutationOpts) err
 // Delete removes a project config key, reverting it to the built-in default.
 func (r *Runner) Delete(ctx context.Context, req DeleteRequest, opts MutationOpts) error {
 	if err := ctx.Err(); err != nil {
-		return err
+		return fmt.Errorf("context cancelled: %w", err)
 	}
 	key := strings.TrimSpace(req.Key)
 
@@ -125,7 +125,7 @@ func (r *Runner) Delete(ctx context.Context, req DeleteRequest, opts MutationOpt
 	}
 	result, err := editor.Delete(key)
 	if err != nil {
-		return err
+		return fmt.Errorf("delete config value: %w", err)
 	}
 	if !result.Applied {
 		return nil

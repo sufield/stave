@@ -62,5 +62,8 @@ func writeExplainMinimalObservation(w io.Writer, observation any) error {
 	if _, err := fmt.Fprintln(w, "\nMinimal observation snippet:"); err != nil {
 		return err
 	}
-	return jsonutil.WriteIndented(w, observation)
+	if err := jsonutil.WriteIndented(w, observation); err != nil {
+		return fmt.Errorf("write observation snippet: %w", err)
+	}
+	return nil
 }

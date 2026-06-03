@@ -117,7 +117,7 @@ func conductAssessment(ctx context.Context, deps WorkflowDeps, req Request, cont
 		CELEvaluator:      req.PredicateEval,
 	})
 	if err != nil {
-		return assessmentState{}, err
+		return assessmentState{}, fmt.Errorf("run directory evaluation: %w", err)
 	}
 	return assessmentState{report: res, snapshotCount: count}, nil
 }

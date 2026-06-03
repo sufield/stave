@@ -61,7 +61,7 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			fmtValue, fmtErr := compose.ResolveFormatValue(format)
 			if fmtErr != nil {
-				return fmtErr
+				return fmt.Errorf("resolve format: %w", fmtErr)
 			}
 
 			ctx := cmd.Context()
@@ -92,7 +92,7 @@ Exit Codes:
 				SourcePath: cleanObsPath,
 			})
 			if err != nil {
-				return err
+				return fmt.Errorf("trace predicate: %w", err)
 			}
 
 			w := cliflags.GetGlobalFlags(cmd).ResolveStdout(cmd.OutOrStdout())

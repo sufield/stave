@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -57,10 +58,14 @@ func openLogWriter(cfg Config) (io.WriteCloser, error) {
 	if cfg.LogFile == "" {
 		return nopCloser{os.Stderr}, nil
 	}
-	return fsutil.SafeOpenAppend(cfg.LogFile, fsutil.WriteOptions{
+	f, err := fsutil.SafeOpenAppend(cfg.LogFile, fsutil.WriteOptions{
 		Perm:         0o600,
 		AllowSymlink: cfg.AllowSymlink,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("open log file %s: %w", cfg.LogFile, err)
+	}
+	return f, nil
 }
 
 func newHandler(cfg Config, out io.Writer) slog.Handler {

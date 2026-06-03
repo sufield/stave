@@ -3,6 +3,7 @@ package diagnose
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
@@ -26,22 +27,37 @@ type Presenter struct {
 // RenderReport writes a standard diagnostic report.
 func (p *Presenter) RenderReport(report *diagnosis.Report) error {
 	if p.Template != "" {
-		return ui.ExecuteTemplate(p.W, p.Template, corereport.NewReadiness(report))
+		if err := ui.ExecuteTemplate(p.W, p.Template, corereport.NewReadiness(report)); err != nil {
+			return fmt.Errorf("execute template: %w", err)
+		}
+		return nil
 	}
 	if p.Format.IsJSON() {
-		return outjson.WriteDiagnosis(p.W, report)
+		if err := outjson.WriteDiagnosis(p.W, report); err != nil {
+			return fmt.Errorf("write diagnosis JSON: %w", err)
+		}
+		return nil
 	}
-	return outtext.WriteDiagnosisReport(p.W, report, func(level, msg string) string {
+	if err := outtext.WriteDiagnosisReport(p.W, report, func(level, msg string) string {
 		return ui.SeverityLabel(level, msg, p.W)
-	})
+	}); err != nil {
+		return fmt.Errorf("write diagnosis text: %w", err)
+	}
+	return nil
 }
 
 // RenderDetail writes a single-finding deep-dive result.
 func (p *Presenter) RenderDetail(detail *evaluation.FindingDetail) error {
 	if p.Format.IsJSON() {
-		return writeFindingDetailJSON(p.W, detail)
+		if err := writeFindingDetailJSON(p.W, detail); err != nil {
+			return fmt.Errorf("write finding detail JSON: %w", err)
+		}
+		return nil
 	}
-	return outtext.WriteFindingDetail(p.W, detail)
+	if err := outtext.WriteFindingDetail(p.W, detail); err != nil {
+		return fmt.Errorf("write finding detail text: %w", err)
+	}
+	return nil
 }
 
 // jsonTrace implements json.Marshaler for lazy trace rendering.
@@ -56,7 +72,7 @@ func (jt jsonTrace) MarshalJSON() ([]byte, error) {
 	}
 	var buf bytes.Buffer
 	if err := jt.trace.Raw.RenderJSON(&buf); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("render trace JSON: %w", err)
 	}
 	return buf.Bytes(), nil
 }

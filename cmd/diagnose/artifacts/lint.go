@@ -42,7 +42,7 @@ func runLint(cmd *cobra.Command, args []string) error {
 
 	diags, err := lint.Dir(cmd.Context(), target, fsutil.ReadFileLimited)
 	if err != nil {
-		return err
+		return fmt.Errorf("lint %s: %w", target, err)
 	}
 
 	out := cmd.OutOrStdout()

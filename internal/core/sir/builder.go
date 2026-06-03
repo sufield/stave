@@ -201,7 +201,11 @@ func (b *Builder) collectRoleChains(snapshots []asset.Snapshot) (map[asset.ID][]
 	if b.roleChains == nil {
 		return nil, nil
 	}
-	return b.roleChains.RoleChains(snapshots)
+	rc, err := b.roleChains.RoleChains(snapshots)
+	if err != nil {
+		return nil, fmt.Errorf("role chains: %w", err)
+	}
+	return rc, nil
 }
 
 // collectLifecycles runs the registered LifecycleSource (if any).
@@ -212,7 +216,11 @@ func (b *Builder) collectLifecycles(controls []controldef.ControlDefinition, sna
 	if b.lifecycles == nil {
 		return nil, nil
 	}
-	return b.lifecycles.Lifecycles(controls, snapshots)
+	lc, err := b.lifecycles.Lifecycles(controls, snapshots)
+	if err != nil {
+		return nil, fmt.Errorf("lifecycles: %w", err)
+	}
+	return lc, nil
 }
 
 // collectCoverage runs the registered CoverageSource (if any).
@@ -224,7 +232,11 @@ func (b *Builder) collectCoverage(snapshots []asset.Snapshot, lifecycles map[ker
 	if b.coverage == nil {
 		return CoverageReport{}, nil
 	}
-	return b.coverage.Coverage(snapshots, lifecycles)
+	cov, err := b.coverage.Coverage(snapshots, lifecycles)
+	if err != nil {
+		return CoverageReport{}, fmt.Errorf("coverage: %w", err)
+	}
+	return cov, nil
 }
 
 // buildControlFacts translates a control catalog into deterministic,
@@ -469,11 +481,11 @@ func computeDriftMap(snapshots []asset.Snapshot) (map[asset.ID]asset.DriftType, 
 		if errors.Is(err, asset.ErrInsufficientSnapshots) || errors.Is(err, asset.ErrSnapshotsNotOrdered) {
 			return nil, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("get state transition: %w", err)
 	}
 	drift, err := asset.ComputeDrift(prev, curr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("compute drift: %w", err)
 	}
 	out := make(map[asset.ID]asset.DriftType, len(drift.Changes))
 	for i := range drift.Changes {

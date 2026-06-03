@@ -101,7 +101,10 @@ func runCatalogDiff(ctx context.Context, stdout io.Writer, opts *options, newCtl
 	if rendErr != nil {
 		return rendErr
 	}
-	return renderer.Render(stdout, delta)
+	if err := renderer.Render(stdout, delta); err != nil {
+		return fmt.Errorf("render catalog diff: %w", err)
+	}
+	return nil
 }
 
 func runSnapshotDiff(stdout io.Writer, opts *options) error {
@@ -135,7 +138,10 @@ func runSnapshotDiff(stdout io.Writer, opts *options) error {
 	if rendErr != nil {
 		return rendErr
 	}
-	return renderer.Render(stdout, result)
+	if err := renderer.Render(stdout, result); err != nil {
+		return fmt.Errorf("render snapshot diff: %w", err)
+	}
+	return nil
 }
 
 func writeText(w io.Writer, r *snapshotdiff.DiffResult) error {

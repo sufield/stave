@@ -102,7 +102,7 @@ func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *
 		Sanitizer:         s.Sanitizer,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("compare: %w", err)
 	}
 	verification := cmp.Attestation
 

@@ -58,7 +58,7 @@ func runBisect(ctx context.Context, in Input) error {
 	// Load snapshot archive.
 	snapshots, err := appbisect.LoadSnapshotDir(obsDir, fsutil.ReadFileLimited, in.Logger)
 	if err != nil {
-		return err
+		return fmt.Errorf("load snapshot directory: %w", err)
 	}
 
 	// Resolve clock.
@@ -105,7 +105,7 @@ func runBisect(ctx context.Context, in Input) error {
 	eng := &appbisect.Engine{Evaluate: evaluator}
 	result, err := eng.Run(ctx, snapshots, mode, string(targetID), opts.ResourceARN)
 	if err != nil {
-		return err
+		return fmt.Errorf("run bisect engine: %w", err)
 	}
 
 	// Output.

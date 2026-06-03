@@ -2,6 +2,7 @@ package enginetest
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
@@ -55,7 +56,7 @@ func TestNoBannedImportsInRuntime(t *testing.T) {
 		// Get path relative to repo root for exclusion check
 		rel, err := filepath.Rel(root, path)
 		if err != nil {
-			return err
+			return fmt.Errorf("rel: %w", err)
 		}
 		if isAirgapPolicyFile(rel) {
 			return nil
@@ -70,7 +71,7 @@ func TestNoBannedImportsInRuntime(t *testing.T) {
 
 		data, err := os.ReadFile(path)
 		if err != nil {
-			return err
+			return fmt.Errorf("read file: %w", err)
 		}
 		content := string(data)
 
@@ -243,7 +244,7 @@ func TestNoCredentialEnvReads(t *testing.T) {
 
 		rel, err := filepath.Rel(root, path)
 		if err != nil {
-			return err
+			return fmt.Errorf("rel: %w", err)
 		}
 		if isAirgapPolicyFile(rel) {
 			return nil
@@ -256,7 +257,7 @@ func TestNoCredentialEnvReads(t *testing.T) {
 
 		data, err := os.ReadFile(path)
 		if err != nil {
-			return err
+			return fmt.Errorf("read file: %w", err)
 		}
 		content := string(data)
 

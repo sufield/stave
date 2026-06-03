@@ -155,7 +155,7 @@ func runCompliance(
 		export := buildExport(profiles[0], assessments[0], pkg, version.String, snapshotTime, opts.IncludePass, opts.MinSeverity, result.Findings)
 		return renderer.Render(out, export)
 	}); writeErr != nil {
-		return writeErr
+		return fmt.Errorf("write compliance export: %w", writeErr)
 	}
 
 	return exitError(assessments[0])

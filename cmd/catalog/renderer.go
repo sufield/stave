@@ -35,7 +35,10 @@ type JSONRenderer struct{}
 
 // Render implements Renderer.
 func (JSONRenderer) Render(w io.Writer, r catalogReport) error {
-	return jsonutil.WriteIndented(w, r)
+	if err := jsonutil.WriteIndented(w, r); err != nil {
+		return fmt.Errorf("write catalog JSON: %w", err)
+	}
+	return nil
 }
 
 // TextRenderer writes the human-readable catalog.

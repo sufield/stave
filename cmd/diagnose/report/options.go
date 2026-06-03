@@ -1,6 +1,8 @@
 package report
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
@@ -35,5 +37,9 @@ func (o *options) Prepare(_ *cobra.Command) error {
 
 // resolveFormat resolves the output format from the options.
 func (o *options) resolveFormat() (appcontracts.OutputFormat, error) {
-	return compose.ResolveFormatValue(o.Format)
+	f, err := compose.ResolveFormatValue(o.Format)
+	if err != nil {
+		return "", fmt.Errorf("resolve format: %w", err)
+	}
+	return f, nil
 }

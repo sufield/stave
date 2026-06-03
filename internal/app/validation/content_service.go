@@ -2,6 +2,7 @@ package validation
 
 import (
 	"bytes"
+	"fmt"
 
 	schemas "github.com/sufield/stave/internal/contracts/schema"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
@@ -26,7 +27,7 @@ type ExplicitRequest struct {
 func (r ExplicitRequest) Validate(v contractvalidator.SchemaValidator) (*Report, error) {
 	version, err := schemas.ResolveVersion(r.Kind, r.SchemaVersion)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("resolve version: %w", err)
 	}
 	diags, err := v.Validate(contractvalidator.Request{
 		Kind:          r.Kind,
@@ -35,7 +36,7 @@ func (r ExplicitRequest) Validate(v contractvalidator.SchemaValidator) (*Report,
 		IsYAML:        contractvalidator.IsLikelyYAML(r.Data),
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validate: %w", err)
 	}
 	return &Report{
 		Diagnostics: contractvalidator.DiagnosticsResult(diags, "Fix input to match selected contract schema", r.Strict),
@@ -70,7 +71,11 @@ func NewContentService(factory func() contractvalidator.SchemaValidator) *Conten
 
 // Validate creates a validator and delegates to the request's validation strategy.
 func (s *ContentService) Validate(req ContentValidator) (*Report, error) {
-	return req.Validate(s.newValidator())
+	r, err := req.Validate(s.newValidator())
+	if err != nil {
+		return nil, fmt.Errorf("validate content: %w", err)
+	}
+	return r, nil
 }
 
 func isLikelyJSONContent(data []byte) bool {
@@ -81,7 +86,7 @@ func isLikelyJSONContent(data []byte) bool {
 func validateObservationContent(v contractvalidator.SchemaValidator, data []byte) (*Report, error) {
 	issues, err := v.ValidateObservationJSON(data)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validate observation j s o n: %w", err)
 	}
 	validationReport := &Report{Diagnostics: issues}
 	if issues.IsClean() {
@@ -93,7 +98,7 @@ func validateObservationContent(v contractvalidator.SchemaValidator, data []byte
 func validateControlContent(v contractvalidator.SchemaValidator, data []byte) (*Report, error) {
 	issues, err := v.ValidateControlYAML(data)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validate control y a m l: %w", err)
 	}
 	if issues == nil {
 		issues = diag.NewAssessment()

@@ -79,14 +79,14 @@ func ReadFileLimited(path string) ([]byte, error) {
 	// #nosec G304 -- this helper intentionally reads caller-supplied paths after size checks.
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, err //nolint:wrapcheck // os.Open returns *PathError with full context; wrapping breaks os.IsNotExist callers
 	}
 	defer f.Close()
 
 	limit := maxInputFileBytes.Load()
 	data, err := io.ReadAll(io.LimitReader(f, limit))
 	if err != nil {
-		return nil, err
+		return nil, err //nolint:wrapcheck // io.ReadAll context is sufficient
 	}
 
 	// Probe for overflow: if any byte remains beyond the limit,
@@ -102,7 +102,7 @@ func ReadFileLimited(path string) ([]byte, error) {
 			filepath.Base(path), limit>>mbShift)
 	}
 	if probeErr != nil && !errors.Is(probeErr, io.EOF) {
-		return nil, probeErr
+		return nil, probeErr //nolint:wrapcheck // low-level IO; caller wraps
 	}
 	return data, nil
 }
@@ -130,7 +130,7 @@ func LimitedReadAll(r io.Reader, sourceName string) ([]byte, error) {
 	// never grows its buffer past maxInputFileBytes.
 	data, err := io.ReadAll(io.LimitReader(r, maxInputFileBytes.Load()))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read all: %w", err)
 	}
 
 	// Phase 2: probe for overflow. If even one more byte is available,
@@ -218,7 +218,7 @@ func SafeCreateFile(path string, opts WriteOptions) (*os.File, error) {
 		if errors.Is(err, os.ErrExist) {
 			return nil, fmt.Errorf("%w: %s (use --force to overwrite)", ErrFileExists, path)
 		}
-		return nil, err
+		return nil, fmt.Errorf("open file: %w", err)
 	}
 
 	if !opts.AllowSymlink {
@@ -244,11 +244,14 @@ func SafeWriteFile(path string, data []byte, opts WriteOptions) error {
 	closeErr := f.Close()
 	if writeErr != nil {
 		if closeErr != nil {
-			return errors.Join(writeErr, closeErr)
+			return errors.Join(fmt.Errorf("write: %w", writeErr), fmt.Errorf("close: %w", closeErr))
 		}
-		return writeErr
+		return fmt.Errorf("write: %w", writeErr)
 	}
-	return closeErr
+	if closeErr != nil {
+		return fmt.Errorf("close: %w", closeErr)
+	}
+	return nil
 }
 
 // SafeMkdirAll creates a directory tree, checking every path component for
@@ -269,7 +272,10 @@ var (
 
 func SafeMkdirAll(path string, opts WriteOptions) error {
 	if opts.AllowSymlink {
-		return os.MkdirAll(path, opts.Perm)
+		if err := os.MkdirAll(path, opts.Perm); err != nil {
+			return fmt.Errorf("mkdir all: %w", err)
+		}
+		return nil
 	}
 
 	cleanPath := filepath.Clean(path)
@@ -323,7 +329,7 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 			hook(current)
 		}
 		if mkErr := os.Mkdir(current, opts.Perm); mkErr != nil && !os.IsExist(mkErr) {
-			return mkErr
+			return fmt.Errorf("mkdir: %w", mkErr)
 		}
 		createdByUs = append(createdByUs, current)
 
@@ -554,13 +560,13 @@ func WriteFileAtomic(path string, data []byte, perm os.FileMode) error {
 func crossFSCopy(src, dst string, perm os.FileMode) error {
 	data, err := os.ReadFile(src) //nolint:gosec // temp file we just created
 	if err != nil {
-		return err
+		return fmt.Errorf("read file: %w", err)
 	}
 
 	dir := filepath.Dir(dst)
 	tmp, err := os.CreateTemp(dir, ".stave-xfscopy-*")
 	if err != nil {
-		return err
+		return fmt.Errorf("create temp: %w", err)
 	}
 	tmpName := tmp.Name()
 	// renamed flips to true after a successful os.Rename so the
@@ -617,7 +623,7 @@ func crossFSCopy(src, dst string, perm os.FileMode) error {
 	}
 
 	if err = os.Rename(tmpName, dst); err != nil {
-		return err
+		return fmt.Errorf("rename: %w", err)
 	}
 	renamed = true
 

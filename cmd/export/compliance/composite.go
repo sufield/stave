@@ -69,7 +69,7 @@ func runComposite(
 		return err
 	}
 	if renderErr := renderer.Render(w, export); renderErr != nil {
-		return renderErr
+		return fmt.Errorf("render composite compliance: %w", renderErr)
 	}
 
 	return exitErrorComposite(assessments)

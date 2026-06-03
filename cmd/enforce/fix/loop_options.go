@@ -70,11 +70,11 @@ type loopResolved struct {
 func toRequest(o *loopOptions, stdout, stderr io.Writer) (loopResolved, error) {
 	maxUnsafe, err := cliflags.ParseDurationFlag(o.MaxUnsafeRaw, "--max-unsafe")
 	if err != nil {
-		return loopResolved{}, err
+		return loopResolved{}, fmt.Errorf("resolve max-unsafe duration: %w", err)
 	}
 	clock, err := compose.ResolveClock(o.NowRaw)
 	if err != nil {
-		return loopResolved{}, err
+		return loopResolved{}, fmt.Errorf("resolve clock: %w", err)
 	}
 	return loopResolved{
 		Request: LoopRequest{

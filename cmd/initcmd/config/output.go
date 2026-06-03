@@ -17,7 +17,10 @@ type ShowPresenter struct {
 // Render writes the configuration summary in the requested format.
 func (p *ShowPresenter) Render(out appconfig.EffectiveConfig, json bool) error {
 	if json {
-		return jsonutil.WriteIndented(p.Stdout, out)
+		if err := jsonutil.WriteIndented(p.Stdout, out); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
 	return p.renderText(out)
 }

@@ -213,5 +213,8 @@ func collectControlPaths(pathOrDir string) ([]string, error) {
 		}
 		return nil
 	})
-	return paths, err
+	if err != nil {
+		return nil, fmt.Errorf("walk controls: %w", err)
+	}
+	return paths, nil
 }

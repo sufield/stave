@@ -145,9 +145,12 @@ func runTrend(ctx context.Context, w, stderr io.Writer, opts *trendOptions) erro
 	if rendErr != nil {
 		return rendErr
 	}
-	return cmdutil.WriteTo(w, opts.Out, func(out io.Writer) error {
+	if err := cmdutil.WriteTo(w, opts.Out, func(out io.Writer) error {
 		return renderer.Render(out, &report)
-	})
+	}); err != nil {
+		return fmt.Errorf("write trend output: %w", err)
+	}
+	return nil
 }
 
 func computePostureScore(a *report.Assessment, slaTrend []slaTrendMetric, chainDefs int, maxChainWeight float64) appscore.Result {

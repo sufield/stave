@@ -14,7 +14,7 @@ import (
 func CheckDir(path string) error {
 	fi, err := os.Stat(path)
 	if err != nil {
-		return err
+		return fmt.Errorf("stat directory %s: %w", path, err)
 	}
 	if !fi.IsDir() {
 		return fmt.Errorf("path is not a directory: %s", path)
@@ -35,7 +35,7 @@ func ValidateFlagDir(flag, path, inferKey string, hint error, log *projctx.Infer
 			}
 		}
 
-		return err
+		return fmt.Errorf("validate directory flag %s: %w", flag, err)
 	}
 	return nil
 }

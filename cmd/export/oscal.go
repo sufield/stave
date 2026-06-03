@@ -83,9 +83,12 @@ func runOSCAL(stdout io.Writer, assessmentPath, outputPath, docType, systemUUID 
 		result = apposcal.Export(assessment.Findings, now)
 	}
 
-	return cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
+	if err := cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
 		enc := json.NewEncoder(w)
 		enc.SetIndent("", "  ")
 		return enc.Encode(result)
-	})
+	}); err != nil {
+		return fmt.Errorf("write OSCAL export: %w", err)
+	}
+	return nil
 }

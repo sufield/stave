@@ -77,7 +77,7 @@ Exit Codes:
 
 			resp, err := reporting.BaselineSave(cmd.Context(), req, deps)
 			if err != nil {
-				return err
+				return fmt.Errorf("save baseline: %w", err)
 			}
 
 			_, printErr := fmt.Fprintf(cmd.OutOrStdout(),
@@ -133,11 +133,11 @@ Exit Codes:
 
 			resp, err := reporting.BaselineCheck(cmd.Context(), req, deps)
 			if err != nil {
-				return err
+				return fmt.Errorf("check baseline: %w", err)
 			}
 
 			if renderErr := jsonutil.WriteIndented(cmd.OutOrStdout(), resp); renderErr != nil {
-				return renderErr
+				return fmt.Errorf("write output: %w", renderErr)
 			}
 
 			if req.FailOnNew && resp.HasNew {

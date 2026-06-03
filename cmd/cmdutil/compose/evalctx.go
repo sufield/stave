@@ -130,12 +130,12 @@ func resolvePaths(ec *EvalContext, req EvalContextRequest) error {
 
 	if !req.SkipControlsValidation && !ec.UseBuiltinControls {
 		if err := dircheck.ValidateFlagDir("--controls", ec.ControlsDir, "controls", ui.ErrHintControlsNotAccessible, engine.Log); err != nil {
-			return err
+			return fmt.Errorf("validate controls dir: %w", err)
 		}
 	}
 	if !req.SkipObservationsValidation {
 		if err := dircheck.ValidateFlagDir("--observations", ec.ObservationsDir, "observations", ui.ErrHintObservationsNotAccessible, engine.Log); err != nil {
-			return err
+			return fmt.Errorf("validate observations dir: %w", err)
 		}
 	}
 	return nil

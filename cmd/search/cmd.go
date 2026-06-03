@@ -123,12 +123,15 @@ func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
 		hits = hits[:opts.Top]
 	}
 
-	return renderer.Render(w, searchReport{
+	if err := renderer.Render(w, searchReport{
 		Query: opts.Query,
 		Top:   opts.Top,
 		Total: len(hits),
 		Hits:  hits,
-	})
+	}); err != nil {
+		return fmt.Errorf("render search results: %w", err)
+	}
+	return nil
 }
 
 func renderText(w io.Writer, query string, hits []appcaps.Hit) error {

@@ -34,15 +34,17 @@ func writeHeader(w io.Writer) error {
 
 func writeGapList(w io.Writer, r stave.GapReport, topN int) error {
 	if len(r.Gaps) == 0 {
-		_, err := fmt.Fprintln(w, "\nNo declared property paths are missing on the observed assets.")
-		return err
+		if _, err := fmt.Fprintln(w, "\nNo declared property paths are missing on the observed assets."); err != nil {
+			return fmt.Errorf("write gap list: %w", err)
+		}
+		return nil
 	}
 	limit := len(r.Gaps)
 	if topN > 0 && topN < limit {
 		limit = topN
 	}
 	if _, err := fmt.Fprintf(w, "\nTop %d gaps (of %d total):\n", limit, len(r.Gaps)); err != nil {
-		return err
+		return fmt.Errorf("write gap list header: %w", err)
 	}
 	for i := range limit {
 		if err := writeGap(w, &r.Gaps[i]); err != nil {
@@ -128,7 +130,7 @@ func writeNotes(w io.Writer, r stave.GapReport) error {
 func writeLines(w io.Writer, lines []string) error {
 	for _, line := range lines {
 		if _, err := fmt.Fprintln(w, line); err != nil {
-			return err
+			return fmt.Errorf("write line: %w", err)
 		}
 	}
 	return nil

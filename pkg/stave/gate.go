@@ -218,7 +218,7 @@ func Gate(ctx context.Context, cfg GateConfig) (*GateResult, error) {
 	}
 	resp, err := usecase.Gate(ctx, req, deps)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("gate: %w", err)
 	}
 	return &GateResult{
 		Policy: GatePolicy(resp.Policy),

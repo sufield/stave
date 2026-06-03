@@ -197,11 +197,11 @@ func run(ctx context.Context, w io.Writer, opts *options) error {
 	// Select reporter.
 	format, fmtErr := ui.ParseOutputFormat(string(opts.Format))
 	if fmtErr != nil {
-		return fmtErr
+		return fmt.Errorf("parse output format: %w", fmtErr)
 	}
 	rep, repErr := reporter.New(string(format))
 	if repErr != nil {
-		return repErr
+		return fmt.Errorf("create reporter: %w", repErr)
 	}
 
 	if err := rep.Write(w, report, meta); err != nil {
@@ -305,7 +305,7 @@ func resolveOutput(path string, stdout io.Writer) (io.Writer, func(*error), erro
 	opts.Overwrite = true
 	f, err := fsutil.SafeCreateFile(fsutil.CleanUserPath(path), opts)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("create output file: %w", err)
 	}
 	return f, func(outErr *error) {
 		closeErr := f.Close()

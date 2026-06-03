@@ -82,7 +82,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	}
 	report, err := diagnoseRun.Analyze(ctx, baseCfg)
 	if err != nil {
-		return err
+		return fmt.Errorf("analyze: %w", err)
 	}
 
 	if cfg.Sanitizer != nil && report != nil {
@@ -135,7 +135,7 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("inspect violation: %w", err)
 	}
 
 	p := r.newPresenter(cfg)
@@ -156,7 +156,7 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 func (r *Runner) newDiagnosticEngine() (*appdiagnose.DiagnosticEngine, error) {
 	engine, err := appdiagnose.NewEngine(r.ObsRepo, r.CtlRepo)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create diagnostic engine: %w", err)
 	}
 	// Composition root wires the built-in catalog loader so the app
 	// layer can fall back to the embedded catalog when --controls is

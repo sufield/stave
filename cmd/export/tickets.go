@@ -94,7 +94,7 @@ func runTickets(stdout io.Writer, assessmentPath, outputPath, format, teamManife
 		tickets = filtered
 	}
 
-	return cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
+	if err := cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
 		switch format {
 		case "csv":
 			return writeTicketsCSV(w, tickets)
@@ -103,7 +103,10 @@ func runTickets(stdout io.Writer, assessmentPath, outputPath, format, teamManife
 			enc.SetIndent("", "  ")
 			return enc.Encode(tickets)
 		}
-	})
+	}); err != nil {
+		return fmt.Errorf("write tickets export: %w", err)
+	}
+	return nil
 }
 
 func writeTicketsCSV(w io.Writer, tickets []ticketexport.Ticket) (err error) {

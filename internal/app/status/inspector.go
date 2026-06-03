@@ -24,7 +24,7 @@ func (in *Inspector) stat(path string) (os.FileInfo, error) {
 	if in.StatFn != nil {
 		return in.StatFn(path)
 	}
-	return os.Stat(path)
+	return os.Stat(path) //nolint:wrapcheck // os.Stat returns *PathError; callers check os.IsNotExist
 }
 
 // Inspect inspects a project root and returns the aggregate artifact state.
@@ -61,7 +61,7 @@ func (in *Inspector) summarize(dir string, exts ...string) (Summary, error) {
 	var s Summary
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return s, err
+		return s, err //nolint:wrapcheck // os.ReadDir returns *PathError; callers check os.IsNotExist
 	}
 	for _, e := range entries {
 		if e.IsDir() {
@@ -109,7 +109,10 @@ func (in *Inspector) summarizeRecursive(dir string, exts ...string) (Summary, er
 		}
 		return nil
 	})
-	return s, err
+	if err != nil {
+		return s, fmt.Errorf("walk dir: %w", err)
+	}
+	return s, nil
 }
 
 func matchesExtension(name string, exts []string) bool {

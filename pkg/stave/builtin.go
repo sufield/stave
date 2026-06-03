@@ -32,7 +32,7 @@ func builtinControls() ([]policy.ControlDefinition, error) {
 func loadSnapshots(ctx context.Context, dir string) ([]asset.Snapshot, error) {
 	res, err := observations.NewObservationLoader().LoadSnapshots(ctx, dir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load snapshots: %w", err)
 	}
 	if len(res.Snapshots) == 0 {
 		return nil, fmt.Errorf("no snapshots found in %s", dir)

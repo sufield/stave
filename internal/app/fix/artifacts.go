@@ -101,11 +101,14 @@ func (m *ArtifactWriter) PersistReport(report *LoopReport) error {
 	}
 	if !report.Passed {
 		if err := jsonutil.WriteIndented(m.Stdout, report); err != nil {
-			return err
+			return fmt.Errorf("write indented: %w", err)
 		}
 		return ErrViolationsRemaining
 	}
-	return jsonutil.WriteIndented(m.Stdout, report)
+	if err := jsonutil.WriteIndented(m.Stdout, report); err != nil {
+		return fmt.Errorf("write indented: %w", err)
+	}
+	return nil
 }
 
 func (m *ArtifactWriter) writeJSON(path string, value any) error {

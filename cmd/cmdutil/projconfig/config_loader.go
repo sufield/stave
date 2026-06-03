@@ -144,7 +144,10 @@ func (r *Resolver) WriteUserConfig(cfg *appconfig.OperatorSettings, path string)
 		return fmt.Errorf("create config directory %q: %w", dir, err)
 	}
 
-	return fsutil.SafeWriteFile(path, outBytes, fsutil.ConfigWriteOpts())
+	if err := fsutil.SafeWriteFile(path, outBytes, fsutil.ConfigWriteOpts()); err != nil {
+		return fmt.Errorf("write user config %q: %w", path, err)
+	}
+	return nil
 }
 
 // --- Package-level convenience functions ---

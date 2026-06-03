@@ -69,7 +69,10 @@ func runChanges(stdout io.Writer, assessmentPath, outputPath string, minConfiden
 		GeneratedAt:   time.Now().UTC().Format(time.RFC3339),
 	})
 
-	return cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
+	if err := cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
 		return jsonutil.WriteIndented(w, report)
-	})
+	}); err != nil {
+		return fmt.Errorf("write changes export: %w", err)
+	}
+	return nil
 }

@@ -35,7 +35,7 @@ func Dir(ctx context.Context, root string, readFile func(string) ([]byte, error)
 	for _, file := range files {
 		g.Go(func() error {
 			if err := gctx.Err(); err != nil {
-				return err
+				return fmt.Errorf("lint cancelled: %w", err)
 			}
 			clean := filepath.Clean(file)
 			data, readErr := readFile(clean)
@@ -50,7 +50,7 @@ func Dir(ctx context.Context, root string, readFile func(string) ([]byte, error)
 		})
 	}
 	if err := g.Wait(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("lint files: %w", err)
 	}
 
 	SortDiagnostics(all)
@@ -63,7 +63,7 @@ func Dir(ctx context.Context, root string, readFile func(string) ([]byte, error)
 func CollectYAMLFiles(ctx context.Context, root string) ([]string, error) {
 	info, err := os.Stat(root)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("stat %s: %w", root, err)
 	}
 	if !info.IsDir() {
 		ext := strings.ToLower(filepath.Ext(root))
@@ -79,7 +79,7 @@ func CollectYAMLFiles(ctx context.Context, root string) ([]string, error) {
 			return walkErr
 		}
 		if ctxErr := ctx.Err(); ctxErr != nil {
-			return ctxErr
+			return fmt.Errorf("collect YAML cancelled: %w", ctxErr)
 		}
 		if d.IsDir() {
 			return nil
@@ -91,7 +91,7 @@ func CollectYAMLFiles(ctx context.Context, root string) ([]string, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("walk %s: %w", root, err)
 	}
 	slices.Sort(files)
 	return files, nil

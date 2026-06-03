@@ -212,7 +212,10 @@ func WriteErrorText(w io.Writer, info *ErrorInfo) error {
 	}
 
 	_, err := io.WriteString(w, sb.String())
-	return err
+	if err != nil {
+		return fmt.Errorf("write error text: %w", err)
+	}
+	return nil
 }
 
 // IsSentinel returns true if the error matches a defined platform sentinel.

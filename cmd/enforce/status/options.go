@@ -1,6 +1,7 @@
 package status
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/spf13/cobra"
@@ -33,7 +34,7 @@ type cmdIO struct {
 func toConfig(o *options, cio cmdIO) (config, error) {
 	format, err := compose.ResolveFormatValue(o.Format)
 	if err != nil {
-		return config{}, err
+		return config{}, fmt.Errorf("resolve output format: %w", err)
 	}
 	return config{
 		Dir:    fsutil.CleanUserPath(o.Dir),

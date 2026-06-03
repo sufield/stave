@@ -122,7 +122,11 @@ func ParseDuration(s string) (time.Duration, error) {
 		return 0, err
 	}
 
-	return time.ParseDuration(normalized)
+	d, err := time.ParseDuration(normalized)
+	if err != nil {
+		return 0, fmt.Errorf("parse duration: %w", err)
+	}
+	return d, nil
 }
 
 func normalizeDaysToHours(s string) (string, error) {

@@ -104,7 +104,11 @@ func run(stdout io.Writer, opts *options) error {
 
 func readInput(path string) ([]byte, error) {
 	if path != "" {
-		return fsutil.ReadFileLimited(path)
+		data, err := fsutil.ReadFileLimited(path)
+		if err != nil {
+			return nil, fmt.Errorf("read %s: %w", path, err)
+		}
+		return data, nil
 	}
 	data, err := io.ReadAll(os.Stdin)
 	if err != nil {

@@ -125,7 +125,7 @@ func runResource(w io.Writer, stderr io.Writer, opts *resourceOpts) error {
 		Designated:     designated,
 		ShowDesignated: opts.ShowDesignated,
 	}); err != nil {
-		return err
+		return fmt.Errorf("render resource access: %w", err)
 	}
 
 	if hasNonDesignatedAccess(entries, snap) {

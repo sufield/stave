@@ -96,7 +96,7 @@ func runTest(ctx context.Context, stdout io.Writer, opts *options) error {
 	// propagates after for the exit-code shim to act on.
 	if results == nil && runErr != nil {
 		// Load / evaluator-init failure — no results to render.
-		return runErr
+		return fmt.Errorf("run control tests: %w", runErr)
 	}
 
 	renderer, rendErr := NewRenderer(opts.Format, opts.Verbose)
@@ -104,9 +104,12 @@ func runTest(ctx context.Context, stdout io.Writer, opts *options) error {
 		return rendErr
 	}
 	if err := renderer.Render(stdout, results, summary); err != nil {
-		return err
+		return fmt.Errorf("render test results: %w", err)
 	}
-	return runErr
+	if runErr != nil {
+		return fmt.Errorf("control tests: %w", runErr)
+	}
+	return nil
 }
 
 func writeTable(w io.Writer, results []stave.TestResult, summary stave.TestSummary, verbose bool) error {

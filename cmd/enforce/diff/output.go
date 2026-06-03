@@ -14,9 +14,12 @@ import (
 // writeOutput dispatches rendering of the delta based on format.
 // Pass io.Discard as w to suppress output in quiet mode.
 func writeOutput(w io.Writer, format appcontracts.OutputFormat, out asset.InfrastructureDrift) error {
-	return format.Dispatch(w, appcontracts.RenderFuncs{
+	if err := format.Dispatch(w, appcontracts.RenderFuncs{
 		appcontracts.FormatJSON: func(w io.Writer) error { return jsonutil.WriteIndented(w, out) },
-	}, func(w io.Writer) error { return renderText(w, out) })
+	}, func(w io.Writer) error { return renderText(w, out) }); err != nil {
+		return fmt.Errorf("render diff output: %w", err)
+	}
+	return nil
 }
 
 // renderText generates a human-readable summary of asset changes.
