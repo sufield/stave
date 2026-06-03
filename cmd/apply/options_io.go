@@ -1,6 +1,7 @@
 package apply
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
@@ -22,7 +23,7 @@ type StandardIO struct {
 func ResolveStandardIO(o *Options, cs cobraState) (StandardIO, error) {
 	format, err := compose.ResolveFormatValue(string(o.Format))
 	if err != nil {
-		return StandardIO{}, err
+		return StandardIO{}, fmt.Errorf("resolve output format: %w", err)
 	}
 	quiet := cs.GlobalFlags.Quiet || isMachineFormat(format)
 	return StandardIO{

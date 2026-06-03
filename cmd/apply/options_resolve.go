@@ -19,7 +19,7 @@ import (
 // PrepareEvaluationContext. Dir validation is deferred to validateDirsWithConfig
 // because it depends on the loaded project config (pack awareness).
 func resolvePathInference(controlsDir, observationsDir string, controlsSet, obsChanged bool) (compose.EvalContext, error) {
-	return compose.PrepareEvaluationContext(compose.EvalContextRequest{
+	ec, err := compose.PrepareEvaluationContext(compose.EvalContextRequest{
 		ControlsDir:                controlsDir,
 		ObservationsDir:            observationsDir,
 		ControlsChanged:            controlsSet,
@@ -30,6 +30,10 @@ func resolvePathInference(controlsDir, observationsDir string, controlsSet, obsC
 		SkipClock:                  true,
 		SkipFormat:                 true,
 	})
+	if err != nil {
+		return compose.EvalContext{}, fmt.Errorf("resolve path inference: %w", err)
+	}
+	return ec, nil
 }
 
 // --- Standard mode resolution ---
@@ -59,10 +63,10 @@ func Resolve(o *Options, cs cobraState) (RunConfig, error) {
 	// Load project config once — shared by validateDirs, buildEvaluatorInput, and Build.
 	projCfg, cfgPath, err := projconfig.FindProjectConfigWithPath("")
 	if err != nil {
-		return RunConfig{}, ui.WithHint(
+		return RunConfig{}, fmt.Errorf("resolve run config: %w", ui.WithHint(
 			fmt.Errorf("load project config: %w", err),
 			ui.ErrHintProjectConfig,
-		)
+		))
 	}
 
 	// Built-in catalog fallback: when --controls was not passed AND no
@@ -84,7 +88,7 @@ func Resolve(o *Options, cs cobraState) (RunConfig, error) {
 	} else if observationsDir != "-" {
 		// Still validate observations when controls fall back to builtin.
 		if err := dircheck.ValidateFlagDir("--observations", observationsDir, "observations", ui.ErrHintObservationsNotAccessible, nil); err != nil {
-			return RunConfig{}, err
+			return RunConfig{}, fmt.Errorf("validate observations directory: %w", err)
 		}
 	}
 
@@ -128,19 +132,19 @@ type projectContext struct {
 func resolveProjectContext() (projectContext, error) {
 	resolver, err := projctx.NewResolver()
 	if err != nil {
-		return projectContext{}, ui.WithHint(
+		return projectContext{}, fmt.Errorf("resolve project context: %w", ui.WithHint(
 			fmt.Errorf("resolve project context: %w", err),
 			ui.ErrHintProjectContext,
-		)
+		))
 	}
 	root := resolver.ProjectRoot()
 
 	_, userPath, _, uErr := projconfig.FindUserConfigWithPath()
 	if uErr != nil {
-		return projectContext{}, ui.WithHint(
+		return projectContext{}, fmt.Errorf("load user config: %w", ui.WithHint(
 			fmt.Errorf("load user config: %w", uErr),
 			ui.ErrHintProjectConfig,
-		)
+		))
 	}
 
 	selectedContext := ""
@@ -197,13 +201,13 @@ func validateDirsWithConfig(controlsDir, observationsDir string, controlsSet boo
 	hasPacks := !controlsSet && projCfg != nil && len(projCfg.EnabledControlPacks) > 0
 	if !hasPacks {
 		if err := dircheck.ValidateFlagDir("--controls", controlsDir, "controls", ui.ErrHintControlsNotAccessible, nil); err != nil {
-			return err
+			return fmt.Errorf("validate controls directory: %w", err)
 		}
 	}
 
 	if observationsDir != "-" {
 		if err := dircheck.ValidateFlagDir("--observations", observationsDir, "observations", ui.ErrHintObservationsNotAccessible, nil); err != nil {
-			return err
+			return fmt.Errorf("validate observations directory: %w", err)
 		}
 	}
 

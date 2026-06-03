@@ -3,18 +3,18 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2671
-**Pack hash:** `b23fa9fb6bdad73dea621f9ce08735f9c0a0dc1bb7c78003ccb9df2d9166dd61`
+**Total controls:** 2673
+**Pack hash:** `9780e8eb296e5788cf8389e4ba1126df8b6a35788da2af46453d89c4a61b6d80`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 275 |
-| high | 1162 |
+| high | 1163 |
 | info | 16 |
 | low | 204 |
-| medium | 1014 |
+| medium | 1015 |
 
 | Domain | Count |
 |--------|-------|
@@ -23,7 +23,7 @@
 | capacity | 3 |
 | detection | 134 |
 | encryption | 113 |
-| exposure | 1193 |
+| exposure | 1195 |
 | governance | 578 |
 | hygiene | 18 |
 | identity | 426 |
@@ -34187,6 +34187,21 @@ The `RestrictPublicBuckets` flag of the bucket's Public Access Block configurati
 
 ---
 
+### CTL.S3.POLICY.DENY.BYPASS.001
+
+**Bucket Policy Must Not Allow Access Despite IAM Deny**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+An IAM policy explicitly denies S3 actions for a principal, but the bucket policy allows the same actions for the same principal. In AWS policy evaluation for same-account access, an explicit Deny in any policy always wins — so this is NOT an active bypass. However, the configuration creates a maintenance hazard: if the IAM Deny is later removed (policy update, detach, or role change), the bucket policy Allow silently activates. The latent grant is invisible to IAM auditing because the Deny masks it. This control flags the conflicting policy pair so operators can remove the bucket policy Allow rather than relying on a Deny that may be transient.
+
+**Remediation:** Remove the Allow statement from the bucket policy. Do not rely on the IAM Deny as the sole enforcement mechanism — Deny statements are often transient (attached to temporary policies, permission boundaries, or SCPs that change during reorganization).
+
+---
+
 ### CTL.S3.POLICY.DISCLOSURE.001
 
 **No Public Read of Bucket Policy**
@@ -34261,6 +34276,21 @@ Severity is medium, not high, because object-scoped public grants are a legitima
 S3 bucket policies with Allow statements whose Principal is non-narrow (`Principal: "*"`, `Principal: {"AWS": "*"}`, or an Allow block with no Principal) should constrain every such statement with at least one scoping Condition: `aws:PrincipalOrgID`, `aws:SourceVpc`, `aws:SourceIp` with a fixed CIDR, or `aws:SourceArn`. Without a scoping Condition, the effective principal set is the full internet (anonymous) or every AWS account on Earth (`AWS: "*"`). Scoping Conditions do not fix the name of the principal but they collapse the reachable principal set to callers routed through a known org, VPC, IP range, or service — a posture hardening step that prevents a future policy edit from silently expanding exposure. This control does not fire on buckets with no policy, nor on buckets whose Allow statements all name specific accounts or role ARNs; both states are captured by `policy_has_scoping_condition` being absent or null.
 
 **Remediation:** For every Allow statement with `Principal: "*"`, `Principal: {"AWS": "*"}`, or no Principal block, add a Condition that binds the request to a fixed value: `aws:PrincipalOrgID` to limit to the organization, `aws:SourceVpc` to limit to a VPC endpoint, `aws:SourceIp` with a CIDR to limit to a known range, or `aws:SourceArn` to limit to a specific caller. If the statement is supposed to be globally reachable (CDN origin, public data distribution), replace the bucket policy grant with a narrower mechanism — Origin Access Control, Access Points, or signed URLs.
+
+---
+
+### CTL.S3.POLICY.SHADOW.ALLOW.001
+
+**Bucket Policy Must Not Grant Access Bypassing IAM Restrictions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+The S3 bucket policy grants access to a principal whose IAM policy does not include the corresponding S3 actions. In AWS policy evaluation, a resource policy Allow with a specific principal ARN grants access even when the principal's IAM policy has no S3 permissions — the resource policy acts as a standalone grant for same-account principals. This creates a "shadow allow" invisible to IAM-centric auditing: scanning the principal's attached/inline policies shows no S3 access, but the bucket policy silently grants it. For cross-account principals, both IAM and resource policy must allow the action; for same-account principals, either policy alone is sufficient. This control flags same-account shadow allows where the bucket policy is the sole grant source.
+
+**Remediation:** Review the bucket policy statements that name specific principal ARNs. For each, verify the principal's IAM policies also grant the same S3 actions. If the bucket policy is the sole source of access, either add the permission to the principal's IAM policy (making it visible) or remove the bucket policy statement.
 
 ---
 

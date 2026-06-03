@@ -1,6 +1,7 @@
 package pack
 
 import (
+	"fmt"
 	"io/fs"
 	"path"
 	"strings"
@@ -20,7 +21,7 @@ import (
 // drop files from one walker but not the other.
 func walkControlYAMLs(fsys fs.FS, root string, visitor func(p string, d fs.DirEntry) error) error {
 	root = path.Clean(strings.TrimSpace(root))
-	return fs.WalkDir(fsys, root, func(p string, d fs.DirEntry, err error) error {
+	if err := fs.WalkDir(fsys, root, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -35,5 +36,8 @@ func walkControlYAMLs(fsys fs.FS, root string, visitor func(p string, d fs.DirEn
 			return nil
 		}
 		return visitor(path.Clean(p), d)
-	})
+	}); err != nil {
+		return fmt.Errorf("walk control YAMLs in %s: %w", root, err)
+	}
+	return nil
 }

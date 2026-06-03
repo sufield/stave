@@ -67,7 +67,7 @@ func NewControlLoader(opts ...LoaderOption) *ControlLoader {
 // Results are sorted by control ID for deterministic output.
 func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
 	if err := ctx.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load controls: %w", err)
 	}
 	// Empty dir, ".", "./", or any other cwd-equivalent value means
 	// the caller forgot to set --controls or passed through a zero
@@ -93,7 +93,7 @@ func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.
 
 	for i, path := range paths {
 		if err := ctx.Err(); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("load controls: %w", err)
 		}
 
 		ctl, err := l.loadOne(path)
@@ -148,7 +148,7 @@ func isCwdEquivalent(p string) bool {
 func (l *ControlLoader) loadOne(path string) (policy.ControlDefinition, error) {
 	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
-		return policy.ControlDefinition{}, err
+		return policy.ControlDefinition{}, fmt.Errorf("read control file %s: %w", path, err)
 	}
 
 	issues, err := l.validator.ValidateControlYAML(data, contractvalidator.WithPrefix(path))

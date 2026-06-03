@@ -58,7 +58,7 @@ func normalizeKind(raw string) (schemas.Kind, error) {
 	if k, ok := kindAliases[ui.NormalizeToken(raw)]; ok {
 		return k, nil
 	}
-	return "", ui.EnumError("--kind", raw, []string{"control", "observation", "finding"})
+	return "", fmt.Errorf("normalize schema kind: %w", ui.EnumError("--kind", raw, []string{"control", "observation", "finding"}))
 }
 
 // NewReadinessValidator creates a validation function for plan/apply commands.
@@ -93,7 +93,7 @@ func NewReadinessValidator(
 			PredicateParser:   ctlyaml.ParsePredicate,
 		})
 		if err != nil {
-			return validation.EvaluationState{}, err
+			return validation.EvaluationState{}, fmt.Errorf("execute readiness validation: %w", err)
 		}
 
 		if extraChecks != nil {

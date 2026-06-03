@@ -1,0 +1,18 @@
+id: s3_policy_intersection_exposure
+description: >
+  S3 bucket has conflicting identity and resource policy grants that
+  create invisible or latent access paths. A shadow allow (bucket
+  policy grants access not visible in IAM), combined with an access
+  point policy broader than the bucket policy, or a deny-bypass risk
+  (IAM deny masking a bucket policy allow), compounds into a data
+  exposure surface that IAM-only auditing misses entirely.
+controls:
+  - CTL.S3.POLICY.SHADOW.ALLOW.001
+  - CTL.S3.POLICY.DENY.BYPASS.001
+  - CTL.S3.ACCESSPOINT.BROAD.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - s3_data_access
+postconditions:
+  - data_destruction

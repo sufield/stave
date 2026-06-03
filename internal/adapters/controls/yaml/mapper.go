@@ -300,7 +300,7 @@ func labValidationToDomain(in []yamlLabValidation) []policy.LabValidation {
 func UnmarshalControlDefinition(data []byte) (policy.ControlDefinition, error) {
 	var dto yamlControlDefinition
 	if err := yaml.Unmarshal(data, &dto); err != nil {
-		return policy.ControlDefinition{}, err
+		return policy.ControlDefinition{}, fmt.Errorf("unmarshal control YAML: %w", err)
 	}
 	return controlDefinitionToDomain(dto)
 }

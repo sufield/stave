@@ -156,7 +156,7 @@ func (b *Builder) Build(ctx context.Context, plan *appeval.EvaluationPlan) (*app
 	// Load SLA policy — file takes precedence over embedded.
 	slaCfg, err := compose.LoadSLAPolicy(ctx, b.NewSLALoader, b.Opts.SLAProfile, b.Opts.SLAProfileFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load SLA policy: %w", err)
 	}
 
 	built, err := appeval.BuildDependencies(ctx, &appeval.BuildDependenciesInput{

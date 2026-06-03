@@ -66,7 +66,7 @@ func NewObservationLoader(opts ...LoaderOption) *ObservationLoader {
 // The returned LoadResult includes SHA-256 hashes of each file for auditability.
 func (l *ObservationLoader) LoadSnapshots(ctx context.Context, dir string) (appcontracts.LoadResult, error) {
 	if err := ctx.Err(); err != nil {
-		return appcontracts.LoadResult{}, err
+		return appcontracts.LoadResult{}, fmt.Errorf("load snapshots: %w", err)
 	}
 
 	entries, err := listObservationFiles(dir)
@@ -80,7 +80,7 @@ func (l *ObservationLoader) LoadSnapshots(ctx context.Context, dir string) (appc
 
 	for i, entry := range entries {
 		if err := ctx.Err(); err != nil {
-			return appcontracts.LoadResult{}, err
+			return appcontracts.LoadResult{}, fmt.Errorf("load snapshots: %w", err)
 		}
 
 		path := filepath.Join(dir, entry.Name())

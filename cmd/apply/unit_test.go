@@ -2,6 +2,7 @@ package apply
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -221,7 +222,7 @@ func buildWithNewPlan(b *Builder) (*appeval.ApplyDeps, error) {
 	evalInput := buildEvaluatorInput(b.Opts, pc, b.Opts.ControlsDir, b.Opts.ObservationsDir, "")
 	plan, err := appeval.NewPlan(evalInput)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("build evaluation plan: %w", err)
 	}
 	return b.Build(context.Background(), plan)
 }

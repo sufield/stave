@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.S3.POLICY.SHADOW.ALLOW.001
+name: Bucket Policy Must Not Grant Access Bypassing IAM Restrictions
+description: >
+  The S3 bucket policy grants access to a principal whose IAM policy
+  does not include the corresponding S3 actions. In AWS policy
+  evaluation, a resource policy Allow with a specific principal ARN
+  grants access even when the principal's IAM policy has no S3
+  permissions — the resource policy acts as a standalone grant for
+  same-account principals. This creates a "shadow allow" invisible
+  to IAM-centric auditing: scanning the principal's attached/inline
+  policies shows no S3 access, but the bucket policy silently grants
+  it. For cross-account principals, both IAM and resource policy must
+  allow the action; for same-account principals, either policy alone
+  is sufficient. This control flags same-account shadow allows where
+  the bucket policy is the sole grant source.
+domain: exposure
+severity: high
+scope: compound
+corpus_reference: MITRE:T1530
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["DSP-10", "IAM-05"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    The bucket policy grants S3 access to a same-account principal
+    whose IAM policies do not include S3 permissions. The access is
+    invisible to IAM-only auditing tools.
+  action: >
+    Review the bucket policy statements that name specific principal
+    ARNs. For each, verify the principal's IAM policies also grant
+    the same S3 actions. If the bucket policy is the sole source of
+    access, either add the permission to the principal's IAM policy
+    (making it visible) or remove the bucket policy statement.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "access": {
+          "has_shadow_allow": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.has_shadow_allow
+      op: eq
+      value: true
+tests:
+  - name: bucket with shadow allow fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3:::sensitive-data
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            has_shadow_allow: true
+  - name: bucket without shadow allow passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3:::normal-bucket
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            has_shadow_allow: false

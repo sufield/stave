@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "source": "deployed",
+  "captured_at": "2026-01-10T00:00:00Z",
+  "assets": [
+    {
+      "id": "arn:aws:s3:::sensitive-data-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "access": {
+            "has_shadow_allow": true
+          }
+        }
+      }
+    }
+  ]
+}

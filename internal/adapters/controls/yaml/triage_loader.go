@@ -103,7 +103,7 @@ func LoadTriageIndex(dir string) (*TriageIndex, error) {
 		if os.IsNotExist(err) {
 			return nil, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("stat triage directory %s: %w", triagePath, err)
 	}
 	return LoadTriageIndexFS(os.DirFS(triagePath), ".")
 }
@@ -145,7 +145,7 @@ func loadOverridesFS(fsys fs.FS, dir string, idx *TriageIndex) error {
 		if errors.Is(err, fs.ErrNotExist) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("read triage overrides directory %s: %w", dir, err)
 	}
 
 	for _, entry := range entries {
@@ -183,7 +183,7 @@ func loadFamiliesFS(fsys fs.FS, dir string, idx *TriageIndex) error {
 		if errors.Is(err, fs.ErrNotExist) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("read triage families directory %s: %w", dir, err)
 	}
 
 	for _, entry := range entries {

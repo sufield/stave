@@ -2,6 +2,8 @@
 package validate
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
@@ -80,7 +82,7 @@ func NewCmd(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			resolvedFormat, fmtErr := compose.ResolveFormatValue(opts.Format)
 			if fmtErr != nil {
-				return fmtErr
+				return fmt.Errorf("resolve output format: %w", fmtErr)
 			}
 			return runValidate(compose.CommandContext(cmd), Input{
 				Stdin:  cmd.InOrStdin(),

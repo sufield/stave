@@ -27,7 +27,10 @@ type NewOnlyJSONRenderer struct{}
 func (NewOnlyJSONRenderer) Render(w io.Writer, r *findingfilter.Result) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
-	return enc.Encode(r)
+	if err := enc.Encode(r); err != nil {
+		return fmt.Errorf("write output: %w", err)
+	}
+	return nil
 }
 
 // NewOnlyTextRenderer writes the default human-readable summary.

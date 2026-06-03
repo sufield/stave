@@ -34,9 +34,15 @@ func (r *Reporter) Write(result *appvalidation.Report, hc hintContext) error {
 
 	switch {
 	case r.Format == string(appcontracts.FormatJSON):
-		return outjson.WriteValidation(r.Writer, report)
+		if err := outjson.WriteValidation(r.Writer, report); err != nil {
+			return fmt.Errorf("write JSON validation output: %w", err)
+		}
+		return nil
 	case r.Format != "" && r.Format != string(appcontracts.FormatText):
-		return ui.ExecuteTemplate(r.Writer, r.Format, report)
+		if err := ui.ExecuteTemplate(r.Writer, r.Format, report); err != nil {
+			return fmt.Errorf("execute output template: %w", err)
+		}
+		return nil
 	default:
 		return r.writeText(result, report)
 	}
@@ -50,7 +56,10 @@ func (r *Reporter) ExitStatus(result *appvalidation.Report) error {
 	if result == nil {
 		return errNilResult
 	}
-	return result.ExitError(r.Strict)
+	if err := result.ExitError(r.Strict); err != nil {
+		return fmt.Errorf("determine exit status: %w", err)
+	}
+	return nil
 }
 
 // --- Internal Presentation Logic ---
@@ -72,25 +81,25 @@ func (r *Reporter) writeText(res *appvalidation.Report, report Report) error {
 		res.Summary.ControlsLoaded,
 		res.Summary.SnapshotsLoaded,
 		res.Summary.AssetObservationsLoaded); err != nil {
-		return err
+		return fmt.Errorf("write output: %w", err)
 	}
 
 	if res.Summary.IdentityObservationsLoaded > 0 {
 		if _, err := fmt.Fprintf(r.Writer, ", %d identity observations", res.Summary.IdentityObservationsLoaded); err != nil {
-			return err
+			return fmt.Errorf("write output: %w", err)
 		}
 	}
 	if _, err := fmt.Fprintln(r.Writer); err != nil {
-		return err
+		return fmt.Errorf("write output: %w", err)
 	}
 
 	if r.FixHints && len(report.FixHints) > 0 {
 		if _, err := fmt.Fprintln(r.Writer, "\nSuggested next commands:"); err != nil {
-			return err
+			return fmt.Errorf("write output: %w", err)
 		}
 		for _, h := range report.FixHints {
 			if _, err := fmt.Fprintf(r.Writer, "  - %s\n", h); err != nil {
-				return err
+				return fmt.Errorf("write output: %w", err)
 			}
 		}
 	}
@@ -99,8 +108,10 @@ func (r *Reporter) writeText(res *appvalidation.Report, report Report) error {
 
 func printHeader(w io.Writer, valid bool, eCount, wCount int) error {
 	if valid && wCount == 0 {
-		_, err := fmt.Fprintln(w, "Validation passed")
-		return err
+		if _, err := fmt.Fprintln(w, "Validation passed"); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
 
 	status := "passed"
@@ -109,36 +120,42 @@ func printHeader(w io.Writer, valid bool, eCount, wCount int) error {
 	}
 
 	if wCount > 0 {
-		_, err := fmt.Fprintf(w, "Validation %s (%d error%s, %d warning%s)\n",
-			status, eCount, plural(eCount), wCount, plural(wCount))
-		return err
+		if _, err := fmt.Fprintf(w, "Validation %s (%d error%s, %d warning%s)\n",
+			status, eCount, plural(eCount), wCount, plural(wCount)); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
-	_, err := fmt.Fprintf(w, "Validation %s (%d error%s)\n", status, eCount, plural(eCount))
-	return err
+	if _, err := fmt.Fprintf(w, "Validation %s (%d error%s)\n", status, eCount, plural(eCount)); err != nil {
+		return fmt.Errorf("write output: %w", err)
+	}
+	return nil
 }
 
 func printIssue(w io.Writer, issue diag.Finding) error {
 	if _, err := fmt.Fprintln(w, ui.SeverityLabel(issue.SeverityLabel(), string(issue.RuleID), w)); err != nil {
-		return err
+		return fmt.Errorf("write output: %w", err)
 	}
 
 	for _, key := range issue.Resource.Keys() {
 		if _, err := fmt.Fprintf(w, "  %s=%s\n", key, issue.Resource.Sanitized(key)); err != nil {
-			return err
+			return fmt.Errorf("write output: %w", err)
 		}
 	}
 	if issue.Remediation != "" {
 		if _, err := fmt.Fprintf(w, "  Fix: %s\n", issue.Remediation); err != nil {
-			return err
+			return fmt.Errorf("write output: %w", err)
 		}
 	}
 	if issue.FixCommand != "" {
 		if _, err := fmt.Fprintf(w, "  Example: %s\n", issue.FixCommand); err != nil {
-			return err
+			return fmt.Errorf("write output: %w", err)
 		}
 	}
-	_, err := fmt.Fprintln(w)
-	return err
+	if _, err := fmt.Fprintln(w); err != nil {
+		return fmt.Errorf("write output: %w", err)
+	}
+	return nil
 }
 
 // --- Data Models (DTOs) ---

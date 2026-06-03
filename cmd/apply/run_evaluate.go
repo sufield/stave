@@ -169,7 +169,7 @@ func runStrictIntegrityCheck(strict bool, stdout, stderr io.Writer) error {
 		return fmt.Errorf("load default pack registry: %w", err)
 	}
 	if err := reg.ValidateStrict(ctlbuiltin.EmbeddedFS()); err != nil {
-		return ui.WithNextCommand(err, "stave packs list")
+		return fmt.Errorf("strict integrity check: %w", ui.WithNextCommand(err, "stave packs list"))
 	}
 	return nil
 }

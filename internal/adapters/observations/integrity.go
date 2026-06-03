@@ -26,7 +26,10 @@ func (l *ObservationLoader) verifyConfiguredIntegrity(hashes *evaluation.InputHa
 	}
 
 	validator := integrity.Validator{ActualHashes: hashes}
-	return validator.Verify(m)
+	if err := validator.Verify(m); err != nil {
+		return fmt.Errorf("verify observation integrity: %w", err)
+	}
+	return nil
 }
 
 // loadManifest parses a manifest, verifying the signature when a public key is configured.
@@ -48,5 +51,9 @@ func loadSignedManifest(data []byte, publicKeyPath string) (integrity.Manifest, 
 	if err != nil {
 		return integrity.Manifest{}, fmt.Errorf("read integrity public key: %w", err)
 	}
-	return integrity.UnmarshalSigned(data, pubKey)
+	m, err := integrity.UnmarshalSigned(data, pubKey)
+	if err != nil {
+		return integrity.Manifest{}, fmt.Errorf("verify signed manifest: %w", err)
+	}
+	return m, nil
 }

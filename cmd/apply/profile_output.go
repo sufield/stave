@@ -30,7 +30,10 @@ func (r *Runner) writeResults(ctx context.Context, cfg Config, result *evaluatio
 		Enricher:        enrichFn,
 		CoveragePosture: buildCoveragePosture(controls, nil),
 	}
-	return pipeline.Run(ctx, cfg.Stdout, result)
+	if err := pipeline.Run(ctx, cfg.Stdout, result); err != nil {
+		return fmt.Errorf("run output pipeline: %w", err)
+	}
+	return nil
 }
 
 // finalizeProfileEvaluation reports warnings and returns the appropriate exit error.
@@ -38,7 +41,7 @@ func finalizeProfileEvaluation(stderr io.Writer, quiet bool, results *evaluation
 	unprovable := asset.CountUnprovablySafe(snapshots)
 	if unprovable > 0 && !quiet {
 		if _, err := fmt.Fprintf(stderr, "\nWarning: %d bucket(s) have missing inputs - safety cannot be proven\n", unprovable); err != nil {
-			return err
+			return fmt.Errorf("write output: %w", err)
 		}
 	}
 
@@ -51,7 +54,7 @@ func finalizeProfileEvaluation(stderr io.Writer, quiet bool, results *evaluation
 
 	if !quiet {
 		if _, err := fmt.Fprintln(stderr, "Evaluation complete. No violations found."); err != nil {
-			return err
+			return fmt.Errorf("write output: %w", err)
 		}
 	}
 	return nil

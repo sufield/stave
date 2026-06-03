@@ -64,7 +64,10 @@ func runNewOnlyOutput(ctx context.Context, stdout, stderr io.Writer, opts *Optio
 	if rendErr != nil {
 		return rendErr
 	}
-	return renderer.Render(stdout, filterResult)
+	if err := renderer.Render(stdout, filterResult); err != nil {
+		return fmt.Errorf("render new-only output: %w", err)
+	}
+	return nil
 }
 
 // stickyWriter wraps an io.Writer and remembers the first write
@@ -83,9 +86,9 @@ func (s *stickyWriter) Write(p []byte) (int, error) {
 	}
 	n, err := s.w.Write(p)
 	if err != nil {
-		s.err = err
+		s.err = fmt.Errorf("write output: %w", err)
 	}
-	return n, err
+	return n, s.err
 }
 
 func writeNewOnlyText(w io.Writer, r *findingfilter.Result) error {
@@ -215,5 +218,9 @@ func parseDuration(s string) (time.Duration, error) {
 		}
 		return time.Duration(days) * 24 * time.Hour, nil
 	}
-	return time.ParseDuration(s)
+	d, err := time.ParseDuration(s)
+	if err != nil {
+		return 0, fmt.Errorf("parse duration: %w", err)
+	}
+	return d, nil
 }

@@ -35,7 +35,7 @@ import (
 // This supports reading from stdin when using "-" as the observations path.
 func (l *ObservationLoader) LoadSnapshotFromReader(ctx context.Context, r io.Reader, sourceName string) (asset.Snapshot, error) {
 	if err := ctx.Err(); err != nil {
-		return asset.Snapshot{}, err
+		return asset.Snapshot{}, fmt.Errorf("load snapshot from %s: %w", sourceName, err)
 	}
 
 	data, err := fsutil.LimitedReadAll(r, sourceName)
@@ -206,7 +206,7 @@ func (s *StdinObservationLoader) LoadSnapshots(ctx context.Context, _ string) (a
 
 	snap, err := s.loader.LoadSnapshotFromReader(ctx, bytes.NewReader(data), "stdin")
 	if err != nil {
-		return appcontracts.LoadResult{}, err
+		return appcontracts.LoadResult{}, fmt.Errorf("load snapshot from stdin: %w", err)
 	}
 
 	hashes := &evaluation.InputHashes{

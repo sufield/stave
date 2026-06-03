@@ -1,6 +1,7 @@
 package verify
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -63,13 +64,13 @@ func (o *options) normalize() {
 // validate ensures all required paths exist and are accessible.
 func (o *options) validate() error {
 	if err := dircheck.ValidateFlagDir("--before", o.BeforeDir, "", nil, nil); err != nil {
-		return err
+		return fmt.Errorf("validate before directory: %w", err)
 	}
 	if err := dircheck.ValidateFlagDir("--after", o.AfterDir, "", nil, nil); err != nil {
-		return err
+		return fmt.Errorf("validate after directory: %w", err)
 	}
 	if err := dircheck.ValidateFlagDir("--controls", o.ControlsDir, "", ui.ErrHintControlsNotAccessible, nil); err != nil {
-		return err
+		return fmt.Errorf("validate controls directory: %w", err)
 	}
 	return nil
 }
@@ -87,12 +88,12 @@ type Execution struct {
 func (o *options) Complete() (Execution, error) {
 	maxDuration, err := cliflags.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
 	if err != nil {
-		return Execution{}, err
+		return Execution{}, fmt.Errorf("parse max-unsafe duration: %w", err)
 	}
 
 	clock, err := compose.ResolveClock(o.Now)
 	if err != nil {
-		return Execution{}, err
+		return Execution{}, fmt.Errorf("resolve clock: %w", err)
 	}
 
 	return Execution{

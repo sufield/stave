@@ -66,7 +66,7 @@ func (r *ReadinessRunner) Execute(cfg ReadinessConfig) error {
 		RunEvaluation:          r.CreateValidator(cfg.ControlsDir, cfg.ObservationsDir, cfg.Sanitize),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("assess readiness: %w", err)
 	}
 
 	if err := r.writeReport(cfg, report); err != nil {
@@ -89,10 +89,13 @@ func (r *ReadinessRunner) writeReport(cfg ReadinessConfig, report validation.Rea
 		return nil
 	}
 	if cfg.Format.IsJSON() {
-		return jsonutil.WriteIndented(cfg.Stdout, readinessJSONReport{
+		if err := jsonutil.WriteIndented(cfg.Stdout, readinessJSONReport{
 			ReadinessAssessment: report,
 			NextCommand:         report.NextCommand(),
-		})
+		}); err != nil {
+			return fmt.Errorf("write output: %w", err)
+		}
+		return nil
 	}
 	rep := &Reporter{Stdout: cfg.Stdout, Stderr: cfg.Stderr}
 	return rep.ReportPlan(report)

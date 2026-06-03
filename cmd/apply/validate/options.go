@@ -2,6 +2,7 @@ package validate
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"strings"
 	"time"
@@ -145,7 +146,7 @@ func (o *options) normalizeAndValidate(controlsChanged, obsChanged bool) error {
 		AllowBuiltinFallback:       !singleFileMode,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("prepare evaluation context: %w", err)
 	}
 	o.Controls = ec.ControlsDir
 	o.Observations = ec.ObservationsDir
@@ -154,7 +155,7 @@ func (o *options) normalizeAndValidate(controlsChanged, obsChanged bool) error {
 	// Validate context resolution (fail-fast if context state is broken).
 	if ec.Resolver != nil {
 		if _, resolveErr := ec.Resolver.ResolveSelected(); resolveErr != nil {
-			return resolveErr
+			return fmt.Errorf("resolve project context: %w", resolveErr)
 		}
 	}
 

@@ -61,7 +61,7 @@ var _ appcontracts.SnapshotBundleLoader = (*BundleLoader)(nil)
 // fsutil.ReadFileLimited would hang the runner with no recourse.
 func (BundleLoader) LoadBundle(ctx context.Context, path string) ([]asset.Snapshot, error) {
 	if err := ctx.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("load bundle: %w", err)
 	}
 	if isDaemonContext(ctx) {
 		return nil, ErrDaemonUnsafe
@@ -103,7 +103,7 @@ func (BundleLoader) LoadBundle(ctx context.Context, path string) ([]asset.Snapsh
 		// LeakedReadGoroutines() see ctx-cancelled bundle reads
 		// reflected in the running total.
 		recordLeakedReadGoroutine()
-		return nil, ctx.Err()
+		return nil, fmt.Errorf("load bundle: %w", ctx.Err())
 	case r := <-done:
 		return r.data, r.err
 	}

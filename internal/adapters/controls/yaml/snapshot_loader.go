@@ -51,7 +51,7 @@ func resolveControlPaths(ctx context.Context, dir string) ([]string, error) {
 func loadPathsFromRegistry(ctx context.Context, root, indexPath string) ([]string, error) {
 	data, err := fsutil.ReadFileLimited(indexPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read control index %s: %w", indexPath, err)
 	}
 
 	var idx registryIndex
@@ -62,7 +62,7 @@ func loadPathsFromRegistry(ctx context.Context, root, indexPath string) ([]strin
 	paths := make([]string, 0, len(idx.Files))
 	for _, relPath := range idx.Files {
 		if err := ctx.Err(); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("load control paths: %w", err)
 		}
 		absPath, err := fsutil.JoinWithinRoot(root, relPath)
 		if err != nil {
@@ -83,7 +83,7 @@ func walkForControlFiles(ctx context.Context, root string) ([]string, error) {
 			return walkErr
 		}
 		if err := ctx.Err(); err != nil {
-			return err
+			return fmt.Errorf("resolve control paths: %w", err)
 		}
 
 		if d.IsDir() {

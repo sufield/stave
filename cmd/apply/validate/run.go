@@ -167,5 +167,9 @@ func executeValidateRun(ctx context.Context, in Input, params validateParams) (*
 		PredicateEval:     celEval,
 	}
 
-	return runner.Execute(ctx, cfg)
+	result, err := runner.Execute(ctx, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("execute validation: %w", err)
+	}
+	return result, nil
 }

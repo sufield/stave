@@ -1,6 +1,7 @@
 package pack
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -154,7 +155,7 @@ func collectEmbeddedControlPaths(root string) ([]string, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("walk directory: %w", err)
 	}
 	return out, nil
 }

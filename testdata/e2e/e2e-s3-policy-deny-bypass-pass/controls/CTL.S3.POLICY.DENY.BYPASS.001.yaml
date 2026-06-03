@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.S3.POLICY.DENY.BYPASS.001
+name: Bucket Policy Must Not Allow Access Despite IAM Deny
+description: >
+  An IAM policy explicitly denies S3 actions for a principal, but
+  the bucket policy allows the same actions for the same principal.
+  In AWS policy evaluation for same-account access, an explicit Deny
+  in any policy always wins — so this is NOT an active bypass. However,
+  the configuration creates a maintenance hazard: if the IAM Deny is
+  later removed (policy update, detach, or role change), the bucket
+  policy Allow silently activates. The latent grant is invisible to
+  IAM auditing because the Deny masks it. This control flags the
+  conflicting policy pair so operators can remove the bucket policy
+  Allow rather than relying on a Deny that may be transient.
+domain: exposure
+severity: medium
+scope: compound
+corpus_reference: MITRE:T1530
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-10"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    The bucket policy allows S3 actions for a principal whose IAM
+    policy explicitly denies those actions. The Deny currently wins,
+    but removing the Deny silently activates the bucket policy Allow.
+  action: >
+    Remove the Allow statement from the bucket policy. Do not rely
+    on the IAM Deny as the sole enforcement mechanism — Deny
+    statements are often transient (attached to temporary policies,
+    permission boundaries, or SCPs that change during reorganization).
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "access": {
+          "has_deny_bypass_risk": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.has_deny_bypass_risk
+      op: eq
+      value: true
+tests:
+  - name: bucket with deny bypass risk fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3:::restricted-data
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            has_deny_bypass_risk: true
+  - name: bucket without deny bypass risk passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3:::clean-bucket
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            has_deny_bypass_risk: false
