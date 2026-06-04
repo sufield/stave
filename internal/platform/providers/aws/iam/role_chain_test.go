@@ -41,6 +41,7 @@ func trustDoc(t *testing.T, principals ...string) *PolicyDocument {
 }
 
 func TestResolveChains_DirectAssumption(t *testing.T) {
+	t.Parallel()
 	input := RoleChainInput{
 		PrincipalARN: "arn:aws:iam::123:role/dev",
 		AccountID:    "123",
@@ -76,6 +77,7 @@ func TestResolveChains_DirectAssumption(t *testing.T) {
 }
 
 func TestResolveChains_TwoHop(t *testing.T) {
+	t.Parallel()
 	input := RoleChainInput{
 		PrincipalARN: "arn:aws:iam::123:role/dev",
 		AccountID:    "123",
@@ -116,6 +118,7 @@ func TestResolveChains_TwoHop(t *testing.T) {
 }
 
 func TestResolveChains_CycleDetection(t *testing.T) {
+	t.Parallel()
 	input := RoleChainInput{
 		PrincipalARN: "arn:aws:iam::123:role/a",
 		AccountID:    "123",
@@ -150,6 +153,7 @@ func TestResolveChains_CycleDetection(t *testing.T) {
 }
 
 func TestResolveChains_NotInSnapshot(t *testing.T) {
+	t.Parallel()
 	input := RoleChainInput{
 		PrincipalARN: "arn:aws:iam::123:role/dev",
 		AccountID:    "123",
@@ -176,6 +180,7 @@ func TestResolveChains_NotInSnapshot(t *testing.T) {
 }
 
 func TestResolveChains_TrustPolicyRejectsAssumption(t *testing.T) {
+	t.Parallel()
 	input := RoleChainInput{
 		PrincipalARN: "arn:aws:iam::123:role/dev",
 		AccountID:    "123",
@@ -203,6 +208,7 @@ func TestResolveChains_TrustPolicyRejectsAssumption(t *testing.T) {
 }
 
 func TestResolveChains_CrossAccountHop(t *testing.T) {
+	t.Parallel()
 	input := RoleChainInput{
 		PrincipalARN: "arn:aws:iam::123:role/dev",
 		AccountID:    "123",
@@ -262,6 +268,7 @@ func trustDocTagConditional(t *testing.T, principal string) *PolicyDocument {
 // it. The pre-Iter-2 walker only recognized sts:AssumeRole
 // hops, so this primitive was completely invisible.
 func TestResolveChains_TagMutationPrivesc(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	adminARN := "arn:aws:iam::123:role/admin"
 
@@ -333,6 +340,7 @@ func TestResolveChains_TagMutationPrivesc(t *testing.T) {
 // trust requirement, so no privesc edge exists. This is the
 // false-positive guard.
 func TestResolveChains_TagMutation_NoTrustCondition_NoEdge(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	adminARN := "arn:aws:iam::123:role/admin"
 	otherARN := "arn:aws:iam::123:role/other"
@@ -373,6 +381,7 @@ func TestResolveChains_TagMutation_NoTrustCondition_NoEdge(t *testing.T) {
 // by the principal's actions. The tag-mutation walker must
 // not invent a permission the principal doesn't have.
 func TestResolveChains_TagMutation_NoTaggingPermission_NoEdge(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	adminARN := "arn:aws:iam::123:role/admin"
 
@@ -409,6 +418,7 @@ func TestResolveChains_TagMutation_NoTaggingPermission_NoEdge(t *testing.T) {
 // (super-broad grants implicitly include the tag-mutation
 // primitive).
 func TestResolveChains_TagMutation_WildcardCovered(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	adminARN := "arn:aws:iam::123:role/admin"
 
@@ -449,6 +459,7 @@ func TestResolveChains_TagMutation_WildcardCovered(t *testing.T) {
 // surface. This lets the explainer enumerate every available
 // privesc primitive, not just the first one the walker found.
 func TestResolveChains_AssumeAndTagMutationCoexist(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	adminARN := "arn:aws:iam::123:role/admin"
 
@@ -517,6 +528,7 @@ func trustDocServiceRaw(servicePrincipal string) string {
 // permissions by attaching R as a Lambda execution role and
 // invoking the function.
 func TestResolveChains_LambdaExecutionRolePrivesc(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	execARN := "arn:aws:iam::123:role/lambda-admin"
 
@@ -575,6 +587,7 @@ func TestResolveChains_LambdaExecutionRolePrivesc(t *testing.T) {
 // allow lambda.amazonaws.com → the service can't assume the role
 // even if the principal tried to attach it. False-positive guard.
 func TestResolveChains_LambdaExec_NoServiceTrust_NoEdge(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	execARN := "arn:aws:iam::123:role/wannabe-exec"
 
@@ -610,6 +623,7 @@ func TestResolveChains_LambdaExec_NoServiceTrust_NoEdge(t *testing.T) {
 // invoke Lambda but cannot pass any role → service-exec primitive
 // is incomplete.
 func TestResolveChains_LambdaExec_NoPassRole_NoEdge(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	execARN := "arn:aws:iam::123:role/exec"
 
@@ -645,6 +659,7 @@ func TestResolveChains_LambdaExec_NoPassRole_NoEdge(t *testing.T) {
 // AssumeRoleWithWebIdentity (Cognito identity pools, federated
 // OIDC) and AssumeRoleWithSAML.
 func TestResolveChains_FederatedAssumeRole(t *testing.T) {
+	t.Parallel()
 	cognitoARN := "arn:aws:iam::123:role/CognitoAuth"
 	targetARN := "arn:aws:iam::123:role/admin"
 
@@ -680,6 +695,7 @@ func TestResolveChains_FederatedAssumeRole(t *testing.T) {
 // role version of the same primitive. Pins the multi-service
 // generality of the design.
 func TestResolveChains_CFNExecRolePrivesc(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	cfnExecARN := "arn:aws:iam::123:role/cfn-admin"
 
@@ -724,6 +740,7 @@ func TestResolveChains_CFNExecRolePrivesc(t *testing.T) {
 // skips it rather than enumerating every role in the snapshot.
 // This is the v1 deferral documented in resolveServiceExecChains.
 func TestResolveChains_ServiceExec_WildcardPassRoleSkipped(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	execARN := "arn:aws:iam::123:role/exec"
 
@@ -760,6 +777,7 @@ func TestResolveChains_ServiceExec_WildcardPassRoleSkipped(t *testing.T) {
 // must yield the expected service-principal list, even though the
 // existing iam.Statement parser drops the Principal field.
 func TestExtractServiceTrusts_ServicePrincipalShapes(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name string
 		json string
@@ -871,6 +889,7 @@ func trustDocAccountRootRaw(account string) string {
 // ARN. This is the cross-account compromise propagation
 // described in gap-prompt.md:16.
 func TestResolveChains_AccountRootTrustExpansion(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::222222222222:role/dev"
 	crossARN := "arn:aws:iam::111111111111:role/cross-admin"
 
@@ -925,6 +944,7 @@ func TestResolveChains_AccountRootTrustExpansion(t *testing.T) {
 // negative case. A principal in account 333 must NOT reach a role
 // whose trust policy account-root-trusts only 222.
 func TestResolveChains_AccountRootTrustRejectsForeignAccount(t *testing.T) {
+	t.Parallel()
 	foreignARN := "arn:aws:iam::333333333333:role/dev"
 	crossARN := "arn:aws:iam::111111111111:role/cross-admin"
 
@@ -959,6 +979,7 @@ func TestResolveChains_AccountRootTrustRejectsForeignAccount(t *testing.T) {
 // that exact principal is allowed. Verifies Iter 4's exact-ARN
 // path doesn't accidentally inherit the account-root expansion.
 func TestResolveChains_ExactARNTrustViaAWSPrincipal(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::222222222222:role/dev"
 	otherARN := "arn:aws:iam::222222222222:role/other"
 	crossARN := "arn:aws:iam::111111111111:role/cross-admin"
@@ -1010,6 +1031,7 @@ func TestResolveChains_ExactARNTrustViaAWSPrincipal(t *testing.T) {
 // entry. The bare-account-number form, the :root ARN form, and
 // the list-of-roots form must all classify correctly.
 func TestExtractAWSTrustedPrincipals_ParsesAccountRootShapes(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name         string
 		json         string
@@ -1139,6 +1161,7 @@ func assertStringSliceEqual(t *testing.T, label string, got, want []string) {
 // reference. The chain remains reachable (the walker doesn't
 // drop it) — only the annotation is added.
 func TestResolveChains_ScheduledDeletionAnnotation(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	doomedARN := "arn:aws:iam::123:role/doomed-admin"
 	deletionTime := time.Date(2027, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -1193,6 +1216,7 @@ func TestResolveChains_ScheduledDeletionAnnotation(t *testing.T) {
 // horizon at which the chain first becomes stale. A later
 // deletion in the chain is moot once the earlier one fires.
 func TestResolveChains_ScheduledDeletion_TakesEarliest(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	midARN := "arn:aws:iam::123:role/mid"
 	finalARN := "arn:aws:iam::123:role/final-admin"
@@ -1243,6 +1267,7 @@ func TestResolveChains_ScheduledDeletion_TakesEarliest(t *testing.T) {
 // not crossing any scheduled-for-deletion role keep the
 // annotation as zero-time. Negative case.
 func TestResolveChains_NoScheduledDeletion_ZeroAnnotation(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	adminARN := "arn:aws:iam::123:role/admin"
 
@@ -1281,6 +1306,7 @@ func TestResolveChains_NoScheduledDeletion_ZeroAnnotation(t *testing.T) {
 // secretsmanager-shaped fallback). Both must yield the same
 // timestamp; malformed entries are silently dropped.
 func TestExtractScheduledDeletions_ReadsCanonicalKeys(t *testing.T) {
+	t.Parallel()
 	wantTime := time.Date(2027, 1, 15, 12, 0, 0, 0, time.UTC)
 	cases := []struct {
 		name  string
@@ -1359,6 +1385,7 @@ func TestExtractScheduledDeletions_ReadsCanonicalKeys(t *testing.T) {
 // pattern from gap-prompt.md:10 — distinct from Iter 3's
 // create-and-pass primitive.
 func TestResolveChains_LambdaInvokeExisting_ConfusedDeputy(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	funcARN := "arn:aws:lambda:us-east-1:123:function:legacy-prod"
 	adminARN := "arn:aws:iam::123:role/legacy-prod-exec"
@@ -1414,6 +1441,7 @@ func TestResolveChains_LambdaInvokeExisting_ConfusedDeputy(t *testing.T) {
 // are caught by the catalog's broad-permission controls; the
 // confused-deputy walker stays focused on specific resource ARNs.
 func TestResolveChains_InvokeExisting_WildcardResourceSkipped(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	funcARN := "arn:aws:lambda:us-east-1:123:function:legacy-prod"
 	adminARN := "arn:aws:iam::123:role/legacy-prod-exec"
@@ -1450,6 +1478,7 @@ func TestResolveChains_InvokeExisting_WildcardResourceSkipped(t *testing.T) {
 // no role binding recorded for that ARN. The walker cannot
 // attribute privilege and must skip silently — no chain emitted.
 func TestResolveChains_InvokeExisting_NoBinding_NoEdge(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	funcARN := "arn:aws:lambda:us-east-1:123:function:unknown"
 
@@ -1482,6 +1511,7 @@ func TestResolveChains_InvokeExisting_NoBinding_NoEdge(t *testing.T) {
 // a pre-bound execution role. The same primitive shape as
 // Lambda invoke; pins multi-service generality.
 func TestResolveChains_CFNUpdateExisting(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	stackARN := "arn:aws:cloudformation:us-east-1:123:stack/legacy/abc"
 	cfnRoleARN := "arn:aws:iam::123:role/legacy-cfn-exec"
@@ -1529,6 +1559,7 @@ func TestResolveChains_CFNUpdateExisting(t *testing.T) {
 // trigger action's service must be ignored. Defends against
 // extractor bugs that classify bindings incorrectly.
 func TestResolveChains_InvokeExisting_ServiceKindMismatch(t *testing.T) {
+	t.Parallel()
 	devARN := "arn:aws:iam::123:role/dev"
 	stackARN := "arn:aws:cloudformation:us-east-1:123:stack/x/y"
 	roleARN := "arn:aws:iam::123:role/admin"
@@ -1568,6 +1599,7 @@ func TestResolveChains_InvokeExisting_ServiceKindMismatch(t *testing.T) {
 // from properties.cloudformation.role_arn. Unrelated asset types
 // are silently ignored.
 func TestExtractResourceRoleBindings_LambdaAndCFN(t *testing.T) {
+	t.Parallel()
 	// Mock-style helper to build a snapshot inline. Using a
 	// snapshotForBindings helper to avoid pulling in the full
 	// snapshot factory; the function under test only touches

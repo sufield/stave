@@ -13,6 +13,7 @@ import (
 // ---------------------------------------------------------------------------
 
 func TestToIdentityInt_AllTypes(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		in   any
@@ -53,6 +54,7 @@ func TestToIdentityInt_AllTypes(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestCloudIdentityMetadata(t *testing.T) {
+	t.Parallel()
 	id := CloudIdentity{
 		ID:     "role-1",
 		Type:   "iam_role",
@@ -100,6 +102,7 @@ func TestCloudIdentityMetadata(t *testing.T) {
 }
 
 func TestCloudIdentityMissingProperties(t *testing.T) {
+	t.Parallel()
 	id := CloudIdentity{ID: "role-2"}
 
 	_, ok := id.Owner()
@@ -124,6 +127,7 @@ func TestCloudIdentityMissingProperties(t *testing.T) {
 }
 
 func TestCloudIdentityBadTypes(t *testing.T) {
+	t.Parallel()
 	id := CloudIdentity{
 		Properties: map[string]any{
 			"owner": 42, // not a string
@@ -155,6 +159,7 @@ func TestCloudIdentityBadTypes(t *testing.T) {
 }
 
 func TestIdentityNestedBoolProperty_BadParentType(t *testing.T) {
+	t.Parallel()
 	props := map[string]any{
 		"grants": "not-a-map",
 	}
@@ -165,6 +170,7 @@ func TestIdentityNestedBoolProperty_BadParentType(t *testing.T) {
 }
 
 func TestIdentityNestedIntProperty_BadParentType(t *testing.T) {
+	t.Parallel()
 	props := map[string]any{
 		"scope": "not-a-map",
 	}
@@ -175,6 +181,7 @@ func TestIdentityNestedIntProperty_BadParentType(t *testing.T) {
 }
 
 func TestIdentityNestedBoolProperty_MissingKey(t *testing.T) {
+	t.Parallel()
 	props := map[string]any{
 		"grants": map[string]any{},
 	}
@@ -188,6 +195,7 @@ func TestIdentityNestedBoolProperty_MissingKey(t *testing.T) {
 }
 
 func TestIdentityNestedIntProperty_MissingKey(t *testing.T) {
+	t.Parallel()
 	props := map[string]any{
 		"scope": map[string]any{},
 	}
@@ -205,6 +213,7 @@ func TestIdentityNestedIntProperty_MissingKey(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestPolicyStatementIDs(t *testing.T) {
+	t.Parallel()
 	a := Asset{
 		ID: "bucket-1",
 		Properties: map[string]any{
@@ -220,6 +229,7 @@ func TestPolicyStatementIDs(t *testing.T) {
 }
 
 func TestACLGranteeIDs(t *testing.T) {
+	t.Parallel()
 	a := Asset{
 		ID: "bucket-1",
 		Properties: map[string]any{
@@ -235,6 +245,7 @@ func TestACLGranteeIDs(t *testing.T) {
 }
 
 func TestPolicyStatementIDs_Empty(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: "bucket-1"}
 	ids := a.PolicyStatementIDs()
 	if len(ids) != 0 {
@@ -247,6 +258,7 @@ func TestPolicyStatementIDs_Empty(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestObservationStats_HasCoverageData(t *testing.T) {
+	t.Parallel()
 	s := &ObservationStats{}
 	if s.HasCoverageData() {
 		t.Fatal("empty stats should not have coverage data")
@@ -265,6 +277,7 @@ func TestObservationStats_HasCoverageData(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestDefaultHealthcareScopeFilter(t *testing.T) {
+	t.Parallel()
 	f := PHIBoundary()
 	if f == nil {
 		t.Fatal("expected non-nil")
@@ -296,6 +309,7 @@ func TestDefaultHealthcareScopeFilter(t *testing.T) {
 }
 
 func TestScopeFilter_TagRequirements(t *testing.T) {
+	t.Parallel()
 	f := NewAuditScope(nil, map[string][]string{
 		"env":        {"prod", "staging"},
 		"DataDomain": {},
@@ -336,6 +350,7 @@ func TestScopeFilter_TagRequirements(t *testing.T) {
 }
 
 func TestScopeFilter_WhitespaceHandling(t *testing.T) {
+	t.Parallel()
 	// Allowlist with whitespace entries
 	f := NewAuditScope([]string{"  bucket-1  ", "", "  "}, nil)
 	if f.global {
@@ -349,6 +364,7 @@ func TestScopeFilter_WhitespaceHandling(t *testing.T) {
 }
 
 func TestScopeFilter_EmptyTagValues(t *testing.T) {
+	t.Parallel()
 	// Tag spec with all empty values -> key-only mode
 	f := NewAuditScope(nil, map[string][]string{
 		"env": {"", "  "},
@@ -359,6 +375,7 @@ func TestScopeFilter_EmptyTagValues(t *testing.T) {
 }
 
 func TestScopeFilter_DiscardableKey(t *testing.T) {
+	t.Parallel()
 	// Empty tag key should be discarded
 	f := NewAuditScope(nil, map[string][]string{
 		"  ": {"value"},
@@ -374,6 +391,7 @@ func TestScopeFilter_DiscardableKey(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExposureLifecycle_Stats(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: "bucket-1"}
 	tl, _ := NewExposureLifecycle(a)
 	stats := tl.Stats()
@@ -383,6 +401,7 @@ func TestExposureLifecycle_Stats(t *testing.T) {
 }
 
 func TestExposureLifecycle_SetAsset_EmptyID(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: "bucket-1"}
 	tl, _ := NewExposureLifecycle(a)
 	// SetAsset with same ID is fine
@@ -399,6 +418,7 @@ func TestExposureLifecycle_SetAsset_EmptyID(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestCheckDurationFeasibility_InsufficientSpan(t *testing.T) {
+	t.Parallel()
 	t1 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	t2 := t1.Add(time.Hour) // 1h span
 	snapshots := Snapshots{
@@ -425,6 +445,7 @@ func TestCheckDurationFeasibility_InsufficientSpan(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExposureWindowUnmarshalJSON_OpenExposureWindow(t *testing.T) {
+	t.Parallel()
 	data := `{"opened_at":"2026-01-01T00:00:00Z","resolved_at":"0001-01-01T00:00:00Z","is_active":true}`
 	var ep ExposureWindow
 	err := json.Unmarshal([]byte(data), &ep)
@@ -437,6 +458,7 @@ func TestExposureWindowUnmarshalJSON_OpenExposureWindow(t *testing.T) {
 }
 
 func TestExposureWindowUnmarshalJSON_ClosedExposureWindow(t *testing.T) {
+	t.Parallel()
 	data := `{"opened_at":"2026-01-01T00:00:00Z","resolved_at":"2026-01-02T00:00:00Z","is_active":false}`
 	var ep ExposureWindow
 	err := json.Unmarshal([]byte(data), &ep)
@@ -449,6 +471,7 @@ func TestExposureWindowUnmarshalJSON_ClosedExposureWindow(t *testing.T) {
 }
 
 func TestExposureWindowUnmarshalJSON_MissingStartAt(t *testing.T) {
+	t.Parallel()
 	data := `{"resolved_at":"2026-01-02T00:00:00Z","is_active":false}`
 	var ep ExposureWindow
 	err := json.Unmarshal([]byte(data), &ep)
@@ -458,6 +481,7 @@ func TestExposureWindowUnmarshalJSON_MissingStartAt(t *testing.T) {
 }
 
 func TestExposureWindowUnmarshalJSON_BadJSON(t *testing.T) {
+	t.Parallel()
 	var ep ExposureWindow
 	err := json.Unmarshal([]byte(`{bad`), &ep)
 	if err == nil {
@@ -470,6 +494,7 @@ func TestExposureWindowUnmarshalJSON_BadJSON(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExposureHistory_WindowSummary(t *testing.T) {
+	t.Parallel()
 	h := &ExposureHistory{}
 
 	start1 := time.Date(2026, 1, 5, 0, 0, 0, 0, time.UTC)
@@ -500,6 +525,7 @@ func TestExposureHistory_WindowSummary(t *testing.T) {
 }
 
 func TestExposureHistory_WindowSummary_NoMatch(t *testing.T) {
+	t.Parallel()
 	h := &ExposureHistory{}
 
 	start1 := time.Date(2026, 1, 5, 0, 0, 0, 0, time.UTC)
@@ -522,6 +548,7 @@ func TestExposureHistory_WindowSummary_NoMatch(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestChangeType_IsValid(t *testing.T) {
+	t.Parallel()
 	if !DriftProvisioned.IsValid() {
 		t.Fatal("DriftProvisioned should be valid")
 	}
@@ -537,6 +564,7 @@ func TestChangeType_IsValid(t *testing.T) {
 }
 
 func TestObservationDeltaSummary_Increment(t *testing.T) {
+	t.Parallel()
 	var s DriftSummary
 	s.Record(DriftProvisioned)
 	s.Record(DriftProvisioned)
@@ -559,6 +587,7 @@ func TestObservationDeltaSummary_Increment(t *testing.T) {
 }
 
 func TestObservationDeltaSummary_MarshalJSON(t *testing.T) {
+	t.Parallel()
 	var s DriftSummary
 	s.Record(DriftProvisioned)
 	s.Record(DriftDecommissioned)
@@ -581,6 +610,7 @@ func TestObservationDeltaSummary_MarshalJSON(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestAsset_Identities_WithExternalID(t *testing.T) {
+	t.Parallel()
 	a := Asset{
 		ID: "bucket-1",
 		Properties: map[string]any{
@@ -597,6 +627,7 @@ func TestAsset_Identities_WithExternalID(t *testing.T) {
 }
 
 func TestAsset_Identities_NoExternalID(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: "bucket-1"}
 	ids := a.Identities()
 	if len(ids) != 1 || ids[0] != "bucket-1" {
@@ -605,6 +636,7 @@ func TestAsset_Identities_NoExternalID(t *testing.T) {
 }
 
 func TestAsset_Tags_Empty(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: "bucket-1"}
 	tags := a.Tags()
 	// Empty tags should not match anything
@@ -622,6 +654,7 @@ func TestAsset_Tags_Empty(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestSnapshotLifecycle_FormatLatest_Nil(t *testing.T) {
+	t.Parallel()
 	var tl *snapshotLifecycle
 	if tl.FormatLatest() != "" {
 		t.Fatal("nil lifecycle should return empty string")
@@ -629,6 +662,7 @@ func TestSnapshotLifecycle_FormatLatest_Nil(t *testing.T) {
 }
 
 func TestSnapshotLifecycle_DuplicateTimes_Nil(t *testing.T) {
+	t.Parallel()
 	var tl *snapshotLifecycle
 	if tl.DuplicateTimes() != nil {
 		t.Fatal("nil lifecycle should return nil")
@@ -636,6 +670,7 @@ func TestSnapshotLifecycle_DuplicateTimes_Nil(t *testing.T) {
 }
 
 func TestSnapshotLifecycle_IsAheadOf_Nil(t *testing.T) {
+	t.Parallel()
 	var tl *snapshotLifecycle
 	if tl.IsAheadOf(time.Now()) {
 		t.Fatal("nil lifecycle should not be ahead of anything")

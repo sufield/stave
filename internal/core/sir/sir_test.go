@@ -89,6 +89,7 @@ func sampleSnapshot(ts time.Time) asset.Snapshot {
 }
 
 func TestBuilder_BasicShape(t *testing.T) {
+	t.Parallel()
 	b := NewBuilder()
 	doc, err := b.Build(
 		[]controldef.ControlDefinition{sampleControl()},
@@ -138,6 +139,7 @@ func TestBuilder_BasicShape(t *testing.T) {
 }
 
 func TestBuilder_DeterministicOutput(t *testing.T) {
+	t.Parallel()
 	// Build twice with identical inputs; require byte-identical
 	// JSON. A regressed Builder that consults time.Now() or
 	// produces non-stable map ordering trips here.
@@ -171,6 +173,7 @@ func TestBuilder_DeterministicOutput(t *testing.T) {
 }
 
 func TestBuilder_RoundTripJSON(t *testing.T) {
+	t.Parallel()
 	b := NewBuilder()
 	original, err := b.Build(
 		[]controldef.ControlDefinition{sampleControl()},
@@ -220,6 +223,7 @@ var noiseTokens = []string{
 }
 
 func TestBuilder_NoInfrastructureNoise(t *testing.T) {
+	t.Parallel()
 	// Add a generated_by section that DOES contain tool versions on
 	// the snapshot — the SIR must strip these on translation; if
 	// any leak through, this test fires.
@@ -261,6 +265,7 @@ func TestBuilder_NoInfrastructureNoise(t *testing.T) {
 }
 
 func TestBuilder_EveryFactHasNonEmptySource(t *testing.T) {
+	t.Parallel()
 	b := NewBuilder()
 	doc, err := b.Build(
 		[]controldef.ControlDefinition{sampleControl()},
@@ -302,6 +307,7 @@ func assertRulesHaveSource(t *testing.T, rules []RuleFact, prefix string) {
 }
 
 func TestBuilder_ResourceGroupsFlowThrough(t *testing.T) {
+	t.Parallel()
 	// Iter L0: groupers replace the retired
 	// PermissionAggregator. Each grouper emits raw
 	// ResourceFactGroup rows; the builder concatenates and sorts.
@@ -347,6 +353,7 @@ func TestBuilder_ResourceGroupsFlowThrough(t *testing.T) {
 }
 
 func TestBuilder_GrouperErrorPropagates(t *testing.T) {
+	t.Parallel()
 	g := &fakeGrouper{err: errSentinel}
 	b := NewBuilder(WithResourceFactGrouper(g))
 	_, err := b.Build(nil, nil, fixedTime)
@@ -359,6 +366,7 @@ func TestBuilder_GrouperErrorPropagates(t *testing.T) {
 }
 
 func TestBuilder_EmptyInputs(t *testing.T) {
+	t.Parallel()
 	b := NewBuilder()
 	doc, err := b.Build(nil, nil, fixedTime)
 	if err != nil {
@@ -376,6 +384,7 @@ func TestBuilder_EmptyInputs(t *testing.T) {
 }
 
 func TestBuilder_IntentRationaleAndForbiddenStateSurface(t *testing.T) {
+	t.Parallel()
 	// Iter 5.1: control declares an intent rationale and an
 	// invariant predicate (forbidden_state). Both must flow into
 	// the SIR's ControlFact so an external solver / AI agent
@@ -429,6 +438,7 @@ func TestBuilder_IntentRationaleAndForbiddenStateSurface(t *testing.T) {
 }
 
 func TestBuilder_IntentRationaleAbsent_SerializesAsAbsent(t *testing.T) {
+	t.Parallel()
 	// When the rationale is empty and the invariant is empty, the
 	// JSON must omit both fields rather than emitting empty
 	// strings / nulls — the SIR contract says optional fields are
@@ -463,6 +473,7 @@ func TestBuilder_IntentRationaleAbsent_SerializesAsAbsent(t *testing.T) {
 }
 
 func TestPredicateFact_BothAnyAndAll(t *testing.T) {
+	t.Parallel()
 	// A pathological control with both Any and All populated.
 	// Builder must wrap them in a synthetic outer "all".
 	ctl := controldef.ControlDefinition{
@@ -534,6 +545,7 @@ func (f *fakeLifecycleSource) Lifecycles(_ []controldef.ControlDefinition, _ []a
 }
 
 func TestBuilder_FirstSeenLastSeenAcrossSnapshots(t *testing.T) {
+	t.Parallel()
 	// Asset bucket-a appears in both snapshots; bucket-b only in the
 	// later one. FirstSeen/LastSeen must reflect the actual
 	// observation grid, not just the latest snapshot.
@@ -595,6 +607,7 @@ func TestBuilder_FirstSeenLastSeenAcrossSnapshots(t *testing.T) {
 }
 
 func TestBuilder_DriftDecommissionedSurfaces(t *testing.T) {
+	t.Parallel()
 	earlier := fixedTime.Add(-2 * time.Hour)
 	later := fixedTime.Add(-time.Hour)
 
@@ -632,6 +645,7 @@ func TestBuilder_DriftDecommissionedSurfaces(t *testing.T) {
 }
 
 func TestBuilder_RoleChainHydration(t *testing.T) {
+	t.Parallel()
 	src := &fakeRoleChainSource{
 		chains: map[asset.ID][]RoleChainFact{
 			"arn:aws:iam::111122223333:role/AppRole": {
@@ -696,6 +710,7 @@ func TestBuilder_RoleChainHydration(t *testing.T) {
 }
 
 func TestBuilder_RoleChainSourceErrorPropagates(t *testing.T) {
+	t.Parallel()
 	src := &fakeRoleChainSource{err: errSentinel}
 	b := NewBuilder(WithRoleChainSource(src))
 	_, err := b.Build(nil, []asset.Snapshot{sampleSnapshot(fixedTime.Add(-time.Hour))}, fixedTime)
@@ -708,6 +723,7 @@ func TestBuilder_RoleChainSourceErrorPropagates(t *testing.T) {
 }
 
 func TestBuilder_LifecycleHydratesTemporalWindows(t *testing.T) {
+	t.Parallel()
 	// Build a lifecycle with one resolved exposure window (open at
 	// t-3h, resolved at t-2h) plus an active window opened at t-1h.
 	a := asset.Asset{
@@ -777,6 +793,7 @@ func TestBuilder_LifecycleHydratesTemporalWindows(t *testing.T) {
 }
 
 func TestBuilder_LifecycleSourceErrorPropagates(t *testing.T) {
+	t.Parallel()
 	src := &fakeLifecycleSource{err: errSentinel}
 	b := NewBuilder(WithLifecycleSource(src))
 	_, err := b.Build(nil, []asset.Snapshot{sampleSnapshot(fixedTime.Add(-time.Hour))}, fixedTime)
@@ -789,6 +806,7 @@ func TestBuilder_LifecycleSourceErrorPropagates(t *testing.T) {
 }
 
 func TestBuilder_HydratedDocumentRoundTripsJSON(t *testing.T) {
+	t.Parallel()
 	// Hydration must not break round-trip stability.
 	chainSrc := &fakeRoleChainSource{
 		chains: map[asset.ID][]RoleChainFact{
@@ -852,6 +870,7 @@ func (f *fakeCoverageSource) Coverage(_ []asset.Snapshot, _ map[kernel.ControlID
 }
 
 func TestBuilder_CoverageSource_DefaultIsZeroPolicyNoGaps(t *testing.T) {
+	t.Parallel()
 	// Without WithCoverageSource, Temporal.Coverage is the
 	// zero-value policy and Gaps is nil/empty. Existing fixtures
 	// must not see surprise rows.
@@ -869,6 +888,7 @@ func TestBuilder_CoverageSource_DefaultIsZeroPolicyNoGaps(t *testing.T) {
 }
 
 func TestBuilder_CoverageSource_PopulatesPolicyAndGaps(t *testing.T) {
+	t.Parallel()
 	gap := CoverageGap{
 		AssetID: "arn:aws:s3:::bucket-a",
 		Start:   fixedTime.Add(-24 * time.Hour),
@@ -904,6 +924,7 @@ func TestBuilder_CoverageSource_PopulatesPolicyAndGaps(t *testing.T) {
 }
 
 func TestBuilder_CoverageSource_SortsGapsDeterministically(t *testing.T) {
+	t.Parallel()
 	// A source that returns rows in an arbitrary order must be
 	// projected into a deterministic (AssetID, Start) order. Two
 	// builds of the same input must emit byte-identical Gaps.
@@ -934,6 +955,7 @@ func TestBuilder_CoverageSource_SortsGapsDeterministically(t *testing.T) {
 }
 
 func TestBuilder_CoverageSourceErrorPropagates(t *testing.T) {
+	t.Parallel()
 	src := &fakeCoverageSource{err: errSentinel}
 	b := NewBuilder(WithCoverageSource(src))
 	_, err := b.Build(nil, []asset.Snapshot{sampleSnapshot(fixedTime.Add(-time.Hour))}, fixedTime)

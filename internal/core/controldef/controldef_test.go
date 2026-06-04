@@ -16,6 +16,7 @@ import (
 // ---------------------------------------------------------------------------
 
 func TestSeverityString(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		sev  Severity
 		want string
@@ -36,6 +37,7 @@ func TestSeverityString(t *testing.T) {
 }
 
 func TestSeverityIsValid(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		sev  Severity
 		want bool
@@ -56,6 +58,7 @@ func TestSeverityIsValid(t *testing.T) {
 }
 
 func TestSeverityGte(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		a, b Severity
 		want bool
@@ -73,6 +76,7 @@ func TestSeverityGte(t *testing.T) {
 }
 
 func TestSeverityWeight(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		sev  Severity
 		want int
@@ -92,6 +96,7 @@ func TestSeverityWeight(t *testing.T) {
 }
 
 func TestSeverityBucketName(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		sev  Severity
 		want string
@@ -111,6 +116,7 @@ func TestSeverityBucketName(t *testing.T) {
 }
 
 func TestParseSeverity(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input   string
 		want    Severity
@@ -138,6 +144,7 @@ func TestParseSeverity(t *testing.T) {
 }
 
 func TestSeverityMarshalText(t *testing.T) {
+	t.Parallel()
 	b, err := SeverityHigh.MarshalText()
 	if err != nil {
 		t.Fatal(err)
@@ -148,6 +155,7 @@ func TestSeverityMarshalText(t *testing.T) {
 }
 
 func TestSeverityUnmarshalText(t *testing.T) {
+	t.Parallel()
 	var s Severity
 	if err := s.UnmarshalText([]byte("critical")); err != nil {
 		t.Fatal(err)
@@ -158,6 +166,7 @@ func TestSeverityUnmarshalText(t *testing.T) {
 }
 
 func TestSeverityMarshalJSON(t *testing.T) {
+	t.Parallel()
 	b, err := json.Marshal(SeverityMedium)
 	if err != nil {
 		t.Fatal(err)
@@ -168,6 +177,7 @@ func TestSeverityMarshalJSON(t *testing.T) {
 }
 
 func TestSeverityUnmarshalJSON(t *testing.T) {
+	t.Parallel()
 	var s Severity
 	if err := json.Unmarshal([]byte(`"low"`), &s); err != nil {
 		t.Fatal(err)
@@ -182,6 +192,7 @@ func TestSeverityUnmarshalJSON(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestControlTypeString(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		ct   ControlType
 		want string
@@ -205,6 +216,7 @@ func TestControlTypeString(t *testing.T) {
 }
 
 func TestControlTypeIsValid(t *testing.T) {
+	t.Parallel()
 	if TypeUnknown.IsValid() {
 		t.Error("TypeUnknown should not be valid")
 	}
@@ -217,6 +229,7 @@ func TestControlTypeIsValid(t *testing.T) {
 }
 
 func TestParseControlType(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input   string
 		want    ControlType
@@ -242,6 +255,7 @@ func TestParseControlType(t *testing.T) {
 }
 
 func TestControlTypeMarshalJSON(t *testing.T) {
+	t.Parallel()
 	b, err := json.Marshal(TypeUnsafeState)
 	if err != nil {
 		t.Fatal(err)
@@ -252,6 +266,7 @@ func TestControlTypeMarshalJSON(t *testing.T) {
 }
 
 func TestControlTypeUnmarshalJSON(t *testing.T) {
+	t.Parallel()
 	var ct ControlType
 	if err := json.Unmarshal([]byte(`"prefix_exposure"`), &ct); err != nil {
 		t.Fatal(err)
@@ -266,6 +281,7 @@ func TestControlTypeUnmarshalJSON(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestControlParamsGetSet(t *testing.T) {
+	t.Parallel()
 	p := NewParams(map[string]any{"key1": "val1"})
 
 	v, ok := p.Get("key1")
@@ -286,6 +302,7 @@ func TestControlParamsGetSet(t *testing.T) {
 }
 
 func TestControlParamsSetOnZero(t *testing.T) {
+	t.Parallel()
 	var p ControlParams
 	if !p.IsZero() {
 		t.Fatal("zero value should be zero")
@@ -300,6 +317,7 @@ func TestControlParamsSetOnZero(t *testing.T) {
 }
 
 func TestControlParamsHasKey(t *testing.T) {
+	t.Parallel()
 	p := NewParams(map[string]any{"x": 1})
 	if !p.HasKey("x") {
 		t.Fatal("expected HasKey(x) = true")
@@ -315,6 +333,7 @@ func TestControlParamsHasKey(t *testing.T) {
 }
 
 func TestControlParamsGetOnZero(t *testing.T) {
+	t.Parallel()
 	var zero ControlParams
 	_, ok := zero.Get("anything")
 	if ok {
@@ -323,6 +342,7 @@ func TestControlParamsGetOnZero(t *testing.T) {
 }
 
 func TestControlParamsRaw(t *testing.T) {
+	t.Parallel()
 	var zero ControlParams
 	if zero.Raw() != nil {
 		t.Fatal("zero Raw should be nil")
@@ -334,6 +354,7 @@ func TestControlParamsRaw(t *testing.T) {
 }
 
 func TestParamString(t *testing.T) {
+	t.Parallel()
 	p := NewParams(map[string]any{"s": "hello", "n": 42})
 	if got := p.paramString("s"); got != "hello" {
 		t.Fatalf("got %q", got)
@@ -347,6 +368,7 @@ func TestParamString(t *testing.T) {
 }
 
 func TestParamInt(t *testing.T) {
+	t.Parallel()
 	p := NewParams(map[string]any{
 		"int":     42,
 		"int64":   int64(100),
@@ -376,6 +398,7 @@ func TestParamInt(t *testing.T) {
 }
 
 func TestParamStringSlice(t *testing.T) {
+	t.Parallel()
 	p := NewParams(map[string]any{
 		"str_slice": []string{"a", "b"},
 		"any_slice": []any{"c", "d", 42},
@@ -405,6 +428,7 @@ func TestParamStringSlice(t *testing.T) {
 }
 
 func TestControlParamsMarshalJSON(t *testing.T) {
+	t.Parallel()
 	// nil map -> {}
 	var zero ControlParams
 	b, err := json.Marshal(zero)
@@ -427,6 +451,7 @@ func TestControlParamsMarshalJSON(t *testing.T) {
 }
 
 func TestControlParamsUnmarshalJSON(t *testing.T) {
+	t.Parallel()
 	var p ControlParams
 	if err := json.Unmarshal([]byte(`{"a":1}`), &p); err != nil {
 		t.Fatal(err)
@@ -449,6 +474,7 @@ func TestControlParamsUnmarshalJSON(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestControlDefinitionPrepare(t *testing.T) {
+	t.Parallel()
 	ctl := ControlDefinition{
 		Params: NewParams(map[string]any{"max_unsafe_duration": "24h"}),
 	}
@@ -472,6 +498,7 @@ func TestControlDefinitionPrepare(t *testing.T) {
 }
 
 func TestControlDefinitionPrepareInvalidDuration(t *testing.T) {
+	t.Parallel()
 	ctl := ControlDefinition{
 		Params: NewParams(map[string]any{"max_unsafe_duration": "bogus"}),
 	}
@@ -486,6 +513,7 @@ func TestControlDefinitionPrepareInvalidDuration(t *testing.T) {
 }
 
 func TestControlDefinitionEffectiveMaxUnsafeDuration(t *testing.T) {
+	t.Parallel()
 	fallback := 48 * time.Hour
 
 	// No per-control override: returns fallback
@@ -504,6 +532,7 @@ func TestControlDefinitionEffectiveMaxUnsafeDuration(t *testing.T) {
 }
 
 func TestControlDefinitionIsEvaluatable(t *testing.T) {
+	t.Parallel()
 	evaluatable := []ControlType{TypeUnsafeState, TypeUnsafeDuration, TypeUnsafeRecurrence, TypePrefixExposure}
 	for _, ct := range evaluatable {
 		ctl := ControlDefinition{Type: ct}
@@ -522,6 +551,7 @@ func TestControlDefinitionIsEvaluatable(t *testing.T) {
 }
 
 func TestControlDefinitionHasCompliance(t *testing.T) {
+	t.Parallel()
 	ctl := ControlDefinition{
 		Compliance: ComplianceMapping{"hipaa": "164.312(a)(1)", "nist": "SC-1"},
 	}
@@ -534,6 +564,7 @@ func TestControlDefinitionHasCompliance(t *testing.T) {
 }
 
 func TestControlDefinitionMetadata(t *testing.T) {
+	t.Parallel()
 	ctl := ControlDefinition{
 		ID:          kernel.ControlID("CTL.TEST.001"),
 		Name:        "test-ctrl",
@@ -548,6 +579,7 @@ func TestControlDefinitionMetadata(t *testing.T) {
 }
 
 func TestControlDefinitionsSearchByID(t *testing.T) {
+	t.Parallel()
 	defs := ControlDefinitions{
 		{ID: kernel.ControlID("CTL.A.001")},
 		{ID: kernel.ControlID("CTL.B.002")},
@@ -565,6 +597,7 @@ func TestControlDefinitionsSearchByID(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestOperand(t *testing.T) {
+	t.Parallel()
 	o := Bool(true)
 	if o.Raw() != true {
 		t.Fatal("Bool operand")
@@ -582,6 +615,7 @@ func TestOperand(t *testing.T) {
 }
 
 func TestOperandMarshalJSON(t *testing.T) {
+	t.Parallel()
 	o := Bool(true)
 	b, err := o.MarshalJSON()
 	if err != nil {
@@ -605,6 +639,7 @@ func TestOperandMarshalJSON(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestComplianceMapping(t *testing.T) {
+	t.Parallel()
 	var nilMap ComplianceMapping
 	if nilMap.Get("anything") != "" {
 		t.Fatal("nil map Get should return empty string")
@@ -630,6 +665,7 @@ func TestComplianceMapping(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExposureIsPublic(t *testing.T) {
+	t.Parallel()
 	var nilExp *Exposure
 	if nilExp.IsPublic() {
 		t.Fatal("nil exposure should not be public")
@@ -650,6 +686,7 @@ func TestExposureIsPublic(t *testing.T) {
 }
 
 func TestExposureIsValid(t *testing.T) {
+	t.Parallel()
 	if (&Exposure{}).IsValid() {
 		t.Fatal("empty exposure should not be valid")
 	}
@@ -673,6 +710,7 @@ func TestExposureIsValid(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestCatalog(t *testing.T) {
+	t.Parallel()
 	ctls := []ControlDefinition{
 		{ID: kernel.ControlID("CTL.Z.001")},
 		{ID: kernel.ControlID("CTL.A.001")},
@@ -691,6 +729,7 @@ func TestCatalog(t *testing.T) {
 }
 
 func TestCatalogNil(t *testing.T) {
+	t.Parallel()
 	var cat *Catalog
 	if cat.List() != nil {
 		t.Fatal("nil List should return nil")
@@ -705,6 +744,7 @@ func TestCatalogNil(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestRemediationSpecActionable(t *testing.T) {
+	t.Parallel()
 	var nilSpec *RemediationSpec
 	if nilSpec.HasAction() {
 		t.Fatal("nil spec should not be actionable")
@@ -722,6 +762,7 @@ func TestRemediationSpecActionable(t *testing.T) {
 }
 
 func TestNewRemediationSpec(t *testing.T) {
+	t.Parallel()
 	s := NewRemediationSpec("  desc  ", "  action  ", "  example  ")
 	if s.Description != "desc" {
 		t.Fatalf("Description = %q", s.Description)
@@ -739,6 +780,7 @@ func TestNewRemediationSpec(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestRecurrencePolicyEnabled(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		limit, window int
 		want          bool
@@ -757,6 +799,7 @@ func TestRecurrencePolicyEnabled(t *testing.T) {
 }
 
 func TestRecurrencePolicyWindowDuration(t *testing.T) {
+	t.Parallel()
 	p := RecurrencePolicy{Threshold: 3, WindowDays: 7}
 	if got := p.WindowDuration(); got != 7*24*time.Hour {
 		t.Fatalf("WindowDuration = %v", got)
@@ -764,6 +807,7 @@ func TestRecurrencePolicyWindowDuration(t *testing.T) {
 }
 
 func TestRecurrencePolicyWindow(t *testing.T) {
+	t.Parallel()
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 
 	// Not enabled
@@ -786,6 +830,7 @@ func TestRecurrencePolicyWindow(t *testing.T) {
 }
 
 func TestParseRecurrencePolicy(t *testing.T) {
+	t.Parallel()
 	p := NewParams(map[string]any{
 		"recurrence_threshold": 3,
 		"window_days":          7,
@@ -801,6 +846,7 @@ func TestParseRecurrencePolicy(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestPrefixSetEmpty(t *testing.T) {
+	t.Parallel()
 	ps := NewPrefixSet()
 	if !ps.Empty() {
 		t.Fatal("should be empty")
@@ -813,6 +859,7 @@ func TestPrefixSetEmpty(t *testing.T) {
 }
 
 func TestPrefixSetNormalization(t *testing.T) {
+	t.Parallel()
 	ps := NewPrefixSet("data", "data/sub", "logs")
 	prefixes := ps.Prefixes()
 
@@ -826,6 +873,7 @@ func TestPrefixSetNormalization(t *testing.T) {
 }
 
 func TestPrefixSetOverlap(t *testing.T) {
+	t.Parallel()
 	allowed := NewPrefixSet("public/images")
 	protected := NewPrefixSet("public/images/secret")
 
@@ -847,6 +895,7 @@ func TestPrefixSetOverlap(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestMisconfigurationDisplayProperty(t *testing.T) {
+	t.Parallel()
 	m := Misconfiguration{Property: predicate.NewFieldPath("properties.storage.public_read")}
 	if got := m.DisplayProperty(); got != "storage.public_read" {
 		t.Fatalf("DisplayProperty = %q", got)
@@ -859,6 +908,7 @@ func TestMisconfigurationDisplayProperty(t *testing.T) {
 }
 
 func TestMisconfigurationIsMissing(t *testing.T) {
+	t.Parallel()
 	m := Misconfiguration{Operator: predicate.OpMissing}
 	if !m.IsMissing() {
 		t.Fatal("OpMissing should be missing")
@@ -876,6 +926,7 @@ func TestMisconfigurationIsMissing(t *testing.T) {
 }
 
 func TestMisconfigurationString(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name string
 		m    Misconfiguration
@@ -928,6 +979,7 @@ func TestMisconfigurationString(t *testing.T) {
 }
 
 func TestClassifyProperty(t *testing.T) {
+	t.Parallel()
 	if classifyProperty("some_via_identity_field") != CategoryIdentity {
 		t.Fatal("identity suffix")
 	}
@@ -944,6 +996,7 @@ func TestClassifyProperty(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExceptionRuleValidate(t *testing.T) {
+	t.Parallel()
 	r := ExceptionRule{}
 	if r.Validate() == nil {
 		t.Fatal("empty rule should fail validation")
@@ -961,6 +1014,7 @@ func TestExceptionRuleValidate(t *testing.T) {
 }
 
 func TestExpiryDate(t *testing.T) {
+	t.Parallel()
 	d, err := ParseExpiryDate("")
 	if err != nil || !d.IsZero() {
 		t.Fatal("empty string should return zero")
@@ -990,6 +1044,7 @@ func TestExpiryDate(t *testing.T) {
 }
 
 func TestExpiryDateIsExpired(t *testing.T) {
+	t.Parallel()
 	d, _ := ParseExpiryDate("2026-01-15")
 	now := time.Date(2026, 1, 15, 23, 59, 59, 0, time.UTC)
 	if d.IsExpired(now) {
@@ -1009,6 +1064,7 @@ func TestExpiryDateIsExpired(t *testing.T) {
 }
 
 func TestExceptionConfigShouldExcept(t *testing.T) {
+	t.Parallel()
 	rules := []ExceptionRule{
 		{ControlID: "CTL.S3.PUBLIC.001", AssetID: "bucket-a", Reason: "known safe"},
 		{ControlID: "CTL.S3.PUBLIC.001", AssetID: "bucket-*", Reason: "glob match"},
@@ -1049,6 +1105,7 @@ func TestExceptionConfigShouldExcept(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExemptionConfigShouldExempt(t *testing.T) {
+	t.Parallel()
 	cfg := NewExemptionConfig("v1", []ExemptionRule{
 		{Pattern: "bucket-static", Reason: "static site"},
 		{Pattern: "bucket-*-temp", Reason: "temporary"},
@@ -1084,6 +1141,7 @@ func TestExemptionConfigShouldExempt(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestGlobMatch(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		pattern, s string
 		want       bool
@@ -1106,6 +1164,7 @@ func TestGlobMatch(t *testing.T) {
 }
 
 func TestMatchPattern(t *testing.T) {
+	t.Parallel()
 	if !matchPattern("exact", "exact") {
 		t.Fatal("exact match failed")
 	}
@@ -1122,6 +1181,7 @@ func TestMatchPattern(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestResolvePropertyValue(t *testing.T) {
+	t.Parallel()
 	props := map[string]any{
 		"storage": map[string]any{
 			"encryption": true,
@@ -1160,6 +1220,7 @@ func TestResolvePropertyValue(t *testing.T) {
 }
 
 func TestGetNestedValue(t *testing.T) {
+	t.Parallel()
 	data := map[string]any{
 		"level1": map[string]any{
 			"level2": "value",
@@ -1212,6 +1273,7 @@ func TestGetNestedValue(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestPredicateWalk(t *testing.T) {
+	t.Parallel()
 	pred := UnsafePredicate{
 		Any: []PredicateRule{
 			{Field: predicate.NewFieldPath("field1")},
@@ -1240,6 +1302,7 @@ func TestPredicateWalk(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestMissingParamReferences(t *testing.T) {
+	t.Parallel()
 	pred := UnsafePredicate{
 		Any: []PredicateRule{
 			{ValueFromParam: predicate.ParamRef("defined_param")},
@@ -1265,6 +1328,7 @@ func TestMissingParamReferences(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestNewAssetEvalContext(t *testing.T) {
+	t.Parallel()
 	a := asset.Asset{
 		ID:         asset.ID("bucket-1"),
 		Properties: map[string]any{"k": "v"},

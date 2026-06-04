@@ -18,6 +18,7 @@ var policyEvidence = []string{"bucket.policy.statements[0].effect", "bucket.poli
 var aclEvidence = []string{"bucket.acl.grants[0].grantee", "bucket.acl.grants[0].permission", "bucket.acl.grants[0].scope"}
 
 func TestExposureControlIDs_Complete(t *testing.T) {
+	t.Parallel()
 	all := exposureIDs.all()
 	// There are exactly 11 exposure control IDs. If you add a field to
 	// exposureControlSet, add it to all() and update this count.
@@ -37,6 +38,7 @@ func TestExposureControlIDs_Complete(t *testing.T) {
 }
 
 func TestClassifyExposure_PublicRead(t *testing.T) {
+	t.Parallel()
 	resources := []NormalizedResourceInput{{
 		Name:          "test-bucket",
 		Exists:        true,
@@ -62,6 +64,7 @@ func TestClassifyExposure_PublicRead(t *testing.T) {
 }
 
 func TestClassifyExposure_ResourcePublicRead(t *testing.T) {
+	t.Parallel()
 	resources := []NormalizedResourceInput{{
 		Name:          "acl-bucket",
 		Exists:        true,
@@ -80,6 +83,7 @@ func TestClassifyExposure_ResourcePublicRead(t *testing.T) {
 }
 
 func TestClassifyExposure_Takeover(t *testing.T) {
+	t.Parallel()
 	resources := []NormalizedResourceInput{{
 		Name:              "missing-ref",
 		Exists:            false,
@@ -100,6 +104,7 @@ func TestClassifyExposure_Takeover(t *testing.T) {
 }
 
 func TestClassifyExposure_List(t *testing.T) {
+	t.Parallel()
 	resources := []NormalizedResourceInput{{
 		Name:          "list-bucket",
 		Exists:        true,
@@ -121,6 +126,7 @@ func TestClassifyExposure_List(t *testing.T) {
 }
 
 func TestClassifyExposure_Write(t *testing.T) {
+	t.Parallel()
 	resources := []NormalizedResourceInput{{
 		Name:          "write-bucket",
 		Exists:        true,
@@ -142,6 +148,7 @@ func TestClassifyExposure_Write(t *testing.T) {
 }
 
 func TestClassifyExposure_FullWrite(t *testing.T) {
+	t.Parallel()
 	resources := []NormalizedResourceInput{{
 		Name:              "full-write-bucket",
 		Exists:            true,
@@ -165,6 +172,7 @@ func TestClassifyExposure_FullWrite(t *testing.T) {
 }
 
 func TestClassifyExposure_Delete(t *testing.T) {
+	t.Parallel()
 	resources := []NormalizedResourceInput{{
 		Name:          "delete-bucket",
 		Exists:        true,
@@ -186,6 +194,7 @@ func TestClassifyExposure_Delete(t *testing.T) {
 }
 
 func TestClassifyExposure_MetadataRead(t *testing.T) {
+	t.Parallel()
 	resources := []NormalizedResourceInput{{
 		Name:          "admin-bucket",
 		Exists:        true,
@@ -207,6 +216,7 @@ func TestClassifyExposure_MetadataRead(t *testing.T) {
 }
 
 func TestClassifyExposure_MetadataWrite(t *testing.T) {
+	t.Parallel()
 	resources := []NormalizedResourceInput{{
 		Name:          "admin-write-bucket",
 		Exists:        true,
@@ -228,6 +238,7 @@ func TestClassifyExposure_MetadataWrite(t *testing.T) {
 }
 
 func TestClassifyExposure_WebsitePublic(t *testing.T) {
+	t.Parallel()
 	resources := []NormalizedResourceInput{{
 		Name:           "website-bucket",
 		Exists:         true,
@@ -247,6 +258,7 @@ func TestClassifyExposure_WebsitePublic(t *testing.T) {
 }
 
 func TestClassifyExposure_AuthenticatedOnly(t *testing.T) {
+	t.Parallel()
 	resources := []NormalizedResourceInput{{
 		Name:                "auth-bucket",
 		Exists:              true,
@@ -269,6 +281,7 @@ func TestClassifyExposure_AuthenticatedOnly(t *testing.T) {
 }
 
 func TestClassifyExposure_SortsByResourceThenID(t *testing.T) {
+	t.Parallel()
 	resources := []NormalizedResourceInput{
 		{Name: "z-bucket", Exists: true, IdentityPerms: PermRead,
 			Evidence: newTracker(map[EvidenceCategory][]string{EvIdentityRead: policyEvidence})},
@@ -287,6 +300,7 @@ func TestClassifyExposure_SortsByResourceThenID(t *testing.T) {
 }
 
 func TestClassifyExposure_NoFindings(t *testing.T) {
+	t.Parallel()
 	resources := []NormalizedResourceInput{{
 		Name:     "private-bucket",
 		Exists:   true,
@@ -301,6 +315,7 @@ func TestClassifyExposure_NoFindings(t *testing.T) {
 }
 
 func TestSelectReadExposure_NilWhenNotReadable(t *testing.T) {
+	t.Parallel()
 	result := SelectReadExposure(ReadExposureInput{
 		ResourceID:           "test",
 		IsExternallyReadable: false,
@@ -311,6 +326,7 @@ func TestSelectReadExposure_NilWhenNotReadable(t *testing.T) {
 }
 
 func TestSelectReadExposure_NilWhenWriteAbsorbs(t *testing.T) {
+	t.Parallel()
 	result := SelectReadExposure(ReadExposureInput{
 		ResourceID:           "test",
 		IsExternallyReadable: true,
@@ -322,6 +338,7 @@ func TestSelectReadExposure_NilWhenWriteAbsorbs(t *testing.T) {
 }
 
 func TestSelectWriteExposure_NilWhenNotWritable(t *testing.T) {
+	t.Parallel()
 	result := SelectWriteExposure(WriteExposureInput{
 		ResourceID:      "test",
 		IsPubliclyWrite: false,
@@ -332,6 +349,7 @@ func TestSelectWriteExposure_NilWhenNotWritable(t *testing.T) {
 }
 
 func TestSelectWriteExposure_ResourceWrite(t *testing.T) {
+	t.Parallel()
 	result := SelectWriteExposure(WriteExposureInput{
 		ResourceID:       "test",
 		IsPubliclyWrite:  true,
@@ -349,6 +367,7 @@ func TestSelectWriteExposure_ResourceWrite(t *testing.T) {
 }
 
 func TestBuildEffectiveActions(t *testing.T) {
+	t.Parallel()
 	actions := buildEffectiveActions([]string{ActionWrite}, true, true)
 	if len(actions) != 3 {
 		t.Fatalf("expected 3 actions, got %d: %v", len(actions), actions)
@@ -360,6 +379,7 @@ func TestBuildEffectiveActions(t *testing.T) {
 }
 
 func TestCapabilitySetRoundTrip(t *testing.T) {
+	t.Parallel()
 	mask := PermRead | PermWrite | PermMetadataRead | PermDelete
 	cs := capabilitySetFromMask(mask)
 
@@ -375,6 +395,7 @@ func TestCapabilitySetRoundTrip(t *testing.T) {
 }
 
 func TestEvidenceTracker_RecordAndGet(t *testing.T) {
+	t.Parallel()
 	tracker := NewEvidenceTracker()
 	path := []string{"a", "b"}
 	tracker.Record(EvIdentityRead, path)
@@ -391,6 +412,7 @@ func TestEvidenceTracker_RecordAndGet(t *testing.T) {
 }
 
 func TestEvidenceTracker_RecordIgnoresEmpty(t *testing.T) {
+	t.Parallel()
 	tracker := NewEvidenceTracker()
 	tracker.Record(EvIdentityRead, nil)
 	tracker.Record(EvIdentityRead, []string{})
@@ -403,6 +425,7 @@ func TestEvidenceTracker_RecordIgnoresEmpty(t *testing.T) {
 // --- Model tests ---
 
 func TestGovernanceOverrides_IsHardened(t *testing.T) {
+	t.Parallel()
 	hardened := GovernanceOverrides{
 		BlockResourceBoundPublicAccess: true,
 		BlockIdentityBoundPublicAccess: true,
@@ -420,6 +443,7 @@ func TestGovernanceOverrides_IsHardened(t *testing.T) {
 // --- AccessSummary tests ---
 
 func TestFacts_CheckExposure_IdentityGrant(t *testing.T) {
+	t.Parallel()
 	facts := AccessSummary{
 		HasIdentityEvidence: true,
 		IdentityGrants:      Grants{{Scope: kernel.WildcardPrefix, SourceID: "stmt-1"}},
@@ -434,6 +458,7 @@ func TestFacts_CheckExposure_IdentityGrant(t *testing.T) {
 }
 
 func TestFacts_CheckExposure_Resource(t *testing.T) {
+	t.Parallel()
 	facts := AccessSummary{
 		HasResourceEvidence: true,
 		ResourceReadAll:     true,
@@ -448,6 +473,7 @@ func TestFacts_CheckExposure_Resource(t *testing.T) {
 }
 
 func TestFacts_CheckExposure_MissingEvidence(t *testing.T) {
+	t.Parallel()
 	result := AccessSummary{}.CheckExposure(kernel.ObjectPrefix("any-prefix"))
 	if result.Exposed {
 		t.Error("missing evidence should not be exposed (now inconclusive)")
@@ -461,6 +487,7 @@ func TestFacts_CheckExposure_MissingEvidence(t *testing.T) {
 }
 
 func TestFacts_CheckExposure_Safe(t *testing.T) {
+	t.Parallel()
 	facts := AccessSummary{HasIdentityEvidence: true}
 	result := facts.CheckExposure(kernel.ObjectPrefix("no-matching-prefix"))
 	if result.Exposed {
@@ -469,6 +496,7 @@ func TestFacts_CheckExposure_Safe(t *testing.T) {
 }
 
 func TestFacts_CheckExposure_IdentityBlocked(t *testing.T) {
+	t.Parallel()
 	facts := AccessSummary{
 		HasIdentityEvidence: true,
 		IdentityReadBlocked: true,
@@ -481,6 +509,7 @@ func TestFacts_CheckExposure_IdentityBlocked(t *testing.T) {
 }
 
 func TestFacts_CheckExposure_ResourceBlocked(t *testing.T) {
+	t.Parallel()
 	facts := AccessSummary{
 		HasResourceEvidence: true,
 		ResourceReadAll:     true,
@@ -493,6 +522,7 @@ func TestFacts_CheckExposure_ResourceBlocked(t *testing.T) {
 }
 
 func TestFacts_LacksEvidence(t *testing.T) {
+	t.Parallel()
 	if !(AccessSummary{}).LacksEvidence() {
 		t.Error("expected lacks evidence")
 	}
@@ -502,6 +532,7 @@ func TestFacts_LacksEvidence(t *testing.T) {
 }
 
 func TestSource_String(t *testing.T) {
+	t.Parallel()
 	s := NewSource(SourceIdentity, "stmt-1")
 	if s.String() != "identity:stmt-1" {
 		t.Errorf("expected identity:stmt-1, got %s", s.String())
@@ -513,6 +544,7 @@ func TestSource_String(t *testing.T) {
 }
 
 func TestResult_String(t *testing.T) {
+	t.Parallel()
 	r := ComplianceReport{Exposed: true, Source: NewSource(SourceResource, "")}
 	if r.String() != "resource" {
 		t.Errorf("expected resource, got %s", r.String())
@@ -520,6 +552,7 @@ func TestResult_String(t *testing.T) {
 }
 
 func TestGrant_Covers(t *testing.T) {
+	t.Parallel()
 	g := Grant{Scope: kernel.WildcardPrefix, SourceID: "s1"}
 	if !g.Covers("anything") {
 		t.Error("wildcard grant should cover anything")
@@ -527,6 +560,7 @@ func TestGrant_Covers(t *testing.T) {
 }
 
 func TestGrant_Evidence(t *testing.T) {
+	t.Parallel()
 	g := Grant{Scope: kernel.WildcardPrefix, SourceID: "s1"}
 	ev := g.Evidence()
 	if ev.Kind != SourceIdentity || ev.ID != "s1" {
@@ -535,6 +569,7 @@ func TestGrant_Evidence(t *testing.T) {
 }
 
 func TestGrants_FindMatch(t *testing.T) {
+	t.Parallel()
 	gs := Grants{
 		{Scope: kernel.ObjectPrefix("invoices"), SourceID: "s1"},
 		{Scope: kernel.WildcardPrefix, SourceID: "s2"},
@@ -550,6 +585,7 @@ func TestGrants_FindMatch(t *testing.T) {
 }
 
 func TestGrants_FindMatch_NoMatch(t *testing.T) {
+	t.Parallel()
 	gs := Grants{{Scope: kernel.ObjectPrefix("invoices"), SourceID: "s1"}}
 	if gs.FindMatch("reports") != nil {
 		t.Error("expected no match")
@@ -559,6 +595,7 @@ func TestGrants_FindMatch_NoMatch(t *testing.T) {
 // --- Mapper tests ---
 
 func TestFactsFromStorage_Grants(t *testing.T) {
+	t.Parallel()
 	props := map[string]any{
 		"storage": map[string]any{
 			"prefix_exposure": map[string]any{
@@ -578,6 +615,7 @@ func TestFactsFromStorage_Grants(t *testing.T) {
 }
 
 func TestFactsFromStorage_Empty(t *testing.T) {
+	t.Parallel()
 	facts := SummarizeAccess(map[string]any{})
 	if facts.IdentityGrants != nil {
 		t.Error("expected nil grants for missing storage")
@@ -585,6 +623,7 @@ func TestFactsFromStorage_Empty(t *testing.T) {
 }
 
 func TestFactsFromStorage_OrphanedScope(t *testing.T) {
+	t.Parallel()
 	// Scope exists in array but not in source map — should be skipped.
 	props := map[string]any{
 		"storage": map[string]any{
@@ -605,6 +644,7 @@ func TestFactsFromStorage_OrphanedScope(t *testing.T) {
 }
 
 func TestFactsFromStorage_AllScopesOrphaned(t *testing.T) {
+	t.Parallel()
 	// All scopes missing from source map — should return nil grants.
 	props := map[string]any{
 		"storage": map[string]any{
@@ -624,6 +664,7 @@ func TestFactsFromStorage_AllScopesOrphaned(t *testing.T) {
 // --- Visibility resolver tests ---
 
 func TestBuildResourceExposure_PublicRead(t *testing.T) {
+	t.Parallel()
 	result := BuildResourceExposure(
 		Visibility{Public: Capabilities{Read: true}},
 		Visibility{},
@@ -638,6 +679,7 @@ func TestBuildResourceExposure_PublicRead(t *testing.T) {
 }
 
 func TestBuildResourceExposure_Blocked(t *testing.T) {
+	t.Parallel()
 	result := BuildResourceExposure(
 		Visibility{Public: Capabilities{Read: true}},
 		Visibility{},
@@ -652,6 +694,7 @@ func TestBuildResourceExposure_Blocked(t *testing.T) {
 }
 
 func TestBuildResourceExposure_AuthenticatedAccess(t *testing.T) {
+	t.Parallel()
 	result := BuildResourceExposure(
 		Visibility{Authenticated: Capabilities{Read: true, Write: true, Admin: true}},
 		Visibility{},
@@ -669,6 +712,7 @@ func TestBuildResourceExposure_AuthenticatedAccess(t *testing.T) {
 }
 
 func TestBuildResourceExposure_ResourceFullAccess(t *testing.T) {
+	t.Parallel()
 	result := BuildResourceExposure(
 		Visibility{},
 		Visibility{

@@ -16,6 +16,7 @@ func mustAssess(t *testing.T, policyJSON string) Assessment {
 }
 
 func TestAnalyzePolicyPublicReadWrite(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -41,6 +42,7 @@ func TestAnalyzePolicyPublicReadWrite(t *testing.T) {
 }
 
 func TestAnalyzePolicyAWSPrincipal(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -59,6 +61,7 @@ func TestAnalyzePolicyAWSPrincipal(t *testing.T) {
 }
 
 func TestAnalyzePolicyAWSPrincipalArray(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -80,6 +83,7 @@ func TestAnalyzePolicyAWSPrincipalArray(t *testing.T) {
 }
 
 func TestAnalyzePolicyDeny(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -101,6 +105,7 @@ func TestAnalyzePolicyDeny(t *testing.T) {
 }
 
 func TestAnalyzePolicyPrivate(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -122,6 +127,7 @@ func TestAnalyzePolicyPrivate(t *testing.T) {
 }
 
 func TestAnalyzePolicyEmpty(t *testing.T) {
+	t.Parallel()
 	result := mustAssess(t, "")
 
 	if result.AllowsPublicRead {
@@ -133,6 +139,7 @@ func TestAnalyzePolicyEmpty(t *testing.T) {
 }
 
 func TestAnalyzePolicyInvalidJSON(t *testing.T) {
+	t.Parallel()
 	result := mustAssess(t, "not valid json")
 
 	if result.AllowsPublicRead {
@@ -141,6 +148,7 @@ func TestAnalyzePolicyInvalidJSON(t *testing.T) {
 }
 
 func TestAnalyzePolicyPublicWrite(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -163,6 +171,7 @@ func TestAnalyzePolicyPublicWrite(t *testing.T) {
 }
 
 func TestAnalyzePolicyPublicDelete(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -185,6 +194,7 @@ func TestAnalyzePolicyPublicDelete(t *testing.T) {
 }
 
 func TestAnalyzePolicyS3WildcardSetsWriteAndDelete(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -212,6 +222,7 @@ func TestAnalyzePolicyS3WildcardSetsWriteAndDelete(t *testing.T) {
 }
 
 func TestAnalyzePolicyWildcardActions(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -230,6 +241,7 @@ func TestAnalyzePolicyWildcardActions(t *testing.T) {
 }
 
 func TestAnalyzePolicyWildcardActionSpecificResource(t *testing.T) {
+	t.Parallel()
 	// Wildcard action but specific resource — not a wildcard policy
 	policy := `{
 		"Version": "2012-10-17",
@@ -249,6 +261,7 @@ func TestAnalyzePolicyWildcardActionSpecificResource(t *testing.T) {
 }
 
 func TestAnalyzePolicyPutBucketPolicy(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -269,6 +282,7 @@ func TestAnalyzePolicyPutBucketPolicy(t *testing.T) {
 // Transport encryption tests
 
 func TestAnalyzeTransportEncryptionEnforced(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -292,6 +306,7 @@ func TestAnalyzeTransportEncryptionEnforced(t *testing.T) {
 }
 
 func TestAnalyzeTransportEncryptionMissingCondition(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -310,6 +325,7 @@ func TestAnalyzeTransportEncryptionMissingCondition(t *testing.T) {
 }
 
 func TestAnalyzeTransportEncryptionAllowNotDeny(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -333,6 +349,7 @@ func TestAnalyzeTransportEncryptionAllowNotDeny(t *testing.T) {
 }
 
 func TestAnalyzeTransportEncryptionBooleanFalseCondition(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -356,6 +373,7 @@ func TestAnalyzeTransportEncryptionBooleanFalseCondition(t *testing.T) {
 }
 
 func TestAnalyzeTransportEncryptionMalformedSecureTransportValue(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -379,6 +397,7 @@ func TestAnalyzeTransportEncryptionMalformedSecureTransportValue(t *testing.T) {
 }
 
 func TestAnalyzePolicyCondition_SourceVPCE_StringLike_IsRestrictive(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -408,6 +427,7 @@ func TestAnalyzePolicyCondition_SourceVPCE_StringLike_IsRestrictive(t *testing.T
 }
 
 func TestAnalyzePolicyCondition_SourceVPC_ArnEquals_IsRestrictive(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -434,6 +454,7 @@ func TestAnalyzePolicyCondition_SourceVPC_ArnEquals_IsRestrictive(t *testing.T) 
 }
 
 func TestAnalyzePolicyCondition_PrincipalOrgID_StringEquals_IsRestrictive(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -460,6 +481,7 @@ func TestAnalyzePolicyCondition_PrincipalOrgID_StringEquals_IsRestrictive(t *tes
 }
 
 func TestAnalyzeTransportEncryptionEmpty(t *testing.T) {
+	t.Parallel()
 	result := mustAssess(t, "")
 
 	if result.EnforcesHTTPS {
@@ -470,6 +492,7 @@ func TestAnalyzeTransportEncryptionEmpty(t *testing.T) {
 // Cross-account access tests
 
 func TestCrossAccountAccess(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -500,6 +523,7 @@ func TestCrossAccountAccess(t *testing.T) {
 }
 
 func TestAnalyzeCrossAccountAccessMultiple(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -524,6 +548,7 @@ func TestAnalyzeCrossAccountAccessMultiple(t *testing.T) {
 }
 
 func TestAnalyzeCrossAccountAccessPublicPrincipal(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -542,6 +567,7 @@ func TestAnalyzeCrossAccountAccessPublicPrincipal(t *testing.T) {
 }
 
 func TestAnalyzeCrossAccountAccessDenyIgnored(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -560,6 +586,7 @@ func TestAnalyzeCrossAccountAccessDenyIgnored(t *testing.T) {
 }
 
 func TestAnalyzeCrossAccountAccessEmpty(t *testing.T) {
+	t.Parallel()
 	result := mustAssess(t, "")
 
 	if result.HasExternalAccess {
@@ -570,6 +597,7 @@ func TestAnalyzeCrossAccountAccessEmpty(t *testing.T) {
 // Cross-account write access tests
 
 func TestCrossAccountReadOnly(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -591,6 +619,7 @@ func TestCrossAccountReadOnly(t *testing.T) {
 }
 
 func TestCrossAccountWriteAccess(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -612,6 +641,7 @@ func TestCrossAccountWriteAccess(t *testing.T) {
 }
 
 func TestCrossAccountWildcard(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -630,6 +660,7 @@ func TestCrossAccountWildcard(t *testing.T) {
 }
 
 func TestCrossAccountNoExternal(t *testing.T) {
+	t.Parallel()
 	// Public principal — no external account ARNs
 	policy := `{
 		"Version": "2012-10-17",
@@ -652,6 +683,7 @@ func TestCrossAccountNoExternal(t *testing.T) {
 }
 
 func TestCrossAccountPutWildcard(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -675,6 +707,7 @@ func TestCrossAccountPutWildcard(t *testing.T) {
 // Condition analysis tests
 
 func TestAnalyzeConditionIPAddress(t *testing.T) {
+	t.Parallel()
 	condition := NormalizedCondition{
 		"IpAddress": {
 			"aws:SourceIp": []string{"10.0.0.0/8"},
@@ -691,6 +724,7 @@ func TestAnalyzeConditionIPAddress(t *testing.T) {
 }
 
 func TestAnalyzeConditionNotIPAddress(t *testing.T) {
+	t.Parallel()
 	condition := NormalizedCondition{
 		"NotIpAddress": {
 			"aws:SourceIp": []string{"0.0.0.0/0"},
@@ -704,6 +738,7 @@ func TestAnalyzeConditionNotIPAddress(t *testing.T) {
 }
 
 func TestAnalyzeConditionVPCEndpoint(t *testing.T) {
+	t.Parallel()
 	condition := NormalizedCondition{
 		"StringEquals": {
 			"aws:sourceVpce": []string{"vpce-1a2b3c4d"},
@@ -720,6 +755,7 @@ func TestAnalyzeConditionVPCEndpoint(t *testing.T) {
 }
 
 func TestAnalyzeConditionSourceVPC(t *testing.T) {
+	t.Parallel()
 	condition := NormalizedCondition{
 		"StringEquals": {
 			"aws:SourceVpc": []string{"vpc-abc123"},
@@ -733,6 +769,7 @@ func TestAnalyzeConditionSourceVPC(t *testing.T) {
 }
 
 func TestAnalyzeConditionPrincipalOrgID(t *testing.T) {
+	t.Parallel()
 	condition := NormalizedCondition{
 		"StringEquals": {
 			"aws:PrincipalOrgID": []string{"o-abc123"},
@@ -749,6 +786,7 @@ func TestAnalyzeConditionPrincipalOrgID(t *testing.T) {
 }
 
 func TestAnalyzeConditionPrincipalOrgIDStringEqualsIgnoreCase(t *testing.T) {
+	t.Parallel()
 	condition := NormalizedCondition{
 		"StringEqualsIgnoreCase": {
 			"aws:PrincipalOrgID": []string{"o-abc123"},
@@ -762,6 +800,7 @@ func TestAnalyzeConditionPrincipalOrgIDStringEqualsIgnoreCase(t *testing.T) {
 }
 
 func TestAnalyzeConditionForAnyValueSourceVPCE(t *testing.T) {
+	t.Parallel()
 	condition := NormalizedCondition{
 		"ForAnyValue:StringEquals": {
 			"aws:sourceVpce": []string{"vpce-1a2b3c4d"},
@@ -775,6 +814,7 @@ func TestAnalyzeConditionForAnyValueSourceVPCE(t *testing.T) {
 }
 
 func TestAnalyzeConditionForAnyValueStringEqualsIfExists(t *testing.T) {
+	t.Parallel()
 	condition := NormalizedCondition{
 		"ForAnyValue:StringEqualsIfExists": {
 			"aws:sourceVpce": []string{"vpce-1a2b3c4d"},
@@ -788,6 +828,7 @@ func TestAnalyzeConditionForAnyValueStringEqualsIfExists(t *testing.T) {
 }
 
 func TestAnalyzeConditionNestedSetOperatorsIfExists(t *testing.T) {
+	t.Parallel()
 	condition := NormalizedCondition{
 		"ForAnyValue:ForAllValues:ArnLikeIfExists": {
 			"aws:SourceVpc": []string{"vpc-*"},
@@ -801,6 +842,7 @@ func TestAnalyzeConditionNestedSetOperatorsIfExists(t *testing.T) {
 }
 
 func TestAnalyzeConditionMultiple(t *testing.T) {
+	t.Parallel()
 	condition := NormalizedCondition{
 		"IpAddress": {
 			"aws:SourceIp": []string{"10.0.0.0/8"},
@@ -824,6 +866,7 @@ func TestAnalyzeConditionMultiple(t *testing.T) {
 }
 
 func TestAnalyzeConditionNoCondition(t *testing.T) {
+	t.Parallel()
 	result := analyzeCondition(nil)
 
 	if result.HasIPCondition || result.HasVPCCondition || result.HasOrgCondition {
@@ -832,6 +875,7 @@ func TestAnalyzeConditionNoCondition(t *testing.T) {
 }
 
 func TestAnalyzeConditionIrrelevantKeys(t *testing.T) {
+	t.Parallel()
 	condition := NormalizedCondition{
 		"Bool": {
 			"aws:SecureTransport": []string{"false"},
@@ -845,6 +889,7 @@ func TestAnalyzeConditionIrrelevantKeys(t *testing.T) {
 }
 
 func TestAnalyzeConditionEmptyMap(t *testing.T) {
+	t.Parallel()
 	result := analyzeCondition(NormalizedCondition{})
 
 	if result.HasIPCondition || result.HasVPCCondition || result.HasOrgCondition {
@@ -859,6 +904,7 @@ func TestAnalyzeConditionEmptyMap(t *testing.T) {
 // the test now drives JSON bytes through the unmarshaller and
 // asserts the same behaviour at the new boundary.
 func TestAnalyzeConditionMalformedJSON(t *testing.T) {
+	t.Parallel()
 	var c NormalizedCondition
 	if err := c.UnmarshalJSON([]byte(`"not-a-map"`)); err != nil {
 		t.Fatalf("UnmarshalJSON returned err on malformed input: %v", err)
@@ -875,6 +921,7 @@ func TestAnalyzeConditionMalformedJSON(t *testing.T) {
 // Effective network scope tests
 
 func TestEffectiveNetworkScopePublicNoCondition(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -896,6 +943,7 @@ func TestEffectiveNetworkScopePublicNoCondition(t *testing.T) {
 }
 
 func TestEffectiveNetworkScopeIPRestricted(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -925,6 +973,7 @@ func TestEffectiveNetworkScopeIPRestricted(t *testing.T) {
 }
 
 func TestEffectiveNetworkScopeVPCRestricted(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -954,6 +1003,7 @@ func TestEffectiveNetworkScopeVPCRestricted(t *testing.T) {
 }
 
 func TestEffectiveNetworkScopeOrgRestricted(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -980,6 +1030,7 @@ func TestEffectiveNetworkScopeOrgRestricted(t *testing.T) {
 }
 
 func TestEffectiveNetworkScopeSpecificARNNoScope(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -998,6 +1049,7 @@ func TestEffectiveNetworkScopeSpecificARNNoScope(t *testing.T) {
 }
 
 func TestEffectiveNetworkScopeWeakestLink(t *testing.T) {
+	t.Parallel()
 	// Two statements: one public (no condition), one VPC-restricted.
 	// Overall scope should be "public" (weakest link).
 	policy := `{
@@ -1039,6 +1091,7 @@ func TestEffectiveNetworkScopeWeakestLink(t *testing.T) {
 }
 
 func TestEffectiveNetworkScopeVPCGetObjectSuppressesPublicRead(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -1062,6 +1115,7 @@ func TestEffectiveNetworkScopeVPCGetObjectSuppressesPublicRead(t *testing.T) {
 }
 
 func TestEffectiveNetworkScopeIPListBucketSuppressesPublicList(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -1087,6 +1141,7 @@ func TestEffectiveNetworkScopeIPListBucketSuppressesPublicList(t *testing.T) {
 // Authenticated principal tests
 
 func TestAnalyzePolicyAuthenticatedRead(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -1108,6 +1163,7 @@ func TestAnalyzePolicyAuthenticatedRead(t *testing.T) {
 }
 
 func TestAnalyzePolicyAuthenticatedWrite(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -1132,6 +1188,7 @@ func TestAnalyzePolicyAuthenticatedWrite(t *testing.T) {
 }
 
 func TestAnalyzePolicyAuthenticatedPrincipalArray(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -1150,6 +1207,7 @@ func TestAnalyzePolicyAuthenticatedPrincipalArray(t *testing.T) {
 }
 
 func TestAnalyzePolicySpecificAccountNotAuthenticated(t *testing.T) {
+	t.Parallel()
 	// A specific account ARN is NOT the authenticated-users pattern
 	policy := `{
 		"Version": "2012-10-17",
@@ -1172,6 +1230,7 @@ func TestAnalyzePolicySpecificAccountNotAuthenticated(t *testing.T) {
 }
 
 func TestEffectiveNetworkScopeSecureTransportNotNetworkCondition(t *testing.T) {
+	t.Parallel()
 	// SecureTransport is NOT a network scoping condition — should still flag as public
 	policy := `{
 		"Version": "2012-10-17",
@@ -1201,6 +1260,7 @@ func TestEffectiveNetworkScopeSecureTransportNotNetworkCondition(t *testing.T) {
 // Gap 1: Public ACL modification (PutBucketAcl) tests
 
 func TestAnalyzePolicyPublicPutBucketAcl(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -1222,6 +1282,7 @@ func TestAnalyzePolicyPublicPutBucketAcl(t *testing.T) {
 }
 
 func TestAnalyzePolicyPublicPutObjectAcl(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -1240,6 +1301,7 @@ func TestAnalyzePolicyPublicPutObjectAcl(t *testing.T) {
 }
 
 func TestAnalyzePolicyAuthenticatedPutBucketAcl(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -1263,6 +1325,7 @@ func TestAnalyzePolicyAuthenticatedPutBucketAcl(t *testing.T) {
 // Gap 2: Public ACL readability (GetBucketAcl) tests
 
 func TestAnalyzePolicyPublicGetBucketAcl(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -1284,6 +1347,7 @@ func TestAnalyzePolicyPublicGetBucketAcl(t *testing.T) {
 }
 
 func TestAnalyzePolicyPublicGetObjectAcl(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -1302,6 +1366,7 @@ func TestAnalyzePolicyPublicGetObjectAcl(t *testing.T) {
 }
 
 func TestAnalyzePolicyAuthenticatedGetBucketAcl(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -1325,6 +1390,7 @@ func TestAnalyzePolicyAuthenticatedGetBucketAcl(t *testing.T) {
 // Wildcard actions should set ACL flags
 
 func TestAnalyzePolicyWildcardSetsACLFlags(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{
@@ -1348,6 +1414,7 @@ func TestAnalyzePolicyWildcardSetsACLFlags(t *testing.T) {
 // GetObject should NOT set ACL read flag
 
 func TestAnalyzePolicyGetObjectDoesNotSetACLRead(t *testing.T) {
+	t.Parallel()
 	policy := `{
 		"Version": "2012-10-17",
 		"Statement": [{

@@ -16,6 +16,7 @@ import (
 )
 
 func TestFromEvaluation_MinimalEnvelope(t *testing.T) {
+	t.Parallel()
 	env := report.NewAssessment(report.AssessmentRequest{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
@@ -81,6 +82,7 @@ func TestFromEvaluation_MinimalEnvelope(t *testing.T) {
 }
 
 func TestFromFinding_AllFields(t *testing.T) {
+	t.Parallel()
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	f := remediation.Finding{
 		Finding: evaluation.Finding{
@@ -198,6 +200,7 @@ func TestFromFinding_AllFields(t *testing.T) {
 }
 
 func TestFromFinding_MinimalFields(t *testing.T) {
+	t.Parallel()
 	f := remediation.Finding{
 		Finding: evaluation.Finding{
 			ControlID: "CTL.TEST.001",
@@ -230,6 +233,7 @@ func TestFromFinding_MinimalFields(t *testing.T) {
 }
 
 func TestFromFindings_NilInput(t *testing.T) {
+	t.Parallel()
 	// Both nil and empty must produce a non-nil empty slice so the
 	// JSON shape stays `"findings": []` regardless of input.
 	result := fromFindings(nil)
@@ -239,6 +243,7 @@ func TestFromFindings_NilInput(t *testing.T) {
 }
 
 func TestFromFindings_EmptySlice(t *testing.T) {
+	t.Parallel()
 	result := fromFindings([]remediation.Finding{})
 	if result == nil || len(result) != 0 {
 		t.Errorf("fromFindings([]) = %v, want empty non-nil slice", result)
@@ -246,6 +251,7 @@ func TestFromFindings_EmptySlice(t *testing.T) {
 }
 
 func TestMapSlice_NilInput(t *testing.T) {
+	t.Parallel()
 	result := mapSlice[int, string](nil, func(_ int) string { return "" })
 	if result != nil {
 		t.Errorf("mapSlice(nil, ...) = %v, want nil", result)
@@ -253,6 +259,7 @@ func TestMapSlice_NilInput(t *testing.T) {
 }
 
 func TestMapSlice_EmptyInput(t *testing.T) {
+	t.Parallel()
 	result := mapSlice([]int{}, func(_ int) string { return "x" })
 	if len(result) != 0 {
 		t.Errorf("mapSlice([], ...) = %v, want empty", result)
@@ -260,6 +267,7 @@ func TestMapSlice_EmptyInput(t *testing.T) {
 }
 
 func TestMapSlice_Transform(t *testing.T) {
+	t.Parallel()
 	result := mapSlice([]int{1, 2, 3}, func(i int) int { return i * 2 })
 	if len(result) != 3 || result[0] != 2 || result[1] != 4 || result[2] != 6 {
 		t.Errorf("mapSlice([1,2,3], *2) = %v", result)
@@ -267,6 +275,7 @@ func TestMapSlice_Transform(t *testing.T) {
 }
 
 func TestFromExceptedFindings_Empty(t *testing.T) {
+	t.Parallel()
 	result := fromExceptedFindings(nil)
 	if result != nil {
 		t.Error("fromExceptedFindings(nil) should be nil")
@@ -278,6 +287,7 @@ func TestFromExceptedFindings_Empty(t *testing.T) {
 }
 
 func TestFromExceptedFindings_WithData(t *testing.T) {
+	t.Parallel()
 	input := []evaluation.ExceptedFinding{
 		{ControlID: "CTL.A", AssetID: "res-1", Reason: "known", Expires: mustParseExpiry("2027-01-01")},
 	}
@@ -291,6 +301,7 @@ func TestFromExceptedFindings_WithData(t *testing.T) {
 }
 
 func TestFromSkippedControls_Empty(t *testing.T) {
+	t.Parallel()
 	result := fromSkippedControls(nil)
 	if result != nil {
 		t.Error("fromSkippedControls(nil) should be nil")
@@ -298,6 +309,7 @@ func TestFromSkippedControls_Empty(t *testing.T) {
 }
 
 func TestFromSkippedControls_WithData(t *testing.T) {
+	t.Parallel()
 	input := []evaluation.SkippedControl{
 		{ControlID: "CTL.SKIP.001", ControlName: "Skipped", Reason: "no match"},
 	}
@@ -308,6 +320,7 @@ func TestFromSkippedControls_WithData(t *testing.T) {
 }
 
 func TestFromExemptedAssets_Empty(t *testing.T) {
+	t.Parallel()
 	result := fromExemptedAssets(nil)
 	if result != nil {
 		t.Error("fromExemptedAssets(nil) should be nil")
@@ -315,6 +328,7 @@ func TestFromExemptedAssets_Empty(t *testing.T) {
 }
 
 func TestFromExemptedAssets_WithData(t *testing.T) {
+	t.Parallel()
 	input := []asset.ExemptedAsset{
 		{ID: "res-skip", Pattern: "*-skip", Reason: "excluded"},
 	}
@@ -325,6 +339,7 @@ func TestFromExemptedAssets_WithData(t *testing.T) {
 }
 
 func TestFromRemediationGroups_Empty(t *testing.T) {
+	t.Parallel()
 	result := fromRemediationGroups(nil)
 	if result != nil {
 		t.Error("fromRemediationGroups(nil) should be nil")
@@ -332,6 +347,7 @@ func TestFromRemediationGroups_Empty(t *testing.T) {
 }
 
 func TestFromRemediationGroups_WithData(t *testing.T) {
+	t.Parallel()
 	input := []remediation.Group{
 		{
 			AssetID:   "res-1",
@@ -357,6 +373,7 @@ func TestFromRemediationGroups_WithData(t *testing.T) {
 }
 
 func TestFromAtRiskItems_Empty(t *testing.T) {
+	t.Parallel()
 	result := fromAtRiskItems(nil)
 	if result != nil {
 		t.Error("fromAtRiskItems(nil) should be nil")
@@ -364,6 +381,7 @@ func TestFromAtRiskItems_Empty(t *testing.T) {
 }
 
 func TestFromAtRiskItems_WithData(t *testing.T) {
+	t.Parallel()
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	input := findings.ThresholdItems{
 		{
@@ -396,6 +414,7 @@ func TestFromAtRiskItems_WithData(t *testing.T) {
 }
 
 func TestFromRunInfo_WithInputHashes(t *testing.T) {
+	t.Parallel()
 	ri := evaluation.RunInfo{
 		StaveVersion:      "v1",
 		Offline:           false,
@@ -421,6 +440,7 @@ func TestFromRunInfo_WithInputHashes(t *testing.T) {
 }
 
 func TestFromRunInfo_NilInputHashes(t *testing.T) {
+	t.Parallel()
 	ri := evaluation.RunInfo{StaveVersion: "v1", EvaluatedState: "deployed"}
 	dto := NewRunInfoDTO(ri)
 	if dto.InputHashes != nil {
@@ -429,6 +449,7 @@ func TestFromRunInfo_NilInputHashes(t *testing.T) {
 }
 
 func TestFromInputHashes_Nil(t *testing.T) {
+	t.Parallel()
 	result := NewInputHashesDTO(nil)
 	if result != nil {
 		t.Error("NewInputHashesDTO(nil) should be nil")
@@ -436,6 +457,7 @@ func TestFromInputHashes_Nil(t *testing.T) {
 }
 
 func TestFromExtensions_Nil(t *testing.T) {
+	t.Parallel()
 	result := NewExtensionsDTO(nil)
 	if result != nil {
 		t.Error("NewExtensionsDTO(nil) should be nil")
@@ -443,6 +465,7 @@ func TestFromExtensions_Nil(t *testing.T) {
 }
 
 func TestFromExtensions(t *testing.T) {
+	t.Parallel()
 	ext := &evaluation.Extensions{
 		SelectedSource: "packs",
 		ContextName:    "dev",
@@ -465,6 +488,7 @@ func TestFromExtensions(t *testing.T) {
 }
 
 func TestFromSummary(t *testing.T) {
+	t.Parallel()
 	s := evaluation.ComplianceSummary{TotalAssets: 5, ExposedResources: 2, Violations: 1}
 	dto := NewSummaryDTO(s)
 	if dto.TotalAssets != 5 || dto.ExposedResources != 2 || dto.Violations != 1 {
@@ -473,6 +497,7 @@ func TestFromSummary(t *testing.T) {
 }
 
 func TestFromEvidence_WithAllFields(t *testing.T) {
+	t.Parallel()
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	ev := evaluation.Evidence{
 		FirstUnsafeAt:         now.Add(-48 * time.Hour),
@@ -513,6 +538,7 @@ func TestFromEvidence_WithAllFields(t *testing.T) {
 }
 
 func TestFromRemediationAction(t *testing.T) {
+	t.Parallel()
 	a := evaluation.RemediationAction{
 		ActionType: "set",
 		Path:       predicate.NewFieldPath(".public"),
@@ -525,6 +551,7 @@ func TestFromRemediationAction(t *testing.T) {
 }
 
 func TestFromMisconfiguration(t *testing.T) {
+	t.Parallel()
 	m := policy.Misconfiguration{
 		Property:    predicate.NewFieldPath("storage.access.public_read"),
 		ActualValue: true,
@@ -541,6 +568,7 @@ func TestFromMisconfiguration(t *testing.T) {
 }
 
 func TestFromRemediationSpec(t *testing.T) {
+	t.Parallel()
 	s := policy.RemediationSpec{
 		Description: "fix it",
 		Action:      "do something",

@@ -14,6 +14,7 @@ import (
 // ---------------------------------------------------------------------------
 
 func TestNewOpenExposureWindow(t *testing.T) {
+	t.Parallel()
 	now := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	ep := NewActiveWindow(now)
 	if !ep.IsActive() {
@@ -28,6 +29,7 @@ func TestNewOpenExposureWindow(t *testing.T) {
 }
 
 func TestNewOpenExposureWindowZeroTime(t *testing.T) {
+	t.Parallel()
 	ep := NewActiveWindow(time.Time{})
 	if !ep.OpenedAt().IsZero() {
 		t.Fatal("expected zero OpenedAt for zero-time input")
@@ -35,6 +37,7 @@ func TestNewOpenExposureWindowZeroTime(t *testing.T) {
 }
 
 func TestNewClosedExposureWindow(t *testing.T) {
+	t.Parallel()
 	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	end := start.Add(2 * time.Hour)
 	ep := NewResolvedWindow(start, end)
@@ -50,6 +53,7 @@ func TestNewClosedExposureWindow(t *testing.T) {
 }
 
 func TestNewClosedExposureWindowEndBeforeStart(t *testing.T) {
+	t.Parallel()
 	start := time.Date(2026, 1, 1, 2, 0, 0, 0, time.UTC)
 	end := start.Add(-time.Hour) // before start
 	ep := NewResolvedWindow(start, end)
@@ -60,6 +64,7 @@ func TestNewClosedExposureWindowEndBeforeStart(t *testing.T) {
 }
 
 func TestExposureWindowClose(t *testing.T) {
+	t.Parallel()
 	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	ep := NewActiveWindow(start)
 	endAt := start.Add(3 * time.Hour)
@@ -80,6 +85,7 @@ func TestExposureWindowClose(t *testing.T) {
 }
 
 func TestExposureWindowEffectiveEndAt(t *testing.T) {
+	t.Parallel()
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -98,6 +104,7 @@ func TestExposureWindowEffectiveEndAt(t *testing.T) {
 }
 
 func TestExposureWindowOverlapsWindow(t *testing.T) {
+	t.Parallel()
 	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	end := start.Add(24 * time.Hour)
 	ep := NewResolvedWindow(start, end)
@@ -122,6 +129,7 @@ func TestExposureWindowOverlapsWindow(t *testing.T) {
 }
 
 func TestExposureWindowMarshalJSON(t *testing.T) {
+	t.Parallel()
 	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	ep := NewActiveWindow(start)
 
@@ -143,6 +151,7 @@ func TestExposureWindowMarshalJSON(t *testing.T) {
 }
 
 func TestExposureWindowUnmarshalJSON_Closed(t *testing.T) {
+	t.Parallel()
 	start := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	end := start.Add(2 * time.Hour)
 	ep := NewResolvedWindow(start, end)
@@ -162,6 +171,7 @@ func TestExposureWindowUnmarshalJSON_Closed(t *testing.T) {
 }
 
 func TestExposureWindowUnmarshalJSON_MissingStart(t *testing.T) {
+	t.Parallel()
 	// Missing start_at should error
 	raw := `{"start_at":"0001-01-01T00:00:00Z","end_at":"0001-01-01T00:00:00Z","open":false}`
 	var ep ExposureWindow
@@ -175,6 +185,7 @@ func TestExposureWindowUnmarshalJSON_MissingStart(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExposureHistoryRecord(t *testing.T) {
+	t.Parallel()
 	h := &ExposureHistory{}
 
 	start1 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -198,6 +209,7 @@ func TestExposureHistoryRecord(t *testing.T) {
 }
 
 func TestExposureHistoryRecurringViolationCount(t *testing.T) {
+	t.Parallel()
 	h := &ExposureHistory{}
 
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -221,6 +233,7 @@ func TestExposureHistoryRecurringViolationCount(t *testing.T) {
 }
 
 func TestExposureHistoryWindowSummary(t *testing.T) {
+	t.Parallel()
 	h := &ExposureHistory{}
 
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -245,6 +258,7 @@ func TestExposureHistoryWindowSummary(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExposureLifecycleBasic(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: ID("bucket-1")}
 	tl, _ := NewExposureLifecycle(a)
 	if tl.ID != "bucket-1" {
@@ -264,6 +278,7 @@ func TestExposureLifecycleBasic(t *testing.T) {
 // a single malformed observation row slipped through; the lifecycle
 // builder now skips the bad row and continues processing the rest.
 func TestExposureLifecycleEmptyID(t *testing.T) {
+	t.Parallel()
 	lc, err := NewExposureLifecycle(Asset{})
 	if err == nil {
 		t.Fatal("expected error for empty ID, got nil")
@@ -277,6 +292,7 @@ func TestExposureLifecycleEmptyID(t *testing.T) {
 }
 
 func TestExposureLifecycleRecordObservation(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: ID("bucket-1")}
 	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -316,6 +332,7 @@ func TestExposureLifecycleRecordObservation(t *testing.T) {
 }
 
 func TestExposureLifecycleUnsafeDuration(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: ID("bucket-1")}
 	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -345,6 +362,7 @@ func TestExposureLifecycleUnsafeDuration(t *testing.T) {
 }
 
 func TestExposureLifecycleUnsafeDurationNowBeforeStart(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: ID("bucket-1")}
 	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC)
@@ -361,6 +379,7 @@ func TestExposureLifecycleUnsafeDurationNowBeforeStart(t *testing.T) {
 }
 
 func TestExposureLifecycleExceedsUnsafeThreshold(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: ID("bucket-1")}
 	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -391,6 +410,7 @@ func TestExposureLifecycleExceedsUnsafeThreshold(t *testing.T) {
 // downstream coverage analysis to mark the verdict inconclusive
 // rather than feed a zero-dwell window into duration math.
 func TestExposureLifecycleZeroDurationWindowFlagsClamped(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: ID("bucket-1")}
 	tl, _ := NewExposureLifecycle(a)
 	t1 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -408,6 +428,7 @@ func TestExposureLifecycleZeroDurationWindowFlagsClamped(t *testing.T) {
 }
 
 func TestExposureLifecycleSecureObservationAdvancesLastObservedAt(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: ID("bucket-1")}
 	tl, _ := NewExposureLifecycle(a)
 	t1 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -440,6 +461,7 @@ func TestExposureLifecycleSecureObservationAdvancesLastObservedAt(t *testing.T) 
 }
 
 func TestExposureLifecycleZeroThresholdImmediateBreach(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: ID("bucket-1")}
 	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -483,6 +505,7 @@ func TestExposureLifecycleZeroThresholdImmediateBreach(t *testing.T) {
 }
 
 func TestExposureLifecycleFormatUnsafeSummary(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: ID("bucket-1")}
 	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -499,6 +522,7 @@ func TestExposureLifecycleFormatUnsafeSummary(t *testing.T) {
 }
 
 func TestExposureLifecycleExposureWindowClosure(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: ID("bucket-1")}
 	tl, _ := NewExposureLifecycle(a)
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -523,6 +547,7 @@ func TestExposureLifecycleExposureWindowClosure(t *testing.T) {
 }
 
 func TestExposureLifecycleSetAsset(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: ID("bucket-1"), Type: "old_type"}
 	tl, _ := NewExposureLifecycle(a)
 
@@ -536,6 +561,7 @@ func TestExposureLifecycleSetAsset(t *testing.T) {
 }
 
 func TestExposureLifecycleHasActiveWindow(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: ID("bucket-1")}
 	tl, _ := NewExposureLifecycle(a)
 
@@ -557,6 +583,7 @@ func TestExposureLifecycleHasActiveWindow(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestObservationStats(t *testing.T) {
+	t.Parallel()
 	s := &ObservationStats{}
 	if s.HasFirstObservation() {
 		t.Fatal("empty should not have first observation")
@@ -598,6 +625,7 @@ func TestObservationStats(t *testing.T) {
 }
 
 func TestObservationStatsZeroTime(t *testing.T) {
+	t.Parallel()
 	s := &ObservationStats{}
 	if err := s.RecordObservation(time.Time{}); err == nil {
 		t.Fatal("expected error for zero time")
@@ -605,6 +633,7 @@ func TestObservationStatsZeroTime(t *testing.T) {
 }
 
 func TestObservationStatsOutOfOrder(t *testing.T) {
+	t.Parallel()
 	s := &ObservationStats{}
 	base := time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC)
 	if err := s.RecordObservation(base); err != nil {
@@ -624,6 +653,7 @@ func TestObservationStatsOutOfOrder(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestChangeTypeIsValid(t *testing.T) {
+	t.Parallel()
 	if !DriftProvisioned.IsValid() {
 		t.Fatal("PROVISIONED")
 	}
@@ -639,6 +669,7 @@ func TestChangeTypeIsValid(t *testing.T) {
 }
 
 func TestObservationDeltaSummaryIncrement(t *testing.T) {
+	t.Parallel()
 	s := &DriftSummary{}
 	s.Record(DriftProvisioned)
 	s.Record(DriftProvisioned)
@@ -666,6 +697,7 @@ func TestObservationDeltaSummaryIncrement(t *testing.T) {
 }
 
 func TestObservationDeltaSummaryJSON(t *testing.T) {
+	t.Parallel()
 	s := DriftSummary{}
 	s.Record(DriftProvisioned)
 	b, err := json.Marshal(s)
@@ -682,6 +714,7 @@ func TestObservationDeltaSummaryJSON(t *testing.T) {
 }
 
 func TestSummarizeDeltaChanges(t *testing.T) {
+	t.Parallel()
 	changes := []AssetChange{
 		{Action: DriftProvisioned},
 		{Action: DriftReconfigured},
@@ -695,6 +728,7 @@ func TestSummarizeDeltaChanges(t *testing.T) {
 }
 
 func TestLatestTwoSnapshots(t *testing.T) {
+	t.Parallel()
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	snaps := []Snapshot{
 		{CapturedAt: base.Add(2 * time.Hour)},
@@ -715,6 +749,7 @@ func TestLatestTwoSnapshots(t *testing.T) {
 }
 
 func TestLatestTwoSnapshotsInsufficient(t *testing.T) {
+	t.Parallel()
 	_, _, err := GetStateTransition([]Snapshot{{CapturedAt: time.Now()}})
 	if err == nil {
 		t.Fatal("expected error for insufficient snapshots")
@@ -726,6 +761,7 @@ func TestLatestTwoSnapshotsInsufficient(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestDiffAssetsNoChange(t *testing.T) {
+	t.Parallel()
 	a := Asset{
 		ID:         "bucket-1",
 		Type:       "aws_s3_bucket",
@@ -738,6 +774,7 @@ func TestDiffAssetsNoChange(t *testing.T) {
 }
 
 func TestDiffAssetsTypeChange(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: "bucket-1", Type: "type_a"}
 	b := Asset{ID: "bucket-1", Type: "type_b"}
 	changes := DiffAssets(a, b)
@@ -753,6 +790,7 @@ func TestDiffAssetsTypeChange(t *testing.T) {
 }
 
 func TestDiffAssetsPropertyChange(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: "bucket-1", Properties: map[string]any{"key": "old"}}
 	b := Asset{ID: "bucket-1", Properties: map[string]any{"key": "new"}}
 	changes := DiffAssets(a, b)
@@ -762,6 +800,7 @@ func TestDiffAssetsPropertyChange(t *testing.T) {
 }
 
 func TestAppendPropertyPath(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		base, segment, want string
 	}{
@@ -782,6 +821,7 @@ func TestAppendPropertyPath(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestComputeObservationDelta(t *testing.T) {
+	t.Parallel()
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	prev := Snapshot{
 		CapturedAt: base,
@@ -821,6 +861,7 @@ func TestComputeObservationDelta(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestSnapshotsHelpers(t *testing.T) {
+	t.Parallel()
 	var s Snapshots
 	if !s.IsEmpty() {
 		t.Fatal("nil should be empty")
@@ -839,6 +880,7 @@ func TestSnapshotsHelpers(t *testing.T) {
 }
 
 func TestSnapshotsTemporalBounds(t *testing.T) {
+	t.Parallel()
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	s := Snapshots{
 		{CapturedAt: base.Add(2 * time.Hour)},
@@ -861,6 +903,7 @@ func TestSnapshotsTemporalBounds(t *testing.T) {
 }
 
 func TestSnapshotsUniqueAssetCount(t *testing.T) {
+	t.Parallel()
 	s := Snapshots{
 		{Assets: []Asset{{ID: "a"}, {ID: "b"}}},
 		{Assets: []Asset{{ID: "b"}, {ID: "c"}}},
@@ -875,6 +918,7 @@ func TestSnapshotsUniqueAssetCount(t *testing.T) {
 }
 
 func TestSnapshotsFindFirstUnsortedPair(t *testing.T) {
+	t.Parallel()
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	s := Snapshots{
 		{CapturedAt: base},
@@ -900,6 +944,7 @@ func TestSnapshotsFindFirstUnsortedPair(t *testing.T) {
 }
 
 func TestCountUnprovablySafe(t *testing.T) {
+	t.Parallel()
 	snaps := []Snapshot{
 		{Assets: []Asset{
 			{ID: "safe", Properties: map[string]any{"safety_provable": true}},
@@ -912,6 +957,7 @@ func TestCountUnprovablySafe(t *testing.T) {
 }
 
 func TestSnapshotFindAsset(t *testing.T) {
+	t.Parallel()
 	s := Snapshot{
 		Assets: []Asset{
 			{ID: "bucket-1"},
@@ -927,6 +973,7 @@ func TestSnapshotFindAsset(t *testing.T) {
 }
 
 func TestSnapshotHasTimestamp(t *testing.T) {
+	t.Parallel()
 	s := Snapshot{}
 	if s.HasTimestamp() {
 		t.Fatal("zero time should not have timestamp")
@@ -942,6 +989,7 @@ func TestSnapshotHasTimestamp(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestUniversalFilter(t *testing.T) {
+	t.Parallel()
 	a := Asset{ID: "anything"}
 	if !GetGlobalScope().IsInScope(a) {
 		t.Fatal("universal should match all")
@@ -949,6 +997,7 @@ func TestUniversalFilter(t *testing.T) {
 }
 
 func TestNewScopeFilterAllowlist(t *testing.T) {
+	t.Parallel()
 	f := NewAuditScopeFromAllowlist([]string{"bucket-1", "bucket-2"})
 	if f.IsInScope(Asset{ID: "bucket-1"}) != true {
 		t.Fatal("should match bucket-1")
@@ -959,6 +1008,7 @@ func TestNewScopeFilterAllowlist(t *testing.T) {
 }
 
 func TestNewScopeFilterEmptyReturnsUniversal(t *testing.T) {
+	t.Parallel()
 	f := NewAuditScope(nil, nil)
 	if f != GetGlobalScope() {
 		t.Fatal("empty constraints should return universal")
@@ -966,6 +1016,7 @@ func TestNewScopeFilterEmptyReturnsUniversal(t *testing.T) {
 }
 
 func TestFilterSnapshots(t *testing.T) {
+	t.Parallel()
 	f := NewAuditScopeFromAllowlist([]string{"bucket-1"})
 	snaps := []Snapshot{
 		{Assets: []Asset{{ID: "bucket-1"}, {ID: "bucket-2"}}},
@@ -982,6 +1033,7 @@ func TestFilterSnapshots(t *testing.T) {
 }
 
 func TestFilterSnapshotsNilOrUniversal(t *testing.T) {
+	t.Parallel()
 	snaps := []Snapshot{{Assets: []Asset{{ID: "a"}}}}
 	if got := ApplyScopeToSnapshots(nil, snaps); len(got) != 1 {
 		t.Fatal("nil filter should pass through")
@@ -996,6 +1048,7 @@ func TestFilterSnapshotsNilOrUniversal(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestApplyFilter(t *testing.T) {
+	t.Parallel()
 	delta := InfrastructureDrift{
 		Changes: []AssetChange{
 			{AssetID: "bucket-1", Action: DriftProvisioned, CurrentType: "aws_s3_bucket"},
@@ -1034,6 +1087,7 @@ func TestApplyFilter(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestAssetMap(t *testing.T) {
+	t.Parallel()
 	a := Asset{
 		ID:         "bucket-1",
 		Type:       "aws_s3_bucket",
@@ -1053,6 +1107,7 @@ func TestAssetMap(t *testing.T) {
 }
 
 func TestAssetIsProvablySafe(t *testing.T) {
+	t.Parallel()
 	a := Asset{Properties: map[string]any{"safety_provable": true}}
 	if !a.IsProvablySafe() {
 		t.Fatal("should be provably safe")
@@ -1064,6 +1119,7 @@ func TestAssetIsProvablySafe(t *testing.T) {
 }
 
 func TestCloudIdentityMap(t *testing.T) {
+	t.Parallel()
 	ci := CloudIdentity{
 		ID:         "role-1",
 		Type:       "iam_role",

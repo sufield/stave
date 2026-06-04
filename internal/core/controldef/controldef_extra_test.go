@@ -16,6 +16,7 @@ import (
 // ---------------------------------------------------------------------------
 
 func TestControlDefinitionPrepareNoDuration(t *testing.T) {
+	t.Parallel()
 	ctl := ControlDefinition{
 		Params: NewParams(map[string]any{"some_key": "val"}),
 	}
@@ -34,6 +35,7 @@ func TestControlDefinitionPrepareNoDuration(t *testing.T) {
 }
 
 func TestControlDefinitionPrepareWithRecurrence(t *testing.T) {
+	t.Parallel()
 	ctl := ControlDefinition{
 		Params: NewParams(map[string]any{
 			"recurrence_threshold": 5,
@@ -50,6 +52,7 @@ func TestControlDefinitionPrepareWithRecurrence(t *testing.T) {
 }
 
 func TestControlDefinitionPrepareWithPrefixExposure(t *testing.T) {
+	t.Parallel()
 	ctl := ControlDefinition{
 		Params: NewParams(map[string]any{
 			"allowed_public_prefixes": []string{"public/", "static/"},
@@ -69,6 +72,7 @@ func TestControlDefinitionPrepareWithPrefixExposure(t *testing.T) {
 }
 
 func TestControlDefinitionMaxUnsafeDuration(t *testing.T) {
+	t.Parallel()
 	ctl := ControlDefinition{}
 	got := ctl.MaxUnsafeDuration()
 	if got != 0 {
@@ -77,6 +81,7 @@ func TestControlDefinitionMaxUnsafeDuration(t *testing.T) {
 }
 
 func TestControlDefinitionEnsurePreparedLazy(t *testing.T) {
+	t.Parallel()
 	ctl := ControlDefinition{
 		Params: NewParams(map[string]any{"max_unsafe_duration": "48h"}),
 	}
@@ -95,6 +100,7 @@ func TestControlDefinitionEnsurePreparedLazy(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestCatalogPackHashNil(t *testing.T) {
+	t.Parallel()
 	var cat *Catalog
 	if cat.PackHash(nil) != "" {
 		t.Fatal("nil catalog PackHash should return empty digest")
@@ -102,6 +108,7 @@ func TestCatalogPackHashNil(t *testing.T) {
 }
 
 func TestCatalogPackHashEmpty(t *testing.T) {
+	t.Parallel()
 	cat := NewCatalog(nil)
 	if cat.PackHash(nil) != "" {
 		t.Fatal("empty catalog PackHash should return empty digest")
@@ -113,6 +120,7 @@ func TestCatalogPackHashEmpty(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestValidateControlDefinitionNil(t *testing.T) {
+	t.Parallel()
 	issues := (*ControlDefinition)(nil).Validate()
 	if len(issues) != 0 {
 		t.Fatalf("nil control should produce no issues, got %d", len(issues))
@@ -120,6 +128,7 @@ func TestValidateControlDefinitionNil(t *testing.T) {
 }
 
 func TestValidateControlDefinitionMissingMetadata(t *testing.T) {
+	t.Parallel()
 	ctl := &ControlDefinition{}
 	issues := ctl.Validate()
 	// Should have issues for missing ID, name, description, and empty predicate
@@ -129,6 +138,7 @@ func TestValidateControlDefinitionMissingMetadata(t *testing.T) {
 }
 
 func TestValidateControlDefinitionBadIDFormat(t *testing.T) {
+	t.Parallel()
 	ctl := &ControlDefinition{
 		ID:          kernel.ControlID("BADFORMAT"),
 		Name:        "test",
@@ -150,6 +160,7 @@ func TestValidateControlDefinitionBadIDFormat(t *testing.T) {
 }
 
 func TestValidateControlDefinitionBadSeverity(t *testing.T) {
+	t.Parallel()
 	ctl := &ControlDefinition{
 		ID:          kernel.ControlID("CTL.TEST.SEV.001"),
 		Name:        "test",
@@ -172,6 +183,7 @@ func TestValidateControlDefinitionBadSeverity(t *testing.T) {
 }
 
 func TestValidateControlDefinitionBadType(t *testing.T) {
+	t.Parallel()
 	ctl := &ControlDefinition{
 		ID:          kernel.ControlID("CTL.TEST.TYPE.001"),
 		Name:        "test",
@@ -194,6 +206,7 @@ func TestValidateControlDefinitionBadType(t *testing.T) {
 }
 
 func TestValidateControlDefinitionEmptyPredicate(t *testing.T) {
+	t.Parallel()
 	ctl := &ControlDefinition{
 		ID:          kernel.ControlID("CTL.TEST.EMPTY.001"),
 		Name:        "test",
@@ -212,6 +225,7 @@ func TestValidateControlDefinitionEmptyPredicate(t *testing.T) {
 }
 
 func TestValidateControlDefinitionUnsupportedOperator(t *testing.T) {
+	t.Parallel()
 	ctl := &ControlDefinition{
 		ID:          kernel.ControlID("CTL.TEST.OP.001"),
 		Name:        "test",
@@ -235,6 +249,7 @@ func TestValidateControlDefinitionUnsupportedOperator(t *testing.T) {
 }
 
 func TestValidateControlDefinitionUndefinedParam(t *testing.T) {
+	t.Parallel()
 	ctl := &ControlDefinition{
 		ID:          kernel.ControlID("CTL.TEST.PARAM.001"),
 		Name:        "test",
@@ -258,6 +273,7 @@ func TestValidateControlDefinitionUndefinedParam(t *testing.T) {
 }
 
 func TestValidateControlDefinitionBadDurationParam(t *testing.T) {
+	t.Parallel()
 	ctl := &ControlDefinition{
 		ID:          kernel.ControlID("CTL.TEST.DUR.001"),
 		Name:        "test",
@@ -280,6 +296,7 @@ func TestValidateControlDefinitionBadDurationParam(t *testing.T) {
 }
 
 func TestValidateControlDefinitionEmptyDurationParam(t *testing.T) {
+	t.Parallel()
 	ctl := &ControlDefinition{
 		ID:          kernel.ControlID("CTL.TEST.DUR.002"),
 		Name:        "test",
@@ -302,6 +319,7 @@ func TestValidateControlDefinitionEmptyDurationParam(t *testing.T) {
 }
 
 func TestValidateControlDefinitionValidDuration(t *testing.T) {
+	t.Parallel()
 	ctl := &ControlDefinition{
 		ID:          kernel.ControlID("CTL.TEST.DUR.003"),
 		Name:        "test",
@@ -320,6 +338,7 @@ func TestValidateControlDefinitionValidDuration(t *testing.T) {
 }
 
 func TestValidateControlDefinitionSeverityNoneAccepted(t *testing.T) {
+	t.Parallel()
 	ctl := &ControlDefinition{
 		ID:          kernel.ControlID("CTL.TEST.SEVNONE.001"),
 		Name:        "test",
@@ -338,6 +357,7 @@ func TestValidateControlDefinitionSeverityNoneAccepted(t *testing.T) {
 }
 
 func TestValidateControlDefinitionTypeUnknownAccepted(t *testing.T) {
+	t.Parallel()
 	ctl := &ControlDefinition{
 		ID:          kernel.ControlID("CTL.TEST.TYPEUNK.001"),
 		Name:        "test",
@@ -360,6 +380,7 @@ func TestValidateControlDefinitionTypeUnknownAccepted(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestCheckEffectivenessNilEval(t *testing.T) {
+	t.Parallel()
 	issues := CheckEffectiveness(nil, nil, nil)
 	if len(issues) != 0 {
 		t.Fatal("nil eval should return no issues")
@@ -367,6 +388,7 @@ func TestCheckEffectivenessNilEval(t *testing.T) {
 }
 
 func TestCheckEffectivenessNeverTriggered(t *testing.T) {
+	t.Parallel()
 	controls := []ControlDefinition{
 		{ID: kernel.ControlID("CTL.TEST.001"), Name: "test"},
 	}
@@ -381,6 +403,7 @@ func TestCheckEffectivenessNeverTriggered(t *testing.T) {
 }
 
 func TestCheckEffectivenessTriggered(t *testing.T) {
+	t.Parallel()
 	controls := []ControlDefinition{
 		{ID: kernel.ControlID("CTL.TEST.001"), Name: "test"},
 	}
@@ -401,6 +424,7 @@ func TestCheckEffectivenessTriggered(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExtractMisconfigurationsNil(t *testing.T) {
+	t.Parallel()
 	result := ExtractMisconfigurations(nil, nil)
 	if result != nil {
 		t.Fatal("nil predicate should return nil")
@@ -408,6 +432,7 @@ func TestExtractMisconfigurationsNil(t *testing.T) {
 }
 
 func TestExtractMisconfigurationsEmpty(t *testing.T) {
+	t.Parallel()
 	pred := &UnsafePredicate{}
 	ctx := &EvalContext{properties: map[string]any{}}
 	result := ExtractMisconfigurations(pred, ctx)
@@ -417,6 +442,7 @@ func TestExtractMisconfigurationsEmpty(t *testing.T) {
 }
 
 func TestExtractMisconfigurationsSorted(t *testing.T) {
+	t.Parallel()
 	pred := &UnsafePredicate{
 		Any: []PredicateRule{
 			{Field: predicate.NewFieldPath("properties.z_field"), Op: predicate.OpEq, Value: Bool(true)},
@@ -440,6 +466,7 @@ func TestExtractMisconfigurationsSorted(t *testing.T) {
 }
 
 func TestExtractMisconfigurationsDedup(t *testing.T) {
+	t.Parallel()
 	pred := &UnsafePredicate{
 		Any: []PredicateRule{
 			{Field: predicate.NewFieldPath("properties.x"), Op: predicate.OpEq, Value: Bool(true)},
@@ -462,6 +489,7 @@ func TestExtractMisconfigurationsDedup(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExpiryDateUnmarshalText(t *testing.T) {
+	t.Parallel()
 	var d ExpiryDate
 	if err := d.UnmarshalText([]byte("2026-03-15")); err != nil {
 		t.Fatal(err)
@@ -500,6 +528,7 @@ func TestExpiryDateUnmarshalText(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestExceptionConfigExpiredRule(t *testing.T) {
+	t.Parallel()
 	expires, _ := ParseExpiryDate("2026-01-01")
 	rules := []ExceptionRule{
 		{ControlID: "CTL.TEST.001", AssetID: "bucket-a", Reason: "expired", Expires: expires},
@@ -518,6 +547,7 @@ func TestExceptionConfigExpiredRule(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestSeverityMarshalYAML(t *testing.T) {
+	t.Parallel()
 	v, err := SeverityHigh.MarshalYAML()
 	if err != nil {
 		t.Fatal(err)
@@ -528,6 +558,7 @@ func TestSeverityMarshalYAML(t *testing.T) {
 }
 
 func TestSeverityUnmarshalYAML(t *testing.T) {
+	t.Parallel()
 	var s Severity
 	err := s.UnmarshalYAML(func(v any) error {
 		p, _ := v.(*string)
@@ -547,6 +578,7 @@ func TestSeverityUnmarshalYAML(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestControlTypeMarshalText(t *testing.T) {
+	t.Parallel()
 	b, err := TypeUnsafeDuration.MarshalText()
 	if err != nil {
 		t.Fatal(err)
@@ -557,6 +589,7 @@ func TestControlTypeMarshalText(t *testing.T) {
 }
 
 func TestControlTypeUnmarshalText(t *testing.T) {
+	t.Parallel()
 	var ct ControlType
 	if err := ct.UnmarshalText([]byte("prefix_exposure")); err != nil {
 		t.Fatal(err)
@@ -567,6 +600,7 @@ func TestControlTypeUnmarshalText(t *testing.T) {
 }
 
 func TestControlTypeMarshalYAML(t *testing.T) {
+	t.Parallel()
 	v, err := TypeUnsafeState.MarshalYAML()
 	if err != nil {
 		t.Fatal(err)
@@ -577,6 +611,7 @@ func TestControlTypeMarshalYAML(t *testing.T) {
 }
 
 func TestControlTypeUnmarshalYAML(t *testing.T) {
+	t.Parallel()
 	var ct ControlType
 	err := ct.UnmarshalYAML(func(v any) error {
 		*(v.(*string)) = "unsafe_recurrence"
@@ -595,6 +630,7 @@ func TestControlTypeUnmarshalYAML(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestMisconfigurationStringDefaultOperator(t *testing.T) {
+	t.Parallel()
 	m := Misconfiguration{
 		Property:    predicate.NewFieldPath("properties.x"),
 		Operator:    predicate.Operator("custom_op"),
@@ -611,6 +647,7 @@ func TestMisconfigurationStringDefaultOperator(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestControlParamsJSONRoundTrip(t *testing.T) {
+	t.Parallel()
 	p := NewParams(map[string]any{"key": "value", "num": float64(42)})
 	data, err := json.Marshal(p)
 	if err != nil {
@@ -630,6 +667,7 @@ func TestControlParamsJSONRoundTrip(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestPrefixSetOverlapReversedContainment(t *testing.T) {
+	t.Parallel()
 	allowed := NewPrefixSet("public/images/secret")
 	protected := NewPrefixSet("public/images")
 
@@ -640,6 +678,7 @@ func TestPrefixSetOverlapReversedContainment(t *testing.T) {
 }
 
 func TestPrefixSetOverlapNoOverlap(t *testing.T) {
+	t.Parallel()
 	a := NewPrefixSet("alpha")
 	b := NewPrefixSet("beta")
 	if a.Overlap(b) != nil {
@@ -663,6 +702,7 @@ func (mockIDGen) GenerateID(prefix string, components ...string) string {
 }
 
 func TestStableRemediationPlanID(t *testing.T) {
+	t.Parallel()
 	gen := mockIDGen{}
 	id := StableRemediationPlanID(gen, kernel.ControlID("CTL.TEST.001"), asset.ID("bucket-a"))
 	if id == "" {
@@ -671,6 +711,7 @@ func TestStableRemediationPlanID(t *testing.T) {
 }
 
 func TestStableRemediationGroupID(t *testing.T) {
+	t.Parallel()
 	gen := mockIDGen{}
 	id := StableRemediationGroupID(gen, asset.ID("bucket-a"), "hash123")
 	if id == "" {

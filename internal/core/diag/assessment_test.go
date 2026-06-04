@@ -3,6 +3,7 @@ package diag
 import "testing"
 
 func TestNewAssessment_Empty(t *testing.T) {
+	t.Parallel()
 	a := NewAssessment()
 	if a == nil {
 		t.Fatal("NewAssessment returned nil")
@@ -13,6 +14,7 @@ func TestNewAssessment_Empty(t *testing.T) {
 }
 
 func TestAssessment_Record(t *testing.T) {
+	t.Parallel()
 	a := NewAssessment()
 	a.Record(NewFinding(RuleSchemaViolation).Error().Message("bad schema").Build())
 	if len(a.Findings) != 1 {
@@ -27,6 +29,7 @@ func TestAssessment_Record_NilReceiver(_ *testing.T) {
 }
 
 func TestAssessment_RecordAll(t *testing.T) {
+	t.Parallel()
 	a := NewAssessment()
 	findings := []Finding{
 		NewFinding(RuleSchemaViolation).Error().Build(),
@@ -44,6 +47,7 @@ func TestAssessment_RecordAll_NilReceiver(_ *testing.T) {
 }
 
 func TestAssessment_RecordAll_EmptySlice(t *testing.T) {
+	t.Parallel()
 	a := NewAssessment()
 	a.RecordAll(nil)
 	if len(a.Findings) != 0 {
@@ -52,6 +56,7 @@ func TestAssessment_RecordAll_EmptySlice(t *testing.T) {
 }
 
 func TestAssessment_Merge(t *testing.T) {
+	t.Parallel()
 	a1 := NewAssessment()
 	a1.Record(NewFinding(RuleSchemaViolation).Error().Build())
 	a2 := NewAssessment()
@@ -72,6 +77,7 @@ func TestAssessment_Merge_NilReceiver(_ *testing.T) {
 }
 
 func TestAssessment_Merge_NilOther(t *testing.T) {
+	t.Parallel()
 	a := NewAssessment()
 	a.Record(NewFinding(RuleSchemaViolation).Build())
 	a.Merge(nil)
@@ -81,6 +87,7 @@ func TestAssessment_Merge_NilOther(t *testing.T) {
 }
 
 func TestAssessment_Merge_EmptyOther(t *testing.T) {
+	t.Parallel()
 	a := NewAssessment()
 	a.Record(NewFinding(RuleSchemaViolation).Build())
 	a.Merge(NewAssessment())
@@ -90,6 +97,7 @@ func TestAssessment_Merge_EmptyOther(t *testing.T) {
 }
 
 func TestAssessment_Failed(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		findings []Finding
@@ -115,6 +123,7 @@ func TestAssessment_Failed(t *testing.T) {
 }
 
 func TestAssessment_Failed_NilReceiver(t *testing.T) {
+	t.Parallel()
 	var a *Assessment
 	if a.Failed() {
 		t.Fatal("nil receiver Failed should return false")
@@ -122,6 +131,7 @@ func TestAssessment_Failed_NilReceiver(t *testing.T) {
 }
 
 func TestAssessment_HasWarnings(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		findings []Finding
@@ -143,6 +153,7 @@ func TestAssessment_HasWarnings(t *testing.T) {
 }
 
 func TestAssessment_HasWarnings_NilReceiver(t *testing.T) {
+	t.Parallel()
 	var a *Assessment
 	if a.HasWarnings() {
 		t.Fatal("nil receiver HasWarnings should return false")
@@ -150,6 +161,7 @@ func TestAssessment_HasWarnings_NilReceiver(t *testing.T) {
 }
 
 func TestAssessment_Errors(t *testing.T) {
+	t.Parallel()
 	a := NewAssessment()
 	a.Record(NewFinding(RuleSchemaViolation).Error().Build())
 	a.Record(NewFinding(RuleNoControls).Warning().Build())
@@ -167,6 +179,7 @@ func TestAssessment_Errors(t *testing.T) {
 }
 
 func TestAssessment_Warnings(t *testing.T) {
+	t.Parallel()
 	a := NewAssessment()
 	a.Record(NewFinding(RuleSchemaViolation).Error().Build())
 	a.Record(NewFinding(RuleNoControls).Warning().Build())
@@ -181,6 +194,7 @@ func TestAssessment_Warnings(t *testing.T) {
 }
 
 func TestAssessment_Filter_NilReceiver(t *testing.T) {
+	t.Parallel()
 	var a *Assessment
 	if errs := a.Errors(); errs != nil {
 		t.Fatalf("nil receiver Errors() should return nil, got %v", errs)
@@ -191,6 +205,7 @@ func TestAssessment_Filter_NilReceiver(t *testing.T) {
 }
 
 func TestAssessment_Error_NoFindings(t *testing.T) {
+	t.Parallel()
 	a := NewAssessment()
 	got := a.Error()
 	want := "security assessment passed: no issues identified"
@@ -200,6 +215,7 @@ func TestAssessment_Error_NoFindings(t *testing.T) {
 }
 
 func TestAssessment_Error_NilReceiver(t *testing.T) {
+	t.Parallel()
 	var a *Assessment
 	got := a.Error()
 	want := "security assessment passed: no issues identified"
@@ -209,6 +225,7 @@ func TestAssessment_Error_NilReceiver(t *testing.T) {
 }
 
 func TestAssessment_Error_WithFindings(t *testing.T) {
+	t.Parallel()
 	a := NewAssessment()
 	a.Record(NewFinding(RuleSchemaViolation).Error().Message("bad field").Attribute("path", "/dsl_version").Build())
 	a.Record(NewFinding(RuleNoControls).Warning().Build())
@@ -226,6 +243,7 @@ func TestAssessment_Error_WithFindings(t *testing.T) {
 }
 
 func TestAssessment_Error_FirstFindingSummary_MessageAndPath(t *testing.T) {
+	t.Parallel()
 	a := NewAssessment()
 	a.Record(NewFinding(RuleSchemaViolation).Error().Message("missing field").Attribute("path", "/version").Build())
 	got := a.Error()
@@ -240,6 +258,7 @@ func TestAssessment_Error_FirstFindingSummary_MessageAndPath(t *testing.T) {
 }
 
 func TestAssessment_Error_FirstFindingSummary_MessageOnly(t *testing.T) {
+	t.Parallel()
 	a := NewAssessment()
 	a.Record(NewFinding(RuleSchemaViolation).Error().Message("something wrong").Build())
 	got := a.Error()
@@ -250,6 +269,7 @@ func TestAssessment_Error_FirstFindingSummary_MessageOnly(t *testing.T) {
 }
 
 func TestAssessment_Error_FirstFindingSummary_PathOnly(t *testing.T) {
+	t.Parallel()
 	a := NewAssessment()
 	a.Record(NewFinding(RuleSchemaViolation).Error().Attribute("path", "/foo").Build())
 	got := a.Error()
@@ -260,6 +280,7 @@ func TestAssessment_Error_FirstFindingSummary_PathOnly(t *testing.T) {
 }
 
 func TestAssessment_Error_FirstFindingSummary_RuleIDOnly(t *testing.T) {
+	t.Parallel()
 	a := NewAssessment()
 	a.Record(NewFinding(RuleSchemaViolation).Error().Build())
 	got := a.Error()
