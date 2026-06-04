@@ -3,7 +3,8 @@ package cmdutil
 import (
 	"fmt"
 	"io"
-	"os"
+
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // OutputOptions captures the canonical "--output PATH" flag pattern.
@@ -34,7 +35,7 @@ func WriteTo(stdout io.Writer, path string, fn func(io.Writer) error) (err error
 	if path == "" {
 		return fn(stdout)
 	}
-	f, openErr := os.Create(path) //nolint:gosec // user-specified output path
+	f, openErr := fsutil.SafeCreateFile(path, fsutil.ConfigWriteOpts())
 	if openErr != nil {
 		return fmt.Errorf("create output file %q: %w", path, openErr)
 	}

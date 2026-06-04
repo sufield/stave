@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check
+.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check sync-guide docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check
 # Binary name
 BINARY=stave
 
@@ -375,8 +375,28 @@ deadcode-check:
 		exit 1; \
 	fi
 
+## check-unsafe-writes: Forbid raw os.Create/os.WriteFile on user-controlled
+## output paths in cmd/ and internal/app/. These must use the symlink-safe
+## fsutil.SafeCreateFile / fsutil.SafeWriteFile wrappers (internal/platform/fsutil)
+## to close the symlink/hardlink/TOCTOU redirect window. Scoped by grep because
+## forbidigo cannot express "forbid in these dirs only" (RE2 has no negative
+## lookahead) without flagging legitimate writes elsewhere in the tree.
+## Excludes _test.go (test fixtures) and cmd/stave-mcp (writes self-generated
+## os.TempDir() files, not user paths, and is pkg/stave-only by design).
+.PHONY: check-unsafe-writes
+check-unsafe-writes:
+	@hits=$$(grep -rnE 'os\.(Create|WriteFile)\(' cmd/ internal/app/ --include='*.go' \
+		| grep -v '_test\.go' \
+		| grep -v 'cmd/stave-mcp/'); \
+	if [ -n "$$hits" ]; then \
+		echo "ERROR: use fsutil.SafeWriteFile/SafeCreateFile (symlink-safe) instead of os.Create/os.WriteFile:"; \
+		echo "$$hits"; \
+		exit 1; \
+	fi; \
+	echo "OK: no unsafe os.Create/os.WriteFile on user paths in cmd/ or internal/app/"
+
 ## check: Run all checks (fmt, vet, lint, terminology, deadcode, test)
-check: fmt vet lint stale-terminology-check deadcode-check test
+check: fmt vet lint stale-terminology-check check-unsafe-writes deadcode-check test
 
 ## ci: CI pipeline (tidy, check, build)
 ci: tidy check build
@@ -666,6 +686,14 @@ docs-commands:
 ## docs-commands-check: Verify the command reference matches the binary
 docs-commands-check:
 	$(GOCMD) run ./internal/tools/gencommanddocs -check
+
+## sync-guide: Refresh stave-guide/ real-file copies of generated + sub-repo docs.
+## stave-guide/ is the Docusaurus SSG source (real files, not symlinks — SSG can't
+## render symlinked content). Regenerates the generated docs, then copies per
+## stave-guide/.sync-manifest.tsv. Commit the result.
+.PHONY: sync-guide
+sync-guide: docs-controls docs-commands
+	@cd .. && bash scripts/sync-guide.sh
 
 ## docs-commands-catalog: Generate the curated root commands-catalog.md
 ## from catalog_meta.go annotations + the live cobra tree. Edit the

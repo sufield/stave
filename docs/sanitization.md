@@ -28,6 +28,14 @@ What stays visible:
 - counts, durations, timestamps
 - schema versions and summary totals
 
+What is intentionally *not* sanitized, and why:
+
+- **Timestamps** (evaluation times, snapshot times, `first_unsafe_at`/`last_unsafe_at`): reveal *when* something happened, not *what* infrastructure was involved.
+- **Control IDs and names**: these are public rule definitions, not identifying data.
+- **Matched property paths** (schema paths like `properties.storage.visibility.public_read`): structural, not identifying.
+
+Sanitization is deterministic: the same input identifier always maps to the same token within a run, so you can correlate findings without revealing the real identifier.
+
 ## Input Scrubbing
 
 To sanitize observation files before sharing, handle scrubbing in your extractor. Your extractor (any language producing `obs.v0.1` JSON) should strip or replace sensitive identifiers before writing output. See [Building an Extractor](extractor-prompt.md) for guidance.

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"time"
 
@@ -71,7 +70,7 @@ func runExport(opts exportOptions, stdout io.Writer) (exportResult, error) {
 	dest := stdout
 	var closeFn func() error
 	if opts.OutPath != "" {
-		f, createErr := os.Create(opts.OutPath) //nolint:gosec // user-specified output path
+		f, createErr := fsutil.SafeCreateFile(opts.OutPath, fsutil.ConfigWriteOpts())
 		if createErr != nil {
 			return exportResult{}, fmt.Errorf("create output: %w", createErr)
 		}

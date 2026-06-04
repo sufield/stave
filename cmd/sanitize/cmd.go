@@ -104,7 +104,7 @@ func run(opts *options) error {
 		return fmt.Errorf("marshal sanitized output: %w", err)
 	}
 
-	if err := os.WriteFile(opts.OutPath, data, 0o644); err != nil { //nolint:gosec // user-specified output file
+	if err := fsutil.SafeWriteFile(opts.OutPath, data, fsutil.ConfigWriteOpts()); err != nil {
 		return fmt.Errorf("write output: %w", err)
 	}
 

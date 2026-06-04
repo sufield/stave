@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // Package describes the assembled audit evidence package.
@@ -56,7 +58,10 @@ func Assemble(input AssembleInput) (*Package, error) {
 			return nil
 		}
 		path := filepath.Join(dir, filename)
-		if err := os.WriteFile(path, data, 0o644); err != nil { //nolint:gosec // G306: audit bundle is consumed by auditors / external tooling running as a different user — must be world-readable
+		// 0o644 (world-readable) is intentional: auditors / external tooling
+		// read the bundle as a different user. SafeWriteFile keeps that perm
+		// while refusing to follow a symlink at the target path.
+		if err := fsutil.SafeWriteFile(path, data, fsutil.ConfigWriteOpts()); err != nil {
 			return fmt.Errorf("write %s: %w", filename, err)
 		}
 		pkg.Components = append(pkg.Components, Component{
@@ -87,7 +92,7 @@ func Assemble(input AssembleInput) (*Package, error) {
 	if err != nil {
 		return nil, fmt.Errorf("marshal manifest: %w", err)
 	}
-	if writeErr := os.WriteFile(filepath.Join(dir, "00-manifest.json"), manifestData, 0o644); writeErr != nil { //nolint:gosec // G306: manifest accompanies the bundle and inherits the same world-readable requirement
+	if writeErr := fsutil.SafeWriteFile(filepath.Join(dir, "00-manifest.json"), manifestData, fsutil.ConfigWriteOpts()); writeErr != nil {
 		return nil, fmt.Errorf("write manifest: %w", writeErr)
 	}
 

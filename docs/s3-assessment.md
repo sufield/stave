@@ -51,6 +51,24 @@ Output:
 - stdout JSON verification summary
 - `output/verification.json` when `--out` is set
 
+## Optional: generate enforcement templates
+
+From an `out.v0.1` evaluation file, `stave enforce` produces deterministic
+remediation artifacts — either Public Access Block Terraform or a Service
+Control Policy:
+
+```bash
+# Public Access Block (Terraform)
+stave enforce --in evaluation.json --out ./output --mode pab
+
+# Service Control Policy (JSON)
+stave enforce --in evaluation.json --out ./output --mode scp
+```
+
+Output:
+- PAB mode: `output/enforcement/aws/pab.tf`
+- SCP mode: `output/enforcement/aws/scp.json`
+
 ## What the S3 pack covers
 
 The `aws-s3` profile evaluates 67 controls across these categories:

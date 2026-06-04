@@ -43,3 +43,23 @@ unsafe_predicate:
 ```
 
 When the predicate evaluates to true, the invariant is violated. When it evaluates to false, the invariant holds. This inversion — expressing the unsafe condition rather than the safe condition — ensures that missing data produces INCONCLUSIVE rather than a false PASS.
+
+## Why Observations and Invariants Are Separate Contracts
+
+An observation and an invariant answer different questions, so they are
+defined by separate contracts that evolve independently:
+
+- An **observation** says **what is** — the extracted, normalized
+  configuration facts about a resource at a point in time. This is
+  *runtime input*.
+- An **invariant** (expressed as a control) says **what must never be** —
+  the unsafe condition that must not hold. This is *design-time truth*;
+  it does not evaluate anything on its own.
+
+Keeping them separate means an observation snapshot is just admissible
+facts about the system, while the invariant is the safety property
+asserted over those facts. The two can change on different schedules: you
+can re-author an invariant without re-capturing observations, and you can
+collect new observations without touching invariant definitions. The
+evaluator is the only place the two meet — it binds observed facts to the
+predicate and produces a boolean verdict.

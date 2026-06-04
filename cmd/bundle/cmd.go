@@ -155,7 +155,7 @@ func run(ctx context.Context, _, stderr io.Writer, opts *options) error {
 	}
 
 	// Write bundle.
-	if writeErr := os.WriteFile(outputPath, bundleData, 0o644); writeErr != nil { //nolint:gosec // user-specified output
+	if writeErr := fsutil.SafeWriteFile(outputPath, bundleData, fsutil.ConfigWriteOpts()); writeErr != nil {
 		return fmt.Errorf("write bundle: %w", writeErr)
 	}
 
@@ -166,7 +166,7 @@ func run(ctx context.Context, _, stderr io.Writer, opts *options) error {
 			return fmt.Errorf("marshal ASFF: %w", asffErr)
 		}
 		asffPath := outputPath + ".asff.json"
-		if writeErr := os.WriteFile(asffPath, asffData, 0o644); writeErr != nil { //nolint:gosec // user-specified output
+		if writeErr := fsutil.SafeWriteFile(asffPath, asffData, fsutil.ConfigWriteOpts()); writeErr != nil {
 			return fmt.Errorf("write ASFF: %w", writeErr)
 		}
 		fmt.Fprintf(stderr, "ASFF output: %s\n", asffPath)

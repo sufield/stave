@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // Signature is the .sig sidecar file format.
@@ -88,7 +90,7 @@ func WriteSig(snapshotPath string, sig *Signature) error {
 	if err != nil {
 		return fmt.Errorf("marshal signature: %w", err)
 	}
-	if err = os.WriteFile(snapshotPath+".sig", data, 0o644); err != nil { //nolint:gosec // G306: .sig sidecar is world-readable by design; verification tools run as non-owner
+	if err = fsutil.SafeWriteFile(snapshotPath+".sig", data, fsutil.ConfigWriteOpts()); err != nil {
 		return fmt.Errorf("write signature file: %w", err)
 	}
 	return nil

@@ -8,6 +8,7 @@ import (
 	"os/user"
 	"time"
 
+	"github.com/sufield/stave/internal/platform/fsutil"
 	"gopkg.in/yaml.v3"
 )
 
@@ -200,7 +201,7 @@ func Save(path string, f *AcceptanceFile, modifiedBy, timestamp string) error {
 	if err != nil {
 		return fmt.Errorf("marshal: %w", err)
 	}
-	if err = os.WriteFile(path, data, 0o644); err != nil { //nolint:gosec // user-managed file
+	if err = fsutil.SafeWriteFile(path, data, fsutil.ConfigWriteOpts()); err != nil {
 		return fmt.Errorf("write acceptance file: %w", err)
 	}
 	return nil

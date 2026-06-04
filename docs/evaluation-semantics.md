@@ -31,6 +31,43 @@ Observation snapshots are evaluated in ascending `captured_at` order.
 - Duration checks use elapsed time across ordered snapshots.
 - Recurrence checks count unsafe exposure windows in the configured window.
 
+### Determinism details
+
+- `now` defaults to the last snapshot's `captured_at`; the wall clock is used
+  only in the zero-snapshot edge case (so always pass `--now` in CI).
+- Findings are sorted by control ID then asset ID.
+- Output contains no floating-point fields (durations are emitted as integer
+  hours), avoiding cross-platform float formatting differences.
+
+## Timeline Semantics
+
+Stave builds a per-asset timeline from the ordered snapshots. Two rules govern
+how the timeline interprets state changes:
+
+- **Absence is not evidence of safety.** When an asset is missing from a
+  snapshot, no state transition occurs — an asset that was unsafe stays unsafe.
+  This prevents false negatives when an asset temporarily disappears from
+  observations.
+
+  ```
+  t0: bucket public=true  → unsafe
+  t1: bucket absent       → unsafe (unchanged)
+  t2: bucket public=true  → unsafe (episode continues)
+  ```
+
+- **Open episodes stay open.** An episode closes only on explicit evidence of
+  safety (an observed unsafe→safe transition). An episode still unsafe at the
+  final snapshot remains open and is not treated as a completed, closed episode.
+
+### Episode-based duration
+
+Unsafe duration is measured from the start of the **current** episode, not the
+first-ever unsafe observation. A bucket that went unsafe, was remediated, then
+went unsafe again reports the duration of the latest episode. The "why now"
+narrative reads "unsafe since &lt;current episode start&gt;". Recurrence findings
+do not carry a duration, because the first-to-last span would include
+intervening safe periods.
+
 ## Decision Model
 
 Each evaluated `(control, asset)` pair yields one decision row when
@@ -45,6 +82,40 @@ Decision values:
 - `SKIPPED`
 
 The output summary aggregates violations and asset-level totals.
+
+### Coverage, INCONCLUSIVE, and confidence
+
+Stave tracks data-quality metrics per asset timeline — observation count, the
+covered time span (first-seen to last-seen), and the largest gap between
+consecutive observations. These gate certainty, never violations:
+
+- **Duration controls:** when no violation is detected but the covered span is
+  shorter than the `--max-unsafe` window (or a large observation gap leaves the
+  window unverified), the decision is `INCONCLUSIVE` rather than `PASS`.
+- **Recurrence controls:** when the covered span is shorter than the
+  configured recurrence window, the decision is `INCONCLUSIVE`.
+
+When a decision is not inconclusive, a separate **confidence** level is derived
+from the largest observation gap relative to the required window:
+
+- `high` — largest gap is at most 25% of the window
+- `medium` — largest gap is at most 50% of the window
+- `low` — largest gap exceeds 50% of the window
+
+Confidence is independent of the decision: a `PASS` or `VIOLATION` can carry
+`low` confidence when the supporting observations are sparse.
+
+### Decision precedence
+
+```
+1. VIOLATION  (unsafe state with threshold exceeded)
+2. INCONCLUSIVE  (insufficient coverage / large gaps)
+3. PASS
+```
+
+`VIOLATION` always takes precedence over `INCONCLUSIVE`, so insufficient data
+can never hide a confirmed security issue. The governing principle: never claim
+safety when you only lack evidence of danger.
 
 ## Predicate Evaluation (CEL)
 

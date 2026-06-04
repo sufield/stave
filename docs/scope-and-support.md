@@ -26,3 +26,18 @@
 - `stave score` — posture scoring
 - `stave gate` — CI pass/fail policy
 - Tests: `make test`, `make test-fast`, `make test-e2e`, `make lint`
+
+## Source type validation
+
+Stave validates the `generated_by.source_type` field in observations against a
+built-in allowlist. Accepted source types do not imply cloud API access — all
+inputs are local snapshot files. To accept a source type that is not in the
+built-in list (for example, a custom extractor), pass `--allow-unknown-input`.
+
+## Status definitions
+
+- **Supported** — Controls exist, are tested (unit + E2E), and are recommended
+  for production use.
+- **Preview** — Accepted by the engine's input validation, but no shipped
+  controls or extractors target it yet. Used for engine regression testing or
+  reserved for future expansion.

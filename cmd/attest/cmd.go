@@ -301,10 +301,12 @@ func runKeygen(stdout io.Writer, outPrefix string) error {
 	privPath := outPrefix + ".pem"
 	pubPath := outPrefix + ".pub"
 
-	if err := os.WriteFile(privPath, privPEM, 0o600); err != nil {
+	// Keys must never clobber: Overwrite=false => O_EXCL (errors if the path
+	// already exists). User must delete an existing key pair explicitly.
+	if err := fsutil.SafeWriteFile(privPath, privPEM, fsutil.WriteOptions{Perm: 0o600, Overwrite: false, AllowSymlink: false}); err != nil {
 		return fmt.Errorf("write private key: %w", err)
 	}
-	if err := os.WriteFile(pubPath, pubPEM, 0o644); err != nil { //nolint:gosec // public key
+	if err := fsutil.SafeWriteFile(pubPath, pubPEM, fsutil.WriteOptions{Perm: 0o644, Overwrite: false, AllowSymlink: false}); err != nil {
 		return fmt.Errorf("write public key: %w", err)
 	}
 

@@ -138,7 +138,7 @@ func writeFixtureFile(path string, f fixtureFile) error {
 	if err != nil {
 		return fmt.Errorf("marshal fixture: %w", err)
 	}
-	if err = os.WriteFile(path, append(data, '\n'), 0o644); err != nil { //nolint:gosec // user file
+	if err = fsutil.SafeWriteFile(path, append(data, '\n'), fsutil.ConfigWriteOpts()); err != nil {
 		return fmt.Errorf("write fixture: %w", err)
 	}
 	return nil
