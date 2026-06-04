@@ -549,38 +549,6 @@ func (s *Store) ResolveSelected() (string, *Context, bool, error) {
 	return name, &selected, true, nil
 }
 
-// AbsPath joins the provided path with the context's project root if
-// the path is relative.
-//
-// Empty ProjectRoot with a relative input is a configuration gap:
-// the caller asked for "anchor this relative path against the
-// project root" but never provided a root. The earlier shape
-// silently fell back to filepath.Clean(p), which produced a path
-// resolved against whatever cwd happened to be — an inconsistent
-// answer depending on where the binary was launched. Log a warning
-// so operators see the gap; preserve the cwd-relative behavior so
-// existing scripts that rely on the implicit fallback don't break,
-// but flag the configuration drift in the logs.
-// AbsPath returns the absolute form of p, anchored against the
-// context's ProjectRoot when p is relative. Empty p returns "" (the
-// "no path supplied" signal callers depend on).
-//
-// PRECONDITION: ProjectRoot must be non-empty for relative inputs.
-// The function logs a warning and falls back to filepath.Clean(p)
-// (cwd-relative) for relative inputs when ProjectRoot is empty —
-// this preserves long-standing behaviour for existing scripts but
-// hides a configuration gap. New code should call AbsPathStrict
-// instead, which surfaces the empty-ProjectRoot case as an error.
-func (c Context) AbsPath(p string) string {
-	out, err := c.AbsPathStrict(p)
-	if err != nil {
-		slog.Warn("config.Context.AbsPath: ProjectRoot empty for relative path; resolving against cwd",
-			"path", p, "error", err)
-		return filepath.Clean(strings.TrimSpace(p))
-	}
-	return out
-}
-
 // AbsPathStrict returns the absolute form of p anchored against the
 // context's ProjectRoot. Returns an error when p is relative and
 // ProjectRoot is empty — the caller asked for "anchor against the

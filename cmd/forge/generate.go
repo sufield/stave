@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -109,19 +108,27 @@ func runNonInteractive(ctx context.Context, w io.Writer, opts nonInteractiveOpts
 }
 
 // validateGeneratedControl finds and validates the generated control YAML
-// using the same parsing path as stave validate. Returns nil on success or
-// when the YAML file cannot be located (skipped); returns a non-nil error
-// when the YAML exists but fails to parse or prepare.
+// using the same parsing path as stave validate. Returns nil on success;
+// returns a non-nil error when the expected YAML is absent (generation
+// produced nothing) or exists but fails to parse or prepare.
+//
+// This runs immediately after a generation step that is always expected to
+// write <controlID>.yaml, so a missing file is a pipeline failure — not a
+// benign "nothing to validate" skip.
 func validateGeneratedControl(w io.Writer, controlID, outDir string) error {
 	if outDir == "" {
 		outDir = "testdata/e2e"
 	}
 
-	// Find the generated YAML by walking the output directory for
-	// the control ID. Surface walk errors instead of swallowing
-	// them — a permission-denied or vanished subtree used to
-	// silently produce "YAML file not found" and trigger the
+	// Match the EXACT filename gencontrol writes (<controlID>.yaml), not
+	// merely a basename that contains the ID. A substring match would let
+	// a sibling like <controlID>_v2.yaml (or an unrelated control whose ID
+	// contains this one) be validated in place of the real output, so an
+	// invalid generated control could pass on the strength of a different
+	// file. Surface walk errors instead of swallowing them — a
+	// permission-denied or vanished subtree used to silently produce the
 	// SKIPPED path, masking the real cause from the operator.
+	wantName := controlID + ".yaml"
 	var yamlPath string
 	walkErr := filepath.Walk(outDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -130,7 +137,7 @@ func validateGeneratedControl(w io.Writer, controlID, outDir string) error {
 		if info.IsDir() {
 			return nil
 		}
-		if strings.HasSuffix(path, ".yaml") && strings.Contains(filepath.Base(path), controlID) {
+		if filepath.Base(path) == wantName {
 			yamlPath = path
 			return filepath.SkipAll
 		}
@@ -143,8 +150,14 @@ func validateGeneratedControl(w io.Writer, controlID, outDir string) error {
 	}
 
 	if yamlPath == "" {
-		fmt.Fprintln(w, "\nValidating generated control...  SKIPPED (YAML file not found)")
-		return nil
+		// Generation just ran and was expected to write wantName. Its
+		// absence means the pipeline produced no control — fail loud
+		// rather than reporting SKIPPED success and shipping nothing.
+		fmt.Fprintf(w, "\nValidating generated control...  FAILED\n  expected %s under %s but it was not generated\n", wantName, outDir)
+		if walkErr != nil {
+			return fmt.Errorf("generated control %s not found under %s (walk error: %w)", wantName, outDir, walkErr)
+		}
+		return fmt.Errorf("generated control %s not found under %s — generation produced no output", wantName, outDir)
 	}
 
 	data, err := fsutil.ReadFileLimited(yamlPath)

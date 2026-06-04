@@ -171,7 +171,15 @@ func CleanUserPath(p string) string {
 // JoinWithinRoot joins a root directory and a relative path, then verifies
 // the result does not escape root. Returns an error if:
 //   - relPath is absolute
-//   - the joined path resolves outside root after cleaning
+//   - the joined path resolves outside root after cleaning (lexical)
+//   - the joined path, after symlink resolution, resolves outside root
+//
+// The symlink-resolution pass (evalWithinRoot) is essential for the
+// control-loading path: registry entries are relative paths trusted to
+// stay within root, but a lexically-in-root entry that is (or descends
+// through) a symlink to outside root would otherwise be accepted and
+// the out-of-root file read as a control. Lexical Rel cannot see this;
+// only resolving the link does.
 func JoinWithinRoot(root, relPath string) (string, error) {
 	relPath = filepath.Clean(relPath)
 	if filepath.IsAbs(relPath) || strings.HasPrefix(relPath, string(filepath.Separator)) {
@@ -186,6 +194,10 @@ func JoinWithinRoot(root, relPath string) (string, error) {
 	joined := filepath.Join(absRoot, relPath)
 	rel, err := filepath.Rel(absRoot, joined)
 	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("%w: %s", ErrPathTraversal, relPath)
+	}
+
+	if err := evalWithinRoot(absRoot, joined); err != nil {
 		return "", fmt.Errorf("%w: %s", ErrPathTraversal, relPath)
 	}
 

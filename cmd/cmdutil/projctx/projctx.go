@@ -160,9 +160,20 @@ func (e *InferenceEngine) InferDir(name, currentInput string) string {
 			}
 
 			if p := strings.TrimSpace(ctxPath); p != "" {
-				resolved := sc.Context.AbsPath(p)
-				record(InferAttempt{Searched: "context default", Resolved: resolved})
-				return resolved
+				// AbsPathStrict, not AbsPath: a controls/observations
+				// directory is security-sensitive (it determines which
+				// controls and snapshots the engine loads). If ProjectRoot
+				// is empty we must NOT silently anchor it against cwd — that
+				// targets a different, launch-location-dependent set. Record
+				// the gap and fall through to filesystem inference below,
+				// which is deterministic.
+				resolved, absErr := sc.Context.AbsPathStrict(p)
+				if absErr != nil {
+					record(InferAttempt{Searched: "context default", Error: absErr.Error()})
+				} else {
+					record(InferAttempt{Searched: "context default", Resolved: resolved})
+					return resolved
+				}
 			}
 		}
 	}

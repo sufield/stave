@@ -4,6 +4,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"io/fs"
 	"slices"
 	"strings"
 
@@ -161,11 +162,19 @@ func LoadSubSchemas(kind Kind, version string) ([]SubSchema, error) {
 	dir := fmt.Sprintf("embedded/%s/%s/asset-types", k, v)
 	entries, err := embeddedFS.ReadDir(dir)
 	if err != nil {
-		// Missing sub-schema directory is non-fatal: the kind
-		// simply has no auxiliary schemas registered. Callers
-		// (the validator) treat a nil slice as "no sub-schemas
-		// to register" rather than as a load failure.
-		return nil, nil //nolint:nilerr // intentional: missing dir = no sub-schemas
+		// ONLY a missing directory is non-fatal: the kind simply has
+		// no auxiliary schemas registered, and the validator treats a
+		// nil slice as "nothing to register". Any other error must
+		// propagate — silently returning nil here would disable
+		// sub-schema validation on a real read failure. (embeddedFS is
+		// an embed.FS today, where ReadDir can only fail with
+		// ErrNotExist, so the else branch is currently unreachable;
+		// this distinguishes intent and future-proofs the function if
+		// the schema source ever stops being compiled in.)
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("read sub-schema directory %q: %w", dir, err)
 	}
 
 	out := make([]SubSchema, 0, len(entries))

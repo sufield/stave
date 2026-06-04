@@ -70,6 +70,9 @@ func (r *VersionRunner) Run(edition Edition, verbose, verify bool) error {
 		fmt.Fprintf(&sb, "\nIntegrity:\n")
 		fmt.Fprintf(&sb, "  Binary hash:  %s\n", compose.EmptyDash(out.BinaryHash))
 		fmt.Fprintf(&sb, "  Policy hash:  %s\n", compose.EmptyDash(out.PolicyHash))
+		if out.IntegrityError != "" {
+			fmt.Fprintf(&sb, "  WARNING:      %s\n", out.IntegrityError)
+		}
 		fmt.Fprintf(&sb, "  Controls:     %d embedded\n", out.ControlCount)
 		if out.GoVersion != "" {
 			fmt.Fprintf(&sb, "  Go version:   %s\n", out.GoVersion)
@@ -118,28 +121,16 @@ func (r *VersionRunner) enrichWithIntegrity(out *versionOutput) {
 		}
 	}
 
-	// Policy library hash: sorted sha256 of all embedded control YAML files.
-	var controlHashes []string
-	err := fs.WalkDir(controldata.FS, ".", func(path string, d fs.DirEntry, walkErr error) error {
-		if walkErr != nil || d.IsDir() {
-			return walkErr
-		}
-		if !strings.HasSuffix(path, ".yaml") {
-			return nil
-		}
-		data, readErr := fs.ReadFile(controldata.FS, path)
-		if readErr != nil {
-			return nil //nolint:nilerr // skip unreadable files
-		}
-		sum := sha256.Sum256(data)
-		controlHashes = append(controlHashes, hex.EncodeToString(sum[:]))
-		out.ControlCount++
-		return nil
-	})
-	if err == nil && len(controlHashes) > 0 {
-		sort.Strings(controlHashes)
-		combined := sha256.Sum256([]byte(strings.Join(controlHashes, "\n")))
-		out.PolicyHash = "sha256:" + hex.EncodeToString(combined[:])
+	// Policy library hash over every embedded control YAML.
+	hash, count, err := policyLibraryHash(controldata.FS)
+	out.ControlCount = count
+	switch {
+	case err != nil:
+		out.IntegrityError = fmt.Sprintf("policy hash incomplete (not attesting a partial set): %v", err)
+	case hash == "":
+		out.IntegrityError = "policy hash incomplete: no embedded control YAML found"
+	default:
+		out.PolicyHash = hash
 	}
 
 	// Go build info: version and module dependencies.
@@ -149,6 +140,47 @@ func (r *VersionRunner) enrichWithIntegrity(out *versionOutput) {
 			out.Modules = append(out.Modules, dep.Path+"@"+dep.Version)
 		}
 	}
+}
+
+// policyLibraryHash computes the attestation hash over every control YAML
+// in cfs: the sorted, newline-joined sha256 of each file, re-hashed and
+// prefixed "sha256:". It returns the hash, the number of files covered,
+// and an error if ANY file cannot be read.
+//
+// It never returns a partial hash. Skipping an unreadable file would yield
+// a value that looks valid while attesting to an incomplete control set —
+// a false attestation. Any read or walk error aborts so the caller can
+// surface the gap instead of publishing a hash over fewer controls than
+// the binary actually ships. An empty FS returns ("", 0, nil) so the
+// caller can distinguish "no controls" from "read failed".
+func policyLibraryHash(cfs fs.FS) (string, int, error) {
+	var controlHashes []string
+	count := 0
+	err := fs.WalkDir(cfs, ".", func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil || d.IsDir() {
+			return walkErr
+		}
+		if !strings.HasSuffix(path, ".yaml") {
+			return nil
+		}
+		data, readErr := fs.ReadFile(cfs, path)
+		if readErr != nil {
+			return fmt.Errorf("read embedded control %q: %w", path, readErr)
+		}
+		sum := sha256.Sum256(data)
+		controlHashes = append(controlHashes, hex.EncodeToString(sum[:]))
+		count++
+		return nil
+	})
+	if err != nil {
+		return "", count, fmt.Errorf("walk embedded controls: %w", err)
+	}
+	if len(controlHashes) == 0 {
+		return "", 0, nil
+	}
+	sort.Strings(controlHashes)
+	combined := sha256.Sum256([]byte(strings.Join(controlHashes, "\n")))
+	return "sha256:" + hex.EncodeToString(combined[:]), count, nil
 }
 
 // ---------------------------------------------------------------------------
@@ -349,9 +381,10 @@ type versionOutput struct {
 	LockPresent       bool          `json:"lock_present"`
 
 	// Integrity fields (populated by --verify).
-	BinaryHash   string   `json:"binary_hash,omitempty"`
-	PolicyHash   string   `json:"policy_hash,omitempty"`
-	ControlCount int      `json:"control_count,omitempty"`
-	GoVersion    string   `json:"go_version,omitempty"`
-	Modules      []string `json:"modules,omitempty"`
+	BinaryHash     string   `json:"binary_hash,omitempty"`
+	PolicyHash     string   `json:"policy_hash,omitempty"`
+	IntegrityError string   `json:"integrity_error,omitempty"`
+	ControlCount   int      `json:"control_count,omitempty"`
+	GoVersion      string   `json:"go_version,omitempty"`
+	Modules        []string `json:"modules,omitempty"`
 }

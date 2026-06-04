@@ -61,13 +61,36 @@ func TestSortedNamesDeterministic(t *testing.T) {
 	}
 }
 
-func TestAbsPath(t *testing.T) {
+func TestAbsPathStrict(t *testing.T) {
 	ctx := Context{ProjectRoot: "/repo/root"}
-	if got := ctx.AbsPath("controls"); got != "/repo/root/controls" {
-		t.Fatalf("AbsPath relative = %q", got)
+	got, err := ctx.AbsPathStrict("controls")
+	if err != nil {
+		t.Fatalf("relative path with root: unexpected error %v", err)
 	}
-	if got := ctx.AbsPath("/abs/path"); got != "/abs/path" {
-		t.Fatalf("AbsPath absolute = %q", got)
+	if got != "/repo/root/controls" {
+		t.Fatalf("AbsPathStrict relative = %q", got)
+	}
+	got, err = ctx.AbsPathStrict("/abs/path")
+	if err != nil {
+		t.Fatalf("absolute path: unexpected error %v", err)
+	}
+	if got != "/abs/path" {
+		t.Fatalf("AbsPathStrict absolute = %q", got)
+	}
+}
+
+func TestAbsPathStrict_EmptyRootRelativeErrors(t *testing.T) {
+	// The motivation for removing the lenient AbsPath: a relative path
+	// with no ProjectRoot must surface as an error, never silently
+	// resolve against cwd (non-deterministic targeting of controls /
+	// observations / config).
+	ctx := Context{ProjectRoot: ""}
+	if _, err := ctx.AbsPathStrict("controls"); err == nil {
+		t.Fatal("relative path with empty ProjectRoot must error, got nil")
+	}
+	// Empty input is the explicit "no path supplied" signal: not an error.
+	if got, err := ctx.AbsPathStrict(""); err != nil || got != "" {
+		t.Fatalf("empty path must return (\"\", nil), got (%q, %v)", got, err)
 	}
 }
 
