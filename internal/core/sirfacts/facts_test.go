@@ -1406,11 +1406,13 @@ func TestStringifiedPolicyFacts_ParsesAPIGWResourcePolicy(t *testing.T) {
 	}
 }
 
-// TestStringifiedPolicyFacts_SilentOnInvalidJSON confirms a
-// malformed policy_json string produces zero facts and no error.
-// Some fixtures may carry non-JSON strings under the same field
-// name on a different asset; the parser must not log or error.
-func TestStringifiedPolicyFacts_SilentOnInvalidJSON(t *testing.T) {
+// TestStringifiedPolicyFacts_MalformedJSONEmitsDiagnostic confirms that a policy
+// field PRESENT on a MATCHING asset type but not valid JSON is surfaced as a
+// has_malformed_policy fact (fail-visible) — not silently producing zero facts,
+// which would hide condition-based exposures. Cross-asset scalar collisions (a
+// same-named string field on a non-matching asset type) are filtered earlier by
+// asset-type scoping and never reach this path, so they stay silent.
+func TestStringifiedPolicyFacts_MalformedJSONEmitsDiagnostic(t *testing.T) {
 	t.Parallel()
 	doc := &sir.Document{
 		Assets: []sir.AssetFact{{
@@ -1426,10 +1428,20 @@ func TestStringifiedPolicyFacts_SilentOnInvalidJSON(t *testing.T) {
 		}},
 	}
 	facts := ExtractFacts(doc)
-	for _, f := range facts {
-		if f.Source == "stringified_policy" {
-			t.Errorf("invalid JSON produced fact: %+v", f)
+	var got *Fact
+	for i := range facts {
+		if facts[i].Source == "stringified_policy" {
+			if got != nil {
+				t.Fatalf("expected exactly one stringified_policy fact, got an extra: %+v", facts[i])
+			}
+			got = &facts[i]
 		}
+	}
+	if got == nil {
+		t.Fatal("expected a has_malformed_policy diagnostic for invalid JSON, got none (silent miss)")
+	}
+	if got.Predicate != "has_malformed_policy" {
+		t.Errorf("expected predicate has_malformed_policy, got %q", got.Predicate)
 	}
 }
 

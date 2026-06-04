@@ -2,6 +2,7 @@ package policy
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -47,20 +48,21 @@ type NormalizedPrincipal struct {
 }
 
 // UnmarshalJSON populates the principal from any of the AWS-supported
-// JSON shapes. Decode failures are tolerated — the receiver is left
-// in its zero state, which downstream classification renders as
-// ScopeAccount. Mirrors the contract the previous NewPrincipal
-// implemented (decode failure → data=nil) so behaviour is preserved
-// across the normalization boundary.
+// JSON shapes. A null/empty Principal is the legitimate zero principal;
+// a *malformed* Principal returns an error (fail-loud) rather than
+// silently becoming the zero (ScopeAccount) principal, which would mask
+// public access. The error propagates up through the policy parse.
 func (p *NormalizedPrincipal) UnmarshalJSON(data []byte) error {
 	if len(data) == 0 || string(data) == "null" {
 		return nil
 	}
 	var v any
 	if err := json.Unmarshal(data, &v); err != nil {
-		// Tolerant: malformed Principal becomes the zero principal.
-		// See the doc comment on the type for the rationale.
-		return nil //nolint:nilerr // documented fail-soft contract
+		// Fail-loud: a malformed Principal must NOT silently become the zero
+		// (ScopeAccount) principal — that would mask public access. Surfacing
+		// the error fails the whole policy parse, and the bucket is flagged
+		// (cannot prove not-public) rather than passed.
+		return fmt.Errorf("malformed Principal: %w", err)
 	}
 	p.populate(v)
 	return nil
@@ -204,8 +206,10 @@ func classifyAWSARNs(arns []string) kernel.PrincipalScope {
 type NormalizedCondition map[string]map[string][]string
 
 // UnmarshalJSON decodes the condition block, coercing every leaf
-// value to []string. A null or unparseable Condition becomes a nil
-// map — equivalent to "no condition" for every downstream predicate.
+// value to []string. A null/absent Condition is the legitimate nil map
+// ("no condition"); a *malformed* Condition returns an error (fail-loud)
+// rather than silently becoming nil, which would weaken TLS/auth
+// guardrail checks. The error propagates up through the policy parse.
 func (c *NormalizedCondition) UnmarshalJSON(data []byte) error {
 	if len(data) == 0 || string(data) == "null" {
 		*c = nil
@@ -216,11 +220,11 @@ func (c *NormalizedCondition) UnmarshalJSON(data []byte) error {
 	// or array) and coerce uniformly.
 	var raw map[string]map[string]any
 	if err := json.Unmarshal(data, &raw); err != nil {
-		// Tolerant: matches the legacy hasSecureTransportCondition
-		// fail-soft behaviour where a malformed Condition block
-		// returned false instead of erroring.
-		*c = nil
-		return nil //nolint:nilerr // documented fail-soft contract
+		// Fail-loud: a malformed Condition must NOT silently vanish — dropping
+		// it weakens TLS/auth guardrail checks (and scope restrictions). Surface
+		// the parse error so the policy is treated as unparseable, not as
+		// "no condition".
+		return fmt.Errorf("malformed Condition: %w", err)
 	}
 	if len(raw) == 0 {
 		*c = nil

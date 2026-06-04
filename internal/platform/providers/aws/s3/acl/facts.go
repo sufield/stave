@@ -88,20 +88,14 @@ const (
 // asset.Properties["get-bucket-acl"] (which AWS CLI decode
 // produces as map[string]any) into typed ACLFacts.
 //
-// Tolerant of missing fields: an absent Grants array yields
-// ACLFacts{Grants: nil} with no error. Grants whose Grantee or
-// Permission fail to type-assert are silently dropped — the
-// extractor's contract is "best-effort produce typed grants
-// from whatever shape the snapshot carries"; downstream
-// validation (e.g., SIR builder failing to find expected
-// grants) surfaces the gap as a content issue, not a parse
-// error.
+// Tolerant of ABSENT data: a nil rawProperty or an absent Grants array yields
+// ACLFacts{Grants: nil} with no error ("no ACL data" is a valid state).
 //
-// Returns an error only when the top-level shape is wrong
-// enough that nothing meaningful can be extracted (rawProperty
-// is not a map at all, or is a non-nil non-map value). nil
-// rawProperty produces ACLFacts{} with no error — "no ACL
-// data" is a valid input state.
+// Fail-loud on MALFORMED data: a grant whose element is not an object, or whose
+// Grantee/Permission cannot be type-asserted, returns an error rather than being
+// silently dropped — a dropped malformed grant could hide a public/any-auth
+// grant and make the bucket look private. Returns an error when the top-level
+// shape is wrong (rawProperty is a non-nil non-map) or any grant is unparseable.
 func ExtractACLFacts(rawProperty any) (ACLFacts, error) {
 	if rawProperty == nil {
 		return ACLFacts{}, nil
@@ -131,11 +125,15 @@ func ExtractACLFacts(rawProperty any) (ACLFacts, error) {
 	for i, raw := range rawGrants {
 		grant, ok := raw.(map[string]any)
 		if !ok {
-			continue
+			// Fail-loud: a grant we can't parse must NOT be silently dropped —
+			// a malformed public/any-authenticated grant would vanish from the
+			// ACL and the bucket would look private. Error so the ACL is treated
+			// as unparseable, not as "fewer grants".
+			return ACLFacts{}, fmt.Errorf("acl: grant %d is not an object (%T); refusing to drop it — could hide a public grant", i, raw)
 		}
 		parsed, ok := parseGrant(i, grant)
 		if !ok {
-			continue
+			return ACLFacts{}, fmt.Errorf("acl: grant %d has an unparseable Grantee/Permission; refusing to drop it — could hide a public grant", i)
 		}
 		out.Grants = append(out.Grants, parsed)
 	}
@@ -144,8 +142,8 @@ func ExtractACLFacts(rawProperty any) (ACLFacts, error) {
 
 // parseGrant translates one element of the Grants array into a
 // typed ACLGrant. Returns ok=false when the grantee or
-// permission cannot be type-asserted; the caller drops the
-// grant and continues.
+// permission cannot be type-asserted; the caller turns that into
+// a parse error (a malformed grant is never silently dropped).
 func parseGrant(index int, raw map[string]any) (ACLGrant, bool) {
 	granteeRaw, ok := raw["Grantee"].(map[string]any)
 	if !ok {

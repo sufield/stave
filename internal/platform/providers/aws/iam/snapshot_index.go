@@ -11,11 +11,12 @@ import (
 // extraction follows the wire shape stave's collectors emit:
 // nested maps under identity.policies_json, identity.scp_json,
 // identity.boundary_json, identity.has_permissions_boundary,
-// identity.trust_policy_json. Malformed individual layers are
-// silently dropped (matching the legacy fail-soft contract every
-// caller relied on); the caller can branch on the returned
-// ResolutionInput's flags (SCPPresent, BoundaryPresent) to detect
-// "field absent" vs. "field present but unparseable".
+// identity.trust_policy_json. A PRESENT-but-unparseable layer is
+// recorded in ResolutionInput.MalformedLayers (NOT silently dropped,
+// which would under-scope effective permissions); Resolve folds that
+// into the Incomplete flag so downstream treats the principal as
+// inconclusive. Absent fields stay absent (SCPPresent/BoundaryPresent
+// distinguish "absent" from "present but unparseable").
 //
 // Centralised here (rather than duplicated in cmd/nep and
 // internal/app/sirbridge) so the IAM resolution boundary lives
@@ -26,10 +27,15 @@ func BuildResolutionInput(id *asset.CloudIdentity) ResolutionInput {
 		PrincipalARN: string(id.ID),
 	}
 
+	// A PRESENT-but-unparseable layer is recorded in MalformedLayers (not
+	// silently dropped); Resolve folds that into Incomplete so the principal's
+	// effective permissions are treated as inconclusive rather than under-scoped.
 	policiesJSON := stringProperty(id.Properties, "identity", "policies_json")
 	if policiesJSON != "" {
 		if doc, err := ParsePolicyDocument(policiesJSON); err == nil {
 			input.IdentityPolicies = []PolicyDocument{doc}
+		} else {
+			input.MalformedLayers = append(input.MalformedLayers, "identity policies")
 		}
 	}
 
@@ -38,6 +44,8 @@ func BuildResolutionInput(id *asset.CloudIdentity) ResolutionInput {
 		input.SCPPresent = true
 		if doc, err := ParsePolicyDocument(scpJSON); err == nil {
 			input.SCPHierarchy = []PolicyDocument{doc}
+		} else {
+			input.MalformedLayers = append(input.MalformedLayers, "scp")
 		}
 	}
 
@@ -47,6 +55,8 @@ func BuildResolutionInput(id *asset.CloudIdentity) ResolutionInput {
 		if boundaryJSON != "" {
 			if doc, err := ParsePolicyDocument(boundaryJSON); err == nil {
 				input.BoundaryPolicy = &doc
+			} else {
+				input.MalformedLayers = append(input.MalformedLayers, "boundary")
 			}
 		}
 	}
@@ -80,6 +90,13 @@ func ResolveAllPrincipals(snap *asset.Snapshot) (
 		if trustJSON != "" {
 			if doc, err := ParsePolicyDocument(trustJSON); err == nil {
 				trusts[string(id.ID)] = &doc
+			} else {
+				// Present-but-unparseable trust policy: mark the principal
+				// inconclusive (via the pointer already stored in resolved)
+				// rather than silently treating it as having no trust policy.
+				result.Incomplete = true
+				result.IncompleteReasons = append(result.IncompleteReasons,
+					"trust policy present but unparseable")
 			}
 		}
 	}

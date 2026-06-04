@@ -1,6 +1,7 @@
 package compliance
 
 import (
+	"fmt"
 	"strings"
 
 	s3policy "github.com/sufield/stave/internal/platform/providers/aws/s3/policy"
@@ -90,16 +91,12 @@ func ParsePolicyStatements(policyJSON string) ([]PolicyStatement, error) {
 	}
 	doc, err := s3policy.Parse(policyJSON)
 	if err != nil {
-		// Match the legacy "unparseable policy treated as empty"
-		// contract: every caller (the 13 compliance control files)
-		// already handles a nil-and-no-error return as "no
-		// statements to inspect". Surfacing the parse error here
-		// would change behaviour for any policy with a typo, and
-		// the existing controls intentionally treat malformed
-		// policies as a posture concern handled elsewhere
-		// (CTL.S3.POLICY.EXISTS / format validation), not as a
-		// hard failure here.
-		return nil, nil //nolint:nilerr // documented fail-soft contract
+		// Fail-loud: a present-but-unparseable policy must NOT be treated as
+		// "no statements" — that masks any public/over-broad grant the broken
+		// JSON might contain. Propagate; callers flag the bucket as
+		// "policy present but unparseable, cannot prove safe" rather than PASS.
+		// (Empty / absent policy is handled above as nil,nil — that stays.)
+		return nil, fmt.Errorf("parse bucket policy: %w", err)
 	}
 	stmts := doc.Statements()
 	out := make([]PolicyStatement, 0, len(stmts))

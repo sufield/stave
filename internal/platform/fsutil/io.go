@@ -207,9 +207,28 @@ func SafeCreateFile(path string, opts WriteOptions) (*os.File, error) {
 		}
 	}
 
-	flags := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+	// Test hook: inject a path swap between the symlink check and the open to
+	// exercise the TOCTOU window. Nil in production.
+	testHookAfterLstatMu.Lock()
+	beforeOpen := testHookBeforeOpen
+	testHookAfterLstatMu.Unlock()
+	if beforeOpen != nil {
+		beforeOpen(path)
+	}
+
+	// No O_TRUNC: truncation happens AFTER verifyHandle (below), never before,
+	// so a symlink swapped in after CheckSymlinkSafety cannot cause O_TRUNC to
+	// clear an attacker-chosen target. openNoFollow makes the open itself fail
+	// (ELOOP) if the final component is a symlink — atomic on unix; on platforms
+	// without it, verifyHandle + truncate-after-verify are the backstop.
+	flags := os.O_WRONLY | os.O_CREATE
+	if !opts.AllowSymlink {
+		// openNoFollow only when symlinks are disallowed; AllowSymlink callers
+		// explicitly opt into following the link.
+		flags |= openNoFollow
+	}
 	if !opts.Overwrite {
-		flags = os.O_WRONLY | os.O_CREATE | os.O_EXCL
+		flags |= os.O_EXCL
 	}
 
 	// #nosec G304 -- intentionally opens caller-supplied output paths after safety checks.
@@ -226,6 +245,19 @@ func SafeCreateFile(path string, opts WriteOptions) (*os.File, error) {
 			// Best-effort close; returning the security error takes priority.
 			_ = f.Close()
 			return nil, err
+		}
+	}
+
+	// Truncate only after the handle is verified as the intended (non-symlink)
+	// target, so an overwrite can never clear a file we haven't confirmed.
+	if opts.Overwrite {
+		if truncErr := f.Truncate(0); truncErr != nil {
+			_ = f.Close()
+			return nil, fmt.Errorf("truncate: %w", truncErr)
+		}
+		if _, seekErr := f.Seek(0, io.SeekStart); seekErr != nil {
+			_ = f.Close()
+			return nil, fmt.Errorf("seek: %w", seekErr)
 		}
 	}
 
@@ -265,8 +297,12 @@ func SafeWriteFile(path string, data []byte, opts WriteOptions) error {
 // test code that writes the hook. -race flagged the unsynchronised
 // read whenever a parallel test set the hook on a sibling goroutine;
 // the hook is rare enough that the lock overhead is negligible.
+// testHookBeforeOpen is called in SafeCreateFile between CheckSymlinkSafety and
+// the os.OpenFile, to inject a TOCTOU path swap in tests. Nil in production.
+// Guarded by testHookAfterLstatMu (same rationale as testHookAfterLstat).
 var (
 	testHookAfterLstat   func(component string)
+	testHookBeforeOpen   func(path string)
 	testHookAfterLstatMu sync.Mutex
 )
 

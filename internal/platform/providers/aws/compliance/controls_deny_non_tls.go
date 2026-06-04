@@ -35,7 +35,13 @@ func (ctl *controlsDenyNonTLS) Evaluate(snap asset.Snapshot) core.Outcome {
 		policyJSON := extractPolicyJSON(a)
 		stmts, err := ParsePolicyStatements(policyJSON)
 		if err != nil {
-			return nil
+			// Present-but-unparseable policy: cannot confirm a Deny-non-TLS
+			// guardrail exists — flag rather than silently pass.
+			r := ctl.FailResult(
+				fmt.Sprintf("Bucket %s: bucket policy is present but could not be parsed (%v); cannot verify a Deny-non-TLS guardrail is present", a.ID, err),
+				"Fix the malformed bucket policy JSON so the TLS guardrail can be evaluated; an unparseable policy cannot be proven to enforce TLS.",
+			)
+			return &r
 		}
 
 		// Index iteration to avoid the per-iteration copy of the

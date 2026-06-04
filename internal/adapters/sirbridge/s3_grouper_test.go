@@ -153,3 +153,51 @@ func TestAWSS3FactGrouper_EmptyBucketProducesEmptyGroup(t *testing.T) {
 		t.Errorf("all four vectors should be empty for bare bucket: %+v", gr)
 	}
 }
+
+func TestAWSS3FactGrouper_MalformedACLFailsLoud(t *testing.T) {
+	// A grant whose element is not an object is malformed. The grouper
+	// must surface the parse error rather than collapse it to "no
+	// grants" — a dropped malformed grant could hide a public grantee
+	// and make the bucket look private.
+	bucket := asset.Asset{
+		ID:     asset.ID("arn:aws:s3:::malformed-acl"),
+		Type:   kernel.AssetType("aws_s3_bucket"),
+		Vendor: kernel.Vendor("aws"),
+		Properties: map[string]any{
+			"get-bucket-acl": map[string]any{
+				"Grants": []any{"not-an-object"},
+			},
+		},
+	}
+	snap := asset.Snapshot{
+		Source:     asset.SourceDeployed,
+		CapturedAt: time.Date(2026, 5, 1, 11, 0, 0, 0, time.UTC),
+		Assets:     []asset.Asset{bucket},
+	}
+	g := NewAWSS3FactGrouper()
+	if _, err := g.GroupResources([]asset.Snapshot{snap}, time.Time{}); err == nil {
+		t.Fatal("malformed ACL must make GroupResources fail loud, got nil error")
+	}
+}
+
+func TestAWSS3FactGrouper_MalformedBucketPolicyFailsLoud(t *testing.T) {
+	// policy_json present but unparseable must surface as an error, not
+	// silently erase a possibly-public statement.
+	bucket := asset.Asset{
+		ID:     asset.ID("arn:aws:s3:::malformed-policy"),
+		Type:   kernel.AssetType("aws_s3_bucket"),
+		Vendor: kernel.Vendor("aws"),
+		Properties: map[string]any{
+			"policy_json": `{"Statement": [`,
+		},
+	}
+	snap := asset.Snapshot{
+		Source:     asset.SourceDeployed,
+		CapturedAt: time.Date(2026, 5, 1, 11, 0, 0, 0, time.UTC),
+		Assets:     []asset.Asset{bucket},
+	}
+	g := NewAWSS3FactGrouper()
+	if _, err := g.GroupResources([]asset.Snapshot{snap}, time.Time{}); err == nil {
+		t.Fatal("malformed bucket policy must make GroupResources fail loud, got nil error")
+	}
+}

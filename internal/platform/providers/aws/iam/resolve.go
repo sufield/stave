@@ -1,5 +1,7 @@
 package iam
 
+import "strings"
+
 // PrivilegeLevel classifies the resolved effective permission set.
 type PrivilegeLevel string
 
@@ -85,6 +87,11 @@ type ResolutionInput struct {
 	SCPPresent       bool             // false = absent from snapshot (incomplete)
 	BoundaryPolicy   *PolicyDocument  // nil = no boundary attached
 	BoundaryPresent  bool             // true = boundary exists but doc may be nil
+	// MalformedLayers names policy layers that were PRESENT but failed to parse
+	// (e.g. "identity policies", "scp", "boundary"). A malformed layer must NOT
+	// be silently dropped — that under-scopes effective permissions. Resolve
+	// folds this into Incomplete so downstream treats the result conservatively.
+	MalformedLayers []string
 }
 
 // Resolve computes net effective permissions for a principal by applying
@@ -98,6 +105,14 @@ func Resolve(input ResolutionInput) ResolvedPermissions {
 	}
 
 	// Check completeness.
+	if len(input.MalformedLayers) > 0 {
+		// A present-but-unparseable policy layer means the effective
+		// permissions are under-scoped (a missing Deny/SCP looks more
+		// permissive). Treat as inconclusive rather than trusting the result.
+		result.Incomplete = true
+		result.IncompleteReasons = append(result.IncompleteReasons,
+			"policy layer(s) present but unparseable: "+strings.Join(input.MalformedLayers, ", "))
+	}
 	if !input.SCPPresent {
 		result.Incomplete = true
 		result.IncompleteReasons = append(result.IncompleteReasons,

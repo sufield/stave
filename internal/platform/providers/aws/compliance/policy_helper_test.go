@@ -11,9 +11,10 @@ func TestParsePolicyStatements(t *testing.T) {
 		name      string
 		json      string
 		wantCount int
+		wantErr   bool // malformed (present-but-unparseable) policies fail loud
 	}{
 		{name: "empty string", json: "", wantCount: 0},
-		{name: "invalid json", json: "{bad", wantCount: 0},
+		{name: "invalid json", json: "{bad", wantErr: true}, // fail-loud: not "0 statements"
 		{name: "no statement key", json: `{"Version":"2012-10-17"}`, wantCount: 0},
 		{
 			name:      "single statement as object",
@@ -33,6 +34,12 @@ func TestParsePolicyStatements(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			stmts, err := ParsePolicyStatements(tc.json)
+			if tc.wantErr {
+				if err == nil {
+					t.Fatalf("expected a parse error for malformed policy, got nil (would mask exposure)")
+				}
+				return
+			}
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}

@@ -33,7 +33,14 @@ func (ctl *accessPublicList) Evaluate(snap asset.Snapshot) core.Outcome {
 	return evaluateS3Buckets(ctl.Definition, snap, func(a asset.Asset, _ S3Properties) *core.Outcome {
 		policyJSON := extractPolicyJSON(a)
 		stmts, err := ParsePolicyStatements(policyJSON)
-		if err != nil || len(stmts) == 0 {
+		if err != nil {
+			r := ctl.FailResult(
+				fmt.Sprintf("Bucket %s: bucket policy is present but could not be parsed (%v); cannot verify it grants no public s3:ListBucket", a.ID, err),
+				"Fix the malformed bucket policy JSON so it can be evaluated; an unparseable policy cannot be proven safe.",
+			)
+			return &r
+		}
+		if len(stmts) == 0 {
 			return nil
 		}
 

@@ -1,6 +1,7 @@
 package sirbridge
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -50,12 +51,24 @@ func (g *AWSS3FactGrouper) GroupResources(snapshots []asset.Snapshot, _ time.Tim
 		if string(bucket.Type) != "aws_s3_bucket" {
 			continue
 		}
+		// Fail loud on malformed bucket policy / ACL: a swallowed parse
+		// error here erases possibly-public facts and makes the bucket
+		// look private to the L6 solver. Absent/empty data stays tolerant
+		// (the helpers return nil, nil); only unparseable input errors.
+		bucketPolicy, err := extractBucketPolicyStatements(bucket)
+		if err != nil {
+			return nil, err
+		}
+		aclGrants, err := aclGrantFactsFromBucket(bucket)
+		if err != nil {
+			return nil, err
+		}
 		group := sir.ResourceFactGroup{
 			AssetID:      string(bucket.ID),
 			Vendor:       "aws",
 			ServiceArea:  "s3",
-			BucketPolicy: extractBucketPolicyStatements(bucket),
-			ACLGrants:    aclGrantFactsFromBucket(bucket),
+			BucketPolicy: bucketPolicy,
+			ACLGrants:    aclGrants,
 			PAB:          extractPublicAccessBlock(bucket),
 			AttachedIAM:  extractIAMStatementsForAsset(bucket, latest.Identities),
 			Source: sir.SourceRef{
@@ -73,14 +86,23 @@ func (g *AWSS3FactGrouper) GroupResources(snapshots []asset.Snapshot, _ time.Tim
 // SIR-layer sir.ACLGrantFact. The two types differ only in
 // that the SIR fact carries an explicit SourceRef. No content
 // translation; this is a pure type adaptation.
-func aclGrantFactsFromBucket(bucket asset.Asset) []sir.ACLGrantFact {
+//
+// Tolerant of ABSENT data: no get-bucket-acl property, or an ACL with
+// zero grants, returns (nil, nil). Fail-loud on MALFORMED data:
+// ExtractACLFacts errors propagate rather than collapsing to "no
+// grants" — a dropped malformed grant could hide a public/any-auth
+// grantee and make the bucket look private.
+func aclGrantFactsFromBucket(bucket asset.Asset) ([]sir.ACLGrantFact, error) {
 	raw, ok := bucket.Properties["get-bucket-acl"]
 	if !ok || raw == nil {
-		return nil
+		return nil, nil
 	}
 	facts, err := acl.ExtractACLFacts(raw)
-	if err != nil || len(facts.Grants) == 0 {
-		return nil
+	if err != nil {
+		return nil, fmt.Errorf("bucket %s: get-bucket-acl present but unparseable — refusing to drop it, could hide a public grant: %w", bucket.ID, err)
+	}
+	if len(facts.Grants) == 0 {
+		return nil, nil
 	}
 	bucketID := string(bucket.ID)
 	out := make([]sir.ACLGrantFact, 0, len(facts.Grants))
@@ -100,7 +122,7 @@ func aclGrantFactsFromBucket(bucket asset.Asset) []sir.ACLGrantFact {
 			},
 		})
 	}
-	return out
+	return out, nil
 }
 
 // Compile-time assertion.

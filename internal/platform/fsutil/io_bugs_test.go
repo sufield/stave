@@ -237,6 +237,61 @@ func TestSafeCreateFile_VerifyHandleClosesRaceWindow(t *testing.T) {
 	}
 }
 
+// TestSafeCreateFile_RaceDoesNotTruncateVictim drives the real TOCTOU window:
+// a regular target passes CheckSymlinkSafety, then is swapped for a symlink to
+// a victim file *before* the open. Pre-fix, O_TRUNC truncated the victim before
+// verifyHandle ran. Post-fix, openNoFollow (or verifyHandle) rejects the swap
+// and — critically — the victim's contents are left intact (no early truncate).
+func TestSafeCreateFile_RaceDoesNotTruncateVictim(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("symlink race test requires unix")
+	}
+	dir := t.TempDir()
+	target := filepath.Join(dir, "target")
+	victim := filepath.Join(dir, "victim")
+	const sensitive = "sensitive-do-not-truncate"
+	if err := os.WriteFile(victim, []byte(sensitive), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// Regular file so CheckSymlinkSafety passes.
+	if err := os.WriteFile(target, []byte("original"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Swap target -> symlink(victim) exactly once, in the window between the
+	// safety check and the open.
+	testHookAfterLstatMu.Lock()
+	testHookBeforeOpen = func(p string) {
+		if p != target {
+			return
+		}
+		testHookAfterLstatMu.Lock()
+		testHookBeforeOpen = nil // fire once
+		testHookAfterLstatMu.Unlock()
+		_ = os.Remove(target)
+		_ = os.Symlink(victim, target)
+	}
+	testHookAfterLstatMu.Unlock()
+	t.Cleanup(func() {
+		testHookAfterLstatMu.Lock()
+		testHookBeforeOpen = nil
+		testHookAfterLstatMu.Unlock()
+	})
+
+	err := SafeWriteFile(target, []byte("pwned"), WriteOptions{Perm: 0o644, Overwrite: true})
+	if err == nil {
+		t.Error("expected SafeWriteFile to reject the symlink swapped in mid-race")
+	}
+	// The victim must be untouched — never truncated by O_TRUNC.
+	got, readErr := os.ReadFile(victim)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	if string(got) != sensitive {
+		t.Errorf("victim was modified by the race (TOCTOU truncation): got %q want %q", got, sensitive)
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Bug 5: JoinWithinRoot with separator-prefixed path on Windows
 // ---------------------------------------------------------------------------

@@ -875,10 +875,11 @@ func conditionFacts(assets []sir.AssetFact) []Fact {
 // through has_condition / has_condition_value.
 //
 // Adding a new path is governance, not a kitchen sink — only
-// fields confirmed in real fixtures belong here. The parser
-// fails silently on invalid JSON (some scalar string fields
-// happen to share a name with a real policy field on a
-// different asset type).
+// fields confirmed in real fixtures belong here. assetTypes scopes
+// each path so a same-named scalar on a different asset type is
+// skipped (stays silent). For an asset-type-scoped field that IS
+// present but not valid JSON, the parser emits a has_malformed_policy
+// diagnostic fact (fail-visible) rather than silently dropping it.
 type stringifiedPolicyPath struct {
 	blockKey   string // top-level key under properties
 	keys       []string
@@ -924,14 +925,16 @@ var stringifiedPolicyAllowlist = []stringifiedPolicyPath{
 // follows the parsed JSON's array index — Go's encoding/json
 // preserves array order.
 //
-// Failure modes that produce zero facts (and no error):
+// Modes that produce zero condition facts (no error — expected when the path
+// doesn't apply to this asset):
 //   - Field is absent on the asset.
 //   - Field is present but not a string (schema variation).
-//   - Field is a string but not valid JSON.
+//   - Field is on a non-matching asset type (asset-type scoping skips it).
 //   - Parsed JSON has no Statement[] or no Condition blocks.
 //
-// These are all expected on fixtures where the path doesn't
-// apply; raising errors would noise the export with non-issues.
+// Fail-visible (does NOT silently produce zero facts): an asset-type-scoped
+// field that is present but not valid JSON emits a has_malformed_policy fact, so
+// condition-based detections see the gap instead of a false "no conditions".
 func stringifiedPolicyFacts(assets []sir.AssetFact) []Fact {
 	var out []Fact
 	for i := range assets {
@@ -962,6 +965,19 @@ func stringifiedPolicyFacts(assets []sir.AssetFact) []Fact {
 			}
 			var policy map[string]any
 			if err := json.Unmarshal([]byte(jsonStr), &policy); err != nil {
+				if len(rule.assetTypes) > 0 {
+					// Asset-type-scoped field that is present but not valid JSON
+					// is a real malformed policy (not a cross-asset scalar that
+					// merely shares the field name). Fail-visible: emit a
+					// diagnostic fact so condition-based detections see the gap
+					// instead of silently finding zero conditions.
+					out = append(out, Fact{
+						Subject: a.ID, Predicate: "has_malformed_policy",
+						Object: rule.dotPath, Source: "stringified_policy",
+						Evidence: fmt.Sprintf("assets[%d].properties.%s present but not valid JSON: %v",
+							i, rule.dotPath, err),
+					})
+				}
 				continue
 			}
 			stmts, ok := policy["Statement"].([]any)
@@ -975,65 +991,76 @@ func stringifiedPolicyFacts(assets []sir.AssetFact) []Fact {
 				}
 				stmtBase := fmt.Sprintf("assets[%d].properties.%s → (parsed JSON) → Statement[%d]",
 					i, rule.dotPath, si)
-				// Resource-policy principal + action extraction
-				// (PR 5). Emitted regardless of whether the
-				// Statement carries a Condition block. The
-				// "resource_policy_*" predicate names are
-				// distinct from has_action / has_resource so a
-				// reader can tell which trust model produced the
-				// fact (resource policy attached to the bucket
-				// vs. identity policy attached to the role).
-				if p, hasP := stmt["Principal"]; hasP {
-					for _, principal := range extractResourcePolicyPrincipals(p) {
-						out = append(out, Fact{
-							Subject: a.ID, Predicate: "resource_policy_principal",
-							Object: principal, Source: "stringified_policy",
-							Evidence: stmtBase + ".Principal",
-						})
-					}
-				}
-				for _, action := range coerceStringList(stmt["Action"]) {
-					out = append(out, Fact{
-						Subject: a.ID, Predicate: "resource_policy_action",
-						Object: action, Source: "stringified_policy",
-						Evidence: stmtBase + ".Action",
-					})
-				}
-				// Condition extraction (PR 4 behavior).
-				cond, ok := stmt["Condition"].(map[string]any)
-				if !ok || len(cond) == 0 {
-					continue
-				}
-				evid := stmtBase + ".Condition"
-				ops := make([]string, 0, len(cond))
-				for op := range cond {
-					ops = append(ops, op)
-				}
-				sort.Strings(ops)
-				for _, op := range ops {
-					keys, ok := cond[op].(map[string]any)
-					if !ok {
-						continue
-					}
-					keyNames := make([]string, 0, len(keys))
-					for k := range keys {
-						keyNames = append(keyNames, k)
-					}
-					sort.Strings(keyNames)
-					for _, k := range keyNames {
-						out = append(out, Fact{
-							Subject: a.ID, Predicate: "has_condition", Object: op + ":" + k,
-							Source: "stringified_policy", Evidence: evid,
-						})
-						for _, val := range coerceStringList(keys[k]) {
-							out = append(out, Fact{
-								Subject: a.ID, Predicate: "has_condition_value",
-								Object: op + ":" + k + "=" + val,
-								Source: "stringified_policy", Evidence: evid,
-							})
-						}
-					}
-				}
+				out = append(out, resourcePolicyStatementFacts(a.ID, stmtBase, stmt)...)
+			}
+		}
+	}
+	return out
+}
+
+// resourcePolicyStatementFacts projects one already-parsed resource-policy
+// Statement into SIR facts. Split out of stringifiedPolicyFacts to keep that
+// function under the cognitive-complexity budget; the extraction is a pure
+// move with no behavioral change.
+//
+// Emits, for the given subject (asset ID) and stmtBase evidence prefix:
+//   - resource_policy_principal / resource_policy_action — always (PR 5);
+//     the "resource_policy_*" predicate names stay distinct from
+//     has_action / has_resource so a reader can tell which trust model
+//     produced the fact (resource policy on the bucket vs. identity policy
+//     on the role).
+//   - has_condition / has_condition_value — only when the Statement carries
+//     a non-empty Condition block (PR 4). Operators and keys are sorted so
+//     the fact stream is deterministic.
+func resourcePolicyStatementFacts(subject, stmtBase string, stmt map[string]any) []Fact {
+	var out []Fact
+	if p, hasP := stmt["Principal"]; hasP {
+		for _, principal := range extractResourcePolicyPrincipals(p) {
+			out = append(out, Fact{
+				Subject: subject, Predicate: "resource_policy_principal",
+				Object: principal, Source: "stringified_policy",
+				Evidence: stmtBase + ".Principal",
+			})
+		}
+	}
+	for _, action := range coerceStringList(stmt["Action"]) {
+		out = append(out, Fact{
+			Subject: subject, Predicate: "resource_policy_action",
+			Object: action, Source: "stringified_policy",
+			Evidence: stmtBase + ".Action",
+		})
+	}
+	cond, ok := stmt["Condition"].(map[string]any)
+	if !ok || len(cond) == 0 {
+		return out
+	}
+	evid := stmtBase + ".Condition"
+	ops := make([]string, 0, len(cond))
+	for op := range cond {
+		ops = append(ops, op)
+	}
+	sort.Strings(ops)
+	for _, op := range ops {
+		keys, ok := cond[op].(map[string]any)
+		if !ok {
+			continue
+		}
+		keyNames := make([]string, 0, len(keys))
+		for k := range keys {
+			keyNames = append(keyNames, k)
+		}
+		sort.Strings(keyNames)
+		for _, k := range keyNames {
+			out = append(out, Fact{
+				Subject: subject, Predicate: "has_condition", Object: op + ":" + k,
+				Source: "stringified_policy", Evidence: evid,
+			})
+			for _, val := range coerceStringList(keys[k]) {
+				out = append(out, Fact{
+					Subject: subject, Predicate: "has_condition_value",
+					Object: op + ":" + k + "=" + val,
+					Source: "stringified_policy", Evidence: evid,
+				})
 			}
 		}
 	}

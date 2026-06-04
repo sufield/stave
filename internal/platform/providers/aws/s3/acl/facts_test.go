@@ -131,7 +131,11 @@ func TestExtractACLFacts(t *testing.T) {
 			},
 		},
 		{
-			name: "malformed_grant_dropped",
+			// Fail-loud: a malformed grant must error, not be silently dropped.
+			// Dropping it could hide a public/any-auth grant and make the bucket
+			// look private. (A valid AllUsers grant follows the bad entry to prove
+			// we don't just tolerate it because the rest parses.)
+			name: "malformed_grant_errors_not_dropped",
 			input: map[string]any{
 				"Owner": map[string]any{"ID": "owner-7"},
 				"Grants": []any{
@@ -142,15 +146,7 @@ func TestExtractACLFacts(t *testing.T) {
 					},
 				},
 			},
-			// Note: Index reflects position in the input array
-			// (1, not 0) — the malformed entry is skipped but
-			// the surviving grant keeps its original position.
-			want: ACLFacts{
-				OwnerID: "owner-7",
-				Grants: []ACLGrant{
-					{Index: 1, Kind: GranteeGroup, URI: GroupURIAllUsers, Permission: ACLPermissionRead, IsPublic: true},
-				},
-			},
+			wantError: true,
 		},
 		{
 			name:      "non_map_input_errors",

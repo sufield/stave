@@ -31,7 +31,10 @@ func TestExtractBucketPolicyStatements_PublicReadSingleStatement(t *testing.T) {
 			"Resource": "arn:aws:s3:::my-bucket/*"
 		}]
 	}`
-	got := extractBucketPolicyStatements(bucketAsset("arn:aws:s3:::my-bucket", policyJSON))
+	got, err := extractBucketPolicyStatements(bucketAsset("arn:aws:s3:::my-bucket", policyJSON))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	if len(got) != 1 {
 		t.Fatalf("expected 1 statement, got %d", len(got))
@@ -78,7 +81,10 @@ func TestExtractBucketPolicyStatements_AllowAndDenyTwoStatements(t *testing.T) {
 			}
 		]
 	}`
-	got := extractBucketPolicyStatements(bucketAsset("arn:aws:s3:::my-bucket", policyJSON))
+	got, err := extractBucketPolicyStatements(bucketAsset("arn:aws:s3:::my-bucket", policyJSON))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	if len(got) != 2 {
 		t.Fatalf("expected 2 statements, got %d", len(got))
@@ -116,7 +122,10 @@ func TestExtractBucketPolicyStatements_ConditionWithIPAddress(t *testing.T) {
 			}
 		}]
 	}`
-	got := extractBucketPolicyStatements(bucketAsset("arn:aws:s3:::my-bucket", policyJSON))
+	got, err := extractBucketPolicyStatements(bucketAsset("arn:aws:s3:::my-bucket", policyJSON))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	if len(got) != 1 {
 		t.Fatalf("expected 1 statement, got %d", len(got))
@@ -148,8 +157,25 @@ func TestExtractBucketPolicyStatements_NoPolicyReturnsNil(t *testing.T) {
 		Vendor:     kernel.Vendor("aws"),
 		Properties: map[string]any{},
 	}
-	if got := extractBucketPolicyStatements(a); got != nil {
+	got, err := extractBucketPolicyStatements(a)
+	if err != nil {
+		t.Fatalf("absent policy must not error, got %v", err)
+	}
+	if got != nil {
 		t.Errorf("absent policy must return nil, got %+v", got)
+	}
+}
+
+func TestExtractBucketPolicyStatements_MalformedJSONErrors(t *testing.T) {
+	// policy_json present but not valid JSON: must fail loud, not
+	// silently return zero statements (which would erase a possibly
+	// public statement and make the bucket look private).
+	got, err := extractBucketPolicyStatements(bucketAsset("arn:aws:s3:::my-bucket", `{"Statement": [`))
+	if err == nil {
+		t.Fatalf("malformed policy_json must return an error, got nil (facts=%+v)", got)
+	}
+	if got != nil {
+		t.Errorf("malformed policy_json must return nil facts alongside the error, got %+v", got)
 	}
 }
 
@@ -163,7 +189,10 @@ func TestExtractBucketPolicyStatements_ServicePrincipal(t *testing.T) {
 			"Resource": "arn:aws:s3:::my-bucket/*"
 		}]
 	}`
-	got := extractBucketPolicyStatements(bucketAsset("arn:aws:s3:::my-bucket", policyJSON))
+	got, err := extractBucketPolicyStatements(bucketAsset("arn:aws:s3:::my-bucket", policyJSON))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if len(got) != 1 {
 		t.Fatalf("expected 1 statement, got %d", len(got))
 	}

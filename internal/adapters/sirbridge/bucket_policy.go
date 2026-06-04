@@ -1,6 +1,7 @@
 package sirbridge
 
 import (
+	"fmt"
 	"log/slog"
 	"strconv"
 
@@ -55,8 +56,16 @@ func typeName(v any) string {
 
 // extractBucketPolicyStatements decodes the bucket policy JSON
 // stored at asset.Properties["policy_json"] and emits one
-// sir.BucketPolicyStatementFact per statement. Returns nil
-// when no policy is present.
+// sir.BucketPolicyStatementFact per statement.
+//
+// Tolerant of ABSENT data: no policy_json (or an empty policy with
+// zero statements) returns (nil, nil) — "no policy" is a valid state.
+//
+// Fail-loud on MALFORMED data: a policy_json that is present but does
+// not parse returns an error rather than silently producing zero
+// statement facts. A swallowed parse error would erase a possibly
+// public statement and make the bucket look private to the L6 solver —
+// the exact fail-open this guards against.
 //
 // Iter L1 contract: ZERO logical reasoning. The extractor decomposes
 // AWS's polymorphic Principal / Action / Resource / Condition
@@ -73,18 +82,21 @@ func typeName(v any) string {
 // SourceRef contract; downstream consumers (the L7 fix
 // suggester, the explainer) navigate to specific statements
 // via the index.
-func extractBucketPolicyStatements(a asset.Asset) []sir.BucketPolicyStatementFact {
+func extractBucketPolicyStatements(a asset.Asset) ([]sir.BucketPolicyStatementFact, error) {
 	policyJSON := readBucketPolicyJSON(a)
 	if policyJSON == "" {
-		return nil
+		return nil, nil
 	}
 	doc, err := policy.Parse(policyJSON)
-	if err != nil || doc == nil {
-		return nil
+	if err != nil {
+		return nil, fmt.Errorf("bucket %s: policy_json present but unparseable — refusing to drop it, could hide a public statement: %w", a.ID, err)
+	}
+	if doc == nil {
+		return nil, nil
 	}
 	stmts := doc.Statements()
 	if len(stmts) == 0 {
-		return nil
+		return nil, nil
 	}
 	bucketID := string(a.ID)
 
@@ -107,7 +119,7 @@ func extractBucketPolicyStatements(a asset.Asset) []sir.BucketPolicyStatementFac
 		}
 		out = append(out, fact)
 	}
-	return out
+	return out, nil
 }
 
 // typedPrincipalsFrom decomposes a NormalizedPrincipal into a

@@ -897,24 +897,16 @@ func TestAnalyzeConditionEmptyMap(t *testing.T) {
 	}
 }
 
-// TestAnalyzeConditionMalformedJSON exercises the parse-time
-// fail-soft contract. The legacy analyzeCondition accepted any
-// arbitrary type and returned the zero analysis on a non-map; the
-// typed signature pushes that responsibility to UnmarshalJSON, so
-// the test now drives JSON bytes through the unmarshaller and
-// asserts the same behaviour at the new boundary.
+// TestAnalyzeConditionMalformedJSON asserts the fail-loud contract: a
+// malformed Condition must return an error from UnmarshalJSON, not silently
+// decode to an empty (no-condition) map — silently dropping it would weaken
+// TLS/auth guardrail checks (a malformed protective condition would look absent
+// and the policy parse must instead fail so the bucket is flagged).
 func TestAnalyzeConditionMalformedJSON(t *testing.T) {
 	t.Parallel()
 	var c NormalizedCondition
-	if err := c.UnmarshalJSON([]byte(`"not-a-map"`)); err != nil {
-		t.Fatalf("UnmarshalJSON returned err on malformed input: %v", err)
-	}
-	if !c.IsEmpty() {
-		t.Error("expected empty NormalizedCondition for malformed JSON input")
-	}
-	result := analyzeCondition(c)
-	if result.HasIPCondition || result.HasVPCCondition || result.HasOrgCondition {
-		t.Error("expected all conditions false for malformed condition")
+	if err := c.UnmarshalJSON([]byte(`"not-a-map"`)); err == nil {
+		t.Fatal("expected UnmarshalJSON to error on malformed Condition, got nil (would weaken guardrail checks)")
 	}
 }
 

@@ -45,8 +45,17 @@ func (ctl *accessWildcardAction) Evaluate(snap asset.Snapshot) core.Outcome {
 	return evaluateS3Buckets(ctl.Definition, snap, func(a asset.Asset, _ S3Properties) *core.Outcome {
 		policyJSON := extractPolicyJSON(a)
 		stmts, err := ParsePolicyStatements(policyJSON)
-		if err != nil || len(stmts) == 0 {
-			return nil // no policy or unparseable — not a violation
+		if err != nil {
+			// Present-but-unparseable policy: cannot prove it grants no
+			// wildcard actions — flag rather than silently pass.
+			r := ctl.FailResult(
+				fmt.Sprintf("Bucket %s: bucket policy is present but could not be parsed (%v); cannot verify it grants no wildcard (Action: \"*\") access", a.ID, err),
+				"Fix the malformed bucket policy JSON so it can be evaluated; an unparseable policy cannot be proven safe.",
+			)
+			return &r
+		}
+		if len(stmts) == 0 {
+			return nil // no policy attached — not a violation
 		}
 
 		// Index iteration to avoid the per-iteration copy of the
