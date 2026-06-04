@@ -33,23 +33,24 @@ func TestCompoundRegression_RhinoAttachUserPolicy(t *testing.T) {
 
 	found := false
 	for _, c := range a.ChainFindings {
-		if c.ChainID == "iam_privesc_by_attachment" {
-			found = true
-			if c.Severity != "critical" {
-				t.Errorf("chain severity = %s, want critical", c.Severity)
+		if c.ChainID != "iam_privesc_by_attachment" {
+			continue
+		}
+		found = true
+		if c.Severity != "critical" {
+			t.Errorf("chain severity = %s, want critical", c.Severity)
+		}
+		if len(c.ControlsFailing) == 0 {
+			t.Error("expected failing controls in chain")
+		}
+		hasAttach := false
+		for _, ctl := range c.ControlsFailing {
+			if ctl == "CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001" {
+				hasAttach = true
 			}
-			if len(c.ControlsFailing) == 0 {
-				t.Error("expected failing controls in chain")
-			}
-			hasAttach := false
-			for _, ctl := range c.ControlsFailing {
-				if ctl == "CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001" {
-					hasAttach = true
-				}
-			}
-			if !hasAttach {
-				t.Errorf("chain should include ATTACHUSERPOLICY.001, got %v", c.ControlsFailing)
-			}
+		}
+		if !hasAttach {
+			t.Errorf("chain should include ATTACHUSERPOLICY.001, got %v", c.ControlsFailing)
 		}
 	}
 	if !found {

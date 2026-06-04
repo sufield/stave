@@ -2,7 +2,7 @@
   "$id": "urn:stave:schema:asset-type:aws_s3_bucket",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": true,
-  "description": "Property schema for aws_s3_bucket observations. 78 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "description": "Property schema for aws_s3_bucket observations. 81 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
   "properties": {
     "delegation": {
       "additionalProperties": true,
@@ -44,6 +44,13 @@
         }
       }
     },
+    "safety_provable": {
+      "description": "Read by control(s): CTL.S3.INCOMPLETE.001",
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
     "storage": {
       "additionalProperties": true,
       "properties": {
@@ -60,6 +67,13 @@
             "external_account_ids": {
               "description": "Read by control(s): CTL.S3.ACCESS.001, CTL.S3.ACCESS.EXTERNAL.ORG.001"
             },
+            "has_deny_bypass_risk": {
+              "description": "Read by control(s): CTL.S3.POLICY.DENY.BYPASS.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
             "has_external_write": {
               "description": "Read by control(s): CTL.S3.ACCESS.003",
               "type": [
@@ -69,6 +83,13 @@
             },
             "has_ip_condition": {
               "description": "Read by control(s): CTL.S3.NETWORK.VPC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_shadow_allow": {
+              "description": "Read by control(s): CTL.S3.POLICY.SHADOW.ALLOW.001",
               "type": [
                 "boolean",
                 "null"
@@ -423,7 +444,7 @@
           }
         },
         "kind": {
-          "description": "Read by 78 controls: CTL.S3.ACCEL.001, CTL.S3.ACCESS.001, CTL.S3.ACCESS.002, …",
+          "description": "Read by 80 controls: CTL.S3.ACCEL.001, CTL.S3.ACCESS.001, CTL.S3.ACCESS.002, …",
           "type": [
             "string",
             "null"

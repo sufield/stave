@@ -2,7 +2,7 @@
   "$id": "urn:stave:schema:asset-type:aws_opensearch_domain",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": true,
-  "description": "Property schema for aws_opensearch_domain observations. 109 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "description": "Property schema for aws_opensearch_domain observations. 110 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
   "properties": {
     "search_service": {
       "additionalProperties": true,
@@ -186,7 +186,7 @@
               ]
             },
             "publicly_accessible": {
-              "description": "Read by control(s): CTL.OPENSEARCH.PUBLIC.AFTER.VPC.001",
+              "description": "Read by control(s): CTL.OPENSEARCH.INCOMPLETE.001, CTL.OPENSEARCH.PUBLIC.AFTER.VPC.001",
               "type": [
                 "boolean",
                 "null"
@@ -948,7 +948,7 @@
           }
         },
         "kind": {
-          "description": "Read by 109 controls: CTL.OPENSEARCH.ALARM.5XX.001, CTL.OPENSEARCH.ALARM.AUTOSNAPSHOT.FAILURE.001, CTL.OPENSEARCH.ALARM.CLUSTER.RED.001, …",
+          "description": "Read by 110 controls: CTL.OPENSEARCH.ALARM.5XX.001, CTL.OPENSEARCH.ALARM.AUTOSNAPSHOT.FAILURE.001, CTL.OPENSEARCH.ALARM.CLUSTER.RED.001, …",
           "type": [
             "string",
             "null"
