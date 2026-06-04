@@ -34,7 +34,9 @@ func Apply(ctx context.Context, cfg Config) (*Assessment, error) {
 	if err != nil {
 		return nil, fmt.Errorf("run: %w", err)
 	}
-	return BuildAssessment(r.Report, r.Controls), nil
+	a := BuildAssessment(r.Report, r.Controls)
+	a.SilentRiskControls = convertSilentRisks(r.SilentRiskControls)
+	return a, nil
 }
 
 // applyInputs maps the public Config to the applycore.Inputs shape.

@@ -27,6 +27,7 @@ import (
 	appcapabilities "github.com/sufield/stave/internal/app/capabilities"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	"github.com/sufield/stave/internal/app/fieldcov"
 	"github.com/sufield/stave/internal/app/reachability"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/capabilities"
@@ -123,9 +124,18 @@ type Inputs struct {
 // the document. nil when SIR construction failed (the report is
 // still returned).
 type Result struct {
-	Report      *evaluation.ComplianceReport
-	Controls    []policy.ControlDefinition
-	SIRDocument *sir.Document
+	Report             *evaluation.ComplianceReport
+	Controls           []policy.ControlDefinition
+	SIRDocument        *sir.Document
+	SilentRiskControls []SilentRiskControl
+}
+
+// SilentRiskControl identifies a control that may have produced a
+// false PASS because required observation fields were absent.
+type SilentRiskControl struct {
+	ControlID     string   `json:"control_id"`
+	Severity      string   `json:"severity"`
+	MissingFields []string `json:"missing_fields"`
 }
 
 // Run executes the evaluation pipeline: resolve controls, build the
@@ -261,10 +271,13 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 
 	sirDoc := annotateContributingFactIDs(report.Findings, controls, wf.Snapshots(), clock.Now(), celEval)
 
+	silentRisks := detectSilentRisks(controls, wf.Snapshots())
+
 	return &Result{
-		Report:      &report,
-		Controls:    controls,
-		SIRDocument: sirDoc,
+		Report:             &report,
+		Controls:           controls,
+		SIRDocument:        sirDoc,
+		SilentRiskControls: silentRisks,
 	}, nil
 }
 
@@ -439,4 +452,24 @@ func annotateReachability(findings []evaluation.Finding, snapshots []asset.Snaps
 		}
 		findings[i].Reachability = reachability.BuildContext(entries)
 	}
+}
+
+func detectSilentRisks(controls []policy.ControlDefinition, snapshots []asset.Snapshot) []SilentRiskControl {
+	report := fieldcov.Analyze(fieldcov.AnalyzeInput{
+		Controls:  controls,
+		Snapshots: snapshots,
+	})
+	if report == nil || len(report.SilentRisk) == 0 {
+		return nil
+	}
+	out := make([]SilentRiskControl, 0, len(report.SilentRisk))
+	for i := range report.SilentRisk {
+		sr := &report.SilentRisk[i]
+		out = append(out, SilentRiskControl{
+			ControlID:     sr.ControlID,
+			Severity:      sr.Severity,
+			MissingFields: sr.MissingFields,
+		})
+	}
+	return out
 }

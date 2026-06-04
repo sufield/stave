@@ -200,10 +200,6 @@ func (c *AssessmentCollector) RecordFindings(findings []*evaluation.Finding) {
 		if f == nil {
 			continue
 		}
-		// Mirror RecordCheck's behavior: a finding with no
-		// attribution is meaningless evidence and would cause
-		// FallbackID-based identity collisions, coalescing distinct
-		// rows into one. Drop instead so the report stays clean.
 		if f.IsUnattributed() {
 			slog.Warn("collector: finding is unattributed; skipping",
 				"finding_id", f.FindingID, "asset_id", f.AssetID)
@@ -211,25 +207,12 @@ func (c *AssessmentCollector) RecordFindings(findings []*evaluation.Finding) {
 		}
 		fid := f.FindingID
 		if fid == "" {
-			// Synthesise a deterministic fallback ID from the
-			// (control, asset) pair so the finding still
-			// participates in dedup. The earlier shape warned and
-			// then appended, so a strategy that forgot to assign a
-			// FindingID could produce N copies of the same finding
-			// — silent duplicate output. The fallback gives every
-			// such finding an ID that collides on repeat
-			// (control,asset) pairs, restoring the dedup contract.
 			fallback := kernel.FindingID(f.FallbackID())
 			slog.Warn("collector: finding has empty FindingID; using fallback for dedup",
 				"control_id", f.ControlID, "asset_id", f.AssetID,
 				"fallback_finding_id", fallback)
 			fid = fallback
 		}
-		// LoadOrStore returns (existing, true) if the key was
-		// already present. We want the inverse: append iff the
-		// key was NOT present (we claimed it). The cross-asset
-		// dedup happens here, atomically, without taking any
-		// stripe lock.
 		if _, dup := c.findingIDs.LoadOrStore(fid, struct{}{}); dup {
 			slog.Warn("collector: duplicate finding suppressed",
 				"finding_id", fid, "control_id", f.ControlID)
@@ -240,6 +223,7 @@ func (c *AssessmentCollector) RecordFindings(findings []*evaluation.Finding) {
 		s.findings = append(s.findings, *f)
 		s.mu.Unlock()
 	}
+	ReturnFindings(findings)
 }
 
 // RecordSeenAsset registers id in the seen-assets set under the

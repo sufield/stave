@@ -2,11 +2,36 @@ package engine
 
 import (
 	"log/slog"
+	"sync"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 )
+
+var findingPool = sync.Pool{
+	New: func() any { return new(evaluation.Finding) },
+}
+
+func borrowFinding() *evaluation.Finding {
+	f, ok := findingPool.Get().(*evaluation.Finding)
+	if !ok {
+		f = new(evaluation.Finding)
+	}
+	*f = evaluation.Finding{}
+	return f
+}
+
+// ReturnFindings returns a batch of finding pointers to the pool.
+// Safe to call only after the findings have been value-copied into
+// the collector's stripe (RecordFindings does `append(stripe, *f)`).
+func ReturnFindings(findings []*evaluation.Finding) {
+	for _, f := range findings {
+		if f != nil {
+			findingPool.Put(f)
+		}
+	}
+}
 
 // FindingContext groups the situational details for a specific violation.
 type FindingContext struct {
@@ -53,12 +78,13 @@ func newBaseFinding(ctl *policy.ControlDefinition, t *asset.ExposureLifecycle) *
 		return nil
 	}
 	a := t.Asset()
-	f := evaluation.NewFindingFromMetadata(ctl.Metadata())
+	f := borrowFinding()
+	*f = evaluation.NewFindingFromMetadata(ctl.Metadata())
 	f.FindingID = evaluation.StableFindingID(ctl.ID, t.ID)
 	f.AssetID = t.ID
 	f.AssetType = a.Type
 	f.AssetVendor = a.Vendor
 	f.Source = a.Source
 	f.PostureDrift = evaluation.ComputePostureDrift(t)
-	return &f
+	return f
 }

@@ -49,6 +49,13 @@ type Assessment struct {
 	// are bundled.
 	Coverage CoveragePosture
 
+	// SilentRiskControls lists controls that may have produced
+	// false PASS verdicts because required observation fields were
+	// absent. When non-empty, the assessment's violation count may
+	// undercount the true risk. Consumers should treat these as
+	// "findings we can't produce yet" rather than "no problem."
+	SilentRiskControls []SilentRiskControl
+
 	// ChainFindings are compound-risk chains detected during
 	// evaluation — sets of co-failing controls that together
 	// represent a compound attack path. Each ChainFinding
