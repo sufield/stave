@@ -2,11 +2,17 @@ package stave_test
 
 import (
 	"context"
+	"io"
+	"log/slog"
 	"testing"
 	"time"
 
 	"github.com/sufield/stave/pkg/stave"
 )
+
+func init() {
+	slog.SetDefault(slog.New(slog.NewTextHandler(io.Discard, nil)))
+}
 
 func BenchmarkApply(b *testing.B) {
 	cfg := stave.Config{
