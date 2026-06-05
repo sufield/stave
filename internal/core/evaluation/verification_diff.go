@@ -44,11 +44,17 @@ func CompareVerificationFindings(before, after []Finding) VerificationDiff {
 
 	// 2. Identify Resolved and Remaining
 	for key := range beforeMap {
-		f := beforeMap[key]
-		if _, exists := afterMap[key]; exists {
-			diff.Remaining = append(diff.Remaining, f)
+		if after, exists := afterMap[key]; exists {
+			// Persistent violation: report the AFTER-scan state. The
+			// before-state carries stale SLA escalation, evidence
+			// severity, and dwell duration from the original scan;
+			// operators reviewing the diff need the current values.
+			diff.Remaining = append(diff.Remaining, after)
 		} else {
-			diff.Resolved = append(diff.Resolved, f)
+			// Resolved: the finding is gone from the after-scan, so the
+			// before-state is the only (and correct) record of what was
+			// fixed.
+			diff.Resolved = append(diff.Resolved, beforeMap[key])
 		}
 	}
 

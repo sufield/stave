@@ -1,6 +1,7 @@
 package sirbridge
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -36,7 +37,12 @@ func NewEngineLifecycleSource(eval controldef.PredicateEval) *EngineLifecycleSou
 
 // Lifecycles satisfies sir.LifecycleSource.
 func (s *EngineLifecycleSource) Lifecycles(controls []controldef.ControlDefinition, snapshots []asset.Snapshot) (map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle, error) {
-	lc, err := engine.BuildLifecyclesPerControl(controls, snapshots, s.predicateEval)
+	// context.Background(): the sir.LifecycleSource interface (and
+	// sir.Builder.Build above it) does not yet carry a ctx, so caller
+	// cancellation cannot reach this SIR path. Wiring ctx through the SIR
+	// builder chain is a separate change; the interruptibility bug this
+	// fixes is on the assessor's Assess path, which passes its real ctx.
+	lc, err := engine.BuildLifecyclesPerControl(context.Background(), controls, snapshots, s.predicateEval)
 	if err != nil {
 		return nil, fmt.Errorf("build lifecycles: %w", err)
 	}

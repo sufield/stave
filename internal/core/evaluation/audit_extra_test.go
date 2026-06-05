@@ -85,9 +85,11 @@ func TestCalculateReadiness_ZeroControlsInFramework(t *testing.T) {
 	r.CalculateReadiness([]string{"hipaa"}, allControls, compliance)
 
 	fr := r.Summary.FrameworkReadiness[0]
-	// 0 total controls in hipaa → should return 100% (all 0 are passing).
-	if fr.ReadinessPercent != 100 {
-		t.Errorf("ReadinessPercent = %d, want 100 (no controls = fully compliant)", fr.ReadinessPercent)
+	// 0 total controls mapped to hipaa → 0%, NOT a false 100%. Reporting
+	// full compliance for a framework with no coverage is a dangerous
+	// guarantee; TotalControls: 0 signals "no controls mapped".
+	if fr.ReadinessPercent != 0 {
+		t.Errorf("ReadinessPercent = %d, want 0 (zero mapped controls must not report 100%%)", fr.ReadinessPercent)
 	}
 	if fr.TotalControls != 0 {
 		t.Errorf("TotalControls = %d, want 0", fr.TotalControls)

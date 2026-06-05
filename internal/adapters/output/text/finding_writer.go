@@ -713,6 +713,13 @@ func (w *FindingWriter) writeFrameworkReadiness(d *drawer, result *evaluation.Co
 	d.f("\n-------------------\n")
 	for i := range readiness {
 		r := &readiness[i]
+		if r.TotalControls == 0 {
+			// No controls mapped for this requested framework: show the
+			// gap explicitly so 0% is not misread as "failing every
+			// control" (and never as the old false 100%).
+			d.f("  %-20s   --  (no controls mapped)\n", r.Framework)
+			continue
+		}
 		d.f("  %-20s %3d%%  (%d/%d controls passing)\n",
 			r.Framework, r.ReadinessPercent, r.PassingControls, r.TotalControls)
 	}

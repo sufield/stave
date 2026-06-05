@@ -32,10 +32,14 @@ var ErrNilCELEvaluator = errors.New("engine: CEL evaluator is nil")
 // are evaluated per asset, reducing the inner loop from O(C) to O(c)
 // where c is the number of controls matching the asset's vendor.
 func BuildLifecyclesPerControl(
+	ctx context.Context,
 	controls []policy.ControlDefinition,
 	snapshots []asset.Snapshot,
 	celEval policy.PredicateEval,
 ) (map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 
 	lifecyclesByControl := make(map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle, len(controls))
 	mutexes := make(map[kernel.ControlID]*sync.Mutex, len(controls))
@@ -62,11 +66,25 @@ func BuildLifecyclesPerControl(
 	// multiple snapshots) the dominant cost is CEL evaluation here.
 	maxWorkers := runtime.NumCPU()
 	for _, snap := range snapshots {
-		g, _ := errgroup.WithContext(context.Background())
+		// Honour caller cancellation (Ctrl-C, server timeout) before
+		// starting each snapshot's fan-out — the CEL phase across all
+		// assets × snapshots is the most CPU-intensive part of Assess and
+		// must be interruptible, as Assess's doc promises.
+		if err := ctx.Err(); err != nil {
+			return nil, fmt.Errorf("build lifecycles cancelled: %w", err)
+		}
+		// Derive the errgroup from ctx (not context.Background()) so the
+		// first failing goroutine cancels gctx and its siblings fast-fail
+		// instead of running to completion, AND so caller cancellation
+		// propagates into in-flight workers.
+		g, gctx := errgroup.WithContext(ctx)
 		g.SetLimit(maxWorkers)
 		for _, a := range snap.Assets {
 			a, snap := a, snap
 			g.Go(func() error {
+				if err := gctx.Err(); err != nil {
+					return fmt.Errorf("asset %s: %w", a.ID, err)
+				}
 				relevant := ctlIndex.controlsFor(a.Vendor, controls)
 				return recordAssetObservation(a, snap, relevant, celEval, lifecyclesByControl, mutexes)
 			})

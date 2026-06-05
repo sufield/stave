@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -54,7 +55,7 @@ func TestBuildLifecycles_AssetTypeGate(t *testing.T) {
 		return false, nil
 	}
 
-	lifecycles, err := BuildLifecyclesPerControl(controls, snapshots, celEval)
+	lifecycles, err := BuildLifecyclesPerControl(context.Background(), controls, snapshots, celEval)
 	if err != nil {
 		t.Fatalf("BuildLifecyclesPerControl: %v", err)
 	}
@@ -115,7 +116,7 @@ func TestBuildLifecycles_AssetTypeGate_MatchingAsset(t *testing.T) {
 		return true, nil // unsafe
 	}
 
-	lifecycles, err := BuildLifecyclesPerControl(controls, snapshots, celEval)
+	lifecycles, err := BuildLifecyclesPerControl(context.Background(), controls, snapshots, celEval)
 	if err != nil {
 		t.Fatalf("BuildLifecyclesPerControl: %v", err)
 	}

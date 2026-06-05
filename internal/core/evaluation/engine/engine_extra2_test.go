@@ -37,7 +37,7 @@ func TestBuildLifecyclesPerControl_Basic(t *testing.T) {
 		return false, nil
 	}
 
-	lifecycles, err := BuildLifecyclesPerControl(controls, snapshots, celEval)
+	lifecycles, err := BuildLifecyclesPerControl(context.Background(), controls, snapshots, celEval)
 	if err != nil {
 		t.Fatalf("BuildLifecyclesPerControl: %v", err)
 	}
@@ -52,6 +52,34 @@ func TestBuildLifecyclesPerControl_Basic(t *testing.T) {
 	}
 	if tl.IsExposed() {
 		t.Fatal("asset should be safe")
+	}
+}
+
+func TestBuildLifecyclesPerControl_CancelledContextAborts(t *testing.T) {
+	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	controls := []policy.ControlDefinition{{ID: "CTL.A.001", Type: policy.TypeUnsafeState}}
+	snapshots := []asset.Snapshot{
+		{CapturedAt: base, Assets: []asset.Asset{{ID: "bucket-1", Type: "s3_bucket"}}},
+		{CapturedAt: base.Add(time.Hour), Assets: []asset.Asset{{ID: "bucket-1", Type: "s3_bucket"}}},
+	}
+
+	// A predicate that would fail the test if it ever runs under a
+	// cancelled context — the per-snapshot ctx.Err() check must abort
+	// before any asset work begins.
+	celEval := func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+		t.Error("predicate must not run under a pre-cancelled context")
+		return false, nil
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // cancel before the call
+
+	_, err := BuildLifecyclesPerControl(ctx, controls, snapshots, celEval)
+	if err == nil {
+		t.Fatal("cancelled context must abort BuildLifecyclesPerControl, got nil error")
+	}
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("want context.Canceled, got %v", err)
 	}
 }
 
@@ -72,7 +100,7 @@ func TestBuildLifecyclesPerControl_UnsafePredicate(t *testing.T) {
 		return true, nil
 	}
 
-	lifecycles, err := BuildLifecyclesPerControl(controls, snapshots, celEval)
+	lifecycles, err := BuildLifecyclesPerControl(context.Background(), controls, snapshots, celEval)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -96,7 +124,7 @@ func TestBuildLifecyclesPerControl_NilEvaluator(t *testing.T) {
 
 	// Nil evaluator → inconclusive checks are skipped (fail-closed).
 	// Lifecycle exists but has no observations, so IsExposed is false.
-	lifecycles, err := BuildLifecyclesPerControl(controls, snapshots, nil)
+	lifecycles, err := BuildLifecyclesPerControl(context.Background(), controls, snapshots, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

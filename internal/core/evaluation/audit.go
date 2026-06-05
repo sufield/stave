@@ -1,6 +1,9 @@
 package evaluation
 
 import (
+	"slices"
+	"strings"
+
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evidence"
@@ -190,7 +193,13 @@ func (r *ComplianceReport) CalculateReadiness(frameworks []string, allControlIDs
 				totalCitations++
 			}
 		}
-		pct := 100
+		// A requested framework with zero mapped controls is NOT 100%
+		// compliant — that would be a false guarantee. Report 0% so it
+		// can never be mistaken for full coverage; TotalControls: 0
+		// distinguishes "no controls mapped" from "0 of N passing". The
+		// framework stays in the list (the user requested it explicitly)
+		// rather than being silently dropped like the nearby path.
+		pct := 0
 		if total > 0 {
 			pct = passing * 100 / total
 		}
@@ -216,8 +225,19 @@ func (r *ComplianceReport) CalculateReadiness(frameworks []string, allControlIDs
 func computeSuperFix(failingIDs sets.Set[kernel.ControlID], controlCompliance map[kernel.ControlID]map[policy.ComplianceFramework]string, frameworks []string) *SuperFix {
 	fwSet := sets.New[string](frameworks...)
 
-	var best *SuperFix
+	// Iterate control IDs in sorted order so that when several controls
+	// tie for the maximum framework count, the winner is deterministic
+	// (the lexicographically-smallest control ID, via the strict > below)
+	// rather than chosen by Go map iteration order — identical inputs must
+	// yield identical "most impactful fix" recommendations.
+	sortedIDs := make([]kernel.ControlID, 0, len(failingIDs))
 	for ctlID := range failingIDs {
+		sortedIDs = append(sortedIDs, ctlID)
+	}
+	slices.Sort(sortedIDs)
+
+	var best *SuperFix
+	for _, ctlID := range sortedIDs {
 		cc, ok := controlCompliance[ctlID]
 		if !ok {
 			continue
@@ -228,6 +248,8 @@ func computeSuperFix(failingIDs sets.Set[kernel.ControlID], controlCompliance ma
 				fws = append(fws, string(fw))
 			}
 		}
+		// Sort the framework list so SuperFix.Frameworks is stable too.
+		slices.Sort(fws)
 		if len(fws) > 0 && (best == nil || len(fws) > best.FrameworkCount) {
 			best = &SuperFix{
 				ControlID:      ctlID,
@@ -282,6 +304,13 @@ func computeNearbyFrameworks(failingIDs sets.Set[kernel.ControlID], allControlID
 			})
 		}
 	}
+	// allFWs is a set (map) iterated in random order; sort the result by
+	// framework name so the nearby-frameworks report section is stable
+	// between runs with identical inputs (mirrors CompareBaseline's
+	// SortBaselineEntries). Rendered directly in finding_writer.go.
+	slices.SortFunc(nearby, func(a, b NearbyFramework) int {
+		return strings.Compare(a.Framework, b.Framework)
+	})
 	return nearby
 }
 

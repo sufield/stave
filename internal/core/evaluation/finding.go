@@ -358,28 +358,37 @@ func (f *Finding) MatchesSeverityFilter(allowed map[string]bool) bool {
 }
 
 // SLAUrgencyFactor returns the multiplier the rank-priority pass
-// applies to a finding's base risk score based on how close it is
-// to (or past) its SLA threshold. Encapsulates the
-// (RemainingHours, IsOverdue) → urgency-multiplier lookup that the
-// roadmap builder used to compute inline against
-// Evidence.ThresholdHours and Evidence.UnsafeDurationHours.
+// applies to a finding's base risk score based on how close it is to
+// (or past) its SLA POLICY deadline.
 //
-// Returns 1.0 when no SLA threshold is set so callers can multiply
-// unconditionally — an unset threshold contributes no urgency.
+// Urgency is computed against f.slaDeadlineHours — the deadline
+// AnnotateSLA derives from the SLA profile (or control override) — NOT
+// against Evidence.ThresholdHours (the control's max_unsafe_duration).
+// The two are distinct: a finding exists precisely because the unsafe
+// dwell already exceeded the control threshold, so the threshold-based
+// "remaining" is always negative and would pin every finding at maximum
+// urgency. The SLA deadline is a separate policy clock the operator sets
+// for remediation, and remaining = deadline − dwell is genuinely
+// positive while a finding is still within its SLA.
+//
+// Returns 1.0 when the finding carries no SLA deadline (AnnotateSLA was
+// not run, or the profile sets no deadline for this severity) so callers
+// can multiply unconditionally — no policy clock means no urgency.
 //
 // urgencyFn is the package-level multiplier function from the rank
-// package; passing it as a parameter avoids importing the rank
-// package from core (which would invert the dependency arrow). The
-// caller (rank.BuildRoadmap) supplies SLAUrgencyMultiplier.
+// package; passing it as a parameter avoids importing the rank package
+// from core (which would invert the dependency arrow). The caller
+// (rank.BuildRoadmap) supplies SLAUrgencyMultiplier.
 func (f *Finding) SLAUrgencyFactor(urgencyFn func(remainingHours float64, isOverdue bool) float64) float64 {
 	if f == nil || urgencyFn == nil {
 		return 1.0
 	}
-	remaining, hasSLA := f.Evidence.RemainingHours()
+	deadline, hasSLA := f.SLADeadlineValue()
 	if !hasSLA {
 		return 1.0
 	}
-	return urgencyFn(remaining, f.Evidence.IsPastDue())
+	remaining := deadline - f.Evidence.UnsafeDurationHours
+	return urgencyFn(remaining, f.IsOverdue())
 }
 
 // SpanKey returns the canonical "<control_id>@<asset_id>" identifier

@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -91,7 +92,7 @@ func BenchmarkBuildLifecyclesPerControl(b *testing.B) {
 			controls, snapshots := buildSyntheticInputs(tc.controls, tc.assets, tc.snapshots)
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
-				if _, err := BuildLifecyclesPerControl(controls, snapshots, slowPredicateEval); err != nil {
+				if _, err := BuildLifecyclesPerControl(context.Background(), controls, snapshots, slowPredicateEval); err != nil {
 					b.Fatal(err)
 				}
 			}

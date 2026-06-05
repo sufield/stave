@@ -409,7 +409,12 @@ func decode(data []byte, report *evaluation.ComplianceReport) (string, bool) {
 	}
 	keyLen := binary.LittleEndian.Uint32(data[pos:])
 	pos += 4
-	if pos+int(keyLen) > len(data) {
+	// Bounds checks use uint64 arithmetic so a keyLen/bodyLen >= 2^31
+	// (crafted or corrupt cache file) cannot wrap int() negative on
+	// 32-bit builds and slip past the guard into a panicking slice. The
+	// encode path guards with fitsUint32; this is the symmetric decode
+	// guard.
+	if uint64(pos)+uint64(keyLen) > uint64(len(data)) { //nolint:gosec // pos and len(data) are non-negative byte offsets; uint64 widening only
 		return "", false
 	}
 	keyHex := string(data[pos : pos+int(keyLen)])
@@ -419,7 +424,7 @@ func decode(data []byte, report *evaluation.ComplianceReport) (string, bool) {
 	}
 	bodyLen := binary.LittleEndian.Uint32(data[pos:])
 	pos += 4
-	if pos+int(bodyLen) > len(data) {
+	if uint64(pos)+uint64(bodyLen) > uint64(len(data)) { //nolint:gosec // pos and len(data) are non-negative byte offsets; uint64 widening only
 		return "", false
 	}
 	if err := json.Unmarshal(data[pos:pos+int(bodyLen)], report); err != nil {

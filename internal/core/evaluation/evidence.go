@@ -66,32 +66,6 @@ type Evidence struct {
 	EvidenceInvalid bool `json:"evidence_invalid,omitempty"`
 }
 
-// RemainingHours returns the time left before this evidence's
-// underlying violation breaches its SLA threshold, plus a presence
-// flag. Returns (0, false) when ThresholdHours is unset (zero) — the
-// evidence has no deadline against which "remaining" makes sense.
-// Negative values are valid and mean the violation is past due.
-//
-// Replaces the inline (ThresholdHours - UnsafeDurationHours)
-// subtraction in the rank-priority urgency math; centralising the
-// arithmetic on the type keeps the threshold semantics in one place
-// for any future "remaining" callers (alerting, forecast).
-func (e Evidence) RemainingHours() (float64, bool) {
-	if e.ThresholdHours <= 0 {
-		return 0, false
-	}
-	return e.ThresholdHours - e.UnsafeDurationHours, true
-}
-
-// IsPastDue reports whether the evidence shows the violation has
-// crossed its SLA threshold. Distinct from Finding.IsOverdue (which
-// also requires the breach flag and overdue-hours field) — this is
-// the duration-only check the rank computation performs to choose
-// the urgency multiplier.
-func (e Evidence) IsPastDue() bool {
-	return e.ThresholdHours > 0 && e.UnsafeDurationHours > e.ThresholdHours
-}
-
 // HasTemporalRisk reports whether the evidence carries a human-
 // readable temporal-risk summary string. Replaces the
 // (e.TemporalRisk != "") probe at renderer call sites.

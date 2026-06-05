@@ -310,7 +310,7 @@ func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts 
 	// evaluation, enabling cross-resource reasoning via standard predicates.
 	sequenced = EnrichKeyIsolation(sequenced)
 
-	lifecycles, err := BuildLifecyclesPerControl(a.controls, sequenced, a.predicateEval)
+	lifecycles, err := BuildLifecyclesPerControl(ctx, a.controls, sequenced, a.predicateEval)
 	if err != nil {
 		return evaluation.ComplianceReport{}, fmt.Errorf("lifecycle analysis failed: %w", err)
 	}
