@@ -6,6 +6,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func resolveProfileMode(o *Options, cs cobraState) (RunConfig, error) {
@@ -43,7 +44,12 @@ func resolveProfileMode(o *Options, cs cobraState) (RunConfig, error) {
 	// window. Empty value parses to 0 (immediate firing).
 	var maxUnsafe time.Duration
 	if o.MaxUnsafeDuration != "" {
-		maxUnsafe, err = time.ParseDuration(o.MaxUnsafeDuration)
+		// Parse with kernel.ParseDuration — the same grammar the standard
+		// apply path uses (appeval.Options.parseMaxUnsafeDuration). The
+		// stdlib time.ParseDuration rejects the 'd' (day) unit, so "7d"
+		// errored here while standard mode accepted it as 168h, breaking
+		// the "same duration semantic" contract this comment block claims.
+		maxUnsafe, err = kernel.ParseDuration(o.MaxUnsafeDuration)
 		if err != nil {
 			return RunConfig{}, &ui.UserError{Err: fmt.Errorf("parse --max-unsafe %q: %w", o.MaxUnsafeDuration, err)}
 		}

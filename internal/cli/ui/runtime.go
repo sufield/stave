@@ -181,8 +181,13 @@ func ShouldShowWorkflowHandoff(args []string) bool {
 		"completion": {},
 		"status":     {},
 	}
-	for _, a := range args {
-		if _, blocked := ignore[a]; blocked {
+	// The ignore set matches the INVOKED COMMAND (help/version/
+	// completion/status pages have no follow-up workflow), which is the
+	// first token. Matching every element would suppress the hint when a
+	// flag VALUE or positional argument merely equals an ignored token
+	// (e.g. an observations directory literally named "status").
+	if len(args) > 0 {
+		if _, blocked := ignore[args[0]]; blocked {
 			return false
 		}
 	}

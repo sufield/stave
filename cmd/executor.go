@@ -201,13 +201,27 @@ func (a *App) executeRootCommand() {
 
 // suggestCommandIfUnknown replaces Cobra's generic "unknown command" error
 // with a single best-match "Did you mean?" hint using the suggest package.
+//
+// A mistyped command name is always invalid INPUT (exit 2), so any
+// "unknown command" error is wrapped in *ui.UserError — whether or not a
+// close fuzzy match was found. When SuggestCommandError finds a match it
+// returns an enhanced "Did you mean?" error; when it does not, it returns
+// the original Cobra error unchanged. Both shapes start with the
+// "unknown command " prefix and must map to ExitInputError, not the
+// ExitInternal default that an unclassified raw error would otherwise hit.
 func (a *App) suggestCommandIfUnknown(err error) error {
 	names := collectVisibleCommandNames(a.Root)
 	enhanced := ui.SuggestCommandError(err, names)
-	if enhanced != err { //nolint:errorlint // identity check: SuggestCommandError returns same pointer or new error
+	if enhanced != err || isUnknownCommandError(err) { //nolint:errorlint // identity check: SuggestCommandError returns same pointer or new error
 		return &ui.UserError{Err: enhanced}
 	}
 	return err
+}
+
+// isUnknownCommandError reports whether err carries Cobra's
+// "unknown command ..." message shape.
+func isUnknownCommandError(err error) bool {
+	return err != nil && strings.HasPrefix(err.Error(), "unknown command ")
 }
 
 // collectVisibleCommandNames returns the names of all non-hidden subcommands.

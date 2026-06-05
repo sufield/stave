@@ -220,6 +220,14 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 		// class-default remediation instead of the control's
 		// authored guidance (cache-miss runs keep it in memory).
 		rehydrateControlRemediation(&report, auditData.Controls)
+		// Metadata is also json:"-" (audit.go), so the cache's JSON
+		// round-trip drops it too. Re-attach the run's provenance
+		// metadata from cfg, mirroring what the cache-miss path does
+		// via Evaluate (evaluate_workflow.go). Without this, the warm
+		// hit's ToExtensions() returns nil and the emitted output
+		// silently omits the entire extensions block (context_name,
+		// selected_controls_source, resolved_paths, ...).
+		report.Metadata = cfg.Metadata
 		if w.Logger != nil {
 			w.Logger.Info("assessment cache hit", "key", cacheKey.Hex())
 		}

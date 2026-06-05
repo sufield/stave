@@ -16,6 +16,7 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/capabilities"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -192,7 +193,15 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 
 	filtered := filterSnapshots(cfg.Stderr, cfg.Quiet, cfg, snapshots)
 	if len(filtered) == 0 {
-		return nil
+		// The configured scope (e.g. --bucket-allowlist) matched no
+		// asset, so there is nothing to evaluate. Still emit one output
+		// document — the standard apply path always writes one, and the
+		// "one document per invocation" contract means a --format json
+		// consumer must parse a real (empty, COMPLIANT) report rather
+		// than empty stdout. Returning nil here silently produced no
+		// document, making a mis-scoped (typo) allowlist look identical
+		// to a genuinely clean account.
+		return r.emitEmptyScopeResult(ctx, cfg, snapshots)
 	}
 
 	// Use Profiles when populated (multi-profile path); fall back
@@ -252,6 +261,53 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	}
 
 	return finalizeProfileEvaluation(cfg.Stderr, cfg.Quiet, &result, filtered, ctlDir, cfg.InputFile)
+}
+
+// emitEmptyScopeResult writes one output document for a run whose scope
+// filter matched no asset. It evaluates the empty filtered set through
+// the standard assessor so every run-info field (version, now, hashes,
+// fingerprint) is populated, then stamps EvaluatedState from the
+// original (pre-filter) snapshots — the assessor derives that field
+// from the snapshots it sees, and an empty set would leave it blank,
+// failing the out.v0.1 schema's evaluated_state enum. The result has no
+// findings, so the run is COMPLIANT.
+func (r *Runner) emitEmptyScopeResult(ctx context.Context, cfg Config, originalSnapshots []asset.Snapshot) error {
+	result, err := appeval.EvaluateLoaded(ctx, appeval.EvaluationRequest{
+		Controls:          nil,
+		Snapshots:         nil,
+		MaxUnsafeDuration: cfg.MaxUnsafeDuration,
+		Clock:             r.Clock,
+		Hasher:            r.Hasher,
+		StaveVersion:      version.String,
+		PredicateParser:   ctlyaml.ParsePredicate,
+	})
+	if err != nil {
+		return fmt.Errorf("evaluate empty scope: %w", err)
+	}
+	if result.Run.EvaluatedState == "" {
+		result.Run.EvaluatedState = string(latestSnapshotSource(originalSnapshots))
+	}
+
+	if err := r.writeResults(ctx, cfg, &result, nil); err != nil {
+		return fmt.Errorf("write findings: %w", err)
+	}
+	return finalizeProfileEvaluation(cfg.Stderr, cfg.Quiet, &result, nil, "", cfg.InputFile)
+}
+
+// latestSnapshotSource returns the origin context (deployed/planned/
+// local) of the most recent snapshot, defaulting to "deployed" when no
+// snapshot carries one — the value must be a non-empty member of the
+// out.v0.1 evaluated_state enum.
+func latestSnapshotSource(snapshots []asset.Snapshot) asset.SnapshotSource {
+	source := asset.SourceDeployed
+	var latest time.Time
+	for i := range snapshots {
+		if s := snapshots[i].Source; s != "" && !snapshots[i].CapturedAt.Before(latest) {
+			source = s
+			latest = snapshots[i].CapturedAt
+		}
+	}
+	return source
 }
 
 func validateInput(path string) error {

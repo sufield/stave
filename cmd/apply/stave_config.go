@@ -1,6 +1,7 @@
 package apply
 
 import (
+	"log/slog"
 	"maps"
 	"time"
 
@@ -28,6 +29,30 @@ func buildStaveConfig(ec evalContext, deps *appeval.ApplyDeps) stave.Config {
 		controlsDir = ""
 	}
 
+	// Carry the loaded stave.yaml project config into the library path.
+	// applycore.Run only resolves project-scoped settings (exceptions,
+	// exclude_controls, enabled_control_packs) when this field is non-nil;
+	// dropping it silently re-surfaced findings the user excepted in
+	// stave.yaml and flipped the verdict to NON_COMPLIANT.
+	//
+	// The embedded pack registry was already built successfully by
+	// builder.Build (deps_project.go) before executeEvaluation reaches
+	// here, so the only error path — a corrupt embedded registry — is
+	// unreachable in the live pipeline. If it ever fires, fail loud
+	// (slog.Error) and still carry the exception / exclude settings so
+	// the degraded mode is disclosed rather than silently dropping
+	// stave.yaml entirely.
+	var projectConfig *stave.ProjectConfigInput
+	if ec.ProjectConfig != nil {
+		pcInput, err := buildProjectConfigInput(ec.ProjectConfig, ec.Opts.controlsSet)
+		if err != nil {
+			slog.Error("build stave project config from loaded stave.yaml",
+				"error", err,
+				"note", "pack-based controls will not resolve; exceptions/exclude_controls still applied")
+		}
+		projectConfig = &pcInput
+	}
+
 	cfg := stave.Config{
 		// Source paths: same fields cmd/apply has used for years,
 		// surfaced through Plan + Opts after PreRunE resolution.
@@ -45,6 +70,10 @@ func buildStaveConfig(ec evalContext, deps *appeval.ApplyDeps) stave.Config {
 		ExemptionRules:      deps.Config.ExemptionRules,
 		AcknowledgmentRules: deps.Config.AcknowledgmentRules,
 		SLAConfig:           toPublicSLAConfig(deps.Config.SLAConfig),
+
+		// Project-scoped config (exceptions / exclude_controls /
+		// enabled_control_packs) so applycore.Run resolves them.
+		ProjectConfig: projectConfig,
 
 		// Decoration / wire-format fields preserved from deps so
 		// JSON output stays byte-identical.

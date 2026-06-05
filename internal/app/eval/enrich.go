@@ -60,7 +60,8 @@ func PrepareMarkerFindings(enricher remediation.FindingEnricher, sanitizer kerne
 // across the report sidecars that flow into the assessment alongside
 // the main Findings collection. Without this, --sanitize hides
 // identifiers in Findings but leaks them through RiskSignals,
-// ExceptedFindings, AcknowledgedFindings, TopExposures, and
+// ExceptedFindings, AcknowledgedFindings, TopExposures, ChainFindings
+// (CompoundFinding.AssetID + ContributingAssets), and
 // Metadata.ResolvedPaths — which all carry the same identifier shapes
 // the main collection does. Mutates the result copy in place.
 func sanitizeResultSidecars(s kernel.Sanitizer, r *evaluation.ComplianceReport) {
@@ -97,6 +98,22 @@ func sanitizeResultSidecars(s kernel.Sanitizer, r *evaluation.ComplianceReport) 
 			exposures[i] = e
 		}
 		r.TopExposures = exposures
+	}
+	if len(r.ChainFindings) > 0 {
+		chains := make([]findings.CompoundFinding, len(r.ChainFindings))
+		for i := range r.ChainFindings {
+			cf := r.ChainFindings[i]
+			cf.AssetID = asset.ID(s.ID(string(cf.AssetID)))
+			if len(cf.ContributingAssets) > 0 {
+				contrib := make([]asset.ID, len(cf.ContributingAssets))
+				for j, a := range cf.ContributingAssets {
+					contrib[j] = asset.ID(s.ID(string(a)))
+				}
+				cf.ContributingAssets = contrib
+			}
+			chains[i] = cf
+		}
+		r.ChainFindings = chains
 	}
 	if r.Metadata.ResolvedPaths.Controls != "" {
 		r.Metadata.ResolvedPaths.Controls = s.Path(r.Metadata.ResolvedPaths.Controls)

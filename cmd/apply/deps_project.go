@@ -18,25 +18,37 @@ import (
 // an already-loaded config. This avoids duplicate I/O — the config is loaded
 // once in Build() and passed here.
 func (b *Builder) buildProjectConfigFromLoaded(projCfg *appconfig.WorkspacePolicy) (appeval.ProjectConfigInput, error) {
+	return buildProjectConfigInput(projCfg, b.Opts.controlsSet)
+}
+
+// buildProjectConfigInput converts an already-loaded stave.yaml policy into
+// the app-layer ProjectConfigInput the evaluator consumes. Shared by the
+// Builder (standard apply path) and buildStaveConfig (cliapi.Apply path) so
+// both routes resolve exceptions / exclude_controls / enabled packs from the
+// same translation. Returns the zero ProjectConfigInput when projCfg is nil.
+func buildProjectConfigInput(projCfg *appconfig.WorkspacePolicy, controlsSet bool) (appeval.ProjectConfigInput, error) {
 	if projCfg == nil {
 		return appeval.ProjectConfigInput{}, nil
 	}
 
-	builtinRegistry := ctlbuiltin.NewControlStore(ctlbuiltin.EmbeddedFS(), "embedded", ctlbuiltin.WithAliasResolver(predicate.ResolverFunc()))
-
-	reg, err := pack.NewEmbeddedRegistry()
-	if err != nil {
-		return appeval.ProjectConfigInput{}, fmt.Errorf("initialize embedded pack registry: %w", err)
-	}
-
-	return appeval.ProjectConfigInput{
+	// Base input carries the settings that need no embedded registry —
+	// exceptions and exclude_controls resolve without one. Building this
+	// first lets the pack-registry error path return a usable partial
+	// input (disclosed fallback) instead of dropping the whole config.
+	input := appeval.ProjectConfigInput{
 		Exceptions:          mapExceptions(projCfg.Exceptions),
 		EnabledControlPacks: projCfg.EnabledControlPacks,
 		ExcludeControls:     projCfg.ExcludeControls,
-		ControlsFlagSet:     b.Opts.controlsSet,
-		BuiltinLoader:       builtinRegistry.All,
-		PackRegistry:        reg,
-	}, nil
+		ControlsFlagSet:     controlsSet,
+		BuiltinLoader:       ctlbuiltin.NewControlStore(ctlbuiltin.EmbeddedFS(), "embedded", ctlbuiltin.WithAliasResolver(predicate.ResolverFunc())).All,
+	}
+
+	reg, err := pack.NewEmbeddedRegistry()
+	if err != nil {
+		return input, fmt.Errorf("initialize embedded pack registry: %w", err)
+	}
+	input.PackRegistry = reg
+	return input, nil
 }
 
 // mapExceptions converts config exception rules to the app-layer input format.

@@ -147,6 +147,18 @@ func ParseBundle(data []byte) ([]asset.Snapshot, error) {
 		if bundle.Snapshots[i].CapturedAt.IsZero() {
 			return nil, fmt.Errorf("observation bundle snapshot %d is missing required `captured_at` timestamp", i)
 		}
+		// Mirror the strict single-file path (loader_core.go runs the
+		// obs.v0.1 JSON-Schema validator, which enforces assets[].type
+		// minLength:1 / pattern ^[a-z0-9][a-z0-9_.-]*$). The bundle path
+		// skips schema validation, so without this check an empty or
+		// malformed asset type loads silently as Type=="" — matching no
+		// control's scope and producing a wrong COMPLIANT verdict. Reject
+		// it here so both intake paths agree.
+		for j := range bundle.Snapshots[i].Assets {
+			if err := bundle.Snapshots[i].Assets[j].Type.Validate(); err != nil {
+				return nil, fmt.Errorf("observation bundle snapshot %d asset %d has invalid `type`: %w", i, j, err)
+			}
+		}
 		// Mirror loader_core.go: bundle and directory loaders must
 		// produce snapshots with the same shape, otherwise predicates
 		// that depend on type-coerced fields (asset.ID, kernel.AssetType)

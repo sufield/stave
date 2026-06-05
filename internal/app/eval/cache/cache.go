@@ -34,8 +34,16 @@ import (
 )
 
 const (
-	cacheMagic         = "STVA" // STaVe Assessment
-	cacheFormatVersion = 1
+	cacheMagic = "STVA" // STaVe Assessment
+	// cacheFormatVersion is bumped to 2: the body JSON drops
+	// ComplianceReport.Metadata (it is json:"-", excluded from the
+	// report's own wire contract) so the cache now carries Metadata as
+	// its own JSON segment and re-attaches it on load. Without this a
+	// cache HIT replayed a report with empty Metadata, which silently
+	// dropped the output extensions block (Metadata feeds
+	// ToExtensions()). Bumping the version invalidates v1 entries,
+	// which the decoder treats as a clean miss.
+	cacheFormatVersion = 2
 	disableEnv         = "STAVE_DISABLE_ASSESSMENT_CACHE"
 )
 
@@ -369,16 +377,27 @@ func (c *Cache) path(k Key) string {
 //   [4-byte magic 'STVA'][4-byte format version (LE uint32)]
 //   [4-byte key-hex-length (LE uint32)][key-hex bytes]
 //   [4-byte report-json-length (LE uint32)][report-json bytes]
+//   [4-byte metadata-json-length (LE uint32)][metadata-json bytes]
 //
 // The key-hex prefix lets the loader fail FAST on a stale or
 // tampered cache file before trying to decode the report body.
+//
+// Metadata is encoded as its own trailing segment because
+// ComplianceReport.Metadata is json:"-" — it is excluded from the
+// report's own wire contract and would otherwise vanish across the
+// cache's JSON round-trip, silently dropping the output extensions
+// block on a cache hit.
 
 func encode(keyHex string, report evaluation.ComplianceReport) ([]byte, error) {
 	body, err := json.Marshal(report)
 	if err != nil {
 		return nil, err
 	}
-	if !fitsUint32(len(keyHex)) || !fitsUint32(len(body)) {
+	meta, err := json.Marshal(report.Metadata)
+	if err != nil {
+		return nil, err
+	}
+	if !fitsUint32(len(keyHex)) || !fitsUint32(len(body)) || !fitsUint32(len(meta)) {
 		return nil, errors.New("cache entry exceeds uint32 length prefix")
 	}
 	var buf []byte
@@ -388,6 +407,8 @@ func encode(keyHex string, report evaluation.ComplianceReport) ([]byte, error) {
 	buf = append(buf, keyHex...)
 	buf = appendUint32(buf, uint32(len(body))) //nolint:gosec // guarded by fitsUint32
 	buf = append(buf, body...)
+	buf = appendUint32(buf, uint32(len(meta))) //nolint:gosec // guarded by fitsUint32
+	buf = append(buf, meta...)
 	return buf, nil
 }
 
@@ -428,6 +449,22 @@ func decode(data []byte, report *evaluation.ComplianceReport) (string, bool) {
 		return "", false
 	}
 	if err := json.Unmarshal(data[pos:pos+int(bodyLen)], report); err != nil {
+		return "", false
+	}
+	pos += int(bodyLen)
+	// Metadata segment: json:"-" excludes it from the report body, so
+	// it is carried separately and re-attached here. A v2 entry always
+	// has it; the format-version guard above rejects v1 files before
+	// reaching this point.
+	if pos+4 > len(data) {
+		return "", false
+	}
+	metaLen := binary.LittleEndian.Uint32(data[pos:])
+	pos += 4
+	if uint64(pos)+uint64(metaLen) > uint64(len(data)) { //nolint:gosec // pos and len(data) are non-negative byte offsets; uint64 widening only
+		return "", false
+	}
+	if err := json.Unmarshal(data[pos:pos+int(metaLen)], &report.Metadata); err != nil {
 		return "", false
 	}
 	return keyHex, true

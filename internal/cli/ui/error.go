@@ -229,5 +229,11 @@ func IsSentinel(err error) bool {
 		errors.Is(err, ErrValidationFailed) ||
 		errors.Is(err, ErrSecurityAuditFindings) ||
 		errors.Is(err, ErrInterrupted) ||
-		errors.Is(err, ErrInternal)
+		errors.Is(err, ErrInternal) ||
+		// Public facade sentinels classified by ExitCode into
+		// ExitInputError(2)/ExitViolations(3) are platform sentinels
+		// too. Without these, the executor prints a contradictory
+		// INTERNAL_ERROR banner over output the command already wrote.
+		errors.Is(err, stave.ErrInvalidInput) ||
+		errors.Is(err, stave.ErrFailingTests)
 }

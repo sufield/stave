@@ -137,7 +137,7 @@ func ValidateAsset(a asset.Asset) (ValidationResult, bool) {
 // signal.
 func hasPath(props map[string]any, dotted string) bool {
 	path := strings.TrimPrefix(dotted, "properties.")
-	if path == "" || path == dotted && !strings.HasPrefix(dotted, "properties") {
+	if path == "" || !strings.HasPrefix(dotted, "properties.") {
 		// Path didn't start with "properties." — defensive: not a
 		// shape this package handles, treat as missing so the
 		// schema author sees the typo via the warning.
