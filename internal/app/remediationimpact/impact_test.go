@@ -37,7 +37,10 @@ func TestAnalyze_ClosedFindingsDetected(t *testing.T) {
 		},
 	}
 
-	r := Analyze(Input{Before: before, After: after})
+	r, err := Analyze(Input{Before: before, After: after})
+	if err != nil {
+		t.Fatalf("Analyze: %v", err)
+	}
 
 	if len(r.Closed) != 1 {
 		t.Fatalf("closed = %d, want 1", len(r.Closed))
@@ -62,11 +65,14 @@ func TestAnalyze_EfficiencyRatioComputed(t *testing.T) {
 		Findings: []remediation.Finding{},
 	}
 
-	r := Analyze(Input{
+	r, err := Analyze(Input{
 		Before:         before,
 		After:          after,
 		PredictedDelta: 12.0,
 	})
+	if err != nil {
+		t.Fatalf("Analyze: %v", err)
+	}
 
 	if r.Efficiency == nil {
 		t.Fatal("efficiency should be computed when PredictedDelta > 0")
@@ -108,7 +114,10 @@ func TestAnalyze_ChainDeactivationDetected(t *testing.T) {
 		},
 	}
 
-	r := Analyze(Input{Before: before, After: after})
+	r, err := Analyze(Input{Before: before, After: after})
+	if err != nil {
+		t.Fatalf("Analyze: %v", err)
+	}
 
 	if len(r.ChainsDeactivated) != 2 {
 		t.Fatalf("deactivated chains = %d, want 2", len(r.ChainsDeactivated))

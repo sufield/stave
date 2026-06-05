@@ -46,6 +46,18 @@ func TestHexagonalDependencyDirection(t *testing.T) {
 				"github.com/sufield/stave/cmd/",
 				"os/exec",
 			},
+			allowed: []string{
+				// fsutil is a stdlib-os-equivalent filesystem-safety
+				// utility (symlink-safe SafeWriteFile / SafeCreateFile),
+				// not a provider or adapter. App use-cases already perform
+				// direct file I/O via stdlib os (permitted — only os/exec
+				// is banned); fsutil merely hardens those same writes
+				// against symlink TOCTOU. Routing every write site through
+				// this single utility is a deliberate security invariant,
+				// so app services that persist output (attest sidecars,
+				// audit bundles, exemption stores) depend on it directly.
+				"github.com/sufield/stave/internal/platform/fsutil",
+			},
 		},
 		{
 			dirPrefix: filepath.Join("internal", "adapters"),

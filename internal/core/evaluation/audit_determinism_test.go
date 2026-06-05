@@ -71,6 +71,46 @@ func TestComputeSuperFix_DeterministicAcrossRuns(t *testing.T) {
 	}
 }
 
+// computeNearbyFrameworks must compute the readiness percent and gap
+// EXACTLY, and include a framework sitting on the >= 80% boundary. The
+// ordering tests don't touch these values, so a wrong pct/gap formula or
+// an off-by-one threshold goes unnoticed.
+func TestComputeNearbyFrameworks_PercentGapAndBoundary(t *testing.T) {
+	// "fw80": 5 controls mapped, 1 failing → 4/5 = exactly 80% readiness,
+	// gap 1. Must be reported (>= 80, not > 80).
+	allControlIDs := []kernel.ControlID{"C1", "C2", "C3", "C4", "C5"}
+	cc := map[kernel.ControlID]map[policy.ComplianceFramework]string{}
+	for _, id := range allControlIDs {
+		cc[id] = map[policy.ComplianceFramework]string{"fw80": "x"}
+	}
+	failingIDs := sets.New[kernel.ControlID]("C5") // 4 of 5 pass
+
+	got := computeNearbyFrameworks(failingIDs, allControlIDs, cc, sets.New[string]())
+	if len(got) != 1 {
+		t.Fatalf("framework at exactly 80%% must be reported (>= 80), got %d entries: %+v", len(got), got)
+	}
+	if got[0].ReadinessPercent != 80 {
+		t.Errorf("ReadinessPercent = %d, want exactly 80 (passing*100/total = 4*100/5)", got[0].ReadinessPercent)
+	}
+	if got[0].GapCount != 1 {
+		t.Errorf("GapCount = %d, want 1 (total-passing = 5-4)", got[0].GapCount)
+	}
+}
+
+// computeSuperFix must NOT select a failing control whose frameworks are
+// all outside the requested set — its fws list is empty, so it covers
+// zero requested citations and cannot be the "most impactful fix".
+func TestComputeSuperFix_EmptyFrameworkListNotSelected(t *testing.T) {
+	failingIDs := sets.New[kernel.ControlID]("CTL.X")
+	cc := map[kernel.ControlID]map[policy.ComplianceFramework]string{
+		"CTL.X": {"unrequested": "y"}, // maps only to a framework not asked for
+	}
+	// Requested frameworks do NOT include "unrequested".
+	if sf := computeSuperFix(failingIDs, cc, []string{"wanted"}); sf != nil {
+		t.Fatalf("a control covering zero requested frameworks must not be a SuperFix, got %+v", sf)
+	}
+}
+
 // Bug 6: computeNearbyFrameworks must return a list sorted by framework
 // name, stable across runs.
 func TestComputeNearbyFrameworks_SortedDeterministic(t *testing.T) {

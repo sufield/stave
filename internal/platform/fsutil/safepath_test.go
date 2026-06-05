@@ -102,6 +102,28 @@ func TestJoinWithinRoot_RejectsSymlinkEscape(t *testing.T) {
 	}
 }
 
+func TestJoinWithinRoot_RejectsEscapeThroughSymlinkToNonexistentTarget(t *testing.T) {
+	// The target file does NOT exist, but its ancestor "link" is a
+	// symlink to outside root. EvalSymlinks(full path) fails (target
+	// absent), so containment relies on resolveExisting recursing up to
+	// the symlinked ancestor and resolving IT. If that recursion is
+	// skipped, the path stays lexically in-root and the escape is
+	// accepted — this case exercises the recursion base case directly.
+	root := t.TempDir()
+	outside := t.TempDir()
+	if err := os.Symlink(outside, filepath.Join(root, "link")); err != nil {
+		t.Skipf("symlink unsupported: %v", err)
+	}
+	// "newfile.yaml" does not exist under outside/.
+	_, err := JoinWithinRoot(root, filepath.Join("link", "newfile.yaml"))
+	if err == nil {
+		t.Fatal("escape through a symlinked ancestor to a non-existent target must be rejected, got nil")
+	}
+	if !errors.Is(err, ErrPathTraversal) {
+		t.Errorf("want ErrPathTraversal, got %v", err)
+	}
+}
+
 func TestJoinWithinRoot_AcceptsGenuineInRootPath(t *testing.T) {
 	root := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(root, "s3"), 0o755); err != nil {

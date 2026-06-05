@@ -213,8 +213,39 @@ func TestComputeInputHashesKey_FallsBackToPerFile(t *testing.T) {
 }
 
 func TestComputeChainsDigest_NoChainsIsConstant(t *testing.T) {
-	if ComputeChainsDigest(nil) != ComputeChainsDigest([]policy.ChainDefinition{}) {
-		t.Fatal("nil and empty chain slices should produce the same digest")
+	// Pin the empty case to its exact sentinel, and assert a non-empty
+	// slice does NOT collapse to it. Checking only nil == empty leaves
+	// the empty/non-empty branch unverified: a flipped guard would still
+	// make nil and empty agree (both hashed) while silently routing
+	// non-empty inputs to the sentinel.
+	const sentinel = "no-chains"
+	if got := ComputeChainsDigest(nil); got != sentinel {
+		t.Fatalf("nil chains digest = %q, want %q", got, sentinel)
+	}
+	if got := ComputeChainsDigest([]policy.ChainDefinition{}); got != sentinel {
+		t.Fatalf("empty chains digest = %q, want %q", got, sentinel)
+	}
+	nonEmpty := ComputeChainsDigest([]policy.ChainDefinition{{ID: kernel.ChainID("chain-a")}})
+	if nonEmpty == sentinel {
+		t.Fatal("a non-empty chain slice must hash to a real digest, not the no-chains sentinel")
+	}
+}
+
+func TestComputeChainsDigest_DriftsOnNonIDFieldEdit(t *testing.T) {
+	// Two chains with the SAME ID but different content must produce
+	// different digests — the digest hashes each chain's full marshaled
+	// JSON, not just its ID. (Symmetric with the controls-digest drift
+	// test; without it, a guard that hashed only the ID would pass.)
+	a := []policy.ChainDefinition{{
+		ID:         kernel.ChainID("chain-x"),
+		ControlIDs: []kernel.ControlID{"CTL.A"},
+	}}
+	b := []policy.ChainDefinition{{
+		ID:         kernel.ChainID("chain-x"),
+		ControlIDs: []kernel.ControlID{"CTL.A", "CTL.B"},
+	}}
+	if ComputeChainsDigest(a) == ComputeChainsDigest(b) {
+		t.Fatal("chains differing in a non-ID field must produce different digests")
 	}
 }
 

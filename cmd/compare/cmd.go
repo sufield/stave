@@ -154,10 +154,13 @@ func runRemediationImpact(ctx context.Context, stdout io.Writer, opts *options) 
 		return &ui.UserError{Err: fmt.Errorf("load after assessment: %w", err)}
 	}
 
-	result := remediationimpact.Analyze(remediationimpact.Input{
+	result, err := remediationimpact.Analyze(remediationimpact.Input{
 		Before: before,
 		After:  after,
 	})
+	if err != nil {
+		return &ui.UserError{Err: fmt.Errorf("analyze remediation impact: %w", err)}
+	}
 
 	if err := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
 		enc := json.NewEncoder(w)

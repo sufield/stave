@@ -162,6 +162,18 @@ func decodeCache(data []byte) ([]cachedEntry, error) {
 	if !ok {
 		return nil, errors.New("cache: truncated entry count")
 	}
+	// Bound the declared count against what the remaining buffer can
+	// physically hold before pre-sizing the slice. Each entry needs at
+	// least a 32-byte SHA plus two 4-byte length prefixes (40 bytes, even
+	// with zero-length payloads), so a count exceeding remaining/40 cannot
+	// be satisfied and is corrupt/crafted. Without this guard a hostile
+	// count drives make([]cachedEntry, 0, count) past Go's slice-cap limit
+	// and panics the runtime before any per-entry SHA check can run.
+	const minEntryBytes = 32 + 4 + 4
+	if remaining := len(r.buf) - r.pos; count > uint64(remaining)/minEntryBytes { //nolint:gosec // remaining is a non-negative byte count
+
+		return nil, fmt.Errorf("cache: entry count %d exceeds %d-byte buffer capacity", count, remaining)
+	}
 	entries := make([]cachedEntry, 0, count)
 	for i := range count {
 		var sha [32]byte
@@ -240,6 +252,31 @@ func persistCacheFile(path string, entries []cachedEntry) error {
 // helper is also called from tests; the drop is silent and the next
 // cold start regenerates).
 func encodeCache(entries []cachedEntry) []byte {
+	// Marshal and bounds-check each entry's variable parts FIRST, dropping
+	// any that overflow a uint32 length prefix, so the count written below
+	// equals exactly the entries appended. The earlier shape wrote the SHA
+	// before the per-field guards and `continue`d mid-entry, leaving the
+	// count overstated and a bare SHA on disk that desynchronised the
+	// decoder. (proto.Marshal on a CheckedExpr is deterministic enough for
+	// cache stability across runs of the same cel-go version; the cache is
+	// keyed by SHA-of-expression, not SHA-of-program-bytes.)
+	type framedEntry struct {
+		sha  [32]byte
+		expr string
+		ce   []byte
+	}
+	framed := make([]framedEntry, 0, len(entries))
+	for _, e := range entries {
+		if !fitsUint32(len(e.Expression)) {
+			continue
+		}
+		ceBytes, _ := proto.Marshal(e.CheckedExpr)
+		if !fitsUint32(len(ceBytes)) {
+			continue
+		}
+		framed = append(framed, framedEntry{sha: e.ExpressionSHA, expr: e.Expression, ce: ceBytes})
+	}
+
 	var buf []byte
 	buf = append(buf, []byte(cacheMagic)...)
 	buf = appendUint32(buf, cacheFormatVersion)
@@ -249,24 +286,13 @@ func encodeCache(entries []cachedEntry) []byte {
 	}
 	buf = appendUint32(buf, uint32(len(cv))) //nolint:gosec // guarded by fitsUint32
 	buf = append(buf, cv...)
-	buf = appendUint64(buf, uint64(len(entries)))
-	for _, e := range entries {
-		buf = append(buf, e.ExpressionSHA[:]...)
-		if !fitsUint32(len(e.Expression)) {
-			continue
-		}
-		buf = appendUint32(buf, uint32(len(e.Expression))) //nolint:gosec // guarded by fitsUint32
-		buf = append(buf, e.Expression...)
-		// proto.Marshal on a CheckedExpr is deterministic enough for
-		// cache stability across runs of the same cel-go version; we
-		// don't enforce stable byte equality because the cache is
-		// keyed by SHA-of-expression, not SHA-of-program-bytes.
-		ceBytes, _ := proto.Marshal(e.CheckedExpr)
-		if !fitsUint32(len(ceBytes)) {
-			continue
-		}
-		buf = appendUint32(buf, uint32(len(ceBytes))) //nolint:gosec // guarded by fitsUint32
-		buf = append(buf, ceBytes...)
+	buf = appendUint64(buf, uint64(len(framed)))
+	for _, f := range framed {
+		buf = append(buf, f.sha[:]...)
+		buf = appendUint32(buf, uint32(len(f.expr))) //nolint:gosec // guarded by fitsUint32 above
+		buf = append(buf, f.expr...)
+		buf = appendUint32(buf, uint32(len(f.ce))) //nolint:gosec // guarded by fitsUint32 above
+		buf = append(buf, f.ce...)
 	}
 	return buf
 }
@@ -369,7 +395,10 @@ func (r *byteReader) readLengthPrefixed() ([]byte, bool) {
 	if !ok {
 		return nil, false
 	}
-	if r.pos+int(n) > len(r.buf) {
+	// uint64 arithmetic so a length with the high bit set (n >= 2^31)
+	// cannot wrap int() negative on 32-bit builds (int == int32) and slip
+	// past the bound check into a panicking slice expression.
+	if uint64(r.pos)+uint64(n) > uint64(len(r.buf)) { //nolint:gosec // r.pos and len are non-negative offsets
 		return nil, false
 	}
 	out := r.buf[r.pos : r.pos+int(n)]

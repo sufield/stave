@@ -52,3 +52,62 @@ func TestDecode_ValidRoundTripStillWorks(t *testing.T) {
 		t.Fatalf("valid buffer must decode, got key=%q ok=%v", key, ok)
 	}
 }
+
+// Each length guard in decode (min-length, post-version, post-key) must
+// reject a buffer truncated at that exact point — returning ("", false)
+// without ever reaching a binary.Uint32 read or a slice on bytes that
+// are not there. A buffer one field short at each stage exercises the
+// guard precisely; if the guard's arithmetic is wrong (e.g. len+4 → len-4)
+// the read/slice panics instead of returning, so these cases pin the
+// guards that a bare "huge length is rejected" test leaves unverified.
+func TestDecode_TruncatedBuffersRejectedWithoutPanic(t *testing.T) {
+	magic := []byte(cacheMagic)
+	version := appendUint32(nil, cacheFormatVersion)
+
+	cases := map[string][]byte{
+		// Shorter than magic+4: the min-length guard (len < len(magic)+4).
+		"one byte past magic": append(append([]byte{}, magic...), 0x01),
+		"magic only":          append([]byte{}, magic...),
+		// len >= 8 but < 12: passes min-length, fails the post-version
+		// guard (pos+4 > len) before reading keyLen.
+		"magic+version+2": append(append(append([]byte{}, magic...), version...), 0x01, 0x02),
+		// magic+version+keyLen(=0) = 12 bytes: passes through keyLen but
+		// has no room for bodyLen — the post-key guard must catch it
+		// before reading bodyLen.
+		"magic+version+zerokey": func() []byte {
+			b := append(append([]byte{}, magic...), version...)
+			return appendUint32(b, 0) // keyLen = 0, nothing after
+		}(),
+	}
+
+	for name, data := range cases {
+		t.Run(name, func(t *testing.T) {
+			var report evaluation.ComplianceReport
+			key, ok := decode(data, &report) // must not panic
+			if ok || key != "" {
+				t.Fatalf("truncated buffer must be rejected, got key=%q ok=%v", key, ok)
+			}
+		})
+	}
+}
+
+// fitsUint32 must accept zero (an empty key or empty body is a legitimate
+// length), so encode("") succeeds. This pins the lower bound of the guard
+// (n >= 0), distinct from its rejection of negative/oversized lengths.
+func TestEncode_EmptyKeyAccepted(t *testing.T) {
+	data, err := encode("", evaluation.ComplianceReport{})
+	if err != nil {
+		t.Fatalf("empty key must encode (len 0 fits uint32), got error: %v", err)
+	}
+	var report evaluation.ComplianceReport
+	key, ok := decode(data, &report)
+	if !ok || key != "" {
+		t.Fatalf("empty-key buffer must round-trip, got key=%q ok=%v", key, ok)
+	}
+}
+
+func TestFitsUint32_AcceptsZero(t *testing.T) {
+	if !fitsUint32(0) {
+		t.Error("fitsUint32(0) must be true — zero is a valid length")
+	}
+}

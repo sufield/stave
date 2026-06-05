@@ -12,8 +12,13 @@ import (
 
 // runMetrics captures posture metrics for a single assessment run.
 type runMetrics struct {
-	CapturedAt         time.Time      `json:"captured_at"`
-	FilePath           string         `json:"-"`
+	CapturedAt time.Time `json:"captured_at"`
+	FilePath   string    `json:"-"`
+	// TotalAssets is the denominator ViolationRate is computed against
+	// (violations / TotalAssets). Carried so computeProjection targets the
+	// same denominator instead of mixing findings with compliant-asset
+	// counts. Internal-only ("-") to avoid widening the trend JSON shape.
+	TotalAssets        int            `json:"-"`
 	ViolationCount     int            `json:"violation_count"`
 	PassCount          int            `json:"pass_count"`
 	IncompleteCount    int            `json:"incomplete_count"`
@@ -311,6 +316,7 @@ func computeRunMetrics(a *report.Assessment, prev *runMetrics) runMetrics {
 
 	m := runMetrics{
 		CapturedAt:     a.Run.Now,
+		TotalAssets:    total,
 		ViolationCount: violations,
 		PassCount:      passCount,
 		ViolationRate:  rate,
@@ -339,6 +345,13 @@ func computeVelocity(runs []runMetrics, windowSize int) velocityMetrics {
 		start = len(runs) - windowSize
 	}
 	window := runs[start:]
+	// A window of fewer than two runs has no delta to average; dividing
+	// by float64(len(window)-1) would be 0.0/0.0 = NaN, and because every
+	// NaN comparison is false the direction would silently fall through to
+	// "steady". Classify it honestly as insufficient_data instead.
+	if len(window) < 2 {
+		return velocityMetrics{Direction: "insufficient_data"}
+	}
 
 	totalDelta := 0.0
 	for i := 1; i < len(window); i++ {
@@ -379,7 +392,12 @@ func computeProjection(runs []runMetrics, velocity velocityMetrics) *projectionM
 		return nil
 	}
 
-	targetCount := targetRate * float64(runs[len(runs)-1].ViolationCount+runs[len(runs)-1].PassCount)
+	// Target violation COUNT at which the rate hits targetRate. The rate is
+	// violations/TotalAssets (see computeRunMetrics), so the denominator
+	// here must be TotalAssets — not ViolationCount+PassCount, which mixes
+	// findings (a count that can exceed assets when one asset trips several
+	// controls) with compliant-asset counts and inflates the target.
+	targetCount := targetRate * float64(runs[len(runs)-1].TotalAssets)
 	runsNeeded := int((latestCount - targetCount) / (-velocity.AvgNetChange))
 	if runsNeeded <= 0 {
 		runsNeeded = 1

@@ -4,6 +4,8 @@
 package remediationimpact
 
 import (
+	"errors"
+
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -67,8 +69,15 @@ type Input struct {
 	PredictedClosed []string // control IDs predicted to close
 }
 
-// Analyze compares before and after assessments.
-func Analyze(in Input) *Report {
+// Analyze compares before and after assessments. Before and After must
+// both be non-nil — Analyze dereferences them throughout — so a nil input
+// returns an error rather than panicking. Callers load both assessments
+// up front, so in practice this guards a programming error at the package
+// boundary.
+func Analyze(in Input) (*Report, error) {
+	if in.Before == nil || in.After == nil {
+		return nil, errors.New("remediationimpact: Before and After assessments must both be non-nil")
+	}
 	beforeKeys := buildKeySet(in.Before.Findings)
 	afterKeys := buildKeySet(in.After.Findings)
 
@@ -158,7 +167,7 @@ func Analyze(in Input) *Report {
 		}
 	}
 
-	return r
+	return r, nil
 }
 
 func buildKeySet(findings []remediation.Finding) map[findingKey]*remediation.Finding {
@@ -171,6 +180,12 @@ func buildKeySet(findings []remediation.Finding) map[findingKey]*remediation.Fin
 }
 
 func computeSimpleScore(a *report.Assessment) float64 {
+	if a == nil {
+		// No assessment to score. Return 0 (a sentinel "no data" value)
+		// rather than dereferencing a.Summary and panicking; Analyze
+		// guards nil inputs before reaching here, so this is defensive.
+		return 0
+	}
 	if a.Summary.TotalAssets == 0 {
 		return 100
 	}
