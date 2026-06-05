@@ -14,7 +14,7 @@
       },
       "overall": "2702998ee5b2fa5349c1c4cf6a7295f1adf8c2cb0fbd8ace09bcc290ab4bc52b"
     },
-    "policy_fingerprint": "32da5c7c64df6804fa57915c03ada36a22f73b0c6f3664626dd2c6f4ef82e33b",
+    "policy_fingerprint": "adf6da0049d8daa93b76b341b1b220c9574c87eba723b6cc46b819658e7e4d68",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -88,6 +88,7 @@
         "action": "Remove READ_ACP grants from the bucket ACL and remove policy statements granting s3:GetBucketAcl or s3:GetObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
@@ -296,6 +297,14 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
     }
   }
 }

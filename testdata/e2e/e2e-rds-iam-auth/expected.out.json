@@ -14,7 +14,7 @@
       },
       "overall": "9ac450ebf5a029e16470e45d8b387100ea290be9141158bb7b83f7abeeb3b12a"
     },
-    "policy_fingerprint": "e89fc87dfa1eb031594465ab81b52c34f44d701d8a33e40ac48f0eeddc3d3b9d",
+    "policy_fingerprint": "0b5630e609be18aa9a73f0f9223a1867dd6bc7c66704b6b120ed0da15f00ed0b",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -93,6 +93,7 @@
         "action": "Enable IAM authentication on the instance. Run: aws rds modify-db-instance --db-instance-identifier xxx --enable-iam-database-authentication --apply-immediately"
       },
       "sla_deadline_hours": 1440,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 51.369863013698634,
       "score_breakdown": {

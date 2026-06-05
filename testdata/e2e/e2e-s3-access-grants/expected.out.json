@@ -14,7 +14,7 @@
       },
       "overall": "aee6bcd82f3108e5f22948f64cbb369a406f308feac5a45785e95e11b4a8005d"
     },
-    "policy_fingerprint": "21ca43e6df0ea288d3104a678b4974352713521a1e524b0903f23203154c388c",
+    "policy_fingerprint": "ddb83906c61d61491313a339316247b84a3ed99ce597ae7794ee6f39dba95745",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -113,6 +113,7 @@
         "action": "Restrict grant scope to specific prefixes. Use READ not READWRITE."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 77.05479452054796,
       "score_breakdown": {
@@ -291,6 +292,7 @@
         "action": "Associate IAM Identity Center with the Access Grants instance using aws s3control associate-access-grants-identity-center. This enables directory-based grantee resolution."
       },
       "sla_deadline_hours": 1440,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 51.369863013698634,
       "score_breakdown": {
@@ -579,6 +581,14 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
     }
   }
 }

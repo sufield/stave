@@ -14,7 +14,7 @@
       },
       "overall": "d09d2f27ebca6f7b62420bcde97468ce1e63828b485be4bf78ca4e40c0f7e6e5"
     },
-    "policy_fingerprint": "4cf4e367e50f7e0bf46fa8b13979c7d698d037adfbff5c79911e246ee3f43a77",
+    "policy_fingerprint": "41034c5619a61e5bb01acb2ab37b22c015786752f492bbee72c0ae8ac6d632af",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -94,6 +94,7 @@
         "action": "Remove bucket policy statements granting s3:PutObject, s3:DeleteObject, or s3:PutBucketPolicy to external accounts. If cross-account write is required, restrict to specific account IDs with condition keys."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 77.05479452054796,
       "score_breakdown": {
@@ -323,6 +324,14 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
     }
   }
 }

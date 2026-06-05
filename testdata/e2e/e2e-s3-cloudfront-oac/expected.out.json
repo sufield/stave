@@ -14,7 +14,7 @@
       },
       "overall": "525666646e8b8845b2e3f8b3af202a5af48ee163e7af1cad40895d9fafb4cd00"
     },
-    "policy_fingerprint": "a6889bc5a1c1a6b0dcd8adcc1479a7a959e91f1f36fc205bf75e9951ebbfaf6e",
+    "policy_fingerprint": "09b680cf0f7bc04ca0a746ead580fbc3811f892d919c20ea743f630aa9adc56b",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -142,6 +142,7 @@
         "action": "1. Review whether public CDN access is intentional for this bucket. 2. If not intentional, remove the CloudFront distribution or restrict\n   it with signed URLs/cookies.\n3. If intentional, document this as an acknowledged exposure path\n   and add a Stave exemption for this bucket."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
@@ -315,6 +316,7 @@
         "action": "1. Create an Origin Access Control for the distribution. 2. Update the distribution origin to use OAC instead of OAI. 3. Update the bucket policy to grant cloudfront.amazonaws.com\n   with a Condition restricting to the distribution ARN.\n4. Remove the legacy OAI."
       },
       "sla_deadline_hours": 1440,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 51.369863013698634,
       "score_breakdown": {
@@ -619,6 +621,14 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
     }
   }
 }

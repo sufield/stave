@@ -14,7 +14,7 @@
       },
       "overall": "45ab54c3ef9787823ca9a23d255bd8b31e0831b79835c91209391fc526c66173"
     },
-    "policy_fingerprint": "cc56735170388485285933b338b369fdf83380673cef265aa768bb2502bde8d4",
+    "policy_fingerprint": "de61787679e8829299932765e1bd66d7a543ec504356f72f860c4c14237d92a1",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -97,6 +97,7 @@
         "action": "Add network-scoping conditions to the bucket policy: aws:SourceIp for IP range restrictions, aws:SourceVpce for VPC endpoint restrictions, aws:SourceVpc for VPC restrictions, or aws:PrincipalOrgID for organization-only access."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 77.05479452054796,
       "score_breakdown": {
@@ -223,6 +224,7 @@
         "action": "Add network-scoping conditions to the bucket policy: aws:SourceIp for IP range restrictions, aws:SourceVpce for VPC endpoint restrictions, aws:SourceVpc for VPC restrictions, or aws:PrincipalOrgID for organization-only access."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 77.05479452054796,
       "score_breakdown": {
@@ -479,6 +481,14 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
     }
   }
 }

@@ -14,7 +14,7 @@
       },
       "overall": "db79f69df8052641853ba728eb6040f0d17d2f846a60066843678d1ff6e7d5b9"
     },
-    "policy_fingerprint": "2a720311f5385fa65a2456987ddd6cb2af705416bbefa9fe0c2fd4a172156f4f",
+    "policy_fingerprint": "9cc87576b186b6c0755aec34c736bb01e1192a1d9c0ae04fa59b197ab0f8d582",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -133,6 +133,7 @@
         "action": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {

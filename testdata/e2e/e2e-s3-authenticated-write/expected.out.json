@@ -14,7 +14,7 @@
       },
       "overall": "bf3575b87d98e18ddb5d579c6b2df1e8524eaf4b66c9a60e1a292f95063f86be"
     },
-    "policy_fingerprint": "09ce0598a21c2d150e834548df02206c579045b9c68b1ba581c30103d62a0130",
+    "policy_fingerprint": "3886920da7705ff8f896d6804a46f57484cddee0c91d0a5c7504aca635075e29",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -88,6 +88,7 @@
         "action": "Remove the ACL grant or policy statement granting write access to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with BlockPublicAcls and IgnorePublicAcls set to true."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 77.05479452054796,
       "score_breakdown": {
@@ -296,6 +297,14 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
     }
   }
 }

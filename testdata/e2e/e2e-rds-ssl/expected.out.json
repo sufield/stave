@@ -14,7 +14,7 @@
       },
       "overall": "c71840b89ce187166fa2fe9b15b08abcadbe7361aabdd95775cb47b1488ed5ce"
     },
-    "policy_fingerprint": "d0045cfe20d1ed98be12b8ef245f22895d0fd4ac3ba97839da185dec3e293de9",
+    "policy_fingerprint": "c4f3a10257a4402aff4e6ef5491ca8ad3176ae82e14bfa0d6512cd510912ab2d",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -100,6 +100,7 @@
         "action": "Set the rds.force_ssl parameter to 1 in the parameter group (PostgreSQL) or require_secure_transport to ON (MySQL). For Aurora, use the cluster parameter group."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 77.05479452054796,
       "score_breakdown": {

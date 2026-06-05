@@ -14,7 +14,7 @@
       },
       "overall": "8bf4bc75c8133f2d4b32533ae9a287e7a52ee3e85e9c5f2f5910dc12c8feb529"
     },
-    "policy_fingerprint": "7318b10ec005ab2430955cfe11996a8438ac04f4a0c92de885aaf73114c6800d",
+    "policy_fingerprint": "09f75987f9f5fb5f1588e7ebd5142bff298533d473aec964be548344d4b42260",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -115,6 +115,7 @@
         "action": "Change the bucket default encryption to SSE-KMS and specify a customer-managed KMS key ARN. Ensure the KMS key policy grants access only to authorized principals. Enable KMS key rotation."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 77.05479452054796,
       "score_breakdown": {
@@ -313,6 +314,7 @@
         "action": "Change the bucket default encryption to SSE-KMS and specify a customer-managed KMS key ARN. Ensure the KMS key policy grants access only to authorized principals. Enable KMS key rotation."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 77.05479452054796,
       "score_breakdown": {
@@ -629,6 +631,14 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
     }
   }
 }

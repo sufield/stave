@@ -15,7 +15,7 @@
       },
       "overall": "bd49ea33d36e888fe31897260f974b68308fbe3b51a7c73b38e6995e2d8a7000"
     },
-    "policy_fingerprint": "699fa6400d0fb58028e488592cf8e1e88b2f2a4b6a399f85c06ab36f87e2d99c",
+    "policy_fingerprint": "3182893e6a3683754e005a7883a1b158288e255af348a5aaccec8ecc5ada3f9e",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -99,6 +99,7 @@
         "action": "Option 1: Enable the TTLAfterFinished feature gate at cluster level. Option 2: Set ttlSecondsAfterFinished on all Job specs. Option 3: Update VPC CNI to a version with pod completion handling. Verify VPC CNI version:\n  kubectl describe daemonset aws-node -n kube-system | grep Image"
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 75.2054794520548,
       "score_breakdown": {

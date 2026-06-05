@@ -14,7 +14,7 @@
       },
       "overall": "d696c44738921fed4375a7fbd55e6fc1ef262b9cb67bbdb07b42df2d6cea0cd9"
     },
-    "policy_fingerprint": "e4d1f7c419be18716264d641bf8e1034c7bfa05b07d645b2c59d1997305de115",
+    "policy_fingerprint": "d2131dc2023ab759b0f59a571ed873e6ff7909c1d4ffbe294e6ff217bb297f26",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -291,6 +291,7 @@
         "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 77.05479452054796,
       "score_breakdown": {

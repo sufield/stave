@@ -14,7 +14,7 @@
       },
       "overall": "4218add5be0b6772310b952fcac8259776625cfe50d1cec38e08470970ed6796"
     },
-    "policy_fingerprint": "7960771eb1bc6d2e024835667d815c26775ad064a064595e4fdc54325ee86a65",
+    "policy_fingerprint": "4011e677bd327582df343433b619bda08f5a4b8ce3cd1fa188060a3d96244ac8",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -104,6 +104,7 @@
         "action": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
@@ -260,6 +261,7 @@
         "action": "Remove WRITE_ACP grants from the bucket ACL and remove policy statements granting s3:PutBucketAcl or s3:PutObjectAcl to public principals. Enable S3 Public Access Block with BlockPublicAcls set to true."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
@@ -541,6 +543,14 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
     }
   }
 }

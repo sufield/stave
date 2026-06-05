@@ -14,7 +14,7 @@
       },
       "overall": "f4b9bcc6e6c82a44c59a0910943a2034842089a1dd6f0ea52cf6d3ff2449b9d8"
     },
-    "policy_fingerprint": "4f1a1e34f84ec6c37ac1436dde52af2d7728ee28799cdb5606a36cb38185eddd",
+    "policy_fingerprint": "22d14ef04ccb3a0d577ff2bf5c62d0e12c20a6418674fe8c761d53a95fba6f19",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -157,6 +157,7 @@
         "action": "Replace the wildcard principal with the specific AWS account IDs or ARNs that need access, or add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, aws:SourceIp (with a fixed CIDR), or aws:SourceArn. If the bucket genuinely needs to be public (CDN origin, static asset bucket), narrow the Actions to the minimum set and keep Public Access Block enabled where compatible."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
@@ -475,6 +476,7 @@
         "action": "Review bucket policy Principal elements for external account IDs. Remove statements granting access to accounts not in your organization. Use aws:PrincipalOrgID condition to restrict access to your AWS Organization."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 77.05479452054796,
       "score_breakdown": {
@@ -638,6 +640,7 @@
         "action": "Enable default bucket encryption using SSE-S3 (AES256) or SSE-KMS. Use aws s3api put-bucket-encryption to set the default encryption configuration. For sensitive data, use SSE-KMS with a customer-managed key."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 77.05479452054796,
       "score_breakdown": {
@@ -799,6 +802,7 @@
         "action": "Add a bucket policy statement that denies all actions when aws:SecureTransport is false. This forces all API calls to use HTTPS."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 77.05479452054796,
       "score_breakdown": {
@@ -958,6 +962,7 @@
         "action": "Enable S3 server access logging and specify a target bucket for log delivery. Ensure the target bucket has appropriate access controls and is in the same region."
       },
       "sla_deadline_hours": 1440,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 77.05479452054796,
       "score_breakdown": {
@@ -1111,6 +1116,7 @@
         "action": "Enable versioning on the bucket using aws s3api put-bucket-versioning. Once enabled, configure lifecycle rules to manage noncurrent versions and control storage costs."
       },
       "sla_deadline_hours": 1440,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 51.369863013698634,
       "score_breakdown": {
@@ -1643,6 +1649,14 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
     }
   }
 }

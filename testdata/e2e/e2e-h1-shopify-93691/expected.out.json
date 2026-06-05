@@ -14,7 +14,7 @@
       },
       "overall": "07a9b049335b142d5fe4755fc6960a1447d668db55dc16dce526f88551ee50cc"
     },
-    "policy_fingerprint": "bc95b07450e4e888801e0c4290c59ecd23db2cf4bd6e9e5efb135e4a6cb166b4",
+    "policy_fingerprint": "083fb492b53c51455af59955ad349c417ab81e98265bbcc5b352be783284dd37",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -100,6 +100,7 @@
         "action": "Change the signed upload policy to use an exact key condition (eq instead of starts-with) that binds each upload to a specific object path. Generate unique object keys server-side."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {

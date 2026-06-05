@@ -14,7 +14,7 @@
       },
       "overall": "af6f2ec75f5c0f1b4444517d79878fffc4e3b227ae2f2961bc319199f726355c"
     },
-    "policy_fingerprint": "82a889e39dec970088a77273ce89667a8d6de3792213733e6f7231b8ac0f96a1",
+    "policy_fingerprint": "6777373c0467294de3ac51eeeaeb62bb3b69bad2f908e07aa80f3608d8d8b65b",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -98,6 +98,7 @@
         "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {

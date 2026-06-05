@@ -14,7 +14,7 @@
       },
       "overall": "601e4c2eecc9549954dceb5f48829f32534f49ec74af6bae267e8596edfd6dc4"
     },
-    "policy_fingerprint": "1912ed4b60297ea488c3c22e9f0fdb5adc1696a945e3990cf2920f1d7622cf75",
+    "policy_fingerprint": "d76b97b460d6e6f836fc3c4ebafd0e39a9d3449bdac95054128660ab6c499fd7",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -298,6 +298,7 @@
         "action": "Remove or constrain the policy statement granting read actions to Principal \"*\" or AWS: \"*\". If broad read access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public read."
       },
       "sla_deadline_hours": 1440,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
@@ -559,6 +560,14 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
     }
   }
 }

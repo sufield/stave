@@ -14,7 +14,7 @@
       },
       "overall": "40dbcf072fc9b4887e48b61b992f867deaf7263f0937e4c3b3bd4bfe68fc2293"
     },
-    "policy_fingerprint": "16c8d4d79d333afc702f7c36327a94bdf86931a442b387c5f59508eedbb79a5c",
+    "policy_fingerprint": "5012b78c0285992e056fd060dad801408fba1ef30e448549683f6000ceac3fa9",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -89,6 +89,7 @@
         "action": "Enable MFA delete on the bucket using aws s3api put-bucket-versioning with the MFA flag. This requires the root account credentials and an MFA device. Only the root account can enable or disable MFA delete."
       },
       "sla_deadline_hours": 1440,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 51.369863013698634,
       "score_breakdown": {
@@ -327,6 +328,14 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
     }
   }
 }

@@ -14,7 +14,7 @@
       },
       "overall": "801a4ac85e5a20d16af4d0f9ddf5cc226e1f9e7d84ff0172d69b72d68a94ace6"
     },
-    "policy_fingerprint": "def65b691b2f641d5de53223096e8ec1269e80a6577304f6ba9833b913b93486",
+    "policy_fingerprint": "f858f3497a0aff3884cba6346966247cfa0831261cbea1817b775509f2497c50",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -103,6 +103,7 @@
         "action": "Add S3 lifecycle rules to manage object expiration and transitions. Configure rules matching the retention period specified in the data-retention tag. Use lifecycle transitions to move data to cheaper storage classes before expiration."
       },
       "sla_deadline_hours": 1440,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 51.369863013698634,
       "score_breakdown": {
@@ -265,6 +266,7 @@
         "action": "Increase the lifecycle expiration period to at least the configured min_retention_days value. If the current rule is for storage class transition, ensure the expiration rule is separate and meets the minimum retention period."
       },
       "sla_deadline_hours": 1440,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 51.369863013698634,
       "score_breakdown": {
@@ -576,6 +578,14 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
     }
   }
 }

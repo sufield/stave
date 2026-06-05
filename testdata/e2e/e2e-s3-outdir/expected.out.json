@@ -14,7 +14,7 @@
       },
       "overall": "ae143ea4252eb193e92b985e9c9b22d7249d6991bb133c000aeacdb632f18a8a"
     },
-    "policy_fingerprint": "08943ebfcbaef3f2999b262a2a54169db0773c4ff73b21bb0dac639ab11d7729",
+    "policy_fingerprint": "dabfa8c721061e7619756026288f23e4a3aa40f1760dbb765662464b42a091a4",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -115,6 +115,7 @@
         "action": "Remove the underlying public-granting policy statement or ACL entry so the bucket does not depend solely on PAB for protection. Then verify PAB remains enabled as defense-in-depth."
       },
       "sla_deadline_hours": 1440,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
@@ -352,6 +353,14 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
     }
   }
 }

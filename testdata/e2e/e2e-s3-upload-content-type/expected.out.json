@@ -14,7 +14,7 @@
       },
       "overall": "a8e9e10c9a009e83030685a083a6d77c53c64d79ed4cc692ab0385bd852d6029"
     },
-    "policy_fingerprint": "de39ba2e81fb6b30212c6719de9d808a459468e661c500f54d7f58289ad2e913",
+    "policy_fingerprint": "fd9574bb43457293a92923593c3957a97faaf8a277f6aebe7380859f202f84d3",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -100,6 +100,7 @@
         "action": "Add an exact content-type condition to the signed upload policy (e.g., eq $Content-Type image/jpeg). Avoid starts-with with empty prefix, which allows any content type."
       },
       "sla_deadline_hours": 336,
+      "sla_breached": false,
       "sla_policy_source": "profile:default",
       "exposure_score": 100,
       "score_breakdown": {
@@ -352,6 +353,14 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
     }
   }
 }
