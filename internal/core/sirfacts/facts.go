@@ -2047,6 +2047,15 @@ func SerializeSMT2(facts []Fact, w io.Writer, opts SMT2Options) error {
 	bw.writeLine("")
 
 	predicates := allDeclaredPredicates(facts)
+	// Fail loud before emitting anything: a predicate that cannot be rendered
+	// as a valid SMT-LIB symbol (one carrying '|' or '\') would otherwise be
+	// written as malformed |...| text, silently corrupting the S-expression
+	// structure handed to the solver. Refuse rather than emit injectable SMT.
+	for _, p := range predicates {
+		if !smt2SymbolRepresentable(p) {
+			return fmt.Errorf("predicate %q cannot be represented as an SMT-LIB symbol (contains '|' or '\\'); refusing to emit malformed SMT-LIB", p)
+		}
+	}
 	bw.writeLine(fmt.Sprintf("; total_facts: %d", len(facts)))
 	bw.writeLine(fmt.Sprintf("; total_predicates: %d", len(predicates)))
 	if opts.ClosedWorld {
@@ -2209,6 +2218,21 @@ func smt2Symbol(name string) string {
 		return name
 	}
 	return "|" + name + "|"
+}
+
+// smt2SymbolRepresentable reports whether name can be rendered as a valid
+// SMT-LIB v2 symbol. Simple symbols pass through bare; everything else is
+// emitted as a |...| quoted symbol, which SMT-LIB v2.6 §3.1 forbids from
+// containing '|' or '\' — there is no escape sequence inside a quoted symbol.
+// A name carrying either character therefore has NO valid SMT-LIB
+// representation: wrapping it in |...| produces malformed text that breaks
+// S-expression structure and can inject solver input. SerializeSMT2 calls
+// this to fail loud instead of emitting a lie to the reasoning engine.
+func smt2SymbolRepresentable(name string) bool {
+	if isSimpleSMTSymbol(name) {
+		return true
+	}
+	return !strings.ContainsAny(name, "|\\")
 }
 
 func isSimpleSMTSymbol(name string) bool {

@@ -148,13 +148,22 @@ func ParseBundle(data []byte) ([]asset.Snapshot, error) {
 			return nil, fmt.Errorf("observation bundle snapshot %d is missing required `captured_at` timestamp", i)
 		}
 		// Mirror the strict single-file path (loader_core.go runs the
-		// obs.v0.1 JSON-Schema validator, which enforces assets[].type
-		// minLength:1 / pattern ^[a-z0-9][a-z0-9_.-]*$). The bundle path
-		// skips schema validation, so without this check an empty or
-		// malformed asset type loads silently as Type=="" — matching no
-		// control's scope and producing a wrong COMPLIANT verdict. Reject
-		// it here so both intake paths agree.
+		// obs.v0.1 JSON-Schema validator, which enforces assets[].id and
+		// assets[].type minLength:1, type pattern ^[a-z0-9][a-z0-9_.-]*$).
+		// The bundle path skips schema validation, so without these checks a
+		// missing or empty asset id/type loads silently as ""— matching no
+		// control's scope and producing a wrong COMPLIANT verdict. Reject it
+		// here so both intake paths agree.
+		//
+		// `id` needs an explicit presence check (not just the asset.ID
+		// UnmarshalJSON empty-string guard): a *missing* id key never invokes
+		// the unmarshaler, so the field stays the zero value "" and would slip
+		// through. The single-file schema rejects a missing id via
+		// `required:[id]`; this is the bundle path's equivalent.
 		for j := range bundle.Snapshots[i].Assets {
+			if bundle.Snapshots[i].Assets[j].ID == "" {
+				return nil, fmt.Errorf("observation bundle snapshot %d asset %d is missing required `id`", i, j)
+			}
 			if err := bundle.Snapshots[i].Assets[j].Type.Validate(); err != nil {
 				return nil, fmt.Errorf("observation bundle snapshot %d asset %d has invalid `type`: %w", i, j, err)
 			}

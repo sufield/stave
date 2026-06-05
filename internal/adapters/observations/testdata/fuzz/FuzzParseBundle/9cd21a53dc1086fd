@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{\"snApshots\":[{\"CAptured_At\":\"0000-01-01T0:00:00Z\",\"Assets\":[{\"tYpe\":\"0\"}]}]}")
