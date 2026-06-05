@@ -51,7 +51,7 @@ func (e *ResourceExposure) IsPubliclyExposed() bool {
 	if e == nil {
 		return false
 	}
-	return e.PublicRead || e.PublicWrite || e.PublicAdmin || e.PublicList
+	return e.PublicRead || e.PublicWrite || e.PublicAdmin || e.PublicList || e.PublicDelete
 }
 
 // ResolvedAccess represents the final, evaluated entitlement state used by the

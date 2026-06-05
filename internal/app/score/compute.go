@@ -262,7 +262,7 @@ func (r Result) Movers() []ScoreMover {
 			PointsLost: r.Chain.MaxContribution - r.Chain.Contribution,
 		})
 	}
-	if r.Coverage.SubScore < 1.0 && r.Coverage.Detail.CoveragePct > 0 {
+	if r.Coverage.SubScore < 1.0 {
 		movers = append(movers, ScoreMover{
 			Component:  "coverage",
 			Count:      int(r.Coverage.Detail.CoveragePct),

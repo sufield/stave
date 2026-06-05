@@ -257,7 +257,10 @@ func (l *ExposureLifecycle) ExposureDuration(now time.Time) (time.Duration, erro
 	if !l.HasActiveWindow() {
 		return 0, nil
 	}
-	if !now.IsZero() && now.Before(l.activeWindow.OpenedAt()) {
+	if now.IsZero() {
+		return 0, fmt.Errorf("exposure duration: 'now' is the zero time, which precedes any real window start (%s)", l.activeWindow.OpenedAt().Format(time.RFC3339))
+	}
+	if now.Before(l.activeWindow.OpenedAt()) {
 		return 0, fmt.Errorf("exposure duration: 'now' (%s) must not be before window start (%s)", now.Format(time.RFC3339), l.activeWindow.OpenedAt().Format(time.RFC3339))
 	}
 	return now.Sub(l.activeWindow.OpenedAt()), nil

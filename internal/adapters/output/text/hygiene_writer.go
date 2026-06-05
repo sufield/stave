@@ -68,6 +68,12 @@ func writeTrendTable(h *hygieneWriter, trends []evaluation.TrendMetric) {
 	h.f("## Risk SecurityState & Trends\n\n")
 	h.f("| Metric | Current | Previous | Change |\n| :--- | :--- | :--- | :--- |\n")
 	for _, trend := range trends {
-		h.f("| %s | %d | %d | %s%d |\n", trend.Name, trend.Current, trend.Previous, trend.Symbol(), trend.Change())
+		// Symbol() already encodes direction (↓ improving, ↑ declining), so render
+		// the magnitude of the change to avoid a double-negative like "↓ -3".
+		change := trend.Change()
+		if change < 0 {
+			change = -change
+		}
+		h.f("| %s | %d | %d | %s%d |\n", trend.Name, trend.Current, trend.Previous, trend.Symbol(), change)
 	}
 }

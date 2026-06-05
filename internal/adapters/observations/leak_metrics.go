@@ -31,3 +31,11 @@ var leakedReadGoroutines atomic.Int64
 func recordLeakedReadGoroutine() {
 	leakedReadGoroutines.Add(1)
 }
+
+// LeakedReadGoroutines returns the current count of read goroutines
+// that outlived their parent context.Done(). Operators and test
+// harnesses inspecting a long-running process can call this to see
+// whether ctx cancellations have been silently dropping goroutines.
+func LeakedReadGoroutines() int64 {
+	return leakedReadGoroutines.Load()
+}

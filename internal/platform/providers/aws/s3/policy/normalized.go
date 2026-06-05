@@ -249,18 +249,28 @@ func (c NormalizedCondition) IsEmpty() bool {
 }
 
 // Lookup returns the values for (operator, key) and a presence flag.
-// Both lookups are exact-case — callers that need normalization
-// (lower-casing for matching) handle it at their layer.
+// Both the operator and the key match case-insensitively because AWS
+// treats IAM condition operators (e.g. "Bool") and condition keys
+// (e.g. "aws:SecureTransport") as case-insensitive in the policy
+// evaluation engine. The stored map preserves the policy author's
+// original case, so a non-canonical casing (e.g.
+// {"bool":{"aws:securetransport":"false"}}) still resolves to the
+// canonical lookup keys passed by callers.
 func (c NormalizedCondition) Lookup(operator, key string) ([]string, bool) {
 	if c == nil {
 		return nil, false
 	}
-	keys, ok := c[operator]
-	if !ok {
-		return nil, false
+	for op, keys := range c {
+		if !strings.EqualFold(op, operator) {
+			continue
+		}
+		for k, vals := range keys {
+			if strings.EqualFold(k, key) {
+				return vals, true
+			}
+		}
 	}
-	vals, ok := keys[key]
-	return vals, ok
+	return nil, false
 }
 
 // coerceConditionValues turns one decoded condition leaf into a string

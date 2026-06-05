@@ -496,8 +496,29 @@ func (s *prefixExposureStrategy) Evaluate(t *asset.ExposureLifecycle, _ time.Tim
 	if s.ctl == nil || t == nil {
 		return evaluation.ResourceCheck{}, nil
 	}
-	observation, findings := EvaluatePrefixExposureForRow(t, s.ctl)
-	return observation, wrapInPointers(findings)
+	// EvaluatePrefixExposureForRow returns the pool-borrowed *Finding
+	// pointers directly (like the other strategies), so they can flow
+	// straight to the collector and back to findingPool via ReturnFindings.
+	// The previous wrapInPointers step took addresses into a value slice,
+	// which orphaned the pool pointers and fed slice-backing addresses into
+	// the pool — a sync.Pool contract violation (see findingPool).
+	return EvaluatePrefixExposureForRow(t, s.ctl)
+}
+
+// wrapInPointers builds a []*Finding from a value slice by taking the
+// address of each element. NOTE: the resulting pointers alias one shared
+// backing array, so they MUST NOT be handed to ReturnFindings (that would
+// poison findingPool with non-pool addresses). Retained as a test helper
+// only — production strategies now carry pool-borrowed pointers end to end.
+func wrapInPointers(findings []evaluation.Finding) []*evaluation.Finding {
+	if len(findings) == 0 {
+		return nil
+	}
+	evaluatedFindings := make([]*evaluation.Finding, len(findings))
+	for i := range findings {
+		evaluatedFindings[i] = &findings[i]
+	}
+	return evaluatedFindings
 }
 
 type unsupportedStrategy struct {
@@ -540,15 +561,4 @@ func finalizeRow(r evaluation.ResourceCheck, d evaluation.Verdict, c evaluation.
 	r.Verdict = d
 	r.Confidence = c
 	return r
-}
-
-func wrapInPointers(findings []evaluation.Finding) []*evaluation.Finding {
-	if len(findings) == 0 {
-		return nil
-	}
-	evaluatedFindings := make([]*evaluation.Finding, len(findings))
-	for i := range findings {
-		evaluatedFindings[i] = &findings[i]
-	}
-	return evaluatedFindings
 }

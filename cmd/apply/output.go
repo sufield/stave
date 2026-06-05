@@ -105,6 +105,21 @@ func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.Enforcement
 	}
 }
 
+// gateViolations returns the violation gating error for a security
+// state without rendering any user-facing summary. It mirrors the
+// terminal decision in ReportApply (policy.Evaluate → block ⇒
+// ErrViolationsFound) so the --new-only / --new-since path can apply
+// the same exit-code gate after rendering its own signal-filtered
+// view. Returns nil for allow/advisory outcomes; ui.ErrViolationsFound
+// for a block (non-compliant) state.
+func gateViolations(res EvaluateResult) error {
+	outcome := evaluation.EnforcementPolicy{}.Evaluate(res.SecurityState)
+	if outcome.IsAllow() || outcome.IsAdvisory() {
+		return nil
+	}
+	return ui.ErrViolationsFound
+}
+
 // ReportPlan prints the readiness report (used by apply --dry-run).
 func (r *Reporter) ReportPlan(report validation.ReadinessAssessment) error {
 	if !r.ShouldEmit() {

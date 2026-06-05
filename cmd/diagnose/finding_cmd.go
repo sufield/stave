@@ -84,7 +84,10 @@ Examples:
 				return errors.New("both --control-id and --asset-id are required")
 			}
 			eval := cmdctx.ResolverFromCmd(cmd)
-			if !cmd.Flags().Changed("max-unsafe") {
+			// ResolverFromCmd returns nil when no governance resolver was
+			// injected (test harnesses / commands driven without bootstrap).
+			// Skip config-default resolution rather than dereferencing nil.
+			if eval != nil && !cmd.Flags().Changed("max-unsafe") {
 				maxUnsafe = eval.MaxUnsafeDuration()
 			}
 			controlsChanged = cmd.Flags().Changed("controls")

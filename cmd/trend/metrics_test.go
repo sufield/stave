@@ -66,3 +66,84 @@ func TestComputeProjection_UsesTotalAssetsNotFindingSum(t *testing.T) {
 		t.Fatalf("EstimatedRuns=%d, want 25 (target = targetRate * TotalAssets)", p.EstimatedRuns)
 	}
 }
+
+// computeVelocity boundary/value coverage: exact average, the +/-0.5
+// direction thresholds, a window of exactly two runs, and windowSize == 0
+// meaning "use all runs". The original single-scenario test left these
+// (and the arithmetic) unpinned.
+func TestComputeVelocity_ThresholdsAndWindow(t *testing.T) {
+	cases := []struct {
+		name       string
+		runs       []runMetrics
+		windowSize int
+		wantAvg    float64
+		wantWindow int
+		wantDir    string
+	}{
+		// 2-run window, exact average -4 -> improving.
+		{"two-run window exact avg", []runMetrics{{ViolationCount: 10}, {ViolationCount: 6}}, 5, -4, 2, "improving"},
+		// avg exactly -0.5 must stay "steady" (threshold is < -0.5, not <=).
+		{"avg exactly -0.5 is steady", []runMetrics{{ViolationCount: 10}, {ViolationCount: 10}, {ViolationCount: 9}}, 5, -0.5, 3, "steady"},
+		// avg exactly +0.5 must stay "steady" (threshold is > 0.5, not >=).
+		{"avg exactly +0.5 is steady", []runMetrics{{ViolationCount: 9}, {ViolationCount: 9}, {ViolationCount: 10}}, 5, 0.5, 3, "steady"},
+		// windowSize 0 means no limit: use all runs.
+		{"windowSize 0 uses all runs", []runMetrics{{ViolationCount: 10}, {ViolationCount: 5}, {ViolationCount: 2}}, 0, -4, 3, "improving"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			v := computeVelocity(c.runs, c.windowSize)
+			if math.Abs(v.AvgNetChange-c.wantAvg) > 1e-9 {
+				t.Errorf("AvgNetChange = %.4f, want %.4f", v.AvgNetChange, c.wantAvg)
+			}
+			if v.WindowRuns != c.wantWindow {
+				t.Errorf("WindowRuns = %d, want %d", v.WindowRuns, c.wantWindow)
+			}
+			if v.Direction != c.wantDir {
+				t.Errorf("Direction = %q, want %q", v.Direction, c.wantDir)
+			}
+		})
+	}
+}
+
+// computeProjection guard boundaries: not-improving -> nil, empty runs -> nil,
+// latestRate exactly at target -> nil, and zero velocity -> nil.
+func TestComputeProjection_GuardBoundaries(t *testing.T) {
+	improving := velocityMetrics{Direction: "improving", AvgNetChange: -1.0}
+
+	if p := computeProjection(nil, improving); p != nil {
+		t.Errorf("empty runs must yield nil, got %+v", p)
+	}
+	if p := computeProjection([]runMetrics{{ViolationRate: 0.30}}, velocityMetrics{Direction: "regressing", AvgNetChange: 1}); p != nil {
+		t.Errorf("non-improving velocity must yield nil, got %+v", p)
+	}
+	// latestRate exactly equals the 0.05 target -> already at target -> nil.
+	if p := computeProjection([]runMetrics{{ViolationRate: 0.05, ViolationCount: 5, TotalAssets: 100}}, improving); p != nil {
+		t.Errorf("rate exactly at target must yield nil, got %+v", p)
+	}
+	// Zero velocity (Direction improving but AvgNetChange 0) -> nil (no progress).
+	zero := velocityMetrics{Direction: "improving", AvgNetChange: 0}
+	if p := computeProjection([]runMetrics{{ViolationRate: 0.30, ViolationCount: 30, TotalAssets: 100}}, zero); p != nil {
+		t.Errorf("zero velocity must yield nil, got %+v", p)
+	}
+}
+
+func TestComputeProjection_EstimatedRunsExactAndClamped(t *testing.T) {
+	// Exact: target = 0.05*100 = 5; (30-5)/1 = 25.
+	exact := computeProjection(
+		[]runMetrics{{ViolationRate: 0.30, ViolationCount: 30, TotalAssets: 100}},
+		velocityMetrics{Direction: "improving", AvgNetChange: -1.0},
+	)
+	if exact == nil || exact.EstimatedRuns != 25 {
+		t.Fatalf("exact projection EstimatedRuns = %v, want 25", exact)
+	}
+
+	// Clamp: target = 5; (6-5)/2 = 0.5 -> int() truncates to 0 -> clamped to 1.
+	// Pins both the runsNeeded formula and the `<= 0` clamp boundary.
+	clamped := computeProjection(
+		[]runMetrics{{ViolationRate: 0.06, ViolationCount: 6, TotalAssets: 100}},
+		velocityMetrics{Direction: "improving", AvgNetChange: -2.0},
+	)
+	if clamped == nil || clamped.EstimatedRuns != 1 {
+		t.Fatalf("clamped projection EstimatedRuns = %v, want 1 (truncated 0 clamps to 1)", clamped)
+	}
+}

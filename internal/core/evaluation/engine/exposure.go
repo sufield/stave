@@ -28,12 +28,12 @@ type prefixEvaluator struct {
 func EvaluatePrefixExposureForRow(
 	lifecycle *asset.ExposureLifecycle,
 	ctl *policy.ControlDefinition,
-) (evaluation.ResourceCheck, []evaluation.Finding) {
+) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	e := prefixEvaluator{lifecycle: lifecycle, ctl: ctl}
 	return e.evaluate()
 }
 
-func (e *prefixEvaluator) evaluate() (evaluation.ResourceCheck, []evaluation.Finding) {
+func (e *prefixEvaluator) evaluate() (evaluation.ResourceCheck, []*evaluation.Finding) {
 	prefixRow := newPrefixExposureRow(e.lifecycle, e.ctl)
 
 	// 1. Validate Control Configuration
@@ -76,9 +76,9 @@ func newPrefixExposureRow(t *asset.ExposureLifecycle, ctl *policy.ControlDefinit
 func (e *prefixEvaluator) assetExposure(
 	row evaluation.ResourceCheck,
 	protected policy.PrefixSet,
-) (evaluation.ResourceCheck, []evaluation.Finding) {
+) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	facts := exposure.SummarizeAccess(e.lifecycle.Asset().Properties)
-	var findings []evaluation.Finding
+	var findings []*evaluation.Finding
 
 	for _, prefix := range protected.Prefixes() {
 		exposureResult := facts.CheckExposure(prefix)
@@ -106,7 +106,7 @@ func (e *prefixEvaluator) assetExposure(
 		if f == nil {
 			continue
 		}
-		findings = append(findings, *f)
+		findings = append(findings, f)
 	}
 
 	if len(findings) > 0 {
@@ -122,7 +122,7 @@ func (e *prefixEvaluator) configIssue(
 	row evaluation.ResourceCheck,
 	why string,
 	reasonCode string,
-) (evaluation.ResourceCheck, []evaluation.Finding) {
+) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	row.Verdict = evaluation.VerdictViolation
 	f := NewFinding(e.ctl, e.lifecycle, FindingContext{
 		Reason: why,
@@ -135,13 +135,13 @@ func (e *prefixEvaluator) configIssue(
 		// a finding rather than panicking on the deref below.
 		return row, nil
 	}
-	return row, []evaluation.Finding{*f}
+	return row, []*evaluation.Finding{f}
 }
 
 func (e *prefixEvaluator) overlapIssue(
 	row evaluation.ResourceCheck,
 	c *policy.PrefixConflict,
-) (evaluation.ResourceCheck, []evaluation.Finding) {
+) (evaluation.ResourceCheck, []*evaluation.Finding) {
 	row.Verdict = evaluation.VerdictViolation
 	f := NewFinding(e.ctl, e.lifecycle, FindingContext{
 		Reason: fmt.Sprintf("Protected prefix %q overlaps with allowed prefix %q (config_overlap).", c.Protected, c.Allowed),
@@ -154,7 +154,7 @@ func (e *prefixEvaluator) overlapIssue(
 	if f == nil {
 		return row, nil
 	}
-	return row, []evaluation.Finding{*f}
+	return row, []*evaluation.Finding{f}
 }
 
 func prefixExposureSets(ctl *policy.ControlDefinition) (allowed, protected policy.PrefixSet) {

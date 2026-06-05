@@ -117,9 +117,19 @@ func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts 
 		}
 		// runNewOnlyOutput already rendered the signal-filtered
 		// view; calling ReportApply again would emit the standard
-		// summary on top, doubling output. We still need a
-		// Reporter for the SLA gate (its accessor lives on the
-		// type) but skip ReportApply entirely in new-only mode.
+		// summary on top, doubling output. We skip ReportApply's
+		// rendering but must NOT skip its gating decision: a
+		// non-compliant (block) state has to exit non-zero here too,
+		// otherwise CI runs with --new-only pass on every active
+		// finding. gateViolations mirrors ReportApply's policy
+		// evaluation without the duplicate output.
+		if err := gateViolations(results); err != nil {
+			return err
+		}
+		// SLA gate: the SLA breach is a separate gating signal from
+		// the violation gate above. Check it after the violation
+		// decision so a clean (compliant) run can still fail on an
+		// SLA-policy breach.
 		gate := NewReporter(sio, rt)
 		return gate.CheckSLAPolicy(SLAPolicy(opts.SLAPolicy), results)
 	}

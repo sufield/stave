@@ -222,20 +222,13 @@ func collectRuleRefs(rule *policy.PredicateRule, refs []fieldRef) []fieldRef {
 }
 
 // fieldPresent checks if a field path exists in the collected fields.
-// Supports prefix matching: "properties.storage.kind" matches if
-// "properties.storage.kind" is in the set.
+// collectPresentFields records every key at every nesting level, so a field
+// is present only if its exact path was collected. A scalar value at a parent
+// path (e.g. "properties.encryption") must NOT satisfy presence of a deeper
+// child path (e.g. "properties.encryption.enabled") — that leaf was never
+// collected and the deeper field is genuinely missing.
 func fieldPresent(path string, fields map[string]bool) bool {
-	if fields[path] {
-		return true
-	}
-	// Check if any collected field is a prefix of this path
-	// (handles nested structure where parent exists).
-	for f := range fields {
-		if strings.HasPrefix(path, f+".") {
-			return true
-		}
-	}
-	return false
+	return fields[path]
 }
 
 // extractFrameworks returns compliance framework names from a control.

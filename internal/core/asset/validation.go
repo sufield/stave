@@ -100,10 +100,18 @@ func newSnapshotTimeline(seed time.Time) *snapshotLifecycle {
 }
 
 func (t *snapshotLifecycle) observe(capturedAt time.Time) {
-	if capturedAt.Before(t.earliest) {
+	// A zero (missing) timestamp must never anchor the observation span.
+	// Otherwise it pins `earliest` at the zero time (~year 1) and inflates
+	// the computed span by centuries.
+	if capturedAt.IsZero() {
+		return
+	}
+	// Adopt the first real timestamp when the span has not yet been
+	// anchored to a real value (the seed may have been a zero timestamp).
+	if t.earliest.IsZero() || capturedAt.Before(t.earliest) {
 		t.earliest = capturedAt
 	}
-	if capturedAt.After(t.latest) {
+	if t.latest.IsZero() || capturedAt.After(t.latest) {
 		t.latest = capturedAt
 	}
 }

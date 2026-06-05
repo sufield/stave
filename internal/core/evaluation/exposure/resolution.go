@@ -59,7 +59,7 @@ func buildExposureFromResolved(identity, resource Visibility, gov GovernanceOver
 
 		// Latent Reachability
 		LatentPublicRead: resolved.IsLatent,
-		LatentPublicList: identity.Public.List && !resolved.List,
+		LatentPublicList: (identity.Public.List || resource.Public.List) && !resolved.List,
 	}
 
 	// Cross-Account / Authenticated Exposure (Post-Guardrails)

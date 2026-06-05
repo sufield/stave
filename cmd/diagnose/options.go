@@ -58,6 +58,12 @@ func (o *diagnoseOptions) Prepare(cmd *cobra.Command) error {
 	o.obsSet = cmd.Flags().Changed("observations")
 	o.formatSet = cmd.Flags().Changed("format")
 	eval := cmdctx.ResolverFromCmd(cmd)
+	// ResolverFromCmd returns nil when no governance resolver was injected
+	// (test harnesses / commands driven without bootstrap). Skip config-default
+	// resolution rather than dereferencing nil.
+	if eval == nil {
+		return nil
+	}
 	if !cmd.Flags().Changed("max-unsafe") {
 		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}
