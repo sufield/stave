@@ -360,3 +360,74 @@ func TestDenyHasNarrowingConditions_Shapes(t *testing.T) {
 		})
 	}
 }
+
+// TestCollectSCPCeiling_NonEmptyIntersectionAllowsCommonAction pins the
+// other half of the SCP-ceiling contract that
+// Test_RedGate_ScpEmptyIntersection does not exercise: when a multi-SCP
+// chain has a NON-empty intersection, the common (action,resource) pairs
+// must remain allowed and only the non-common ones get blocked.
+//
+// The empty-intersection redgate test reaches its verdict via the
+// post-loop guard (resolve.go:221), so the in-loop early-return
+// (resolve.go:207) and the loop's own iteration (resolve.go:204) are
+// never pinned by it. This test runs a two-SCP chain whose intersection
+// is {s3:GetObject} and asserts that common action stays in
+// EffectiveAllow while a single-SCP-only action (ec2:DescribeInstances)
+// is SCP-blocked — failing if the ceiling collapses to deny-everything.
+func TestCollectSCPCeiling_NonEmptyIntersectionAllowsCommonAction(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("panic during Resolve: %v", r)
+		}
+	}()
+
+	input := ResolutionInput{
+		PrincipalARN: "arn:aws:iam::123:role/r",
+		IdentityPolicies: []PolicyDocument{
+			mustParse(t, `{"Statement":[{"Effect":"Allow","Action":["s3:GetObject","ec2:DescribeInstances"],"Resource":"*"}]}`),
+		},
+		SCPPresent: true,
+		// Intersection of the two SCP allow sets is {s3:GetObject on *}:
+		// ec2:DescribeInstances is allowed by the first SCP only, so it
+		// drops out of the ceiling.
+		SCPHierarchy: []PolicyDocument{
+			mustParse(t, `{"Statement":[{"Effect":"Allow","Action":["s3:GetObject","ec2:DescribeInstances"],"Resource":"*"}]}`),
+			mustParse(t, `{"Statement":[{"Effect":"Allow","Action":["s3:GetObject","s3:PutObject"],"Resource":"*"}]}`),
+		},
+	}
+
+	result := Resolve(input)
+	if result.Incomplete {
+		t.Fatalf("unexpected incomplete: %v", result.IncompleteReasons)
+	}
+
+	// The common action survives the intersection and must be effectively allowed.
+	allowed := false
+	for _, g := range result.EffectiveAllow {
+		if g.Action == "s3:GetObject" {
+			allowed = true
+		}
+	}
+	if !allowed {
+		t.Fatalf("non-empty SCP intersection must keep the common action: "+
+			"expected s3:GetObject in EffectiveAllow, got EffectiveAllow=%+v SCPBlocked=%v",
+			result.EffectiveAllow, result.SCPBlocked)
+	}
+
+	// The action allowed by only one SCP is outside the intersection and must be blocked.
+	for _, g := range result.EffectiveAllow {
+		if g.Action == "ec2:DescribeInstances" {
+			t.Fatalf("ec2:DescribeInstances is not in the SCP intersection and must be blocked, "+
+				"but leaked into EffectiveAllow=%+v", result.EffectiveAllow)
+		}
+	}
+	blocked := false
+	for _, a := range result.SCPBlocked {
+		if a == "ec2:DescribeInstances" {
+			blocked = true
+		}
+	}
+	if !blocked {
+		t.Fatalf("expected ec2:DescribeInstances in SCPBlocked (outside intersection), got SCPBlocked=%v", result.SCPBlocked)
+	}
+}
