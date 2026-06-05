@@ -31,7 +31,7 @@ Stave is designed with a minimal attack surface and a verifiable release pipelin
 
 ## What Stave Evaluates
 
-Stave evaluates configuration snapshots against declarative safety controls. As of MVP 1.0, the evaluation engine supports these control types (`internal/domain/catalog.go`):
+Stave evaluates configuration snapshots against declarative safety controls. As of MVP 1.0, the evaluation engine supports these control types (`internal/core/controldef/control_type.go`):
 
 | Control Type | Evaluation | Status |
 |---------------|-----------|--------|

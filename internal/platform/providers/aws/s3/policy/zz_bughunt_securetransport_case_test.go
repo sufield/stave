@@ -51,8 +51,8 @@ func TestBugHunt_SecureTransportCaseInsensitive(t *testing.T) {
 	result := doc.Assess()
 
 	if !result.EnforcesHTTPS {
-		t.Errorf("expected EnforcesHTTPS=true for a Deny with case-insensitive "+
-			"Bool/aws:SecureTransport=false condition ({\"bool\":{\"aws:securetransport\":\"false\"}}), got false; "+
+		t.Errorf("expected EnforcesHTTPS=true for a Deny with case-insensitive " +
+			"Bool/aws:SecureTransport=false condition ({\"bool\":{\"aws:securetransport\":\"false\"}}), got false; " +
 			"AWS matches condition operators and keys case-insensitively, so this policy DOES enforce HTTPS")
 	}
 }

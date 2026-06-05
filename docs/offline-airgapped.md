@@ -79,7 +79,7 @@ GOFLAGS=-mod=vendor make build
 ### Test-Time Notes
 
 - **Unit tests** (`make test`) — fully local, no network required.
-- **E2E tests** (`scripts/e2e.sh`, `scripts/e2e-counterfactual.sh`) — fully local, but require `jq`, `diff`, and `bash` to be installed.
+- **E2E tests** (`make e2e` / `go test ./e2e/...`) — fully local, but require `jq`, `diff`, and `bash` to be installed.
 - No test downloads fixtures or contacts external services.
 
 ### Release-Time Notes
@@ -101,8 +101,8 @@ Release signing and attestation require network access:
 
 ### Why do the ACL constants contain `http://` URLs?
 
-The constants `AllUsersGranteeURI` and `AuthenticatedUsersGranteeURI` in
-`internal/adapters/input/extract/s3/acl.go` contain URIs like
+The constants `GroupURIAllUsers` and `GroupURIAuthenticatedUsers` in
+`internal/platform/providers/aws/s3/acl/facts.go` contain URIs like
 `http://acs.amazonaws.com/groups/global/AllUsers`. These are **opaque
 identifiers defined by the AWS S3 ACL specification** — they are string
 comparisons, not HTTP endpoints. Stave never fetches these URLs.
