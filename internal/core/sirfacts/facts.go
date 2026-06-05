@@ -28,6 +28,7 @@ import (
 	"io"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -503,7 +504,7 @@ func iamPolicyFacts(assets []sir.AssetFact) []Fact {
 				if effect, _ := stmt["Effect"].(string); effect != "Allow" {
 					continue
 				}
-				evid := fmt.Sprintf("assets[%d].policies.attached_policies[%d].statements[%d]", i, pi, si)
+				evid := fmt.Sprintf("assets[%d].properties.identity.policies.attached_policies[%d].statements[%d]", i, pi, si)
 				for _, action := range coerceStringList(stmt["Action"]) {
 					out = append(out, Fact{
 						Subject: a.ID, Predicate: "has_action", Object: action,
@@ -850,7 +851,7 @@ func conditionFacts(assets []sir.AssetFact) []Fact {
 						// valid character in IAM condition keys, so the
 						// split point is unambiguous. Emits one fact per
 						// value (conditions can carry array values).
-						for _, val := range coerceStringList(keys[k]) {
+						for _, val := range coerceConditionValueList(keys[k]) {
 							out = append(out, Fact{
 								Subject: a.ID, Predicate: "has_condition_value",
 								Object: op + ":" + k + "=" + val,
@@ -1734,6 +1735,49 @@ func coerceStringList(v any) []string {
 		return out
 	}
 	return nil
+}
+
+// coerceConditionValueList renders the value half of an IAM
+// Condition entry as a list of strings. Unlike coerceStringList
+// (used for Action/Resource, which are always strings or string
+// arrays), an IAM condition value is commonly a non-string scalar:
+// a JSON boolean (e.g. {"Bool":{"aws:SecureTransport":false}}) parses
+// to a Go bool, and numeric conditions (e.g. NumericLessThan) parse
+// to float64. Those must survive projection so a closed-world query
+// like has_condition_value(p,"Bool:aws:SecureTransport=false") can
+// match. Strings and []any-of-mixed-scalars are also handled. Nested
+// maps/slices are skipped (no meaningful scalar form).
+func coerceConditionValueList(v any) []string {
+	switch t := v.(type) {
+	case []any:
+		out := make([]string, 0, len(t))
+		for _, e := range t {
+			if s, ok := conditionScalarString(e); ok {
+				out = append(out, s)
+			}
+		}
+		return out
+	default:
+		if s, ok := conditionScalarString(t); ok {
+			return []string{s}
+		}
+		return nil
+	}
+}
+
+// conditionScalarString renders a single scalar condition value as a
+// string, reporting false for non-scalar (map/slice/nil) inputs so
+// callers can skip them.
+func conditionScalarString(v any) (string, bool) {
+	switch s := v.(type) {
+	case string:
+		return s, true
+	case bool:
+		return strconv.FormatBool(s), true
+	case float64:
+		return scalarString(s), true
+	}
+	return "", false
 }
 
 // purposeFlagFacts parses semicolon-delimited key=value strings on

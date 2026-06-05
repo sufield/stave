@@ -64,7 +64,14 @@ func analyzeAssetStreak(req *assetStreakRequest) (maxStreak time.Duration, match
 
 	for _, pt := range req.Points {
 		unsafe, err := req.Eval(req.Control, pt.state, pt.identities)
-		if err == nil && unsafe {
+		if err != nil {
+			// Inconclusive evaluation — freeze the in-progress streak, do
+			// not reset. Mirrors risk.computeAssetStates, which skips
+			// (continues past) eval-error points to preserve the exposure
+			// window rather than ending it.
+			continue
+		}
+		if unsafe {
 			matched = true
 			tracker.markUnsafe(pt.at)
 		} else {

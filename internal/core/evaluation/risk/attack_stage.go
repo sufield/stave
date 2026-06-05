@@ -45,8 +45,13 @@ func BuildAttackStageSummary(
 	failures []FailingControl,
 	lookup map[kernel.ControlID]*policy.ControlDefinition,
 ) map[kernel.AttackStage]string {
-	// Track worst severity per stage.
+	// Track worst severity per stage, and which stages have any active
+	// failure at all. Presence is tracked separately from the worst
+	// severity because a failing control may carry SeverityNone (0),
+	// which is the zero value of the severity map and would otherwise be
+	// indistinguishable from "no failure here."
 	worstPerStage := make(map[kernel.AttackStage]policy.Severity)
+	failedStages := make(map[kernel.AttackStage]bool)
 
 	for i := range failures {
 		cid := failures[i].ControlID
@@ -58,6 +63,7 @@ func BuildAttackStageSummary(
 		if stage == "" {
 			continue
 		}
+		failedStages[stage] = true
 		sev := ctl.Severity
 		if sev > worstPerStage[stage] {
 			worstPerStage[stage] = sev
@@ -67,11 +73,19 @@ func BuildAttackStageSummary(
 	// Build summary with all known stages.
 	summary := make(map[kernel.AttackStage]string, len(allAttackStages))
 	for _, stage := range allAttackStages {
-		if sev, ok := worstPerStage[stage]; ok {
-			summary[stage] = severityLabel(sev)
-		} else {
+		if !failedStages[stage] {
 			summary[stage] = "PASS"
+			continue
 		}
+		// Stage has an active failure: never report PASS. severityLabel
+		// returns "PASS" for SeverityNone, so floor the displayed
+		// severity at INFO to keep an active failure distinguishable
+		// from a clean stage.
+		sev := worstPerStage[stage]
+		if !sev.IsSet() {
+			sev = policy.SeverityInfo
+		}
+		summary[stage] = severityLabel(sev)
 	}
 
 	return summary

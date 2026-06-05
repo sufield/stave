@@ -112,6 +112,17 @@ func (sc StatementContext) Evaluate() StatementAssessment {
 			// Warning: Public Read
 			assessment.Score = ScoreWarning
 			assessment.Findings = append(assessment.Findings, "Unrestricted Public Read Access")
+		} else if sc.Permissions.Has(PermAdminRead) {
+			// Warning: Public read of the resource's own configuration
+			// (policy / ACL / settings metadata, e.g.
+			// s3:GetBucketPolicy / s3:GetBucketAcl). This does not expose
+			// object contents but discloses how the resource is secured —
+			// an information-disclosure primitive that hands an attacker
+			// the exact map of the access surface. Without this branch a
+			// public AdminRead-only statement fell through to ScoreSafe
+			// with no findings, identical to no public access at all.
+			assessment.Score = ScoreWarning
+			assessment.Findings = append(assessment.Findings, "Unrestricted Public Read of Resource Configuration")
 		} else if sc.Permissions.Has(PermList) {
 			// Info: Public List-Only.
 			//

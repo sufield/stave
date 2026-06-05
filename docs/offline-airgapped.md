@@ -26,7 +26,7 @@ The `stave` binary:
 - **No network access** — contains zero networking code; makes no HTTP requests, DNS lookups, or socket connections.
 - **No subprocess execution** — never calls `os/exec` or shells out to external tools.
 - **No credential access** — does not read AWS credentials, environment variables for cloud APIs, or key stores.
-- **Local files only** — reads observation JSON and invariant YAML from disk, writes evaluation results to stdout.
+- **Local files only** — reads observation JSON and control YAML from disk, writes evaluation results to stdout.
 - **Embedded schemas** — JSON Schemas are compiled into the binary via `//go:embed`; no download step at runtime.
 
 You can verify this yourself:

@@ -2,10 +2,30 @@ package sirfacts
 
 import (
 	"fmt"
+	"math"
 	"sort"
+	"strconv"
 
 	"github.com/sufield/stave/internal/core/sir"
 )
+
+// scalarString renders a scalar property leaf as a string suitable
+// for the Object of a fact triple. It exists because the observations
+// loader uses plain json.Unmarshal (no UseNumber), so every JSON
+// number — including integers like 31536000 — lands as a float64.
+// fmt's default %v verb renders magnitudes >= 1e6 / < 1e-4 in
+// scientific notation ("3.1536e+07"), which breaks reasoning-engine
+// queries that string-compare against the literal decimal digits. For
+// an integral float64 we emit the plain decimal form ("31536000"); all
+// other types fall through to %v.
+func scalarString(val any) string {
+	if f, ok := val.(float64); ok {
+		if math.Trunc(f) == f && !math.IsInf(f, 0) {
+			return strconv.FormatFloat(f, 'f', -1, 64)
+		}
+	}
+	return fmt.Sprintf("%v", val)
+}
 
 // ObservationFacts walks the full properties tree of every asset and
 // emits one triple per scalar leaf, with the dot-joined property path
@@ -95,7 +115,7 @@ func appendObservationLeaves(out []Fact, assetID, prefix string, node map[string
 			// lookupScalar and propertyFacts.
 			continue
 		default:
-			obj := fmt.Sprintf("%v", val)
+			obj := scalarString(val)
 			if obj == "" {
 				continue
 			}

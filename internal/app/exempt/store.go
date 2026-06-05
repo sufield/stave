@@ -14,12 +14,12 @@ import (
 
 // AcceptanceFile is the on-disk format for the managed risk acceptance file.
 type AcceptanceFile struct {
-	SchemaVersion   string                `yaml:"schema_version"`
-	LastModified    string                `yaml:"last_modified"`
-	LastModifiedBy  string                `yaml:"last_modified_by"`
-	Acknowledgments []AcknowledgmentEntry `yaml:"acknowledgments,omitempty"`
-	Exceptions      []ExceptionEntry      `yaml:"exceptions,omitempty"`
-	Exemptions      []ExemptionEntry      `yaml:"exemptions,omitempty"`
+	SchemaVersion   string                `yaml:"schema_version" json:"schema_version"`
+	LastModified    string                `yaml:"last_modified" json:"last_modified"`
+	LastModifiedBy  string                `yaml:"last_modified_by" json:"last_modified_by"`
+	Acknowledgments []AcknowledgmentEntry `yaml:"acknowledgments,omitempty" json:"acknowledgments,omitempty"`
+	Exceptions      []ExceptionEntry      `yaml:"exceptions,omitempty" json:"exceptions,omitempty"`
+	Exemptions      []ExemptionEntry      `yaml:"exemptions,omitempty" json:"exemptions,omitempty"`
 }
 
 // Acknowledgment status string literals. Centralised so the status
@@ -36,16 +36,16 @@ const (
 // YAML tags match controldef.AcknowledgmentRule so the produced file
 // is consumable by stave apply --acknowledgment-file without modification.
 type AcknowledgmentEntry struct {
-	ID                   string       `yaml:"id"`
-	ControlID            string       `yaml:"control_id"`
-	AssetID              string       `yaml:"asset_id"`
-	Reason               string       `yaml:"rationale"`
-	Approver             string       `yaml:"acknowledged_by"`
-	AcknowledgedDate     string       `yaml:"acknowledged_date"`
-	ExpiryDate           string       `yaml:"expiry_date"`
-	CompensatingControls []string     `yaml:"compensating_controls,omitempty"`
-	Status               string       `yaml:"status"`
-	AuditTrail           []AuditEvent `yaml:"audit_trail"`
+	ID                   string       `yaml:"id" json:"id"`
+	ControlID            string       `yaml:"control_id" json:"control_id"`
+	AssetID              string       `yaml:"asset_id" json:"asset_id"`
+	Reason               string       `yaml:"rationale" json:"rationale"`
+	Approver             string       `yaml:"acknowledged_by" json:"acknowledged_by"`
+	AcknowledgedDate     string       `yaml:"acknowledged_date" json:"acknowledged_date"`
+	ExpiryDate           string       `yaml:"expiry_date" json:"expiry_date"`
+	CompensatingControls []string     `yaml:"compensating_controls,omitempty" json:"compensating_controls,omitempty"`
+	Status               string       `yaml:"status" json:"status"`
+	AuditTrail           []AuditEvent `yaml:"audit_trail" json:"audit_trail"`
 }
 
 // IsActive reports whether the entry's status is the canonical
@@ -154,24 +154,24 @@ func (a *AcknowledgmentEntry) ExportStatus() string {
 
 // ExceptionEntry is an operational suppression.
 type ExceptionEntry struct {
-	ControlID  string `yaml:"control_id"`
-	AssetID    string `yaml:"asset_id"`
-	ExpiryDate string `yaml:"expiry_date,omitempty"`
-	Reason     string `yaml:"reason"`
+	ControlID  string `yaml:"control_id" json:"control_id"`
+	AssetID    string `yaml:"asset_id" json:"asset_id"`
+	ExpiryDate string `yaml:"expiry_date,omitempty" json:"expiry_date,omitempty"`
+	Reason     string `yaml:"reason" json:"reason"`
 }
 
 // ExemptionEntry is a scope exclusion.
 type ExemptionEntry struct {
-	AssetPattern string `yaml:"asset_pattern"`
-	Reason       string `yaml:"reason"`
+	AssetPattern string `yaml:"asset_pattern" json:"asset_pattern"`
+	Reason       string `yaml:"reason" json:"reason"`
 }
 
 // AuditEvent records a change to an acceptance entry.
 type AuditEvent struct {
-	Event     string `yaml:"event"`
-	Timestamp string `yaml:"timestamp"`
-	Actor     string `yaml:"actor"`
-	Note      string `yaml:"note,omitempty"`
+	Event     string `yaml:"event" json:"event"`
+	Timestamp string `yaml:"timestamp" json:"timestamp"`
+	Actor     string `yaml:"actor" json:"actor"`
+	Note      string `yaml:"note,omitempty" json:"note,omitempty"`
 }
 
 // Load reads an acceptance file from disk. Returns empty file if not found.
@@ -391,7 +391,12 @@ func (f *AcceptanceFile) Upcoming(days int, now time.Time) []AcknowledgmentEntry
 		if err != nil {
 			continue
 		}
-		if expiry.Before(cutoff) {
+		// Only entries expiring in the future (after now) but before the
+		// cutoff are "upcoming". An entry whose expiry is already in the
+		// past is expired, not upcoming, so it must be excluded by the
+		// lower bound — without it, a long-lapsed acceptance still
+		// satisfies expiry < cutoff and is wrongly returned.
+		if !expiry.Before(now) && expiry.Before(cutoff) {
 			result = append(result, *a)
 		}
 	}

@@ -66,7 +66,7 @@ type sarifArtifactLocation struct {
 }
 
 type sarifRegion struct {
-	StartLine   int `json:"startLine"`
+	StartLine   int `json:"startLine,omitempty"`
 	StartColumn int `json:"startColumn,omitempty"`
 	EndLine     int `json:"endLine,omitempty"`
 	EndColumn   int `json:"endColumn,omitempty"`

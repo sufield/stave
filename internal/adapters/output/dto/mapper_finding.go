@@ -74,7 +74,10 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 	}
 
 	dto.SLADeadlineHours = f.SLADeadlinePtr()
-	dto.SLABreached = f.SLABreachedFlag()
+	if f.HasSLA() {
+		breached := f.SLABreachedFlag()
+		dto.SLABreached = &breached
+	}
 	dto.SLAOverdueHours = f.SLAOverduePtr()
 	dto.SLAEscalatedSeverity = f.SLAEscalatedSeverityValue().String()
 	dto.SLAPolicySource = f.SLAPolicySourceLabel()

@@ -208,10 +208,31 @@ func collectSCPCeiling(scps []PolicyDocument) []ActionGrant {
 			// Once the intersection is empty, no later SCP can
 			// add anything back — a deny-by-omission is the SCP
 			// chain's strongest possible verdict.
-			return nil
+			//
+			// Return a non-nil empty slice, NOT nil. nil means
+			// "no ceiling, everything passes" to matchesCeiling;
+			// an empty-but-present ceiling must DENY everything.
+			// Returning nil here let an action survive a chain
+			// that allowed nothing in common — the exact
+			// privilege-escalation hazard this intersection guards.
+			return emptyCeiling()
 		}
 	}
+	if len(ceiling) == 0 {
+		// The hierarchy was present (len(scps) > 0) but its
+		// running allow set is empty — same deny-everything verdict
+		// as the in-loop collapse above. Never return nil here.
+		return emptyCeiling()
+	}
 	return ceiling
+}
+
+// emptyCeiling is a non-nil, zero-length ActionGrant slice. It
+// signals "a ceiling is present but admits no actions" — distinct
+// from a nil ceiling, which means "no ceiling at all". matchesCeiling
+// reports false for every grant against it, denying everything.
+func emptyCeiling() []ActionGrant {
+	return []ActionGrant{}
 }
 
 // scpAllowGrants flattens an SCP's Allow statements into the
