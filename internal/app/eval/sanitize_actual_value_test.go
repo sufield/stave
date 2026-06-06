@@ -80,3 +80,25 @@ func TestSanitizeActualValue_UnknownTypeFallsBackToRedacted(t *testing.T) {
 		t.Errorf("sanitizeActualValue(custom struct) = %v, want %q (conservative fallback)", got, kernel.Redacted)
 	}
 }
+
+// TestSanitizeActualValue_NamedStringRoutedLikePlainString pins the
+// cache-determinism fix. Misconfiguration.ActualValue is `any`: a fresh
+// evaluation carries a *named* string type (e.g. kernel.AssetType from the
+// "asset type = X" predicate), but a value that round-trips through the
+// content-addressed assessment cache is JSON-decoded back to a *plain*
+// `string`. Before the fix the named type missed `case string` and fell to the
+// conservative `default: Redacted` branch, so a cache MISS redacted a
+// non-sensitive category to [SANITIZED] while a cache HIT showed it raw —
+// non-deterministic, environment-dependent output. Both must now route through
+// s.Value() identically.
+func TestSanitizeActualValue_NamedStringRoutedLikePlainString(t *testing.T) {
+	// kernel.AssetType is the concrete type that surfaced the bug.
+	if got := sanitizeActualValue(kernel.AssetType("k8s_apiserver"), stubSanitizer{}); got != "VAL:k8s_apiserver" {
+		t.Errorf("sanitizeActualValue(kernel.AssetType) = %v, want VAL:k8s_apiserver (named string must route through s.Value, not the Redacted default)", got)
+	}
+	// Any named string type behaves the same as the plain-string (cache-decoded) form.
+	type customStr string
+	if got := sanitizeActualValue(customStr("hello"), stubSanitizer{}); got != "VAL:hello" {
+		t.Errorf("sanitizeActualValue(named string) = %v, want VAL:hello", got)
+	}
+}

@@ -268,14 +268,17 @@ Examples:
   # User-facing catalog
   stave capabilities catalog
 
-  # Pipe to jq for parsing
-  stave capabilities | jq '.observations.schema_versions'
+  # Supported observation schema versions
+  stave capabilities | jq '.observation_support.schemas'
 
-  # Check supported source types
-  stave capabilities | jq '.inputs.source_types'
+  # Supported control (policy) DSL versions
+  stave capabilities | jq '.policy_support.schemas'
 
-  # Check security-audit capabilities
-  stave capabilities | jq '.security_audit'` + OfflineHelpSuffix,
+  # Supported input source types
+  stave capabilities | jq '[.data_ingress.connectors[].type]'
+
+  # Supported compliance / security frameworks
+  stave capabilities | jq '.compliance_support.security_frameworks'` + OfflineHelpSuffix,
 		Example: `  stave capabilities | jq '.version'`,
 		// Allow subcommands; explicit args check keeps the default
 		// RunE strict.

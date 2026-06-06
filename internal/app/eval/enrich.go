@@ -2,6 +2,7 @@ package eval
 
 import (
 	"errors"
+	"reflect"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/asset"
@@ -262,6 +263,21 @@ func sanitizeActualValue(v any, s kernel.Sanitizer) any {
 		}
 		return out
 	default:
+		// A *named* string type (e.g. kernel.AssetType) reaches the default
+		// because the `case string` above matches only the unnamed `string`.
+		// Treat any string-KIND value as a string so the result is
+		// deterministic regardless of whether ActualValue came straight from
+		// the engine (carrying its named type) or round-tripped through the
+		// content-addressed assessment cache, which JSON-decodes it back to a
+		// plain `string` and erases the named type. Without this, a cache HIT
+		// and a cache MISS produced different output for the same value — and
+		// a non-sensitive category such as an asset type was needlessly
+		// redacted to [SANITIZED] on the (uncached) miss path while a cache
+		// hit showed it raw. Routing through s.Value() keeps the per-field
+		// identifier sanitizer in effect for named-string identifiers.
+		if rv := reflect.ValueOf(v); rv.Kind() == reflect.String {
+			return s.Value(rv.String())
+		}
 		return kernel.Redacted
 	}
 }
