@@ -147,3 +147,6 @@ google.golang.org/protobuf/types/known/wrapperspb
 # gopkg.in/yaml.v3 v3.0.1
 ## explicit
 gopkg.in/yaml.v3
+# pgregory.net/rapid v1.3.0
+## explicit; go 1.23
+pgregory.net/rapid
