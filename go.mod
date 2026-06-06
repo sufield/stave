@@ -19,7 +19,7 @@ require (
 	github.com/rogpeppe/go-internal v1.15.0
 	golang.org/x/sync v0.20.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240826202546-f6391c0de4c7
-	google.golang.org/protobuf v1.36.10
+	google.golang.org/protobuf v1.36.11
 	pgregory.net/rapid v1.3.0
 )
 
