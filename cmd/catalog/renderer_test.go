@@ -15,6 +15,8 @@ func TestNewRenderer_KnownFormats(t *testing.T) {
 	}{
 		{"json", JSONRenderer{}},
 		{"text", TextRenderer{}},
+		{"auto", TextRenderer{}},
+		{"wide", WideRenderer{}},
 		{"", TextRenderer{}},
 	}
 	for _, tc := range cases {
@@ -35,8 +37,8 @@ func TestNewRenderer_UnknownFormatErrors(t *testing.T) {
 	if err == nil {
 		t.Fatalf("NewRenderer(\"xml\"): want error, got %T", r)
 	}
-	if !strings.Contains(err.Error(), "--format must be text | json") {
-		t.Errorf("error should preserve pre-migration message, got: %q", err.Error())
+	if !strings.Contains(err.Error(), "--format must be text | auto | wide | json") {
+		t.Errorf("error should list the accepted formats, got: %q", err.Error())
 	}
 }
 
