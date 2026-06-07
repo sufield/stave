@@ -77,6 +77,13 @@
 //	SupportedOperators — the predicate operators Stave supports.
 //	InspectACL         — assess a JSON array of S3 ACL grants.
 //	InspectPolicy      — analyse a raw S3 bucket-policy document.
+//	InspectRisk        — score a policy statement context.
+//	InspectExposure    — classify resource exposure + bucket access.
+//	MapTelemetry       — assessment -> NDJSON telemetry events.
+//	SignSnapshot       — Ed25519-sign a snapshot's assets.
+//	VerifySnapshot     — verify an attested snapshot.
+//	GenerateAttestKeyPair — make an Ed25519 attestation key pair.
+//	EvalCEL            — evaluate a raw CEL expression over a snapshot.
 //	AvailableFrameworks — list every embedded framework profile ID.
 //	SearchCatalog      — rank the catalog against a free-form intent.
 //	ExplainControl     — catalog-only explanation of one control.

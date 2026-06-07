@@ -5,14 +5,13 @@ import (
 
 	"github.com/spf13/cobra"
 
-	domainrisk "github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/metadata"
-	"github.com/sufield/stave/internal/util/jsonutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // NewCmd constructs the inspect risk command.
-func NewCmd(resolver domainrisk.PermissionResolver) *cobra.Command {
+func NewCmd() *cobra.Command {
 	var file string
 
 	cmd := &cobra.Command{
@@ -36,11 +35,14 @@ Exit Codes:
 			if err != nil {
 				return fmt.Errorf("read input: %w", err)
 			}
-			output, err := Analyze(input, resolver)
+			out, err := stave.InspectRisk(input)
 			if err != nil {
-				return err
+				return err //nolint:wrapcheck // stave.InspectRisk already wraps with context ("parse risk input" / "encode risk report")
 			}
-			return jsonutil.WriteIndented(cmd.OutOrStdout(), output)
+			if _, err := cmd.OutOrStdout().Write(out); err != nil {
+				return fmt.Errorf("write output: %w", err)
+			}
+			return nil
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

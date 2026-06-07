@@ -3,19 +3,16 @@
 package telemetry
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 
-	apptelemetry "github.com/sufield/stave/internal/app/telemetry"
-	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/metadata"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type options struct {
@@ -83,22 +80,14 @@ func run(stdout io.Writer, opts *options) error {
 		return err
 	}
 
-	var assessment report.Assessment
-	if err := json.Unmarshal(data, &assessment); err != nil {
-		return fmt.Errorf("parse assessment: %w", err)
+	out, err := stave.MapTelemetry(data, opts.Severity, opts.ResourceARN)
+	if err != nil {
+		return err //nolint:wrapcheck // stave.MapTelemetry already wraps ("parse assessment" / "encode telemetry event")
 	}
 
-	filter := buildFilter(opts)
-	events := apptelemetry.MapAssessment(&assessment, filter, nil)
-
-	// Stream NDJSON: one JSON object per line.
-	enc := json.NewEncoder(stdout)
-	for i := range events {
-		if err := enc.Encode(&events[i]); err != nil {
-			return fmt.Errorf("encode telemetry event: %w", err)
-		}
+	if _, err := stdout.Write(out); err != nil {
+		return fmt.Errorf("write output: %w", err)
 	}
-
 	return nil
 }
 
@@ -118,20 +107,4 @@ func readInput(path string) ([]byte, error) {
 		return nil, errors.New("no assessment data provided (pipe from stave apply --format json or use --in)")
 	}
 	return data, nil
-}
-
-func buildFilter(opts *options) apptelemetry.Filter {
-	filter := apptelemetry.Filter{
-		ResourceARN: opts.ResourceARN,
-	}
-	if opts.Severity != "" {
-		filter.Severities = make(map[string]bool)
-		for s := range strings.SplitSeq(opts.Severity, ",") {
-			trimmed := strings.TrimSpace(strings.ToLower(s))
-			if trimmed != "" {
-				filter.Severities[trimmed] = true
-			}
-		}
-	}
-	return filter
 }

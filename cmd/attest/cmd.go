@@ -5,7 +5,6 @@ package attest
 import (
 	"crypto/ed25519"
 	"crypto/x509"
-	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -17,10 +16,9 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	appatt "github.com/sufield/stave/internal/app/attest"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // NewCmd constructs the attest command with sign, verify, and keygen subcommands.
@@ -180,55 +178,36 @@ func runSign(stdout io.Writer, snapshotPath, keyPath, keyID, outPath string) err
 		return &ui.UserError{Err: errors.New("key is not Ed25519")}
 	}
 
-	// Load snapshot and parse assets.
+	// Load the snapshot. The asset parse + Ed25519 sign + attestation
+	// encode happen in stave.SignSnapshot, so this command keeps only the
+	// key handling and depends on pkg/stave for the domain work.
 	snapData, err := fsutil.ReadFileLimited(snapshotPath)
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("read snapshot: %w", err)}
 	}
-	var snapshot struct {
-		SchemaVersion string               `json:"schema_version"`
-		CapturedAt    time.Time            `json:"captured_at"`
-		Source        asset.SnapshotSource `json:"source"`
-		Assets        []asset.Asset        `json:"assets"`
-	}
-	if unmarshalErr := json.Unmarshal(snapData, &snapshot); unmarshalErr != nil {
-		return &ui.UserError{Err: fmt.Errorf("parse snapshot: %w", unmarshalErr)}
-	}
 
-	// Sign assets. A failed Hostname lookup is rare (typically only
-	// hits in stripped-down sandboxes / sealed containers) but the
-	// attestation must still record SOMETHING in the host slot so
-	// the audit trail can be reconstructed. Use the explicit
-	// "unknown" sentinel + a stderr warning rather than silently
-	// signing with an empty hostname — the attestation consumer
-	// reading "" cannot tell apart "real failure" from "the host
-	// was named ''".
+	// A failed Hostname lookup is rare (typically only hits in
+	// stripped-down sandboxes / sealed containers) but the attestation
+	// must still record SOMETHING in the host slot so the audit trail can
+	// be reconstructed. Use the explicit "unknown" sentinel + a stderr
+	// warning rather than silently signing with an empty hostname — the
+	// attestation consumer reading "" cannot tell apart "real failure"
+	// from "the host was named ''".
 	hostname, hostErr := os.Hostname()
 	if hostErr != nil {
 		fmt.Fprintf(os.Stderr,
 			"Warning: os.Hostname failed (%v); recording attestation host as \"unknown\"\n", hostErr)
 		hostname = "unknown"
 	}
-	attestation, err := appatt.SignAssets(snapshot.Assets, privateKey, hostname, "stave-cli", time.Now().UTC())
-	if err != nil {
-		return fmt.Errorf("sign assets: %w", err)
-	}
-	if keyID != "" {
-		attestation.PublicKeyFingerprint = keyID
-	}
 
-	attested := appatt.AttestedSnapshot{
-		SchemaVersion: snapshot.SchemaVersion,
-		CapturedAt:    snapshot.CapturedAt,
-		Source:        snapshot.Source,
-		Attestation:   attestation,
-		Assets:        snapshot.Assets,
+	out, err := stave.SignSnapshot(snapData, privateKey, keyID, hostname, time.Now().UTC())
+	if err != nil {
+		return &ui.UserError{Err: err}
 	}
 
 	if err := cmdutil.WriteTo(stdout, outPath, func(w io.Writer) error {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		return enc.Encode(attested)
+		_, werr := w.Write(out)
+		return werr
 	}); err != nil {
 		return fmt.Errorf("write attested snapshot: %w", err)
 	}
@@ -254,17 +233,18 @@ func runVerify(stdout io.Writer, snapshotPath, keyPath string) error {
 		return &ui.UserError{Err: errors.New("key is not Ed25519")}
 	}
 
-	// Load and parse attested snapshot.
+	// Load the snapshot. Parsing + Ed25519 verification happen in
+	// stave.VerifySnapshot.
 	snapData, err := fsutil.ReadFileLimited(snapshotPath)
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("read snapshot: %w", err)}
 	}
-	var attested appatt.AttestedSnapshot
-	if unmarshalErr := json.Unmarshal(snapData, &attested); unmarshalErr != nil {
-		return &ui.UserError{Err: fmt.Errorf("parse attested snapshot: %w", unmarshalErr)}
-	}
 
-	if verifyErr := appatt.VerifyAssets(attested.Assets, attested.Attestation, publicKey); verifyErr != nil {
+	verified, err := stave.VerifySnapshot(snapData, publicKey)
+	if err != nil {
+		return &ui.UserError{Err: err}
+	}
+	if !verified {
 		return ui.ErrViolationsFound
 	}
 
@@ -273,9 +253,9 @@ func runVerify(stdout io.Writer, snapshotPath, keyPath string) error {
 }
 
 func runKeygen(stdout io.Writer, outPrefix string) error {
-	pub, priv, err := appatt.GenerateKeyPair()
+	pub, priv, err := stave.GenerateAttestKeyPair()
 	if err != nil {
-		return fmt.Errorf("generate key pair: %w", err)
+		return err //nolint:wrapcheck // stave.GenerateAttestKeyPair already wraps ("generate key pair")
 	}
 
 	// Marshal private key.

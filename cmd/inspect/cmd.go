@@ -3,7 +3,6 @@ package inspect
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/inspect/acl"
 	"github.com/sufield/stave/cmd/inspect/aliases"
 	"github.com/sufield/stave/cmd/inspect/compliance"
@@ -13,11 +12,10 @@ import (
 	"github.com/sufield/stave/internal/platform/metadata"
 )
 
-// NewInspectCmd constructs the inspect command tree. The S3 resolver
-// arrives via the injected factory so test code (and future
-// non-AWS deployments) can substitute alternatives without touching
-// the cobra wiring.
-func NewInspectCmd(newS3Resolver compose.S3ResolverFactory) *cobra.Command {
+// NewInspectCmd constructs the inspect command tree. Each subcommand
+// builds its own analysis primitives through pkg/stave, so no resolver is
+// threaded through the cobra wiring.
+func NewInspectCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "inspect",
 		Short: "Low-level security analysis primitives",
@@ -36,11 +34,10 @@ Subcommands:
 		Args: cobra.NoArgs,
 	}
 
-	resolver := newS3Resolver()
 	cmd.AddCommand(policy.NewCmd())
 	cmd.AddCommand(acl.NewCmd())
 	cmd.AddCommand(exposure.NewCmd())
-	cmd.AddCommand(risk.NewCmd(resolver))
+	cmd.AddCommand(risk.NewCmd())
 	cmd.AddCommand(compliance.NewCmd())
 	cmd.AddCommand(aliases.NewCmd())
 

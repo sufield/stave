@@ -1,14 +1,16 @@
-package risk
+package stave
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
+	s3resolver "github.com/sufield/stave/internal/adapters/aws/s3"
 	domainrisk "github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
-// Input is the JSON input for risk analysis.
-type Input struct {
+type riskInput struct {
 	Actions         []string `json:"actions"`
 	IsPublic        bool     `json:"is_public"`
 	IsAuthenticated bool     `json:"is_authenticated"`
@@ -16,32 +18,33 @@ type Input struct {
 	IsAllow         bool     `json:"is_allow"`
 }
 
-// Output is the JSON output of risk analysis.
-type Output struct {
+type riskOutput struct {
 	NormalizedActions []string                       `json:"normalized_actions"`
 	Permissions       domainrisk.Permission          `json:"permissions"`
-	PermissionCheck   PermissionCheck                `json:"permission_check"`
+	PermissionCheck   riskPermissionCheck            `json:"permission_check"`
 	StatementResult   domainrisk.StatementAssessment `json:"statement_result"`
 	Report            domainrisk.Report              `json:"report"`
 }
 
-// PermissionCheck exercises Permission.Has and Permission.Overlap.
-type PermissionCheck struct {
+type riskPermissionCheck struct {
 	HasRead       bool `json:"has_read"`
 	HasWrite      bool `json:"has_write"`
 	OverlapAdmin  bool `json:"overlap_admin"`
 	IsFullControl bool `json:"is_full_control"`
 }
 
-// Analyze parses input JSON and produces a risk analysis report.
-func Analyze(input []byte, resolver domainrisk.PermissionResolver) (Output, error) {
-	var in Input
+// InspectRisk parses a policy statement context (JSON) and computes the
+// risk score plus permission analysis, returning the report as indented
+// JSON bytes. It builds the default permission resolver internally, so it
+// is the library entry point behind `stave inspect risk`.
+func InspectRisk(input []byte) ([]byte, error) {
+	var in riskInput
 	if err := json.Unmarshal(input, &in); err != nil {
-		return Output{}, fmt.Errorf("parse risk input: %w", err)
+		return nil, fmt.Errorf("parse risk input: %w", err)
 	}
 
 	normalized := domainrisk.NormalizeActions(in.Actions)
-	perms := domainrisk.ResolveActions(normalized, resolver)
+	perms := domainrisk.ResolveActions(normalized, s3resolver.NewResolver())
 
 	ctx := domainrisk.StatementContext{
 		Permissions:     perms,
@@ -50,17 +53,16 @@ func Analyze(input []byte, resolver domainrisk.PermissionResolver) (Output, erro
 		IsNetworkScoped: in.IsNetworkScoped,
 		IsAllow:         in.IsAllow,
 	}
-
 	result := ctx.Evaluate()
 
 	report := domainrisk.Report{}
 	report.UpdateReport(result)
 	report.Permissions = perms
 
-	return Output{
+	out := riskOutput{
 		NormalizedActions: normalized,
 		Permissions:       perms,
-		PermissionCheck: PermissionCheck{
+		PermissionCheck: riskPermissionCheck{
 			HasRead:       perms.Has(domainrisk.PermRead),
 			HasWrite:      perms.Has(domainrisk.PermWrite),
 			OverlapAdmin:  perms.Overlap(domainrisk.PermAdminRead | domainrisk.PermAdminWrite),
@@ -68,5 +70,11 @@ func Analyze(input []byte, resolver domainrisk.PermissionResolver) (Output, erro
 		},
 		StatementResult: result,
 		Report:          report,
-	}, nil
+	}
+
+	var buf bytes.Buffer
+	if err := jsonutil.WriteIndented(&buf, out); err != nil {
+		return nil, fmt.Errorf("encode risk report: %w", err)
+	}
+	return buf.Bytes(), nil
 }

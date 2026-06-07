@@ -190,7 +190,7 @@ func WireCommands(app *App) error {
 	root.AddCommand(artifacts.NewPacksCmd())
 
 	// Introspection
-	root.AddCommand(inspect.NewInspectCmd(f.NewS3Resolver))
+	root.AddCommand(inspect.NewInspectCmd())
 
 	// Net Effective Permissions (CIEM)
 	root.AddCommand(stavenep.NewCmd())
