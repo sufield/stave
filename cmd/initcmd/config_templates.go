@@ -1,6 +1,6 @@
 package initcmd
 
-import "github.com/sufield/stave/internal/core/kernel"
+import "github.com/sufield/stave/pkg/stave"
 
 // templateObservation is the starter observation file written by
 // `stave generate observation`. It includes one asset per common
@@ -10,7 +10,7 @@ import "github.com/sufield/stave/internal/core/kernel"
 // integrations/).
 const templateObservation = `
 {
-  "schema_version": "` + string(kernel.SchemaObservation) + `",
+  "schema_version": "` + stave.ObservationSchemaVersion + `",
   "generated_by": {
     "source_type": "stave-template",
     "tool": "stave-template"

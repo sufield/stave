@@ -5,14 +5,13 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/metadata"
-	"github.com/sufield/stave/internal/util/jsonutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // NewCmd constructs the inspect policy command.
-func NewCmd(resolver risk.PermissionResolver) *cobra.Command {
+func NewCmd() *cobra.Command {
 	var file string
 
 	cmd := &cobra.Command{
@@ -44,11 +43,14 @@ Exit Codes:
 			if err != nil {
 				return fmt.Errorf("read input: %w", err)
 			}
-			report, err := Analyze(input, resolver)
+			out, err := stave.InspectPolicy(input)
 			if err != nil {
-				return err
+				return err //nolint:wrapcheck // stave.InspectPolicy already wraps with context ("parse policy" / "encode policy report")
 			}
-			return jsonutil.WriteIndented(cmd.OutOrStdout(), report)
+			if _, err := cmd.OutOrStdout().Write(out); err != nil {
+				return fmt.Errorf("write output: %w", err)
+			}
+			return nil
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

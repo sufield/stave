@@ -7,18 +7,15 @@ import (
 	"io"
 	"time"
 
-	comp "github.com/sufield/stave/internal/compliance"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
-// analyze validates frameworks, resolves check IDs, and returns the crosswalk JSON.
+// analyze resolves the crosswalk through the pkg/stave facade. When no
+// check IDs are supplied it extracts them from the raw input first. The
+// framework validation and crosswalk resolution live in
+// stave.ResolveCrosswalk, so this command depends only on pkg/stave.
 func analyze(raw []byte, frameworks, checkIDs []string) ([]byte, error) {
-	for _, f := range frameworks {
-		if _, parseErr := comp.ParseFramework(f); parseErr != nil {
-			return nil, fmt.Errorf("invalid framework: %w", parseErr)
-		}
-	}
-
 	if len(checkIDs) == 0 {
 		var err error
 		checkIDs, err = extractCheckIDs(raw)
@@ -27,12 +24,11 @@ func analyze(raw []byte, frameworks, checkIDs []string) ([]byte, error) {
 		}
 	}
 
-	resolution, err := comp.ResolveControlCrosswalk(raw, frameworks, checkIDs, time.Now().UTC())
+	out, err := stave.ResolveCrosswalk(raw, frameworks, checkIDs, time.Now().UTC())
 	if err != nil {
-		return nil, fmt.Errorf("resolve crosswalk: %w", err)
+		return nil, fmt.Errorf("analyze compliance crosswalk: %w", err)
 	}
-
-	return resolution.ResolutionJSON, nil
+	return out, nil
 }
 
 func extractCheckIDs(raw []byte) ([]string, error) { //nolint:unparam // error kept for future JSON/YAML parse failure paths

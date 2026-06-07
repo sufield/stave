@@ -3,19 +3,16 @@
 package sanitize
 
 import (
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
 
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/internal/adapters/observations"
-	appsanitize "github.com/sufield/stave/internal/app/sanitize"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type options struct {
@@ -65,43 +62,22 @@ Exit Codes:
 }
 
 func run(opts *options) error {
-	snaps, err := observations.LoadBundle(opts.Snapshot)
+	// Load + sanitize + marshal live in stave.SanitizeSnapshot so this
+	// command depends only on pkg/stave. Input errors (load/read/parse)
+	// surface as exit 2 via ui.UserError, preserving the prior messages.
+	data, stats, err := stave.SanitizeSnapshot(opts.Snapshot, opts.Rules)
 	if err != nil {
-		return &ui.UserError{Err: fmt.Errorf("load snapshot: %w", err)}
+		return &ui.UserError{Err: err}
 	}
 
-	cfg := appsanitize.DefaultConfig()
-	if opts.Rules != "" {
-		data, readErr := fsutil.ReadFileLimited(opts.Rules)
-		if readErr != nil {
-			return &ui.UserError{Err: fmt.Errorf("read rules: %w", readErr)}
-		}
-		if unmarshalErr := yaml.Unmarshal(data, &cfg); unmarshalErr != nil {
-			return &ui.UserError{Err: fmt.Errorf("parse rules: %w", unmarshalErr)}
-		}
-	}
-
-	res := appsanitize.Sanitize(snaps, cfg)
-	// Surface the Result so a no-op run (misspelled rule field,
-	// empty input) is visible — the previous void-return shape
-	// passed silently when the rule set didn't engage.
+	// Surface the stats so a no-op run (misspelled rule field, empty
+	// input) is visible rather than passing silently.
 	slog.Debug("sanitize: completed",
-		"assets_touched", res.AssetsTouched,
-		"rules_applied", res.RulesApplied,
-		"account_id_hashes", res.AccountIDHashes)
-	if res.AssetsTouched == 0 {
+		"assets_touched", stats.AssetsTouched,
+		"rules_applied", stats.RulesApplied,
+		"account_id_hashes", stats.AccountIDHashes)
+	if stats.AssetsTouched == 0 {
 		slog.Warn("sanitize: no assets matched — input may be empty or rules may be mis-targeted")
-	}
-
-	// Re-wrap into bundle format.
-	bundle := observations.ObservationBundle{
-		SchemaVersion: "obs.v0.1",
-		Snapshots:     snaps,
-	}
-
-	data, err := json.MarshalIndent(bundle, "", "  ")
-	if err != nil {
-		return fmt.Errorf("marshal sanitized output: %w", err)
 	}
 
 	if err := fsutil.SafeWriteFile(opts.OutPath, data, fsutil.ConfigWriteOpts()); err != nil {

@@ -10,10 +10,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/platform/metadata"
 )
 
@@ -79,7 +79,7 @@ func (r *Runner) Set(ctx context.Context, name, command string) error {
 }
 
 // List retrieves all defined aliases and outputs them in the requested format.
-func (r *Runner) List(ctx context.Context, format appcontracts.OutputFormat) error {
+func (r *Runner) List(ctx context.Context, format cmdutil.OutputFormat) error {
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("context cancelled: %w", err)
 	}

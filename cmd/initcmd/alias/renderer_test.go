@@ -4,17 +4,17 @@ import (
 	"bytes"
 	"testing"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/cmd/cmdutil"
 )
 
 func TestNewRenderer_KnownFormats(t *testing.T) {
 	tests := []struct {
 		name   string
-		format appcontracts.OutputFormat
+		format cmdutil.OutputFormat
 		want   Renderer
 	}{
-		{name: "json", format: appcontracts.FormatJSON, want: JSONRenderer{}},
-		{name: "text", format: appcontracts.FormatText, want: TextRenderer{}},
+		{name: "json", format: cmdutil.FormatJSON, want: JSONRenderer{}},
+		{name: "text", format: cmdutil.FormatText, want: TextRenderer{}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -30,7 +30,7 @@ func TestNewRenderer_KnownFormats(t *testing.T) {
 }
 
 func TestNewRenderer_UnknownFormat(t *testing.T) {
-	r, err := NewRenderer(appcontracts.OutputFormat("bogus"))
+	r, err := NewRenderer(cmdutil.OutputFormat("bogus"))
 	if err == nil {
 		t.Fatalf("NewRenderer(bogus) expected error, got renderer %T", r)
 	}

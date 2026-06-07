@@ -7,17 +7,17 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	staveenv "github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/platform/metadata"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // --- Domain Types ---
 
 // ListConfig defines the parameters for the environment variable listing.
 type ListConfig struct {
-	Format appcontracts.OutputFormat
+	Format cmdutil.OutputFormat
 	Stdout io.Writer
 }
 
@@ -33,10 +33,10 @@ type Entry struct {
 
 // listEnvVars retrieves all supported STAVE_* variables and renders them.
 func listEnvVars(cfg ListConfig) error {
-	vars := staveenv.All()
+	vars := stave.ListEnvVars()
 	entries := make([]Entry, len(vars))
 	for i, v := range vars {
-		val := v.Value()
+		val := v.Value
 		isSet := val != ""
 		if !isSet {
 			val = v.DefaultValue

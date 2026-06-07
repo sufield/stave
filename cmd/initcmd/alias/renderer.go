@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
@@ -51,11 +51,11 @@ func (TextRenderer) Render(w io.Writer, entries []Entry) error {
 // The enum is validated upstream at flag-parse time, so an unknown
 // format here is defensive — return an explicit error rather than a
 // silent JSON fallback.
-func NewRenderer(format appcontracts.OutputFormat) (Renderer, error) {
+func NewRenderer(format cmdutil.OutputFormat) (Renderer, error) {
 	switch format {
-	case appcontracts.FormatJSON:
+	case cmdutil.FormatJSON:
 		return JSONRenderer{}, nil
-	case appcontracts.FormatText:
+	case cmdutil.FormatText:
 		return TextRenderer{}, nil
 	}
 	return nil, fmt.Errorf("unsupported format %q (expected: text or json)", format)

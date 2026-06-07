@@ -67,6 +67,16 @@
 //	Gate               — apply a CI failure policy to an evaluation.
 //	Compliance         — per-framework compliance posture (one).
 //	ComplianceMulti    — per-framework compliance posture (many; single-pass).
+//	ResolveCrosswalk   — resolve a control-crosswalk doc against frameworks.
+//	ListEmbeddedProfiles — list the built-in compliance profiles (id + name).
+//	LoadProfile        — load and validate a compliance-profile YAML file.
+//	SanitizeSnapshot   — tokenize a snapshot bundle for safe sharing.
+//	ObservationSchemaVersion — the obs.v0.1 schema_version string (const).
+//	ListEnvVars        — the supported STAVE_* environment variables.
+//	ListPredicateAliases — semantic predicate alias metadata.
+//	SupportedOperators — the predicate operators Stave supports.
+//	InspectACL         — assess a JSON array of S3 ACL grants.
+//	InspectPolicy      — analyse a raw S3 bucket-policy document.
 //	AvailableFrameworks — list every embedded framework profile ID.
 //	SearchCatalog      — rank the catalog against a free-form intent.
 //	ExplainControl     — catalog-only explanation of one control.

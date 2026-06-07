@@ -37,7 +37,7 @@ Subcommands:
 	}
 
 	resolver := newS3Resolver()
-	cmd.AddCommand(policy.NewCmd(resolver))
+	cmd.AddCommand(policy.NewCmd())
 	cmd.AddCommand(acl.NewCmd())
 	cmd.AddCommand(exposure.NewCmd())
 	cmd.AddCommand(risk.NewCmd(resolver))

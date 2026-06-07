@@ -11,9 +11,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	evidenceadapter "github.com/sufield/stave/internal/adapters/evidence"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // NewCmd constructs the profile command group.
@@ -111,7 +111,7 @@ func runList(w io.Writer, profilesDir string) error {
 	fmt.Fprintln(w, "AVAILABLE PROFILES")
 	fmt.Fprintln(w)
 
-	builtIn, err := evidenceadapter.LoadEmbeddedProfiles()
+	builtIn, err := stave.ListEmbeddedProfiles()
 	if err == nil && len(builtIn) > 0 {
 		fmt.Fprintf(w, "Built-in (%d):\n", len(builtIn))
 		for _, p := range builtIn {
@@ -141,22 +141,16 @@ func runList(w io.Writer, profilesDir string) error {
 }
 
 func runValidate(w io.Writer, file string) error {
-	profile, err := evidenceadapter.LoadProfileFromFile(file)
+	profile, err := stave.LoadProfile(file)
 	if err != nil {
-		return &ui.UserError{Err: fmt.Errorf("load profile: %w", err)}
+		return &ui.UserError{Err: err}
 	}
 
 	fmt.Fprintf(w, "OK %s is valid\n\n", file)
 	fmt.Fprintf(w, "  ID:           %s\n", profile.ID)
 	fmt.Fprintf(w, "  Name:         %s\n", profile.Name)
-	fmt.Fprintf(w, "  Requirements: %d\n", len(profile.Requirements))
-
-	// Count total controls.
-	totalControls := 0
-	for _, req := range profile.Requirements {
-		totalControls += len(req.ControlIDs)
-	}
-	fmt.Fprintf(w, "  Controls:     %d\n", totalControls)
+	fmt.Fprintf(w, "  Requirements: %d\n", profile.RequirementCount)
+	fmt.Fprintf(w, "  Controls:     %d\n", profile.ControlCount)
 
 	return nil
 }
