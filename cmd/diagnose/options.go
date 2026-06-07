@@ -24,6 +24,7 @@ type diagnoseOptions struct {
 	Cases             []string
 	SignalContains    string
 	Template          string
+	NoPager           bool
 	// Captured in Prepare from cmd.Flags().Changed() so ToConfig
 	// does not need *cobra.Command.
 	controlsSet bool
@@ -40,6 +41,7 @@ func (o *diagnoseOptions) BindFlags(cmd *cobra.Command) {
 	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
 	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339). Required for deterministic output")
 	f.StringVarP(&o.Format, "format", "f", "text", "Output format: text or json")
+	f.BoolVar(&o.NoPager, "no-pager", false, "never page output, even on a terminal")
 	f.StringSliceVar(&o.Cases, "case", nil, "Filter to one or more diagnostic case values")
 	f.StringVar(&o.SignalContains, "signal-contains", "", "Filter diagnostics by signal substring (case-insensitive)")
 	f.StringVar(&o.Template, "template", "", "Template string for custom output formatting (supports {{.Field}}, {{range}}, {{json}})")

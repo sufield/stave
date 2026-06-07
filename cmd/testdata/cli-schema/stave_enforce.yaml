@@ -1,0 +1,92 @@
+name: stave enforce
+synopsis: |
+    Generate deterministic enforcement templates from evaluation output
+description: |-
+    Enforce reads evaluation JSON and generates deterministic remediation templates.
+
+    Supported Modes:
+      pab - Generates AWS Public Access Block Terraform (.tf)
+      scp - Generates AWS Service Control Policy JSON (.json)
+
+    Exit Codes:
+      0   - Success
+      2   - Input error
+      4   - Internal error
+
+    Offline-only: reads local files; makes zero network connections; no cloud credentials.
+usage: stave enforce [flags]
+options:
+    - name: dry-run
+      default_value: "false"
+      usage: Preview planned paths without writing files
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for enforce
+    - name: in
+      shorthand: i
+      usage: Path to evaluation JSON input (required)
+    - name: mode
+      default_value: pab
+      usage: 'Enforcement mode: pab|scp'
+    - name: out
+      default_value: output
+      usage: Output directory for generated templates
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: quiet
+      default_value: "false"
+      usage: |
+        Suppress output (exit code only) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: verbose
+      shorthand: v
+      default_value: "0"
+      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: '  stave enforce --input evaluation.json --mode terraform'
+see_also:
+    - stave - Configuration safety evaluator

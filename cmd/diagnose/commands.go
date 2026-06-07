@@ -9,6 +9,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/metadata"
 )
 
@@ -78,7 +79,13 @@ Exit Codes:
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			flags := cliflags.GetGlobalFlags(cmd)
-			cfg, err := toConfig(&opts, flags, cmd.OutOrStdout(), cmd.ErrOrStderr(), cmd.InOrStdin())
+			// Page the human report to a terminal; never page JSON. The pager
+			// wraps the writer threaded into the diagnosis Config, so all report
+			// output flows through it.
+			pageable := !opts.NoPager && opts.Format != "json"
+			pw, closePager := ui.NewPager(cmd.Context(), cmd.OutOrStdout(), pageable)
+			defer func() { _ = closePager() }()
+			cfg, err := toConfig(&opts, flags, pw, cmd.ErrOrStderr(), cmd.InOrStdin())
 			if err != nil {
 				return err
 			}

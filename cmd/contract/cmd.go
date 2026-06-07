@@ -50,6 +50,7 @@ type options struct {
 	ControlsDir  string
 	ChainsDir    string
 	SteampipeDir string
+	NoPager      bool
 }
 
 // NewCmd constructs the `contract` parent command. Today it ships
@@ -122,13 +123,20 @@ Exit codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return run(cmd.Context(), cmd.OutOrStdout(), opts, deps)
+			pageable := !opts.NoPager && opts.Format != "json"
+			pw, closePager := ui.NewPager(cmd.Context(), cmd.OutOrStdout(), pageable)
+			err := run(cmd.Context(), pw, opts, deps)
+			if cerr := closePager(); cerr != nil && err == nil {
+				err = cerr
+			}
+			return err
 		},
 	}
 
 	cmd.Flags().StringVar(&opts.AssetType, "asset-type", "", "asset type to inspect (e.g. aws_s3_bucket)")
 	cmd.Flags().BoolVar(&opts.List, "list", false, "list every asset type with controls")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "output format: text | json")
+	cmd.Flags().BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
 	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "control catalog directory")
 	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "chains", "chain catalog directory")
 	cmd.Flags().StringVar(&opts.SteampipeDir, "steampipe", "contracts/steampipe", "Steampipe mapping directory")

@@ -277,6 +277,11 @@ func NewApp(opts ...AppOption) (*App, error) {
 
 	app.Root.Version = fmt.Sprintf("%s (%s)", Version(), string(app.Edition))
 	wireHelpGroups(app.Root)
+	// Man-page-style, paged --help across the tree (installed after groups so the
+	// group-aware template renders them) + a hidden gen-man that emits real *.1
+	// pages.
+	ApplyManStyle(app.Root)
+	app.Root.AddCommand(NewGenManCmd(app.Root, Version()))
 	return app, nil
 }
 

@@ -1,0 +1,136 @@
+name: stave ci gate
+synopsis: Enforce CI failure policy modes from config or flags
+description: |-
+    Gate applies a CI failure policy and returns exit code 3 when the policy fails.
+
+    Supported policies:
+      - fail_on_any_violation
+      - fail_on_new_violation
+      - fail_on_overdue_upcoming
+
+    Inputs:
+      --policy          CI failure policy mode (default: from project config)
+      --in              Path to evaluation JSON (required for fail_on_any/new)
+      --baseline        Path to baseline JSON (required for fail_on_new_violation)
+      --controls, -i    Path to control definitions directory (used by fail_on_overdue_upcoming)
+      --observations, -o Path to observation snapshots directory (used by fail_on_overdue_upcoming)
+      --max-unsafe      Maximum allowed unsafe duration (used by fail_on_overdue_upcoming)
+      --now             Reference time (RFC3339). If omitted, uses wall clock
+      --format, -f      Output format: text or json (default: text)
+
+    Outputs:
+      stdout            Gate result summary (text or JSON)
+      stderr            Error messages (if any)
+
+    Exit Codes:
+      0   - Policy passed; no violations detected
+      2   - Invalid input or configuration error
+      3   - Policy failed; violations detected
+      130 - Interrupted (SIGINT)
+
+    Offline-only: reads local files; makes zero network connections; no cloud credentials.
+usage: stave ci gate [flags]
+options:
+    - name: baseline
+      default_value: output/baseline.json
+      usage: Path to baseline JSON (required for fail_on_new_violation)
+    - name: controls
+      shorthand: i
+      default_value: controls
+      usage: |
+        Path to control definitions directory (used by fail_on_overdue_upcoming)
+    - name: format
+      shorthand: f
+      default_value: text
+      usage: 'Output format: text or json'
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for gate
+    - name: in
+      default_value: output/evaluation.json
+      usage: |
+        Path to evaluation JSON (required for fail_on_any_violation and fail_on_new_violation)
+    - name: max-unsafe
+      usage: |
+        Maximum allowed unsafe duration (used by fail_on_overdue_upcoming) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: now
+      usage: Reference time (RFC3339). If omitted, uses wall clock
+    - name: observations
+      shorthand: o
+      default_value: observations
+      usage: |
+        Path to observation snapshots directory (used by fail_on_overdue_upcoming)
+    - name: policy
+      usage: |
+        CI failure policy mode: fail_on_any_violation, fail_on_new_violation, fail_on_overdue_upcoming Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: team
+      usage: Filter gate to findings owned by this team
+    - name: team-manifest
+      usage: Team manifest YAML for ownership routing
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: quiet
+      default_value: "false"
+      usage: |
+        Suppress output (exit code only) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: verbose
+      shorthand: v
+      default_value: "0"
+      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: |4-
+      # Fail on any findings in evaluation output
+      stave ci gate --policy fail_on_any_violation --in output/evaluation.json
+
+      # Fail only on newly introduced findings
+      stave ci gate --policy fail_on_new_violation --in output/evaluation.json --baseline output/baseline.json
+
+      # Fail when any upcoming action is already overdue
+      stave ci gate --policy fail_on_overdue_upcoming --controls ./controls --observations ./observations
+see_also:
+    - stave ci - CI/CD policy and baseline commands

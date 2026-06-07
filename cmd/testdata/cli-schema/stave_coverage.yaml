@@ -1,0 +1,111 @@
+name: stave coverage
+synopsis: |
+    Analyze observation field coverage against control predicates
+description: |-
+    Analyze which controls can evaluate against a snapshot by checking
+    whether all fields referenced in control predicates are present in
+    the snapshot's asset properties.
+
+    Controls are classified as:
+      EVALUABLE    All referenced fields present in snapshot
+      INCOMPLETE   Some fields missing — INCOMPLETE verdict expected
+      SILENT_RISK  Missing fields could produce false PASS verdicts
+      NO_ASSETS    No assets of the required type in snapshot
+
+    Inputs:
+      --snapshot PATH     Path to observation snapshot JSON (required)
+      --controls PATH     Path to controls directory (default: controls)
+      --format STRING     Output format: table (default) | json
+      --out PATH          Write to file instead of stdout
+
+    Exit Codes:
+      0   No silent risk controls
+      2   Invalid input
+      3   Silent risk controls detected
+usage: stave coverage [flags]
+options:
+    - name: controls
+      shorthand: i
+      default_value: controls
+      usage: path to controls directory
+    - name: format
+      shorthand: f
+      default_value: table
+      usage: 'output format: table | json'
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for coverage
+    - name: no-pager
+      default_value: "false"
+      usage: never page output, even on a terminal
+    - name: out
+      usage: write to file instead of stdout
+    - name: snapshot
+      usage: path to observation snapshot JSON (required)
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: quiet
+      default_value: "false"
+      usage: |
+        Suppress output (exit code only) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: verbose
+      shorthand: v
+      default_value: "0"
+      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: |4-
+      # Analyze coverage against snapshot
+      stave coverage --snapshot snapshot.json
+
+      # JSON output for automation
+      stave coverage --snapshot snapshot.json --format json
+
+      # Check before assessment
+      stave coverage --snapshot snapshot.json && stave apply --snapshot snapshot.json
+see_also:
+    - stave - Configuration safety evaluator

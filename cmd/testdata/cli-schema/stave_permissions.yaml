@@ -1,0 +1,97 @@
+name: stave permissions
+synopsis: Query net effective permissions from a snapshot
+description: |-
+    Resolve and display net effective permissions (NEP) by evaluating all
+    six AWS IAM policy layers: explicit denies, SCPs, permission boundaries,
+    identity-based policies, resource-based policies, and transitive role
+    chains.
+
+    All computation runs locally against a snapshot file. No cloud credentials
+    required.
+
+    Subcommands:
+      principal   Resolve permissions for a specific principal ARN
+      resource    Show who has effective access to a resource
+      summary     Aggregate NEP metrics across all principals
+
+    Exit Codes:
+      0   No findings above threshold
+      1   Critical findings exist
+      2   High findings (no critical)
+      3   Incomplete resolution (snapshot data missing)
+      4   Internal error
+
+    Examples:
+      # Who can access the PHI bucket?
+      stave nep resource --snapshot obs.json --resource arn:aws:s3:::phi-records
+
+      # What can this role actually do?
+      stave nep principal --snapshot obs.json --principal arn:aws:iam::123:role/app
+
+      # NEP summary for CI/CD gating
+      stave nep summary --snapshot obs.json --threshold critical
+options:
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for permissions
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: quiet
+      default_value: "false"
+      usage: |
+        Suppress output (exit code only) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: verbose
+      shorthand: v
+      default_value: "0"
+      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+see_also:
+    - stave - Configuration safety evaluator
+    - stave permissions principal - Resolve permissions for a specific principal ARN
+    - stave permissions resource - Show who has effective access to a resource
+    - stave permissions summary - Aggregate NEP metrics across all principals

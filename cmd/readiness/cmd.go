@@ -17,6 +17,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/pkg/stave"
 )
 
@@ -27,6 +28,7 @@ type options struct {
 	Format          string
 	TopN            int
 	Quiet           bool
+	NoPager         bool
 }
 
 // NewCmd constructs the readiness command. Wired into the root
@@ -95,7 +97,13 @@ Caveats:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return run(cmd.Context(), cmd.OutOrStdout(), opts)
+			pageable := !opts.NoPager && opts.Format != "json"
+			pw, closePager := cmdutil.NewPager(cmd.Context(), cmd.OutOrStdout(), pageable)
+			err := run(cmd.Context(), pw, opts)
+			if cerr := closePager(); cerr != nil && err == nil {
+				err = cerr
+			}
+			return err
 		},
 	}
 
@@ -103,6 +111,7 @@ Caveats:
 	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "control catalog directory")
 	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "chains", "chain catalog directory")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "output format: text | json")
+	cmd.Flags().BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
 	cmd.Flags().IntVar(&opts.TopN, "top", 5, "number of action-plan entries to surface")
 	cmd.Flags().BoolVar(&opts.Quiet, "quiet", false, "suppress output (exit code only)")
 

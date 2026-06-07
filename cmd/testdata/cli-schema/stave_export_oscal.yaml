@@ -1,0 +1,91 @@
+name: stave export oscal
+synopsis: Export findings as OSCAL 1.1.2 Assessment Results JSON
+description: |-
+    Convert assessment findings to an OSCAL Assessment Results document
+    for FedRAMP, FISMA, and DoD automated toolchain ingestion.
+
+    UUIDs are deterministic (derived from control_id + asset_id).
+
+    Document types:
+      assessment-results   Standard assessment results (default)
+      poam                 Plan of Action and Milestones
+      ssp                  System Security Plan (stub)
+
+    Exit Codes:
+      0   Export complete
+      2   Invalid input
+usage: stave export oscal [flags]
+options:
+    - name: assessment
+      usage: stave apply JSON output (required)
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for oscal
+    - name: out
+      usage: write to file
+    - name: system-uuid
+      usage: system UUID for POA&M generation
+    - name: type
+      default_value: assessment-results
+      usage: 'OSCAL document type: assessment-results, poam, ssp'
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: quiet
+      default_value: "false"
+      usage: |
+        Suppress output (exit code only) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: verbose
+      shorthand: v
+      default_value: "0"
+      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: |4-
+      stave export oscal --assessment findings.json --out oscal-results.json
+      stave export oscal --assessment findings.json --type poam --system-uuid abc-123
+see_also:
+    - stave export - Export controls and compliance evidence

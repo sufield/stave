@@ -22,6 +22,7 @@ type options struct {
 	ControlsDir  string
 	Format       string
 	OutFile      string
+	NoPager      bool
 }
 
 // NewCmd constructs the coverage command.
@@ -65,13 +66,22 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runCoverage(cmd.Context(), cmd.OutOrStdout(), opts, newCtlRepo)
+			// Page only the human table to a terminal — never JSON, and never
+			// when writing to a file (--out) or --no-pager is set.
+			pageable := !opts.NoPager && opts.Format != "json" && opts.OutFile == ""
+			pw, closePager := ui.NewPager(cmd.Context(), cmd.OutOrStdout(), pageable)
+			err := runCoverage(cmd.Context(), pw, opts, newCtlRepo)
+			if cerr := closePager(); cerr != nil && err == nil {
+				err = cerr
+			}
+			return err
 		},
 	}
 
 	cmd.Flags().StringVar(&opts.SnapshotPath, "snapshot", "", "path to observation snapshot JSON (required)")
 	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "path to controls directory")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json")
+	cmd.Flags().BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
 	cmd.Flags().StringVar(&opts.OutFile, "out", "", "write to file instead of stdout")
 
 	_ = cmd.MarkFlagRequired("snapshot")

@@ -1,0 +1,194 @@
+name: stave apply
+synopsis: Run control evaluation after plan checks pass
+description: |-
+    Apply executes control evaluation and produces safety findings.
+
+    Modes:
+      Default        Evaluate observations against controls in a project directory.
+      --dry-run      Run readiness checks only, without evaluating controls.
+      --profile      Evaluate a bundled observations file against a built-in control pack.
+                     Requires --input. Example: stave apply --profile aws-s3 --input obs.json
+
+    Inputs:
+      --controls, -i            Path to control definitions directory (default: controls/s3)
+      --observations, -o        Path to observation snapshots directory (default: observations)
+      --profile, -p             Evaluation profile (e.g., aws-s3)
+      --input                   Path to observations bundle file (required with --profile)
+      --max-unsafe              Maximum allowed unsafe duration (default: from project config)
+      --now                     Override current time (RFC3339) for deterministic output
+      --format, -f              Output format: text, json, or sarif (default: text)
+      --dry-run                 Run readiness checks only
+
+    Outputs:
+      stdout                    Evaluation findings (JSON, text, or SARIF)
+      stderr                    Progress and diagnostic messages
+
+    Exit Codes:
+      0   - Evaluation completed with no violations
+      2   - Invalid input or configuration error
+      3   - Violations found
+      4   - Internal error
+      130 - Interrupted (SIGINT)
+
+    Remediation scope:
+      Stave produces findings with structured remediation data
+      (asset-parameterized CLI in findings[].fix_plan.command,
+      property-level changes in findings[].remediation_context.changes,
+      AI-prompt-ready context in findings[].remediation_context). It
+      does NOT execute remediation. Pipe apply output to downstream
+      tooling — AI prompts, CI/CD pipelines, ticket systems — for fix
+      generation. There is no --apply-fixes flag and no auto-fix mode;
+      the boundary is the data, not the change.
+
+    Offline-only: reads local files; makes zero network connections; no cloud credentials.
+usage: stave apply [flags]
+options:
+    - name: acknowledgment-file
+      usage: Path to acknowledgment config YAML file
+    - name: assert-recent
+      usage: Fail if no snapshot newer than this duration (e.g. 48h)
+    - name: assets
+      usage: asset sensitivity classification manifest YAML
+    - name: baseline
+      usage: SARIF baseline file for baseline state comparison
+    - name: bucket-allowlist
+      default_value: '[]'
+      usage: Bucket names/ARNs to include
+    - name: controls
+      shorthand: i
+      default_value: controls
+      usage: Path to control definitions directory
+    - name: dry-run
+      default_value: "false"
+      usage: Run readiness checks only, without evaluating controls
+    - name: exemption-file
+      usage: Path to asset exemption list YAML file
+    - name: format
+      shorthand: f
+      default_value: text
+      usage: Output format (text, json, or sarif)
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for apply
+    - name: history
+      usage: |
+        Directory of historical assessment JSON files (for --new-only)
+    - name: include-all
+      default_value: "false"
+      usage: Disable health scope filtering
+    - name: input
+      usage: Path to observations bundle file (required with --profile)
+    - name: integrity-manifest
+      usage: Path to manifest JSON containing expected hashes
+    - name: integrity-public-key
+      usage: Path to Ed25519 public key for signed manifests
+    - name: max-unsafe
+      usage: |
+        Maximum allowed unsafe duration Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: new-only
+      default_value: "false"
+      usage: Show only findings not present in previous assessment
+    - name: new-since
+      usage: |
+        Show only findings not present in assessments within this window (e.g. 7d)
+    - name: now
+      usage: Override current time (RFC3339) for deterministic output
+    - name: observations
+      shorthand: o
+      default_value: observations
+      usage: Path to observation snapshots directory
+    - name: overlay
+      usage: environment-specific severity overlay YAML
+    - name: owner-filter
+      default_value: '[]'
+      usage: Team IDs to filter findings (repeatable or comma-separated)
+    - name: profile
+      shorthand: p
+      usage: Evaluation profile (e.g. aws-s3)
+    - name: profile-file
+      default_value: '[]'
+      usage: custom compliance profile YAML (can be repeated)
+    - name: show-suppressed
+      default_value: "false"
+      usage: include overlay-suppressed controls in output
+    - name: sla-policy
+      default_value: warn
+      usage: 'SLA breach exit code behavior: warn, strict, critical-only'
+    - name: sla-profile
+      usage: |
+        SLA policy profile (pci_dss_v4, hipaa, soc2, fedramp_moderate, default)
+    - name: sla-profile-file
+      usage: path to custom SLA policy YAML file
+    - name: team-manifest
+      usage: Path to stave-teams.yaml for owner routing
+    - name: trace
+      usage: |
+        Write full step-by-step audit trace to file. Every finding already emits a compact reasoning_trace inline (rendered as prose in text output, as raw DSL in JSON/SARIF); this flag writes the full Assessment.Steps[] superset to a separate file for users who want the precise predicate-DSL form or per-step timing.
+    - name: verbose
+      shorthand: v
+      default_value: "false"
+      usage: |
+        Show full evidence, reasoning, and remediation for each finding
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: quiet
+      default_value: "false"
+      usage: |
+        Suppress output (exit code only) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: |4-
+      # Standard evaluation
+      stave apply --controls ./controls --observations ./obs --format json
+
+      # Readiness check only (dry run)
+      stave apply --dry-run
+
+      # Profile-based evaluation with bundled observations
+      stave apply --profile aws-s3 --input observations.json --now 2026-01-15T00:00:00Z
+see_also:
+    - stave - Configuration safety evaluator

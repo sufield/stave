@@ -12,6 +12,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	appcoverage "github.com/sufield/stave/internal/app/coverage"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
@@ -22,6 +23,7 @@ type options struct {
 	Format      string
 	OutPath     string
 	MinControls int
+	NoPager     bool
 }
 
 // NewCmd constructs the map command with the given dependencies.
@@ -44,7 +46,15 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runMap(cmd.Context(), cmd.OutOrStdout(), opts, deps)
+			// Page only the human table to a terminal — json/navigator/markdown
+			// are machine formats, and --out writes to a file.
+			pageable := !opts.NoPager && opts.OutPath == "" && opts.Format == "table"
+			pw, closePager := ui.NewPager(cmd.Context(), cmd.OutOrStdout(), pageable)
+			err := runMap(cmd.Context(), pw, opts, deps)
+			if cerr := closePager(); cerr != nil && err == nil {
+				err = cerr
+			}
+			return err
 		},
 	}
 
@@ -52,6 +62,7 @@ Exit Codes:
 	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "path to controls directory")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json | navigator | markdown")
 	cmd.Flags().StringVar(&opts.OutPath, "out", "", "write to file instead of stdout")
+	cmd.Flags().BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
 	cmd.Flags().IntVar(&opts.MinControls, "min-controls", 2, "thin coverage threshold")
 
 	return cmd

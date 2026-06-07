@@ -1,0 +1,138 @@
+name: stave readiness
+synopsis: |
+    Report what Stave can/can't evaluate given the supplied observations
+description: |-
+    Readiness produces a pre-evaluation coverage report. It loads the
+    control catalog, the chain catalog, and the observation snapshots,
+    then reports — without running the evaluation engine — what
+    fraction of the catalog can fire against the observed asset surface.
+
+    Distinct from 'stave apply --dry-run', which checks input schema
+    validity (does it load? is the shape right?). Readiness measures
+    catalog effectiveness: of the ~2,600 controls and ~580 chains in
+    the catalog, how many can fire given what the collector captured?
+    Which asset types are absent? Which collection actions unlock the
+    most coverage?
+
+    Readiness is advisory. It does not gate 'stave apply' and it does
+    not run the engine. Operators can always evaluate what they have,
+    even if the snapshot exercises only a slice of the catalog.
+
+    Inputs:
+      --observations DIR    Observation snapshot directory
+      --controls DIR        Control catalog (default: embedded built-ins)
+      --chains DIR          Chain catalog (default: chains)
+      --format FORMAT       Output: text (default) | json
+      --top N               Action plan entries (default: 5)
+
+    Outputs:
+      stdout                The readiness report
+      stderr                Loader diagnostics
+
+    Exit Codes:
+      0   Report produced
+      2   Input error
+      4   Internal error
+      130 SIGINT
+
+    Caveats:
+      - Phase 1 measures asset-type coverage only. The intent
+        dimension (data_classification tags, role-type labels,
+        vendor_registry presence) and the foundational dimension
+        (CloudTrail enabled, IMDSv2 enforced, GuardDuty baseline)
+        are deferred pending catalog metadata.
+      - Controls without applicable_asset_types declarations fall
+        in the 'indeterminate' bucket. The analyzer cannot
+        statically classify them; the engine fires them on any
+        asset at evaluation time.
+usage: stave readiness [flags]
+options:
+    - name: chains
+      default_value: chains
+      usage: chain catalog directory
+    - name: controls
+      shorthand: i
+      default_value: controls
+      usage: control catalog directory
+    - name: format
+      shorthand: f
+      default_value: text
+      usage: 'output format: text | json'
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for readiness
+    - name: no-pager
+      default_value: "false"
+      usage: never page output, even on a terminal
+    - name: observations
+      shorthand: o
+      usage: observation snapshot directory (required)
+    - name: quiet
+      default_value: "false"
+      usage: suppress output (exit code only)
+    - name: top
+      default_value: "5"
+      usage: number of action-plan entries to surface
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: verbose
+      shorthand: v
+      default_value: "0"
+      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: |4-
+      # Default text report against an observation directory
+      stave readiness --observations ./my-snapshot
+
+      # Machine-readable for CI or tooling
+      stave readiness --observations ./my-snapshot --format json
+
+      # Widen the action plan to the top 10 unblocking asset types
+      stave readiness --observations ./my-snapshot --top 10
+see_also:
+    - stave - Configuration safety evaluator

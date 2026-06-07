@@ -1,0 +1,100 @@
+name: stave version
+synopsis: Print version and environment state
+description: |-
+    Version prints binary version and, with --verbose, schema and lockfile status.
+    With --verify, prints integrity hashes for the binary, embedded policy library,
+    and Go module dependencies. Auditors compare these against known-good values.
+    With --sbom, outputs a CycloneDX JSON Software Bill of Materials.
+    With --check-update, performs an explicit network call to GitHub to report
+    whether a newer release is available. This is the only flag on this command
+    that touches the network; the default flow is air-gapped.
+
+    Exit Codes:
+      0   - Success
+      4   - Internal error
+
+    Examples:
+      stave version
+      stave version --details
+      stave version --verify
+      stave version --sbom > stave-sbom.json
+      stave version --check-update                # opt-in network check
+      STAVE_NO_NETWORK=1 stave version --check-update  # short-circuits cleanly
+
+    Offline-only: reads local files; makes zero network connections; no cloud credentials.
+usage: stave version [flags]
+options:
+    - name: check-update
+      default_value: "false"
+      usage: Check GitHub for a newer release (opt-in network call)
+    - name: details
+      default_value: "false"
+      usage: Include schema and lockfile status
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for version
+    - name: sbom
+      default_value: "false"
+      usage: Output CycloneDX JSON Software Bill of Materials
+    - name: verify
+      default_value: "false"
+      usage: Print binary and policy library integrity hashes
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: quiet
+      default_value: "false"
+      usage: |
+        Suppress output (exit code only) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: verbose
+      shorthand: v
+      default_value: "0"
+      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: '  stave version --verify'
+see_also:
+    - stave - Configuration safety evaluator

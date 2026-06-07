@@ -4,6 +4,8 @@ package trend
 
 import (
 	"github.com/spf13/cobra"
+
+	"github.com/sufield/stave/internal/cli/ui"
 )
 
 // NewCmd creates the trend command.
@@ -37,13 +39,23 @@ Examples:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runTrend(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), opts)
+			// Page only the human table to a terminal — never the json/openmetrics
+			// machine formats, and never when writing to a file (--out).
+			pageable := !opts.NoPager && opts.Out == "" &&
+				opts.Format != "json" && opts.Format != "openmetrics"
+			pw, closePager := ui.NewPager(cmd.Context(), cmd.OutOrStdout(), pageable)
+			err := runTrend(cmd.Context(), pw, cmd.ErrOrStderr(), opts)
+			if cerr := closePager(); cerr != nil && err == nil {
+				err = cerr
+			}
+			return err
 		},
 	}
 
 	cmd.Flags().StringVar(&opts.HistoryDir, "history", "", "directory of out.v0.1 assessment files")
 	cmd.Flags().StringVar(&opts.Files, "files", "", "comma-separated assessment files in chronological order")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json | openmetrics")
+	cmd.Flags().BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
 	cmd.Flags().StringVar(&opts.Out, "out", "", "write output to file instead of stdout")
 	cmd.Flags().IntVar(&opts.Window, "window", 0, "limit to most recent N assessments (0 = all)")
 	cmd.Flags().IntVar(&opts.MinRuns, "min-runs", 2, "minimum assessment files required")
@@ -72,4 +84,5 @@ type trendOptions struct {
 	Team           string
 	RegressionOnly bool
 	Rollup         string
+	NoPager        bool
 }

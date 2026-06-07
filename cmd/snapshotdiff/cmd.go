@@ -26,6 +26,7 @@ type options struct {
 	Catalogs       bool
 	CatalogBefore  string
 	CatalogAfter   string
+	NoPager        bool
 }
 
 // NewCmd constructs the diff command.
@@ -58,10 +59,18 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			pageable := !opts.NoPager && opts.Format != "json"
+			pw, closePager := ui.NewPager(cmd.Context(), cmd.OutOrStdout(), pageable)
+			var err error
 			if opts.Catalogs {
-				return runCatalogDiff(cmd.Context(), cmd.OutOrStdout(), opts, newCtlRepo)
+				err = runCatalogDiff(cmd.Context(), pw, opts, newCtlRepo)
+			} else {
+				err = runSnapshotDiff(pw, opts)
 			}
-			return runSnapshotDiff(cmd.OutOrStdout(), opts)
+			if cerr := closePager(); cerr != nil && err == nil {
+				err = cerr
+			}
+			return err
 		},
 	}
 
@@ -71,6 +80,7 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.CatalogBefore, "catalog-before", "", "path to before catalog (with --catalogs)")
 	cmd.Flags().StringVar(&opts.CatalogAfter, "catalog-after", "", "path to after catalog (with --catalogs)")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "output format: text | json")
+	cmd.Flags().BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
 
 	return cmd
 }

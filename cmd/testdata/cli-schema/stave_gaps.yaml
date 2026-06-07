@@ -1,0 +1,149 @@
+name: stave gaps
+synopsis: |
+    Report which observation properties are absent + what they unlock
+description: |+
+    Gaps produces a field-level coverage report. For each
+    (asset_type, property_path) the catalog declares — i.e., paths
+    the predicate AST walker discovers from controls that carry
+    applicable_asset_types — it reports:
+
+      - missing_count / total_count    how many observed assets of
+                                       the type lack the property
+      - controls_blocked               which controls would fire if
+                                       the property were populated
+      - chains_blocked                 chain count via member-control
+                                       inheritance (deduplicated)
+      - max_severity                   highest severity among readers
+      - is_intent_property             tags + role-type label paths
+                                       sort to the top of the plan
+      - remediation.type               "tag" (seconds-per-asset) or
+                                       "collector" (code change)
+      - remediation.command            CLI template (tag) or doc
+                                       pointer (collector)
+
+    Distinct from stave readiness, which reports asset-type-level
+    coverage ("did the collector emit any IAM roles at all?"). Gaps
+    goes one level deeper ("of the 22 buckets you emitted, 19 lack
+    data_classification, and that's blocking 98 chains").
+
+    Inputs:
+      --observations DIR    Observation snapshot directory
+      --controls DIR        Control catalog (default: controls)
+      --chains DIR          Chain catalog (default: chains)
+      --format FORMAT       Output: text (default) | json
+      --top N               Action plan entries (default: 5)
+
+    Outputs:
+      stdout                The gap report
+      stderr                Loader diagnostics
+
+    Exit Codes:
+      0   Report produced
+      2   Input error
+      4   Internal error
+      130 SIGINT
+
+    Caveats:
+      - Controls without applicable_asset_types declarations cannot
+        surface gaps here. Their count appears in the summary so the
+        operator knows the report is partial; run 'stave readiness'
+        to see asset-type-level coverage.
+      - Intent properties are currently a hardcoded canonical set
+        (data_classification, role-type, environment for storage and
+        compute). A future commit reads them from
+        internal/controldata/taxonomy/intent_properties.yaml.
+      - Per-asset-ID listings are not emitted by default. The
+        aggregate counts ("19 of 22 buckets") are the scannable
+        format; a future --verbose flag will expand them.
+
+usage: stave gaps [flags]
+options:
+    - name: chains
+      default_value: chains
+      usage: chain catalog directory
+    - name: controls
+      shorthand: i
+      default_value: controls
+      usage: control catalog directory
+    - name: format
+      shorthand: f
+      default_value: text
+      usage: 'output format: text | json'
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for gaps
+    - name: no-pager
+      default_value: "false"
+      usage: never page output, even on a terminal
+    - name: observations
+      shorthand: o
+      usage: observation snapshot directory (required)
+    - name: quiet
+      default_value: "false"
+      usage: suppress output (exit code only)
+    - name: top
+      default_value: "5"
+      usage: number of top gaps to emphasise in the summary
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: verbose
+      shorthand: v
+      default_value: "0"
+      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: |4-
+      # Top 5 field-level gaps against an observation directory
+      stave gaps --observations ./my-snapshot
+
+      # Machine-readable for CI or tooling
+      stave gaps --observations ./my-snapshot --format json
+
+      # Widen the surfaced gap list to the top 10 by unlock value
+      stave gaps --observations ./my-snapshot --top 10
+see_also:
+    - stave - Configuration safety evaluator

@@ -1,0 +1,115 @@
+name: stave bundle
+synopsis: |
+    Generate a sealed evidence bundle for air-gap GRC integration
+description: |-
+    Bundle runs a full assessment and packages the results into a
+    portable, cryptographically sealed evidence archive (.stave-bundle).
+    The bundle contains the assessment, logic trace, pruned resource
+    snapshots, and a SHA-256 manifest — optionally signed with an Ed25519
+    private key.
+
+    This enables air-gapped environments to produce verifiable compliance
+    evidence that can be transferred to GRC platforms (Vanta, Drata,
+    ServiceNow) via data diode or manual transfer.
+
+    Inputs:
+      --controls, -i     Path to control definitions directory
+      --observations, -o Path to observation snapshots directory
+      --sign-key         Path to Ed25519 private key PEM for signing
+      --output           Output file path (default: evidence-<timestamp>.stave-bundle)
+      --include-asff     Include ASFF-formatted findings for Security Hub integration
+
+    Outputs:
+      .stave-bundle      Tar.gz archive with assessment, trace, snapshots, manifest
+
+    Exit Codes:
+      0   Bundle created, no violations
+      2   Input or configuration error
+      3   Bundle created with violations
+      4   Internal error
+usage: stave bundle [flags]
+options:
+    - name: controls
+      shorthand: i
+      default_value: controls
+      usage: Path to control definitions directory
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for bundle
+    - name: include-asff
+      default_value: "false"
+      usage: Include ASFF-formatted findings
+    - name: max-unsafe
+      default_value: 168h
+      usage: Maximum allowed unsafe duration
+    - name: observations
+      shorthand: o
+      default_value: observations
+      usage: Path to observation snapshots directory
+    - name: output
+      usage: Output file path
+    - name: sign-key
+      usage: Path to Ed25519 private key PEM for signing
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: quiet
+      default_value: "false"
+      usage: |
+        Suppress output (exit code only) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: verbose
+      shorthand: v
+      default_value: "0"
+      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: |4-
+      stave bundle --controls ./controls --observations ./observations
+      stave bundle -i ./controls -o ./observations --sign-key audit-private.pem
+      stave bundle -i ./controls -o ./observations --include-asff --output evidence.stave-bundle
+see_also:
+    - stave - Configuration safety evaluator
+    - stave bundle audit - Assemble a compliance-period evidence package

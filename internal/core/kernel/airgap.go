@@ -109,6 +109,13 @@ func DefaultPolicy() AirgapPolicy {
 			"internal/adapters/govulncheck/runner.go": {
 				`"os/exec"`: {},
 			},
+			// The pager spawns the user's $PAGER (less/more) to display human
+			// output AFTER evaluation. Like the govulncheck runner above, this is
+			// a scoped, display-only subprocess — it touches no network and is
+			// never on the evaluation path, so the air-gap guarantee holds.
+			"internal/cli/ui/pager.go": {
+				`"os/exec"`: {},
+			},
 			"internal/cli/ui/template.go": {
 				`"text/template"`: {},
 			},

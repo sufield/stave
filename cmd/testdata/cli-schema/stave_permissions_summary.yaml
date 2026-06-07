@@ -1,0 +1,90 @@
+name: stave permissions summary
+synopsis: Aggregate NEP metrics across all principals
+description: |-
+    Show a high-level NEP summary across all principals in the snapshot.
+    Includes privilege distribution, finding counts, chain metrics, and
+    highest-risk principals.
+
+    Exit Codes:
+      0   No findings above threshold
+      1   Critical findings exist
+      2   High findings (no critical)
+      3   Incomplete resolution
+      4   Internal error
+
+    Examples:
+      stave nep summary --snapshot obs.json
+      stave nep summary --snapshot obs.json --threshold critical --format json
+usage: stave permissions summary [flags]
+options:
+    - name: format
+      shorthand: f
+      default_value: table
+      usage: 'output format: table | json'
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for summary
+    - name: snapshot
+      usage: path to snapshot file (required)
+    - name: threshold
+      default_value: elevated
+      usage: 'severity threshold: none|limited|standard|elevated|admin'
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: quiet
+      default_value: "false"
+      usage: |
+        Suppress output (exit code only) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: verbose
+      shorthand: v
+      default_value: "0"
+      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: '  stave nep summary --snapshot obs.json'
+see_also:
+    - stave permissions - Query net effective permissions from a snapshot

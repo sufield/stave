@@ -11,6 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/pkg/stave"
 )
 
@@ -21,6 +22,7 @@ type options struct {
 	FailFast    bool
 	Filter      string
 	Verbose     bool
+	NoPager     bool
 }
 
 // NewCmd constructs the test command.
@@ -64,13 +66,20 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runTest(cmd.Context(), cmd.OutOrStdout(), opts)
+			pageable := !opts.NoPager && opts.Format != "json" && opts.Format != "tap"
+			pw, closePager := cmdutil.NewPager(cmd.Context(), cmd.OutOrStdout(), pageable)
+			err := runTest(cmd.Context(), pw, opts)
+			if cerr := closePager(); cerr != nil && err == nil {
+				err = cerr
+			}
+			return err
 		},
 	}
 
 	cmd.Flags().StringVar(&opts.ControlPath, "control", "", "test a single control YAML file")
 	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "test all controls in directory")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json | tap")
+	cmd.Flags().BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
 	cmd.Flags().BoolVar(&opts.FailFast, "fail-fast", false, "stop on first failure")
 	cmd.Flags().StringVar(&opts.Filter, "filter", "", "run only controls matching pattern")
 	cmd.Flags().BoolVarP(&opts.Verbose, "verbose", "v", false, "show passing tests")

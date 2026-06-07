@@ -30,6 +30,7 @@ type options struct {
 	Format      string
 	Snapshots   string
 	ControlsDir string
+	NoPager     bool
 }
 
 // NewCmd constructs the expand command.
@@ -82,7 +83,13 @@ Exit codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runExpand(cmd.Context(), cmd.OutOrStdout(), opts, newCtlRepo)
+			pageable := !opts.NoPager && opts.Format != "json"
+			pw, closePager := ui.NewPager(cmd.Context(), cmd.OutOrStdout(), pageable)
+			err := runExpand(cmd.Context(), pw, opts, newCtlRepo)
+			if cerr := closePager(); cerr != nil && err == nil {
+				err = cerr
+			}
+			return err
 		},
 	}
 
@@ -91,6 +98,7 @@ Exit codes:
 	flags.StringVar(&opts.Finding, "finding", "", "control ID to expand from (e.g., CTL.ROUTE53.DANGLING.S3.001)")
 	flags.BoolVar(&opts.List, "list", false, "list all archetypes with control counts")
 	flags.StringVarP(&opts.Format, "format", "f", "text", "output format: text or json")
+	flags.BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
 	flags.StringVar(&opts.Snapshots, "snapshots", "", "observations directory for snapshot coverage check")
 	flags.StringVarP(&opts.ControlsDir, cliflags.FlagControls, "i", "controls", "control definitions directory")
 

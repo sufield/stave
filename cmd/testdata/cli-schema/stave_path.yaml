@@ -1,0 +1,107 @@
+name: stave path
+synopsis: Export attack path graph data from active chain findings
+description: |-
+    Produce a structured data export describing active chain findings,
+    directed edges between chains (postcondition of A satisfies
+    precondition of B), and control remediation actions per chain.
+
+    An external program performs path finding — BFS, DFS, shortest
+    path, centrality analysis, or any other graph algorithm. Stave
+    does not implement graph algorithms.
+
+    Inputs:
+      --output PATH     Path to stave apply JSON output (required)
+      --chains PATH     Path to chains directory (default: chains)
+      --format STRING   Output format: json (default) | dot | csv-edges
+      --out PATH        Write to file instead of stdout
+
+    Outputs:
+      stdout            Attack path graph in selected format
+
+    Exit Codes:
+      0   Graph produced
+      2   Invalid input
+      4   Internal error
+usage: stave path [flags]
+options:
+    - name: chains
+      default_value: chains
+      usage: path to chains directory
+    - name: format
+      shorthand: f
+      default_value: json
+      usage: 'output format: json | dot | csv-edges'
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for path
+    - name: out
+      usage: write to file instead of stdout
+    - name: output
+      usage: path to stave apply JSON output (required)
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: quiet
+      default_value: "false"
+      usage: |
+        Suppress output (exit code only) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: verbose
+      shorthand: v
+      default_value: "0"
+      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: |4-
+      # Produce graph data for external analysis
+      stave path --output findings.json > attack-graph.json
+
+      # Graphviz visualization
+      stave path --output findings.json --format dot | dot -Tsvg > paths.svg
+
+      # CSV edges for Python NetworkX
+      stave path --output findings.json --format csv-edges > edges.csv
+see_also:
+    - stave - Configuration safety evaluator

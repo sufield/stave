@@ -1,0 +1,118 @@
+name: stave score
+synopsis: Compute security posture score (0-100)
+description: |-
+    Compute a normalized 0-100 security posture score from assessment
+    output. The score is a weighted combination of severity distribution,
+    SLA compliance, chain activity, and framework coverage.
+
+    Inputs:
+      --output PATH       Path to a single out.v0.1.json assessment file
+      --history DIR       Directory of out.v0.1.json files for score trend
+      --compliance LIST   Comma-separated compliance profile names for coverage
+      --sla-profile NAME  SLA profile name for SLA component scoring
+      --weights STRING    Override default weights (severity=0.45,sla=0.25,
+                          chain=0.20,coverage=0.10)
+      --format FORMAT     Output format: table (default) | json | openmetrics
+
+    Outputs:
+      stdout              Score report in the selected format
+
+    Exit Codes:
+      0   Score computed
+      2   Invalid input
+      4   Internal error
+usage: stave score [flags]
+options:
+    - name: compliance
+      usage: comma-separated compliance profiles for coverage
+    - name: format
+      shorthand: f
+      default_value: table
+      usage: 'output format: table | json | openmetrics'
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for score
+    - name: history
+      usage: directory of out.v0.1.json files for trend
+    - name: output
+      usage: path to out.v0.1.json assessment file
+    - name: sla-profile
+      usage: SLA profile name for SLA scoring
+    - name: weights
+      usage: override weights (severity=N,sla=N,chain=N,coverage=N)
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: quiet
+      default_value: "false"
+      usage: |
+        Suppress output (exit code only) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: verbose
+      shorthand: v
+      default_value: "0"
+      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: |4-
+      # Current score from assessment output
+      stave score --output assessment.json
+
+      # Score with compliance coverage
+      stave score --output assessment.json --compliance hipaa
+
+      # Score trend over history
+      stave score --history ./assessments/ --compliance hipaa
+
+      # JSON output for automation
+      stave score --output assessment.json --format json
+
+      # OpenMetrics for Prometheus scraping
+      stave score --output assessment.json --format openmetrics
+
+      # Custom weights
+      stave score --output assessment.json --weights severity=0.60,sla=0.20,chain=0.15,coverage=0.05
+see_also:
+    - stave - Configuration safety evaluator

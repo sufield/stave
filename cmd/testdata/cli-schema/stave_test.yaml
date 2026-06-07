@@ -1,0 +1,115 @@
+name: stave test
+synopsis: Run embedded control test cases
+description: |-
+    Run test cases embedded in control YAML files. Each control can
+    define a tests: block with inline test assets and expected verdicts.
+
+    The test runner uses the exact same CEL evaluation path as stave apply
+    — same property normalization, same isMissing behavior.
+
+    Verdicts: PASS, VIOLATION, INCONCLUSIVE
+
+    Inputs:
+      --control PATH    Test a single control YAML file
+      --controls PATH   Test all controls in a directory (default: controls)
+      --format STRING   Output format: table (default) | json | tap
+      --fail-fast       Stop on first failure
+      --filter STRING   Run only tests matching pattern (e.g. CTL.S3.*)
+      --verbose         Show passing tests (default: failures only)
+
+    Exit Codes:
+      0   All tests passed
+      2   Invalid input
+      3   One or more tests failed
+usage: stave test [flags]
+options:
+    - name: control
+      usage: test a single control YAML file
+    - name: controls
+      shorthand: i
+      usage: test all controls in directory
+    - name: fail-fast
+      default_value: "false"
+      usage: stop on first failure
+    - name: filter
+      usage: run only controls matching pattern
+    - name: format
+      shorthand: f
+      default_value: table
+      usage: 'output format: table | json | tap'
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for test
+    - name: no-pager
+      default_value: "false"
+      usage: never page output, even on a terminal
+    - name: verbose
+      shorthand: v
+      default_value: "false"
+      usage: show passing tests
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: quiet
+      default_value: "false"
+      usage: |
+        Suppress output (exit code only) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: |4-
+      # Test all controls
+      stave test --controls ./controls
+
+      # Test a single control
+      stave test --control controls/s3/access/CTL.S3.PUBLIC.001.yaml
+
+      # TAP output for CI
+      stave test --controls ./controls --format tap
+
+      # Filter to S3 controls only
+      stave test --controls ./controls --filter "CTL.S3.*"
+see_also:
+    - stave - Configuration safety evaluator

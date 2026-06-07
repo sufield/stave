@@ -1,0 +1,97 @@
+name: stave graph export
+synopsis: Export assessment as JSON, STIX 2.1, JSON-LD, or GraphML
+description: |-
+    Export reads assessment JSON (from stave apply) and produces a
+    standards-based graph document. Every node and edge maps to
+    OCSF, STIX 2.1, ATT&CK, or OSCAL per docs/ontology/README.md.
+
+    Formats:
+      json         Native graph JSON (default)
+      stix         STIX 2.1 Bundle JSON
+      jsonld       JSON-LD against the Stave ontology — universal RDF
+                   format consumable by Neo4j GDS, igraph, NetworkX,
+                   Spark GraphX, Gephi, and any RDF-aware library.
+      graphml      GraphML XML — native to igraph, NetworkX, Gephi,
+                   Cytoscape; carries node/edge attributes typed for
+                   graph data science (severity weights, partition
+                   labels).
+
+    Exit Codes:
+      0   Export complete
+      2   Input error
+usage: stave graph export [flags]
+options:
+    - name: format
+      shorthand: f
+      default_value: json
+      usage: 'Output format: json | stix | jsonld | graphml'
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for export
+    - name: out
+      usage: Write output to file instead of stdout
+    - name: output
+      usage: Path to out.v0.1 assessment JSON
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: quiet
+      default_value: "false"
+      usage: |
+        Suppress output (exit code only) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: verbose
+      shorthand: v
+      default_value: "0"
+      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: |4-
+      stave graph export --output assessment.json
+      stave graph export --output assessment.json --format stix
+      stave graph export --output assessment.json --format jsonld --out graph.jsonld
+      stave graph export --output assessment.json --format graphml --out graph.graphml
+see_also:
+    - stave graph - Visualize control and asset relationships

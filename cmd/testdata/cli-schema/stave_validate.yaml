@@ -1,0 +1,146 @@
+name: stave validate
+synopsis: Validate inputs without evaluation
+description: |-
+    Validate controls, observations, and configuration for correctness without evaluation.
+
+    Validate checks structural and semantic correctness of all evaluation inputs
+    before running the full apply pipeline. It catches schema violations, invalid
+    timestamps, and cross-file inconsistencies early, reducing time spent debugging
+    failed evaluations.
+
+    What it checks:
+      - Control schema (id, name, description)
+      - Observation schema and timestamps
+      - Cross-file consistency and time sanity
+      - Duration format and feasibility
+
+    Inputs:
+      --controls, -i       Path to control definitions (default: controls)
+      --observations, -o   Path to observation snapshots (default: observations)
+      --in                 Single input file or '-' for stdin
+      --kind               Contract kind: control|observation|finding (requires --in)
+      --schema-version     Contract schema version override
+      --max-unsafe         Maximum allowed unsafe duration
+      --now                Override current time (RFC3339) for deterministic output
+      --format, -f         Output format: text or json (default: text)
+      --strict             Treat warnings as errors (exit 2)
+      --fix-hints          Print remediation hints after issues
+      --quiet              Suppress output
+      --template           Custom output template
+
+    Outputs:
+      stdout               Validation report listing issues found (text or JSON)
+      stderr               Error messages (if any)
+
+    Exit Codes:
+      0   - All inputs are valid; no issues found
+      2   - Invalid input or validation failure (also used in --strict mode for warnings)
+      130 - Interrupted (SIGINT)
+
+    Examples:
+      # Validate project controls and observations
+      stave validate
+
+      # Validate with JSON output
+      stave validate --format json
+
+      # Validate a single file from stdin
+      cat control.yaml | stave validate --in - --kind control
+
+      # Strict mode: treat warnings as errors
+      stave validate --strict
+
+    Offline-only: reads local files; makes zero network connections; no cloud credentials.
+usage: stave validate [flags]
+options:
+    - name: assert-recent
+      usage: Fail if no snapshot newer than this duration (e.g. 48h)
+    - name: controls
+      shorthand: i
+      default_value: controls
+      usage: Path to control definitions (inferred if omitted)
+    - name: fix-hints
+      default_value: "false"
+      usage: Print remediation hints after issues
+    - name: format
+      shorthand: f
+      default_value: text
+      usage: 'Output format: text or json'
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for validate
+    - name: in
+      usage: Single input file or '-' for stdin
+    - name: kind
+      usage: 'Contract kind: control|observation|finding'
+    - name: max-unsafe
+      usage: |
+        Maximum allowed unsafe duration Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: now
+      usage: Override current time (RFC3339) for deterministic output
+    - name: observations
+      shorthand: o
+      default_value: observations
+      usage: Path to observation snapshots (inferred if omitted)
+    - name: schema-version
+      usage: Contract schema version override
+    - name: strict
+      default_value: "false"
+      usage: Treat warnings as errors (exit 2)
+    - name: template
+      usage: Custom output template
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: quiet
+      default_value: "false"
+      usage: |
+        Suppress output (exit code only) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: verbose
+      shorthand: v
+      default_value: "0"
+      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: '  stave validate --controls controls/s3 --observations observations'
+see_also:
+    - stave - Configuration safety evaluator
