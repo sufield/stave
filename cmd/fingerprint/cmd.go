@@ -2,13 +2,13 @@ package fingerprint
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/stave"
 )
 
@@ -71,17 +71,9 @@ func runExplain(ctx context.Context, w io.Writer, opts *options) error {
 		return fmt.Errorf("fingerprint explain: %w", err)
 	}
 
-	switch opts.Format {
-	case "json":
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		if err := enc.Encode(result); err != nil {
-			return fmt.Errorf("encode fingerprint JSON: %w", err)
-		}
-		return nil
-	default:
-		fmt.Fprintln(w, result.Preimage)
-		fmt.Fprintln(w, result.Fingerprint)
-		return nil
+	r, rerr := NewRenderer(opts.Format)
+	if rerr != nil {
+		return &ui.UserError{Err: rerr}
 	}
+	return r.Render(w, result)
 }

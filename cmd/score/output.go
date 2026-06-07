@@ -1,7 +1,6 @@
 package score
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"math"
@@ -9,21 +8,6 @@ import (
 
 	"github.com/sufield/stave/pkg/stave"
 )
-
-func renderResult(w io.Writer, r stave.ScoreResult, format string) error {
-	switch format {
-	case "json":
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		return enc.Encode(r)
-	case "openmetrics":
-		writeOpenMetrics(w, r)
-		return nil
-	default:
-		writeTable(w, r)
-		return nil
-	}
-}
 
 func writeTable(w io.Writer, r stave.ScoreResult) {
 	fmt.Fprintln(w, "SECURITY POSTURE SCORE")

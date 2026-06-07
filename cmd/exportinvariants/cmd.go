@@ -15,10 +15,8 @@ package exportinvariants
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -96,12 +94,9 @@ Exit codes:
 // paths are pure pkg/stave consumption — no internal/cli/ui
 // import needed to keep the standard exit-code contract.
 func run(ctx context.Context, w io.Writer, opts *options) error {
-	format := strings.ToLower(strings.TrimSpace(opts.Format))
-	switch format {
-	case "", "json":
-		// supported
-	default:
-		return fmt.Errorf("--format must be json (got %q): %w", opts.Format, stave.ErrInvalidInput)
+	renderer, rerr := NewRenderer(opts.Format)
+	if rerr != nil {
+		return rerr
 	}
 
 	out, err := stave.ExportInvariants(ctx, stave.InvariantExportConfig{
@@ -111,10 +106,5 @@ func run(ctx context.Context, w io.Writer, opts *options) error {
 		return fmt.Errorf("export controls: %w", err)
 	}
 
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	if err := enc.Encode(out); err != nil {
-		return fmt.Errorf("encode controls: %w", err)
-	}
-	return nil
+	return renderer.Render(w, out)
 }

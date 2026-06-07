@@ -15,7 +15,6 @@ package exportsir
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -170,11 +169,9 @@ Exit codes:
 // smt2 / json) on top, nothing else.
 func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error {
 	format := strings.ToLower(strings.TrimSpace(opts.Format))
-	switch format {
-	case "", "json", "jsonl", "smt2":
-		// supported
-	default:
-		return &ui.UserError{Err: fmt.Errorf("--format must be one of json | jsonl | smt2 (got %q)", opts.Format)}
+	renderer, rerr := NewRenderer(format)
+	if rerr != nil {
+		return rerr
 	}
 
 	allowlistMode := strings.ToLower(strings.TrimSpace(opts.AllowlistMode))
@@ -262,25 +259,7 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error 
 		facts = sirfacts.FilterOutCatalog(facts)
 	}
 
-	switch format {
-	case "jsonl":
-		if encErr := sirfacts.SerializeJSONL(facts, w); encErr != nil {
-			return fmt.Errorf("encode jsonl: %w", encErr)
-		}
-		return nil
-	case "smt2":
-		if encErr := sirfacts.SerializeSMT2(facts, w, sirfacts.SMT2Options{ClosedWorld: opts.ClosedWorld}); encErr != nil {
-			return fmt.Errorf("encode smt2: %w", encErr)
-		}
-		return nil
-	default:
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		if encErr := enc.Encode(doc); encErr != nil {
-			return fmt.Errorf("encode SIR: %w", encErr)
-		}
-		return nil
-	}
+	return renderer.Render(w, Payload{Doc: doc, Facts: facts, ClosedWorld: opts.ClosedWorld})
 }
 
 // validateAndReport runs a lightweight evaluation pass against

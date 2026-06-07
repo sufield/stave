@@ -177,14 +177,11 @@ func uncoveredAssets(assetIDs []asset.ID, coveredAssets map[asset.ID]bool) []ass
 }
 
 func writeResult(w io.Writer, format Format, result CoverageResult, sanitizer kernel.Sanitizer) error {
-	switch format {
-	case FormatDot:
-		return writeDOT(w, result, sanitizer)
-	case FormatJSON:
-		return writeJSON(w, result, sanitizer)
-	default:
-		return nil
+	r, err := NewCoverageRenderer(format)
+	if err != nil {
+		return nil // unknown Format is a boundary-validated no-op (validateFormat rejects unknown CLI input); preserves TestWriteResult_Unknown
 	}
+	return r.Render(w, result, sanitizer)
 }
 
 func writeDOT(w io.Writer, result CoverageResult, sanitizer kernel.Sanitizer) error {

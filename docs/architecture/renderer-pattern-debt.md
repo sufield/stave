@@ -2,23 +2,33 @@
 
 ## Status
 
-**CLOSED 2026-05-18.** Zero pending dispatch sites. Every command
-in `cmd/` that branches on `opts.Format` now goes through the
-Renderer pattern.
+**RE-CLOSED 2026-06-07.** Zero pending dispatch sites again.
 
-Eleven migration batches (1 – 11) landed on 2026-05-18, closing the
-inventory the same day it was last updated. The CLAUDE.md New
-Command Checklist (item 7) enforces the pattern for future commands;
-adding a new inline `switch opts.Format` should fail review.
+History:
+
+- **CLOSED 2026-05-18** after twelve migration batches (1 – 12).
+- **REOPENED 2026-06-07.** A live-code audit found the "zero pending"
+  claim had drifted: six inline `switch …Format` sites were live in
+  `cmd/`. One (`cmd/fingerprint`, added 2026-06-02) was a post-closure
+  regression that slipped past the CLAUDE.md item-7 review gate. The
+  other five were never covered by the original batches: the export
+  family (`score`, `exportsir`, `export/tickets`, `exportinvariants`)
+  plus `enforce/graph`, which *had* a `renderer.go` but whose
+  `writeResult` path bypassed it (a partial migration).
+- **RE-CLOSED 2026-06-07** by batches 13 – 18 (below), migrating all six.
 
 Final tally:
 
-- **32 files migrated** (the inventory listed 25 originally; +6 new
-  files shipped after 2026-05-03 also migrated; +1 missed by the
-  original switch-only grep — see batch 11 note).
-- **35 dispatch sites** consolidated into factory calls.
+- **38 files migrated** (32 in batches 1 – 12, +6 in batches 13 – 18).
 - **One reference implementation** (`cmd/export/compliance/`) carried
-  the pattern forward into 30+ new factories.
+  the pattern forward into 35+ factories.
+
+**Regression vector** — CLAUDE.md item 7 is a *manual* review gate with
+no mechanical enforcement, which is exactly why the `cmd/fingerprint`
+drift landed undetected for ~3 weeks. Follow-up: add a lint/grep guard
+that fails on any new inline `switch …Format` (or `opts.Format ==`)
+render dispatch outside a `renderer*.go` factory, so the inventory
+cannot silently reopen again.
 
 The remainder of this doc is preserved as a retrospective.
 
@@ -65,7 +75,11 @@ The remainder of this doc is preserved as a retrospective.
   the original doc inherits the Renderer pattern.
 - **All multi-site clusters are migrated** (consolidate, nep, rank,
   snapshotdiff).
-- **Currently pending**: 0 sites. Inventory closed.
+- **Batches 13 – 18 (2026-06-07)** migrated the six sites a
+  2026-06-07 audit found still live after the 2026-05-18 closure:
+  `fingerprint` (13), `score` (14), `exportsir` (15), `enforce/graph`
+  writeResult (16), `export/tickets` (17), `exportinvariants` (18).
+- **Currently pending**: 0 sites. Inventory re-closed 2026-06-07.
 
 **2026-05-18 mitigations**:
 1. New Command Checklist in `CLAUDE.md` mandates the Renderer pattern
@@ -129,7 +143,8 @@ concrete type; nothing in the cmd-side handlers changes.
 
 ## Inventory
 
-**Zero pending sites.** Inventory closed 2026-05-18 with batch 12.
+**Zero pending sites.** Inventory closed 2026-05-18 with batch 12,
+reopened by a 2026-06-07 audit, and re-closed 2026-06-07 with batch 18.
 The full per-file migration log is below.
 
 ### Migrated
@@ -164,6 +179,12 @@ The full per-file migration log is below.
 | cmd/nep/{principal,resource,summary}.go | 2026-05-18 | Batch 10. `cmd/nep/renderer.go` + `renderer_test.go`. Same multi-site shape as consolidate — three sibling files, three Renderer interfaces (`PrincipalRenderer`, `ResourceRenderer`, `SummaryRenderer`). `ResourceRenderer` uses a `ResourcePayload` struct because the DOT renderer needs unfiltered entries while JSON/Table use the filtered view. Formats: principal is table/json, resource is table/json/dot, summary is table/json. |
 | cmd/rank/cmd.go (4 sites) | 2026-05-18 | Batch 11. `cmd/rank/renderer.go` + `renderer_test.go`. Different shape from prior batches: the concrete formatters already lived in `internal/app/rank/formatter/` (RoadmapFormatter, SprintFormatter, IdentityRankingFormatter interfaces + JSON/CSV/TextRoadmap/TextSprint/TextIdentityRanking concretes). Batch 11 added the missing concretes (`JSONSprint`, `JSONIdentityRanking`, `TeamRoadmapsFormatter` interface + `JSONTeamRoadmaps` + `TextTeamRoadmaps`) and four factory functions in cmd/rank/renderer.go. Four dispatch sites (three switches + one `if format == "json"` the original switch-only grep missed) collapse into factory calls. |
 | cmd/snapshotdiff/cmd.go (2 sites) | 2026-05-18 | Batch 12 — closes the inventory. `cmd/snapshotdiff/renderer.go` + `renderer_test.go`. Two payload types under one command: catalog diff (`appdiff.Delta`) and snapshot diff (`snapshotdiff.DiffResult`). Two Renderer interfaces (`CatalogRenderer`, `SnapshotRenderer`) with two factories. Same multi-payload recipe as cmd/consolidate and cmd/nep, just within a single file rather than sibling files. |
+| cmd/fingerprint/cmd.go | 2026-06-07 | Batch 13. `cmd/fingerprint/renderer.go` + `renderer_test.go`. 2 formats (text/json). **Post-closure regression fix** — a naked `switch opts.Format` in `runExplain`, added 2026-06-02, slipped past the item-7 gate. `JSONRenderer`/`TextRenderer`; unknown format → `ui.UserError` (exit 2), tightening the old silent text fallback. |
+| cmd/score/{cmd,output}.go | 2026-06-07 | Batch 14. `cmd/score/renderer.go` + `renderer_test.go`. 3 formats (table/json/openmetrics). Deleted the `renderResult` dispatch fn; `writeTable`/`writeOpenMetrics` stay in output.go. Bad format surfaces exit 2 via `stave.ErrInvalidInput` (the package's facade test forbids importing `internal/cli/ui`, same constraint as exportinvariants). |
+| cmd/exportsir/cmd.go (2 sites) | 2026-06-07 | Batch 15. `cmd/exportsir/renderer.go` + `renderer_test.go`. 3 formats (json/jsonl/smt2). A `Payload` struct carries `Doc` + `Facts` + `ClosedWorld` so one interface spans the nested-document (json) and fact-stream (jsonl/smt2) payloads. Collapsed the early validation switch *and* the final render switch into one factory call. |
+| cmd/enforce/graph/run.go | 2026-06-07 | Batch 16. `cmd/enforce/graph/renderer_coverage.go` + `renderer_coverage_test.go`. 2 formats (dot/json). **Partial-migration fix**: the package already had a `renderer.go` for the `GraphData` surface; `writeResult` bypassed it. New `CoverageRenderer` (non-colliding unexported names) for the `CoverageResult`+`Sanitizer` payload; unknown `Format` stays a boundary-validated no-op so `TestWriteResult_Unknown` holds. |
+| cmd/export/tickets.go | 2026-06-07 | Batch 17. `cmd/export/renderer_tickets.go` + `renderer_tickets_test.go`. 2 formats (json/csv). Prefixed names (`TicketsRenderer`) so package `export` can host more surfaces. Renderer built *before* `cmdutil.WriteTo` for fail-fast on bad format. |
+| cmd/exportinvariants/cmd.go | 2026-06-07 | Batch 18 — re-closes the inventory. `cmd/exportinvariants/renderer.go` + `renderer_test.go`. 1 format (json). Validation switch + inline encode collapsed into factory + `Render`. Unknown format wraps `stave.ErrInvalidInput` (exit 2) without importing `internal/cli/ui`. |
 
 ## Remediation outline
 

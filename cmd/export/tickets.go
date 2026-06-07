@@ -94,15 +94,13 @@ func runTickets(stdout io.Writer, assessmentPath, outputPath, format, teamManife
 		tickets = filtered
 	}
 
+	renderer, rerr := NewTicketsRenderer(format)
+	if rerr != nil {
+		return &ui.UserError{Err: rerr}
+	}
+
 	if err := cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
-		switch format {
-		case "csv":
-			return writeTicketsCSV(w, tickets)
-		default:
-			enc := json.NewEncoder(w)
-			enc.SetIndent("", "  ")
-			return enc.Encode(tickets)
-		}
+		return renderer.Render(w, tickets)
 	}); err != nil {
 		return fmt.Errorf("write tickets export: %w", err)
 	}

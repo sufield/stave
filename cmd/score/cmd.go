@@ -128,7 +128,16 @@ func runScoreSingle(ctx context.Context, stdout io.Writer, opts *options, weight
 	if err != nil {
 		return err
 	}
-	return renderResult(stdout, result, opts.Format)
+	r, rerr := NewRenderer(opts.Format)
+	if rerr != nil {
+		// Bad --format is user input — wrap so the root exit-code
+		// shim maps to exit 2. This package's facade architecture
+		// test forbids importing internal/cli/ui, so we surface the
+		// exit-2 contract via the stave.ErrInvalidInput sentinel
+		// (same pattern as cmd/exportinvariants).
+		return fmt.Errorf("%w: %w", rerr, stave.ErrInvalidInput)
+	}
+	return r.Render(stdout, result)
 }
 
 func runScoreTrend(ctx context.Context, stdout io.Writer, opts *options, weights stave.Weights, budget stave.ChainBudget) error {
@@ -161,7 +170,11 @@ func runScoreTrend(ctx context.Context, stdout io.Writer, opts *options, weights
 	latest := results[len(results)-1]
 	latest.Trend = buildTrend(results)
 
-	return renderResult(stdout, latest, opts.Format)
+	r, rerr := NewRenderer(opts.Format)
+	if rerr != nil {
+		return fmt.Errorf("%w: %w", rerr, stave.ErrInvalidInput)
+	}
+	return r.Render(stdout, latest)
 }
 
 // computeFromAssessment delegates to stave.Score so library and
