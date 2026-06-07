@@ -2,7 +2,6 @@ package exempt
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -89,15 +88,14 @@ func renderSuggest(w io.Writer, result *exemptionsuggest.Result, format string) 
 		}
 		return nil
 	}
-	if format == "json" {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		if err := enc.Encode(result); err != nil {
-			return fmt.Errorf("encode suggestions JSON: %w", err)
-		}
-		return nil
+	renderer, err := NewSuggestRenderer(format)
+	if err != nil {
+		return err
 	}
-	return writeSuggestTable(w, result)
+	if err := renderer.Render(w, result); err != nil {
+		return fmt.Errorf("render output: %w", err)
+	}
+	return nil
 }
 
 func newSuggestCmd() *cobra.Command {

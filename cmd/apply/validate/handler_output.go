@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 
-	outjson "github.com/sufield/stave/internal/adapters/output/json"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/diag"
@@ -32,20 +30,14 @@ func (r *Reporter) Write(result *appvalidation.Report, hc hintContext) error {
 
 	report := buildReport(result, r.FixHints, hc)
 
-	switch {
-	case r.Format == string(appcontracts.FormatJSON):
-		if err := outjson.WriteValidation(r.Writer, report); err != nil {
-			return fmt.Errorf("write JSON validation output: %w", err)
-		}
-		return nil
-	case r.Format != "" && r.Format != string(appcontracts.FormatText):
-		if err := ui.ExecuteTemplate(r.Writer, r.Format, report); err != nil {
-			return fmt.Errorf("execute output template: %w", err)
-		}
-		return nil
-	default:
-		return r.writeText(result, report)
+	renderer, err := NewRenderer(r.Format, r)
+	if err != nil {
+		return &ui.UserError{Err: err}
 	}
+	if err := renderer.Render(r.Writer, renderPayload{result: result, report: report}); err != nil {
+		return fmt.Errorf("render output: %w", err)
+	}
+	return nil
 }
 
 // ExitStatus determines if the validation should result in a CLI error.

@@ -96,10 +96,11 @@ Exit Codes:
 			}
 
 			w := cliflags.GetGlobalFlags(cmd).ResolveStdout(cmd.OutOrStdout())
-			if fmtValue.IsJSON() {
-				return result.RenderJSON(w)
+			renderer, err := NewTraceRenderer(fmtValue)
+			if err != nil {
+				return err
 			}
-			return result.RenderText(w)
+			return renderer.Render(w, result)
 		},
 	}
 

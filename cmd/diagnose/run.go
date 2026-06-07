@@ -142,15 +142,9 @@ func (r *Runner) runDetailMode(ctx context.Context, cfg Config) error {
 	if err := p.RenderDetail(detail); err != nil {
 		return err
 	}
-	// runDetailMode only runs after InspectViolation has confirmed
-	// a violation (otherwise the upstream returns an error), so the
-	// detail view is always rendering a known violation — emit the
-	// gating exit code unless the operator asked for JSON, where
-	// the document itself carries the violation signal.
-	if !cfg.Format.IsJSON() {
-		return ui.ErrViolationsFound
-	}
-	return nil
+	// The gating exit code for the detail view is keyed on the output
+	// format: see detailGatingError for the rationale.
+	return detailGatingError(cfg.Format)
 }
 
 func (r *Runner) newDiagnosticEngine() (*appdiagnose.DiagnosticEngine, error) {

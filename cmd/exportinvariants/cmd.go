@@ -106,5 +106,8 @@ func run(ctx context.Context, w io.Writer, opts *options) error {
 		return fmt.Errorf("export controls: %w", err)
 	}
 
-	return renderer.Render(w, out)
+	if err := renderer.Render(w, out); err != nil {
+		return fmt.Errorf("render output: %w", err)
+	}
+	return nil
 }

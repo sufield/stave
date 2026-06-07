@@ -179,9 +179,13 @@ func uncoveredAssets(assetIDs []asset.ID, coveredAssets map[asset.ID]bool) []ass
 func writeResult(w io.Writer, format Format, result CoverageResult, sanitizer kernel.Sanitizer) error {
 	r, err := NewCoverageRenderer(format)
 	if err != nil {
-		return nil // unknown Format is a boundary-validated no-op (validateFormat rejects unknown CLI input); preserves TestWriteResult_Unknown
+		//nolint:nilerr // unknown Format is a boundary-validated no-op: ParseFormat rejects unknown CLI input upstream, and TestWriteResult_Unknown pins this swallow.
+		return nil
 	}
-	return r.Render(w, result, sanitizer)
+	if err := r.Render(w, result, sanitizer); err != nil {
+		return fmt.Errorf("render output: %w", err)
+	}
+	return nil
 }
 
 func writeDOT(w io.Writer, result CoverageResult, sanitizer kernel.Sanitizer) error {

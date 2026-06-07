@@ -9,7 +9,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 func newSchemasCmd() *cobra.Command {
@@ -96,13 +95,17 @@ func writeSchemas(w io.Writer, format appcontracts.OutputFormat) error {
 		},
 	}
 
-	if format.IsJSON() {
-		if err := jsonutil.WriteIndented(w, out); err != nil {
-			return fmt.Errorf("write schemas JSON: %w", err)
-		}
-		return nil
+	renderer, err := NewSchemasRenderer(format)
+	if err != nil {
+		return err
 	}
+	if err := renderer.Render(w, out); err != nil {
+		return fmt.Errorf("render output: %w", err)
+	}
+	return nil
+}
 
+func renderSchemasText(w io.Writer, out schemasOutput) error {
 	groups := []struct {
 		heading string
 		entries []schemaEntry

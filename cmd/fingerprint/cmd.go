@@ -75,5 +75,8 @@ func runExplain(ctx context.Context, w io.Writer, opts *options) error {
 	if rerr != nil {
 		return &ui.UserError{Err: rerr}
 	}
-	return r.Render(w, result)
+	if err := r.Render(w, result); err != nil {
+		return fmt.Errorf("render output: %w", err)
+	}
+	return nil
 }

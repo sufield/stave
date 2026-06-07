@@ -137,7 +137,10 @@ func runScoreSingle(ctx context.Context, stdout io.Writer, opts *options, weight
 		// (same pattern as cmd/exportinvariants).
 		return fmt.Errorf("%w: %w", rerr, stave.ErrInvalidInput)
 	}
-	return r.Render(stdout, result)
+	if err := r.Render(stdout, result); err != nil {
+		return fmt.Errorf("render output: %w", err)
+	}
+	return nil
 }
 
 func runScoreTrend(ctx context.Context, stdout io.Writer, opts *options, weights stave.Weights, budget stave.ChainBudget) error {
@@ -174,7 +177,10 @@ func runScoreTrend(ctx context.Context, stdout io.Writer, opts *options, weights
 	if rerr != nil {
 		return fmt.Errorf("%w: %w", rerr, stave.ErrInvalidInput)
 	}
-	return r.Render(stdout, latest)
+	if err := r.Render(stdout, latest); err != nil {
+		return fmt.Errorf("render output: %w", err)
+	}
+	return nil
 }
 
 // computeFromAssessment delegates to stave.Score so library and

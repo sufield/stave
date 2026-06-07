@@ -16,9 +16,6 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/metadata"
-	"github.com/sufield/stave/internal/util/jsonutil"
-
-	"github.com/sufield/stave/internal/adapters/output/text"
 )
 
 // ExplainRequest holds the inputs for the explain workflow.
@@ -57,14 +54,12 @@ func NewExplainerWithFinder(repo appcontracts.ControlRepository) *Explainer {
 
 // WriteExplainResult renders an ExplainResult to the writer in the given format.
 func WriteExplainResult(w io.Writer, result appcontracts.ExplainResult, format appcontracts.OutputFormat) error {
-	if format.IsJSON() {
-		if err := jsonutil.WriteIndented(w, result); err != nil {
-			return fmt.Errorf("write explain JSON: %w", err)
-		}
-		return nil
+	renderer, err := NewExplainResultRenderer(format)
+	if err != nil {
+		return err
 	}
-	if err := text.WriteExplainText(w, result); err != nil {
-		return fmt.Errorf("write explain text: %w", err)
+	if err := renderer.Render(w, result); err != nil {
+		return fmt.Errorf("render output: %w", err)
 	}
 	return nil
 }

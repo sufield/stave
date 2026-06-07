@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 )
 
 func TestConfigFileLine_WithPath(t *testing.T) {
@@ -70,14 +71,16 @@ func TestBuildShowOutput(t *testing.T) {
 	}
 }
 
-func TestShowPresenter_RenderText(t *testing.T) {
+func TestShowRenderer_RenderText(t *testing.T) {
 	eval := appconfig.NewResolver(nil, "", nil, "")
 	out := buildShowOutput(eval)
 
-	var buf bytes.Buffer
-	p := &ShowPresenter{Stdout: &buf}
-	err := p.Render(out, false)
+	renderer, err := NewShowRenderer(appcontracts.FormatText)
 	if err != nil {
+		t.Fatalf("NewShowRenderer error: %v", err)
+	}
+	var buf bytes.Buffer
+	if err := renderer.Render(&buf, out); err != nil {
 		t.Fatalf("Render text error: %v", err)
 	}
 	rendered := buf.String()
@@ -89,14 +92,16 @@ func TestShowPresenter_RenderText(t *testing.T) {
 	}
 }
 
-func TestShowPresenter_RenderJSON(t *testing.T) {
+func TestShowRenderer_RenderJSON(t *testing.T) {
 	eval := appconfig.NewResolver(nil, "", nil, "")
 	out := buildShowOutput(eval)
 
-	var buf bytes.Buffer
-	p := &ShowPresenter{Stdout: &buf}
-	err := p.Render(out, true)
+	renderer, err := NewShowRenderer(appcontracts.FormatJSON)
 	if err != nil {
+		t.Fatalf("NewShowRenderer error: %v", err)
+	}
+	var buf bytes.Buffer
+	if err := renderer.Render(&buf, out); err != nil {
 		t.Fatalf("Render JSON error: %v", err)
 	}
 	rendered := buf.String()

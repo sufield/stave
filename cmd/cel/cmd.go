@@ -16,7 +16,6 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/metadata"
-	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // NewCmd creates the cel parent command with eval subcommand.
@@ -118,8 +117,12 @@ func (b *celBridge) EvalBool(expr string, props map[string]any) (bool, error) {
 }
 
 func runCELEval(stdout, stderr io.Writer, stdin io.Reader, expr, inputPath, assetType, format string, useStdin bool) error {
+	renderer, err := NewRenderer(format)
+	if err != nil {
+		return &ui.UserError{Err: err}
+	}
+
 	var data []byte
-	var err error
 
 	if useStdin {
 		data, err = io.ReadAll(stdin)
@@ -157,14 +160,10 @@ func runCELEval(stdout, stderr io.Writer, stdin io.Reader, expr, inputPath, asse
 		return fmt.Errorf("evaluate: %w", err)
 	}
 
-	if format == "json" {
-		if err := jsonutil.WriteIndented(stdout, result); err != nil {
-			return fmt.Errorf("write JSON output: %w", err)
-		}
-		return nil
+	if err := renderer.Render(stdout, result); err != nil {
+		return fmt.Errorf("render output: %w", err)
 	}
-
-	return renderCELText(stdout, result)
+	return nil
 }
 
 // parseAssets returns the union of all assets across the input

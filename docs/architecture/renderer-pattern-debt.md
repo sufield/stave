@@ -2,7 +2,22 @@
 
 ## Status
 
-**RE-CLOSED 2026-06-07.** Zero pending dispatch sites again.
+**CLOSED + mechanically guarded across all four dispatch forms
+(2026-06-07).** The original inventory only tracked the tagged
+`switch opts.Format`. Broader audits the same day found the identical
+*format-dispatch-in-a-handler* anti-pattern in three more syntactic
+forms — all now migrated to `NewRenderer` factories:
+
+1. tagged `switch opts.Format` (batches 1–18),
+2. string-literal `if format == "json"` + one tagless `switch{}` (11+1 sites),
+3. typed `if format.IsJSON()` / tagless `.IsJSON()` switch (~21 sites,
+   migrated to factories taking the typed `contracts.OutputFormat`).
+
+`TestNoInlineFormatSwitch` (`cmd/renderer_pattern_test.go`) now blocks
+all four forms: a tagged or tagless format `switch`, and an
+`if <format> {…encode…}` whose branch JSON-encodes (the encode test
+separates real dispatch from the legitimate "suppress hints in JSON
+mode" idiom). See **Broader audit** below.
 
 History:
 
@@ -23,12 +38,64 @@ Final tally:
 - **One reference implementation** (`cmd/export/compliance/`) carried
   the pattern forward into 35+ factories.
 
-**Regression vector** — CLAUDE.md item 7 is a *manual* review gate with
-no mechanical enforcement, which is exactly why the `cmd/fingerprint`
-drift landed undetected for ~3 weeks. Follow-up: add a lint/grep guard
-that fails on any new inline `switch …Format` (or `opts.Format ==`)
-render dispatch outside a `renderer*.go` factory, so the inventory
-cannot silently reopen again.
+**Regression vector — now closed.** CLAUDE.md item 7 was a *manual*
+review gate with no mechanical enforcement, which is exactly why the
+`cmd/fingerprint` drift landed undetected for ~3 weeks. That gap is now
+closed by `TestNoInlineFormatSwitch` (`cmd/renderer_pattern_test.go`): an
+AST guard that fails the build on any inline `switch …Format` outside a
+`renderer*.go` factory. It catches the exact `switch opts.Format` /
+`switch format` shape all six batch-13–18 sites used; three legitimate
+non-dispatch switches (the `cmdutil/compose` finding-writer factory,
+`features`'s inline renderer factory, and the `stave-mcp` protocol
+dispatcher) are carried in a documented `formatSwitchAllowlist`, and a
+dead allowlist entry fails the test so the list cannot rot. An inline
+`if opts.Format == "…"` / `if f.IsJSON()` render dispatch is now also
+caught — the guard flags a format-conditional `if` only when its branch
+JSON-encodes, which separates real dispatch from the legitimate "suppress
+human hints in JSON mode" idiom (which never encodes).
+
+## Broader audit (2026-06-07)
+
+The tagged-`switch` inventory was only one syntactic form of the item-7
+anti-pattern (format dispatch decided inline in a command handler).
+A follow-up audit classified every format comparison in `cmd/`:
+
+- **String-literal `if` dispatch (11 sites, 7 packages) — MIGRATED (2026-06-07 if-dispatch round).**
+  `if format == "json" { …encode…; return } … text`, full output chosen
+  per branch with no shared render afterward. Sites: `bisect`, `cel`,
+  `diagnose/artifacts` (controls + quality), `exempt` (cmd + suggest),
+  `expand` renderList (bypassed its own factory), `trend`
+  (forecast/oscillation/predict, all bypassed the package factory). Each
+  now routes through a `NewRenderer` factory; output byte-identical via
+  delegation. `exempt/export.go` was confirmed a validation gate, not
+  dispatch, and left as-is.
+- **Tagless `switch{}` dispatch (1 site) — MIGRATED.**
+  `cmd/apply/validate/handler_output.go` used `switch { case r.Format !=
+  …: }`, which slips past `TestNoInlineFormatSwitch` (it only inspects
+  switches *with* a format tag). Migrated to a factory.
+- **Typed-format `.IsJSON()` family (~21 sites, 12 packages) — MIGRATED
+  (decision: migrate to factories).** A typed `contracts.OutputFormat`
+  enum with `.IsJSON()` / `.IsMarkdown()` methods was used across
+  `apply/readiness`, `diagnose/*`, `doctor`, `enforce/gate`,
+  `enforce/status`, `initcmd/*` (alias, config, contextcmd, env),
+  `schemas`, and `scorecard` with inline `if format.IsJSON() { …encode… }`
+  / tagless-`switch` dispatch. Each now routes through a `NewRenderer`
+  factory that **takes the typed `contracts.OutputFormat`** (keeping
+  type-safety, e.g. `cmd/enforce/graph`'s `NewCoverageRenderer(Format)`),
+  output byte-identical via delegation. One straggler the guard caught —
+  `diagnose/artifacts/controls_cmd.go` packs-list dispatch (a third
+  payload the if-dispatch round missed) — was migrated to a
+  `PacksRenderer`. The `cmd/enforce/gate` and `initcmd/config` bool-arg
+  dispatch helpers (`renderGate(…, isJSON bool)`, `presenter.Render(…,
+  isJSON bool)`) were converted to the typed factory too.
+
+**Lint lesson (2026-06-07).** The first factory batches were committed
+after `go test` but without `make lint`; golangci-lint's `wrapcheck`
+then failed CI on 35 `return renderer.Render(…)` sites (an interface
+method's error must be wrapped). The fix — `if err := renderer.Render(…);
+err != nil { return fmt.Errorf("…: %w", err) }` — is now the convention
+in every migrated handler. Run `make lint` (not just `make test`) before
+committing renderer changes.
 
 The remainder of this doc is preserved as a retrospective.
 

@@ -7,8 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	reportrender "github.com/sufield/stave/internal/adapters/output/report"
 	"github.com/sufield/stave/internal/core/reporting"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/metadata"
@@ -74,6 +72,11 @@ Examples:
 				return err
 			}
 
+			renderer, err := NewRenderer(fmtValue)
+			if err != nil {
+				return err
+			}
+
 			// Use case: load evaluation
 			ucReq := reporting.ReportRequest{
 				InputFile:    opts.InputFile,
@@ -87,16 +90,11 @@ Examples:
 			}
 
 			// Adapter: render in requested format
-			eval := ucResp.EvaluationData
-			if fmtValue.IsJSON() {
-				w := compose.ResolveStdout(cmd.OutOrStdout(), flags.Quiet, fmtValue)
-				return reportrender.RenderJSON(*eval, staveversion.String, w)
-			}
-			return reportrender.RenderText(*eval, reportrender.RenderTextOptions{
+			return renderer.Render(cmd.OutOrStdout(), reportPayload{
+				Eval:            *ucResp.EvaluationData,
 				StaveVersion:    staveversion.String,
 				DefaultTemplate: defaultReportTemplate,
 				TemplatePath:    fsutil.CleanUserPath(opts.TemplateFile),
-				Writer:          cmd.OutOrStdout(),
 				Quiet:           flags.Quiet,
 			})
 		},

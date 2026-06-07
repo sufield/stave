@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io"
 
-	outjson "github.com/sufield/stave/internal/adapters/output/json"
-	outtext "github.com/sufield/stave/internal/adapters/output/text"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -32,30 +30,24 @@ func (p *Presenter) RenderReport(report *diagnosis.Report) error {
 		}
 		return nil
 	}
-	if p.Format.IsJSON() {
-		if err := outjson.WriteDiagnosis(p.W, report); err != nil {
-			return fmt.Errorf("write diagnosis JSON: %w", err)
-		}
-		return nil
+	renderer, err := NewReportRenderer(p.Format)
+	if err != nil {
+		return err
 	}
-	if err := outtext.WriteDiagnosisReport(p.W, report, func(level, msg string) string {
-		return ui.SeverityLabel(level, msg, p.W)
-	}); err != nil {
-		return fmt.Errorf("write diagnosis text: %w", err)
+	if err := renderer.Render(p.W, report); err != nil {
+		return fmt.Errorf("render output: %w", err)
 	}
 	return nil
 }
 
 // RenderDetail writes a single-finding deep-dive result.
 func (p *Presenter) RenderDetail(detail *evaluation.FindingDetail) error {
-	if p.Format.IsJSON() {
-		if err := writeFindingDetailJSON(p.W, detail); err != nil {
-			return fmt.Errorf("write finding detail JSON: %w", err)
-		}
-		return nil
+	renderer, err := NewDetailRenderer(p.Format)
+	if err != nil {
+		return err
 	}
-	if err := outtext.WriteFindingDetail(p.W, detail); err != nil {
-		return fmt.Errorf("write finding detail text: %w", err)
+	if err := renderer.Render(p.W, detail); err != nil {
+		return fmt.Errorf("render output: %w", err)
 	}
 	return nil
 }

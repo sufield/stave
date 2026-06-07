@@ -17,6 +17,7 @@ import (
 	"github.com/sufield/stave/internal/app/catalog"
 	"github.com/sufield/stave/internal/app/catalogsearch"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/cli/ui"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/metadata"
@@ -103,22 +104,8 @@ func runListPacks(w io.Writer, cfg catalog.DiscoveryRequest) error {
 		return fmt.Errorf("list packs: %w", err)
 	}
 
-	if appcontracts.OutputFormat(cfg.OutputFormat) == appcontracts.FormatJSON {
-		if werr := jsonutil.WriteIndented(w, items); werr != nil {
-			return fmt.Errorf("write packs JSON: %w", werr)
-		}
-		return nil
-	}
-
-	if len(items) == 0 {
-		_, err := fmt.Fprintln(w, "No packs found.")
-		return err
-	}
-
-	for _, p := range items {
-		if _, err := fmt.Fprintf(w, "%s\t%s\n", p.Name, p.Description); err != nil {
-			return err
-		}
+	if err := NewPacksRenderer(cfg.OutputFormat).Render(w, items); err != nil {
+		return fmt.Errorf("render packs output: %w", err)
 	}
 	return nil
 }
@@ -269,7 +256,11 @@ Exit Codes:
 				AttackStage: attackStage,
 			})
 
-			return renderControlSearch(cmd.OutOrStdout(), results, format)
+			renderer, err := NewControlsRenderer(format)
+			if err != nil {
+				return &ui.UserError{Err: err}
+			}
+			return renderer.Render(cmd.OutOrStdout(), results)
 		},
 	}
 
@@ -282,16 +273,10 @@ Exit Codes:
 	return cmd
 }
 
-// renderControlSearch writes catalog-search results in the
-// requested format. Takes an io.Writer so the caller owns the
+// writeSearchTable writes catalog-search results as the default
+// human-readable table. Takes an io.Writer so the caller owns the
 // cobra boundary; this function stays off the cobra import graph.
-func renderControlSearch(w io.Writer, results []catalogsearch.SearchResult, format string) error {
-	if format == "json" {
-		if err := jsonutil.WriteIndented(w, results); err != nil {
-			return fmt.Errorf("write search JSON: %w", err)
-		}
-		return nil
-	}
+func writeSearchTable(w io.Writer, results []catalogsearch.SearchResult) error {
 	if len(results) == 0 {
 		_, err := fmt.Fprintln(w, "No matching controls found.")
 		return err

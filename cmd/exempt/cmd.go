@@ -3,7 +3,6 @@
 package exempt
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -526,15 +525,13 @@ func renderHistory(w io.Writer, entries []appexempt.AcknowledgmentEntry, format 
 		}
 		return nil
 	}
-	if format == "json" {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		if err := enc.Encode(entries); err != nil {
-			return fmt.Errorf("encode history JSON: %w", err)
-		}
-		return nil
+	renderer, err := NewHistoryRenderer(format)
+	if err != nil {
+		return err
 	}
-	appexempt.WriteHistory(w, entries)
+	if err := renderer.Render(w, entries); err != nil {
+		return fmt.Errorf("render output: %w", err)
+	}
 	return nil
 }
 

@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -17,54 +15,8 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/metadata"
-	"github.com/sufield/stave/internal/util/jsonutil"
 	"github.com/sufield/stave/pkg/stave"
 )
-
-// renderGate writes the gate result in JSON (when isJSON) or text.
-// Text is suppressed when quiet is set. Takes an io.Writer so the
-// caller owns the cobra boundary.
-//
-// JSON is rendered through gateJSON so the wire format stays
-// compatible with the previous usecase.GateResponse shape — operators
-// running the JSON output through scripts or downstream gates rely
-// on those exact field names.
-func renderGate(w io.Writer, result *stave.GateResult, isJSON, quiet bool) error {
-	if isJSON {
-		if err := jsonutil.WriteIndented(w, gateJSON{
-			Policy:            string(result.Policy),
-			Pass:              result.Passed,
-			Reason:            result.Reason,
-			CheckedAt:         result.CheckedAt,
-			CurrentViolations: result.CurrentViolations,
-			NewViolations:     result.NewViolations,
-			OverdueUpcoming:   result.OverdueCount,
-		}); err != nil {
-			return fmt.Errorf("write output: %w", err)
-		}
-		return nil
-	}
-	if quiet {
-		return nil
-	}
-	_, err := fmt.Fprintf(w, "Gate %s (%s): %s\n", result.PassLabel(), result.Policy, result.Reason)
-	return err
-}
-
-// gateJSON is the wire-format envelope for the JSON output. Field
-// names and time-encoding match the prior usecase.GateResponse shape
-// (time.Time's default RFC3339Nano marshaling) so existing CI scripts
-// that grep `pass` or `current_violations` continue to work after
-// the migration.
-type gateJSON struct {
-	Policy            string    `json:"policy"`
-	Pass              bool      `json:"pass"`
-	Reason            string    `json:"reason"`
-	CheckedAt         time.Time `json:"checked_at"`
-	CurrentViolations int       `json:"current_violations,omitempty"`
-	NewViolations     int       `json:"new_violations,omitempty"`
-	OverdueUpcoming   int       `json:"overdue_upcoming,omitempty"`
-}
 
 // Deps is retained as an empty struct for ABI compatibility with
 // callers that pass it; the gate command now wires its own adapters
@@ -184,8 +136,12 @@ Exit Codes:
 				result.MergeTeamVerdict(teamResult.TeamID, teamResult.Passed, teamResult.Reason)
 			}
 
-			if renderErr := renderGate(cfg.Stdout, result, cfg.Format.IsJSON(), cfg.Quiet); renderErr != nil {
+			renderer, renderErr := NewRenderer(cfg.Format, cfg.Quiet)
+			if renderErr != nil {
 				return renderErr
+			}
+			if err := renderer.Render(cfg.Stdout, result); err != nil {
+				return fmt.Errorf("render gate output: %w", err)
 			}
 
 			return result.ExitError()

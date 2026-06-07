@@ -6,23 +6,13 @@ import (
 	"slices"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
-	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
-// ShowPresenter handles the formatting and output of the configuration summary.
+// ShowPresenter holds the text layout for the configuration summary.
+// Format dispatch lives in the typed NewShowRenderer factory
+// (renderer.go); ShowTextRenderer delegates here for the text path.
 type ShowPresenter struct {
 	Stdout io.Writer
-}
-
-// Render writes the configuration summary in the requested format.
-func (p *ShowPresenter) Render(out appconfig.EffectiveConfig, json bool) error {
-	if json {
-		if err := jsonutil.WriteIndented(p.Stdout, out); err != nil {
-			return fmt.Errorf("write output: %w", err)
-		}
-		return nil
-	}
-	return p.renderText(out)
 }
 
 func (p *ShowPresenter) renderText(out appconfig.EffectiveConfig) error {

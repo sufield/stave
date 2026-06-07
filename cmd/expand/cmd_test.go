@@ -134,7 +134,11 @@ func TestRenderJSON_IncludesArchetypeAndControls(t *testing.T) {
 
 func TestRenderList_TextLists12Archetypes(t *testing.T) {
 	var buf bytes.Buffer
-	if err := renderList(&buf, "text", sampleControls()); err != nil {
+	r, err := NewListRenderer("text")
+	if err != nil {
+		t.Fatalf("NewListRenderer: %v", err)
+	}
+	if err := r.Render(&buf, sampleControls()); err != nil {
 		t.Fatalf("renderList: %v", err)
 	}
 	out := buf.String()
@@ -147,7 +151,11 @@ func TestRenderList_TextLists12Archetypes(t *testing.T) {
 
 func TestRenderList_JSONIncludesCounts(t *testing.T) {
 	var buf bytes.Buffer
-	if err := renderList(&buf, "json", sampleControls()); err != nil {
+	r, err := NewListRenderer("json")
+	if err != nil {
+		t.Fatalf("NewListRenderer: %v", err)
+	}
+	if err := r.Render(&buf, sampleControls()); err != nil {
 		t.Fatalf("renderList json: %v", err)
 	}
 	var got struct {

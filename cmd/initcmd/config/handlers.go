@@ -142,8 +142,14 @@ func (r *Runner) Show(_ context.Context, eval *appconfig.GovernanceResolver, for
 		return errors.New("project config evaluator not available; ensure bootstrap runs before this command")
 	}
 	out := buildShowOutput(eval)
-	presenter := &ShowPresenter{Stdout: r.Stdout}
-	return presenter.Render(out, format.IsJSON())
+	renderer, err := NewShowRenderer(format)
+	if err != nil {
+		return err
+	}
+	if err := renderer.Render(r.Stdout, out); err != nil {
+		return fmt.Errorf("render output: %w", err)
+	}
+	return nil
 }
 
 // --- Internal Helpers ---

@@ -100,16 +100,14 @@ func runScorecard(stdout io.Writer, opts *options) error {
 
 	report := appsc.Compute(assessment.Findings, frameworks)
 
-	switch {
-	case opts.Format.IsJSON():
-		enc := json.NewEncoder(stdout)
-		enc.SetIndent("", "  ")
-		return enc.Encode(report)
-	case opts.Format.IsMarkdown():
-		return writeMarkdown(stdout, report)
-	default:
-		return writeTable(stdout, report)
+	renderer, err := NewRenderer(opts.Format)
+	if err != nil {
+		return &ui.UserError{Err: err}
 	}
+	if err := renderer.Render(stdout, report); err != nil {
+		return fmt.Errorf("render output: %w", err)
+	}
+	return nil
 }
 
 func writeTable(w io.Writer, r *appsc.Report) error {

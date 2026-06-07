@@ -8,7 +8,6 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appstatus "github.com/sufield/stave/internal/app/status"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // config defines the parameters for the status check.
@@ -61,14 +60,12 @@ func (r *Runner) Run(cfg config) error {
 }
 
 func (r *Runner) report(cfg config, res appstatus.Result) error {
-	if cfg.Format.IsJSON() {
-		if err := jsonutil.WriteIndented(cfg.Stdout, res); err != nil {
-			return fmt.Errorf("write output: %w", err)
-		}
-		return nil
+	renderer, err := NewRenderer(cfg.Format)
+	if err != nil {
+		return err
 	}
-	if err := appstatus.FormatText(cfg.Stdout, res); err != nil {
-		return fmt.Errorf("render status text: %w", err)
+	if err := renderer.Render(cfg.Stdout, res); err != nil {
+		return fmt.Errorf("render output: %w", err)
 	}
 	return nil
 }

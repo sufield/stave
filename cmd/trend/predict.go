@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/app/trendpredict"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/metadata"
-	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 func newPredictCmd() *cobra.Command {
@@ -68,11 +68,11 @@ Exit Codes:
 				Now:             now,
 			})
 
-			stdout := cmd.OutOrStdout()
-			if format == "json" {
-				return jsonutil.WriteIndented(stdout, prediction)
+			renderer, rendErr := NewPredictRenderer(format)
+			if rendErr != nil {
+				return &ui.UserError{Err: rendErr}
 			}
-			return renderPredictText(stdout, prediction)
+			return renderer.Render(cmd.OutOrStdout(), prediction)
 		},
 	}
 

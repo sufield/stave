@@ -1,9 +1,7 @@
 package doctor
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -88,14 +86,12 @@ Exit Codes:
 
 			stdout := cliflags.GetGlobalFlags(cmd).ResolveStdout(cmd.OutOrStdout())
 
-			if fmtValue.IsJSON() {
-				if renderErr := reportJSON(stdout, resp); renderErr != nil {
-					return renderErr
-				}
-			} else {
-				if renderErr := reportText(stdout, resp); renderErr != nil {
-					return renderErr
-				}
+			renderer, rendererErr := NewRenderer(fmtValue)
+			if rendererErr != nil {
+				return rendererErr
+			}
+			if renderErr := renderer.Render(stdout, resp); renderErr != nil {
+				return fmt.Errorf("render doctor output: %w", renderErr)
 			}
 
 			if !resp.AllPassed {
@@ -111,34 +107,4 @@ Exit Codes:
 	opts.BindFlags(cmd)
 
 	return cmd
-}
-
-func reportJSON(w io.Writer, resp setup.DoctorResponse) error {
-	payload := struct {
-		Ready  bool                `json:"ready"`
-		Checks []setup.DoctorCheck `json:"checks"`
-	}{
-		Ready:  resp.AllPassed,
-		Checks: resp.Checks,
-	}
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	if err := enc.Encode(payload); err != nil {
-		return fmt.Errorf("encode doctor report JSON: %w", err)
-	}
-	return nil
-}
-
-func reportText(w io.Writer, resp setup.DoctorResponse) error {
-	for _, c := range resp.Checks {
-		if _, err := fmt.Fprintf(w, "[%s] %s: %s\n", c.Status, c.Name, c.Message); err != nil {
-			return fmt.Errorf("write doctor check status: %w", err)
-		}
-		if c.Fix != "" {
-			if _, err := fmt.Fprintf(w, "      Fix: %s\n", c.Fix); err != nil {
-				return fmt.Errorf("write doctor check fix: %w", err)
-			}
-		}
-	}
-	return nil
 }

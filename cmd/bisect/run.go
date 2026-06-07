@@ -8,6 +8,7 @@ import (
 	"time"
 
 	appbisect "github.com/sufield/stave/internal/app/bisect"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -109,5 +110,12 @@ func runBisect(ctx context.Context, in Input) error {
 	}
 
 	// Output.
-	return writeOutput(in.Stdout, in.Stderr, result, opts.Format, in.Logger)
+	renderer, err := NewRenderer(opts.Format)
+	if err != nil {
+		return &ui.UserError{Err: err}
+	}
+	if err := renderer.Render(in.Stdout, in.Stderr, result, in.Logger); err != nil {
+		return fmt.Errorf("render output: %w", err)
+	}
+	return nil
 }

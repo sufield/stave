@@ -15,7 +15,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/platform/metadata"
-	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // --- Domain Types ---
@@ -97,22 +96,12 @@ func (r *Runner) List(ctx context.Context, format appcontracts.OutputFormat) err
 		return strings.Compare(a.Name, b.Name)
 	})
 
-	if format.IsJSON() {
-		if entries == nil {
-			entries = []Entry{}
-		}
-		if err := jsonutil.WriteIndented(r.Stdout, entries); err != nil {
-			return fmt.Errorf("write output: %w", err)
-		}
-		return nil
+	renderer, err := NewRenderer(format)
+	if err != nil {
+		return err
 	}
-
-	if len(entries) == 0 {
-		fmt.Fprintln(r.Stdout, "No aliases defined.")
-		return nil
-	}
-	for _, e := range entries {
-		fmt.Fprintf(r.Stdout, "%s -> %s\n", e.Name, e.Command)
+	if err := renderer.Render(r.Stdout, entries); err != nil {
+		return fmt.Errorf("render output: %w", err)
 	}
 	return nil
 }

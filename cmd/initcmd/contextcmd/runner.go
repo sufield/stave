@@ -8,7 +8,6 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	contexts "github.com/sufield/stave/internal/config"
-	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // --- Domain Models ---
@@ -69,27 +68,12 @@ func (r *Runner) List(st *contexts.Store, format appcontracts.OutputFormat) erro
 		})
 	}
 
-	if format.IsJSON() {
-		if err := jsonutil.WriteIndented(r.Stdout, items); err != nil {
-			return fmt.Errorf("write output: %w", err)
-		}
-		return nil
-	}
-
-	if len(items) == 0 {
-		_, err := fmt.Fprintln(r.Stdout, "No contexts configured.")
+	renderer, err := NewListRenderer(format)
+	if err != nil {
 		return err
 	}
-	for _, item := range items {
-		suffix := ""
-		if item.Active {
-			suffix = " (active)"
-		}
-		fmt.Fprintf(r.Stdout, "%s%s\n", item.Name, suffix)
-		fmt.Fprintf(r.Stdout, "  root: %s\n", item.ProjectRoot)
-		fmt.Fprintf(r.Stdout, "  config: %s\n", emptyDash(item.ProjectConfig))
-		fmt.Fprintf(r.Stdout, "  controls: %s\n", emptyDash(item.ControlsDir))
-		fmt.Fprintf(r.Stdout, "  observations: %s\n", emptyDash(item.ObserveDir))
+	if err := renderer.Render(r.Stdout, items); err != nil {
+		return fmt.Errorf("render output: %w", err)
 	}
 	return nil
 }
@@ -134,23 +118,14 @@ func (r *Runner) Use(st *contexts.Store, name string) error {
 
 // Show renders the currently selected context.
 func (r *Runner) Show(format appcontracts.OutputFormat, res ShowResult) error {
-	if format.IsJSON() {
-		if err := jsonutil.WriteIndented(r.Stdout, res); err != nil {
-			return fmt.Errorf("write output: %w", err)
-		}
-		return nil
+	renderer, err := NewShowRenderer(format)
+	if err != nil {
+		return err
 	}
-
-	_, err := fmt.Fprintf(r.Stdout, "Context: %s (%s)\nStore: %s\nProject root: %s\nConfig: %s\nControls default: %s\nObservations default: %s\n",
-		res.Name,
-		res.SelectedBy,
-		res.StoreFile,
-		res.ProjectRoot,
-		emptyDash(res.ProjectConfig),
-		emptyDash(res.ControlsDir),
-		emptyDash(res.ObserveDir),
-	)
-	return err
+	if err := renderer.Render(r.Stdout, res); err != nil {
+		return fmt.Errorf("render output: %w", err)
+	}
+	return nil
 }
 
 // Delete removes a context from the store.

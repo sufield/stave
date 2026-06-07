@@ -11,7 +11,6 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	staveenv "github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/platform/metadata"
-	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // --- Domain Types ---
@@ -52,13 +51,14 @@ func listEnvVars(cfg ListConfig) error {
 		}
 	}
 
-	if cfg.Format.IsJSON() {
-		if err := jsonutil.WriteIndented(cfg.Stdout, entries); err != nil {
-			return fmt.Errorf("write output: %w", err)
-		}
-		return nil
+	renderer, err := NewRenderer(cfg.Format)
+	if err != nil {
+		return err
 	}
-	return renderEnvText(cfg.Stdout, entries)
+	if err := renderer.Render(cfg.Stdout, entries); err != nil {
+		return fmt.Errorf("render output: %w", err)
+	}
+	return nil
 }
 
 func renderEnvText(w io.Writer, entries []Entry) error {

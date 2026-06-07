@@ -259,7 +259,10 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error 
 		facts = sirfacts.FilterOutCatalog(facts)
 	}
 
-	return renderer.Render(w, Payload{Doc: doc, Facts: facts, ClosedWorld: opts.ClosedWorld})
+	if err := renderer.Render(w, Payload{Doc: doc, Facts: facts, ClosedWorld: opts.ClosedWorld}); err != nil {
+		return fmt.Errorf("render output: %w", err)
+	}
+	return nil
 }
 
 // validateAndReport runs a lightweight evaluation pass against

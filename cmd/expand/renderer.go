@@ -57,3 +57,47 @@ func NewRenderer(format string) (Renderer, error) {
 	}
 	return nil, fmt.Errorf("unsupported format %q (expected: text | json)", format)
 }
+
+// --- ListRenderer ---
+//
+// `stave expand --list` renders a different payload (the archetype
+// catalog summary derived from the loaded controls) than the
+// single-archetype expand above. Following the multi-payload
+// convention (cmd/nep, cmd/consolidate), it gets its own Renderer
+// interface keyed by its payload type and a sibling factory sharing
+// the same format-string contract.
+
+// ListRenderer is the polymorphic format-dispatch interface for
+// `stave expand --list`. Concrete implementations delegate to the
+// existing renderListText / renderListJSON helpers, which are
+// unchanged.
+type ListRenderer interface {
+	Render(w io.Writer, controls []policy.ControlDefinition) error
+}
+
+// ListJSONRenderer emits the archetype catalog summary as JSON.
+type ListJSONRenderer struct{}
+
+// Render implements ListRenderer.
+func (ListJSONRenderer) Render(w io.Writer, controls []policy.ControlDefinition) error {
+	return renderListJSON(w, controls)
+}
+
+// ListTextRenderer emits the default human-readable catalog summary.
+type ListTextRenderer struct{}
+
+// Render implements ListRenderer.
+func (ListTextRenderer) Render(w io.Writer, controls []policy.ControlDefinition) error {
+	return renderListText(w, controls)
+}
+
+// NewListRenderer maps a format string to its concrete ListRenderer.
+func NewListRenderer(format string) (ListRenderer, error) {
+	switch format {
+	case "json":
+		return ListJSONRenderer{}, nil
+	case "text", "":
+		return ListTextRenderer{}, nil
+	}
+	return nil, fmt.Errorf("unsupported format %q (expected: text | json)", format)
+}

@@ -13,6 +13,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/app/catalogquality"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/metadata"
 )
@@ -72,13 +73,12 @@ Exit Codes:
 
 			report := catalogquality.Analyze(input)
 
-			stdout := cmd.OutOrStdout()
-			if format == "json" {
-				if encErr := writeQualityJSON(stdout, report); encErr != nil {
-					return encErr
-				}
-			} else {
-				writeQualityTable(stdout, report)
+			renderer, err := NewQualityRenderer(format)
+			if err != nil {
+				return &ui.UserError{Err: err}
+			}
+			if err := renderer.Render(cmd.OutOrStdout(), report); err != nil {
+				return fmt.Errorf("render quality output: %w", err)
 			}
 
 			if minCompleteness > 0 && report.OverallPct < minCompleteness {

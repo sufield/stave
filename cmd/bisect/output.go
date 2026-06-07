@@ -8,18 +8,7 @@ import (
 
 	appbisect "github.com/sufield/stave/internal/app/bisect"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/util/jsonutil"
 )
-
-func writeOutput(stdout, stderr io.Writer, result appbisect.Result, format string, logger *slog.Logger) error {
-	if format == "json" {
-		if err := jsonutil.WriteIndented(stdout, result); err != nil {
-			return fmt.Errorf("write output: %w", err)
-		}
-		return nil
-	}
-	return writeText(stdout, stderr, result, logger)
-}
 
 func writeText(stdout, stderr io.Writer, result appbisect.Result, _ *slog.Logger) error {
 	modeName := result.ModeLabel()

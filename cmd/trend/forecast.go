@@ -1,7 +1,6 @@
 package trend
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -14,6 +13,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/sla"
 	"github.com/sufield/stave/internal/app/forecast"
 	appscore "github.com/sufield/stave/internal/app/score"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/metadata"
 )
@@ -96,7 +96,11 @@ Exit Codes:
 				return fmt.Errorf("compute forecast: %w", err)
 			}
 
-			return renderForecast(cmd.OutOrStdout(), result, format)
+			renderer, rendErr := NewForecastRenderer(format)
+			if rendErr != nil {
+				return &ui.UserError{Err: rendErr}
+			}
+			return renderer.Render(cmd.OutOrStdout(), result)
 		},
 	}
 
@@ -153,19 +157,6 @@ func buildMTTRHistory(assessments []*report.Assessment) map[string][]float64 {
 	}
 
 	return sevTotals
-}
-
-// renderForecast writes the forecast result in the requested
-// format. Takes an io.Writer so the caller owns the cobra
-// boundary; this function stays off the cobra import graph.
-func renderForecast(w io.Writer, r *forecast.Result, format string) error {
-	if format == "json" {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		return enc.Encode(r)
-	}
-	writeForecastTable(w, r)
-	return nil
 }
 
 func writeForecastTable(w io.Writer, r *forecast.Result) {

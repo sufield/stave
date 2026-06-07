@@ -121,7 +121,14 @@ func runExpand(ctx context.Context, w io.Writer, opts *options, newCtlRepo compo
 	}
 
 	if opts.List {
-		return renderList(w, opts.Format, controls)
+		listRenderer, listErr := NewListRenderer(opts.Format)
+		if listErr != nil {
+			return inputErrorf("%s", listErr.Error())
+		}
+		if err := listRenderer.Render(w, controls); err != nil {
+			return fmt.Errorf("render expansion: %w", err)
+		}
+		return nil
 	}
 
 	archID := opts.Archetype
@@ -303,35 +310,33 @@ type findingEntry struct {
 	Name string `json:"name,omitempty"`
 }
 
-// renderList writes the catalog summary in text or JSON form.
-func renderList(w io.Writer, format string, controls []policy.ControlDefinition) error {
-	counts := make(map[string]int, len(archetype.Catalog))
-	for i := range controls {
-		if !controls[i].Archetype.IsEmpty() {
-			counts[controls[i].Archetype.String()]++
-		}
-	}
+// renderListJSON emits the catalog summary in JSON form.
+func renderListJSON(w io.Writer, controls []policy.ControlDefinition) error {
+	counts := archetypeCounts(controls)
 
-	if format == "json" {
-		type entry struct {
-			ID           string `json:"id"`
-			Name         string `json:"name"`
-			Description  string `json:"description"`
-			ControlCount int    `json:"control_count"`
-		}
-		out := make([]entry, 0, len(archetype.Catalog))
-		for _, a := range archetype.Catalog {
-			out = append(out, entry{
-				ID:           a.ID.String(),
-				Name:         a.Name,
-				Description:  a.Description,
-				ControlCount: counts[a.ID.String()],
-			})
-		}
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		return enc.Encode(map[string]any{"archetypes": out})
+	type entry struct {
+		ID           string `json:"id"`
+		Name         string `json:"name"`
+		Description  string `json:"description"`
+		ControlCount int    `json:"control_count"`
 	}
+	out := make([]entry, 0, len(archetype.Catalog))
+	for _, a := range archetype.Catalog {
+		out = append(out, entry{
+			ID:           a.ID.String(),
+			Name:         a.Name,
+			Description:  a.Description,
+			ControlCount: counts[a.ID.String()],
+		})
+	}
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	return enc.Encode(map[string]any{"archetypes": out})
+}
+
+// renderListText writes the catalog summary in human-readable text form.
+func renderListText(w io.Writer, controls []policy.ControlDefinition) error {
+	counts := archetypeCounts(controls)
 
 	fmt.Fprintln(w, "Archetypes:")
 	fmt.Fprintln(w)
@@ -342,6 +347,18 @@ func renderList(w io.Writer, format string, controls []policy.ControlDefinition)
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "Use: stave expand --archetype <id>")
 	return nil
+}
+
+// archetypeCounts tallies controls per archetype ID, skipping
+// controls with no archetype field.
+func archetypeCounts(controls []policy.ControlDefinition) map[string]int {
+	counts := make(map[string]int, len(archetype.Catalog))
+	for i := range controls {
+		if !controls[i].Archetype.IsEmpty() {
+			counts[controls[i].Archetype.String()]++
+		}
+	}
+	return counts
 }
 
 // --- internal helpers ---

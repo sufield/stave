@@ -13,7 +13,6 @@ import (
 	"github.com/sufield/stave/internal/app/readiness"
 	"github.com/sufield/stave/internal/cli/ui"
 	validation "github.com/sufield/stave/internal/core/schemaval"
-	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
 // ReadinessValidator evaluates controls against observations and returns a result.
@@ -88,17 +87,14 @@ func (r *ReadinessRunner) writeReport(cfg ReadinessConfig, report validation.Rea
 	if cfg.Quiet {
 		return nil
 	}
-	if cfg.Format.IsJSON() {
-		if err := jsonutil.WriteIndented(cfg.Stdout, readinessJSONReport{
-			ReadinessAssessment: report,
-			NextCommand:         report.NextCommand(),
-		}); err != nil {
-			return fmt.Errorf("write output: %w", err)
-		}
-		return nil
+	renderer, err := NewReadinessRenderer(cfg.Format)
+	if err != nil {
+		return err
 	}
-	rep := &Reporter{Stdout: cfg.Stdout, Stderr: cfg.Stderr}
-	return rep.ReportPlan(report)
+	if err := renderer.Render(cfg.Stdout, cfg.Stderr, report); err != nil {
+		return fmt.Errorf("render output: %w", err)
+	}
+	return nil
 }
 
 // readinessJSONReport enriches the domain Report with the CLI-specific
