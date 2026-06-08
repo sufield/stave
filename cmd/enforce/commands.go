@@ -45,7 +45,7 @@ func NewGateCmd(deps gate.Deps) *cobra.Command {
 func NewCiDiffCmd() *cobra.Command { return cidiff.NewCmd() }
 
 // NewBaselineCmd constructs the baselinecmd component.
-func NewBaselineCmd(deps baseline.Deps) *cobra.Command { return baseline.NewCmd(deps) }
+func NewBaselineCmd() *cobra.Command { return baseline.NewCmd() }
 
 // NewStatusCmd constructs the statuscmd component.
 func NewStatusCmd() *cobra.Command { return status.NewCmd() }

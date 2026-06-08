@@ -1,7 +1,7 @@
 package export
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
@@ -9,10 +9,9 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	appocsf "github.com/sufield/stave/internal/app/ocsf"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 func newOCSFCmd() *cobra.Command {
@@ -49,24 +48,16 @@ func runOCSF(stdout io.Writer, assessmentPath, outputPath string) error {
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("read assessment: %w", err)}
 	}
-	var assessment struct {
-		Findings []remediation.Finding `json:"findings"`
-	}
-	if unmarshalErr := json.Unmarshal(data, &assessment); unmarshalErr != nil {
-		return &ui.UserError{Err: fmt.Errorf("parse assessment: %w", unmarshalErr)}
-	}
-
-	events := appocsf.Export(assessment.Findings)
-
-	if err := cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
-		// NDJSON: one event per line.
-		enc := json.NewEncoder(w)
-		for i := range events {
-			if encErr := enc.Encode(&events[i]); encErr != nil {
-				return fmt.Errorf("encode event: %w", encErr)
-			}
+	out, err := stave.ExportOCSF(data)
+	if err != nil {
+		if errors.Is(err, stave.ErrInvalidInput) {
+			return &ui.UserError{Err: err}
 		}
-		return nil
+		return err //nolint:wrapcheck // facade already wrapped; preserve exit code.
+	}
+	if err := cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
+		_, werr := w.Write(out)
+		return werr
 	}); err != nil {
 		return fmt.Errorf("write OCSF export: %w", err)
 	}

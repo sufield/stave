@@ -1,7 +1,6 @@
-package exportsir
+package cliapi
 
 import (
-	"bytes"
 	"strings"
 	"testing"
 
@@ -13,9 +12,9 @@ import (
 	"github.com/sufield/stave/internal/core/sirfacts"
 )
 
-// makePredicateRule constructs a leaf PredicateRule with the
-// supplied field path. The op + value are filler — the validator
-// only reads Field, so tests can keep the rest minimal.
+// These exercise the SIR validation helpers that moved here from
+// cmd/exportsir.
+
 func makePredicateRule(field string) policy.PredicateRule {
 	return policy.PredicateRule{
 		Field: predicate.NewFieldPath(field),
@@ -24,7 +23,6 @@ func makePredicateRule(field string) policy.PredicateRule {
 }
 
 func TestValidation_DetectsProjectionGap(t *testing.T) {
-	t.Parallel()
 	findings := []evaluation.Finding{{
 		ControlID: kernel.ControlID("CTL.COGNITO.MFA.001"),
 		AssetID:   asset.ID("arn:aws:cognito-idp:us-east-1:111122223333:userpool/abc"),
@@ -68,25 +66,18 @@ func TestValidation_DetectsProjectionGap(t *testing.T) {
 	}
 }
 
-// TestValidation_NoGapWhenCovered confirms that a fact with the
-// same property path the control evaluates suppresses the warning.
 func TestValidation_NoGapWhenCovered(t *testing.T) {
-	t.Parallel()
 	findings := []evaluation.Finding{{
 		ControlID: kernel.ControlID("CTL.COGNITO.MFA.001"),
 		AssetID:   asset.ID("arn:aws:cognito-idp:us-east-1:111122223333:userpool/abc"),
 	}}
-	facts := []sirfacts.Fact{
-		{
-			FactID:    "ccccccccc",
-			Subject:   "arn:aws:cognito-idp:us-east-1:111122223333:userpool/abc",
-			Predicate: "has_mfa_enforced",
-			Object:    "false",
-			Provenance: &sirfacts.Provenance{
-				PropertyPath: "identity.governance.mfa_enforced",
-			},
-		},
-	}
+	facts := []sirfacts.Fact{{
+		FactID:     "ccccccccc",
+		Subject:    "arn:aws:cognito-idp:us-east-1:111122223333:userpool/abc",
+		Predicate:  "has_mfa_enforced",
+		Object:     "false",
+		Provenance: &sirfacts.Provenance{PropertyPath: "identity.governance.mfa_enforced"},
+	}}
 	controls := []policy.ControlDefinition{{
 		ID: kernel.ControlID("CTL.COGNITO.MFA.001"),
 		UnsafePredicate: policy.UnsafePredicate{
@@ -95,89 +86,48 @@ func TestValidation_NoGapWhenCovered(t *testing.T) {
 			},
 		},
 	}}
-	warnings := ValidateSIRCompleteness(findings, facts, controls)
-	if len(warnings) != 0 {
+	if warnings := ValidateSIRCompleteness(findings, facts, controls); len(warnings) != 0 {
 		t.Errorf("want no warnings, got %d: %+v", len(warnings), warnings)
 	}
 }
 
-// TestValidation_BidirectionalCoverage confirms the substring
-// match works in either direction: a fact path that is deeper
-// than the control path (control evaluates a parent, fact
-// records a leaf) AND a fact path that is shallower than the
-// control path (control evaluates a leaf, fact summarises a
-// parent) both count as coverage.
 func TestValidation_BidirectionalCoverage(t *testing.T) {
-	t.Parallel()
-	findings := []evaluation.Finding{{
-		ControlID: "CTL.IAM.OVERPERM.001",
-		AssetID:   "arn:aws:iam::111:role/x",
+	findings := []evaluation.Finding{{ControlID: "CTL.IAM.OVERPERM.001", AssetID: "arn:aws:iam::111:role/x"}}
+	facts := []sirfacts.Fact{{
+		FactID:     "deeper",
+		Subject:    "arn:aws:iam::111:role/x",
+		Provenance: &sirfacts.Provenance{PropertyPath: "identity.policies.attached_policies[0].statements[0].Action"},
 	}}
-	// Fact path is deeper than control path.
-	facts := []sirfacts.Fact{
-		{
-			FactID:  "deeper",
-			Subject: "arn:aws:iam::111:role/x",
-			Provenance: &sirfacts.Provenance{
-				PropertyPath: "identity.policies.attached_policies[0].statements[0].Action",
-			},
-		},
-	}
 	controls := []policy.ControlDefinition{{
 		ID: "CTL.IAM.OVERPERM.001",
 		UnsafePredicate: policy.UnsafePredicate{
-			All: []policy.PredicateRule{
-				makePredicateRule("properties.identity.policies.attached_policies"),
-			},
+			All: []policy.PredicateRule{makePredicateRule("properties.identity.policies.attached_policies")},
 		},
 	}}
-	warnings := ValidateSIRCompleteness(findings, facts, controls)
-	if len(warnings) != 0 {
+	if warnings := ValidateSIRCompleteness(findings, facts, controls); len(warnings) != 0 {
 		t.Errorf("want no warnings (control path is prefix of fact path), got %+v", warnings)
 	}
 }
 
-// TestValidation_NoFindingsNoWarnings — there's nothing to
-// validate when CEL didn't fire on anything. This is the common
-// remediated-fixture path; the validator must be silent.
 func TestValidation_NoFindingsNoWarnings(t *testing.T) {
-	t.Parallel()
-	warnings := ValidateSIRCompleteness(nil, nil, nil)
-	if warnings != nil {
+	if warnings := ValidateSIRCompleteness(nil, nil, nil); warnings != nil {
 		t.Errorf("want nil warnings on empty input, got %+v", warnings)
 	}
 }
 
-// TestValidation_UnknownControlIDIsIgnored — if a finding
-// references a control ID not in the catalog, skip it silently.
-// That's a load-time bug (mismatched catalog vs report), not a
-// projection gap.
 func TestValidation_UnknownControlIDIsIgnored(t *testing.T) {
-	t.Parallel()
-	findings := []evaluation.Finding{{
-		ControlID: "CTL.UNKNOWN.001",
-		AssetID:   "arn:aws:s3:::x",
+	findings := []evaluation.Finding{{ControlID: "CTL.UNKNOWN.001", AssetID: "arn:aws:s3:::x"}}
+	facts := []sirfacts.Fact{{
+		FactID:     "x",
+		Subject:    "arn:aws:s3:::x",
+		Provenance: &sirfacts.Provenance{PropertyPath: "type"},
 	}}
-	facts := []sirfacts.Fact{
-		{
-			FactID:     "x",
-			Subject:    "arn:aws:s3:::x",
-			Provenance: &sirfacts.Provenance{PropertyPath: "type"},
-		},
-	}
-	warnings := ValidateSIRCompleteness(findings, facts, nil)
-	if len(warnings) != 0 {
+	if warnings := ValidateSIRCompleteness(findings, facts, nil); len(warnings) != 0 {
 		t.Errorf("unknown control should produce no warning, got %+v", warnings)
 	}
 }
 
-// TestExtractPredicateFieldPaths_StripsPropertiesPrefix confirms
-// the leading "properties." prefix common to control YAML field
-// paths is stripped — the SIR fact provenance.PropertyPath is
-// observation-relative (no prefix), so paths must align before
-// comparison.
 func TestExtractPredicateFieldPaths_StripsPropertiesPrefix(t *testing.T) {
-	t.Parallel()
 	pred := policy.UnsafePredicate{
 		All: []policy.PredicateRule{
 			makePredicateRule("properties.identity.governance.mfa_enforced"),
@@ -196,19 +146,13 @@ func TestExtractPredicateFieldPaths_StripsPropertiesPrefix(t *testing.T) {
 	}
 }
 
-// TestExtractPredicateFieldPaths_DeduplicatesAcrossNestedBlocks
-// confirms a control with the same field repeated under different
-// any/all branches collapses to a single path entry.
 func TestExtractPredicateFieldPaths_DeduplicatesAcrossNestedBlocks(t *testing.T) {
-	t.Parallel()
 	pred := policy.UnsafePredicate{
 		Any: []policy.PredicateRule{
-			{
-				All: []policy.PredicateRule{
-					makePredicateRule("properties.network.is_private"),
-					makePredicateRule("properties.network.is_private"),
-				},
-			},
+			{All: []policy.PredicateRule{
+				makePredicateRule("properties.network.is_private"),
+				makePredicateRule("properties.network.is_private"),
+			}},
 			makePredicateRule("properties.network.is_private"),
 		},
 	}
@@ -218,24 +162,15 @@ func TestExtractPredicateFieldPaths_DeduplicatesAcrossNestedBlocks(t *testing.T)
 	}
 }
 
-// TestRenderValidationWarnings_FormatStable renders a fixed set
-// of warnings to a buffer and checks the canonical phrases the
-// CLI relies on (the leading "WARNING:" tag, the "Asset:" prefix
-// for the asset line, the "n SIR projection gap(s)" header).
-// Format changes that break grep-based CI checks would surface
-// here.
-func TestRenderValidationWarnings_FormatStable(t *testing.T) {
-	t.Parallel()
-	buf := &bytes.Buffer{}
-	renderValidationWarnings(buf, []ValidationWarning{
-		{
-			ControlID: "CTL.X.001",
-			AssetID:   "arn:aws:s3:::a",
-			CELPath:   "x.y",
-			Message:   "Control CTL.X.001 evaluates x.y but no SIR fact covers this property path. SMT queries cannot distinguish vulnerable from remediated for this control.",
-		},
-	})
-	out := buf.String()
+// TestRenderSIRValidation_FormatStable checks the grep-relied-on phrases
+// for the gap report (the renderer now also emits the no-gaps banner).
+func TestRenderSIRValidation_FormatStable(t *testing.T) {
+	out := string(renderSIRValidation([]ValidationWarning{{
+		ControlID: "CTL.X.001",
+		AssetID:   "arn:aws:s3:::a",
+		CELPath:   "x.y",
+		Message:   "Control CTL.X.001 evaluates x.y but no SIR fact covers this property path. SMT queries cannot distinguish vulnerable from remediated for this control.",
+	}}))
 	if !strings.Contains(out, "1 SIR projection gap(s) detected:") {
 		t.Errorf("missing header, got: %s", out)
 	}
@@ -247,45 +182,29 @@ func TestRenderValidationWarnings_FormatStable(t *testing.T) {
 	}
 }
 
-// TestRenderValidationWarnings_EmptyIsSilent — no warnings, no
-// output. The "no gaps" banner is the caller's responsibility.
-func TestRenderValidationWarnings_EmptyIsSilent(t *testing.T) {
-	t.Parallel()
-	buf := &bytes.Buffer{}
-	renderValidationWarnings(buf, nil)
-	if buf.Len() != 0 {
-		t.Errorf("empty input should produce no output, got: %q", buf.String())
+// TestRenderSIRValidation_EmptyShowsBanner — no gaps emits the all-clear
+// banner (the command writes it to stderr only when --validate is set).
+func TestRenderSIRValidation_EmptyShowsBanner(t *testing.T) {
+	out := string(renderSIRValidation(nil))
+	if !strings.Contains(out, "all CEL-evaluated properties are projected. No gaps.") {
+		t.Errorf("empty input should show the no-gaps banner, got: %q", out)
 	}
 }
 
-// TestValidation_DeterministicOrder confirms identical input
-// produces byte-identical warning ordering across runs (the
-// internal map iterations would otherwise scramble the result).
 func TestValidation_DeterministicOrder(t *testing.T) {
-	t.Parallel()
 	findings := []evaluation.Finding{
 		{ControlID: "CTL.B", AssetID: "arn:b"},
 		{ControlID: "CTL.A", AssetID: "arn:a"},
 	}
-	facts := []sirfacts.Fact{} // intentionally empty so every CEL path warns
+	facts := []sirfacts.Fact{}
 	controls := []policy.ControlDefinition{
-		{
-			ID: "CTL.A",
-			UnsafePredicate: policy.UnsafePredicate{
-				All: []policy.PredicateRule{
-					makePredicateRule("properties.zzz"),
-					makePredicateRule("properties.aaa"),
-				},
-			},
-		},
-		{
-			ID: "CTL.B",
-			UnsafePredicate: policy.UnsafePredicate{
-				All: []policy.PredicateRule{
-					makePredicateRule("properties.mmm"),
-				},
-			},
-		},
+		{ID: "CTL.A", UnsafePredicate: policy.UnsafePredicate{All: []policy.PredicateRule{
+			makePredicateRule("properties.zzz"),
+			makePredicateRule("properties.aaa"),
+		}}},
+		{ID: "CTL.B", UnsafePredicate: policy.UnsafePredicate{All: []policy.PredicateRule{
+			makePredicateRule("properties.mmm"),
+		}}},
 	}
 	var first []ValidationWarning
 	for run := range 5 {
@@ -299,8 +218,7 @@ func TestValidation_DeterministicOrder(t *testing.T) {
 		}
 		for i := range warnings {
 			if warnings[i] != first[i] {
-				t.Errorf("run %d: warnings[%d] differs:\n  first=%+v\n  this =%+v",
-					run, i, first[i], warnings[i])
+				t.Errorf("run %d: warnings[%d] differs", run, i)
 			}
 		}
 	}

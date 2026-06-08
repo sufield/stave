@@ -1,7 +1,6 @@
 package export
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -11,11 +10,9 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	apposcal "github.com/sufield/stave/internal/app/oscal"
-	"github.com/sufield/stave/internal/app/oscalpoam"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 func newOSCALCmd() *cobra.Command {
@@ -60,33 +57,16 @@ func runOSCAL(stdout io.Writer, assessmentPath, outputPath, docType, systemUUID 
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("read assessment: %w", err)}
 	}
-	var assessment struct {
-		Findings []remediation.Finding `json:"findings"`
+	out, err := stave.ExportOSCAL(data, docType, systemUUID, time.Now().UTC())
+	if err != nil {
+		if errors.Is(err, stave.ErrInvalidInput) {
+			return &ui.UserError{Err: err}
+		}
+		return err //nolint:wrapcheck // facade already wrapped; preserve exit code.
 	}
-	if unmarshalErr := json.Unmarshal(data, &assessment); unmarshalErr != nil {
-		return &ui.UserError{Err: fmt.Errorf("parse assessment: %w", unmarshalErr)}
-	}
-
-	now := time.Now().UTC()
-
-	var result any
-	switch docType {
-	case "poam":
-		result = oscalpoam.Generate(oscalpoam.Input{
-			Findings:   assessment.Findings,
-			SystemUUID: systemUUID,
-			Now:        now,
-		})
-	case "ssp":
-		return &ui.UserError{Err: errors.New("OSCAL SSP export is not yet implemented")}
-	default:
-		result = apposcal.Export(assessment.Findings, now)
-	}
-
 	if err := cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		return enc.Encode(result)
+		_, werr := w.Write(out)
+		return werr
 	}); err != nil {
 		return fmt.Errorf("write OSCAL export: %w", err)
 	}

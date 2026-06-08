@@ -167,12 +167,6 @@ Exit codes:
 // fact extraction. export-sir adds output formatting (jsonl /
 // smt2 / json) on top, nothing else.
 func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error {
-	format := strings.ToLower(strings.TrimSpace(opts.Format))
-	renderer, rerr := NewRenderer(format)
-	if rerr != nil {
-		return rerr
-	}
-
 	allowlistMode := strings.ToLower(strings.TrimSpace(opts.AllowlistMode))
 	if allowlistMode == "" {
 		allowlistMode = "curated"
@@ -189,77 +183,34 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error 
 		return &ui.UserError{Err: err}
 	}
 
-	// One load path: cliapi.Apply owns the loaders, the CEL
-	// evaluator, and the SIR builder. The result carries the
-	// SIR document, the active controls, and the compliance
-	// report (used by --validate). No duplicate orchestration.
-	res, err := cliapi.Apply(ctx, stave.Config{
-		ControlsDir:  opts.ControlsDir,
-		SnapshotsDir: opts.ObservationsDir,
-		Now:          now,
+	// One load path: cliapi.ExportSIR routes through cliapi.Apply — the
+	// loaders, the CEL evaluator, and the SIR builder — then projects facts
+	// and renders. The validation report (--validate) comes back as stderr
+	// bytes; no duplicate orchestration here.
+	out, validationOut, err := cliapi.ExportSIR(ctx, cliapi.ExportSIRConfig{
+		ControlsDir:     opts.ControlsDir,
+		ObservationsDir: opts.ObservationsDir,
+		Format:          strings.ToLower(strings.TrimSpace(opts.Format)),
+		Now:             now,
+		Validate:        opts.Validate,
+		AllowlistMode:   allowlistMode,
+		ClosedWorld:     opts.ClosedWorld,
+		StripCatalog:    opts.StripCatalog,
 	})
 	if err != nil {
-		return fmt.Errorf("evaluate: %w", err)
-	}
-	if res.IsIncomplete() {
-		return errors.New("evaluate: cliapi.Apply returned an incomplete result")
-	}
-	if res.SIRDocument == nil {
-		return errors.New("evaluate: SIR build failed inside cliapi.Apply; no document to project")
-	}
-	doc := res.SIRDocument
-
-	// Extract facts when the format needs them or --validate asks.
-	// The JSON format path serialises the nested SIR document
-	// directly and doesn't read facts unless --validate is also
-	// set, so the conditional avoids the work in the no-validate
-	// JSON case.
-	var facts []sirfacts.Fact
-	if format != "json" || opts.Validate {
-		facts = sirfacts.ExtractFacts(doc)
-		// Raw observation primitives — every scalar leaf of each
-		// asset's properties tree, projected under its literal
-		// dot-joined path with source "observation". Appended
-		// unconditionally (both allowlist modes): these are
-		// observation facts, not derived auto_prop values, and they
-		// are what lets a reasoning engine derive a finding from
-		// first principles instead of re-confirming Stave's
-		// contributed_by conclusions. Kept out of ExtractFacts so
-		// applycore's per-finding ContributingFactIDs trace — and
-		// thus `stave apply` output — stays byte-identical.
-		facts = append(facts, sirfacts.ObservationFacts(doc.Assets)...)
-		// --allowlist-mode full appends auto_prop_<path> triples
-		// for every control-read property path the predicate index
-		// advertises. Auto-generated names live in their own
-		// predicate namespace (auto_prop_*) so existing solvers
-		// reading has_public_read / can_assume / has_action see no
-		// new assertions on the predicates they know. The flag is
-		// an experiment — measuring how much the export grows —
-		// not yet a production toggle.
-		if allowlistMode == "full" {
-			facts = append(facts, sirfacts.AutoPropertyFacts(doc.Assets, res.Controls)...)
+		if errors.Is(err, stave.ErrInvalidInput) {
+			return &ui.UserError{Err: err}
 		}
-		// AgeSeconds is byte-stable across runs only when --now is
-		// pinned (the SIR builder consumed the same value, so
-		// CapturedAt - Now is reproducible).
-		sirfacts.AnnotateFreshness(facts, now)
+		return err //nolint:wrapcheck // facade already wrapped ("evaluate"/"encode ..."); preserve exit 4.
 	}
 
-	if opts.Validate {
-		warnings := ValidateSIRCompleteness(res.ComplianceReport.Findings, facts, res.Controls)
-		if len(warnings) == 0 {
-			fmt.Fprintln(errW, "SIR validation: all CEL-evaluated properties are projected. No gaps.")
-		} else {
-			renderValidationWarnings(errW, warnings)
+	if len(validationOut) > 0 {
+		if _, werr := errW.Write(validationOut); werr != nil {
+			return fmt.Errorf("write validation report: %w", werr)
 		}
 	}
-
-	if opts.StripCatalog && (format == "jsonl" || format == "smt2") {
-		facts = sirfacts.FilterOutCatalog(facts)
-	}
-
-	if err := renderer.Render(w, Payload{Doc: doc, Facts: facts, ClosedWorld: opts.ClosedWorld}); err != nil {
-		return fmt.Errorf("render output: %w", err)
+	if _, werr := w.Write(out); werr != nil {
+		return fmt.Errorf("write output: %w", werr)
 	}
 	return nil
 }

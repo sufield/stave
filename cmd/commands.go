@@ -4,12 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/core/asset"
-	"github.com/sufield/stave/internal/core/ports"
 
 	"github.com/sufield/stave/cmd/apply"
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
@@ -28,7 +26,6 @@ import (
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
 	"github.com/sufield/stave/cmd/doctor"
 	"github.com/sufield/stave/cmd/enforce"
-	"github.com/sufield/stave/cmd/enforce/baseline"
 	"github.com/sufield/stave/cmd/enforce/fix"
 	"github.com/sufield/stave/cmd/enforce/gate"
 	staveexempt "github.com/sufield/stave/cmd/exempt"
@@ -61,7 +58,6 @@ import (
 	stavetrend "github.com/sufield/stave/cmd/trend"
 	validatemapping "github.com/sufield/stave/cmd/validatemapping"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
-	infrabaseline "github.com/sufield/stave/internal/adapters/baseline"
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	infrareport "github.com/sufield/stave/internal/adapters/report"
 	infrafix "github.com/sufield/stave/internal/app/fix"
@@ -69,7 +65,6 @@ import (
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/core/reporting"
 	"github.com/sufield/stave/internal/core/usecase"
-	"github.com/sufield/stave/internal/platform/fileout"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -321,32 +316,7 @@ func wireCISubtree(
 	newCtlRepo compose.CtlRepoFactory,
 	newObsRepo compose.ObsRepoFactory,
 ) error {
-	// DirPerms defaults to 0o755: the parent dir for the baseline
-	// file might not exist on first run, and SafeMkdirAll passes the
-	// FileMode through to os.Mkdir verbatim — a zero DirPerms would
-	// create the directory with mode 0000 (no rwx for anyone) and
-	// the subsequent SafeCreateFile would fail with "permission
-	// denied" on a directory we just made ourselves.
-	baselineFileOpts := fileout.FileOptions{DirPerms: 0o755}
-
-	baselineWriter, bwErr := infrabaseline.NewWriter(func(path string) (*os.File, error) {
-		return fileout.OpenOutputFile(path, baselineFileOpts)
-	})
-	if bwErr != nil {
-		return fmt.Errorf("wire baseline writer: %w", bwErr)
-	}
-	ciCmd.AddCommand(enforce.NewBaselineCmd(baseline.Deps{
-		SaveDeps: reporting.BaselineSaveDeps{
-			Loader: &infrabaseline.EvaluationLoader{},
-			Writer: baselineWriter,
-			Clock:  ports.RealClock{},
-		},
-		CheckDeps: reporting.BaselineCheckDeps{
-			EvalLoader:     &infrabaseline.EvaluationLoader{},
-			BaselineLoader: &infrabaseline.Loader{},
-			Clock:          ports.RealClock{},
-		},
-	}))
+	ciCmd.AddCommand(enforce.NewBaselineCmd())
 	// Gate adapters (FindingsCounter, BaselineComparer, OverdueCounter)
 	// are now wired internally by pkg/stave.Gate; the gate command
 	// no longer accepts dependency injection at this boundary.

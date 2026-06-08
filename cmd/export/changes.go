@@ -1,7 +1,7 @@
 package export
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -10,11 +10,9 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/internal/app/exportchanges"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/fsutil"
-	"github.com/sufield/stave/internal/util/jsonutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 func newChangesCmd() *cobra.Command {
@@ -56,21 +54,16 @@ func runChanges(stdout io.Writer, assessmentPath, outputPath string, minConfiden
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("read assessment: %w", err)}
 	}
-	var assessment struct {
-		Findings []remediation.Finding `json:"findings"`
+	out, err := stave.ExportChanges(data, minConfidence, time.Now().UTC())
+	if err != nil {
+		if errors.Is(err, stave.ErrInvalidInput) {
+			return &ui.UserError{Err: err}
+		}
+		return err //nolint:wrapcheck // facade already wrapped; preserve exit code.
 	}
-	if unmarshalErr := json.Unmarshal(data, &assessment); unmarshalErr != nil {
-		return &ui.UserError{Err: fmt.Errorf("parse assessment: %w", unmarshalErr)}
-	}
-
-	report := exportchanges.Export(exportchanges.Input{
-		Findings:      assessment.Findings,
-		MinConfidence: minConfidence,
-		GeneratedAt:   time.Now().UTC().Format(time.RFC3339),
-	})
-
 	if err := cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
-		return jsonutil.WriteIndented(w, report)
+		_, werr := w.Write(out)
+		return werr
 	}); err != nil {
 		return fmt.Errorf("write changes export: %w", err)
 	}

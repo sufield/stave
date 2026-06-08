@@ -104,8 +104,15 @@
 //	RenderCatalog      — grouped capability catalog view (text/wide/json).
 //	BuildAttackPath    — chain attack-path graph (json/dot/csv-edges).
 //	CIDiff             — new/resolved findings vs a baseline evaluation.
+//	BaselineSave       — capture evaluation findings as a baseline file.
+//	BaselineCheck      — new/resolved findings vs a saved baseline.
 //	GenerateEnforcement — write a PAB/SCP enforcement template from findings.
 //	RunDoctor          — local environment readiness checks (text/json).
+//	ExportOCSF         — findings as OCSF 1.1 Compliance Finding NDJSON.
+//	ExportOSCAL        — findings as OSCAL assessment-results / POA&M JSON.
+//	ExportChanges      — remediation property changes as JSON.
+//	ExportTickets      — findings as ticket records (json/csv).
+//	RenderFeatures     — in-scope (discovered) + out-of-scope capability report.
 //	ExplainControl     — catalog-only explanation of one control.
 //	SuggestControlIDs  — fuzzy-suggest control IDs for a partial query.
 //	AssetTypeExamples  — example control ID per asset type.

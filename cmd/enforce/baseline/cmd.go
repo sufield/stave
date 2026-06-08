@@ -6,19 +6,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/reporting"
 	"github.com/sufield/stave/internal/platform/metadata"
-	"github.com/sufield/stave/internal/util/jsonutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
-// Deps groups the infrastructure implementations for the baseline command.
-type Deps struct {
-	SaveDeps  reporting.BaselineSaveDeps
-	CheckDeps reporting.BaselineCheckDeps
-}
-
 // NewCmd constructs the baseline command tree.
-func NewCmd(deps Deps) *cobra.Command {
+func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "baseline",
 		Short: "Manage baseline findings for fail-on-new CI workflows",
@@ -35,15 +28,15 @@ Example:
 		Args: cobra.NoArgs,
 	}
 
-	cmd.AddCommand(newSaveCmd(deps.SaveDeps))
-	cmd.AddCommand(newCheckCmd(deps.CheckDeps))
+	cmd.AddCommand(newSaveCmd())
+	cmd.AddCommand(newCheckCmd())
 
 	return cmd
 }
 
 // --- Save Subcommand ---
 
-func newSaveCmd(deps reporting.BaselineSaveDeps) *cobra.Command {
+func newSaveCmd() *cobra.Command {
 	var (
 		inPath  string
 		outPath = "output/baseline.json"
@@ -70,19 +63,14 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			req := reporting.BaselineSaveRequest{
-				EvaluationPath: inPath,
-				OutputPath:     outPath,
-			}
-
-			resp, err := reporting.BaselineSave(cmd.Context(), req, deps)
+			out, err := stave.BaselineSave(cmd.Context(), inPath, outPath)
 			if err != nil {
-				return fmt.Errorf("save baseline: %w", err)
+				return err //nolint:wrapcheck // facade already wrapped ("save baseline"); preserve exit 4.
 			}
-
-			_, printErr := fmt.Fprintf(cmd.OutOrStdout(),
-				"Saved baseline: %s (findings=%d)\n", resp.OutputPath, resp.FindingsCount)
-			return printErr
+			if _, werr := cmd.OutOrStdout().Write(out); werr != nil {
+				return fmt.Errorf("write output: %w", werr)
+			}
+			return nil
 		},
 	}
 
@@ -95,7 +83,7 @@ Exit Codes:
 
 // --- Check Subcommand ---
 
-func newCheckCmd(deps reporting.BaselineCheckDeps) *cobra.Command {
+func newCheckCmd() *cobra.Command {
 	var (
 		inPath       string
 		baselinePath string
@@ -125,22 +113,14 @@ Exit Codes:
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			req := reporting.BaselineCheckRequest{
-				EvaluationPath: inPath,
-				BaselinePath:   baselinePath,
-				FailOnNew:      failOnNew,
-			}
-
-			resp, err := reporting.BaselineCheck(cmd.Context(), req, deps)
+			out, hasNew, err := stave.BaselineCheck(cmd.Context(), inPath, baselinePath, failOnNew)
 			if err != nil {
-				return fmt.Errorf("check baseline: %w", err)
+				return err //nolint:wrapcheck // facade already wrapped ("check baseline"/"write output"); preserve exit 4.
 			}
-
-			if renderErr := jsonutil.WriteIndented(cmd.OutOrStdout(), resp); renderErr != nil {
-				return fmt.Errorf("write output: %w", renderErr)
+			if _, werr := cmd.OutOrStdout().Write(out); werr != nil {
+				return fmt.Errorf("write output: %w", werr)
 			}
-
-			if req.FailOnNew && resp.HasNew {
+			if hasNew {
 				return ui.ErrViolationsFound
 			}
 			return nil

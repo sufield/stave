@@ -5,24 +5,14 @@
 package features
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
-	"io"
-	"strings"
-	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 
-	scopemanifest "github.com/sufield/stave/features"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/pkg/stave"
 )
-
-// payload is the rendered document: live IN SCOPE discovery plus the
-// versioned OUT OF SCOPE manifest.
-type payload struct {
-	InScope    []InScopeFeature                `json:"in_scope"`
-	OutOfScope []scopemanifest.OutOfScopeEntry `json:"out_of_scope"`
-}
 
 // NewCmd constructs the `stave features` command.
 func NewCmd() *cobra.Command {
@@ -67,131 +57,29 @@ Examples:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			renderer, err := newRenderer(format)
+			out, err := stave.RenderFeatures(format)
 			if err != nil {
-				return err
+				if errors.Is(err, stave.ErrInvalidInput) {
+					return &ui.UserError{Err: err}
+				}
+				return err //nolint:wrapcheck // facade already wrapped ("load scope manifest"); preserve exit 4.
 			}
-			outOfScope, err := scopemanifest.OutOfScope()
-			if err != nil {
-				return fmt.Errorf("load scope manifest: %w", err)
-			}
-			doc := payload{InScope: discoverInScope(), OutOfScope: outOfScope}
 
-			// Page human output on a TTY; never page JSON (keeps JSON-to-pipe
-			// clean) and never when --no-pager is set or stdout is not a
-			// terminal. NewPager returns the writer unchanged with a no-op close
-			// in the unpaged cases, so piped/redirected output is unaffected.
+			// Page human output on a TTY; never page JSON, and never when
+			// --no-pager is set or stdout is not a terminal. NewPager returns
+			// the writer unchanged with a no-op close in the unpaged cases.
 			pageable := format != "json" && !noPager
 			pw, closePager := ui.NewPager(cmd.Context(), cmd.OutOrStdout(), pageable)
-			renderErr := renderer.render(pw, doc)
+			_, writeErr := pw.Write(out)
 			closeErr := closePager()
-			if renderErr != nil {
-				return renderErr
+			if writeErr != nil {
+				return fmt.Errorf("write features: %w", writeErr)
 			}
-			return closeErr
+			return closeErr //nolint:wrapcheck // already wrapped ("wait for pager: …") by NewPager's closer.
 		},
 	}
 
 	cmd.Flags().StringVarP(&format, "format", "f", "auto", "Output format: auto | text | wide | json")
 	cmd.Flags().BoolVar(&noPager, "no-pager", false, "never page output, even on a terminal")
 	return cmd
-}
-
-// renderer maps a payload to bytes in a specific format.
-type renderer interface {
-	render(w io.Writer, p payload) error
-}
-
-func newRenderer(format string) (renderer, error) {
-	switch format {
-	case "text", "auto", "":
-		return textRenderer{}, nil
-	case "wide":
-		return wideRenderer{}, nil
-	case "json":
-		return jsonRenderer{}, nil
-	default:
-		return nil, &ui.UserError{Err: fmt.Errorf("--format must be auto | text | wide | json (got %q)", format)}
-	}
-}
-
-type jsonRenderer struct{}
-
-func (jsonRenderer) render(w io.Writer, p payload) error {
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(p)
-}
-
-type textRenderer struct{}
-
-func (textRenderer) render(w io.Writer, p payload) error {
-	if _, err := fmt.Fprint(w, "\nIN SCOPE (discovered from this build)\n"); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintln(w, "─────────────────────────────────────"); err != nil {
-		return err
-	}
-	for _, f := range p.InScope {
-		if _, err := fmt.Fprintf(w, "  ✓ %-22s %s\n", f.Label, f.Detail); err != nil {
-			return err
-		}
-	}
-
-	if _, err := fmt.Fprint(w, "\nOUT OF SCOPE (by design — see features/scope.yaml)\n"); err != nil {
-		return err
-	}
-	if _, err := fmt.Fprintln(w, "──────────────────────────────────────────────────"); err != nil {
-		return err
-	}
-	for _, e := range p.OutOfScope {
-		detail := e.Reason
-		if len(e.Alternatives) > 0 {
-			detail = fmt.Sprintf("%s: %s", e.Reason, strings.Join(e.Alternatives, ", "))
-		}
-		if _, err := fmt.Fprintf(w, "  → %-22s %s\n", e.Label, detail); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// wideRenderer is the columnar variant of the text view: each section is
-// tab-aligned, and OUT OF SCOPE gets its own Reason / Alternatives columns
-// instead of the compact inline "reason: alts" the default view uses.
-type wideRenderer struct{}
-
-func (wideRenderer) render(w io.Writer, p payload) error {
-	if _, err := fmt.Fprint(w, "\nIN SCOPE (discovered from this build)\n"); err != nil {
-		return err
-	}
-	in := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
-	if _, err := fmt.Fprintln(in, "  CAPABILITY\tDETAIL"); err != nil {
-		return err
-	}
-	for _, f := range p.InScope {
-		if _, err := fmt.Fprintf(in, "  ✓ %s\t%s\n", f.Label, f.Detail); err != nil {
-			return err
-		}
-	}
-	if err := in.Flush(); err != nil {
-		return fmt.Errorf("flush in-scope table: %w", err)
-	}
-
-	if _, err := fmt.Fprint(w, "\nOUT OF SCOPE (by design — see features/scope.yaml)\n"); err != nil {
-		return err
-	}
-	out := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
-	if _, err := fmt.Fprintln(out, "  CAPABILITY\tREASON\tALTERNATIVES"); err != nil {
-		return err
-	}
-	for _, e := range p.OutOfScope {
-		if _, err := fmt.Fprintf(out, "  → %s\t%s\t%s\n", e.Label, e.Reason, strings.Join(e.Alternatives, ", ")); err != nil {
-			return err
-		}
-	}
-	if err := out.Flush(); err != nil {
-		return fmt.Errorf("flush out-of-scope table: %w", err)
-	}
-	return nil
 }

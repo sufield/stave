@@ -7,6 +7,11 @@ import (
 	"testing"
 )
 
+// These drive the command end-to-end (cobra Execute). The rendering and
+// registry discovery now live behind stave.RenderFeatures; the renderer
+// factory + payload type moved with them, so this file tests the command's
+// observable behaviour rather than those internals.
+
 func TestFeatures_TextOutput(t *testing.T) {
 	cmd := NewCmd()
 	var buf bytes.Buffer
@@ -31,7 +36,13 @@ func TestFeatures_JSONOutput(t *testing.T) {
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("execute: %v", err)
 	}
-	var p payload
+	var p struct {
+		InScope []struct {
+			Label  string `json:"label"`
+			Detail string `json:"detail"`
+		} `json:"in_scope"`
+		OutOfScope []json.RawMessage `json:"out_of_scope"`
+	}
 	if err := json.Unmarshal(buf.Bytes(), &p); err != nil {
 		t.Fatalf("output is not valid JSON: %v\n%s", err, buf.String())
 	}
@@ -41,7 +52,6 @@ func TestFeatures_JSONOutput(t *testing.T) {
 	if len(p.OutOfScope) == 0 {
 		t.Error("expected out-of-scope entries")
 	}
-	// The catalog detail must be discovered (real count), not a placeholder.
 	var catalog string
 	for _, f := range p.InScope {
 		if f.Label == "Control Catalog" {
@@ -60,25 +70,6 @@ func TestFeatures_UnknownFormat(t *testing.T) {
 	cmd.SetArgs([]string{"--format", "xml"})
 	if err := cmd.Execute(); err == nil {
 		t.Fatal("expected error for unknown format")
-	}
-}
-
-// Shared output framework: auto default, wide variant, --no-pager flag.
-func TestFeatures_RendererFactory(t *testing.T) {
-	for _, f := range []string{"", "text", "auto"} {
-		r, err := newRenderer(f)
-		if err != nil {
-			t.Fatalf("newRenderer(%q): %v", f, err)
-		}
-		if _, ok := r.(textRenderer); !ok {
-			t.Errorf("newRenderer(%q) = %T, want textRenderer", f, r)
-		}
-	}
-	if r, err := newRenderer("wide"); err != nil || func() bool { _, ok := r.(wideRenderer); return !ok }() {
-		t.Errorf("newRenderer(\"wide\") = %T, %v; want wideRenderer", r, err)
-	}
-	if r, err := newRenderer("json"); err != nil || func() bool { _, ok := r.(jsonRenderer); return !ok }() {
-		t.Errorf("newRenderer(\"json\") = %T, %v; want jsonRenderer", r, err)
 	}
 }
 
