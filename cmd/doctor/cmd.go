@@ -9,21 +9,16 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/setup"
 	"github.com/sufield/stave/internal/platform/metadata"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // ErrDoctorRequiredIssues is returned when the doctor detects critical environment issues.
 // It wraps ErrDiagnosticsFound so ExitCode maps it to exit 3 (violations/diagnostics).
 var ErrDoctorRequiredIssues = fmt.Errorf("doctor found required issues: %w", ui.ErrDiagnosticsFound)
 
-// Deps groups the infrastructure implementations for the doctor command.
-type Deps struct {
-	UseCaseDeps setup.DoctorDeps
-}
-
 // NewCmd constructs the doctor command.
-func NewCmd(deps Deps) *cobra.Command {
+func NewCmd() *cobra.Command {
 	opts := &options{
 		Format: "text",
 	}
@@ -73,28 +68,17 @@ Exit Codes:
 				return fmt.Errorf("resolve executable path: %w", exeErr)
 			}
 
-			req := setup.DoctorRequest{
-				Cwd:        cwd,
-				BinaryPath: exe,
-				Format:     string(fmtValue),
-			}
-
-			resp, ucErr := setup.Doctor(cmd.Context(), req, deps.UseCaseDeps)
+			out, allPassed, ucErr := stave.RunDoctor(cmd.Context(), cwd, exe, string(fmtValue))
 			if ucErr != nil {
-				return fmt.Errorf("run doctor checks: %w", ucErr)
+				return ucErr //nolint:wrapcheck // facade already wrapped ("run doctor checks"/render); preserve exit 4.
 			}
 
 			stdout := cliflags.GetGlobalFlags(cmd).ResolveStdout(cmd.OutOrStdout())
-
-			renderer, rendererErr := NewRenderer(fmtValue)
-			if rendererErr != nil {
-				return rendererErr
-			}
-			if renderErr := renderer.Render(stdout, resp); renderErr != nil {
-				return fmt.Errorf("render doctor output: %w", renderErr)
+			if _, werr := stdout.Write(out); werr != nil {
+				return fmt.Errorf("render doctor output: %w", werr)
 			}
 
-			if !resp.AllPassed {
+			if !allPassed {
 				return ErrDoctorRequiredIssues
 			}
 			return nil

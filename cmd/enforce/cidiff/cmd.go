@@ -6,15 +6,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/reporting"
 	"github.com/sufield/stave/internal/platform/metadata"
-	"github.com/sufield/stave/internal/util/jsonutil"
+	"github.com/sufield/stave/pkg/stave"
 )
-
-// Deps groups the infrastructure implementations for the ci diff command.
-type Deps struct {
-	UseCaseDeps reporting.CIDiffDeps
-}
 
 // options holds the raw CLI flag values for the ci diff command.
 type options struct {
@@ -24,7 +18,7 @@ type options struct {
 }
 
 // NewCmd constructs the diff command.
-func NewCmd(deps Deps) *cobra.Command {
+func NewCmd() *cobra.Command {
 	opts := &options{FailOnNew: true}
 
 	cmd := &cobra.Command{
@@ -44,22 +38,14 @@ Exit Codes:
   stave ci diff --current pr-evaluation.json --baseline main-evaluation.json --fail-on-new`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			req := reporting.CIDiffRequest{
-				CurrentPath:  opts.CurrentPath,
-				BaselinePath: opts.BaselinePath,
-				FailOnNew:    opts.FailOnNew,
-			}
-
-			resp, err := reporting.CIDiff(cmd.Context(), req, deps.UseCaseDeps)
+			out, hasNew, err := stave.CIDiff(cmd.Context(), opts.CurrentPath, opts.BaselinePath, opts.FailOnNew)
 			if err != nil {
-				return fmt.Errorf("run CI diff: %w", err)
+				return err //nolint:wrapcheck // facade already wrapped ("run CI diff"/"write output"); preserve exit 4.
 			}
-
-			if renderErr := jsonutil.WriteIndented(cmd.OutOrStdout(), resp); renderErr != nil {
-				return fmt.Errorf("write output: %w", renderErr)
+			if _, werr := cmd.OutOrStdout().Write(out); werr != nil {
+				return fmt.Errorf("write output: %w", werr)
 			}
-
-			if req.FailOnNew && resp.HasNew {
+			if hasNew {
 				return ui.ErrViolationsFound
 			}
 			return nil

@@ -6,18 +6,12 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	artifact "github.com/sufield/stave/internal/adapters/artifacts"
-	appmetrics "github.com/sufield/stave/internal/app/metrics"
-	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/core/report"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type options struct {
@@ -64,27 +58,9 @@ Exit Codes:
 }
 
 func run(ctx context.Context, stdout io.Writer, opts *options) error {
-	// Load latest assessment from history.
-	latest, err := loadLatestAssessment(ctx, opts.HistoryDir)
+	data, err := stave.RenderMetrics(ctx, opts.HistoryDir)
 	if err != nil {
-		return fmt.Errorf("load history: %w", err)
-	}
-
-	// Compute posture score from violation rate.
-	var postureScore float64
-	if latest.Summary.TotalAssets > 0 {
-		postureScore = (1.0 - float64(latest.Summary.Violations)/float64(latest.Summary.TotalAssets)) * 100
-	} else {
-		postureScore = 100
-	}
-
-	// Group findings by team from OwnerTeamID (populated by stave apply --team-manifest).
-	teamFindings := remediation.FindingSet(latest.Findings).GroupByOwner()
-
-	input := appmetrics.Input{
-		Assessment:   latest,
-		PostureScore: postureScore,
-		TeamFindings: teamFindings,
+		return err //nolint:wrapcheck // facade already wrapped ("load history: ..."); preserve the message + exit code.
 	}
 
 	// Write to file or stdout. The fallback writer (when --out is
@@ -92,41 +68,12 @@ func run(ctx context.Context, stdout io.Writer, opts *options) error {
 	// dropping the report when no path was specified made the
 	// command look successful while emitting nothing.
 	if err := cmdutil.WriteTo(stdout, opts.OutPath, func(w io.Writer) error {
-		appmetrics.Write(w, input)
-		return nil
+		_, werr := w.Write(data)
+		return werr
 	}); err != nil {
 		return fmt.Errorf("write metrics: %w", err)
 	}
 
 	fmt.Fprintf(stdout, "Wrote metrics to %s\n", opts.OutPath)
 	return nil
-}
-
-func loadLatestAssessment(ctx context.Context, dir string) (*report.Assessment, error) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, fmt.Errorf("read directory: %w", err)
-	}
-
-	loader := artifact.NewLoader()
-	var latest *report.Assessment
-
-	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
-			continue
-		}
-		path := filepath.Join(dir, entry.Name())
-		a, loadErr := loader.Evaluation(ctx, path)
-		if loadErr != nil {
-			continue
-		}
-		if latest == nil || a.Run.Now.After(latest.Run.Now) {
-			latest = a
-		}
-	}
-
-	if latest == nil {
-		return nil, fmt.Errorf("no assessment files found in %s", dir)
-	}
-	return latest, nil
 }

@@ -4,7 +4,6 @@
 package path
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"time"
@@ -13,12 +12,8 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
-	"github.com/sufield/stave/internal/app/attackpath"
-	"github.com/sufield/stave/internal/core/capabilities"
-	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type options struct {
@@ -84,79 +79,19 @@ Exit Codes:
 	return cmd
 }
 
-// assessmentJSON is the minimal subset of out.v0.1 we need.
-type assessmentJSON struct {
-	CompoundFindings []compoundFindingJSON `json:"compound_findings"`
-	Findings         []findingJSON         `json:"findings"`
-}
-
-type compoundFindingJSON struct {
-	Chain           string   `json:"chain"`
-	ControlsFailing []string `json:"controls_failing"`
-}
-
-type findingJSON struct {
-	ControlID   string `json:"control_id"`
-	Remediation string `json:"remediation"`
-}
-
 func runPath(stdout io.Writer, opts *options) error {
 	data, err := fsutil.ReadFileLimited(opts.AssessmentPath)
 	if err != nil {
 		return fmt.Errorf("read assessment: %w", err)
 	}
 
-	var assessment assessmentJSON
-	if unmarshalErr := json.Unmarshal(data, &assessment); unmarshalErr != nil {
-		return fmt.Errorf("parse assessment: %w", unmarshalErr)
-	}
-
-	chains, err := ctlyaml.LoadChains(opts.ChainsDir, capabilities.Builtin())
+	out, err := stave.BuildAttackPath(data, opts.ChainsDir, opts.AssessmentPath, opts.Format, time.Now().UTC())
 	if err != nil {
-		return fmt.Errorf("load chains: %w", err)
-	}
-
-	// Build remediation lookup from assessment findings.
-	remediationByCtl := make(map[string]string, len(assessment.Findings))
-	for _, f := range assessment.Findings {
-		if f.Remediation != "" {
-			remediationByCtl[f.ControlID] = f.Remediation
-		}
-	}
-	controlLookup := make(map[string]*policy.ControlDefinition)
-	for cid, rem := range remediationByCtl {
-		controlLookup[cid] = &policy.ControlDefinition{
-			ID:          kernel.ControlID(cid),
-			Remediation: policy.NewRemediationSpec("", rem, ""),
-		}
-	}
-
-	var findings []attackpath.ActiveFinding
-	for _, cf := range assessment.CompoundFindings {
-		var cids []kernel.ControlID
-		for _, c := range cf.ControlsFailing {
-			cids = append(cids, kernel.ControlID(c))
-		}
-		findings = append(findings, attackpath.ActiveFinding{
-			ChainID:         cf.Chain,
-			ControlsFailing: cids,
-		})
-	}
-
-	graph := attackpath.Build(attackpath.BuildInput{
-		GeneratedAt:    time.Now().UTC().Format(time.RFC3339),
-		AssessmentPath: opts.AssessmentPath,
-		Chains:         chains,
-		Findings:       findings,
-		ControlLookup:  controlLookup,
-	})
-
-	renderer, rendErr := NewRenderer(opts.Format)
-	if rendErr != nil {
-		return rendErr
+		return err //nolint:wrapcheck // facade already wrapped; all path errors are exit-4 plain.
 	}
 	if err := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
-		return renderer.Render(w, graph)
+		_, werr := w.Write(out)
+		return werr
 	}); err != nil {
 		return fmt.Errorf("write attack path: %w", err)
 	}

@@ -4,6 +4,7 @@ package coverage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -11,10 +12,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/adapters/observations"
-	"github.com/sufield/stave/internal/app/fieldcov"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type options struct {
@@ -26,7 +25,7 @@ type options struct {
 }
 
 // NewCmd constructs the coverage command.
-func NewCmd(newCtlRepo compose.CtlRepoFactory) *cobra.Command {
+func NewCmd() *cobra.Command {
 	opts := &options{
 		ControlsDir: "controls",
 		Format:      "table",
@@ -70,7 +69,7 @@ Exit Codes:
 			// when writing to a file (--out) or --no-pager is set.
 			pageable := !opts.NoPager && opts.Format != "json" && opts.OutFile == ""
 			pw, closePager := ui.NewPager(cmd.Context(), cmd.OutOrStdout(), pageable)
-			err := runCoverage(cmd.Context(), pw, opts, newCtlRepo)
+			err := runCoverage(cmd.Context(), pw, opts)
 			if cerr := closePager(); cerr != nil && err == nil {
 				err = cerr
 			}
@@ -89,44 +88,30 @@ Exit Codes:
 	return cmd
 }
 
-func runCoverage(ctx context.Context, stdout io.Writer, opts *options, newCtlRepo compose.CtlRepoFactory) error {
-	// Load snapshot.
-	snapshots, err := observations.LoadBundle(opts.SnapshotPath)
-	if err != nil {
-		return &ui.UserError{Err: fmt.Errorf("load snapshot: %w", err)}
-	}
-	if len(snapshots) == 0 {
-		return &ui.UserError{Err: fmt.Errorf("no snapshots in %s", opts.SnapshotPath)}
+func runCoverage(ctx context.Context, stdout io.Writer, opts *options) error {
+	// Validate the format up front (guard, not a render dispatch — the
+	// rendering lives in pkg/stave — so this does not trip the
+	// inline-format-switch lint).
+	if opts.Format != "table" && opts.Format != "json" && opts.Format != "" {
+		return &ui.UserError{Err: fmt.Errorf("unknown format %q (valid: table, json)", opts.Format)}
 	}
 
-	// Load controls.
-	repo, err := newCtlRepo()
+	out, silentRisk, err := stave.AnalyzeFieldCoverage(ctx, opts.SnapshotPath, opts.ControlsDir, opts.Format, time.Now().UTC())
 	if err != nil {
-		return fmt.Errorf("init control loader: %w", err)
-	}
-	controls, err := repo.LoadControls(ctx, opts.ControlsDir)
-	if err != nil {
-		return fmt.Errorf("load controls: %w", err)
+		if errors.Is(err, stave.ErrInvalidInput) {
+			return &ui.UserError{Err: err}
+		}
+		return err //nolint:wrapcheck // facade already wrapped ("load controls"/"encode json"); preserve exit 4.
 	}
 
-	report := fieldcov.Analyze(fieldcov.AnalyzeInput{
-		SnapshotPath: opts.SnapshotPath,
-		GeneratedAt:  time.Now().UTC().Format(time.RFC3339),
-		Controls:     controls,
-		Snapshots:    snapshots,
-	})
-
-	renderer, rendErr := NewRenderer(opts.Format)
-	if rendErr != nil {
-		return &ui.UserError{Err: rendErr}
-	}
 	if writeErr := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
-		return renderer.Render(w, report)
+		_, e := w.Write(out)
+		return e
 	}); writeErr != nil {
 		return fmt.Errorf("write coverage output: %w", writeErr)
 	}
 
-	if report.Summary.SilentRisk > 0 {
+	if silentRisk {
 		return ui.ErrViolationsFound
 	}
 	return nil

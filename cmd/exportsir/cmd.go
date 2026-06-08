@@ -25,7 +25,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/sirfacts"
 	"github.com/sufield/stave/pkg/stave"
 	"github.com/sufield/stave/pkg/stave/cliapi"
 )

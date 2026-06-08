@@ -152,7 +152,7 @@ func ExportInvariants(ctx context.Context, cfg InvariantExportConfig) (*Invarian
 	if ctx == nil {
 		return nil, errors.New("stave.ExportInvariants: ctx is required")
 	}
-	controls, err := loadInvariantControls(ctx, cfg.ControlsDir)
+	controls, err := loadControlsFromDir(ctx, cfg.ControlsDir)
 	if err != nil {
 		return nil, err
 	}
@@ -169,11 +169,11 @@ func ExportInvariants(ctx context.Context, cfg InvariantExportConfig) (*Invarian
 	return out, nil
 }
 
-// loadInvariantControls reuses the same control-resolution path
-// the rest of pkg/stave uses (embedded catalog when dir empty;
-// YAML loader otherwise). Returns the materialised slice — the
-// repository view is internal-only.
-func loadInvariantControls(ctx context.Context, dir string) ([]controldef.ControlDefinition, error) {
+// loadControlsFromDir resolves a control set the same way the rest of
+// pkg/stave does (embedded catalog when dir is empty; YAML loader
+// otherwise) and returns the materialised slice — the repository view is
+// internal-only. Shared by the invariant export and the catalog diff.
+func loadControlsFromDir(ctx context.Context, dir string) ([]controldef.ControlDefinition, error) {
 	controls, repo, err := resolveControls(dir)
 	if err != nil {
 		return nil, fmt.Errorf("load controls: %w", err)

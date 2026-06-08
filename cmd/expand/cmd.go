@@ -6,21 +6,15 @@ package expand
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"sort"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/adapters/controls/archetype"
-	"github.com/sufield/stave/internal/app/expand"
 	"github.com/sufield/stave/internal/cli/ui"
-	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type options struct {
@@ -34,7 +28,7 @@ type options struct {
 }
 
 // NewCmd constructs the expand command.
-func NewCmd(newCtlRepo compose.CtlRepoFactory) *cobra.Command {
+func NewCmd() *cobra.Command {
 	opts := &options{}
 
 	cmd := &cobra.Command{
@@ -85,7 +79,7 @@ Exit codes:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			pageable := !opts.NoPager && opts.Format != "json"
 			pw, closePager := ui.NewPager(cmd.Context(), cmd.OutOrStdout(), pageable)
-			err := runExpand(cmd.Context(), pw, opts, newCtlRepo)
+			err := runExpand(cmd.Context(), pw, opts)
 			if cerr := closePager(); cerr != nil && err == nil {
 				err = cerr
 			}
@@ -107,7 +101,7 @@ Exit codes:
 	return cmd
 }
 
-func runExpand(ctx context.Context, w io.Writer, opts *options, newCtlRepo compose.CtlRepoFactory) error {
+func runExpand(ctx context.Context, w io.Writer, opts *options) error {
 	if opts.Archetype == "" && opts.Finding == "" && !opts.List {
 		return inputErrorf("one of --archetype, --finding, or --list is required")
 	}
@@ -115,339 +109,27 @@ func runExpand(ctx context.Context, w io.Writer, opts *options, newCtlRepo compo
 		return inputErrorf("--format must be text or json (got %q)", opts.Format)
 	}
 
-	controls, err := compose.LoadControlsFrom(ctx, newCtlRepo, opts.ControlsDir)
-	if err != nil {
-		return internalErrorf("load controls: %w", err)
-	}
-
+	var out []byte
+	var err error
 	if opts.List {
-		listRenderer, listErr := NewListRenderer(opts.Format)
-		if listErr != nil {
-			return inputErrorf("%s", listErr.Error())
-		}
-		if err := listRenderer.Render(w, controls); err != nil {
-			return fmt.Errorf("render expansion: %w", err)
-		}
-		return nil
-	}
-
-	archID := opts.Archetype
-	var finding *policy.ControlDefinition
-	if opts.Finding != "" {
-		ctlID := kernel.ControlID(opts.Finding)
-		for i := range controls {
-			if controls[i].ID == ctlID {
-				finding = &controls[i]
-				break
-			}
-		}
-		if finding == nil {
-			return inputErrorf("control %q not found in %s", opts.Finding, opts.ControlsDir)
-		}
-		if finding.Archetype.IsEmpty() {
-			return inputErrorf("control %q has no archetype field", opts.Finding)
-		}
-		archID = finding.Archetype.String()
-	}
-
-	arch, ok := archetype.Lookup(archID)
-	if !ok {
-		return inputErrorf("unknown archetype %q (use --list to see catalog)", archID)
-	}
-
-	matched := expand.FilterByArchetype(controls, archID)
-	snap := expand.ScanSnapshots(opts.Snapshots, arch.Services)
-
-	renderer, rendErr := NewRenderer(opts.Format)
-	if rendErr != nil {
-		return inputErrorf("%s", rendErr.Error())
-	}
-	if err := renderer.Render(w, Payload{
-		Archetype:      arch,
-		Matched:        matched,
-		SnapshotStatus: snap,
-		Finding:        finding,
-	}); err != nil {
-		return fmt.Errorf("render expansion: %w", err)
-	}
-	return nil
-}
-
-// renderText writes the human-readable form of a single-archetype expand.
-func renderText(w io.Writer, arch archetype.Archetype, matched []policy.ControlDefinition, snap *expand.SnapshotStatus, finding *policy.ControlDefinition) error {
-	if finding != nil {
-		fmt.Fprintf(w, "Finding: %s\n", finding.ID)
-		if finding.Name != "" {
-			fmt.Fprintf(w, "  %s\n\n", finding.Name)
-		} else {
-			fmt.Fprintln(w)
-		}
-		fmt.Fprintf(w, "This is an instance of the %s archetype.\n\n", arch.Name)
-	}
-
-	fmt.Fprintf(w, "Archetype: %s\n\n", arch.Name)
-	fmt.Fprintln(w, wrapParagraph(arch.Description, 70))
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, wrapParagraph(arch.Guidance, 70))
-	fmt.Fprintln(w)
-
-	if len(matched) == 0 {
-		fmt.Fprintln(w, "Controls in this archetype: (none yet — no controls have been")
-		fmt.Fprintln(w, "tagged with this archetype in the loaded catalog).")
+		out, err = stave.ExpandList(ctx, opts.ControlsDir, opts.Format)
 	} else {
-		fmt.Fprintln(w, "Controls in this archetype:")
-		fmt.Fprintln(w)
-		groups := groupByService(matched)
-		for _, svc := range sortedKeys(groups) {
-			ctls := groups[svc]
-			fmt.Fprintf(w, "  %s (%d control%s)\n", svc, len(ctls), plural(len(ctls)))
-			for i := range ctls {
-				ctl := &ctls[i]
-				prefix := "├──"
-				if i == len(ctls)-1 {
-					prefix = "└──"
-				}
-				fmt.Fprintf(w, "  %s %s — %s [%s]\n",
-					prefix, ctl.ID, oneLineSummary(ctl), strings.ToLower(ctl.Severity.String()))
-			}
-			fmt.Fprintln(w)
-		}
+		out, err = stave.ExpandArchetype(ctx, opts.ControlsDir, opts.Archetype, opts.Finding, opts.Snapshots, opts.Format)
 	}
-
-	if snap != nil {
-		fmt.Fprintln(w, "Snapshot coverage:")
-		fmt.Fprintln(w)
-		all := append(append([]string{}, snap.Found...), snap.Missing...)
-		sort.Strings(all)
-		foundSet := make(map[string]bool, len(snap.Found))
-		for _, s := range snap.Found {
-			foundSet[s] = true
+	if err != nil {
+		if errors.Is(err, stave.ErrInvalidInput) {
+			return &ui.UserError{Err: err}
 		}
-		for _, svc := range all {
-			if foundSet[svc] {
-				fmt.Fprintf(w, "  ✓ %-15s snapshot found\n", svc)
-			} else {
-				fmt.Fprintf(w, "  ✗ %-15s no snapshot — run: stave snapshot %s\n", svc, svc)
-			}
-		}
-		if len(snap.Missing) > 0 {
-			fmt.Fprintln(w)
-			fmt.Fprintln(w, "Generate missing snapshots, then re-run:")
-			fmt.Fprintln(w, "  stave verify")
-		}
+		return err //nolint:wrapcheck // facade already wrapped ("load controls"/"render expansion"); preserve exit 4.
 	}
-
+	if _, werr := w.Write(out); werr != nil {
+		return fmt.Errorf("write expansion: %w", werr)
+	}
 	return nil
 }
 
-// renderJSON emits the structured form of a single-archetype expand.
-func renderJSON(w io.Writer, arch archetype.Archetype, matched []policy.ControlDefinition, snap *expand.SnapshotStatus, finding *policy.ControlDefinition) error {
-	type controlEntry struct {
-		ID       string `json:"id"`
-		Service  string `json:"service"`
-		Severity string `json:"severity"`
-		Summary  string `json:"summary"`
-	}
-	type payload struct {
-		Finding          *findingEntry          `json:"finding,omitempty"`
-		Archetype        archetypeEntry         `json:"archetype"`
-		Controls         []controlEntry         `json:"controls"`
-		ServicesAffected []string               `json:"services_affected"`
-		SnapshotStatus   *expand.SnapshotStatus `json:"snapshot_status,omitempty"`
-		SnapshotCommands []string               `json:"snapshot_commands,omitempty"`
-	}
-
-	out := payload{
-		Archetype: archetypeEntry{
-			ID:          arch.ID.String(),
-			Name:        arch.Name,
-			Description: arch.Description,
-			Guidance:    arch.Guidance,
-		},
-		Controls: make([]controlEntry, 0, len(matched)),
-	}
-
-	if finding != nil {
-		out.Finding = &findingEntry{ID: string(finding.ID), Name: finding.Name}
-	}
-
-	groups := groupByService(matched)
-	out.ServicesAffected = sortedKeys(groups)
-	for _, svc := range out.ServicesAffected {
-		ctls := groups[svc]
-		for i := range ctls {
-			ctl := &ctls[i]
-			out.Controls = append(out.Controls, controlEntry{
-				ID:       string(ctl.ID),
-				Service:  svc,
-				Severity: strings.ToLower(ctl.Severity.String()),
-				Summary:  oneLineSummary(ctl),
-			})
-		}
-	}
-
-	if snap != nil {
-		out.SnapshotStatus = snap
-		for _, svc := range snap.Missing {
-			out.SnapshotCommands = append(out.SnapshotCommands, "stave snapshot "+svc)
-		}
-	}
-
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(out)
-}
-
-type archetypeEntry struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Guidance    string `json:"guidance"`
-}
-
-type findingEntry struct {
-	ID   string `json:"id"`
-	Name string `json:"name,omitempty"`
-}
-
-// renderListJSON emits the catalog summary in JSON form.
-func renderListJSON(w io.Writer, controls []policy.ControlDefinition) error {
-	counts := archetypeCounts(controls)
-
-	type entry struct {
-		ID           string `json:"id"`
-		Name         string `json:"name"`
-		Description  string `json:"description"`
-		ControlCount int    `json:"control_count"`
-	}
-	out := make([]entry, 0, len(archetype.Catalog))
-	for _, a := range archetype.Catalog {
-		out = append(out, entry{
-			ID:           a.ID.String(),
-			Name:         a.Name,
-			Description:  a.Description,
-			ControlCount: counts[a.ID.String()],
-		})
-	}
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	return enc.Encode(map[string]any{"archetypes": out})
-}
-
-// renderListText writes the catalog summary in human-readable text form.
-func renderListText(w io.Writer, controls []policy.ControlDefinition) error {
-	counts := archetypeCounts(controls)
-
-	fmt.Fprintln(w, "Archetypes:")
-	fmt.Fprintln(w)
-	for _, a := range archetype.Catalog {
-		short := firstSentence(a.Description)
-		fmt.Fprintf(w, "  %-23s %s — %s (%d controls)\n", a.ID, a.Name, short, counts[a.ID.String()])
-	}
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "Use: stave expand --archetype <id>")
-	return nil
-}
-
-// archetypeCounts tallies controls per archetype ID, skipping
-// controls with no archetype field.
-func archetypeCounts(controls []policy.ControlDefinition) map[string]int {
-	counts := make(map[string]int, len(archetype.Catalog))
-	for i := range controls {
-		if !controls[i].Archetype.IsEmpty() {
-			counts[controls[i].Archetype.String()]++
-		}
-	}
-	return counts
-}
-
-// --- internal helpers ---
-
-func groupByService(ctls []policy.ControlDefinition) map[string][]policy.ControlDefinition {
-	out := make(map[string][]policy.ControlDefinition)
-	for i := range ctls {
-		svc := expand.ServiceFromControlID(ctls[i].ID)
-		out[svc] = append(out[svc], ctls[i])
-	}
-	return out
-}
-
-func sortedKeys[V any](m map[string]V) []string {
-	out := make([]string, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	sort.Strings(out)
-	return out
-}
-
-func oneLineSummary(ctl *policy.ControlDefinition) string {
-	// Prefer the authored Defect (one sentence triage); fall back to Name.
-	if ctl.HasDiagnosis() {
-		return firstSentence(ctl.Defect)
-	}
-	return ctl.Name
-}
-
-// firstSentence returns the text up to the first period or newline,
-// trimmed. Whitespace is collapsed so multi-line YAML folded scalars
-// render as a single readable line.
-func firstSentence(s string) string {
-	s = strings.TrimSpace(strings.Join(strings.Fields(s), " "))
-	if i := strings.IndexAny(s, ".\n"); i > 0 {
-		return strings.TrimSpace(s[:i])
-	}
-	return s
-}
-
-// wrapParagraph soft-wraps a paragraph at the given width on word boundaries.
-// Newlines in the input are preserved as paragraph breaks.
-func wrapParagraph(s string, width int) string {
-	s = strings.TrimSpace(strings.Join(strings.Fields(s), " "))
-	if s == "" {
-		return ""
-	}
-	var lines []string
-	words := strings.Fields(s)
-	var cur strings.Builder
-	for _, word := range words {
-		if cur.Len() == 0 {
-			cur.WriteString(word)
-			continue
-		}
-		if cur.Len()+1+len(word) > width {
-			lines = append(lines, cur.String())
-			cur.Reset()
-			cur.WriteString(word)
-			continue
-		}
-		cur.WriteByte(' ')
-		cur.WriteString(word)
-	}
-	if cur.Len() > 0 {
-		lines = append(lines, cur.String())
-	}
-	return strings.Join(lines, "\n")
-}
-
-func plural(n int) string {
-	if n == 1 {
-		return ""
-	}
-	return "s"
-}
-
-// --- error helpers — exit codes 2 (user input) and 4 (internal) ---
-
+// inputErrorf wraps a user-input error so the executor maps it to exit
+// code 2 (missing flags, unknown archetype/finding).
 func inputErrorf(format string, args ...any) error {
 	return &ui.UserError{Err: fmt.Errorf(format, args...)}
-}
-
-// internalErrorf returns a plain wrapped error: the executor maps
-// unclassified errors to exit code 4 and renders the message to stderr.
-// Wrapping ui.ErrInternal would suppress the message via the sentinel
-// filter, which is the wrong shape for runtime failures the user can act
-// on (missing controls dir, parse errors, etc.).
-func internalErrorf(format string, args ...any) error {
-	return fmt.Errorf(format, args...)
 }

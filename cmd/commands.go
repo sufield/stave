@@ -29,7 +29,6 @@ import (
 	"github.com/sufield/stave/cmd/doctor"
 	"github.com/sufield/stave/cmd/enforce"
 	"github.com/sufield/stave/cmd/enforce/baseline"
-	"github.com/sufield/stave/cmd/enforce/cidiff"
 	"github.com/sufield/stave/cmd/enforce/fix"
 	"github.com/sufield/stave/cmd/enforce/gate"
 	staveexempt "github.com/sufield/stave/cmd/exempt"
@@ -63,14 +62,12 @@ import (
 	validatemapping "github.com/sufield/stave/cmd/validatemapping"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	infrabaseline "github.com/sufield/stave/internal/adapters/baseline"
-	infradoctor "github.com/sufield/stave/internal/adapters/doctor"
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	infrareport "github.com/sufield/stave/internal/adapters/report"
 	infrafix "github.com/sufield/stave/internal/app/fix"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/core/reporting"
-	"github.com/sufield/stave/internal/core/setup"
 	"github.com/sufield/stave/internal/core/usecase"
 	"github.com/sufield/stave/internal/platform/fileout"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -146,7 +143,7 @@ func WireCommands(app *App) error {
 	}))
 	root.AddCommand(diagnoseCmd)
 	root.AddCommand(diagnose.NewExplainCmd(f.NewCtlRepo))
-	root.AddCommand(expand.NewCmd(f.NewCtlRepo))
+	root.AddCommand(expand.NewCmd())
 
 	// Workflow & CI
 	root.AddCommand(enforce.NewStatusCmd())
@@ -222,15 +219,13 @@ func WireCommands(app *App) error {
 	}))
 
 	// ATT&CK coverage map
-	root.AddCommand(stavemap.NewCmd(stavemap.Deps{
-		NewCtlRepo: f.NewCtlRepo,
-	}))
+	root.AddCommand(stavemap.NewCmd())
 
 	// Attack path graph export
 	root.AddCommand(stavepath.NewCmd())
 
 	// Field coverage analysis
-	root.AddCommand(stavecoverage.NewCmd(f.NewCtlRepo))
+	root.AddCommand(stavecoverage.NewCmd())
 
 	// Control test runner. cmd/test migrated to the pkg/stave
 	// facade (commit X); construction (control loader + CEL
@@ -255,33 +250,24 @@ func WireCommands(app *App) error {
 	// Per-asset-type contract introspection — joins the per-asset
 	// JSON Schema, the predicate-path index, and the Steampipe
 	// mapping directory into one agent-facing view.
-	root.AddCommand(contract.NewCmd(contract.Deps{
-		NewCtlRepo:     f.NewCtlRepo,
-		NewChainLoader: f.NewChainLoader,
-	}))
+	root.AddCommand(contract.NewCmd())
 
 	// Steampipe→Stave mapping validation. Lets an agent confirm a
 	// generated contracts/steampipe/*.yaml is well-formed, references
 	// only declared schema paths, and covers the catalog's read
 	// surface for that asset type before it ships an observation.
-	root.AddCommand(validatemapping.NewCmd(validatemapping.Deps{
-		NewCtlRepo:     f.NewCtlRepo,
-		NewChainLoader: f.NewChainLoader,
-	}))
+	root.AddCommand(validatemapping.NewCmd())
 
 	// Free-form search across controls + chains + asset types.
 	// Bridges user intent ("public S3 bucket") to catalog vocabulary
 	// without forcing the user to know the taxonomy first.
-	root.AddCommand(search.NewCmd(search.Deps{
-		NewCtlRepo:     f.NewCtlRepo,
-		NewChainLoader: f.NewChainLoader,
-	}))
+	root.AddCommand(search.NewCmd())
 
 	// Multi-framework scorecard
 	root.AddCommand(stavescorecard.NewCmd())
 
 	// Snapshot diff
-	root.AddCommand(stavesnapshotdiff.NewCmd(f.NewCtlRepo))
+	root.AddCommand(stavesnapshotdiff.NewCmd())
 
 	// Standalone sanitization
 	root.AddCommand(stavesanitize.NewCmd())
@@ -296,17 +282,7 @@ func WireCommands(app *App) error {
 	root.AddCommand(stavecompare.NewCmd())
 
 	// Executive report
-	reportDeps := stavereport.Deps{
-		NewChainLoader:          f.NewChainLoader,
-		NewSLALoader:            f.NewSLALoader,
-		NewArtifactLoader:       f.NewArtifactLoader,
-		NewSnapshotBundleLoader: f.NewSnapshotBundleLoader,
-		NewCtlRepo:              f.NewCtlRepo,
-	}
-	if err := reportDeps.Validate(); err != nil {
-		return fmt.Errorf("validate report deps: %w", err)
-	}
-	root.AddCommand(stavereport.NewCmd(reportDeps))
+	root.AddCommand(stavereport.NewCmd())
 
 	// Posture score
 	root.AddCommand(stavescore.NewCmd())
@@ -315,19 +291,12 @@ func WireCommands(app *App) error {
 	root.AddCommand(stavetelemetry.NewCmd())
 
 	// Supportability
-	root.AddCommand(doctor.NewCmd(doctor.Deps{
-		UseCaseDeps: setup.DoctorDeps{
-			Runner: &infradoctor.CheckRunner{},
-		},
-	}))
+	root.AddCommand(doctor.NewCmd())
 	root.AddCommand(enforce.NewGraphCmd(f.NewCtlRepo, loadSnapshots))
 	root.AddCommand(initalias.NewCmd(root))
 	{
 		capabilitiesCmd := newCapabilitiesCmd()
-		capabilitiesCmd.AddCommand(catalog.NewCmd(catalog.Deps{
-			NewCtlRepo:     f.NewCtlRepo,
-			NewChainLoader: f.NewChainLoader,
-		}))
+		capabilitiesCmd.AddCommand(catalog.NewCmd())
 		root.AddCommand(capabilitiesCmd)
 	}
 	root.AddCommand(newCompletionCmd())
@@ -387,13 +356,7 @@ func wireCISubtree(
 		NewCtlRepo:      newCtlRepo,
 		NewObsRepo:      newObsRepo,
 	}))
-	ciCmd.AddCommand(enforce.NewCiDiffCmd(cidiff.Deps{
-		UseCaseDeps: reporting.CIDiffDeps{
-			CurrentLoader:  &infrabaseline.EvaluationLoader{},
-			BaselineLoader: &infrabaseline.EvaluationLoader{},
-			Clock:          ports.RealClock{},
-		},
-	}))
+	ciCmd.AddCommand(enforce.NewCiDiffCmd())
 	ciCmd.AddCommand(enforce.NewFixCmd(fix.Deps{
 		NewLoader: func() (usecase.FindingLoaderPort, error) {
 			celEval, err := newCELEvaluator()

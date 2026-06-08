@@ -12,20 +12,12 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	appcaps "github.com/sufield/stave/internal/app/capabilities"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/pkg/stave"
 )
-
-// Deps holds the catalog-loading factories.
-type Deps struct {
-	NewCtlRepo     compose.CtlRepoFactory
-	NewChainLoader compose.ChainLoaderFactory
-}
 
 type options struct {
 	Query       string
@@ -36,7 +28,7 @@ type options struct {
 }
 
 // NewCmd constructs the `search` command.
-func NewCmd(deps Deps) *cobra.Command {
+func NewCmd() *cobra.Command {
 	opts := &options{
 		Top:         10,
 		Format:      "text",
@@ -85,7 +77,7 @@ Exit codes:
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.Query = strings.Join(args, " ")
-			return run(cmd.Context(), cmd.OutOrStdout(), opts, deps)
+			return run(cmd.Context(), cmd.OutOrStdout(), opts)
 		},
 	}
 	cmd.Flags().IntVar(&opts.Top, "top", 10, "number of matches to surface")
@@ -95,83 +87,23 @@ Exit codes:
 	return cmd
 }
 
-func run(ctx context.Context, w io.Writer, opts *options, deps Deps) error {
+func run(ctx context.Context, w io.Writer, opts *options) error {
 	if strings.TrimSpace(opts.Query) == "" {
 		return &ui.UserError{Err: errors.New("query is required")}
 	}
-	renderer, rendErr := NewRenderer(opts.Format)
-	if rendErr != nil {
-		return &ui.UserError{Err: rendErr}
+	// Validate the format up front (guard, not a render dispatch — the
+	// rendering lives in pkg/stave — so this does not trip the
+	// inline-format-switch lint).
+	if opts.Format != "text" && opts.Format != "json" && opts.Format != "" {
+		return &ui.UserError{Err: fmt.Errorf("--format must be text | json (got %q)", opts.Format)}
 	}
 
-	controls, err := compose.LoadControlsFrom(ctx, deps.NewCtlRepo, opts.ControlsDir)
+	out, err := stave.RenderCatalogSearch(ctx, opts.Query, opts.Top, opts.ControlsDir, opts.ChainsDir, opts.Format)
 	if err != nil {
-		return fmt.Errorf("load controls: %w", err)
+		return err //nolint:wrapcheck // facade already wrapped ("load controls"/"render ..."); preserve exit 4.
 	}
-	chains, err := compose.LoadChainDefinitions(ctx, deps.NewChainLoader, opts.ChainsDir)
-	if err != nil {
-		var notFound interface{ NotFound() bool }
-		if !errors.As(err, &notFound) || !notFound.NotFound() {
-			return fmt.Errorf("load chains: %w", err)
-		}
-		chains = nil
-	}
-	catalog := appcaps.Build(controls, chains)
-
-	hits := appcaps.Rank(catalog, opts.Query)
-	if len(hits) > opts.Top {
-		hits = hits[:opts.Top]
-	}
-
-	if err := renderer.Render(w, searchReport{
-		Query: opts.Query,
-		Top:   opts.Top,
-		Total: len(hits),
-		Hits:  hits,
-	}); err != nil {
-		return fmt.Errorf("render search results: %w", err)
+	if _, werr := w.Write(out); werr != nil {
+		return fmt.Errorf("write search results: %w", werr)
 	}
 	return nil
 }
-
-func renderText(w io.Writer, query string, hits []appcaps.Hit) error {
-	if len(hits) == 0 {
-		fmt.Fprintf(w, "No matches for %q. Try broader terms (e.g. \"s3\" instead of \"bucket policy\").\n", query)
-		return nil
-	}
-	fmt.Fprintf(w, "Matches for %q (%d):\n\n", query, len(hits))
-	for i := range hits {
-		c := &hits[i].Capability
-		fmt.Fprintf(w, "#%d  %s", i+1, c.Title)
-		if c.Severity != "" {
-			fmt.Fprintf(w, "   [%s]", strings.ToUpper(c.Severity))
-		}
-		fmt.Fprintln(w)
-		if c.UseWhen != "" {
-			fmt.Fprintf(w, "    Use when: %s\n", c.UseWhen)
-		}
-		if c.Description != "" {
-			fmt.Fprintf(w, "    Detects:  %s\n", c.Description)
-		}
-		if c.ExampleCmd != "" {
-			fmt.Fprintf(w, "    Command:  %s\n", c.ExampleCmd)
-		}
-		if len(c.ControlIDs) > 0 {
-			n := len(c.ControlIDs)
-			limit := min(n, 3)
-			extra := ""
-			if n > limit {
-				extra = fmt.Sprintf(" (+%d more)", n-limit)
-			}
-			fmt.Fprintf(w, "    Controls: %s%s\n", strings.Join(c.ControlIDs[:limit], ", "), extra)
-		}
-		if len(c.ChainIDs) > 0 {
-			fmt.Fprintf(w, "    Chains:   %s\n", strings.Join(c.ChainIDs, ", "))
-		}
-		fmt.Fprintln(w)
-	}
-	return nil
-}
-
-// Tabwriter helper kept available for future grouped output.
-var _ = tabwriter.NewWriter

@@ -4,6 +4,7 @@ package report
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -11,11 +12,11 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/internal/app/contracts"
-	er "github.com/sufield/stave/internal/app/execreport"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type options struct {
@@ -25,20 +26,19 @@ type options struct {
 	ChainsDir     string
 	SLAFile       string
 	TeamManifest  string
-	Format        contracts.OutputFormat
+	Format        cmdutil.OutputFormat
 	OutFile       string
 	Title         string
 	Period        string
 	TeamBreakdown bool
 }
 
-// NewCmd constructs the report command with the given dependencies.
-// cmd/commands.go is responsible for resolving the production factories.
-func NewCmd(deps Deps) *cobra.Command {
+// NewCmd constructs the report command.
+func NewCmd() *cobra.Command {
 	opts := &options{
 		ControlsDir: "controls",
 		ChainsDir:   "chains",
-		Format:      contracts.FormatJSON,
+		Format:      cmdutil.FormatJSON,
 		Title:       "Security Posture Report",
 	}
 
@@ -74,7 +74,7 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runReport(cmd.Context(), cmd.OutOrStdout(), opts, deps)
+			return runReport(cmd.Context(), cmd.OutOrStdout(), opts)
 		},
 	}
 
@@ -96,101 +96,55 @@ Exit Codes:
 	return cmd
 }
 
-func runReport(ctx context.Context, stdout io.Writer, opts *options, deps Deps) error {
-	builder, err := buildReportBuilder(deps)
+func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
+	data, err := stave.BuildReport(ctx, stave.ReportInput{
+		HistoryDir:   opts.HistoryDir,
+		SnapshotPath: opts.SnapshotPath,
+		ControlsDir:  opts.ControlsDir,
+		ChainsDir:    opts.ChainsDir,
+		SLAFile:      opts.SLAFile,
+		TeamManifest: opts.TeamManifest,
+		Title:        opts.Title,
+		Period:       opts.Period,
+		Format:       opts.Format.String(),
+	}, time.Now().UTC())
 	if err != nil {
-		return err
-	}
-	report, err := builder.Build(ctx, er.BuilderInput{
-		HistoryDir:       opts.HistoryDir,
-		SnapshotPath:     opts.SnapshotPath,
-		ControlsDir:      opts.ControlsDir,
-		ChainsDir:        opts.ChainsDir,
-		SLAFile:          opts.SLAFile,
-		TeamManifestPath: opts.TeamManifest,
-		Title:            opts.Title,
-		Period:           opts.Period,
-		Now:              time.Now().UTC(),
-	})
-	if err != nil {
-		return &ui.UserError{Err: err}
+		if errors.Is(err, stave.ErrInvalidInput) {
+			return &ui.UserError{Err: err}
+		}
+		return err //nolint:wrapcheck // facade already wrapped; preserve the exit-4 message verbatim.
 	}
 
-	return writeReport(stdout, opts, report)
+	return writeReportOutput(stdout, opts.OutFile, data)
 }
 
-// buildReportBuilder instantiates the app-layer Builder by resolving
-// every port from the cmd-supplied factory closures. Each factory
-// call produces an independent loader; errors here surface as
-// configuration / wiring failures.
-func buildReportBuilder(deps Deps) (*er.Builder, error) {
-	artifactLoader, err := deps.NewArtifactLoader()
-	if err != nil {
-		return nil, fmt.Errorf("create artifact loader: %w", err)
-	}
-	chainLoader, err := deps.NewChainLoader()
-	if err != nil {
-		return nil, fmt.Errorf("create chain loader: %w", err)
-	}
-	slaProvider, err := deps.NewSLALoader()
-	if err != nil {
-		return nil, fmt.Errorf("create sla provider: %w", err)
-	}
-	bundleLoader, err := deps.NewSnapshotBundleLoader()
-	if err != nil {
-		return nil, fmt.Errorf("create snapshot bundle loader: %w", err)
-	}
-	ctlRepo, err := deps.NewCtlRepo()
-	if err != nil {
-		return nil, fmt.Errorf("create control loader: %w", err)
-	}
-	return &er.Builder{
-		Deps: er.BuilderDeps{
-			ArtifactLoader:       artifactLoader,
-			ChainLoader:          chainLoader,
-			SLAProvider:          slaProvider,
-			SnapshotBundleLoader: bundleLoader,
-			ControlRepo:          ctlRepo,
-		},
-	}, nil
-}
-
-// writeReport handles the format dispatch + file/stdout sink and
-// preserves the close-error-after-write rule (write errors win
-// over close errors so partial-output failures aren't masked).
-func writeReport(stdout io.Writer, opts *options, report *er.Report) error {
+// writeReportOutput writes the rendered report to OutFile (symlink-safe,
+// 0o600 — a report may carry sensitive asset identifiers) or to stdout.
+// Preserves the close-error-after-write rule: write errors win over
+// close errors so partial-output failures aren't masked.
+func writeReportOutput(stdout io.Writer, outFile string, data []byte) error {
 	w := stdout
 	var f *os.File
-	if opts.OutFile != "" {
-		// SafeCreateFile applies symlink rejection and 0o600 perms
-		// — a report contains finding IDs and may carry sensitive
-		// asset identifiers, so a world-readable file (the default
-		// os.Create behaviour) is the wrong default. Mirrors the
-		// cmd/evaluate output-write pattern.
+	if outFile != "" {
 		writeOpts := fsutil.DefaultWriteOpts()
 		writeOpts.Overwrite = true
 		var fErr error
-		f, fErr = fsutil.SafeCreateFile(opts.OutFile, writeOpts)
+		f, fErr = fsutil.SafeCreateFile(outFile, writeOpts)
 		if fErr != nil {
 			return fmt.Errorf("create output file: %w", fErr)
 		}
 		w = f
 	}
 
-	renderer, rendErr := NewRenderer(opts.Format)
-	if rendErr != nil {
-		if f != nil {
-			_ = f.Close()
-		}
-		return rendErr
-	}
-	writeErr := renderer.Render(w, report)
-
+	_, writeErr := w.Write(data)
 	if f != nil {
 		closeErr := f.Close()
 		if writeErr == nil {
 			writeErr = closeErr
 		}
 	}
-	return writeErr
+	if writeErr != nil {
+		return fmt.Errorf("write report: %w", writeErr)
+	}
+	return nil
 }

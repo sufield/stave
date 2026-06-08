@@ -1,10 +1,6 @@
 package generate
 
-import (
-	"testing"
-
-	"github.com/sufield/stave/internal/platform/fileout"
-)
+import "testing"
 
 func TestParseMode_Valid(t *testing.T) {
 	tests := []struct {
@@ -51,36 +47,5 @@ func TestDefaultOptions(t *testing.T) {
 	}
 	if opts.ModeRaw != "pab" {
 		t.Fatalf("ModeRaw = %q", opts.ModeRaw)
-	}
-}
-
-func TestTargetNames(t *testing.T) {
-	names := targetNames(nil)
-	if len(names) != 0 {
-		t.Fatalf("expected 0 targets, got %d", len(names))
-	}
-}
-
-func TestNewRunner(t *testing.T) {
-	r := NewRunner(fileout.FileOptions{
-		Overwrite: false,
-		DirPerms:  0o700,
-	})
-	if r == nil {
-		t.Fatal("expected non-nil runner")
-	}
-}
-
-func TestValidateInputPath_Missing(t *testing.T) {
-	err := validateInputPath("/nonexistent/path/file.json")
-	if err == nil {
-		t.Fatal("expected error for missing file")
-	}
-}
-
-func TestValidateInputPath_Dir(t *testing.T) {
-	err := validateInputPath(t.TempDir())
-	if err == nil {
-		t.Fatal("expected error for directory input")
 	}
 }

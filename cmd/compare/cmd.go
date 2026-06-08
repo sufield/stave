@@ -4,7 +4,6 @@ package compare
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -13,12 +12,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	artifact "github.com/sufield/stave/internal/adapters/artifacts"
-	appcompare "github.com/sufield/stave/internal/app/compare"
-	"github.com/sufield/stave/internal/app/remediationimpact"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type options struct {
@@ -109,28 +105,17 @@ func runCompare(ctx context.Context, stdout io.Writer, opts *options) error {
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("read assessment: %w", err)}
 	}
-	var assessment struct {
-		Findings []remediation.Finding `json:"findings"`
-	}
-	if unmarshalErr := json.Unmarshal(data, &assessment); unmarshalErr != nil {
-		return &ui.UserError{Err: fmt.Errorf("parse assessment: %w", unmarshalErr)}
-	}
 
-	result := appcompare.Analyze(appcompare.Input{
-		GeneratedAt:  time.Now().UTC().Format(time.RFC3339),
-		BaselineName: opts.From,
-		TargetName:   opts.To,
-		BaselineKey:  opts.From,
-		TargetKey:    opts.To,
-		Findings:     assessment.Findings,
-	})
-
-	renderer, rendErr := NewRenderer(opts.Format)
-	if rendErr != nil {
-		return &ui.UserError{Err: rendErr}
+	out, err := stave.CompareFrameworks(time.Now().UTC(), opts.From, opts.To, data, opts.Format)
+	if err != nil {
+		if errors.Is(err, stave.ErrInvalidInput) {
+			return &ui.UserError{Err: err}
+		}
+		return err //nolint:wrapcheck // facade already wrapped; preserve the exit-4 render message verbatim.
 	}
 	if err := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
-		return renderer.Render(w, result)
+		_, werr := w.Write(out)
+		return werr
 	}); err != nil {
 		return fmt.Errorf("write comparison output: %w", err)
 	}
@@ -142,30 +127,17 @@ func runRemediationImpact(ctx context.Context, stdout io.Writer, opts *options) 
 		return &ui.UserError{Err: errors.New("--before and --after are required for remediation mode")}
 	}
 
-	loader := artifact.NewLoader()
-
-	before, err := loader.Evaluation(ctx, opts.Before)
+	out, err := stave.CompareRemediationImpact(ctx, opts.Before, opts.After)
 	if err != nil {
-		return &ui.UserError{Err: fmt.Errorf("load before assessment: %w", err)}
-	}
-
-	after, err := loader.Evaluation(ctx, opts.After)
-	if err != nil {
-		return &ui.UserError{Err: fmt.Errorf("load after assessment: %w", err)}
-	}
-
-	result, err := remediationimpact.Analyze(remediationimpact.Input{
-		Before: before,
-		After:  after,
-	})
-	if err != nil {
-		return &ui.UserError{Err: fmt.Errorf("analyze remediation impact: %w", err)}
+		if errors.Is(err, stave.ErrInvalidInput) {
+			return &ui.UserError{Err: err}
+		}
+		return err //nolint:wrapcheck // facade already wrapped; preserve the exit code verbatim.
 	}
 
 	if err := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		return enc.Encode(result)
+		_, werr := w.Write(out)
+		return werr
 	}); err != nil {
 		return fmt.Errorf("write remediation impact: %w", err)
 	}

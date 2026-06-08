@@ -3,18 +3,15 @@ package mapcmd
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	appcoverage "github.com/sufield/stave/internal/app/coverage"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type options struct {
@@ -26,9 +23,8 @@ type options struct {
 	NoPager     bool
 }
 
-// NewCmd constructs the map command with the given dependencies.
-// cmd/commands.go is responsible for resolving the production factories.
-func NewCmd(deps Deps) *cobra.Command {
+// NewCmd constructs the map command.
+func NewCmd() *cobra.Command {
 	opts := &options{Format: "table", ControlsDir: "controls", MinControls: 2}
 
 	cmd := &cobra.Command{
@@ -50,7 +46,7 @@ Exit Codes:
 			// are machine formats, and --out writes to a file.
 			pageable := !opts.NoPager && opts.OutPath == "" && opts.Format == "table"
 			pw, closePager := ui.NewPager(cmd.Context(), cmd.OutOrStdout(), pageable)
-			err := runMap(cmd.Context(), pw, opts, deps)
+			err := runMap(cmd.Context(), pw, opts)
 			if cerr := closePager(); cerr != nil && err == nil {
 				err = cerr
 			}
@@ -68,96 +64,27 @@ Exit Codes:
 	return cmd
 }
 
-func runMap(ctx context.Context, stdout io.Writer, opts *options, deps Deps) error {
-	ctlRepo, err := deps.NewCtlRepo()
-	if err != nil {
-		return fmt.Errorf("create control loader: %w", err)
-	}
-	controls, err := ctlRepo.LoadControls(ctx, fsutil.CleanUserPath(opts.ControlsDir))
-	if err != nil {
-		return fmt.Errorf("load controls: %w", err)
-	}
-
-	input := appcoverage.BuildInput{
-		Controls:    controls,
-		MinControls: opts.MinControls,
-	}
-
-	// Optional posture overlay.
+func runMap(ctx context.Context, stdout io.Writer, opts *options) error {
+	// Read the optional posture-overlay assessment (fsutil is an exempt
+	// command-side helper); the facade parses + builds + renders.
+	var assessmentData []byte
 	if opts.OutputFile != "" {
 		data, readErr := fsutil.ReadFileLimited(opts.OutputFile)
 		if readErr != nil {
 			return fmt.Errorf("read assessment: %w", readErr)
 		}
-		var assessment report.Assessment
-		if jsonErr := json.Unmarshal(data, &assessment); jsonErr != nil {
-			return fmt.Errorf("parse assessment: %w", jsonErr)
-		}
-		input.Findings = assessment.Findings
+		assessmentData = data
 	}
 
-	coverageReport := appcoverage.Build(input)
-
-	renderer, rendErr := NewRenderer(opts.Format)
-	if rendErr != nil {
-		return rendErr
+	out, err := stave.MapAttackCoverage(ctx, fsutil.CleanUserPath(opts.ControlsDir), opts.MinControls, assessmentData, opts.Format)
+	if err != nil {
+		return err //nolint:wrapcheck // facade already wrapped; all map errors are exit-4 plain.
 	}
-	if err := cmdutil.WriteTo(stdout, opts.OutPath, func(out io.Writer) error {
-		return renderer.Render(out, coverageReport)
+	if err := cmdutil.WriteTo(stdout, opts.OutPath, func(w io.Writer) error {
+		_, werr := w.Write(out)
+		return werr
 	}); err != nil {
 		return fmt.Errorf("write coverage map: %w", err)
 	}
 	return nil
-}
-
-func writeTable(w io.Writer, r *appcoverage.CoverageReport) {
-	fmt.Fprintf(w, "MITRE ATT&CK COVERAGE MAP\n")
-	fmt.Fprintf(w, "Controls: %d analyzed, %d annotated, %d unannotated\n\n",
-		r.ControlsAnalyzed, r.ControlsAnnotated, r.ControlsUnannotated)
-
-	// Gaps first.
-	hasGaps := false
-	for i := range r.Tactics {
-		if r.Tactics[i].IsGap() {
-			if !hasGaps {
-				fmt.Fprintln(w, "COVERAGE GAPS")
-				fmt.Fprintln(w, strings.Repeat("-", 70))
-				hasGaps = true
-			}
-			tc := &r.Tactics[i]
-			fmt.Fprintf(w, "  %-22s %-7s %3d controls  %s\n",
-				tc.TacticName, tc.TacticID, tc.ControlCount, tc.DisplayStatus())
-		}
-	}
-	if hasGaps {
-		fmt.Fprintln(w)
-	}
-
-	fmt.Fprintln(w, "FULL TACTIC COVERAGE")
-	fmt.Fprintln(w, strings.Repeat("-", 70))
-	for i := range r.Tactics {
-		tc := &r.Tactics[i]
-		passingStr := "—"
-		if tc.PassingCount != nil {
-			passingStr = fmt.Sprintf("%d/%d", *tc.PassingCount, tc.ControlCount)
-		}
-		fmt.Fprintf(w, "  %-22s %-7s %3d controls  %s\n",
-			tc.TacticName, tc.TacticID, tc.ControlCount, passingStr)
-	}
-
-	fmt.Fprintf(w, "\nSummary: %d/%d tactics covered, %d thin, %d gaps\n",
-		r.Summary.TacticsCovered, r.Summary.TacticsTotal, r.Summary.TacticsThin, r.Summary.TacticsNoCoverage)
-}
-
-func writeMarkdown(w io.Writer, r *appcoverage.CoverageReport) {
-	fmt.Fprintln(w, "# MITRE ATT&CK Coverage Report")
-	fmt.Fprintf(w, "Controls: %d | Annotated: %d\n\n", r.ControlsAnalyzed, r.ControlsAnnotated)
-
-	fmt.Fprintln(w, "| Tactic | ID | Controls | Status |")
-	fmt.Fprintln(w, "|---|---|---|---|")
-	for i := range r.Tactics {
-		tc := &r.Tactics[i]
-		fmt.Fprintf(w, "| %s | %s | %d | %s |\n",
-			tc.TacticName, tc.TacticID, tc.ControlCount, tc.Status)
-	}
 }

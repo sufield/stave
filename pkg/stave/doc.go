@@ -84,8 +84,28 @@
 //	VerifySnapshot     — verify an attested snapshot.
 //	GenerateAttestKeyPair — make an Ed25519 attestation key pair.
 //	EvalCEL            — evaluate a raw CEL expression over a snapshot.
+//	DiffCatalogs       — render the delta between two control catalogs.
+//	DiffSnapshotBundles — render the diff of two observation bundle files.
+//	RenderMetrics      — Prometheus scrape body from an assessment history.
+//	RenderScorecard    — multi-framework compliance scorecard from findings.
+//	CompareFrameworks  — baseline-vs-target framework gap analysis.
+//	CompareRemediationImpact — before/after remediation-impact analysis.
+//	ExpandList         — archetype catalog summary with control counts.
+//	ExpandArchetype    — expand one archetype/finding into its control family.
+//	ContractShowType   — agent-facing input contract for one asset type.
+//	ContractList       — asset types with controls (schema/mapping presence).
+//	BuildReport        — executive posture report (json/markdown).
+//	MapAttackCoverage  — MITRE ATT&CK tactic coverage map from the catalog.
+//	ValidateMapping    — pre-flight check a Steampipe->Stave mapping file.
 //	AvailableFrameworks — list every embedded framework profile ID.
 //	SearchCatalog      — rank the catalog against a free-form intent.
+//	RenderCatalogSearch — load (dir) + rank + render the catalog search.
+//	AnalyzeFieldCoverage — control evaluability vs a snapshot's fields.
+//	RenderCatalog      — grouped capability catalog view (text/wide/json).
+//	BuildAttackPath    — chain attack-path graph (json/dot/csv-edges).
+//	CIDiff             — new/resolved findings vs a baseline evaluation.
+//	GenerateEnforcement — write a PAB/SCP enforcement template from findings.
+//	RunDoctor          — local environment readiness checks (text/json).
 //	ExplainControl     — catalog-only explanation of one control.
 //	SuggestControlIDs  — fuzzy-suggest control IDs for a partial query.
 //	AssetTypeExamples  — example control ID per asset type.

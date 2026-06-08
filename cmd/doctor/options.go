@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 )
 
 // options holds the raw CLI flag values for the doctor command.
@@ -27,7 +27,7 @@ func (o *options) Prepare(cmd *cobra.Command) error {
 }
 
 // resolveFormat resolves the output format without needing *cobra.Command.
-func (o *options) resolveFormat() (appcontracts.OutputFormat, error) {
+func (o *options) resolveFormat() (cmdutil.OutputFormat, error) {
 	f, err := compose.ResolveFormatValue(o.Format)
 	if err != nil {
 		return "", fmt.Errorf("resolve output format: %w", err)

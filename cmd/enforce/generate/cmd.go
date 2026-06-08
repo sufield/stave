@@ -2,15 +2,43 @@ package generate
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/internal/platform/fileout"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/metadata"
+	"github.com/sufield/stave/pkg/stave"
 )
+
+// Mode represents a validated enforcement mode.
+type Mode string
+
+const (
+	// ModePAB selects Public Access Block enforcement.
+	ModePAB Mode = "pab"
+	// ModeSCP selects Service Control Policy enforcement.
+	ModeSCP Mode = "scp"
+)
+
+// ParseMode validates and returns a Mode value. It stays in the command
+// (not the facade) because it reports invalid input via ui.EnumError, and
+// pkg/stave must not import internal/cli/ui.
+func ParseMode(s string) (Mode, error) {
+	normalized := Mode(ui.NormalizeToken(s))
+	switch normalized {
+	case ModePAB, ModeSCP:
+		return normalized, nil
+	default:
+		return "", ui.EnumError("--mode", s, []string{string(ModePAB), string(ModeSCP)})
+	}
+}
+
+// String implements fmt.Stringer.
+func (m Mode) String() string {
+	return string(m)
+}
 
 type options struct {
 	InPath  string
@@ -36,20 +64,6 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	_ = cmd.RegisterFlagCompletionFunc("mode", cliflags.CompleteFixed(string(ModePAB), string(ModeSCP)))
 }
 
-func toConfig(o *options, stdout io.Writer) (Config, error) {
-	mode, err := ParseMode(o.ModeRaw)
-	if err != nil {
-		return Config{}, fmt.Errorf("invalid mode: %w", err)
-	}
-	return Config{
-		InputPath: fsutil.CleanUserPath(o.InPath),
-		OutDir:    fsutil.CleanUserPath(o.OutDir),
-		Mode:      mode,
-		DryRun:    o.DryRun,
-		Stdout:    stdout,
-	}, nil
-}
-
 // NewCmd constructs the generate enforce command.
 func NewCmd() *cobra.Command {
 	opts := defaultOptions()
@@ -70,17 +84,26 @@ Exit Codes:
 		Example: `  stave enforce --input evaluation.json --mode terraform`,
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, err := toConfig(&opts, cmd.OutOrStdout())
+			mode, err := ParseMode(opts.ModeRaw)
 			if err != nil {
-				return err
+				return fmt.Errorf("invalid mode: %w", err)
 			}
 			gf := cliflags.GetGlobalFlags(cmd)
-			runner := NewRunner(fileout.FileOptions{
+			out, err := stave.GenerateEnforcement(cmd.Context(), stave.GenerateEnforcementConfig{
+				InputPath:     fsutil.CleanUserPath(opts.InPath),
+				OutDir:        fsutil.CleanUserPath(opts.OutDir),
+				Mode:          mode.String(),
+				DryRun:        opts.DryRun,
 				Overwrite:     gf.Force,
 				AllowSymlinks: gf.AllowSymlinkOut,
-				DirPerms:      0o700,
 			})
-			return runner.Run(cmd.Context(), cfg)
+			if err != nil {
+				return err //nolint:wrapcheck // facade already wrapped; all generate errors are exit-4 plain.
+			}
+			if _, werr := cmd.OutOrStdout().Write(out); werr != nil {
+				return fmt.Errorf("write output: %w", werr)
+			}
+			return nil
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
