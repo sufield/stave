@@ -9,8 +9,8 @@ against each fixture's observation snapshots.
 ### `remediated-config`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: unsat
-- **Soufflé** — 45 reach / 0 anon / 0 self-reg
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -18,14 +18,14 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 51 lines / `smt2` 507 lines
-- *runtime*: 10.42s
+- *fact export*: `jsonl` 80 lines / `smt2` 607 lines
+- *runtime*: 1.67s
 
 ### `writeup-config`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: sat
-- **Soufflé** — 45 reach / 0 anon / 0 self-reg
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a
+- **Soufflé** — n/a
 - **Clingo** — 1 kind(s): resource_policy_broad_read
 - **Prolog** — 2 proof step(s)
 - **PySAT** — SAFE
@@ -33,8 +33,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 54 lines / `smt2` 525 lines
-- *runtime*: 11.64s
+- *fact export*: `jsonl` 83 lines / `smt2` 625 lines
+- *runtime*: 1.69s
 
 ## Reading the matrix
 

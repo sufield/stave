@@ -14,7 +14,7 @@ Coder instance, and wants a $6/month droplet that "just works."
 | Component | Version | Source |
 |---|---|---|
 | Ubuntu base | `ubuntu-24-04-x64` | DO snapshot base |
-| Go toolchain | `1.26.3` | matches `go.mod`'s `toolchain` directive |
+| Go toolchain | `1.26.4` | matches `go.mod`'s `toolchain` directive |
 | Steampipe | `1.0.0` | matches the Coder Dockerfile |
 | AWS plugin | latest at build time | `steampipe plugin install aws` |
 | Stave | `$STAVE_REF` (default `main`) | built from source on the droplet |

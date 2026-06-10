@@ -9,8 +9,8 @@ against each fixture's observation snapshots.
 ### `after`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: unsat; query: unsat; query: unsat
-- **Soufflé** — 15 reach / 0 anon / 0 self-reg
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query: n/a; query: n/a
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -18,15 +18,15 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 15 lines / `smt2` 291 lines
-- *runtime*: 10.28s
+- *fact export*: `jsonl` 17 lines / `smt2` 211 lines
+- *runtime*: 1.98s
 
 ### `before`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.IAM.POLICY.RESOURCE.WILDCARD.001`
-- **SMT (Z3 / cvc5 / Yices)** — query: sat; query: unsat; query: sat
-- **Soufflé** — 8 reach / 0 anon / 0 self-reg
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query: n/a; query: n/a
+- **Soufflé** — n/a
 - **Clingo** — 2 kind(s): exploitable_overperm, wildcard_action_resource
 - **Prolog** — 2 proof step(s)
 - **PySAT** — SAFE
@@ -34,14 +34,14 @@ against each fixture's observation snapshots.
 - **TLA+** — UNSAFE
 - **Game theory** — $900
 
-- *fact export*: `jsonl` 15 lines / `smt2` 291 lines
-- *runtime*: 11.1s
+- *fact export*: `jsonl` 17 lines / `smt2` 211 lines
+- *runtime*: 1.68s
 
 ### `bybit-pattern-after`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: unsat; query: unsat; query: unsat
-- **Soufflé** — 16 reach / 0 anon / 0 self-reg
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query: n/a; query: n/a
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -49,14 +49,14 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 29 lines / `smt2` 375 lines
-- *runtime*: 10.45s
+- *fact export*: `jsonl` 38 lines / `smt2` 342 lines
+- *runtime*: 1.75s
 
 ### `bybit-pattern-before`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: unsat; query: sat; query: unsat
-- **Soufflé** — 8 reach / 0 anon / 0 self-reg
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query: n/a; query: n/a
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -64,8 +64,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 25 lines / `smt2` 351 lines
-- *runtime*: 10.98s
+- *fact export*: `jsonl` 34 lines / `smt2` 318 lines
+- *runtime*: 1.65s
 
 ## Reading the matrix
 

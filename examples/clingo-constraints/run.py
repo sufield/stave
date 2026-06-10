@@ -81,6 +81,9 @@ LIFTED_PREDICATES = {
     # pair on an identity's `purpose` becomes
     # has_purpose_flag(identity, "k=v"). Rule V18 in constraints.lp.
     "has_purpose_flag",
+    # IAM Privilege Escalation
+    "identity_is_admin_equivalent", "identity_escalation_passrole_autoscaling_present",
+    "identity_kind", "identity_name",
 }
 
 
@@ -98,7 +101,7 @@ def load_facts(jsonl_path: Path) -> list[str]:
             if not line:
                 continue
             triple = json.loads(line)
-            pred = triple.get("predicate", "")
+            pred = triple.get("predicate", "").replace(".", "_")
             if pred not in LIFTED_PREDICATES:
                 continue
             subj = triple.get("subject", "")

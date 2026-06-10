@@ -9,8 +9,8 @@ against each fixture's observation snapshots.
 ### `after`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: unsat
-- **Soufflé** — 0 reachable
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -18,15 +18,15 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 14 lines / `smt2` 285 lines
-- *runtime*: 9.81s
+- *fact export*: `jsonl` 34 lines / `smt2` 331 lines
+- *runtime*: 1.75s
 
 ### `before`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.S3.PUBLIC.LIST.001`
-- **SMT (Z3 / cvc5 / Yices)** — query: sat
-- **Soufflé** — 0 reachable
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a
+- **Soufflé** — n/a
 - **Clingo** — 2 kind(s): broad_resource_policy_principal, public_list
 - **Prolog** — 2 proof step(s)
 - **PySAT** — SAFE
@@ -34,8 +34,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 16 lines / `smt2` 297 lines
-- *runtime*: 10.71s
+- *fact export*: `jsonl` 36 lines / `smt2` 343 lines
+- *runtime*: 1.77s
 
 ## Reading the matrix
 

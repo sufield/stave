@@ -9,8 +9,8 @@ against each fixture's observation snapshots.
 ### `after`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: unsat
-- **Soufflé** — 0 reachable
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -18,15 +18,15 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 7 lines / `smt2` 243 lines
-- *runtime*: 8.56s
+- *fact export*: `jsonl` 10 lines / `smt2` 170 lines
+- *runtime*: 1.74s
 
 ### `before`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.K8S.AUTH.ACCESSKEYMAP.001`
-- **SMT (Z3 / cvc5 / Yices)** — query: sat
-- **Soufflé** — 0 reachable
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a
+- **Soufflé** — n/a
 - **Clingo** — 1 kind(s): access_key_template_injection
 - **Prolog** — 1 proof step(s)
 - **PySAT** — SAFE
@@ -34,8 +34,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 9 lines / `smt2` 255 lines
-- *runtime*: 9.05s
+- *fact export*: `jsonl` 12 lines / `smt2` 182 lines
+- *runtime*: 1.78s
 
 ## Reading the matrix
 

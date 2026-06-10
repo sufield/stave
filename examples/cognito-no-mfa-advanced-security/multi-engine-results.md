@@ -9,8 +9,8 @@ against each fixture's observation snapshots.
 ### `after`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: unsat
-- **Soufflé** — 0 reachable
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -18,15 +18,15 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 9 lines / `smt2` 255 lines
-- *runtime*: 9.36s
+- *fact export*: `jsonl` 19 lines / `smt2` 231 lines
+- *runtime*: 1.63s
 
 ### `before`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.COGNITO.MFA.001`
-- **SMT (Z3 / cvc5 / Yices)** — query: sat
-- **Soufflé** — 0 reachable
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a
+- **Soufflé** — n/a
 - **Clingo** — 2 kind(s): advanced_security_off, mfa_disabled
 - **Prolog** — 2 proof step(s)
 - **PySAT** — SAFE
@@ -34,8 +34,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 10 lines / `smt2` 261 lines
-- *runtime*: 10.35s
+- *fact export*: `jsonl` 18 lines / `smt2` 223 lines
+- *runtime*: 1.65s
 
 ## Reading the matrix
 

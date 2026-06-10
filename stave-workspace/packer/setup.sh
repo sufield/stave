@@ -17,7 +17,7 @@
 set -euo pipefail
 
 STAVE_REF="${STAVE_REF:-main}"
-GO_VERSION="${GO_VERSION:-1.26.3}"
+GO_VERSION="${GO_VERSION:-1.26.4}"
 STEAMPIPE_VERSION="1.0.0"
 
 echo "── System packages ─────────────────────────────────────────"

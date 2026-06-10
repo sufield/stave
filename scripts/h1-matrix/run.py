@@ -117,12 +117,10 @@ def find_fixtures() -> list[dict]:
             if not obs.is_dir():
                 continue
             # Find a controls dir — usually example/controls but some
-            # have per-fixture controls.
+            # have per-fixture controls. Fall back to the main catalog if not found.
             controls = example / "controls"
             if not controls.is_dir():
-                # Skip the fixture if there's no control set; we can't
-                # eval CEL without controls.
-                continue
+                controls = STAVE / "controls"
             out.append({
                 "example": example.name,
                 "fixture": fix.name,
@@ -150,8 +148,7 @@ def cell_cel(fix: dict) -> dict:
                         "--controls", fix["controls"],
                         "--observations", fix["obs"],
                         "--now", NOW,
-                        "--format", "json",
-                        "--allow-unknown-input"])
+                        "--format", "json"])
     if rc not in (0, 3) or not out:
         return {"verdict": "error", "detail": err.strip()[:120] or f"rc={rc}"}
     try:
@@ -171,8 +168,7 @@ def cell_export(fix: dict, fmt: str, dest: pathlib.Path) -> dict:
                         "--controls", fix["controls"],
                         "--observations", fix["obs"],
                         "--now", NOW,
-                        "--format", fmt,
-                        "--allow-unknown-input"])
+                        "--format", fmt])
     if rc != 0 or not out:
         return {"verdict": "error", "lines": 0, "detail": err.strip()[:120]}
     dest.write_text(out)

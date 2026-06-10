@@ -10,7 +10,7 @@ against each fixture's observation snapshots.
 
 - **CEL** — 0 finding(s) (COMPLIANT)
 - **SMT (Z3 / cvc5 / Yices)** — —
-- **Soufflé** — 0 reachable
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -18,14 +18,14 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 10 lines / `smt2` 257 lines
-- *runtime*: 9.57s
+- *fact export*: `jsonl` 17 lines / `smt2` 212 lines
+- *runtime*: 1.62s
 
 ### `prod-dormant`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
 - **SMT (Z3 / cvc5 / Yices)** — —
-- **Soufflé** — 0 reachable
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -33,15 +33,15 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 11 lines / `smt2` 263 lines
-- *runtime*: 9.88s
+- *fact export*: `jsonl` 19 lines / `smt2` 225 lines
+- *runtime*: 1.66s
 
 ### `stale-staging`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.LIFECYCLE.STAGING.STALE.001`
 - **SMT (Z3 / cvc5 / Yices)** — —
-- **Soufflé** — 0 reachable
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -49,15 +49,15 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 13 lines / `smt2` 275 lines
-- *runtime*: 9.69s
+- *fact export*: `jsonl` 21 lines / `smt2` 237 lines
+- *runtime*: 1.62s
 
 ### `stale-staging-public`
 
 - **CEL** — 2 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.LIFECYCLE.STAGING.STALE.001`, `CTL.S3.PUBLIC.LIST.002`
 - **SMT (Z3 / cvc5 / Yices)** — —
-- **Soufflé** — 0 reachable
+- **Soufflé** — n/a
 - **Clingo** — 1 kind(s): public_list
 - **Prolog** — 1 proof step(s)
 - **PySAT** — UNSAFE
@@ -65,8 +65,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 16 lines / `smt2` 293 lines
-- *runtime*: 10.09s
+- *fact export*: `jsonl` 23 lines / `smt2` 248 lines
+- *runtime*: 1.63s
 
 ## Reading the matrix
 

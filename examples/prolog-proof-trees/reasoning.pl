@@ -258,6 +258,20 @@ passrole_autoscaling_bypass(P, [
     has_action(P, "autoscaling:*"),
     \+ has_deny_action(P, "autoscaling:CreateLaunchConfiguration").
 
+% PassRole -> autoscaling privilege escalation. A user U can escalate
+% to admin-equivalent role R because U has the PassRole + AutoScaling escalation
+% finding AND R is admin-equivalent AND R trusts the EC2 service (which AutoScaling uses).
+% Targets: iam-21-privesc-5-patterns.
+passrole_autoscaling_escalation(U, R, [
+    step(U, identity_escalation_passrole_autoscaling_present, "true"),
+    step(R, identity_is_admin_equivalent, "true"),
+    step(R, trusts_service, "ec2.amazonaws.com"),
+    conclusion(U, can_escalate_to_admin_via_passrole_autoscaling)
+]) :-
+    identity_escalation_passrole_autoscaling_present(U, "true"),
+    identity_is_admin_equivalent(R, "true"),
+    trusts_service(R, "ec2.amazonaws.com").
+
 % ===========================================================
 % Proof tree formatting.
 % ===========================================================
@@ -383,6 +397,11 @@ run_passrole_autoscaling :-
         ( format("~npassrole autoscaling bypass on ~w:~n", [P]),
           print_proof(Proof) )).
 
+run_passrole_autoscaling_escalation :-
+    forall(passrole_autoscaling_escalation(U, R, Proof),
+        ( format("~npassrole autoscaling escalation from ~w to admin-equivalent ~w:~n", [U, R]),
+          print_proof(Proof) )).
+
 run_queries :-
     run_section("Anonymous Access Chains",
                 anonymous_access(_, _, _, _), run_anonymous),
@@ -419,4 +438,6 @@ run_queries :-
     run_section("Broad Write Scope (Signed Upload)",
                 broad_write_scope(_, _), run_broad_write),
     run_section("PassRole Autoscaling Bypass (deny-aware)",
-                passrole_autoscaling_bypass(_, _), run_passrole_autoscaling).
+                passrole_autoscaling_bypass(_, _), run_passrole_autoscaling),
+    run_section("PassRole Autoscaling Privilege Escalation (cross-subject)",
+                passrole_autoscaling_escalation(_, _, _), run_passrole_autoscaling_escalation).

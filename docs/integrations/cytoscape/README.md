@@ -41,5 +41,4 @@ stave graph export --output assessment.json > graph.json
 
 ## Supersedes
 
-This viewer supersedes `docs/graph/cytoscape.html` (the old
-DOT-based viewer). The old file is preserved until Iteration 6.
+This viewer supersedes the old DOT-based viewer (`docs/graph/cytoscape.html`), which was removed in Iteration 6.

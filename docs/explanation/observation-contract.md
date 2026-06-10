@@ -32,4 +32,4 @@ When a new infrastructure service needs Stave coverage, the integration path is:
 
 The contract is the boundary. The extractor author needs the contract. The control author needs the contract. Neither needs the other. This allows independent development of extractors and controls.
 
-Contracts are documented per service in `docs/contracts/`.
+Contracts are documented per service in `docs/contract/`.

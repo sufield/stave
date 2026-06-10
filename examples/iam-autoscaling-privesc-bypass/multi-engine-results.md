@@ -9,8 +9,8 @@ against each fixture's observation snapshots.
 ### `remediated-config`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: unsat
-- **Soufflé** — 19 reach / 0 anon / 0 self-reg
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -18,15 +18,15 @@ against each fixture's observation snapshots.
 - **TLA+** — UNSAFE
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 53 lines / `smt2` 519 lines
-- *runtime*: 10.8s
+- *fact export*: `jsonl` 57 lines / `smt2` 452 lines
+- *runtime*: 1.7s
 
 ### `writeup-config`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001`
-- **SMT (Z3 / cvc5 / Yices)** — query: sat
-- **Soufflé** — 19 reach / 0 anon / 0 self-reg
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a
+- **Soufflé** — n/a
 - **Clingo** — 1 kind(s): passrole_autoscaling_bypass
 - **Prolog** — 3 proof step(s)
 - **PySAT** — SAFE
@@ -34,8 +34,8 @@ against each fixture's observation snapshots.
 - **TLA+** — UNSAFE
 - **Game theory** — $900
 
-- *fact export*: `jsonl` 45 lines / `smt2` 471 lines
-- *runtime*: 40.69s
+- *fact export*: `jsonl` 51 lines / `smt2` 418 lines
+- *runtime*: 1.84s
 
 ## Reading the matrix
 

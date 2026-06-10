@@ -48,7 +48,7 @@ run_one() {
         --controls "$controls" \
         --observations "$obs_dir" \
         --now 2026-01-09T00:00:00Z \
-        --format jsonl --allow-unknown-input > "$facts" 2>/dev/null
+        --format jsonl > "$facts" 2>/dev/null
 
     "$venv_python" "$runner" "$label" "$facts" "$mode"
 }
@@ -87,6 +87,31 @@ run_one "staging-stale-public" \
 run_one "staging-active" \
     "$example_root/staging-stale-endpoint/controls" \
     "$example_root/staging-stale-endpoint/fixtures/active-staging/observations"
+
+# Bedrock agent overpermissioned
+run_one "bedrock-agent" \
+    "$stave_root/controls" \
+    "$example_root/bedrock-agent-overpermissioned/fixtures/writeup-config/observations"
+
+# Shadow admin detection
+run_one "shadow-admin" \
+    "$stave_root/controls" \
+    "$example_root/shadow-admin-detection/fixtures/writeup-config/observations"
+
+# VPC peering exfiltration
+run_one "vpc-peering" \
+    "$stave_root/controls" \
+    "$example_root/vpc-peering-exfiltration/fixtures/writeup-config/observations"
+
+# S3 delegation failure
+run_one "s3-delegation" \
+    "$stave_root/controls" \
+    "$example_root/s3-delegation-failure/fixtures/writeup-config/observations"
+
+# Cognito iteration 1 ghosts
+run_one "cognito-iteration1-ghosts" \
+    "$stave_root/controls" \
+    "$example_root/cognito-iteration1-ghosts/fixtures/writeup-config/observations"
 
 # Rhino-remediated → what-if: smallest set of additional
 # findings that would tip the configuration into unsafe.

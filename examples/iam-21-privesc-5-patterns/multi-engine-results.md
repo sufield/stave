@@ -10,23 +10,23 @@ against each fixture's observation snapshots.
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001`
-- **SMT (Z3 / cvc5 / Yices)** — query: sat; query: sat; query: sat; query: sat; query: sat
-- **Soufflé** — 58 reach / 0 anon / 0 self-reg
-- **Clingo** — no violations
-- **Prolog** — no proof
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query: n/a; query: n/a; query: n/a; query: n/a
+- **Soufflé** — n/a
+- **Clingo** — 1 kind(s): escalation_via_passrole_autoscaling
+- **Prolog** — 3 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=0% (MINIMAL)
 - **TLA+** — AT_RISK
 - **Game theory** — $1100
 
-- *fact export*: `jsonl` 103 lines / `smt2` 819 lines
-- *runtime*: 177.54s
+- *fact export*: `jsonl` 108 lines / `smt2` 759 lines
+- *runtime*: 1.63s
 
 ### `real-world-pattern3`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: unsat; query: unsat; query: sat; query: unsat; query: unsat
-- **Soufflé** — 12 reach / 0 anon / 0 self-reg
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query: n/a; query: n/a; query: n/a; query: n/a
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -34,14 +34,14 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 38 lines / `smt2` 429 lines
-- *runtime*: 11.09s
+- *fact export*: `jsonl` 52 lines / `smt2` 429 lines
+- *runtime*: 1.63s
 
 ### `remediated`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: unsat; query: unsat; query: unsat; query: unsat; query: unsat
-- **Soufflé** — 9 reach / 0 anon / 0 self-reg
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query: n/a; query: n/a; query: n/a; query: n/a
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -49,24 +49,24 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 17 lines / `smt2` 303 lines
-- *runtime*: 8.53s
+- *fact export*: `jsonl` 22 lines / `smt2` 243 lines
+- *runtime*: 1.62s
 
 ### `rhino-vulnerable`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001`
-- **SMT (Z3 / cvc5 / Yices)** — query: sat; query: sat; query: sat; query: sat; query: sat
-- **Soufflé** — 58 reach / 0 anon / 0 self-reg
-- **Clingo** — no violations
-- **Prolog** — no proof
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query: n/a; query: n/a; query: n/a; query: n/a
+- **Soufflé** — n/a
+- **Clingo** — 1 kind(s): escalation_via_passrole_autoscaling
+- **Prolog** — 6 proof step(s)
 - **PySAT** — SAFE
 - **Risk model** — P=0% (MINIMAL)
 - **TLA+** — AT_RISK
 - **Game theory** — $1100
 
-- *fact export*: `jsonl` 92 lines / `smt2` 753 lines
-- *runtime*: 175.72s
+- *fact export*: `jsonl` 103 lines / `smt2` 729 lines
+- *runtime*: 1.64s
 
 ## Reading the matrix
 

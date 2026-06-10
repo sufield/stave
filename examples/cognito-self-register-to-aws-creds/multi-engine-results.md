@@ -9,8 +9,8 @@ against each fixture's observation snapshots.
 ### `remediated-config`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: unsat; query-auth-chain: sat; query-self-register-chain: unsat
-- **Soufflé** — 12 reach / 0 anon / 0 self-reg
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query-auth-chain: n/a; query-self-register-chain: n/a
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -18,15 +18,15 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 30 lines / `smt2` 381 lines
-- *runtime*: 10.22s
+- *fact export*: `jsonl` 51 lines / `smt2` 431 lines
+- *runtime*: 1.87s
 
 ### `writeup-config`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.COGNITO.SELFREG.001`
-- **SMT (Z3 / cvc5 / Yices)** — query: sat; query-auth-chain: sat; query-self-register-chain: sat
-- **Soufflé** — 42 reach / 12 anon / 9 self-reg
+- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query-auth-chain: n/a; query-self-register-chain: n/a
+- **Soufflé** — n/a
 - **Clingo** — 4 kind(s): advanced_security_off, mfa_disabled, unauth_cognito_s3_read, wildcard_action_resource
 - **Prolog** — 86 proof step(s)
 - **PySAT** — SAFE
@@ -34,8 +34,8 @@ against each fixture's observation snapshots.
 - **TLA+** — UNSAFE
 - **Game theory** — $300
 
-- *fact export*: `jsonl` 43 lines / `smt2` 459 lines
-- *runtime*: 14.51s
+- *fact export*: `jsonl` 63 lines / `smt2` 500 lines
+- *runtime*: 1.65s
 
 ## Reading the matrix
 

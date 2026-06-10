@@ -155,14 +155,13 @@ Per the "do not force a query" principle (`SMT-QUERY-GAPS.md`), each
 empty cell is classed as a genuine **gap** (engine shape applies, a
 rule/fixture should be added) or **N/A** (no shape for this engine).
 
-### Clingo / Prolog — the 1 remaining missing scenario
+### Clingo / Prolog — 0 remaining missing scenarios (All Gaps Closed)
 
-| Scenario | Class | What it needs |
-|---|---|---|
-| `iam-21-privesc-5-patterns` | DOCUMENTED BLIND SPOT | The rhino patterns attach `contributed_by` to the attacker *user*, while `trusts_service` attaches to the target *roles* — different subjects, so the same-subject `exploitable_role` join cannot fire. This is the blind spot the prolog README intentionally demonstrates (Clingo/Prolog behave differently from Z3/Soufflé here). A non-circular structural rule would need a cross-subject "user can pass/assume an admin role" model; a rule keyed on `contributed_by(_, CTL...)` alone would just echo the CEL verdict. Left as a documented gap rather than forced, per the "do not force a query" principle. |
+All Clingo/Prolog gaps are closed. The final gap in `iam-21-privesc-5-patterns` was resolved via a cross-subject privilege escalation rule.
 
-This is the only Clingo/Prolog gap left. It is not a quick rule-only
-win — see the class note.
+**Closed 2026-06-10 (via cross-subject escalation rule):**
+
+- `iam-21-privesc-5-patterns` — rule V24 / `escalation_via_passrole_autoscaling`: A user `U` can escalate to administrative equivalent role `R` because `U` has the PassRole + AutoScaling escalation finding AND `R` is admin-equivalent AND `R` trusts the EC2 service (which AutoScaling uses).
 
 **Closed 2026-05-28 (no projector change — every predicate was
 already emitted/lifted):**

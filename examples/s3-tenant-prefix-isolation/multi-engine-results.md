@@ -10,7 +10,7 @@ against each fixture's observation snapshots.
 
 - **CEL** — 0 finding(s) (COMPLIANT)
 - **SMT (Z3 / cvc5 / Yices)** — —
-- **Soufflé** — 0 reachable
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -18,15 +18,15 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 12 lines / `smt2` 269 lines
-- *runtime*: 10.57s
+- *fact export*: `jsonl` 19 lines / `smt2` 224 lines
+- *runtime*: 1.66s
 
 ### `before`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.S3.TENANT.ISOLATION.001`
 - **SMT (Z3 / cvc5 / Yices)** — —
-- **Soufflé** — 0 reachable
+- **Soufflé** — n/a
 - **Clingo** — 1 kind(s): tenant_isolation_not_enforced
 - **Prolog** — 1 proof step(s)
 - **PySAT** — SAFE
@@ -34,8 +34,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 14 lines / `smt2` 281 lines
-- *runtime*: 10.19s
+- *fact export*: `jsonl` 21 lines / `smt2` 236 lines
+- *runtime*: 1.8s
 
 ## Reading the matrix
 

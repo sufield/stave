@@ -240,5 +240,15 @@ violation(P, "passrole_autoscaling_bypass", "autoscaling:CreateLaunchConfigurati
     has_action(P, "autoscaling:*"),
     not has_deny_action(P, "autoscaling:CreateLaunchConfiguration").
 
+% V24: IAM Privilege Escalation via PassRole and AutoScaling.
+% A user U can escalate to administrative equivalent role R because U has
+% the PassRole + AutoScaling escalation finding AND R is admin-equivalent
+% AND trusts the EC2 service (which AutoScaling uses).
+% Targets: iam-21-privesc-5-patterns.
+violation(U, "escalation_via_passrole_autoscaling", R) :-
+    identity_escalation_passrole_autoscaling_present(U, "true"),
+    identity_is_admin_equivalent(R, "true"),
+    trusts_service(R, "ec2.amazonaws.com").
+
 #show violation/3.
 #show latent_risk/2.

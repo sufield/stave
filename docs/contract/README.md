@@ -36,8 +36,15 @@ filename convention and an example directory.
 
 - Contract version is encoded in `schema_version`.
 - Breaking changes require a new schema version.
-- Non-breaking additions may occur only when they do not invalidate
-  existing consumers.
+- Non-breaking additions may occur only when they do not invalidate existing consumers.
+
+These are **stable contracts**. Once a field appears in a contract it is bound by these rules:
+
+* **Additive change is always allowed.** Stave may consume new fields at any time. Producers and consumers MUST tolerate fields they do not recognize.
+* **Removing or renaming a field is a breaking change.** It is not permitted on the existing contract. If unavoidable, the contract is re-released under a versioned ID alongside the original.
+* **Tightening a field's type is a breaking change.** Widening (e.g., adding a new enum value) is allowed; narrowing requires the same versioned treatment as a rename.
+
+Producers should be permissive about unknown fields so additive changes don't require an integrator rebuild.
 
 For MVP 1.0, `obs.v0.1` is treated as stable for supported S3 fields.
 
@@ -190,6 +197,11 @@ conventions above apply across all domain files.
 | [compute.md](compute.md) | `compute.*` — EC2 instances, EBS snapshots, containers |
 | [database.md](database.md) | `database.*` — RDS |
 | [kubernetes.md](kubernetes.md) | `rbac.*`, `network_policy.*`, `secrets.*`, `audit.*` |
+| [active-directory.md](active-directory.md) | Active Directory / LDAP asset properties |
+| [cisco-ios.md](cisco-ios.md) | Cisco IOS network device properties |
+| [eks.md](eks.md) | Amazon EKS cluster and addon properties |
+| [k8s.md](k8s.md) | Kubernetes component configuration properties (API server, etcd, kubelet, etc.) |
+| [vsphere.md](vsphere.md) | VMware vSphere virtualization platform asset properties |
 | [misc.md](misc.md) | `loadbalancer.*`, `dns.*`, `cryptography.*`, `secret.blast_radius.*`, `backup.recovery_isolation.*`, the compliance-expansion table, and other small namespaces |
 
 ## Global conventions

@@ -174,4 +174,67 @@ COMPOUND_RULES: list[dict[str, object]] = [
             "CTL.S3.PUBLIC.LIST.002",
         ],
     },
+    {
+        "name": "bedrock_agent_overperm_ghost_lambda",
+        "description": (
+            "A Bedrock Agent has overprivileged Lambda execution permissions "
+            "AND references a ghost Lambda trigger. This allows an attacker "
+            "who can invoke the agent to trigger arbitrary or hijacked actions, "
+            "escalating privileges inside the account."
+        ),
+        "controls": [
+            "CTL.BEDROCK.AGENT.OVERPERM.LAMBDA.001",
+            "CTL.BEDROCK.AGENT.GHOST.LAMBDA.001",
+        ],
+    },
+    {
+        "name": "shadow_admin_category_mix_drift",
+        "description": (
+            "An IAM role mixes compute and administrative privileges AND "
+            "exhibits permission drift. This indicates a shadow administrator "
+            "role that is actively acquiring permissions outside its initial intent."
+        ),
+        "controls": [
+            "CTL.IAM.ROLE.CATEGORYMIX.001",
+            "CTL.IAM.ROLE.PERMISSIONDRIFT.001",
+        ],
+    },
+    {
+        "name": "vpc_peering_crossaccount_routes",
+        "description": (
+            "A VPC peering connection terminates in a cross-account/external "
+            "destination AND has active route table entries. Establishes "
+            "an unmonitored data exfiltration pathway directly bypassing standard gateways."
+        ),
+        "controls": [
+            "CTL.VPC.PEERING.CROSSACCOUNT.001",
+            "CTL.VPC.PEERING.ROUTES.001",
+        ],
+    },
+    {
+        "name": "s3_delegation_unrevocable_escalation",
+        "description": (
+            "An S3 bucket policy contains overpermissioned external delegation "
+            "AND lacks customer-revocable capability. This makes the delegation "
+            "permanent and opens up a direct pathway for a third-party vendor "
+            "to access or leak the bucket content."
+        ),
+        "controls": [
+            "CTL.S3.DELEGATION.ESCALATION.001",
+            "CTL.S3.DELEGATION.REVOCABLE.001",
+        ],
+    },
+    {
+        "name": "cognito_ghost_auth_triggers",
+        "description": (
+            "A Cognito user pool references a ghost Lambda function for both "
+            "Create Auth Challenge and Define Auth Challenge triggers. "
+            "This indicates a broken authentication flow where custom authentication "
+            "challenges cannot be verified or resolved safely."
+        ),
+        "controls": [
+            "CTL.COGNITO.GHOST.CREATEAUTH.001",
+            "CTL.COGNITO.GHOST.DEFINEAUTH.001",
+        ],
+    },
 ]

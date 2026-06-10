@@ -59,7 +59,11 @@ OUTPUT_FILE=$2
     echo ":- discontiguous has_deny_action/2."
     echo ":- discontiguous has_deny_resource/2."
     echo ":- discontiguous has_purpose_flag/2."
+    echo ":- discontiguous identity_is_admin_equivalent/2."
+    echo ":- discontiguous identity_escalation_passrole_autoscaling_present/2."
+    echo ":- discontiguous identity_kind/2."
+    echo ":- discontiguous identity_name/2."
     echo ""
-    jq -r '"\(.predicate)(\"\(.subject | gsub("\\\\"; "\\\\\\\\") | gsub("\""; "\\\""))\", \"\(.object | gsub("\\\\"; "\\\\\\\\") | gsub("\""; "\\\""))\")."' \
+    jq -r '.predicate |= (gsub("\\."; "_")) | "\(.predicate)(\"\(.subject | gsub("\\\\"; "\\\\\\\\") | gsub("\""; "\\\""))\", \"\(.object | gsub("\\\\"; "\\\\\\\\") | gsub("\""; "\\\""))\")."' \
         "$JSONL_FILE"
 } > "$OUTPUT_FILE"

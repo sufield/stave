@@ -9,8 +9,8 @@ against each fixture's observation snapshots.
 ### `after`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query-data-events: unsat; query-mgmt: unsat
-- **Soufflé** — 0 reachable
+- **SMT (Z3 / cvc5 / Yices)** — query-data-events: n/a; query-mgmt: n/a
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -18,15 +18,15 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 7 lines / `smt2` 243 lines
-- *runtime*: 9.44s
+- *fact export*: `jsonl` 11 lines / `smt2` 177 lines
+- *runtime*: 1.62s
 
 ### `before`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.CLOUDTRAIL.STOP.DETECT.001`
-- **SMT (Z3 / cvc5 / Yices)** — query-data-events: unsat; query-mgmt: sat
-- **Soufflé** — 0 reachable
+- **SMT (Z3 / cvc5 / Yices)** — query-data-events: n/a; query-mgmt: n/a
+- **Soufflé** — n/a
 - **Clingo** — 1 kind(s): logging_disabled
 - **Prolog** — 1 proof step(s)
 - **PySAT** — SAFE
@@ -34,14 +34,14 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 9 lines / `smt2` 255 lines
-- *runtime*: 9.34s
+- *fact export*: `jsonl` 14 lines / `smt2` 196 lines
+- *runtime*: 1.62s
 
 ### `data-events-after`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query-data-events: unsat; query-mgmt: unsat
-- **Soufflé** — 0 reachable
+- **SMT (Z3 / cvc5 / Yices)** — query-data-events: n/a; query-mgmt: n/a
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -49,14 +49,14 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 35 lines / `smt2` 411 lines
-- *runtime*: 9.63s
+- *fact export*: `jsonl` 53 lines / `smt2` 435 lines
+- *runtime*: 1.66s
 
 ### `data-events-before`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query-data-events: sat; query-mgmt: unsat
-- **Soufflé** — 0 reachable
+- **SMT (Z3 / cvc5 / Yices)** — query-data-events: n/a; query-mgmt: n/a
+- **Soufflé** — n/a
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -64,8 +64,8 @@ against each fixture's observation snapshots.
 - **TLA+** — AT_RISK
 - **Game theory** — no-path
 
-- *fact export*: `jsonl` 32 lines / `smt2` 393 lines
-- *runtime*: 9.87s
+- *fact export*: `jsonl` 50 lines / `smt2` 417 lines
+- *runtime*: 1.62s
 
 ## Reading the matrix
 
