@@ -234,7 +234,14 @@ Full reference and per-domain breakdowns: [`docs/controls/reference.md`](docs/co
 | [Evaluation semantics](docs/evaluation-semantics.md) | How duration tracking works |
 | [Architecture](docs/architecture/overview.md) | System design overview |
 | [FAQ](docs/faq.md) | Common questions |
+| [Community](https://www.reddit.com/r/systeminvariant/) | Join the discussion on Reddit |
 | [Full docs index](docs/index.md) | Everything else |
+
+## Community
+
+Join our community on Reddit to discuss system invariants, cloud safety, and the development of Stave:
+
+- **Reddit:** [/r/systeminvariant](https://www.reddit.com/r/systeminvariant/)
 
 ## Contributing
 
