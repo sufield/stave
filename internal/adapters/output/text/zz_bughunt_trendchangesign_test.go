@@ -57,7 +57,7 @@ func TestBugHunt_TrendChangeSign(t *testing.T) {
 	if !strings.Contains(out, want) {
 		// Surface the buggy line for a readable failure message.
 		var got string
-		for _, line := range strings.Split(out, "\n") {
+		for line := range strings.SplitSeq(out, "\n") {
 			if strings.Contains(line, "Current violations") && strings.Contains(line, "↓") {
 				got = strings.TrimSpace(line)
 				break

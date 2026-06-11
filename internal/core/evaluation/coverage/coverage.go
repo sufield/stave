@@ -153,8 +153,16 @@ func assemble(covered map[toolDomain]map[string]struct{}, inventories []ToolInve
 
 	for _, inv := range inventories {
 		dc := lookup(idx, inv.Tool, inv.Domain)
-		dc.Total = len(inv.Checks)
-		dc.NotCoveredChecks = missingChecks(inv.Checks, covered[toolDomain{tool: inv.Tool, domain: inv.Domain}])
+		uniqueChecks := make([]string, 0, len(inv.Checks))
+		seen := make(map[string]struct{})
+		for _, id := range inv.Checks {
+			if _, ok := seen[id]; !ok {
+				seen[id] = struct{}{}
+				uniqueChecks = append(uniqueChecks, id)
+			}
+		}
+		dc.Total = len(uniqueChecks)
+		dc.NotCoveredChecks = missingChecks(uniqueChecks, covered[toolDomain{tool: inv.Tool, domain: inv.Domain}])
 		store(idx, inv.Tool, inv.Domain, dc)
 	}
 

@@ -327,32 +327,46 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 	}
 
 	cleanPath := filepath.Clean(path)
-	// Strip the volume / UNC prefix before splitting so a path like
-	// `C:\stave\state` or `\\host\share\stave` doesn't produce empty
-	// leading segments that the segment loop below would treat as
-	// component names. The volume becomes the seed `current`; the
-	// loop walks the remaining segments.
-	volume := filepath.VolumeName(cleanPath)
-	rest := strings.TrimPrefix(cleanPath, volume)
-	components := strings.Split(rest, string(filepath.Separator))
 
-	current := volume
-	if filepath.IsAbs(cleanPath) || (volume != "" && strings.HasPrefix(rest, string(filepath.Separator))) {
-		current += string(filepath.Separator)
+	// 1. Find the deepest existing ancestor
+	ancestor := cleanPath
+	for range maxPathDepth {
+		fi, err := os.Lstat(ancestor)
+		if err == nil {
+			if fi.Mode()&os.ModeSymlink != 0 {
+				return fmt.Errorf("%w: %s (use --allow-symlink-output to override)", ErrSymlinkForbidden, ancestor)
+			}
+			if !fi.IsDir() {
+				return fmt.Errorf("path component is not a directory: %s", ancestor)
+			}
+			break
+		}
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("security check failed for %q: %w", ancestor, err)
+		}
+		parent := filepath.Dir(ancestor)
+		if parent == ancestor {
+			break
+		}
+		ancestor = parent
 	}
 
-	// createdByUs tracks components this loop materially created
-	// (Mkdir succeeded). The post-Mkdir verification only re-Lstats
-	// these paths — pre-existing ancestors are trusted because the
-	// loop already validated them, and trusting them avoids the
-	// false positive on legitimate ancestor symlinks
-	// (/tmp -> /private/tmp on macOS, $HOME automounter mounts,
-	// container bind-mounts) that the earlier full-path
-	// filepath.EvalSymlinks comparison hit.
+	// 2. Get relative path from ancestor to cleanPath
+	rel, err := filepath.Rel(ancestor, cleanPath)
+	if err != nil {
+		return fmt.Errorf("failed to get relative path from %q to %q: %w", ancestor, cleanPath, err)
+	}
+	if rel == "." {
+		return nil // Target already exists and is valid
+	}
+
+	// 3. Create components from ancestor down
+	components := strings.Split(rel, string(filepath.Separator))
+	current := ancestor
 	var createdByUs []string
 
 	for _, part := range components {
-		if part == "" {
+		if part == "" || part == "." {
 			continue
 		}
 		current = filepath.Join(current, part)
@@ -381,44 +395,15 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 		}
 		createdByUs = append(createdByUs, current)
 
-		// Post-creation TOCTOU guard: re-Lstat every component we
-		// created on this run. An attacker swapping a component we
-		// created (for example unlinking it and replacing with a
-		// symlink right before we Mkdir'd a deeper child) flips
-		// the Mkdir target from "directory we expect" to "directory
-		// at the symlink target". Re-checking only loop-created
-		// components avoids the false positive on legitimate
-		// pre-existing ancestor symlinks that the earlier
-		// full-path EvalSymlinks compare hit.
-		//
-		// O(n²) is intentional: Lstat does not follow the leaf
-		// symlink but DOES traverse parent symlinks, so an O(n)
-		// "check current only" optimization would miss a parent
-		// swap (Lstat("a/b/c") would resolve a symlinked `a` and
-		// only return mode bits for the leaf `c`).
 		for _, p := range createdByUs {
 			pfi, plstatErr := os.Lstat(p)
 			if plstatErr != nil {
 				return fmt.Errorf("post-mkdir verification failed for %q: %w", p, plstatErr)
 			}
 			if pfi.Mode()&os.ModeSymlink != 0 {
-				// Two-step cleanup: remove the spurious child the
-				// Mkdir created at the attacker's target, then
-				// remove the swapped symlink itself. `current`
-				// resolves through the symlink at `p`, so
-				// removing `current` deletes the directory the
-				// attacker tricked us into creating; removing `p`
-				// then breaks the link so a follow-up call
-				// doesn't immediately re-traverse it. The
-				// previous shape removed only `current` (left
-				// the symlink behind for the next operation) or
-				// only `p` (left the spurious target directory).
-				// TestSafeMkdirAll_TOCTOU_WithHook pins both
-				// removals must happen.
 				_ = os.Remove(current)
 				_ = os.Remove(p)
-				return fmt.Errorf("%w: %s became a symlink during creation",
-					ErrSymlinkForbidden, p)
+				return fmt.Errorf("%w: %s became a symlink during creation", ErrSymlinkForbidden, p)
 			}
 		}
 	}

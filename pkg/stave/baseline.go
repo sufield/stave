@@ -37,7 +37,7 @@ func BaselineSave(ctx context.Context, evaluationPath, outputPath string) ([]byt
 		return nil, fmt.Errorf("save baseline: %w", err)
 	}
 
-	return []byte(fmt.Sprintf("Saved baseline: %s (findings=%d)\n", resp.OutputPath, resp.FindingsCount)), nil
+	return fmt.Appendf(nil, "Saved baseline: %s (findings=%d)\n", resp.OutputPath, resp.FindingsCount), nil
 }
 
 // BaselineCheck compares the findings in an evaluation artifact against a

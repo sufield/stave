@@ -310,3 +310,20 @@ func TestCoverageIndex_DomainsForTool_Unknown(t *testing.T) {
 		t.Errorf("expected 0 domains, got %d", len(domains))
 	}
 }
+
+func TestBuildCoverageIndex_DuplicateChecksInInventory(t *testing.T) {
+	inventories := []coverage.ToolInventory{
+		{Tool: "tool-a", Domain: "s3", Checks: []string{"check-1", "check-1", "check-2"}},
+	}
+
+	idx := coverage.BuildCoverageIndex(nil, inventories)
+
+	s3 := idx.ByTool["tool-a"]["s3"]
+	if s3.Total != 2 {
+		t.Errorf("expected total unique checks to be 2, got %d", s3.Total)
+	}
+	expectedNotCovered := []string{"check-1", "check-2"}
+	if !reflect.DeepEqual(s3.NotCoveredChecks, expectedNotCovered) {
+		t.Errorf("expected unique NotCoveredChecks %v, got %v", expectedNotCovered, s3.NotCoveredChecks)
+	}
+}

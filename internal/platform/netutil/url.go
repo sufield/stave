@@ -20,7 +20,7 @@ import (
 func EscapeFragment(topic string) string {
 	parts := strings.Split(topic, "/")
 	for i, p := range parts {
-		parts[i] = url.QueryEscape(p)
+		parts[i] = url.PathEscape(p)
 	}
 	return strings.Join(parts, "/")
 }

@@ -27,7 +27,7 @@ func TestPrefixExposure_PoolRoundTripStaysCorrect(t *testing.T) {
 	ctl := exposureControl("CTL.EXP.POOL", nil, nil)
 
 	const iterations = 2000
-	for i := 0; i < iterations; i++ {
+	for i := range iterations {
 		tl := exposureLifecycle(t, nil)
 
 		row, findings := EvaluatePrefixExposureForRow(tl, ctl)
