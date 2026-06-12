@@ -87,7 +87,7 @@ func WireCommands(app *App) error {
 	root.AddCommand(initcmd.NewGenerateCmd())
 
 	// Control Engine
-	root.AddCommand(applyvalidate.NewCmd(f.NewObsRepo, f.NewCtlRepo, f.NewCELEvaluator, ui.DefaultRuntime()))
+	root.AddCommand(applyvalidate.NewCmd(ui.DefaultRuntime()))
 	applyDeps := apply.Deps{
 		NewObsRepo:       f.NewObsRepo,
 		NewCtlRepo:       f.NewCtlRepo,

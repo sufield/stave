@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
@@ -13,9 +12,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
-	appvalidation "github.com/sufield/stave/internal/app/validation"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/diag"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -56,10 +53,6 @@ type options struct {
 	useBuiltinControls bool
 }
 
-func (o *options) hintCtx() hintContext {
-	return hintContext{ControlsDir: o.Controls, ObservationsDir: o.Observations}
-}
-
 // newOptions initializes defaults with zero values for config-derived fields.
 // Call resolveConfigDefaults after flag parsing to fill in project-config defaults.
 func newOptions() *options {
@@ -95,28 +88,6 @@ func (o *options) Prepare(cmd *cobra.Command) error {
 		cmd.Flags().Changed("controls"),
 		cmd.Flags().Changed("observations"),
 	)
-}
-
-// BuildRequest constructs the appropriate ContentValidator request
-// for these options. When Kind is unset the input is auto-detected;
-// when set it must normalise to a recognised schemas.Kind alias.
-// Replaces the package-level buildValidationRequest function so the
-// Kind/SchemaVersion/Strict triple lives on the type that owns the
-// fields, and runValidateSingleFile drops the inline branching.
-func (o *options) BuildRequest(data []byte) (appvalidation.ContentValidator, error) {
-	if o.Kind == "" {
-		return appvalidation.AutoRequest{Data: data}, nil
-	}
-	normalizedKind, err := normalizeKind(o.Kind)
-	if err != nil {
-		return nil, err
-	}
-	return appvalidation.ExplicitRequest{
-		Data:          data,
-		Kind:          normalizedKind,
-		SchemaVersion: o.SchemaVersion,
-		Strict:        o.Strict,
-	}, nil
 }
 
 // normalizeAndValidate cleans user input, applies project-root inference,
@@ -182,34 +153,4 @@ func (o *options) logEnvironment() {
 		"config", compose.EmptyDash(cfgPath),
 		"controls", o.Controls,
 		"observations", o.Observations)
-}
-
-// validateParams holds the fully parsed domain types.
-type validateParams struct {
-	maxUnsafe *time.Duration
-	nowTime   time.Time
-	issues    []diag.Finding
-}
-
-// parseParams converts raw strings from options into structured domain values.
-func (o *options) parseParams() validateParams {
-	var p validateParams
-
-	dur, issue := compose.ResolveDurationDiag(o.MaxUnsafeDuration)
-	if issue != nil {
-		p.issues = append(p.issues, *issue)
-	} else {
-		p.maxUnsafe = dur
-	}
-
-	if o.NowTime != "" {
-		t, issue := compose.ResolveNowDiag(o.NowTime)
-		if issue != nil {
-			p.issues = append(p.issues, *issue)
-		} else {
-			p.nowTime = t
-		}
-	}
-
-	return p
 }

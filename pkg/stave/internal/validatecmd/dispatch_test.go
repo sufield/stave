@@ -1,12 +1,29 @@
-package validate
+package validatecmd
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 	"strings"
 	"testing"
+	"text/template"
 
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 )
+
+// testExec mimics ui.ExecuteTemplate (the production TemplateFunc) by parsing
+// the string as a literal template — the test cannot import internal/cli/ui
+// because cli/ui imports pkg/stave, which imports this package.
+func testExec(w io.Writer, tmpl string, data any) error {
+	t, err := template.New("t").Parse(tmpl)
+	if err != nil {
+		return fmt.Errorf("parse template: %w", err)
+	}
+	if err := t.Execute(w, data); err != nil {
+		return fmt.Errorf("execute template: %w", err)
+	}
+	return nil
+}
 
 func TestNewRenderer_KnownFormats(t *testing.T) {
 	cases := []struct {
@@ -102,7 +119,7 @@ func TestTemplateRenderer_BadTemplateErrors(t *testing.T) {
 	var buf bytes.Buffer
 	// ExecuteTemplate treats the format string as a literal template; a
 	// malformed action triggers the wrapped error path.
-	r := TemplateRenderer{template: "{{.Unclosed"}
+	r := TemplateRenderer{template: "{{.Unclosed", exec: testExec}
 	if err := r.Render(&buf, payload); err == nil {
 		t.Fatalf("Render with malformed template: want error, got nil")
 	} else if !strings.Contains(err.Error(), "execute output template") {
@@ -114,7 +131,7 @@ func TestTemplateRenderer_RendersLiteralTemplate(t *testing.T) {
 	result := &appvalidation.Report{}
 	payload := renderPayload{result: result, report: buildReport(result, false, hintContext{})}
 	var buf bytes.Buffer
-	r := TemplateRenderer{template: "valid={{.Valid}}"}
+	r := TemplateRenderer{template: "valid={{.Valid}}", exec: testExec}
 	if err := r.Render(&buf, payload); err != nil {
 		t.Fatalf("Render: unexpected error: %v", err)
 	}

@@ -1,4 +1,4 @@
-package validate
+package validatecmd
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
-	"github.com/sufield/stave/internal/cli/ui"
 )
 
 // renderPayload carries everything the validation renderers need. The JSON
@@ -19,13 +18,10 @@ type renderPayload struct {
 	report Report
 }
 
-// Renderer is the polymorphic format-dispatch interface for the
-// `apply validate` output. Concrete implementations delegate to the
-// existing helpers (outjson.WriteValidation / ui.ExecuteTemplate /
-// Reporter.writeText) so the rendered bytes are byte-identical to the
-// pre-Renderer-pattern output.
-//
-// New formats add an implementation here and a factory case in NewRenderer.
+// Renderer is the polymorphic format-dispatch interface for the validate
+// output. Concrete implementations delegate to outjson.WriteValidation, the
+// Template callback, or Reporter.writeText so the rendered bytes are
+// byte-identical to the command's pre-facade output.
 type Renderer interface {
 	Render(w io.Writer, payload renderPayload) error
 }
@@ -42,14 +38,16 @@ func (JSONRenderer) Render(w io.Writer, payload renderPayload) error {
 }
 
 // TemplateRenderer renders the report through a user-supplied template file.
-// The format string carries the template path.
+// The format string carries the template path; execution is delegated to the
+// command-provided TemplateFunc (backed by ui.ExecuteTemplate).
 type TemplateRenderer struct {
 	template string
+	exec     TemplateFunc
 }
 
 // Render implements Renderer.
 func (t TemplateRenderer) Render(w io.Writer, payload renderPayload) error {
-	if err := ui.ExecuteTemplate(w, t.template, payload.report); err != nil {
+	if err := t.exec(w, t.template, payload.report); err != nil {
 		return fmt.Errorf("execute output template: %w", err)
 	}
 	return nil
@@ -66,20 +64,17 @@ func (t TextRenderer) Render(w io.Writer, payload renderPayload) error {
 }
 
 // NewRenderer maps a format string to its concrete Renderer, preserving the
-// exact branching semantics of the previous switch:
+// exact branching semantics of the command's pre-facade switch:
 //   - "json" -> JSONRenderer
 //   - "" or "text" -> TextRenderer (the default)
 //   - any other non-empty value -> TemplateRenderer (the format is a
 //     template path)
-//
-// The text renderer delegates back to the Reporter for its presentation
-// helpers, so the factory takes the Reporter that owns this output.
 func NewRenderer(format string, reporter *Reporter) (Renderer, error) {
 	switch {
 	case format == string(appcontracts.FormatJSON):
 		return JSONRenderer{}, nil
 	case format != "" && format != string(appcontracts.FormatText):
-		return TemplateRenderer{template: format}, nil
+		return TemplateRenderer{template: format, exec: reporter.Template}, nil
 	default:
 		return TextRenderer{reporter: reporter}, nil
 	}

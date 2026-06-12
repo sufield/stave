@@ -37,10 +37,35 @@ to sequence them:
 
 **Cross-cmd clusters** (migrate the pair together, or move the shared
 helper to `pkg/stave` first):
-- `apply/validate` (~1122) ↔ `cmd/apply` (34 internal imports). The
-  exported `applyvalidate.NewReadinessValidator` + `PackConfigIssues`
-  are consumed by `cmd/apply/readiness.go` — validate cannot be made
-  facade-clean in isolation without orphaning apply's readiness path.
+- `apply/validate` (~1122) ↔ `cmd/apply` (34 internal imports).
+  **Increment 1 done (2026-06-12):** the shared
+  `applyvalidate.NewReadinessValidator` + `PackConfigIssues` moved into
+  `pkg/stave` (`NewReadinessEvaluator`, `ValidatePackConfiguration`), with
+  the stave.yaml-discovery wrapper in `cmd/cmdutil/projconfig.PackConfigIssues`
+  shared by both commands. This **severed the `cmd/apply → cmd/apply/validate`
+  import** — the blocker that prevented validate from being migrated in
+  isolation. Remaining:
+  - **Increment 2 — DONE 2026-06-12.** `cmd/apply/validate` is facade-clean
+    and enrolled. The load→compute→render pipeline lives in
+    `pkg/stave/internal/validatecmd`, surfaced as `stave.ValidateProject`
+    (project path) + `stave.ValidateContent` (`--in` single-file path); the
+    facade self-constructs its repositories from paths. Landed as two
+    commits: 2a (engine + facade, unwired) then 2b (rewire command + delete
+    moved files + relocate white-box tests + enroll). The cli/ui-bound
+    severity-label and template rendering cross as **callbacks**
+    (`ui.SeverityLabel`, `ui.ExecuteTemplate`) — no forked color state,
+    byte-identical, command stays clean. The resolved `appcontracts.OutputFormat`
+    is held only as an inferred value (passed to compose helpers + `string()`
+    converted, never named) so the command avoids importing the contracts
+    package. Pack-config discovery (stave.yaml) stays command-side and is
+    passed to the facade as primitives. Exit-code sentinels
+    (`ErrValidationFailed`/`Warnings`) returned unwrapped.
+  - **Increment 3+** — `cmd/apply` itself (25 files, 3 modes). Its eval
+    *core* already routes through `pkg/stave/cliapi.Apply`; the work is
+    lifting orchestration/enrichment (owners, reachability, coverage
+    posture, lapsed exemptions, SLA) + output into the facade. Interactive
+    `ui.Runtime` progress, project-context discovery, stdin handling, and
+    exit routing stay command-side. Likely 2–3 sub-increments.
 - `diagnose/artifacts` (~829, 4 subcommands / ~11 leaf verbs) ↔
   `cmd/diagnose` (22 imports). `controls explain` uses
   `cmd/diagnose.NewExplainerWithFinder` + `WriteExplainResult` — but the

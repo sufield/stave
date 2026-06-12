@@ -1,4 +1,4 @@
-package validate
+package validatecmd
 
 import (
 	"errors"
@@ -6,19 +6,23 @@ import (
 	"io"
 
 	appvalidation "github.com/sufield/stave/internal/app/validation"
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/diag"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
 var errNilResult = errors.New("validation result is nil")
 
-// Reporter handles the formatting and writing of validation results.
+// Reporter handles the formatting and writing of validation results. The
+// cli/ui-bound formatting (severity labels, template execution) is injected
+// as Label/Template callbacks so this engine stays off the internal/cli/ui
+// import graph (pkg/stave cannot import cli/ui).
 type Reporter struct {
 	Writer   io.Writer
 	Format   string // "text", "json", or path to template
 	Strict   bool
 	FixHints bool
+	Label    LabelFunc
+	Template TemplateFunc
 }
 
 // Write outputs the validation result based on reporter configuration.
@@ -32,7 +36,7 @@ func (r *Reporter) Write(result *appvalidation.Report, hc hintContext) error {
 
 	renderer, err := NewRenderer(r.Format, r)
 	if err != nil {
-		return &ui.UserError{Err: err}
+		return err
 	}
 	if err := renderer.Render(r.Writer, renderPayload{result: result, report: report}); err != nil {
 		return fmt.Errorf("render output: %w", err)
@@ -64,7 +68,7 @@ func (r *Reporter) writeText(res *appvalidation.Report, report Report) error {
 	}
 
 	for _, issue := range diagnostics.Findings {
-		if err := printIssue(r.Writer, issue); err != nil {
+		if err := printIssue(r.Writer, issue, r.Label); err != nil {
 			return err
 		}
 	}
@@ -124,8 +128,8 @@ func printHeader(w io.Writer, valid bool, eCount, wCount int) error {
 	return nil
 }
 
-func printIssue(w io.Writer, issue diag.Finding) error {
-	if _, err := fmt.Fprintln(w, ui.SeverityLabel(issue.SeverityLabel(), string(issue.RuleID), w)); err != nil {
+func printIssue(w io.Writer, issue diag.Finding, label LabelFunc) error {
+	if _, err := fmt.Fprintln(w, label(issue.SeverityLabel(), string(issue.RuleID), w)); err != nil {
 		return fmt.Errorf("write output: %w", err)
 	}
 

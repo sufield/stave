@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/metadata"
@@ -63,7 +62,7 @@ Examples:
 
 // NewCmd builds the validate command.
 // Returns nil if rt is nil — the caller (WireCommands) must provide a valid runtime.
-func NewCmd(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvaluatorFactory, rt *ui.Runtime) *cobra.Command {
+func NewCmd(rt *ui.Runtime) *cobra.Command {
 	if rt == nil {
 		return nil
 	}
@@ -80,24 +79,25 @@ func NewCmd(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
+			// resolvedFormat is appcontracts.OutputFormat (inferred). It is
+			// passed to compose helpers and converted to a string for the
+			// facade — never named — so the command does not import
+			// internal/app/contracts.
 			resolvedFormat, fmtErr := compose.ResolveFormatValue(opts.Format)
 			if fmtErr != nil {
 				return fmt.Errorf("resolve output format: %w", fmtErr)
 			}
+			gf := cliflags.GetGlobalFlags(cmd)
+			out := compose.ResolveStdout(cmd.OutOrStdout(), gf.Quiet, resolvedFormat)
 			return runValidate(compose.CommandContext(cmd), Input{
-				Stdin:  cmd.InOrStdin(),
-				Stdout: cmd.OutOrStdout(),
-				Stderr: cmd.ErrOrStderr(),
-				Logger: cmdctx.LoggerFromCmd(cmd),
-				Global: cliflags.GlobalSettingsFrom(cmd),
-				Format: resolvedFormat,
-				Deps: validateDeps{
-					NewObsRepo:      newObsRepo,
-					NewCtlRepo:      newCtlRepo,
-					NewCELEvaluator: newCELEvaluator,
-				},
-				Rt:   rt,
-				Opts: opts,
+				Stdin:    cmd.InOrStdin(),
+				Out:      out,
+				Stderr:   cmd.ErrOrStderr(),
+				Format:   string(resolvedFormat),
+				Quiet:    gf.Quiet,
+				Sanitize: gf.Sanitize,
+				Rt:       rt,
+				Opts:     opts,
 			})
 		},
 		SilenceUsage:  true,

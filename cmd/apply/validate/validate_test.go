@@ -5,18 +5,14 @@ import (
 	"context"
 	"errors"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"os"
-
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
-	appvalidation "github.com/sufield/stave/internal/app/validation"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/diag"
-	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // testdataDir returns the path to a testdata e2e fixture directory.
@@ -43,64 +39,24 @@ func findRepoRoot(t *testing.T) string {
 	}
 }
 
-// testReporter creates a Reporter writing to buf with the given options.
-func testReporter(buf *bytes.Buffer, jsonOutput bool, opts *options) *Reporter {
-	format := "text"
-	if jsonOutput {
-		format = "json"
-	}
-	return &Reporter{
-		Writer:   buf,
-		Format:   format,
-		Strict:   opts.Strict,
-		FixHints: opts.FixHints,
-	}
-}
-
 // TestExitCode tests the ExitCode function with various error conditions.
-// Exit code contract:
-//
-//	0 = success
-//	2 = input/validation error
-//	3 = violations/diagnostics found
-//	130 = interrupted
+// Exit code contract: 0=success, 2=input/validation error, 3=violations, 130=interrupted.
 func TestExitCode(t *testing.T) {
 	tests := []struct {
 		name     string
 		err      error
 		expected int
 	}{
-		{
-			name:     "clean validation returns 0",
-			err:      nil,
-			expected: 0,
-		},
-		{
-			name:     "validation errors returns 2",
-			err:      ui.ErrValidationFailed,
-			expected: 2,
-		},
-		{
-			name:     "validation warnings returns 2",
-			err:      ui.ErrValidationWarnings,
-			expected: 2,
-		},
-		{
-			name:     "violations found returns 3",
-			err:      ui.ErrViolationsFound,
-			expected: 3,
-		},
-		{
-			name:     "unknown error returns 4 (internal)",
-			err:      errors.New("some other error"),
-			expected: 4,
-		},
+		{"clean validation returns 0", nil, 0},
+		{"validation errors returns 2", ui.ErrValidationFailed, 2},
+		{"validation warnings returns 2", ui.ErrValidationWarnings, 2},
+		{"violations found returns 3", ui.ErrViolationsFound, 3},
+		{"unknown error returns 4 (internal)", errors.New("some other error"), 4},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ui.ExitCode(tt.err)
-			if got != tt.expected {
+			if got := ui.ExitCode(tt.err); got != tt.expected {
 				t.Errorf("ui.ExitCode(%v) = %d, want %d", tt.err, got, tt.expected)
 			}
 		})
@@ -118,26 +74,17 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 	}
 
 	var stdout, stderr bytes.Buffer
-
-	// Exercise full validate command flow (directory mode).
-	f := compose.DefaultFactories()
 	err := runValidate(context.Background(), Input{
-		Stdout: &stdout,
+		Out:    &stdout,
 		Stderr: &stderr,
 		Format: "text",
-		Deps: validateDeps{
-			NewObsRepo:      f.NewObsRepo,
-			NewCtlRepo:      f.NewCtlRepo,
-			NewCELEvaluator: f.NewCELEvaluator,
-		},
-		Rt:   ui.DefaultRuntime(),
-		Opts: opts,
+		Rt:     ui.DefaultRuntime(),
+		Opts:   opts,
 	})
 	if err != nil {
 		t.Fatalf("expected directory validate to pass, got: %v\nstderr: %s", err, stderr.String())
 	}
 	output := stdout.String()
-
 	if !strings.Contains(output, "Validation passed") {
 		t.Fatalf("expected validation success output, got: %s", output)
 	}
@@ -146,250 +93,9 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 	}
 }
 
-// TestOutputAndExit_Clean tests Reporter with a clean validation result (no errors or warnings).
-func TestOutputAndExit_Clean(t *testing.T) {
-	// No errors, no warnings → exit 0
-	result := &appvalidation.Report{
-		Diagnostics: &diag.Assessment{Findings: []diag.Finding{}},
-		Summary: appvalidation.Summary{
-			ControlsLoaded:          2,
-			SnapshotsLoaded:         3,
-			AssetObservationsLoaded: 10,
-		},
-	}
-
-	var buf bytes.Buffer
-	opts := newOptions()
-	r := testReporter(&buf, false, opts)
-	if err := r.Write(result, opts.hintCtx()); err != nil {
-		t.Fatalf("Write failed: %v", err)
-	}
-	err := r.ExitStatus(result)
-
-	if err != nil {
-		t.Errorf("expected nil error for clean validation, got %v", err)
-	}
-	if ui.ExitCode(err) != 0 {
-		t.Errorf("expected exit code 0, got %d", ui.ExitCode(err))
-	}
-}
-
-// TestOutputAndExit_Errors tests Reporter with validation errors (should return exit code 2).
-func TestOutputAndExit_Errors(t *testing.T) {
-	// Has errors → exit 2
-	result := &appvalidation.Report{
-		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
-			{
-				RuleID:      diag.RuleControlMissingID,
-				Severity:    diag.SeverityError,
-				Remediation: "Add id field",
-			},
-		}},
-		Summary: appvalidation.Summary{
-			ControlsLoaded: 1,
-		},
-	}
-
-	var buf bytes.Buffer
-	opts := newOptions()
-	r := testReporter(&buf, false, opts)
-	if err := r.Write(result, opts.hintCtx()); err != nil {
-		t.Fatalf("Write failed: %v", err)
-	}
-	err := r.ExitStatus(result)
-
-	if err == nil {
-		t.Error("expected error for validation with errors")
-	}
-	if ui.ExitCode(err) != 2 {
-		t.Errorf("expected exit code 2, got %d", ui.ExitCode(err))
-	}
-}
-
-// TestOutputAndExit_WarningsOnly tests Reporter with only warnings (should return exit code 2).
-func TestOutputAndExit_WarningsOnly(t *testing.T) {
-	// Warnings only, no errors → exit 2
-	result := &appvalidation.Report{
-		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
-			{
-				RuleID:      diag.RuleSingleSnapshot,
-				Severity:    diag.SeverityWarn,
-				Remediation: "Add more snapshots",
-			},
-			{
-				RuleID:      diag.RuleSpanLessThanMaxUnsafe,
-				Severity:    diag.SeverityWarn,
-				Remediation: "Reduce max-unsafe",
-			},
-		}},
-		Summary: appvalidation.Summary{
-			SnapshotsLoaded: 1,
-		},
-	}
-
-	var buf bytes.Buffer
-	opts := newOptions()
-	r := testReporter(&buf, false, opts)
-	if err := r.Write(result, opts.hintCtx()); err != nil {
-		t.Fatalf("Write failed: %v", err)
-	}
-	err := r.ExitStatus(result)
-
-	if err == nil {
-		t.Error("expected error for validation with warnings")
-	}
-	if ui.ExitCode(err) != 2 {
-		t.Errorf("expected exit code 2, got %d", ui.ExitCode(err))
-	}
-}
-
-// TestOutputAndExit_ErrorsAndWarnings tests Reporter with both errors and warnings (errors take precedence, exit code 2).
-func TestOutputAndExit_ErrorsAndWarnings(t *testing.T) {
-	// Has both errors and warnings → exit 2 (errors take precedence)
-	result := &appvalidation.Report{
-		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
-			{
-				RuleID:      diag.RuleControlMissingID,
-				Severity:    diag.SeverityError,
-				Remediation: "Add id field",
-			},
-			{
-				RuleID:      diag.RuleSingleSnapshot,
-				Severity:    diag.SeverityWarn,
-				Remediation: "Add more snapshots",
-			},
-		}},
-		Summary: appvalidation.Summary{
-			ControlsLoaded:  1,
-			SnapshotsLoaded: 1,
-		},
-	}
-
-	var buf bytes.Buffer
-	opts := newOptions()
-	r := testReporter(&buf, false, opts)
-	if err := r.Write(result, opts.hintCtx()); err != nil {
-		t.Fatalf("Write failed: %v", err)
-	}
-	err := r.ExitStatus(result)
-
-	if err == nil {
-		t.Error("expected error for validation with errors")
-	}
-	if ui.ExitCode(err) != 2 {
-		t.Errorf("expected exit code 2, got %d", ui.ExitCode(err))
-	}
-}
-
-// TestOutputAndExit_JSONOutput tests Reporter with JSON output format.
-func TestOutputAndExit_JSONOutput(t *testing.T) {
-	opts := newOptions()
-	opts.FixHints = false
-	result := &appvalidation.Report{
-		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
-			{
-				RuleID:   diag.RuleSingleSnapshot,
-				Severity: diag.SeverityWarn,
-				Resource: kernel.NewSanitizableMap(map[string]string{
-					"snapshot_count": "1",
-				}),
-				Remediation: "Add more snapshots",
-			},
-		}},
-		Summary: appvalidation.Summary{
-			SnapshotsLoaded: 1,
-		},
-	}
-
-	var buf bytes.Buffer
-	r := testReporter(&buf, true, opts)
-	if err := r.Write(result, opts.hintCtx()); err != nil {
-		t.Fatalf("Write failed: %v", err)
-	}
-	err := r.ExitStatus(result)
-
-	// Check JSON output contains expected fields
-	output := buf.String()
-	if !strings.Contains(output, `"schema_version": "validate.v0.1"`) {
-		t.Errorf("expected JSON to contain schema_version, got %s", output)
-	}
-	if !strings.Contains(output, `"valid": true`) {
-		t.Errorf("expected JSON to contain 'valid': true, got %s", output)
-	}
-	if !strings.Contains(output, `"rule_id": "SINGLE_SNAPSHOT"`) {
-		t.Errorf("expected JSON to contain warning rule_id, got %s", output)
-	}
-
-	// Should return warnings error
-	if ui.ExitCode(err) != 2 {
-		t.Errorf("expected exit code 2 for warnings, got %d", ui.ExitCode(err))
-	}
-}
-
-func TestWriteValidationText_WithFixHints(t *testing.T) {
-	opts := newOptions()
-	opts.FixHints = true
-	opts.Controls = "./controls"
-	opts.Observations = "./observations"
-
-	result := &appvalidation.Report{
-		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
-			{
-				RuleID:      diag.RuleObservationLoadFailed,
-				Severity:    diag.SeverityError,
-				Remediation: "Check observations",
-				Resource: kernel.NewSanitizableMap(map[string]string{
-					"directory": "./observations",
-				}),
-			},
-		}},
-	}
-
-	var buf bytes.Buffer
-	r := testReporter(&buf, false, opts)
-	if err := r.Write(result, opts.hintCtx()); err != nil {
-		t.Fatalf("Write failed: %v", err)
-	}
-	out := buf.String()
-	if !strings.Contains(out, "Suggested next commands:") {
-		t.Fatalf("expected fix hints section, got: %s", out)
-	}
-	if !strings.Contains(out, "Place observation JSON files") {
-		t.Fatalf("expected observation hint, got: %s", out)
-	}
-}
-
-func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
-	opts := newOptions()
-	opts.FixHints = true
-
-	result := &appvalidation.Report{
-		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
-			{
-				RuleID:      "INVALID_MAX_UNSAFE",
-				Severity:    diag.SeverityError,
-				Remediation: "Use valid duration",
-				FixCommand:  "stave validate --max-unsafe 168h",
-			},
-		}},
-	}
-
-	var buf bytes.Buffer
-	r := testReporter(&buf, true, opts)
-	_ = r.Write(result, opts.hintCtx())
-	out := buf.String()
-	if !strings.Contains(out, `"fix_hints"`) {
-		t.Fatalf("expected fix_hints in json output, got: %s", out)
-	}
-	if !strings.Contains(out, "stave validate --max-unsafe 168h") {
-		t.Fatalf("expected command hint in json output, got: %s", out)
-	}
-}
-
 // TestValidateHelpText verifies validate command help contains required sections.
 func TestValidateHelpText(t *testing.T) {
-	vf := compose.DefaultFactories()
-	help := NewCmd(vf.NewObsRepo, vf.NewCtlRepo, vf.NewCELEvaluator, ui.DefaultRuntime()).Long
+	help := NewCmd(ui.DefaultRuntime()).Long
 	required := []string{"What it checks:", "Control schema", "Observation schema", "Duration format"}
 	for _, section := range required {
 		if !strings.Contains(help, section) {
@@ -409,7 +115,6 @@ func TestDiagnoseHelpText(t *testing.T) {
 			t.Errorf("diagnose help missing required section: %s", section)
 		}
 	}
-	// Examples may be in Long or in the dedicated Example field (CLIG.dev best practice).
 	if !strings.Contains(help, "Examples:") && strings.TrimSpace(cmd.Example) == "" {
 		t.Error("diagnose help missing examples (expected in Long or Example field)")
 	}
@@ -435,20 +140,16 @@ func TestExitCodesContract(t *testing.T) {
 		err      error
 		expected int
 	}{
-		// Exit code 0: Success
 		{"success returns 0", nil, 0},
-		// Exit code 2: Input/validation errors
 		{"validation failed returns 2", ui.ErrValidationFailed, 2},
 		{"validation warnings returns 2", ui.ErrValidationWarnings, 2},
-		// Exit code 3: Violations/diagnostics found
 		{"violations found returns 3", ui.ErrViolationsFound, 3},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ui.ExitCode(tt.err)
-			if got != tt.expected {
-				t.Errorf("ui.ExitCode(%v) = %d, want %d (contract: 0=success, 2=input error, 3=violations)", tt.err, got, tt.expected)
+			if got := ui.ExitCode(tt.err); got != tt.expected {
+				t.Errorf("ui.ExitCode(%v) = %d, want %d", tt.err, got, tt.expected)
 			}
 		})
 	}

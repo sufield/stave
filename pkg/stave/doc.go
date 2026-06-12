@@ -120,6 +120,9 @@
 //	AssetTypeExamples  — example control ID per asset type.
 //	Gaps               — field-level observation coverage gaps.
 //	Readiness          — control fire/blocked forecast + action plan.
+//	NewReadinessEvaluator — readiness validation closure shared by
+//	                     `apply --dry-run` and `validate`.
+//	ValidatePackConfiguration — flag unknown enabled control-pack names.
 //	DiffSnapshots      — structured diff of two snapshot directories.
 //	GetCapabilities    — version + capability counts (controls, packs, frameworks).
 //	ExportInvariants   — catalog projected as solver-ready invariants

@@ -7,12 +7,13 @@ import (
 	"os"
 	"time"
 
-	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
 	"github.com/sufield/stave/cmd/cmdutil/prereq"
+	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/app/readiness"
 	"github.com/sufield/stave/internal/cli/ui"
 	validation "github.com/sufield/stave/internal/core/schemaval"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // ReadinessValidator evaluates controls against observations and returns a result.
@@ -109,7 +110,7 @@ type readinessJSONReport struct {
 // It is invoked by apply --dry-run.
 func runDryRun(ctx context.Context, deps Deps, cfg ReadinessConfig) error {
 	factory := func(ctlDir, obsDir string, sanitize bool) ReadinessValidator {
-		return applyvalidate.NewReadinessValidator(ctx, deps.NewObsRepo, deps.NewCtlRepo, ctlDir, obsDir, sanitize, applyvalidate.PackConfigIssues)
+		return stave.NewReadinessEvaluator(ctx, deps.NewObsRepo, deps.NewCtlRepo, ctlDir, obsDir, sanitize, projconfig.PackConfigIssues)
 	}
 	runner := NewReadinessRunner(factory)
 	return runner.Execute(cfg)

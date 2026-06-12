@@ -136,8 +136,7 @@ func TestEnforceFlagRegistered(t *testing.T) {
 
 // TestValidateInFlagRegistered verifies --in flag exists on validate.
 func TestValidateInFlagRegistered(t *testing.T) {
-	vf := compose.DefaultFactories()
-	f := applyvalidate.NewCmd(vf.NewObsRepo, vf.NewCtlRepo, vf.NewCELEvaluator, ui.DefaultRuntime()).Flags().Lookup("in")
+	f := applyvalidate.NewCmd(ui.DefaultRuntime()).Flags().Lookup("in")
 	if f == nil {
 		t.Error("validate missing --in flag")
 	}
@@ -154,7 +153,7 @@ func TestCommonShortAliasesRegistered(t *testing.T) {
 		NewChainLoader:   f.NewChainLoader,
 		NewSLALoader:     f.NewSLALoader,
 	})
-	validateCmd := applyvalidate.NewCmd(f.NewObsRepo, f.NewCtlRepo, f.NewCELEvaluator, ui.DefaultRuntime())
+	validateCmd := applyvalidate.NewCmd(ui.DefaultRuntime())
 	cases := []struct {
 		name      string
 		shorthand string
