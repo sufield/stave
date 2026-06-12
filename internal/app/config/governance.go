@@ -29,7 +29,7 @@ func discoverGovernanceSettings() []string {
 		if f.Tag.Get("governance") != "include" {
 			continue
 		}
-		tag := strings.Split(f.Tag.Get("yaml"), ",")[0]
+		tag, _, _ := strings.Cut(f.Tag.Get("yaml"), ",")
 		if tag == "" || tag == "-" {
 			continue
 		}
@@ -205,7 +205,7 @@ func BuildSettingCompletions() []string {
 func fieldByYAMLTag(v reflect.Value, tag string) (reflect.Value, bool) {
 	t := v.Type()
 	for i := range t.NumField() {
-		yamlTag := strings.Split(t.Field(i).Tag.Get("yaml"), ",")[0]
+		yamlTag, _, _ := strings.Cut(t.Field(i).Tag.Get("yaml"), ",")
 		if yamlTag == tag {
 			return v.Field(i), true
 		}
@@ -216,7 +216,7 @@ func fieldByYAMLTag(v reflect.Value, tag string) (reflect.Value, bool) {
 func structFieldNameByYAMLTag(_ *WorkspacePolicy, yamlKey string) string {
 	t := reflect.TypeFor[WorkspacePolicy]()
 	for field := range t.Fields() {
-		tag := strings.Split(field.Tag.Get("yaml"), ",")[0]
+		tag, _, _ := strings.Cut(field.Tag.Get("yaml"), ",")
 		if tag == yamlKey {
 			return field.Name
 		}

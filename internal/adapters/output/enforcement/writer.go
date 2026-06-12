@@ -1,8 +1,9 @@
 package enforcement
 
 import (
+	"cmp"
 	"encoding/json"
-	"sort"
+	"slices"
 	"strings"
 	"unicode"
 
@@ -19,8 +20,8 @@ type BucketTarget struct {
 
 // SortTargets sorts targets by resource ID for deterministic output.
 func SortTargets(targets []BucketTarget) {
-	sort.Slice(targets, func(i, j int) bool {
-		return targets[i].AssetID < targets[j].AssetID
+	slices.SortFunc(targets, func(a, b BucketTarget) int {
+		return cmp.Compare(a.AssetID, b.AssetID)
 	})
 }
 

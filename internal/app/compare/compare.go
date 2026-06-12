@@ -3,9 +3,9 @@
 package compare
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
-	"strings"
+	"slices"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -135,13 +135,13 @@ func Analyze(input Input) *Result {
 
 	// Sort: shared by severity, target-only by severity.
 	sortBySeverity := func(items []CompareItem) {
-		sort.Slice(items, func(i, j int) bool {
-			si := sevOrder(strings.ToLower(items[i].Severity))
-			sj := sevOrder(strings.ToLower(items[j].Severity))
-			if si != sj {
-				return si < sj
+		slices.SortFunc(items, func(a, b CompareItem) int {
+			sa := sevOrder(a.Severity)
+			sb := sevOrder(b.Severity)
+			if sa != sb {
+				return cmp.Compare(sa, sb)
 			}
-			return items[i].ControlID < items[j].ControlID
+			return cmp.Compare(a.ControlID, b.ControlID)
 		})
 	}
 	sortBySeverity(shared)

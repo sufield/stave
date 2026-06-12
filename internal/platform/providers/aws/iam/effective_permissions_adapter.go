@@ -1,8 +1,9 @@
 package iam
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -99,18 +100,17 @@ func (r *EffectivePermissionResolver) ResolveSnapshot(snap *asset.Snapshot) []po
 		}
 	}
 
-	sort.Slice(out, func(i, j int) bool {
-		a, b := &out[i], &out[j]
+	slices.SortFunc(out, func(a, b ports.EffectivePermission) int {
 		if a.PrincipalID != b.PrincipalID {
-			return a.PrincipalID < b.PrincipalID
+			return cmp.Compare(a.PrincipalID, b.PrincipalID)
 		}
 		if a.Source != b.Source {
-			return a.Source < b.Source
+			return cmp.Compare(a.Source, b.Source)
 		}
 		if a.Action != b.Action {
-			return a.Action < b.Action
+			return cmp.Compare(a.Action, b.Action)
 		}
-		return a.Resource < b.Resource
+		return cmp.Compare(a.Resource, b.Resource)
 	})
 	return out
 }
@@ -148,7 +148,7 @@ func stringifyConditions(raw any) []string {
 	if len(out) == 0 {
 		return nil
 	}
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }
 

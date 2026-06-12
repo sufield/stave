@@ -6,11 +6,12 @@
 package coverage
 
 import (
+	"cmp"
 	"embed"
 	"fmt"
 	"io/fs"
 	"path"
-	"sort"
+	"slices"
 	"strings"
 
 	corecov "github.com/sufield/stave/internal/core/evaluation/coverage"
@@ -79,11 +80,11 @@ func loadFromFS(fsys fs.FS, root string) ([]corecov.ToolInventory, error) {
 		out = append(out, inv)
 	}
 
-	sort.Slice(out, func(i, j int) bool {
-		if out[i].Tool != out[j].Tool {
-			return out[i].Tool < out[j].Tool
+	slices.SortFunc(out, func(a, b corecov.ToolInventory) int {
+		if a.Tool != b.Tool {
+			return cmp.Compare(a.Tool, b.Tool)
 		}
-		return out[i].Domain < out[j].Domain
+		return cmp.Compare(a.Domain, b.Domain)
 	})
 	return out, nil
 }

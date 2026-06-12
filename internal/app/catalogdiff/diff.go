@@ -3,8 +3,8 @@
 package catalogdiff
 
 import (
+	"cmp"
 	"slices"
-	"sort"
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -70,8 +70,8 @@ func Compute(before, after []policy.ControlDefinition) *Delta {
 
 	slices.Sort(newControls)
 	slices.Sort(removedControls)
-	sort.Slice(sevChanges, func(i, j int) bool {
-		return sevChanges[i].ControlID < sevChanges[j].ControlID
+	slices.SortFunc(sevChanges, func(a, b SeverityChange) int {
+		return cmp.Compare(a.ControlID, b.ControlID)
 	})
 
 	return &Delta{

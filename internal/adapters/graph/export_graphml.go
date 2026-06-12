@@ -3,12 +3,13 @@ package graph
 import (
 	"bufio"
 	"bytes"
+	"cmp"
 	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
-	"sort"
+	"slices"
 	"strconv"
 )
 
@@ -188,11 +189,11 @@ func collectGraphMLKeys(rdf *rdfGraph) []graphmlKey {
 	for _, k := range seen {
 		out = append(out, k)
 	}
-	sort.Slice(out, func(i, j int) bool {
-		if out[i].for_ != out[j].for_ {
-			return out[i].for_ < out[j].for_
+	slices.SortFunc(out, func(a, b graphmlKey) int {
+		if a.for_ != b.for_ {
+			return cmp.Compare(a.for_, b.for_)
 		}
-		return out[i].name < out[j].name
+		return cmp.Compare(a.name, b.name)
 	})
 	// Re-id once positions are stable so id values are deterministic.
 	for i := range out {

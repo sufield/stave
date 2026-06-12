@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -82,8 +82,14 @@ func (b *Builder) Build(ctx context.Context, in BuilderInput) (*Report, error) {
 	if len(assessments) == 0 {
 		return nil, fmt.Errorf("no assessments in %s", in.HistoryDir)
 	}
-	sort.Slice(assessments, func(i, j int) bool {
-		return assessments[i].Run.Now.Before(assessments[j].Run.Now)
+	slices.SortFunc(assessments, func(a, b *corereport.Assessment) int {
+		if a.Run.Now.Before(b.Run.Now) {
+			return -1
+		}
+		if a.Run.Now.After(b.Run.Now) {
+			return 1
+		}
+		return 0
 	})
 	latest := assessments[len(assessments)-1]
 

@@ -1,8 +1,9 @@
 package execreport
 
 import (
+	"cmp"
 	"context"
-	"sort"
+	"slices"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appcoverage "github.com/sufield/stave/internal/app/coverage"
@@ -101,7 +102,9 @@ func buildTopFindings(a *corereport.Assessment, n int) []TopFinding {
 		}
 		items = append(items, ranked{idx: i, score: w*100 + burn*50})
 	}
-	sort.Slice(items, func(i, j int) bool { return items[i].score > items[j].score })
+	slices.SortFunc(items, func(a, b ranked) int {
+		return cmp.Compare(b.score, a.score)
+	})
 	if len(items) > n {
 		items = items[:n]
 	}

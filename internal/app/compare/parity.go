@@ -1,8 +1,8 @@
 package compare
 
 import (
-	"sort"
-	"strings"
+	"cmp"
+	"slices"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -120,13 +120,13 @@ func AnalyzeParity(input ParityInput) *ParityResult {
 
 	// Sort by severity.
 	sortBySev := func(items []ParityItem) {
-		sort.Slice(items, func(i, j int) bool {
-			si := sevOrder(strings.ToLower(items[i].Severity))
-			sj := sevOrder(strings.ToLower(items[j].Severity))
-			if si != sj {
-				return si < sj
+		slices.SortFunc(items, func(a, b ParityItem) int {
+			sa := sevOrder(a.Severity)
+			sb := sevOrder(b.Severity)
+			if sa != sb {
+				return cmp.Compare(sa, sb)
 			}
-			return items[i].ControlID < items[j].ControlID
+			return cmp.Compare(a.ControlID, b.ControlID)
 		})
 	}
 	sortBySev(consistentFail)

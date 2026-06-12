@@ -3,13 +3,14 @@ package graph
 import (
 	"bufio"
 	"bytes"
+	"cmp"
 	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
-	"sort"
+	"slices"
 )
 
 //go:embed ontology.ttl
@@ -192,7 +193,7 @@ func (enc *jsonldNodeEncoder) encodeNode(n *rdfNode, outgoing []rdfEdge) []byte 
 		for k := range groups {
 			predKeys = append(predKeys, k)
 		}
-		sort.Strings(predKeys)
+		slices.Sort(predKeys)
 		for _, k := range predKeys {
 			grp := groups[k]
 			enc.buf.WriteString(",\n      ")
@@ -360,16 +361,16 @@ func encodeJSONValue(buf *bytes.Buffer, v any) {
 // across runs — important for golden tests and for diffing two
 // exports of the same assessment.
 func sortRDF(g *rdfGraph) {
-	sort.Slice(g.Nodes, func(i, j int) bool {
-		return g.Nodes[i].ID < g.Nodes[j].ID
+	slices.SortFunc(g.Nodes, func(a, b rdfNode) int {
+		return cmp.Compare(a.ID, b.ID)
 	})
-	sort.Slice(g.Edges, func(i, j int) bool {
-		if g.Edges[i].From != g.Edges[j].From {
-			return g.Edges[i].From < g.Edges[j].From
+	slices.SortFunc(g.Edges, func(a, b rdfEdge) int {
+		if a.From != b.From {
+			return cmp.Compare(a.From, b.From)
 		}
-		if g.Edges[i].Predicate != g.Edges[j].Predicate {
-			return g.Edges[i].Predicate < g.Edges[j].Predicate
+		if a.Predicate != b.Predicate {
+			return cmp.Compare(a.Predicate, b.Predicate)
 		}
-		return g.Edges[i].To < g.Edges[j].To
+		return cmp.Compare(a.To, b.To)
 	})
 }

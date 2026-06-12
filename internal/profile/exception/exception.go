@@ -51,7 +51,7 @@ func (d *Date) UnmarshalYAML(unmarshal func(any) error) error {
 		t, err = time.Parse(time.RFC3339, s)
 	}
 	if err != nil {
-		return fmt.Errorf("invalid date %q (use YYYY-MM-DD or RFC3339)", s)
+		return fmt.Errorf("invalid date %q (use YYYY-MM-DD or RFC3339): %w", s, err)
 	}
 	d.Time = t
 	return nil
