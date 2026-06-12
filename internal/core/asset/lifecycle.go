@@ -74,13 +74,15 @@ func (l *ExposureLifecycle) Asset() Asset {
 // surface the failure via a normal error path, matching the
 // error-returning style of NewExposureLifecycle.
 func (l *ExposureLifecycle) SetAsset(a Asset) error {
-	if l.ID.IsEmpty() {
-		l.ID = a.ID
+	newID := l.ID
+	if newID.IsEmpty() {
+		newID = a.ID
 	}
-	l.asset = a
-	if l.ID.IsEmpty() {
+	if newID.IsEmpty() {
 		return ErrEmptyAssetID
 	}
+	l.ID = newID
+	l.asset = a
 	return nil
 }
 

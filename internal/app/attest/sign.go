@@ -56,7 +56,7 @@ func Verify(snapshotPath string, publicKey ed25519.PublicKey) error {
 	sigPath := snapshotPath + ".sig"
 	sigData, err := os.ReadFile(sigPath) //nolint:gosec // G304: sigPath is derived from validated snapshotPath
 	if err != nil {
-		return fmt.Errorf("signature file missing: %s", sigPath)
+		return fmt.Errorf("signature file missing %s: %w", sigPath, err)
 	}
 
 	var sig Signature

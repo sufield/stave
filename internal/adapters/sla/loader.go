@@ -102,22 +102,22 @@ func LoadFromFile(path string) (*Policy, error) {
 // Tier-level checks live on DeadlineTiers itself; Policy.Validate
 // only owns the Policy-scoped invariants (escalation_factor range).
 func (p *Policy) Validate() error {
-	var errs []string
+	var errs []error
 	if err := p.Deadlines.Validate(); err != nil {
-		errs = append(errs, err.Error())
+		errs = append(errs, err)
 	}
 	if p.EscalationFactor < 1.0 || p.EscalationFactor > 3.0 {
-		errs = append(errs, fmt.Sprintf("escalation_factor %.1f must be between 1.0 and 3.0", p.EscalationFactor))
+		errs = append(errs, fmt.Errorf("escalation_factor %.1f must be between 1.0 and 3.0", p.EscalationFactor))
 	}
 	if len(errs) > 0 {
-		return fmt.Errorf("%s", strings.Join(errs, "; "))
+		return errors.Join(errs...)
 	}
 	return nil
 }
 
 // Validate checks that all four severity tiers carry a non-empty,
 // kernel.ParseDuration-parseable string. Returns a single
-// semicolon-joined error so the caller can surface every missing /
+// joined error so the caller can surface every missing /
 // malformed tier in one pass instead of failing on the first.
 //
 // Owns the per-tier "required and parseable" rule so Policy.Validate
@@ -136,16 +136,16 @@ func (d *DeadlineTiers) Validate() error {
 		{"medium", d.Medium},
 		{"low", d.Low},
 	}
-	var errs []string
+	var errs []error
 	for _, t := range tiers {
 		if t.value == "" {
-			errs = append(errs, "deadlines."+t.name+" is required")
+			errs = append(errs, fmt.Errorf("deadlines.%s is required: %w", t.name, kernel.ErrEmptyDuration))
 		} else if _, err := kernel.ParseDuration(t.value); err != nil {
-			errs = append(errs, "deadlines."+t.name+": "+err.Error())
+			errs = append(errs, fmt.Errorf("deadlines.%s: %w", t.name, err))
 		}
 	}
 	if len(errs) > 0 {
-		return errors.New(strings.Join(errs, "; "))
+		return errors.Join(errs...)
 	}
 	return nil
 }
@@ -154,7 +154,7 @@ func (d *DeadlineTiers) Validate() error {
 func LoadEmbedded(id string) (*Policy, error) {
 	data, err := policiesFS.ReadFile("embedded/" + id + ".yaml")
 	if err != nil {
-		return nil, fmt.Errorf("sla policy %q not found", id)
+		return nil, fmt.Errorf("sla policy %q not found: %w", id, err)
 	}
 	var p Policy
 	if err := yaml.Unmarshal(data, &p); err != nil {

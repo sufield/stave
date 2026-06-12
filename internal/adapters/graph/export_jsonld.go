@@ -58,7 +58,7 @@ func MarshalJSONLD(w io.Writer, g *GraphData) error {
 // strict-mode export check the returned slice for non-empty.
 func MarshalJSONLDWithDiagnostics(w io.Writer, g *GraphData) ([]UnmappedEdge, error) {
 	if g == nil {
-		return nil, errors.New("MarshalJSONLD: nil GraphData")
+		return nil, errors.New("marshalJSONLD: nil GraphData")
 	}
 	rdf := mapTordfGraph(g)
 

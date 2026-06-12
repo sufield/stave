@@ -2,15 +2,12 @@ package verify
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -73,34 +70,4 @@ func (o *options) validate() error {
 		return fmt.Errorf("validate controls directory: %w", err)
 	}
 	return nil
-}
-
-// Execution contains the resolved domain objects ready for the application layer.
-type Execution struct {
-	BeforeDir         string
-	AfterDir          string
-	ControlsDir       string
-	MaxUnsafeDuration time.Duration
-	Clock             ports.Clock
-}
-
-// Complete transforms the raw options into a validated Execution object.
-func (o *options) Complete() (Execution, error) {
-	maxDuration, err := cliflags.ParseDurationFlag(o.MaxUnsafeDuration, "--max-unsafe")
-	if err != nil {
-		return Execution{}, fmt.Errorf("parse max-unsafe duration: %w", err)
-	}
-
-	clock, err := compose.ResolveClock(o.Now)
-	if err != nil {
-		return Execution{}, fmt.Errorf("resolve clock: %w", err)
-	}
-
-	return Execution{
-		BeforeDir:         o.BeforeDir,
-		AfterDir:          o.AfterDir,
-		ControlsDir:       o.ControlsDir,
-		MaxUnsafeDuration: maxDuration,
-		Clock:             clock,
-	}, nil
 }

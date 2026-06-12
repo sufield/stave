@@ -846,9 +846,9 @@ func diffPaths(a, b any, prefix string) []string {
 			out = append(out, diffPaths(av[i], bv[i], fmt.Sprintf("%s[%d]", prefix, i))...)
 		}
 	default:
-		aj, _ := json.Marshal(a)
-		bj, _ := json.Marshal(b)
-		if !bytes.Equal(aj, bj) {
+		aj, errA := json.Marshal(a)
+		bj, errB := json.Marshal(b)
+		if errA != nil || errB != nil || !bytes.Equal(aj, bj) {
 			out = append(out, prefix)
 		}
 	}

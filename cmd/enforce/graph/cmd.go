@@ -1,17 +1,15 @@
 package graph
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
+
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/platform/metadata"
 )
 
-// NewCmd constructs the graph command group with its coverage subcommand.
-func NewCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoader) *cobra.Command {
+// NewCmd constructs the graph command group with its coverage and export
+// subcommands.
+func NewCmd() *cobra.Command {
 	graphCmd := &cobra.Command{
 		Use:   "graph",
 		Short: "Visualize control and asset relationships",
@@ -19,12 +17,12 @@ func NewCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoa
 		Args:  cobra.NoArgs,
 	}
 
-	graphCmd.AddCommand(newCoverageCmd(newCtlRepo, loadSnapshots))
+	graphCmd.AddCommand(newCoverageCmd())
 	graphCmd.AddCommand(newExportCmd())
 	return graphCmd
 }
 
-func newCoverageCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoader) *cobra.Command {
+func newCoverageCmd() *cobra.Command {
 	opts := defaultCoverageOptions()
 
 	cmd := &cobra.Command{
@@ -63,17 +61,7 @@ Exit Codes:
 		Example: `  stave graph coverage --controls controls/s3 --observations observations`,
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, err := toConfig(opts, cliflags.GetGlobalFlags(cmd), cmd.OutOrStdout())
-			if err != nil {
-				return err
-			}
-			runner := NewRunner(
-				func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
-					return compose.LoadControlsFrom(ctx, newCtlRepo, dir)
-				},
-				loadSnapshots,
-			)
-			return runner.Run(cmd.Context(), cfg)
+			return runCoverage(cmd.Context(), opts, cliflags.GetGlobalFlags(cmd), cmd.OutOrStdout())
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

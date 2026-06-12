@@ -42,7 +42,7 @@ func CreateDurationFinding(in DurationFindingInput) (*evaluation.Finding, error)
 		// dereferencing a nil pointer in the duration / asset path
 		// — a malformed call site (test harness, partial result
 		// reconstruction) should fail loud rather than panic.
-		return nil, errors.New("CreateDurationFinding: ExposureLifecycle is required")
+		return nil, errors.New("createDurationFinding: ExposureLifecycle is required")
 	}
 	if in.Control == nil {
 		// Sibling guard: in.Control.Params and in.Control.UnsafePredicate
@@ -50,7 +50,7 @@ func CreateDurationFinding(in DurationFindingInput) (*evaluation.Finding, error)
 		// would also fault. Same fail-loud rationale as the
 		// ExposureLifecycle branch — a malformed call site is the
 		// only way this fires.
-		return nil, errors.New("CreateDurationFinding: Control is required")
+		return nil, errors.New("createDurationFinding: Control is required")
 	}
 	a := in.ExposureLifecycle.Asset()
 	duration, durationErr := in.ExposureLifecycle.ExposureDuration(in.Now)
@@ -74,7 +74,7 @@ func CreateDurationFinding(in DurationFindingInput) (*evaluation.Finding, error)
 		// keep this defensive return so a future signature shift
 		// (additional nil-tolerant fields, etc.) cannot panic
 		// silently on the f.Evidence write below.
-		return nil, errors.New("CreateDurationFinding: newBaseFinding returned nil despite passing input guards")
+		return nil, errors.New("createDurationFinding: newBaseFinding returned nil despite passing input guards")
 	}
 	f.Evidence = evaluation.Evidence{
 		FirstUnsafeAt:       in.ExposureLifecycle.FirstExposedAt(),

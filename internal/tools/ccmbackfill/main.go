@@ -19,6 +19,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"io/fs"
@@ -171,11 +172,11 @@ func applyToFile(path string, ccms []string) (bool, error) {
 		return false, err
 	}
 	if doc.Kind != yaml.DocumentNode || len(doc.Content) == 0 {
-		return false, fmt.Errorf("unexpected YAML structure")
+		return false, errors.New("unexpected YAML structure")
 	}
 	top := doc.Content[0]
 	if top.Kind != yaml.MappingNode {
-		return false, fmt.Errorf("top-level YAML is not a mapping")
+		return false, errors.New("top-level YAML is not a mapping")
 	}
 
 	complianceKey, complianceVal := findChild(top, "compliance")

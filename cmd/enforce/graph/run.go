@@ -2,258 +2,49 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
-	"strings"
 
-	"maps"
-	"slices"
-
-	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/asset"
-	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/util/jsonutil"
+	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
-// Format represents a validated graph output format.
-type Format string
+// runCoverage validates the input directories (exit 2), delegates the
+// load → build → render pipeline to the facade, and writes the rendered
+// coverage graph.
+func runCoverage(ctx context.Context, opts *coverageOptions, gf cliflags.GlobalFlags, stdout io.Writer) error {
+	controlsDir := fsutil.CleanUserPath(opts.ControlsDir)
+	observationsDir := fsutil.CleanUserPath(opts.ObservationsDir)
 
-// Supported graph output formats.
-const (
-	FormatDot  Format = "dot"
-	FormatJSON Format = "json"
-)
-
-// ParseFormat validates and returns a Format value.
-func ParseFormat(s string) (Format, error) {
-	normalized := Format(ui.NormalizeToken(s))
-	switch normalized {
-	case FormatDot, FormatJSON:
-		return normalized, nil
-	default:
-		return "", ui.EnumError("--format", s, []string{string(FormatDot), string(FormatJSON)})
-	}
-}
-
-// config holds the validated parameters for graph generation.
-type config struct {
-	ControlsDir     string
-	ObservationsDir string
-	Format          Format
-	Sanitizer       kernel.Sanitizer
-	Stdout          io.Writer
-	PredicateEval   policy.PredicateEval
-}
-
-// Runner orchestrates loading assets and generating coverage graphs.
-type Runner struct {
-	LoadControls  compose.ControlLoaderFunc
-	LoadSnapshots compose.SnapshotLoader
-}
-
-// NewRunner initializes a graph runner.
-func NewRunner(loadControls compose.ControlLoaderFunc, loadSnapshots compose.SnapshotLoader) *Runner {
-	return &Runner{LoadControls: loadControls, LoadSnapshots: loadSnapshots}
-}
-
-// CoverageEdge represents a single control→asset coverage relationship.
-type CoverageEdge struct {
-	ControlID kernel.ControlID `json:"control_id"`
-	AssetID   asset.ID         `json:"asset_id"`
-}
-
-// CoverageResult holds the complete coverage graph data.
-type CoverageResult struct {
-	Controls        []kernel.ControlID `json:"controls"`
-	Assets          []asset.ID         `json:"assets"`
-	Edges           []CoverageEdge     `json:"edges"`
-	UncoveredAssets []asset.ID         `json:"uncovered_assets"`
-}
-
-// Run validates inputs, loads artifacts, builds the coverage graph, and writes it.
-func (r *Runner) Run(ctx context.Context, cfg config) error {
-	if err := dircheck.ValidateFlagDir("--controls", cfg.ControlsDir, "", nil, nil); err != nil {
+	// Directory validation stays command-side so a missing/unreadable dir is
+	// a user error (exit 2) rather than a plain load failure (exit 4).
+	if err := dircheck.ValidateFlagDir("--controls", controlsDir, "", nil, nil); err != nil {
 		return &ui.UserError{Err: fmt.Errorf("invalid controls directory: %w", err)}
 	}
-	if err := dircheck.ValidateFlagDir("--observations", cfg.ObservationsDir, "", nil, nil); err != nil {
+	if err := dircheck.ValidateFlagDir("--observations", observationsDir, "", nil, nil); err != nil {
 		return &ui.UserError{Err: fmt.Errorf("invalid observations directory: %w", err)}
 	}
 
-	controls, latestSnapshot, err := r.loadArtifacts(ctx, cfg.ControlsDir, cfg.ObservationsDir)
+	out, err := stave.CoverageGraph(ctx, stave.CoverageGraphConfig{
+		ControlsDir:     controlsDir,
+		ObservationsDir: observationsDir,
+		Format:          opts.Format,
+		SanitizeIDs:     gf.Sanitize,
+		PathMode:        string(gf.PathMode),
+	})
 	if err != nil {
-		return fmt.Errorf("loading artifacts: %w", err)
-	}
-	result := buildResult(controls, latestSnapshot, cfg.PredicateEval)
-	return writeResult(cfg.Stdout, cfg.Format, result, cfg.Sanitizer)
-}
-
-func (r *Runner) loadArtifacts(ctx context.Context, controlsDir, observationsDir string) ([]policy.ControlDefinition, asset.Snapshot, error) {
-	controls, err := r.LoadControls(ctx, controlsDir)
-	if err != nil {
-		return nil, asset.Snapshot{}, fmt.Errorf("load controls: %w", err)
-	}
-	snapshots, err := r.LoadSnapshots(ctx, observationsDir)
-	if err != nil {
-		return nil, asset.Snapshot{}, fmt.Errorf("load snapshots: %w", err)
-	}
-	latest, latestErr := compose.LatestSnapshot(snapshots)
-	if latestErr != nil {
-		return nil, asset.Snapshot{}, fmt.Errorf("%w: no observation snapshots found in %s", latestErr, observationsDir)
-	}
-	return controls, latest, nil
-}
-
-func buildResult(controls []policy.ControlDefinition, latest asset.Snapshot, eval policy.PredicateEval) CoverageResult {
-	assetMap, assetIDs := coverageAssets(latest.Assets)
-	controlIDs := coverageControlIDs(controls)
-	edges, covered := CoverageEdges(controls, assetMap, assetIDs, latest.Identities, eval)
-	return CoverageResult{
-		Controls:        controlIDs,
-		Assets:          assetIDs,
-		Edges:           edges,
-		UncoveredAssets: uncoveredAssets(assetIDs, covered),
-	}
-}
-
-func coverageAssets(assets []asset.Asset) (map[asset.ID]asset.Asset, []asset.ID) {
-	assetMap := make(map[asset.ID]asset.Asset, len(assets))
-	for _, a := range assets {
-		assetMap[a.ID] = a
-	}
-	if len(assetMap) == 0 {
-		return assetMap, nil
-	}
-	return assetMap, slices.Sorted(maps.Keys(assetMap))
-}
-
-func coverageControlIDs(controls []policy.ControlDefinition) []kernel.ControlID {
-	ids := make([]kernel.ControlID, len(controls))
-	for i := range controls {
-		ctl := &controls[i]
-		ids[i] = ctl.ID
-	}
-	return ids
-}
-
-// CoverageEdges computes edges between controls and assets where the control's
-// predicate matches the asset, returning the edges and a set of covered asset IDs.
-func CoverageEdges(
-	controls []policy.ControlDefinition,
-	assetMap map[asset.ID]asset.Asset,
-	assetIDs []asset.ID,
-	identities []asset.CloudIdentity,
-	eval policy.PredicateEval,
-) ([]CoverageEdge, map[asset.ID]bool) {
-	edges := make([]CoverageEdge, 0, len(assetIDs))
-	coveredAssets := make(map[asset.ID]bool, len(assetIDs))
-	if eval == nil {
-		return edges, coveredAssets
-	}
-	for i := range controls {
-		ctl := &controls[i]
-		for _, rid := range assetIDs {
-			unsafe, err := eval(*ctl, assetMap[rid], identities)
-			if err != nil || !unsafe {
-				continue
-			}
-			edges = append(edges, CoverageEdge{ControlID: ctl.ID, AssetID: rid})
-			coveredAssets[rid] = true
+		if errors.Is(err, stave.ErrInvalidInput) {
+			return &ui.UserError{Err: err}
 		}
-	}
-	return edges, coveredAssets
-}
-
-func uncoveredAssets(assetIDs []asset.ID, coveredAssets map[asset.ID]bool) []asset.ID {
-	out := make([]asset.ID, 0)
-	for _, rid := range assetIDs {
-		if !coveredAssets[rid] {
-			out = append(out, rid)
-		}
-	}
-	return out
-}
-
-func writeResult(w io.Writer, format Format, result CoverageResult, sanitizer kernel.Sanitizer) error {
-	r, err := NewCoverageRenderer(format)
-	if err != nil {
-		//nolint:nilerr // unknown Format is a boundary-validated no-op: ParseFormat rejects unknown CLI input upstream, and TestWriteResult_Unknown pins this swallow.
-		return nil
-	}
-	if err := r.Render(w, result, sanitizer); err != nil {
-		return fmt.Errorf("render output: %w", err)
-	}
-	return nil
-}
-
-func writeDOT(w io.Writer, result CoverageResult, sanitizer kernel.Sanitizer) error {
-	uncoveredSet := make(map[asset.ID]bool)
-	for _, r := range result.UncoveredAssets {
-		uncoveredSet[r] = true
+		return err //nolint:wrapcheck // facade already wrapped ("loading artifacts"/"render..."); preserve exit 4.
 	}
 
-	fmt.Fprintln(w, "digraph StaveCoverage {")
-	fmt.Fprintln(w, `  rankdir="LR";`)
-	fmt.Fprintln(w, `  node [shape=box, style=rounded];`)
-	fmt.Fprintln(w)
-
-	// Controls cluster
-	fmt.Fprintln(w, "  subgraph cluster_controls {")
-	fmt.Fprintln(w, `    label="Controls";`)
-	fmt.Fprintln(w, `    style="filled";`)
-	fmt.Fprintln(w, `    color="lightgrey";`)
-	for _, id := range result.Controls {
-		fmt.Fprintf(w, "    %s [style=filled, fillcolor=lightblue];\n", dotQuote(id.String()))
-	}
-	fmt.Fprintln(w, "  }")
-	fmt.Fprintln(w)
-
-	// Assets cluster
-	fmt.Fprintln(w, "  subgraph cluster_assets {")
-	fmt.Fprintln(w, `    label="Assets";`)
-	for _, rid := range result.Assets {
-		displayID := sanitizer.ID(rid.String())
-		if uncoveredSet[rid] {
-			fmt.Fprintf(w, "    %s [style=filled, fillcolor=lightyellow];\n", dotQuote(displayID))
-		} else {
-			fmt.Fprintf(w, "    %s;\n", dotQuote(displayID))
-		}
-	}
-	fmt.Fprintln(w, "  }")
-	fmt.Fprintln(w)
-
-	// Edges
-	for _, edge := range result.Edges {
-		assetDisplay := sanitizer.ID(edge.AssetID.String())
-		fmt.Fprintf(w, "  %s -> %s;\n", dotQuote(edge.ControlID.String()), dotQuote(assetDisplay))
-	}
-
-	fmt.Fprintln(w, "}")
-	return nil
-}
-
-// dotQuote wraps a string in double quotes for DOT format, escaping inner quotes.
-func dotQuote(s string) string {
-	escaped := strings.ReplaceAll(s, `\`, `\\`)
-	escaped = strings.ReplaceAll(escaped, `"`, `\\"`)
-	return `"` + escaped + `"`
-}
-
-func writeJSON(w io.Writer, result CoverageResult, sanitizer kernel.Sanitizer) error {
-	for i, rid := range result.Assets {
-		result.Assets[i] = asset.ID(sanitizer.ID(rid.String()))
-	}
-	for i, edge := range result.Edges {
-		result.Edges[i].AssetID = asset.ID(sanitizer.ID(edge.AssetID.String()))
-	}
-	for i, rid := range result.UncoveredAssets {
-		result.UncoveredAssets[i] = asset.ID(sanitizer.ID(rid.String()))
-	}
-
-	if err := jsonutil.WriteIndented(w, result); err != nil {
-		return fmt.Errorf("write output: %w", err)
+	if _, werr := stdout.Write(out); werr != nil {
+		return fmt.Errorf("write coverage graph: %w", werr)
 	}
 	return nil
 }

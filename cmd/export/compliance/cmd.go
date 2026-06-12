@@ -2,8 +2,6 @@ package compliance
 
 import (
 	"github.com/spf13/cobra"
-
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 )
 
 type options struct {
@@ -22,7 +20,7 @@ type options struct {
 }
 
 // NewCmd creates the compliance evidence export subcommand.
-func NewCmd(newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvaluatorFactory) *cobra.Command {
+func NewCmd() *cobra.Command {
 	opts := &options{
 		Format:      "json",
 		MinSeverity: "all",
@@ -65,7 +63,7 @@ Examples:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runCompliance(cmd.Context(), opts, cmd.OutOrStdout(), newCtlRepo, newCELEvaluator)
+			return runCompliance(cmd.Context(), opts, cmd.OutOrStdout())
 		},
 	}
 

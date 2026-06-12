@@ -5,10 +5,13 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/metadata"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type options struct {
@@ -21,9 +24,8 @@ type options struct {
 	ResourceARN string
 }
 
-// NewCmd constructs the bisect command with the given dependencies.
-// cmd/commands.go is responsible for resolving the production factories.
-func NewCmd(deps Deps) *cobra.Command {
+// NewCmd constructs the bisect command.
+func NewCmd() *cobra.Command {
 	opts := &options{}
 
 	cmd := &cobra.Command{
@@ -69,13 +71,39 @@ Exit Codes:
   stave bisect -i controls/ -o snapshots/ --control-id CTL.S3.ENCRYPT.001 --resource arn:aws:s3:::prod-bucket`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runBisect(compose.CommandContext(cmd), Input{
-				Stdout: cmd.OutOrStdout(),
-				Stderr: cmd.ErrOrStderr(),
-				Logger: cmdctx.LoggerFromCmd(cmd),
-				Opts:   opts,
-				Deps:   deps,
+			if opts.ControlID == "" {
+				return &ui.UserError{Err: errors.New("--control-id is required")}
+			}
+
+			out, err := stave.BisectControl(compose.CommandContext(cmd), stave.BisectInput{
+				ControlsDir: opts.ControlsDir,
+				ObsDir:      opts.ObsDir,
+				ControlID:   opts.ControlID,
+				Mode:        opts.Mode,
+				Format:      opts.Format,
+				Now:         opts.Now,
+				ResourceARN: opts.ResourceARN,
+				Logger:      cmdctx.LoggerFromCmd(cmd),
 			})
+			if err != nil {
+				if errors.Is(err, stave.ErrInvalidInput) {
+					return &ui.UserError{Err: err}
+				}
+				return err //nolint:wrapcheck // facade already wrapped; preserve exit codes.
+			}
+
+			if len(out.Stderr) > 0 {
+				if _, werr := cmd.ErrOrStderr().Write(out.Stderr); werr != nil {
+					return fmt.Errorf("write warnings: %w", werr)
+				}
+			}
+			if _, werr := cmd.OutOrStdout().Write(out.Stdout); werr != nil {
+				return fmt.Errorf("write output: %w", werr)
+			}
+			if out.HasViolations {
+				return ui.ErrViolationsFound
+			}
+			return nil
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -93,25 +121,4 @@ Exit Codes:
 	_ = cmd.RegisterFlagCompletionFunc("mode", cliflags.CompleteFixed("bisect", "scan"))
 
 	return cmd
-}
-
-func parseMode(s string) (int, error) {
-	switch s {
-	case "bisect":
-		return 0, nil // ModeBisect
-	case "scan":
-		return 1, nil // ModeScan
-	default:
-		return 0, fmt.Errorf("invalid --mode %q (supported: bisect, scan)", s)
-	}
-}
-
-func (o *options) validate() error {
-	if o.ControlID == "" {
-		return errors.New("--control-id is required")
-	}
-	if _, err := parseMode(o.Mode); err != nil {
-		return err
-	}
-	return nil
 }

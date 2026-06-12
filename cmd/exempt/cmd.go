@@ -5,23 +5,18 @@ package exempt
 import (
 	"errors"
 	"fmt"
-	"io"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	appexempt "github.com/sufield/stave/internal/app/exempt"
-	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 const defaultFile = "./stave-acknowledgments.yaml"
 
-// NewCmd constructs the exempt command group with explicit dependencies.
-// cmd/commands.go is responsible for resolving the production factories.
-func NewCmd(deps Deps) *cobra.Command {
+// NewCmd constructs the exempt command group.
+func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exempt",
 		Short: "Manage risk acceptances (acknowledgments, exceptions, exemptions)",
@@ -45,7 +40,7 @@ Subcommands:
 	cmd.AddCommand(newListCmd())
 	cmd.AddCommand(newRemoveCmd())
 	cmd.AddCommand(newUpcomingCmd())
-	cmd.AddCommand(newValidateCmd(deps))
+	cmd.AddCommand(newValidateCmd())
 	cmd.AddCommand(newHistoryCmd())
 	cmd.AddCommand(newExportCmd())
 	cmd.AddCommand(newSuggestCmd())
@@ -63,49 +58,6 @@ type acknowledgeOptions struct {
 	Expires      string
 	Compensating string
 	File         string
-}
-
-// Normalize is a no-op for acknowledge — all user-facing fields are
-// cobra-required and File has a flag-default. The method exists so
-// PreRunE has a stable hook if future validation lands here.
-func (o *acknowledgeOptions) Normalize() error { return nil }
-
-type acknowledgeResult struct {
-	ControlID string
-	AssetID   string
-	Expires   string
-}
-
-func runAcknowledge(opts acknowledgeOptions) (acknowledgeResult, error) {
-	f, err := appexempt.Load(opts.File)
-	if err != nil {
-		return acknowledgeResult{}, fmt.Errorf("load acceptance file: %w", err)
-	}
-	var comps []string
-	if opts.Compensating != "" {
-		comps = strings.Split(opts.Compensating, ",")
-	}
-	if addErr := f.AddAcknowledgment(appexempt.AcknowledgmentEntry{
-		ControlID:            opts.ControlID,
-		AssetID:              opts.AssetID,
-		Reason:               opts.Reason,
-		Approver:             opts.Approver,
-		ExpiryDate:           opts.Expires,
-		CompensatingControls: comps,
-	}, appexempt.NewTimestamp(ports.RealClock{})); addErr != nil {
-		return acknowledgeResult{}, fmt.Errorf("add acknowledgment: %w", addErr)
-	}
-	if saveErr := appexempt.Save(opts.File, f, "stave exempt acknowledge", appexempt.NewTimestamp(ports.RealClock{})); saveErr != nil {
-		return acknowledgeResult{}, fmt.Errorf("save acceptance file: %w", saveErr)
-	}
-	return acknowledgeResult{ControlID: opts.ControlID, AssetID: opts.AssetID, Expires: opts.Expires}, nil
-}
-
-func renderAcknowledge(w io.Writer, r acknowledgeResult) error {
-	if _, err := fmt.Fprintf(w, "Acknowledged: %s@%s (expires %s)\n", r.ControlID, r.AssetID, r.Expires); err != nil {
-		return fmt.Errorf("write output: %w", err)
-	}
-	return nil
 }
 
 func newAcknowledgeCmd() *cobra.Command {
@@ -130,15 +82,21 @@ Exit Codes:
     --expires 2026-09-01`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		PreRunE: func(_ *cobra.Command, _ []string) error {
-			return opts.Normalize()
-		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			result, err := runAcknowledge(opts)
-			if err != nil {
-				return err
+			if err := stave.AddAcknowledgment(opts.File, stave.AcknowledgmentInput{
+				ControlID:    opts.ControlID,
+				AssetID:      opts.AssetID,
+				Reason:       opts.Reason,
+				Approver:     opts.Approver,
+				Expires:      opts.Expires,
+				Compensating: opts.Compensating,
+			}); err != nil {
+				return err //nolint:wrapcheck // facade already wrapped; preserve exit 4.
 			}
-			return renderAcknowledge(cmd.OutOrStdout(), result)
+			if _, err := fmt.Fprintf(cmd.OutOrStdout(), "Acknowledged: %s@%s (expires %s)\n", opts.ControlID, opts.AssetID, opts.Expires); err != nil {
+				return fmt.Errorf("write output: %w", err)
+			}
+			return nil
 		},
 	}
 
@@ -169,27 +127,6 @@ type exceptOptions struct {
 	File      string
 }
 
-func (o *exceptOptions) Normalize() error { return nil }
-
-func runExcept(opts exceptOptions) error {
-	f, err := appexempt.Load(opts.File)
-	if err != nil {
-		return fmt.Errorf("load acceptance file: %w", err)
-	}
-	if addErr := f.AddException(appexempt.ExceptionEntry{
-		ControlID:  opts.ControlID,
-		AssetID:    opts.AssetID,
-		ExpiryDate: opts.Expires,
-		Reason:     opts.Reason,
-	}); addErr != nil {
-		return fmt.Errorf("add exception: %w", addErr)
-	}
-	if saveErr := appexempt.Save(opts.File, f, "stave exempt except", appexempt.NewTimestamp(ports.RealClock{})); saveErr != nil {
-		return fmt.Errorf("save acceptance file: %w", saveErr)
-	}
-	return nil
-}
-
 func newExceptCmd() *cobra.Command {
 	opts := exceptOptions{File: defaultFile}
 
@@ -205,11 +142,13 @@ Exit Codes:
 		Example:       `  stave exempt except --control-id CTL.IAM.MFA.001 --asset-id arn:aws:iam::123:user/svc`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		PreRunE: func(_ *cobra.Command, _ []string) error {
-			return opts.Normalize()
-		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return runExcept(opts)
+			return stave.AddException(opts.File, stave.ExceptionInput{ //nolint:wrapcheck // facade already wrapped; preserve exit 4.
+				ControlID: opts.ControlID,
+				AssetID:   opts.AssetID,
+				Expires:   opts.Expires,
+				Reason:    opts.Reason,
+			})
 		},
 	}
 
@@ -233,25 +172,6 @@ type assetOptions struct {
 	File    string
 }
 
-func (o *assetOptions) Normalize() error { return nil }
-
-func runAsset(opts assetOptions) error {
-	f, err := appexempt.Load(opts.File)
-	if err != nil {
-		return fmt.Errorf("load acceptance file: %w", err)
-	}
-	if addErr := f.AddExemption(appexempt.ExemptionEntry{
-		AssetPattern: opts.Pattern,
-		Reason:       opts.Reason,
-	}); addErr != nil {
-		return fmt.Errorf("add exemption: %w", addErr)
-	}
-	if saveErr := appexempt.Save(opts.File, f, "stave exempt asset", appexempt.NewTimestamp(ports.RealClock{})); saveErr != nil {
-		return fmt.Errorf("save acceptance file: %w", saveErr)
-	}
-	return nil
-}
-
 func newExemptSubCmd() *cobra.Command {
 	opts := assetOptions{File: defaultFile}
 
@@ -268,11 +188,8 @@ Exit Codes:
 		Example:       `  stave exempt asset --pattern "arn:aws:s3:::sandbox-*" --reason "sandbox"`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		PreRunE: func(_ *cobra.Command, _ []string) error {
-			return opts.Normalize()
-		},
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return runAsset(opts)
+			return stave.AddAssetExemption(opts.File, opts.Pattern, opts.Reason) //nolint:wrapcheck // facade already wrapped; preserve exit 4.
 		},
 	}
 
@@ -294,16 +211,6 @@ type listOptions struct {
 	ShowExpired bool
 }
 
-func (o *listOptions) Normalize() error { return nil }
-
-func runList(opts listOptions) (*appexempt.AcceptanceFile, error) {
-	f, err := appexempt.Load(opts.File)
-	if err != nil {
-		return nil, fmt.Errorf("load acceptance file: %w", err)
-	}
-	return f, nil
-}
-
 func newListCmd() *cobra.Command {
 	opts := listOptions{File: defaultFile, Format: "table", ListType: "all"}
 
@@ -319,15 +226,13 @@ Exit Codes:
 		Example:       "  stave exempt list\n  stave exempt list --format json --expired",
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		PreRunE: func(_ *cobra.Command, _ []string) error {
-			return opts.Normalize()
-		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			f, err := runList(opts)
+			out, err := stave.ListAcceptances(opts.File, opts.Format, opts.ListType, opts.ShowExpired)
 			if err != nil {
-				return err
+				return err //nolint:wrapcheck // facade already wrapped; preserve exit codes.
 			}
-			return appexempt.WriteList(cmd.OutOrStdout(), f, opts.Format, opts.ListType, opts.ShowExpired)
+			_, werr := cmd.OutOrStdout().Write(out)
+			return werr
 		},
 	}
 
@@ -346,31 +251,6 @@ type removeOptions struct {
 	File string
 }
 
-func (o *removeOptions) Normalize() error { return nil }
-
-type removeResult struct{ ID string }
-
-func runRemove(opts removeOptions) (removeResult, error) {
-	f, err := appexempt.Load(opts.File)
-	if err != nil {
-		return removeResult{}, fmt.Errorf("load acceptance file: %w", err)
-	}
-	if rmErr := f.Remove(opts.ID, appexempt.NewTimestamp(ports.RealClock{})); rmErr != nil {
-		return removeResult{}, fmt.Errorf("revoke entry: %w", rmErr)
-	}
-	if saveErr := appexempt.Save(opts.File, f, "stave exempt remove", appexempt.NewTimestamp(ports.RealClock{})); saveErr != nil {
-		return removeResult{}, fmt.Errorf("save acceptance file: %w", saveErr)
-	}
-	return removeResult{ID: opts.ID}, nil
-}
-
-func renderRemove(w io.Writer, r removeResult) error {
-	if _, err := fmt.Fprintf(w, "Revoked: %s\n", r.ID); err != nil {
-		return fmt.Errorf("write output: %w", err)
-	}
-	return nil
-}
-
 func newRemoveCmd() *cobra.Command {
 	opts := removeOptions{File: defaultFile}
 
@@ -386,15 +266,14 @@ Exit Codes:
 		Example:       `  stave exempt remove --id "CTL.S3.PUBLIC.001@arn:aws:s3:::bucket"`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		PreRunE: func(_ *cobra.Command, _ []string) error {
-			return opts.Normalize()
-		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			result, err := runRemove(opts)
-			if err != nil {
-				return err
+			if err := stave.RemoveAcceptance(opts.File, opts.ID); err != nil {
+				return err //nolint:wrapcheck // facade already wrapped; preserve exit codes.
 			}
-			return renderRemove(cmd.OutOrStdout(), result)
+			if _, err := fmt.Fprintf(cmd.OutOrStdout(), "Revoked: %s\n", opts.ID); err != nil {
+				return fmt.Errorf("write output: %w", err)
+			}
+			return nil
 		},
 	}
 
@@ -411,61 +290,6 @@ Exit Codes:
 type upcomingOptions struct {
 	File string
 	Days int
-	// Resolved in Normalize.
-	Now time.Time
-}
-
-// Normalize resolves the "now" reference that determines remaining
-// days. Kept here (rather than in the runner) so a future --now
-// override flag can slot in without reshaping the run function.
-func (o *upcomingOptions) Normalize() error {
-	o.Now = time.Now().UTC()
-	return nil
-}
-
-type upcomingResult struct {
-	Days    int
-	Entries []appexempt.AcknowledgmentEntry
-	Now     time.Time
-}
-
-func runUpcoming(opts upcomingOptions) (upcomingResult, error) {
-	f, err := appexempt.Load(opts.File)
-	if err != nil {
-		return upcomingResult{}, fmt.Errorf("load acceptance file: %w", err)
-	}
-	return upcomingResult{
-		Days:    opts.Days,
-		Entries: f.Upcoming(opts.Days, opts.Now),
-		Now:     opts.Now,
-	}, nil
-}
-
-func renderUpcoming(w io.Writer, r upcomingResult) error {
-	if len(r.Entries) == 0 {
-		if _, err := fmt.Fprintf(w, "No acceptances expiring within %d days.\n", r.Days); err != nil {
-			return fmt.Errorf("write output: %w", err)
-		}
-		return nil
-	}
-	if _, err := fmt.Fprintf(w, "ACCEPTANCES EXPIRING WITHIN %d DAYS\n", r.Days); err != nil {
-		return fmt.Errorf("write output: %w", err)
-	}
-	if _, err := fmt.Fprintln(w, strings.Repeat("-", 70)); err != nil {
-		return fmt.Errorf("write output: %w", err)
-	}
-	for i := range r.Entries {
-		a := &r.Entries[i]
-		daysLeft := -1
-		if expiry, parseErr := time.Parse("2006-01-02", a.ExpiryDate); parseErr == nil {
-			daysLeft = int(time.Until(expiry).Hours() / 24)
-		}
-		if _, err := fmt.Fprintf(w, "  %-40s  %s  %d days  %s\n",
-			a.ID, a.ExpiryDate, daysLeft, a.Approver); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func newUpcomingCmd() *cobra.Command {
@@ -483,15 +307,13 @@ Exit Codes:
 		Example:       "  stave exempt upcoming --days 30",
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		PreRunE: func(_ *cobra.Command, _ []string) error {
-			return opts.Normalize()
-		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			result, err := runUpcoming(opts)
+			out, err := stave.UpcomingAcceptances(opts.File, opts.Days, time.Now().UTC())
 			if err != nil {
-				return err
+				return err //nolint:wrapcheck // facade already wrapped; preserve exit codes.
 			}
-			return renderUpcoming(cmd.OutOrStdout(), result)
+			_, werr := cmd.OutOrStdout().Write(out)
+			return werr
 		},
 	}
 
@@ -506,33 +328,6 @@ Exit Codes:
 type historyOptions struct {
 	File   string
 	Format string
-}
-
-func (o *historyOptions) Normalize() error { return nil }
-
-func runHistory(opts historyOptions) ([]appexempt.AcknowledgmentEntry, error) {
-	f, err := appexempt.Load(opts.File)
-	if err != nil {
-		return nil, fmt.Errorf("load acceptance file: %w", err)
-	}
-	return f.History(), nil
-}
-
-func renderHistory(w io.Writer, entries []appexempt.AcknowledgmentEntry, format string) error {
-	if len(entries) == 0 {
-		if _, err := fmt.Fprintln(w, "No acknowledgment history."); err != nil {
-			return fmt.Errorf("write output: %w", err)
-		}
-		return nil
-	}
-	renderer, err := NewHistoryRenderer(format)
-	if err != nil {
-		return err
-	}
-	if err := renderer.Render(w, entries); err != nil {
-		return fmt.Errorf("render output: %w", err)
-	}
-	return nil
 }
 
 func newHistoryCmd() *cobra.Command {
@@ -551,15 +346,13 @@ Exit Codes:
 		Example:       "  stave exempt history\n  stave exempt history --format json",
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		PreRunE: func(_ *cobra.Command, _ []string) error {
-			return opts.Normalize()
-		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			entries, err := runHistory(opts)
+			out, err := stave.AcceptanceHistory(opts.File, opts.Format)
 			if err != nil {
-				return err
+				return err //nolint:wrapcheck // facade already wrapped; preserve exit codes.
 			}
-			return renderHistory(cmd.OutOrStdout(), entries, opts.Format)
+			_, werr := cmd.OutOrStdout().Write(out)
+			return werr
 		},
 	}
 
@@ -575,51 +368,7 @@ type validateOptions struct {
 	File string
 }
 
-func (o *validateOptions) Normalize() error { return nil }
-
-type validateResult struct {
-	Errors []string
-}
-
-func runValidate(opts validateOptions, newStore compose.BuiltinControlStoreFactory) (validateResult, error) {
-	f, err := appexempt.Load(opts.File)
-	if err != nil {
-		return validateResult{}, fmt.Errorf("load acceptance file: %w", err)
-	}
-
-	// Load built-in catalog for compensating-control validation. The
-	// factory is the compose-layer indirection so cmd/exempt no longer
-	// imports the adapter or controldata packages directly.
-	//
-	// Catalog load errors are tolerated: validate's other checks
-	// (required fields, expiry dates) are still useful without
-	// catalog cross-reference.
-	knownIDs := make(map[string]bool)
-	if controls, loadErr := newStore(); loadErr == nil {
-		for i := range controls {
-			knownIDs[string(controls[i].ID)] = true
-		}
-	}
-
-	return validateResult{Errors: f.ValidateWithCatalog(knownIDs)}, nil
-}
-
-func renderValidate(w io.Writer, r validateResult) error {
-	if len(r.Errors) == 0 {
-		if _, err := fmt.Fprintln(w, "Acceptance file is valid."); err != nil {
-			return fmt.Errorf("write output: %w", err)
-		}
-		return nil
-	}
-	for _, e := range r.Errors {
-		if _, err := fmt.Fprintf(w, "  ERROR: %s\n", e); err != nil {
-			return err
-		}
-	}
-	return errors.New("validation failed")
-}
-
-func newValidateCmd(deps Deps) *cobra.Command {
+func newValidateCmd() *cobra.Command {
 	opts := validateOptions{File: defaultFile}
 
 	cmd := &cobra.Command{
@@ -634,15 +383,24 @@ Exit Codes:
 		Example:       "  stave exempt validate --file ./stave-acknowledgments.yaml",
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		PreRunE: func(_ *cobra.Command, _ []string) error {
-			return opts.Normalize()
-		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			result, err := runValidate(opts, deps.NewBuiltinControlStore)
+			validationErrors, err := stave.ValidateAcceptances(opts.File)
 			if err != nil {
-				return err
+				return err //nolint:wrapcheck // facade already wrapped; preserve exit codes.
 			}
-			return renderValidate(cmd.OutOrStdout(), result)
+			w := cmd.OutOrStdout()
+			if len(validationErrors) == 0 {
+				if _, werr := fmt.Fprintln(w, "Acceptance file is valid."); werr != nil {
+					return fmt.Errorf("write output: %w", werr)
+				}
+				return nil
+			}
+			for _, e := range validationErrors {
+				if _, werr := fmt.Fprintf(w, "  ERROR: %s\n", e); werr != nil {
+					return werr
+				}
+			}
+			return errors.New("validation failed")
 		},
 	}
 

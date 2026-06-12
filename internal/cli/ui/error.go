@@ -2,6 +2,7 @@
 package ui
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -94,7 +95,7 @@ func ExitCode(err error) int {
 	}
 
 	switch {
-	case errors.Is(err, ErrInterrupted):
+	case errors.Is(err, ErrInterrupted), errors.Is(err, context.Canceled):
 		return ExitInterrupted
 	case errors.Is(err, ErrViolationsFound), errors.Is(err, ErrDiagnosticsFound):
 		return ExitViolations
@@ -229,6 +230,7 @@ func IsSentinel(err error) bool {
 		errors.Is(err, ErrValidationFailed) ||
 		errors.Is(err, ErrSecurityAuditFindings) ||
 		errors.Is(err, ErrInterrupted) ||
+		errors.Is(err, context.Canceled) ||
 		errors.Is(err, ErrInternal) ||
 		// Public facade sentinels classified by ExitCode into
 		// ExitInputError(2)/ExitViolations(3) are platform sentinels

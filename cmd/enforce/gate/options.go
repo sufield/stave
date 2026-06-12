@@ -1,17 +1,10 @@
 package gate
 
 import (
-	"fmt"
-	"io"
-
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	appconfig "github.com/sufield/stave/internal/app/config"
-	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // Options holds the raw CLI flag values before validation.
@@ -26,19 +19,11 @@ type Options struct {
 	Format            string
 	Team              string
 	TeamManifest      string
-	formatChanged     bool // set by Prepare from cmd.Flags().Changed
-}
-
-// HasTeamFilter reports whether the operator scoped this gate run
-// to a specific team. Replaces the (opts.Team != "") probe at the
-// team-manifest gating site so the field check stays on the type.
-func (o *Options) HasTeamFilter() bool {
-	return o != nil && o.Team != ""
 }
 
 // DefaultOptions returns the standard defaults for the gate command.
 // Config-derived fields (Policy, MaxUnsafeDuration) start as zero values;
-// call resolveConfigDefaults after flag parsing to fill them from project config.
+// call Prepare after flag parsing to fill them from project config.
 func DefaultOptions() Options {
 	return Options{
 		InPath:          "output/evaluation.json",
@@ -61,7 +46,6 @@ func (o *Options) Prepare(cmd *cobra.Command) error {
 	if !cmd.Flags().Changed("max-unsafe") {
 		o.MaxUnsafeDuration = eval.MaxUnsafeDuration()
 	}
-	o.formatChanged = cmd.Flags().Changed("format")
 	return nil
 }
 
@@ -78,42 +62,4 @@ func (o *Options) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format: text or json")
 	f.StringVar(&o.Team, "team", "", "Filter gate to findings owned by this team")
 	f.StringVar(&o.TeamManifest, "team-manifest", "", "Team manifest YAML for ownership routing")
-}
-
-// toConfig converts raw CLI options into a validated Config.
-// Standalone function — does not depend on cobra.
-func toConfig(o *Options, gf cliflags.GlobalFlags, stdout, stderr io.Writer) (config, error) {
-	policy, err := appconfig.ParseEnforcementGate(o.Policy)
-	if err != nil {
-		return config{}, &ui.UserError{Err: fmt.Errorf("invalid policy: %w", err)}
-	}
-
-	ec, err := compose.PrepareEvaluationContext(compose.EvalContextRequest{
-		ControlsDir:       o.ControlsDir,
-		ObservationsDir:   o.ObservationsDir,
-		MaxUnsafeDuration: o.MaxUnsafeDuration,
-		NowTime:           o.Now,
-		Format:            o.Format,
-		FormatChanged:     o.formatChanged,
-		SkipPathInference: true,
-		SkipMaxUnsafe:     policy.SkipsMaxUnsafe(),
-	})
-	if err != nil {
-		return config{}, &ui.UserError{Err: fmt.Errorf("prepare evaluation context: %w", err)}
-	}
-
-	return config{
-		Policy:            policy,
-		InPath:            fsutil.CleanUserPath(o.InPath),
-		BaselinePath:      fsutil.CleanUserPath(o.BaselinePath),
-		ControlsDir:       ec.ControlsDir,
-		ObservationsDir:   ec.ObservationsDir,
-		MaxUnsafeDuration: ec.MaxUnsafe,
-		Format:            ec.Format,
-		Quiet:             gf.Quiet,
-		Clock:             ec.Clock,
-		Sanitizer:         gf.GetSanitizer(),
-		Stdout:            stdout,
-		Stderr:            stderr,
-	}, nil
 }

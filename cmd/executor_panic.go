@@ -32,6 +32,18 @@ func (a *App) recoverExecutePanic() {
 			"stack", string(stack),
 		)
 
+		// Stop signal delivery and unblock the signal-handler
+		// goroutine before starting cleanup. This eliminates the race window
+		// where a SIGINT could fire while we are cleaning up, which would
+		// see a.cancel as nil and trigger a pre-bootstrap interrupt exit (130)
+		// instead of the intended internal error exit (4).
+		//
+		// Atomic Swap so the deferred normal-path cleanup in Execute
+		// observes nil here and skips calling the closure twice.
+		if fn := a.cleanupInterrupt.Swap(nil); fn != nil {
+			(*fn)()
+		}
+
 		// postRun is skipped on panic-recovery, so stop any active CPU
 		// profile and flush the log file before exit. cleanupBeforeExit
 		// captures both in one place handleExecutionError shares.
@@ -40,19 +52,7 @@ func (a *App) recoverExecutePanic() {
 		errInfo := a.buildPanicErrorInfo(sanitized)
 		a.writeErrorInfo(errInfo)
 
-		// Stop signal delivery and unblock the signal-handler
-		// goroutine before ExitFunc. In production ExitFunc is os.Exit
-		// and the goroutine dies with the process; in tests ExitFunc
-		// is mocked, and without this explicit cleanup the handler
-		// goroutine stays blocked on its select for the rest of the
-		// test run, leaking against future tests.
-		//
-		// Atomic Swap so the deferred normal-path cleanup in Execute
-		// observes nil here and skips calling the closure twice.
-		if fn := a.cleanupInterrupt.Swap(nil); fn != nil {
-			(*fn)()
-		}
-		a.ExitFunc(ui.ExitInternal)
+		a.exit(ui.ExitInternal)
 	}
 }
 

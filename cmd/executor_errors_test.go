@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/sufield/stave/internal/cli/ui"
@@ -69,6 +71,8 @@ func TestSentinelErrorRendering(t *testing.T) {
 		{"security audit", ui.ErrSecurityAuditFindings, "Security audit gate failed", ui.ExitSecurity},
 		{"interrupted", ui.ErrInterrupted, "Interrupted", ui.ExitInterrupted},
 		{"internal", ui.ErrInternal, "Internal error", ui.ExitInternal},
+		{"context canceled", context.Canceled, "Interrupted", ui.ExitInterrupted},
+		{"wrapped context canceled", fmt.Errorf("context canceled: %w", context.Canceled), "Interrupted", ui.ExitInterrupted},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

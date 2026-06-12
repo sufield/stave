@@ -26,6 +26,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -100,28 +101,28 @@ var (
 
 func (c *config) validate() error {
 	if c.ID == "" {
-		return fmt.Errorf("--id is required")
+		return errors.New("--id is required")
 	}
 	if err := fsutil.SafeFilename(c.ID); err != nil {
 		return fmt.Errorf("--id: %w", err)
 	}
 	if c.Name == "" {
-		return fmt.Errorf("--name is required")
+		return errors.New("--name is required")
 	}
 	if c.Field == "" {
-		return fmt.Errorf("--field is required")
+		return errors.New("--field is required")
 	}
 	if c.Remediation == "" {
-		return fmt.Errorf("--remediation is required (every control must have a remediation path)")
+		return errors.New("--remediation is required (every control must have a remediation path)")
 	}
 	if !validDomains[c.Domain] {
-		return fmt.Errorf("--domain: must be one of exposure, identity, governance")
+		return errors.New("--domain: must be one of exposure, identity, governance")
 	}
 	if !validSeverities[c.Severity] {
-		return fmt.Errorf("--severity: must be one of critical, high, medium, low, info")
+		return errors.New("--severity: must be one of critical, high, medium, low, info")
 	}
 	if !validOps[c.Op] {
-		return fmt.Errorf("--op: must be one of eq, ne, lt, gt, missing, present")
+		return errors.New("--op: must be one of eq, ne, lt, gt, missing, present")
 	}
 	cwd, err := os.Getwd()
 	if err != nil {

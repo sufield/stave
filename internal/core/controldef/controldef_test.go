@@ -469,6 +469,28 @@ func TestControlParamsUnmarshalJSON(t *testing.T) {
 	}
 }
 
+func TestControlParams_MarshalUnmarshal_RoundTrip_IsZero(t *testing.T) {
+	t.Parallel()
+	var zero ControlParams
+	if !zero.IsZero() {
+		t.Fatal("expected zero ControlParams initially")
+	}
+
+	b, err := json.Marshal(zero)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var roundTripped ControlParams
+	if err := json.Unmarshal(b, &roundTripped); err != nil {
+		t.Fatal(err)
+	}
+
+	if !roundTripped.IsZero() {
+		t.Fatal("expected round-tripped zero ControlParams to still be zero (IsZero() == true)")
+	}
+}
+
 // ---------------------------------------------------------------------------
 // ControlDefinition
 // ---------------------------------------------------------------------------

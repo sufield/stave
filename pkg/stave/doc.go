@@ -113,6 +113,8 @@
 //	ExportChanges      — remediation property changes as JSON.
 //	ExportTickets      — findings as ticket records (json/csv).
 //	RenderFeatures     — in-scope (discovered) + out-of-scope capability report.
+//	EvaluateSnapshot   — run a compliance profile over a snapshot (text/json).
+//	BisectControl      — find when a control was first violated (text/json).
 //	ExplainControl     — catalog-only explanation of one control.
 //	SuggestControlIDs  — fuzzy-suggest control IDs for a partial query.
 //	AssetTypeExamples  — example control ID per asset type.
@@ -123,6 +125,31 @@
 //	ExportInvariants   — catalog projected as solver-ready invariants
 //	                     (the data shape an external SMT compiler consumes).
 //	ExportPolicies     — parsed resource/trust policies for solver export.
+//	BuildEvidenceBundle — sealed evidence bundle (+ optional ASFF) from an assessment.
+//	AssembleAuditBundle — compliance-period evidence package from assessment history.
+//	ExportCompliance   — per-requirement evidence package (json/table/markdown/oscal).
+//	DiffObservationDrift — drift between the latest two snapshots (text/json).
+//	CoverageGraph      — control→asset coverage graph (dot/json).
+//	ExportAssessmentGraph — assessment graph export (json/stix/jsonld/graphml).
+//	VerifyRemediation  — before/after attestation report (json) + violation signal.
+//	AddAcknowledgment / AddException / AddAssetExemption / RemoveAcceptance
+//	                   — mutate the risk-acceptance file (audit-trailed).
+//	ListAcceptances / UpcomingAcceptances / AcceptanceHistory
+//	                   — render acceptance views (table/json).
+//	ValidateAcceptances — validate the acceptance file (returns errors list).
+//	ExportRiskRegister — acceptances + open findings as OSCAL POA&M JSON.
+//	SuggestExemptions  — chronic/oscillating finding exemption candidates.
+//	RunGate            — CI gate verdict (policy + optional team scope; text/json).
+//	EnforcementGatePolicies — the supported CI failure policy names.
+//	FixFinding         — remediation guidance JSON for a single finding.
+//	RunFixLoop         — apply/apply/verify remediation lifecycle + artifacts.
+//	ResolvePrincipal   — net effective permissions for one IAM principal (table/json).
+//	ResolveResourceAccess — who can reach a resource (table/json/dot) + exit-1 signal.
+//	NepSummary         — aggregate net-effective-permission metrics (table/json).
+//	TrendReport        — posture-trend report across assessment history (table/json/openmetrics).
+//	PredictReadiness   — compliance-readiness achievement-date projection (text/json).
+//	ForecastPosture    — posture-score trajectory + SLA status (table/json).
+//	ClassifyOscillation — violation oscillation patterns (table/json).
 //
 // See docs/architecture/pkg-stave-facade.md for the facade pattern,
 // the rule cmd/ should obey ("imports only pkg/stave"), and the

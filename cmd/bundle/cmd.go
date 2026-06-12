@@ -6,7 +6,6 @@ package bundle
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -16,12 +15,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/internal/adapters/evidence"
-	"github.com/sufield/stave/internal/adapters/observations"
-	"github.com/sufield/stave/internal/adapters/output/asff"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type options struct {
@@ -114,12 +110,6 @@ func run(ctx context.Context, _, stderr io.Writer, opts *options) error {
 		return fmt.Errorf("assessment: %w", err)
 	}
 
-	// Parse assessment for bundle metadata.
-	var assessment report.Assessment
-	if jsonErr := json.Unmarshal(assessmentJSON, &assessment); jsonErr != nil {
-		return fmt.Errorf("parse assessment: %w", jsonErr)
-	}
-
 	// Load signing key if provided.
 	var privateKeyPEM []byte
 	if opts.SignKeyPath != "" {
@@ -130,43 +120,21 @@ func run(ctx context.Context, _, stderr io.Writer, opts *options) error {
 		privateKeyPEM = keyData
 	}
 
-	// Load observation snapshots so the bundle can include the asset
-	// state that produced each finding. The bundler prunes to assets
-	// referenced by Findings (see evidence.marshalPrunedSnapshots).
-	loader := observations.NewObservationLoader()
-	loadResult, loadErr := loader.LoadSnapshots(ctx, opts.ObservationsDir)
-	if loadErr != nil {
-		return fmt.Errorf("load snapshots for bundle: %w", loadErr)
-	}
-
-	// Build the bundle.
+	// Assemble the bundle (parse + snapshot load/prune + tar.gz + sign +
+	// optional ASFF) behind the facade; the command owns the file writes.
 	fmt.Fprintf(stderr, "Packaging evidence bundle...\n")
-	input := evidence.BundleInput{
-		Assessment:    &assessment,
-		Snapshots:     loadResult.Snapshots,
-		TraceJSON:     nil, // Logic trace would be captured if --trace was active
-		PrivateKeyPEM: privateKeyPEM,
-		StaveVersion:  "edge",
-	}
-
-	bundleData, err := evidence.Build(input)
+	res, err := stave.BuildEvidenceBundle(ctx, assessmentJSON, opts.ObservationsDir, privateKeyPEM, opts.IncludeASFF)
 	if err != nil {
-		return fmt.Errorf("build bundle: %w", err)
+		return err //nolint:wrapcheck // facade already wrapped ("build bundle"/"marshal ASFF"); preserve exit 4.
 	}
 
-	// Write bundle.
-	if writeErr := fsutil.SafeWriteFile(outputPath, bundleData, fsutil.ConfigWriteOpts()); writeErr != nil {
+	if writeErr := fsutil.SafeWriteFile(outputPath, res.BundleData, fsutil.ConfigWriteOpts()); writeErr != nil {
 		return fmt.Errorf("write bundle: %w", writeErr)
 	}
 
-	// Write ASFF if requested.
 	if opts.IncludeASFF {
-		asffData, asffErr := asff.MarshalASFF(&assessment)
-		if asffErr != nil {
-			return fmt.Errorf("marshal ASFF: %w", asffErr)
-		}
 		asffPath := outputPath + ".asff.json"
-		if writeErr := fsutil.SafeWriteFile(asffPath, asffData, fsutil.ConfigWriteOpts()); writeErr != nil {
+		if writeErr := fsutil.SafeWriteFile(asffPath, res.ASFFData, fsutil.ConfigWriteOpts()); writeErr != nil {
 			return fmt.Errorf("write ASFF: %w", writeErr)
 		}
 		fmt.Fprintf(stderr, "ASFF output: %s\n", asffPath)
@@ -177,10 +145,9 @@ func run(ctx context.Context, _, stderr io.Writer, opts *options) error {
 		signed = "signed"
 	}
 	fmt.Fprintf(stderr, "Bundle created (%s): %s\n", signed, outputPath)
-	fmt.Fprintf(stderr, "  %d violations, %d chain findings\n",
-		assessment.Summary.Violations, len(assessment.ChainFindings))
+	fmt.Fprintf(stderr, "  %d violations, %d chain findings\n", res.Violations, res.ChainFindings)
 
-	if assessment.Summary.Violations > 0 {
+	if res.Violations > 0 {
 		return ui.ErrViolationsFound
 	}
 	return nil

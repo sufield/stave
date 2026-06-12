@@ -52,7 +52,7 @@ func MarshalGraphML(w io.Writer, g *GraphData) error {
 // MarshalJSONLDWithDiagnostics for the contract.
 func MarshalGraphMLWithDiagnostics(w io.Writer, g *GraphData) ([]UnmappedEdge, error) {
 	if g == nil {
-		return nil, errors.New("MarshalGraphML: nil GraphData")
+		return nil, errors.New("marshalGraphML: nil GraphData")
 	}
 	rdf := mapTordfGraph(g)
 

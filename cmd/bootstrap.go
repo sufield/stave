@@ -207,7 +207,8 @@ func hasAnnotation(cmd *cobra.Command, key string) bool {
 }
 
 func (a *App) postRun(cmd *cobra.Command, _ []string) {
-	a.releaseResources(cmd)
+	// No-op: resources are released at the end of execute() to avoid closing
+	// the log file before finalizeExecute runs.
 }
 
 // releaseResources stops the CPU profile, writes the memory profile,

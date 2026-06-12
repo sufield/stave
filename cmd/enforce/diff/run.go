@@ -2,88 +2,49 @@ package diff
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/adapters/output"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/asset"
-	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/pkg/stave"
 )
 
-// config defines the domain parameters for comparing observation snapshots.
-type config struct {
-	ObservationsDir string
-	Format          appcontracts.OutputFormat
-	Filter          asset.FilterOptions
-}
-
-// runner orchestrates the loading and comparison of observation snapshots.
-type runner struct {
-	LoadSnapshots compose.SnapshotLoader
-	Quiet         bool
-	Sanitizer     kernel.Sanitizer
-	Stdout        io.Writer
-	Stderr        io.Writer
-}
-
-// newRunner initializes a diff runner with injected dependencies and pre-extracted flags.
-func newRunner(load compose.SnapshotLoader, gf cliflags.GlobalFlags, stdout, stderr io.Writer) *runner {
+// run builds the drift config from the flags + global settings, shows a
+// progress span while the facade computes and renders the delta, and writes
+// the rendered bytes (suppressed in quiet mode).
+func run(ctx context.Context, opts *Options, gf cliflags.GlobalFlags, stdout, stderr io.Writer) error {
+	// Quiet mode discards stdout (the diff report); the progress span on
+	// stderr is suppressed separately via progress.Quiet.
+	out := stdout
 	if !gf.TextOutputEnabled() {
-		stdout = io.Discard
+		out = io.Discard
 	}
-	return &runner{
-		LoadSnapshots: load,
-		Quiet:         gf.Quiet,
-		Sanitizer:     gf.GetSanitizer(),
-		Stdout:        stdout,
-		Stderr:        stderr,
-	}
-}
 
-// Run executes the diffing workflow: loading the two latest snapshots,
-// calculating the delta, applying filters, and rendering the output.
-func (r *runner) Run(ctx context.Context, cfg config) error {
-	progress := ui.NewRuntime(r.Stdout, r.Stderr)
-	progress.Quiet = r.Quiet
+	progress := ui.NewRuntime(out, stderr)
+	progress.Quiet = gf.Quiet
 	stop := progress.BeginProgress("Computing observation delta")
 	defer stop()
 
-	delta, err := r.computeDelta(ctx, cfg.ObservationsDir, cfg.Filter)
+	rendered, err := stave.DiffObservationDrift(ctx, stave.ObservationDriftConfig{
+		ObservationsDir: opts.ObservationsDir,
+		Format:          opts.Format,
+		ChangeTypes:     opts.ChangeTypes,
+		AssetTypes:      opts.AssetTypes,
+		AssetID:         opts.AssetID,
+		SanitizeIDs:     gf.Sanitize,
+		PathMode:        string(gf.PathMode),
+	})
 	if err != nil {
-		return err
+		if errors.Is(err, stave.ErrInvalidInput) {
+			return &ui.UserError{Err: err}
+		}
+		return err //nolint:wrapcheck // facade already wrapped ("loading snapshots"/"render..."); preserve exit 4.
 	}
 
-	// `defer stop()` (above) handles the cleanup; the explicit call
-	// here used to fire stop() twice — harmless for the current
-	// progress runtime, but a future implementation that frees
-	// resources on Stop would double-free. The deferred form is
-	// the single source of truth for ending the progress span.
-
-	delta = output.SanitizeObservationDelta(r.Sanitizer, delta)
-
-	return writeOutput(r.Stdout, cfg.Format, delta)
-}
-
-func (r *runner) computeDelta(ctx context.Context, dir string, filter asset.FilterOptions) (asset.InfrastructureDrift, error) {
-	snapshots, err := r.LoadSnapshots(ctx, dir)
-	if err != nil {
-		return asset.InfrastructureDrift{}, fmt.Errorf("loading snapshots: %w", err)
+	if _, werr := out.Write(rendered); werr != nil {
+		return fmt.Errorf("write diff output: %w", werr)
 	}
-	if len(snapshots) < 2 {
-		return asset.InfrastructureDrift{}, fmt.Errorf("need at least 2 snapshots in %s for diff", dir)
-	}
-
-	prev, curr, err := asset.GetStateTransition(snapshots)
-	if err != nil {
-		return asset.InfrastructureDrift{}, fmt.Errorf("select latest snapshots: %w", err)
-	}
-	drift, err := asset.ComputeDrift(prev, curr)
-	if err != nil {
-		return asset.InfrastructureDrift{}, fmt.Errorf("compute drift: %w", err)
-	}
-	return drift.ApplyFilter(filter), nil
+	return nil
 }

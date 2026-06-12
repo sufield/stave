@@ -16,17 +16,59 @@ function. The CLI and the MCP server both consume it. New code paths
 don't bypass the facade and re-implement orchestration from internal
 parts.
 
-## Current state — honest (updated 2026-06-07)
+## Current state — honest (updated 2026-06-12)
 
-Six cmd packages are at the bar (zero `internal/` imports), each
-enforced by a per-package `TestArchitecture_NoInternalImports`:
-`stave-mcp`, `gaps`, `readiness`, `score`, `test`, `exportinvariants`.
+The Phase-3 grind is well underway, tracked by the one-way ratchet in
+`cmd/facade_ratchet_test.go` (`facadeCleanBaseline`). **54 leaf command
+packages are facade-clean** (import only `pkg/stave`, `cmd/cmdutil`,
+stdlib, third-party CLI deps, and the four exempt helpers below); each
+also carries a production-only `TestArchitecture_FacadeOnly`. A subset
+are stricter still — *at the bar*, zero internal imports, not even the
+helpers: `stave-mcp`, `gaps`, `readiness`, `score`, `test`,
+`exportinvariants` (e.g. `cmd/score` surfaces exit-2 via
+`stave.ErrInvalidInput` instead of `ui.UserError`).
 
-The wider CLI is not there yet. **228 non-test files under `cmd/`
-import 135 distinct `internal/` packages.** (The 2026-05 baseline was
-214 / 161; the file count rose as the renderer-pattern factories
-landed — they legitimately import the CLI-shaped helpers below.) The
-top importers split into two categories:
+What remains is the **heavy tail** — the small/medium commands are done;
+every still-leaky migratable command is a large, multi-subcommand package
+(1000–2150 lines) with substantial command-side compute. `nep` (~1164,
+CIEM, 3 subcommands) was migrated 2026-06-12. The remaining migratable
+targets — surveyed 2026-06-12 — fall into two shapes, which dictates how
+to sequence them:
+
+**Cross-cmd clusters** (migrate the pair together, or move the shared
+helper to `pkg/stave` first):
+- `apply/validate` (~1122) ↔ `cmd/apply` (34 internal imports). The
+  exported `applyvalidate.NewReadinessValidator` + `PackConfigIssues`
+  are consumed by `cmd/apply/readiness.go` — validate cannot be made
+  facade-clean in isolation without orphaning apply's readiness path.
+- `diagnose/artifacts` (~829, 4 subcommands / ~11 leaf verbs) ↔
+  `cmd/diagnose` (22 imports). `controls explain` uses
+  `cmd/diagnose.NewExplainerWithFinder` + `WriteExplainResult` — but the
+  underlying logic is in `internal/app/explain` + `internal/adapters/
+  output/text`, so a facade `ExplainControlFromDir` (distinct from the
+  catalog-only `stave.ExplainControl`) can absorb it. The other ~10
+  verbs (lint, fmt, packs list/show, controls list/list-packs/search/
+  aliases/alias-explain/quality) are independent app-layer calls. Doable
+  solo; just large.
+
+**Huge self-contained** (no cross-cmd deps — purely mechanical, mirror
+the nepcmd/graphcmd engine-subpkg pattern):
+- `trend` — migrated 2026-06-12 into pkg/stave/internal/trendcmd
+  (TrendReport / PredictReadiness / ForecastPosture / ClassifyOscillation;
+  the pager + --out write + stderr load-warnings stayed command-side).
+- `forge` (~1784, 7 subcommands incl. an interactive 11-step authoring
+  wizard — route each compute step through facade fns taking the
+  snapshot PATH not the loaded snapshot; keep w.selectOption/readLine/
+  confirm command-side).
+
+None are blocked — just large. Each deserves a focused pass.
+
+The historical snapshot below (2026-06-07) predates the ratchet grind
+and is kept for the top-importer breakdown that motivated the exemption
+split:
+
+> **228 non-test files under `cmd/` import 135 distinct `internal/`
+> packages.** The top importers split into two categories:
 
 | Imports from cmd/ | Package | Nature |
 |---:|---|---|
@@ -182,3 +224,53 @@ With the facade:
   capability, two transports. (Stated in `pkg/stave/doc.go`.)
 - Engine refactors stay inside the facade.
 - Anyone outside the module gets a real, stable Go API.
+
+## Cannot be migrated: the cli/ui import cycle
+
+`internal/cli/ui` imports `pkg/stave` (for `ui/error.go`'s exit-code
+mapping). So **`pkg/stave` must never import any package that
+transitively imports `internal/cli/ui`** — that closes a cycle and the
+build breaks (`import cycle not allowed`).
+
+Only two internal packages import `cli/ui` directly, and they taint
+everything downstream of them:
+
+- `internal/app/status`
+- `internal/adapters/output/report`
+
+A command whose compute/render path needs either of these **cannot be
+made facade-clean**: the tainted package can't move into `pkg/stave`
+(cycle) and can't stay in the command (not an exempt helper). Detect it
+before attempting a migration:
+
+```
+go list -deps ./cmd/<path> | grep -E 'internal/app/status$|internal/adapters/output/report$'
+```
+
+A non-empty result means BLOCKED. Known blocked leaf commands:
+`enforce` (parent), `enforce/status`, `diagnose/report`, `cmd` (root).
+
+The classification scout must apply this `go list -deps` filter — a
+direct-import grep is not enough, because the taint is transitive (e.g.
+`diagnose/report` reaches `cli/ui` only through `adapters/output/report`,
+not directly).
+
+## Deferred: config-store CRUD belongs in the CLI layer
+
+`initcmd/contextcmd` and `initcmd/config` manage the user's named
+project-context store (`internal/config`, a stateful, mutable,
+disk-persisted object): list / create / use / show / delete. This is
+**CLI configuration management, not an evaluation use case** — forcing
+`CreateContext` / `UseContext` / … into `pkg/stave` would pollute the
+evaluation facade (Apply/Score/Gate/…) with a persistent-mutable Store
+API that does not fit the stateless `Verb(ctx, cfg) -> (bytes, err)`
+shape. These are deferred. When migrated, the right home is a
+`cmd/cmdutil` subpackage (the exempt CLI-wrapper layer), **not**
+`pkg/stave` — the ratchet is satisfied either way, but the architecture
+stays honest only if config-store CRUD lives in the CLI layer.
+
+Note: a progress runtime, an ID-sanitizer, or mid-pipeline stdout do
+**not** block migration — `enforce/diff` (migrated 2026-06-11) keeps the
+progress span and the quiet/output handling command-side while the
+sanitizer crosses the facade boundary as primitive `sanitizeIDs bool` +
+`pathMode string` params and the engine returns rendered bytes.

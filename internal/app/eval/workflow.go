@@ -115,16 +115,16 @@ func NewAuditWorkflow(
 	enricher appcontracts.EnrichFunc,
 ) (*AuditWorkflow, error) {
 	if invRepo == nil {
-		return nil, errors.New("NewAuditWorkflow: ObservationRepo is required")
+		return nil, errors.New("newAuditWorkflow: ObservationRepo is required")
 	}
 	if polRepo == nil {
-		return nil, errors.New("NewAuditWorkflow: PolicyRepo is required")
+		return nil, errors.New("newAuditWorkflow: PolicyRepo is required")
 	}
 	if publisher == nil {
-		return nil, errors.New("NewAuditWorkflow: ReportPublisher is required")
+		return nil, errors.New("newAuditWorkflow: ReportPublisher is required")
 	}
 	if enricher == nil {
-		return nil, errors.New("NewAuditWorkflow: ContextEnricher is required")
+		return nil, errors.New("newAuditWorkflow: ContextEnricher is required")
 	}
 	return &AuditWorkflow{
 		ObservationRepo: invRepo,

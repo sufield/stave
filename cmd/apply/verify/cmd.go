@@ -4,23 +4,17 @@
 package verify
 
 import (
-	"context"
-	"io"
+	"fmt"
 
 	"github.com/spf13/cobra"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	outjson "github.com/sufield/stave/internal/adapters/output/json"
-	appattest "github.com/sufield/stave/internal/app/attestation"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
-	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/metadata"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // NewCmd builds the verify command.
-func NewCmd(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvaluatorFactory, rt *ui.Runtime) *cobra.Command {
+func NewCmd(rt *ui.Runtime) *cobra.Command {
 	opts := newOptions()
 
 	cmd := &cobra.Command{
@@ -66,44 +60,29 @@ Exit Codes:
 			return opts.validate()
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			exec, err := opts.Complete()
-			if err != nil {
-				return err
-			}
-
-			celEval, err := newCELEvaluator()
-			if err != nil {
-				return err
-			}
-
 			gf := cliflags.GetGlobalFlags(cmd)
 
-			return appattest.PerformAttestation(
-				cmd.Context(),
-				appattest.WorkflowDeps{
-					LoadPolicies: func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
-						return compose.LoadControlsFrom(ctx, newCtlRepo, dir)
-					},
-					NewObservationRepo: func() (appcontracts.ObservationRepository, error) {
-						return newObsRepo()
-					},
-					PublishAttestation: func(w io.Writer, v *report.Attestation) error {
-						return outjson.WriteVerification(w, v)
-					},
-					BeginStage: rt.BeginProgress,
-				},
-				appattest.Request{
-					BaselineSource: exec.BeforeDir,
-					TargetSource:   exec.AfterDir,
-					PolicySource:   exec.ControlsDir,
-					SLAThreshold:   exec.MaxUnsafeDuration,
-					Clock:          exec.Clock,
-					Quiet:          gf.Quiet,
-					Sanitizer:      gf.GetSanitizer(),
-					Stdout:         cmd.OutOrStdout(),
-					PredicateEval:  celEval,
-				},
-			)
+			out, hasViolations, err := stave.VerifyRemediation(cmd.Context(), stave.VerifyConfig{
+				BeforeDir:   opts.BeforeDir,
+				AfterDir:    opts.AfterDir,
+				ControlsDir: opts.ControlsDir,
+				MaxUnsafe:   opts.MaxUnsafeDuration,
+				Now:         opts.Now,
+				SanitizeIDs: gf.Sanitize,
+				PathMode:    string(gf.PathMode),
+				Progress:    rt.BeginProgress,
+			})
+			if err != nil {
+				return err //nolint:wrapcheck // facade already wrapped; preserve exit 4.
+			}
+
+			if _, werr := cmd.OutOrStdout().Write(out); werr != nil {
+				return fmt.Errorf("write verification report: %w", werr)
+			}
+			if hasViolations {
+				return ui.ErrViolationsFound
+			}
+			return nil
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,

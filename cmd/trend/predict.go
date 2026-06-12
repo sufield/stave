@@ -3,14 +3,12 @@ package trend
 import (
 	"errors"
 	"fmt"
-	"io"
-	"time"
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/internal/app/trendpredict"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/metadata"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 func newPredictCmd() *cobra.Command {
@@ -44,35 +42,27 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if historyDir == "" && files == "" {
-				return errors.New("either --history or --files is required")
-			}
-
-			tOpts := &trendOptions{HistoryDir: historyDir, Files: files, MinRuns: 2}
-			assessments, err := loadAssessments(cmd.Context(), cmd.ErrOrStderr(), tOpts)
-			if err != nil {
-				return err
-			}
-			if len(assessments) < 2 {
-				return fmt.Errorf("prediction requires at least 2 assessment files (found %d)", len(assessments))
-			}
-
-			now := time.Now().UTC()
-			window := time.Duration(windowDays) * 24 * time.Hour
-
-			prediction := trendpredict.Predict(trendpredict.Input{
-				Assessments:     assessments,
+			out, warnings, err := stave.PredictReadiness(cmd.Context(), stave.TrendPredictConfig{
+				HistoryDir:      historyDir,
+				Files:           files,
 				Profile:         profile,
 				TargetReadiness: targetReadiness,
-				Window:          window,
-				Now:             now,
+				WindowDays:      windowDays,
+				Format:          format,
 			})
-
-			renderer, rendErr := NewPredictRenderer(format)
-			if rendErr != nil {
-				return &ui.UserError{Err: rendErr}
+			for _, warn := range warnings {
+				fmt.Fprintln(cmd.ErrOrStderr(), warn)
 			}
-			return renderer.Render(cmd.OutOrStdout(), prediction)
+			if err != nil {
+				if errors.Is(err, stave.ErrInvalidInput) {
+					return &ui.UserError{Err: err}
+				}
+				return err //nolint:wrapcheck // facade already wrapped; preserve exit codes.
+			}
+			if _, werr := cmd.OutOrStdout().Write(out); werr != nil {
+				return fmt.Errorf("write predict output: %w", werr)
+			}
+			return nil
 		},
 	}
 
@@ -84,30 +74,4 @@ Exit Codes:
 	cmd.Flags().StringVarP(&format, "format", "f", "text", "Output format: text or json")
 
 	return cmd
-}
-
-func renderPredictText(w io.Writer, p *trendpredict.Prediction) error {
-	fmt.Fprintf(w, "Profile:           %s\n", p.Profile)
-	fmt.Fprintf(w, "Current readiness: %.1f%%\n", p.CurrentReadiness)
-	fmt.Fprintf(w, "Target readiness:  %.1f%%\n", p.TargetReadiness)
-	fmt.Fprintf(w, "\n")
-
-	if !p.ProjectedDate.IsZero() {
-		fmt.Fprintf(w, "Projected date:    %s\n", p.ProjectedDate.Format("2006-01-02"))
-		fmt.Fprintf(w, "Optimistic:        %s\n", p.OptimisticDate.Format("2006-01-02"))
-		fmt.Fprintf(w, "Pessimistic:       %s\n", p.PessimisticDate.Format("2006-01-02"))
-	} else {
-		fmt.Fprintf(w, "Insufficient data for projection.\n")
-	}
-
-	if len(p.Accelerators) > 0 {
-		fmt.Fprintf(w, "\nAccelerators:\n")
-		for _, a := range p.Accelerators {
-			fmt.Fprintf(w, "  - %s (saves ~%d days)\n", a.Description, a.DaysSaved)
-			for _, id := range a.ControlIDs {
-				fmt.Fprintf(w, "    %s\n", id)
-			}
-		}
-	}
-	return nil
 }

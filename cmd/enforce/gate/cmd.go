@@ -1,30 +1,19 @@
 package gate
 
 import (
-	"github.com/spf13/cobra"
-
-	"encoding/json"
 	"errors"
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	appconfig "github.com/sufield/stave/internal/app/config"
-	"github.com/sufield/stave/internal/app/teamgate"
-	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/evaluation/remediation"
-	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/metadata"
 	"github.com/sufield/stave/pkg/stave"
 )
 
-// Deps is retained as an empty struct for ABI compatibility with
-// callers that pass it; the gate command now wires its own adapters
-// through pkg/stave.Gate. Future iterations may remove the parameter.
-type Deps struct{}
-
 // NewCmd constructs the CI gate command.
-func NewCmd(deps Deps) *cobra.Command {
+func NewCmd() *cobra.Command {
 	opts := DefaultOptions()
 
 	cmd := &cobra.Command{
@@ -69,82 +58,38 @@ Exit Codes:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, err := toConfig(&opts, cliflags.GetGlobalFlags(cmd), cmd.OutOrStdout(), cmd.ErrOrStderr())
-			if err != nil {
-				return err
-			}
+			gf := cliflags.GetGlobalFlags(cmd)
 
-			result, err := stave.Gate(cmd.Context(), stave.GateConfig{
-				Policy:          stave.GatePolicy(cfg.Policy),
-				EvaluationPath:  cfg.InPath,
-				BaselinePath:    cfg.BaselinePath,
-				ControlsDir:     cfg.ControlsDir,
-				ObservationsDir: cfg.ObservationsDir,
-				MaxUnsafe:       cfg.MaxUnsafeDuration,
+			out, warnings, passed, err := stave.RunGate(cmd.Context(), stave.GateRunConfig{
+				Policy:          opts.Policy,
+				InPath:          opts.InPath,
+				BaselinePath:    opts.BaselinePath,
+				ControlsDir:     opts.ControlsDir,
+				ObservationsDir: opts.ObservationsDir,
+				MaxUnsafe:       opts.MaxUnsafeDuration,
+				Now:             opts.Now,
+				Format:          opts.Format,
+				Quiet:           gf.Quiet,
+				Team:            opts.Team,
+				TeamManifest:    opts.TeamManifest,
 			})
 			if err != nil {
-				return fmt.Errorf("run gate: %w", err)
+				if errors.Is(err, stave.ErrInvalidInput) {
+					return &ui.UserError{Err: err}
+				}
+				return err //nolint:wrapcheck // facade already wrapped ("run gate"); preserve exit 4.
 			}
 
-			// Per-team gate: filter findings to one team and evaluate
-			// thresholds. The team-gate path reads cfg.InPath (the
-			// evaluation file). Policies like fail_on_overdue_upcoming
-			// derive their verdict from controls + observations
-			// directly and never produce an evaluation file — skip the
-			// per-team filter for those cases instead of failing the
-			// command on a missing path the operator was never asked
-			// to provide.
-			teamFilterRequested := opts.HasTeamFilter()
-			policySupportsTeams := cfg.Policy.RequiresTeamScope()
-			isIgnoredFilter := teamFilterRequested && !policySupportsTeams
-			isApplyingTeamFilter := teamFilterRequested && policySupportsTeams
-
-			if isIgnoredFilter {
-				fmt.Fprintf(cmd.ErrOrStderr(),
-					"warning: --team flag ignored because policy %q does not require team scope\n",
-					cfg.Policy)
+			for _, warn := range warnings {
+				fmt.Fprintln(cmd.ErrOrStderr(), warn)
 			}
-			if isApplyingTeamFilter {
-				if opts.TeamManifest == "" {
-					return &ui.UserError{Err: errors.New("--team-manifest is required when using --team")}
-				}
-				manifest, manifestErr := teams.LoadManifest(opts.TeamManifest)
-				if manifestErr != nil {
-					return &ui.UserError{Err: fmt.Errorf("load team manifest: %w", manifestErr)}
-				}
-				evalData, readErr := fsutil.ReadFileLimited(cfg.InPath)
-				if readErr != nil {
-					return &ui.UserError{Err: fmt.Errorf("read evaluation for team gate: %w", readErr)}
-				}
-				var evalDoc struct {
-					Findings []remediation.Finding `json:"findings"`
-				}
-				if unmarshalErr := json.Unmarshal(evalData, &evalDoc); unmarshalErr != nil {
-					return &ui.UserError{Err: fmt.Errorf("parse evaluation for team gate: %w", unmarshalErr)}
-				}
-				teamResult := teamgate.Evaluate(teamgate.Input{
-					Findings:   evalDoc.Findings,
-					Manifest:   manifest,
-					TeamID:     opts.Team,
-					Thresholds: teamgate.DefaultThresholds(),
-				})
-				// Combine: the gate must clear BOTH the global policy
-				// (already in result.Passed) and the per-team policy.
-				// MergeTeamVerdict on GateResponse owns the AND-merge
-				// so cmd-side code stops mutating Passed and Reason
-				// inline.
-				result.MergeTeamVerdict(teamResult.TeamID, teamResult.Passed, teamResult.Reason)
+			if _, werr := cmd.OutOrStdout().Write(out); werr != nil {
+				return fmt.Errorf("write gate output: %w", werr)
 			}
-
-			renderer, renderErr := NewRenderer(cfg.Format, cfg.Quiet)
-			if renderErr != nil {
-				return renderErr
+			if !passed {
+				return ui.ErrViolationsFound
 			}
-			if err := renderer.Render(cfg.Stdout, result); err != nil {
-				return fmt.Errorf("render gate output: %w", err)
-			}
-
-			return result.ExitError()
+			return nil
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -157,6 +102,6 @@ Exit Codes:
 }
 
 func registerCompletions(cmd *cobra.Command) {
-	_ = cmd.RegisterFlagCompletionFunc("policy", cliflags.CompleteFixed(appconfig.AllEnforcementGates()...))
+	_ = cmd.RegisterFlagCompletionFunc("policy", cliflags.CompleteFixed(stave.EnforcementGatePolicies()...))
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
 }

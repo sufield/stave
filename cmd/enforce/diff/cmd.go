@@ -4,13 +4,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/platform/metadata"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // NewCmd constructs the snapshot diff command.
-func NewCmd(loadSnapshots compose.SnapshotLoader) *cobra.Command {
+func NewCmd() *cobra.Command {
 	opts := DefaultOptions()
 
 	cmd := &cobra.Command{
@@ -49,12 +48,7 @@ Exit Codes:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, err := toConfig(&opts)
-			if err != nil {
-				return err
-			}
-			runner := newRunner(loadSnapshots, cliflags.GetGlobalFlags(cmd), cmd.OutOrStdout(), cmd.ErrOrStderr())
-			return runner.Run(cmd.Context(), cfg)
+			return run(cmd.Context(), &opts, cliflags.GetGlobalFlags(cmd), cmd.OutOrStdout(), cmd.ErrOrStderr())
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -62,7 +56,7 @@ Exit Codes:
 
 	opts.BindFlags(cmd)
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSON...))
-	_ = cmd.RegisterFlagCompletionFunc("change-type", cliflags.CompleteFixed(asset.AllDriftTypes()...))
+	_ = cmd.RegisterFlagCompletionFunc("change-type", cliflags.CompleteFixed(stave.ObservationDriftChangeTypes()...))
 
 	return cmd
 }

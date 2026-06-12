@@ -188,11 +188,12 @@ func (l *ObservationLoader) process(data []byte, source string) ([]asset.Snapsho
 func isBundleFormat(data []byte) bool {
 	var probe struct {
 		Snapshots json.RawMessage `json:"snapshots"`
+		Assets    json.RawMessage `json:"assets"`
 	}
 	if err := json.Unmarshal(data, &probe); err != nil {
 		return false
 	}
-	return len(probe.Snapshots) > 0
+	return len(probe.Snapshots) > 0 && len(probe.Assets) == 0
 }
 
 func buildInputHashes(fileHashes map[string]string) *evaluation.InputHashes {

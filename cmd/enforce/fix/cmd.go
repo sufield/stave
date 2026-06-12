@@ -6,32 +6,13 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/core/ports"
-	"github.com/sufield/stave/internal/core/usecase"
-	"github.com/sufield/stave/internal/platform/fileout"
+	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/metadata"
-	"github.com/sufield/stave/internal/util/jsonutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
-// LoopDeps groups the factory functions required by the fix-loop command.
-type LoopDeps struct {
-	NewCELEvaluator compose.CELEvaluatorFactory
-	NewCtlRepo      compose.CtlRepoFactory
-	NewObsRepo      compose.ObsRepoFactory
-}
-
-// Deps groups the infrastructure implementations for the fix command.
-// The Loader is constructed lazily via NewLoader so that CEL evaluator
-// initialization (which compiles every embedded predicate) does not
-// run on every CLI startup — only when `stave ci fix` is actually
-// invoked. This mirrors the lazy pattern used by LoopDeps.
-type Deps struct {
-	NewLoader func() (usecase.FindingLoaderPort, error)
-}
-
 // NewFixCmd constructs the fix command.
-func NewFixCmd(deps Deps) *cobra.Command {
+func NewFixCmd() *cobra.Command {
 	opts := &fixOptions{}
 
 	cmd := &cobra.Command{
@@ -62,22 +43,12 @@ Exit Codes:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			loader, err := deps.NewLoader()
+			out, err := stave.FixFinding(cmd.Context(), opts.InputPath, opts.FindingRef)
 			if err != nil {
-				return err
+				return err //nolint:wrapcheck // facade already wrapped ("run fix"); preserve exit 4.
 			}
-			req := usecase.FixRequest{
-				InputPath:  opts.InputPath,
-				FindingRef: opts.FindingRef,
-			}
-
-			resp, err := usecase.Fix(cmd.Context(), req, usecase.FixDeps{Loader: loader})
-			if err != nil {
-				return fmt.Errorf("run fix: %w", err)
-			}
-
-			if writeErr := jsonutil.WriteIndented(cmd.OutOrStdout(), resp.Data); writeErr != nil {
-				return fmt.Errorf("write output: %w", writeErr)
+			if _, werr := cmd.OutOrStdout().Write(out); werr != nil {
+				return fmt.Errorf("write output: %w", werr)
 			}
 			return nil
 		},
@@ -91,7 +62,7 @@ Exit Codes:
 }
 
 // NewFixLoopCmd constructs the fix-loop command.
-func NewFixLoopCmd(deps LoopDeps) *cobra.Command {
+func NewFixLoopCmd() *cobra.Command {
 	opts := &loopOptions{
 		ControlsDir: "controls",
 	}
@@ -129,15 +100,27 @@ Exit Codes:
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			resolved, err := toRequest(opts, cmd.OutOrStdout(), cmd.ErrOrStderr())
+			gf := cliflags.GetGlobalFlags(cmd)
+
+			hasViolations, err := stave.RunFixLoop(cmd.Context(), stave.FixLoopConfig{
+				BeforeDir:     opts.BeforeDir,
+				AfterDir:      opts.AfterDir,
+				ControlsDir:   opts.ControlsDir,
+				OutDir:        opts.OutDir,
+				MaxUnsafe:     opts.MaxUnsafeRaw,
+				Now:           opts.NowRaw,
+				Force:         gf.Force,
+				AllowSymlinks: gf.AllowSymlinkOut,
+				SanitizeIDs:   gf.Sanitize,
+				PathMode:      string(gf.PathMode),
+			}, cmd.OutOrStdout(), cmd.ErrOrStderr())
 			if err != nil {
-				return err
+				return err //nolint:wrapcheck // facade already wrapped ("run fix loop"); preserve exit 4.
 			}
-			runner, err := newLoopRunner(cliflags.GetGlobalFlags(cmd), deps, resolved.Clock)
-			if err != nil {
-				return err
+			if hasViolations {
+				return ui.ErrViolationsFound
 			}
-			return runner.Loop(cmd.Context(), resolved.Request)
+			return nil
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -146,21 +129,4 @@ Exit Codes:
 	opts.BindFlags(cmd)
 
 	return cmd
-}
-
-func newLoopRunner(gf cliflags.GlobalFlags, deps LoopDeps, clock ports.Clock) (*Runner, error) {
-	celEval, err := deps.NewCELEvaluator()
-	if err != nil {
-		return nil, err
-	}
-	runner := NewRunner(celEval, clock)
-	runner.NewCtlRepo = deps.NewCtlRepo
-	runner.NewObsRepo = deps.NewObsRepo
-	runner.Sanitizer = gf.GetSanitizer()
-	runner.FileOptions = fileout.FileOptions{
-		Overwrite:     gf.Force,
-		AllowSymlinks: gf.AllowSymlinkOut,
-		DirPerms:      0o700,
-	}
-	return runner, nil
 }

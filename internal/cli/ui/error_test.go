@@ -2,6 +2,7 @@ package ui
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -67,12 +68,19 @@ func TestExitCode(t *testing.T) {
 			expected: ExitInputError,
 		},
 		{
-			// Bare sentinel also maps correctly — covers the case
-			// of returning stave.ErrInvalidInput directly without
-			// a wrapping message.
 			name:     "bare stave.ErrInvalidInput returns 2",
 			err:      stave.ErrInvalidInput,
 			expected: ExitInputError,
+		},
+		{
+			name:     "context.Canceled returns 130",
+			err:      context.Canceled,
+			expected: ExitInterrupted,
+		},
+		{
+			name:     "wrapped context.Canceled returns 130",
+			err:      fmt.Errorf("context cancelled: %w", context.Canceled),
+			expected: ExitInterrupted,
 		},
 	}
 
@@ -99,6 +107,8 @@ func TestIsSentinel(t *testing.T) {
 		{"diagnostics found", ErrDiagnosticsFound, true},
 		{"interrupted", ErrInterrupted, true},
 		{"internal error", ErrInternal, true},
+		{"context canceled", context.Canceled, true},
+		{"wrapped context canceled", fmt.Errorf("context canceled: %w", context.Canceled), true},
 		{"other error", errors.New("other"), false},
 		{"nil", nil, false},
 	}

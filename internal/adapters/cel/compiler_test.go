@@ -261,6 +261,114 @@ func TestCompile_ContainsOperator(t *testing.T) {
 	}
 }
 
+func TestCompile_ContainsOperator_List(t *testing.T) {
+	t.Parallel()
+	compiler, err := NewCompiler()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{Field: predicate.NewFieldPath("properties.actions"), Op: predicate.OpContains, Value: policy.Str("s3:GetObject")},
+		},
+	}
+
+	cp, err := compiler.Compile(pred)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Case 1: Exact match of element in the list -> true
+	props := map[string]any{"actions": []any{"s3:GetObject", "s3:PutObject"}}
+	result, err := evaluateWithParams(cp, props, nil, nil)
+	if err != nil {
+		t.Fatalf("eval: %v", err)
+	}
+	if !result {
+		t.Fatal("expected true for list containing 's3:GetObject'")
+	}
+
+	// Case 2: Substring of element but not exact match -> false
+	predSubstring := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{Field: predicate.NewFieldPath("properties.actions"), Op: predicate.OpContains, Value: policy.Str("s3:Get")},
+		},
+	}
+	cpSubstring, err := compiler.Compile(predSubstring)
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err = evaluateWithParams(cpSubstring, props, nil, nil)
+	if err != nil {
+		t.Fatalf("eval: %v", err)
+	}
+	if result {
+		t.Fatal("expected false for list where no element exactly matches 's3:Get' (substring matching on lists is a bug)")
+	}
+}
+
+func TestCompile_MixedFieldAndNestedPredicate(t *testing.T) {
+	t.Parallel()
+	compiler, err := NewCompiler()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{
+				Field: predicate.NewFieldPath("properties.storage.kind"),
+				Op:    predicate.OpEq,
+				Value: policy.Str("bucket"),
+				Any: []policy.PredicateRule{
+					{Field: predicate.NewFieldPath("properties.storage.versioning.enabled"), Op: predicate.OpEq, Value: policy.Bool(false)},
+				},
+			},
+		},
+	}
+
+	cp, err := compiler.Compile(pred)
+	if err != nil {
+		t.Fatalf("compile: %v", err)
+	}
+
+	// Case 1: Kind is bucket, versioning is disabled -> unsafe (should match / evaluate to true)
+	props1 := map[string]any{
+		"storage": map[string]any{
+			"kind": "bucket",
+			"versioning": map[string]any{
+				"enabled": false,
+			},
+		},
+	}
+	res1, err := evaluateWithParams(cp, props1, nil, nil)
+	if err != nil {
+		t.Fatalf("eval 1: %v", err)
+	}
+	if !res1 {
+		t.Fatal("expected unsafe (true) for bucket with versioning disabled")
+	}
+
+	// Case 2: Kind is database, versioning is disabled -> safe (should NOT match because kind is not bucket / evaluate to false)
+	props2 := map[string]any{
+		"storage": map[string]any{
+			"kind": "database",
+			"versioning": map[string]any{
+				"enabled": false,
+			},
+		},
+	}
+	res2, err := evaluateWithParams(cp, props2, nil, nil)
+	if err != nil {
+		t.Fatalf("eval 2: %v", err)
+	}
+	// Under the buggy implementation, kind is discarded, so this would evaluate to true!
+	if res2 {
+		t.Fatal("expected safe (false) for database with versioning disabled because kind is not bucket (field condition was discarded!)")
+	}
+}
+
 func TestCompile_CacheHit(t *testing.T) {
 	t.Parallel()
 	compiler, err := NewCompiler()

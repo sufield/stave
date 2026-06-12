@@ -2,22 +2,16 @@ package bundle
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
-	artifact "github.com/sufield/stave/internal/adapters/artifacts"
-	"github.com/sufield/stave/internal/app/auditbundle"
-	appexempt "github.com/sufield/stave/internal/app/exempt"
-	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/metadata"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type auditOptions struct {
@@ -86,66 +80,25 @@ func runAudit(ctx context.Context, stdout io.Writer, opts *auditOptions) error {
 		return err
 	}
 
-	// Load assessments in period.
-	assessments, err := loadPeriodAssessments(ctx, opts.History, startDate, endDate)
+	res, err := stave.AssembleAuditBundle(ctx, stave.AuditBundleInput{
+		Framework:  opts.Framework,
+		Period:     periodLabel,
+		Start:      startDate,
+		End:        endDate,
+		HistoryDir: opts.History,
+		ExemptPath: opts.Exempt,
+		OutDir:     opts.OutDir,
+		DryRun:     opts.DryRun,
+	})
 	if err != nil {
-		return fmt.Errorf("load assessments: %w", err)
+		return err //nolint:wrapcheck // facade already wrapped ("load assessments"/"assemble audit bundle"); preserve exit codes.
 	}
 
 	if opts.DryRun {
-		return writeDryRun(stdout, opts.Framework, periodLabel, assessments, opts.Exempt)
+		return writeDryRun(stdout, opts.Framework, periodLabel, res.AssessmentCount, opts.Exempt)
 	}
 
-	if opts.OutDir == "" {
-		return errors.New("--out is required (output directory)")
-	}
-
-	// Build report JSON. Match the exemption-marshal pattern below:
-	// a marshal failure on the audit summary would otherwise produce
-	// an empty bundle artifact that downstream consumers would
-	// silently treat as "no findings".
-	reportJSON, err := json.MarshalIndent(map[string]any{
-		"framework":   opts.Framework,
-		"period":      periodLabel,
-		"assessments": len(assessments),
-	}, "", "  ")
-	if err != nil {
-		return fmt.Errorf("marshal audit report: %w", err)
-	}
-
-	// Build report markdown.
-	reportMD := fmt.Appendf(nil, "# %s Audit Report — %s\n\nAssessments in period: %d\n",
-		strings.ToUpper(opts.Framework), periodLabel, len(assessments))
-
-	// Load exemptions if provided. Errors are fatal: an audit bundle
-	// that silently omits the operator's --exempt input would falsely
-	// represent compliance scope.
-	var exemptJSON []byte
-	if opts.Exempt != "" {
-		af, loadErr := appexempt.Load(opts.Exempt)
-		if loadErr != nil {
-			return fmt.Errorf("load exemptions %q: %w", opts.Exempt, loadErr)
-		}
-		exemptJSON, err = json.MarshalIndent(af, "", "  ")
-		if err != nil {
-			return fmt.Errorf("marshal exemptions: %w", err)
-		}
-	}
-
-	pkg, err := auditbundle.Assemble(auditbundle.AssembleInput{
-		Framework:      opts.Framework,
-		Period:         periodLabel,
-		OutputDir:      opts.OutDir,
-		ReportJSON:     reportJSON,
-		ReportMarkdown: reportMD,
-		ExemptionsJSON: exemptJSON,
-		GeneratedAt:    time.Now().UTC(),
-	})
-	if err != nil {
-		return fmt.Errorf("assemble audit bundle: %w", err)
-	}
-
-	fmt.Fprintf(stdout, "Audit package written to %s (%d components)\n", opts.OutDir, len(pkg.Components))
+	fmt.Fprintf(stdout, "Audit package written to %s (%d components)\n", opts.OutDir, res.ComponentCount)
 	return nil
 }
 
@@ -195,38 +148,13 @@ func parsePeriod(opts *auditOptions) (label string, start, end time.Time, err er
 	return "", time.Time{}, time.Time{}, errors.New("either --period or --from/--to is required")
 }
 
-func loadPeriodAssessments(ctx context.Context, dir string, start, end time.Time) ([]*report.Assessment, error) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, fmt.Errorf("read directory: %w", err)
-	}
-
-	loader := artifact.NewLoader()
-	var assessments []*report.Assessment
-	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
-			continue
-		}
-		path := filepath.Join(dir, entry.Name())
-		a, loadErr := loader.Evaluation(ctx, path)
-		if loadErr != nil {
-			continue
-		}
-		if (a.Run.Now.Equal(start) || a.Run.Now.After(start)) &&
-			(a.Run.Now.Equal(end) || a.Run.Now.Before(end)) {
-			assessments = append(assessments, a)
-		}
-	}
-	return assessments, nil
-}
-
-func writeDryRun(w io.Writer, framework, period string, assessments []*report.Assessment, exemptPath string) error {
+func writeDryRun(w io.Writer, framework, period string, assessmentCount int, exemptPath string) error {
 	fmt.Fprintln(w, "AUDIT BUNDLE DRY RUN")
 	fmt.Fprintf(w, "Framework: %s  |  Period: %s\n", strings.ToUpper(framework), period)
 	fmt.Fprintln(w, strings.Repeat("\u2500", 55))
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "WOULD COLLECT")
-	fmt.Fprintf(w, "  \u2713 assessment-results.json  (%d assessments in period)\n", len(assessments))
+	fmt.Fprintf(w, "  \u2713 assessment-results.json  (%d assessments in period)\n", assessmentCount)
 	fmt.Fprintln(w, "  \u2713 assessment-report.md")
 	fmt.Fprintln(w, "  \u2713 continuity.json")
 	fmt.Fprintln(w, "  \u2713 trend.json")

@@ -47,10 +47,18 @@ import (
 // add packages as they migrate; never remove one (that would be a
 // regression the test should have caught).
 var facadeCleanBaseline = map[string]bool{
+	"apply/verify":       true,
 	"attest":             true,
+	"bisect":             true,
+	"bundle":             true,
 	"catalog":            true,
 	"enforce/cidiff":     true,
+	"enforce/diff":       true,
+	"enforce/fix":        true,
+	"enforce/gate":       true,
 	"enforce/generate":   true,
+	"enforce/graph":      true,
+	"evaluate":           true,
 	"exportsir":          true,
 	"cel":                true,
 	"compare":            true,
@@ -58,8 +66,10 @@ var facadeCleanBaseline = map[string]bool{
 	"coverage":           true,
 	"enforce/baseline":   true,
 	"doctor":             true,
+	"exempt":             true,
 	"expand":             true,
 	"export":             true,
+	"export/compliance":  true,
 	"exportinvariants":   true,
 	"features":           true,
 	"fingerprint":        true,
@@ -76,6 +86,7 @@ var facadeCleanBaseline = map[string]bool{
 	"inspect/risk":       true,
 	"map":                true,
 	"metrics":            true,
+	"nep":                true,
 	"path":               true,
 	"profile":            true,
 	"readiness":          true,
@@ -90,6 +101,7 @@ var facadeCleanBaseline = map[string]bool{
 	"stave-mcp":          true,
 	"telemetry":          true,
 	"test":               true,
+	"trend":              true,
 	"validatemapping":    true,
 }
 

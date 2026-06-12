@@ -41,7 +41,7 @@ var stixObjectTypeMap = map[NodeType]string{
 // MarshalSTIX writes a STIX 2.1 Bundle JSON from GraphData.
 func MarshalSTIX(w io.Writer, g *GraphData) error {
 	if g == nil {
-		return errors.New("MarshalSTIX: nil GraphData")
+		return errors.New("marshalSTIX: nil GraphData")
 	}
 	now := g.GeneratedAt.UTC()
 	nowStr := now.Format(time.RFC3339)

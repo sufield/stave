@@ -756,3 +756,32 @@ func TestCompile_AnyInFieldOperator(t *testing.T) {
 		t.Fatal("empty expression")
 	}
 }
+
+func TestStringifyValue_NarrowWidthIntegers(t *testing.T) {
+	t.Parallel()
+
+	type CustomInt8 int8
+	type CustomUint16 uint16
+
+	testCases := []struct {
+		name     string
+		input    any
+		expected any
+	}{
+		{"int8", int8(42), int(42)},
+		{"int16", int16(-100), int(-100)},
+		{"uint8", uint8(200), uint(200)},
+		{"uint16", uint16(50000), uint(50000)},
+		{"CustomInt8", CustomInt8(-5), int64(-5)},
+		{"CustomUint16", CustomUint16(80), uint64(80)},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := stringifyValue(tc.input)
+			if got != tc.expected {
+				t.Errorf("stringifyValue(%T(%v)) = %T(%v), want %T(%v)", tc.input, tc.input, got, got, tc.expected, tc.expected)
+			}
+		})
+	}
+}

@@ -413,6 +413,22 @@ func TestExposureLifecycle_SetAsset_EmptyID(t *testing.T) {
 	}
 }
 
+func TestExposureLifecycle_SetAsset_ValidationPreventsMutation(t *testing.T) {
+	t.Parallel()
+	tl := &ExposureLifecycle{} // leaves both ID and asset empty
+
+	badAsset := Asset{ID: "", Type: "malformed"}
+	err := tl.SetAsset(badAsset)
+	if err == nil {
+		t.Fatal("expected ErrEmptyAssetID, got nil")
+	}
+
+	// Assert that tl.asset was NOT mutated to badAsset because of validation failure
+	if tl.Asset().Type == "malformed" {
+		t.Error("tl.asset was mutated to badAsset despite the validation error")
+	}
+}
+
 // ---------------------------------------------------------------------------
 // validation.go — checkDurationFeasibility, hasInsufficientSpan
 // ---------------------------------------------------------------------------

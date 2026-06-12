@@ -181,6 +181,11 @@ type App struct {
 	// retry on every concurrent cleanup attempt.
 	cleanupOnce sync.Once
 
+	// exitOnce gates exit. We want to ensure ExitFunc is called exactly
+	// once across all concurrent exit paths (signal handler, handleExecutionError,
+	// recoverExecutePanic, etc.)
+	exitOnce sync.Once
+
 	// logCloseOnce serialises LogCloser.Close + the
 	// "Warning: close log file" stderr write across the two paths
 	// that can both reach it: postRun (normal exit) and

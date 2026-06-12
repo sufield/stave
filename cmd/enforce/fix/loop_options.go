@@ -2,7 +2,6 @@ package fix
 
 import (
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -10,8 +9,6 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -58,36 +55,6 @@ func (o *loopOptions) resolveConfigDefaults(defaults configDefaults, flags *pfla
 	if !flags.Changed("max-unsafe") {
 		o.MaxUnsafeRaw = defaults.MaxUnsafeDuration()
 	}
-}
-
-// loopResolved holds the parsed runtime values from flag resolution.
-type loopResolved struct {
-	Request LoopRequest
-	Clock   ports.Clock
-}
-
-// toRequest resolves raw flag values into a validated LoopRequest and Clock.
-func toRequest(o *loopOptions, stdout, stderr io.Writer) (loopResolved, error) {
-	maxUnsafe, err := cliflags.ParseDurationFlag(o.MaxUnsafeRaw, "--max-unsafe")
-	if err != nil {
-		return loopResolved{}, fmt.Errorf("resolve max-unsafe duration: %w", err)
-	}
-	clock, err := compose.ResolveClock(o.NowRaw)
-	if err != nil {
-		return loopResolved{}, fmt.Errorf("resolve clock: %w", err)
-	}
-	return loopResolved{
-		Request: LoopRequest{
-			BeforeDir:         o.BeforeDir,
-			AfterDir:          o.AfterDir,
-			ControlsDir:       o.ControlsDir,
-			OutDir:            o.OutDir,
-			MaxUnsafeDuration: maxUnsafe,
-			Stdout:            stdout,
-			Stderr:            stderr,
-		},
-		Clock: clock,
-	}, nil
 }
 
 // normalize cleans user-supplied paths and validates the output directory.

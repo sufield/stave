@@ -140,6 +140,9 @@ func ParseBundle(data []byte) ([]asset.Snapshot, error) {
 	if err := json.Unmarshal(data, &bundle); err != nil {
 		return nil, fmt.Errorf("parse observations JSON: %w", err)
 	}
+	if bundle.SchemaVersion != kernel.SchemaObservation && bundle.SchemaVersion != "bundle.v1" {
+		return nil, fmt.Errorf("unsupported schema version %q", bundle.SchemaVersion)
+	}
 	if len(bundle.Snapshots) == 0 {
 		return nil, errors.New("observation bundle contains no snapshots (expected a top-level `snapshots` array)")
 	}

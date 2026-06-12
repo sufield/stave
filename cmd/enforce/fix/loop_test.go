@@ -9,11 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	appfix "github.com/sufield/stave/internal/app/fix"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/core/report"
-	"github.com/sufield/stave/internal/platform/fileout"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 func TestBuildFixLoopReport(t *testing.T) {
@@ -55,28 +54,20 @@ func TestRunFixLoopWritesArtifacts(t *testing.T) {
 	fixture := testdataDir(t, "e2e-s3-verify")
 	outDir := t.TempDir()
 
-	clock := ports.FixedClock(time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC))
-	runner := newTestRunner(t)
-	runner.Clock = clock
-	f := compose.DefaultFactories()
-	runner.NewCtlRepo = f.NewCtlRepo
-	runner.NewObsRepo = f.NewObsRepo
-	runner.FileOptions = fileout.FileOptions{
-		Overwrite: true,
-		DirPerms:  0o700,
-	}
-
-	loopErr := runner.Loop(context.Background(), LoopRequest{
-		BeforeDir:         filepath.Join(fixture, "before"),
-		AfterDir:          filepath.Join(fixture, "after"),
-		ControlsDir:       filepath.Join(fixture, "controls"),
-		OutDir:            outDir,
-		MaxUnsafeDuration: 168 * time.Hour,
-		Stdout:            &bytes.Buffer{},
-		Stderr:            &bytes.Buffer{},
-	})
+	hasViolations, loopErr := stave.RunFixLoop(context.Background(), stave.FixLoopConfig{
+		BeforeDir:   filepath.Join(fixture, "before"),
+		AfterDir:    filepath.Join(fixture, "after"),
+		ControlsDir: filepath.Join(fixture, "controls"),
+		OutDir:      outDir,
+		MaxUnsafe:   "168h",
+		Now:         "2026-01-11T00:00:00Z",
+		Force:       true,
+	}, &bytes.Buffer{}, &bytes.Buffer{})
 	if loopErr != nil {
-		t.Fatalf("Loop returned error: %v", loopErr)
+		t.Fatalf("RunFixLoop returned error: %v", loopErr)
+	}
+	if hasViolations {
+		t.Fatalf("expected no remaining violations for e2e-s3-verify fixture")
 	}
 
 	files := []string{

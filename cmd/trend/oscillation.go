@@ -3,17 +3,12 @@ package trend
 import (
 	"errors"
 	"fmt"
-	"io"
-	"slices"
-	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/internal/app/oscillation"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/metadata"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 func newOscillationCmd() *cobra.Command {
@@ -47,70 +42,25 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if historyDir == "" && files == "" {
-				return errors.New("either --history or --files is required")
+			out, warnings, err := stave.ClassifyOscillation(cmd.Context(), stave.TrendOscillationConfig{
+				HistoryDir:      historyDir,
+				Files:           files,
+				MinOscillations: minOscillations,
+				Format:          format,
+			})
+			for _, warn := range warnings {
+				fmt.Fprintln(cmd.ErrOrStderr(), warn)
 			}
-
-			tOpts := &trendOptions{HistoryDir: historyDir, Files: files, MinRuns: 2}
-			assessments, err := loadAssessments(cmd.Context(), cmd.ErrOrStderr(), tOpts)
 			if err != nil {
-				return err
-			}
-			if len(assessments) < 2 {
-				return fmt.Errorf("oscillation analysis requires at least 2 assessment files (found %d)", len(assessments))
-			}
-
-			// Sort by timestamp.
-			slices.SortFunc(assessments, func(a, b *report.Assessment) int {
-				return a.Run.Now.Compare(b.Run.Now)
-			})
-
-			// Dereference to value slice for oscillation.Input.
-			vals := make([]report.Assessment, len(assessments))
-			for i, a := range assessments {
-				vals[i] = *a
-			}
-
-			// Build set of all (controlID, assetID) pairs.
-			type fkey struct{ ctl, ast string }
-			pairs := make(map[fkey]bool)
-			for i := range vals {
-				for j := range vals[i].Findings {
-					f := &vals[i].Findings[j]
-					pairs[fkey{string(f.ControlID), string(f.AssetID)}] = true
+				if errors.Is(err, stave.ErrInvalidInput) {
+					return &ui.UserError{Err: err}
 				}
+				return err //nolint:wrapcheck // facade already wrapped; preserve exit codes.
 			}
-
-			// Classify each pair.
-			var results []oscillation.Classification
-			for k := range pairs {
-				c := oscillation.Classify(oscillation.Input{
-					Assessments:     vals,
-					ControlID:       kernel.ControlID(k.ctl),
-					AssetID:         k.ast,
-					MinOscillations: minOscillations,
-				})
-				if c.Pattern != "" {
-					results = append(results, c)
-				}
+			if _, werr := cmd.OutOrStdout().Write(out); werr != nil {
+				return fmt.Errorf("write oscillation output: %w", werr)
 			}
-
-			// Sort results for deterministic output.
-			slices.SortFunc(results, func(a, b oscillation.Classification) int {
-				if a.Pattern != b.Pattern {
-					return strings.Compare(a.Pattern, b.Pattern)
-				}
-				if a.ControlID != b.ControlID {
-					return strings.Compare(a.ControlID, b.ControlID)
-				}
-				return strings.Compare(a.AssetID, b.AssetID)
-			})
-
-			renderer, rendErr := NewOscillationRenderer(format)
-			if rendErr != nil {
-				return &ui.UserError{Err: rendErr}
-			}
-			return renderer.Render(cmd.OutOrStdout(), results)
+			return nil
 		},
 	}
 
@@ -120,33 +70,4 @@ Exit Codes:
 	cmd.Flags().StringVarP(&format, "format", "f", "table", "Output format: table or json")
 
 	return cmd
-}
-
-func writeOscillationTable(w io.Writer, results []oscillation.Classification) {
-	if len(results) == 0 {
-		fmt.Fprintln(w, "No oscillation patterns detected.")
-		return
-	}
-
-	fmt.Fprintln(w, "OSCILLATION ANALYSIS")
-	fmt.Fprintln(w, strings.Repeat("-", 90))
-	fmt.Fprintf(w, "%-14s %-30s %-30s %6s %5s %s\n",
-		"Pattern", "Control", "Asset", "Fail%", "Cycles", "Confidence")
-	fmt.Fprintf(w, "%-14s %-30s %-30s %6s %5s %s\n",
-		strings.Repeat("-", 14), strings.Repeat("-", 30), strings.Repeat("-", 30),
-		strings.Repeat("-", 6), strings.Repeat("-", 5), strings.Repeat("-", 10))
-
-	for i := range results {
-		r := &results[i]
-		fmt.Fprintf(w, "%-14s %-30s %-30s %5.0f%% %5d %.2f\n",
-			r.Pattern, truncate(r.ControlID, 30), truncate(r.AssetID, 30),
-			r.FailureRate*100, r.Cycles, r.Confidence)
-	}
-}
-
-func truncate(s string, limit int) string {
-	if len(s) <= limit {
-		return s
-	}
-	return s[:limit-3] + "..."
 }

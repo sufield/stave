@@ -1,9 +1,12 @@
 package sla
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestLoadEmbedded_Default(t *testing.T) {
@@ -160,5 +163,20 @@ func TestDeadlineHoursFor_UnknownSeverity(t *testing.T) {
 	p, _ := LoadEmbedded("default")
 	if p.DeadlineHoursFor("info") != 0 {
 		t.Errorf("info severity should return 0, got %f", p.DeadlineHoursFor("info"))
+	}
+}
+
+func TestValidate_ErrorIdentityPreserved(t *testing.T) {
+	p := &Policy{
+		Deadlines:        DeadlineTiers{Critical: "", High: "24h", Medium: "168h", Low: "720h"},
+		EscalationFactor: 2.0,
+	}
+	err := p.Validate()
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+
+	if !errors.Is(err, kernel.ErrEmptyDuration) {
+		t.Errorf("expected error to wrap kernel.ErrEmptyDuration, but it did not: %v", err)
 	}
 }

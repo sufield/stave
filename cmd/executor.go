@@ -82,11 +82,12 @@ func (a *App) execute() {
 	// SIGINT exit path matches the other two for log/profile fidelity.
 	if a.Root.Context() != nil && a.Root.Context().Err() != nil {
 		a.cleanupBeforeExit()
-		a.ExitFunc(ui.ExitInterrupted)
+		a.exit(ui.ExitInterrupted)
 		return
 	}
 
 	a.finalizeExecute(args)
+	a.releaseResources(a.Root)
 }
 
 // installInterruptHandler uses os.Stderr directly because signal handlers
@@ -161,14 +162,14 @@ func (a *App) installInterruptHandler() func() {
 				// Force the process exit even if the main
 				// goroutine is wedged inside a non-ctx-aware
 				// syscall (e.g. a long disk read that the
-				// cancelled ctx cannot unwind). The earlier shape
+				// Cancelled ctx cannot unwind). The earlier shape
 				// returned without exiting, deferring exit to the
 				// main goroutine — fine when RunE actually wakes
 				// up on ctx cancellation, but a hang otherwise.
 				// ExitFunc IS the test seam for SIGINT handling,
 				// so calling it here does not bypass any test
 				// hooks. Mirrors the pre-bootstrap path below.
-				a.ExitFunc(ui.ExitInterrupted)
+				a.exit(ui.ExitInterrupted)
 				return
 			}
 			// Pre-bootstrap signal: cancel function not yet stored.
@@ -183,7 +184,7 @@ func (a *App) installInterruptHandler() func() {
 			// leaks.
 			a.cleanupBeforeExit()
 			cleanup()
-			a.ExitFunc(ui.ExitInterrupted)
+			a.exit(ui.ExitInterrupted)
 		case <-done:
 			return
 		}
@@ -310,7 +311,7 @@ func (a *App) handleExecutionError(err error) {
 	// audit log entries describing the failure itself.
 	a.cleanupBeforeExit()
 
-	a.ExitFunc(exitCode)
+	a.exit(exitCode)
 }
 
 // cleanupBeforeExit releases process-level resources that postRun
@@ -381,4 +382,11 @@ func (a *App) finalizeExecute(args []string) {
 	}
 	projectRoot := persistSessionStateIfApplicable(resolver, args)
 	a.printWorkflowHandoff(args, projectRoot)
+	a.releaseResources(a.Root)
+}
+
+func (a *App) exit(code int) {
+	a.exitOnce.Do(func() {
+		a.ExitFunc(code)
+	})
 }

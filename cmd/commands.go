@@ -7,8 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/internal/core/asset"
-
 	"github.com/sufield/stave/cmd/apply"
 	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
 	applyverify "github.com/sufield/stave/cmd/apply/verify"
@@ -26,8 +24,6 @@ import (
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
 	"github.com/sufield/stave/cmd/doctor"
 	"github.com/sufield/stave/cmd/enforce"
-	"github.com/sufield/stave/cmd/enforce/fix"
-	"github.com/sufield/stave/cmd/enforce/gate"
 	staveexempt "github.com/sufield/stave/cmd/exempt"
 	"github.com/sufield/stave/cmd/expand"
 	staveexport "github.com/sufield/stave/cmd/export"
@@ -58,13 +54,10 @@ import (
 	stavetrend "github.com/sufield/stave/cmd/trend"
 	validatemapping "github.com/sufield/stave/cmd/validatemapping"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
-	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
 	infrareport "github.com/sufield/stave/internal/adapters/report"
-	infrafix "github.com/sufield/stave/internal/app/fix"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/core/reporting"
-	"github.com/sufield/stave/internal/core/usecase"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -90,11 +83,6 @@ func WireCommands(app *App) error {
 	root := app.Root
 	f := compose.DefaultFactories()
 
-	// Convenience closures for commands that need composed loaders.
-	loadSnapshots := func(ctx context.Context, dir string) ([]asset.Snapshot, error) {
-		return compose.LoadSnapshotsFrom(ctx, f.NewObsRepo, dir)
-	}
-
 	// Getting started
 	root.AddCommand(initcmd.NewGenerateCmd())
 
@@ -113,7 +101,7 @@ func WireCommands(app *App) error {
 		return fmt.Errorf("validate apply deps: %w", err)
 	}
 	root.AddCommand(apply.NewApplyCmd(applyDeps))
-	root.AddCommand(applyverify.NewCmd(f.NewObsRepo, f.NewCtlRepo, f.NewCELEvaluator, ui.DefaultRuntime()))
+	root.AddCommand(applyverify.NewCmd(ui.DefaultRuntime()))
 	diagnoseCmd := diagnose.NewDiagnoseCmd(f.NewObsRepo, f.NewCtlRepo)
 	diagnoseCmd.AddCommand(diagnose.NewTraceCmd(f.NewCtlRepo, f.NewSnapshotRepo))
 	diagnoseCmd.AddCommand(diagnose.NewExplainNarrativeCmd())
@@ -150,7 +138,7 @@ func WireCommands(app *App) error {
 		Args:  cobra.NoArgs,
 	}
 	root.AddCommand(snapshotCmd)
-	wireSnapshotSubtree(snapshotCmd, loadSnapshots)
+	wireSnapshotSubtree(snapshotCmd)
 
 	ciCmd := &cobra.Command{
 		Use:   "ci",
@@ -159,9 +147,7 @@ func WireCommands(app *App) error {
 		Args:  cobra.NoArgs,
 	}
 	root.AddCommand(ciCmd)
-	if err := wireCISubtree(ciCmd, f.NewCELEvaluator, f.NewCtlRepo, f.NewObsRepo); err != nil {
-		return err
-	}
+	wireCISubtree(ciCmd)
 
 	// Capability scope
 	root.AddCommand(stavefeatures.NewCmd())
@@ -170,7 +156,7 @@ func WireCommands(app *App) error {
 	root.AddCommand(stavefingerprint.NewCmd())
 
 	// Export & Interop
-	root.AddCommand(staveexport.NewCmd(f.NewCtlRepo, f.NewCELEvaluator))
+	root.AddCommand(staveexport.NewCmd())
 	root.AddCommand(staveexportinvariants.NewCmd())
 	root.AddCommand(staveexportsir.NewCmd())
 
@@ -191,10 +177,7 @@ func WireCommands(app *App) error {
 	root.AddCommand(stavecelcmd.NewCmd())
 
 	// Security chronology
-	root.AddCommand(stavebisect.NewCmd(stavebisect.Deps{
-		NewCtlRepo:      f.NewCtlRepo,
-		NewCELEvaluator: f.NewCELEvaluator,
-	}))
+	root.AddCommand(stavebisect.NewCmd())
 
 	// Evidence bundling
 	root.AddCommand(stavebundle.NewCmd())
@@ -209,9 +192,7 @@ func WireCommands(app *App) error {
 	root.AddCommand(stavetrend.NewCmd())
 
 	// Risk acceptance management
-	root.AddCommand(staveexempt.NewCmd(staveexempt.Deps{
-		NewBuiltinControlStore: f.NewBuiltinControlStore,
-	}))
+	root.AddCommand(staveexempt.NewCmd())
 
 	// ATT&CK coverage map
 	root.AddCommand(stavemap.NewCmd())
@@ -287,7 +268,7 @@ func WireCommands(app *App) error {
 
 	// Supportability
 	root.AddCommand(doctor.NewCmd())
-	root.AddCommand(enforce.NewGraphCmd(f.NewCtlRepo, loadSnapshots))
+	root.AddCommand(enforce.NewGraphCmd())
 	root.AddCommand(initalias.NewCmd(root))
 	{
 		capabilitiesCmd := newCapabilitiesCmd()
@@ -303,40 +284,20 @@ func WireCommands(app *App) error {
 	return nil
 }
 
-func wireSnapshotSubtree(
-	snapshotCmd *cobra.Command,
-	loadSnapshots compose.SnapshotLoader,
-) {
-	snapshotCmd.AddCommand(enforce.NewDiffCmd(loadSnapshots))
+func wireSnapshotSubtree(snapshotCmd *cobra.Command) {
+	snapshotCmd.AddCommand(enforce.NewDiffCmd())
 }
 
-func wireCISubtree(
-	ciCmd *cobra.Command,
-	newCELEvaluator compose.CELEvaluatorFactory,
-	newCtlRepo compose.CtlRepoFactory,
-	newObsRepo compose.ObsRepoFactory,
-) error {
+func wireCISubtree(ciCmd *cobra.Command) {
 	ciCmd.AddCommand(enforce.NewBaselineCmd())
 	// Gate adapters (FindingsCounter, BaselineComparer, OverdueCounter)
-	// are now wired internally by pkg/stave.Gate; the gate command
-	// no longer accepts dependency injection at this boundary.
-	ciCmd.AddCommand(enforce.NewGateCmd(gate.Deps{}))
-	ciCmd.AddCommand(enforce.NewFixLoopCmd(fix.LoopDeps{
-		NewCELEvaluator: newCELEvaluator,
-		NewCtlRepo:      newCtlRepo,
-		NewObsRepo:      newObsRepo,
-	}))
+	// are now wired internally by pkg/stave.Gate; fix / fix-loop wire
+	// their own adapters through pkg/stave too — the CI subcommands no
+	// longer accept dependency injection at this boundary.
+	ciCmd.AddCommand(enforce.NewGateCmd())
+	ciCmd.AddCommand(enforce.NewFixLoopCmd())
 	ciCmd.AddCommand(enforce.NewCiDiffCmd())
-	ciCmd.AddCommand(enforce.NewFixCmd(fix.Deps{
-		NewLoader: func() (usecase.FindingLoaderPort, error) {
-			celEval, err := newCELEvaluator()
-			if err != nil {
-				return nil, fmt.Errorf("initialize CEL evaluator for fix command: %w", err)
-			}
-			return infrafix.NewFindingLoader(celEval, fsutil.ReadFileLimited, evaljson.ParseFindings)
-		},
-	}))
-	return nil
+	ciCmd.AddCommand(enforce.NewFixCmd())
 }
 
 // assignCommandGroup stamps the named subcommand with the given help

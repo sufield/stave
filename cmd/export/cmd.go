@@ -4,12 +4,11 @@ package export
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/export/compliance"
 )
 
 // NewCmd creates the export parent command with compliance and standards subcommands.
-func NewCmd(newCtlRepo compose.CtlRepoFactory, newCELEvaluator compose.CELEvaluatorFactory) *cobra.Command {
+func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export controls and compliance evidence",
@@ -24,7 +23,7 @@ Subcommands:
 		SilenceErrors: true,
 	}
 
-	cmd.AddCommand(compliance.NewCmd(newCtlRepo, newCELEvaluator))
+	cmd.AddCommand(compliance.NewCmd())
 	cmd.AddCommand(newOCSFCmd())
 	cmd.AddCommand(newOSCALCmd())
 	cmd.AddCommand(newChangesCmd())

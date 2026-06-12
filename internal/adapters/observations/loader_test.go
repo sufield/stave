@@ -476,3 +476,58 @@ func TestObservationLoader_MixedBundleAndFlatFiles(t *testing.T) {
 		t.Errorf("snapshot count: got %d, want %d", got, want)
 	}
 }
+
+func TestParseBundle_InvalidSchemaVersion(t *testing.T) {
+	bundle := `{
+  "schema_version": "invalid-version",
+  "snapshots": [
+    {
+      "schema_version": "obs.v0.1",
+      "captured_at": "2026-01-01T00:00:00Z",
+      "source": "deployed",
+      "assets": []
+    }
+  ]
+}`
+	_, err := ParseBundle([]byte(bundle))
+	if err == nil {
+		t.Fatal("expected error for invalid bundle schema_version, got nil")
+	}
+	if !strings.Contains(err.Error(), "unsupported schema version") {
+		t.Errorf("expected error to mention unsupported schema version, got: %v", err)
+	}
+}
+
+func TestObservationLoader_isBundleFormat_AmbiguousFile(t *testing.T) {
+	dir := t.TempDir()
+	// A flat file that happens to include a snapshots key
+	content := `{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "assets": [
+    {
+      "id": "my-bucket",
+      "type": "storage_bucket",
+      "properties": {}
+    }
+  ],
+  "snapshots": [
+    {
+      "captured_at": "2026-01-01T00:00:00Z",
+      "assets": []
+    }
+  ]
+}`
+	if err := os.WriteFile(filepath.Join(dir, "flat.json"), []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	loader := NewObservationLoader()
+	_, err := loader.LoadSnapshots(context.Background(), dir)
+	if err == nil {
+		t.Fatal("expected error when loading flat file with snapshots key, got nil")
+	}
+	if !strings.Contains(err.Error(), "additional properties 'snapshots' not allowed") {
+		t.Errorf("expected error to mention additional properties, got: %v", err)
+	}
+}

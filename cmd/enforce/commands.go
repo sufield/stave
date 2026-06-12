@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/enforce/baseline"
 	"github.com/sufield/stave/cmd/enforce/cidiff"
 	"github.com/sufield/stave/cmd/enforce/diff"
@@ -22,23 +21,23 @@ import (
 func NewGenerateCmd() *cobra.Command { return generate.NewCmd() }
 
 // NewDiffCmd constructs the diffcmd component.
-func NewDiffCmd(loadSnapshots compose.SnapshotLoader) *cobra.Command {
-	return diff.NewCmd(loadSnapshots)
+func NewDiffCmd() *cobra.Command {
+	return diff.NewCmd()
 }
 
 // NewFixCmd constructs the fixcmd component.
-func NewFixCmd(deps fix.Deps) *cobra.Command {
-	return fix.NewFixCmd(deps)
+func NewFixCmd() *cobra.Command {
+	return fix.NewFixCmd()
 }
 
 // NewFixLoopCmd constructs the fixloopcmd component.
-func NewFixLoopCmd(deps fix.LoopDeps) *cobra.Command {
-	return fix.NewFixLoopCmd(deps)
+func NewFixLoopCmd() *cobra.Command {
+	return fix.NewFixLoopCmd()
 }
 
 // NewGateCmd constructs the gatecmd component.
-func NewGateCmd(deps gate.Deps) *cobra.Command {
-	return gate.NewCmd(deps)
+func NewGateCmd() *cobra.Command {
+	return gate.NewCmd()
 }
 
 // NewCiDiffCmd constructs the cidiffcmd component.
@@ -51,8 +50,8 @@ func NewBaselineCmd() *cobra.Command { return baseline.NewCmd() }
 func NewStatusCmd() *cobra.Command { return status.NewCmd() }
 
 // NewGraphCmd constructs the graphcmd component.
-func NewGraphCmd(newCtlRepo compose.CtlRepoFactory, loadSnapshots compose.SnapshotLoader) *cobra.Command {
-	return graph.NewCmd(newCtlRepo, loadSnapshots)
+func NewGraphCmd() *cobra.Command {
+	return graph.NewCmd()
 }
 
 // NextCommandForProject provides a high-level recommendation for the next

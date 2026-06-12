@@ -1,19 +1,11 @@
 package forge
 
 import (
-	"errors"
 	"fmt"
-	"io"
-	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/internal/adapters/observations"
-	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/core/predicate"
-
-	stavecel "github.com/sufield/stave/internal/adapters/cel"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 func newPreviewCmd() *cobra.Command {
@@ -44,7 +36,11 @@ Examples:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runPreview(cmd.OutOrStdout(), snapshot, assetType, field, op, value, predicateExpr)
+			out, err := stave.ForgePreview(snapshot, assetType, field, op, value, predicateExpr)
+			if _, werr := cmd.OutOrStdout().Write(out); werr != nil && err == nil {
+				return fmt.Errorf("write preview output: %w", werr)
+			}
+			return err //nolint:wrapcheck // facade already wrapped; preserve exit codes.
 		},
 	}
 
@@ -57,86 +53,4 @@ Examples:
 	_ = cmd.MarkFlagRequired("snapshot")
 
 	return cmd
-}
-
-func runPreview(w io.Writer, snapshotPath, assetType, field, op, value, predicateExpr string) error {
-	if field == "" && predicateExpr == "" {
-		return errors.New("either --field or --predicate is required")
-	}
-
-	snapshots, err := observations.LoadBundle(snapshotPath)
-	if err != nil {
-		return fmt.Errorf("load snapshot: %w", err)
-	}
-	if len(snapshots) == 0 {
-		return errors.New("snapshot file contains no observations")
-	}
-	snap := &snapshots[len(snapshots)-1]
-
-	// Build a synthetic control definition for evaluation.
-	ctl := policy.ControlDefinition{
-		DSLVersion: "ctrl.v1",
-		ID:         kernel.ControlID("CTL.FORGE.PREVIEW.000"),
-		Name:       "Forge Preview",
-		Type:       policy.TypeUnsafeState,
-	}
-
-	if field != "" {
-		ctl.UnsafePredicate = policy.UnsafePredicate{
-			All: []policy.PredicateRule{{
-				Field: predicate.NewFieldPath(field),
-				Op:    predicate.Operator(op),
-				Value: policy.NewOperand(parseValue(value)),
-			}},
-		}
-	}
-
-	// Create CEL evaluator.
-	celEval, err := stavecel.NewPredicateEval()
-	if err != nil {
-		return fmt.Errorf("init CEL evaluator: %w", err)
-	}
-
-	// Prepare the control for evaluation.
-	if err := ctl.Prepare(); err != nil {
-		return fmt.Errorf("prepare control: %w", err)
-	}
-
-	// Evaluate against matching assets.
-	var failCount, passCount, errCount int
-	for i := range snap.Assets {
-		a := &snap.Assets[i]
-		if assetType != "" && string(a.Type) != assetType {
-			continue
-		}
-
-		unsafe, evalErr := celEval(ctl, *a, nil)
-		if evalErr != nil {
-			fmt.Fprintf(w, "  ERROR  %s  %v\n", a.ID, evalErr)
-			errCount++
-			continue
-		}
-
-		if unsafe {
-			fmt.Fprintf(w, "  FAIL   %s\n", a.ID)
-			failCount++
-		} else {
-			fmt.Fprintf(w, "  PASS   %s\n", a.ID)
-			passCount++
-		}
-	}
-
-	fmt.Fprintf(w, "\n%d FAIL  |  %d PASS  |  %d ERROR\n", failCount, passCount, errCount)
-	return nil
-}
-
-// parseValue converts a string flag value to its typed equivalent.
-func parseValue(s string) any {
-	switch strings.ToLower(s) {
-	case "true":
-		return true
-	case "false":
-		return false
-	}
-	return s
 }

@@ -1,7 +1,7 @@
 package graph
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -9,10 +9,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	graphpkg "github.com/sufield/stave/internal/adapters/graph"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type exportOptions struct {
@@ -71,26 +70,19 @@ func runExport(stdout io.Writer, opts *exportOptions) error {
 		return &ui.UserError{Err: fmt.Errorf("read assessment: %w", err)}
 	}
 
-	var assessment report.Assessment
-	if err := json.Unmarshal(data, &assessment); err != nil {
-		return &ui.UserError{Err: fmt.Errorf("parse assessment: %w", err)}
+	out, err := stave.ExportAssessmentGraph(data, opts.Format, opts.OutputFile, time.Now().UTC())
+	if err != nil {
+		if errors.Is(err, stave.ErrInvalidInput) {
+			return &ui.UserError{Err: err}
+		}
+		return err //nolint:wrapcheck // facade already wrapped ("render..."/"unsupported format"); preserve exit codes.
 	}
 
-	g := graphpkg.Build(graphpkg.BuildInput{
-		Findings:      assessment.Findings,
-		ChainFindings: assessment.ChainFindings,
-		Now:           time.Now().UTC(),
-		SourcePath:    opts.OutputFile,
-	})
-
-	renderer, rendErr := NewRenderer(opts.Format)
-	if rendErr != nil {
-		return rendErr
-	}
-	if err := cmdutil.WriteTo(stdout, opts.OutPath, func(out io.Writer) error {
-		return renderer.Render(out, g)
-	}); err != nil {
-		return fmt.Errorf("write graph export: %w", err)
+	if writeErr := cmdutil.WriteTo(stdout, opts.OutPath, func(w io.Writer) error {
+		_, e := w.Write(out)
+		return e
+	}); writeErr != nil {
+		return fmt.Errorf("write graph export: %w", writeErr)
 	}
 	return nil
 }

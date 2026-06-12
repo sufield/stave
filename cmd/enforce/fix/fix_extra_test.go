@@ -53,21 +53,3 @@ func TestLoopOptions_ResolveConfigDefaults_NilDefaults(t *testing.T) {
 		t.Fatalf("MaxUnsafeRaw changed: %q", opts.MaxUnsafeRaw)
 	}
 }
-
-func TestBuildLoopInfra_NilCtlRepo(t *testing.T) {
-	runner := newTestRunner(t)
-	runner.NewCtlRepo = nil
-	_, err := runner.buildLoopInfra(LoopRequest{})
-	if err == nil {
-		t.Fatal("expected error for nil NewCtlRepo")
-	}
-}
-
-func TestBuildLoopInfra_NilObsRepo(t *testing.T) {
-	runner := newTestRunner(t)
-	runner.NewObsRepo = nil
-	_, err := runner.buildLoopInfra(LoopRequest{})
-	if err == nil {
-		t.Fatal("expected error for nil NewObsRepo")
-	}
-}

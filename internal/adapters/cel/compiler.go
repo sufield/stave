@@ -371,12 +371,41 @@ func isSafeParamName(s string) bool {
 // ruleToExpr converts a single PredicateRule to a CEL expression.
 // scopeVar is passed through for field resolution and recursive calls.
 func ruleToExpr(r *policy.PredicateRule, scopeVar string, depth int) (string, error) {
-	// Handle nested logic blocks (recursive any/all)
-	if len(r.Any) > 0 || len(r.All) > 0 {
+	// Compile nested logic blocks (recursive any/all) if present
+	var nestedExpr string
+	var err error
+	hasNested := len(r.Any) > 0 || len(r.All) > 0
+	if hasNested {
 		nested := policy.UnsafePredicate{Any: r.Any, All: r.All}
-		return predicateToExpr(nested, scopeVar, depth+1)
+		nestedExpr, err = predicateToExpr(nested, scopeVar, depth+1)
+		if err != nil {
+			return "", err
+		}
 	}
 
+	field := r.Field.String()
+	op := r.Op
+
+	// If there's no field condition (i.e. empty field and op), and we have nested expressions:
+	if field == "" && op == "" && hasNested {
+		return nestedExpr, nil
+	}
+
+	// Otherwise, compile the field condition
+	fieldExpr, err := ruleFieldConditionToExpr(r, scopeVar, depth)
+	if err != nil {
+		return "", err
+	}
+
+	if hasNested && nestedExpr != "" {
+		return fmt.Sprintf("(%s && %s)", fieldExpr, nestedExpr), nil
+	}
+
+	return fieldExpr, nil
+}
+
+// ruleFieldConditionToExpr compiles only the field condition portion of a PredicateRule.
+func ruleFieldConditionToExpr(r *policy.PredicateRule, scopeVar string, depth int) (string, error) {
 	field := r.Field.String()
 	op := r.Op
 	val := r.Value.Raw()
@@ -445,7 +474,7 @@ func ruleToExpr(r *policy.PredicateRule, scopeVar string, depth int) (string, er
 	case predicate.OpIn:
 		return resolveAndFormatBinary("op in", "(%s && %s in %s)", val, hf, fa, resolveValueExpr)
 	case predicate.OpContains:
-		return resolveAndFormatBinary("op contains", "(%s && string(%s).contains(%s))", val, hf, fa, resolveValueExpr)
+		return resolveAndFormatBinary("op contains", "(%[1]s && (type(%[2]s) == type([]) ? %[3]s in %[2]s : (type(%[2]s) == type(\"\") ? string(%[2]s).contains(%[3]s) : false)))", val, hf, fa, resolveValueExpr)
 	case predicate.OpMissing:
 		return ruleToExprMissing(val, hf, fa)
 	case predicate.OpPresent:

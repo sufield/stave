@@ -433,8 +433,8 @@ func (p *ControlParams) Set(key string, value any) {
 // Len returns the number of parameters.
 func (p ControlParams) Len() int { return len(p.m) }
 
-// IsZero reports whether the inner map is nil.
-func (p ControlParams) IsZero() bool { return p.m == nil }
+// IsZero reports whether the inner map is empty or nil.
+func (p ControlParams) IsZero() bool { return len(p.m) == 0 }
 
 // HasKey returns true if the parameter key exists.
 func (p ControlParams) HasKey(key string) bool {

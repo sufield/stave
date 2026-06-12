@@ -1,15 +1,8 @@
 package diff
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/convert"
-	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -44,58 +37,4 @@ func (o *Options) BindFlags(cmd *cobra.Command) {
 func (o *Options) Prepare(_ *cobra.Command) error {
 	o.ObservationsDir = fsutil.CleanUserPath(o.ObservationsDir)
 	return nil
-}
-
-// toConfig converts raw CLI options into a validated logic configuration.
-// Standalone function — does not depend on cobra.
-func toConfig(o *Options) (config, error) {
-	format, err := compose.ResolveFormatValue(o.Format)
-	if err != nil {
-		return config{}, fmt.Errorf("resolve output format: %w", err)
-	}
-
-	filter, err := buildFilter(o)
-	if err != nil {
-		return config{}, err
-	}
-
-	return config{
-		ObservationsDir: o.ObservationsDir,
-		Format:          format,
-		Filter:          filter,
-	}, nil
-}
-
-func buildFilter(o *Options) (asset.FilterOptions, error) {
-	changeTypes, err := parseChangeTypes(o.ChangeTypes)
-	if err != nil {
-		return asset.FilterOptions{}, err
-	}
-	return asset.FilterOptions{
-		ChangeTypes: changeTypes,
-		AssetTypes:  convert.ToAssetTypes(o.AssetTypes),
-		AssetID:     strings.TrimSpace(o.AssetID),
-	}, nil
-}
-
-// parseChangeTypes validates and converts raw strings to asset.DriftType values.
-func parseChangeTypes(raw []string) ([]asset.DriftType, error) {
-	if len(raw) == 0 {
-		return nil, nil
-	}
-	out := make([]asset.DriftType, 0, len(raw))
-	for _, s := range raw {
-		val := strings.ToUpper(strings.TrimSpace(s))
-		if val == "" {
-			continue
-		}
-		ct := asset.DriftType(val)
-		if !ct.IsValid() {
-			return nil, &ui.UserError{
-				Err: fmt.Errorf("invalid --change-type %q (supported: PROVISIONED, DECOMMISSIONED, RECONFIGURED)", s),
-			}
-		}
-		out = append(out, ct)
-	}
-	return out, nil
 }

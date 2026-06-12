@@ -80,15 +80,12 @@ func (r *EffectivePermissionResolver) ResolveSnapshot(snap *asset.Snapshot) []po
 		// same field as a real policy condition.
 		for i := range perms.ResourcePolicyGrants {
 			g := &perms.ResourcePolicyGrants[i]
-			conds := []string{}
+			var conds []string
 			if g.IsCrossAccount {
 				conds = append(conds, "synthetic:is_cross_account=true")
 			}
 			if g.IsPublic {
 				conds = append(conds, "synthetic:is_public=true")
-			}
-			if len(conds) == 0 {
-				conds = nil
 			}
 			for _, action := range g.Actions {
 				out = append(out, ports.EffectivePermission{

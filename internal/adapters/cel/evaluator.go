@@ -92,6 +92,14 @@ func stringifyValue(v any) any {
 	// reflect path, which loses signedness on uint64.
 	case bool, float64, float32, int, int32, int64, uint, uint32, uint64:
 		return val
+	case int8:
+		return int(val)
+	case int16:
+		return int(val)
+	case uint8:
+		return uint(val)
+	case uint16:
+		return uint(val)
 	case map[string]any:
 		return stringifyNamedTypes(val) // returns new map, no mutation
 	case []any:
@@ -105,6 +113,12 @@ func stringifyValue(v any) any {
 		switch rv.Kind() {
 		case reflect.String:
 			return rv.String()
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			return rv.Int()
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			return rv.Uint()
+		case reflect.Float32, reflect.Float64:
+			return rv.Float()
 		case reflect.Slice, reflect.Array:
 			// Concrete typed slices like []map[string]any or
 			// []asset.CloudIdentity do not match `case []any` above,

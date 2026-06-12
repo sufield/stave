@@ -36,6 +36,8 @@ func (d *Diagnostic) IsError() bool {
 	return d != nil && d.Severity == SeverityError
 }
 
+var idPattern = regexp.MustCompile(`^[A-Z]+\.[A-Z0-9_]+\.[0-9]{3}$`)
+
 // Linter performs quality checks on control YAML definitions.
 type Linter struct {
 	idPattern *regexp.Regexp
@@ -44,7 +46,7 @@ type Linter struct {
 // NewLinter creates a Linter with the standard rule set.
 func NewLinter() *Linter {
 	return &Linter{
-		idPattern: regexp.MustCompile(`^[A-Z]+\.[A-Z0-9_]+\.[0-9]{3}$`),
+		idPattern: idPattern,
 	}
 }
 
