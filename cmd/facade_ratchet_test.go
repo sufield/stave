@@ -73,6 +73,7 @@ var facadeCleanBaseline = map[string]bool{
 	"exportinvariants":   true,
 	"features":           true,
 	"fingerprint":        true,
+	"forge":              true,
 	"gaps":               true,
 	"initcmd":            true,
 	"initcmd/alias":      true,

@@ -150,6 +150,16 @@
 //	PredictReadiness   — compliance-readiness achievement-date projection (text/json).
 //	ForecastPosture    — posture-score trajectory + SLA status (table/json).
 //	ClassifyOscillation — violation oscillation patterns (table/json).
+//	ForgePreview / ForgeLivePreview — CEL-evaluate a synthetic predicate
+//	                   against a snapshot (control-authoring preview).
+//	ForgePaths         — enumerate property paths for an asset type.
+//	ForgeSnapshotAssetCount / ForgeSnapshotAssetTypes — snapshot inspection
+//	                   for the authoring wizard.
+//	ForgeScaffold      — write pass/fail fixtures for a control.
+//	ForgeLint          — lint a control (or directory) for schema/semantics.
+//	ForgeChainLint     — lint a chain file against a controls directory.
+//	ForgeTest          — fixture-based pass/fail assertions for a control.
+//	ForgeValidateGenerated — validate a freshly generated control YAML.
 //
 // See docs/architecture/pkg-stave-facade.md for the facade pattern,
 // the rule cmd/ should obey ("imports only pkg/stave"), and the

@@ -1,7 +1,6 @@
-package forge
+package forgecmd
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,7 +13,7 @@ import (
 const minimalValidControl = `dsl_version: ctrl.v1
 id: CTL.FORGE.TEST.001
 name: Forge Test Control
-description: Fixture control for validateGeneratedControl tests.
+description: Fixture control for ValidateGenerated tests.
 domain: resilience
 severity: medium
 type: unsafe_state
@@ -40,17 +39,17 @@ func writeControl(t *testing.T, dir, name, body string) {
 	}
 }
 
-func TestValidateGeneratedControl_ExactMatchPasses(t *testing.T) {
+func TestValidateGenerated_ExactMatchPasses(t *testing.T) {
 	out := t.TempDir()
 	writeControl(t, out, "CTL.FORGE.TEST.001.yaml", minimalValidControl)
 
-	var buf bytes.Buffer
-	if err := validateGeneratedControl(&buf, "CTL.FORGE.TEST.001", out); err != nil {
-		t.Fatalf("valid exact-named control must validate, got: %v\n%s", err, buf.String())
+	report, err := ValidateGenerated("CTL.FORGE.TEST.001", out)
+	if err != nil {
+		t.Fatalf("valid exact-named control must validate, got: %v\n%s", err, report)
 	}
 }
 
-func TestValidateGeneratedControl_SubstringSiblingNotValidated(t *testing.T) {
+func TestValidateGenerated_SubstringSiblingNotValidated(t *testing.T) {
 	// Only a sibling whose basename CONTAINS the control ID is present —
 	// the exact <controlID>.yaml was never generated. The old Contains
 	// match would validate this sibling; the exact match must ignore it
@@ -58,27 +57,25 @@ func TestValidateGeneratedControl_SubstringSiblingNotValidated(t *testing.T) {
 	out := t.TempDir()
 	writeControl(t, out, "CTL.FORGE.TEST.001_v2.yaml", minimalValidControl)
 
-	var buf bytes.Buffer
-	err := validateGeneratedControl(&buf, "CTL.FORGE.TEST.001", out)
+	report, err := ValidateGenerated("CTL.FORGE.TEST.001", out)
 	if err == nil {
-		t.Fatalf("a basename-contains sibling must NOT satisfy validation; want error, got nil\n%s", buf.String())
+		t.Fatalf("a basename-contains sibling must NOT satisfy validation; want error, got nil\n%s", report)
 	}
 	if !strings.Contains(err.Error(), "not found") {
 		t.Errorf("want 'not found' error, got: %v", err)
 	}
 }
 
-func TestValidateGeneratedControl_MissingYAMLFailsLoud(t *testing.T) {
+func TestValidateGenerated_MissingYAMLFailsLoud(t *testing.T) {
 	// Generation produced nothing. Must fail loud, not report SKIPPED
 	// success and ship a missing control.
 	out := t.TempDir()
 
-	var buf bytes.Buffer
-	err := validateGeneratedControl(&buf, "CTL.FORGE.TEST.001", out)
+	report, err := ValidateGenerated("CTL.FORGE.TEST.001", out)
 	if err == nil {
-		t.Fatalf("missing generated YAML must return an error, got nil\n%s", buf.String())
+		t.Fatalf("missing generated YAML must return an error, got nil\n%s", report)
 	}
-	if strings.Contains(buf.String(), "SKIPPED") {
-		t.Errorf("missing output must not be reported as SKIPPED success; output:\n%s", buf.String())
+	if strings.Contains(string(report), "SKIPPED") {
+		t.Errorf("missing output must not be reported as SKIPPED success; output:\n%s", report)
 	}
 }

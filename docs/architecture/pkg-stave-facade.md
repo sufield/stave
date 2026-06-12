@@ -56,10 +56,14 @@ the nepcmd/graphcmd engine-subpkg pattern):
 - `trend` — migrated 2026-06-12 into pkg/stave/internal/trendcmd
   (TrendReport / PredictReadiness / ForecastPosture / ClassifyOscillation;
   the pager + --out write + stderr load-warnings stayed command-side).
-- `forge` (~1784, 7 subcommands incl. an interactive 11-step authoring
-  wizard — route each compute step through facade fns taking the
-  snapshot PATH not the loaded snapshot; keep w.selectOption/readLine/
-  confirm command-side).
+- `forge` — migrated 2026-06-12 into pkg/stave/internal/forgecmd
+  (ForgePreview / ForgeLivePreview / ForgePaths / ForgeSnapshotAssetCount /
+  ForgeSnapshotAssetTypes / ForgeScaffold / ForgeLint / ForgeChainLint /
+  ForgeTest / ForgeValidateGenerated). Each compute step of the
+  interactive 11-step `new` wizard routes through a facade fn taking the
+  snapshot PATH (re-loaded per call); the w.selectOption/readLine/confirm
+  prompts, the gencontrol subprocess exec, and the file writes stayed
+  command-side. cmd/forge now imports only pkg/stave + the exempt fsutil.
 
 None are blocked — just large. Each deserves a focused pass.
 

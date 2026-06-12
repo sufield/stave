@@ -1,7 +1,6 @@
 package forge
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -9,13 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/internal/adapters/observations"
-	"github.com/sufield/stave/internal/core/asset"
-	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/core/predicate"
-
-	stavecel "github.com/sufield/stave/internal/adapters/cel"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 func newNewCmd() *cobra.Command {
@@ -111,6 +104,16 @@ var (
 	}
 )
 
+var knownAssetTypes = []string{
+	"aws_s3_bucket", "aws_iam_role", "aws_iam_user", "aws_ec2_instance",
+	"aws_rds_instance", "aws_lambda_function", "aws_ecs_task_definition",
+	"aws_eks_cluster", "aws_vpc_security_group", "aws_kms_key",
+}
+
+// runWizard drives the 11-step interactive authoring loop. The prompts +
+// stdin reads stay here; each compute step (snapshot inspection, path
+// enumeration, live preview, generation) routes through the pkg/stave facade,
+// so this command holds no internal types — only the snapshot PATH.
 func runWizard(in io.Reader, out io.Writer, cmd *cobra.Command, snapshotPath string) error {
 	w := newWizard(in, out)
 
@@ -119,23 +122,25 @@ func runWizard(in io.Reader, out io.Writer, cmd *cobra.Command, snapshotPath str
 	fmt.Fprintln(out, strings.Repeat("=", 40))
 	fmt.Fprintln(out, "")
 
-	// Load snapshot if provided.
-	var snap *asset.Snapshot
+	// Load snapshot for path discovery + live preview.
+	var snapLoaded bool
 	if snapshotPath != "" {
-		snapshots, err := observations.LoadBundle(snapshotPath)
+		count, loaded, err := stave.ForgeSnapshotAssetCount(snapshotPath)
 		if err != nil {
 			fmt.Fprintf(out, "Warning: could not load snapshot: %v\n", err)
-		} else if len(snapshots) > 0 {
-			snap = &snapshots[len(snapshots)-1]
-			fmt.Fprintf(out, "Loaded snapshot with %d assets.\n\n", len(snap.Assets))
+		} else if loaded {
+			snapLoaded = true
+			fmt.Fprintf(out, "Loaded snapshot with %d assets.\n\n", count)
 		}
 	}
 
 	// Step 1: Asset type.
 	fmt.Fprintln(out, "Step 1 of 11: Asset Type")
 	assetTypes := knownAssetTypes
-	if snap != nil {
-		assetTypes = discoverAssetTypes(snap)
+	if snapLoaded {
+		if types, err := stave.ForgeSnapshotAssetTypes(snapshotPath); err == nil && len(types) > 0 {
+			assetTypes = types
+		}
 	}
 	selectedType := w.selectOption("What type of asset does this control evaluate?", assetTypes)
 	fmt.Fprintln(out, "")
@@ -166,16 +171,12 @@ func runWizard(in io.Reader, out io.Writer, cmd *cobra.Command, snapshotPath str
 	// Step 6: Property path.
 	fmt.Fprintln(out, "Step 6 of 11: Property Path")
 	var selectedField string
-	if snap != nil {
-		var pathsBuf bytes.Buffer
-		if pathsErr := runPaths(&pathsBuf, snapshotPath, selectedType, ""); pathsErr != nil {
-			// runPaths is informational here — surface the failure as a
-			// hint instead of aborting the wizard. Without this, an
-			// unreadable snapshot silently produced an empty path
-			// suggestion list and the operator typed paths blind.
+	if snapLoaded {
+		pathsBytes, pathsErr := stave.ForgePaths(snapshotPath, selectedType, "")
+		if pathsErr != nil {
 			fmt.Fprintf(out, "(could not enumerate paths: %v)\n", pathsErr)
 		} else {
-			fmt.Fprintln(out, pathsBuf.String())
+			fmt.Fprintln(out, string(pathsBytes))
 		}
 		fmt.Fprintln(out, "")
 		selectedField = w.readLine("Enter the property path to evaluate:")
@@ -194,13 +195,13 @@ func runWizard(in io.Reader, out io.Writer, cmd *cobra.Command, snapshotPath str
 	fmt.Fprintln(out, "")
 
 	// Step 8: Live preview.
-	if snap != nil {
+	if snapLoaded {
 		fmt.Fprintln(out, "Step 8 of 11: Live Preview")
-		runLivePreview(out, snap, selectedType, selectedField, selectedOp, selectedValue)
+		writeLivePreview(out, snapshotPath, selectedType, selectedField, selectedOp, selectedValue)
 		if !w.confirm("Is this the behavior you intended?") {
 			selectedOp = w.selectOption("Operator:", operatorOptions)
 			selectedValue = w.readLineDefault("Unsafe value:", selectedValue)
-			runLivePreview(out, snap, selectedType, selectedField, selectedOp, selectedValue)
+			writeLivePreview(out, snapshotPath, selectedType, selectedField, selectedOp, selectedValue)
 		}
 		fmt.Fprintln(out, "")
 	} else {
@@ -256,67 +257,12 @@ func runWizard(in io.Reader, out io.Writer, cmd *cobra.Command, snapshotPath str
 	})
 }
 
-func runLivePreview(out io.Writer, snap *asset.Snapshot, assetType, field, op, value string) {
-	celEval, err := stavecel.NewPredicateEval()
+// writeLivePreview renders the wizard's live-preview block via the facade.
+func writeLivePreview(out io.Writer, snapshotPath, assetType, field, op, value string) {
+	preview, err := stave.ForgeLivePreview(snapshotPath, assetType, field, op, value)
 	if err != nil {
-		fmt.Fprintf(out, "  CEL evaluator error: %v\n", err)
+		fmt.Fprintf(out, "  preview error: %v\n", err)
 		return
 	}
-	ctl := policy.ControlDefinition{
-		DSLVersion: "ctrl.v1",
-		ID:         kernel.ControlID("CTL.FORGE.PREVIEW.000"),
-		Name:       "Live Preview",
-		Type:       policy.TypeUnsafeState,
-		UnsafePredicate: policy.UnsafePredicate{
-			All: []policy.PredicateRule{{
-				Field: predicate.NewFieldPath(field),
-				Op:    predicate.Operator(op),
-				Value: policy.NewOperand(parseValue(value)),
-			}},
-		},
-	}
-	if err := ctl.Prepare(); err != nil {
-		fmt.Fprintf(out, "  Predicate error: %v\n", err)
-		return
-	}
-	var failCount, passCount int
-	for i := range snap.Assets {
-		a := &snap.Assets[i]
-		if assetType != "" && string(a.Type) != assetType {
-			continue
-		}
-		unsafe, evalErr := celEval(ctl, *a, nil)
-		if evalErr != nil {
-			continue
-		}
-		if unsafe {
-			fmt.Fprintf(out, "  FAIL  %s\n", a.ID)
-			failCount++
-		} else {
-			fmt.Fprintf(out, "  PASS  %s\n", a.ID)
-			passCount++
-		}
-	}
-	fmt.Fprintf(out, "\n%d FAIL  |  %d PASS\n\n", failCount, passCount)
-}
-
-var knownAssetTypes = []string{
-	"aws_s3_bucket", "aws_iam_role", "aws_iam_user", "aws_ec2_instance",
-	"aws_rds_instance", "aws_lambda_function", "aws_ecs_task_definition",
-	"aws_eks_cluster", "aws_vpc_security_group", "aws_kms_key",
-}
-
-func discoverAssetTypes(snap *asset.Snapshot) []string {
-	seen := make(map[string]bool)
-	for _, a := range snap.Assets {
-		seen[string(a.Type)] = true
-	}
-	var types []string
-	for t := range seen {
-		types = append(types, t)
-	}
-	if len(types) == 0 {
-		return knownAssetTypes
-	}
-	return types
+	_, _ = out.Write(preview)
 }
