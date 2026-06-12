@@ -1,0 +1,412 @@
+package applycmd
+
+import (
+	"bytes"
+	"context"
+	"errors"
+	"fmt"
+	"log/slog"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"github.com/sufield/stave/internal/adapters/acknowledgment"
+	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
+	"github.com/sufield/stave/internal/adapters/controls/pack"
+	"github.com/sufield/stave/internal/adapters/exemption"
+	"github.com/sufield/stave/internal/adapters/observations"
+	builtinpredicate "github.com/sufield/stave/internal/adapters/predicate"
+	"github.com/sufield/stave/internal/adapters/sla"
+	"github.com/sufield/stave/internal/adapters/telemetry"
+	appconfig "github.com/sufield/stave/internal/app/config"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appeval "github.com/sufield/stave/internal/app/eval"
+	"github.com/sufield/stave/internal/app/exemptlapse"
+	"github.com/sufield/stave/internal/app/reachability"
+	"github.com/sufield/stave/internal/app/teams"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/ports"
+	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/providers/aws/iam"
+	"github.com/sufield/stave/internal/sanitize"
+	"github.com/sufield/stave/internal/version"
+	"github.com/sufield/stave/pkg/stave/internal/applycore"
+	"gopkg.in/yaml.v3"
+)
+
+// ErrInvalidInput marks input errors in the standard pipeline (bad
+// --new-since, missing --history-dir) so the pkg/stave facade maps them to
+// ErrInvalidInput (exit 2).
+var ErrInvalidInput = errors.New("invalid input")
+
+// StandardRequest is the parsed input for the default `apply` (standard
+// evaluation) path. Most fields are primitives; ProjectConfig is the
+// already-loaded stave.yaml policy (the command-side cleanliness of passing
+// it is resolved when the dispatch is wired — increment 3c-ii).
+type StandardRequest struct {
+	ControlsDir        string
+	ObservationsDir    string
+	MaxUnsafe          time.Duration
+	Now                time.Time
+	SanitizeIDs        bool
+	PathMode           string
+	Format             string
+	Verbose            bool
+	ExemptionFile      string
+	AckFile            string
+	IntegrityManifest  string
+	IntegrityPublicKey string
+	SLAProfile         string
+	SLAProfileFile     string
+	TeamManifest       string
+	OwnerFilter        []string
+	TracePath          string
+	UseBuiltin         bool
+	ContextName        string
+	ControlsFlagSet    bool
+	AssertRecent       string // --assert-recent: fail fast if newest snapshot older than this
+	// ProjectConfigPath is the resolved stave.yaml path (from command-side
+	// projconfig discovery), or "" when no project config applies. The engine
+	// loads it — the command holds only the path string, never the policy type.
+	ProjectConfigPath string
+
+	// New-only mode (--new-only / --new-since): the output becomes the
+	// new/returned/resolved diff against HistoryDir. Gating is unchanged.
+	NewOnly    bool
+	NewSince   string
+	HistoryDir string
+}
+
+// StandardResult is the rendered outcome of a standard evaluation. Everything
+// the command needs for exit routing + summary rendering crosses as a
+// primitive so the command holds no internal evaluation types.
+type StandardResult struct {
+	Output               []byte   // the report (stdout)
+	Warnings             []string // stderr-bound (new-only history warnings)
+	SecurityState        string   // COMPLIANT | AT_RISK | NON_COMPLIANT
+	Gate                 string   // ALLOW | ADVISORY | BLOCK
+	SummaryMessage       string   // outcome.SummaryMessage()
+	HasSLABreach         bool
+	HasCriticalSLABreach bool
+	LapsedExemptionCount int
+}
+
+// EvaluateStandard runs the default `apply` pipeline: load exemption/
+// acknowledgment/SLA/project config, evaluate via the applycore engine,
+// annotate owner + reachability context, render the report to bytes, and
+// compute the gating decision. NOTE: --new-only / --new-since filtering is
+// not yet handled here (added in a follow-up); callers must not pass it until
+// then.
+func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult, error) {
+	exemptionCfg, err := loadExemptionConfig(req.ExemptionFile)
+	if err != nil {
+		return StandardResult{}, err
+	}
+	ackCfg, err := loadAcknowledgmentConfig(req.AckFile)
+	if err != nil {
+		return StandardResult{}, err
+	}
+	projCfg, err := loadWorkspacePolicy(req.ProjectConfigPath)
+	if err != nil {
+		return StandardResult{}, err
+	}
+	projCfgInput, err := buildProjectConfigInput(projCfg, req.ControlsFlagSet)
+	if err != nil {
+		return StandardResult{}, err
+	}
+
+	slaCfg, err := sla.NewProvider().LoadSLAConfig(ctx, req.SLAProfile, req.SLAProfileFile)
+	if err != nil {
+		return StandardResult{}, fmt.Errorf("load SLA policy: %w", err)
+	}
+
+	// Staleness gate (--assert-recent): run before evaluation so a stale
+	// snapshot fails fast. A breach maps to exit 2 via ErrInvalidInput.
+	if req.AssertRecent != "" && req.ObservationsDir != "-" {
+		if msg, stale, serr := checkStaleness(ctx, req.ObservationsDir, req.AssertRecent, req.Now); serr != nil {
+			return StandardResult{}, serr
+		} else if stale {
+			return StandardResult{}, fmt.Errorf("%s: %w", msg, ErrInvalidInput)
+		}
+	}
+
+	var tracer ports.Tracer
+	var fileTracer *telemetry.LocalFileTracer
+	if req.TracePath != "" {
+		fileTracer = telemetry.NewLocalFileTracer()
+		tracer = fileTracer
+	}
+
+	// Built-in catalog fallback: an empty ControlsDir tells the engine to
+	// select the embedded catalog rather than load a non-existent directory.
+	controlsDir := req.ControlsDir
+	if req.UseBuiltin {
+		controlsDir = ""
+	}
+
+	result, err := applycore.Run(ctx, applycore.Inputs{
+		SnapshotsDir:        req.ObservationsDir,
+		ControlsDir:         controlsDir,
+		ChainsDir:           "chains",
+		IntegrityManifest:   req.IntegrityManifest,
+		IntegrityPublicKey:  req.IntegrityPublicKey,
+		MaxUnsafe:           req.MaxUnsafe,
+		Now:                 req.Now,
+		ExemptionRules:      exemptionCfg,
+		AcknowledgmentRules: ackCfg,
+		SLAConfig:           slaCfg,
+		ProjectConfig:       &projCfgInput,
+		Tracer:              tracer,
+		ContextName:         req.ContextName,
+	})
+	if err != nil {
+		return StandardResult{}, fmt.Errorf("evaluate: %w", err)
+	}
+	report := result.Report
+
+	if err = annotateOwners(report, req.TeamManifest, req.OwnerFilter); err != nil {
+		return StandardResult{}, err
+	}
+	if err = annotateReachability(report, req.ObservationsDir); err != nil {
+		return StandardResult{}, err
+	}
+
+	var out []byte
+	var warnings []string
+	if req.NewOnly {
+		// Signal-filtered output replaces the standard report; gating below
+		// is computed from the same report regardless.
+		out, warnings, err = evaluateNewOnly(ctx, req, report)
+	} else {
+		sanitizer := sanitize.Policy{SanitizeIDs: req.SanitizeIDs, PathMode: sanitize.PathMode(req.PathMode)}.NewSanitizer()
+		out, err = renderReport(ctx, req.Format, req.Verbose, sanitizer, report, result.Controls)
+	}
+	if err != nil {
+		return StandardResult{}, err
+	}
+
+	if fileTracer != nil {
+		lt := fileTracer.Finalize(ports.FinalizeArgs{StaveVersion: version.String})
+		if writeErr := telemetry.WriteTraceFile(lt, req.TracePath); writeErr != nil {
+			slog.Warn("failed to write logic trace", "path", req.TracePath, "error", writeErr)
+		}
+	}
+
+	lapsed := exemptlapse.Detect(exemptlapse.Input{
+		AcknowledgedFindings: report.AcknowledgedFindings,
+		Now:                  req.Now,
+	})
+
+	outcome := evaluation.EnforcementPolicy{}.Evaluate(report.SecurityState)
+	return StandardResult{
+		Output:               out,
+		Warnings:             warnings,
+		SecurityState:        string(report.SecurityState),
+		Gate:                 string(outcome.Signal),
+		SummaryMessage:       outcome.SummaryMessage(),
+		HasSLABreach:         report.HasAnySLABreach(),
+		HasCriticalSLABreach: report.HasCriticalSLABreach(),
+		LapsedExemptionCount: len(lapsed),
+	}, nil
+}
+
+// renderReport runs the output pipeline (marshaler + enricher + coverage)
+// into a byte buffer. Shared shape with profile mode's writeResults.
+func renderReport(ctx context.Context, format string, verbose bool, sanitizer kernel.Sanitizer, report *evaluation.ComplianceReport, controls []policy.ControlDefinition) ([]byte, error) {
+	marshaler, err := buildFindingWriter(format, verbose)
+	if err != nil {
+		return nil, err
+	}
+	enricher := remediation.NewPlanner()
+	enrichFn := func(rep *evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
+		return appeval.Enrich(enricher, sanitizer, rep)
+	}
+	pipeline := &appeval.OutputPipeline{
+		Marshaler:       marshaler,
+		Enricher:        enrichFn,
+		CoveragePosture: buildCoveragePosture(controls, nil),
+	}
+	var buf bytes.Buffer
+	if err := pipeline.Run(ctx, &buf, report); err != nil {
+		return nil, fmt.Errorf("run output pipeline: %w", err)
+	}
+	return buf.Bytes(), nil
+}
+
+// --- enrichment (moved verbatim from cmd/apply/run_owners.go + run_reachability.go) ---
+
+func annotateOwners(report *evaluation.ComplianceReport, teamManifest string, ownerFilter []string) error {
+	manifestPath := resolveTeamManifest(teamManifest)
+	if manifestPath == "" {
+		if len(ownerFilter) > 0 {
+			return errors.New("--owner-filter requires a team manifest (set --team-manifest or place stave-teams.yaml in cwd)")
+		}
+		return nil
+	}
+
+	manifest, err := teams.LoadManifest(manifestPath)
+	if err != nil {
+		if len(ownerFilter) > 0 {
+			return fmt.Errorf("load team manifest %q: %w", manifestPath, err)
+		}
+		slog.Warn("skipping owner annotation", "manifest", manifestPath, "error", err)
+		return nil
+	}
+
+	for i := range report.Findings {
+		f := &report.Findings[i]
+		owner := manifest.ResolveOwner(nil, string(f.AssetID), string(f.ControlID))
+		f.OwnerTeamID = kernel.TeamID(owner.TeamID)
+		f.OwnerTeamName = owner.TeamName
+		f.OwnerContact = owner.Contact
+		f.OwnerResolution = owner.ResolutionPath
+	}
+
+	if len(ownerFilter) == 0 {
+		return nil
+	}
+	allowed := make(map[string]bool, len(ownerFilter))
+	for _, id := range ownerFilter {
+		allowed[strings.TrimSpace(id)] = true
+	}
+	filtered := make([]evaluation.Finding, 0, len(report.Findings))
+	for i := range report.Findings {
+		if report.Findings[i].MatchesOwner(allowed) {
+			filtered = append(filtered, report.Findings[i])
+		}
+	}
+	report.Findings = filtered
+	return nil
+}
+
+func resolveTeamManifest(flagPath string) string {
+	if flagPath != "" {
+		return flagPath
+	}
+	const defaultPath = "stave-teams.yaml"
+	if _, err := os.Stat(defaultPath); err == nil {
+		return defaultPath
+	}
+	return ""
+}
+
+const reachabilityBundleName = "observations.json"
+
+func annotateReachability(report *evaluation.ComplianceReport, obsDir string) error {
+	if obsDir == "" || len(report.Findings) == 0 {
+		return nil
+	}
+	if obsDir == "-" {
+		slog.Debug("annotate reachability: stdin observation mode; skipping bundle lookup", "obs_dir", obsDir)
+		return nil
+	}
+
+	bundlePath := filepath.Join(obsDir, reachabilityBundleName)
+	snapshots, err := observations.LoadBundle(bundlePath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			slog.Debug("annotate reachability: no bundle file in observations dir; skipping", "obs_dir", obsDir)
+			return nil
+		}
+		return fmt.Errorf("annotate reachability: malformed bundle at %q: %w", bundlePath, err)
+	}
+	if len(snapshots) == 0 {
+		return nil
+	}
+	snap := &snapshots[len(snapshots)-1]
+	idx := iam.BuildResourceAccessIndex(snap)
+	if idx == nil {
+		return nil
+	}
+
+	remFindings := make([]remediation.Finding, len(report.Findings))
+	for i := range report.Findings {
+		remFindings[i] = remediation.Finding{Finding: report.Findings[i]}
+	}
+	reachability.AnnotateFindings(remFindings, idx)
+	for i := range remFindings {
+		report.Findings[i].Reachability = remFindings[i].Reachability
+	}
+	return nil
+}
+
+// --- config loading (moved verbatim from cmd/apply/deps_project.go) ---
+
+// loadWorkspacePolicy reads + parses the stave.yaml at path. Empty path means
+// no project config. Mirrors projconfig's loadProjectConfig (which stays
+// command-side); the engine loads here so the command passes only the path.
+func loadWorkspacePolicy(path string) (*appconfig.WorkspacePolicy, error) {
+	if strings.TrimSpace(path) == "" {
+		return nil, nil //nolint:nilnil // no project config: nil-cfg + nil-err means "none".
+	}
+	data, err := fsutil.ReadFileLimited(path)
+	if err != nil {
+		return nil, fmt.Errorf("read project config: %w", err)
+	}
+	var cfg appconfig.WorkspacePolicy
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return nil, fmt.Errorf("parse project config at %q: %w", path, err)
+	}
+	return &cfg, nil
+}
+
+func buildProjectConfigInput(projCfg *appconfig.WorkspacePolicy, controlsSet bool) (appeval.ProjectConfigInput, error) {
+	if projCfg == nil {
+		return appeval.ProjectConfigInput{}, nil
+	}
+	input := appeval.ProjectConfigInput{
+		Exceptions:          mapExceptions(projCfg.Exceptions),
+		EnabledControlPacks: projCfg.EnabledControlPacks,
+		ExcludeControls:     projCfg.ExcludeControls,
+		ControlsFlagSet:     controlsSet,
+		BuiltinLoader:       ctlbuiltin.NewControlStore(ctlbuiltin.EmbeddedFS(), "embedded", ctlbuiltin.WithAliasResolver(builtinpredicate.ResolverFunc())).All,
+	}
+	reg, err := pack.NewEmbeddedRegistry()
+	if err != nil {
+		return input, fmt.Errorf("initialize embedded pack registry: %w", err)
+	}
+	input.PackRegistry = reg
+	return input, nil
+}
+
+func mapExceptions(in []appconfig.PolicyException) []appeval.ExceptionInput {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]appeval.ExceptionInput, len(in))
+	for i, s := range in {
+		out[i] = appeval.ExceptionInput{
+			ControlID: s.ControlID,
+			AssetID:   s.AssetID,
+			Reason:    s.Reason,
+			Expires:   s.Expires,
+		}
+	}
+	return out
+}
+
+func loadAcknowledgmentConfig(path string) (*policy.AcknowledgmentConfig, error) {
+	if strings.TrimSpace(path) == "" {
+		return nil, nil //nolint:nilnil // optional config: nil-cfg + nil-err means "none configured".
+	}
+	cfg, err := acknowledgment.Load(path)
+	if err != nil {
+		return nil, fmt.Errorf("loading acknowledgments from %q: %w", path, err)
+	}
+	return cfg, nil
+}
+
+func loadExemptionConfig(path string) (*policy.ExemptionConfig, error) {
+	if strings.TrimSpace(path) == "" {
+		return nil, nil //nolint:nilnil // optional config: nil-cfg + nil-err means "none configured".
+	}
+	cfg, err := (&exemption.Loader{}).Load(path)
+	if err != nil {
+		return nil, fmt.Errorf("loading exemptions from %q: %w", path, err)
+	}
+	return cfg, nil
+}
