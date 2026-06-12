@@ -5,27 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
-	"github.com/sufield/stave/internal/adapters/observations"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/asset"
-	"github.com/sufield/stave/internal/core/capabilities"
-	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/core/ports"
-	"github.com/sufield/stave/internal/platform/crypto"
-	"github.com/sufield/stave/internal/version"
+	"github.com/sufield/stave/pkg/stave"
 )
 
-// Profile represents a validated evaluation profile.
+// Profile represents a validated evaluation profile. The type + name parsing
+// stay command-side for flag validation; the evaluation pipeline lives in the
+// pkg/stave facade (stave.EvaluateProfile).
 type Profile string
 
 const (
@@ -59,39 +49,6 @@ const (
 	ProfileAWSEFS Profile = "aws-efs"
 )
 
-// UsesPHIScope reports whether this profile keeps the default PHI
-// audit scope. Only the AWS-S3 default profile does — every other
-// profile (IAM/EFS/GCS/HIPAA/SOC2/CIS/PCI/NIST/FedRAMP/GDPR/FFIEC/
-// ISO/NISTCSF) wants the global scope so PHIBoundary doesn't
-// silently filter out IAM, VPC, KMS, and compute assets the
-// profile must evaluate. Replaces the open-coded
-// `cfg.Profile != ProfileAWSS3` probe in resolveScopeFilter.
-func (p Profile) UsesPHIScope() bool {
-	return p == ProfileAWSS3
-}
-
-// AssetTypeLabel returns the human-readable asset-type plural the
-// "no assets matching scope" error message references. Centralised
-// so the error string in filterSnapshots adapts to the profile —
-// the previous hardcoded "S3 buckets" misled IAM / EFS / GCS / KMS
-// operators when an empty filter result was about identities or
-// EFS volumes, not buckets.
-func (p Profile) AssetTypeLabel() string {
-	switch p {
-	case ProfileAWSS3:
-		return "S3 buckets"
-	case ProfileAWSIAM:
-		return "IAM identities"
-	case ProfileAWSEFS:
-		return "EFS file systems"
-	case ProfileGCPGCS:
-		return "GCS buckets"
-	}
-	// Compliance profiles span multiple asset types; the message
-	// generalises rather than enumerating.
-	return "assets"
-}
-
 // ParseProfile validates and returns a Profile value.
 func ParseProfile(s string) (Profile, error) {
 	switch Profile(s) {
@@ -124,14 +81,12 @@ func ParseProfiles(s string) ([]Profile, error) {
 	return profiles, nil
 }
 
-// Config holds the parameters for a profile-based apply operation.
+// Config holds the resolved parameters for a profile-based apply operation.
+// Flag string parsing happens in resolveProfileMode; the evaluation itself
+// runs in the pkg/stave facade.
 type Config struct {
-	InputFile string
-	// Profile is the primary profile (kept for output labeling and
-	// the AWS-S3 default-scope check). Profiles is the full list
-	// when --profile is comma-separated; loadControlsMulti uses it
-	// so all profiles' controls are evaluated, not just the first.
-	Profile           Profile
+	InputFile         string
+	Profile           Profile // primary profile, for output labeling
 	Profiles          []Profile
 	BucketAllowlist   []string
 	IncludeAll        bool
@@ -140,355 +95,58 @@ type Config struct {
 	Quiet             bool
 	Stdout            io.Writer
 	Stderr            io.Writer
-	Sanitizer         kernel.Sanitizer
+	NowTime           string // RFC3339 or "" — the facade builds the clock
 }
 
-// Runner handles the execution of the profile apply logic.
-type Runner struct {
-	Clock            ports.Clock
-	Hasher           ports.Digester
-	UI               *ui.Runtime
-	NewCELEvaluator  compose.CELEvaluatorFactory
-	LoadControls     compose.ControlLoaderFunc
-	newFindingWriter compose.FindingWriterFactory
-}
+// runProfile drives profile-based evaluation through the pkg/stave facade.
+// It owns the progress runtime, the stdout/stderr writes, and exit-code
+// routing; the load -> evaluate -> render pipeline is in stave.EvaluateProfile.
+func runProfile(ctx context.Context, cs cobraState, cfg RunConfig) error {
+	p := cfg.Profile
 
-// RunnerOption configures optional Runner dependencies.
-type RunnerOption func(*Runner)
-
-// WithClock overrides the default wall clock.
-func WithClock(c ports.Clock) RunnerOption {
-	return func(r *Runner) { r.Clock = c }
-}
-
-// WithUI sets the UI runtime for progress and hints.
-func WithUI(rt *ui.Runtime) RunnerOption {
-	return func(r *Runner) { r.UI = rt }
-}
-
-// NewRunner initializes a runner with required factories and optional overrides.
-func NewRunner(newCELEvaluator compose.CELEvaluatorFactory, loadControls compose.ControlLoaderFunc, newFindingWriter compose.FindingWriterFactory, opts ...RunnerOption) *Runner {
-	r := &Runner{
-		Hasher:           crypto.NewHasher(),
-		NewCELEvaluator:  newCELEvaluator,
-		LoadControls:     loadControls,
-		newFindingWriter: newFindingWriter,
-	}
-	for _, o := range opts {
-		o(r)
-	}
-	return r
-}
-
-// Run executes the profile evaluation workflow.
-func (r *Runner) Run(ctx context.Context, cfg Config) error {
-	if err := validateInput(cfg.InputFile); err != nil {
-		return err
+	names := make([]string, len(p.Profiles))
+	for i, pr := range p.Profiles {
+		names[i] = string(pr)
 	}
 
-	snapshots, err := observations.LoadBundle(cfg.InputFile)
-	if err != nil {
-		return fmt.Errorf("load observation bundle: %w", err)
-	}
-
-	filtered := filterSnapshots(cfg.Stderr, cfg.Quiet, cfg, snapshots)
-	if len(filtered) == 0 {
-		// The configured scope (e.g. --bucket-allowlist) matched no
-		// asset, so there is nothing to evaluate. Still emit one output
-		// document — the standard apply path always writes one, and the
-		// "one document per invocation" contract means a --format json
-		// consumer must parse a real (empty, COMPLIANT) report rather
-		// than empty stdout. Returning nil here silently produced no
-		// document, making a mis-scoped (typo) allowlist look identical
-		// to a genuinely clean account.
-		return r.emitEmptyScopeResult(ctx, cfg, snapshots)
-	}
-
-	// Use Profiles when populated (multi-profile path); fall back
-	// to single-profile loadControls only if Profiles is empty
-	// (callers that constructed Config by hand without going
-	// through resolveProfileMode).
-	profiles := cfg.Profiles
-	if len(profiles) == 0 {
-		profiles = []Profile{cfg.Profile}
-	}
-	ctlDir, controls, err := r.loadControlsMulti(ctx, profiles)
-	if err != nil {
-		return fmt.Errorf("load controls: %w", err)
-	}
-
-	celEval, err := r.NewCELEvaluator()
-	if err != nil {
-		return fmt.Errorf("init CEL evaluator: %w", err)
-	}
-
-	// Load chain definitions for risk reasoning. Use the same
-	// canonical "chains" relative path the standard apply pipeline
-	// uses (see deps.go and stave_config.go) instead of joining
-	// "..\chains" off whatever getControlsBaseDir returned. The
-	// parent-traversal shape was fragile: when getControlsBaseDir
-	// fell back to its "controls" default, the join produced a
-	// "../chains" path resolved against the working directory,
-	// silently loading the wrong directory in any project layout
-	// where the controls dir was not a sibling of chains/.
-	chains, chainsErr := ctlyaml.LoadChains("chains", capabilities.Builtin())
-	if chainsErr != nil {
-		return fmt.Errorf("loading chains: %w", chainsErr)
-	}
-
-	done := r.UI.BeginProgress("apply profile observations")
-	defer done()
-
-	result, err := appeval.EvaluateLoaded(ctx, appeval.EvaluationRequest{
-		Controls:          controls,
-		Snapshots:         filtered,
-		MaxUnsafeDuration: cfg.MaxUnsafeDuration,
-		Clock:             r.Clock,
-		Hasher:            r.Hasher,
-		StaveVersion:      version.String,
-		PredicateParser:   ctlyaml.ParsePredicate,
-		CELEvaluator:      celEval,
+	rt := ui.NewRuntime(cs.Stdout, cs.Stderr)
+	rt.Quiet = p.Quiet
+	done := rt.BeginProgress("apply profile observations")
+	res, err := stave.EvaluateProfile(ctx, stave.ProfileRequest{
+		InputFile:       p.InputFile,
+		Profiles:        names,
+		BucketAllowlist: p.BucketAllowlist,
+		IncludeAll:      p.IncludeAll,
+		MaxUnsafe:       p.MaxUnsafeDuration,
+		Format:          string(p.OutputFormat),
+		Now:             p.NowTime,
+		SanitizeIDs:     cs.GlobalFlags.Sanitize,
+		PathMode:        string(cs.GlobalFlags.PathMode),
 	})
+	done()
+
 	if err != nil {
-		return fmt.Errorf("evaluate: %w", err)
+		if errors.Is(err, stave.ErrInvalidInput) {
+			return &ui.UserError{Err: err}
+		}
+		return err //nolint:wrapcheck // facade already wrapped; preserve exit 4.
 	}
 
-	// Enrich with risk reasoning (chains, attack stages, exposure ranking).
-	appeval.EnrichReport(&result, controls, chains, filtered)
-
-	if err := r.writeResults(ctx, cfg, &result, controls); err != nil {
-		return fmt.Errorf("write findings: %w", err)
+	if _, werr := p.Stdout.Write(res.Output); werr != nil {
+		return fmt.Errorf("write profile output: %w", werr)
 	}
 
-	return finalizeProfileEvaluation(cfg.Stderr, cfg.Quiet, &result, filtered, ctlDir, cfg.InputFile)
-}
-
-// emitEmptyScopeResult writes one output document for a run whose scope
-// filter matched no asset. It evaluates the empty filtered set through
-// the standard assessor so every run-info field (version, now, hashes,
-// fingerprint) is populated, then stamps EvaluatedState from the
-// original (pre-filter) snapshots — the assessor derives that field
-// from the snapshots it sees, and an empty set would leave it blank,
-// failing the out.v0.1 schema's evaluated_state enum. The result has no
-// findings, so the run is COMPLIANT.
-func (r *Runner) emitEmptyScopeResult(ctx context.Context, cfg Config, originalSnapshots []asset.Snapshot) error {
-	result, err := appeval.EvaluateLoaded(ctx, appeval.EvaluationRequest{
-		Controls:          nil,
-		Snapshots:         nil,
-		MaxUnsafeDuration: cfg.MaxUnsafeDuration,
-		Clock:             r.Clock,
-		Hasher:            r.Hasher,
-		StaveVersion:      version.String,
-		PredicateParser:   ctlyaml.ParsePredicate,
-	})
-	if err != nil {
-		return fmt.Errorf("evaluate empty scope: %w", err)
-	}
-	if result.Run.EvaluatedState == "" {
-		result.Run.EvaluatedState = string(latestSnapshotSource(originalSnapshots))
-	}
-
-	if err := r.writeResults(ctx, cfg, &result, nil); err != nil {
-		return fmt.Errorf("write findings: %w", err)
-	}
-	return finalizeProfileEvaluation(cfg.Stderr, cfg.Quiet, &result, nil, "", cfg.InputFile)
-}
-
-// latestSnapshotSource returns the origin context (deployed/planned/
-// local) of the most recent snapshot, defaulting to "deployed" when no
-// snapshot carries one — the value must be a non-empty member of the
-// out.v0.1 evaluated_state enum.
-func latestSnapshotSource(snapshots []asset.Snapshot) asset.SnapshotSource {
-	source := asset.SourceDeployed
-	var latest time.Time
-	for i := range snapshots {
-		if s := snapshots[i].Source; s != "" && !snapshots[i].CapturedAt.Before(latest) {
-			source = s
-			latest = snapshots[i].CapturedAt
+	if !p.Quiet {
+		for _, w := range res.Warnings {
+			fmt.Fprintln(p.Stderr, w)
+		}
+		if res.DiagnoseHint != "" {
+			ui.WriteHint(p.Stderr, res.DiagnoseHint)
 		}
 	}
-	return source
-}
 
-func validateInput(path string) error {
-	fi, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return &ui.UserError{Err: fmt.Errorf("--input not found: %q", path)}
-		}
-		if os.IsPermission(err) {
-			return &ui.UserError{Err: fmt.Errorf("--input not readable: %q (check file permissions)", path)}
-		}
-		return &ui.UserError{Err: fmt.Errorf("cannot access --input %q: %w", path, err)}
-	}
-	if fi.IsDir() {
-		return &ui.UserError{Err: fmt.Errorf("--input must be a file, got directory: %q", path)}
+	if res.HasViolations {
+		return ui.ErrViolationsFound
 	}
 	return nil
-}
-
-func (r *Runner) loadControlsMulti(ctx context.Context, profiles []Profile) (string, []policy.ControlDefinition, error) {
-	// Walk every profile's control domain so a multi-profile run
-	// (e.g. --profile=hipaa,soc2,pci-dss-v4.0) sees the union of
-	// available controls. The previous "use the first profile only"
-	// shape silently dropped controls authored in any other domain
-	// and the profile-side compliance filter would then have nothing
-	// to match — multi-profile runs collapsed to their first
-	// profile's domain content.
-	base := getControlsBaseDir()
-	seenDir := make(map[string]struct{})
-	seenCtl := make(map[kernel.ControlID]struct{})
-	var primaryDir string
-	var controls []policy.ControlDefinition
-	for _, prof := range profiles {
-		domain := profileControlDomain(prof)
-		dir := filepath.Join(base, domain)
-		if primaryDir == "" {
-			primaryDir = dir
-		}
-		if _, dup := seenDir[dir]; dup {
-			continue
-		}
-		seenDir[dir] = struct{}{}
-		loaded, err := r.LoadControls(ctx, dir)
-		if err != nil {
-			return "", nil, err
-		}
-		// Dedup by ControlID — the same control can live under
-		// multiple framework directories during the migration to
-		// per-profile catalogues, and a duplicate would inflate
-		// finding counts in the assessment summary.
-		for i := range loaded {
-			id := loaded[i].ID
-			if _, dup := seenCtl[id]; dup {
-				continue
-			}
-			seenCtl[id] = struct{}{}
-			controls = append(controls, loaded[i])
-		}
-	}
-	ctlDir := primaryDir
-
-	// Collect compliance frameworks from all profiles.
-	var frameworks []policy.ComplianceFramework
-	for _, prof := range profiles {
-		if fw := profileComplianceFramework(prof); fw != "" {
-			frameworks = append(frameworks, fw)
-		}
-	}
-
-	// Filter: union across all requested frameworks.
-	if len(frameworks) == 1 {
-		controls = filterByCompliance(controls, frameworks[0])
-	} else if len(frameworks) > 1 {
-		controls = filterByComplianceUnion(controls, frameworks)
-	}
-
-	if len(controls) == 0 {
-		label := profileControlDomain(profiles[0])
-		if label == "" {
-			var names []string
-			for _, p := range profiles {
-				names = append(names, string(p))
-			}
-			label = strings.Join(names, ",")
-		}
-		return "", nil, fmt.Errorf("%w: no %s controls found in %s", appeval.ErrNoControls, label, ctlDir)
-	}
-
-	return ctlDir, controls, nil
-}
-
-// profileControlDomain maps a profile to its control subdirectory.
-// Returns empty string for cross-domain profiles (e.g. HIPAA).
-func profileControlDomain(prof Profile) string {
-	switch prof {
-	case ProfileAWSIAM:
-		return "iam"
-	case ProfileAWSEFS:
-		return "efs"
-	case ProfileGCPGCS:
-		return "gcs"
-	case ProfileHIPAA, ProfileCISv3, ProfileSOC2, ProfilePCIDSSv4, ProfileNIST, ProfileFedRAMP, ProfileGDPR, ProfileFFIEC, ProfileISO27001, ProfileNISTCSF:
-		return "" // Cross-domain: loads all, filtered by compliance ref.
-	default:
-		return "s3"
-	}
-}
-
-// profileComplianceFramework returns the compliance framework key used to
-// filter controls for compliance-based profiles. Returns empty for
-// domain-scoped profiles that load all controls from their directory.
-func profileComplianceFramework(prof Profile) policy.ComplianceFramework {
-	switch prof {
-	case ProfileHIPAA:
-		return "hipaa"
-	case ProfileCISv3:
-		return "cis_aws_v3.0"
-	case ProfileSOC2:
-		return "soc2"
-	case ProfilePCIDSSv4:
-		return "pci_dss_v4.0"
-	case ProfileNIST:
-		return "nist_800_53_r5"
-	case ProfileFedRAMP:
-		return "fedramp_moderate"
-	case ProfileGDPR:
-		return "gdpr"
-	case ProfileFFIEC:
-		return "ffiec"
-	case ProfileISO27001:
-		return "iso_27001_2022"
-	case ProfileNISTCSF:
-		return "nist_csf_2.0"
-	default:
-		return ""
-	}
-}
-
-func filterByCompliance(controls []policy.ControlDefinition, fw policy.ComplianceFramework) []policy.ControlDefinition {
-	filtered := make([]policy.ControlDefinition, 0, len(controls))
-	for i := range controls {
-		if controls[i].HasCompliance(fw) {
-			filtered = append(filtered, controls[i])
-		}
-	}
-	return filtered
-}
-
-// filterByComplianceUnion returns controls that match ANY of the given frameworks.
-// Controls are deduplicated by ID — a control appearing in multiple frameworks
-// is included once with all its compliance citations intact.
-func filterByComplianceUnion(controls []policy.ControlDefinition, frameworks []policy.ComplianceFramework) []policy.ControlDefinition {
-	fwSet := make(map[policy.ComplianceFramework]bool, len(frameworks))
-	for _, fw := range frameworks {
-		fwSet[fw] = true
-	}
-
-	filtered := make([]policy.ControlDefinition, 0, len(controls))
-	seen := make(map[kernel.ControlID]bool)
-	for i := range controls {
-		ctl := &controls[i]
-		if seen[ctl.ID] {
-			continue
-		}
-		for fw := range ctl.Compliance {
-			if fwSet[fw] {
-				filtered = append(filtered, *ctl)
-				seen[ctl.ID] = true
-				break
-			}
-		}
-	}
-	return filtered
-}
-
-func getControlsBaseDir() string {
-	if exe, err := os.Executable(); err == nil {
-		dir := filepath.Join(filepath.Dir(exe), "controls")
-		if fi, err := os.Stat(dir); err == nil && fi.IsDir() {
-			return dir
-		}
-	}
-	return "controls"
 }

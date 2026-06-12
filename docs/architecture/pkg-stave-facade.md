@@ -60,12 +60,24 @@ helper to `pkg/stave` first):
     package. Pack-config discovery (stave.yaml) stays command-side and is
     passed to the facade as primitives. Exit-code sentinels
     (`ErrValidationFailed`/`Warnings`) returned unwrapped.
-  - **Increment 3+** — `cmd/apply` itself (25 files, 3 modes). Its eval
-    *core* already routes through `pkg/stave/cliapi.Apply`; the work is
-    lifting orchestration/enrichment (owners, reachability, coverage
-    posture, lapsed exemptions, SLA) + output into the facade. Interactive
-    `ui.Runtime` progress, project-context discovery, stdin handling, and
-    exit routing stay command-side. Likely 2–3 sub-increments.
+  - **Increment 3** — `cmd/apply` itself (3331 LOC, 18 files, 3 modes).
+    Engine = `pkg/stave/internal/applycmd`. Sub-increments (cmd/apply
+    enrolls on the last; intermediate commits stay dirty so the ratchet
+    doesn't fire early):
+    - **3a — DONE 2026-06-12.** `apply --dry-run` readiness →
+      `stave.AssessReadiness` (prereq replicated via internal/doctor; plan
+      renderer was pure fmt.Fprintf). cmd/apply 34→32 non-exempt imports.
+    - **3b — DONE 2026-06-12.** `apply --profile` → `stave.EvaluateProfile`.
+      Facade self-constructs CEL/control-loader (with alias resolver)/
+      finding-marshaler/sanitizer/clock; cli/ui crossings become return
+      values (Warnings, DiagnoseHint, HasViolations, ErrInvalidProfileInput).
+      cmd/apply 32→31 imports (the rest are shared with standard mode).
+    - **3c** — standard mode (the big lift): run_evaluate already calls
+      `pkg/stave/cliapi.Apply`; lift Builder/deps + enrichment (owners,
+      reachability, coverage) + output pipeline + SLA + new-only. Progress
+      crosses as a `func(processed, total)` callback; ReportApply/
+      CheckSLAPolicy/decorateError stay command-side (exit-3 + hints).
+    - **3d** — final cleanup + architecture_test + enroll.
 - `diagnose/artifacts` (~829, 4 subcommands / ~11 leaf verbs) ↔
   `cmd/diagnose` (22 imports). `controls explain` uses
   `cmd/diagnose.NewExplainerWithFinder` + `WriteExplainResult` — but the

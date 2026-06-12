@@ -3,8 +3,6 @@ package apply
 import (
 	"bytes"
 	"errors"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -12,9 +10,7 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
-	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/core/outcome"
 	"github.com/sufield/stave/internal/core/ports"
 	validation "github.com/sufield/stave/internal/core/schemaval"
 )
@@ -266,213 +262,6 @@ func TestReporter_ReportApply_QuietStillGates(t *testing.T) {
 	}
 }
 
-// --- printReadinessIssue ---
-
-func TestPrintReadinessIssue(t *testing.T) {
-	var buf bytes.Buffer
-	issue := validation.ValidationFinding{
-		Name:        "controls",
-		Status:      outcome.Pass,
-		Message:     "found 5 controls",
-		Remediation: "run validate",
-		FixCommand:  "stave validate",
-	}
-	err := printReadinessIssue(&buf, issue)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	out := buf.String()
-	if !strings.Contains(out, "controls") {
-		t.Fatalf("expected name in output, got: %s", out)
-	}
-	if !strings.Contains(out, "Fix: run validate") {
-		t.Fatalf("expected fix in output, got: %s", out)
-	}
-	if !strings.Contains(out, "Command: stave validate") {
-		t.Fatalf("expected command in output, got: %s", out)
-	}
-}
-
-func TestPrintReadinessIssue_NoFixOrCommand(t *testing.T) {
-	var buf bytes.Buffer
-	issue := validation.ValidationFinding{
-		Name:    "obs",
-		Status:  outcome.Pass,
-		Message: "found 3 snapshots",
-	}
-	err := printReadinessIssue(&buf, issue)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	out := buf.String()
-	if strings.Contains(out, "Fix:") {
-		t.Fatalf("should not contain Fix: when empty, got: %s", out)
-	}
-	if strings.Contains(out, "Command:") {
-		t.Fatalf("should not contain Command: when empty, got: %s", out)
-	}
-}
-
-// --- Reporter.ReportPlan ---
-
-func TestReporter_ReportPlan(t *testing.T) {
-	var stdout, stderr bytes.Buffer
-	r := &Reporter{
-		Stdout:  &stdout,
-		Stderr:  &stderr,
-		Runtime: ui.NewRuntime(&stdout, &stderr),
-	}
-	report := validation.ReadinessAssessment{
-		IsSafe:            true,
-		ControlSource:     "controls/s3",
-		ObservationSource: "observations",
-		Summary: validation.AssessmentSummary{
-			ControlsVerified:  5,
-			StatesVerified:    3,
-			ResourcesAnalyzed: 10,
-		},
-	}
-	err := r.ReportPlan(report)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	out := stdout.String()
-	if !strings.Contains(out, "Plan Summary") {
-		t.Fatalf("expected Plan Summary, got: %s", out)
-	}
-	if !strings.Contains(out, "Ready:        true") {
-		t.Fatalf("expected Ready: true, got: %s", out)
-	}
-	if !strings.Contains(out, "stave apply") {
-		t.Fatalf("expected apply next command, got: %s", out)
-	}
-}
-
-func TestReporter_ReportPlan_Quiet(t *testing.T) {
-	var stdout, stderr bytes.Buffer
-	r := &Reporter{
-		Stdout:  &stdout,
-		Stderr:  &stderr,
-		Runtime: ui.NewRuntime(&stdout, &stderr),
-		Quiet:   true,
-	}
-	report := validation.ReadinessAssessment{IsSafe: true}
-	err := r.ReportPlan(report)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if stdout.Len() != 0 {
-		t.Fatalf("expected no output in quiet mode, got: %s", stdout.String())
-	}
-}
-
-// --- validateInput ---
-
-func TestValidateInput_NotFound(t *testing.T) {
-	err := validateInput("/nonexistent/path/to/file.json")
-	if err == nil {
-		t.Fatal("expected error for nonexistent file")
-	}
-	if !strings.Contains(err.Error(), "not found") {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-func TestValidateInput_IsDirectory(t *testing.T) {
-	dir := t.TempDir()
-	err := validateInput(dir)
-	if err == nil {
-		t.Fatal("expected error for directory")
-	}
-	if !strings.Contains(err.Error(), "must be a file") {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-func TestValidateInput_ValidFile(t *testing.T) {
-	tmp := t.TempDir()
-	f := filepath.Join(tmp, "test.json")
-	if err := os.WriteFile(f, []byte("{}"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	err := validateInput(f)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-// --- profileControlDomain ---
-
-func TestProfileControlDomain(t *testing.T) {
-	tests := []struct {
-		prof Profile
-		want string
-	}{
-		{ProfileAWSS3, "s3"},
-		{ProfileAWSIAM, "iam"},
-		{ProfileGCPGCS, "gcs"},
-		{ProfileHIPAA, ""},
-		{ProfileCISv3, ""},
-		{ProfileSOC2, ""},
-		{ProfilePCIDSSv4, ""},
-		{ProfileNIST, ""},
-		{ProfileFedRAMP, ""},
-		{ProfileGDPR, ""},
-		{ProfileFFIEC, ""},
-		{ProfileISO27001, ""},
-		{ProfileNISTCSF, ""},
-	}
-	for _, tt := range tests {
-		got := profileControlDomain(tt.prof)
-		if got != tt.want {
-			t.Fatalf("profileControlDomain(%q) = %q, want %q", tt.prof, got, tt.want)
-		}
-	}
-}
-
-func TestProfileComplianceFramework(t *testing.T) {
-	tests := []struct {
-		prof Profile
-		want policy.ComplianceFramework
-	}{
-		{ProfileAWSS3, ""},
-		{ProfileAWSIAM, ""},
-		{ProfileGCPGCS, ""},
-		{ProfileHIPAA, "hipaa"},
-		{ProfileCISv3, "cis_aws_v3.0"},
-		{ProfileSOC2, "soc2"},
-		{ProfilePCIDSSv4, "pci_dss_v4.0"},
-		{ProfileNIST, "nist_800_53_r5"},
-		{ProfileFedRAMP, "fedramp_moderate"},
-		{ProfileGDPR, "gdpr"},
-		{ProfileFFIEC, "ffiec"},
-		{ProfileISO27001, "iso_27001_2022"},
-		{ProfileNISTCSF, "nist_csf_2.0"},
-	}
-	for _, tt := range tests {
-		got := profileComplianceFramework(tt.prof)
-		if got != tt.want {
-			t.Fatalf("profileComplianceFramework(%q) = %q, want %q", tt.prof, got, tt.want)
-		}
-	}
-}
-
-func TestFilterByCompliance(t *testing.T) {
-	controls := []policy.ControlDefinition{
-		{ID: "CTL.S3.PUBLIC.001", Compliance: policy.ComplianceMapping{"hipaa": "164.312(a)(1)"}},
-		{ID: "CTL.S3.POLICY.WRITE.001", Compliance: nil},
-		{ID: "CTL.RDS.ENCRYPT.001", Compliance: policy.ComplianceMapping{"hipaa": "164.312(a)(2)(iv)"}},
-		{ID: "CTL.EC2.IMDSV2.001", Compliance: policy.ComplianceMapping{"cis_aws_v1.4.0": "5.6"}},
-	}
-	got := filterByCompliance(controls, "hipaa")
-	if len(got) != 2 {
-		t.Fatalf("filterByCompliance: got %d controls, want 2", len(got))
-	}
-	if got[0].ID != "CTL.S3.PUBLIC.001" || got[1].ID != "CTL.RDS.ENCRYPT.001" {
-		t.Fatalf("filterByCompliance: unexpected controls: %v, %v", got[0].ID, got[1].ID)
-	}
-}
-
 // --- SharedOptions.normalize ---
 
 func TestSharedOptions_Normalize(t *testing.T) {
@@ -487,95 +276,6 @@ func TestSharedOptions_Normalize(t *testing.T) {
 	}
 }
 
-// --- resolveScopeFilter ---
-
-func TestResolveScopeFilter_IncludeAll(t *testing.T) {
-	cfg := Config{IncludeAll: true}
-	f := resolveScopeFilter(cfg)
-	if f == nil {
-		t.Fatal("expected non-nil filter")
-	}
-}
-
-func TestResolveScopeFilter_Allowlist(t *testing.T) {
-	cfg := Config{BucketAllowlist: []string{"bucket-a", "bucket-b"}}
-	f := resolveScopeFilter(cfg)
-	if f == nil {
-		t.Fatal("expected non-nil filter")
-	}
-}
-
-func TestResolveScopeFilter_Default(t *testing.T) {
-	cfg := Config{}
-	f := resolveScopeFilter(cfg)
-	if f == nil {
-		t.Fatal("expected non-nil filter")
-	}
-}
-
-// --- filterSnapshots ---
-
-func TestFilterSnapshots_Empty(t *testing.T) {
-	var stderr bytes.Buffer
-	cfg := Config{IncludeAll: true}
-	got := filterSnapshots(&stderr, false, cfg, nil)
-	if got != nil {
-		t.Fatal("expected nil for empty snapshots")
-	}
-	if !strings.Contains(stderr.String(), "No snapshots") {
-		t.Fatalf("expected 'No snapshots' warning, got: %s", stderr.String())
-	}
-}
-
-func TestFilterSnapshots_EmptyQuiet(t *testing.T) {
-	var stderr bytes.Buffer
-	cfg := Config{IncludeAll: true}
-	got := filterSnapshots(&stderr, true, cfg, nil)
-	if got != nil {
-		t.Fatal("expected nil for empty snapshots")
-	}
-	if stderr.Len() != 0 {
-		t.Fatal("expected no stderr output in quiet mode")
-	}
-}
-
-// --- finalizeProfileEvaluation ---
-
-func TestFinalizeProfileEvaluation_NoFindings(t *testing.T) {
-	var stderr bytes.Buffer
-	result := evaluation.ComplianceReport{Findings: nil}
-	err := finalizeProfileEvaluation(&stderr, false, &result, nil, "ctl", "input")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if !strings.Contains(stderr.String(), "No violations found") {
-		t.Fatalf("expected success message, got: %s", stderr.String())
-	}
-}
-
-func TestFinalizeProfileEvaluation_WithFindings(t *testing.T) {
-	var stderr bytes.Buffer
-	result := evaluation.ComplianceReport{
-		Findings: []evaluation.Finding{{ControlID: "CTL.TEST.001"}},
-	}
-	err := finalizeProfileEvaluation(&stderr, false, &result, nil, "ctl", "input")
-	if !errors.Is(err, ui.ErrViolationsFound) {
-		t.Fatalf("expected ErrViolationsFound, got: %v", err)
-	}
-}
-
-func TestFinalizeProfileEvaluation_Quiet(t *testing.T) {
-	var stderr bytes.Buffer
-	result := evaluation.ComplianceReport{Findings: nil}
-	err := finalizeProfileEvaluation(&stderr, true, &result, nil, "ctl", "input")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if stderr.Len() != 0 {
-		t.Fatal("expected no stderr output in quiet mode")
-	}
-}
-
 // --- validateDirsWithConfig ---
 
 func TestValidateDirsWithConfig_StdinObservations(t *testing.T) {
@@ -585,23 +285,6 @@ func TestValidateDirsWithConfig_StdinObservations(t *testing.T) {
 	if err == nil {
 		// Controls dir is tmp which exists, and obs is stdin, should succeed
 		t.Log("stdin mode passed controls validation")
-	}
-}
-
-// --- NewReadinessRunner ---
-
-func TestNewReadinessRunner(t *testing.T) {
-	factory := func(_, _ string, _ bool) ReadinessValidator {
-		return func(_ time.Duration, _ time.Time) (validation.EvaluationState, error) {
-			return validation.EvaluationState{}, nil
-		}
-	}
-	runner := NewReadinessRunner(factory)
-	if runner == nil {
-		t.Fatal("expected non-nil runner")
-	}
-	if runner.CreateValidator == nil {
-		t.Fatal("expected non-nil CreateValidator")
 	}
 }
 
@@ -694,64 +377,6 @@ func TestParseProfiles_TrailingComma(t *testing.T) {
 	}
 	if len(profiles) != 1 {
 		t.Fatalf("expected 1 profile (trailing comma ignored), got %d", len(profiles))
-	}
-}
-
-// --- filterByComplianceUnion ---
-
-func TestFilterByComplianceUnion_SingleFramework(t *testing.T) {
-	controls := []policy.ControlDefinition{
-		{ID: "CTL.A", Compliance: policy.ComplianceMapping{"hipaa": ""}},
-		{ID: "CTL.B", Compliance: policy.ComplianceMapping{"soc2": ""}},
-		{ID: "CTL.C", Compliance: policy.ComplianceMapping{"hipaa": ""}},
-	}
-	result := filterByComplianceUnion(controls, []policy.ComplianceFramework{"hipaa"})
-	if len(result) != 2 {
-		t.Fatalf("expected 2 controls for hipaa, got %d", len(result))
-	}
-}
-
-func TestFilterByComplianceUnion_MultiFramework(t *testing.T) {
-	controls := []policy.ControlDefinition{
-		{ID: "CTL.A", Compliance: policy.ComplianceMapping{"hipaa": ""}},
-		{ID: "CTL.B", Compliance: policy.ComplianceMapping{"soc2": ""}},
-		{ID: "CTL.C", Compliance: policy.ComplianceMapping{"pci-dss": ""}},
-	}
-	result := filterByComplianceUnion(controls, []policy.ComplianceFramework{"hipaa", "soc2"})
-	if len(result) != 2 {
-		t.Fatalf("expected 2 controls (hipaa + soc2 union), got %d", len(result))
-	}
-}
-
-func TestFilterByComplianceUnion_Dedup(t *testing.T) {
-	// Control matches both frameworks — should appear once.
-	controls := []policy.ControlDefinition{
-		{ID: "CTL.A", Compliance: policy.ComplianceMapping{"hipaa": "", "soc2": ""}},
-		{ID: "CTL.B", Compliance: policy.ComplianceMapping{"hipaa": ""}},
-	}
-	result := filterByComplianceUnion(controls, []policy.ComplianceFramework{"hipaa", "soc2"})
-	if len(result) != 2 {
-		t.Fatalf("expected 2 controls (deduped), got %d", len(result))
-	}
-}
-
-func TestFilterByComplianceUnion_NoMatch(t *testing.T) {
-	controls := []policy.ControlDefinition{
-		{ID: "CTL.A", Compliance: policy.ComplianceMapping{"hipaa": ""}},
-	}
-	result := filterByComplianceUnion(controls, []policy.ComplianceFramework{"soc2"})
-	if len(result) != 0 {
-		t.Fatalf("expected 0 controls for non-matching framework, got %d", len(result))
-	}
-}
-
-func TestFilterByComplianceUnion_EmptyFrameworks(t *testing.T) {
-	controls := []policy.ControlDefinition{
-		{ID: "CTL.A", Compliance: policy.ComplianceMapping{"hipaa": ""}},
-	}
-	result := filterByComplianceUnion(controls, nil)
-	if len(result) != 0 {
-		t.Fatalf("expected 0 controls for nil frameworks, got %d", len(result))
 	}
 }
 

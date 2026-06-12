@@ -4,26 +4,16 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
-	"github.com/sufield/stave/cmd/cmdutil/prereq"
-	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/app/readiness"
 	"github.com/sufield/stave/internal/cli/ui"
-	validation "github.com/sufield/stave/internal/core/schemaval"
 	"github.com/sufield/stave/pkg/stave"
 )
 
-// ReadinessValidator evaluates controls against observations and returns a result.
-type ReadinessValidator func(maxUnsafe time.Duration, now time.Time) (validation.EvaluationState, error)
-
-// ReadinessValidatorFactory creates the validation function used during assessment.
-type ReadinessValidatorFactory func(ctlDir, obsDir string, sanitize bool) ReadinessValidator
-
-// ReadinessConfig defines the parsed, validated parameters for readiness assessment.
-// All fields are native types — flag string parsing happens before construction.
+// ReadinessConfig defines the parsed, validated parameters for readiness
+// assessment. All fields are native types — flag string parsing happens
+// before construction in ResolveDryRun.
 type ReadinessConfig struct {
 	ControlsDir       string
 	ObservationsDir   string
@@ -33,97 +23,38 @@ type ReadinessConfig struct {
 	Quiet             bool
 	Sanitize          bool
 	Stdout            io.Writer
-	Stderr            io.Writer
 
 	ControlsFlagSet        bool
 	HasEnabledControlPacks bool
-	PrereqChecks           []validation.ValidationFinding
+	EnabledPacks           []string
 }
 
-// ReadinessRunner orchestrates the readiness assessment workflow.
-// Invoked by apply --dry-run.
-type ReadinessRunner struct {
-	CreateValidator ReadinessValidatorFactory
-}
-
-// NewReadinessRunner returns a runner with the given validator factory.
-func NewReadinessRunner(factory ReadinessValidatorFactory) *ReadinessRunner {
-	return &ReadinessRunner{
-		CreateValidator: factory,
-	}
-}
-
-// Execute performs the readiness assessment and writes the report.
-func (r *ReadinessRunner) Execute(cfg ReadinessConfig) error {
-	report, err := readiness.AssessReadiness(validation.AssessmentContext{
-		ControlSource:          cfg.ControlsDir,
-		ObservationSource:      cfg.ObservationsDir,
-		SLAThreshold:           cfg.MaxUnsafeDuration,
-		CurrentTime:            cfg.Now,
-		ControlFlagsSet:        cfg.ControlsFlagSet,
+// runDryRun performs only readiness checks (apply --dry-run). The assessment,
+// prerequisite checks, and plan rendering live in the pkg/stave facade
+// (stave.AssessReadiness); the command writes the rendered bytes (quiet-gated)
+// and maps a not-ready result to the validation exit code.
+func runDryRun(ctx context.Context, cfg ReadinessConfig) error {
+	out, ready, err := stave.AssessReadiness(ctx, stave.ReadinessRequest{
+		ControlsDir:            cfg.ControlsDir,
+		ObservationsDir:        cfg.ObservationsDir,
+		MaxUnsafe:              cfg.MaxUnsafeDuration,
+		Now:                    cfg.Now,
+		Sanitize:               cfg.Sanitize,
+		Format:                 string(cfg.Format),
+		ControlsFlagSet:        cfg.ControlsFlagSet,
 		HasEnabledControlPacks: cfg.HasEnabledControlPacks,
-		PreflightChecks:        cfg.PrereqChecks,
-		RunEvaluation:          r.CreateValidator(cfg.ControlsDir, cfg.ObservationsDir, cfg.Sanitize),
-	})
+	}, cfg.EnabledPacks, "")
 	if err != nil {
-		return fmt.Errorf("assess readiness: %w", err)
+		return err //nolint:wrapcheck // facade already wrapped; preserve exit codes.
 	}
 
-	if err := r.writeReport(cfg, report); err != nil {
-		return err
+	if !cfg.Quiet {
+		if _, werr := cfg.Stdout.Write(out); werr != nil {
+			return fmt.Errorf("write readiness report: %w", werr)
+		}
 	}
-
-	if !report.IsReady() {
+	if !ready {
 		return ui.ErrValidationFailed
 	}
 	return nil
-}
-
-// writeReport renders the readiness report in the requested format.
-// The cfg.Quiet gate lives here (rather than at the caller) so the
-// "stay silent in quiet mode" rule is bound to the writer rather
-// than to the call site — the report renderer itself decides
-// whether the configuration permits emitting output.
-func (r *ReadinessRunner) writeReport(cfg ReadinessConfig, report validation.ReadinessAssessment) error {
-	if cfg.Quiet {
-		return nil
-	}
-	renderer, err := NewReadinessRenderer(cfg.Format)
-	if err != nil {
-		return err
-	}
-	if err := renderer.Render(cfg.Stdout, cfg.Stderr, report); err != nil {
-		return fmt.Errorf("render output: %w", err)
-	}
-	return nil
-}
-
-// readinessJSONReport enriches the domain Report with the CLI-specific
-// next_command field for JSON output. The domain type intentionally omits this
-// field because CLI command names are a presentation concern.
-type readinessJSONReport struct {
-	validation.ReadinessAssessment
-	NextCommand string `json:"next_command"`
-}
-
-// runDryRun performs only readiness checks (replacing the removed plan command).
-// It is invoked by apply --dry-run.
-func runDryRun(ctx context.Context, deps Deps, cfg ReadinessConfig) error {
-	factory := func(ctlDir, obsDir string, sanitize bool) ReadinessValidator {
-		return stave.NewReadinessEvaluator(ctx, deps.NewObsRepo, deps.NewCtlRepo, ctlDir, obsDir, sanitize, projconfig.PackConfigIssues)
-	}
-	runner := NewReadinessRunner(factory)
-	return runner.Execute(cfg)
-}
-
-func doctorPrereqs() ([]validation.ValidationFinding, error) {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return nil, fmt.Errorf("resolve working directory: %w", err)
-	}
-	exe, err := os.Executable()
-	if err != nil {
-		return nil, fmt.Errorf("resolve executable path: %w", err)
-	}
-	return prereq.DoctorPrereqChecks(cwd, exe), nil
 }

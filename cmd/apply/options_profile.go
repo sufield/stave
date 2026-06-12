@@ -26,11 +26,6 @@ func resolveProfileMode(o *Options, cs cobraState) (RunConfig, error) {
 		return RunConfig{}, &ui.UserError{Err: fmt.Errorf("--input is required when using --profile %s", o.Profile)}
 	}
 
-	clock, err := compose.ResolveClock(o.NowTime)
-	if err != nil {
-		return RunConfig{}, &ui.UserError{Err: err}
-	}
-
 	format, err := compose.ResolveFormatValue(string(o.Format))
 	if err != nil {
 		return RunConfig{}, &ui.UserError{Err: err}
@@ -74,7 +69,7 @@ func resolveProfileMode(o *Options, cs cobraState) (RunConfig, error) {
 		Quiet:             quiet,
 		Stdout:            compose.ResolveStdout(cs.Stdout, quiet, format),
 		Stderr:            cs.Stderr,
-		Sanitizer:         cs.GlobalFlags.GetSanitizer(),
+		NowTime:           o.NowTime,
 	}
-	return RunConfig{Mode: runModeProfile, Profile: cfg, profileClock: clock}, nil
+	return RunConfig{Mode: runModeProfile, Profile: cfg}, nil
 }

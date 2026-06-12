@@ -27,7 +27,7 @@ func ResolveDryRun(o *Options, cs cobraState) (ReadinessConfig, error) {
 		return ReadinessConfig{}, fmt.Errorf("prepare evaluation context: %w", err)
 	}
 
-	hasPacks := false
+	var enabledPacks []string
 	cfg, ok, cfgErr := projconfig.FindProjectConfig()
 	if cfgErr != nil {
 		return ReadinessConfig{}, fmt.Errorf("resolve dry-run config: %w", ui.WithHint(
@@ -35,13 +35,8 @@ func ResolveDryRun(o *Options, cs cobraState) (ReadinessConfig, error) {
 			ui.ErrHintProjectConfig,
 		))
 	}
-	if ok && len(cfg.EnabledControlPacks) > 0 {
-		hasPacks = true
-	}
-
-	prereqs, prereqErr := doctorPrereqs()
-	if prereqErr != nil {
-		return ReadinessConfig{}, prereqErr
+	if ok {
+		enabledPacks = cfg.EnabledControlPacks
 	}
 
 	return ReadinessConfig{
@@ -53,9 +48,8 @@ func ResolveDryRun(o *Options, cs cobraState) (ReadinessConfig, error) {
 		Quiet:                  cs.GlobalFlags.Quiet,
 		Sanitize:               cs.GlobalFlags.Sanitize,
 		Stdout:                 cs.Stdout,
-		Stderr:                 cs.Stderr,
 		ControlsFlagSet:        o.controlsSet,
-		HasEnabledControlPacks: hasPacks,
-		PrereqChecks:           prereqs,
+		HasEnabledControlPacks: len(enabledPacks) > 0,
+		EnabledPacks:           enabledPacks,
 	}, nil
 }

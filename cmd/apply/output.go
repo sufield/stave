@@ -4,13 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
 
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/core/evaluation"
-	validation "github.com/sufield/stave/internal/core/schemaval"
 )
 
 // Reporter handles the visual presentation of evaluation and readiness
@@ -118,70 +116,6 @@ func gateViolations(res EvaluateResult) error {
 		return nil
 	}
 	return ui.ErrViolationsFound
-}
-
-// ReportPlan prints the readiness report (used by apply --dry-run).
-func (r *Reporter) ReportPlan(report validation.ReadinessAssessment) error {
-	if !r.ShouldEmit() {
-		return nil
-	}
-
-	w := r.Stdout
-	if _, err := fmt.Fprintf(w, "Plan Summary\n------------\n"); err != nil {
-		return fmt.Errorf("write output: %w", err)
-	}
-	if _, err := fmt.Fprintf(w, "Ready:        %t\n", report.IsSafe); err != nil {
-		return fmt.Errorf("write output: %w", err)
-	}
-	if _, err := fmt.Fprintf(w, "Controls:     %s\n", report.ControlSource); err != nil {
-		return fmt.Errorf("write output: %w", err)
-	}
-	if _, err := fmt.Fprintf(w, "Checks: %s\n", report.ObservationSource); err != nil {
-		return fmt.Errorf("write output: %w", err)
-	}
-	if _, err := fmt.Fprintf(w, "Checked:      %d controls, %d snapshots, %d asset observations\n",
-		report.Summary.ControlsVerified,
-		report.Summary.StatesVerified,
-		report.Summary.ResourcesAnalyzed); err != nil {
-		return fmt.Errorf("write output: %w", err)
-	}
-
-	issues := report.Findings()
-	if len(issues) > 0 {
-		if _, err := fmt.Fprintln(w, "\nIssues:"); err != nil {
-			return fmt.Errorf("write output: %w", err)
-		}
-		for _, issue := range issues {
-			if err := printReadinessIssue(w, issue); err != nil {
-				return err
-			}
-		}
-	}
-
-	if _, err := fmt.Fprintf(w, "\nNext: %s\n", report.NextCommand()); err != nil {
-		return fmt.Errorf("write output: %w", err)
-	}
-	return nil
-}
-
-func printReadinessIssue(w io.Writer, issue validation.ValidationFinding) error {
-	if _, err := fmt.Fprintf(w, "  [%s] %s: %s\n", issue.Status.String(), issue.Name, issue.Message); err != nil {
-		return fmt.Errorf("write output: %w", err)
-	}
-
-	if fix := strings.TrimSpace(issue.Remediation); fix != "" {
-		if _, err := fmt.Fprintf(w, "    Fix: %s\n", fix); err != nil {
-			return fmt.Errorf("write output: %w", err)
-		}
-	}
-
-	if cmd := strings.TrimSpace(issue.FixCommand); cmd != "" {
-		if _, err := fmt.Fprintf(w, "    Command: %s\n", cmd); err != nil {
-			return fmt.Errorf("write output: %w", err)
-		}
-	}
-
-	return nil
 }
 
 // CheckSLAPolicy returns an error (exit code 3) when SLA breaches

@@ -35,10 +35,9 @@ const (
 // Exactly one of Params or Profile is meaningful, determined by Mode.
 // All resolved values live here — no downstream code reads back from Options.
 type RunConfig struct {
-	Mode         runMode
-	Params       *applyParams // non-nil in standard mode
-	Profile      *Config      // non-nil in profile mode
-	profileClock ports.Clock  // used by profile mode
+	Mode    runMode
+	Params  *applyParams // non-nil in standard mode
+	Profile *Config      // non-nil in profile mode
 
 	// Resolved directory paths from inference. Used by buildEvaluatorInput
 	// instead of reading back from the mutable Options receiver.

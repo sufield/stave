@@ -4,10 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
-	"github.com/sufield/stave/internal/cli/ui"
-	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // runApply is the single dispatch function called by the thin RunE wrapper.
@@ -33,7 +30,7 @@ func runApply(ctx context.Context, deps Deps, opts *Options, cs cobraState) erro
 		if dryErr != nil {
 			return fmt.Errorf("resolve dry-run config: %w", dryErr)
 		}
-		return runDryRun(ctx, deps, dryCfg)
+		return runDryRun(ctx, dryCfg)
 	}
 
 	if err = runStrictIntegrityCheck(cs.GlobalFlags.Strict, cs.Stdout, cs.Stderr); err != nil {
@@ -46,18 +43,7 @@ func runApply(ctx context.Context, deps Deps, opts *Options, cs cobraState) erro
 	}
 
 	if cfg.IsProfileMode() {
-		rt := ui.NewRuntime(cs.Stdout, cs.Stderr)
-		rt.Quiet = cfg.Profile.Quiet
-		runner := NewRunner(
-			deps.NewCELEvaluator,
-			func(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
-				return compose.LoadControlsFrom(ctx, deps.NewCtlRepo, dir)
-			},
-			deps.NewFindingWriter,
-			WithClock(cfg.profileClock),
-			WithUI(rt),
-		)
-		return runner.Run(ctx, *cfg.Profile)
+		return runProfile(ctx, cs, cfg)
 	}
 
 	sio, err := ResolveStandardIO(opts, cs)
