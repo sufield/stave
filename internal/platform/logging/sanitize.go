@@ -16,9 +16,7 @@ func isSensitiveKey(key string) bool {
 	// Normalize once: lowercase, strip CLI dashes, strip =value suffix.
 	norm := strings.ToLower(key)
 	norm = strings.TrimLeft(norm, "-")
-	if i := strings.IndexByte(norm, '='); i >= 0 {
-		norm = norm[:i]
-	}
+	norm, _, _ = strings.Cut(norm, "=")
 	if norm == "" {
 		return false
 	}

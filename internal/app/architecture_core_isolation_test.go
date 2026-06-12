@@ -6,7 +6,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -77,7 +77,7 @@ func TestCoreRuntimeNoHardwiredSideEffects(t *testing.T) {
 		}
 	}
 
-	sort.Strings(violations)
+	slices.Sort(violations)
 	for _, v := range violations {
 		t.Errorf("core side-effect violation: %s", v)
 	}
@@ -145,7 +145,7 @@ func TestCoreTestsAreIsolated(t *testing.T) {
 		}
 	}
 
-	sort.Strings(violations)
+	slices.Sort(violations)
 	for _, v := range violations {
 		t.Errorf("core test isolation violation: %s", v)
 	}

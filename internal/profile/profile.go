@@ -9,7 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"sort"
+	"slices"
 
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/compliance"
@@ -428,8 +428,14 @@ func (p *Profile) Evaluate(ctx context.Context, snap asset.Snapshot, registries 
 	// Sort: failures first, then by severity descending. This is
 	// for display only; compound detection ran above against the
 	// stable pre-sort input. Comparator lives on Result.Less.
-	sort.SliceStable(results, func(i, j int) bool {
-		return results[i].Less(&results[j])
+	slices.SortStableFunc(results, func(a, b Result) int {
+		if a.Less(&b) {
+			return -1
+		}
+		if b.Less(&a) {
+			return 1
+		}
+		return 0
 	})
 
 	compoundFindings := compound.Detect(compound.DefaultRules(), preSortOutcomes)

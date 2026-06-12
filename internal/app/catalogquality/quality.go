@@ -52,32 +52,32 @@ func Analyze(input Input) Report {
 
 		// severity
 		if ctl.Severity.IsValid() {
-			inc(&completeness, "severity", true)
+			inc(completeness, "severity", true)
 		} else {
-			inc(&completeness, "severity", false)
+			inc(completeness, "severity", false)
 		}
 
 		// remediation.action
 		if ctl.Remediation.HasAction() {
-			inc(&completeness, "remediation.action", true)
+			inc(completeness, "remediation.action", true)
 		} else {
-			inc(&completeness, "remediation.action", false)
+			inc(completeness, "remediation.action", false)
 		}
 
 		// attack_stage
 		stage := ctl.AttackStage()
 		if stage != "" {
-			inc(&completeness, "attack_stage", true)
+			inc(completeness, "attack_stage", true)
 			stagesSeen[stage] = true
 		} else {
-			inc(&completeness, "attack_stage", false)
+			inc(completeness, "attack_stage", false)
 		}
 
 		// compliance
 		if len(ctl.Compliance) > 0 {
-			inc(&completeness, "compliance", true)
+			inc(completeness, "compliance", true)
 		} else {
-			inc(&completeness, "compliance", false)
+			inc(completeness, "compliance", false)
 		}
 
 		// Track covered asset domains.
@@ -132,12 +132,12 @@ func Analyze(input Input) Report {
 	}
 }
 
-func inc(m *map[string]FieldStat, key string, present bool) {
-	fs := (*m)[key]
+func inc(m map[string]FieldStat, key string, present bool) {
+	fs := m[key]
 	if present {
 		fs.Present++
 	} else {
 		fs.Missing++
 	}
-	(*m)[key] = fs
+	m[key] = fs
 }

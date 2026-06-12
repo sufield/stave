@@ -1,10 +1,11 @@
 package catalog
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -67,24 +68,22 @@ func SummarizePolicies(controls []policy.ControlDefinition) []PolicyEntry {
 // OrderEntries sorts policy entries by the requested attribute.
 func OrderEntries(entries []PolicyEntry, orderBy string) error {
 	key := strings.ToLower(strings.TrimSpace(orderBy))
-	var less func(i, j int) bool
 
 	switch key {
 	case "id":
-		less = func(i, j int) bool { return entries[i].ID < entries[j].ID }
+		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.ID, b.ID) })
 	case "name":
-		less = func(i, j int) bool { return entries[i].Name < entries[j].Name }
+		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.Name, b.Name) })
 	case "type":
-		less = func(i, j int) bool { return entries[i].Type < entries[j].Type }
+		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.Type, b.Type) })
 	case "risk":
-		less = func(i, j int) bool { return entries[i].Risk < entries[j].Risk }
+		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.Risk, b.Risk) })
 	case "domain":
-		less = func(i, j int) bool { return entries[i].Domain < entries[j].Domain }
+		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.Domain, b.Domain) })
 	default:
 		return fmt.Errorf("invalid order attribute %q (available: id, name, type, risk, domain)", orderBy)
 	}
 
-	sort.Slice(entries, less)
 	return nil
 }
 

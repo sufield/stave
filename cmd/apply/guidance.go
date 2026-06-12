@@ -3,9 +3,6 @@ package apply
 import (
 	"fmt"
 	"strings"
-
-	"github.com/sufield/stave/internal/app/exemptlapse"
-	"github.com/sufield/stave/internal/core/evaluation"
 )
 
 // Next-step templates. Centralized so flag/command renames update in one place.
@@ -15,54 +12,14 @@ const (
 	stepExport   = "Export findings to a file: `stave apply --format json > findings.json`"
 )
 
-// EvaluateResult provides structured execution outcomes and CLI guidance.
-type EvaluateResult struct {
-	SecurityState        evaluation.SecurityState
-	DiagnoseCommand      string   // full CLI command for copy-paste
-	NextSteps            []string // nil when safe
-	HasSLABreach         bool     // at least one finding has SLABreached=true
-	HasCriticalSLABreach bool     // at least one critical/escalated-critical finding breached SLA
-	// RawFindings holds the raw evaluation findings for post-processing
-	// (e.g. --new-only filtering). Nil when not needed.
-	RawFindings []evaluation.Finding
-	// LapsedExemptions holds exemptions that have expired, detected
-	// post-evaluation from acknowledged findings.
-	LapsedExemptions []exemptlapse.LapsedFinding
-}
-
-// ShouldFailForPolicy reports whether the SLA-policy gate should
-// fail this run. Centralises the (policy → which-breach-flag-to-read)
-// mapping so Reporter.CheckSLAPolicy stops switching on policy at
-// the call site. Returns false for SLAPolicyWarn (the no-fail
-// default) and any unrecognised policy value.
-func (r EvaluateResult) ShouldFailForPolicy(policy SLAPolicy) bool {
-	switch policy {
-	case SLAPolicyStrict:
-		return r.HasSLABreach
-	case SLAPolicyCriticalOnly:
-		return r.HasCriticalSLABreach
-	default:
-		return false
-	}
-}
-
-// BuildEvaluateResult maps a domain safety status into actionable CLI guidance.
-// This lives in the cmd layer because it produces CLI-specific strings
-// (command names, flag suggestions) that the app layer must not know about.
-func BuildEvaluateResult(status evaluation.SecurityState, controlsDir, observationsDir string) EvaluateResult {
-	if status == evaluation.StateCompliant {
-		return EvaluateResult{SecurityState: status}
-	}
-
-	hint := BuildDiagnoseHint(controlsDir, observationsDir)
-	return EvaluateResult{
-		SecurityState:   status,
-		DiagnoseCommand: hint,
-		NextSteps: []string{
-			fmt.Sprintf(stepDiagnose, hint),
-			stepText,
-			stepExport,
-		},
+// applyNextSteps builds the next-step hints shown on a blocking
+// (non-compliant) outcome, from the diagnose command. Replaces the
+// NextSteps field that the former EvaluateResult carried.
+func applyNextSteps(diagnose string) []string {
+	return []string{
+		fmt.Sprintf(stepDiagnose, diagnose),
+		stepText,
+		stepExport,
 	}
 }
 

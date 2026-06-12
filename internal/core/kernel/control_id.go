@@ -38,31 +38,43 @@ func NewControlID(raw string) (ControlID, error) {
 // Provider extracts the service provider or family (the first segment after CTL).
 // For "CTL.S3.PUBLIC.001", it returns "S3".
 func (id ControlID) Provider() string {
-	parts := strings.Split(id.String(), ".")
-	if len(parts) < 2 {
+	s := id.String()
+	_, rest, ok := strings.Cut(s, ".")
+	if !ok {
 		return ""
 	}
-	return parts[1]
+	prov, _, _ := strings.Cut(rest, ".")
+	return prov
 }
 
 // Category extracts the middle functional segments.
 // For "CTL.S3.PUBLIC.READ.001", it returns "PUBLIC.READ".
 func (id ControlID) Category() string {
-	parts := strings.Split(id.String(), ".")
-	if len(parts) < 4 {
-		if len(parts) >= 3 {
-			return parts[2]
-		}
+	s := id.String()
+	_, rest, ok := strings.Cut(s, ".")
+	if !ok {
 		return ""
 	}
-	return strings.Join(parts[2:len(parts)-1], ".")
+	_, rest, ok = strings.Cut(rest, ".")
+	if !ok {
+		return ""
+	}
+	idx := strings.LastIndexByte(rest, '.')
+	if idx < 0 {
+		return rest
+	}
+	return rest[:idx]
 }
 
 // Sequence extracts the trailing numeric identifier.
 // For "CTL.S3.PUBLIC.001", it returns "001".
 func (id ControlID) Sequence() string {
-	parts := strings.Split(id.String(), ".")
-	return parts[len(parts)-1]
+	s := id.String()
+	idx := strings.LastIndexByte(s, '.')
+	if idx < 0 {
+		return s
+	}
+	return s[idx+1:]
 }
 
 // ValidateControlIDFormat ensures the ID meets naming and structure requirements.

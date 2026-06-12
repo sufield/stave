@@ -30,3 +30,22 @@ import "errors"
 // see ErrControlNotFound in explain.go for the per-feature
 // "not-found" precedent.
 var ErrInvalidInput = errors.New("invalid input")
+
+// asInvalidInput tags err as a user-input error so the CLI exit-code shim maps
+// it to exit 2, WITHOUT appending redundant "invalid input" text. The engine
+// errors it wraps already carry an internal input sentinel in their message
+// (e.g. applycmd.ErrInvalidInput); a plain `fmt.Errorf("%w: %w", err,
+// ErrInvalidInput)` would render "...: invalid input: invalid input". This
+// joins ErrInvalidInput into the errors.Is chain only, preserving the original
+// message verbatim.
+func asInvalidInput(err error) error {
+	return invalidInputError{err: err}
+}
+
+type invalidInputError struct{ err error }
+
+func (e invalidInputError) Error() string { return e.err.Error() }
+
+func (e invalidInputError) Unwrap() error { return e.err }
+
+func (e invalidInputError) Is(target error) bool { return target == ErrInvalidInput }

@@ -1,18 +1,17 @@
 package apply
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/dircheck"
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
-	appapply "github.com/sufield/stave/internal/app/apply"
-	appconfig "github.com/sufield/stave/internal/app/config"
-	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // resolvePathInference resolves controls and observations directories using
@@ -52,15 +51,18 @@ func Resolve(o *Options, cs cobraState) (RunConfig, error) {
 	controlsDir := ec.ControlsDir
 	observationsDir := ec.ObservationsDir
 
-	// IntegrityManifest and IntegrityPublicKey are already cleaned by
-	// normalize() in PreRunE — no duplicate cleaning needed here.
-
-	parsed, err := parseDomainOptions(o.MaxUnsafeDuration, o.NowTime, observationsDir, o.IntegrityManifest, o.IntegrityPublicKey)
-	if err != nil {
+	// Integrity flag validation, restored from the removed appeval.Validate
+	// path: these are CLI flag checks (public-key needs a manifest, the
+	// manifest is incompatible with stdin, both paths must exist), so they
+	// belong command-side, validated before the evaluation progress span.
+	if err = validateIntegrityFlags(o.IntegrityManifest, o.IntegrityPublicKey, observationsDir); err != nil {
 		return RunConfig{}, err
 	}
 
-	// Load project config once — shared by validateDirs, buildEvaluatorInput, and Build.
+	// --max-unsafe and --now are validated + parsed in the facade
+	// (stave.EvaluateStandard); the command passes the raw flag strings.
+
+	// Load project config once — shared by validateDirs and the facade.
 	projCfg, cfgPath, err := projconfig.FindProjectConfigWithPath("")
 	if err != nil {
 		return RunConfig{}, fmt.Errorf("resolve run config: %w", ui.WithHint(
@@ -82,7 +84,7 @@ func Resolve(o *Options, cs cobraState) (RunConfig, error) {
 	useBuiltin := !o.controlsSet && !hasPacks && !pathExists(controlsDir)
 
 	if !useBuiltin {
-		if err := validateDirsWithConfig(controlsDir, observationsDir, o.controlsSet, projCfg); err != nil {
+		if err := validateDirsWithConfig(controlsDir, observationsDir, hasPacks); err != nil {
 			return RunConfig{}, err
 		}
 	} else if observationsDir != "-" {
@@ -92,17 +94,10 @@ func Resolve(o *Options, cs cobraState) (RunConfig, error) {
 		}
 	}
 
-	params := &applyParams{
-		maxUnsafeDuration: parsed.MaxUnsafeDuration,
-		clock:             buildClock(parsed.Now),
-		source:            parsed.Source,
-	}
 	return RunConfig{
 		Mode:              runModeStandard,
-		Params:            params,
 		ControlsDir:       controlsDir,
 		ObservationsDir:   observationsDir,
-		projectConfig:     projCfg,
 		projectConfigPath: cfgPath,
 		UseBuiltinCatalog: useBuiltin,
 	}, nil
@@ -154,51 +149,77 @@ func resolveProjectContext() (projectContext, error) {
 
 	return projectContext{
 		Root:           root,
-		ContextName:    appapply.ResolveContextName(root, selectedContext),
+		ContextName:    resolveContextName(root, selectedContext),
 		UserConfigPath: userPath,
 	}, nil
 }
 
-// buildEvaluatorInput assembles the domain-layer options from resolved
-// paths and CLI flags. No project context resolution — that's done by
-// resolveProjectContext.
-func buildEvaluatorInput(o *Options, pc projectContext, controlsDir, observationsDir, cfgPath string) appeval.Options {
-	return appeval.Options{
-		ContextName:        pc.ContextName,
-		ProjectRoot:        pc.Root,
-		ControlsDir:        controlsDir,
-		ConfigPath:         cfgPath,
-		UserConfigPath:     pc.UserConfigPath,
-		MaxUnsafeDuration:  o.MaxUnsafeDuration,
-		NowTime:            o.NowTime,
-		ObservationsSource: appeval.ObservationSource(observationsDir),
-		IntegrityManifest:  o.IntegrityManifest,
-		IntegrityPublicKey: o.IntegrityPublicKey,
-		Hasher:             fsutil.FSContentHasher{},
+// resolveContextName returns the project context label: the selected context
+// name when set, else the project-root basename, else "default". Inlined from
+// internal/app/apply.ResolveContextName (pure stdlib) so the command holds no
+// internal/app import.
+func resolveContextName(projectRoot, selectedContext string) string {
+	if s := strings.TrimSpace(selectedContext); s != "" {
+		return s
 	}
+	base := filepath.Base(projectRoot)
+	if base == "" || base == "." || base == string(filepath.Separator) {
+		return "default"
+	}
+	return base
 }
 
-// parseDomainOptions validates and parses domain-specific flag values
-// without constructing a full appeval.Options struct.
-func parseDomainOptions(maxUnsafe, nowTime, observationsDir, manifest, pubKey string) (appeval.ParsedOptions, error) {
-	opts := appeval.Options{
-		MaxUnsafeDuration:  maxUnsafe,
-		NowTime:            nowTime,
-		ObservationsSource: appeval.ObservationSource(observationsDir),
-		IntegrityManifest:  manifest,
-		IntegrityPublicKey: pubKey,
+// validateIntegrityFlags reproduces the pre-facade integrity checks that lived
+// in appeval.Options.Validate (removed with parseDomainOptions): the public key
+// requires a manifest, the manifest is incompatible with stdin observations,
+// and both paths, when set, must reference existing files. These are CLI flag
+// validations — they stay command-side and surface as input errors (exit 2),
+// matching the original messages byte-for-byte.
+func validateIntegrityFlags(manifest, publicKey, observationsDir string) error {
+	manifest = strings.TrimSpace(manifest)
+	publicKey = strings.TrimSpace(publicKey)
+
+	if publicKey != "" && manifest == "" {
+		return &ui.UserError{Err: errors.New("integrity-public-key requires integrity-manifest")}
 	}
-	parsed, err := opts.Validate()
+	if observationsDir == "-" && manifest != "" {
+		return &ui.UserError{Err: errors.New("integrity-manifest cannot be used with observations - (stdin mode)")}
+	}
+	if err := validateIntegrityFilePath(manifest, "integrity-manifest"); err != nil {
+		return &ui.UserError{Err: err}
+	}
+	if err := validateIntegrityFilePath(publicKey, "integrity-public-key"); err != nil {
+		return &ui.UserError{Err: err}
+	}
+	return nil
+}
+
+// validateIntegrityFilePath mirrors appeval.validateFilePath: a non-empty flag
+// value must reference an existing regular file, distinguishing not-found,
+// permission, and is-a-directory cases.
+func validateIntegrityFilePath(path, flag string) error {
+	if path == "" {
+		return nil
+	}
+	fi, err := os.Stat(path)
 	if err != nil {
-		return appeval.ParsedOptions{}, &ui.UserError{Err: err}
+		if os.IsNotExist(err) {
+			return fmt.Errorf("%s not found at path %q", flag, path)
+		}
+		if os.IsPermission(err) {
+			return fmt.Errorf("%s not readable at path %q (check file permissions)", flag, path)
+		}
+		return fmt.Errorf("cannot access %s at path %q: %w", flag, path, err)
 	}
-	return parsed, nil
+	if fi.IsDir() {
+		return fmt.Errorf("%s must be a file, got directory %q", flag, path)
+	}
+	return nil
 }
 
-// validateDirsWithConfig ensures directories exist unless using packs or stdin.
-// Uses a pre-loaded project config to check for enabled packs without re-reading disk.
-func validateDirsWithConfig(controlsDir, observationsDir string, controlsSet bool, projCfg *appconfig.WorkspacePolicy) error {
-	hasPacks := !controlsSet && projCfg != nil && len(projCfg.EnabledControlPacks) > 0
+// validateDirsWithConfig ensures directories exist unless enabled control
+// packs (hasPacks) supply controls, or observations come from stdin.
+func validateDirsWithConfig(controlsDir, observationsDir string, hasPacks bool) error {
 	if !hasPacks {
 		if err := dircheck.ValidateFlagDir("--controls", controlsDir, "controls", ui.ErrHintControlsNotAccessible, nil); err != nil {
 			return fmt.Errorf("validate controls directory: %w", err)

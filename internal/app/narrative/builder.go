@@ -4,6 +4,7 @@
 package narrative
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
 	"strings"
@@ -205,7 +206,7 @@ func buildSteps(spec policy.RemediationSpec) []Step {
 		if !a.HasSafeDefault && b.HasSafeDefault {
 			return 1
 		}
-		return strings.Compare(a.PropertyPath, b.PropertyPath)
+		return cmp.Compare(a.PropertyPath, b.PropertyPath)
 	})
 
 	// Group changes by namespace (first path component).

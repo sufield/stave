@@ -189,8 +189,9 @@ func Build(input BuildInput) *Graph {
 	}
 }
 
-func capLabel(id string) string {
-	labels := map[string]string{ //nolint:gosec // G101: not credentials — ATT&CK capability labels
+var (
+	//nolint:gosec // G101: not credentials — ATT&CK capability labels
+	capLabels = map[string]string{
 		"internet_access":           "Internet Access",
 		"network_access_vpc":        "VPC Network Access",
 		"network_access_ec2":        "EC2 Network Access",
@@ -211,14 +212,9 @@ func capLabel(id string) string {
 		"data_destruction":          "Data Destruction",
 		"audit_trail_destroyed":     "Audit Trail Destroyed",
 	}
-	if l, ok := labels[id]; ok {
-		return l
-	}
-	return strings.ReplaceAll(id, "_", " ")
-}
 
-func capDescription(id string) string {
-	desc := map[string]string{ //nolint:gosec // G101: not credentials — ATT&CK capability descriptions
+	//nolint:gosec // G101: not credentials — ATT&CK capability descriptions
+	capDescriptions = map[string]string{
 		"internet_access":           "Attacker reachable from the public internet",
 		"network_access_vpc":        "Attacker can reach services within the VPC",
 		"network_access_ec2":        "Attacker can reach EC2 instances on internal ports",
@@ -239,7 +235,17 @@ func capDescription(id string) string {
 		"data_destruction":          "Attacker can destroy data without recovery",
 		"audit_trail_destroyed":     "Audit logging disabled or tampered with",
 	}
-	if d, ok := desc[id]; ok {
+)
+
+func capLabel(id string) string {
+	if l, ok := capLabels[id]; ok {
+		return l
+	}
+	return strings.ReplaceAll(id, "_", " ")
+}
+
+func capDescription(id string) string {
+	if d, ok := capDescriptions[id]; ok {
 		return d
 	}
 	return ""

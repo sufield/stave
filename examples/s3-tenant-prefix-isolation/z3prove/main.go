@@ -201,8 +201,8 @@ func loadSignerPurpose(snapshotsDir string) (string, error) {
 		}
 		var snap struct {
 			Identities []struct {
-				Type       string                 `json:"type"`
-				Properties map[string]interface{} `json:"properties"`
+				Type       string         `json:"type"`
+				Properties map[string]any `json:"properties"`
 			} `json:"identities"`
 		}
 		if err := json.Unmarshal(raw, &snap); err != nil {

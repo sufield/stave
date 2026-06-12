@@ -144,15 +144,7 @@ func TestValidateInFlagRegistered(t *testing.T) {
 
 func TestCommonShortAliasesRegistered(t *testing.T) {
 	f := compose.DefaultFactories()
-	applyCmd := apply.NewApplyCmd(apply.Deps{
-		NewObsRepo:       f.NewObsRepo,
-		NewCtlRepo:       f.NewCtlRepo,
-		NewStdinObsRepo:  f.NewStdinObsRepo,
-		NewFindingWriter: f.NewFindingWriter,
-		NewCELEvaluator:  f.NewCELEvaluator,
-		NewChainLoader:   f.NewChainLoader,
-		NewSLALoader:     f.NewSLALoader,
-	})
+	applyCmd := apply.NewApplyCmd()
 	validateCmd := applyvalidate.NewCmd(ui.DefaultRuntime())
 	cases := []struct {
 		name      string

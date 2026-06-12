@@ -37,7 +37,10 @@ func ComputeOverall(files map[evaluation.FilePath]kernel.Digest) kernel.Digest {
 
 	var b strings.Builder
 	for _, name := range names {
-		fmt.Fprintf(&b, "%s=%s\n", name, files[evaluation.FilePath(name)])
+		b.WriteString(name)
+		b.WriteByte('=')
+		b.WriteString(string(files[evaluation.FilePath(name)]))
+		b.WriteByte('\n')
 	}
 	return platformcrypto.HashBytes([]byte(b.String()))
 }

@@ -4,7 +4,6 @@
 package snapshotdiff
 
 import (
-	"fmt"
 	"slices"
 	"time"
 
@@ -125,7 +124,7 @@ func diffProperties(assetID asset.ID, before, after map[string]any, prefix strin
 			continue
 		}
 
-		if fmt.Sprintf("%v", bVal) != fmt.Sprintf("%v", aVal) {
+		if !jsonEqual(bVal, aVal) {
 			changes = append(changes, PropertyChange{
 				AssetID:  assetID,
 				Property: path,
@@ -175,4 +174,48 @@ func indexAssets(assets []asset.Asset) map[asset.ID]*asset.Asset {
 		idx[assets[i].ID] = &assets[i]
 	}
 	return idx
+}
+
+// jsonEqual recursively checks structural equality of JSON-compatible values
+// (strings, floats, booleans, maps, slices) without reflection package overhead
+// or recursive pointer/struct traversal vulnerabilities.
+func jsonEqual(a, b any) bool {
+	switch va := a.(type) {
+	case string:
+		vb, ok := b.(string)
+		return ok && va == vb
+	case float64:
+		vb, ok := b.(float64)
+		return ok && va == vb
+	case bool:
+		vb, ok := b.(bool)
+		return ok && va == vb
+	case []any:
+		vb, ok := b.([]any)
+		if !ok || len(va) != len(vb) {
+			return false
+		}
+		for i := range va {
+			if !jsonEqual(va[i], vb[i]) {
+				return false
+			}
+		}
+		return true
+	case map[string]any:
+		vb, ok := b.(map[string]any)
+		if !ok || len(va) != len(vb) {
+			return false
+		}
+		for k, v1 := range va {
+			v2, exists := vb[k]
+			if !exists || !jsonEqual(v1, v2) {
+				return false
+			}
+		}
+		return true
+	case nil:
+		return b == nil
+	default:
+		return a == b
+	}
 }

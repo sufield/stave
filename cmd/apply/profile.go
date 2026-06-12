@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"io"
 	"strings"
-	"time"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/stave"
 )
@@ -90,8 +89,8 @@ type Config struct {
 	Profiles          []Profile
 	BucketAllowlist   []string
 	IncludeAll        bool
-	MaxUnsafeDuration time.Duration
-	OutputFormat      appcontracts.OutputFormat
+	MaxUnsafeDuration string // raw --max-unsafe flag; the facade parses it
+	OutputFormat      cmdutil.OutputFormat
 	Quiet             bool
 	Stdout            io.Writer
 	Stderr            io.Writer

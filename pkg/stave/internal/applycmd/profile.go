@@ -42,11 +42,27 @@ type ProfileRequest struct {
 	Profiles        []string // validated profile names
 	BucketAllowlist []string
 	IncludeAll      bool
-	MaxUnsafe       time.Duration
+	MaxUnsafe       string // duration string (e.g. "168h", "7d"); "" → 0
 	Format          string // "text" | "json" | "sarif"
 	Now             string // RFC3339 or "" for wall clock
 	SanitizeIDs     bool
 	PathMode        string
+}
+
+// parseProfileMaxUnsafe parses the --max-unsafe duration string with the same
+// grammar standard apply uses (kernel.ParseDuration accepts the 'd' day unit
+// that stdlib time.ParseDuration rejects). An empty value means 0 (immediate
+// firing). Bad input is tagged ErrInvalidProfileInput so the facade maps it to
+// exit 2.
+func parseProfileMaxUnsafe(s string) (time.Duration, error) {
+	if s == "" {
+		return 0, nil
+	}
+	d, err := kernel.ParseDuration(s)
+	if err != nil {
+		return 0, fmt.Errorf("%w: parse --max-unsafe %q: %v", ErrInvalidProfileInput, s, err) //nolint:errorlint // sentinel-tag wrap; %v keeps the cause readable
+	}
+	return d, nil
 }
 
 // ProfileResult is the rendered outcome of a profile evaluation. Output is
@@ -73,6 +89,10 @@ func EvaluateProfile(ctx context.Context, req ProfileRequest) (ProfileResult, er
 	if err != nil {
 		return ProfileResult{}, err
 	}
+	maxUnsafe, err := parseProfileMaxUnsafe(req.MaxUnsafe)
+	if err != nil {
+		return ProfileResult{}, err
+	}
 	sanitizer := sanitize.Policy{SanitizeIDs: req.SanitizeIDs, PathMode: sanitize.PathMode(req.PathMode)}.NewSanitizer()
 
 	profiles := parseProfileNames(req.Profiles)
@@ -92,7 +112,7 @@ func EvaluateProfile(ctx context.Context, req ProfileRequest) (ProfileResult, er
 		// Mis-scoped allowlist matched nothing: still emit one (empty,
 		// COMPLIANT) document so a --format json consumer parses a real
 		// report rather than empty stdout.
-		out, finalize, emptyErr := evaluateEmptyScope(ctx, req, clock, sanitizer, snapshots)
+		out, finalize, emptyErr := evaluateEmptyScope(ctx, req, maxUnsafe, clock, sanitizer, snapshots)
 		if emptyErr != nil {
 			return ProfileResult{}, emptyErr
 		}
@@ -121,7 +141,7 @@ func EvaluateProfile(ctx context.Context, req ProfileRequest) (ProfileResult, er
 	result, err := appeval.EvaluateLoaded(ctx, appeval.EvaluationRequest{
 		Controls:          controls,
 		Snapshots:         filtered,
-		MaxUnsafeDuration: req.MaxUnsafe,
+		MaxUnsafeDuration: maxUnsafe,
 		Clock:             clock,
 		Hasher:            crypto.NewHasher(),
 		StaveVersion:      version.String,
@@ -149,11 +169,11 @@ func EvaluateProfile(ctx context.Context, req ProfileRequest) (ProfileResult, er
 
 // evaluateEmptyScope writes one document for a run whose scope filter matched
 // no asset, stamping EvaluatedState from the original (pre-filter) snapshots.
-func evaluateEmptyScope(ctx context.Context, req ProfileRequest, clock ports.Clock, sanitizer kernel.Sanitizer, originalSnapshots []asset.Snapshot) ([]byte, finalizeOutcome, error) {
+func evaluateEmptyScope(ctx context.Context, req ProfileRequest, maxUnsafe time.Duration, clock ports.Clock, sanitizer kernel.Sanitizer, originalSnapshots []asset.Snapshot) ([]byte, finalizeOutcome, error) {
 	result, err := appeval.EvaluateLoaded(ctx, appeval.EvaluationRequest{
 		Controls:          nil,
 		Snapshots:         nil,
-		MaxUnsafeDuration: req.MaxUnsafe,
+		MaxUnsafeDuration: maxUnsafe,
 		Clock:             clock,
 		Hasher:            crypto.NewHasher(),
 		StaveVersion:      version.String,

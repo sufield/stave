@@ -24,7 +24,7 @@ import (
 // report on stdout; warnings (skipped/misdirected history) cross as []string
 // for the command to write to stderr. Gating is unchanged (computed from the
 // same report in EvaluateStandard).
-func evaluateNewOnly(ctx context.Context, req StandardRequest, report *evaluation.ComplianceReport) ([]byte, []string, error) {
+func evaluateNewOnly(ctx context.Context, req StandardRequest, report *evaluation.ComplianceReport, now time.Time) ([]byte, []string, error) {
 	history, warnings, err := loadHistoryAssessments(ctx, req.HistoryDir)
 	if err != nil {
 		return nil, warnings, err
@@ -48,7 +48,7 @@ func evaluateNewOnly(ctx context.Context, req StandardRequest, report *evaluatio
 		CurrentFindings: current,
 		History:         history,
 		NewSince:        newSince,
-		Now:             req.Now,
+		Now:             now,
 	})
 
 	var buf bytes.Buffer

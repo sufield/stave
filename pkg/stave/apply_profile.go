@@ -3,7 +3,6 @@ package stave
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/sufield/stave/pkg/stave/internal/applycmd"
 )
@@ -27,7 +26,7 @@ func EvaluateProfile(ctx context.Context, req ProfileRequest) (ProfileResult, er
 	res, err := applycmd.EvaluateProfile(ctx, req)
 	if err != nil {
 		if errors.Is(err, applycmd.ErrInvalidProfileInput) {
-			return ProfileResult{}, fmt.Errorf("%w: %w", err, ErrInvalidInput)
+			return ProfileResult{}, asInvalidInput(err)
 		}
 		return ProfileResult{}, err //nolint:wrapcheck // engine already wrapped; preserve exit 4.
 	}

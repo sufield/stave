@@ -1,10 +1,11 @@
 package yaml
 
 import (
+	"cmp"
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -61,8 +62,8 @@ func LoadChains(dir string, registry policy.CapabilityRegistry) ([]policy.ChainD
 		chains = append(chains, chain)
 	}
 
-	sort.Slice(chains, func(i, j int) bool {
-		return chains[i].ID < chains[j].ID
+	slices.SortFunc(chains, func(a, b policy.ChainDefinition) int {
+		return cmp.Compare(a.ID, b.ID)
 	})
 
 	return chains, nil

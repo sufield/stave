@@ -227,8 +227,8 @@ func loadUploadPolicy(snapshotsDir string) (mode, exemplar string, err error) {
 		}
 		var snap struct {
 			Assets []struct {
-				Type       string                 `json:"type"`
-				Properties map[string]interface{} `json:"properties"`
+				Type       string         `json:"type"`
+				Properties map[string]any `json:"properties"`
 			} `json:"assets"`
 		}
 		if err := json.Unmarshal(raw, &snap); err != nil {
@@ -238,7 +238,7 @@ func loadUploadPolicy(snapshotsDir string) (mode, exemplar string, err error) {
 			if a.Type != "s3_upload_policy" {
 				continue
 			}
-			upload, _ := a.Properties["s3_upload"].(map[string]interface{})
+			upload, _ := a.Properties["s3_upload"].(map[string]any)
 			if upload == nil {
 				continue
 			}

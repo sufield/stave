@@ -142,15 +142,15 @@ func (l *Linter) checkVersion(path string, root *yaml.Node) []Diagnostic {
 	return nil
 }
 
-var forbiddenFields = map[string]bool{
-	"now": true, "timestamp": true, "generated_at": true, "runtime": true,
+var forbiddenFields = map[string]struct{}{
+	"now": {}, "timestamp": {}, "generated_at": {}, "runtime": {},
 }
 
 func (l *Linter) walkDeterminism(path string, n *yaml.Node) []Diagnostic {
 	var diags []Diagnostic
 	walk(n, func(k, _ *yaml.Node) {
 		key := strings.ToLower(strings.TrimSpace(k.Value))
-		if forbiddenFields[key] {
+		if _, ok := forbiddenFields[key]; ok {
 			diags = append(diags, newDiag(path, k.Line, k.Column, "CTL_NONDETERMINISTIC_FIELD",
 				fmt.Sprintf("field %q is not allowed in control contracts", k.Value), SeverityError))
 		}

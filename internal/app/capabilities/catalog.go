@@ -1,8 +1,9 @@
 package capabilities
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -41,14 +42,14 @@ func Build(controls []policy.ControlDefinition, chains []policy.ChainDefinition)
 	caps = append(caps, buildControlGroups(controls)...)
 	caps = append(caps, buildChainCaps(chains)...)
 	caps = append(caps, operationalCaps()...)
-	sort.Slice(caps, func(i, j int) bool {
-		if caps[i].Kind != caps[j].Kind {
-			return kindOrder(caps[i].Kind) < kindOrder(caps[j].Kind)
+	slices.SortFunc(caps, func(a, b Capability) int {
+		if a.Kind != b.Kind {
+			return cmp.Compare(kindOrder(a.Kind), kindOrder(b.Kind))
 		}
-		if caps[i].Service != caps[j].Service {
-			return caps[i].Service < caps[j].Service
+		if a.Service != b.Service {
+			return cmp.Compare(a.Service, b.Service)
 		}
-		return caps[i].Title < caps[j].Title
+		return cmp.Compare(a.Title, b.Title)
 	})
 	return caps
 }
@@ -89,7 +90,7 @@ func buildControlGroups(controls []policy.ControlDefinition) []Capability {
 		assetTypes := map[string]struct{}{}
 		var maxSev policy.Severity
 		titleParts := map[string]struct{}{}
-		descs := []string{}
+		var descs []string
 		for _, m := range members {
 			ids = append(ids, string(m.ID))
 			for _, at := range m.ApplicableAssetTypes {
@@ -105,12 +106,12 @@ func buildControlGroups(controls []policy.ControlDefinition) []Capability {
 				descs = append(descs, m.Description)
 			}
 		}
-		sort.Strings(ids)
+		slices.Sort(ids)
 		atList := make([]string, 0, len(assetTypes))
 		for at := range assetTypes {
 			atList = append(atList, at)
 		}
-		sort.Strings(atList)
+		slices.Sort(atList)
 
 		out = append(out, Capability{
 			ID:          fmt.Sprintf("%s.%s", k.service, k.category),
@@ -298,7 +299,7 @@ func summariseFirst(descs []string) string {
 	if len(descs) == 0 {
 		return ""
 	}
-	sort.Strings(descs)
+	slices.Sort(descs)
 	return summariseDescription(descs[0])
 }
 
@@ -326,7 +327,7 @@ func extractKeywordsFromControls(ctls []*policy.ControlDefinition) []string {
 	for k := range seen {
 		out = append(out, k)
 	}
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }
 
@@ -339,7 +340,7 @@ func extractKeywordsFromText(parts ...string) []string {
 	for k := range seen {
 		out = append(out, k)
 	}
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }
 

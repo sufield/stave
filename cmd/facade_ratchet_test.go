@@ -47,6 +47,7 @@ import (
 // add packages as they migrate; never remove one (that would be a
 // regression the test should have caught).
 var facadeCleanBaseline = map[string]bool{
+	"apply":              true,
 	"apply/validate":     true,
 	"apply/verify":       true,
 	"attest":             true,

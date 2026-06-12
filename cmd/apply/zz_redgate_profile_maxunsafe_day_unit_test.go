@@ -2,25 +2,19 @@ package apply
 
 import (
 	"testing"
-	"time"
 )
 
-// Test_RedGate_ProfileMaxUnsafeDayUnit asserts that profile mode parses
-// --max-unsafe with the same duration grammar as the standard apply path.
+// Test_RedGate_ProfileMaxUnsafeDayUnit asserts that profile mode accepts the
+// same --max-unsafe duration grammar as the standard apply path, including the
+// 'd' (day) unit ("7d" -> 168h).
 //
-// The standard path resolves --max-unsafe via kernel.ParseDuration, which
-// accepts the 'd' (day) unit ("7d" -> 168h). unit_test.go's "valid flags
-// with --now" subcase proves the standard path turns "7d" into 7*24h.
-//
-// resolveProfileMode (options_profile.go) instead parses the SAME flag with
-// the stdlib time.ParseDuration, which rejects any 'd' suffix. The in-code
-// comment claims "the same duration semantic applies whether the user runs
-// profile or standard mode" — this test pins the correct behavior so the
-// claim becomes enforceable: "7d" must resolve to 168h in profile mode too.
-//
-// Against current code this FAILS because time.ParseDuration("7d") returns
-// `time: unknown unit "d"`, so resolveProfileMode returns an error instead
-// of a RunConfig with MaxUnsafeDuration == 168h.
+// Parsing now lives in the facade (stave.EvaluateProfile -> parseProfileMaxUnsafe,
+// which uses kernel.ParseDuration and accepts 'd'). The command must NOT parse
+// the flag itself — it passes the raw string through verbatim. An earlier shape
+// parsed it command-side with stdlib time.ParseDuration, which rejects any 'd'
+// suffix and broke the "same duration semantic" contract. This test pins the
+// passthrough: resolveProfileMode must accept "7d" without erroring and carry
+// it forward unchanged for the facade to parse.
 func Test_RedGate_ProfileMaxUnsafeDayUnit(t *testing.T) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -42,9 +36,9 @@ func Test_RedGate_ProfileMaxUnsafeDayUnit(t *testing.T) {
 		t.Fatalf("profile mode rejected --max-unsafe=7d but standard mode accepts it as 168h: %v", err)
 	}
 	if cfg.Profile == nil {
-		t.Fatalf("RunConfig.Profile is nil; cannot verify parsed --max-unsafe")
+		t.Fatalf("RunConfig.Profile is nil; cannot verify --max-unsafe passthrough")
 	}
-	if got, want := cfg.Profile.MaxUnsafeDuration, 7*24*time.Hour; got != want {
-		t.Fatalf("MaxUnsafeDuration = %v, want %v (7d == 168h to match standard mode)", got, want)
+	if got, want := cfg.Profile.MaxUnsafeDuration, "7d"; got != want {
+		t.Fatalf("MaxUnsafeDuration = %q, want %q (raw string passed through to the facade)", got, want)
 	}
 }

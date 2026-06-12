@@ -1,34 +1,17 @@
 package apply
 
 import (
+	"strings"
 	"testing"
-
-	"github.com/sufield/stave/internal/core/evaluation"
 )
 
-func TestBuildEvaluateResult_Safe(t *testing.T) {
-	res := BuildEvaluateResult(evaluation.StateCompliant, "controls/s3", "observations")
-	if res.SecurityState != evaluation.StateCompliant {
-		t.Fatalf("expected PostureSafe, got %s", res.SecurityState)
+func TestApplyNextSteps(t *testing.T) {
+	steps := applyNextSteps("stave diagnose --controls ctl")
+	if len(steps) != 3 {
+		t.Fatalf("expected 3 next steps, got %d", len(steps))
 	}
-	if res.DiagnoseCommand != "" {
-		t.Fatalf("expected empty DiagnoseCommand for safe status, got %q", res.DiagnoseCommand)
-	}
-	if res.NextSteps != nil {
-		t.Fatalf("expected nil next steps for safe status, got %v", res.NextSteps)
-	}
-}
-
-func TestBuildEvaluateResult_Unsafe(t *testing.T) {
-	res := BuildEvaluateResult(evaluation.StateNonCompliant, "controls/s3", "observations")
-	if res.SecurityState != evaluation.StateNonCompliant {
-		t.Fatalf("expected PostureUnsafe, got %s", res.SecurityState)
-	}
-	if res.DiagnoseCommand == "" {
-		t.Fatal("expected non-empty DiagnoseCommand for unsafe status")
-	}
-	if len(res.NextSteps) != 3 {
-		t.Fatalf("expected 3 next steps, got %d", len(res.NextSteps))
+	if !strings.Contains(steps[0], "stave diagnose --controls ctl") {
+		t.Fatalf("first step should embed the diagnose command, got: %q", steps[0])
 	}
 }
 

@@ -5,10 +5,15 @@ import (
 	"fmt"
 	"io"
 
-	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
-	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
-	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/pkg/stave"
+)
+
+// Gate signal values returned by the standard evaluation facade (mirrors
+// evaluation.EnforcementLevel without importing the engine package).
+const (
+	gateAllow    = "ALLOW"
+	gateAdvisory = "ADVISORY"
 )
 
 // Reporter handles the visual presentation of evaluation and readiness
@@ -65,54 +70,51 @@ func (r *Reporter) hasInteractiveUI() bool {
 	return r != nil && r.Runtime != nil
 }
 
-// ReportApply prints the outcome of an evaluation and returns an error
-// when the response policy indicates failure. Per-signal phrasing
-// lives on EnforcementOutcome.SummaryMessage; this method composes
-// that message with the (advisory / block) hint plumbing.
-func (r *Reporter) ReportApply(res EvaluateResult, policy evaluation.EnforcementPolicy) error {
-	outcome := policy.Evaluate(res.SecurityState)
-	if msg := outcome.SummaryMessage(); msg != "" {
-		r.Emit(r.Stderr, msg)
+// ReportApply prints the outcome of an evaluation and returns an error when
+// the gate decision (precomputed by stave.EvaluateStandard) indicates a block.
+// The summary message + advisory/block hint plumbing are composed from the
+// primitive StandardResult; the diagnose hint + next steps are built
+// command-side from the security state and resolved dirs.
+func (r *Reporter) ReportApply(res stave.StandardResult, controlsDir, observationsDir string) error {
+	if res.SummaryMessage != "" {
+		r.Emit(r.Stderr, res.SummaryMessage)
 	}
 
-	switch {
-	case outcome.IsAllow():
+	switch res.Gate {
+	case gateAllow:
 		return nil
-	case outcome.IsAdvisory():
-		if r.ShouldEmit() && res.DiagnoseCommand != "" {
-			ui.WriteHint(r.Stderr, res.DiagnoseCommand)
+	case gateAdvisory:
+		if r.ShouldEmit() {
+			if diagnose := BuildDiagnoseHint(controlsDir, observationsDir); diagnose != "" {
+				ui.WriteHint(r.Stderr, diagnose)
+			}
 		}
 		return nil
-	default: // IsBlock
+	default: // block
 		if r.ShouldEmit() {
-			// Match the advisory branch above: only emit the diagnose
-			// hint when one was actually wired. A bare `WriteHint`
-			// with an empty command renders as a misleading
+			// Only emit the diagnose hint when one was actually built. A
+			// bare WriteHint with an empty command renders as a misleading
 			// "next: <empty>" line in the operator's terminal.
-			if res.DiagnoseCommand != "" {
-				ui.WriteHint(r.Stderr, res.DiagnoseCommand)
+			diagnose := BuildDiagnoseHint(controlsDir, observationsDir)
+			if diagnose != "" {
+				ui.WriteHint(r.Stderr, diagnose)
 			}
-			// Skip the next-steps hint when no runtime is wired.
-			// The violation error is the foundational signal here;
-			// the hint is purely advisory UI.
+			// Skip the next-steps hint when no runtime is wired. The
+			// violation error is the foundational signal; the hint is UI.
 			if r.hasInteractiveUI() {
-				r.Runtime.PrintNextSteps(res.NextSteps...)
+				r.Runtime.PrintNextSteps(applyNextSteps(diagnose)...)
 			}
 		}
 		return ui.ErrViolationsFound
 	}
 }
 
-// gateViolations returns the violation gating error for a security
-// state without rendering any user-facing summary. It mirrors the
-// terminal decision in ReportApply (policy.Evaluate → block ⇒
-// ErrViolationsFound) so the --new-only / --new-since path can apply
-// the same exit-code gate after rendering its own signal-filtered
-// view. Returns nil for allow/advisory outcomes; ui.ErrViolationsFound
-// for a block (non-compliant) state.
-func gateViolations(res EvaluateResult) error {
-	outcome := evaluation.EnforcementPolicy{}.Evaluate(res.SecurityState)
-	if outcome.IsAllow() || outcome.IsAdvisory() {
+// gateViolations returns the violation gating error without rendering any
+// user-facing summary, so the --new-only path applies the same exit-code gate
+// after rendering its own signal-filtered view. nil for allow/advisory;
+// ui.ErrViolationsFound for a block (non-compliant) state.
+func gateViolations(res stave.StandardResult) error {
+	if res.Gate == gateAllow || res.Gate == gateAdvisory {
 		return nil
 	}
 	return ui.ErrViolationsFound
@@ -132,8 +134,8 @@ func gateViolations(res EvaluateResult) error {
 // keeps the exit-code map's semantic split intact: 1 is reserved
 // for the dedicated `security-audit` command, 3 is "evaluation
 // completed with findings".
-func (r *Reporter) CheckSLAPolicy(policy SLAPolicy, res EvaluateResult) error {
-	if !res.ShouldFailForPolicy(policy) {
+func (r *Reporter) CheckSLAPolicy(policy SLAPolicy, res stave.StandardResult) error {
+	if !shouldFailForSLA(policy, res) {
 		return nil
 	}
 	if msg := policy.FailureMessage(); msg != "" {
@@ -142,17 +144,31 @@ func (r *Reporter) CheckSLAPolicy(policy SLAPolicy, res EvaluateResult) error {
 	return ui.ErrViolationsFound
 }
 
+// shouldFailForSLA maps the policy to which breach flag gates the run.
+// Returns false for SLAPolicyWarn (the no-fail default) and any unrecognised
+// value. Replaces the former EvaluateResult.ShouldFailForPolicy.
+func shouldFailForSLA(policy SLAPolicy, res stave.StandardResult) bool {
+	switch policy {
+	case SLAPolicyStrict:
+		return res.HasSLABreach
+	case SLAPolicyCriticalOnly:
+		return res.HasCriticalSLABreach
+	default:
+		return false
+	}
+}
+
 // decorateError maps domain-specific errors to user-facing remediation hints.
 // This is presentation logic — it translates domain errors into CLI guidance
 // using sentinel error matching via errors.Is.
 func decorateError(err error) error {
 	var hint error
 	switch {
-	case errors.Is(err, appeval.ErrNoControls):
+	case errors.Is(err, stave.ErrNoControls):
 		hint = ui.ErrHintNoControls
-	case errors.Is(err, appeval.ErrNoSnapshots):
+	case errors.Is(err, stave.ErrNoSnapshots):
 		hint = ui.ErrHintNoSnapshots
-	case errors.Is(err, contractvalidator.ErrSchemaValidationFailed):
+	case errors.Is(err, stave.ErrSchemaValidation):
 		hint = ui.ErrHintSchemaValidation
 	default:
 		return err

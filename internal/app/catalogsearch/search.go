@@ -31,6 +31,8 @@ type Filter struct {
 // Search finds controls matching the filter criteria.
 func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 	query := strings.ToLower(f.Query)
+	domainFilter := strings.ToLower(f.Domain)
+	profileFilter := strings.ToLower(f.Profile)
 	var results []SearchResult
 
 	for i := range controls {
@@ -39,7 +41,7 @@ func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 		if query != "" && !matchesQuery(ctl, query) {
 			continue
 		}
-		if f.Domain != "" && !strings.Contains(strings.ToLower(string(ctl.ID)), strings.ToLower(f.Domain)) {
+		if domainFilter != "" && !strings.Contains(strings.ToLower(string(ctl.ID)), domainFilter) {
 			continue
 		}
 		if f.Severity != "" && !ctl.Severity.Matches(f.Severity) {
@@ -48,7 +50,7 @@ func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 		if f.AttackStage != "" && string(ctl.AttackStage()) != f.AttackStage {
 			continue
 		}
-		if f.Profile != "" && !hasFramework(ctl, f.Profile) {
+		if profileFilter != "" && !hasFramework(ctl, profileFilter) {
 			continue
 		}
 
@@ -69,15 +71,15 @@ func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 	return results
 }
 
-func matchesQuery(ctl *policy.ControlDefinition, query string) bool {
-	return strings.Contains(strings.ToLower(string(ctl.ID)), query) ||
-		strings.Contains(strings.ToLower(ctl.Name), query) ||
-		strings.Contains(strings.ToLower(ctl.Description), query)
+func matchesQuery(ctl *policy.ControlDefinition, queryLower string) bool {
+	return strings.Contains(strings.ToLower(string(ctl.ID)), queryLower) ||
+		strings.Contains(strings.ToLower(ctl.Name), queryLower) ||
+		strings.Contains(strings.ToLower(ctl.Description), queryLower)
 }
 
-func hasFramework(ctl *policy.ControlDefinition, profile string) bool {
+func hasFramework(ctl *policy.ControlDefinition, profileLower string) bool {
 	for fw := range ctl.Compliance {
-		if strings.Contains(strings.ToLower(string(fw)), strings.ToLower(profile)) {
+		if strings.Contains(strings.ToLower(string(fw)), profileLower) {
 			return true
 		}
 	}
@@ -85,9 +87,10 @@ func hasFramework(ctl *policy.ControlDefinition, profile string) bool {
 }
 
 func extractDomain(controlID string) string {
-	parts := strings.Split(controlID, ".")
-	if len(parts) >= 2 {
-		return strings.ToLower(parts[1])
+	_, rest, ok := strings.Cut(controlID, ".")
+	if !ok {
+		return ""
 	}
-	return ""
+	prov, _, _ := strings.Cut(rest, ".")
+	return strings.ToLower(prov)
 }

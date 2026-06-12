@@ -2,11 +2,9 @@ package apply
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func resolveProfileMode(o *Options, cs cobraState) (RunConfig, error) {
@@ -31,24 +29,9 @@ func resolveProfileMode(o *Options, cs cobraState) (RunConfig, error) {
 		return RunConfig{}, &ui.UserError{Err: err}
 	}
 
-	// Parse --max-unsafe in profile mode so the same duration semantic
-	// applies whether the user runs profile or standard mode. Without
-	// this, profile mode silently passed MaxUnsafeDuration: 0 to the
-	// evaluator regardless of the flag, producing immediate findings
-	// where standard mode would have given the workload a remediation
-	// window. Empty value parses to 0 (immediate firing).
-	var maxUnsafe time.Duration
-	if o.MaxUnsafeDuration != "" {
-		// Parse with kernel.ParseDuration — the same grammar the standard
-		// apply path uses (appeval.Options.parseMaxUnsafeDuration). The
-		// stdlib time.ParseDuration rejects the 'd' (day) unit, so "7d"
-		// errored here while standard mode accepted it as 168h, breaking
-		// the "same duration semantic" contract this comment block claims.
-		maxUnsafe, err = kernel.ParseDuration(o.MaxUnsafeDuration)
-		if err != nil {
-			return RunConfig{}, &ui.UserError{Err: fmt.Errorf("parse --max-unsafe %q: %w", o.MaxUnsafeDuration, err)}
-		}
-	}
+	// --max-unsafe is parsed in the facade (stave.EvaluateProfile), using the
+	// same kernel.ParseDuration grammar standard apply uses (accepts the 'd'
+	// day unit). The command passes the raw flag string through unchanged.
 
 	// Compute Quiet once and pass the same value to both Config.Quiet
 	// and ResolveStdout. The previous shape passed
@@ -64,7 +47,7 @@ func resolveProfileMode(o *Options, cs cobraState) (RunConfig, error) {
 		Profiles:          profiles,    // Full list — used for control loading.
 		BucketAllowlist:   o.BucketAllowlist,
 		IncludeAll:        o.IncludeAll,
-		MaxUnsafeDuration: maxUnsafe,
+		MaxUnsafeDuration: o.MaxUnsafeDuration,
 		OutputFormat:      format,
 		Quiet:             quiet,
 		Stdout:            compose.ResolveStdout(cs.Stdout, quiet, format),

@@ -130,8 +130,8 @@ func ParseDuration(s string) (time.Duration, error) {
 }
 
 func normalizeDaysToHours(s string) (string, error) {
-	// Fast path: skip regex if no 'd' exists
-	if !strings.Contains(strings.ToLower(s), "d") {
+	// Fast path: skip regex if no 'd' or 'D' exists
+	if !strings.Contains(s, "d") && !strings.Contains(s, "D") {
 		return s, nil
 	}
 

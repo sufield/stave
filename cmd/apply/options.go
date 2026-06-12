@@ -3,12 +3,8 @@ package apply
 import (
 	"io"
 	"log/slog"
-	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
-	appconfig "github.com/sufield/stave/internal/app/config"
-	appeval "github.com/sufield/stave/internal/app/eval"
-	"github.com/sufield/stave/internal/core/ports"
 )
 
 // cobraState holds all values extracted from *cobra.Command.
@@ -31,22 +27,19 @@ const (
 	runModeProfile  runMode = "profile"
 )
 
-// RunConfig holds the fully resolved execution state.
-// Exactly one of Params or Profile is meaningful, determined by Mode.
-// All resolved values live here — no downstream code reads back from Options.
+// RunConfig holds the fully resolved execution state. Exactly one of the mode
+// payloads is meaningful, determined by Mode. The standard path reads the raw
+// flag strings off Options directly (parsing happens in the facade).
 type RunConfig struct {
 	Mode    runMode
-	Params  *applyParams // non-nil in standard mode
-	Profile *Config      // non-nil in profile mode
+	Profile *Config // non-nil in profile mode
 
-	// Resolved directory paths from inference. Used by buildEvaluatorInput
-	// instead of reading back from the mutable Options receiver.
+	// Resolved directory paths from inference.
 	ControlsDir     string
 	ObservationsDir string
 
-	// Pre-loaded project config, resolved once during Resolve().
-	// Shared by buildEvaluatorInput and Build to avoid repeated disk reads.
-	projectConfig     *appconfig.WorkspacePolicy
+	// projectConfigPath is the resolved stave.yaml path (or "") passed to the
+	// facade, which loads the policy itself.
 	projectConfigPath string
 
 	// UseBuiltinCatalog is set when --controls was not given and no
@@ -54,24 +47,7 @@ type RunConfig struct {
 	UseBuiltinCatalog bool
 }
 
-// IsProfileMode reports whether the run is in profile mode (the
-// Profile pointer is the meaningful one). Replaces direct
-// comparisons against runModeProfile so the dispatch test lives
-// on the type. Standard mode is the inverse.
+// IsProfileMode reports whether the run is in profile mode.
 func (c *RunConfig) IsProfileMode() bool {
 	return c != nil && c.Mode == runModeProfile
-}
-
-// applyParams holds validated and parsed domain types.
-type applyParams struct {
-	maxUnsafeDuration time.Duration
-	clock             ports.Clock
-	source            appeval.ObservationSource
-}
-
-func buildClock(now time.Time) ports.Clock {
-	if !now.IsZero() {
-		return ports.FixedClock(now)
-	}
-	return ports.RealClock{}
 }

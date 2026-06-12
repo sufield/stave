@@ -5,14 +5,12 @@ import (
 	"errors"
 	"strings"
 	"testing"
-	"time"
 
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
-	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/core/ports"
 	validation "github.com/sufield/stave/internal/core/schemaval"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // --- ParseProfile ---
@@ -52,27 +50,6 @@ func TestParseProfile_Invalid(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "unsupported --profile") {
 		t.Fatalf("unexpected error: %v", err)
-	}
-}
-
-// --- buildClock ---
-
-func TestBuildClock_ZeroTime(t *testing.T) {
-	c := buildClock(time.Time{})
-	if _, ok := c.(ports.RealClock); !ok {
-		t.Fatalf("expected RealClock for zero time, got %T", c)
-	}
-}
-
-func TestBuildClock_FixedTime(t *testing.T) {
-	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
-	c := buildClock(now)
-	fc, ok := c.(ports.FixedClock)
-	if !ok {
-		t.Fatalf("expected FixedClock, got %T", c)
-	}
-	if !time.Time(fc).Equal(now) {
-		t.Fatalf("FixedClock = %v, want %v", time.Time(fc), now)
 	}
 }
 
@@ -187,10 +164,8 @@ func TestReporter_ReportApply_Pass(t *testing.T) {
 		Runtime: ui.NewRuntime(&stdout, &stderr),
 	}
 
-	policy := evaluation.EnforcementPolicy{}
-	res := EvaluateResult{SecurityState: evaluation.StateCompliant}
-	err := r.ReportApply(res, policy)
-	if err != nil {
+	res := stave.StandardResult{Gate: "ALLOW", SummaryMessage: "No violations found"}
+	if err := r.ReportApply(res, "controls/s3", "observations"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !strings.Contains(stderr.String(), "No violations found") {
@@ -206,14 +181,8 @@ func TestReporter_ReportApply_Fail(t *testing.T) {
 		Runtime: ui.NewRuntime(&stdout, &stderr),
 	}
 
-	policy := evaluation.EnforcementPolicy{}
-	res := EvaluateResult{
-		SecurityState:   evaluation.StateNonCompliant,
-		DiagnoseCommand: "stave diagnose",
-		NextSteps:       []string{"fix it"},
-	}
-	err := r.ReportApply(res, policy)
-	if !errors.Is(err, ui.ErrViolationsFound) {
+	res := stave.StandardResult{Gate: "BLOCK", SecurityState: "NON_COMPLIANT"}
+	if err := r.ReportApply(res, "controls/s3", "observations"); !errors.Is(err, ui.ErrViolationsFound) {
 		t.Fatalf("expected ErrViolationsFound, got: %v", err)
 	}
 }
@@ -227,10 +196,8 @@ func TestReporter_ReportApply_Quiet(t *testing.T) {
 		Quiet:   true,
 	}
 
-	policy := evaluation.EnforcementPolicy{}
-	res := EvaluateResult{SecurityState: evaluation.StateCompliant}
-	err := r.ReportApply(res, policy)
-	if err != nil {
+	res := stave.StandardResult{Gate: "ALLOW", SummaryMessage: "No violations found"}
+	if err := r.ReportApply(res, "controls/s3", "observations"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if stderr.Len() != 0 {
@@ -252,9 +219,8 @@ func TestReporter_ReportApply_QuietStillGates(t *testing.T) {
 		Runtime: ui.NewRuntime(&stdout, &stderr),
 		Quiet:   true,
 	}
-	res := EvaluateResult{SecurityState: evaluation.StateNonCompliant}
-	err := r.ReportApply(res, evaluation.EnforcementPolicy{})
-	if !errors.Is(err, ui.ErrViolationsFound) {
+	res := stave.StandardResult{Gate: "BLOCK", SecurityState: "NON_COMPLIANT"}
+	if err := r.ReportApply(res, "controls/s3", "observations"); !errors.Is(err, ui.ErrViolationsFound) {
 		t.Fatalf("expected ErrViolationsFound under Quiet=true, got: %v", err)
 	}
 	if stderr.Len() != 0 {
@@ -281,25 +247,10 @@ func TestSharedOptions_Normalize(t *testing.T) {
 func TestValidateDirsWithConfig_StdinObservations(t *testing.T) {
 	// stdin mode should skip observations validation
 	tmp := t.TempDir()
-	err := validateDirsWithConfig(tmp, "-", false, nil)
+	err := validateDirsWithConfig(tmp, "-", false)
 	if err == nil {
 		// Controls dir is tmp which exists, and obs is stdin, should succeed
 		t.Log("stdin mode passed controls validation")
-	}
-}
-
-// --- EvaluateResult struct ---
-
-func TestEvaluateResult_Defaults(t *testing.T) {
-	res := EvaluateResult{}
-	if res.SecurityState != "" {
-		t.Fatalf("expected empty status, got %q", res.SecurityState)
-	}
-	if res.DiagnoseCommand != "" {
-		t.Fatal("expected empty command")
-	}
-	if res.NextSteps != nil {
-		t.Fatal("expected nil next steps")
 	}
 }
 
@@ -385,7 +336,7 @@ func TestParseProfiles_TrailingComma(t *testing.T) {
 func TestCheckSLAPolicy_WarnNeverFails(t *testing.T) {
 	var stderr bytes.Buffer
 	r := &Reporter{Stderr: &stderr}
-	res := EvaluateResult{HasSLABreach: true, HasCriticalSLABreach: true}
+	res := stave.StandardResult{HasSLABreach: true, HasCriticalSLABreach: true}
 	err := r.CheckSLAPolicy("warn", res)
 	if err != nil {
 		t.Fatalf("warn should never fail, got: %v", err)
@@ -395,7 +346,7 @@ func TestCheckSLAPolicy_WarnNeverFails(t *testing.T) {
 func TestCheckSLAPolicy_StrictFailsOnAnyBreach(t *testing.T) {
 	var stderr bytes.Buffer
 	r := &Reporter{Stderr: &stderr}
-	res := EvaluateResult{HasSLABreach: true}
+	res := stave.StandardResult{HasSLABreach: true}
 	err := r.CheckSLAPolicy("strict", res)
 	if !errors.Is(err, ui.ErrViolationsFound) {
 		t.Fatalf("strict should fail on SLA breach, got: %v", err)
@@ -405,7 +356,7 @@ func TestCheckSLAPolicy_StrictFailsOnAnyBreach(t *testing.T) {
 func TestCheckSLAPolicy_StrictPassesWhenNoBreach(t *testing.T) {
 	var stderr bytes.Buffer
 	r := &Reporter{Stderr: &stderr}
-	res := EvaluateResult{HasSLABreach: false}
+	res := stave.StandardResult{HasSLABreach: false}
 	err := r.CheckSLAPolicy("strict", res)
 	if err != nil {
 		t.Fatalf("strict should pass when no breach, got: %v", err)
@@ -415,7 +366,7 @@ func TestCheckSLAPolicy_StrictPassesWhenNoBreach(t *testing.T) {
 func TestCheckSLAPolicy_CriticalOnlyFailsOnCritical(t *testing.T) {
 	var stderr bytes.Buffer
 	r := &Reporter{Stderr: &stderr}
-	res := EvaluateResult{HasSLABreach: true, HasCriticalSLABreach: true}
+	res := stave.StandardResult{HasSLABreach: true, HasCriticalSLABreach: true}
 	err := r.CheckSLAPolicy("critical-only", res)
 	if !errors.Is(err, ui.ErrViolationsFound) {
 		t.Fatalf("critical-only should fail on critical breach, got: %v", err)
@@ -425,29 +376,9 @@ func TestCheckSLAPolicy_CriticalOnlyFailsOnCritical(t *testing.T) {
 func TestCheckSLAPolicy_CriticalOnlyPassesOnNonCritical(t *testing.T) {
 	var stderr bytes.Buffer
 	r := &Reporter{Stderr: &stderr}
-	res := EvaluateResult{HasSLABreach: true, HasCriticalSLABreach: false}
+	res := stave.StandardResult{HasSLABreach: true, HasCriticalSLABreach: false}
 	err := r.CheckSLAPolicy("critical-only", res)
 	if err != nil {
 		t.Fatalf("critical-only should pass on non-critical breach, got: %v", err)
-	}
-}
-
-// TestRunNewOnly_BadNowIsFatal pins the contract that --now parse
-// failures in new-only mode produce a UserError. The earlier shape
-// silently fell back to time.Now() on parse failure, hiding typos
-// behind output that looked correct but was anchored to wall time.
-func TestRunNewOnly_BadNowIsFatal(t *testing.T) {
-	var stdout bytes.Buffer
-	opts := &Options{
-		SharedOptions: SharedOptions{NowTime: "not-a-date"},
-		HistoryDir:    t.TempDir(),
-	}
-	err := runNewOnlyOutput(t.Context(), &stdout, &stdout, opts, EvaluateResult{})
-	if err == nil {
-		t.Fatal("expected error for malformed --now, got nil")
-	}
-	var ue *ui.UserError
-	if !errors.As(err, &ue) {
-		t.Fatalf("expected ui.UserError, got %T: %v", err, err)
 	}
 }

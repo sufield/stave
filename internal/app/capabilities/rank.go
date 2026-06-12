@@ -1,8 +1,9 @@
 package capabilities
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -91,11 +92,11 @@ func Rank(catalog []Capability, query string) []Hit {
 		}
 		out = append(out, Hit{Capability: *c, Score: score, MatchedOn: matched})
 	}
-	sort.Slice(out, func(i, j int) bool {
-		if out[i].Score != out[j].Score {
-			return out[i].Score > out[j].Score
+	slices.SortFunc(out, func(a, b Hit) int {
+		if a.Score != b.Score {
+			return cmp.Compare(b.Score, a.Score) // descending
 		}
-		return out[i].Capability.ID < out[j].Capability.ID
+		return cmp.Compare(a.Capability.ID, b.Capability.ID)
 	})
 	return out
 }

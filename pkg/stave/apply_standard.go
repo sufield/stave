@@ -3,7 +3,6 @@ package stave
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/sufield/stave/pkg/stave/internal/applycmd"
 )
@@ -30,7 +29,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 	res, err := applycmd.EvaluateStandard(ctx, req)
 	if err != nil {
 		if errors.Is(err, applycmd.ErrInvalidInput) {
-			return StandardResult{}, fmt.Errorf("%w: %w", err, ErrInvalidInput)
+			return StandardResult{}, asInvalidInput(err)
 		}
 		return StandardResult{}, err //nolint:wrapcheck // engine already wrapped; preserve exit 4.
 	}

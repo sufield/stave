@@ -1,8 +1,8 @@
 package evaluation
 
 import (
+	"cmp"
 	"slices"
-	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -309,7 +309,7 @@ func computeNearbyFrameworks(failingIDs sets.Set[kernel.ControlID], allControlID
 	// between runs with identical inputs (mirrors CompareBaseline's
 	// SortBaselineEntries). Rendered directly in finding_writer.go.
 	slices.SortFunc(nearby, func(a, b NearbyFramework) int {
-		return strings.Compare(a.Framework, b.Framework)
+		return cmp.Compare(a.Framework, b.Framework)
 	})
 	return nearby
 }

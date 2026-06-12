@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"cmp"
 	"embed"
 	"errors"
 	"fmt"
@@ -197,7 +198,7 @@ func LoadSubSchemas(kind Kind, version string) ([]SubSchema, error) {
 		}
 		out = append(out, SubSchema{URI: uri, Bytes: data})
 	}
-	slices.SortFunc(out, func(a, b SubSchema) int { return strings.Compare(a.URI, b.URI) })
+	slices.SortFunc(out, func(a, b SubSchema) int { return cmp.Compare(a.URI, b.URI) })
 	return out, nil
 }
 

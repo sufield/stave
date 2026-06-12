@@ -88,19 +88,7 @@ func WireCommands(app *App) error {
 
 	// Control Engine
 	root.AddCommand(applyvalidate.NewCmd(ui.DefaultRuntime()))
-	applyDeps := apply.Deps{
-		NewObsRepo:       f.NewObsRepo,
-		NewCtlRepo:       f.NewCtlRepo,
-		NewStdinObsRepo:  f.NewStdinObsRepo,
-		NewFindingWriter: f.NewFindingWriter,
-		NewCELEvaluator:  f.NewCELEvaluator,
-		NewChainLoader:   f.NewChainLoader,
-		NewSLALoader:     f.NewSLALoader,
-	}
-	if err := applyDeps.Validate(); err != nil {
-		return fmt.Errorf("validate apply deps: %w", err)
-	}
-	root.AddCommand(apply.NewApplyCmd(applyDeps))
+	root.AddCommand(apply.NewApplyCmd())
 	root.AddCommand(applyverify.NewCmd(ui.DefaultRuntime()))
 	diagnoseCmd := diagnose.NewDiagnoseCmd(f.NewObsRepo, f.NewCtlRepo)
 	diagnoseCmd.AddCommand(diagnose.NewTraceCmd(f.NewCtlRepo, f.NewSnapshotRepo))

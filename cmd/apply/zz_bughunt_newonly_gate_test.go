@@ -5,86 +5,53 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/pkg/stave"
 )
 
-// TestBugHunt_NewOnlyGate_BlocksNonCompliant proves that the gating
-// decision used by the --new-only / --new-since branch of
-// runStandardApply must mirror ReportApply: a NON_COMPLIANT
-// (block) security state has to surface ui.ErrViolationsFound so the
-// CLI exits non-zero. The in-code comment at run_standard.go:109-113
-// states this gating MUST still apply in new-only mode ("otherwise CI
-// runs with --new-only would pass on every active finding"), but the
-// branch only called CheckSLAPolicy, dropping the violation gate.
-//
-// gateViolations is the smallest seam the fix introduces/uses to make
-// the gating decision. Before the fix this file fails to compile
-// (missing symbol), which is the RED signal.
+// TestBugHunt_NewOnlyGate_BlocksNonCompliant proves the gating decision used
+// by the --new-only branch of runStandardApply mirrors ReportApply: a BLOCK
+// gate must surface ui.ErrViolationsFound so the CLI exits non-zero,
+// otherwise CI runs with --new-only would pass on every active finding.
 func TestBugHunt_NewOnlyGate_BlocksNonCompliant(t *testing.T) {
 	tests := []struct {
 		name      string
-		state     evaluation.SecurityState
+		gate      string
 		wantBlock bool
 	}{
-		{
-			name:      "non-compliant blocks (exit 3)",
-			state:     evaluation.StateNonCompliant,
-			wantBlock: true,
-		},
-		{
-			name:      "compliant does not block",
-			state:     evaluation.StateCompliant,
-			wantBlock: false,
-		},
-		{
-			name:      "at-risk is advisory, does not block under default policy",
-			state:     evaluation.StateAtRisk,
-			wantBlock: false,
-		},
+		{"block gate blocks (exit 3)", "BLOCK", true},
+		{"allow gate does not block", "ALLOW", false},
+		{"advisory gate does not block under default policy", "ADVISORY", false},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			res := EvaluateResult{SecurityState: tc.state}
-			err := gateViolations(res)
+			err := gateViolations(stave.StandardResult{Gate: tc.gate})
 			if tc.wantBlock {
 				if !errors.Is(err, ui.ErrViolationsFound) {
-					t.Fatalf("state %s: expected ErrViolationsFound, got: %v", tc.state, err)
+					t.Fatalf("gate %s: expected ErrViolationsFound, got: %v", tc.gate, err)
 				}
 			} else if err != nil {
-				t.Fatalf("state %s: expected nil gating error, got: %v", tc.state, err)
+				t.Fatalf("gate %s: expected nil gating error, got: %v", tc.gate, err)
 			}
 		})
 	}
 }
 
 // TestBugHunt_NewOnlyGate_MatchesReportApply locks the new-only gating
-// decision to the standard path's ReportApply decision so the two
-// modes can never drift: for any security state, gateViolations must
-// return a violation iff ReportApply(default policy) does.
+// decision to the standard path's ReportApply decision so the two modes can
+// never drift: for any gate, gateViolations must return a violation iff
+// ReportApply does.
 func TestBugHunt_NewOnlyGate_MatchesReportApply(t *testing.T) {
-	states := []evaluation.SecurityState{
-		evaluation.StateCompliant,
-		evaluation.StateAtRisk,
-		evaluation.StateNonCompliant,
-	}
+	for _, gate := range []string{"ALLOW", "ADVISORY", "BLOCK"} {
+		res := stave.StandardResult{Gate: gate}
 
-	for _, state := range states {
-		res := EvaluateResult{SecurityState: state}
-
-		// Standard-path decision via ReportApply with a discarding,
-		// quiet reporter (output is irrelevant; only the error matters).
 		rep := &Reporter{Quiet: true}
-		standardViolation := errors.Is(
-			rep.ReportApply(res, evaluation.EnforcementPolicy{}),
-			ui.ErrViolationsFound,
-		)
-
+		standardViolation := errors.Is(rep.ReportApply(res, "ctl", "obs"), ui.ErrViolationsFound)
 		newOnlyViolation := errors.Is(gateViolations(res), ui.ErrViolationsFound)
 
 		if standardViolation != newOnlyViolation {
-			t.Fatalf("state %s: standard-path violation=%v but new-only gate violation=%v; modes must agree",
-				state, standardViolation, newOnlyViolation)
+			t.Fatalf("gate %s: standard-path violation=%v but new-only gate violation=%v; modes must agree",
+				gate, standardViolation, newOnlyViolation)
 		}
 	}
 }

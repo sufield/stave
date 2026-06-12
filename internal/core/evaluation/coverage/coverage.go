@@ -7,7 +7,7 @@
 package coverage
 
 import (
-	"sort"
+	"slices"
 
 	"github.com/sufield/stave/internal/core/controldef"
 )
@@ -46,7 +46,7 @@ func (c CoverageIndex) ToolNames() []string {
 	for tool := range c.ByTool {
 		names = append(names, tool)
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 	return names
 }
 
@@ -63,7 +63,7 @@ func (c CoverageIndex) DomainsForTool(tool string) []string {
 	for d := range domains {
 		names = append(names, d)
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 	return names
 }
 
@@ -191,13 +191,13 @@ func missingChecks(inventoryChecks []string, coveredSet map[string]struct{}) []s
 	if len(inventoryChecks) == 0 {
 		return nil
 	}
-	missing := make([]string, 0)
+	var missing []string
 	for _, id := range inventoryChecks {
 		if _, ok := coveredSet[id]; !ok {
 			missing = append(missing, id)
 		}
 	}
-	sort.Strings(missing)
+	slices.Sort(missing)
 	if len(missing) == 0 {
 		return nil
 	}

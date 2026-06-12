@@ -1,7 +1,8 @@
 package capabilities
 
 import (
-	"sort"
+	"cmp"
+	"slices"
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -98,7 +99,7 @@ func ServiceRollup(controls []policy.ControlDefinition) []ServiceRow {
 	for _, r := range rows {
 		out = append(out, *r)
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].Service < out[j].Service })
+	slices.SortFunc(out, func(a, b ServiceRow) int { return cmp.Compare(a.Service, b.Service) })
 	return out
 }
 
@@ -145,14 +146,14 @@ func LeafControls(controls []policy.ControlDefinition, service, category, severi
 			Severity: controls[i].Severity,
 		})
 	}
-	sort.Slice(out, func(i, j int) bool {
-		if out[i].Service != out[j].Service {
-			return out[i].Service < out[j].Service
+	slices.SortFunc(out, func(a, b LeafControl) int {
+		if a.Service != b.Service {
+			return cmp.Compare(a.Service, b.Service)
 		}
-		if out[i].Category != out[j].Category {
-			return out[i].Category < out[j].Category
+		if a.Category != b.Category {
+			return cmp.Compare(a.Category, b.Category)
 		}
-		return out[i].ID < out[j].ID
+		return cmp.Compare(a.ID, b.ID)
 	})
 	return out
 }

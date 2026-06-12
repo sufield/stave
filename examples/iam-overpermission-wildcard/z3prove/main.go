@@ -95,9 +95,9 @@ var witnesses = []witness{
 }
 
 type statement struct {
-	Effect   string      `json:"Effect"`
-	Action   interface{} `json:"Action"`   // string OR []string
-	Resource interface{} `json:"Resource"` // string OR []string
+	Effect   string `json:"Effect"`
+	Action   any    `json:"Action"`   // string OR []string
+	Resource any    `json:"Resource"` // string OR []string
 }
 
 func main() {
@@ -318,11 +318,11 @@ func disjunction(ctx *z3.Context, key z3.Int, indices []int, sort z3.Sort) z3.Bo
 	return first.Or(rest...)
 }
 
-func stringList(v interface{}) []string {
+func stringList(v any) []string {
 	switch t := v.(type) {
 	case string:
 		return []string{t}
-	case []interface{}:
+	case []any:
 		out := make([]string, 0, len(t))
 		for _, e := range t {
 			if s, ok := e.(string); ok {

@@ -21,13 +21,13 @@
 package sirfacts
 
 import (
+	"cmp"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -829,7 +829,7 @@ func conditionFacts(assets []sir.AssetFact) []Fact {
 				for op := range cond {
 					ops = append(ops, op)
 				}
-				sort.Strings(ops)
+				slices.Sort(ops)
 				for _, op := range ops {
 					keys, ok := cond[op].(map[string]any)
 					if !ok {
@@ -839,7 +839,7 @@ func conditionFacts(assets []sir.AssetFact) []Fact {
 					for k := range keys {
 						keyNames = append(keyNames, k)
 					}
-					sort.Strings(keyNames)
+					slices.Sort(keyNames)
 					for _, k := range keyNames {
 						out = append(out, Fact{
 							Subject: a.ID, Predicate: "has_condition", Object: op + ":" + k,
@@ -1040,7 +1040,7 @@ func resourcePolicyStatementFacts(subject, stmtBase string, stmt map[string]any)
 	for op := range cond {
 		ops = append(ops, op)
 	}
-	sort.Strings(ops)
+	slices.Sort(ops)
 	for _, op := range ops {
 		keys, ok := cond[op].(map[string]any)
 		if !ok {
@@ -1050,7 +1050,7 @@ func resourcePolicyStatementFacts(subject, stmtBase string, stmt map[string]any)
 		for k := range keys {
 			keyNames = append(keyNames, k)
 		}
-		sort.Strings(keyNames)
+		slices.Sort(keyNames)
 		for _, k := range keyNames {
 			out = append(out, Fact{
 				Subject: subject, Predicate: "has_condition", Object: op + ":" + k,
@@ -1194,7 +1194,7 @@ func tagFacts(assets []sir.AssetFact) []Fact {
 		for name := range a.Properties {
 			blockNames = append(blockNames, name)
 		}
-		sort.Strings(blockNames)
+		slices.Sort(blockNames)
 		for _, blockName := range blockNames {
 			block, ok := a.Properties[blockName].(map[string]any)
 			if !ok {
@@ -1208,7 +1208,7 @@ func tagFacts(assets []sir.AssetFact) []Fact {
 			for k := range tags {
 				keys = append(keys, k)
 			}
-			sort.Strings(keys)
+			slices.Sort(keys)
 			for _, k := range keys {
 				value, ok := tags[k].(string)
 				if !ok || value == "" {
@@ -1660,11 +1660,11 @@ func assumeEdgeFacts(assets []sir.AssetFact) []Fact {
 			Evidence:  req.evid,
 		})
 	}
-	sort.SliceStable(out, func(i, j int) bool {
-		if out[i].Subject != out[j].Subject {
-			return out[i].Subject < out[j].Subject
+	slices.SortStableFunc(out, func(a, b Fact) int {
+		if a.Subject != b.Subject {
+			return cmp.Compare(a.Subject, b.Subject)
 		}
-		return out[i].Object < out[j].Object
+		return cmp.Compare(a.Object, b.Object)
 	})
 	return out
 }
@@ -1711,7 +1711,7 @@ func extractResourcePolicyPrincipals(principal any) []string {
 		for _, val := range v {
 			result = append(result, coerceStringList(val)...)
 		}
-		sort.Strings(result)
+		slices.Sort(result)
 		return result
 	}
 	return nil
@@ -2132,7 +2132,7 @@ func allDeclaredPredicates(facts []Fact) []string {
 	for p := range seen {
 		out = append(out, p)
 	}
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }
 
@@ -2148,7 +2148,7 @@ func uniquePredicates(facts []Fact) []string {
 	for p := range seen {
 		out = append(out, p)
 	}
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }
 

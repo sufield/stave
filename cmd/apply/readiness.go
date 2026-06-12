@@ -6,7 +6,7 @@ import (
 	"io"
 	"time"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/stave"
 )
@@ -19,7 +19,7 @@ type ReadinessConfig struct {
 	ObservationsDir   string
 	MaxUnsafeDuration time.Duration
 	Now               time.Time
-	Format            appcontracts.OutputFormat
+	Format            cmdutil.OutputFormat
 	Quiet             bool
 	Sanitize          bool
 	Stdout            io.Writer

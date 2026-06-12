@@ -1,6 +1,7 @@
 package lint
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"io/fs"
@@ -104,7 +105,7 @@ func SortDiagnostics(diags []Diagnostic) {
 
 // CompareDiagnostic defines canonical ordering for diagnostics.
 func CompareDiagnostic(a, b Diagnostic) int {
-	if c := strings.Compare(a.Path, b.Path); c != 0 {
+	if c := cmp.Compare(a.Path, b.Path); c != 0 {
 		return c
 	}
 	if a.Line != b.Line {
@@ -113,10 +114,10 @@ func CompareDiagnostic(a, b Diagnostic) int {
 	if a.Col != b.Col {
 		return a.Col - b.Col
 	}
-	if c := strings.Compare(a.RuleID, b.RuleID); c != 0 {
+	if c := cmp.Compare(a.RuleID, b.RuleID); c != 0 {
 		return c
 	}
-	return strings.Compare(a.Message, b.Message)
+	return cmp.Compare(a.Message, b.Message)
 }
 
 // ErrorCount returns the number of error-severity diagnostics.

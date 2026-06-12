@@ -106,6 +106,12 @@ type Inputs struct {
 	// callers populate from the resolved EvaluationPlan; library
 	// callers usually leave empty.
 	ContextName string
+
+	// ObservationRepo, when non-nil, overrides the default directory-based
+	// observation loader — used by the CLI's stdin path (`apply -o -`) to
+	// feed a stdin-reading repository. nil keeps the standard SnapshotsDir
+	// loader (with integrity options applied).
+	ObservationRepo appcontracts.ObservationRepository
 }
 
 // Result is the engine's output: the full ComplianceReport plus the
@@ -215,12 +221,16 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 		}
 	}()
 
-	obsOpts := []observations.LoaderOption{}
-	if in.IntegrityManifest != "" {
-		obsOpts = append(obsOpts, observations.WithIntegrityCheck(in.IntegrityManifest, in.IntegrityPublicKey))
+	obsRepo := in.ObservationRepo
+	if obsRepo == nil {
+		obsOpts := []observations.LoaderOption{}
+		if in.IntegrityManifest != "" {
+			obsOpts = append(obsOpts, observations.WithIntegrityCheck(in.IntegrityManifest, in.IntegrityPublicKey))
+		}
+		obsRepo = observations.NewObservationLoader(obsOpts...)
 	}
 	wf := &appeval.AuditWorkflow{
-		ObservationRepo:  observations.NewObservationLoader(obsOpts...),
+		ObservationRepo:  obsRepo,
 		PolicyRepo:       ctlRepo,
 		SnapshotEnricher: iam.NewChainPropertyEnricher(),
 	}

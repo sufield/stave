@@ -2,6 +2,7 @@
 package observations
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -118,7 +119,7 @@ func listObservationFiles(dir string) ([]os.DirEntry, error) {
 		return e.IsDir() || !strings.HasSuffix(e.Name(), ".json")
 	})
 	slices.SortFunc(entries, func(a, b os.DirEntry) int {
-		return strings.Compare(a.Name(), b.Name())
+		return cmp.Compare(a.Name(), b.Name())
 	})
 	return entries, nil
 }

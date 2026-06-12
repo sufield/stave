@@ -10,9 +10,10 @@
 package expand
 
 import (
+	"cmp"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -31,11 +32,8 @@ func FilterByArchetype(controls []policy.ControlDefinition, id string) []policy.
 			out = append(out, controls[i])
 		}
 	}
-	sort.Slice(out, func(i, j int) bool {
-		if out[i].ID == out[j].ID {
-			return false
-		}
-		return out[i].ID < out[j].ID
+	slices.SortFunc(out, func(a, b policy.ControlDefinition) int {
+		return cmp.Compare(a.ID, b.ID)
 	})
 	return out
 }

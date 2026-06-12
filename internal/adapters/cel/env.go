@@ -442,7 +442,7 @@ func literal(v any) (string, error) {
 	case []string:
 		quoted := make([]string, len(val))
 		for i, s := range val {
-			quoted[i] = fmt.Sprintf("%q", s)
+			quoted[i] = strconv.Quote(s)
 		}
 		return "[" + strings.Join(quoted, ", ") + "]", nil
 	case []any:
@@ -468,7 +468,7 @@ func literal(v any) (string, error) {
 			if err != nil {
 				return "", fmt.Errorf("map[%q]: %w", k, err)
 			}
-			entries[i] = fmt.Sprintf("%q: %s", k, lit)
+			entries[i] = strconv.Quote(k) + ": " + lit
 		}
 		return "{" + strings.Join(entries, ", ") + "}", nil
 	case nil:

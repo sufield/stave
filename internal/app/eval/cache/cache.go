@@ -16,6 +16,7 @@
 package cache
 
 import (
+	"cmp"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
@@ -25,7 +26,6 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"sort"
 	"sync"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -137,8 +137,8 @@ func ComputeControlsDigest(controls []policy.ControlDefinition) string {
 	for i := range idx {
 		idx[i] = i
 	}
-	sort.SliceStable(idx, func(i, j int) bool {
-		return controls[idx[i]].ID < controls[idx[j]].ID
+	slices.SortStableFunc(idx, func(a, b int) int {
+		return cmp.Compare(controls[a].ID, controls[b].ID)
 	})
 	h := sha256.New()
 	for _, i := range idx {
@@ -175,8 +175,8 @@ func ComputeChainsDigest(chains []policy.ChainDefinition) string {
 	for i := range idx {
 		idx[i] = i
 	}
-	sort.SliceStable(idx, func(i, j int) bool {
-		return chains[idx[i]].ID < chains[idx[j]].ID
+	slices.SortStableFunc(idx, func(a, b int) int {
+		return cmp.Compare(chains[a].ID, chains[b].ID)
 	})
 	h := sha256.New()
 	for _, i := range idx {

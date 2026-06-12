@@ -7,7 +7,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -121,7 +121,7 @@ func TestHexagonalDependencyDirection(t *testing.T) {
 		}
 	}
 
-	sort.Strings(violations)
+	slices.Sort(violations)
 	for _, v := range violations {
 		t.Errorf("hexagonal dependency violation: %s", v)
 	}
@@ -183,7 +183,7 @@ func TestNoFloatingInternalPackages(t *testing.T) {
 		}
 	}
 
-	sort.Strings(floating)
+	slices.Sort(floating)
 	for _, name := range floating {
 		t.Errorf("floating internal package: internal/%s/ — assign to a layer or add to the allow-list with rationale", name)
 	}
@@ -254,7 +254,7 @@ func TestNoVendorStringsInCore(t *testing.T) {
 		t.Fatalf("walk %s: %v", coreDir, walkErr)
 	}
 
-	sort.Strings(violations)
+	slices.Sort(violations)
 	for _, v := range violations {
 		t.Errorf("vendor string in core: %s", v)
 	}

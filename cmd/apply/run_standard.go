@@ -4,141 +4,89 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"log/slog"
 
-	"github.com/sufield/stave/cmd/cmdutil/compose"
-	"github.com/sufield/stave/cmd/cmdutil/runid"
-	appconfig "github.com/sufield/stave/internal/app/config"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/pkg/stave"
 )
 
-// evalContext groups the parameters needed by the evaluation pipeline.
-type evalContext struct {
-	NewFindingWriter  compose.FindingWriterFactory
-	NewCtlRepo        compose.CtlRepoFactory
-	NewStdinObsRepo   func(io.Reader) (appcontracts.ObservationRepository, error)
-	NewCELEvaluator   compose.CELEvaluatorFactory
-	NewChainLoader    compose.ChainLoaderFactory
-	NewSLALoader      compose.SLALoaderFactory
-	Opts              *Options
-	Params            applyParams
-	IO                StandardIO
-	Plan              *appeval.EvaluationPlan
-	Runtime           *ui.Runtime
-	Logger            *slog.Logger
-	ProjectConfig     *appconfig.WorkspacePolicy
-	ProjectConfigPath string
-	UseBuiltinCatalog bool
-}
-
-// runStandardApply executes the standard plan → evaluate → output pipeline.
-func runStandardApply(ctx context.Context, logger *slog.Logger, deps Deps, opts *Options, params applyParams, sio StandardIO, cfg RunConfig) error {
+// runStandardApply executes the standard evaluation through the pkg/stave
+// facade. The command owns flag/path resolution, the progress runtime, the
+// stdout/stderr writes, and exit-code routing; the load → evaluate → enrich →
+// render pipeline (including --new-only and --assert-recent) lives in
+// stave.EvaluateStandard.
+func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio StandardIO, cfg RunConfig) error {
 	pc, pcErr := resolveProjectContext()
 	if pcErr != nil {
 		return decorateError(pcErr)
 	}
-	evalInput := buildEvaluatorInput(opts, pc, cfg.ControlsDir, cfg.ObservationsDir, cfg.projectConfigPath)
-	plan, err := appeval.NewPlan(evalInput)
-	if err != nil {
-		return decorateError(fmt.Errorf("resolve evaluation plan: %w", err))
-	}
-	if plan == nil {
-		// NewPlan's contract is "(plan, nil) on success, (nil, err)
-		// on failure". A (nil, nil) result here indicates a contract
-		// violation by NewPlan, not normal operation — fail loud
-		// rather than carry a nil plan into the run-id wiring (which
-		// would nil-deref ObservationsHash) or executeEvaluation
-		// (which dereferences plan throughout).
-		return decorateError(errors.New("resolve evaluation plan: NewPlan returned nil without error"))
-	}
-
-	logger = runid.SetupLoggingWithRunID(logger, plan.ObservationsHash.String(), plan.ControlsHash.String())
 
 	rt := ui.NewRuntime(sio.Stdout, sio.Stderr)
 	rt.Quiet = sio.Quiet
 
-	ec := evalContext{
-		NewFindingWriter:  deps.NewFindingWriter,
-		NewCtlRepo:        deps.NewCtlRepo,
-		NewStdinObsRepo:   deps.NewStdinObsRepo,
-		NewCELEvaluator:   deps.NewCELEvaluator,
-		NewChainLoader:    deps.NewChainLoader,
-		NewSLALoader:      deps.NewSLALoader,
-		Opts:              opts,
-		Params:            params,
-		IO:                sio,
-		Plan:              plan,
-		Runtime:           rt,
-		Logger:            logger,
-		ProjectConfig:     cfg.projectConfig,
-		ProjectConfigPath: cfg.projectConfigPath,
-		UseBuiltinCatalog: cfg.UseBuiltinCatalog,
-	}
-
-	// Disclosed fallback (per the repo's "fallbacks only when disclosed"
-	// rule): no --controls and no controls/ dir → the embedded catalog.
+	// Disclosed fallback: no --controls and no controls/ dir → embedded catalog.
 	if cfg.UseBuiltinCatalog {
 		fmt.Fprintf(sio.Stderr, "note: no --controls given and no controls/ directory found — "+
 			"evaluating against the built-in control catalog. Pass --controls <dir> to use your own.\n")
 	}
 
-	// Staleness check: --assert-recent. Run BEFORE evaluation so a
-	// stale-snapshot run fails fast instead of paying the full
-	// evaluation cost only to be rejected. The decision-and-evaluate
-	// pair lives on Options.CheckStaleness; we only load snapshots
-	// when the flag is set so the cost is paid lazily.
-	if opts.HasStalenessCheck() {
-		snapshots, snapErr := compose.LoadSnapshotsFrom(ctx, deps.NewObsRepo, cfg.ObservationsDir)
-		if snapErr != nil {
-			return fmt.Errorf("load snapshots for staleness check: %w", snapErr)
-		}
-		if staleErr := opts.CheckStaleness(snapshots, params.clock.Now()); staleErr != nil {
-			return staleErr
-		}
-	}
+	done := rt.BeginProgress("apply controls against observations")
+	res, err := stave.EvaluateStandard(ctx, stave.StandardRequest{
+		ControlsDir:        cfg.ControlsDir,
+		ObservationsDir:    cfg.ObservationsDir,
+		MaxUnsafe:          opts.MaxUnsafeDuration,
+		Now:                opts.NowTime,
+		SanitizeIDs:        cs.GlobalFlags.Sanitize,
+		PathMode:           string(cs.GlobalFlags.PathMode),
+		Format:             string(sio.Format),
+		Verbose:            opts.Verbose,
+		ExemptionFile:      opts.ExemptionFile,
+		AckFile:            opts.AcknowledgmentFile,
+		IntegrityManifest:  opts.IntegrityManifest,
+		IntegrityPublicKey: opts.IntegrityPublicKey,
+		SLAProfile:         opts.SLAProfile,
+		SLAProfileFile:     opts.SLAProfileFile,
+		TeamManifest:       opts.TeamManifest,
+		OwnerFilter:        opts.OwnerFilter,
+		TracePath:          opts.TracePath,
+		UseBuiltin:         cfg.UseBuiltinCatalog,
+		ContextName:        pc.ContextName,
+		ControlsFlagSet:    opts.controlsSet,
+		AssertRecent:       opts.AssertRecent,
+		Stdin:              cs.Stdin,
+		ProjectConfigPath:  cfg.projectConfigPath,
+		NewOnly:            opts.IsNewOnlyMode(),
+		NewSince:           opts.NewSince,
+		HistoryDir:         opts.HistoryDir,
+	})
+	done()
 
-	results, err := executeEvaluation(ctx, ec)
 	if err != nil {
+		if errors.Is(err, stave.ErrInvalidInput) {
+			return &ui.UserError{Err: err}
+		}
 		return decorateError(err)
 	}
 
-	// Signal-filtered output: --new-only or --new-since.
-	// The signal view replaces the standard reporter's user-facing
-	// summary, but the gating semantics — exit non-zero on
-	// violations / SLA breach — must still apply, otherwise CI runs
-	// with --new-only would pass on every active finding.
-	if opts.IsNewOnlyMode() {
-		if err := runNewOnlyOutput(ctx, sio.Stdout, sio.Stderr, opts, results); err != nil {
-			return err
-		}
-		// runNewOnlyOutput already rendered the signal-filtered
-		// view; calling ReportApply again would emit the standard
-		// summary on top, doubling output. We skip ReportApply's
-		// rendering but must NOT skip its gating decision: a
-		// non-compliant (block) state has to exit non-zero here too,
-		// otherwise CI runs with --new-only pass on every active
-		// finding. gateViolations mirrors ReportApply's policy
-		// evaluation without the duplicate output.
-		if err := gateViolations(results); err != nil {
-			return err
-		}
-		// SLA gate: the SLA breach is a separate gating signal from
-		// the violation gate above. Check it after the violation
-		// decision so a clean (compliant) run can still fail on an
-		// SLA-policy breach.
-		gate := NewReporter(sio, rt)
-		return gate.CheckSLAPolicy(SLAPolicy(opts.SLAPolicy), results)
+	if _, werr := sio.Stdout.Write(res.Output); werr != nil {
+		return fmt.Errorf("write evaluation output: %w", werr)
+	}
+	for _, w := range res.Warnings {
+		fmt.Fprintln(sio.Stderr, w)
 	}
 
 	rep := NewReporter(sio, rt)
-	if err := rep.ReportApply(results, evaluation.EnforcementPolicy{}); err != nil {
-		return err
+
+	// Signal-filtered (--new-only) view already rendered its own output;
+	// skip the standard summary but keep the violation + SLA gates.
+	if opts.IsNewOnlyMode() {
+		if gateErr := gateViolations(res); gateErr != nil {
+			return gateErr
+		}
+		return rep.CheckSLAPolicy(SLAPolicy(opts.SLAPolicy), res)
 	}
 
-	// SLA policy exit code: check after normal evaluation reporting.
-	return rep.CheckSLAPolicy(SLAPolicy(opts.SLAPolicy), results)
+	if reportErr := rep.ReportApply(res, cfg.ControlsDir, cfg.ObservationsDir); reportErr != nil {
+		return reportErr
+	}
+	return rep.CheckSLAPolicy(SLAPolicy(opts.SLAPolicy), res)
 }

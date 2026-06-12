@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
-	"github.com/sufield/stave/internal/app/contracts"
-	"github.com/sufield/stave/internal/app/staleness"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/platform/metadata"
 )
@@ -22,7 +19,7 @@ import (
 // variables when the user did not set them explicitly on the command line.
 // Precedence: CLI flag > env var > config file > default.
 func (o *Options) resolveEnvVarDefaults(cmd *cobra.Command) {
-	o.Format = contracts.OutputFormat(cliflags.ResolveFormatEnv(cmd, string(o.Format)))
+	o.Format = cmdutil.OutputFormat(cliflags.ResolveFormatEnv(cmd, string(o.Format)))
 	o.ControlsDir = cliflags.ResolveControlsEnv(cmd, o.ControlsDir)
 	o.ObservationsDir = cliflags.ResolveObservationsEnv(cmd, o.ObservationsDir)
 	o.NowTime = cliflags.ResolveNowEnv(cmd, o.NowTime)
@@ -54,7 +51,7 @@ type SharedOptions struct {
 	ObservationsDir   string
 	MaxUnsafeDuration string
 	NowTime           string
-	Format            contracts.OutputFormat
+	Format            cmdutil.OutputFormat
 
 	// controlsSet / formatSet / obsSet track whether the respective
 	// flag was explicitly set by the user. All three are derived
@@ -65,7 +62,7 @@ type SharedOptions struct {
 	obsSet      bool
 }
 
-func (o *SharedOptions) bindCommon(cmd *cobra.Command, defaultFormat contracts.OutputFormat) {
+func (o *SharedOptions) bindCommon(cmd *cobra.Command, defaultFormat cmdutil.OutputFormat) {
 	f := cmd.Flags()
 	cliflags.RegisterControlsFlag(cmd, &o.ControlsDir, cliflags.DefaultControlsDir, "Path to control definitions directory")
 
@@ -121,39 +118,6 @@ func (o *Options) IsNewOnlyMode() bool {
 	return o != nil && (o.NewOnly || o.NewSince != "")
 }
 
-// HasStalenessCheck reports whether --assert-recent was set.
-// Used by the apply runner to gate the snapshot-load + staleness
-// evaluation; replaces the tuple-unpack the runner used to do
-// inline.
-func (o *Options) HasStalenessCheck() bool {
-	return o != nil && o.AssertRecent != ""
-}
-
-// CheckStaleness evaluates the --assert-recent flag against the
-// supplied snapshots. Returns nil when:
-//
-//   - The flag was not set (no assertion requested), or
-//   - The flag was set and the staleness check passed.
-//
-// Returns a UserError when the flag is malformed or when the
-// snapshots are stale relative to the configured threshold. The
-// "should I check?" decision lives inside the method so the
-// caller branches on a single error value.
-func (o *Options) CheckStaleness(snapshots []asset.Snapshot, now time.Time) error {
-	if !o.HasStalenessCheck() {
-		return nil
-	}
-	d, err := time.ParseDuration(o.AssertRecent)
-	if err != nil {
-		return &ui.UserError{Err: fmt.Errorf("parse --assert-recent %q: %w", o.AssertRecent, err)}
-	}
-	result := staleness.Check(snapshots, d, now)
-	if result.Stale {
-		return &ui.UserError{Err: fmt.Errorf("%s", result.Message)}
-	}
-	return nil
-}
-
 // normalize cleans all user-supplied paths in one pass.
 func (o *Options) normalize() {
 	o.SharedOptions.normalize()
@@ -168,7 +132,7 @@ func (o *Options) normalize() {
 }
 
 // NewApplyCmd constructs the apply command.
-func NewApplyCmd(deps Deps) *cobra.Command {
+func NewApplyCmd() *cobra.Command {
 	opts := &Options{}
 
 	cmd := &cobra.Command{
@@ -238,7 +202,7 @@ Remediation scope:
 				Stdin:       cmd.InOrStdin(),
 				GlobalFlags: cliflags.GetGlobalFlags(cmd),
 			}
-			return runApply(cmd.Context(), deps, opts, cs)
+			return runApply(cmd.Context(), opts, cs)
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -250,7 +214,7 @@ Remediation scope:
 	// Scripted callers explicitly pass `--format json` (every test, demo,
 	// and CI invocation already does), so flipping the default is safe
 	// for the existing suite.
-	opts.bindCommon(cmd, contracts.FormatText)
+	opts.bindCommon(cmd, cmdutil.FormatText)
 	opts.bindApplySpecific(cmd)
 	opts.markMutuallyExclusive(cmd)
 	// Completion registration is best-effort — if it fails, help output

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -24,6 +25,7 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/app/exemptlapse"
 	"github.com/sufield/stave/internal/app/reachability"
+	"github.com/sufield/stave/internal/app/staleness"
 	"github.com/sufield/stave/internal/app/teams"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -50,8 +52,8 @@ var ErrInvalidInput = errors.New("invalid input")
 type StandardRequest struct {
 	ControlsDir        string
 	ObservationsDir    string
-	MaxUnsafe          time.Duration
-	Now                time.Time
+	MaxUnsafe          string // raw --max-unsafe (e.g. "168h", "7d"); parsed by the engine
+	Now                string // raw --now (RFC3339) or ""; parsed by the engine
 	SanitizeIDs        bool
 	PathMode           string
 	Format             string
@@ -68,7 +70,8 @@ type StandardRequest struct {
 	UseBuiltin         bool
 	ContextName        string
 	ControlsFlagSet    bool
-	AssertRecent       string // --assert-recent: fail fast if newest snapshot older than this
+	AssertRecent       string    // --assert-recent: fail fast if newest snapshot older than this
+	Stdin              io.Reader // used only when ObservationsDir == "-" (stdin observations)
 	// ProjectConfigPath is the resolved stave.yaml path (from command-side
 	// projconfig discovery), or "" when no project config applies. The engine
 	// loads it — the command holds only the path string, never the policy type.
@@ -124,10 +127,15 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 		return StandardResult{}, fmt.Errorf("load SLA policy: %w", err)
 	}
 
+	maxUnsafe, now, err := parseStandardTimes(req.MaxUnsafe, req.Now)
+	if err != nil {
+		return StandardResult{}, err
+	}
+
 	// Staleness gate (--assert-recent): run before evaluation so a stale
 	// snapshot fails fast. A breach maps to exit 2 via ErrInvalidInput.
 	if req.AssertRecent != "" && req.ObservationsDir != "-" {
-		if msg, stale, serr := checkStaleness(ctx, req.ObservationsDir, req.AssertRecent, req.Now); serr != nil {
+		if msg, stale, serr := checkStaleness(ctx, req.ObservationsDir, req.AssertRecent, now); serr != nil {
 			return StandardResult{}, serr
 		} else if stale {
 			return StandardResult{}, fmt.Errorf("%s: %w", msg, ErrInvalidInput)
@@ -148,20 +156,32 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 		controlsDir = ""
 	}
 
+	// Stdin observations (`apply -o -`): override the dir loader with a
+	// stdin-reading repository so applycore reads the bundle from req.Stdin.
+	var obsRepo appcontracts.ObservationRepository
+	if req.ObservationsDir == "-" {
+		stdinRepo, serr := observations.NewStdinObservationLoader(observations.NewObservationLoader(), req.Stdin)
+		if serr != nil {
+			return StandardResult{}, fmt.Errorf("init stdin observation loader: %w", serr)
+		}
+		obsRepo = stdinRepo
+	}
+
 	result, err := applycore.Run(ctx, applycore.Inputs{
 		SnapshotsDir:        req.ObservationsDir,
 		ControlsDir:         controlsDir,
 		ChainsDir:           "chains",
 		IntegrityManifest:   req.IntegrityManifest,
 		IntegrityPublicKey:  req.IntegrityPublicKey,
-		MaxUnsafe:           req.MaxUnsafe,
-		Now:                 req.Now,
+		MaxUnsafe:           maxUnsafe,
+		Now:                 now,
 		ExemptionRules:      exemptionCfg,
 		AcknowledgmentRules: ackCfg,
 		SLAConfig:           slaCfg,
 		ProjectConfig:       &projCfgInput,
 		Tracer:              tracer,
 		ContextName:         req.ContextName,
+		ObservationRepo:     obsRepo,
 	})
 	if err != nil {
 		return StandardResult{}, fmt.Errorf("evaluate: %w", err)
@@ -180,7 +200,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 	if req.NewOnly {
 		// Signal-filtered output replaces the standard report; gating below
 		// is computed from the same report regardless.
-		out, warnings, err = evaluateNewOnly(ctx, req, report)
+		out, warnings, err = evaluateNewOnly(ctx, req, report, now)
 	} else {
 		sanitizer := sanitize.Policy{SanitizeIDs: req.SanitizeIDs, PathMode: sanitize.PathMode(req.PathMode)}.NewSanitizer()
 		out, err = renderReport(ctx, req.Format, req.Verbose, sanitizer, report, result.Controls)
@@ -198,7 +218,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 
 	lapsed := exemptlapse.Detect(exemptlapse.Input{
 		AcknowledgedFindings: report.AcknowledgedFindings,
-		Now:                  req.Now,
+		Now:                  now,
 	})
 
 	outcome := evaluation.EnforcementPolicy{}.Evaluate(report.SecurityState)
@@ -212,6 +232,57 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 		HasCriticalSLABreach: report.HasCriticalSLABreach(),
 		LapsedExemptionCount: len(lapsed),
 	}, nil
+}
+
+// parseStandardTimes parses the raw --max-unsafe and --now flag strings into
+// the engine's reference duration and time. Bad values wrap ErrInvalidInput
+// (exit 2).
+//
+// When --now is empty it materializes the wall clock as time.Now().UTC(),
+// matching the pre-facade command which passed params.clock.Now()
+// (ports.RealClock{}.Now() == time.Now().UTC()) as a concrete time. The engine
+// then builds a FixedClock (IsUserProvided=true) and uses that wall clock as
+// the audit reference. Returning the zero time instead would make the engine
+// fall back to the latest snapshot's CapturedAt (RealClock, IsUserProvided=
+// false), silently changing durations, security_state, gating, and the exit
+// code on every no---now run. --now is normalized to UTC to match the
+// pre-facade parseNowTime, so non-UTC offsets render byte-identically.
+func parseStandardTimes(maxUnsafeStr, nowStr string) (time.Duration, time.Time, error) {
+	// Parse unconditionally: the pre-facade appeval.parseMaxUnsafeDuration
+	// rejected an empty value (kernel.ParseDuration → ErrEmptyDuration → exit
+	// 2). Guarding on != "" would silently treat an explicit --max-unsafe ""
+	// as 0 and evaluate (exit 3), a behavior change.
+	maxUnsafe, err := kernel.ParseDuration(maxUnsafeStr)
+	if err != nil {
+		return 0, time.Time{}, fmt.Errorf("parse --max-unsafe %q: %w: %w", maxUnsafeStr, err, ErrInvalidInput)
+	}
+	if nowStr == "" {
+		return maxUnsafe, time.Now().UTC(), nil
+	}
+	t, err := time.Parse(time.RFC3339, nowStr)
+	if err != nil {
+		return 0, time.Time{}, fmt.Errorf("parse --now %q: %w: %w", nowStr, err, ErrInvalidInput)
+	}
+	return maxUnsafe, t.UTC(), nil
+}
+
+// checkStaleness loads snapshots and applies the --assert-recent threshold.
+// Returns (message, stale, error); a malformed duration is surfaced as a
+// stale message so the command maps it to exit 2.
+func checkStaleness(ctx context.Context, obsDir, assertRecent string, now time.Time) (string, bool, error) {
+	threshold, err := time.ParseDuration(assertRecent)
+	if err != nil {
+		return fmt.Sprintf("parse --assert-recent %q: %v", assertRecent, err), true, nil
+	}
+	loaded, err := observations.NewObservationLoader().LoadSnapshots(ctx, obsDir)
+	if err != nil {
+		return "", false, fmt.Errorf("load snapshots for staleness check: %w", err)
+	}
+	sr := staleness.Check(loaded.Snapshots, threshold, now)
+	if sr.Stale {
+		return sr.Message, true, nil
+	}
+	return "", false, nil
 }
 
 // renderReport runs the output pipeline (marshaler + enricher + coverage)

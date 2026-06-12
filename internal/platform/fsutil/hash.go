@@ -1,6 +1,7 @@
 package fsutil
 
 import (
+	"cmp"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -51,7 +52,7 @@ func HashDirByExt(dir string, exts ...string) (kernel.Digest, error) {
 	}
 
 	slices.SortFunc(pairs, func(a, b namedHash) int {
-		return strings.Compare(a.name, b.name)
+		return cmp.Compare(a.name, b.name)
 	})
 
 	var b strings.Builder

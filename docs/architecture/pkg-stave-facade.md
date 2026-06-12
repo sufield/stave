@@ -72,12 +72,26 @@ helper to `pkg/stave` first):
       finding-marshaler/sanitizer/clock; cli/ui crossings become return
       values (Warnings, DiagnoseHint, HasViolations, ErrInvalidProfileInput).
       cmd/apply 32→31 imports (the rest are shared with standard mode).
-    - **3c** — standard mode (the big lift): run_evaluate already calls
-      `pkg/stave/cliapi.Apply`; lift Builder/deps + enrichment (owners,
-      reachability, coverage) + output pipeline + SLA + new-only. Progress
-      crosses as a `func(processed, total)` callback; ReportApply/
-      CheckSLAPolicy/decorateError stay command-side (exit-3 + hints).
-    - **3d** — final cleanup + architecture_test + enroll.
+    - **3c — DONE 2026-06-12.** standard mode (the big lift): the full
+      load → evaluate → enrich (owners, reachability) → render → SLA →
+      new-only pipeline lifted into `stave.EvaluateStandard`
+      (`pkg/stave/internal/applycmd/standard.go` + `newonly.go`). The facade
+      self-constructs the engine via `applycore.Run` (an `ObservationRepo`
+      override on `applycore.Inputs` carries stdin observations without the
+      command holding a repo type). `--max-unsafe`/`--now` parse in the
+      facade; the command passes raw flag strings. Project config crosses as
+      a path (`ProjectConfigPath`); the facade loads the `WorkspacePolicy`.
+      cli/ui crossings became return values: warnings (`[]string`), the gate
+      decision (string `ALLOW`/`ADVISORY`/`BLOCK`), and SLA flags on
+      `StandardResult`. `ReportApply`/`gateViolations`/`CheckSLAPolicy`/
+      `decorateError` stay command-side (exit-3 + hints); the evaluation
+      sentinels reach `decorateError` via `stave.ErrNoControls`/
+      `ErrNoSnapshots`/`ErrSchemaValidation` (re-exports of the internal
+      sentinels). Input errors map to exit 2 via `asInvalidInput` (joins
+      `ErrInvalidInput` into the Is chain without doubling the message).
+    - **3d — DONE 2026-06-12.** `cmd/apply` is facade-clean (0 non-exempt
+      internal imports), `architecture_test.go` added, `"apply"` enrolled in
+      `facadeCleanBaseline`.
 - `diagnose/artifacts` (~829, 4 subcommands / ~11 leaf verbs) ↔
   `cmd/diagnose` (22 imports). `controls explain` uses
   `cmd/diagnose.NewExplainerWithFinder` + `WriteExplainResult` — but the
@@ -210,7 +224,7 @@ done — flipping today would fail on the ~64 still-leaky packages.
 
 **Started as a ratchet** (`cmd/facade_ratchet_test.go`): one consolidated
 test walks every leaf command package and holds a `facadeCleanBaseline`
-of the packages that are already facade-clean (11 today; the `cmd/cmdutil`
+of the packages that are already facade-clean (59 today; the `cmd/cmdutil`
 subtree is excluded as the wrapper layer). It enforces a one-way ratchet —
 
 - no baseline package may regress (gain a non-exempt internal import), and

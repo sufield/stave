@@ -38,12 +38,15 @@ func (a AssetType) String() string {
 // For "storage_bucket", it returns "storage".
 func (a AssetType) Domain() AssetDomain {
 	s := a.String()
-	parts := strings.Split(s, "_")
-	if len(parts) < 2 {
-		return AssetDomain(parts[0])
+	idx1 := strings.IndexByte(s, '_')
+	if idx1 < 0 {
+		return AssetDomain(s)
 	}
-	// Convention: the domain is the first two segments if they exist.
-	return AssetDomain(strings.Join(parts[:2], "_"))
+	idx2 := strings.IndexByte(s[idx1+1:], '_')
+	if idx2 < 0 {
+		return AssetDomain(s)
+	}
+	return AssetDomain(s[:idx1+1+idx2])
 }
 
 // Validate ensures the AssetType adheres to the system's naming constraints.

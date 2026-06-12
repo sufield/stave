@@ -1,6 +1,6 @@
 package graph
 
-import "sort"
+import "slices"
 
 // sortedPropKeys returns the keys of props in sorted order. Centralizes
 // the make+for-range+sort pattern that the JSON-LD and GraphML
@@ -14,6 +14,6 @@ func sortedPropKeys(props map[string]any) []string {
 	for k := range props {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 	return keys
 }
