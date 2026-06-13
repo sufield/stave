@@ -221,9 +221,9 @@ func SafeCreateFile(path string, opts WriteOptions) (*os.File, error) {
 
 	// Test hook: inject a path swap between the symlink check and the open to
 	// exercise the TOCTOU window. Nil in production.
-	testHookAfterLstatMu.Lock()
-	beforeOpen := testHookBeforeOpen
-	testHookAfterLstatMu.Unlock()
+	testHooks.mu.Lock()
+	beforeOpen := testHooks.beforeOpen
+	testHooks.mu.Unlock()
 	if beforeOpen != nil {
 		beforeOpen(path)
 	}
@@ -298,26 +298,25 @@ func SafeWriteFile(path string, data []byte, opts WriteOptions) error {
 	return nil
 }
 
+// testHooks bundles fsutil's test-only injection points with the mutex that
+// guards them. Both hooks are nil in production (zero cost beyond a nil check);
+// tests install them under testHooks.mu to drive the TOCTOU symlink-swap races
+// that are otherwise non-deterministic. -race flagged unsynchronised reads when
+// a parallel test set a hook on a sibling goroutine, hence the lock. This is the
+// idiomatic Go stdlib testHook* pattern (cf. net/http, time): kept package-level
+// rather than threaded through the SafeMkdirAll / SafeCreateFile signatures,
+// which are a production API that must not carry a test concern. Consolidating
+// the two hooks with their shared lock into one holder replaces the former loose
+// mutex that was named after only one of the two fields it guarded.
+var testHooks struct {
+	mu         sync.Mutex
+	afterLstat func(component string) // SafeMkdirAll: fired between the Lstat check and Mkdir
+	beforeOpen func(path string)      // SafeCreateFile: fired between the symlink check and open
+}
+
 // SafeMkdirAll creates a directory tree, checking every path component for
 // symlinks during creation (unless AllowSymlink). This prevents TOCTOU races
 // that could occur between a pre-check and os.MkdirAll.
-// testHookAfterLstat is called between the Lstat check and Mkdir call
-// in SafeMkdirAll. Nil in production. Set in tests to inject TOCTOU
-// race conditions for symlink swap testing.
-//
-// testHookAfterLstatMu guards both the read in SafeMkdirAll and any
-// test code that writes the hook. -race flagged the unsynchronised
-// read whenever a parallel test set the hook on a sibling goroutine;
-// the hook is rare enough that the lock overhead is negligible.
-// testHookBeforeOpen is called in SafeCreateFile between CheckSymlinkSafety and
-// the os.OpenFile, to inject a TOCTOU path swap in tests. Nil in production.
-// Guarded by testHookAfterLstatMu (same rationale as testHookAfterLstat).
-var (
-	testHookAfterLstat   func(component string)
-	testHookBeforeOpen   func(path string)
-	testHookAfterLstatMu sync.Mutex
-)
-
 func SafeMkdirAll(path string, opts WriteOptions) error {
 	if opts.AllowSymlink {
 		if err := os.MkdirAll(path, opts.Perm); err != nil {
@@ -384,9 +383,9 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 		if !os.IsNotExist(err) {
 			return fmt.Errorf("security check failed for %q: %w", current, err)
 		}
-		testHookAfterLstatMu.Lock()
-		hook := testHookAfterLstat
-		testHookAfterLstatMu.Unlock()
+		testHooks.mu.Lock()
+		hook := testHooks.afterLstat
+		testHooks.mu.Unlock()
 		if hook != nil {
 			hook(current)
 		}

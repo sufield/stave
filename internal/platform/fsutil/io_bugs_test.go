@@ -260,22 +260,22 @@ func TestSafeCreateFile_RaceDoesNotTruncateVictim(t *testing.T) {
 
 	// Swap target -> symlink(victim) exactly once, in the window between the
 	// safety check and the open.
-	testHookAfterLstatMu.Lock()
-	testHookBeforeOpen = func(p string) {
+	testHooks.mu.Lock()
+	testHooks.beforeOpen = func(p string) {
 		if p != target {
 			return
 		}
-		testHookAfterLstatMu.Lock()
-		testHookBeforeOpen = nil // fire once
-		testHookAfterLstatMu.Unlock()
+		testHooks.mu.Lock()
+		testHooks.beforeOpen = nil // fire once
+		testHooks.mu.Unlock()
 		_ = os.Remove(target)
 		_ = os.Symlink(victim, target)
 	}
-	testHookAfterLstatMu.Unlock()
+	testHooks.mu.Unlock()
 	t.Cleanup(func() {
-		testHookAfterLstatMu.Lock()
-		testHookBeforeOpen = nil
-		testHookAfterLstatMu.Unlock()
+		testHooks.mu.Lock()
+		testHooks.beforeOpen = nil
+		testHooks.mu.Unlock()
 	})
 
 	err := SafeWriteFile(target, []byte("pwned"), WriteOptions{Perm: 0o644, Overwrite: true})

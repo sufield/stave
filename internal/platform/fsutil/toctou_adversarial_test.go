@@ -7,7 +7,7 @@ import (
 )
 
 // TestSafeMkdirAll_TOCTOU_WithHook injects a symlink swap between
-// the Lstat check and the Mkdir call using the testHookAfterLstat
+// the Lstat check and the Mkdir call using the testHooks.afterLstat
 // variable. This deterministically tests whether the TOCTOU window
 // is closed — without relying on race timing.
 func TestSafeMkdirAll_TOCTOU_WithHook(t *testing.T) {
@@ -22,8 +22,8 @@ func TestSafeMkdirAll_TOCTOU_WithHook(t *testing.T) {
 	// under legitPath. We swap legitPath for a symlink to attackerTarget.
 	legitPath := filepath.Join(tmpDir, "legit")
 
-	testHookAfterLstatMu.Lock()
-	testHookAfterLstat = func(component string) {
+	testHooks.mu.Lock()
+	testHooks.afterLstat = func(component string) {
 		if filepath.Base(component) == "subdir" {
 			// Swap the parent directory for a symlink right before Mkdir.
 			// This simulates an attacker acting in the TOCTOU window.
@@ -31,11 +31,11 @@ func TestSafeMkdirAll_TOCTOU_WithHook(t *testing.T) {
 			_ = os.Symlink(attackerTarget, legitPath)
 		}
 	}
-	testHookAfterLstatMu.Unlock()
+	testHooks.mu.Unlock()
 	defer func() {
-		testHookAfterLstatMu.Lock()
-		testHookAfterLstat = nil
-		testHookAfterLstatMu.Unlock()
+		testHooks.mu.Lock()
+		testHooks.afterLstat = nil
+		testHooks.mu.Unlock()
 	}()
 
 	targetPath := filepath.Join(legitPath, "subdir")
