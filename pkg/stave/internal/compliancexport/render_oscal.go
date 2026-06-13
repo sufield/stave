@@ -176,12 +176,12 @@ func renderOSCAL(
 
 		// Reviewed controls.
 		var controlSelects []oscalControlSelect
-		controlSeen := make(map[string]bool)
+		controlSeen := make(map[string]struct{})
 		for ri := range assessment.Requirements {
 			req := &assessment.Requirements[ri]
 			oscalID := toOSCALControlID(profile.FrameworkKey, req.RequirementID)
-			if !controlSeen[oscalID] {
-				controlSeen[oscalID] = true
+			if _, ok := controlSeen[oscalID]; !ok {
+				controlSeen[oscalID] = struct{}{}
 				controlSelects = append(controlSelects, oscalControlSelect{ControlID: oscalID})
 			}
 		}
@@ -300,13 +300,13 @@ func uuidV5(parts ...string) string {
 }
 
 func deduplicateObservations(obs []oscalObservation) []oscalObservation {
-	seen := make(map[string]bool)
+	seen := make(map[string]struct{})
 	var out []oscalObservation
 	for i := range obs {
-		if seen[obs[i].UUID] {
+		if _, ok := seen[obs[i].UUID]; ok {
 			continue
 		}
-		seen[obs[i].UUID] = true
+		seen[obs[i].UUID] = struct{}{}
 		out = append(out, obs[i])
 	}
 	return out

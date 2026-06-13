@@ -41,8 +41,8 @@ func TestApplyAcknowledgments_AssetAAckSurvivesAssetBFailure(t *testing.T) {
 	// status fires only when a compensating control was never
 	// evaluated; EvaluationCoverage distinguishes those two cases.
 	coverage := EvaluationCoverage{
-		"asset-A": {"CTL.X": true, "CTL.Y": true},
-		"asset-B": {"CTL.Y": true},
+		"asset-A": {"CTL.X": {}, "CTL.Y": {}},
+		"asset-B": {"CTL.Y": {}},
 	}
 
 	active, ackd := applyAcknowledgments(findings, nil, acks, now, coverage)
@@ -88,7 +88,7 @@ func TestApplyAcknowledgments_AckInvalidatedByOwnAssetFailure(t *testing.T) {
 	}
 
 	coverage := EvaluationCoverage{
-		"asset-A": {"CTL.X": true, "CTL.Y": true},
+		"asset-A": {"CTL.X": {}, "CTL.Y": {}},
 	}
 
 	_, ackd := applyAcknowledgments(findings, nil, acks, now, coverage)

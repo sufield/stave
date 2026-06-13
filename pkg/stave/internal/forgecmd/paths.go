@@ -32,9 +32,9 @@ func SnapshotAssetTypes(path string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	seen := make(map[string]bool)
+	seen := make(map[string]struct{})
 	for _, a := range snap.Assets {
-		seen[string(a.Type)] = true
+		seen[string(a.Type)] = struct{}{}
 	}
 	var types []string
 	for t := range seen {

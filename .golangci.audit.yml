@@ -1,0 +1,70 @@
+# Report-only Go best-practices AUDIT config — NOT a gate.
+#
+# This is a SEPARATE config from the gating .golangci.yml; it enables only the
+# four detectors that quantify the audit's four dimensions and is always run
+# with --issues-exit-code 0 (see `make audit`). It never enters the failing
+# `check` aggregate. Detection here is reproducible; enforcement is each
+# follow-on refactor spec's job.
+#
+# Design + verified syntax: docs/superpowers/specs/2026-06-13-go-best-practices-audit-design.md
+version: "2"
+
+run:
+  timeout: 5m
+  tests: false          # prod code is the target; skip _test.go entirely
+  build-tags:
+    - stavedev          # parity with the gating config so tagged files are seen
+
+linters:
+  default: none
+  enable:
+    - interfacebloat    # DIM1 interface segregation
+    - gochecknoglobals  # DIM2 package-level global state
+    - gochecknoinits    # DIM2 init() functions
+    - forbidigo         # DIM3 panic / os.Exit / log.Fatal in library code
+  settings:
+    interfacebloat:
+      # Setting key is 'max' (NOT 'threshold'). Counts top-level ELEMENTS =
+      # explicit methods + embedded interfaces (each embed = 1 element, not
+      # expanded). Default 10.
+      max: 10
+    # NB: gochecknoglobals / gochecknoinits expose ZERO settings in v2.11.3 —
+    # any settings block for them fails `golangci-lint config verify` (exit 3).
+    # Their ignore behavior is hardcoded: blank `_`, interface assertions
+    # `var _ Iface = (*T)(nil)`, sentinel errors (err/Err prefix AND error
+    # type), `version` vars, `//go:embed` vars, and regexp.MustCompile values
+    # are auto-ignored; lookup-table maps/slices ARE flagged.
+    forbidigo:
+      # Specifying `forbid` REPLACES the default fmt.Print* list. Patterns are
+      # IDENTIFIERS — '^panic$' works, 'panic\(' matches nothing.
+      forbid:
+        - pattern: '^panic$'
+          msg: "panic is forbidden in library packages; return an error instead"
+        - pattern: '^os\.Exit$'
+          msg: "os.Exit is forbidden in library packages; exit at main instead"
+        - pattern: '^log\.(Fatal|Fatalf|Fatalln)$'
+          msg: "log.Fatal* is forbidden in library packages; return an error instead"
+  exclusions:
+    generated: strict
+    paths:
+      - (^|/)testdata($|/)
+      - (^|/)fixtures($|/)
+      - (^|/)examples($|/)   # examples/ package main excluded here
+      - internal/tools/      # dev tools (incl. this audit's own tools) excluded here
+    rules:
+      # DIM3 only: panic/os.Exit/log.Fatal are legitimate at the process
+      # boundary. Exclusion is PATH-based (not package-name) — every dir holding
+      # a `package main` outside the global paths above is listed explicitly.
+      - path: (^|/)cmd/
+        linters: [forbidigo]
+      - path: (^|/)(experiments|reasoning)/
+        linters: [forbidigo]
+
+issues:
+  # A baseline is a COMPLETE inventory — never cap. golangci-lint's defaults
+  # (max-issues-per-linter: 50, max-same-issues: 3) silently truncate: with the
+  # defaults, forbidigo (one shared message) reported only 3 of ~12 real panics
+  # and gochecknoglobals stopped at exactly 50. The gating .golangci.yml sets
+  # both to 0 for the same reason.
+  max-issues-per-linter: 0
+  max-same-issues: 0

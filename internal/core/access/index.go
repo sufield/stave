@@ -51,13 +51,13 @@ func (idx *ResourceAccessIndex) AddEntry(resourceID string, entry ResourceAccess
 // access is never considered designated.
 func (idx *ResourceAccessIndex) HasNonDesignatedPHIAccess(
 	resourceID string,
-	designatedPrincipals map[string]bool,
+	designatedPrincipals map[string]struct{},
 ) bool {
 	for _, entry := range idx.entries[resourceID] {
 		if entry.IsPublic {
 			return true
 		}
-		if !designatedPrincipals[entry.PrincipalARN] {
+		if _, ok := designatedPrincipals[entry.PrincipalARN]; !ok {
 			return true
 		}
 	}

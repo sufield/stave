@@ -107,8 +107,8 @@ func TestHasNonDesignatedPHIAccess_AllDesignated(t *testing.T) {
 		"123456789012",
 	)
 
-	designated := map[string]bool{
-		"arn:aws:iam::123456789012:role/phi-processor": true,
+	designated := map[string]struct{}{
+		"arn:aws:iam::123456789012:role/phi-processor": {},
 	}
 	if idx.HasNonDesignatedPHIAccess("arn:aws:s3:::phi-bucket", designated) {
 		t.Fatal("expected no non-designated access — all principals are designated")
@@ -123,8 +123,8 @@ func TestHasNonDesignatedPHIAccess_NonDesignated(t *testing.T) {
 		"123456789012",
 	)
 
-	designated := map[string]bool{
-		"arn:aws:iam::123456789012:role/phi-processor": true,
+	designated := map[string]struct{}{
+		"arn:aws:iam::123456789012:role/phi-processor": {},
 	}
 	if !idx.HasNonDesignatedPHIAccess("arn:aws:s3:::phi-bucket", designated) {
 		t.Fatal("expected non-designated access detected")
@@ -139,7 +139,7 @@ func TestHasNonDesignatedPHIAccess_PublicAlwaysNonDesignated(t *testing.T) {
 		"123456789012",
 	)
 
-	designated := map[string]bool{} // empty — no one is designated
+	designated := map[string]struct{}{} // empty — no one is designated
 	if !idx.HasNonDesignatedPHIAccess("arn:aws:s3:::phi-bucket", designated) {
 		t.Fatal("expected public access to be non-designated")
 	}

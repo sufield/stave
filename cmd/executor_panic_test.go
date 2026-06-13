@@ -1,3 +1,7 @@
+//go:build unix
+
+// This test drives the signal handler with syscall.Kill, which is unix-only;
+// the production signal path (cmd/executor.go) remains cross-platform.
 package cmd
 
 import (

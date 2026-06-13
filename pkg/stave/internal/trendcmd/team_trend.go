@@ -173,9 +173,9 @@ func computeRollup(trends []teamTrend, group *teams.HierarchyGroup) *rollupResul
 	if group == nil {
 		return nil
 	}
-	memberSet := make(map[string]bool, len(group.Teams))
+	memberSet := make(map[string]struct{}, len(group.Teams))
 	for _, tid := range group.Teams {
-		memberSet[tid] = true
+		memberSet[tid] = struct{}{}
 	}
 
 	var totalScore, totalMTTR float64
@@ -183,7 +183,7 @@ func computeRollup(trends []teamTrend, group *teams.HierarchyGroup) *rollupResul
 	var openFindings, criticalOpen, count int
 	for i := range trends {
 		t := &trends[i]
-		if !memberSet[t.ID] {
+		if _, ok := memberSet[t.ID]; !ok {
 			continue
 		}
 		count++

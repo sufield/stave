@@ -87,14 +87,16 @@ func TestBuild_SingleFinding_TwoCitations(t *testing.T) {
 	}
 
 	// Records sorted by framework
-	frameworks := make(map[string]bool)
+	frameworks := make(map[string]struct{})
 	for _, r := range pkg.Records {
 		if len(r.Citations) != 1 {
 			t.Errorf("expected 1 citation per record, got %d", len(r.Citations))
 		}
-		frameworks[r.Citations[0].Framework] = true
+		frameworks[r.Citations[0].Framework] = struct{}{}
 	}
-	if !frameworks["hipaa"] || !frameworks["soc2"] {
+	_, okHipaa := frameworks["hipaa"]
+	_, okSoc2 := frameworks["soc2"]
+	if !okHipaa || !okSoc2 {
 		t.Errorf("expected hipaa and soc2 frameworks, got %v", frameworks)
 	}
 }

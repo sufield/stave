@@ -123,13 +123,13 @@ func BuildCompositeGaps(assessments []*ProfileAssessment) CompositeGapReport {
 	// Partition into shared and unique.
 	var shared []SharedGap
 	var unique []UniqueGap
-	uniqueControlIDs := make(map[string]bool)
+	uniqueControlIDs := make(map[string]struct{})
 
 	for _, entry := range gaps {
-		uniqueControlIDs[entry.controlID] = true
-		fwSet := make(map[string]bool)
+		uniqueControlIDs[entry.controlID] = struct{}{}
+		fwSet := make(map[string]struct{})
 		for _, v := range entry.violations {
-			fwSet[v.Framework] = true
+			fwSet[v.Framework] = struct{}{}
 		}
 
 		if len(fwSet) >= 2 {
@@ -219,14 +219,14 @@ func findingIDFromRecord(rec *EvidenceRecord) string {
 }
 
 func deduplicateViolations(vs []FrameworkViolation) []FrameworkViolation {
-	seen := make(map[string]bool)
+	seen := make(map[string]struct{})
 	var out []FrameworkViolation
 	for _, v := range vs {
 		key := v.Framework + ":" + v.RequirementID
-		if seen[key] {
+		if _, ok := seen[key]; ok {
 			continue
 		}
-		seen[key] = true
+		seen[key] = struct{}{}
 		out = append(out, v)
 	}
 	return out

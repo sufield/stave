@@ -59,14 +59,14 @@ func exemptBuildPOAM(af *appexempt.AcceptanceFile, assessment *report.Assessment
 	var risks []map[string]any
 
 	// Type 1: Accepted risk items from acknowledgments.
-	ackIDs := make(map[string]bool)
+	ackIDs := make(map[string]struct{})
 	for i := range af.Acknowledgments {
 		a := &af.Acknowledgments[i]
 		if !a.IsExportable() {
 			continue
 		}
 
-		ackIDs[a.ControlID+"@"+a.AssetID] = true
+		ackIDs[a.ControlID+"@"+a.AssetID] = struct{}{}
 		itemUUID := exemptPOAMUUID("poam-item", a.ControlID, a.AssetID)
 		riskUUID := exemptPOAMUUID("risk", a.ControlID, a.AssetID)
 
@@ -139,7 +139,7 @@ func exemptBuildPOAM(af *appexempt.AcceptanceFile, assessment *report.Assessment
 		for i := range assessment.Findings {
 			f := &assessment.Findings[i]
 			key := string(f.ControlID) + "@" + string(f.AssetID)
-			if ackIDs[key] {
+			if _, ok := ackIDs[key]; ok {
 				continue // acknowledged — already in Type 1
 			}
 

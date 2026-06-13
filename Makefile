@@ -304,6 +304,27 @@ lint-debt:
 		echo "No change. Debt holds at the baseline ceiling."; \
 	fi
 
+## audit: Generate the report-only Go best-practices baseline (docs/audits/go-best-practices-baseline.{md,json}).
+## audit-check: Verify the committed baseline matches current source (manual; NOT in CI — churn is per-commit volatile).
+##
+## Report-only and advisory — gates nothing. Detectors: .golangci.audit.yml
+## (interfacebloat / gochecknoglobals / gochecknoinits / forbidigo) +
+## internal/tools/goroutinescan; aggregated by internal/tools/auditreport.
+## Design: docs/superpowers/specs/2026-06-13-go-best-practices-audit-design.md.
+.PHONY: audit audit-check
+audit: AUDIT_CHECK :=
+audit-check: AUDIT_CHECK := -check
+audit audit-check:
+	@set -e; tmp=$$(mktemp -d); trap 'rm -rf "$$tmp"' EXIT; \
+	$(GOLINT) run -c .golangci.audit.yml --output.json.path stdout --show-stats=false --issues-exit-code 0 ./... > "$$tmp/lint.json"; \
+	$(GOCMD) run ./internal/tools/goroutinescan -root . > "$$tmp/goroutines.json"; \
+	git log --format= --name-only --relative -- '*.go' | grep -v _test.go | sort | uniq -c | sort -rn > "$$tmp/churn.txt"; \
+	$(GOCMD) run ./internal/tools/auditreport \
+		-lint "$$tmp/lint.json" -goroutines "$$tmp/goroutines.json" -churn "$$tmp/churn.txt" \
+		-out docs/audits/go-best-practices-baseline.md \
+		-json docs/audits/go-best-practices-baseline.json \
+		-now "$$(git log -1 --format=%cI)" -commit "$$(git rev-parse --short HEAD)" $(AUDIT_CHECK) $(ARGS)
+
 ## fmt: Format code
 fmt:
 	$(GOFMT) ./...
@@ -1018,6 +1039,7 @@ SYNC_EXCLUDES = \
 	--exclude='.venv/' \
 	--exclude='venv/' \
 	--exclude='docs/audits/' \
+	--exclude='docs/superpowers/' \
 	--exclude='docs/plans/' \
 	--exclude='docs/ontology/' \
 	--exclude='docs/design/' \

@@ -33,9 +33,9 @@ type ScopeResolver func(assetID asset.ID, path string) (string, bool)
 // that never fire pay only the nil-check at emission time, not the
 // per-chain map allocation.
 type chainBuckets struct {
-	byScope         map[string]map[kernel.ControlID]bool
-	assetsByScope   map[string]map[asset.ID]bool
-	resolvedByScope map[string]bool
+	byScope         map[string]map[kernel.ControlID]struct{}
+	assetsByScope   map[string]map[asset.ID]struct{}
+	resolvedByScope map[string]struct{}
 }
 
 // DetectChains checks each chain definition: a chain fires only when
@@ -89,21 +89,21 @@ func DetectChains(
 			b := buckets[ci]
 			if b == nil {
 				b = &chainBuckets{
-					byScope:         make(map[string]map[kernel.ControlID]bool),
-					assetsByScope:   make(map[string]map[asset.ID]bool),
-					resolvedByScope: make(map[string]bool),
+					byScope:         make(map[string]map[kernel.ControlID]struct{}),
+					assetsByScope:   make(map[string]map[asset.ID]struct{}),
+					resolvedByScope: make(map[string]struct{}),
 				}
 				buckets[ci] = b
 			}
 			scope, resolved := groupingKey(chain, f.AssetID, scopeResolver)
 			if b.byScope[scope] == nil {
-				b.byScope[scope] = make(map[kernel.ControlID]bool)
-				b.assetsByScope[scope] = make(map[asset.ID]bool)
+				b.byScope[scope] = make(map[kernel.ControlID]struct{})
+				b.assetsByScope[scope] = make(map[asset.ID]struct{})
 			}
-			b.byScope[scope][f.ControlID] = true
-			b.assetsByScope[scope][f.AssetID] = true
+			b.byScope[scope][f.ControlID] = struct{}{}
+			b.assetsByScope[scope][f.AssetID] = struct{}{}
 			if resolved {
-				b.resolvedByScope[scope] = true
+				b.resolvedByScope[scope] = struct{}{}
 			}
 		}
 	}
@@ -154,14 +154,14 @@ func DetectChains(
 func emitChainFinding(
 	chain *policy.ChainDefinition,
 	scope string,
-	scopeFailing map[kernel.ControlID]bool,
+	scopeFailing map[kernel.ControlID]struct{},
 	b *chainBuckets,
 	controlLookup map[kernel.ControlID]*policy.ControlDefinition,
 ) (findingsdata.CompoundFinding, bool) {
 	var failing []kernel.ControlID
 	var holding []kernel.ControlID
 	for _, cid := range chain.ControlIDs {
-		if scopeFailing[cid] {
+		if _, ok := scopeFailing[cid]; ok {
 			failing = append(failing, cid)
 		} else {
 			holding = append(holding, cid)
@@ -173,12 +173,12 @@ func emitChainFinding(
 	}
 
 	// Collect attack stages and compute scope-aware blast multiplier.
-	stageSet := make(map[kernel.AttackStage]bool)
+	stageSet := make(map[kernel.AttackStage]struct{})
 	maxBlast := 1.0
 	for _, cid := range failing {
 		if ctl, ok := controlLookup[cid]; ok {
 			if stage := ctl.AttackStage(); stage != "" {
-				stageSet[stage] = true
+				stageSet[stage] = struct{}{}
 			}
 			mult := scopeAdjustedBlast(ctl)
 			if mult > maxBlast {
@@ -222,7 +222,8 @@ func emitChainFinding(
 	// duplicate AssetID — and adding it unconditionally would churn
 	// every chain golden in the repo. Emit only when scope_field
 	// actually drove grouping.
-	if chain.ScopeField != "" && b.resolvedByScope[scope] {
+	_, isResolved := b.resolvedByScope[scope]
+	if chain.ScopeField != "" && isResolved {
 		finding.ScopeID = scope
 		finding.ScopeField = chain.ScopeField
 		finding.ContributingAssets = contributing
@@ -250,7 +251,7 @@ func groupingKey(chain *policy.ChainDefinition, assetID asset.ID, resolver Scope
 
 // sortedAssetIDs returns the keys of the set in lexical order so chain
 // findings are deterministic across runs.
-func sortedAssetIDs(set map[asset.ID]bool) []asset.ID {
+func sortedAssetIDs(set map[asset.ID]struct{}) []asset.ID {
 	out := make([]asset.ID, 0, len(set))
 	for id := range set {
 		out = append(out, id)

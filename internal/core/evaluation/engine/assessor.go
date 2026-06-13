@@ -769,7 +769,7 @@ func buildSuppressionSet(
 // asset?") rather than a two-step nested lookup. Construct via
 // newEvaluationCoverage; the zero value behaves like "nothing
 // evaluated".
-type EvaluationCoverage map[asset.ID]map[kernel.ControlID]bool
+type EvaluationCoverage map[asset.ID]map[kernel.ControlID]struct{}
 
 // Contains reports whether the (assetID, controlID) pair appears
 // in this run's recorded check set.
@@ -781,7 +781,8 @@ func (c EvaluationCoverage) Contains(assetID asset.ID, controlID kernel.ControlI
 	if !ok {
 		return false
 	}
-	return controls[controlID]
+	_, present := controls[controlID]
+	return present
 }
 
 // newEvaluationCoverage indexes the recorded ResourceChecks by
@@ -793,9 +794,9 @@ func newEvaluationCoverage(checks []evaluation.ResourceCheck) EvaluationCoverage
 	for i := range checks {
 		c := &checks[i]
 		if out[c.AssetID] == nil {
-			out[c.AssetID] = make(map[kernel.ControlID]bool)
+			out[c.AssetID] = make(map[kernel.ControlID]struct{})
 		}
-		out[c.AssetID][c.ControlID] = true
+		out[c.AssetID][c.ControlID] = struct{}{}
 	}
 	return out
 }
@@ -818,26 +819,26 @@ func applyAcknowledgments(
 	// control was passing on A. Per-asset partitioning preserves the
 	// original intent: a compensating control is "passing" relative to
 	// the asset whose acknowledgment we're validating.
-	failingByAsset := make(map[asset.ID]map[kernel.ControlID]bool)
+	failingByAsset := make(map[asset.ID]map[kernel.ControlID]struct{})
 	for i := range findings {
 		assetID := findings[i].AssetID
 		if failingByAsset[assetID] == nil {
-			failingByAsset[assetID] = make(map[kernel.ControlID]bool)
+			failingByAsset[assetID] = make(map[kernel.ControlID]struct{})
 		}
-		failingByAsset[assetID][findings[i].ControlID] = true
+		failingByAsset[assetID][findings[i].ControlID] = struct{}{}
 	}
 
 	// Excepted controls are tracked separately so we can distinguish
 	// "passed" from "filtered". A compensating control that was
 	// excepted on this asset has no verification signal — treating
 	// it as passing was the bug.
-	exceptedByAsset := make(map[asset.ID]map[kernel.ControlID]bool)
+	exceptedByAsset := make(map[asset.ID]map[kernel.ControlID]struct{})
 	for i := range exceptedFindings {
 		ef := &exceptedFindings[i]
 		if exceptedByAsset[ef.AssetID] == nil {
-			exceptedByAsset[ef.AssetID] = make(map[kernel.ControlID]bool)
+			exceptedByAsset[ef.AssetID] = make(map[kernel.ControlID]struct{})
 		}
-		exceptedByAsset[ef.AssetID][ef.ControlID] = true
+		exceptedByAsset[ef.AssetID][ef.ControlID] = struct{}{}
 	}
 
 	var active []evaluation.Finding
@@ -882,11 +883,13 @@ func applyAcknowledgments(
 		allCompPassing := true
 		for _, cc := range rule.CompensatingControls {
 			var status string
+			_, hasFailing := assetFailing[cc]
+			_, hasExcepted := assetExcepted[cc]
 			switch {
-			case assetFailing[cc]:
+			case hasFailing:
 				status = "fail"
 				allCompPassing = false
-			case assetExcepted[cc]:
+			case hasExcepted:
 				status = "excepted"
 				allCompPassing = false
 			case !coverage.Contains(f.AssetID, cc):

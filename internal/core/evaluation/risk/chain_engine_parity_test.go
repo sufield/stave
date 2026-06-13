@@ -34,28 +34,28 @@ func detectChainsLegacy(
 
 	for i := range chains {
 		chain := &chains[i]
-		chainMembers := make(map[kernel.ControlID]bool, len(chain.ControlIDs))
+		chainMembers := make(map[kernel.ControlID]struct{}, len(chain.ControlIDs))
 		for _, cid := range chain.ControlIDs {
-			chainMembers[cid] = true
+			chainMembers[cid] = struct{}{}
 		}
 
-		byScope := make(map[string]map[kernel.ControlID]bool)
-		assetsByScope := make(map[string]map[asset.ID]bool)
-		resolvedByScope := make(map[string]bool)
+		byScope := make(map[string]map[kernel.ControlID]struct{})
+		assetsByScope := make(map[string]map[asset.ID]struct{})
+		resolvedByScope := make(map[string]struct{})
 		for j := range failures {
 			f := &failures[j]
-			if !chainMembers[f.ControlID] {
+			if _, ok := chainMembers[f.ControlID]; !ok {
 				continue
 			}
 			scope, resolved := groupingKey(chain, f.AssetID, scopeResolver)
 			if byScope[scope] == nil {
-				byScope[scope] = make(map[kernel.ControlID]bool)
-				assetsByScope[scope] = make(map[asset.ID]bool)
+				byScope[scope] = make(map[kernel.ControlID]struct{})
+				assetsByScope[scope] = make(map[asset.ID]struct{})
 			}
-			byScope[scope][f.ControlID] = true
-			assetsByScope[scope][f.AssetID] = true
+			byScope[scope][f.ControlID] = struct{}{}
+			assetsByScope[scope][f.AssetID] = struct{}{}
 			if resolved {
-				resolvedByScope[scope] = true
+				resolvedByScope[scope] = struct{}{}
 			}
 		}
 
@@ -63,7 +63,7 @@ func detectChainsLegacy(
 			var failing []kernel.ControlID
 			var holding []kernel.ControlID
 			for _, cid := range chain.ControlIDs {
-				if scopeFailing[cid] {
+				if _, ok := scopeFailing[cid]; ok {
 					failing = append(failing, cid)
 				} else {
 					holding = append(holding, cid)
@@ -74,12 +74,12 @@ func detectChainsLegacy(
 				continue
 			}
 
-			stageSet := make(map[kernel.AttackStage]bool)
+			stageSet := make(map[kernel.AttackStage]struct{})
 			maxBlast := 1.0
 			for _, cid := range failing {
 				if ctl, ok := controlLookup[cid]; ok {
 					if stage := ctl.AttackStage(); stage != "" {
-						stageSet[stage] = true
+						stageSet[stage] = struct{}{}
 					}
 					mult := scopeAdjustedBlast(ctl)
 					if mult > maxBlast {
@@ -116,7 +116,8 @@ func detectChainsLegacy(
 				Narrative:         narrative,
 				AttackStages:      stages,
 			}
-			if chain.ScopeField != "" && resolvedByScope[scope] {
+			_, isResolved := resolvedByScope[scope]
+			if chain.ScopeField != "" && isResolved {
 				finding.ScopeID = scope
 				finding.ScopeField = chain.ScopeField
 				finding.ContributingAssets = contributing

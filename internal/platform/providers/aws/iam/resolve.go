@@ -503,7 +503,7 @@ func classifyPrivilege(effective []ActionGrant) PrivilegeLevel {
 
 	hasAdmin := false
 	hasElevated := false
-	serviceCount := make(map[string]bool)
+	serviceCount := make(map[string]struct{})
 
 	for _, grant := range effective {
 		// A grant influences classification when its resource is
@@ -535,7 +535,7 @@ func classifyPrivilege(effective []ActionGrant) PrivilegeLevel {
 
 		// Track service breadth
 		if idx := indexByte(action, ':'); idx > 0 {
-			serviceCount[action[:idx]] = true
+			serviceCount[action[:idx]] = struct{}{}
 		}
 	}
 

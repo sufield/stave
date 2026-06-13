@@ -64,11 +64,11 @@ func (idx *CitationIndex) Coverage(framework string, totalRequirements int) Cita
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 	prefix := framework + ":"
-	covered := make(map[string]bool)
+	covered := make(map[string]struct{})
 	for key := range idx.entries {
 		if after, ok := strings.CutPrefix(key, prefix); ok {
 			req := after
-			covered[req] = true
+			covered[req] = struct{}{}
 		}
 	}
 
@@ -87,10 +87,10 @@ func (idx *CitationIndex) Coverage(framework string, totalRequirements int) Cita
 func (idx *CitationIndex) Frameworks() []string {
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
-	seen := make(map[string]bool)
+	seen := make(map[string]struct{})
 	for key := range idx.entries {
 		if before, _, ok := strings.Cut(key, ":"); ok {
-			seen[before] = true
+			seen[before] = struct{}{}
 		}
 	}
 	var out []string

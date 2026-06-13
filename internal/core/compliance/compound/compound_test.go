@@ -161,14 +161,14 @@ func TestDetect(t *testing.T) {
 		if len(findings) != 2 {
 			t.Fatalf("got %d findings, want 2", len(findings))
 		}
-		ids := map[string]bool{}
+		ids := map[string]struct{}{}
 		for _, f := range findings {
-			ids[f.ID] = true
+			ids[f.ID] = struct{}{}
 		}
-		if !ids["COMPOUND.001"] {
+		if _, ok := ids["COMPOUND.001"]; !ok {
 			t.Error("expected COMPOUND.001")
 		}
-		if !ids["COMPOUND.002"] {
+		if _, ok := ids["COMPOUND.002"]; !ok {
 			t.Error("expected COMPOUND.002")
 		}
 	})
