@@ -124,11 +124,7 @@ func TestRegister_OverwritesAndIsThreadSafe(t *testing.T) {
 		AssetType: tt,
 		Fields:    []FieldRequirement{{Path: "properties.x", Required: true}},
 	})
-	defer func() {
-		registryMu.Lock()
-		delete(Schemas, tt)
-		registryMu.Unlock()
-	}()
+	defer schemas.remove(tt)
 	if _, ok := Lookup(tt); !ok {
 		t.Fatal("Register should make schema visible to Lookup")
 	}

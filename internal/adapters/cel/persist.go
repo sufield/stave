@@ -63,32 +63,22 @@ type cachedEntry struct {
 	CheckedExpr   *exprpb.CheckedExpr
 }
 
-// celGoVersion is detected once at process start from the build
-// info. Stored as a package-level so the cache header writer and the
-// reader compare the same value without re-walking module deps on
-// every load.
-var (
-	celGoVersionOnce sync.Once
-	celGoVersionVal  string
-)
-
-func celGoVersion() string {
-	celGoVersionOnce.Do(func() {
-		info, ok := debug.ReadBuildInfo()
-		if !ok {
-			celGoVersionVal = "unknown"
-			return
+// celGoVersion returns the cel-go module version, detected once from build info
+// and memoized so the cache header writer and reader compare the same value
+// without re-walking module deps on every load. sync.OnceValue replaces the
+// former Once + package-level string pair with a single memoizing func.
+var celGoVersion = sync.OnceValue(func() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "unknown"
+	}
+	for _, dep := range info.Deps {
+		if dep.Path == "github.com/google/cel-go" {
+			return dep.Version
 		}
-		for _, dep := range info.Deps {
-			if dep.Path == "github.com/google/cel-go" {
-				celGoVersionVal = dep.Version
-				return
-			}
-		}
-		celGoVersionVal = "unknown"
-	})
-	return celGoVersionVal
-}
+	}
+	return "unknown"
+})
 
 // IsCacheDisabled reports whether the persist layer should
 // short-circuit. Checked by Compiler.LoadCache / PersistCache so the

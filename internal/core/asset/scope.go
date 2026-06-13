@@ -1,9 +1,6 @@
 package asset
 
-import (
-	"strings"
-	"sync"
-)
+import "strings"
 
 // AuditScope defines the boundary for security evaluation.
 // It determines which cloud resources are subject to policy enforcement
@@ -20,21 +17,16 @@ type AuditScope struct {
 	requiredKeys map[string]struct{}            // Keys that must exist regardless of value
 }
 
-// globalScope is the singleton "include every asset" boundary. The
-// global flag short-circuits filtering inside AuditScope methods, so
-// every consumer that needs an unbounded scope shares the same value
-// rather than allocating their own. Access via GetGlobalScope so the
-// pointer cannot be reseated; SetGlobalScope is provided for tests
-// that need to install a stub.
-var (
-	globalScope   = &AuditScope{global: true}
-	globalScopeMu sync.RWMutex
-)
+// globalScope is the singleton "include every asset" boundary. The global flag
+// short-circuits filtering inside AuditScope methods, so every consumer that
+// needs an unbounded scope shares the same immutable value rather than
+// allocating their own. It is set once at package load and never reseated —
+// callers read it through GetGlobalScope and treat it as read-only.
+var globalScope = &AuditScope{global: true}
 
-// GetGlobalScope returns the process-wide unbounded audit scope.
+// GetGlobalScope returns the process-wide unbounded audit scope. The returned
+// *AuditScope is shared and must be treated as read-only.
 func GetGlobalScope() *AuditScope {
-	globalScopeMu.RLock()
-	defer globalScopeMu.RUnlock()
 	return globalScope
 }
 

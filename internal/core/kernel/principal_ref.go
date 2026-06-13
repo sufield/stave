@@ -19,44 +19,51 @@ import (
 // per-cloud principal grammar (that lives in the provider adapter).
 type PrincipalRef string
 
-// recognisedPrincipalSuffixes covers service-principal hostnames
-// that legitimately appear as principals but don't carry an ARN
-// scheme. The kernel ships this registry empty; provider packages
-// contribute their suffixes via RegisterPrincipalSuffix from
-// Register() (e.g. providers/aws.Register registers
-// ".amazonaws.com").
-var (
-	recognisedPrincipalSuffixesMu sync.RWMutex
-	recognisedPrincipalSuffixes   = []string{}
-)
+// principalSuffixRegistry is the concurrency-safe set of service-principal
+// hostname suffixes that legitimately appear as principals but don't carry an
+// ARN scheme. Bundling the slice with the RWMutex that guards it keeps the lock
+// and the data in one type. The kernel ships it empty; provider packages
+// contribute their suffixes via RegisterPrincipalSuffix from Register() (e.g.
+// providers/aws.Register registers ".amazonaws.com").
+type principalSuffixRegistry struct {
+	mu       sync.RWMutex
+	suffixes []string
+}
 
-// RegisterPrincipalSuffix adds suffix to the set of service-
-// principal hostnames PrincipalRef.Validate accepts. Idempotent:
-// registering the same suffix twice is a no-op. Call from a
-// provider init().
-func RegisterPrincipalSuffix(suffix string) {
+// register adds suffix to the set. Idempotent; empty input is ignored.
+func (r *principalSuffixRegistry) register(suffix string) {
 	if suffix == "" {
 		return
 	}
-	recognisedPrincipalSuffixesMu.Lock()
-	defer recognisedPrincipalSuffixesMu.Unlock()
-	if slices.Contains(recognisedPrincipalSuffixes, suffix) {
-		return
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if !slices.Contains(r.suffixes, suffix) {
+		r.suffixes = append(r.suffixes, suffix)
 	}
-	recognisedPrincipalSuffixes = append(recognisedPrincipalSuffixes, suffix)
 }
 
-// hasRegisteredPrincipalSuffix reports whether s ends with any
-// registered suffix. Internal helper for Validate.
-func hasRegisteredPrincipalSuffix(s string) bool {
-	recognisedPrincipalSuffixesMu.RLock()
-	defer recognisedPrincipalSuffixesMu.RUnlock()
-	for _, suffix := range recognisedPrincipalSuffixes {
+// matches reports whether s ends with any registered suffix.
+func (r *principalSuffixRegistry) matches(s string) bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for _, suffix := range r.suffixes {
 		if strings.HasSuffix(s, suffix) {
 			return true
 		}
 	}
 	return false
+}
+
+// principalSuffixes is the process-wide service-principal suffix registry —
+// one cohesive instance rather than a loose mutex+slice pair.
+var principalSuffixes = &principalSuffixRegistry{}
+
+// RegisterPrincipalSuffix adds suffix to the set of service-
+// principal hostnames PrincipalRef.Validate accepts. Idempotent:
+// registering the same suffix twice is a no-op. Call from a
+// provider's Register() entrypoint.
+func RegisterPrincipalSuffix(suffix string) {
+	principalSuffixes.register(suffix)
 }
 
 // String returns the raw ref string.
@@ -77,7 +84,7 @@ func (p PrincipalRef) Validate() error {
 	if IsRecognizedURIScheme(s) {
 		return nil
 	}
-	if hasRegisteredPrincipalSuffix(s) {
+	if principalSuffixes.matches(s) {
 		return nil
 	}
 	return fmt.Errorf("invalid principal ref %q: must be an ARN-shaped URI or a known service-principal hostname", s)

@@ -6,15 +6,58 @@ import (
 	"sync"
 )
 
-// profilesMu guards the package-level registry. RegisterProfile is
-// typically called from init() of profile-defining packages, but
-// nothing prevents a runtime call (test setup, plugin load) from
-// racing with AllProfiles / LoadProfile readers — guard explicitly
-// rather than rely on init-time happens-before.
-var (
-	profilesMu sync.RWMutex
-	profiles   = map[ProfileID]*Profile{}
-)
+// profileRegistry is the concurrency-safe set of registered profiles. Bundling
+// the map with the RWMutex that guards it keeps the lock and the data it
+// protects in one type; nothing can read or mutate the registry without going
+// through a method. RegisterProfile is typically called from init() of
+// profile-defining packages, but a runtime call (test setup, plugin load) could
+// race with AllProfiles / LoadProfile readers, so access is guarded explicitly
+// rather than relying on init-time happens-before.
+type profileRegistry struct {
+	mu       sync.RWMutex
+	profiles map[ProfileID]*Profile
+}
+
+// register adds p, panicking on a nil/empty-ID profile or a duplicate ID (see
+// RegisterProfile for why a panic is the right startup-time failure mode).
+func (r *profileRegistry) register(p *Profile) {
+	if p == nil || p.ID == "" {
+		panic("profile: RegisterProfile called with nil profile or empty ID")
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if _, exists := r.profiles[p.ID]; exists {
+		panic(fmt.Sprintf("profile %q registered twice; check init() order across profile packages", p.ID))
+	}
+	r.profiles[p.ID] = p
+}
+
+// load returns a deep copy of the profile registered under id, or false.
+func (r *profileRegistry) load(id ProfileID) (*Profile, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	p, ok := r.profiles[id]
+	if !ok {
+		return nil, false
+	}
+	return p.Clone(), true
+}
+
+// allIDs returns every registered profile ID in stable sorted order.
+func (r *profileRegistry) allIDs() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	ids := make([]string, 0, len(r.profiles))
+	for id := range r.profiles {
+		ids = append(ids, id.String())
+	}
+	slices.Sort(ids)
+	return ids
+}
+
+// registry is the process-wide profile registry — one cohesive instance rather
+// than a loose mutex+map pair.
+var registry = &profileRegistry{profiles: map[ProfileID]*Profile{}}
 
 // RegisterProfile adds a profile to the global registry. Panics on
 // duplicate IDs: a duplicate registration is almost always two
@@ -24,21 +67,7 @@ var (
 // "wrong profile loaded" symptom into a deterministic startup
 // failure.
 func RegisterProfile(p *Profile) {
-	// Guard against nil / empty-ID profiles before touching the
-	// registry. A nil pointer would NPE on profiles[p.ID]; an
-	// empty ID would cause every later registration with no ID
-	// to clobber the same map slot. RegisterProfile is called
-	// from init() so a panic is the right failure mode — the
-	// startup-time crash names the offender.
-	if p == nil || p.ID == "" {
-		panic("profile: RegisterProfile called with nil profile or empty ID")
-	}
-	profilesMu.Lock()
-	defer profilesMu.Unlock()
-	if _, exists := profiles[p.ID]; exists {
-		panic(fmt.Sprintf("profile %q registered twice; check init() order across profile packages", p.ID))
-	}
-	profiles[p.ID] = p
+	registry.register(p)
 }
 
 // LoadProfile returns a profile by ID or an error if not found.
@@ -50,13 +79,11 @@ func LoadProfile(id string) (*Profile, error) {
 	if err != nil {
 		return nil, err
 	}
-	profilesMu.RLock()
-	defer profilesMu.RUnlock()
-	p, ok := profiles[parsed]
+	p, ok := registry.load(parsed)
 	if !ok {
 		return nil, fmt.Errorf("unknown profile %q", id)
 	}
-	return p.Clone(), nil
+	return p, nil
 }
 
 // Clone returns a deep copy of the profile so a caller mutating the
@@ -95,12 +122,5 @@ func (p *Profile) Clone() *Profile {
 // callers, broken for any consumer that diffed the list (CLI help
 // text, test goldens, generated docs). Sorting locks the order in.
 func AllProfiles() []string {
-	profilesMu.RLock()
-	defer profilesMu.RUnlock()
-	ids := make([]string, 0, len(profiles))
-	for id := range profiles {
-		ids = append(ids, id.String())
-	}
-	slices.Sort(ids)
-	return ids
+	return registry.allIDs()
 }

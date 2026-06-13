@@ -310,12 +310,13 @@ lint-debt:
 ## Report-only and advisory — gates nothing. Detectors: .golangci.audit.yml
 ## (interfacebloat / gochecknoglobals / gochecknoinits / forbidigo) +
 ## internal/tools/goroutinescan; aggregated by internal/tools/auditreport.
-## Design: docs/superpowers/specs/2026-06-13-go-best-practices-audit-design.md.
+# Design: docs/superpowers/specs/2026-06-13-go-best-practices-audit-design.md.
 .PHONY: audit audit-check
 audit: AUDIT_CHECK :=
 audit-check: AUDIT_CHECK := -check
 audit audit-check:
 	@set -e; tmp=$$(mktemp -d); trap 'rm -rf "$$tmp"' EXIT; \
+	$(GOLINT) config verify -c .golangci.audit.yml; \
 	$(GOLINT) run -c .golangci.audit.yml --output.json.path stdout --show-stats=false --issues-exit-code 0 ./... > "$$tmp/lint.json"; \
 	$(GOCMD) run ./internal/tools/goroutinescan -root . > "$$tmp/goroutines.json"; \
 	git log --format= --name-only --relative -- '*.go' | grep -v _test.go | sort | uniq -c | sort -rn > "$$tmp/churn.txt"; \

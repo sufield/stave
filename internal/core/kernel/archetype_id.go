@@ -20,23 +20,48 @@ import (
 // degrades to non-empty + slug-case shape only.
 type ArchetypeID string
 
-var (
-	archetypeIDVocabMu sync.RWMutex
-	archetypeIDVocab   map[ArchetypeID]struct{}
-)
+// archetypeVocabulary is the concurrency-safe set of valid archetype IDs.
+// Bundling the map with the RWMutex that guards it keeps the lock and the data
+// it protects in one type; a nil map means no vocabulary has been registered
+// yet, at which point the kernel cannot reject on vocabulary grounds.
+type archetypeVocabulary struct {
+	mu  sync.RWMutex
+	ids map[ArchetypeID]struct{}
+}
+
+// replace installs ids as the canonical vocabulary, replacing any prior set.
+func (v *archetypeVocabulary) replace(ids []string) {
+	set := make(map[ArchetypeID]struct{}, len(ids))
+	for _, id := range ids {
+		set[ArchetypeID(id)] = struct{}{}
+	}
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	v.ids = set
+}
+
+// known reports membership. registered is false when no vocabulary has been
+// set, in which case callers treat any non-empty ID as acceptable.
+func (v *archetypeVocabulary) known(a ArchetypeID) (registered, ok bool) {
+	v.mu.RLock()
+	defer v.mu.RUnlock()
+	if v.ids == nil {
+		return false, false
+	}
+	_, ok = v.ids[a]
+	return true, ok
+}
+
+// archetypeVocab is the process-wide archetype-ID vocabulary — one cohesive
+// registry instance rather than a loose mutex+map pair.
+var archetypeVocab = &archetypeVocabulary{}
 
 // SetArchetypeIDVocabulary registers the canonical set of archetype
 // IDs against which ArchetypeID.Validate / IsValid will check. The
 // archetype package calls this from its init() with the catalog
 // IDs. Call once at startup; later calls replace the vocabulary.
 func SetArchetypeIDVocabulary(ids []string) {
-	set := make(map[ArchetypeID]struct{}, len(ids))
-	for _, id := range ids {
-		set[ArchetypeID(id)] = struct{}{}
-	}
-	archetypeIDVocabMu.Lock()
-	defer archetypeIDVocabMu.Unlock()
-	archetypeIDVocab = set
+	archetypeVocab.replace(ids)
 }
 
 // String returns the raw ID.
@@ -54,12 +79,10 @@ func (a ArchetypeID) IsValid() bool {
 	if a.IsEmpty() {
 		return false
 	}
-	archetypeIDVocabMu.RLock()
-	defer archetypeIDVocabMu.RUnlock()
-	if archetypeIDVocab == nil {
+	registered, ok := archetypeVocab.known(a)
+	if !registered {
 		return true
 	}
-	_, ok := archetypeIDVocab[a]
 	return ok
 }
 
@@ -69,12 +92,11 @@ func (a ArchetypeID) Validate() error {
 	if a.IsEmpty() {
 		return errors.New("archetype ID must not be empty")
 	}
-	archetypeIDVocabMu.RLock()
-	defer archetypeIDVocabMu.RUnlock()
-	if archetypeIDVocab == nil {
+	registered, ok := archetypeVocab.known(a)
+	if !registered {
 		return nil
 	}
-	if _, ok := archetypeIDVocab[a]; !ok {
+	if !ok {
 		return fmt.Errorf("invalid archetype ID %q: not in catalog vocabulary", string(a))
 	}
 	return nil

@@ -3,7 +3,6 @@ package compliance
 import (
 	"fmt"
 	"slices"
-	"sync"
 
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -74,26 +73,33 @@ func (r *ControlCatalog) Len() int {
 	return len(r.controls)
 }
 
-// controlRegistry is the default global registry, populated by init()
-// functions in each control implementation file. Production code reaches it
-// via GetControlRegistry() — the variable itself is unexported so a
-// consumer cannot reseat it.
-var (
-	controlRegistry     = NewRegistry()
-	controlRegistryOnce sync.Once
-)
+// controlRegistrar is the package-level control-registration state: the live
+// catalog plus the factory functions that populated it (replayed by
+// NewTestCatalog to build isolated test catalogs). RegisterControl — called
+// from each control file's init() — feeds both. Registration is init-time only
+// and not concurrency-safe by contract, so no lock is needed.
+type controlRegistrar struct {
+	catalog      *ControlCatalog
+	constructors []ControlFactory
+}
 
-// GetControlRegistry returns the singleton control catalog. The first
-// call ensures the catalog has had every package init() chance to
-// register; the sync.Once is defensive only — register-on-init is
-// already complete by the time main runs — but it documents the
-// "initialise once" contract.
+// register records a factory and registers its product in the live catalog.
+func (r *controlRegistrar) register(factory ControlFactory) {
+	r.constructors = append(r.constructors, factory)
+	r.catalog.MustRegister(factory())
+}
+
+// registrar is the process-wide control-registration state — one cohesive
+// value replacing a singleton catalog, a parallel factory slice, and a
+// defensive sync.Once whose Do body was empty.
+var registrar = &controlRegistrar{catalog: NewRegistry()}
+
+// GetControlRegistry returns the singleton control catalog. Every control
+// package's init() has registered by the time main runs, so the catalog is
+// fully populated; this simply returns it. The variable is unexported so a
+// consumer cannot reseat it.
 func GetControlRegistry() *ControlCatalog {
-	controlRegistryOnce.Do(func() {
-		// init() functions ran before main. The Once just locks
-		// the entry-state contract.
-	})
-	return controlRegistry
+	return registrar.catalog
 }
 
 // ControlFactory constructs a fresh Control instance. Named so the
@@ -102,24 +108,18 @@ func GetControlRegistry() *ControlCatalog {
 // explain what the function returned.
 type ControlFactory func() Control
 
-// allControlConstructors holds factory functions for every built-in control.
-// Populated by RegisterControl() calls in init() — the source of truth
-// that both the global controlRegistry and NewTestCatalog() draw from.
-var allControlConstructors []ControlFactory
-
-// RegisterControl records a control factory and registers it in the global
-// control registry. Called from init() in each control file.
+// RegisterControl records a control factory and registers its product in the
+// global control catalog. Called from init() in each control file.
 func RegisterControl(factory ControlFactory) {
-	allControlConstructors = append(allControlConstructors, factory)
-	controlRegistry.MustRegister(factory())
+	registrar.register(factory)
 }
 
 // NewTestCatalog creates an isolated ControlCatalog with all built-in controls.
 // Each call produces a fresh catalog — safe for parallel tests.
 func NewTestCatalog() *ControlCatalog {
 	cat := NewRegistry()
-	for i := range allControlConstructors {
-		cat.MustRegister(allControlConstructors[i]())
+	for i := range registrar.constructors {
+		cat.MustRegister(registrar.constructors[i]())
 	}
 	return cat
 }

@@ -115,34 +115,33 @@ type ResourceURI string
 // existing consumers continue to validate without an explicit
 // provider registration. Phase 5 of the provider-extraction plan
 // will drop the seed once the AWS provider's init() takes over.
-var (
-	recognizedURISchemesMu sync.RWMutex
-	recognizedURISchemes   = []string{"arn:", "gcp:", "azure:"}
-)
+// uriSchemeRegistry is the concurrency-safe set of scheme prefixes that
+// ResourceURI accepts at the kernel boundary. Bundling the slice with the
+// RWMutex that guards it keeps the lock and data in one type. The kernel seeds
+// the historical arn:/gcp:/azure: defaults; providers add their scheme via
+// RegisterURIScheme from their Register() entrypoint.
+type uriSchemeRegistry struct {
+	mu      sync.RWMutex
+	schemes []string
+}
 
-// RegisterURIScheme adds scheme to the set of prefixes ResourceURI
-// accepts. Idempotent: registering the same scheme twice is a
-// no-op. Call this from a provider package's init() so the scheme
-// is available before any caller validates a URI carrying it.
-func RegisterURIScheme(scheme string) {
+// register adds scheme to the set. Idempotent; empty input is ignored.
+func (r *uriSchemeRegistry) register(scheme string) {
 	if scheme == "" {
 		return
 	}
-	recognizedURISchemesMu.Lock()
-	defer recognizedURISchemesMu.Unlock()
-	if slices.Contains(recognizedURISchemes, scheme) {
-		return
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if !slices.Contains(r.schemes, scheme) {
+		r.schemes = append(r.schemes, scheme)
 	}
-	recognizedURISchemes = append(recognizedURISchemes, scheme)
 }
 
-// IsRecognizedURIScheme reports whether uri begins with a registered
-// scheme. Used by ResourceURI.Validate so callers stop reaching for
-// the package-level slice directly.
-func IsRecognizedURIScheme(uri string) bool {
-	recognizedURISchemesMu.RLock()
-	defer recognizedURISchemesMu.RUnlock()
-	for _, scheme := range recognizedURISchemes {
+// matches reports whether uri begins with any registered scheme.
+func (r *uriSchemeRegistry) matches(uri string) bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for _, scheme := range r.schemes {
 		if strings.HasPrefix(uri, scheme) {
 			return true
 		}
@@ -150,15 +149,30 @@ func IsRecognizedURIScheme(uri string) bool {
 	return false
 }
 
-// recognizedURISchemesSnapshot returns a copy of the current set
-// for diagnostic / error-message purposes (Validate uses it to
-// build the "must start with one of [...]" message).
-func recognizedURISchemesSnapshot() []string {
-	recognizedURISchemesMu.RLock()
-	defer recognizedURISchemesMu.RUnlock()
-	out := make([]string, len(recognizedURISchemes))
-	copy(out, recognizedURISchemes)
-	return out
+// snapshot returns a copy of the current set for diagnostic messages.
+func (r *uriSchemeRegistry) snapshot() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return slices.Clone(r.schemes)
+}
+
+// uriSchemes is the process-wide URI-scheme registry — one cohesive instance
+// rather than a loose mutex+slice pair.
+var uriSchemes = &uriSchemeRegistry{schemes: []string{"arn:", "gcp:", "azure:"}}
+
+// RegisterURIScheme adds scheme to the set of prefixes ResourceURI
+// accepts. Idempotent: registering the same scheme twice is a no-op.
+// Call this from a provider package's Register() entrypoint so the
+// scheme is available before any caller validates a URI carrying it.
+func RegisterURIScheme(scheme string) {
+	uriSchemes.register(scheme)
+}
+
+// IsRecognizedURIScheme reports whether uri begins with a registered
+// scheme. Used by ResourceURI.Validate so callers stop reaching for
+// the package-level slice directly.
+func IsRecognizedURIScheme(uri string) bool {
+	return uriSchemes.matches(uri)
 }
 
 // String returns the raw URI string.
@@ -177,7 +191,7 @@ func (u ResourceURI) Validate() error {
 	if IsRecognizedURIScheme(string(u)) {
 		return nil
 	}
-	return fmt.Errorf("invalid resource URI %q: must start with one of %v", string(u), recognizedURISchemesSnapshot())
+	return fmt.Errorf("invalid resource URI %q: must start with one of %v", string(u), uriSchemes.snapshot())
 }
 
 // ParseResourceURI returns a validated ResourceURI.
@@ -221,37 +235,53 @@ func (u *ResourceURI) UnmarshalJSON(b []byte) error {
 // ObservationSourceType identifies the extraction method that produced an observation.
 type ObservationSourceType string
 
-var (
-	observationSourceTypesMu sync.RWMutex
-	observationSourceTypes   = []ObservationSourceType{}
-)
+// observationSourceTypeRegistry is the concurrency-safe set of known
+// observation source types. Bundling the slice with the RWMutex that guards it
+// keeps the lock and data in one type; providers register via
+// RegisterObservationSourceType from their Register() entrypoint.
+type observationSourceTypeRegistry struct {
+	mu    sync.RWMutex
+	types []ObservationSourceType
+}
 
-// RegisterObservationSourceType adds t to the kernel's known
-// source-type registry. Idempotent: registering the same type
-// twice is a no-op. Provider packages call this from init() so the
-// type is enumerable through KnownObservationSourceTypes without
-// the kernel needing per-vendor constants.
-func RegisterObservationSourceType(t ObservationSourceType) {
+// register adds t to the set. Idempotent; empty input is ignored.
+func (r *observationSourceTypeRegistry) register(t ObservationSourceType) {
 	if t.IsEmpty() {
 		return
 	}
-	observationSourceTypesMu.Lock()
-	defer observationSourceTypesMu.Unlock()
-	if slices.Contains(observationSourceTypes, t) {
-		return
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if !slices.Contains(r.types, t) {
+		r.types = append(r.types, t)
 	}
-	observationSourceTypes = append(observationSourceTypes, t)
+}
+
+// snapshot returns a copy of the registered source types.
+func (r *observationSourceTypeRegistry) snapshot() []ObservationSourceType {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return slices.Clone(r.types)
+}
+
+// observationSourceTypeReg is the process-wide source-type registry — one
+// cohesive instance rather than a loose mutex+slice pair.
+var observationSourceTypeReg = &observationSourceTypeRegistry{}
+
+// RegisterObservationSourceType adds t to the kernel's known
+// source-type registry. Idempotent: registering the same type twice
+// is a no-op. Provider packages call this from their Register()
+// entrypoint so the type is enumerable through
+// KnownObservationSourceTypes without the kernel needing per-vendor
+// constants.
+func RegisterObservationSourceType(t ObservationSourceType) {
+	observationSourceTypeReg.register(t)
 }
 
 // KnownObservationSourceTypes returns a copy of the registered
 // source types. Used by the capabilities manifest so it doesn't
 // need to enumerate vendor-specific types itself.
 func KnownObservationSourceTypes() []ObservationSourceType {
-	observationSourceTypesMu.RLock()
-	defer observationSourceTypesMu.RUnlock()
-	out := make([]ObservationSourceType, len(observationSourceTypes))
-	copy(out, observationSourceTypes)
-	return out
+	return observationSourceTypeReg.snapshot()
 }
 
 func (t ObservationSourceType) String() string { return string(t) }

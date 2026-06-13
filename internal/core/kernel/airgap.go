@@ -17,73 +17,87 @@ type AirgapPolicy struct {
 	cloudPermissions     map[Vendor][]string // keyed by provider (e.g., "aws", "azure")
 }
 
-// Vendor-specific air-gap inputs live in package-level registries so
-// provider packages contribute their keys and permissions from
-// init() / Register(). DefaultPolicy snapshots the registries at
-// call time. The kernel ships these registries empty; AWS seeds via
-// providers/aws.Register, GCP and Azure register their own keys
-// when those providers ship.
-var (
-	bannedCredentialKeysMu sync.RWMutex
-	bannedCredentialKeys   = []string{}
+// airgapRegistry holds the vendor-contributed air-gap inputs — banned
+// credential env-var names and per-vendor cloud permissions. Bundling both with
+// the single RWMutex that guards them keeps the lock and the data it protects
+// in one type (registration happens once at startup, so a shared lock is
+// ample). The kernel ships it empty; providers contribute via
+// RegisterBannedCredentialKeys / RegisterCloudPermissions from their Register()
+// entrypoint, and DefaultPolicy snapshots it at call time.
+type airgapRegistry struct {
+	mu               sync.RWMutex
+	bannedCredKeys   []string
+	cloudPermissions map[Vendor][]string
+}
 
-	cloudPermissionsMu sync.RWMutex
-	cloudPermissions   = map[Vendor][]string{}
-)
-
-// RegisterBannedCredentialKeys appends the given environment-variable
-// names to the air-gap policy's banned-credential-keys list.
-// Duplicates are skipped. Provider packages call this from init().
-func RegisterBannedCredentialKeys(keys ...string) {
+// registerBannedKeys appends env-var names, skipping empties and duplicates.
+func (r *airgapRegistry) registerBannedKeys(keys ...string) {
 	if len(keys) == 0 {
 		return
 	}
-	bannedCredentialKeysMu.Lock()
-	defer bannedCredentialKeysMu.Unlock()
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	for _, k := range keys {
-		if k == "" || slices.Contains(bannedCredentialKeys, k) {
+		if k == "" || slices.Contains(r.bannedCredKeys, k) {
 			continue
 		}
-		bannedCredentialKeys = append(bannedCredentialKeys, k)
+		r.bannedCredKeys = append(r.bannedCredKeys, k)
 	}
 }
 
-// RegisterCloudPermissions appends the given IAM/equivalent
-// permission strings to the air-gap policy's per-vendor permission
-// list. Duplicates within a vendor are skipped. Provider packages
-// call this from init().
-func RegisterCloudPermissions(vendor Vendor, perms ...string) {
+// registerCloudPermissions appends per-vendor permission strings, skipping
+// empties and per-vendor duplicates.
+func (r *airgapRegistry) registerCloudPermissions(vendor Vendor, perms ...string) {
 	if vendor == "" || len(perms) == 0 {
 		return
 	}
-	cloudPermissionsMu.Lock()
-	defer cloudPermissionsMu.Unlock()
-	existing := cloudPermissions[vendor]
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	existing := r.cloudPermissions[vendor]
 	for _, p := range perms {
 		if p == "" || slices.Contains(existing, p) {
 			continue
 		}
 		existing = append(existing, p)
 	}
-	cloudPermissions[vendor] = existing
+	r.cloudPermissions[vendor] = existing
 }
 
-// snapshotBannedCredentialKeys returns a copy of the registry.
-func snapshotBannedCredentialKeys() []string {
-	bannedCredentialKeysMu.RLock()
-	defer bannedCredentialKeysMu.RUnlock()
-	return slices.Clone(bannedCredentialKeys)
+// snapshotBannedKeys returns a copy of the banned-credential-keys list.
+func (r *airgapRegistry) snapshotBannedKeys() []string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return slices.Clone(r.bannedCredKeys)
 }
 
-// snapshotCloudPermissions returns a deep copy of the registry.
-func snapshotCloudPermissions() map[Vendor][]string {
-	cloudPermissionsMu.RLock()
-	defer cloudPermissionsMu.RUnlock()
-	out := make(map[Vendor][]string, len(cloudPermissions))
-	for v, perms := range cloudPermissions {
+// snapshotCloudPermissions returns a deep copy of the per-vendor permissions.
+func (r *airgapRegistry) snapshotCloudPermissions() map[Vendor][]string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	out := make(map[Vendor][]string, len(r.cloudPermissions))
+	for v, perms := range r.cloudPermissions {
 		out[v] = slices.Clone(perms)
 	}
 	return out
+}
+
+// airgapInputs is the process-wide registry of vendor-contributed air-gap
+// inputs — one cohesive instance rather than two loose mutex+collection pairs.
+var airgapInputs = &airgapRegistry{cloudPermissions: map[Vendor][]string{}}
+
+// RegisterBannedCredentialKeys appends the given environment-variable
+// names to the air-gap policy's banned-credential-keys list.
+// Duplicates are skipped. Provider packages call this from Register().
+func RegisterBannedCredentialKeys(keys ...string) {
+	airgapInputs.registerBannedKeys(keys...)
+}
+
+// RegisterCloudPermissions appends the given IAM/equivalent permission
+// strings to the air-gap policy's per-vendor permission list.
+// Duplicates within a vendor are skipped. Provider packages call this
+// from Register().
+func RegisterCloudPermissions(vendor Vendor, perms ...string) {
+	airgapInputs.registerCloudPermissions(vendor, perms...)
 }
 
 // DefaultPolicy returns the standard air-gap restriction policy.
@@ -120,8 +134,8 @@ func DefaultPolicy() AirgapPolicy {
 				`"text/template"`: {},
 			},
 		},
-		bannedCredentialKeys: snapshotBannedCredentialKeys(),
-		cloudPermissions:     snapshotCloudPermissions(),
+		bannedCredentialKeys: airgapInputs.snapshotBannedKeys(),
+		cloudPermissions:     airgapInputs.snapshotCloudPermissions(),
 	}
 }
 

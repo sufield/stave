@@ -77,7 +77,7 @@ func TestCoverage_EveryRegisteredSchemaHasARequiredField(t *testing.T) {
 		// in eks_cluster.go.
 		"aws_eks_cluster": {},
 	}
-	for typ, s := range Schemas {
+	for typ, s := range schemas.all() {
 		if _, ok := allowedWithoutRequired[typ]; ok {
 			continue
 		}

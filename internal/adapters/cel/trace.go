@@ -92,32 +92,44 @@ func (r *TraceResult) RenderJSON(w io.Writer) error {
 // call would return the same error — even after the underlying
 // condition cleared. The double-check pattern retries on each call
 // until init succeeds, then takes the read-locked fast path.
-var (
-	sharedTraceCompiler   *Compiler
-	sharedTraceCompilerMu sync.RWMutex
-)
+// lazyCompiler memoizes a single *Compiler behind an RWMutex, bundling the lock
+// with the value it guards. It uses double-checked locking rather than
+// sync.Once so a transient NewCompiler failure is retried on the next call
+// instead of being memoized forever (see the note above).
+type lazyCompiler struct {
+	mu       sync.RWMutex
+	compiler *Compiler
+}
 
-func getTraceCompiler() (*Compiler, error) {
-	sharedTraceCompilerMu.RLock()
-	c := sharedTraceCompiler
-	sharedTraceCompilerMu.RUnlock()
+func (l *lazyCompiler) get() (*Compiler, error) {
+	l.mu.RLock()
+	c := l.compiler
+	l.mu.RUnlock()
 	if c != nil {
 		return c, nil
 	}
 
-	sharedTraceCompilerMu.Lock()
-	defer sharedTraceCompilerMu.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	// Re-check under the write lock: another goroutine may have
 	// initialised between our RUnlock and Lock.
-	if sharedTraceCompiler != nil {
-		return sharedTraceCompiler, nil
+	if l.compiler != nil {
+		return l.compiler, nil
 	}
 	compiler, err := NewCompiler()
 	if err != nil {
 		return nil, err
 	}
-	sharedTraceCompiler = compiler
-	return compiler, nil
+	l.compiler = compiler
+	return l.compiler, nil
+}
+
+// traceCompiler is the process-wide lazily-initialised trace compiler — one
+// cohesive instance rather than a loose value+mutex pair.
+var traceCompiler = &lazyCompiler{}
+
+func getTraceCompiler() (*Compiler, error) {
+	return traceCompiler.get()
 }
 
 // BuildTrace compiles and evaluates a control's predicate against an

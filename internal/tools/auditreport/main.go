@@ -394,18 +394,22 @@ func renderMarkdown(rep Report) string {
 		"Regenerate with `make audit`; design in " +
 		"`docs/superpowers/specs/2026-06-13-go-best-practices-audit-design.md`.\n\n")
 
+	if !rep.ChurnAvailable {
+		b.WriteString("> **Churn ranking SKIPPED** — no churn data available; hotspots are ranked by violation count only (Score = violations).\n\n")
+	}
+
 	b.WriteString("## Summary\n\n")
-	b.WriteString("| Dimension | Detector(s) | Violations | Files |\n")
-	b.WriteString("|---|---|---:|---:|\n")
+	b.WriteString("| Dimension | Detector(s) | Violations | Files | Recommended ceiling |\n")
+	b.WriteString("|---|---|---:|---:|---|\n")
 	for _, d := range rep.Dimensions {
-		fmt.Fprintf(&b, "| %s — %s | %s | %d | %d |\n", d.Key, d.Title, strings.Join(d.Detectors, ", "), d.Count, d.Files)
+		fmt.Fprintf(&b, "| %s — %s | %s | %d | %d | %s |\n", d.Key, d.Title, strings.Join(d.Detectors, ", "), d.Count, d.Files, d.RecommendedCeiling)
 	}
 	b.WriteString("\n")
 
 	for _, d := range rep.Dimensions {
 		fmt.Fprintf(&b, "## %s — %s\n\n", d.Key, d.Title)
-		fmt.Fprintf(&b, "_Detector(s): %s. %d violation(s) across %d file(s)._\n\n",
-			strings.Join(d.Detectors, ", "), d.Count, d.Files)
+		fmt.Fprintf(&b, "_Detector(s): %s. %d violation(s) across %d file(s). Recommended ratchet ceiling: %s._\n\n",
+			strings.Join(d.Detectors, ", "), d.Count, d.Files, d.RecommendedCeiling)
 		if d.Count == 0 {
 			b.WriteString("No violations at the configured threshold — not a current problem area.\n\n")
 			continue
@@ -434,8 +438,8 @@ func renderMarkdown(rep Report) string {
 	}
 
 	b.WriteString("## Already enforced (context)\n\n")
-	b.WriteString("- **DIM3 errors:** the wrap/return side is already gated by `errcheck`/`errorlint`/`wrapcheck`/`nilerr`; this baseline adds the `forbidigo` panic-ban surface.\n")
-	b.WriteString("- **DIM4 context:** `containedctx`/`fatcontext`/`noctx` already gate context structure; `goroutinescan` flags unmanaged raw `go` launches (heuristic — needs manual confirmation).\n\n")
+	b.WriteString("- **DIM3 errors:** the wrap/return side is already gated by `errcheck`/`errorlint`/`wrapcheck`/`nilerr`; this baseline adds the `forbidigo` ban on `panic`/`os.Exit`/`log.Fatal*` in library code (only `panic` occurs outside the path-excluded `cmd/`).\n")
+	b.WriteString("- **DIM4 context:** `containedctx`/`fatcontext`/`noctx` already gate context structure; `goroutinescan` flags unmanaged raw `go` launches. The heuristic is function-body-scoped and name-based, so a flag NEEDS MANUAL CONFIRMATION and the count is a FLOOR: an incidental lifecycle signal (or one managing a sibling goroutine) can mask a fire-and-forget launch, and teardown extracted to a sibling method reads as unmanaged.\n\n")
 
 	b.WriteString("## Verification commands\n\n")
 	b.WriteString("```bash\n")

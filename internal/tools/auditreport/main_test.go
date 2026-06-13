@@ -89,6 +89,39 @@ func TestBuildReport_Dimensions(t *testing.T) {
 	if aScore != 5 {
 		t.Errorf("DIM2 internal/a/a.go score = %d, want 5 (1 × churn 5)", aScore)
 	}
+	if !rep.ChurnAvailable {
+		t.Error("ChurnAvailable should be true with non-empty churn")
+	}
+	if by["DIM2"].RecommendedCeiling != "≤ 2 (current count; ratchet toward 0)" {
+		t.Errorf("DIM2 ceiling = %q", by["DIM2"].RecommendedCeiling)
+	}
+	// Sample fixture has 1 interfacebloat finding, so DIM1 count is 1.
+	if by["DIM1"].RecommendedCeiling != "≤ 1 (current count; ratchet toward 0)" {
+		t.Errorf("DIM1 ceiling = %q", by["DIM1"].RecommendedCeiling)
+	}
+	// Clean-dimension (count 0) ceiling path:
+	if got := ceilingFor(0); got != "0 — clean; gate to forbid new violations" {
+		t.Errorf("ceilingFor(0) = %q", got)
+	}
+}
+
+func TestChurnUnavailableBanner(t *testing.T) {
+	findings, _ := parseLintJSON(strings.NewReader(sampleLintJSON))
+	grs, _ := parseGoroutines(strings.NewReader(sampleGoroutineJSON))
+
+	repEmpty := buildReport(findings, grs, map[string]int{}, "2026-06-13", "abc1234")
+	if repEmpty.ChurnAvailable {
+		t.Error("ChurnAvailable should be false with empty churn")
+	}
+	if !strings.Contains(renderMarkdown(repEmpty), "Churn ranking SKIPPED") {
+		t.Error("missing churn-unavailable banner when churn is empty")
+	}
+
+	churn, _ := parseChurn(strings.NewReader(sampleChurn))
+	repFull := buildReport(findings, grs, churn, "2026-06-13", "abc1234")
+	if strings.Contains(renderMarkdown(repFull), "Churn ranking SKIPPED") {
+		t.Error("banner should be absent when churn is available")
+	}
 }
 
 func writeTemp(t *testing.T, dir, name, content string) string {

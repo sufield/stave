@@ -15,7 +15,7 @@
 // slog warning at the ingest boundary.
 //
 // Adding a new asset type:
-//  1. Drop a Schema literal into the package-level Schemas map.
+//  1. Declare a Schema literal and register it via Register().
 //  2. List the property paths that the asset type's control set
 //     references. Use the same dotted-path syntax used by the
 //     control YAML (e.g. "properties.storage.access.has_wildcard_principal").
@@ -31,6 +31,7 @@ package schema
 
 import (
 	"log/slog"
+	"maps"
 	"strings"
 	"sync"
 
@@ -61,31 +62,61 @@ type Schema struct {
 	Fields    []FieldRequirement
 }
 
-// Schemas is the package-level registry. The aws_s3_bucket entry
-// is the inaugural one; the rest of the high-volume asset types
-// follow as the migration proceeds.
-var (
-	registryMu sync.RWMutex
-	Schemas    = map[kernel.AssetType]Schema{}
-)
+// schemaRegistry is the concurrency-safe per-asset-type schema registry.
+// Bundling the map with the RWMutex that guards it keeps the lock and the data
+// in one type, and makes the map unreachable — and so un-raceable — from outside
+// the package (the registry was previously an exported, externally-mutable map).
+type schemaRegistry struct {
+	mu      sync.RWMutex
+	entries map[kernel.AssetType]Schema
+}
+
+// register installs s, replacing any existing entry for the same AssetType.
+func (r *schemaRegistry) register(s Schema) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.entries[s.AssetType] = s
+}
+
+// lookup returns the schema for t, or false if none is registered.
+func (r *schemaRegistry) lookup(t kernel.AssetType) (Schema, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	s, ok := r.entries[t]
+	return s, ok
+}
+
+// remove deletes t's entry. Used by tests that install a temporary schema.
+func (r *schemaRegistry) remove(t kernel.AssetType) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	delete(r.entries, t)
+}
+
+// all returns a snapshot copy of the registered schemas for iteration.
+func (r *schemaRegistry) all() map[kernel.AssetType]Schema {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	out := make(map[kernel.AssetType]Schema, len(r.entries))
+	maps.Copy(out, r.entries)
+	return out
+}
+
+// schemas is the process-wide schema registry — one cohesive instance rather
+// than a loose mutex plus an exported, externally-mutable map.
+var schemas = &schemaRegistry{entries: map[kernel.AssetType]Schema{}}
 
 // Register installs a schema for an asset type. Replaces any
 // existing entry for the same AssetType. Goroutine-safe so tests
-// can install temporary schemas without racing the registry's
-// init.
+// can install temporary schemas without racing the registry's init.
 func Register(s Schema) {
-	registryMu.Lock()
-	defer registryMu.Unlock()
-	Schemas[s.AssetType] = s
+	schemas.register(s)
 }
 
 // Lookup returns the schema for an asset type, or false if no
 // schema is registered.
 func Lookup(t kernel.AssetType) (Schema, bool) {
-	registryMu.RLock()
-	defer registryMu.RUnlock()
-	s, ok := Schemas[t]
-	return s, ok
+	return schemas.lookup(t)
 }
 
 // ValidationResult is the outcome of one asset's validation pass.

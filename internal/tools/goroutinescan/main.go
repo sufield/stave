@@ -4,6 +4,15 @@
 // or a received result channel. A flagged goroutine ("managed": false) is a
 // HEURISTIC candidate that NEEDS MANUAL CONFIRMATION, not a confirmed defect.
 //
+// The signal scan is function-body-scoped and name-based (not type-checked), so
+// it intentionally errs toward "managed" and has two known blind spots: (1) an
+// incidental lifecycle signal — or one managing a DIFFERENT goroutine in the
+// same function — marks a fire-and-forget launch as managed, so the unmanaged
+// count is a FLOOR, not a ceiling; (2) teardown extracted to a sibling method
+// (Begin/loop/End sharing channels on a receiver) reads as unmanaged. errgroup
+// used only via a passed-in group (g.Go) and signal.NotifyContext are not
+// detected. All of these need manual review of a flagged or unflagged launch.
+//
 // It is the DIM4 detector of the report-only Go best-practices audit; see
 // docs/superpowers/specs/2026-06-13-go-best-practices-audit-design.md.
 //
