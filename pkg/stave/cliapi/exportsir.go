@@ -143,17 +143,17 @@ func ValidateSIRCompleteness(
 		return nil
 	}
 
-	factPathsByAsset := make(map[string]map[string]bool)
+	factPathsByAsset := make(map[string]map[string]struct{})
 	for _, f := range facts {
 		if f.Provenance == nil || f.Provenance.PropertyPath == "" {
 			continue
 		}
 		set := factPathsByAsset[f.Subject]
 		if set == nil {
-			set = make(map[string]bool)
+			set = make(map[string]struct{})
 			factPathsByAsset[f.Subject] = set
 		}
-		set[f.Provenance.PropertyPath] = true
+		set[f.Provenance.PropertyPath] = struct{}{}
 	}
 
 	pathsByControl := make(map[kernel.ControlID][]string)
@@ -225,7 +225,7 @@ func extractPredicateFieldPaths(p policy.UnsafePredicate) []string {
 
 // pathCovered reports whether any fact path covers the control predicate
 // path. Coverage is substring-based in either direction.
-func pathCovered(celPath string, assetPaths map[string]bool) bool {
+func pathCovered(celPath string, assetPaths map[string]struct{}) bool {
 	for factPath := range assetPaths {
 		if factPath == celPath {
 			return true

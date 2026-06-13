@@ -22,6 +22,7 @@
 package main
 
 import (
+	"cmp"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -33,7 +34,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -158,11 +159,11 @@ func scanDir(root string) ([]Goroutine, error) {
 	if walkErr != nil {
 		return nil, walkErr
 	}
-	sort.Slice(out, func(i, j int) bool {
-		if out[i].File != out[j].File {
-			return out[i].File < out[j].File
+	slices.SortFunc(out, func(a, b Goroutine) int {
+		if n := cmp.Compare(a.File, b.File); n != 0 {
+			return n
 		}
-		return out[i].Line < out[j].Line
+		return cmp.Compare(a.Line, b.Line)
 	})
 	return out, nil
 }
@@ -278,28 +279,28 @@ func scanSignals(body *ast.BlockStmt) []string {
 	if body == nil {
 		return nil
 	}
-	set := map[string]bool{}
+	set := map[string]struct{}{}
 	ast.Inspect(body, func(n ast.Node) bool {
 		switch x := n.(type) {
 		case *ast.Ident:
 			switch x.Name {
 			case "errgroup":
-				set["errgroup"] = true
+				set["errgroup"] = struct{}{}
 			case "WaitGroup":
-				set["waitgroup"] = true
+				set["waitgroup"] = struct{}{}
 			case "context":
-				set["context"] = true
+				set["context"] = struct{}{}
 			}
 		case *ast.SelectorExpr:
 			switch x.Sel.Name {
 			case "WaitGroup", "Wait":
-				set["waitgroup"] = true
+				set["waitgroup"] = struct{}{}
 			case "Done":
-				set["done"] = true
+				set["done"] = struct{}{}
 			}
 		case *ast.UnaryExpr:
 			if x.Op == token.ARROW { // channel receive: awaiting a result
-				set["chan-recv"] = true
+				set["chan-recv"] = struct{}{}
 			}
 		}
 		return true
@@ -311,6 +312,6 @@ func scanSignals(body *ast.BlockStmt) []string {
 	for k := range set {
 		out = append(out, k)
 	}
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }

@@ -88,11 +88,11 @@ func TestAllHIPAATaggedControlsAppearInResults(t *testing.T) {
 
 	// Find all controls tagged for hipaa.
 	catalog := compliance.GetControlRegistry()
-	hipaaControlIDs := make(map[kernel.ControlID]bool)
+	hipaaControlIDs := make(map[kernel.ControlID]struct{})
 	for _, def := range catalog.All() {
 		for _, prof := range def.Def().ComplianceProfiles() {
 			if prof == "hipaa" {
-				hipaaControlIDs[def.Def().ID()] = true
+				hipaaControlIDs[def.Def().ID()] = struct{}{}
 			}
 		}
 	}
@@ -106,15 +106,15 @@ func TestAllHIPAATaggedControlsAppearInResults(t *testing.T) {
 		t.Fatalf("evaluate: %v", err)
 	}
 
-	resultIDs := make(map[kernel.ControlID]bool)
+	resultIDs := make(map[kernel.ControlID]struct{})
 	for _, r := range report.Results {
-		resultIDs[r.ControlID] = true
+		resultIDs[r.ControlID] = struct{}{}
 	}
 
 	// Every hipaa-tagged control should appear in the results (pass or fail).
 	missing := 0
 	for id := range hipaaControlIDs {
-		if !resultIDs[id] {
+		if _, ok := resultIDs[id]; !ok {
 			t.Errorf("hipaa-tagged control %s not in results", id)
 			missing++
 		}

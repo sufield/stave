@@ -43,12 +43,12 @@ func TestParseAssets_MultiSnapshotBundle_FlattensAll(t *testing.T) {
 	if len(assets) != 4 {
 		t.Errorf("assets count = %d, want 4 (a-only, b-and-c×2, c-only)", len(assets))
 	}
-	seen := map[string]bool{}
+	seen := map[string]struct{}{}
 	for _, a := range assets {
-		seen[string(a.ID)] = true
+		seen[string(a.ID)] = struct{}{}
 	}
 	for _, want := range []string{"a-only", "b-and-c", "c-only"} {
-		if !seen[want] {
+		if _, ok := seen[want]; !ok {
 			t.Errorf("missing asset %q from flattened union", want)
 		}
 	}

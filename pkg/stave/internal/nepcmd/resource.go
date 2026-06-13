@@ -84,7 +84,7 @@ type resourcePayload struct {
 	ResourceARN    string
 	DisplayEntries []iam.ResourceAccessEntry
 	AllEntries     []iam.ResourceAccessEntry
-	Designated     map[string]bool
+	Designated     map[string]struct{}
 	ShowDesignated bool
 }
 
@@ -121,10 +121,11 @@ func classificationWarning(snap *asset.Snapshot, resourceARN, classification str
 	return fmt.Sprintf("Warning: resource %s does not have tag data-classification=%s. Showing access results anyway.", resourceARN, classification)
 }
 
-func filterNonDesignated(entries []iam.ResourceAccessEntry, designated map[string]bool) []iam.ResourceAccessEntry {
+func filterNonDesignated(entries []iam.ResourceAccessEntry, designated map[string]struct{}) []iam.ResourceAccessEntry {
 	var filtered []iam.ResourceAccessEntry
 	for i := range entries {
-		if entries[i].IsPublic || !designated[entries[i].PrincipalARN] {
+		_, isDesignated := designated[entries[i].PrincipalARN]
+		if entries[i].IsPublic || !isDesignated {
 			filtered = append(filtered, entries[i])
 		}
 	}
@@ -230,15 +231,16 @@ var designatedTags = []struct{ key, value string }{
 func hasNonDesignatedAccess(entries []iam.ResourceAccessEntry, snap *asset.Snapshot) bool {
 	designated := buildDesignatedSet(snap)
 	for _, e := range entries {
-		if e.IsPublic || !designated[e.PrincipalARN] {
+		_, isDesignated := designated[e.PrincipalARN]
+		if e.IsPublic || !isDesignated {
 			return true
 		}
 	}
 	return false
 }
 
-func buildDesignatedSet(snap *asset.Snapshot) map[string]bool {
-	designated := make(map[string]bool)
+func buildDesignatedSet(snap *asset.Snapshot) map[string]struct{} {
+	designated := make(map[string]struct{})
 	for i := range snap.Identities {
 		id := &snap.Identities[i]
 		tags := resolveMapProperty(id.Properties, []string{"identity", "tags"})
@@ -247,7 +249,7 @@ func buildDesignatedSet(snap *asset.Snapshot) map[string]bool {
 		}
 		for _, dt := range designatedTags {
 			if v, ok := tags[dt.key]; ok && fmt.Sprintf("%v", v) == dt.value {
-				designated[string(id.ID)] = true
+				designated[string(id.ID)] = struct{}{}
 				break
 			}
 		}
@@ -312,7 +314,7 @@ func renderResourceTable(w io.Writer, resourceARN string, entries []iam.Resource
 	return nil
 }
 
-func renderResourceDOT(w io.Writer, resourceARN string, allEntries []iam.ResourceAccessEntry, designated map[string]bool, showAll bool) error {
+func renderResourceDOT(w io.Writer, resourceARN string, allEntries []iam.ResourceAccessEntry, designated map[string]struct{}, showAll bool) error {
 	fmt.Fprintln(w, "digraph PHIAccess {")
 	fmt.Fprintln(w, `    rankdir=LR`)
 	fmt.Fprintln(w, `    node [fontname="Helvetica" fontsize=11]`)
@@ -327,7 +329,7 @@ func renderResourceDOT(w io.Writer, resourceARN string, allEntries []iam.Resourc
 
 	for i := range allEntries {
 		e := &allEntries[i]
-		isDesignated := designated[e.PrincipalARN]
+		_, isDesignated := designated[e.PrincipalARN]
 
 		if !showAll && isDesignated {
 			continue

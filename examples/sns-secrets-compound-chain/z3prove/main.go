@@ -153,7 +153,7 @@ func finding1Subscription(key string, f fixture) bool {
 		{topicARN: f.topic.arn},
 	}
 
-	subscribable := []int{}
+	var subscribable []int
 	for i, w := range witnesses {
 		// User has sns:Subscribe on this topic ARN?
 		if !iamAdmitsAction(f.allow, f.deny, "sns:Subscribe", w.topicARN) {
@@ -215,7 +215,7 @@ func finding1Subscription(key string, f fixture) bool {
 // paths does the principal's apigateway:GET reach that the
 // Deny does not block?
 func finding2APIGwDenyGap(key string, f fixture) bool {
-	open := []int{}
+	var open []int
 	for i, p := range apigwManagementPaths {
 		// User has apigateway:GET on the path?
 		fullARN := "arn:aws:apigateway:us-east-1::" + p

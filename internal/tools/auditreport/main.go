@@ -21,12 +21,13 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"cmp"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"os"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -264,13 +265,13 @@ func parseChurn(r io.Reader) (map[string]int, error) {
 
 func buildReport(findings []Finding, grs []GoroutineRec, churn map[string]int, date, commit string) Report {
 	byLinter := func(linters ...string) []Finding {
-		want := map[string]bool{}
+		want := map[string]struct{}{}
 		for _, l := range linters {
-			want[l] = true
+			want[l] = struct{}{}
 		}
 		var out []Finding
 		for _, f := range findings {
-			if want[f.Linter] {
+			if _, ok := want[f.Linter]; ok {
 				out = append(out, f)
 			}
 		}
@@ -329,25 +330,25 @@ func buildDimension(key, title string, detectors []string, findings []Finding, c
 		ch := churnFor(churn, file)
 		hotspots = append(hotspots, Hotspot{File: file, Count: cnt, Churn: ch, Score: cnt * max(ch, 1)})
 	}
-	sort.Slice(hotspots, func(i, j int) bool {
-		if hotspots[i].Score != hotspots[j].Score {
-			return hotspots[i].Score > hotspots[j].Score
+	slices.SortFunc(hotspots, func(a, b Hotspot) int {
+		if n := cmp.Compare(b.Score, a.Score); n != 0 {
+			return n
 		}
-		if hotspots[i].Count != hotspots[j].Count {
-			return hotspots[i].Count > hotspots[j].Count
+		if n := cmp.Compare(b.Count, a.Count); n != 0 {
+			return n
 		}
-		return hotspots[i].File < hotspots[j].File
+		return cmp.Compare(a.File, b.File)
 	})
 
 	sorted := append([]Finding(nil), findings...)
-	sort.Slice(sorted, func(i, j int) bool {
-		if sorted[i].File != sorted[j].File {
-			return sorted[i].File < sorted[j].File
+	slices.SortFunc(sorted, func(a, b Finding) int {
+		if n := cmp.Compare(a.File, b.File); n != 0 {
+			return n
 		}
-		if sorted[i].Line != sorted[j].Line {
-			return sorted[i].Line < sorted[j].Line
+		if n := cmp.Compare(a.Line, b.Line); n != 0 {
+			return n
 		}
-		return sorted[i].Text < sorted[j].Text
+		return cmp.Compare(a.Text, b.Text)
 	})
 	samples := make([]Sample, 0, sampleCap)
 	for _, f := range sorted {

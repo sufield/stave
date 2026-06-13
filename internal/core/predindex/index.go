@@ -1,6 +1,7 @@
 package predindex
 
 import (
+	"cmp"
 	"slices"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -94,14 +95,14 @@ func Build(controls []policy.ControlDefinition, chains []policy.ChainDefinition)
 	for k := range idx.PathToControls {
 		ids := idx.PathToControls[k]
 		slices.SortFunc(ids, func(a, b kernel.ControlID) int {
-			return cmpString(string(a), string(b))
+			return cmp.Compare(a, b)
 		})
 		idx.PathToControls[k] = dedupeControls(ids)
 	}
 	for k := range idx.PathToChains {
 		ids := idx.PathToChains[k]
 		slices.SortFunc(ids, func(a, b kernel.ChainID) int {
-			return cmpString(string(a), string(b))
+			return cmp.Compare(a, b)
 		})
 		idx.PathToChains[k] = dedupeChains(ids)
 	}
@@ -159,12 +160,4 @@ func dedupeChains(ids []kernel.ChainID) []kernel.ChainID {
 	return out
 }
 
-func cmpString(a, b string) int {
-	if a < b {
-		return -1
-	}
-	if a > b {
-		return 1
-	}
-	return 0
-}
+

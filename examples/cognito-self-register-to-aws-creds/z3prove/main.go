@@ -349,7 +349,7 @@ func finding5ChokePoint(key string, f fixture) {
 	fmt.Printf("  testing %d candidate fixes...\n", len(candidates))
 	fmt.Println()
 
-	chokes := []int{}
+	var chokes []int
 	for i, c := range candidates {
 		g := f // copy
 		// statements slices share backing — clone them.
@@ -534,7 +534,7 @@ func loadFixture(snapshotsDir string) (fixture, error) {
 				f.identityPool.authRoleARN = id.IdentityPool.AuthenticatedRoleARN
 				f.identityPool.roleMappingConfigured = id.IdentityPool.RoleMappingConfigured
 			case "aws_iam_role":
-				stmts := []statement{}
+				var stmts []statement
 				for _, p := range id.Policies.AttachedPolicies {
 					stmts = append(stmts, p.Statements...)
 				}

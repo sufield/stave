@@ -102,9 +102,9 @@ func TestHIPAAProfile_Evaluate(t *testing.T) {
 	}
 
 	// Check that implemented invariants produced results.
-	resultIDs := make(map[kernel.ControlID]bool)
+	resultIDs := make(map[kernel.ControlID]struct{})
 	for _, r := range report.Results {
-		resultIDs[r.ControlID] = true
+		resultIDs[r.ControlID] = struct{}{}
 	}
 
 	// These invariants are implemented and should appear.
@@ -112,7 +112,7 @@ func TestHIPAAProfile_Evaluate(t *testing.T) {
 		"CONTROLS.001.STRICT", "CONTROLS.004", "AUDIT.001", "ACCESS.001",
 		"ACCESS.002", "GOVERNANCE.001", "RETENTION.002", "CONTROLS.002",
 	} {
-		if !resultIDs[id] {
+		if _, ok := resultIDs[id]; !ok {
 			t.Errorf("expected result for %s", id)
 		}
 	}
@@ -120,7 +120,7 @@ func TestHIPAAProfile_Evaluate(t *testing.T) {
 	// All HIPAA-tagged controls should now be present (formerly unimplemented
 	// controls AUDIT.002, ACCESS.003, ACCESS.006, ACCESS.009 are now implemented).
 	for _, id := range []kernel.ControlID{"AUDIT.002", "ACCESS.003", "ACCESS.006", "ACCESS.009"} {
-		if !resultIDs[id] {
+		if _, ok := resultIDs[id]; !ok {
 			t.Errorf("expected result for newly implemented %s", id)
 		}
 	}

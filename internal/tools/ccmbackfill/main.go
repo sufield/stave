@@ -478,7 +478,7 @@ func renderReport(recs []controlRec) string {
 	}
 
 	sb.WriteString("\n## Ambiguous controls (left absent)\n\n")
-	unmapped := []controlRec{}
+	var unmapped []controlRec
 	for _, r := range recs {
 		if len(r.CCMs) == 0 {
 			unmapped = append(unmapped, r)

@@ -128,7 +128,7 @@ func main() {
 // required actions are all in Allow and none in Deny?"
 // Z3 search over the vector index.
 func finding1DenyCoverage(key string, state apiState) bool {
-	available := []int{}
+	var available []int
 	for i, v := range computeLaunchVectors {
 		if vectorEffectivelyAvailable(v, state) {
 			available = append(available, i)
@@ -199,7 +199,7 @@ func finding2PassRoleReachesAdmin(key string, state apiState) bool {
 		},
 	}
 
-	reachable := []int{}
+	var reachable []int
 	for i, w := range witnesses {
 		if !w.hasAdmin {
 			continue
@@ -264,7 +264,7 @@ func finding3CompoundPath(key string, state apiState) bool {
 	type compoundIdx struct {
 		vectorIdx int
 	}
-	available := []compoundIdx{}
+	var available []compoundIdx
 	for i, v := range computeLaunchVectors {
 		if !vectorEffectivelyAvailable(v, state) {
 			continue

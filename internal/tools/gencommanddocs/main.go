@@ -105,17 +105,17 @@ func renderCatalog(root *cobra.Command) (*bytes.Buffer, error) {
 	all, leaves := collectPaths(root)
 	short := shortByPath(root)
 
-	annotated := map[string]bool{}
+	annotated := map[string]struct{}{}
 	var phantom []string
 	for _, a := range catalogAnnotations {
-		annotated[a.Path] = true
-		if !all[a.Path] {
+		annotated[a.Path] = struct{}{}
+		if _, ok := all[a.Path]; !ok {
 			phantom = append(phantom, a.Path)
 		}
 	}
 	var missing []string
 	for c := range leaves {
-		if !annotated[c] {
+		if _, ok := annotated[c]; !ok {
 			missing = append(missing, c)
 		}
 	}
@@ -191,8 +191,8 @@ func shortByPath(root *cobra.Command) map[string]string {
 
 // collectPaths walks the tree and returns the set of all command paths
 // and the subset that are leaves (no non-skipped subcommands).
-func collectPaths(root *cobra.Command) (all, leaves map[string]bool) {
-	all, leaves = map[string]bool{}, map[string]bool{}
+func collectPaths(root *cobra.Command) (all, leaves map[string]struct{}) {
+	all, leaves = map[string]struct{}{}, map[string]struct{}{}
 	var walk func(c *cobra.Command)
 	walk = func(c *cobra.Command) {
 		for _, sub := range c.Commands() {
@@ -200,7 +200,7 @@ func collectPaths(root *cobra.Command) (all, leaves map[string]bool) {
 				continue
 			}
 			p := commandPath(sub)
-			all[p] = true
+			all[p] = struct{}{}
 			hasChild := false
 			for _, g := range sub.Commands() {
 				if !skip(g) {
@@ -209,7 +209,7 @@ func collectPaths(root *cobra.Command) (all, leaves map[string]bool) {
 				}
 			}
 			if !hasChild {
-				leaves[p] = true
+				leaves[p] = struct{}{}
 			}
 			walk(sub)
 		}
@@ -263,7 +263,7 @@ func render(root *cobra.Command) (*bytes.Buffer, int) {
 		id    string
 		title string
 	}
-	order := []groupHeader{}
+	var order []groupHeader
 	for _, g := range root.Groups() {
 		order = append(order, groupHeader{id: g.ID, title: g.Title})
 	}

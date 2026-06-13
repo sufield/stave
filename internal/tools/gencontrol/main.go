@@ -94,9 +94,9 @@ type config struct {
 }
 
 var (
-	validDomains    = map[string]bool{"exposure": true, "identity": true, "governance": true}
-	validSeverities = map[string]bool{"critical": true, "high": true, "medium": true, "low": true, "info": true}
-	validOps        = map[string]bool{"eq": true, "ne": true, "lt": true, "gt": true, "missing": true, "present": true}
+	validDomains    = map[string]struct{}{"exposure": {}, "identity": {}, "governance": {}}
+	validSeverities = map[string]struct{}{"critical": {}, "high": {}, "medium": {}, "low": {}, "info": {}}
+	validOps        = map[string]struct{}{"eq": {}, "ne": {}, "lt": {}, "gt": {}, "missing": {}, "present": {}}
 )
 
 func (c *config) validate() error {
@@ -115,13 +115,13 @@ func (c *config) validate() error {
 	if c.Remediation == "" {
 		return errors.New("--remediation is required (every control must have a remediation path)")
 	}
-	if !validDomains[c.Domain] {
+	if _, ok := validDomains[c.Domain]; !ok {
 		return errors.New("--domain: must be one of exposure, identity, governance")
 	}
-	if !validSeverities[c.Severity] {
+	if _, ok := validSeverities[c.Severity]; !ok {
 		return errors.New("--severity: must be one of critical, high, medium, low, info")
 	}
-	if !validOps[c.Op] {
+	if _, ok := validOps[c.Op]; !ok {
 		return errors.New("--op: must be one of eq, ne, lt, gt, missing, present")
 	}
 	cwd, err := os.Getwd()

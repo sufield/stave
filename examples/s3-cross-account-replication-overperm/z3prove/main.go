@@ -158,7 +158,7 @@ func finding1NonReplicationPrincipal(label string, statements []statement) bool 
 	intSort := ctx.IntSort()
 	req := ctx.IntConst("principal_idx")
 
-	intendedIdx := []int{}
+	var intendedIdx []int
 	for i, w := range witnesses {
 		if w.intended {
 			intendedIdx = append(intendedIdx, i)
@@ -301,7 +301,7 @@ func finding3KMSScopeCheck(label string, statements []statement) bool {
 		}
 	}
 
-	thisKeyIdx := []int{}
+	var thisKeyIdx []int
 	for i, w := range witnesses {
 		if w.isThis {
 			thisKeyIdx = append(thisKeyIdx, i)

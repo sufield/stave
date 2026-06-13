@@ -33,7 +33,7 @@ func TestRenderResource_KnownFormats(t *testing.T) {
 		ResourceARN:    "arn:aws:s3:::test-bucket",
 		DisplayEntries: []iam.ResourceAccessEntry{},
 		AllEntries:     []iam.ResourceAccessEntry{},
-		Designated:     map[string]bool{},
+		Designated:     map[string]struct{}{},
 	}
 	for _, format := range []string{"json", "dot", "table", ""} {
 		var buf bytes.Buffer

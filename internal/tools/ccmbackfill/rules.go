@@ -908,13 +908,13 @@ func applySubcategoryRules(service, sub, id string, add func(...string)) {
 		// drift). Config-evaluators aren't audit logs — tagging them
 		// LOG-05/LOG-12 is wrong and makes "who logs access?" queries
 		// return them as false positives.
-		configEvaluators := map[string]bool{
-			"config":         true,
-			"guardrail":      true,
-			"securityhub":    true,
-			"cloudformation": true,
+		configEvaluators := map[string]struct{}{
+			"config":         {},
+			"guardrail":      {},
+			"securityhub":    {},
+			"cloudformation": {},
 		}
-		if !configEvaluators[service] {
+		if _, ok := configEvaluators[service]; !ok {
 			add("LOG-05", "LOG-12")
 		}
 	case "logging":

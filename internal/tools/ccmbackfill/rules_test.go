@@ -95,12 +95,12 @@ func TestInferUnknownServiceReturnsNil(t *testing.T) {
 // CCM IDs.
 func TestInferDeduplicates(t *testing.T) {
 	got := Infer("s3/encrypt", "CTL.S3.ENCRYPT.001")
-	seen := map[string]bool{}
+	seen := map[string]struct{}{}
 	for _, c := range got {
-		if seen[c] {
+		if _, ok := seen[c]; ok {
 			t.Errorf("Infer returned duplicate CCM %q in %v", c, got)
 		}
-		seen[c] = true
+		seen[c] = struct{}{}
 	}
 }
 

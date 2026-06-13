@@ -174,7 +174,7 @@ func runPattern(
 		totalMethods: len(methods),
 	}
 
-	reachableIdx := []int{}
+	var reachableIdx []int
 	for i, m := range methods {
 		if check(f, m) {
 			reachableIdx = append(reachableIdx, i)
