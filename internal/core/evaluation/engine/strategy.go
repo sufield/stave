@@ -110,7 +110,7 @@ func emitViolationFinding(
 	// inflates the violations summary above the visible finding count.
 	if finding == nil {
 		deps.Logger().Warn("CreateDurationFinding returned nil finding; downgrading verdict to INCONCLUSIVE to keep counts consistent",
-			"control", ctl.ID, "asset", t.ID)
+			"control", ctl.ID, "asset", t.ID())
 		observation.MarkInconclusive("violation finding could not be constructed")
 		return observation, nil
 	}
@@ -140,7 +140,7 @@ func emitViolationFinding(
 		// renderers must avoid arithmetic on the -1.0 sentinel.
 		finding.Evidence.EvidenceInvalid = true
 		deps.Logger().Warn("duration calculation failed; emitting violation with sentinel duration -1.0 and evidence_invalid=true",
-			"control", ctl.ID, "asset", t.ID, "error", durErr,
+			"control", ctl.ID, "asset", t.ID(), "error", durErr,
 			"finding_emitted", true)
 	}
 	confidence := deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
@@ -294,7 +294,7 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 		// degraded-arithmetic path, then mark inconclusive with the
 		// already-classified reason.
 		if reason == asset.ReasonInconclusiveThresholdError {
-			s.deps.Logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID)
+			s.deps.Logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID())
 		}
 		observation.MarkInconclusive(reason)
 		return observation, nil
@@ -353,7 +353,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.T
 	// 1. Violation Check (Always takes precedence)
 	exceeds, threshErr := t.ExceedsSLA(now, maxUnsafe)
 	if threshErr != nil {
-		s.deps.Logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID, "error", threshErr)
+		s.deps.Logger().Warn("unsafe threshold check failed", "control", s.ctl.ID, "asset", t.ID(), "error", threshErr)
 		observation.MarkInconclusive("threshold check error")
 		return observation, nil
 	}
@@ -551,7 +551,7 @@ func newControlRow(ctl *policy.ControlDefinition, t *asset.ExposureLifecycle) ev
 	resType := t.Asset().Type
 	return evaluation.ResourceCheck{
 		ControlID:   ctl.ID,
-		AssetID:     t.ID,
+		AssetID:     t.ID(),
 		AssetType:   resType,
 		AssetDomain: resType.Domain(),
 	}

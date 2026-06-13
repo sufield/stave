@@ -261,8 +261,8 @@ func TestExposureLifecycleBasic(t *testing.T) {
 	t.Parallel()
 	a := Asset{ID: ID("bucket-1")}
 	tl, _ := NewExposureLifecycle(a)
-	if tl.ID != "bucket-1" {
-		t.Fatalf("ID = %v", tl.ID)
+	if tl.ID() != "bucket-1" {
+		t.Fatalf("ID = %v", tl.ID())
 	}
 	if !tl.IsSecure() {
 		t.Fatal("new lifecycle should be safe")

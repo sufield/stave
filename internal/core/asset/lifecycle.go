@@ -11,7 +11,7 @@ import (
 // It records when an asset first became non-compliant, when it was last observed
 // in that state, and maintains a history of resolved windows for dwell-time analysis.
 type ExposureLifecycle struct {
-	ID    ID
+	id    ID
 	asset Asset
 
 	activeWindow   *ExposureWindow
@@ -55,9 +55,18 @@ func NewExposureLifecycle(a Asset) (*ExposureLifecycle, error) {
 		return nil, ErrEmptyAssetID
 	}
 	return &ExposureLifecycle{
-		ID:    a.ID,
+		id:    a.ID,
 		asset: a,
 	}, nil
+}
+
+// ID returns the asset ID this lifecycle tracks. Read-only: the ID is set once
+// at construction (NewExposureLifecycle / SetAsset enforce non-empty) and never
+// mutated afterward, so exposing it through a getter rather than a settable
+// field keeps the non-empty-ID invariant checkContracts guards from being
+// broken by external assignment.
+func (l *ExposureLifecycle) ID() ID {
+	return l.id
 }
 
 // Asset returns the latest observed state of the cloud asset.
@@ -74,14 +83,14 @@ func (l *ExposureLifecycle) Asset() Asset {
 // surface the failure via a normal error path, matching the
 // error-returning style of NewExposureLifecycle.
 func (l *ExposureLifecycle) SetAsset(a Asset) error {
-	newID := l.ID
+	newID := l.id
 	if newID.IsEmpty() {
 		newID = a.ID
 	}
 	if newID.IsEmpty() {
 		return ErrEmptyAssetID
 	}
-	l.ID = newID
+	l.id = newID
 	l.asset = a
 	return nil
 }
@@ -449,7 +458,7 @@ func (l *ExposureLifecycle) FormatExposureSummary(threshold time.Duration, now t
 // ErrEmptyAssetID lets the engine skip the offending lifecycle and
 // keep processing the rest of the snapshot.
 func (l *ExposureLifecycle) checkContracts() error {
-	if l.ID.IsEmpty() {
+	if l.id.IsEmpty() {
 		return ErrEmptyAssetID
 	}
 	return nil
