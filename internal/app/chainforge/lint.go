@@ -18,7 +18,7 @@ type LintResult struct {
 
 // LintChain validates a chain definition against the control catalog
 // and the catalog-supplied capability registry.
-func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]bool, registry policy.CapabilityRegistry) LintResult {
+func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]struct{}, registry policy.CapabilityRegistry) LintResult {
 	result := LintResult{ChainID: string(chain.ID)}
 
 	if chain.ID == "" {
@@ -38,9 +38,11 @@ func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]bo
 
 	// Check member controls exist in catalog.
 	for _, cid := range chain.ControlIDs {
-		if controlIDs != nil && !controlIDs[cid] {
-			result.Errors = append(result.Errors, fmt.Sprintf(
-				"member control %q not found in catalog", cid))
+		if controlIDs != nil {
+			if _, ok := controlIDs[cid]; !ok {
+				result.Errors = append(result.Errors, fmt.Sprintf(
+					"member control %q not found in catalog", cid))
+			}
 		}
 	}
 

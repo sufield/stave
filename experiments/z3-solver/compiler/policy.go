@@ -94,7 +94,7 @@ func (m *CompiledModel) freshQueryVars(prefix string) queryVars {
 func (m *CompiledModel) appendStatement(stmt *stave.PolicyStatement, sourceAsset, policyType, assertionName string, isTrust bool) {
 	vars := m.evalVars()
 
-	notModeled := []string{}
+	var notModeled []string
 	principalMatch := m.matchSet(vars.P, stmt.Principals, stmt.NotPrincipals, m.Principals)
 	actionMatch := m.matchActionSet(vars.A, stmt.Actions, stmt.NotActions)
 	resourceMatch := m.matchResourceSet(vars.R, stmt.Resources, stmt.NotResources, sourceAsset, isTrust)

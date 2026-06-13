@@ -50,12 +50,12 @@ var s3GetActions = []string{
 // The destination policy needs ReplicateObject + ReplicateDelete
 // + ObjectOwnerOverrideToBucketOwner; the only `Get` action it
 // needs is GetBucketVersioning to verify versioning is on.
-var replicationRequiredOnDestination = map[string]bool{
-	"s3:GetBucketVersioning":              true,
-	"s3:PutBucketVersioning":              true,
-	"s3:ReplicateObject":                  true,
-	"s3:ReplicateDelete":                  true,
-	"s3:ObjectOwnerOverrideToBucketOwner": true,
+var replicationRequiredOnDestination = map[string]struct{}{
+	"s3:GetBucketVersioning":              {},
+	"s3:PutBucketVersioning":              {},
+	"s3:ReplicateObject":                  {},
+	"s3:ReplicateDelete":                  {},
+	"s3:ObjectOwnerOverrideToBucketOwner": {},
 }
 
 // excessGetActions returns the s3:Get* actions whose names
@@ -64,9 +64,9 @@ var replicationRequiredOnDestination = map[string]bool{
 // enumerates to demonstrate that `s3:Get*` admits more than
 // the policy author intended.
 func excessGetActions() []string {
-	out := []string{}
+	var out []string
 	for _, a := range s3GetActions {
-		if !replicationRequiredOnDestination[a] {
+		if _, ok := replicationRequiredOnDestination[a]; !ok {
 			out = append(out, a)
 		}
 	}

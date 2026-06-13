@@ -82,7 +82,7 @@ type Input struct {
 	Now time.Time
 	// ExemptedKeys is the set of (control@asset) keys that already
 	// have active exemptions — these are excluded from suggestions.
-	ExemptedKeys map[string]bool
+	ExemptedKeys map[string]struct{}
 }
 
 // Suggest analyzes assessment history and produces exemption candidates.
@@ -165,7 +165,7 @@ func Suggest(in Input) *Result {
 	for k, m := range meta {
 		// Skip if already exempted.
 		exemptKey := string(k.ControlID) + "@" + string(k.AssetID)
-		if in.ExemptedKeys[exemptKey] {
+		if _, ok := in.ExemptedKeys[exemptKey]; ok {
 			continue
 		}
 

@@ -58,8 +58,8 @@ func QueryChokePoint(model *compiler.CompiledModel, reach *QueryResult) *QueryRe
 	}
 
 	// Find Allow statements whose suppression breaks the grant.
-	cover := []string{}
-	candidates := []int{}
+	var cover []string
+	var candidates []int
 	for i := range model.Stmt {
 		if model.Stmt[i].Effect == "Allow" {
 			candidates = append(candidates, i)

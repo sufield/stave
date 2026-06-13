@@ -190,9 +190,9 @@ func filterResolvedChains(chains []policy.ChainDefinition, controls []policy.Con
 			)
 		}
 	}
-	activeIDs := make(map[kernel.ControlID]bool, len(controls))
+	activeIDs := make(map[kernel.ControlID]struct{}, len(controls))
 	for i := range controls {
-		activeIDs[controls[i].ID] = true
+		activeIDs[controls[i].ID] = struct{}{}
 	}
 	resolved := make([]policy.ChainDefinition, 0, len(chains))
 	for i := range chains {
@@ -209,7 +209,7 @@ func filterResolvedChains(chains []policy.ChainDefinition, controls []policy.Con
 		}
 		allPresent := true
 		for _, ctlID := range chain.ControlIDs {
-			if !activeIDs[ctlID] {
+			if _, ok := activeIDs[ctlID]; !ok {
 				allPresent = false
 				break
 			}

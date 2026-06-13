@@ -23,11 +23,11 @@ func MapTelemetry(data []byte, severity, resourceARN string) ([]byte, error) {
 
 	filter := apptelemetry.Filter{ResourceARN: resourceARN}
 	if severity != "" {
-		filter.Severities = make(map[string]bool)
+		filter.Severities = make(map[string]struct{})
 		for s := range strings.SplitSeq(severity, ",") {
 			trimmed := strings.TrimSpace(strings.ToLower(s))
 			if trimmed != "" {
-				filter.Severities[trimmed] = true
+				filter.Severities[trimmed] = struct{}{}
 			}
 		}
 	}

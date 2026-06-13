@@ -63,7 +63,7 @@ func walkPredicate(pred policy.UnsafePredicate, params policy.ControlParams) ([]
 	allRules, allFields := walkRules("all", pred.All, params)
 	rules = append(rules, allRules...)
 	for f := range allFields {
-		fieldSet[f] = true
+		fieldSet[f] = struct{}{}
 	}
 
 	fields := make([]string, 0, len(fieldSet))
@@ -74,9 +74,9 @@ func walkPredicate(pred policy.UnsafePredicate, params policy.ControlParams) ([]
 	return fields, rules
 }
 
-func walkRules(from string, prs []policy.PredicateRule, params policy.ControlParams) ([]contracts.ExplainRule, map[string]bool) {
+func walkRules(from string, prs []policy.PredicateRule, params policy.ControlParams) ([]contracts.ExplainRule, map[string]struct{}) {
 	var rules []contracts.ExplainRule
-	fieldSet := map[string]bool{}
+	fieldSet := map[string]struct{}{}
 	for i := range prs {
 		r := prs[i]
 		loc := fmt.Sprintf("%s[%d]", from, i)
@@ -84,14 +84,14 @@ func walkRules(from string, prs []policy.PredicateRule, params policy.ControlPar
 			sub, nf := walkRules(loc+".any", r.Any, params)
 			rules = append(rules, sub...)
 			for f := range nf {
-				fieldSet[f] = true
+				fieldSet[f] = struct{}{}
 			}
 		}
 		if len(r.All) > 0 {
 			sub, nf := walkRules(loc+".all", r.All, params)
 			rules = append(rules, sub...)
 			for f := range nf {
-				fieldSet[f] = true
+				fieldSet[f] = struct{}{}
 			}
 		}
 		if r.Field.IsZero() {
@@ -105,7 +105,7 @@ func walkRules(from string, prs []policy.PredicateRule, params policy.ControlPar
 			From:    loc,
 			Comment: comment,
 		})
-		fieldSet[r.Field.String()] = true
+		fieldSet[r.Field.String()] = struct{}{}
 	}
 	return rules, fieldSet
 }

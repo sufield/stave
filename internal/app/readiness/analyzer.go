@@ -137,7 +137,7 @@ func classifyChains(controls []policy.ControlDefinition, chains []policy.ChainDe
 		// Each chain member's missing asset types — collected
 		// before classification, then attributed only if the
 		// chain ends up blocked.
-		chainMissing := map[kernel.AssetType]bool{}
+		chainMissing := map[kernel.AssetType]struct{}{}
 
 		for _, memberID := range chain.ControlIDs {
 			ctl, ok := ctlIndex[memberID]
@@ -156,7 +156,7 @@ func classifyChains(controls []policy.ControlDefinition, chains []policy.ChainDe
 			if !anyObserved(ctl.ApplicableAssetTypes, observed) {
 				blocked = true
 				for _, t := range ctl.ApplicableAssetTypes {
-					chainMissing[t] = true
+					chainMissing[t] = struct{}{}
 				}
 			}
 		}

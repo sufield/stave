@@ -47,7 +47,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/aclements/go-z3/z3"
@@ -232,7 +232,7 @@ func admittedByStatements(statements []statement) []int {
 	for i := range seen {
 		out = append(out, i)
 	}
-	sort.Ints(out)
+	slices.Sort(out)
 	return out
 }
 
@@ -276,7 +276,7 @@ func resourceMatches(stmtResources []string, witness string) bool {
 }
 
 func dangerousIndices() []int {
-	out := []int{}
+	var out []int
 	for i, w := range witnesses {
 		if w.dangerous {
 			out = append(out, i)
@@ -286,7 +286,7 @@ func dangerousIndices() []int {
 }
 
 func intendedIndices() []int {
-	out := []int{}
+	var out []int
 	for i, w := range witnesses {
 		if w.intended {
 			out = append(out, i)
@@ -352,7 +352,7 @@ func loadStatements(snapshotsDir string) ([]statement, error) {
 		}
 		names = append(names, e.Name())
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 
 	for _, name := range names {
 		raw, err := os.ReadFile(filepath.Join(snapshotsDir, name))

@@ -71,14 +71,14 @@ func TestCoverage_HighVolumeAssetTypesRegistered(t *testing.T) {
 // inline). Allow-list those exceptions explicitly so the check
 // stays meaningful for the rest.
 func TestCoverage_EveryRegisteredSchemaHasARequiredField(t *testing.T) {
-	allowedWithoutRequired := map[kernel.AssetType]bool{
+	allowedWithoutRequired := map[kernel.AssetType]struct{}{
 		// EKS controls don't share a single .kind anchor — the
 		// controls each gate on narrower paths. Documented inline
 		// in eks_cluster.go.
-		"aws_eks_cluster": true,
+		"aws_eks_cluster": {},
 	}
 	for typ, s := range Schemas {
-		if allowedWithoutRequired[typ] {
+		if _, ok := allowedWithoutRequired[typ]; ok {
 			continue
 		}
 		hasRequired := false

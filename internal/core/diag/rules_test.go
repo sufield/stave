@@ -38,11 +38,11 @@ func TestRuleIDs_Unique(t *testing.T) {
 		RuleInvalidMaxUnsafe, RuleInvalidNowTime,
 		RulePackRegistryLoadFailed, RuleProjectConfigLoadFailed, RuleUnknownControlPack,
 	}
-	seen := make(map[RuleID]bool, len(rules))
+	seen := make(map[RuleID]struct{}, len(rules))
 	for _, r := range rules {
-		if seen[r] {
+		if _, ok := seen[r]; ok {
 			t.Fatalf("duplicate rule ID: %s", r)
 		}
-		seen[r] = true
+		seen[r] = struct{}{}
 	}
 }

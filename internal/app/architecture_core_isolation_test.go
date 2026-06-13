@@ -30,10 +30,10 @@ func TestCoreRuntimeNoHardwiredSideEffects(t *testing.T) {
 
 	// time.Now() is forbidden except in clock implementations and
 	// injection-point defaults (NowFunc fallbacks).
-	timeNowAllowed := map[string]bool{
-		filepath.Join("internal", "core", "ports", "clock.go"):           true, // RealClock implementation
-		filepath.Join("internal", "app", "eval", "evaluation_output.go"): true, // elapsed-time profiling
-		filepath.Join("internal", "app", "hygiene", "request.go"):        true, // NowFunc default fallback
+	timeNowAllowed := map[string]struct{}{
+		filepath.Join("internal", "core", "ports", "clock.go"):           {}, // RealClock implementation
+		filepath.Join("internal", "app", "eval", "evaluation_output.go"): {}, // elapsed-time profiling
+		filepath.Join("internal", "app", "hygiene", "request.go"):        {}, // NowFunc default fallback
 	}
 
 	var violations []string
@@ -67,7 +67,8 @@ func TestCoreRuntimeNoHardwiredSideEffects(t *testing.T) {
 				}
 			}
 			// time.Now() requires per-file allowlist (clock impls, injection defaults)
-			if strings.Contains(text, "time.Now()") && !timeNowAllowed[rel] {
+			_, allowed := timeNowAllowed[rel]
+			if strings.Contains(text, "time.Now()") && !allowed {
 				violations = append(violations, rel+": contains time.Now() — use ports.Clock interface")
 			}
 			return nil

@@ -19,8 +19,8 @@ func (m *CompiledModel) compileConditions(conds []stave.Condition) (z3.Bool, []s
 		return m.Ctx.FromBool(true), nil
 	}
 
-	terms := []z3.Bool{}
-	notModeled := []string{}
+	var terms []z3.Bool
+	var notModeled []string
 	for _, c := range conds {
 		expr, modeled := m.compileCondition(c)
 		if !modeled {

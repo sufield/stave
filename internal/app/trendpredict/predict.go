@@ -138,10 +138,10 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 		if a.Run.Now.Before(cutoff) {
 			continue
 		}
-		currentKeys := make(map[fkey]bool, len(a.Findings))
+		currentKeys := make(map[fkey]struct{}, len(a.Findings))
 		for i := range a.Findings {
 			k := fkey{string(a.Findings[i].ControlID), string(a.Findings[i].AssetID)}
-			currentKeys[k] = true
+			currentKeys[k] = struct{}{}
 			if _, exists := open[k]; !exists {
 				open[k] = &mttrWindow{
 					sev:    a.Findings[i].SeverityLabel(),
@@ -150,7 +150,7 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 			}
 		}
 		for k, w := range open {
-			if !currentKeys[k] {
+			if _, ok := currentKeys[k]; !ok {
 				w.closeAt = a.Run.Now
 				closed = append(closed, *w)
 				delete(open, k)

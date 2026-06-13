@@ -41,7 +41,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/aclements/go-z3/z3"
@@ -72,15 +72,15 @@ const (
 	classFinancial    = "financial"
 )
 
-var sensitiveClasses = map[string]bool{
-	classConfidential: true,
-	classSensitive:    true,
-	classPII:          true,
-	classFinancial:    true,
+var sensitiveClasses = map[string]struct{}{
+	classConfidential: {},
+	classSensitive:    {},
+	classPII:          {},
+	classFinancial:    {},
 }
 
 func isSensitive(b bucketWitness) bool {
-	if sensitiveClasses[strings.ToLower(b.dataClassification)] {
+	if _, ok := sensitiveClasses[strings.ToLower(b.dataClassification)]; ok {
 		return true
 	}
 	return strings.EqualFold(b.environment, "production")
@@ -323,7 +323,7 @@ func loadFixture(snapshotsDir string) (fixture, error) {
 		}
 		names = append(names, e.Name())
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 
 	for _, name := range names {
 		raw, err := os.ReadFile(filepath.Join(snapshotsDir, name))

@@ -24,7 +24,7 @@ func TestLintChain_ValidChain(t *testing.T) {
 		Preconditions:       []string{"internet_access"},
 		Postconditions:      []string{"iam_credential_theft"},
 	}
-	catalog := map[kernel.ControlID]bool{"CTL.A.001": true, "CTL.B.001": true}
+	catalog := map[kernel.ControlID]struct{}{"CTL.A.001": {}, "CTL.B.001": {}}
 	result := LintChain(chain, catalog, testRegistry)
 	if len(result.Errors) != 0 {
 		t.Errorf("valid chain should have 0 errors, got %d: %v", len(result.Errors), result.Errors)
@@ -37,7 +37,7 @@ func TestLintChain_UnknownControl(t *testing.T) {
 		ControlIDs:          []kernel.ControlID{"CTL.A.001", "CTL.UNKNOWN.001"},
 		EscalationThreshold: 2,
 	}
-	catalog := map[kernel.ControlID]bool{"CTL.A.001": true}
+	catalog := map[kernel.ControlID]struct{}{"CTL.A.001": {}}
 	result := LintChain(chain, catalog, testRegistry)
 	hasError := false
 	for _, e := range result.Errors {

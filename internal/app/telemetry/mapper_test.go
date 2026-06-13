@@ -74,7 +74,7 @@ func TestMapper_SeverityFilter(t *testing.T) {
 		{Finding: evaluation.Finding{ControlID: "CTL.C", ControlSeverity: policy.SeverityMedium, AssetID: "c"}},
 	})
 
-	filter := Filter{Severities: map[string]bool{"critical": true}}
+	filter := Filter{Severities: map[string]struct{}{"critical": {}}}
 	events := MapAssessment(a, filter, nil)
 	if len(events) != 1 {
 		t.Fatalf("expected 1 critical event, got %d", len(events))

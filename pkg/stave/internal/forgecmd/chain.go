@@ -45,7 +45,7 @@ func ChainLint(chainPath, controlsDir string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func loadControlIDs(dir string) map[kernel.ControlID]bool {
+func loadControlIDs(dir string) map[kernel.ControlID]struct{} {
 	chains, err := ctlyaml.LoadChains(dir, capabilities.Builtin())
 	_ = chains // we want control IDs, not chain IDs
 	if err != nil {
@@ -57,7 +57,7 @@ func loadControlIDs(dir string) map[kernel.ControlID]bool {
 		return nil
 	}
 
-	ids := make(map[kernel.ControlID]bool, len(paths))
+	ids := make(map[kernel.ControlID]struct{}, len(paths))
 	for _, p := range paths {
 		data, readErr := os.ReadFile(fsutil.CleanUserPath(p))
 		if readErr != nil {
@@ -67,7 +67,7 @@ func loadControlIDs(dir string) map[kernel.ControlID]bool {
 		if unmarshalErr != nil {
 			continue
 		}
-		ids[ctl.ID] = true
+		ids[ctl.ID] = struct{}{}
 	}
 	return ids
 }

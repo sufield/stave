@@ -33,7 +33,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/aclements/go-z3/z3"
@@ -344,9 +344,9 @@ func loadRealWorldFixture(snapshotsDir string) (realWorldFixture, error) {
 		}
 		names = append(names, e.Name())
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 
-	seen := map[string]bool{}
+	seen := map[string]struct{}{}
 	for _, name := range names {
 		raw, err := os.ReadFile(filepath.Join(snapshotsDir, name))
 		if err != nil {
@@ -387,10 +387,10 @@ func loadRealWorldFixture(snapshotsDir string) (realWorldFixture, error) {
 		}
 
 		for _, a := range snap.Assets {
-			if seen[a.ID] {
+			if _, ok := seen[a.ID]; ok {
 				continue
 			}
-			seen[a.ID] = true
+			seen[a.ID] = struct{}{}
 			switch a.Type {
 			case "aws_iam_user":
 				if a.ID != userARN {

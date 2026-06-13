@@ -147,9 +147,9 @@ func TestAvailableProfiles(t *testing.T) {
 	if len(profiles) < 5 {
 		t.Errorf("expected at least 5 profiles, got %d: %v", len(profiles), profiles)
 	}
-	want := map[string]bool{
-		"default": true, "pci_dss_v4": true, "hipaa": true,
-		"soc2": true, "fedramp_moderate": true,
+	want := map[string]struct{}{
+		"default": {}, "pci_dss_v4": {}, "hipaa": {},
+		"soc2": {}, "fedramp_moderate": {},
 	}
 	for _, p := range profiles {
 		delete(want, p)

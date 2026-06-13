@@ -117,7 +117,7 @@ func TestSuggest_ExemptedFindingsExcluded(t *testing.T) {
 		Window:       90 * day,
 		MinDwell:     14 * day,
 		Now:          tNow,
-		ExemptedKeys: map[string]bool{"CTL.A.001@asset1": true},
+		ExemptedKeys: map[string]struct{}{"CTL.A.001@asset1": {}},
 	})
 
 	if len(result.Chronic) != 0 {

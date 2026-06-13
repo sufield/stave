@@ -190,9 +190,9 @@ top:
 	walk(root, func(k, _ *yaml.Node) {
 		keys = append(keys, k.Value)
 	})
-	expected := map[string]bool{"top": true, "nested": true, "deep": true, "sibling": true}
+	expected := map[string]struct{}{"top": {}, "nested": {}, "deep": {}, "sibling": {}}
 	for _, k := range keys {
-		if !expected[k] {
+		if _, ok := expected[k]; !ok {
 			t.Errorf("unexpected key visited: %s", k)
 		}
 		delete(expected, k)

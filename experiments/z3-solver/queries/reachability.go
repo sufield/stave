@@ -92,20 +92,20 @@ func QueryReachability(model *compiler.CompiledModel, from, to string) *QueryRes
 // requiring an assume hop.
 func enumerateChains(model *compiler.CompiledModel, from string, maxHops int) [][]string {
 	chains := [][]string{{from}}
-	visited := map[string]bool{from: true}
+	visited := map[string]struct{}{from: {}}
 	frontier := []string{from}
 
 	for hop := 0; hop < maxHops; hop++ {
-		next := []string{}
+		var next []string
 		for _, current := range frontier {
 			for _, e := range model.TrustEdges {
 				if e.Assumer != current {
 					continue
 				}
-				if visited[e.Assumee] {
+				if _, ok := visited[e.Assumee]; ok {
 					continue
 				}
-				visited[e.Assumee] = true
+				visited[e.Assumee] = struct{}{}
 				// Build the chain reaching this assumee.
 				for _, base := range chains {
 					if base[len(base)-1] != current {

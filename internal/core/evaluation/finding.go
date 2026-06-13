@@ -347,14 +347,15 @@ func (f *Finding) MaxSeverityWith(other policy.Severity) policy.Severity {
 // is active. Replaces the
 // (filter.Severities[f.ControlSeverity.String()]) probe in
 // telemetry/mapper.go's matchesFilter.
-func (f *Finding) MatchesSeverityFilter(allowed map[string]bool) bool {
+func (f *Finding) MatchesSeverityFilter(allowed map[string]struct{}) bool {
 	if len(allowed) == 0 {
 		return true
 	}
 	if f == nil {
 		return false
 	}
-	return allowed[f.SeverityLabel()]
+	_, ok := allowed[f.SeverityLabel()]
+	return ok
 }
 
 // SLAUrgencyFactor returns the multiplier the rank-priority pass
@@ -1107,11 +1108,12 @@ func (f *Finding) OwnerKey() string {
 // cmd/apply/run_owners.go so the filter site stops doing the type
 // conversion and map probe inline. nil receiver returns false; nil
 // allowed-map returns false (no allow-set means nothing matches).
-func (f *Finding) MatchesOwner(allowed map[string]bool) bool {
+func (f *Finding) MatchesOwner(allowed map[string]struct{}) bool {
 	if f == nil || allowed == nil {
 		return false
 	}
-	return allowed[f.OwnerKey()]
+	_, ok := allowed[f.OwnerKey()]
+	return ok
 }
 
 // IsChainMember reports whether the finding contributed to one or

@@ -82,7 +82,7 @@ func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 		return &SnapshotStatus{Missing: append([]string{}, services...)}
 	}
 
-	have := make(map[string]bool)
+	have := make(map[string]struct{})
 	for _, f := range files {
 		data, readErr := os.ReadFile(filepath.Clean(f)) //nolint:gosec // CLI tool reads user-provided observation paths.
 		if readErr != nil {
@@ -90,19 +90,19 @@ func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 		}
 		text := string(data)
 		for _, svc := range services {
-			if have[svc] {
+			if _, ok := have[svc]; ok {
 				continue
 			}
 			needle := "aws_" + svc
 			if strings.Contains(text, needle) {
-				have[svc] = true
+				have[svc] = struct{}{}
 			}
 		}
 	}
 
 	out := &SnapshotStatus{}
 	for _, svc := range services {
-		if have[svc] {
+		if _, ok := have[svc]; ok {
 			out.Found = append(out.Found, svc)
 		} else {
 			out.Missing = append(out.Missing, svc)

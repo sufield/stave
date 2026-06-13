@@ -9,8 +9,8 @@ import (
 
 // Filter controls which findings are included in the telemetry stream.
 type Filter struct {
-	Severities  map[string]bool // empty = all
-	ResourceARN string          // empty = all
+	Severities  map[string]struct{} // empty = all
+	ResourceARN string              // empty = all
 }
 
 // ControlFingerprints maps control IDs to their per-control hashes.

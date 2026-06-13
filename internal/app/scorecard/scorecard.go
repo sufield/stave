@@ -38,17 +38,17 @@ func Compute(findings []remediation.Finding, frameworks []string) *Report {
 		// lets us delegate "how many of these are Critical?" to the
 		// domain method instead of branching on the severity here.
 		var perControl remediation.FindingSet
-		seen := make(map[string]bool)
+		seen := make(map[string]struct{})
 		for i := range findings {
 			f := &findings[i]
 			if _, ok := f.ControlCompliance[fwKey]; !ok {
 				continue
 			}
 			cid := string(f.ControlID)
-			if seen[cid] {
+			if _, ok := seen[cid]; ok {
 				continue
 			}
-			seen[cid] = true
+			seen[cid] = struct{}{}
 			perControl = append(perControl, *f)
 		}
 		total := len(perControl)

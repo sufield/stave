@@ -45,7 +45,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/aclements/go-z3/z3"
@@ -159,8 +159,8 @@ func finding1ResourcePatternMismatch(key string, state apiState) bool {
 		}
 	}
 
-	allowedIdx := []int{}
-	deniedIdx := []int{}
+	var allowedIdx []int
+	var deniedIdx []int
 	for i, w := range witnesses {
 		if resourceMatches(allowResources, w.resource) {
 			allowedIdx = append(allowedIdx, i)
@@ -246,7 +246,7 @@ func finding2VpcWideAccess(key string, state apiState) bool {
 	// unconditional Allow does, and the witness reaches the
 	// API.
 
-	denyByes := []int{} // witnesses NOT denied
+	var denyByes []int // witnesses NOT denied
 	for i, w := range witnesses {
 		denied := false
 		for _, st := range state.statements {
@@ -268,7 +268,7 @@ func finding2VpcWideAccess(key string, state apiState) bool {
 	intSort := ctx.IntSort()
 	req := ctx.IntConst("vpce_idx")
 
-	intendedIdx := []int{}
+	var intendedIdx []int
 	for i, w := range witnesses {
 		if w.intended {
 			intendedIdx = append(intendedIdx, i)
@@ -347,7 +347,7 @@ func finding3NoAuthCompound(key string, state apiState) bool {
 		{vpcEndpoint: "vpce-0999888777666555"},
 		{vpcEndpoint: "vpce-0abcdefabcdefabcd"},
 	}
-	denyByes := []int{}
+	var denyByes []int
 	for i, w := range witnesses {
 		denied := false
 		for _, st := range state.statements {
@@ -369,7 +369,7 @@ func finding3NoAuthCompound(key string, state apiState) bool {
 	intSort := ctx.IntSort()
 	req := ctx.IntConst("vpce_idx_compound")
 
-	intendedIdx := []int{}
+	var intendedIdx []int
 	for i, w := range witnesses {
 		if w.intended {
 			intendedIdx = append(intendedIdx, i)
@@ -509,7 +509,7 @@ func loadAPIConfig(snapshotsDir string) (apiState, error) {
 		}
 		names = append(names, e.Name())
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 
 	for _, name := range names {
 		raw, err := os.ReadFile(filepath.Join(snapshotsDir, name))

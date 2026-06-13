@@ -340,9 +340,9 @@ func annotateOwners(report *evaluation.ComplianceReport, teamManifest string, ow
 	if len(ownerFilter) == 0 {
 		return nil
 	}
-	allowed := make(map[string]bool, len(ownerFilter))
+	allowed := make(map[string]struct{}, len(ownerFilter))
 	for _, id := range ownerFilter {
-		allowed[strings.TrimSpace(id)] = true
+		allowed[strings.TrimSpace(id)] = struct{}{}
 	}
 	filtered := make([]evaluation.Finding, 0, len(report.Findings))
 	for i := range report.Findings {

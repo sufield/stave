@@ -11,7 +11,7 @@ func TestOutOfScope_ParsesAndIsWellFormed(t *testing.T) {
 		t.Fatal("expected at least one out-of-scope entry")
 	}
 
-	seen := map[string]bool{}
+	seen := map[string]struct{}{}
 	for _, e := range entries {
 		if e.ID == "" {
 			t.Errorf("entry %q has empty id", e.Label)
@@ -22,10 +22,10 @@ func TestOutOfScope_ParsesAndIsWellFormed(t *testing.T) {
 		if e.Reason == "" {
 			t.Errorf("entry %q has empty reason", e.ID)
 		}
-		if seen[e.ID] {
+		if _, ok := seen[e.ID]; ok {
 			t.Errorf("duplicate out-of-scope id %q", e.ID)
 		}
-		seen[e.ID] = true
+		seen[e.ID] = struct{}{}
 	}
 }
 

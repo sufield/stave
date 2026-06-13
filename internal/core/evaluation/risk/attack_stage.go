@@ -51,7 +51,7 @@ func BuildAttackStageSummary(
 	// which is the zero value of the severity map and would otherwise be
 	// indistinguishable from "no failure here."
 	worstPerStage := make(map[kernel.AttackStage]policy.Severity)
-	failedStages := make(map[kernel.AttackStage]bool)
+	failedStages := make(map[kernel.AttackStage]struct{})
 
 	for i := range failures {
 		cid := failures[i].ControlID
@@ -63,7 +63,7 @@ func BuildAttackStageSummary(
 		if stage == "" {
 			continue
 		}
-		failedStages[stage] = true
+		failedStages[stage] = struct{}{}
 		sev := ctl.Severity
 		if sev > worstPerStage[stage] {
 			worstPerStage[stage] = sev
@@ -73,7 +73,7 @@ func BuildAttackStageSummary(
 	// Build summary with all known stages.
 	summary := make(map[kernel.AttackStage]string, len(allAttackStages))
 	for _, stage := range allAttackStages {
-		if !failedStages[stage] {
+		if _, ok := failedStages[stage]; !ok {
 			summary[stage] = "PASS"
 			continue
 		}
@@ -94,10 +94,10 @@ func BuildAttackStageSummary(
 // AttackStagesFromFindings extracts the unique, sorted attack stages
 // from a set of compound findings.
 func AttackStagesFromFindings(findings []findingsdata.CompoundFinding) []kernel.AttackStage {
-	seen := make(map[kernel.AttackStage]bool)
+	seen := make(map[kernel.AttackStage]struct{})
 	for i := range findings {
 		for _, s := range findings[i].AttackStages {
-			seen[s] = true
+			seen[s] = struct{}{}
 		}
 	}
 	stages := make([]kernel.AttackStage, 0, len(seen))

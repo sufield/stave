@@ -98,16 +98,16 @@ func CreateDurationFinding(in DurationFindingInput) (*evaluation.Finding, error)
 // Stable order: identity before resource. Returns [RootCauseGeneral] if
 // misconfigurations exist but none are categorized.
 func DeriveRootCauses(misconfigs []policy.Misconfiguration) []evaluation.RootCause {
-	found := make(map[policy.Category]bool)
+	found := make(map[policy.Category]struct{})
 	for _, mc := range misconfigs {
-		found[mc.Category] = true
+		found[mc.Category] = struct{}{}
 	}
 
 	var causes []evaluation.RootCause
-	if found[policy.CategoryIdentity] {
+	if _, ok := found[policy.CategoryIdentity]; ok {
 		causes = append(causes, evaluation.RootCauseIdentity)
 	}
-	if found[policy.CategoryResource] {
+	if _, ok := found[policy.CategoryResource]; ok {
 		causes = append(causes, evaluation.RootCauseResource)
 	}
 	if len(causes) == 0 && len(misconfigs) > 0 {

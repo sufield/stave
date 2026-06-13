@@ -56,12 +56,12 @@ func Diff(before, after asset.Snapshot) *DiffResult {
 	afterIndex := indexAssets(after.Assets)
 
 	// Collect all asset IDs, sorted.
-	allIDs := make(map[asset.ID]bool)
+	allIDs := make(map[asset.ID]struct{})
 	for id := range beforeIndex {
-		allIDs[id] = true
+		allIDs[id] = struct{}{}
 	}
 	for id := range afterIndex {
-		allIDs[id] = true
+		allIDs[id] = struct{}{}
 	}
 	sortedIDs := make([]asset.ID, 0, len(allIDs))
 	for id := range allIDs {

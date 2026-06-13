@@ -249,12 +249,12 @@ func TestControlLoader_CanonicalS3DirNoDuplicates(t *testing.T) {
 	}
 
 	// Double-check: no duplicates (the loader already enforces this, but belt-and-suspenders)
-	idSet := make(map[kernel.ControlID]bool)
+	idSet := make(map[kernel.ControlID]struct{})
 	for _, ctl := range controls {
-		if idSet[ctl.ID] {
+		if _, ok := idSet[ctl.ID]; ok {
 			t.Errorf("duplicate ID in canonical set: %s", ctl.ID)
 		}
-		idSet[ctl.ID] = true
+		idSet[ctl.ID] = struct{}{}
 	}
 }
 

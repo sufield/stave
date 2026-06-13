@@ -43,7 +43,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/aclements/go-z3/z3"
@@ -452,9 +452,9 @@ func loadFixture(snapshotsDir string) (fixture, error) {
 		}
 		names = append(names, e.Name())
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 
-	seen := map[string]bool{}
+	seen := map[string]struct{}{}
 	for _, name := range names {
 		raw, err := os.ReadFile(filepath.Join(snapshotsDir, name))
 		if err != nil {
@@ -506,10 +506,10 @@ func loadFixture(snapshotsDir string) (fixture, error) {
 			return f, err
 		}
 		for _, a := range snap.Assets {
-			if seen[a.ID] {
+			if _, ok := seen[a.ID]; ok {
 				continue
 			}
-			seen[a.ID] = true
+			seen[a.ID] = struct{}{}
 			id := a.Properties.Identity
 			switch a.Type {
 			case "aws_cognito_user_pool":

@@ -184,11 +184,11 @@ func ValidateAcceptances(file string) ([]string, error) {
 	}
 	// Load the built-in catalog for compensating-control validation. Catalog
 	// load errors are tolerated: the field/date checks are still useful.
-	knownIDs := make(map[string]bool)
+	knownIDs := make(map[string]struct{})
 	store := ctlbuiltin.NewControlStore(controldata.FS, ".", ctlbuiltin.WithAliasResolver(predicate.ResolverFunc()))
 	if controls, loadErr := store.All(); loadErr == nil {
 		for i := range controls {
-			knownIDs[string(controls[i].ID)] = true
+			knownIDs[string(controls[i].ID)] = struct{}{}
 		}
 	}
 	return f.ValidateWithCatalog(knownIDs), nil

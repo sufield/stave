@@ -125,9 +125,9 @@ func printSeverityBreakdown(a *stave.Assessment) {
 }
 
 func printAttackSurface(a *stave.Assessment) {
-	assets := map[stave.AssetID]bool{}
+	assets := map[stave.AssetID]struct{}{}
 	for _, f := range a.Findings {
-		assets[f.AssetID] = true
+		assets[f.AssetID] = struct{}{}
 	}
 	fmt.Println("Attack Surface")
 	fmt.Println(strings.Repeat("─", 40))

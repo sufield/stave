@@ -62,11 +62,13 @@ func TestLoadFiltered_ByScopeTags(t *testing.T) {
 
 	// Verify all returned controls have the required tags
 	for _, ctl := range controls {
-		tags := make(map[kernel.ScopeTag]bool, len(ctl.ScopeTags))
+		tags := make(map[kernel.ScopeTag]struct{}, len(ctl.ScopeTags))
 		for _, tag := range ctl.ScopeTags {
-			tags[tag] = true
+			tags[tag] = struct{}{}
 		}
-		if !tags["aws"] || !tags["s3"] {
+		if _, ok1 := tags["aws"]; !ok1 {
+			t.Errorf("control %s scope_tags %v does not contain [aws, s3]", ctl.ID, ctl.ScopeTags)
+		} else if _, ok2 := tags["s3"]; !ok2 {
 			t.Errorf("control %s scope_tags %v does not contain [aws, s3]", ctl.ID, ctl.ScopeTags)
 		}
 	}
@@ -94,12 +96,12 @@ func TestLoadAll_NoDuplicateIDs(t *testing.T) {
 	if err != nil {
 		t.Fatalf("All failed: %v", err)
 	}
-	seen := make(map[kernel.ControlID]bool, len(controls))
+	seen := make(map[kernel.ControlID]struct{}, len(controls))
 	for _, ctl := range controls {
-		if seen[ctl.ID] {
+		if _, ok := seen[ctl.ID]; ok {
 			t.Errorf("duplicate control ID: %s", ctl.ID)
 		}
-		seen[ctl.ID] = true
+		seen[ctl.ID] = struct{}{}
 	}
 }
 

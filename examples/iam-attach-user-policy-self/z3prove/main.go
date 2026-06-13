@@ -51,7 +51,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/aclements/go-z3/z3"
@@ -224,7 +224,7 @@ func allWitnessIndices() []int {
 }
 
 func dangerousIndices() []int {
-	out := []int{}
+	var out []int
 	for i, w := range witnesses {
 		if w.dangerous {
 			out = append(out, i)
@@ -289,7 +289,7 @@ func loadUserPolicies(snapshotsDir string) (userArn string, statements []stateme
 		}
 		names = append(names, e.Name())
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 
 	for _, name := range names {
 		raw, err := os.ReadFile(filepath.Join(snapshotsDir, name))

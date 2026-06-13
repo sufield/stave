@@ -32,13 +32,13 @@ func TestHIPAAControlsExistInPack(t *testing.T) {
 		"CTL.S3.PRESIGNED.001",
 	}
 
-	controlSet := make(map[kernel.ControlID]bool)
+	controlSet := make(map[kernel.ControlID]struct{})
 	for _, id := range hipaa.Controls {
-		controlSet[id] = true
+		controlSet[id] = struct{}{}
 	}
 
 	for _, id := range required {
-		if !controlSet[id] {
+		if _, ok := controlSet[id]; !ok {
 			t.Errorf("HIPAA pack missing control %s", id)
 		}
 	}

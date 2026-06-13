@@ -58,22 +58,22 @@ func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinitio
 	// the catalog-wide count of every control reading that path,
 	// including VPC/security-group controls that never see a
 	// Lambda asset.
-	controlAppliesTo := map[kernel.ControlID]map[kernel.AssetType]bool{}
+	controlAppliesTo := map[kernel.ControlID]map[kernel.AssetType]struct{}{}
 	for i := range controls {
 		ctl := &controls[i]
-		m := map[kernel.AssetType]bool{}
+		m := map[kernel.AssetType]struct{}{}
 		for _, at := range ctl.ApplicableAssetTypes {
-			m[at] = true
+			m[at] = struct{}{}
 		}
 		controlAppliesTo[ctl.ID] = m
 	}
-	controlReadsPath := map[kernel.ControlID]map[string]bool{}
+	controlReadsPath := map[kernel.ControlID]map[string]struct{}{}
 	for path, ctls := range idx.PathToControls {
 		for _, id := range ctls {
 			if controlReadsPath[id] == nil {
-				controlReadsPath[id] = map[string]bool{}
+				controlReadsPath[id] = map[string]struct{}{}
 			}
-			controlReadsPath[id][path] = true
+			controlReadsPath[id][path] = struct{}{}
 		}
 	}
 
@@ -85,8 +85,10 @@ func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinitio
 		// path, so we have to filter here per (path, type).
 		var controlsBlocked []kernel.ControlID
 		for _, id := range idx.PathToControls[k.p] {
-			if controlAppliesTo[id][k.t] {
-				controlsBlocked = append(controlsBlocked, id)
+			if at, ok := controlAppliesTo[id]; ok {
+				if _, ok2 := at[k.t]; ok2 {
+					controlsBlocked = append(controlsBlocked, id)
+				}
 			}
 		}
 		// Same intersection for chains: a chain is blocked by
@@ -101,7 +103,15 @@ func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinitio
 				}
 				blocks := false
 				for _, member := range chains[ci].ControlIDs {
-					if controlReadsPath[member][k.p] && controlAppliesTo[member][k.t] {
+					var reads bool
+					if rp, ok := controlReadsPath[member]; ok {
+						_, reads = rp[k.p]
+					}
+					var applies bool
+					if at, ok := controlAppliesTo[member]; ok {
+						_, applies = at[k.t]
+					}
+					if reads && applies {
 						blocks = true
 						break
 					}
@@ -112,7 +122,7 @@ func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinitio
 				break
 			}
 		}
-		isIntent := intentSet[k.p]
+		_, isIntent := intentSet[k.p]
 		gaps = append(gaps, FieldGap{
 			PropertyPath:         k.p,
 			AssetType:            k.t,
@@ -203,14 +213,14 @@ func snapshotOf(_ asset.Asset, snaps []asset.Snapshot) asset.Snapshot {
 // paths. Hardcoded for v1; a follow-on commit will read these
 // from internal/controldata/taxonomy/intent_properties.yaml so
 // the set grows without code edits.
-func intentPaths() map[string]bool {
-	return map[string]bool{
-		"properties.storage.tags.data_classification": true,
-		"properties.storage.tags.environment":         true,
-		"properties.identity.tags.role-type":          true,
-		"properties.identity.tags.environment":        true,
-		"properties.compute.tags.environment":         true,
-		"properties.ai.tags.environment":              true,
+func intentPaths() map[string]struct{} {
+	return map[string]struct{}{
+		"properties.storage.tags.data_classification": {},
+		"properties.storage.tags.environment":         {},
+		"properties.identity.tags.role-type":          {},
+		"properties.identity.tags.environment":        {},
+		"properties.compute.tags.environment":         {},
+		"properties.ai.tags.environment":              {},
 	}
 }
 

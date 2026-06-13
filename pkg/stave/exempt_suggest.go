@@ -48,17 +48,17 @@ func SuggestExemptions(ctx context.Context, cfg SuggestConfig) ([]byte, error) {
 
 	var result *exemptionsuggest.Result
 	if len(history) > 0 {
-		exemptedKeys := make(map[string]bool)
+		exemptedKeys := make(map[string]struct{})
 		if cfg.AcceptanceFile != "" {
 			if af, loadErr := appexempt.Load(cfg.AcceptanceFile); loadErr == nil {
 				for i := range af.Acknowledgments {
 					if af.Acknowledgments[i].IsActive() {
-						exemptedKeys[af.Acknowledgments[i].ID] = true
+						exemptedKeys[af.Acknowledgments[i].ID] = struct{}{}
 					}
 				}
 				for i := range af.Exceptions {
 					key := af.Exceptions[i].ControlID + "@" + af.Exceptions[i].AssetID
-					exemptedKeys[key] = true
+					exemptedKeys[key] = struct{}{}
 				}
 			}
 		}

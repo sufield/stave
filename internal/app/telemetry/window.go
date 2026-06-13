@@ -30,10 +30,10 @@ func (w *WindowTracker) Track(resourceID, controlID string, capturedAt time.Time
 // CloseAbsent closes windows for any (control, resource) pairs that
 // are NOT in the current finding set. Call after processing all findings
 // for one assessment. Returns the set of closed window IDs.
-func (w *WindowTracker) CloseAbsent(currentFindings map[string]bool) []string {
+func (w *WindowTracker) CloseAbsent(currentFindings map[string]struct{}) []string {
 	var closed []string
 	for key, wid := range w.active {
-		if !currentFindings[key] {
+		if _, ok := currentFindings[key]; !ok {
 			closed = append(closed, wid)
 			delete(w.active, key)
 		}

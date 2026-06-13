@@ -31,7 +31,7 @@ func TestWindowTracker_WindowCloses(t *testing.T) {
 	tracker.Track("bucket-a", "CTL.S3.001", t1())
 
 	// Assessment at t2 has no finding for this pair → window closes.
-	closed := tracker.CloseAbsent(map[string]bool{})
+	closed := tracker.CloseAbsent(map[string]struct{}{})
 	if len(closed) != 1 {
 		t.Fatalf("expected 1 closed window, got %d", len(closed))
 	}
@@ -42,7 +42,7 @@ func TestWindowTracker_WindowReopens(t *testing.T) {
 	wid1 := tracker.Track("bucket-a", "CTL.S3.001", t1())
 
 	// Close it.
-	tracker.CloseAbsent(map[string]bool{})
+	tracker.CloseAbsent(map[string]struct{}{})
 
 	// New violation at t3 — should get a new window_id.
 	wid2 := tracker.Track("bucket-a", "CTL.S3.001", t3())

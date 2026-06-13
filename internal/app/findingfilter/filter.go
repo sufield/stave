@@ -252,12 +252,12 @@ func classifyCurrent(in Input, timeline map[findingKey]*appearance, gapCount map
 // assessment but absent from the current set — i.e. fixed since last
 // run.
 func buildResolved(in Input, latest *report.Assessment, timeline map[findingKey]*appearance) []ResolvedFinding {
-	currentKeys := make(map[findingKey]bool, len(in.CurrentFindings))
+	currentKeys := make(map[findingKey]struct{}, len(in.CurrentFindings))
 	for i := range in.CurrentFindings {
 		currentKeys[findingKey{
 			ControlID: in.CurrentFindings[i].ControlID,
 			AssetID:   in.CurrentFindings[i].AssetID,
-		}] = true
+		}] = struct{}{}
 	}
 
 	var resolved []ResolvedFinding
@@ -266,7 +266,7 @@ func buildResolved(in Input, latest *report.Assessment, timeline map[findingKey]
 			ControlID: latest.Findings[i].ControlID,
 			AssetID:   latest.Findings[i].AssetID,
 		}
-		if currentKeys[k] {
+		if _, ok := currentKeys[k]; ok {
 			continue
 		}
 		ap := timeline[k]
@@ -299,12 +299,12 @@ func computeGapCounts(sorted []*report.Assessment) map[findingKey]int {
 	tracker := make(map[findingKey]*state)
 
 	for idx, a := range sorted {
-		currentKeys := make(map[findingKey]bool, len(a.Findings))
+		currentKeys := make(map[findingKey]struct{}, len(a.Findings))
 		for i := range a.Findings {
 			currentKeys[findingKey{
 				ControlID: a.Findings[i].ControlID,
 				AssetID:   a.Findings[i].AssetID,
-			}] = true
+			}] = struct{}{}
 		}
 
 		if idx == 0 {
@@ -317,7 +317,7 @@ func computeGapCounts(sorted []*report.Assessment) map[findingKey]int {
 		// Shift current → prev.
 		for k, s := range tracker {
 			s.wasPresentPrev = s.wasPresentCurr
-			s.wasPresentCurr = currentKeys[k]
+			_, s.wasPresentCurr = currentKeys[k]
 		}
 		// Add new keys.
 		for k := range currentKeys {

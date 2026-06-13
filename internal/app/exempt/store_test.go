@@ -255,7 +255,7 @@ func TestValidateWithCatalog_UnknownCompensating(t *testing.T) {
 		},
 	}
 
-	knownIDs := map[string]bool{"CTL.KNOWN.001": true}
+	knownIDs := map[string]struct{}{"CTL.KNOWN.001": {}}
 	errs := f.ValidateWithCatalog(knownIDs)
 
 	found := false
@@ -284,7 +284,7 @@ func TestValidateWithCatalog_AllKnown(t *testing.T) {
 		},
 	}
 
-	knownIDs := map[string]bool{"CTL.B": true}
+	knownIDs := map[string]struct{}{"CTL.B": {}}
 	errs := f.ValidateWithCatalog(knownIDs)
 	if len(errs) != 0 {
 		t.Errorf("expected no errors, got: %v", errs)

@@ -323,7 +323,7 @@ func (f *AcceptanceFile) Remove(id, timestamp string) error {
 
 // ValidateWithCatalog checks all entries including compensating control IDs
 // against the provided set of known control IDs.
-func (f *AcceptanceFile) ValidateWithCatalog(knownIDs map[string]bool) []string {
+func (f *AcceptanceFile) ValidateWithCatalog(knownIDs map[string]struct{}) []string {
 	errs := f.Validate()
 	if len(knownIDs) == 0 {
 		return errs
@@ -331,7 +331,7 @@ func (f *AcceptanceFile) ValidateWithCatalog(knownIDs map[string]bool) []string 
 	for i := range f.Acknowledgments {
 		a := &f.Acknowledgments[i]
 		for _, cc := range a.CompensatingControls {
-			if !knownIDs[cc] {
+			if _, ok := knownIDs[cc]; !ok {
 				errs = append(errs, fmt.Sprintf("acknowledgment[%d]: compensating control %q not found in catalog", i, cc))
 			}
 		}

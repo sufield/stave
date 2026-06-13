@@ -25,15 +25,15 @@ func TestExposureControlIDs_Complete(t *testing.T) {
 	if len(all) != 11 {
 		t.Fatalf("expected 11 exposure control IDs, got %d — update all() in control_ids.go", len(all))
 	}
-	seen := make(map[kernel.ControlID]bool)
+	seen := make(map[kernel.ControlID]struct{})
 	for _, id := range all {
 		if id == "" {
 			t.Fatal("empty control ID in exposureIDs.all()")
 		}
-		if seen[id] {
+		if _, ok := seen[id]; ok {
 			t.Fatalf("duplicate control ID %s in exposureIDs.all()", id)
 		}
-		seen[id] = true
+		seen[id] = struct{}{}
 	}
 }
 

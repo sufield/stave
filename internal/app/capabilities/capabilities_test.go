@@ -21,9 +21,9 @@ func TestCapabilities_ConnectorCount(t *testing.T) {
 func TestCapabilities_ConnectorsExpectedSet(t *testing.T) {
 	caps := capabilities.Summarize("test-v1")
 
-	got := make(map[kernel.ObservationSourceType]bool, len(caps.DataIngress.Connectors))
+	got := make(map[kernel.ObservationSourceType]struct{}, len(caps.DataIngress.Connectors))
 	for _, c := range caps.DataIngress.Connectors {
-		got[c.Type] = true
+		got[c.Type] = struct{}{}
 	}
 
 	want := []kernel.ObservationSourceType{
@@ -31,7 +31,7 @@ func TestCapabilities_ConnectorsExpectedSet(t *testing.T) {
 	}
 
 	for _, sourceType := range want {
-		if !got[sourceType] {
+		if _, ok := got[sourceType]; !ok {
 			t.Errorf("connector %q missing from capabilities", sourceType)
 		}
 	}
@@ -103,7 +103,7 @@ func TestCapabilities_ComplianceSupport(t *testing.T) {
 	if !caps.ComplianceSupport.Enabled {
 		t.Fatal("compliance.enabled should be true")
 	}
-	wantFormats := map[string]bool{"json": true, "markdown": true, "sarif": true}
+	wantFormats := map[string]struct{}{"json": {}, "markdown": {}, "sarif": {}}
 	for _, format := range caps.ComplianceSupport.ReportFormats {
 		delete(wantFormats, format)
 	}

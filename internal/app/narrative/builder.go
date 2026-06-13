@@ -311,9 +311,9 @@ func buildChainContext(f *remediation.Finding, chainDefs []policy.ChainDefinitio
 	}
 
 	// Build member control status.
-	failingIDs := make(map[string]bool, len(allFindings))
+	failingIDs := make(map[string]struct{}, len(allFindings))
 	for i := range allFindings {
-		failingIDs[string(allFindings[i].ControlID)] = true
+		failingIDs[string(allFindings[i].ControlID)] = struct{}{}
 	}
 
 	if chainDef != nil {
@@ -321,7 +321,7 @@ func buildChainContext(f *remediation.Finding, chainDefs []policy.ChainDefinitio
 			status := StatusPassing
 			if string(ctlID) == string(f.ControlID) {
 				status = StatusThisFinding
-			} else if failingIDs[string(ctlID)] {
+			} else if _, ok := failingIDs[string(ctlID)]; ok {
 				status = StatusAlsoFailing
 			}
 			ctx.MemberControls = append(ctx.MemberControls, ChainMember{

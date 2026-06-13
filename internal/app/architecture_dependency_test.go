@@ -139,29 +139,29 @@ func TestNoFloatingInternalPackages(t *testing.T) {
 	root := findModuleRoot(t)
 	internalDir := filepath.Join(root, "internal")
 
-	allowed := map[string]bool{
+	allowed := map[string]struct{}{
 		// Architectural layers tested by TestHexagonalDependencyDirection.
-		"core":     true,
-		"app":      true,
-		"adapters": true,
-		"platform": true,
-		"cli":      true,
+		"core":     {},
+		"app":      {},
+		"adapters": {},
+		"platform": {},
+		"cli":      {},
 
 		// Cross-cutting helpers carved out by category. Each has a
 		// clear scope; new floating packages are not.
-		"compliance":  true, // compliance-framework metadata
-		"config":      true, // CLI config-file loading
-		"contracts":   true, // legacy global contracts (internal/app/contracts is the active one)
-		"controldata": true, // pre-Phase-5 control data; future move into adapters/controls
-		"doctor":      true, // doctor diagnostics; semi-cmd-like
-		"env":         true, // env-var loading helpers
-		"profile":     true, // compliance profile evaluation
-		"sanitize":    true, // ID sanitisation helpers
-		"testutil":    true, // shared test helpers
-		"tools":       true, // build-time code-gen tools
-		"util":        true, // small pure-functional utilities
-		"version":     true, // version-string constants
-		"yamlutil":    true, // yaml parsing helpers
+		"compliance":  {}, // compliance-framework metadata
+		"config":      {}, // CLI config-file loading
+		"contracts":   {}, // legacy global contracts (internal/app/contracts is the active one)
+		"controldata": {}, // pre-Phase-5 control data; future move into adapters/controls
+		"doctor":      {}, // doctor diagnostics; semi-cmd-like
+		"env":         {}, // env-var loading helpers
+		"profile":     {}, // compliance profile evaluation
+		"sanitize":    {}, // ID sanitisation helpers
+		"testutil":    {}, // shared test helpers
+		"tools":       {}, // build-time code-gen tools
+		"util":        {}, // small pure-functional utilities
+		"version":     {}, // version-string constants
+		"yamlutil":    {}, // yaml parsing helpers
 	}
 
 	entries, err := os.ReadDir(internalDir)
@@ -178,7 +178,7 @@ func TestNoFloatingInternalPackages(t *testing.T) {
 		if strings.HasPrefix(name, ".") {
 			continue
 		}
-		if !allowed[name] {
+		if _, ok := allowed[name]; !ok {
 			floating = append(floating, name)
 		}
 	}

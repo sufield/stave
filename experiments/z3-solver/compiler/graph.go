@@ -65,7 +65,7 @@ func (m *CompiledModel) CanAssumeBounded(from, to string, maxHops int) bool {
 	// Multi-hop: depth-first walk over TrustEdges. Cycles are
 	// guarded by the visited set so a self-trust loop does not
 	// cause a stack blow-up.
-	visited := map[string]bool{from: true}
+	visited := map[string]struct{}{from: {}}
 	var dfs func(current string, depth int) bool
 	dfs = func(current string, depth int) bool {
 		if depth == 0 {
@@ -78,10 +78,10 @@ func (m *CompiledModel) CanAssumeBounded(from, to string, maxHops int) bool {
 			if e.Assumee == to {
 				return true
 			}
-			if visited[e.Assumee] {
+			if _, ok := visited[e.Assumee]; ok {
 				continue
 			}
-			visited[e.Assumee] = true
+			visited[e.Assumee] = struct{}{}
 			if dfs(e.Assumee, depth-1) {
 				return true
 			}

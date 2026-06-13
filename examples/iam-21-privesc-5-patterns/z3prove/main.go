@@ -54,7 +54,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/aclements/go-z3/z3"
@@ -238,7 +238,7 @@ func printSummary(key string, results []queryResult) {
 	for n := range rhinoReachSet {
 		rhinoIDs = append(rhinoIDs, n)
 	}
-	sort.Ints(rhinoIDs)
+	slices.Sort(rhinoIDs)
 
 	fmt.Printf("  registry total: %d methods across 5 patterns\n", totalReg)
 	fmt.Printf("  reachable:      %d methods\n", totalReach)
@@ -464,9 +464,9 @@ func loadFixture(snapshotsDir string) (fixture, error) {
 		}
 		names = append(names, e.Name())
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 
-	seenRoles := map[string]bool{}
+	seenRoles := map[string]struct{}{}
 	for _, name := range names {
 		raw, err := os.ReadFile(filepath.Join(snapshotsDir, name))
 		if err != nil {
@@ -496,10 +496,10 @@ func loadFixture(snapshotsDir string) (fixture, error) {
 
 		for _, a := range snap.Assets {
 			if a.Type == "aws_iam_user" && a.ID == userARN {
-				if seenRoles[a.ID] {
+				if _, ok := seenRoles[a.ID]; ok {
 					continue
 				}
-				seenRoles[a.ID] = true
+				seenRoles[a.ID] = struct{}{}
 				for _, p := range a.Properties.Identity.Policies.AttachedPolicies {
 					for _, st := range p.Statements {
 						switch strings.ToUpper(st.Effect) {
@@ -512,10 +512,10 @@ func loadFixture(snapshotsDir string) (fixture, error) {
 				}
 			}
 			if a.Type == "aws_iam_role" {
-				if seenRoles[a.ID] {
+				if _, ok := seenRoles[a.ID]; ok {
 					continue
 				}
-				seenRoles[a.ID] = true
+				seenRoles[a.ID] = struct{}{}
 				f.adminRoles = append(f.adminRoles, adminRole{
 					arn:             a.ID,
 					trustedServices: a.Properties.Identity.TrustedServices,

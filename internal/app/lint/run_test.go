@@ -33,17 +33,17 @@ items:
 		t.Fatalf("Dir error: %v", err)
 	}
 
-	codes := map[string]bool{}
+	codes := map[string]struct{}{}
 	for _, d := range diags {
-		codes[d.RuleID] = true
+		codes[d.RuleID] = struct{}{}
 	}
-	if !codes["CTL_ID_NAMESPACE"] {
+	if _, ok := codes["CTL_ID_NAMESPACE"]; !ok {
 		t.Error("expected CTL_ID_NAMESPACE diagnostic")
 	}
-	if !codes["CTL_NONDETERMINISTIC_FIELD"] {
+	if _, ok := codes["CTL_NONDETERMINISTIC_FIELD"]; !ok {
 		t.Error("expected CTL_NONDETERMINISTIC_FIELD diagnostic")
 	}
-	if !codes["CTL_ORDERING_HINT"] {
+	if _, ok := codes["CTL_ORDERING_HINT"]; !ok {
 		t.Error("expected CTL_ORDERING_HINT diagnostic")
 	}
 	if ErrorCount(diags) == 0 {
