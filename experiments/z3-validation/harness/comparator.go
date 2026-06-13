@@ -1,6 +1,9 @@
 package harness
 
-import "sort"
+import (
+	"cmp"
+	"slices"
+)
 
 // Compare joins CEL findings against Z3 findings via the supplied
 // control-mapping (Stave control ID → Z3 query name) and produces
@@ -29,11 +32,11 @@ func Compare(cel []CELFinding, z3 []Z3Finding, mapping map[string]string, fixtur
 	z3ByAssetQuery := indexZ3(z3)
 
 	keys := mergeKeys(celByAssetQuery, z3ByAssetQuery)
-	sort.Slice(keys, func(i, j int) bool {
-		if keys[i].asset != keys[j].asset {
-			return keys[i].asset < keys[j].asset
+	slices.SortFunc(keys, func(a, b assetQuery) int {
+		if a.asset != b.asset {
+			return cmp.Compare(a.asset, b.asset)
 		}
-		return keys[i].query < keys[j].query
+		return cmp.Compare(a.query, b.query)
 	})
 
 	out := make([]FindingComparison, 0, len(keys))
@@ -147,6 +150,6 @@ func anyControl(set map[string]struct{}) string {
 	for k := range set {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 	return keys[0]
 }

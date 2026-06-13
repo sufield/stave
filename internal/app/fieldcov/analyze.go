@@ -101,8 +101,8 @@ func Analyze(input AnalyzeInput) *Report {
 
 // collectPresentFields walks all assets in all snapshots and returns
 // the set of property field paths that exist.
-func collectPresentFields(snapshots []asset.Snapshot) map[string]bool {
-	fields := make(map[string]bool)
+func collectPresentFields(snapshots []asset.Snapshot) map[string]struct{} {
+	fields := make(map[string]struct{})
 	for _, snap := range snapshots {
 		for _, a := range snap.Assets {
 			walkProperties("properties", a.Properties, fields)
@@ -112,10 +112,10 @@ func collectPresentFields(snapshots []asset.Snapshot) map[string]bool {
 }
 
 // walkProperties recursively walks a nested map and collects all leaf paths.
-func walkProperties(prefix string, m map[string]any, out map[string]bool) {
+func walkProperties(prefix string, m map[string]any, out map[string]struct{}) {
 	for k, v := range m {
 		path := prefix + "." + k
-		out[path] = true
+		out[path] = struct{}{}
 		if nested, ok := v.(map[string]any); ok {
 			walkProperties(path, nested, out)
 		}
@@ -123,7 +123,7 @@ func walkProperties(prefix string, m map[string]any, out map[string]bool) {
 }
 
 // classifyControl determines coverage classification for a single control.
-func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]bool) ControlResult {
+func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]struct{}) ControlResult {
 	result := ControlResult{
 		ControlID:  string(ctl.ID),
 		Severity:   ctl.Severity.String(),
@@ -227,8 +227,9 @@ func collectRuleRefs(rule *policy.PredicateRule, refs []fieldRef) []fieldRef {
 // path (e.g. "properties.encryption") must NOT satisfy presence of a deeper
 // child path (e.g. "properties.encryption.enabled") — that leaf was never
 // collected and the deeper field is genuinely missing.
-func fieldPresent(path string, fields map[string]bool) bool {
-	return fields[path]
+func fieldPresent(path string, fields map[string]struct{}) bool {
+	_, ok := fields[path]
+	return ok
 }
 
 // extractFrameworks returns compliance framework names from a control.

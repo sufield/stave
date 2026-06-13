@@ -95,11 +95,6 @@ func TestLoadEmbeddedProfiles_AllFivePresent(t *testing.T) {
 		t.Fatalf("len = %d, want at least 5", len(profiles))
 	}
 
-	got := make(map[string]bool, len(profiles))
-	for _, p := range profiles {
-		got[p.ID] = true
-	}
-
 	expected := map[string]int{
 		"hipaa":            17,
 		"soc2":             14,

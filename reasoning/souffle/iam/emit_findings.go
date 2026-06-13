@@ -47,6 +47,7 @@
 package main
 
 import (
+	"cmp"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -55,7 +56,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -153,15 +154,15 @@ func main() {
 
 	// Stable ordering — sort by (control_id, asset_id,
 	// evidence.misconfigurations[0].property).
-	sort.Slice(findings, func(i, j int) bool {
-		if findings[i].ControlID != findings[j].ControlID {
-			return findings[i].ControlID < findings[j].ControlID
+	slices.SortFunc(findings, func(a, b finding) int {
+		if a.ControlID != b.ControlID {
+			return cmp.Compare(a.ControlID, b.ControlID)
 		}
-		if findings[i].AssetID != findings[j].AssetID {
-			return findings[i].AssetID < findings[j].AssetID
+		if a.AssetID != b.AssetID {
+			return cmp.Compare(a.AssetID, b.AssetID)
 		}
-		return findings[i].Evidence.Misconfigurations[0].Property <
-			findings[j].Evidence.Misconfigurations[0].Property
+		return cmp.Compare(a.Evidence.Misconfigurations[0].Property,
+			b.Evidence.Misconfigurations[0].Property)
 	})
 
 	doc := document{

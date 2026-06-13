@@ -1,8 +1,9 @@
 package queries
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/aclements/go-z3/z3"
@@ -64,13 +65,13 @@ func QueryChokePoint(model *compiler.CompiledModel, reach *QueryResult) *QueryRe
 			candidates = append(candidates, i)
 		}
 	}
-	sort.Slice(candidates, func(i, j int) bool {
-		return model.Stmt[candidates[i]].AssertionName < model.Stmt[candidates[j]].AssertionName
+	slices.SortFunc(candidates, func(a, b int) int {
+		return cmp.Compare(model.Stmt[a].AssertionName, model.Stmt[b].AssertionName)
 	})
 
-	suppressed := map[int]bool{}
+	suppressed := map[int]struct{}{}
 	for _, idx := range candidates {
-		suppressed[idx] = true
+		suppressed[idx] = struct{}{}
 		if !checkGrantWithSuppression(model, terminal, action, resource, suppressed) {
 			cover = append(cover, model.Stmt[idx].AssertionName)
 			// Keep the suppression — once we know this statement
@@ -107,7 +108,7 @@ func QueryChokePoint(model *compiler.CompiledModel, reach *QueryResult) *QueryRe
 // still permitted, false when the suppression has broken the
 // grant. The implementation builds a fresh per-call solver so
 // suppression state does not leak across QueryChokePoint calls.
-func checkGrantWithSuppression(model *compiler.CompiledModel, principal, action, resource string, suppressed map[int]bool) bool {
+func checkGrantWithSuppression(model *compiler.CompiledModel, principal, action, resource string, suppressed map[int]struct{}) bool {
 	pConst, ok := model.Principals[principal]
 	if !ok {
 		return false

@@ -44,7 +44,7 @@ func TestComputeStatus_ResolvedFinding(t *testing.T) {
 		},
 	}
 	// Finding no longer active.
-	activeFindings := map[string]bool{}
+	activeFindings := map[string]struct{}{}
 
 	report := ComputeStatus(file, now, activeFindings)
 	if report.Resolved != 1 {

@@ -41,7 +41,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -116,12 +116,12 @@ var defaultHighSensitivityValues = []string{"PII", "PHI", "PCI"}
 // IAM principal asset types — mirror schema.dl's is_principal_type.
 // Used by the G3 emitter to discriminate principals from resources
 // when generating authorized facts (tag-equality joins).
-var iamPrincipalTypes = map[string]bool{
-	"aws_iam_user":           true,
-	"aws_iam_role":           true,
-	"aws_iam_federated_role": true,
-	"aws_iam_saml_provider":  true,
-	"aws_iam_sso_config":     true,
+var iamPrincipalTypes = map[string]struct{}{
+	"aws_iam_user":           {},
+	"aws_iam_role":           {},
+	"aws_iam_federated_role": {},
+	"aws_iam_saml_provider":  {},
+	"aws_iam_sso_config":     {},
 }
 
 // factLine matches the JSONL shape sirfacts emits. Only the three
@@ -247,13 +247,13 @@ func emitG3Facts(outDir string) (map[string]int, error) {
 	}
 
 	// Partition assets into principals + resources via has_type.
-	principals := map[string]bool{}
-	resources := map[string]bool{}
+	principals := map[string]struct{}{}
+	resources := map[string]struct{}{}
 	for _, t := range hasTypes {
-		if iamPrincipalTypes[t.Object] {
-			principals[t.Subject] = true
+		if _, ok := iamPrincipalTypes[t.Object]; ok {
+			principals[t.Subject] = struct{}{}
 		} else if strings.HasPrefix(t.Object, "aws_") {
-			resources[t.Subject] = true
+			resources[t.Subject] = struct{}{}
 		}
 	}
 
@@ -404,12 +404,12 @@ func readFactPairs(path string) ([]factPair, error) {
 	return out, nil
 }
 
-func sortedKeys(m map[string]bool) []string {
+func sortedKeys(m map[string]struct{}) []string {
 	out := make([]string, 0, len(m))
 	for k := range m {
 		out = append(out, k)
 	}
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }
 
@@ -481,7 +481,7 @@ func split(r io.Reader, outDir string) (map[string]int, error) {
 	for p := range buffers {
 		names = append(names, p)
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 
 	for _, pred := range names {
 		path := filepath.Join(outDir, pred+".facts")
@@ -522,7 +522,7 @@ func report(counts map[string]int, outDir string) {
 	for p := range counts {
 		preds = append(preds, p)
 	}
-	sort.Strings(preds)
+	slices.Sort(preds)
 
 	fmt.Printf("Wrote %d .facts files to %s\n", len(counts), outDir)
 	fmt.Printf("Total emitted facts: %d\n", total)

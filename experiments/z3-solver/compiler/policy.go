@@ -332,11 +332,11 @@ func (m *CompiledModel) EvaluateAccess() z3.Bool {
 // EvaluateAccess: any index in the supplied set is treated as if
 // the statement did not exist. Used by the choke-point query to
 // search for the minimum cover that breaks a grant.
-func (m *CompiledModel) EvaluateAccessWith(suppressed map[int]bool) z3.Bool {
+func (m *CompiledModel) EvaluateAccessWith(suppressed map[int]struct{}) z3.Bool {
 	allows := []z3.Bool{}
 	denies := []z3.Bool{}
 	for i := range m.Stmt {
-		if suppressed[i] {
+		if _, ok := suppressed[i]; ok {
 			continue
 		}
 		s := &m.Stmt[i]

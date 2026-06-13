@@ -46,10 +46,10 @@ func TestBugHunt_ScalarParentPrefix(t *testing.T) {
 	// Sanity: confirm the test fixture really has the scalar-parent shape the
 	// bug requires (parent collected, leaf not collected). These are not the
 	// bug assertions — they guard against a contrived/always-fail test.
-	if !presentFields["properties.encryption"] {
+	if _, ok := presentFields["properties.encryption"]; !ok {
 		t.Fatalf("fixture invalid: expected parent path %q to be collected", "properties.encryption")
 	}
-	if presentFields["properties.encryption.enabled"] {
+	if _, ok := presentFields["properties.encryption.enabled"]; ok {
 		t.Fatalf("fixture invalid: leaf path %q should NOT be collected for a scalar parent",
 			"properties.encryption.enabled")
 	}

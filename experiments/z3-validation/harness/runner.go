@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
+	"slices"
 	"time"
 )
 
@@ -233,11 +234,11 @@ func filterByResult(in []FindingComparison, result ComparisonResult) []FindingCo
 // deterministic iteration.
 func DiscoverFixtures(root string, filter func(string) bool) ([]string, error) {
 	var out []string
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() {
+		if !d.IsDir() {
 			return nil
 		}
 		if filepath.Base(path) != "observations" {
@@ -252,6 +253,6 @@ func DiscoverFixtures(root string, filter func(string) bool) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	sort.Strings(out)
+	slices.Sort(out)
 	return out, nil
 }

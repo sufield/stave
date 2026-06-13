@@ -3,6 +3,7 @@ package enginetest
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
@@ -21,21 +22,21 @@ func TestNoBannedImportsInRuntime(t *testing.T) {
 	t.Parallel()
 	// Excluded directories: vendored dependencies, dev tooling, and CLI
 	// entrypoints not shipped as part of the runtime domain.
-	excludedDirs := map[string]bool{
-		"vendor":         true,
-		"internal/tools": true,
-		"cmd":            true,
+	excludedDirs := map[string]struct{}{
+		"vendor":         {},
+		"internal/tools": {},
+		"cmd":            {},
 		// experiments/ is a separate Go module per its own go.mod;
 		// nothing in there links into the runtime binary, so the
 		// air-gap import policy does not apply.
-		"experiments": true,
+		"experiments": {},
 	}
 
 	root := findRepoRoot(t)
 
 	var violations []string
 
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				return nil
@@ -44,7 +45,7 @@ func TestNoBannedImportsInRuntime(t *testing.T) {
 		}
 
 		// Skip non-Go files
-		if info.IsDir() || !strings.HasSuffix(path, ".go") {
+		if d.IsDir() || !strings.HasSuffix(path, ".go") {
 			return nil
 		}
 
@@ -220,22 +221,22 @@ func TestNoHTTPSchemaIdentifiers(t *testing.T) {
 // The only allowed env var read is NO_COLOR.
 func TestNoCredentialEnvReads(t *testing.T) {
 	t.Parallel()
-	excludedDirs := map[string]bool{
-		"vendor":         true,
-		"internal/tools": true,
+	excludedDirs := map[string]struct{}{
+		"vendor":         {},
+		"internal/tools": {},
 	}
 
 	root := findRepoRoot(t)
 	var violations []string
 
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
 				return nil
 			}
 			return err
 		}
-		if info.IsDir() || !strings.HasSuffix(path, ".go") {
+		if d.IsDir() || !strings.HasSuffix(path, ".go") {
 			return nil
 		}
 		if strings.HasSuffix(path, "_test.go") {

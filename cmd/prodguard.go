@@ -88,14 +88,15 @@ func (d *EnvironmentDetector) Detect() Environment {
 // underlying map header.
 type SafetyPolicy struct {
 	mu              sync.RWMutex
-	blockedCommands map[string]bool
+	blockedCommands map[string]struct{}
 }
 
 // IsBlocked reports whether cmdName is on the blocked list.
 func (p *SafetyPolicy) IsBlocked(cmdName string) bool {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
-	return p.blockedCommands[cmdName]
+	_, ok := p.blockedCommands[cmdName]
+	return ok
 }
 
 // Set replaces the blocked-command list. Pass nil or empty to clear.
@@ -104,13 +105,13 @@ func (p *SafetyPolicy) IsBlocked(cmdName string) bool {
 // that would otherwise leave production protection partially in
 // place.
 func (p *SafetyPolicy) Set(cmds []string) error {
-	m := make(map[string]bool, len(cmds))
+	m := make(map[string]struct{}, len(cmds))
 	for _, c := range cmds {
 		trimmed := strings.TrimSpace(c)
 		if trimmed == "" {
 			return errors.New("SafetyPolicy.Set: blocked command name must not be empty / whitespace")
 		}
-		m[trimmed] = true
+		m[trimmed] = struct{}{}
 	}
 	p.mu.Lock()
 	p.blockedCommands = m

@@ -313,10 +313,10 @@ func TestExperiment02_ActiveChain(t *testing.T) {
 
 	// Assert resources span different classes.
 	resources := filterNodesByType(nodes, "Resource")
-	classes := make(map[string]bool)
+	classes := make(map[string]struct{})
 	for _, r := range resources {
 		if rc, ok := nodeProps(r)["resource_class"].(string); ok {
-			classes[rc] = true
+			classes[rc] = struct{}{}
 		}
 	}
 	if len(classes) < 2 {
@@ -324,13 +324,13 @@ func TestExperiment02_ActiveChain(t *testing.T) {
 	}
 
 	// Assert no duplicate edges.
-	edgeSigs := make(map[string]bool)
+	edgeSigs := make(map[string]struct{})
 	for _, e := range edges {
 		sig := e["from"].(string) + "|" + e["type"].(string) + "|" + e["to"].(string)
-		if edgeSigs[sig] {
+		if _, ok := edgeSigs[sig]; ok {
 			t.Errorf("duplicate edge: %s", sig)
 		}
-		edgeSigs[sig] = true
+		edgeSigs[sig] = struct{}{}
 	}
 }
 
@@ -385,14 +385,14 @@ func TestExperiment04_NoChain(t *testing.T) {
 	}
 
 	// Assert resource class diversity.
-	classes := make(map[string]bool)
+	classes := make(map[string]struct{})
 	for _, r := range resources {
 		if rc, ok := nodeProps(r)["resource_class"].(string); ok {
-			classes[rc] = true
+			classes[rc] = struct{}{}
 		}
 	}
 	for _, wantClass := range []string{"storage", "database", "compute", "network", "identity"} {
-		if !classes[wantClass] {
+		if _, ok := classes[wantClass]; !ok {
 			t.Errorf("missing resource class: %s (have: %v)", wantClass, classes)
 		}
 	}
@@ -510,18 +510,18 @@ func TestExperiment03_STIXExport(t *testing.T) {
 	}
 
 	// Verify object types include expected STIX types.
-	typeSet := make(map[string]bool)
+	typeSet := make(map[string]struct{})
 	for _, obj := range objects {
 		m, ok := obj.(map[string]any)
 		if !ok {
 			continue
 		}
 		if stype, ok := m["type"].(string); ok {
-			typeSet[stype] = true
+			typeSet[stype] = struct{}{}
 		}
 	}
 	for _, want := range []string{"observed-data", "infrastructure", "attack-pattern", "relationship"} {
-		if !typeSet[want] {
+		if _, ok := typeSet[want]; !ok {
 			t.Errorf("missing STIX object type: %s (have: %v)", want, typeSet)
 		}
 	}

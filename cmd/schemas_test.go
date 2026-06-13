@@ -61,12 +61,12 @@ func TestSchemasJSONOutput(t *testing.T) {
 		t.Fatal("artifact array must be non-empty")
 	}
 
-	found := map[string]bool{}
+	found := map[string]struct{}{}
 	for _, e := range got.Data {
-		found[e.Schema] = true
+		found[e.Schema] = struct{}{}
 	}
 	for _, want := range []string{"ctrl.v1", "obs.v0.1", "out.v0.1"} {
-		if !found[want] {
+		if _, ok := found[want]; !ok {
 			t.Errorf("data missing schema %q", want)
 		}
 	}

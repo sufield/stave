@@ -242,13 +242,13 @@ func TestExperiment02_ActiveChain(t *testing.T) {
 	}
 
 	// No duplicate edges.
-	seen := make(map[string]bool)
+	seen := make(map[string]struct{})
 	for _, e := range g.Edges {
 		key := e.From + "|" + e.To + "|" + string(e.Type)
-		if seen[key] {
+		if _, ok := seen[key]; ok {
 			t.Errorf("duplicate edge: %s -> %s (%s)", e.From, e.To, e.Type)
 		}
-		seen[key] = true
+		seen[key] = struct{}{}
 	}
 }
 
@@ -292,12 +292,12 @@ func TestExperiment03_ComplianceMapping(t *testing.T) {
 	}
 
 	// Check requirement IDs.
-	reqIDs := make(map[string]bool)
+	reqIDs := make(map[string]struct{})
 	for _, r := range reqs {
-		reqIDs[r.ID] = true
+		reqIDs[r.ID] = struct{}{}
 	}
 	for _, want := range []string{"hipaa:164.312(a)(1)", "pci_dss_v4.0:7.2.1", "soc2:CC6.1"} {
-		if !reqIDs[want] {
+		if _, ok := reqIDs[want]; !ok {
 			t.Errorf("missing ComplianceRequirement %q", want)
 		}
 	}
@@ -355,12 +355,12 @@ func TestExperiment04_NoChain(t *testing.T) {
 	}
 
 	// Check resource class diversity.
-	classes := make(map[string]bool)
+	classes := make(map[string]struct{})
 	for _, r := range resources {
-		classes[r.Properties["resource_class"].(string)] = true
+		classes[r.Properties["resource_class"].(string)] = struct{}{}
 	}
 	for _, want := range []string{"storage", "database", "compute", "network", "identity", "key", "cdn", "queue"} {
-		if !classes[want] {
+		if _, ok := classes[want]; !ok {
 			t.Errorf("missing resource_class %q", want)
 		}
 	}

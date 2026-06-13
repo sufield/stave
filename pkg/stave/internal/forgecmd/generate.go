@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/fs"
-	"os"
 	"path/filepath"
 
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"

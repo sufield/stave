@@ -54,7 +54,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -186,7 +186,7 @@ func main() {
 			datalogOnly = append(datalogOnly, p)
 		}
 	}
-	sort.Strings(datalogOnly)
+	slices.Sort(datalogOnly)
 
 	// 8. Report.
 	report(opts, iamFindings, results, datalogOnly, totalAccessRows)

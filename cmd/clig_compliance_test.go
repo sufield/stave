@@ -167,20 +167,21 @@ func TestCligGlobalFlags(t *testing.T) {
 // JSON-only inspection commands are excluded — they always output JSON by
 // design and don't need a format switch.
 func isDataCommand(cmd *cobra.Command) bool {
-	multiFormatCommands := map[string]bool{
-		"stave apply":             true,
-		"stave diagnose":          true,
-		"stave validate":          true,
-		"stave report":            true,
-		"stave doctor":            true,
-		"stave security-audit":    true,
-		"stave ci gate":           true,
-		"stave snapshot diff":     true,
-		"stave snapshot quality":  true,
-		"stave snapshot upcoming": true,
-		"stave snapshot status":   true,
-		"stave snapshot risk":     true,
-		"stave controls list":     true,
+	multiFormatCommands := map[string]struct{}{
+		"stave apply":             {},
+		"stave diagnose":          {},
+		"stave validate":          {},
+		"stave report":            {},
+		"stave doctor":            {},
+		"stave security-audit":    {},
+		"stave ci gate":           {},
+		"stave snapshot diff":     {},
+		"stave snapshot quality":  {},
+		"stave snapshot upcoming": {},
+		"stave snapshot status":   {},
+		"stave snapshot risk":     {},
+		"stave controls list":     {},
 	}
-	return multiFormatCommands[cmd.CommandPath()]
+	_, ok := multiFormatCommands[cmd.CommandPath()]
+	return ok
 }

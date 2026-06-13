@@ -21,7 +21,7 @@ import (
 // It enumerates the dev-edition tree, which is a superset of the
 // standard tree, so dev-only commands are covered too.
 func TestFeaturesScopeManifest_NoForbiddenCommands(t *testing.T) {
-	registered := map[string]bool{}
+	registered := map[string]struct{}{}
 	collectCommandNames(getDevRootCmd(), registered)
 
 	entries, err := scopemanifest.OutOfScope()
@@ -31,7 +31,7 @@ func TestFeaturesScopeManifest_NoForbiddenCommands(t *testing.T) {
 
 	for _, e := range entries {
 		for _, name := range e.Forbids {
-			if registered[name] {
+			if _, ok := registered[name]; ok {
 				t.Errorf("command %q is registered but re-introduces out-of-scope capability %q (%s).\n"+
 					"Either remove the command, or if the capability is now intentionally in scope, "+
 					"delete the %q entry from features/scope.yaml.",
@@ -43,9 +43,9 @@ func TestFeaturesScopeManifest_NoForbiddenCommands(t *testing.T) {
 
 // collectCommandNames records the first token of every command's Use
 // string (the command name) across the whole tree.
-func collectCommandNames(cmd *cobra.Command, out map[string]bool) {
+func collectCommandNames(cmd *cobra.Command, out map[string]struct{}) {
 	if name := strings.Fields(cmd.Use); len(name) > 0 {
-		out[name[0]] = true
+		out[name[0]] = struct{}{}
 	}
 	for _, sub := range cmd.Commands() {
 		collectCommandNames(sub, out)

@@ -35,7 +35,7 @@ type ResolvedItem struct {
 }
 
 // ComputeStatus analyzes exemption health.
-func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[string]bool) *StatusReport {
+func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[string]struct{}) *StatusReport {
 	report := &StatusReport{
 		GeneratedAt: now.Format(time.RFC3339),
 	}
@@ -79,9 +79,9 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 			report.ExpiringDays60++
 		}
 
-		// Check if finding is resolved.
 		key := ack.ControlID + "@" + ack.AssetID
-		if activeFindings != nil && !activeFindings[key] {
+		_, active := activeFindings[key]
+		if activeFindings != nil && !active {
 			report.Resolved++
 			report.ResolvedItems = append(report.ResolvedItems, ResolvedItem{
 				ControlID:      ack.ControlID,

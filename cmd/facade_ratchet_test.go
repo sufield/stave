@@ -45,66 +45,66 @@ import (
 // to cmd/) that import no non-exempt internal/ package. It is a ratchet:
 // add packages as they migrate; never remove one (that would be a
 // regression the test should have caught).
-var facadeCleanBaseline = map[string]bool{
-	"apply":              true,
-	"apply/validate":     true,
-	"apply/verify":       true,
-	"attest":             true,
-	"bisect":             true,
-	"bundle":             true,
-	"catalog":            true,
-	"enforce/cidiff":     true,
-	"enforce/diff":       true,
-	"enforce/fix":        true,
-	"enforce/gate":       true,
-	"enforce/generate":   true,
-	"enforce/graph":      true,
-	"evaluate":           true,
-	"exportsir":          true,
-	"cel":                true,
-	"compare":            true,
-	"contract":           true,
-	"coverage":           true,
-	"enforce/baseline":   true,
-	"doctor":             true,
-	"exempt":             true,
-	"expand":             true,
-	"export":             true,
-	"export/compliance":  true,
-	"exportinvariants":   true,
-	"features":           true,
-	"fingerprint":        true,
-	"forge":              true,
-	"gaps":               true,
-	"initcmd":            true,
-	"initcmd/alias":      true,
-	"initcmd/env":        true,
-	"inspect":            true,
-	"inspect/acl":        true,
-	"inspect/aliases":    true,
-	"inspect/compliance": true,
-	"inspect/exposure":   true,
-	"inspect/policy":     true,
-	"inspect/risk":       true,
-	"map":                true,
-	"metrics":            true,
-	"nep":                true,
-	"path":               true,
-	"profile":            true,
-	"readiness":          true,
-	"report":             true,
-	"sanitize":           true,
-	"score":              true,
-	"scorecard":          true,
-	"search":             true,
-	"snapshotdiff":       true,
-	"stave":              true,
-	"stave-dev":          true,
-	"stave-mcp":          true,
-	"telemetry":          true,
-	"test":               true,
-	"trend":              true,
-	"validatemapping":    true,
+var facadeCleanBaseline = map[string]struct{}{
+	"apply":              {},
+	"apply/validate":     {},
+	"apply/verify":       {},
+	"attest":             {},
+	"bisect":             {},
+	"bundle":             {},
+	"catalog":            {},
+	"enforce/cidiff":     {},
+	"enforce/diff":       {},
+	"enforce/fix":        {},
+	"enforce/gate":       {},
+	"enforce/generate":   {},
+	"enforce/graph":      {},
+	"evaluate":           {},
+	"exportsir":          {},
+	"cel":                {},
+	"compare":            {},
+	"contract":           {},
+	"coverage":           {},
+	"enforce/baseline":   {},
+	"doctor":             {},
+	"exempt":             {},
+	"expand":             {},
+	"export":             {},
+	"export/compliance":  {},
+	"exportinvariants":   {},
+	"features":           {},
+	"fingerprint":        {},
+	"forge":              {},
+	"gaps":               {},
+	"initcmd":            {},
+	"initcmd/alias":      {},
+	"initcmd/env":        {},
+	"inspect":            {},
+	"inspect/acl":        {},
+	"inspect/aliases":    {},
+	"inspect/compliance": {},
+	"inspect/exposure":   {},
+	"inspect/policy":     {},
+	"inspect/risk":       {},
+	"map":                {},
+	"metrics":            {},
+	"nep":                {},
+	"path":               {},
+	"profile":            {},
+	"readiness":          {},
+	"report":             {},
+	"sanitize":           {},
+	"score":              {},
+	"scorecard":          {},
+	"search":             {},
+	"snapshotdiff":       {},
+	"stave":              {},
+	"stave-dev":          {},
+	"stave-mcp":          {},
+	"telemetry":          {},
+	"test":               {},
+	"trend":              {},
+	"validatemapping":    {},
 }
 
 func TestFacadeRatchet(t *testing.T) {
@@ -117,7 +117,7 @@ func TestFacadeRatchet(t *testing.T) {
 	const internalPrefix = `"github.com/sufield/stave/internal/`
 
 	fset := token.NewFileSet()
-	cleanNow := map[string]bool{}
+	cleanNow := map[string]struct{}{}
 
 	walkErr := filepath.WalkDir(".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -161,7 +161,7 @@ func TestFacadeRatchet(t *testing.T) {
 			}
 		}
 		if hasProd && !leaks {
-			cleanNow[rel] = true
+			cleanNow[rel] = struct{}{}
 		}
 		return nil
 	})
@@ -172,7 +172,7 @@ func TestFacadeRatchet(t *testing.T) {
 	// 1. Regression: a baseline package that is no longer clean.
 	var regressed []string
 	for pkg := range facadeCleanBaseline {
-		if !cleanNow[pkg] {
+		if _, ok := cleanNow[pkg]; !ok {
 			regressed = append(regressed, pkg)
 		}
 	}
@@ -186,7 +186,7 @@ func TestFacadeRatchet(t *testing.T) {
 	// 2. Un-enrolled progress: a clean package missing from the baseline.
 	var unenrolled []string
 	for pkg := range cleanNow {
-		if !facadeCleanBaseline[pkg] {
+		if _, ok := facadeCleanBaseline[pkg]; !ok {
 			unenrolled = append(unenrolled, pkg)
 		}
 	}
