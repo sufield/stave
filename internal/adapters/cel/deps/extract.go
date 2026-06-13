@@ -25,12 +25,12 @@ func Extract(pred *policy.UnsafePredicate) ([]string, error) {
 		return nil, nil
 	}
 
-	seen := make(map[string]bool)
+	seen := make(map[string]struct{})
 	pred.Walk(func(rule policy.PredicateRule) {
 		if rule.Field.IsZero() {
 			return
 		}
-		seen[rule.Field.String()] = true
+		seen[rule.Field.String()] = struct{}{}
 	})
 
 	paths := make([]string, 0, len(seen))

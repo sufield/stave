@@ -2,11 +2,12 @@ package cliapi
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -188,15 +189,12 @@ func ValidateSIRCompleteness(
 		}
 	}
 
-	sort.Slice(warnings, func(i, j int) bool {
-		a, b := &warnings[i], &warnings[j]
-		if a.ControlID != b.ControlID {
-			return a.ControlID < b.ControlID
-		}
-		if a.AssetID != b.AssetID {
-			return a.AssetID < b.AssetID
-		}
-		return a.CELPath < b.CELPath
+	slices.SortFunc(warnings, func(a, b ValidationWarning) int {
+		return cmp.Or(
+			cmp.Compare(a.ControlID, b.ControlID),
+			cmp.Compare(a.AssetID, b.AssetID),
+			cmp.Compare(a.CELPath, b.CELPath),
+		)
 	})
 
 	return warnings
@@ -206,7 +204,7 @@ func ValidateSIRCompleteness(
 // `Field` path stripped of the leading "properties." prefix. Empty Field
 // values (parent any/all nodes) are skipped. Results are deduped + sorted.
 func extractPredicateFieldPaths(p policy.UnsafePredicate) []string {
-	seen := make(map[string]bool)
+	seen := make(map[string]struct{})
 	p.Walk(func(rule policy.PredicateRule) {
 		if rule.Field.IsZero() {
 			return
@@ -215,13 +213,13 @@ func extractPredicateFieldPaths(p policy.UnsafePredicate) []string {
 		if path == "" {
 			return
 		}
-		seen[path] = true
+		seen[path] = struct{}{}
 	})
 	out := make([]string, 0, len(seen))
 	for k := range seen {
 		out = append(out, k)
 	}
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }
 
@@ -252,8 +250,12 @@ func renderSIRValidation(warnings []ValidationWarning) []byte {
 	}
 	fmt.Fprintf(&buf, "\n%d SIR projection gap(s) detected:\n\n", len(warnings))
 	for i := range warnings {
-		fmt.Fprintf(&buf, "  WARNING: %s\n", warnings[i].Message)
-		fmt.Fprintf(&buf, "           Asset: %s\n\n", warnings[i].AssetID)
+		buf.WriteString("  WARNING: ")
+		buf.WriteString(warnings[i].Message)
+		buf.WriteByte('\n')
+		buf.WriteString("           Asset: ")
+		buf.WriteString(warnings[i].AssetID)
+		buf.WriteString("\n\n")
 	}
 	fmt.Fprintf(&buf, "These controls fire in CEL but the properties they evaluate\n")
 	fmt.Fprintf(&buf, "are not projected into the SIR. Add projector entries in\n")

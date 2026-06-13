@@ -104,12 +104,11 @@ func runAudit(ctx context.Context, stdout io.Writer, opts *auditOptions) error {
 
 func parsePeriod(opts *auditOptions) (label string, start, end time.Time, err error) {
 	if opts.Period != "" {
-		parts := strings.SplitN(opts.Period, "-", 2)
-		if len(parts) != 2 {
+		quarterRaw, year, ok := strings.Cut(opts.Period, "-")
+		if !ok {
 			return "", time.Time{}, time.Time{}, fmt.Errorf("invalid period %q (expected Q1-2026)", opts.Period)
 		}
-		quarter := strings.ToUpper(parts[0])
-		year := parts[1]
+		quarter := strings.ToUpper(quarterRaw)
 		var yearInt int
 		if _, scanErr := fmt.Sscanf(year, "%d", &yearInt); scanErr != nil {
 			return "", time.Time{}, time.Time{}, fmt.Errorf("invalid year in period %q", opts.Period)

@@ -161,12 +161,12 @@ func Build(input BuildInput) *CoverageReport {
 	}
 
 	// Group findings by control ID for posture overlay.
-	var failingControls map[kernel.ControlID]bool
+	var failingControls map[kernel.ControlID]struct{}
 	hasOverlay := len(input.Findings) > 0
 	if hasOverlay {
-		failingControls = make(map[kernel.ControlID]bool)
+		failingControls = make(map[kernel.ControlID]struct{})
 		for i := range input.Findings {
-			failingControls[input.Findings[i].ControlID] = true
+			failingControls[input.Findings[i].ControlID] = struct{}{}
 		}
 	}
 
@@ -203,7 +203,7 @@ func Build(input BuildInput) *CoverageReport {
 			passing := 0
 			failing := 0
 			for _, cid := range ctls {
-				if failingControls[kernel.ControlID(cid)] {
+				if _, ok := failingControls[kernel.ControlID(cid)]; ok {
 					failing++
 				} else {
 					passing++
@@ -234,7 +234,7 @@ func Build(input BuildInput) *CoverageReport {
 			passing := 0
 			failing := 0
 			for _, cid := range ctls {
-				if failingControls[kernel.ControlID(cid)] {
+				if _, ok := failingControls[kernel.ControlID(cid)]; ok {
 					failing++
 				} else {
 					passing++

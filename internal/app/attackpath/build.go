@@ -81,18 +81,18 @@ type BuildInput struct {
 
 // Build produces an attack path graph from active chain findings.
 func Build(input BuildInput) *Graph {
-	activeChains := make(map[string]bool, len(input.Findings))
+	activeChains := make(map[string]struct{}, len(input.Findings))
 	for _, f := range input.Findings {
-		activeChains[f.ChainID] = true
+		activeChains[f.ChainID] = struct{}{}
 	}
 
 	// Collect capabilities referenced by active annotated chains.
-	capSet := make(map[string]bool)
+	capSet := make(map[string]struct{})
 	var nodes []ChainNode
 	for i := range input.Chains {
 		ch := &input.Chains[i]
 		status := "inactive"
-		if activeChains[string(ch.ID)] {
+		if _, ok := activeChains[string(ch.ID)]; ok {
 			status = "active"
 		}
 
@@ -124,10 +124,10 @@ func Build(input BuildInput) *Graph {
 
 		if status == "active" {
 			for _, c := range ch.Preconditions {
-				capSet[c] = true
+				capSet[c] = struct{}{}
 			}
 			for _, c := range ch.Postconditions {
-				capSet[c] = true
+				capSet[c] = struct{}{}
 			}
 		}
 	}
@@ -137,12 +137,13 @@ func Build(input BuildInput) *Graph {
 	var edges []Edge
 	for i := range input.Chains {
 		a := &input.Chains[i]
-		if !activeChains[string(a.ID)] || len(a.Postconditions) == 0 {
+		if _, ok := activeChains[string(a.ID)]; !ok || len(a.Postconditions) == 0 {
 			continue
 		}
 		for j := range input.Chains {
 			b := &input.Chains[j]
-			if a.ID == b.ID || !activeChains[string(b.ID)] || len(b.Preconditions) == 0 {
+			_, isActiveB := activeChains[string(b.ID)]
+			if a.ID == b.ID || !isActiveB || len(b.Preconditions) == 0 {
 				continue
 			}
 			for _, post := range a.Postconditions {

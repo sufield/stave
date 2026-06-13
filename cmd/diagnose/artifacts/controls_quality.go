@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -118,7 +118,7 @@ func writeQualityTable(w io.Writer, r catalogquality.Report) {
 	for f := range r.Completeness {
 		fields = append(fields, f)
 	}
-	sort.Strings(fields)
+	slices.Sort(fields)
 
 	for _, f := range fields {
 		fs := r.Completeness[f]

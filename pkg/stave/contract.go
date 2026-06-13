@@ -2,13 +2,14 @@ package stave
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 	"text/tabwriter"
 
@@ -120,14 +121,12 @@ func renderContractType(assetType string, idx predindex.Index, steampipeDir, for
 			IsIntentProperty: isIntentProperty(p),
 		})
 	}
-	sort.Slice(rows, func(i, j int) bool {
-		if rows[i].ChainsCount != rows[j].ChainsCount {
-			return rows[i].ChainsCount > rows[j].ChainsCount
-		}
-		if rows[i].ControlsCount != rows[j].ControlsCount {
-			return rows[i].ControlsCount > rows[j].ControlsCount
-		}
-		return rows[i].Path < rows[j].Path
+	slices.SortFunc(rows, func(a, b contractPathRow) int {
+		return cmp.Or(
+			cmp.Compare(b.ChainsCount, a.ChainsCount),
+			cmp.Compare(b.ControlsCount, a.ControlsCount),
+			cmp.Compare(a.Path, b.Path),
+		)
 	})
 
 	report := contractTypeReport{
@@ -162,7 +161,7 @@ func renderContractList(idx predindex.Index, steampipeDir, format string) ([]byt
 	for t := range idx.TypeToPaths {
 		types = append(types, string(t))
 	}
-	sort.Strings(types)
+	slices.Sort(types)
 
 	rows := make([]contractListRow, 0, len(types))
 	withSchema := 0

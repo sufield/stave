@@ -16,6 +16,7 @@ package main
 
 import (
 	"bytes"
+	"cmp"
 	"flag"
 	"fmt"
 	"os"
@@ -290,7 +291,7 @@ func render(root *cobra.Command) (*bytes.Buffer, int) {
 		if len(entries) == 0 {
 			continue
 		}
-		slices.SortFunc(entries, func(a, b entry) int { return strings.Compare(a.path, b.path) })
+		slices.SortFunc(entries, func(a, b entry) int { return cmp.Compare(a.path, b.path) })
 		fmt.Fprintf(&buf, "\n## %s\n\n", g.title)
 		buf.WriteString("| Command | Description |\n|---|---|\n")
 		for _, e := range entries {

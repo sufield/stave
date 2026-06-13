@@ -4,6 +4,7 @@
 package env
 
 import (
+	"cmp"
 	"os"
 	"slices"
 	"strconv"
@@ -171,10 +172,10 @@ func All() []Entry {
 	out := make([]Entry, len(all))
 	copy(out, all)
 	slices.SortFunc(out, func(a, b Entry) int {
-		if c := strings.Compare(a.Category, b.Category); c != 0 {
+		if c := cmp.Compare(a.Category, b.Category); c != 0 {
 			return c
 		}
-		return strings.Compare(a.Name, b.Name)
+		return cmp.Compare(a.Name, b.Name)
 	})
 	return out
 }

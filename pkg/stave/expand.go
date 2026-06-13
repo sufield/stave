@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/adapters/controls/archetype"
@@ -141,13 +141,13 @@ func renderExpandText(w io.Writer, arch archetype.Archetype, matched []policy.Co
 		fmt.Fprintln(w, "Snapshot coverage:")
 		fmt.Fprintln(w)
 		all := append(append([]string{}, snap.Found...), snap.Missing...)
-		sort.Strings(all)
-		foundSet := make(map[string]bool, len(snap.Found))
+		slices.Sort(all)
+		foundSet := make(map[string]struct{}, len(snap.Found))
 		for _, s := range snap.Found {
-			foundSet[s] = true
+			foundSet[s] = struct{}{}
 		}
 		for _, svc := range all {
-			if foundSet[svc] {
+			if _, ok := foundSet[svc]; ok {
 				fmt.Fprintf(w, "  ✓ %-15s snapshot found\n", svc)
 			} else {
 				fmt.Fprintf(w, "  ✗ %-15s no snapshot — run: stave snapshot %s\n", svc, svc)
@@ -295,7 +295,7 @@ func sortedKeys[V any](m map[string]V) []string {
 	for k := range m {
 		out = append(out, k)
 	}
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }
 

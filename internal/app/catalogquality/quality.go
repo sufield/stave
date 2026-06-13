@@ -44,8 +44,8 @@ func Analyze(input Input) Report {
 		"compliance":         {},
 	}
 
-	coveredTypes := make(map[kernel.AssetType]bool)
-	stagesSeen := make(map[kernel.AttackStage]bool)
+	coveredTypes := make(map[kernel.AssetType]struct{})
+	stagesSeen := make(map[kernel.AttackStage]struct{})
 
 	for i := range input.Controls {
 		ctl := &input.Controls[i]
@@ -68,7 +68,7 @@ func Analyze(input Input) Report {
 		stage := ctl.AttackStage()
 		if stage != "" {
 			inc(completeness, "attack_stage", true)
-			stagesSeen[stage] = true
+			stagesSeen[stage] = struct{}{}
 		} else {
 			inc(completeness, "attack_stage", false)
 		}
@@ -82,7 +82,7 @@ func Analyze(input Input) Report {
 
 		// Track covered asset domains.
 		if ctl.Domain != "" {
-			coveredTypes[kernel.AssetType(ctl.Domain)] = true
+			coveredTypes[kernel.AssetType(ctl.Domain)] = struct{}{}
 		}
 	}
 
@@ -103,7 +103,7 @@ func Analyze(input Input) Report {
 	// Identify blind spots: asset types with resources but no controls.
 	var blindSpots []BlindSpot
 	for at, count := range input.AssetTypes {
-		if !coveredTypes[at] {
+		if _, isCovered := coveredTypes[at]; !isCovered {
 			blindSpots = append(blindSpots, BlindSpot{
 				AssetType:  string(at),
 				AssetCount: count,
@@ -118,7 +118,7 @@ func Analyze(input Input) Report {
 	}
 	var mitreGaps []string
 	for _, stage := range allStages {
-		if !stagesSeen[stage] {
+		if _, isSeen := stagesSeen[stage]; !isSeen {
 			mitreGaps = append(mitreGaps, string(stage))
 		}
 	}

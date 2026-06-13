@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"sort"
+	"slices"
 	"strings"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -206,7 +206,7 @@ func WriteErrorText(w io.Writer, info *ErrorInfo) error {
 		for k := range info.Evidence {
 			keys = append(keys, k)
 		}
-		sort.Strings(keys)
+		slices.Sort(keys)
 		for _, k := range keys {
 			fmt.Fprintf(&sb, "    - %s: %s\n", k, info.Evidence[k])
 		}

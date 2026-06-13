@@ -2,11 +2,12 @@ package stave
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
-	"sort"
+	"slices"
 	"strings"
 	"text/tabwriter"
 
@@ -316,14 +317,12 @@ func mappingCoverageReport(m mappingDoc, idx predindex.Index) mappingCoverage {
 			chains:   len(idx.PathToChains[p]),
 		})
 	}
-	sort.Slice(gaps, func(i, j int) bool {
-		if gaps[i].controls != gaps[j].controls {
-			return gaps[i].controls > gaps[j].controls
-		}
-		if gaps[i].chains != gaps[j].chains {
-			return gaps[i].chains > gaps[j].chains
-		}
-		return gaps[i].path < gaps[j].path
+	slices.SortFunc(gaps, func(a, b gap) int {
+		return cmp.Or(
+			cmp.Compare(b.controls, a.controls),
+			cmp.Compare(b.chains, a.chains),
+			cmp.Compare(a.path, b.path),
+		)
 	})
 	top := gaps
 	if len(top) > 5 {

@@ -1,11 +1,11 @@
 package report
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"io"
 	"slices"
-	"strings"
 	"time"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -210,9 +210,9 @@ func sortReportFindings(findings []reportFinding) {
 		if a.sevRank != b.sevRank {
 			return a.sevRank - b.sevRank
 		}
-		if c := strings.Compare(a.ControlID, b.ControlID); c != 0 {
+		if c := cmp.Compare(a.ControlID, b.ControlID); c != 0 {
 			return c
 		}
-		return strings.Compare(a.AssetID, b.AssetID)
+		return cmp.Compare(a.AssetID, b.AssetID)
 	})
 }

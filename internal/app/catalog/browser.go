@@ -11,6 +11,14 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
+var validFields = map[string]struct{}{
+	"id":     {},
+	"name":   {},
+	"type":   {},
+	"risk":   {},
+	"domain": {},
+}
+
 // DiscoveryRequest defines the parameters for searching the policy catalog.
 type DiscoveryRequest struct {
 	PolicySource   string
@@ -89,21 +97,20 @@ func OrderEntries(entries []PolicyEntry, orderBy string) error {
 
 // SelectFields validates and returns the requested field names for display.
 func SelectFields(raw string) ([]string, error) {
-	valid := map[string]bool{"id": true, "name": true, "type": true, "risk": true, "domain": true}
 	var selected []string
-	seen := make(map[string]bool)
+	seen := make(map[string]struct{})
 
 	for p := range strings.SplitSeq(raw, ",") {
 		f := strings.ToLower(strings.TrimSpace(p))
 		if f == "" {
 			continue
 		}
-		if !valid[f] {
+		if _, isValid := validFields[f]; !isValid {
 			return nil, fmt.Errorf("invalid field selection %q (allowed: id, name, type, risk, domain)", f)
 		}
-		if !seen[f] {
+		if _, isSeen := seen[f]; !isSeen {
 			selected = append(selected, f)
-			seen[f] = true
+			seen[f] = struct{}{}
 		}
 	}
 	if len(selected) == 0 {

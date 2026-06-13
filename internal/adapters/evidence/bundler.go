@@ -137,18 +137,20 @@ func Build(input BundleInput) ([]byte, error) {
 }
 
 func marshalPrunedSnapshots(snapshots []asset.Snapshot, findings []remediation.Finding) ([]byte, error) {
-	violatedIDs := make(map[asset.ID]bool, len(findings))
+	violatedIDs := make(map[asset.ID]struct{}, len(findings))
 	for i := range findings {
-		violatedIDs[findings[i].AssetID] = true
+		violatedIDs[findings[i].AssetID] = struct{}{}
 	}
 
 	var pruned []asset.Asset
-	seen := make(map[asset.ID]bool)
+	seen := make(map[asset.ID]struct{})
 	for _, snap := range snapshots {
 		for _, a := range snap.Assets {
-			if violatedIDs[a.ID] && !seen[a.ID] {
+			_, isViolated := violatedIDs[a.ID]
+			_, isSeen := seen[a.ID]
+			if isViolated && !isSeen {
 				pruned = append(pruned, a)
-				seen[a.ID] = true
+				seen[a.ID] = struct{}{}
 			}
 		}
 	}

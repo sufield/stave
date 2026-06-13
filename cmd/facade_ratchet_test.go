@@ -37,7 +37,6 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"sort"
 	"strings"
 	"testing"
 )
@@ -177,7 +176,7 @@ func TestFacadeRatchet(t *testing.T) {
 			regressed = append(regressed, pkg)
 		}
 	}
-	sort.Strings(regressed)
+	slices.Sort(regressed)
 	if len(regressed) > 0 {
 		t.Errorf("facade regression — these packages were facade-clean and now import a non-exempt internal/ package:\n  cmd/%s\n\n"+
 			"Move the new dependency behind pkg/stave (see docs/architecture/pkg-stave-facade.md); do not import internal/ directly.",
@@ -191,7 +190,7 @@ func TestFacadeRatchet(t *testing.T) {
 			unenrolled = append(unenrolled, pkg)
 		}
 	}
-	sort.Strings(unenrolled)
+	slices.Sort(unenrolled)
 	if len(unenrolled) > 0 {
 		t.Errorf("facade ratchet — these packages are now facade-clean but missing from facadeCleanBaseline:\n  %q\n\n"+
 			"Add them to the baseline in cmd/facade_ratchet_test.go so the progress is locked in and cannot regress.",

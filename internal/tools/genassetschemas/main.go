@@ -47,7 +47,6 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"sort"
 	"strings"
 
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
@@ -302,7 +301,7 @@ func buildSchema(at kernel.AssetType, controls []policy.ControlDefinition) map[s
 	for k := range paths {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 
 	root := newObjectNode()
 	for _, k := range keys {

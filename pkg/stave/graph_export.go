@@ -1,8 +1,8 @@
 package stave
 
 import (
+	"cmp"
 	"slices"
-	"sort"
 	"time"
 
 	"github.com/sufield/stave/internal/core/sir"
@@ -327,12 +327,11 @@ func hydrateGraphFromSIR(g *GraphExport, doc *sir.Document) {
 		}
 	}
 
-	sort.Slice(g.TransitiveReachability, func(i, j int) bool {
-		a, b := &g.TransitiveReachability[i], &g.TransitiveReachability[j]
-		if a.FromPrincipal != b.FromPrincipal {
-			return a.FromPrincipal < b.FromPrincipal
-		}
-		return a.FinalRole < b.FinalRole
+	slices.SortFunc(g.TransitiveReachability, func(a, b ReachabilityPath) int {
+		return cmp.Or(
+			cmp.Compare(a.FromPrincipal, b.FromPrincipal),
+			cmp.Compare(a.FinalRole, b.FinalRole),
+		)
 	})
 }
 
@@ -406,20 +405,18 @@ func (s *assetSet) sorted() []AssetNode {
 	for _, n := range s.byID {
 		out = append(out, n)
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
+	slices.SortFunc(out, func(a, b AssetNode) int { return cmp.Compare(a.ID, b.ID) })
 	return out
 }
 
 // sortGraphEdges keeps the Edges slice in deterministic order so
 // consumers diffing exports across runs see stable output.
 func sortGraphEdges(edges []AssetEdge) {
-	sort.Slice(edges, func(i, j int) bool {
-		if edges[i].Relationship != edges[j].Relationship {
-			return edges[i].Relationship < edges[j].Relationship
-		}
-		if edges[i].FromAssetID != edges[j].FromAssetID {
-			return edges[i].FromAssetID < edges[j].FromAssetID
-		}
-		return edges[i].ToAssetID < edges[j].ToAssetID
+	slices.SortFunc(edges, func(a, b AssetEdge) int {
+		return cmp.Or(
+			cmp.Compare(a.Relationship, b.Relationship),
+			cmp.Compare(a.FromAssetID, b.FromAssetID),
+			cmp.Compare(a.ToAssetID, b.ToAssetID),
+		)
 	})
 }

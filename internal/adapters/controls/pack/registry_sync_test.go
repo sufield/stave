@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
+	"slices"
 	"strings"
 	"testing"
 
@@ -104,7 +104,7 @@ func TestIndexCoversAllEmbeddedBuiltins(t *testing.T) {
 		}
 	}
 	if len(missing) > 0 {
-		sort.Strings(missing)
+		slices.Sort(missing)
 		t.Fatalf("index.yaml missing metadata entries for embedded controls: %s", strings.Join(missing, ", "))
 	}
 }

@@ -272,7 +272,7 @@ var wireToPredicate = map[EdgeType]string{
 // filter on isAlgorithmShortcut were incorrectly seeing it as a
 // shortcut. Keep this set tight: only include predicates that are
 // produced by the shortcut-materialization pass.
-var shortcutPredicates = map[string]bool{
-	predViolates:           true,
-	predHasEffectiveAccess: true,
+var shortcutPredicates = map[string]struct{}{
+	predViolates:           {},
+	predHasEffectiveAccess: {},
 }

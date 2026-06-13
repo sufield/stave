@@ -13,7 +13,8 @@
 package ccmbackfill
 
 import (
-	"sort"
+	"cmp"
+	"slices"
 	"strings"
 )
 
@@ -80,11 +81,11 @@ func Infer(dir, id string) []string {
 	for c, p := range seen {
 		entries = append(entries, entry{c, p})
 	}
-	sort.Slice(entries, func(i, j int) bool {
-		if entries[i].prio != entries[j].prio {
-			return entries[i].prio < entries[j].prio
-		}
-		return entries[i].id < entries[j].id
+	slices.SortFunc(entries, func(a, b entry) int {
+		return cmp.Or(
+			cmp.Compare(a.prio, b.prio),
+			cmp.Compare(a.id, b.id),
+		)
 	})
 	if len(entries) > 5 {
 		entries = entries[:5]
@@ -95,7 +96,7 @@ func Infer(dir, id string) []string {
 	}
 	// Final output is sorted alphabetically for stable YAML emission;
 	// the priority ordering only affects which CCMs survive truncation.
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }
 

@@ -3,7 +3,7 @@ package sirfacts
 import (
 	"fmt"
 	"math"
-	"sort"
+	"slices"
 	"strconv"
 
 	"github.com/sufield/stave/internal/core/sir"
@@ -100,7 +100,7 @@ func appendObservationLeaves(out []Fact, assetID, prefix string, node map[string
 	for k := range node {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 
 	for _, k := range keys {
 		path := k

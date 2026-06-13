@@ -17,11 +17,12 @@ package main
 
 import (
 	"bytes"
+	"cmp"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
@@ -147,8 +148,8 @@ func buildRows(inv corecov.ToolInventory, controls []policy.ControlDefinition) [
 		}
 	}
 	for k := range byCheck {
-		sort.Slice(byCheck[k], func(i, j int) bool {
-			return byCheck[k][i].controlID < byCheck[k][j].controlID
+		slices.SortFunc(byCheck[k], func(a, b rowEntry) int {
+			return cmp.Compare(a.controlID, b.controlID)
 		})
 	}
 	rows := make([]row, 0, len(inv.Checks))

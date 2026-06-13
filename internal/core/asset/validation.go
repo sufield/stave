@@ -1,6 +1,7 @@
 package asset
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
 	"strings"
@@ -297,7 +298,7 @@ func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.F
 		}
 	}
 	slices.SortFunc(reusedTypeIDs, func(a, b ID) int {
-		return strings.Compare(a.String(), b.String())
+		return cmp.Compare(a.String(), b.String())
 	})
 	for _, id := range reusedTypeIDs {
 		types := ctx.assetTypes[id]
@@ -319,7 +320,7 @@ func (s Snapshots) checkIdentityConsistency(ctx *validationCtx) (issues []diag.F
 			}
 		}
 		slices.SortFunc(singleAppearanceIDs, func(a, b ID) int {
-			return strings.Compare(a.String(), b.String())
+			return cmp.Compare(a.String(), b.String())
 		})
 		for _, id := range singleAppearanceIDs {
 			issues = append(issues, diag.NewFinding(diag.RuleAssetSingleAppearance).

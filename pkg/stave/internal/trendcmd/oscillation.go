@@ -2,6 +2,7 @@ package trendcmd
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -73,12 +74,12 @@ func ClassifyOscillation(ctx context.Context, cfg OscillationConfig) ([]byte, []
 
 	slices.SortFunc(results, func(a, b oscillation.Classification) int {
 		if a.Pattern != b.Pattern {
-			return strings.Compare(a.Pattern, b.Pattern)
+			return cmp.Compare(a.Pattern, b.Pattern)
 		}
 		if a.ControlID != b.ControlID {
-			return strings.Compare(a.ControlID, b.ControlID)
+			return cmp.Compare(a.ControlID, b.ControlID)
 		}
-		return strings.Compare(a.AssetID, b.AssetID)
+		return cmp.Compare(a.AssetID, b.AssetID)
 	})
 
 	var buf bytes.Buffer

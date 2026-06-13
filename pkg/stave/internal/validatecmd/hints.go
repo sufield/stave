@@ -3,7 +3,7 @@ package validatecmd
 import (
 	"fmt"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/diag"
@@ -61,7 +61,7 @@ func collectHints(result *diag.Assessment, ctx hintContext) []string {
 		}
 	}
 
-	sort.Strings(hints)
+	slices.Sort(hints)
 	return hints
 }
 

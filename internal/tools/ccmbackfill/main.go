@@ -19,17 +19,19 @@ package main
 
 import (
 	"bytes"
+	"cmp"
 	"errors"
 	"flag"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 
-	"github.com/sufield/stave/internal/tools/ccmbackfill"
 	"gopkg.in/yaml.v3"
+
+	"github.com/sufield/stave/internal/tools/ccmbackfill"
 )
 
 type controlRec struct {
@@ -120,7 +122,7 @@ func walkControls(root string) ([]controlRec, error) {
 	if err != nil {
 		return nil, err
 	}
-	sort.Slice(recs, func(i, j int) bool { return recs[i].ID < recs[j].ID })
+	slices.SortFunc(recs, func(a, b controlRec) int { return cmp.Compare(a.ID, b.ID) })
 	return recs, nil
 }
 
@@ -449,7 +451,7 @@ func renderReport(recs []controlRec) string {
 	domainMapped := map[string]int{}
 	domainTotal := map[string]int{}
 	for _, r := range recs {
-		svc := strings.SplitN(r.Dir, "/", 2)[0]
+		svc, _, _ := strings.Cut(r.Dir, "/")
 		domainTotal[svc]++
 		if len(r.CCMs) > 0 {
 			mapped++
@@ -467,7 +469,7 @@ func renderReport(recs []controlRec) string {
 	for k := range domainTotal {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 	for _, k := range keys {
 		m := domainMapped[k]
 		t := domainTotal[k]
@@ -482,8 +484,8 @@ func renderReport(recs []controlRec) string {
 			unmapped = append(unmapped, r)
 		}
 	}
-	sort.Slice(unmapped, func(i, j int) bool {
-		return unmapped[i].Rel < unmapped[j].Rel
+	slices.SortFunc(unmapped, func(a, b controlRec) int {
+		return cmp.Compare(a.Rel, b.Rel)
 	})
 	if len(unmapped) == 0 {
 		sb.WriteString("(none)\n")

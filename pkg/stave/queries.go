@@ -1,6 +1,6 @@
 package stave
 
-import "sort"
+import "slices"
 
 // FindingsForAsset returns every Finding rooted on the named asset.
 // The returned slice is a fresh copy; consumers may mutate it freely
@@ -174,6 +174,6 @@ func (f Finding) Frameworks() []string {
 	for fw := range f.ControlCompliance {
 		out = append(out, fw)
 	}
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }

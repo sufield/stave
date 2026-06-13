@@ -2,7 +2,6 @@ package remediation
 
 import (
 	"cmp"
-	"fmt"
 	"log/slog"
 	"slices"
 
@@ -93,7 +92,7 @@ func (a *accumulator) add(f Finding) {
 			"control_id", f.ControlID, "asset_id", f.AssetID, "finding_id", f.FindingID)
 		fingerprint = "no-fingerprint:" + string(f.FindingID)
 	}
-	key := fmt.Sprintf("%s:%s", f.AssetID, fingerprint)
+	key := string(f.AssetID) + ":" + fingerprint
 
 	if g, ok := a.groups[key]; ok {
 		g.controlSet[f.ControlID] = struct{}{}

@@ -1,9 +1,9 @@
 package exposure
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
-	"strings"
 
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -36,9 +36,9 @@ func ClassifyExposure(resources []NormalizedResourceInput) []Classification {
 	// Sort findings deterministically: by Resource ID, then by Control ID severity.
 	slices.SortFunc(findings, func(a, b Classification) int {
 		if a.Resource != b.Resource {
-			return strings.Compare(a.Resource, b.Resource)
+			return cmp.Compare(a.Resource, b.Resource)
 		}
-		return strings.Compare(string(a.ID), string(b.ID))
+		return cmp.Compare(string(a.ID), string(b.ID))
 	})
 
 	return findings

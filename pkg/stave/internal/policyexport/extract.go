@@ -10,11 +10,12 @@
 package policyexport
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -326,18 +327,13 @@ func sortedPermissions(m map[string]ports.EffectivePermission) []ports.Effective
 	for _, v := range m {
 		out = append(out, v)
 	}
-	sort.Slice(out, func(i, j int) bool {
-		a, b := &out[i], &out[j]
-		if a.PrincipalID != b.PrincipalID {
-			return a.PrincipalID < b.PrincipalID
-		}
-		if a.Source != b.Source {
-			return a.Source < b.Source
-		}
-		if a.Action != b.Action {
-			return a.Action < b.Action
-		}
-		return a.Resource < b.Resource
+	slices.SortFunc(out, func(a, b ports.EffectivePermission) int {
+		return cmp.Or(
+			cmp.Compare(a.PrincipalID, b.PrincipalID),
+			cmp.Compare(a.Source, b.Source),
+			cmp.Compare(a.Action, b.Action),
+			cmp.Compare(a.Resource, b.Resource),
+		)
 	})
 	return out
 }
@@ -350,11 +346,11 @@ func sortedDocs(m map[string]PolicyDocument) []PolicyDocument {
 	for _, v := range m {
 		out = append(out, v)
 	}
-	sort.Slice(out, func(i, j int) bool {
-		if out[i].SourceAssetID != out[j].SourceAssetID {
-			return out[i].SourceAssetID < out[j].SourceAssetID
-		}
-		return out[i].PolicyType < out[j].PolicyType
+	slices.SortFunc(out, func(a, b PolicyDocument) int {
+		return cmp.Or(
+			cmp.Compare(a.SourceAssetID, b.SourceAssetID),
+			cmp.Compare(a.PolicyType, b.PolicyType),
+		)
 	})
 	return out
 }
@@ -367,8 +363,8 @@ func sortedTrustDocs(m map[string]TrustDocument) []TrustDocument {
 	for _, v := range m {
 		out = append(out, v)
 	}
-	sort.Slice(out, func(i, j int) bool {
-		return out[i].SourceAssetID < out[j].SourceAssetID
+	slices.SortFunc(out, func(a, b TrustDocument) int {
+		return cmp.Compare(a.SourceAssetID, b.SourceAssetID)
 	})
 	return out
 }
@@ -381,14 +377,12 @@ func sortedEdges(m map[string]AssetEdge) []AssetEdge {
 	for _, v := range m {
 		out = append(out, v)
 	}
-	sort.Slice(out, func(i, j int) bool {
-		if out[i].FromAssetID != out[j].FromAssetID {
-			return out[i].FromAssetID < out[j].FromAssetID
-		}
-		if out[i].Relationship != out[j].Relationship {
-			return out[i].Relationship < out[j].Relationship
-		}
-		return out[i].ToAssetID < out[j].ToAssetID
+	slices.SortFunc(out, func(a, b AssetEdge) int {
+		return cmp.Or(
+			cmp.Compare(a.FromAssetID, b.FromAssetID),
+			cmp.Compare(a.Relationship, b.Relationship),
+			cmp.Compare(a.ToAssetID, b.ToAssetID),
+		)
 	})
 	return out
 }
@@ -501,7 +495,7 @@ func flattenPrincipals(raw json.RawMessage) []string {
 	for k := range byCategory {
 		categories = append(categories, k)
 	}
-	sort.Strings(categories)
+	slices.Sort(categories)
 	var out []string
 	for _, cat := range categories {
 		for _, v := range stringOrList(byCategory[cat]) {
@@ -527,7 +521,7 @@ func flattenConditions(raw json.RawMessage) []Condition {
 	for op := range byOperator {
 		operators = append(operators, op)
 	}
-	sort.Strings(operators)
+	slices.Sort(operators)
 	var out []Condition
 	for _, op := range operators {
 		entries := byOperator[op]
@@ -535,7 +529,7 @@ func flattenConditions(raw json.RawMessage) []Condition {
 		for k := range entries {
 			keys = append(keys, k)
 		}
-		sort.Strings(keys)
+		slices.Sort(keys)
 		for _, k := range keys {
 			out = append(out, Condition{
 				Operator: op,

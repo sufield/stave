@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"runtime"
 	"slices"
-	"strings"
 	"time"
 
 	"golang.org/x/sync/errgroup"
@@ -197,7 +196,7 @@ func (a *Assessor) sortSnapshots(snapshots []asset.Snapshot) []asset.Snapshot {
 		if cmp := i.CapturedAt.Compare(j.CapturedAt); cmp != 0 {
 			return cmp
 		}
-		return strings.Compare(string(i.Source), string(j.Source))
+		return cmp.Compare(string(i.Source), string(j.Source))
 	})
 	return sorted
 }

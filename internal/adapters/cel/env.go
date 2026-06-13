@@ -184,11 +184,11 @@ func isMissing(val ref.Val) bool {
 // Field paths that don't start with one of these are treated as property
 // lookups (prefixed with "properties" to match the old evaluator's
 // default-namespace behavior).
-var knownNamespaces = map[string]bool{
-	"properties": true,
-	"params":     true,
-	"identities": true,
-	"identity":   true,
+var knownNamespaces = map[string]struct{}{
+	"properties": {},
+	"params":     {},
+	"identities": {},
+	"identity":   {},
 }
 
 // normalizePath ensures the field path starts with a known CEL namespace.
@@ -196,7 +196,7 @@ var knownNamespaces = map[string]bool{
 // evaluator's default-namespace resolution.
 func normalizePath(dotPath string) string {
 	first, _, _ := strings.Cut(dotPath, ".")
-	if knownNamespaces[first] {
+	if _, ok := knownNamespaces[first]; ok {
 		return dotPath
 	}
 	return "properties." + dotPath
@@ -411,7 +411,7 @@ func literal(v any) (string, error) {
 		case "false":
 			return "false", nil
 		}
-		return fmt.Sprintf("%q", val), nil
+		return strconv.Quote(val), nil
 	case float64:
 		if isWholeIntegerFloat(val) {
 			return strconv.FormatInt(int64(val), 10), nil

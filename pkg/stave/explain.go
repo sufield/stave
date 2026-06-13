@@ -3,7 +3,7 @@ package stave
 import (
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -103,7 +103,7 @@ func SuggestControlIDs(query string, limit int) []string {
 			matches = append(matches, id)
 		}
 	}
-	sort.Strings(matches)
+	slices.Sort(matches)
 	if limit > 0 && len(matches) > limit {
 		matches = matches[:limit]
 	}
@@ -170,16 +170,16 @@ func renderRule(r policy.PredicateRule) string {
 // field paths the predicate reads — the data a snapshot must carry
 // for this control to evaluate.
 func predicateFields(p policy.UnsafePredicate) []string {
-	seen := map[string]bool{}
+	seen := map[string]struct{}{}
 	p.Walk(func(r policy.PredicateRule) {
 		if f := r.Field.String(); f != "" {
-			seen[f] = true
+			seen[f] = struct{}{}
 		}
 	})
 	out := make([]string, 0, len(seen))
 	for f := range seen {
 		out = append(out, f)
 	}
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }

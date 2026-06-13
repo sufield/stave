@@ -45,11 +45,7 @@ func truncateARN(arn string, maxLen int) string {
 }
 
 func shortARN(arn string) string {
-	parts := strings.Split(arn, "/")
-	if len(parts) > 1 {
-		return parts[len(parts)-1]
-	}
-	return arn
+	return arn[strings.LastIndexByte(arn, '/')+1:]
 }
 
 // dotQuote wraps a string in double quotes for DOT format, escaping inner quotes.

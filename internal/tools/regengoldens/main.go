@@ -32,6 +32,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -42,7 +43,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -233,7 +234,7 @@ func main() {
 		}
 	}
 
-	sort.Slice(reports, func(i, j int) bool { return reports[i].Fixture < reports[j].Fixture })
+	slices.SortFunc(reports, func(a, b fixtureReport) int { return cmp.Compare(a.Fixture, b.Fixture) })
 	printReport(reports, *dryRun)
 
 	// Exit-code gate: when -fail-on-behavioral is set, surface a
@@ -479,7 +480,7 @@ func joinSorted(set map[string]struct{}) string {
 	for n := range set {
 		names = append(names, n)
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 	return strings.Join(names, ", ")
 }
 
@@ -826,7 +827,7 @@ func diffPaths(a, b any, prefix string) []string {
 		for k := range keys {
 			sorted = append(sorted, k)
 		}
-		sort.Strings(sorted)
+		slices.Sort(sorted)
 		for _, k := range sorted {
 			child := k
 			if prefix != "" {

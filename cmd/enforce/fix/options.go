@@ -38,8 +38,8 @@ func (o *fixOptions) Prepare(_ *cobra.Command) error {
 }
 
 func (o *fixOptions) validateFindingRef() error {
-	parts := strings.SplitN(o.FindingRef, "@", 2)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+	id, asset, ok := strings.Cut(o.FindingRef, "@")
+	if !ok || id == "" || asset == "" {
 		return &ui.UserError{
 			Err: fmt.Errorf("invalid --finding %q: must be <control_id>@<asset_id>", o.FindingRef),
 		}

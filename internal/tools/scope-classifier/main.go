@@ -46,12 +46,13 @@
 package main
 
 import (
+	"cmp"
 	"flag"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -182,8 +183,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	sort.Slice(proposals, func(i, j int) bool {
-		return proposals[i].Rel < proposals[j].Rel
+	slices.SortFunc(proposals, func(a, b proposal) int {
+		return cmp.Compare(a.Rel, b.Rel)
 	})
 
 	out, err := renderReport(proposals)
@@ -295,11 +296,8 @@ func compoundFieldMatch(node map[string]any) string {
 // "iam", "s3", "cloudfront", etc. Used for the per-domain summary
 // in the report.
 func topDomain(rel string) string {
-	parts := strings.Split(rel, string(filepath.Separator))
-	if len(parts) == 0 {
-		return "unknown"
-	}
-	return parts[0]
+	before, _, _ := strings.Cut(rel, string(filepath.Separator))
+	return before
 }
 
 // isTriageDomain reports whether the domain directory is one the
@@ -416,7 +414,7 @@ func renderReport(proposals []proposal) (string, error) {
 	for d := range perDomain {
 		domains = append(domains, d)
 	}
-	sort.Strings(domains)
+	slices.Sort(domains)
 	for _, d := range domains {
 		c := perDomain[d]
 		fmt.Fprintf(&b, "| %s | %d | %d | %d |\n",

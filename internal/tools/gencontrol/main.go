@@ -429,11 +429,7 @@ func sanitizeScalar(s string) string {
 }
 
 func shortField(field string) string {
-	parts := strings.Split(field, ".")
-	if len(parts) > 0 {
-		return parts[len(parts)-1]
-	}
-	return field
+	return field[strings.LastIndexByte(field, '.')+1:]
 }
 
 func invertValue(v string) string {
@@ -478,9 +474,8 @@ func parseCompliance(s string) map[string]string {
 	}
 	result := make(map[string]string)
 	for pair := range strings.SplitSeq(s, ",") {
-		kv := strings.SplitN(pair, "=", 2)
-		if len(kv) == 2 {
-			result[strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
+		if k, v, ok := strings.Cut(pair, "="); ok {
+			result[strings.TrimSpace(k)] = strings.TrimSpace(v)
 		}
 	}
 	return result

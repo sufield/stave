@@ -1843,9 +1843,9 @@ func emitPurposeFlags(subject string, props map[string]any, evidence string) []F
 		if t == "" || !strings.Contains(t, "=") {
 			continue
 		}
-		eq := strings.SplitN(t, "=", 2)
-		key := strings.ToLower(strings.TrimSpace(eq[0]))
-		val := strings.TrimSpace(eq[1])
+		k, v, _ := strings.Cut(t, "=")
+		key := strings.ToLower(strings.TrimSpace(k))
+		val := strings.TrimSpace(v)
 		if key == "" {
 			continue
 		}

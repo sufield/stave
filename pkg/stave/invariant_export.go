@@ -1,10 +1,11 @@
 package stave
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/controldef"
@@ -163,8 +164,8 @@ func ExportInvariants(ctx context.Context, cfg InvariantExportConfig) (*Invarian
 	for i := range controls {
 		out.Invariants = append(out.Invariants, projectControl(&controls[i]))
 	}
-	sort.Slice(out.Invariants, func(i, j int) bool {
-		return out.Invariants[i].ID < out.Invariants[j].ID
+	slices.SortFunc(out.Invariants, func(a, b InvariantDefinition) int {
+		return cmp.Compare(a.ID, b.ID)
 	})
 	return out, nil
 }

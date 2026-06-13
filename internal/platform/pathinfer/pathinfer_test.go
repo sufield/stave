@@ -3,7 +3,7 @@ package pathinfer
 import (
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"testing"
 
 	"github.com/sufield/stave/internal/env"
@@ -172,7 +172,7 @@ func TestUnique(t *testing.T) {
 						t.Errorf("candidates: got %d, want %d: %v", len(candidates), tt.wantNCands, candidates)
 					}
 					// Verify candidates are sorted
-					if !sort.StringsAreSorted(candidates) {
+					if !slices.IsSorted(candidates) {
 						t.Errorf("candidates not sorted: %v", candidates)
 					}
 				}

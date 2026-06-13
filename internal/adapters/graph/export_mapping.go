@@ -196,12 +196,13 @@ func (m *rdfMapper) firstEdgePass(g *GraphData) {
 		}
 
 		props := edgeProperties(e, m.nodesByID)
+		_, isShortcut := shortcutPredicates[pred]
 		m.out.Edges = append(m.out.Edges, rdfEdge{
 			From:       fromIRI,
 			To:         toIRI,
 			Predicate:  pred,
 			Properties: props,
-			Shortcut:   shortcutPredicates[pred],
+			Shortcut:   isShortcut,
 		})
 
 		if findingID, resourceID, ok := e.FindingResourcePair(); ok {

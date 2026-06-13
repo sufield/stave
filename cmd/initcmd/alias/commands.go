@@ -1,6 +1,7 @@
 package alias
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
@@ -93,7 +95,7 @@ func (r *Runner) List(ctx context.Context, format cmdutil.OutputFormat) error {
 		entries = append(entries, Entry{Name: k, Command: v})
 	}
 	slices.SortFunc(entries, func(a, b Entry) int {
-		return strings.Compare(a.Name, b.Name)
+		return cmp.Compare(a.Name, b.Name)
 	})
 
 	renderer, err := NewRenderer(format)

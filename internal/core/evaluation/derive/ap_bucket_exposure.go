@@ -1,7 +1,7 @@
 package derive
 
 import (
-	"sort"
+	"slices"
 
 	"github.com/sufield/stave/internal/core/asset"
 )
@@ -94,7 +94,7 @@ func collectPublicAccessPointsByBucket(snap asset.Snapshot) map[string][]string 
 		byBucket[bucketName] = append(byBucket[bucketName], apName)
 	}
 	for k := range byBucket {
-		sort.Strings(byBucket[k])
+		slices.Sort(byBucket[k])
 	}
 	return byBucket
 }

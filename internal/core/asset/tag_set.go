@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"maps"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -23,7 +24,7 @@ func (c TagConflict) String() string {
 func formatQuoted(ss []string) string {
 	quoted := make([]string, len(ss))
 	for i, s := range ss {
-		quoted[i] = fmt.Sprintf("%q", s)
+		quoted[i] = strconv.Quote(s)
 	}
 	return strings.Join(quoted, ", ")
 }

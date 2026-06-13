@@ -89,9 +89,8 @@ func (idx *CitationIndex) Frameworks() []string {
 	defer idx.mu.RUnlock()
 	seen := make(map[string]bool)
 	for key := range idx.entries {
-		parts := strings.SplitN(key, ":", 2)
-		if len(parts) == 2 {
-			seen[parts[0]] = true
+		if before, _, ok := strings.Cut(key, ":"); ok {
+			seen[before] = true
 		}
 	}
 	var out []string

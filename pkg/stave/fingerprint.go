@@ -60,11 +60,10 @@ func FingerprintExplain(ctx context.Context, cfg Config) (*FingerprintExplainRes
 		if strings.HasPrefix(line, "eval_version:") {
 			continue
 		}
-		parts := strings.SplitN(line, ":", 2)
-		if len(parts) == 2 {
+		if id, hash, ok := strings.Cut(line, ":"); ok {
 			controlEntries = append(controlEntries, FingerprintControlEntry{
-				ID:               parts[0],
-				Hash:             parts[1],
+				ID:               id,
+				Hash:             hash,
 				AssetTypesHashed: true,
 			})
 		}

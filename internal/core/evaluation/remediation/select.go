@@ -29,5 +29,5 @@ func SelectFinding(findings []Finding, needle string) (Finding, error) {
 
 // FindingKey returns the canonical string selector for a finding.
 func FindingKey(f *Finding) string {
-	return fmt.Sprintf("%s@%s", f.ControlID, f.AssetID)
+	return string(f.ControlID) + "@" + string(f.AssetID)
 }

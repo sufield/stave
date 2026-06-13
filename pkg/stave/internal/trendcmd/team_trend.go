@@ -1,10 +1,10 @@
 package trendcmd
 
 import (
-	"sort"
-
+	"cmp"
 	"fmt"
 	"io"
+	"slices"
 
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -152,8 +152,8 @@ func computeTeamTrends(
 	}
 
 	// Sort by score descending.
-	sort.Slice(trends, func(i, j int) bool {
-		return trends[i].PostureScore > trends[j].PostureScore
+	slices.SortFunc(trends, func(a, b teamTrend) int {
+		return cmp.Compare(b.PostureScore, a.PostureScore)
 	})
 
 	// Summary.

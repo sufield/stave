@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -178,7 +178,7 @@ func policyLibraryHash(cfs fs.FS) (string, int, error) {
 	if len(controlHashes) == 0 {
 		return "", 0, nil
 	}
-	sort.Strings(controlHashes)
+	slices.Sort(controlHashes)
 	combined := sha256.Sum256([]byte(strings.Join(controlHashes, "\n")))
 	return "sha256:" + hex.EncodeToString(combined[:]), count, nil
 }

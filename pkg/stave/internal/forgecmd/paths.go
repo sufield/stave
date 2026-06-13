@@ -3,7 +3,7 @@ package forgecmd
 import (
 	"bytes"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/adapters/observations"
@@ -85,7 +85,7 @@ func Paths(snapshotPath, assetType, filter string) ([]byte, error) {
 			sorted = append(sorted, p)
 		}
 	}
-	sort.Strings(sorted)
+	slices.Sort(sorted)
 
 	label := assetType
 	if label == "" {
@@ -105,7 +105,7 @@ func Paths(snapshotPath, assetType, filter string) ([]byte, error) {
 			for v := range info.values {
 				vals = append(vals, v)
 			}
-			sort.Strings(vals)
+			slices.Sort(vals)
 			line += fmt.Sprintf("  %v", vals)
 		}
 		fmt.Fprintln(&buf, line)

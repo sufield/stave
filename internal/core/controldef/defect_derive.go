@@ -3,6 +3,7 @@ package controldef
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/predicate"
@@ -169,7 +170,7 @@ func eqPhrase(value any) string {
 		if v == "" {
 			return "is empty"
 		}
-		return fmt.Sprintf("is set to %q", v)
+		return "is set to " + strconv.Quote(v)
 	default:
 		return fmt.Sprintf("is set to %v", value)
 	}
@@ -183,7 +184,7 @@ func nePhrase(value any) string {
 		}
 		return "is enabled"
 	case string:
-		return fmt.Sprintf("is not %q", v)
+		return "is not " + strconv.Quote(v)
 	default:
 		return fmt.Sprintf("is not %v", value)
 	}
@@ -219,10 +220,10 @@ var abbreviations = map[string]string{
 }
 
 // Boolean-state suffixes stripped when followed by the operator phrase.
-var boolSuffixes = map[string]bool{
-	"enabled": true, "disabled": true, "active": true,
-	"configured": true, "attached": true, "encrypted": true,
-	"blocked": true, "required": true, "managed": true,
+var boolSuffixes = map[string]struct{}{
+	"enabled": {}, "disabled": {}, "active": {},
+	"configured": {}, "attached": {}, "encrypted": {},
+	"blocked": {}, "required": {}, "managed": {},
 }
 
 // pathOverrides provides hand-tuned labels for paths where the
@@ -403,11 +404,10 @@ func pathLabel(path string) string {
 
 func algorithmicLabel(path string) string {
 	// Strip namespace (first segment).
-	parts := strings.SplitN(path, ".", 2)
-	if len(parts) < 2 {
+	_, rest, ok := strings.Cut(path, ".")
+	if !ok {
 		return ""
 	}
-	rest := parts[1]
 
 	// Remove array indices.
 	rest = arrayIndexRegex.ReplaceAllString(rest, "")
@@ -427,7 +427,10 @@ func algorithmicLabel(path string) string {
 
 	// Check if last segment is a boolean suffix — remember but don't
 	// strip yet (we strip only when expanding).
-	lastIsBool := len(segments) > 1 && boolSuffixes[segments[len(segments)-1]]
+	lastIsBool := false
+	if len(segments) > 1 {
+		_, lastIsBool = boolSuffixes[segments[len(segments)-1]]
+	}
 
 	// Expand abbreviations.
 	expanded := make([]string, len(segments))

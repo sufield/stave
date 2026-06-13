@@ -2,10 +2,11 @@ package stave
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"fmt"
 	"io"
-	"sort"
+	"slices"
 	"strings"
 	"text/tabwriter"
 
@@ -203,21 +204,27 @@ func renderCatalogSummaryView(w io.Writer, r catalogReport) error {
 	return nil
 }
 
+// catalogSeverityOrder is the fixed highest-first severity ordering shared by
+// the catalog severity renderers. Package-level so the literal is not
+// re-allocated on every render call.
+var catalogSeverityOrder = []policy.Severity{
+	policy.SeverityCritical, policy.SeverityHigh, policy.SeverityMedium,
+	policy.SeverityLow, policy.SeverityInfo,
+}
+
+// catalogSevShort maps severities to their compact wide-view labels.
+var catalogSevShort = map[policy.Severity]string{
+	policy.SeverityCritical: "crit", policy.SeverityHigh: "high",
+	policy.SeverityMedium: "med", policy.SeverityLow: "low", policy.SeverityInfo: "info",
+}
+
 // catalogSevBreakdown renders a compact per-severity tally (highest-first,
 // non-zero only) for the wide view, e.g. "crit:2 high:3 med:1".
 func catalogSevBreakdown(m map[policy.Severity]int) string {
-	order := []policy.Severity{
-		policy.SeverityCritical, policy.SeverityHigh, policy.SeverityMedium,
-		policy.SeverityLow, policy.SeverityInfo,
-	}
-	short := map[policy.Severity]string{
-		policy.SeverityCritical: "crit", policy.SeverityHigh: "high",
-		policy.SeverityMedium: "med", policy.SeverityLow: "low", policy.SeverityInfo: "info",
-	}
-	parts := make([]string, 0, len(order))
-	for _, s := range order {
+	parts := make([]string, 0, len(catalogSeverityOrder))
+	for _, s := range catalogSeverityOrder {
 		if n := m[s]; n > 0 {
-			parts = append(parts, fmt.Sprintf("%s:%d", short[s], n))
+			parts = append(parts, fmt.Sprintf("%s:%d", catalogSevShort[s], n))
 		}
 	}
 	if len(parts) == 0 {
@@ -229,12 +236,8 @@ func catalogSevBreakdown(m map[policy.Severity]int) string {
 // catalogSeverityHistogram renders the control-group severity counts
 // highest-first, omitting empty buckets.
 func catalogSeverityHistogram(s appcaps.Summary) string {
-	order := []policy.Severity{
-		policy.SeverityCritical, policy.SeverityHigh, policy.SeverityMedium,
-		policy.SeverityLow, policy.SeverityInfo,
-	}
-	parts := make([]string, 0, len(order))
-	for _, sev := range order {
+	parts := make([]string, 0, len(catalogSeverityOrder))
+	for _, sev := range catalogSeverityOrder {
 		if n := s.SeverityHist[sev]; n > 0 {
 			parts = append(parts, fmt.Sprintf("%d %s", n, strings.ToUpper(sev.String())))
 		}
@@ -356,11 +359,11 @@ func catalogControlGroups(in []appcaps.Capability) []appcaps.Capability {
 			out = append(out, in[i])
 		}
 	}
-	sort.Slice(out, func(i, j int) bool {
-		if out[i].Service != out[j].Service {
-			return out[i].Service < out[j].Service
-		}
-		return out[i].Title < out[j].Title
+	slices.SortFunc(out, func(a, b appcaps.Capability) int {
+		return cmp.Or(
+			cmp.Compare(a.Service, b.Service),
+			cmp.Compare(a.Title, b.Title),
+		)
 	})
 	return out
 }

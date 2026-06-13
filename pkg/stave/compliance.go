@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/adapters/cel"
@@ -175,6 +175,6 @@ func availableProfileIDs() []string {
 	for _, p := range profiles {
 		ids = append(ids, p.ID)
 	}
-	sort.Strings(ids)
+	slices.Sort(ids)
 	return ids
 }

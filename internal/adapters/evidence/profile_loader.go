@@ -168,13 +168,13 @@ func parseProfile(data []byte, filename string) (*coreevidence.FrameworkProfile,
 			return nil, fmt.Errorf("%s: extends %q: %w", filename, dto.Extends, parentErr)
 		}
 		// Merge: parent requirements first, child overrides by ID.
-		childIDs := make(map[string]bool, len(reqs))
+		childIDs := make(map[string]struct{}, len(reqs))
 		for _, r := range reqs {
-			childIDs[r.ID] = true
+			childIDs[r.ID] = struct{}{}
 		}
 		var merged []coreevidence.Requirement
 		for _, pr := range parent.Requirements {
-			if !childIDs[pr.ID] {
+			if _, ok := childIDs[pr.ID]; !ok {
 				merged = append(merged, pr)
 			}
 		}
