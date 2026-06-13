@@ -219,7 +219,9 @@ func fieldAccess(dotPath string) string {
 	var result strings.Builder
 	result.WriteString(parts[0])
 	for _, p := range parts[1:] {
-		fmt.Fprintf(&result, "[%q]", p)
+		result.WriteByte('[')
+		result.WriteString(strconv.Quote(p))
+		result.WriteByte(']')
 	}
 	return result.String()
 }
@@ -271,7 +273,9 @@ func hasField(dotPath string) string {
 		var base strings.Builder
 		base.WriteString(parts[0])
 		for j := 1; j < i; j++ {
-			fmt.Fprintf(&base, "[%q]", parts[j])
+			base.WriteByte('[')
+			base.WriteString(strconv.Quote(parts[j]))
+			base.WriteByte(']')
 		}
 		checks = append(checks, fmt.Sprintf("%q in %s", parts[i], base.String()))
 	}
@@ -323,7 +327,9 @@ func scopedFieldAccess(dotPath, scopeVar string) string {
 	var result strings.Builder
 	result.WriteString(scopeVar)
 	for _, p := range parts {
-		fmt.Fprintf(&result, "[%q]", p)
+		result.WriteByte('[')
+		result.WriteString(strconv.Quote(p))
+		result.WriteByte(']')
 	}
 	return result.String()
 }
@@ -354,7 +360,9 @@ func scopedHasField(dotPath, scopeVar string) string {
 		var base strings.Builder
 		base.WriteString(scopeVar)
 		for j := range i {
-			fmt.Fprintf(&base, "[%q]", parts[j])
+			base.WriteByte('[')
+			base.WriteString(strconv.Quote(parts[j]))
+			base.WriteByte(']')
 		}
 		checks = append(checks, fmt.Sprintf("%q in %s", parts[i], base.String()))
 	}

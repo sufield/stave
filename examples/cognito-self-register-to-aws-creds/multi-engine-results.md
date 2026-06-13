@@ -9,8 +9,8 @@ against each fixture's observation snapshots.
 ### `remediated-config`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query-auth-chain: n/a; query-self-register-chain: n/a
-- **Soufflé** — n/a
+- **SMT (Z3 / cvc5 / Yices)** — query: sat; query-auth-chain: sat; query-self-register-chain: sat
+- **Soufflé** — 12 reach / 0 anon / 0 self-reg
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -19,14 +19,14 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 51 lines / `smt2` 431 lines
-- *runtime*: 1.87s
+- *runtime*: 6.49s
 
 ### `writeup-config`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.COGNITO.SELFREG.001`
-- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query-auth-chain: n/a; query-self-register-chain: n/a
-- **Soufflé** — n/a
+- **SMT (Z3 / cvc5 / Yices)** — query: sat; query-auth-chain: sat; query-self-register-chain: sat
+- **Soufflé** — 42 reach / 12 anon / 9 self-reg
 - **Clingo** — 4 kind(s): advanced_security_off, mfa_disabled, unauth_cognito_s3_read, wildcard_action_resource
 - **Prolog** — 86 proof step(s)
 - **PySAT** — SAFE
@@ -35,7 +35,7 @@ against each fixture's observation snapshots.
 - **Game theory** — $300
 
 - *fact export*: `jsonl` 63 lines / `smt2` 500 lines
-- *runtime*: 1.65s
+- *runtime*: 7.22s
 
 ## Reading the matrix
 

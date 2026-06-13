@@ -9,8 +9,8 @@ against each fixture's observation snapshots.
 ### `after`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: n/a
-- **Soufflé** — n/a
+- **SMT (Z3 / cvc5 / Yices)** — query: sat
+- **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -19,14 +19,14 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 41 lines / `smt2` 377 lines
-- *runtime*: 1.92s
+- *runtime*: 7.53s
 
 ### `before`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.S3.WRITE.SCOPE.001`
-- **SMT (Z3 / cvc5 / Yices)** — query: n/a
-- **Soufflé** — n/a
+- **SMT (Z3 / cvc5 / Yices)** — query: sat
+- **Soufflé** — 0 reachable
 - **Clingo** — 1 kind(s): broad_write_scope
 - **Prolog** — 1 proof step(s)
 - **PySAT** — SAFE
@@ -35,7 +35,7 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 43 lines / `smt2` 389 lines
-- *runtime*: 1.71s
+- *runtime*: 7.71s
 
 ## Reading the matrix
 

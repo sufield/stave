@@ -10,7 +10,7 @@ against each fixture's observation snapshots.
 
 - **CEL** — 0 finding(s) (AT_RISK)
 - **SMT (Z3 / cvc5 / Yices)** — —
-- **Soufflé** — n/a
+- **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -19,13 +19,13 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 5364 lines / `smt2` 21591 lines
-- *runtime*: 4.4s
+- *runtime*: 16.2s
 
 ### `ttl-exceeded`
 
 - **CEL** — 0 finding(s) (AT_RISK)
 - **SMT (Z3 / cvc5 / Yices)** — —
-- **Soufflé** — n/a
+- **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -34,13 +34,13 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 5365 lines / `smt2` 21598 lines
-- *runtime*: 4.46s
+- *runtime*: 16.33s
 
 ### `ttl-valid`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
 - **SMT (Z3 / cvc5 / Yices)** — —
-- **Soufflé** — n/a
+- **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -49,7 +49,7 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 5363 lines / `smt2` 21586 lines
-- *runtime*: 4.11s
+- *runtime*: 16.25s
 
 ## Reading the matrix
 

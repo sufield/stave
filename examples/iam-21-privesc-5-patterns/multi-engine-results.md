@@ -10,8 +10,8 @@ against each fixture's observation snapshots.
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001`
-- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query: n/a; query: n/a; query: n/a; query: n/a
-- **Soufflé** — n/a
+- **SMT (Z3 / cvc5 / Yices)** — query: sat; query: sat; query: sat; query: sat; query: sat
+- **Soufflé** — 58 reach / 0 anon / 0 self-reg
 - **Clingo** — 1 kind(s): escalation_via_passrole_autoscaling
 - **Prolog** — 3 proof step(s)
 - **PySAT** — SAFE
@@ -20,13 +20,13 @@ against each fixture's observation snapshots.
 - **Game theory** — $1100
 
 - *fact export*: `jsonl` 108 lines / `smt2` 759 lines
-- *runtime*: 1.63s
+- *runtime*: 8.32s
 
 ### `real-world-pattern3`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query: n/a; query: n/a; query: n/a; query: n/a
-- **Soufflé** — n/a
+- **SMT (Z3 / cvc5 / Yices)** — query: sat; query: sat; query: sat; query: sat; query: sat
+- **Soufflé** — 12 reach / 0 anon / 0 self-reg
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -35,13 +35,13 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 52 lines / `smt2` 429 lines
-- *runtime*: 1.63s
+- *runtime*: 7.14s
 
 ### `remediated`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query: n/a; query: n/a; query: n/a; query: n/a
-- **Soufflé** — n/a
+- **SMT (Z3 / cvc5 / Yices)** — query: sat; query: sat; query: sat; query: sat; query: sat
+- **Soufflé** — 9 reach / 0 anon / 0 self-reg
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -50,14 +50,14 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 22 lines / `smt2` 243 lines
-- *runtime*: 1.62s
+- *runtime*: 6.72s
 
 ### `rhino-vulnerable`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001`
-- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query: n/a; query: n/a; query: n/a; query: n/a
-- **Soufflé** — n/a
+- **SMT (Z3 / cvc5 / Yices)** — query: sat; query: sat; query: sat; query: sat; query: sat
+- **Soufflé** — 58 reach / 0 anon / 0 self-reg
 - **Clingo** — 1 kind(s): escalation_via_passrole_autoscaling
 - **Prolog** — 6 proof step(s)
 - **PySAT** — SAFE
@@ -66,7 +66,7 @@ against each fixture's observation snapshots.
 - **Game theory** — $1100
 
 - *fact export*: `jsonl` 103 lines / `smt2` 729 lines
-- *runtime*: 1.64s
+- *runtime*: 7.75s
 
 ## Reading the matrix
 

@@ -27,11 +27,18 @@ const (
 
 func checkVersionInfo(ctx *SystemEnvironment) Diagnostic {
 	var sb strings.Builder
-	fmt.Fprintf(&sb, "stave_version=%s go_version=%s os=%s arch=%s",
-		ctx.BuildVersion, ctx.Runtime, ctx.OS, ctx.Arch)
+	sb.WriteString("stave_version=")
+	sb.WriteString(ctx.BuildVersion)
+	sb.WriteString(" go_version=")
+	sb.WriteString(ctx.Runtime)
+	sb.WriteString(" os=")
+	sb.WriteString(ctx.OS)
+	sb.WriteString(" arch=")
+	sb.WriteString(ctx.Arch)
 
 	if ctx.BinaryPath != "" {
-		fmt.Fprintf(&sb, " binary=%s", ctx.BinaryPath)
+		sb.WriteString(" binary=")
+		sb.WriteString(ctx.BinaryPath)
 	}
 
 	return Diagnostic{

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -115,10 +116,15 @@ func (l *Loader) validateIfStrict(data []byte, source string) error {
 		b.WriteString(":")
 		for i, d := range diags {
 			if i >= 5 {
-				fmt.Fprintf(&b, "\n  ... (+%d more)", len(diags)-5)
+				b.WriteString("\n  ... (+")
+				b.WriteString(strconv.Itoa(len(diags) - 5))
+				b.WriteString(" more)")
 				break
 			}
-			fmt.Fprintf(&b, "\n  %s: %s", d.Path, d.Message)
+			b.WriteString("\n  ")
+			b.WriteString(d.Path)
+			b.WriteString(": ")
+			b.WriteString(d.Message)
 		}
 		return fmt.Errorf("%s: %w", b.String(), validator.ErrSchemaValidationFailed)
 	}

@@ -9,8 +9,8 @@ against each fixture's observation snapshots.
 ### `after`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query-data-events: n/a; query-mgmt: n/a
-- **Soufflé** — n/a
+- **SMT (Z3 / cvc5 / Yices)** — query-data-events: sat; query-mgmt: sat
+- **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -19,14 +19,14 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 11 lines / `smt2` 177 lines
-- *runtime*: 1.62s
+- *runtime*: 7.48s
 
 ### `before`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.CLOUDTRAIL.STOP.DETECT.001`
-- **SMT (Z3 / cvc5 / Yices)** — query-data-events: n/a; query-mgmt: n/a
-- **Soufflé** — n/a
+- **SMT (Z3 / cvc5 / Yices)** — query-data-events: sat; query-mgmt: sat
+- **Soufflé** — 0 reachable
 - **Clingo** — 1 kind(s): logging_disabled
 - **Prolog** — 1 proof step(s)
 - **PySAT** — SAFE
@@ -35,13 +35,13 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 14 lines / `smt2` 196 lines
-- *runtime*: 1.62s
+- *runtime*: 7.52s
 
 ### `data-events-after`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query-data-events: n/a; query-mgmt: n/a
-- **Soufflé** — n/a
+- **SMT (Z3 / cvc5 / Yices)** — query-data-events: sat; query-mgmt: sat
+- **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -50,13 +50,13 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 53 lines / `smt2` 435 lines
-- *runtime*: 1.66s
+- *runtime*: 7.5s
 
 ### `data-events-before`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query-data-events: n/a; query-mgmt: n/a
-- **Soufflé** — n/a
+- **SMT (Z3 / cvc5 / Yices)** — query-data-events: sat; query-mgmt: sat
+- **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -65,7 +65,7 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 50 lines / `smt2` 417 lines
-- *runtime*: 1.62s
+- *runtime*: 6.78s
 
 ## Reading the matrix
 

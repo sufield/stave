@@ -163,8 +163,8 @@ func marshalPrunedSnapshots(snapshots []asset.Snapshot, findings []remediation.F
 
 func buildSummary(input BundleInput) []byte {
 	var buf bytes.Buffer
-	fmt.Fprintf(&buf, "Stave Evidence Bundle\n")
-	fmt.Fprintf(&buf, "=====================\n\n")
+	buf.WriteString("Stave Evidence Bundle\n")
+	buf.WriteString("=====================\n\n")
 	fmt.Fprintf(&buf, "Generated: %s\n", time.Now().UTC().Format(time.RFC3339))
 	fmt.Fprintf(&buf, "Version:   %s\n", input.StaveVersion)
 	fmt.Fprintf(&buf, "Status:    %s\n\n", input.Assessment.Status)

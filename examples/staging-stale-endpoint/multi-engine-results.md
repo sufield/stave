@@ -10,7 +10,7 @@ against each fixture's observation snapshots.
 
 - **CEL** — 0 finding(s) (COMPLIANT)
 - **SMT (Z3 / cvc5 / Yices)** — —
-- **Soufflé** — n/a
+- **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -19,13 +19,13 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 17 lines / `smt2` 212 lines
-- *runtime*: 1.62s
+- *runtime*: 6.77s
 
 ### `prod-dormant`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
 - **SMT (Z3 / cvc5 / Yices)** — —
-- **Soufflé** — n/a
+- **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -34,14 +34,14 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 19 lines / `smt2` 225 lines
-- *runtime*: 1.66s
+- *runtime*: 6.69s
 
 ### `stale-staging`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.LIFECYCLE.STAGING.STALE.001`
 - **SMT (Z3 / cvc5 / Yices)** — —
-- **Soufflé** — n/a
+- **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -50,14 +50,14 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 21 lines / `smt2` 237 lines
-- *runtime*: 1.62s
+- *runtime*: 6.82s
 
 ### `stale-staging-public`
 
 - **CEL** — 2 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.LIFECYCLE.STAGING.STALE.001`, `CTL.S3.PUBLIC.LIST.002`
 - **SMT (Z3 / cvc5 / Yices)** — —
-- **Soufflé** — n/a
+- **Soufflé** — 0 reachable
 - **Clingo** — 1 kind(s): public_list
 - **Prolog** — 1 proof step(s)
 - **PySAT** — UNSAFE
@@ -66,7 +66,7 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 23 lines / `smt2` 248 lines
-- *runtime*: 1.63s
+- *runtime*: 6.73s
 
 ## Reading the matrix
 

@@ -3,6 +3,7 @@ package enginetest
 import (
 	"go/parser"
 	"go/token"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,11 +47,11 @@ func TestDomainLayerBoundary(t *testing.T) {
 		if _, err := os.Stat(dirPath); err != nil {
 			continue
 		}
-		err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		err := filepath.WalkDir(dirPath, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				return err
 			}
-			if info.IsDir() || !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+			if d.IsDir() || !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
 				return nil
 			}
 

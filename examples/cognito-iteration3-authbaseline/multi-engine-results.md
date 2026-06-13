@@ -10,7 +10,7 @@ against each fixture's observation snapshots.
 
 - **CEL** — 0 finding(s) (AT_RISK)
 - **SMT (Z3 / cvc5 / Yices)** — —
-- **Soufflé** — n/a
+- **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -19,13 +19,13 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 5380 lines / `smt2` 21700 lines
-- *runtime*: 4.18s
+- *runtime*: 15.69s
 
 ### `remediated-config`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
 - **SMT (Z3 / cvc5 / Yices)** — —
-- **Soufflé** — n/a
+- **Soufflé** — 0 reachable
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -34,13 +34,13 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 5376 lines / `smt2` 21676 lines
-- *runtime*: 4.45s
+- *runtime*: 15.55s
 
 ### `writeup-config`
 
 - **CEL** — 0 finding(s) (AT_RISK)
 - **SMT (Z3 / cvc5 / Yices)** — —
-- **Soufflé** — n/a
+- **Soufflé** — 0 reachable
 - **Clingo** — 1 kind(s): mfa_disabled
 - **Prolog** — 1 proof step(s)
 - **PySAT** — UNSAFE
@@ -49,7 +49,7 @@ against each fixture's observation snapshots.
 - **Game theory** — $1500
 
 - *fact export*: `jsonl` 5383 lines / `smt2` 21716 lines
-- *runtime*: 4.04s
+- *runtime*: 15.78s
 
 ## Reading the matrix
 

@@ -3,6 +3,7 @@ package forgecmd
 import (
 	"bytes"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -24,11 +25,11 @@ func ValidateGenerated(controlID, outDir string) ([]byte, error) {
 
 	wantName := controlID + ".yaml"
 	var yamlPath string
-	walkErr := filepath.Walk(outDir, func(path string, info os.FileInfo, err error) error {
+	walkErr := filepath.WalkDir(outDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() {
+		if d.IsDir() {
 			return nil
 		}
 		if filepath.Base(path) == wantName {

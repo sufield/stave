@@ -111,54 +111,54 @@ through for full per-fixture detail.
 
 | Example | CEL | SMT | Soufflé | Risk | Game |
 |---|---|---|---|---|---|
-| [ai-shadow-and-ghosts](ai-shadow-and-ghosts/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [apigw-private-api-scoped-deny](apigw-private-api-scoped-deny/multi-engine-results.md) | 0 | unsat | — | P=0% | no-path |
-| [bedrock-agent-overpermissioned](bedrock-agent-overpermissioned/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [bedrock-agent-tool-phi](bedrock-agent-tool-phi/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [bedrock-rag-phi-exposure](bedrock-rag-phi-exposure/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [cloudtrail-stop-logging](cloudtrail-stop-logging/multi-engine-results.md) | 1 | unsat | — | P=0% | no-path |
-| [cognito-advsec-tristate](cognito-advsec-tristate/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [cognito-iteration1-ghosts](cognito-iteration1-ghosts/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [cognito-iteration10-tokenuicompliance](cognito-iteration10-tokenuicompliance/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [cognito-iteration2-unauth](cognito-iteration2-unauth/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [cognito-iteration3-authbaseline](cognito-iteration3-authbaseline/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [cognito-iteration4-clientconfig](cognito-iteration4-clientconfig/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [cognito-iteration5-authrole](cognito-iteration5-authrole/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [cognito-iteration6-advsec](cognito-iteration6-advsec/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [cognito-iteration7-federation](cognito-iteration7-federation/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [cognito-iteration8-monitoring](cognito-iteration8-monitoring/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [cognito-iteration9-orphans](cognito-iteration9-orphans/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [cognito-no-mfa-advanced-security](cognito-no-mfa-advanced-security/multi-engine-results.md) | 1 | unsat | — | P=0% | no-path |
-| [cognito-presignup-ghost](cognito-presignup-ghost/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [cognito-self-register-to-aws-creds](cognito-self-register-to-aws-creds/multi-engine-results.md) | 1 | unsat | — | P=41% | $300 |
-| [demo-ai-security](demo-ai-security/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [ecs-ssrf-credential-theft](ecs-ssrf-credential-theft/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [eks-aws-auth-template-injection](eks-aws-auth-template-injection/multi-engine-results.md) | 1 | unsat | — | P=0% | no-path |
-| [eks-rbac-webhook-config-access](eks-rbac-webhook-config-access/multi-engine-results.md) | 1 | unsat | — | P=0% | no-path |
-| [iam-21-privesc-5-patterns](iam-21-privesc-5-patterns/multi-engine-results.md) | 1 | unsat | — | P=0% | $1100 |
-| [iam-attach-user-policy-self](iam-attach-user-policy-self/multi-engine-results.md) | 1 | unsat | — | P=0% | no-path |
-| [iam-autoscaling-privesc-bypass](iam-autoscaling-privesc-bypass/multi-engine-results.md) | 1 | unsat | — | P=40% | $900 |
-| [iam-cred-ttl-exceeded](iam-cred-ttl-exceeded/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [iam-multi-hop-trust](iam-multi-hop-trust/multi-engine-results.md) | 0 | unsat | — | P=40% | $1500 |
-| [iam-overpermission-wildcard](iam-overpermission-wildcard/multi-engine-results.md) | 1 | unsat | — | P=65% | $900 |
-| [imds-ssrf-chain](imds-ssrf-chain/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [meta-observation-stale](meta-observation-stale/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [s3-broad-write-scope](s3-broad-write-scope/multi-engine-results.md) | 1 | unsat | — | P=0% | no-path |
-| [s3-bucket-name-dangling](s3-bucket-name-dangling/multi-engine-results.md) | 1 | unsat | — | P=0% | no-path |
-| [s3-cross-account-replication-overperm](s3-cross-account-replication-overperm/multi-engine-results.md) | 0 | unsat | — | P=0% | no-path |
-| [s3-delegation-failure](s3-delegation-failure/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [s3-dotgit-readable](s3-dotgit-readable/multi-engine-results.md) | 1 | unsat | — | P=0% | no-path |
-| [s3-public-list-policy](s3-public-list-policy/multi-engine-results.md) | 1 | unsat | — | P=0% | no-path |
-| [s3-public-read-policy](s3-public-read-policy/multi-engine-results.md) | 1 | unsat | — | P=0% | no-path |
-| [s3-tenant-prefix-isolation](s3-tenant-prefix-isolation/multi-engine-results.md) | 1 | — | — | P=0% | no-path |
-| [sagemaker-execution-role-overprivileged](sagemaker-execution-role-overprivileged/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [sagemaker-notebook-prod-escape](sagemaker-notebook-prod-escape/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [shadow-admin-detection](shadow-admin-detection/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [shadow-ec2-lateral-movement](shadow-ec2-lateral-movement/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [sns-secrets-compound-chain](sns-secrets-compound-chain/multi-engine-results.md) | 0 | unsat | — | P=0% | no-path |
-| [staging-stale-endpoint](staging-stale-endpoint/multi-engine-results.md) | 2 | — | — | P=0% | no-path |
-| [vpc-peering-exfiltration](vpc-peering-exfiltration/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
-| [z3-forbidden-state](z3-forbidden-state/multi-engine-results.md) | 0 | — | — | P=0% | no-path |
+| [ai-shadow-and-ghosts](ai-shadow-and-ghosts/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [apigw-private-api-scoped-deny](apigw-private-api-scoped-deny/multi-engine-results.md) | 0 | sat | 0 anon, 0 total | P=0% | no-path |
+| [bedrock-agent-overpermissioned](bedrock-agent-overpermissioned/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [bedrock-agent-tool-phi](bedrock-agent-tool-phi/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [bedrock-rag-phi-exposure](bedrock-rag-phi-exposure/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [cloudtrail-stop-logging](cloudtrail-stop-logging/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
+| [cognito-advsec-tristate](cognito-advsec-tristate/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [cognito-iteration1-ghosts](cognito-iteration1-ghosts/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [cognito-iteration10-tokenuicompliance](cognito-iteration10-tokenuicompliance/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [cognito-iteration2-unauth](cognito-iteration2-unauth/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [cognito-iteration3-authbaseline](cognito-iteration3-authbaseline/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [cognito-iteration4-clientconfig](cognito-iteration4-clientconfig/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [cognito-iteration5-authrole](cognito-iteration5-authrole/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [cognito-iteration6-advsec](cognito-iteration6-advsec/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [cognito-iteration7-federation](cognito-iteration7-federation/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [cognito-iteration8-monitoring](cognito-iteration8-monitoring/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [cognito-iteration9-orphans](cognito-iteration9-orphans/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [cognito-no-mfa-advanced-security](cognito-no-mfa-advanced-security/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
+| [cognito-presignup-ghost](cognito-presignup-ghost/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [cognito-self-register-to-aws-creds](cognito-self-register-to-aws-creds/multi-engine-results.md) | 1 | sat | 12 anon, 42 total | P=41% | $300 |
+| [demo-ai-security](demo-ai-security/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [ecs-ssrf-credential-theft](ecs-ssrf-credential-theft/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [eks-aws-auth-template-injection](eks-aws-auth-template-injection/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
+| [eks-rbac-webhook-config-access](eks-rbac-webhook-config-access/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
+| [iam-21-privesc-5-patterns](iam-21-privesc-5-patterns/multi-engine-results.md) | 1 | sat | 0 anon, 58 total | P=0% | $1100 |
+| [iam-attach-user-policy-self](iam-attach-user-policy-self/multi-engine-results.md) | 1 | sat | 0 anon, 3 total | P=0% | no-path |
+| [iam-autoscaling-privesc-bypass](iam-autoscaling-privesc-bypass/multi-engine-results.md) | 1 | sat | 0 anon, 19 total | P=40% | $900 |
+| [iam-cred-ttl-exceeded](iam-cred-ttl-exceeded/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [iam-multi-hop-trust](iam-multi-hop-trust/multi-engine-results.md) | 0 | sat | 0 anon, 6 total | P=40% | $1500 |
+| [iam-overpermission-wildcard](iam-overpermission-wildcard/multi-engine-results.md) | 1 | sat | 0 anon, 8 total | P=65% | $900 |
+| [imds-ssrf-chain](imds-ssrf-chain/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [meta-observation-stale](meta-observation-stale/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [s3-broad-write-scope](s3-broad-write-scope/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
+| [s3-bucket-name-dangling](s3-bucket-name-dangling/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
+| [s3-cross-account-replication-overperm](s3-cross-account-replication-overperm/multi-engine-results.md) | 0 | sat | 0 anon, 45 total | P=0% | no-path |
+| [s3-delegation-failure](s3-delegation-failure/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [s3-dotgit-readable](s3-dotgit-readable/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
+| [s3-public-list-policy](s3-public-list-policy/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
+| [s3-public-read-policy](s3-public-read-policy/multi-engine-results.md) | 1 | sat | 0 anon, 0 total | P=0% | no-path |
+| [s3-tenant-prefix-isolation](s3-tenant-prefix-isolation/multi-engine-results.md) | 1 | — | 0 anon, 0 total | P=0% | no-path |
+| [sagemaker-execution-role-overprivileged](sagemaker-execution-role-overprivileged/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [sagemaker-notebook-prod-escape](sagemaker-notebook-prod-escape/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [shadow-admin-detection](shadow-admin-detection/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [shadow-ec2-lateral-movement](shadow-ec2-lateral-movement/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [sns-secrets-compound-chain](sns-secrets-compound-chain/multi-engine-results.md) | 0 | sat | 0 anon, 18 total | P=0% | no-path |
+| [staging-stale-endpoint](staging-stale-endpoint/multi-engine-results.md) | 2 | — | 0 anon, 0 total | P=0% | no-path |
+| [vpc-peering-exfiltration](vpc-peering-exfiltration/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
+| [z3-forbidden-state](z3-forbidden-state/multi-engine-results.md) | 0 | — | 0 anon, 0 total | P=0% | no-path |
 
 ## Quick Start for Your Own Environment
 
@@ -182,7 +182,7 @@ through for full per-fixture detail.
 | Engine | Useful | Empty / no-signal | n/a / skipped | Error |
 |---|---:|---:|---:|---:|
 | cel | 18 | 97 | 0 | 0 |
-| souffle | 0 | 0 | 115 | 0 |
+| souffle | 115 | 0 | 0 | 0 |
 | clingo | 27 | 88 | 0 | 0 |
 | prolog | 28 | 87 | 0 | 0 |
 | pysat | 8 | 107 | 0 | 0 |

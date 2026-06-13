@@ -77,12 +77,17 @@ func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]bo
 // FormatLint produces human-readable lint output.
 func FormatLint(r LintResult) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "%s\n", r.ChainID)
+	b.WriteString(r.ChainID)
+	b.WriteByte('\n')
 	for _, e := range r.Errors {
-		fmt.Fprintf(&b, "  ERROR   %s\n", e)
+		b.WriteString("  ERROR   ")
+		b.WriteString(e)
+		b.WriteByte('\n')
 	}
 	for _, w := range r.Warnings {
-		fmt.Fprintf(&b, "  WARNING %s\n", w)
+		b.WriteString("  WARNING ")
+		b.WriteString(w)
+		b.WriteByte('\n')
 	}
 	return b.String()
 }

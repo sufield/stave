@@ -3,6 +3,7 @@ package report
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	schemas "github.com/sufield/stave/internal/contracts/schema"
@@ -77,7 +78,9 @@ func formatDiagnostics(diags []contractvalidator.Diagnostic) error {
 
 	for i, d := range diags {
 		if i >= maxReported {
-			fmt.Fprintf(&sb, "; and %d more...", len(diags)-maxReported)
+			sb.WriteString("; and ")
+			sb.WriteString(strconv.Itoa(len(diags) - maxReported))
+			sb.WriteString(" more...")
 			break
 		}
 		if i > 0 {

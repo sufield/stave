@@ -9,8 +9,8 @@ against each fixture's observation snapshots.
 ### `after`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query: n/a; query: n/a
-- **Soufflé** — n/a
+- **SMT (Z3 / cvc5 / Yices)** — query: sat; query: sat; query: sat
+- **Soufflé** — 15 reach / 0 anon / 0 self-reg
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -19,14 +19,14 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 17 lines / `smt2` 211 lines
-- *runtime*: 1.98s
+- *runtime*: 6.72s
 
 ### `before`
 
 - **CEL** — 1 finding(s) (NON_COMPLIANT)
   - controls fired: `CTL.IAM.POLICY.RESOURCE.WILDCARD.001`
-- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query: n/a; query: n/a
-- **Soufflé** — n/a
+- **SMT (Z3 / cvc5 / Yices)** — query: sat; query: sat; query: sat
+- **Soufflé** — 8 reach / 0 anon / 0 self-reg
 - **Clingo** — 2 kind(s): exploitable_overperm, wildcard_action_resource
 - **Prolog** — 2 proof step(s)
 - **PySAT** — SAFE
@@ -35,13 +35,13 @@ against each fixture's observation snapshots.
 - **Game theory** — $900
 
 - *fact export*: `jsonl` 17 lines / `smt2` 211 lines
-- *runtime*: 1.68s
+- *runtime*: 6.61s
 
 ### `bybit-pattern-after`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query: n/a; query: n/a
-- **Soufflé** — n/a
+- **SMT (Z3 / cvc5 / Yices)** — query: sat; query: sat; query: sat
+- **Soufflé** — 16 reach / 0 anon / 0 self-reg
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -50,13 +50,13 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 38 lines / `smt2` 342 lines
-- *runtime*: 1.75s
+- *runtime*: 6.4s
 
 ### `bybit-pattern-before`
 
 - **CEL** — 0 finding(s) (COMPLIANT)
-- **SMT (Z3 / cvc5 / Yices)** — query: n/a; query: n/a; query: n/a
-- **Soufflé** — n/a
+- **SMT (Z3 / cvc5 / Yices)** — query: sat; query: sat; query: sat
+- **Soufflé** — 8 reach / 0 anon / 0 self-reg
 - **Clingo** — no violations
 - **Prolog** — no proof
 - **PySAT** — SAFE
@@ -65,7 +65,7 @@ against each fixture's observation snapshots.
 - **Game theory** — no-path
 
 - *fact export*: `jsonl` 34 lines / `smt2` 318 lines
-- *runtime*: 1.65s
+- *runtime*: 7.34s
 
 ## Reading the matrix
 

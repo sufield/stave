@@ -19,8 +19,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -45,7 +52,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.74
+      "elapsed_s": 18.98
     },
     {
       "label": "ai-shadow-and-ghosts/writeup-config",
@@ -66,8 +73,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -92,7 +106,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.19
+      "elapsed_s": 18.95
     },
     {
       "label": "apigw-private-api-scoped-deny/broadened-allow",
@@ -115,12 +129,10 @@
         {
           "query": "apigw-private-api-scoped-deny/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -129,8 +141,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -157,7 +176,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.64
+      "elapsed_s": 7.21
     },
     {
       "label": "apigw-private-api-scoped-deny/remediated-config",
@@ -180,12 +199,10 @@
         {
           "query": "apigw-private-api-scoped-deny/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -194,8 +211,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -222,7 +246,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.62
+      "elapsed_s": 7.5
     },
     {
       "label": "apigw-private-api-scoped-deny/writeup-config",
@@ -245,12 +269,10 @@
         {
           "query": "apigw-private-api-scoped-deny/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -259,8 +281,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -287,7 +316,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.75
+      "elapsed_s": 7.0
     },
     {
       "label": "bedrock-agent-overpermissioned/partial-remediation",
@@ -308,8 +337,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -334,7 +370,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.04
+      "elapsed_s": 17.22
     },
     {
       "label": "bedrock-agent-overpermissioned/remediated-config",
@@ -355,8 +391,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -381,7 +424,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.15
+      "elapsed_s": 16.0
     },
     {
       "label": "bedrock-agent-overpermissioned/writeup-config",
@@ -402,8 +445,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -429,7 +479,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.08
+      "elapsed_s": 15.37
     },
     {
       "label": "bedrock-agent-tool-phi/remediated-config",
@@ -450,8 +500,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -476,7 +533,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.13
+      "elapsed_s": 15.42
     },
     {
       "label": "bedrock-agent-tool-phi/writeup-config",
@@ -497,8 +554,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -523,7 +587,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.12
+      "elapsed_s": 15.28
     },
     {
       "label": "bedrock-rag-phi-exposure/remediated-config",
@@ -544,8 +608,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -570,7 +641,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.1
+      "elapsed_s": 15.65
     },
     {
       "label": "bedrock-rag-phi-exposure/training-crossaccount",
@@ -591,8 +662,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -617,7 +695,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.08
+      "elapsed_s": 16.41
     },
     {
       "label": "bedrock-rag-phi-exposure/writeup-config",
@@ -638,8 +716,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -664,7 +749,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.11
+      "elapsed_s": 20.04
     },
     {
       "label": "cloudtrail-stop-logging/after",
@@ -687,12 +772,10 @@
         {
           "query": "cloudtrail-stop-logging/query-data-events",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -702,12 +785,10 @@
         {
           "query": "cloudtrail-stop-logging/query-mgmt",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -716,8 +797,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -742,7 +830,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.62
+      "elapsed_s": 7.48
     },
     {
       "label": "cloudtrail-stop-logging/before",
@@ -767,12 +855,10 @@
         {
           "query": "cloudtrail-stop-logging/query-data-events",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -782,12 +868,10 @@
         {
           "query": "cloudtrail-stop-logging/query-mgmt",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -796,8 +880,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -824,7 +915,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.62
+      "elapsed_s": 7.52
     },
     {
       "label": "cloudtrail-stop-logging/data-events-after",
@@ -847,12 +938,10 @@
         {
           "query": "cloudtrail-stop-logging/query-data-events",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -862,12 +951,10 @@
         {
           "query": "cloudtrail-stop-logging/query-mgmt",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -876,8 +963,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -902,7 +996,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.66
+      "elapsed_s": 7.5
     },
     {
       "label": "cloudtrail-stop-logging/data-events-before",
@@ -925,12 +1019,10 @@
         {
           "query": "cloudtrail-stop-logging/query-data-events",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -940,12 +1032,10 @@
         {
           "query": "cloudtrail-stop-logging/query-mgmt",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -954,8 +1044,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -980,7 +1077,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.62
+      "elapsed_s": 6.78
     },
     {
       "label": "cognito-advsec-tristate/audit-mode",
@@ -1001,8 +1098,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1027,7 +1131,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.12
+      "elapsed_s": 15.13
     },
     {
       "label": "cognito-advsec-tristate/enforced-mode",
@@ -1048,8 +1152,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1074,7 +1185,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.04
+      "elapsed_s": 14.85
     },
     {
       "label": "cognito-advsec-tristate/off-mode",
@@ -1095,8 +1206,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -1123,7 +1241,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.05
+      "elapsed_s": 15.26
     },
     {
       "label": "cognito-iteration1-ghosts/authflow-gap-config",
@@ -1144,8 +1262,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1171,7 +1296,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.16
+      "elapsed_s": 15.49
     },
     {
       "label": "cognito-iteration1-ghosts/remediated-config",
@@ -1192,8 +1317,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1218,7 +1350,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.41
+      "elapsed_s": 17.85
     },
     {
       "label": "cognito-iteration1-ghosts/writeup-config",
@@ -1239,8 +1371,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1266,7 +1405,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.31
+      "elapsed_s": 18.27
     },
     {
       "label": "cognito-iteration10-tokenuicompliance/remediated-config",
@@ -1287,8 +1426,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1313,7 +1459,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.09
+      "elapsed_s": 15.89
     },
     {
       "label": "cognito-iteration10-tokenuicompliance/writeup-config",
@@ -1334,8 +1480,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1360,7 +1513,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.14
+      "elapsed_s": 15.97
     },
     {
       "label": "cognito-iteration2-unauth/cross-resource-config",
@@ -1381,8 +1534,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1407,7 +1567,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.08
+      "elapsed_s": 16.8
     },
     {
       "label": "cognito-iteration2-unauth/remediated-config",
@@ -1428,8 +1588,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1454,7 +1621,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.44
+      "elapsed_s": 15.11
     },
     {
       "label": "cognito-iteration2-unauth/writeup-config",
@@ -1475,8 +1642,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1501,7 +1675,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.35
+      "elapsed_s": 15.23
     },
     {
       "label": "cognito-iteration3-authbaseline/recovery-bypass-config",
@@ -1522,8 +1696,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1548,7 +1729,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.18
+      "elapsed_s": 15.69
     },
     {
       "label": "cognito-iteration3-authbaseline/remediated-config",
@@ -1569,8 +1750,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1595,7 +1783,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.45
+      "elapsed_s": 15.55
     },
     {
       "label": "cognito-iteration3-authbaseline/writeup-config",
@@ -1616,8 +1804,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -1646,7 +1841,7 @@
         "verdict": "$1500",
         "cost": 1500
       },
-      "elapsed_s": 4.04
+      "elapsed_s": 15.78
     },
     {
       "label": "cognito-iteration4-clientconfig/open-redirect-config",
@@ -1667,8 +1862,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1693,7 +1895,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.18
+      "elapsed_s": 15.85
     },
     {
       "label": "cognito-iteration4-clientconfig/remediated-config",
@@ -1714,8 +1916,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1740,7 +1949,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.04
+      "elapsed_s": 15.68
     },
     {
       "label": "cognito-iteration4-clientconfig/writeup-config",
@@ -1761,8 +1970,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1787,7 +2003,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.05
+      "elapsed_s": 15.51
     },
     {
       "label": "cognito-iteration5-authrole/remediated-config",
@@ -1808,8 +2024,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1834,7 +2057,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.06
+      "elapsed_s": 15.49
     },
     {
       "label": "cognito-iteration5-authrole/writeup-config",
@@ -1855,8 +2078,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1881,7 +2111,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.06
+      "elapsed_s": 15.3
     },
     {
       "label": "cognito-iteration6-advsec/remediated-config",
@@ -1902,8 +2132,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -1928,7 +2165,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.2
+      "elapsed_s": 15.96
     },
     {
       "label": "cognito-iteration6-advsec/writeup-config",
@@ -1949,8 +2186,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -1977,7 +2221,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.07
+      "elapsed_s": 15.58
     },
     {
       "label": "cognito-iteration7-federation/remediated-config",
@@ -1998,8 +2242,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -2024,7 +2275,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.04
+      "elapsed_s": 15.45
     },
     {
       "label": "cognito-iteration7-federation/writeup-config",
@@ -2045,8 +2296,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -2071,7 +2329,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.41
+      "elapsed_s": 15.69
     },
     {
       "label": "cognito-iteration8-monitoring/remediated-config",
@@ -2092,8 +2350,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -2118,7 +2383,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.04
+      "elapsed_s": 15.51
     },
     {
       "label": "cognito-iteration8-monitoring/writeup-config",
@@ -2139,8 +2404,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -2165,7 +2437,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.07
+      "elapsed_s": 15.84
     },
     {
       "label": "cognito-iteration9-orphans/remediated-config",
@@ -2186,8 +2458,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -2212,7 +2491,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.19
+      "elapsed_s": 15.95
     },
     {
       "label": "cognito-iteration9-orphans/writeup-config",
@@ -2233,8 +2512,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -2259,7 +2545,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.11
+      "elapsed_s": 15.81
     },
     {
       "label": "cognito-no-mfa-advanced-security/after",
@@ -2282,12 +2568,10 @@
         {
           "query": "cognito-no-mfa-advanced-security/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -2296,8 +2580,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -2322,7 +2613,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.63
+      "elapsed_s": 6.2
     },
     {
       "label": "cognito-no-mfa-advanced-security/before",
@@ -2347,12 +2638,10 @@
         {
           "query": "cognito-no-mfa-advanced-security/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -2361,8 +2650,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -2390,7 +2686,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.65
+      "elapsed_s": 6.35
     },
     {
       "label": "cognito-presignup-ghost/remediated-config",
@@ -2411,8 +2707,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -2437,7 +2740,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.05
+      "elapsed_s": 15.85
     },
     {
       "label": "cognito-presignup-ghost/writeup-config",
@@ -2458,8 +2761,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -2484,7 +2794,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.14
+      "elapsed_s": 15.59
     },
     {
       "label": "cognito-self-register-to-aws-creds/remediated-config",
@@ -2507,12 +2817,10 @@
         {
           "query": "z3-cognito-unauth-chain/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -2522,12 +2830,10 @@
         {
           "query": "z3-cognito-auth-chain/query-auth-chain",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -2537,12 +2843,10 @@
         {
           "query": "z3-cognito-auth-chain/query-self-register-chain",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -2551,8 +2855,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 12,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -2577,7 +2888,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.87
+      "elapsed_s": 6.49
     },
     {
       "label": "cognito-self-register-to-aws-creds/writeup-config",
@@ -2602,12 +2913,10 @@
         {
           "query": "z3-cognito-unauth-chain/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -2617,12 +2926,10 @@
         {
           "query": "z3-cognito-auth-chain/query-auth-chain",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -2632,12 +2939,10 @@
         {
           "query": "z3-cognito-auth-chain/query-self-register-chain",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -2646,8 +2951,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 12,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 42,
+          "self_register_reachable": 9
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -2678,7 +2990,7 @@
         "verdict": "$300",
         "cost": 300
       },
-      "elapsed_s": 1.65
+      "elapsed_s": 7.22
     },
     {
       "label": "demo-ai-security/remediated-config",
@@ -2699,8 +3011,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -2725,7 +3044,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.2
+      "elapsed_s": 16.97
     },
     {
       "label": "demo-ai-security/writeup-config",
@@ -2746,8 +3065,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -2772,7 +3098,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.1
+      "elapsed_s": 17.68
     },
     {
       "label": "ecs-ssrf-credential-theft/remediated-config",
@@ -2793,8 +3119,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -2819,7 +3152,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.38
+      "elapsed_s": 16.95
     },
     {
       "label": "ecs-ssrf-credential-theft/writeup-config",
@@ -2840,8 +3173,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -2866,7 +3206,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.35
+      "elapsed_s": 16.26
     },
     {
       "label": "eks-aws-auth-template-injection/after",
@@ -2889,12 +3229,10 @@
         {
           "query": "eks-aws-auth-template-injection/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -2903,8 +3241,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -2929,7 +3274,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.74
+      "elapsed_s": 6.66
     },
     {
       "label": "eks-aws-auth-template-injection/before",
@@ -2954,12 +3299,10 @@
         {
           "query": "eks-aws-auth-template-injection/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -2968,8 +3311,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -2996,7 +3346,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.78
+      "elapsed_s": 6.6
     },
     {
       "label": "eks-rbac-webhook-config-access/after",
@@ -3019,12 +3369,10 @@
         {
           "query": "eks-rbac-webhook-config-access/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3033,8 +3381,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -3059,7 +3414,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.67
+      "elapsed_s": 6.43
     },
     {
       "label": "eks-rbac-webhook-config-access/before",
@@ -3084,12 +3439,10 @@
         {
           "query": "eks-rbac-webhook-config-access/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3098,8 +3451,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -3126,7 +3486,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.62
+      "elapsed_s": 6.14
     },
     {
       "label": "iam-21-privesc-5-patterns/partial-deny",
@@ -3151,12 +3511,10 @@
         {
           "query": "z3-rhino-pattern1-self-mutation/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3166,12 +3524,10 @@
         {
           "query": "z3-rhino-pattern2-credential-creation/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3181,12 +3537,10 @@
         {
           "query": "z3-rhino-pattern3-passrole-compute/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3196,12 +3550,10 @@
         {
           "query": "z3-rhino-pattern4-indirect-invoke/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3211,12 +3563,10 @@
         {
           "query": "z3-rhino-pattern5-trust-modification/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3225,8 +3575,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 58,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -3254,7 +3611,7 @@
         "verdict": "$1100",
         "cost": 1100
       },
-      "elapsed_s": 1.63
+      "elapsed_s": 8.32
     },
     {
       "label": "iam-21-privesc-5-patterns/real-world-pattern3",
@@ -3277,12 +3634,10 @@
         {
           "query": "z3-rhino-pattern1-self-mutation/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3292,12 +3647,10 @@
         {
           "query": "z3-rhino-pattern2-credential-creation/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3307,12 +3660,10 @@
         {
           "query": "z3-rhino-pattern3-passrole-compute/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3322,12 +3673,10 @@
         {
           "query": "z3-rhino-pattern4-indirect-invoke/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3337,12 +3686,10 @@
         {
           "query": "z3-rhino-pattern5-trust-modification/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3351,8 +3698,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 12,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -3377,7 +3731,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.63
+      "elapsed_s": 7.14
     },
     {
       "label": "iam-21-privesc-5-patterns/remediated",
@@ -3400,12 +3754,10 @@
         {
           "query": "z3-rhino-pattern1-self-mutation/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3415,12 +3767,10 @@
         {
           "query": "z3-rhino-pattern2-credential-creation/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3430,12 +3780,10 @@
         {
           "query": "z3-rhino-pattern3-passrole-compute/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3445,12 +3793,10 @@
         {
           "query": "z3-rhino-pattern4-indirect-invoke/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3460,12 +3806,10 @@
         {
           "query": "z3-rhino-pattern5-trust-modification/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3474,8 +3818,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 9,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -3500,7 +3851,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.62
+      "elapsed_s": 6.72
     },
     {
       "label": "iam-21-privesc-5-patterns/rhino-vulnerable",
@@ -3525,12 +3876,10 @@
         {
           "query": "z3-rhino-pattern1-self-mutation/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3540,12 +3889,10 @@
         {
           "query": "z3-rhino-pattern2-credential-creation/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3555,12 +3902,10 @@
         {
           "query": "z3-rhino-pattern3-passrole-compute/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3570,12 +3915,10 @@
         {
           "query": "z3-rhino-pattern4-indirect-invoke/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3585,12 +3928,10 @@
         {
           "query": "z3-rhino-pattern5-trust-modification/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3599,8 +3940,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 58,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -3628,7 +3976,7 @@
         "verdict": "$1100",
         "cost": 1100
       },
-      "elapsed_s": 1.64
+      "elapsed_s": 7.75
     },
     {
       "label": "iam-attach-user-policy-self/after",
@@ -3651,12 +3999,10 @@
         {
           "query": "iam-attach-user-policy-self/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3665,8 +4011,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 3,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -3691,7 +4044,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.65
+      "elapsed_s": 6.46
     },
     {
       "label": "iam-attach-user-policy-self/before",
@@ -3716,12 +4069,10 @@
         {
           "query": "iam-attach-user-policy-self/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3730,8 +4081,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 3,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -3758,7 +4116,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.62
+      "elapsed_s": 6.82
     },
     {
       "label": "iam-autoscaling-privesc-bypass/remediated-config",
@@ -3781,12 +4139,10 @@
         {
           "query": "iam-autoscaling-privesc-bypass/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3795,8 +4151,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 19,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -3821,7 +4184,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.7
+      "elapsed_s": 6.77
     },
     {
       "label": "iam-autoscaling-privesc-bypass/writeup-config",
@@ -3846,12 +4209,10 @@
         {
           "query": "iam-autoscaling-privesc-bypass/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -3860,8 +4221,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 19,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -3889,7 +4257,7 @@
         "verdict": "$900",
         "cost": 900
       },
-      "elapsed_s": 1.84
+      "elapsed_s": 6.99
     },
     {
       "label": "iam-cred-ttl-exceeded/no-expiry",
@@ -3910,8 +4278,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -3936,7 +4311,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.4
+      "elapsed_s": 16.2
     },
     {
       "label": "iam-cred-ttl-exceeded/ttl-exceeded",
@@ -3957,8 +4332,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -3983,7 +4365,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.46
+      "elapsed_s": 16.33
     },
     {
       "label": "iam-cred-ttl-exceeded/ttl-valid",
@@ -4004,8 +4386,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -4030,7 +4419,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.11
+      "elapsed_s": 16.25
     },
     {
       "label": "iam-multi-hop-trust/remediated",
@@ -4053,12 +4442,10 @@
         {
           "query": "z3-multi-hop-can-assume/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4067,8 +4454,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 2,
+          "production_reachable": 0,
+          "reachable": 6,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -4094,7 +4488,7 @@
         "verdict": "$1500",
         "cost": 1500
       },
-      "elapsed_s": 1.64
+      "elapsed_s": 6.75
     },
     {
       "label": "iam-multi-hop-trust/vulnerable",
@@ -4117,12 +4511,10 @@
         {
           "query": "z3-multi-hop-can-assume/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4131,8 +4523,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 6,
+          "production_reachable": 0,
+          "reachable": 10,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -4160,7 +4559,7 @@
         "verdict": "$2300",
         "cost": 2300
       },
-      "elapsed_s": 1.67
+      "elapsed_s": 6.85
     },
     {
       "label": "iam-overpermission-wildcard/after",
@@ -4183,12 +4582,10 @@
         {
           "query": "z3-overpermission-fixture/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4198,12 +4595,10 @@
         {
           "query": "z3-bybit-tag-aware-compound/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4213,12 +4608,10 @@
         {
           "query": "z3-compound-overperm-assumable/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4227,8 +4620,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 15,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -4253,7 +4653,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.98
+      "elapsed_s": 6.72
     },
     {
       "label": "iam-overpermission-wildcard/before",
@@ -4278,12 +4678,10 @@
         {
           "query": "z3-overpermission-fixture/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4293,12 +4691,10 @@
         {
           "query": "z3-bybit-tag-aware-compound/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4308,12 +4704,10 @@
         {
           "query": "z3-compound-overperm-assumable/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4322,8 +4716,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 1,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 8,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -4352,7 +4753,7 @@
         "verdict": "$900",
         "cost": 900
       },
-      "elapsed_s": 1.68
+      "elapsed_s": 6.61
     },
     {
       "label": "iam-overpermission-wildcard/bybit-pattern-after",
@@ -4375,12 +4776,10 @@
         {
           "query": "z3-overpermission-fixture/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4390,12 +4789,10 @@
         {
           "query": "z3-bybit-tag-aware-compound/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4405,12 +4802,10 @@
         {
           "query": "z3-compound-overperm-assumable/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4419,8 +4814,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 4,
+          "reachable": 16,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -4445,7 +4847,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.75
+      "elapsed_s": 6.4
     },
     {
       "label": "iam-overpermission-wildcard/bybit-pattern-before",
@@ -4468,12 +4870,10 @@
         {
           "query": "z3-overpermission-fixture/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4483,12 +4883,10 @@
         {
           "query": "z3-bybit-tag-aware-compound/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4498,12 +4896,10 @@
         {
           "query": "z3-compound-overperm-assumable/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4512,8 +4908,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 8,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -4538,7 +4941,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.65
+      "elapsed_s": 7.34
     },
     {
       "label": "imds-ssrf-chain/remediated-config",
@@ -4559,8 +4962,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -4585,7 +4995,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.44
+      "elapsed_s": 17.97
     },
     {
       "label": "imds-ssrf-chain/writeup-config",
@@ -4606,8 +5016,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -4632,7 +5049,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.07
+      "elapsed_s": 19.11
     },
     {
       "label": "meta-observation-stale/boundary",
@@ -4653,8 +5070,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -4679,7 +5103,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.25
+      "elapsed_s": 18.64
     },
     {
       "label": "meta-observation-stale/fresh",
@@ -4700,8 +5124,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -4726,7 +5157,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.53
+      "elapsed_s": 17.54
     },
     {
       "label": "meta-observation-stale/stale",
@@ -4747,8 +5178,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -4773,7 +5211,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.28
+      "elapsed_s": 18.64
     },
     {
       "label": "s3-broad-write-scope/after",
@@ -4796,12 +5234,10 @@
         {
           "query": "s3-broad-write-scope/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4810,8 +5246,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -4836,7 +5279,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.92
+      "elapsed_s": 7.53
     },
     {
       "label": "s3-broad-write-scope/before",
@@ -4861,12 +5304,10 @@
         {
           "query": "s3-broad-write-scope/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4875,8 +5316,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -4903,7 +5351,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.71
+      "elapsed_s": 7.71
     },
     {
       "label": "s3-bucket-name-dangling/after",
@@ -4926,12 +5374,10 @@
         {
           "query": "s3-bucket-name-dangling/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -4940,8 +5386,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -4966,7 +5419,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.66
+      "elapsed_s": 7.06
     },
     {
       "label": "s3-bucket-name-dangling/before",
@@ -4991,12 +5444,10 @@
         {
           "query": "s3-bucket-name-dangling/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -5005,8 +5456,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -5034,7 +5492,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.69
+      "elapsed_s": 6.33
     },
     {
       "label": "s3-cross-account-replication-overperm/remediated-config",
@@ -5057,12 +5515,10 @@
         {
           "query": "s3-cross-account-replication-overperm/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -5071,8 +5527,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 45,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -5097,7 +5560,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.67
+      "elapsed_s": 6.96
     },
     {
       "label": "s3-cross-account-replication-overperm/writeup-config",
@@ -5120,12 +5583,10 @@
         {
           "query": "s3-cross-account-replication-overperm/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -5134,8 +5595,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 45,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -5162,7 +5630,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.69
+      "elapsed_s": 7.52
     },
     {
       "label": "s3-delegation-failure/remediated-config",
@@ -5183,8 +5651,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -5209,7 +5684,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 5.13
+      "elapsed_s": 17.52
     },
     {
       "label": "s3-delegation-failure/writeup-config",
@@ -5230,8 +5705,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -5257,7 +5739,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.06
+      "elapsed_s": 17.79
     },
     {
       "label": "s3-dotgit-readable/after",
@@ -5280,12 +5762,10 @@
         {
           "query": "s3-dotgit-readable/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -5294,8 +5774,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -5322,7 +5809,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.7
+      "elapsed_s": 6.63
     },
     {
       "label": "s3-dotgit-readable/before",
@@ -5347,12 +5834,10 @@
         {
           "query": "s3-dotgit-readable/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -5361,8 +5846,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -5390,7 +5882,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.79
+      "elapsed_s": 6.72
     },
     {
       "label": "s3-public-list-policy/after",
@@ -5413,12 +5905,10 @@
         {
           "query": "s3-public-list-policy/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -5427,8 +5917,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -5453,7 +5950,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.75
+      "elapsed_s": 7.11
     },
     {
       "label": "s3-public-list-policy/before",
@@ -5478,12 +5975,10 @@
         {
           "query": "s3-public-list-policy/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -5492,8 +5987,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -5521,7 +6023,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.77
+      "elapsed_s": 7.06
     },
     {
       "label": "s3-public-read-policy/after",
@@ -5544,12 +6046,10 @@
         {
           "query": "s3-public-read-policy/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -5558,8 +6058,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -5584,7 +6091,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.62
+      "elapsed_s": 6.5
     },
     {
       "label": "s3-public-read-policy/before",
@@ -5609,12 +6116,10 @@
         {
           "query": "s3-public-read-policy/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -5623,8 +6128,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -5652,7 +6164,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.74
+      "elapsed_s": 6.93
     },
     {
       "label": "s3-tenant-prefix-isolation/after",
@@ -5673,8 +6185,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -5699,7 +6218,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.66
+      "elapsed_s": 6.56
     },
     {
       "label": "s3-tenant-prefix-isolation/before",
@@ -5722,8 +6241,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -5750,7 +6276,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.8
+      "elapsed_s": 6.65
     },
     {
       "label": "sagemaker-execution-role-overprivileged/partial-remediation",
@@ -5771,8 +6297,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -5797,7 +6330,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.54
+      "elapsed_s": 15.85
     },
     {
       "label": "sagemaker-execution-role-overprivileged/remediated-config",
@@ -5818,8 +6351,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -5844,7 +6384,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.14
+      "elapsed_s": 16.16
     },
     {
       "label": "sagemaker-execution-role-overprivileged/writeup-config",
@@ -5865,8 +6405,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -5891,7 +6438,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.13
+      "elapsed_s": 17.09
     },
     {
       "label": "sagemaker-notebook-prod-escape/remediated-config",
@@ -5912,8 +6459,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -5938,7 +6492,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.06
+      "elapsed_s": 17.2
     },
     {
       "label": "sagemaker-notebook-prod-escape/writeup-config",
@@ -5959,8 +6513,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -5985,7 +6546,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.11
+      "elapsed_s": 15.86
     },
     {
       "label": "shadow-admin-detection/remediated-config",
@@ -6006,8 +6567,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -6032,7 +6600,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.08
+      "elapsed_s": 16.91
     },
     {
       "label": "shadow-admin-detection/writeup-config",
@@ -6053,8 +6621,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -6080,7 +6655,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.04
+      "elapsed_s": 17.88
     },
     {
       "label": "shadow-ec2-lateral-movement/remediated-config",
@@ -6101,8 +6676,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -6127,7 +6709,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.07
+      "elapsed_s": 18.85
     },
     {
       "label": "shadow-ec2-lateral-movement/writeup-config",
@@ -6148,8 +6730,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -6174,7 +6763,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.02
+      "elapsed_s": 19.74
     },
     {
       "label": "sns-secrets-compound-chain/remediated-config",
@@ -6197,12 +6786,10 @@
         {
           "query": "sns-secrets-compound-chain/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -6211,8 +6798,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 18,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -6237,7 +6831,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.61
+      "elapsed_s": 7.28
     },
     {
       "label": "sns-secrets-compound-chain/writeup-config",
@@ -6260,12 +6854,10 @@
         {
           "query": "sns-secrets-compound-chain/query",
           "z3": {
-            "verdict": "n/a",
-            "detail": "z3 not on PATH"
+            "verdict": "sat"
           },
           "cvc5": {
-            "verdict": "n/a",
-            "detail": "cvc5 not on PATH"
+            "verdict": "sat"
           },
           "yices": {
             "verdict": "n/a",
@@ -6274,8 +6866,15 @@
         }
       ],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 10,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -6302,7 +6901,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.67
+      "elapsed_s": 7.85
     },
     {
       "label": "staging-stale-endpoint/active-staging",
@@ -6323,8 +6922,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -6349,7 +6955,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.62
+      "elapsed_s": 6.77
     },
     {
       "label": "staging-stale-endpoint/prod-dormant",
@@ -6370,8 +6976,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -6396,7 +7009,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.66
+      "elapsed_s": 6.69
     },
     {
       "label": "staging-stale-endpoint/stale-staging",
@@ -6419,8 +7032,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -6445,7 +7065,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.62
+      "elapsed_s": 6.82
     },
     {
       "label": "staging-stale-endpoint/stale-staging-public",
@@ -6469,8 +7089,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "ok",
@@ -6498,7 +7125,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 1.63
+      "elapsed_s": 6.73
     },
     {
       "label": "vpc-peering-exfiltration/remediated-config",
@@ -6519,8 +7146,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -6545,7 +7179,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.06
+      "elapsed_s": 16.86
     },
     {
       "label": "vpc-peering-exfiltration/writeup-config",
@@ -6566,8 +7200,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -6593,7 +7234,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.1
+      "elapsed_s": 19.96
     },
     {
       "label": "z3-forbidden-state/remediated-config",
@@ -6614,8 +7255,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -6640,7 +7288,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.05
+      "elapsed_s": 18.65
     },
     {
       "label": "z3-forbidden-state/writeup-config",
@@ -6661,8 +7309,15 @@
       },
       "smt_queries": [],
       "souffle": {
-        "verdict": "n/a",
-        "detail": "souffle not on PATH"
+        "verdict": "ok",
+        "rels": {
+          "anonymous_reachable": 0,
+          "exploitable_overperm": 0,
+          "privesc_chain": 0,
+          "production_reachable": 0,
+          "reachable": 0,
+          "self_register_reachable": 0
+        }
       },
       "clingo": {
         "verdict": "empty",
@@ -6687,7 +7342,7 @@
       "game": {
         "verdict": "no-path"
       },
-      "elapsed_s": 4.09
+      "elapsed_s": 18.64
     }
   ],
   "z3_runners": {

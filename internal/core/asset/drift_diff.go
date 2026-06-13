@@ -3,7 +3,6 @@ package asset
 import (
 	"cmp"
 	"maps"
-	"reflect"
 	"slices"
 	"strings"
 )
@@ -65,7 +64,7 @@ func DiffAssets(prev, curr Asset) []ConfigurationDrift {
 // diffDeep recursively compares two values and returns property changes.
 func diffDeep(path string, from, to any) []ConfigurationDrift {
 	// PRECONDITION: If types differ at the same path, record as a change and stop recursion.
-	if reflect.TypeOf(from) != reflect.TypeOf(to) {
+	if hasTypeMismatch(from, to) {
 		return []ConfigurationDrift{{Attribute: path, OldValue: from, NewValue: to}}
 	}
 
@@ -80,8 +79,7 @@ func diffDeep(path string, from, to any) []ConfigurationDrift {
 		}
 		return changes
 	}
-	// PERFORMANCE: Using reflect.DeepEqual is the idiomatic way to compare arbitrary JSON values.
-	if !reflect.DeepEqual(from, to) {
+	if !jsonEqual(from, to) {
 		return []ConfigurationDrift{{Attribute: path, OldValue: from, NewValue: to}}
 	}
 	return nil
@@ -121,4 +119,70 @@ func uniqueSortedKeys[V any](a, b map[string]V) []string {
 		return nil
 	}
 	return slices.Sorted(maps.Keys(keySet))
+}
+
+func jsonEqual(a, b any) bool {
+	switch va := a.(type) {
+	case string:
+		vb, ok := b.(string)
+		return ok && va == vb
+	case float64:
+		vb, ok := b.(float64)
+		return ok && va == vb
+	case bool:
+		vb, ok := b.(bool)
+		return ok && va == vb
+	case []any:
+		vb, ok := b.([]any)
+		if !ok || len(va) != len(vb) {
+			return false
+		}
+		for i := range va {
+			if !jsonEqual(va[i], vb[i]) {
+				return false
+			}
+		}
+		return true
+	case map[string]any:
+		vb, ok := b.(map[string]any)
+		if !ok || len(va) != len(vb) {
+			return false
+		}
+		for k, v1 := range va {
+			v2, exists := vb[k]
+			if !exists || !jsonEqual(v1, v2) {
+				return false
+			}
+		}
+		return true
+	case nil:
+		return b == nil
+	default:
+		return a == b
+	}
+}
+
+func hasTypeMismatch(a, b any) bool {
+	if a == nil || b == nil {
+		return (a == nil) != (b == nil)
+	}
+	switch a.(type) {
+	case string:
+		_, ok := b.(string)
+		return !ok
+	case float64:
+		_, ok := b.(float64)
+		return !ok
+	case bool:
+		_, ok := b.(bool)
+		return !ok
+	case []any:
+		_, ok := b.([]any)
+		return !ok
+	case map[string]any:
+		_, ok := b.(map[string]any)
+		return !ok
+	default:
+		return false
+	}
 }

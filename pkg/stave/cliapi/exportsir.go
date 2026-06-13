@@ -257,8 +257,8 @@ func renderSIRValidation(warnings []ValidationWarning) []byte {
 		buf.WriteString(warnings[i].AssetID)
 		buf.WriteString("\n\n")
 	}
-	fmt.Fprintf(&buf, "These controls fire in CEL but the properties they evaluate\n")
-	fmt.Fprintf(&buf, "are not projected into the SIR. Add projector entries in\n")
-	fmt.Fprintf(&buf, "cmd/exportsir/facts.go to close these gaps.\n\n")
+	buf.WriteString("These controls fire in CEL but the properties they evaluate\n")
+	buf.WriteString("are not projected into the SIR. Add projector entries in\n")
+	buf.WriteString("cmd/exportsir/facts.go to close these gaps.\n\n")
 	return buf.Bytes()
 }
