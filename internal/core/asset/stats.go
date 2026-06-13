@@ -8,12 +8,16 @@ import (
 // It is agnostic to whether an asset is safe or unsafe.
 // CONTRACT: coverageSpan is always derived from (lastSeenAt - firstSeenAt).
 type ObservationStats struct {
+	// time.Time fields are grouped first: each carries a *Location pointer, so
+	// clustering them shrinks the GC pointer-scan range (fieldalignment: 96->72).
+	// Field order is internal-only — these are unexported metrics with no JSON
+	// marshaling and no semantic ordering.
 	firstSeenAt      time.Time
 	lastSeenAt       time.Time
-	coverageSpan     time.Duration
-	observationCount int
-	maxGap           time.Duration
 	prevSeenAt       time.Time
+	coverageSpan     time.Duration
+	maxGap           time.Duration
+	observationCount int
 }
 
 // HasFirstObservation reports whether at least one observation was recorded.
