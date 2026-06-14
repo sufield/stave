@@ -161,7 +161,11 @@ func (p *NormalizedPrincipal) Scope() kernel.PrincipalScope {
 	if p.Wildcard {
 		return kernel.ScopePublic
 	}
-	if len(p.Federated) > 0 {
+	// A Federated principal widens scope to Public — but only a NON-EMPTY
+	// entry names a real identity. NormalizeStringOrSlice("") yields [""],
+	// so a {"Federated": ""} block must not be counted as public (mirrors
+	// ConcreteAWSARNs dropping empty-string AWS entries).
+	if hasNonEmptyString(p.Federated) {
 		return kernel.ScopePublic
 	}
 	if len(p.AWSARNs) > 0 {
@@ -170,6 +174,19 @@ func (p *NormalizedPrincipal) Scope() kernel.PrincipalScope {
 		}
 	}
 	return kernel.ScopeAccount
+}
+
+// hasNonEmptyString reports whether s holds at least one non-empty entry.
+// Used to distinguish a principal slice that names a real identity from
+// one carrying only the empty-string placeholder NormalizeStringOrSlice
+// produces for a "" value.
+func hasNonEmptyString(s []string) bool {
+	for _, v := range s {
+		if v != "" {
+			return true
+		}
+	}
+	return false
 }
 
 // classifyAWSARNs returns the most permissive scope across the AWS

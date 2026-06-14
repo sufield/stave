@@ -8,7 +8,11 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-var accountARNPattern = regexp.MustCompile(`^arn:aws:iam::(\d{12}):`)
+// accountARNPattern captures the 12-digit account ID from an IAM ARN. The
+// partition field (2nd segment) is matched generically so GovCloud
+// (aws-us-gov), China (aws-cn), and ISO partitions are handled, not only the
+// commercial "aws" partition.
+var accountARNPattern = regexp.MustCompile(`^arn:[^:]+:iam::(\d{12}):`)
 
 // Assessment is the unified security posture derived from a bucket policy.
 // It consolidates access, transport, cross-account, and network analysis

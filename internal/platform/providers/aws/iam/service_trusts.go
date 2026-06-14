@@ -161,10 +161,12 @@ func extractServicePrincipals(raw any) []string {
 // federated OIDC) and AssumeRoleWithSAML (federated SAML) are now
 // hop-creating actions.
 func isAssumeRoleAction(action string) bool {
-	switch action {
-	case "sts:AssumeRole",
-		"sts:AssumeRoleWithWebIdentity",
-		"sts:AssumeRoleWithSAML",
+	// IAM action names are case-insensitive in AWS, so compare against the
+	// lowercased form — a trust policy may legally write "sts:assumerole".
+	switch strings.ToLower(action) {
+	case "sts:assumerole",
+		"sts:assumerolewithwebidentity",
+		"sts:assumerolewithsaml",
 		"sts:*",
 		"*":
 		return true
