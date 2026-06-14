@@ -253,16 +253,12 @@ func parseControlID(id string) (string, string) {
 		return "", ""
 	}
 	rest := strings.TrimPrefix(id, "CTL.")
-	segs := strings.SplitN(rest, ".", 4)
-	if len(segs) < 2 {
+	svc, rest2, ok1 := strings.Cut(rest, ".")
+	if !ok1 {
 		return "", ""
 	}
-	svc := strings.ToLower(segs[0])
-	cat := ""
-	if len(segs) >= 2 {
-		cat = strings.ToLower(segs[1])
-	}
-	return svc, cat
+	cat, _, _ := strings.Cut(rest2, ".")
+	return strings.ToLower(svc), strings.ToLower(cat)
 }
 
 func titleForGroup(service, category string, n int) string {

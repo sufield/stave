@@ -75,20 +75,18 @@ func SummarizePolicies(controls []policy.ControlDefinition) []PolicyEntry {
 
 // OrderEntries sorts policy entries by the requested attribute.
 func OrderEntries(entries []PolicyEntry, orderBy string) error {
-	key := strings.ToLower(strings.TrimSpace(orderBy))
-
-	switch key {
-	case "id":
+	trimmed := strings.TrimSpace(orderBy)
+	if strings.EqualFold(trimmed, "id") {
 		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.ID, b.ID) })
-	case "name":
+	} else if strings.EqualFold(trimmed, "name") {
 		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.Name, b.Name) })
-	case "type":
+	} else if strings.EqualFold(trimmed, "type") {
 		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.Type, b.Type) })
-	case "risk":
+	} else if strings.EqualFold(trimmed, "risk") {
 		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.Risk, b.Risk) })
-	case "domain":
+	} else if strings.EqualFold(trimmed, "domain") {
 		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.Domain, b.Domain) })
-	default:
+	} else {
 		return fmt.Errorf("invalid order attribute %q (available: id, name, type, risk, domain)", orderBy)
 	}
 
@@ -101,12 +99,23 @@ func SelectFields(raw string) ([]string, error) {
 	seen := make(map[string]struct{}, 5)
 
 	for p := range strings.SplitSeq(raw, ",") {
-		f := strings.ToLower(strings.TrimSpace(p))
-		if f == "" {
+		trimmed := strings.TrimSpace(p)
+		if trimmed == "" {
 			continue
 		}
-		if _, isValid := validFields[f]; !isValid {
-			return nil, fmt.Errorf("invalid field selection %q (allowed: id, name, type, risk, domain)", f)
+		var f string
+		if strings.EqualFold(trimmed, "id") {
+			f = "id"
+		} else if strings.EqualFold(trimmed, "name") {
+			f = "name"
+		} else if strings.EqualFold(trimmed, "type") {
+			f = "type"
+		} else if strings.EqualFold(trimmed, "risk") {
+			f = "risk"
+		} else if strings.EqualFold(trimmed, "domain") {
+			f = "domain"
+		} else {
+			return nil, fmt.Errorf("invalid field selection %q (allowed: id, name, type, risk, domain)", trimmed)
 		}
 		if _, isSeen := seen[f]; !isSeen {
 			selected = append(selected, f)

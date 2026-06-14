@@ -1,6 +1,5 @@
 package capabilities
 
-
 // synonymMap translates the words users actually type into the
 // catalog's canonical vocabulary. "Is my bucket open?" should
 // surface the public-access capabilities; "orphaned policies"

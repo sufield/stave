@@ -149,11 +149,17 @@ func (r *GovernanceResolver) ResolveCIFailurePolicy() PolicyValue[string] {
 func (r *GovernanceResolver) ResolveCLIOutput() PolicyValue[string] {
 	if r.Settings != nil {
 		raw := r.Settings.CLIDefaults.Output
-		v := strings.ToLower(strings.TrimSpace(raw))
-		if v == "json" || v == "text" {
-			return PolicyValue[string]{Value: v, Source: r.SettingsPath + ":cli_defaults.output", Layer: LayerUserConfig}
+		trimmed := strings.TrimSpace(raw)
+		var v string
+		if strings.EqualFold(trimmed, "json") {
+			v = "json"
+		} else if strings.EqualFold(trimmed, "text") {
+			v = "text"
 		}
 		if v != "" {
+			return PolicyValue[string]{Value: v, Source: r.SettingsPath + ":cli_defaults.output", Layer: LayerUserConfig}
+		}
+		if trimmed != "" {
 			// Non-empty but invalid: silently falling back to
 			// "text" hid config-file typos (e.g. "Json", "yaml")
 			// from operators. Surface the rejection so they can
@@ -187,11 +193,17 @@ func (r *GovernanceResolver) ResolveCLISanitize() PolicyValue[bool] {
 func (r *GovernanceResolver) ResolveCLIPathMode() PolicyValue[string] {
 	if r.Settings != nil {
 		raw := r.Settings.CLIDefaults.PathMode
-		v := strings.ToLower(strings.TrimSpace(raw))
-		if v == "base" || v == "full" {
-			return PolicyValue[string]{Value: v, Source: r.SettingsPath + ":cli_defaults.path_mode", Layer: LayerUserConfig}
+		trimmed := strings.TrimSpace(raw)
+		var v string
+		if strings.EqualFold(trimmed, "base") {
+			v = "base"
+		} else if strings.EqualFold(trimmed, "full") {
+			v = "full"
 		}
 		if v != "" {
+			return PolicyValue[string]{Value: v, Source: r.SettingsPath + ":cli_defaults.path_mode", Layer: LayerUserConfig}
+		}
+		if trimmed != "" {
 			slog.Warn("config: cli_defaults.path_mode rejected; using default",
 				slog.String("invalid", raw),
 				slog.String("source", r.SettingsPath),

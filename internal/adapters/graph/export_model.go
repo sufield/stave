@@ -37,7 +37,7 @@ var severityWeights = map[policy.Severity]float64{
 // algorithm running over the graph treats them as non-edges of the
 // weighted view rather than throwing.
 func SeverityWeight(severity string) float64 {
-	parsed, err := policy.ParseSeverity(strings.ToLower(severity))
+	parsed, err := policy.ParseSeverity(severity)
 	if err != nil {
 		return 0.0
 	}

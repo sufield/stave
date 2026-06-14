@@ -1,8 +1,6 @@
 package s3
 
 import (
-	"strings"
-
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -53,12 +51,15 @@ func NewResolver() *Resolver {
 // node (an action this resolver knows about) and false when the action
 // is unrecognized.
 func (r *Resolver) Resolve(action string) (risk.Permission, bool) {
-	action = strings.ToLower(action)
 	node := r.root
 	var lastMatch risk.Permission
 	matched := false
 	for i := 0; i < len(action); i++ {
-		child, ok := node.children[action[i]]
+		c := action[i]
+		if c >= 'A' && c <= 'Z' {
+			c += 'a' - 'A'
+		}
+		child, ok := node.children[c]
 		if !ok {
 			break
 		}

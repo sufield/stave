@@ -41,16 +41,12 @@ func Rank(catalog []Capability, query string) []Hit {
 		score := 0.0
 		var matched []string
 
-		titleLow := strings.ToLower(c.Title)
-		useWhenLow := strings.ToLower(c.UseWhen)
-		descLow := strings.ToLower(c.Description)
-
 		// Phrase bonus — verbatim multi-word match.
 		if len(strings.Fields(phrase)) > 1 {
-			if strings.Contains(titleLow, phrase) {
+			if containsFold(c.Title, phrase) {
 				score += 5
 				matched = append(matched, "phrase:title")
-			} else if strings.Contains(useWhenLow, phrase) {
+			} else if containsFold(c.UseWhen, phrase) {
 				score += 4
 				matched = append(matched, "phrase:use_when")
 			}
@@ -62,20 +58,20 @@ func Rank(catalog []Capability, query string) []Hit {
 			if tok == "" {
 				continue
 			}
-			if strings.Contains(titleLow, tok) {
+			if containsFold(c.Title, tok) {
 				score += 3
 				titleHits++
 			}
-			if strings.Contains(useWhenLow, tok) {
+			if containsFold(c.UseWhen, tok) {
 				score += 2
 			}
 			for _, kw := range c.Keywords {
-				if kw == tok || strings.Contains(kw, tok) {
+				if strings.EqualFold(kw, tok) || containsFold(kw, tok) {
 					score += 1
 					break
 				}
 			}
-			if strings.Contains(descLow, tok) {
+			if containsFold(c.Description, tok) {
 				score += 0.5
 			}
 		}
@@ -106,10 +102,12 @@ func Rank(catalog []Capability, query string) []Hit {
 // internal tokenise, which has a length-3 floor for indexing) so
 // two-letter queries like "s3" still match.
 func tokeniseQuery(s string) []string {
-	s = strings.ToLower(s)
 	var out []string
-	cur := strings.Builder{}
+	var cur strings.Builder
 	for _, r := range s {
+		if r >= 'A' && r <= 'Z' {
+			r += 'a' - 'A'
+		}
 		switch {
 		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
 			cur.WriteRune(r)
@@ -124,4 +122,43 @@ func tokeniseQuery(s string) []string {
 		out = append(out, cur.String())
 	}
 	return out
+}
+
+func containsFold(s, substrLower string) bool {
+	if substrLower == "" {
+		return true
+	}
+	if len(s) < len(substrLower) {
+		return false
+	}
+	isASCII := true
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 128 {
+			isASCII = false
+			break
+		}
+	}
+	if isASCII {
+		for i := 0; i <= len(s)-len(substrLower); i++ {
+			match := true
+			for j := 0; j < len(substrLower); j++ {
+				c1 := s[i+j]
+				c2 := substrLower[j]
+				if c1 != c2 {
+					if c1 >= 'A' && c1 <= 'Z' {
+						c1 += 'a' - 'A'
+					}
+					if c1 != c2 {
+						match = false
+						break
+					}
+				}
+			}
+			if match {
+				return true
+			}
+		}
+		return false
+	}
+	return strings.Contains(strings.ToLower(s), substrLower)
 }

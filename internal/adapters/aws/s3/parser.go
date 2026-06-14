@@ -22,16 +22,21 @@ var ErrEmptyS3Reference = errors.New("s3: reference is empty")
 // "arn:aws:s3:::" downstream and matched no asset, producing
 // silent-no-op enforcement for malformed input.
 func ParseS3Reference(input string) (kernel.BucketRef, error) {
-	s := strings.ToLower(strings.TrimSpace(input))
+	s := strings.TrimSpace(input)
 	if s == "" {
 		return kernel.BucketRef{}, ErrEmptyS3Reference
 	}
-	s = strings.TrimPrefix(s, "arn:aws:s3:::")
-	s = strings.TrimPrefix(s, "aws:s3:::")
-	s = strings.TrimPrefix(s, "s3://")
+	if len(s) >= 13 && strings.EqualFold(s[:13], "arn:aws:s3:::") {
+		s = s[13:]
+	} else if len(s) >= 9 && strings.EqualFold(s[:9], "aws:s3:::") {
+		s = s[9:]
+	} else if len(s) >= 5 && strings.EqualFold(s[:5], "s3://") {
+		s = s[5:]
+	}
 	if i := strings.IndexByte(s, '/'); i >= 0 {
 		s = s[:i]
 	}
+	s = strings.ToLower(s)
 	if s == "" {
 		return kernel.BucketRef{}, fmt.Errorf("s3: reference %q has empty bucket after stripping prefixes: %w", input, ErrEmptyS3Reference)
 	}

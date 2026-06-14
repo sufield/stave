@@ -208,6 +208,20 @@ func (s Severity) BucketName() string {
 // ParseSeverity converts a string into a Severity level.
 // It is case-insensitive and returns an error for unrecognized strings.
 func ParseSeverity(s string) (Severity, error) {
+	switch s {
+	case "info", "INFO", "Info":
+		return SeverityInfo, nil
+	case "low", "LOW", "Low":
+		return SeverityLow, nil
+	case "medium", "MEDIUM", "Medium":
+		return SeverityMedium, nil
+	case "high", "HIGH", "High":
+		return SeverityHigh, nil
+	case "critical", "CRITICAL", "Critical":
+		return SeverityCritical, nil
+	case "none", "NONE", "None", "":
+		return SeverityNone, nil
+	}
 	switch strings.ToLower(strings.TrimSpace(s)) {
 	case "info":
 		return SeverityInfo, nil

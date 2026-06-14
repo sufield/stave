@@ -120,8 +120,8 @@ func DiscoverManifests(ctx context.Context, root string) ([]string, error) {
 			}
 			return nil
 		}
-		ext := strings.ToLower(filepath.Ext(path))
-		if ext == ".json" || ext == ".yaml" || ext == ".yml" {
+		ext := filepath.Ext(path)
+		if strings.EqualFold(ext, ".json") || strings.EqualFold(ext, ".yaml") || strings.EqualFold(ext, ".yml") {
 			manifests = append(manifests, path)
 		}
 		return nil

@@ -85,14 +85,18 @@ func (g EnforcementGate) RequiresTeamScope() bool {
 
 // ParseEnforcementGate validates and normalizes a string into an EnforcementGate.
 func ParseEnforcementGate(raw string) (EnforcementGate, error) {
-	p := EnforcementGate(strings.ToLower(strings.TrimSpace(raw)))
-	switch p {
-	case GateStrict, GateRegression, GateSLA:
-		return p, nil
-	default:
-		return "", fmt.Errorf("unsupported enforcement gate %q (supported: %s, %s, %s)",
-			raw, GateStrict, GateRegression, GateSLA)
+	trimmed := strings.TrimSpace(raw)
+	if strings.EqualFold(trimmed, string(GateStrict)) {
+		return GateStrict, nil
 	}
+	if strings.EqualFold(trimmed, string(GateRegression)) {
+		return GateRegression, nil
+	}
+	if strings.EqualFold(trimmed, string(GateSLA)) {
+		return GateSLA, nil
+	}
+	return "", fmt.Errorf("unsupported enforcement gate %q (supported: %s, %s, %s)",
+		raw, GateStrict, GateRegression, GateSLA)
 }
 
 // --- Governance Models ---

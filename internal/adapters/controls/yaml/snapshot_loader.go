@@ -120,8 +120,8 @@ func walkForControlFiles(ctx context.Context, root string) ([]string, error) {
 // `_taxonomy.yaml`, `.gitkeep`, etc. are operator-facing artefacts
 // living alongside the controls but not loaded as control YAML.
 func isControlFile(path string) bool {
-	ext := strings.ToLower(filepath.Ext(path))
-	if ext != ".yaml" && ext != ".yml" {
+	ext := filepath.Ext(path)
+	if !strings.EqualFold(ext, ".yaml") && !strings.EqualFold(ext, ".yml") {
 		return false
 	}
 	name := filepath.Base(path)

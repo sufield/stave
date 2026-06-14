@@ -13,14 +13,14 @@ import (
 // CanonicalizeByExtension applies deterministic formatting based on file extension.
 // Returns nil if the extension is not recognized.
 func CanonicalizeByExtension(path string, data []byte) ([]byte, error) {
-	switch strings.ToLower(filepath.Ext(path)) {
-	case ".json":
+	ext := filepath.Ext(path)
+	if strings.EqualFold(ext, ".json") {
 		return FormatJSON(data)
-	case ".yaml", ".yml":
-		return FormatYAML(data)
-	default:
-		return nil, nil
 	}
+	if strings.EqualFold(ext, ".yaml") || strings.EqualFold(ext, ".yml") {
+		return FormatYAML(data)
+	}
+	return nil, nil
 }
 
 // FormatJSON normalizes observation JSON into canonical indented form.

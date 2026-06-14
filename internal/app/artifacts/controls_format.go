@@ -14,7 +14,17 @@ import (
 
 // FormatControlOutput writes control rows in the requested format.
 func FormatControlOutput(w io.Writer, cfg catalog.DiscoveryRequest, rows []catalog.PolicyEntry) error {
-	format := appcontracts.OutputFormat(strings.ToLower(strings.TrimSpace(cfg.OutputFormat)))
+	rawFormat := strings.TrimSpace(cfg.OutputFormat)
+	var format appcontracts.OutputFormat
+	if strings.EqualFold(rawFormat, "json") {
+		format = appcontracts.FormatJSON
+	} else if strings.EqualFold(rawFormat, "csv") {
+		format = "csv"
+	} else if strings.EqualFold(rawFormat, "text") || rawFormat == "" {
+		format = appcontracts.FormatText
+	} else {
+		format = appcontracts.OutputFormat(strings.ToLower(rawFormat))
+	}
 
 	if format == appcontracts.FormatJSON {
 		if err := jsonutil.WriteIndented(w, rows); err != nil {

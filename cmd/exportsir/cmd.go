@@ -167,14 +167,13 @@ Exit codes:
 // fact extraction. export-sir adds output formatting (jsonl /
 // smt2 / json) on top, nothing else.
 func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error {
-	allowlistMode := strings.ToLower(strings.TrimSpace(opts.AllowlistMode))
-	if allowlistMode == "" {
+	trimmed := strings.TrimSpace(opts.AllowlistMode)
+	var allowlistMode string
+	if trimmed == "" || strings.EqualFold(trimmed, "curated") {
 		allowlistMode = "curated"
-	}
-	switch allowlistMode {
-	case "curated", "full":
-		// supported
-	default:
+	} else if strings.EqualFold(trimmed, "full") {
+		allowlistMode = "full"
+	} else {
 		return &ui.UserError{Err: fmt.Errorf("--allowlist-mode must be curated | full (got %q)", opts.AllowlistMode)}
 	}
 
@@ -190,7 +189,17 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error 
 	out, validationOut, err := cliapi.ExportSIR(ctx, cliapi.ExportSIRConfig{
 		ControlsDir:     opts.ControlsDir,
 		ObservationsDir: opts.ObservationsDir,
-		Format:          strings.ToLower(strings.TrimSpace(opts.Format)),
+		Format: func() string {
+			fmtTrimmed := strings.TrimSpace(opts.Format)
+			if strings.EqualFold(fmtTrimmed, "jsonl") {
+				return "jsonl"
+			} else if strings.EqualFold(fmtTrimmed, "smt2") {
+				return "smt2"
+			} else if strings.EqualFold(fmtTrimmed, "json") {
+				return "json"
+			}
+			return strings.ToLower(fmtTrimmed)
+		}(),
 		Now:             now,
 		Validate:        opts.Validate,
 		AllowlistMode:   allowlistMode,
