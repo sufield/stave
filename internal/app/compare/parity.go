@@ -55,11 +55,11 @@ func AnalyzeParity(input ParityInput) *ParityResult {
 	prodEnv := input.EnvOrder[0]
 
 	// Build per-control per-env verdict map.
-	failingByEnv := make(map[string]map[kernel.ControlID]struct{})
+	failingByEnv := make(map[string]map[kernel.ControlID]struct{}, len(input.EnvOrder))
 	allControls := make(map[kernel.ControlID]string) // control → severity
 
 	for _, env := range input.EnvOrder {
-		failingByEnv[env] = make(map[kernel.ControlID]struct{})
+		failingByEnv[env] = make(map[kernel.ControlID]struct{}, len(input.Environments[env]))
 		for i := range input.Environments[env] {
 			f := &input.Environments[env][i]
 			failingByEnv[env][f.ControlID] = struct{}{}
@@ -75,7 +75,7 @@ func AnalyzeParity(input ParityInput) *ParityResult {
 	sevOrder := policy.SeverityOrderOf
 
 	for cid, sev := range allControls {
-		perEnv := make(map[string]string)
+		perEnv := make(map[string]string, len(input.EnvOrder))
 		failCount := 0
 		prodFails := false
 		lowerFails := 0

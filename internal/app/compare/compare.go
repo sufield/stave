@@ -84,7 +84,7 @@ func Analyze(input Input) *Result {
 	}
 
 	// Collect unique controls and their framework membership.
-	controlMap := make(map[string]*classified)
+	controlMap := make(map[string]*classified, len(input.Findings))
 
 	for i := range input.Findings {
 		f := &input.Findings[i]

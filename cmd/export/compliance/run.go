@@ -61,5 +61,11 @@ func splitProfiles(raw string) []string {
 	if raw == "" {
 		return nil
 	}
-	return strings.Split(raw, ",")
+	var profiles []string
+	for raw != "" {
+		var p string
+		p, raw, _ = strings.Cut(raw, ",")
+		profiles = append(profiles, p)
+	}
+	return profiles
 }

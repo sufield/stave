@@ -693,7 +693,7 @@ func propertyFacts(assets []sir.AssetFact) []Fact {
 			case map[string]any, []any:
 				continue
 			}
-			obj := fmt.Sprintf("%v", value)
+			obj := scalarString(value)
 			if obj == "" {
 				continue
 			}
@@ -1577,7 +1577,7 @@ func scanAssumeStatement(assetIdx, policyIdx, stmtIdx int, assumerID string, raw
 
 func assumeEdgeFacts(assets []sir.AssetFact) []Fact {
 	var requests []assumeRequest
-	trustAdmits := make(map[string]map[string]string) // target → assumer → evid
+	trustAdmits := make(map[string]map[string]string, len(assets)) // target → assumer → evid
 	for i := range assets {
 		a := &assets[i]
 		if a.Type != "aws_iam_user" && a.Type != "aws_iam_role" {

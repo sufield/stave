@@ -98,7 +98,7 @@ func OrderEntries(entries []PolicyEntry, orderBy string) error {
 // SelectFields validates and returns the requested field names for display.
 func SelectFields(raw string) ([]string, error) {
 	var selected []string
-	seen := make(map[string]struct{})
+	seen := make(map[string]struct{}, 5)
 
 	for p := range strings.SplitSeq(raw, ",") {
 		f := strings.ToLower(strings.TrimSpace(p))

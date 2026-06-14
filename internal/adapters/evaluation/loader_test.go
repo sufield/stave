@@ -1,7 +1,6 @@
 package evaluation
 
 import (
-	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,7 +30,7 @@ func TestLoader(t *testing.T) {
 	})
 
 	t.Run("reader parse error", func(t *testing.T) {
-		_, err := loader.LoadFromReader(bytes.NewBufferString("{bad"), "stdin")
+		_, err := loader.LoadFromReader(strings.NewReader("{bad"), "stdin")
 		if err == nil || !strings.Contains(err.Error(), "invalid JSON") {
 			t.Fatalf("unexpected err: %v", err)
 		}

@@ -19,12 +19,26 @@ import (
 // an integral float64 we emit the plain decimal form ("31536000"); all
 // other types fall through to %v.
 func scalarString(val any) string {
-	if f, ok := val.(float64); ok {
-		if math.Trunc(f) == f && !math.IsInf(f, 0) {
-			return strconv.FormatFloat(f, 'f', -1, 64)
+	switch v := val.(type) {
+	case string:
+		return v
+	case bool:
+		if v {
+			return "true"
 		}
+		return "false"
+	case float64:
+		if math.Trunc(v) == v && !math.IsInf(v, 0) {
+			return strconv.FormatFloat(v, 'f', -1, 64)
+		}
+		return strconv.FormatFloat(v, 'g', -1, 64)
+	case int:
+		return strconv.Itoa(v)
+	case int64:
+		return strconv.FormatInt(v, 10)
+	default:
+		return fmt.Sprintf("%v", val)
 	}
-	return fmt.Sprintf("%v", val)
 }
 
 // ObservationFacts walks the full properties tree of every asset and

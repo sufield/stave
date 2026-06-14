@@ -41,8 +41,11 @@ func AddAcknowledgment(file string, in AcknowledgmentInput) error {
 		return fmt.Errorf("load acceptance file: %w", err)
 	}
 	var comps []string
-	if in.Compensating != "" {
-		comps = strings.Split(in.Compensating, ",")
+	p := in.Compensating
+	for p != "" {
+		var seg string
+		seg, p, _ = strings.Cut(p, ",")
+		comps = append(comps, seg)
 	}
 	if addErr := f.AddAcknowledgment(appexempt.AcknowledgmentEntry{
 		ControlID:            in.ControlID,

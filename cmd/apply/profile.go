@@ -61,9 +61,10 @@ func ParseProfile(s string) (Profile, error) {
 // ParseProfiles parses a comma-separated profile string into a slice.
 // Supports multi-profile evaluation (e.g., "hipaa,soc2,pci-dss-v4.0").
 func ParseProfiles(s string) ([]Profile, error) {
-	parts := strings.Split(s, ",")
-	profiles := make([]Profile, 0, len(parts))
-	for _, p := range parts {
+	var profiles []Profile
+	for s != "" {
+		var p string
+		p, s, _ = strings.Cut(s, ",")
 		trimmed := strings.TrimSpace(p)
 		if trimmed == "" {
 			continue

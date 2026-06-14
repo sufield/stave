@@ -32,14 +32,10 @@ import (
 func Infer(dir, id string) []string {
 	dir = strings.ToLower(strings.Trim(dir, "/"))
 	idU := strings.ToUpper(id)
-	parts := strings.Split(dir, "/")
-	service := ""
+	service, rest, found := strings.Cut(dir, "/")
 	sub := ""
-	if len(parts) > 0 {
-		service = parts[0]
-	}
-	if len(parts) > 1 {
-		sub = parts[1]
+	if found {
+		sub, _, _ = strings.Cut(rest, "/")
 	}
 
 	const (

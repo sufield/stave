@@ -1,4 +1,4 @@
-package sirfacts
+package evaluation_test
 
 import (
 	"bytes"
@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/sir"
+	"github.com/sufield/stave/internal/core/sirfacts"
 )
 
 // dwellFixtureDoc builds a SIR document with two S3 buckets, each carrying
@@ -51,7 +52,7 @@ func dwellFixtureDoc(reliable, clamped string) *sir.Document {
 func factsSMT2(t *testing.T, doc *sir.Document) string {
 	t.Helper()
 	var buf bytes.Buffer
-	if err := SerializeSMT2(ExtractFacts(doc), &buf, SMT2Options{ClosedWorld: true}); err != nil {
+	if err := sirfacts.SerializeSMT2(sirfacts.ExtractFacts(doc), &buf, sirfacts.SMT2Options{ClosedWorld: true}); err != nil {
 		t.Fatalf("SerializeSMT2: %v", err)
 	}
 	return buf.String()
@@ -83,10 +84,20 @@ func solve(t *testing.T, solverBin, facts, query string) (verdict, full string) 
 // has_unreliable_exposure_duration signal: it returns the reliable exposure as
 // a witness and DECLINES (UNSAT) when the only candidate window is clamped.
 //
-// This is the end-to-end consumer check for the DurationUnreliable flag: the
-// SIR flags the window, sirfacts projects has_unreliable_exposure_duration,
-// and the solver excludes it from the gradeable set — instead of reading a
-// clamped Start == End as a trustworthy "0s exposure within any SLA."
+// This lives in internal/adapters/evaluation (not internal/core) because it
+// shells out to a solver — the core-test isolation gate forbids os/exec under
+// internal/core (see internal/app/architecture_core_isolation_test.go). It
+// skips cleanly when no solver is installed, so it never gates CI on z3/cvc5.
+//
+// The query selects an asset with a confirmed exposure:
+//
+//	has_type(a,"aws_s3_bucket") ∧ has_exposure_window(a,"true")
+//	  ∧ ¬has_unreliable_exposure_duration(a,"true")
+//
+// The clamped bucket carries has_unreliable_exposure_duration, so the query's
+// negation excludes it; under the closed-world axioms the reliable bucket
+// (unflagged) satisfies it. Hence sat with the reliable witness on a mixed
+// corpus, and unsat (decline) when only the clamped window exists.
 func TestDwellGradingQuery_DeclinesOnClampedWindow(t *testing.T) {
 	t.Parallel()
 
@@ -106,8 +117,8 @@ func TestDwellGradingQuery_DeclinesOnClampedWindow(t *testing.T) {
 	const reliable = "arn:aws:s3:::bucket-reliable-exposure"
 	const clamped = "arn:aws:s3:::bucket-clamped-skew"
 
-	// 1) Mixed corpus: one reliable + one clamped window. The grader must
-	//    find the reliable bucket and NOT the clamped one.
+	// 1) Mixed corpus: one reliable + one clamped window. The grader must find
+	//    the reliable bucket and NOT the clamped one.
 	mixed := factsSMT2(t, dwellFixtureDoc(reliable, clamped))
 	verdict, full := solve(t, solverBin, mixed, query)
 	if verdict != "sat" {

@@ -187,13 +187,15 @@ func loadAssessments(ctx context.Context, historyDir, files string) ([]*report.A
 	loader := artifact.NewLoader()
 
 	if files != "" {
-		paths := strings.Split(files, ",")
 		var assessments []*report.Assessment
-		for _, p := range paths {
-			p = strings.TrimSpace(p)
-			a, err := loader.Evaluation(ctx, p)
+		p := files
+		for p != "" {
+			var seg string
+			seg, p, _ = strings.Cut(p, ",")
+			seg = strings.TrimSpace(seg)
+			a, err := loader.Evaluation(ctx, seg)
 			if err != nil {
-				return nil, nil, fmt.Errorf("load %s: %w", p, err)
+				return nil, nil, fmt.Errorf("load %s: %w", seg, err)
 			}
 			assessments = append(assessments, a)
 		}

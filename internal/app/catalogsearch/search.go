@@ -60,6 +60,7 @@ func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 			Severity:    ctl.Severity.String(),
 			Domain:      extractDomain(string(ctl.ID)),
 			AttackStage: string(ctl.AttackStage()),
+			Frameworks:  make([]string, 0, len(ctl.Compliance)),
 		}
 		for fw := range ctl.Compliance {
 			sr.Frameworks = append(sr.Frameworks, string(fw))

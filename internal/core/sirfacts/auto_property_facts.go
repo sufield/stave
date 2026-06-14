@@ -1,7 +1,6 @@
 package sirfacts
 
 import (
-	"fmt"
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -72,7 +71,7 @@ func AutoPropertyFacts(assets []sir.AssetFact, controls []policy.ControlDefiniti
 			out = append(out, Fact{
 				Subject:   a.ID,
 				Predicate: predicate,
-				Object:    fmt.Sprintf("%v", value),
+				Object:    scalarString(value),
 				Source:    "auto_property",
 				Evidence:  "assets." + a.ID + "." + p,
 			})

@@ -184,7 +184,7 @@ func loadBuiltInControlsByID(
 
 // collectMissingIDs returns sorted IDs that remain marked as unseen in the unseen map.
 func collectMissingIDs(unseen map[kernel.ControlID]struct{}) []string {
-	var missing []string
+	missing := make([]string, 0, len(unseen))
 	for id := range unseen {
 		missing = append(missing, string(id))
 	}

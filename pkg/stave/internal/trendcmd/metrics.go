@@ -414,12 +414,15 @@ func computeProjection(runs []runMetrics, velocity velocityMetrics) *projectionM
 // computeFrameworkTrends computes per-framework satisfaction rates across runs.
 func computeFrameworkTrends(assessments []*report.Assessment, complianceFlag string) []frameworkTrend {
 	if complianceFlag == "" {
-		return []frameworkTrend{}
+		return nil
 	}
 
-	frameworks := strings.Split(complianceFlag, ",")
-	for i := range frameworks {
-		frameworks[i] = strings.TrimSpace(frameworks[i])
+	var frameworks []string
+	p := complianceFlag
+	for p != "" {
+		var seg string
+		seg, p, _ = strings.Cut(p, ",")
+		frameworks = append(frameworks, strings.TrimSpace(seg))
 	}
 
 	// Load framework profiles for requirement counts.

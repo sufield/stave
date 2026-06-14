@@ -464,9 +464,10 @@ func domainFromControlYAML(path string) string {
 		id := strings.TrimSpace(strings.TrimPrefix(line, "id:"))
 		// Strip optional quotes.
 		id = strings.Trim(id, `"'`)
-		parts := strings.Split(id, ".")
-		if len(parts) >= 2 && strings.EqualFold(parts[0], "CTL") {
-			return strings.ToLower(parts[1])
+		first, rest, ok := strings.Cut(id, ".")
+		if ok && strings.EqualFold(first, "CTL") {
+			second, _, _ := strings.Cut(rest, ".")
+			return strings.ToLower(second)
 		}
 		return ""
 	}

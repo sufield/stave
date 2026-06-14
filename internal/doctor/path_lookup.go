@@ -44,23 +44,29 @@ func candidateExecutableNames(file, goos, pathExt string) []string {
 		return []string{file}
 	}
 
-	var exts []string
+	var out []string
 	if strings.TrimSpace(pathExt) == "" {
-		exts = []string{".EXE", ".BAT", ".CMD", ".COM"}
+		staticExts := [...]string{".EXE", ".BAT", ".CMD", ".COM"}
+		out = make([]string, 0, len(staticExts))
+		for _, ext := range staticExts {
+			out = append(out, file+ext)
+		}
 	} else {
-		exts = strings.Split(pathExt, ";")
-	}
-
-	out := make([]string, 0, len(exts))
-	for _, ext := range exts {
-		ext = strings.TrimSpace(ext)
-		if ext == "" {
-			continue
+		n := strings.Count(pathExt, ";") + 1
+		out = make([]string, 0, n)
+		p := pathExt
+		for p != "" {
+			var ext string
+			ext, p, _ = strings.Cut(p, ";")
+			ext = strings.TrimSpace(ext)
+			if ext == "" {
+				continue
+			}
+			if !strings.HasPrefix(ext, ".") {
+				ext = "." + ext
+			}
+			out = append(out, file+ext)
 		}
-		if !strings.HasPrefix(ext, ".") {
-			ext = "." + ext
-		}
-		out = append(out, file+ext)
 	}
 	if len(out) == 0 {
 		return []string{file + ".EXE"}

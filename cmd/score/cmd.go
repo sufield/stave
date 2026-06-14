@@ -213,9 +213,10 @@ func parseComplianceList(s string) []string {
 	if s == "" {
 		return nil
 	}
-	parts := strings.Split(s, ",")
-	out := make([]string, 0, len(parts))
-	for _, p := range parts {
+	var out []string
+	for s != "" {
+		var p string
+		p, s, _ = strings.Cut(s, ",")
 		if t := strings.TrimSpace(p); t != "" {
 			out = append(out, t)
 		}

@@ -273,9 +273,11 @@ func pathDeclaredInSchema(schema map[string]any, path string) bool {
 	if !strings.HasPrefix(path, prefix) {
 		return false
 	}
-	segs := strings.Split(strings.TrimPrefix(path, prefix), ".")
 	cursor := schema
-	for _, seg := range segs {
+	p := strings.TrimPrefix(path, prefix)
+	for p != "" {
+		var seg string
+		seg, p, _ = strings.Cut(p, ".")
 		props, ok := cursor["properties"].(map[string]any)
 		if !ok {
 			return false

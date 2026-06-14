@@ -386,16 +386,16 @@ func mergeMaps(dst, src map[string]any) map[string]any {
 // ── Helpers ──────────────────────────────────────────────────
 
 func assetIDFromType(assetType string) string {
-	parts := strings.Split(assetType, "_")
-	if len(parts) > 1 {
-		return "test-" + strings.Join(parts[1:], "-")
+	_, rest, ok := strings.Cut(assetType, "_")
+	if ok && rest != "" {
+		return "test-" + strings.ReplaceAll(rest, "_", "-")
 	}
 	return "test-asset"
 }
 
 func defaultFixtureName(controlID, suffix string) string {
 	parts := strings.Split(strings.ToLower(controlID), ".")
-	var meaningful []string
+	meaningful := make([]string, 0, len(parts))
 	for _, p := range parts {
 		if p == "ctl" {
 			continue
