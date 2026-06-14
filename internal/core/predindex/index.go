@@ -159,5 +159,3 @@ func dedupeChains(ids []kernel.ChainID) []kernel.ChainID {
 	}
 	return out
 }
-
-
