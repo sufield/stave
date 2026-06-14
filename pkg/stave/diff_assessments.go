@@ -47,9 +47,9 @@ func DiffAssessments(previous, current *Assessment) *AssessmentDiff {
 		prevByID[previous.Findings[i].FindingID] = i
 	}
 
-	currByID := make(map[FindingID]bool, len(current.Findings))
+	currByID := make(map[FindingID]struct{}, len(current.Findings))
 	for i := range current.Findings {
-		currByID[current.Findings[i].FindingID] = true
+		currByID[current.Findings[i].FindingID] = struct{}{}
 	}
 
 	for i := range current.Findings {
@@ -70,7 +70,7 @@ func DiffAssessments(previous, current *Assessment) *AssessmentDiff {
 	}
 
 	for i := range previous.Findings {
-		if !currByID[previous.Findings[i].FindingID] {
+		if _, ok := currByID[previous.Findings[i].FindingID]; !ok {
 			diff.Removed = append(diff.Removed, previous.Findings[i])
 		}
 	}

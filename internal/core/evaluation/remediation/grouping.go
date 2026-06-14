@@ -53,7 +53,7 @@ func BuildGroups(findings []Finding) []Group {
 	for i := range findings {
 		f := &findings[i]
 		if f.RemediationPlan != nil {
-			acc.add(*f)
+			acc.add(f)
 		}
 	}
 	return acc.toSortedGroups()
@@ -78,8 +78,7 @@ func newAccumulator() *accumulator {
 	}
 }
 
-//nolint:gocritic // hugeParam: internal method, not worth interface change
-func (a *accumulator) add(f Finding) {
+func (a *accumulator) add(f *Finding) {
 	// An empty ActionsFingerprint would collapse every finding for
 	// the same asset into one group, regardless of remediation
 	// content — wholly unrelated rules would appear merged in the

@@ -212,13 +212,16 @@ func normalizePath(dotPath string) string {
 // Bare fields like "type" are normalized to "properties.type" first.
 func fieldAccess(dotPath string) string {
 	dotPath = normalizePath(dotPath)
-	parts := strings.Split(dotPath, ".")
-	if len(parts) <= 1 {
+	first, rest, found := strings.Cut(dotPath, ".")
+	if !found {
 		return dotPath
 	}
 	var result strings.Builder
-	result.WriteString(parts[0])
-	for _, p := range parts[1:] {
+	result.WriteString(first)
+	remaining := rest
+	for remaining != "" {
+		var p string
+		p, remaining, _ = strings.Cut(remaining, ".")
 		result.WriteByte('[')
 		result.WriteString(strconv.Quote(p))
 		result.WriteByte(']')
@@ -245,8 +248,8 @@ func hasField(dotPath string) string {
 		// fails rather than silently passing.
 		return "false"
 	}
-	parts := strings.Split(dotPath, ".")
-	if len(parts) == 1 {
+	first, rest, found := strings.Cut(dotPath, ".")
+	if !found {
 		// Single-segment path after normalization is always a known
 		// top-level CEL variable (properties, params, identities,
 		// identity); normalizePath prefixes anything else with
@@ -268,16 +271,17 @@ func hasField(dotPath string) string {
 		return "true"
 	}
 
-	checks := make([]string, 0, len(parts)-1)
-	for i := 1; i < len(parts); i++ {
-		var base strings.Builder
-		base.WriteString(parts[0])
-		for j := 1; j < i; j++ {
-			base.WriteByte('[')
-			base.WriteString(strconv.Quote(parts[j]))
-			base.WriteByte(']')
-		}
-		checks = append(checks, fmt.Sprintf("%q in %s", parts[i], base.String()))
+	var checks []string
+	var base strings.Builder
+	base.WriteString(first)
+	remaining := rest
+	for remaining != "" {
+		var p string
+		p, remaining, _ = strings.Cut(remaining, ".")
+		checks = append(checks, strconv.Quote(p)+" in "+base.String())
+		base.WriteByte('[')
+		base.WriteString(strconv.Quote(p))
+		base.WriteByte(']')
 	}
 	return strings.Join(checks, " && ")
 }
@@ -323,10 +327,12 @@ func scopedFieldAccess(dotPath, scopeVar string) string {
 	// "type" → __id["type"]
 	// "purpose" → __id["purpose"]
 	// "grants.has_wildcard" → __id["grants"]["has_wildcard"]
-	parts := strings.Split(dotPath, ".")
 	var result strings.Builder
 	result.WriteString(scopeVar)
-	for _, p := range parts {
+	remaining := dotPath
+	for remaining != "" {
+		var p string
+		p, remaining, _ = strings.Cut(remaining, ".")
 		result.WriteByte('[')
 		result.WriteString(strconv.Quote(p))
 		result.WriteByte(']')
@@ -354,17 +360,17 @@ func scopedHasField(dotPath, scopeVar string) string {
 	// In scoped mode, check existence at each nesting level from scopeVar.
 	// "type" → "type" in __id
 	// "grants.has_wildcard" → "grants" in __id && "has_wildcard" in __id["grants"]
-	parts := strings.Split(dotPath, ".")
-	checks := make([]string, 0, len(parts))
-	for i := range parts {
-		var base strings.Builder
-		base.WriteString(scopeVar)
-		for j := range i {
-			base.WriteByte('[')
-			base.WriteString(strconv.Quote(parts[j]))
-			base.WriteByte(']')
-		}
-		checks = append(checks, fmt.Sprintf("%q in %s", parts[i], base.String()))
+	var checks []string
+	var base strings.Builder
+	base.WriteString(scopeVar)
+	remaining := dotPath
+	for remaining != "" {
+		var p string
+		p, remaining, _ = strings.Cut(remaining, ".")
+		checks = append(checks, strconv.Quote(p)+" in "+base.String())
+		base.WriteByte('[')
+		base.WriteString(strconv.Quote(p))
+		base.WriteByte(']')
 	}
 	return strings.Join(checks, " && ")
 }
@@ -413,10 +419,11 @@ func literal(v any) (string, error) {
 		return "false", nil
 	case string:
 		// Normalize boolean strings to match property normalizer
-		switch strings.ToLower(strings.TrimSpace(val)) {
-		case "true":
+		trimmed := strings.TrimSpace(val)
+		if strings.EqualFold(trimmed, "true") {
 			return "true", nil
-		case "false":
+		}
+		if strings.EqualFold(trimmed, "false") {
 			return "false", nil
 		}
 		return strconv.Quote(val), nil
@@ -424,7 +431,7 @@ func literal(v any) (string, error) {
 		if isWholeIntegerFloat(val) {
 			return strconv.FormatInt(int64(val), 10), nil
 		}
-		return fmt.Sprintf("%g", val), nil
+		return strconv.FormatFloat(val, 'g', -1, 64), nil
 	case float32:
 		// Promote float32 values into the float64 path: CEL has a
 		// single double type, so the textual representation is the
@@ -434,7 +441,7 @@ func literal(v any) (string, error) {
 		if isWholeIntegerFloat(f) {
 			return strconv.FormatInt(int64(f), 10), nil
 		}
-		return fmt.Sprintf("%g", f), nil
+		return strconv.FormatFloat(f, 'g', -1, 64), nil
 	case int:
 		return strconv.Itoa(val), nil
 	case int32:

@@ -27,17 +27,6 @@ func NewLibrary() (*Library, error) {
 	return &Library{idx: idx}, nil
 }
 
-// MustNewLibrary loads the embedded policy-pack registry and
-// panics on error. Convenience for cmd-side wiring where load
-// failure is a build-time bug worth crashing on.
-func MustNewLibrary() *Library {
-	lib, err := NewLibrary()
-	if err != nil {
-		panic("pack: failed to load embedded policy library: " + err.Error())
-	}
-	return lib
-}
-
 // ListPacks returns every pack in stable order, projected into
 // the contract's PolicyPack value type.
 func (l *Library) ListPacks() ([]contracts.PolicyPack, error) {

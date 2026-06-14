@@ -8,7 +8,7 @@ import (
 
 // Specialist generates a remediation plan for a specific class of security risk.
 type Specialist interface {
-	Plan(f Finding) *evaluation.RemediationPlan
+	Plan(f *Finding) *evaluation.RemediationPlan
 }
 
 // Planner generates machine-readable remediation plans (Fix Plans) for violations.
@@ -35,9 +35,7 @@ func (p *Planner) Register(class kernel.ControlClass, s Specialist) {
 
 // PlanFor returns a remediation plan for the finding's control class,
 // or nil if no specialist is registered for that class.
-//
-//nolint:gocritic // hugeParam: PlanFor is an interface boundary — callers pass by value
-func (p *Planner) PlanFor(f Finding) *evaluation.RemediationPlan {
+func (p *Planner) PlanFor(f *Finding) *evaluation.RemediationPlan {
 	if s, ok := p.specialists[f.ControlID.Classify()]; ok {
 		return s.Plan(f)
 	}
@@ -79,7 +77,7 @@ func (p *Planner) enrichSlice(findings []evaluation.Finding) []Finding {
 			Finding:         *f,
 			RemediationSpec: resolveSpec(f),
 		}
-		findingWithPlan.RemediationPlan = p.PlanFor(findingWithPlan)
+		findingWithPlan.RemediationPlan = p.PlanFor(&findingWithPlan)
 		parameterizeCommand(&findingWithPlan)
 		enriched[i] = findingWithPlan
 	}

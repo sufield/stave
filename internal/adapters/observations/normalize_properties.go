@@ -73,10 +73,10 @@ func coerceString(s string) any {
 		return trimmed
 	}
 
-	switch strings.ToLower(trimmed) {
-	case "true":
+	if strings.EqualFold(trimmed, "true") {
 		return true
-	case "false":
+	}
+	if strings.EqualFold(trimmed, "false") {
 		return false
 	}
 

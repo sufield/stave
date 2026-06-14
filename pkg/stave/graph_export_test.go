@@ -114,9 +114,9 @@ func TestExportGraph_ChainsProjectMembers(t *testing.T) {
 	if len(chain.Members) != 2 {
 		t.Fatalf("chain.Members = %v, want 2", chain.Members)
 	}
-	wantMembers := map[stave.FindingID]bool{"fid-A": true, "fid-B": true}
+	wantMembers := map[stave.FindingID]struct{}{"fid-A": {}, "fid-B": {}}
 	for _, fid := range chain.Members {
-		if !wantMembers[fid] {
+		if _, ok := wantMembers[fid]; !ok {
 			t.Errorf("unexpected member %q", fid)
 		}
 	}

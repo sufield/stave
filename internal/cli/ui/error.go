@@ -186,13 +186,19 @@ func WriteErrorText(w io.Writer, info *ErrorInfo) error {
 	sb.WriteByte('\n')
 
 	if info.Message != "" {
-		fmt.Fprintf(&sb, "  Message: %s\n", info.Message)
+		sb.WriteString("  Message: ")
+		sb.WriteString(info.Message)
+		sb.WriteByte('\n')
 	}
 	if info.Action != "" {
-		fmt.Fprintf(&sb, "  Fix:     %s\n", info.Action)
+		sb.WriteString("  Fix:     ")
+		sb.WriteString(info.Action)
+		sb.WriteByte('\n')
 	}
 	if info.URL != "" {
-		fmt.Fprintf(&sb, "  Help:    %s\n", info.URL)
+		sb.WriteString("  Help:    ")
+		sb.WriteString(info.URL)
+		sb.WriteByte('\n')
 	}
 
 	if len(info.Evidence) > 0 {
@@ -208,7 +214,11 @@ func WriteErrorText(w io.Writer, info *ErrorInfo) error {
 		}
 		slices.Sort(keys)
 		for _, k := range keys {
-			fmt.Fprintf(&sb, "    - %s: %s\n", k, info.Evidence[k])
+			sb.WriteString("    - ")
+			sb.WriteString(k)
+			sb.WriteString(": ")
+			sb.WriteString(info.Evidence[k])
+			sb.WriteByte('\n')
 		}
 	}
 

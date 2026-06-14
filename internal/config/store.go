@@ -141,11 +141,10 @@ func hasNoUnsafeSegments(path string) bool {
 		return true
 	}
 
-	// Phase 2: Accurate check. Split into segments and verify no
-	// segment is exactly `..`. The exact-match rule is what allows
+	// Phase 2: Accurate check. Check if any discrete segment is exactly `..`
+	// without allocating slice. The exact-match rule is what allows
 	// `v1..2` and `...` to pass as benign filenames.
-	segments := strings.Split(normalized, "/")
-	isPathEscapingBoundaries := slices.Contains(segments, "..")
+	isPathEscapingBoundaries := normalized == ".." || strings.HasPrefix(normalized, "../") || strings.HasSuffix(normalized, "/..") || strings.Contains(normalized, "/../")
 	return !isPathEscapingBoundaries
 }
 

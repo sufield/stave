@@ -53,9 +53,10 @@ func ExtractObservationProperties(
 
 // resolveDotPath traverses nested maps following a dot-separated path.
 func resolveDotPath(m map[string]any, path string) (any, bool) {
-	parts := strings.Split(path, ".")
 	var current any = m
-	for _, part := range parts {
+	for path != "" {
+		var part string
+		part, path, _ = strings.Cut(path, ".")
 		cm, ok := current.(map[string]any)
 		if !ok {
 			return nil, false

@@ -144,27 +144,13 @@ func SanitizeFindings(s kernel.Sanitizer, findings []remediation.Finding) []reme
 	out := make([]remediation.Finding, len(findings))
 	for i := range findings {
 		f := &findings[i]
-		out[i] = sanitizeFinding(*f, s)
+		out[i] = sanitizeFinding(f, s)
 	}
 	return out
 }
 
-// sanitizeFinding returns a deep copy of the Finding with
-// infrastructure identifiers masked. This is presentation/privacy
-// logic, not domain logic.
-//
-// Sanitization is type-discriminated: identifier-shaped fields
-// (asset IDs, source paths, identity statements, grantees) route
-// through the per-field Sanitizer interface; primitive observation
-// values (booleans, numbers, nil) pass through unchanged so
-// downstream consumers see the actual observed state. See
-// sanitizeActualValue for the full type matrix and rationale, and
-// docs/product/architecture.md § "Sanitization policy" for the
-// architectural commitment.
-//
-//nolint:gocritic // hugeParam: deep-copy semantics require value parameter
-func sanitizeFinding(f remediation.Finding, s kernel.Sanitizer) remediation.Finding {
-	out := f
+func sanitizeFinding(f *remediation.Finding, s kernel.Sanitizer) remediation.Finding {
+	out := *f
 	out.AssetID = asset.ID(s.ID(string(f.AssetID)))
 
 	if f.HasSource() {

@@ -92,7 +92,7 @@ func (s *Service) Fix(ctx context.Context, req Request) error {
 
 	EnsurePlan(&selected)
 
-	return WriteFixResult(req.Stdout, selected)
+	return WriteFixResult(req.Stdout, &selected)
 }
 
 // EnsurePlan mutates f in place to ensure it has a non-nil
@@ -105,7 +105,7 @@ func EnsurePlan(f *remediation.Finding) {
 		return
 	}
 	if f.RemediationPlan == nil {
-		f.RemediationPlan = remediation.NewPlanner().PlanFor(*f)
+		f.RemediationPlan = remediation.NewPlanner().PlanFor(f)
 	}
 }
 
@@ -120,9 +120,7 @@ func SelectFinding(findings []remediation.Finding, needle string) (remediation.F
 }
 
 // WriteFixResult writes the fix plan as JSON with structured changes.
-//
-//nolint:gocritic // hugeParam: public API — changing to pointer would cascade
-func WriteFixResult(w io.Writer, f remediation.Finding) error {
+func WriteFixResult(w io.Writer, f *remediation.Finding) error {
 	changes := policy.DeriveChanges(f.Evidence.Misconfigurations)
 
 	out := struct {
@@ -175,8 +173,6 @@ func deriveConfidence(changes []policy.PropertyChange) float64 {
 
 // FindingKey returns the canonical string selector for a finding.
 // Delegates to remediation.FindingKey in core.
-//
-//nolint:gocritic // hugeParam: thin wrapper
-func FindingKey(f remediation.Finding) string {
-	return remediation.FindingKey(&f)
+func FindingKey(f *remediation.Finding) string {
+	return remediation.FindingKey(f)
 }

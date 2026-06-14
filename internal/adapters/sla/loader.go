@@ -60,16 +60,15 @@ func (p *Policy) AllDeadlines() map[string]float64 {
 // Returns 0 if severity is unrecognized or has no deadline.
 func (p *Policy) DeadlineHoursFor(severity string) float64 {
 	var raw string
-	switch strings.ToLower(severity) {
-	case "critical":
+	if strings.EqualFold(severity, "critical") {
 		raw = p.Deadlines.Critical
-	case "high":
+	} else if strings.EqualFold(severity, "high") {
 		raw = p.Deadlines.High
-	case "medium":
+	} else if strings.EqualFold(severity, "medium") {
 		raw = p.Deadlines.Medium
-	case "low":
+	} else if strings.EqualFold(severity, "low") {
 		raw = p.Deadlines.Low
-	default:
+	} else {
 		return 0
 	}
 	if raw == "" {

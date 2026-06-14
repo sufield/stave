@@ -51,11 +51,11 @@ func ClassifyOscillation(ctx context.Context, cfg OscillationConfig) ([]byte, []
 	}
 
 	type fkey struct{ ctl, ast string }
-	pairs := make(map[fkey]bool)
+	pairs := make(map[fkey]struct{})
 	for i := range vals {
 		for j := range vals[i].Findings {
 			f := &vals[i].Findings[j]
-			pairs[fkey{string(f.ControlID), string(f.AssetID)}] = true
+			pairs[fkey{string(f.ControlID), string(f.AssetID)}] = struct{}{}
 		}
 	}
 

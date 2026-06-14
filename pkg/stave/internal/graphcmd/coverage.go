@@ -178,9 +178,9 @@ func CoverageEdges(
 	assetIDs []asset.ID,
 	identities []asset.CloudIdentity,
 	eval policy.PredicateEval,
-) ([]CoverageEdge, map[asset.ID]bool) {
+) ([]CoverageEdge, map[asset.ID]struct{}) {
 	edges := make([]CoverageEdge, 0, len(assetIDs))
-	coveredAssets := make(map[asset.ID]bool, len(assetIDs))
+	coveredAssets := make(map[asset.ID]struct{}, len(assetIDs))
 	if eval == nil {
 		return edges, coveredAssets
 	}
@@ -192,16 +192,16 @@ func CoverageEdges(
 				continue
 			}
 			edges = append(edges, CoverageEdge{ControlID: ctl.ID, AssetID: rid})
-			coveredAssets[rid] = true
+			coveredAssets[rid] = struct{}{}
 		}
 	}
 	return edges, coveredAssets
 }
 
-func uncoveredAssets(assetIDs []asset.ID, coveredAssets map[asset.ID]bool) []asset.ID {
+func uncoveredAssets(assetIDs []asset.ID, coveredAssets map[asset.ID]struct{}) []asset.ID {
 	out := make([]asset.ID, 0)
 	for _, rid := range assetIDs {
-		if !coveredAssets[rid] {
+		if _, ok := coveredAssets[rid]; !ok {
 			out = append(out, rid)
 		}
 	}
@@ -221,9 +221,9 @@ func writeResult(w io.Writer, format Format, result CoverageResult, sanitizer ke
 }
 
 func writeDOT(w io.Writer, result CoverageResult, sanitizer kernel.Sanitizer) error {
-	uncoveredSet := make(map[asset.ID]bool)
+	uncoveredSet := make(map[asset.ID]struct{})
 	for _, r := range result.UncoveredAssets {
-		uncoveredSet[r] = true
+		uncoveredSet[r] = struct{}{}
 	}
 
 	fmt.Fprintln(w, "digraph StaveCoverage {")
@@ -247,7 +247,7 @@ func writeDOT(w io.Writer, result CoverageResult, sanitizer kernel.Sanitizer) er
 	fmt.Fprintln(w, `    label="Assets";`)
 	for _, rid := range result.Assets {
 		displayID := sanitizer.ID(rid.String())
-		if uncoveredSet[rid] {
+		if _, ok := uncoveredSet[rid]; ok {
 			fmt.Fprintf(w, "    %s [style=filled, fillcolor=lightyellow];\n", dotQuote(displayID))
 		} else {
 			fmt.Fprintf(w, "    %s;\n", dotQuote(displayID))

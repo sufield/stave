@@ -8,20 +8,12 @@ func TestDefaultPolicy_ProxyEnvVars(t *testing.T) {
 	if len(vars) == 0 {
 		t.Fatal("expected non-empty proxy env vars")
 	}
-	// Verify well-known entries exist.
-	want := map[string]bool{
-		"HTTP_PROXY":  false,
-		"HTTPS_PROXY": false,
-		"http_proxy":  false,
-		"https_proxy": false,
-	}
+	found := make(map[string]struct{})
 	for _, v := range vars {
-		if _, ok := want[v]; ok {
-			want[v] = true
-		}
+		found[v] = struct{}{}
 	}
-	for k, found := range want {
-		if !found {
+	for _, k := range []string{"HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"} {
+		if _, ok := found[k]; !ok {
 			t.Errorf("expected %q in ProxyEnvVars", k)
 		}
 	}

@@ -665,14 +665,14 @@ func coerceBool(val any, defaultVal bool) (bool, error) {
 	case bool:
 		return v, nil
 	case string:
-		switch strings.ToLower(strings.TrimSpace(v)) {
-		case "true":
+		trimmed := strings.TrimSpace(v)
+		if strings.EqualFold(trimmed, "true") {
 			return true, nil
-		case "false":
-			return false, nil
-		default:
-			return false, fmt.Errorf("expected bool or \"true\"/\"false\" string, got %q", v)
 		}
+		if strings.EqualFold(trimmed, "false") {
+			return false, nil
+		}
+		return false, fmt.Errorf("expected bool or \"true\"/\"false\" string, got %q", v)
 	default:
 		return false, fmt.Errorf("expected bool or \"true\"/\"false\" string, got %T", val)
 	}

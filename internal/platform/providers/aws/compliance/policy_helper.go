@@ -54,9 +54,8 @@ func (s PolicyStatement) HasWildcardPrincipal() bool {
 // HasAction reports whether the statement includes the given action
 // (case-insensitive).
 func (s PolicyStatement) HasAction(action string) bool {
-	lower := strings.ToLower(action)
 	for _, a := range s.Action {
-		if strings.ToLower(a) == lower {
+		if strings.EqualFold(a, action) {
 			return true
 		}
 	}

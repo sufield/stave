@@ -40,7 +40,7 @@ func (s Snapshots) analyze() *validationCtx {
 	for _, snap := range s {
 		ctx.lifecycle.observe(snap.CapturedAt)
 
-		timeCounts[snap.CapturedAt]++
+		timeCounts[snap.CapturedAt.UTC()]++
 
 		seenInSnap := make(map[ID]struct{})
 		for _, r := range snap.Assets {
@@ -97,7 +97,7 @@ type snapshotLifecycle struct {
 }
 
 func newSnapshotTimeline(seed time.Time) *snapshotLifecycle {
-	return &snapshotLifecycle{earliest: seed, latest: seed}
+	return &snapshotLifecycle{earliest: seed.UTC(), latest: seed.UTC()}
 }
 
 func (t *snapshotLifecycle) observe(capturedAt time.Time) {
@@ -107,13 +107,14 @@ func (t *snapshotLifecycle) observe(capturedAt time.Time) {
 	if capturedAt.IsZero() {
 		return
 	}
+	capturedAtUTC := capturedAt.UTC()
 	// Adopt the first real timestamp when the span has not yet been
 	// anchored to a real value (the seed may have been a zero timestamp).
-	if t.earliest.IsZero() || capturedAt.Before(t.earliest) {
-		t.earliest = capturedAt
+	if t.earliest.IsZero() || capturedAtUTC.Before(t.earliest) {
+		t.earliest = capturedAtUTC
 	}
-	if t.latest.IsZero() || capturedAt.After(t.latest) {
-		t.latest = capturedAt
+	if t.latest.IsZero() || capturedAtUTC.After(t.latest) {
+		t.latest = capturedAtUTC
 	}
 }
 

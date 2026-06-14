@@ -152,9 +152,12 @@ func shortControlID(id string) string {
 	// CTL.IAM.ESCALATE.CREATEACCESSKEY.001 → ESCALATE.CREATEACCESSKEY.001
 	// CTL.IAM.POLICY.ADMIN.001 → POLICY.ADMIN.001
 	// CTL.S3.PUBLIC.READ.001 → PUBLIC.READ.001
-	parts := strings.Split(id, ".")
-	if len(parts) > 3 && parts[0] == "CTL" {
-		return strings.Join(parts[2:], ".")
+	if strings.HasPrefix(id, "CTL.") {
+		if idx := strings.IndexByte(id[4:], '.'); idx >= 0 {
+			if strings.IndexByte(id[4+idx+1:], '.') >= 0 {
+				return id[4+idx+1:]
+			}
+		}
 	}
 	return id
 }

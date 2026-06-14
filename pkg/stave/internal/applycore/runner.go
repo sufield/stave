@@ -156,18 +156,13 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 		return nil, errors.New("applycore.Run: SnapshotsDir is required")
 	}
 	libraryOnce.Do(func() {
-		// pack.MustNewLibrary panics on an invalid embedded
-		// library — recover so a misconfigured release builds a
-		// runnable error path instead of taking down every
-		// pkg/stave caller. The error is sticky (see errLibraryInit
-		// doc) — sync.Once won't re-enter this body.
-		defer func() {
-			if r := recover(); r != nil {
-				errLibraryInit = fmt.Errorf("applycore: library init panicked: %v", r)
-			}
-		}()
 		aws.Register()
-		appcapabilities.Configure(pack.MustNewLibrary())
+		lib, err := pack.NewLibrary()
+		if err != nil {
+			errLibraryInit = fmt.Errorf("applycore: failed to load embedded library: %w", err)
+			return
+		}
+		appcapabilities.Configure(lib)
 	})
 	if err := isLibraryReady(); err != nil {
 		return nil, err
@@ -223,7 +218,7 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 
 	obsRepo := in.ObservationRepo
 	if obsRepo == nil {
-		obsOpts := []observations.LoaderOption{}
+		var obsOpts []observations.LoaderOption
 		if in.IntegrityManifest != "" {
 			obsOpts = append(obsOpts, observations.WithIntegrityCheck(in.IntegrityManifest, in.IntegrityPublicKey))
 		}
@@ -370,13 +365,13 @@ func annotateContributingFactIDs(
 // (e.g. fingerprint explain). Empty dir uses the embedded catalog.
 func LoadControls(dir string) ([]policy.ControlDefinition, error) {
 	libraryOnce.Do(func() {
-		defer func() {
-			if r := recover(); r != nil {
-				errLibraryInit = fmt.Errorf("applycore: library init panicked: %v", r)
-			}
-		}()
 		aws.Register()
-		appcapabilities.Configure(pack.MustNewLibrary())
+		lib, err := pack.NewLibrary()
+		if err != nil {
+			errLibraryInit = fmt.Errorf("applycore: failed to load embedded library: %w", err)
+			return
+		}
+		appcapabilities.Configure(lib)
 	})
 	if err := isLibraryReady(); err != nil {
 		return nil, err

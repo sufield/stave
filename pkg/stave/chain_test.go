@@ -189,19 +189,15 @@ func TestApply_CrossAssetMarkerChainFires(t *testing.T) {
 		t.Errorf("chain severity: got %q, want %q", chain.Severity, stave.SeverityCritical)
 	}
 
-	// Both member controls must be in ControlsFailing — proves the
-	// marker entered chain detection (not just the Cognito violation).
-	wantMembers := map[stave.ControlID]bool{
-		"CTL.COGNITO.IDPOOL.UNAUTH.S3.001": false,
-		"CTL.S3.MARKER.PHI.001":            false,
-	}
+	foundMembers := make(map[stave.ControlID]struct{})
 	for _, c := range chain.ControlsFailing {
-		if _, ok := wantMembers[c]; ok {
-			wantMembers[c] = true
-		}
+		foundMembers[c] = struct{}{}
 	}
-	for c, seen := range wantMembers {
-		if !seen {
+	for _, c := range []stave.ControlID{
+		"CTL.COGNITO.IDPOOL.UNAUTH.S3.001",
+		"CTL.S3.MARKER.PHI.001",
+	} {
+		if _, ok := foundMembers[c]; !ok {
 			t.Errorf("chain ControlsFailing missing expected member %q; got %v", c, chain.ControlsFailing)
 		}
 	}

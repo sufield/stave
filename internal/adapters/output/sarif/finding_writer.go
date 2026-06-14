@@ -68,7 +68,9 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 		// per-finding order so issue-id metadata lands on the right
 		// SARIF row. A future change that filters or reorders would
 		// otherwise silently mis-attribute the annotations.
-		verifyPositionalInvariant(results, remFindings)
+		if err := verifyPositionalInvariant(results, remFindings); err != nil {
+			return nil, err
+		}
 		fidToIssue := make(map[string]string, len(remFindings))
 		for _, iss := range enriched.Result.Issues {
 			for _, fid := range iss.MemberFindingIDs {
@@ -121,14 +123,15 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 // violated; a silent mismatch would attribute issue-id metadata to
 // the wrong SARIF row, sending operators to investigate the wrong
 // finding.
-func verifyPositionalInvariant(results []sarifResult, findings []remediation.Finding) {
+func verifyPositionalInvariant(results []sarifResult, findings []remediation.Finding) error {
 	if len(results) != len(findings) {
-		panic(fmt.Sprintf(
+		return fmt.Errorf(
 			"sarif: positional invariant violated (results: %d, findings: %d); "+
 				"buildResults must preserve finding order so issue-id annotations land on the correct row",
 			len(results), len(findings),
-		))
+		)
 	}
+	return nil
 }
 
 // buildRules deduplicates control IDs and builds SARIF rule descriptors.

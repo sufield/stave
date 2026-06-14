@@ -94,17 +94,34 @@ func resolveMapProperty(props map[string]any, path []string) map[string]any {
 }
 
 func extractAccountID(arn string) string {
-	parts := strings.Split(arn, ":")
-	if len(parts) >= 5 {
-		return parts[4]
+	curr := arn
+	for i := 0; i < 4; i++ {
+		idx := strings.IndexByte(curr, ':')
+		if idx == -1 {
+			return ""
+		}
+		curr = curr[idx+1:]
 	}
-	return ""
+	if nextIdx := strings.IndexByte(curr, ':'); nextIdx != -1 {
+		return curr[:nextIdx]
+	}
+	return curr
 }
 
 func extractService(arn string) string {
-	parts := strings.Split(arn, ":")
-	if len(parts) >= 3 {
-		return parts[2]
+	idx1 := strings.IndexByte(arn, ':')
+	if idx1 == -1 {
+		return ""
 	}
-	return ""
+	rest1 := arn[idx1+1:]
+	idx2 := strings.IndexByte(rest1, ':')
+	if idx2 == -1 {
+		return ""
+	}
+	rest2 := rest1[idx2+1:]
+	idx3 := strings.IndexByte(rest2, ':')
+	if idx3 == -1 {
+		return rest2
+	}
+	return rest2[:idx3]
 }

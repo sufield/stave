@@ -209,23 +209,17 @@ func mapSeverity(sev string) ASFFSeverity {
 }
 
 func severityToNormalized(sev string) int {
-	// Lowercase the input so the switch matches regardless of how
-	// the producer canonicalises severity. Stave's Severity.String()
-	// returns lowercase today (the matching path), but
-	// f.SeverityLabel and cf.Severity.String are two separate call
-	// sites — accepting both cases here keeps the mapping robust if
-	// either changes its convention or a future caller passes
-	// already-uppercased ASFF labels through this helper.
-	switch strings.ToLower(strings.TrimSpace(sev)) {
-	case "critical":
+	// Compare the input case-insensitively using strings.EqualFold to
+	// avoid lowercasing string allocations.
+	trimmed := strings.TrimSpace(sev)
+	if strings.EqualFold(trimmed, "critical") {
 		return 90
-	case "high":
+	} else if strings.EqualFold(trimmed, "high") {
 		return 70
-	case "medium":
+	} else if strings.EqualFold(trimmed, "medium") {
 		return 40
-	case "low":
+	} else if strings.EqualFold(trimmed, "low") {
 		return 10
-	default:
-		return 0
 	}
+	return 0
 }

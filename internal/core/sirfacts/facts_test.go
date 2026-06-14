@@ -397,33 +397,26 @@ func TestCognitoMappingFacts_OmitsNegativeCase(t *testing.T) {
 func TestIAMPolicyFacts_EmitsActionsAndResources(t *testing.T) {
 	t.Parallel()
 	facts := ExtractFacts(cognitoFixture())
-	wantActions := map[string]bool{"s3:GetObject": false, "s3:ListBucket": false}
-	wantResources := map[string]bool{
-		"arn:aws:s3:::app-data":   false,
-		"arn:aws:s3:::app-data/*": false,
-	}
+	foundActions := make(map[string]struct{})
+	foundResources := make(map[string]struct{})
 	for _, f := range facts {
 		if f.Subject != "arn:aws:iam::111122223333:role/UnauthRole" {
 			continue
 		}
 		switch f.Predicate {
 		case "has_action":
-			if _, ok := wantActions[f.Object]; ok {
-				wantActions[f.Object] = true
-			}
+			foundActions[f.Object] = struct{}{}
 		case "has_resource":
-			if _, ok := wantResources[f.Object]; ok {
-				wantResources[f.Object] = true
-			}
+			foundResources[f.Object] = struct{}{}
 		}
 	}
-	for a, found := range wantActions {
-		if !found {
+	for _, a := range []string{"s3:GetObject", "s3:ListBucket"} {
+		if _, ok := foundActions[a]; !ok {
 			t.Errorf("missing has_action %q on UnauthRole", a)
 		}
 	}
-	for r, found := range wantResources {
-		if !found {
+	for _, r := range []string{"arn:aws:s3:::app-data", "arn:aws:s3:::app-data/*"} {
+		if _, ok := foundResources[r]; !ok {
 			t.Errorf("missing has_resource %q on UnauthRole", r)
 		}
 	}
@@ -453,20 +446,14 @@ func TestTrustPolicyFacts_EmitsServicePrincipals(t *testing.T) {
 		}},
 	}
 	facts := ExtractFacts(doc)
-	want := map[string]bool{
-		"lambda.amazonaws.com":    false,
-		"ecs-tasks.amazonaws.com": false,
-	}
+	found := make(map[string]struct{})
 	for _, f := range facts {
-		if f.Predicate != "trusts_service" {
-			continue
-		}
-		if _, ok := want[f.Object]; ok {
-			want[f.Object] = true
+		if f.Predicate == "trusts_service" {
+			found[f.Object] = struct{}{}
 		}
 	}
-	for svc, found := range want {
-		if !found {
+	for _, svc := range []string{"lambda.amazonaws.com", "ecs-tasks.amazonaws.com"} {
+		if _, ok := found[svc]; !ok {
 			t.Errorf("missing trusts_service fact for %q", svc)
 		}
 	}
@@ -496,20 +483,14 @@ func TestTagFacts_EmitsKeyEqualsValue(t *testing.T) {
 			},
 		},
 	}
-	want := map[string]bool{
-		"environment=production":           false,
-		"data_classification=confidential": false,
-	}
+	found := make(map[string]struct{})
 	for _, f := range ExtractFacts(doc) {
-		if f.Predicate != "has_tag" {
-			continue
-		}
-		if _, ok := want[f.Object]; ok {
-			want[f.Object] = true
+		if f.Predicate == "has_tag" {
+			found[f.Object] = struct{}{}
 		}
 	}
-	for k, found := range want {
-		if !found {
+	for _, k := range []string{"environment=production", "data_classification=confidential"} {
+		if _, ok := found[k]; !ok {
 			t.Errorf("missing has_tag fact %q", k)
 		}
 	}
@@ -533,21 +514,14 @@ func TestTagFacts_WalksMultipleBlockNames(t *testing.T) {
 			},
 		}},
 	}
-	want := map[string]bool{
-		"in_bucket=yes":   false,
-		"in_storage=yes":  false,
-		"in_identity=yes": false,
-	}
+	found := make(map[string]struct{})
 	for _, f := range ExtractFacts(doc) {
-		if f.Predicate != "has_tag" {
-			continue
-		}
-		if _, ok := want[f.Object]; ok {
-			want[f.Object] = true
+		if f.Predicate == "has_tag" {
+			found[f.Object] = struct{}{}
 		}
 	}
-	for k, found := range want {
-		if !found {
+	for _, k := range []string{"in_bucket=yes", "in_storage=yes", "in_identity=yes"} {
+		if _, ok := found[k]; !ok {
 			t.Errorf("missing has_tag fact %q from multi-block walk", k)
 		}
 	}
@@ -885,21 +859,14 @@ func TestAssumeEdgeFacts_MultiHopChain(t *testing.T) {
 		mkRole(c, d, b),
 		mkLeaf(d, c),
 	}}
-	want := map[[2]string]bool{
-		{a, b}: false,
-		{b, c}: false,
-		{c, d}: false,
-	}
+	found := make(map[[2]string]struct{})
 	for _, f := range ExtractFacts(doc) {
-		if f.Predicate != "can_assume" {
-			continue
-		}
-		if _, ok := want[[2]string{f.Subject, f.Object}]; ok {
-			want[[2]string{f.Subject, f.Object}] = true
+		if f.Predicate == "can_assume" {
+			found[[2]string{f.Subject, f.Object}] = struct{}{}
 		}
 	}
-	for edge, ok := range want {
-		if !ok {
+	for _, edge := range [][2]string{{a, b}, {b, c}, {c, d}} {
+		if _, ok := found[edge]; !ok {
 			t.Errorf("missing can_assume edge: %s -> %s", edge[0], edge[1])
 		}
 	}
@@ -939,17 +906,12 @@ func TestDenyPolicyFacts_EmitsDenyActions(t *testing.T) {
 		}},
 	}
 	facts := ExtractFacts(doc)
-	wantDenyActions := map[string]bool{
-		"autoscaling:CreateAutoScalingGroup": false,
-		"ecs:RunTask":                        false,
-	}
+	foundDenyActions := make(map[string]struct{})
 	wantDenyResource := false
 	wantAllowAction := false
 	for _, f := range facts {
 		if f.Predicate == "has_deny_action" {
-			if _, ok := wantDenyActions[f.Object]; ok {
-				wantDenyActions[f.Object] = true
-			}
+			foundDenyActions[f.Object] = struct{}{}
 		}
 		if f.Predicate == "has_deny_resource" && f.Object == "*" {
 			wantDenyResource = true
@@ -958,8 +920,8 @@ func TestDenyPolicyFacts_EmitsDenyActions(t *testing.T) {
 			wantAllowAction = true
 		}
 	}
-	for action, hit := range wantDenyActions {
-		if !hit {
+	for _, action := range []string{"autoscaling:CreateAutoScalingGroup", "ecs:RunTask"} {
+		if _, ok := foundDenyActions[action]; !ok {
 			t.Errorf("missing has_deny_action(%s)", action)
 		}
 	}
@@ -1008,21 +970,15 @@ func TestConditionFacts_EmitsOperatorKeyPairs(t *testing.T) {
 		}},
 	}
 	facts := ExtractFacts(doc)
-	want := map[string]bool{
-		"StringEquals:iam:PassedToService": false,
-		"StringLike:aws:RequestTag/team":   false,
-	}
+	found := make(map[string]struct{})
 	for _, f := range facts {
-		if f.Predicate != "has_condition" {
-			continue
-		}
-		if _, ok := want[f.Object]; ok {
-			want[f.Object] = true
+		if f.Predicate == "has_condition" {
+			found[f.Object] = struct{}{}
 		}
 	}
-	for obj, hit := range want {
-		if !hit {
-			t.Errorf("missing has_condition(%s)", obj)
+	for _, k := range []string{"StringEquals:iam:PassedToService", "StringLike:aws:RequestTag/team"} {
+		if _, ok := found[k]; !ok {
+			t.Errorf("missing has_condition(%s)", k)
 		}
 	}
 }
@@ -1058,10 +1014,7 @@ func TestDataEventLoggingFacts_EmitsPerBucket(t *testing.T) {
 		}},
 	}
 	facts := ExtractFacts(doc)
-	want := map[string]bool{
-		"arn:aws:s3:::confidential-data": false,
-		"arn:aws:s3:::pii-records":       false,
-	}
+	found := make(map[string]struct{})
 	for _, f := range facts {
 		if f.Predicate != "has_data_event_logging" {
 			continue
@@ -1069,12 +1022,10 @@ func TestDataEventLoggingFacts_EmitsPerBucket(t *testing.T) {
 		if f.Object != "true" {
 			t.Errorf("has_data_event_logging emitted with object=%q (expected \"true\")", f.Object)
 		}
-		if _, ok := want[f.Subject]; ok {
-			want[f.Subject] = true
-		}
+		found[f.Subject] = struct{}{}
 	}
-	for bucket, hit := range want {
-		if !hit {
+	for _, bucket := range []string{"arn:aws:s3:::confidential-data", "arn:aws:s3:::pii-records"} {
+		if _, ok := found[bucket]; !ok {
 			t.Errorf("missing has_data_event_logging(%s)", bucket)
 		}
 	}
@@ -1331,34 +1282,30 @@ func TestConditionFacts_EmitsValuesAlongsideKeys(t *testing.T) {
 		}},
 	}
 	facts := ExtractFacts(doc)
-	wantKeys := map[string]bool{
-		"StringEquals:iam:PassedToService": false,
-		"StringLike:aws:RequestTag/team":   false,
-	}
-	wantValues := map[string]bool{
-		"StringEquals:iam:PassedToService=ec2.amazonaws.com":    false,
-		"StringEquals:iam:PassedToService=lambda.amazonaws.com": false,
-		"StringLike:aws:RequestTag/team=data-*":                 false,
-	}
+	foundKeys := make(map[string]struct{})
+	foundValues := make(map[string]struct{})
 	for _, f := range facts {
 		if f.Predicate == "has_condition" {
-			if _, ok := wantKeys[f.Object]; ok {
-				wantKeys[f.Object] = true
-			}
+			foundKeys[f.Object] = struct{}{}
 		}
 		if f.Predicate == "has_condition_value" {
-			if _, ok := wantValues[f.Object]; ok {
-				wantValues[f.Object] = true
-			}
+			foundValues[f.Object] = struct{}{}
 		}
 	}
-	for k, hit := range wantKeys {
-		if !hit {
+	for _, k := range []string{
+		"StringEquals:iam:PassedToService",
+		"StringLike:aws:RequestTag/team",
+	} {
+		if _, ok := foundKeys[k]; !ok {
 			t.Errorf("missing has_condition(%s)", k)
 		}
 	}
-	for v, hit := range wantValues {
-		if !hit {
+	for _, v := range []string{
+		"StringEquals:iam:PassedToService=ec2.amazonaws.com",
+		"StringEquals:iam:PassedToService=lambda.amazonaws.com",
+		"StringLike:aws:RequestTag/team=data-*",
+	} {
+		if _, ok := foundValues[v]; !ok {
 			t.Errorf("missing has_condition_value(%s)", v)
 		}
 	}
@@ -1561,21 +1508,19 @@ func TestStringifiedPolicyFacts_EmitsResourcePolicyPrincipal(t *testing.T) {
 		}},
 	}
 	facts := ExtractFacts(doc)
-	want := map[string]bool{
-		`resource_policy_principal=arn:aws:iam::111122223333:root`: false,
-		`resource_policy_action=s3:Get*`:                           false,
-		`resource_policy_action=s3:List*`:                          false,
-	}
+	found := make(map[string]struct{})
 	for _, f := range facts {
 		if f.Source == "stringified_policy" {
 			key := f.Predicate + "=" + f.Object
-			if _, ok := want[key]; ok {
-				want[key] = true
-			}
+			found[key] = struct{}{}
 		}
 	}
-	for k, hit := range want {
-		if !hit {
+	for _, k := range []string{
+		`resource_policy_principal=arn:aws:iam::111122223333:root`,
+		`resource_policy_action=s3:Get*`,
+		`resource_policy_action=s3:List*`,
+	} {
+		if _, ok := found[k]; !ok {
 			t.Errorf("missing %s from parsed bucket policy", k)
 		}
 	}
@@ -1626,15 +1571,12 @@ func TestExtractResourcePolicyPrincipals_MixedKeys(t *testing.T) {
 		"AWS":     "arn:aws:iam::123:root",
 	}
 	got := extractResourcePolicyPrincipals(in)
-	wantSet := map[string]bool{
-		"arn:aws:iam::123:root": false,
-		"ec2.amazonaws.com":     false,
-	}
+	found := make(map[string]struct{})
 	for _, v := range got {
-		wantSet[v] = true
+		found[v] = struct{}{}
 	}
-	for k, hit := range wantSet {
-		if !hit {
+	for _, k := range []string{"arn:aws:iam::123:root", "ec2.amazonaws.com"} {
+		if _, ok := found[k]; !ok {
 			t.Errorf("missing principal value %q", k)
 		}
 	}

@@ -15,15 +15,15 @@ func TestMinimumS3IngestIAMActions_MatchesManifest(t *testing.T) {
 		t.Fatal("MinimumS3IngestIAMActions returned empty list")
 	}
 
-	manifestSet := map[string]bool{}
+	manifestSet := map[string]struct{}{}
 	for _, entry := range S3IngestPermissions() {
-		manifestSet[entry.Action] = true
+		manifestSet[entry.Action] = struct{}{}
 	}
 	if len(got) != len(manifestSet) {
 		t.Fatalf("action count mismatch: got=%d manifest=%d", len(got), len(manifestSet))
 	}
 	for _, action := range got {
-		if !manifestSet[action] {
+		if _, ok := manifestSet[action]; !ok {
 			t.Fatalf("unexpected action in output: %s", action)
 		}
 	}

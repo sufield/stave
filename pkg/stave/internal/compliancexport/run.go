@@ -107,9 +107,9 @@ func Run(ctx context.Context, cfg *Config) (Result, error) {
 	}
 
 	// Collect controls matching any requested framework.
-	fwSet := make(map[policy.ComplianceFramework]bool)
+	fwSet := make(map[policy.ComplianceFramework]struct{})
 	for _, p := range profiles {
-		fwSet[policy.ComplianceFramework(p.FrameworkKey)] = true
+		fwSet[policy.ComplianceFramework(p.FrameworkKey)] = struct{}{}
 	}
 	var controls []policy.ControlDefinition
 	for i := range allControls {

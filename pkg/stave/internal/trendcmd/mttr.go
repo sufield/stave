@@ -26,12 +26,12 @@ func computeMTTR(assessments []*report.Assessment) map[string]mttrEntry {
 
 	for _, a := range assessments {
 		capturedAt := a.Run.Now
-		currentKeys := make(map[string]bool)
+		currentKeys := make(map[string]struct{})
 
 		for i := range a.Findings {
 			f := &a.Findings[i]
 			key := string(f.ControlID) + ":" + string(f.AssetID)
-			currentKeys[key] = true
+			currentKeys[key] = struct{}{}
 
 			sev := f.SeverityLabel()
 			if sev == "" {
@@ -51,7 +51,7 @@ func computeMTTR(assessments []*report.Assessment) map[string]mttrEntry {
 
 		// Close windows for violations no longer present.
 		for key, w := range windows {
-			if !currentKeys[key] {
+			if _, ok := currentKeys[key]; !ok {
 				w.closedAt = capturedAt
 				w.closed = true
 				closedWindows = append(closedWindows, *w)

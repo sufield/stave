@@ -145,10 +145,9 @@ func loadBuiltInControlsByID(
 		return nil, fmt.Errorf("load built-in controls: %w", err)
 	}
 
-	// allowed doubles as a "seen" tracker: true = wanted but unseen.
-	allowed := make(map[kernel.ControlID]bool, len(controlIDs))
+	unseen := make(map[kernel.ControlID]struct{}, len(controlIDs))
 	for _, id := range controlIDs {
-		allowed[id] = true
+		unseen[id] = struct{}{}
 	}
 	var excluded map[kernel.ControlID]struct{}
 	if len(excludeIDs) > 0 {
@@ -160,22 +159,20 @@ func loadBuiltInControlsByID(
 
 	// Single pass: select allowed controls, mark as seen.
 	selected := make([]policy.ControlDefinition, 0, len(controlIDs))
-	foundCount := 0
 	for i := range allBuiltIns {
 		ctl := &allBuiltIns[i]
-		if !allowed[ctl.ID] {
+		if _, ok := unseen[ctl.ID]; !ok {
 			continue
 		}
-		allowed[ctl.ID] = false // mark seen
-		foundCount++
+		delete(unseen, ctl.ID) // mark seen
 		if _, ok := excluded[ctl.ID]; ok {
 			continue
 		}
 		selected = append(selected, *ctl)
 	}
 
-	if foundCount < len(controlIDs) {
-		missing := collectMissingIDs(allowed)
+	if len(unseen) > 0 {
+		missing := collectMissingIDs(unseen)
 		return nil, fmt.Errorf("pack registry references missing embedded controls: %s", strings.Join(missing, ", "))
 	}
 
@@ -185,13 +182,11 @@ func loadBuiltInControlsByID(
 	return selected, nil
 }
 
-// collectMissingIDs returns sorted IDs that remain marked as unseen in the allowed map.
-func collectMissingIDs(allowed map[kernel.ControlID]bool) []string {
+// collectMissingIDs returns sorted IDs that remain marked as unseen in the unseen map.
+func collectMissingIDs(unseen map[kernel.ControlID]struct{}) []string {
 	var missing []string
-	for id, unseen := range allowed {
-		if unseen {
-			missing = append(missing, string(id))
-		}
+	for id := range unseen {
+		missing = append(missing, string(id))
 	}
 	slices.Sort(missing)
 	return missing

@@ -367,9 +367,9 @@ func computeRequirementSLA(ra *evidence.RequirementAssessment, findings []evalua
 	}
 
 	// Build set of control IDs mapped to this requirement via evidence records.
-	reqControlIDs := make(map[string]bool)
+	reqControlIDs := make(map[string]struct{})
 	for _, rec := range ra.Evidence {
-		reqControlIDs[rec.ControlID] = true
+		reqControlIDs[rec.ControlID] = struct{}{}
 	}
 
 	var detected, withinSLA, breached int
@@ -378,7 +378,7 @@ func computeRequirementSLA(ra *evidence.RequirementAssessment, findings []evalua
 
 	for i := range findings {
 		f := &findings[i]
-		if !reqControlIDs[string(f.ControlID)] {
+		if _, ok := reqControlIDs[string(f.ControlID)]; !ok {
 			continue
 		}
 		// Only count findings that have compliance mapping for this framework.

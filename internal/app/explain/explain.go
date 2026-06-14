@@ -194,10 +194,11 @@ func setNested(root map[string]any, dotted string, val any) {
 	if dotted == "" {
 		return
 	}
-	parts := strings.Split(dotted, ".")
+	fullPath := dotted
 	curr := root
-	for i, p := range parts {
-		if i == len(parts)-1 {
+	for {
+		p, after, ok := strings.Cut(dotted, ".")
+		if !ok {
 			if val != nil {
 				curr[p] = val
 			}
@@ -215,12 +216,13 @@ func setNested(root map[string]any, dotted string, val any) {
 			// mode but harder to detect.
 			if existing, present := curr[p]; present {
 				slog.Warn("explain.setNested: overwriting non-map intermediate value",
-					"path", dotted, "segment", p,
+					"path", fullPath, "segment", p,
 					"existing_type", fmt.Sprintf("%T", existing))
 			}
 			next = map[string]any{}
 			curr[p] = next
 		}
 		curr = next
+		dotted = after
 	}
 }

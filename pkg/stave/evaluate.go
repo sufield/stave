@@ -148,9 +148,27 @@ func evalExtractBucketName(snap asset.Snapshot) string {
 
 func evalExtractAccountID(snap asset.Snapshot) string {
 	for i := range snap.Assets {
-		parts := strings.Split(string(snap.Assets[i].ID), ":")
-		if len(parts) >= 5 && parts[4] != "" {
-			return parts[4]
+		curr := string(snap.Assets[i].ID)
+		found := true
+		for j := 0; j < 4; j++ {
+			idx := strings.IndexByte(curr, ':')
+			if idx == -1 {
+				found = false
+				break
+			}
+			curr = curr[idx+1:]
+		}
+		if !found {
+			continue
+		}
+		var accountID string
+		if nextIdx := strings.IndexByte(curr, ':'); nextIdx != -1 {
+			accountID = curr[:nextIdx]
+		} else {
+			accountID = curr
+		}
+		if accountID != "" {
+			return accountID
 		}
 	}
 	return ""

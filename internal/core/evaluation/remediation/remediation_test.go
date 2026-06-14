@@ -124,7 +124,7 @@ func TestPlannerPlanFor_PublicExposure(t *testing.T) {
 			AssetType: "aws_s3_bucket",
 		},
 	}
-	plan := p.PlanFor(f)
+	plan := p.PlanFor(&f)
 	if plan == nil {
 		t.Fatal("expected plan for public exposure")
 	}
@@ -144,7 +144,7 @@ func TestPlannerPlanFor_UnknownClass(t *testing.T) {
 			AssetID:   "res-1",
 		},
 	}
-	plan := p.PlanFor(f)
+	plan := p.PlanFor(&f)
 	if plan != nil {
 		t.Fatal("unknown class should return nil plan")
 	}
@@ -163,7 +163,7 @@ func TestPublicExposurePlannerPlan(t *testing.T) {
 			AssetType: "aws_s3_bucket",
 		},
 	}
-	plan := p.Plan(f)
+	plan := p.Plan(&f)
 	if plan == nil {
 		t.Fatal("expected plan")
 	}

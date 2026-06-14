@@ -412,9 +412,8 @@ func roleTrustsService(serviceTrusts map[string][]string, roleARN, servicePrinci
 	if !ok {
 		return false
 	}
-	want := strings.ToLower(servicePrincipal)
 	for _, svc := range services {
-		if strings.ToLower(svc) == want {
+		if strings.EqualFold(svc, servicePrincipal) {
 			return true
 		}
 	}

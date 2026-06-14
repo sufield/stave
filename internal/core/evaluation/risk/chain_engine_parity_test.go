@@ -1,10 +1,10 @@
 package risk
 
 import (
+	"cmp"
 	"fmt"
 	"reflect"
 	"slices"
-	"strings"
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -93,7 +93,7 @@ func detectChainsLegacy(
 				stages = append(stages, s)
 			}
 			slices.SortFunc(stages, func(a, b kernel.AttackStage) int {
-				return strings.Compare(string(a), string(b))
+				return cmp.Compare(a, b)
 			})
 
 			escalation := ChainEscalation(len(failing))
@@ -127,13 +127,13 @@ func detectChainsLegacy(
 	}
 
 	slices.SortFunc(findings, func(a, b findingsdata.CompoundFinding) int {
-		if c := strings.Compare(string(a.ChainID), string(b.ChainID)); c != 0 {
+		if c := cmp.Compare(a.ChainID, b.ChainID); c != 0 {
 			return c
 		}
-		if c := strings.Compare(a.ScopeID, b.ScopeID); c != 0 {
+		if c := cmp.Compare(a.ScopeID, b.ScopeID); c != 0 {
 			return c
 		}
-		return strings.Compare(string(a.AssetID), string(b.AssetID))
+		return cmp.Compare(a.AssetID, b.AssetID)
 	})
 
 	return findings

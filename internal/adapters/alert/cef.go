@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -108,19 +109,19 @@ func FormatCEF(a ports.WatchAlert) string {
 
 	// Extension key=value pairs.
 	var ext []string
-	ext = append(ext, fmt.Sprintf("rt=%d", a.Timestamp.UnixMilli()))
+	ext = append(ext, "rt="+strconv.FormatInt(a.Timestamp.UnixMilli(), 10))
 	ext = append(ext, "cs1="+cefEscape(a.SecurityState))
 	ext = append(ext, "cs1Label=SecurityState")
-	ext = append(ext, fmt.Sprintf("cn1=%d", a.Violations))
+	ext = append(ext, "cn1="+strconv.Itoa(a.Violations))
 	ext = append(ext, "cn1Label=Violations")
-	ext = append(ext, fmt.Sprintf("cn2=%d", a.NewViolations))
+	ext = append(ext, "cn2="+strconv.Itoa(a.NewViolations))
 	ext = append(ext, "cn2Label=NewViolations")
 	if a.ActiveSLABreaches > 0 {
-		ext = append(ext, fmt.Sprintf("cn3=%d", a.ActiveSLABreaches))
+		ext = append(ext, "cn3="+strconv.Itoa(a.ActiveSLABreaches))
 		ext = append(ext, "cn3Label=SLABreaches")
 	}
 	if a.MaxDwellTimeHours > 0 {
-		ext = append(ext, fmt.Sprintf("cfp1=%.1f", a.MaxDwellTimeHours))
+		ext = append(ext, "cfp1="+strconv.FormatFloat(a.MaxDwellTimeHours, 'f', 1, 64))
 		ext = append(ext, "cfp1Label=MaxDwellHours")
 	}
 	if len(a.Regressions) > 0 {

@@ -104,10 +104,10 @@ func buildMTTRHistory(assessments []*report.Assessment) map[string][]float64 {
 	sevTotals := make(map[string][]float64)
 
 	for _, a := range assessments {
-		currentKeys := make(map[fkey]bool, len(a.Findings))
+		currentKeys := make(map[fkey]struct{}, len(a.Findings))
 		for i := range a.Findings {
 			k := fkey{string(a.Findings[i].ControlID), string(a.Findings[i].AssetID)}
-			currentKeys[k] = true
+			currentKeys[k] = struct{}{}
 			if _, exists := open[k]; !exists {
 				open[k] = &window{
 					sev:    a.Findings[i].SeverityLabel(),
@@ -116,7 +116,7 @@ func buildMTTRHistory(assessments []*report.Assessment) map[string][]float64 {
 			}
 		}
 		for k, w := range open {
-			if !currentKeys[k] {
+			if _, ok := currentKeys[k]; !ok {
 				hours := a.Run.Now.Sub(w.openAt).Hours()
 				sevTotals[w.sev] = append(sevTotals[w.sev], hours)
 				delete(open, k)

@@ -134,14 +134,17 @@ func rootCauseKeys(trace []MatchedClause) map[string]struct{} {
 // parentNamespace returns the all-but-last path segment of key,
 // or an empty string when the parent has fewer than 2 segments.
 func parentNamespace(key string) string {
-	parts := strings.Split(key, ".")
-	if len(parts) < 3 {
-		// Strict ≥2 segments on the parent — e.g. "storage.foo.bar"
-		// yields "storage.foo"; "storage.foo" (parent "storage") is
-		// excluded as too coarse.
+	// Find the last dot in the string to get the parent namespace.
+	lastDot := strings.LastIndexByte(key, '.')
+	if lastDot == -1 {
 		return ""
 	}
-	return strings.Join(parts[:len(parts)-1], ".")
+	parent := key[:lastDot]
+	// Strict >=2 segments on the parent — check if there is still a dot
+	if strings.IndexByte(parent, '.') == -1 {
+		return ""
+	}
+	return parent
 }
 
 // unionFind is a minimal disjoint-set used to cluster findings by

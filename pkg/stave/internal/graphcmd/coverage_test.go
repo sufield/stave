@@ -101,7 +101,7 @@ func TestCoverageControlIDs(t *testing.T) {
 
 func TestUncoveredAssets(t *testing.T) {
 	all := []asset.ID{"a", "b", "c"}
-	covered := map[asset.ID]bool{"b": true}
+	covered := map[asset.ID]struct{}{"b": {}}
 	uncovered := uncoveredAssets(all, covered)
 	if len(uncovered) != 2 {
 		t.Fatalf("len = %d", len(uncovered))

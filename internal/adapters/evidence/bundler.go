@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -165,13 +166,21 @@ func buildSummary(input BundleInput) []byte {
 	var buf bytes.Buffer
 	buf.WriteString("Stave Evidence Bundle\n")
 	buf.WriteString("=====================\n\n")
-	fmt.Fprintf(&buf, "Generated: %s\n", time.Now().UTC().Format(time.RFC3339))
-	fmt.Fprintf(&buf, "Version:   %s\n", input.StaveVersion)
-	fmt.Fprintf(&buf, "Status:    %s\n\n", input.Assessment.Status)
-	fmt.Fprintf(&buf, "Assets evaluated:  %d\n", input.Assessment.Summary.TotalAssets)
-	fmt.Fprintf(&buf, "Violations found:  %d\n", input.Assessment.Summary.Violations)
-	fmt.Fprintf(&buf, "Chain findings:    %d\n", len(input.Assessment.ChainFindings))
-	fmt.Fprintf(&buf, "Signed:            %v\n", len(input.PrivateKeyPEM) > 0)
+	buf.WriteString("Generated: ")
+	buf.WriteString(time.Now().UTC().Format(time.RFC3339))
+	buf.WriteString("\nVersion:   ")
+	buf.WriteString(input.StaveVersion)
+	buf.WriteString("\nStatus:    ")
+	buf.WriteString(string(input.Assessment.Status))
+	buf.WriteString("\n\nAssets evaluated:  ")
+	buf.WriteString(strconv.Itoa(input.Assessment.Summary.TotalAssets))
+	buf.WriteString("\nViolations found:  ")
+	buf.WriteString(strconv.Itoa(input.Assessment.Summary.Violations))
+	buf.WriteString("\nChain findings:    ")
+	buf.WriteString(strconv.Itoa(len(input.Assessment.ChainFindings)))
+	buf.WriteString("\nSigned:            ")
+	buf.WriteString(strconv.FormatBool(len(input.PrivateKeyPEM) > 0))
+	buf.WriteByte('\n')
 	return buf.Bytes()
 }
 

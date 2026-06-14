@@ -93,9 +93,11 @@ func lookupScalar(properties map[string]any, path string) (any, bool) {
 	if !strings.HasPrefix(path, prefix) {
 		return nil, false
 	}
-	segs := strings.Split(strings.TrimPrefix(path, prefix), ".")
+	p := strings.TrimPrefix(path, prefix)
 	var cursor any = properties
-	for _, seg := range segs {
+	for p != "" {
+		var seg string
+		seg, p, _ = strings.Cut(p, ".")
 		m, ok := cursor.(map[string]any)
 		if !ok {
 			return nil, false

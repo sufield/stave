@@ -62,7 +62,7 @@ func TestSelectFinding_NotFound(t *testing.T) {
 
 func TestFindingKey(t *testing.T) {
 	f := makeRemFinding("CTL.S3.PUBLIC.001", "my-bucket")
-	got := FindingKey(f)
+	got := FindingKey(&f)
 	if got != "CTL.S3.PUBLIC.001@my-bucket" {
 		t.Fatalf("FindingKey = %q", got)
 	}
@@ -76,7 +76,7 @@ func TestWriteFixResult(t *testing.T) {
 	f := makeRemFinding("CTL.TEST.001", "bucket-a")
 	f.RemediationSpec = controldef.RemediationSpec{Action: "Fix it"}
 	var buf bytes.Buffer
-	if err := WriteFixResult(&buf, f); err != nil {
+	if err := WriteFixResult(&buf, &f); err != nil {
 		t.Fatal(err)
 	}
 	out := buf.String()

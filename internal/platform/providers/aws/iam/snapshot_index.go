@@ -108,11 +108,34 @@ func ResolveAllPrincipals(snap *asset.Snapshot) (
 // the canonical 6-segment ARN form and the 5-segment trust-root
 // form ("arn:aws:iam::<account>:root") that ResolveChains expects.
 func ExtractAccountIDFromARN(arn string) string {
-	parts := strings.Split(arn, ":")
-	if len(parts) >= 5 {
-		return parts[4]
+	// Find the 4th and 5th colons without allocating a slice of strings.
+	c1 := strings.IndexByte(arn, ':')
+	if c1 == -1 {
+		return ""
 	}
-	return ""
+	c2 := strings.IndexByte(arn[c1+1:], ':')
+	if c2 == -1 {
+		return ""
+	}
+	c2 = c1 + 1 + c2
+	c3 := strings.IndexByte(arn[c2+1:], ':')
+	if c3 == -1 {
+		return ""
+	}
+	c3 = c2 + 1 + c3
+	c4 := strings.IndexByte(arn[c3+1:], ':')
+	if c4 == -1 {
+		return ""
+	}
+	c4 = c3 + 1 + c4
+
+	// The account ID is between c4 and the next colon or the end of the string
+	rem := arn[c4+1:]
+	c5 := strings.IndexByte(rem, ':')
+	if c5 == -1 {
+		return rem
+	}
+	return rem[:c5]
 }
 
 // stringProperty walks a nested map[string]any using the supplied

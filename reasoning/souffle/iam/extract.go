@@ -314,15 +314,15 @@ func emitG3Facts(outDir string) (map[string]int, error) {
 	}
 	defer sensFile.Close()
 
-	highValues := map[string]bool{}
+	highValues := map[string]struct{}{}
 	for _, v := range defaultHighSensitivityValues {
-		highValues[v] = true
+		highValues[v] = struct{}{}
 	}
 	sensCount := 0
 	for _, r := range resList {
 		level := "standard"
 		if v, ok := tagsByAsset[r][defaultClassificationTagKey]; ok {
-			if highValues[v] {
+			if _, okHigh := highValues[v]; okHigh {
 				level = "high"
 			}
 		}
@@ -343,11 +343,13 @@ func ownershipValues(tags map[string]string) []string {
 		return nil
 	}
 	var out []string
-	seen := map[string]bool{}
+	seen := map[string]struct{}{}
 	for _, key := range defaultOwnershipTagKeys {
-		if v, ok := tags[key]; ok && !seen[v] {
-			out = append(out, v)
-			seen[v] = true
+		if v, ok := tags[key]; ok {
+			if _, okSeen := seen[v]; !okSeen {
+				out = append(out, v)
+				seen[v] = struct{}{}
+			}
 		}
 	}
 	return out
@@ -359,13 +361,15 @@ func hasMatchingOwnership(principalTags map[string]string, resourceValues []stri
 	if principalTags == nil {
 		return false
 	}
-	resourceSet := map[string]bool{}
+	resourceSet := map[string]struct{}{}
 	for _, v := range resourceValues {
-		resourceSet[v] = true
+		resourceSet[v] = struct{}{}
 	}
 	for _, key := range defaultOwnershipTagKeys {
-		if v, ok := principalTags[key]; ok && resourceSet[v] {
-			return true
+		if v, ok := principalTags[key]; ok {
+			if _, okSet := resourceSet[v]; okSet {
+				return true
+			}
 		}
 	}
 	return false

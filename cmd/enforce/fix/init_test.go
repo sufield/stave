@@ -10,6 +10,10 @@ import (
 // TestMain configures the package-level injection slots that
 // production code wires through NewApp.
 func TestMain(m *testing.M) {
-	capabilities.Configure(pack.MustNewLibrary())
+	lib, err := pack.NewLibrary()
+	if err != nil {
+		panic("failed to load library: " + err.Error())
+	}
+	capabilities.Configure(lib)
 	m.Run()
 }

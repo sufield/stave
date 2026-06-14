@@ -246,9 +246,11 @@ func NewApp(opts ...AppOption) (*App, error) {
 	// dependency on AWS is visible at the CLI's wiring boundary
 	// instead of hidden behind blank-import side effects.
 	aws.Register()
-	// Wire the embedded policy library so app/capabilities.Manifest
-	// has its data source. Idempotent.
-	capabilities.Configure(pack.MustNewLibrary())
+	lib, err := pack.NewLibrary()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load embedded policy library: %w", err)
+	}
+	capabilities.Configure(lib)
 	app := &App{
 		Edition:  EditionProd,
 		ExitFunc: os.Exit,

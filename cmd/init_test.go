@@ -12,6 +12,10 @@ import (
 // build cobra commands directly and bypass the NewApp call path,
 // so we replicate the wiring here.
 func TestMain(m *testing.M) {
-	capabilities.Configure(pack.MustNewLibrary())
+	lib, err := pack.NewLibrary()
+	if err != nil {
+		panic("failed to load library: " + err.Error())
+	}
+	capabilities.Configure(lib)
 	m.Run()
 }

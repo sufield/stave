@@ -215,21 +215,21 @@ func filterByCompliance(controls []policy.ControlDefinition, fw policy.Complianc
 }
 
 func filterByComplianceUnion(controls []policy.ControlDefinition, frameworks []policy.ComplianceFramework) []policy.ControlDefinition {
-	fwSet := make(map[policy.ComplianceFramework]bool, len(frameworks))
+	fwSet := make(map[policy.ComplianceFramework]struct{}, len(frameworks))
 	for _, fw := range frameworks {
-		fwSet[fw] = true
+		fwSet[fw] = struct{}{}
 	}
 	filtered := make([]policy.ControlDefinition, 0, len(controls))
-	seen := make(map[kernel.ControlID]bool)
+	seen := make(map[kernel.ControlID]struct{})
 	for i := range controls {
 		ctl := &controls[i]
-		if seen[ctl.ID] {
+		if _, ok := seen[ctl.ID]; ok {
 			continue
 		}
 		for fw := range ctl.Compliance {
-			if fwSet[fw] {
+			if _, ok := fwSet[fw]; ok {
 				filtered = append(filtered, *ctl)
-				seen[ctl.ID] = true
+				seen[ctl.ID] = struct{}{}
 				break
 			}
 		}

@@ -21,7 +21,7 @@ func TestBuildRemediationPlan_S3Public(t *testing.T) {
 		},
 	}
 
-	plan := planner.PlanFor(finding)
+	plan := planner.PlanFor(&finding)
 	if plan == nil {
 		t.Fatal("PlanFor() = nil, want non-nil plan")
 	}
@@ -60,7 +60,7 @@ func TestBuildRemediationPlan_UnknownClass(t *testing.T) {
 		},
 	}
 
-	plan := planner.PlanFor(finding)
+	plan := planner.PlanFor(&finding)
 	if plan != nil {
 		t.Fatalf("PlanFor() = %+v, want nil for unknown control class", plan)
 	}

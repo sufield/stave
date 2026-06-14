@@ -133,7 +133,7 @@ func (e *Edge) DebugLabel() string {
 	if e == nil {
 		return ""
 	}
-	return fmt.Sprintf("%s %s -> %s", e.Type, e.From, e.To)
+	return string(e.Type) + " " + e.From + " -> " + e.To
 }
 
 // BuildInput holds the data for graph construction.

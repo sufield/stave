@@ -273,26 +273,53 @@ func humaniseCategory(c string) string {
 	if c == "" {
 		return "general"
 	}
-	// Replace underscores and capitalise per word
-	parts := strings.Split(c, "_")
-	for i, p := range parts {
-		if p == "" {
-			continue
+	var b strings.Builder
+	b.Grow(len(c))
+	capitalizeNext := true
+	for i := 0; i < len(c); i++ {
+		ch := c[i]
+		if ch == '_' {
+			b.WriteByte(' ')
+			capitalizeNext = true
+		} else {
+			if capitalizeNext {
+				if ch >= 'a' && ch <= 'z' {
+					b.WriteByte(ch - 'a' + 'A')
+				} else {
+					b.WriteByte(ch)
+				}
+				capitalizeNext = false
+			} else {
+				b.WriteByte(ch)
+			}
 		}
-		parts[i] = strings.ToUpper(p[:1]) + p[1:]
 	}
-	return strings.Join(parts, " ")
+	return b.String()
 }
 
 func humaniseID(id string) string {
-	parts := strings.Split(id, "_")
-	for i, p := range parts {
-		if p == "" {
-			continue
+	var b strings.Builder
+	b.Grow(len(id))
+	capitalizeNext := true
+	for i := 0; i < len(id); i++ {
+		ch := id[i]
+		if ch == '_' {
+			b.WriteByte(' ')
+			capitalizeNext = true
+		} else {
+			if capitalizeNext {
+				if ch >= 'a' && ch <= 'z' {
+					b.WriteByte(ch - 'a' + 'A')
+				} else {
+					b.WriteByte(ch)
+				}
+				capitalizeNext = false
+			} else {
+				b.WriteByte(ch)
+			}
 		}
-		parts[i] = strings.ToUpper(p[:1]) + p[1:]
 	}
-	return strings.Join(parts, " ")
+	return b.String()
 }
 
 func summariseFirst(descs []string) string {

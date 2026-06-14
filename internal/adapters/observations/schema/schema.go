@@ -177,9 +177,11 @@ func hasPath(props map[string]any, dotted string) bool {
 	if props == nil {
 		return false
 	}
-	parts := strings.Split(path, ".")
 	var cur any = props
-	for _, p := range parts {
+	remaining := path
+	for remaining != "" {
+		var p string
+		p, remaining, _ = strings.Cut(remaining, ".")
 		m, ok := cur.(map[string]any)
 		if !ok {
 			return false

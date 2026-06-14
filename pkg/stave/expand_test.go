@@ -74,9 +74,9 @@ func TestRenderExpandJSON_IncludesArchetypeAndControls(t *testing.T) {
 	if len(got.Controls) != 2 {
 		t.Errorf("controls len = %d, want 2", len(got.Controls))
 	}
-	wantServices := map[string]bool{"route53": true, "sqs": true}
+	wantServices := map[string]struct{}{"route53": {}, "sqs": {}}
 	for _, svc := range got.ServicesAffected {
-		if !wantServices[svc] {
+		if _, ok := wantServices[svc]; !ok {
 			t.Errorf("unexpected service in services_affected: %q", svc)
 		}
 	}

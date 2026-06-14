@@ -113,9 +113,9 @@ func evidencePackageForProfiles(ctx context.Context, snapshotsDir string, profil
 	if err != nil {
 		return nil, err
 	}
-	wanted := make(map[policy.ComplianceFramework]bool, len(profiles))
+	wanted := make(map[policy.ComplianceFramework]struct{}, len(profiles))
 	for _, p := range profiles {
-		wanted[policy.ComplianceFramework(p.FrameworkKey)] = true
+		wanted[policy.ComplianceFramework(p.FrameworkKey)] = struct{}{}
 	}
 	var controls []policy.ControlDefinition
 	for i := range allControls {

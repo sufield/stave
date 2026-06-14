@@ -53,7 +53,7 @@ func BuildFindingDetail(r *evaluation.ComplianceReport, req evaluation.FindingDe
 		Finding:         *violation,
 		RemediationSpec: spec,
 	}
-	plan := NewPlanner().PlanFor(enriched)
+	plan := NewPlanner().PlanFor(&enriched)
 	if plan != nil && gen != nil {
 		plan.ID = policy.StableRemediationPlanID(gen, violation.ControlID, violation.AssetID)
 	}

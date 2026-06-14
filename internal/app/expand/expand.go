@@ -47,11 +47,18 @@ func FilterByArchetype(controls []policy.ControlDefinition, id string) []policy.
 // segments) so callers can handle that as a single bucket rather
 // than being forced into nil-checks.
 func ServiceFromControlID(id kernel.ControlID) string {
-	parts := strings.Split(string(id), ".")
-	if len(parts) < 2 {
+	s := string(id)
+	// Skip the first segment (e.g. "ctl")
+	_, after, ok := strings.Cut(s, ".")
+	if !ok {
 		return "unknown"
 	}
-	svc := strings.ToLower(parts[1])
+	// The second segment is between the first dot and the second dot
+	before, _, _ := strings.Cut(after, ".")
+	if before == "" {
+		return "unknown"
+	}
+	svc := strings.ToLower(before)
 	if svc == "secrets" {
 		return "secretsmanager"
 	}
