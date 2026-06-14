@@ -360,7 +360,15 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 	}
 
 	// 3. Create components from ancestor down
-	components := strings.Split(rel, string(filepath.Separator))
+	var components []string
+	rest := rel
+	for rest != "" {
+		var part string
+		part, rest, _ = strings.Cut(rest, string(filepath.Separator))
+		if part != "" {
+			components = append(components, part)
+		}
+	}
 	current := ancestor
 	var createdByUs []string
 

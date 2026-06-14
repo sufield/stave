@@ -100,7 +100,7 @@ func TestByteReader_ReadLengthPrefixed_HighBitLength(t *testing.T) {
 // (same package), so the byte order matches the decoder by construction.
 func buildHeaderWithCount(count uint64) []byte {
 	var buf []byte
-	buf = append(buf, []byte(cacheMagic)...)
+	buf = append(buf, cacheMagic...)
 	buf = appendUint32(buf, cacheFormatVersion)
 	cv := []byte(celGoVersion())
 	buf = appendUint32(buf, uint32(len(cv)))

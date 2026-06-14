@@ -102,7 +102,11 @@ func BuildCoverageIndex(controls []controldef.ControlDefinition, inventories []T
 // from the provided inventory list. Duplicate (tool, check_id) entries
 // across different inventory files keep the first domain seen.
 func buildInventoryIndex(inventories []ToolInventory) map[checkKey]string {
-	idx := make(map[checkKey]string)
+	totalChecks := 0
+	for _, inv := range inventories {
+		totalChecks += len(inv.Checks)
+	}
+	idx := make(map[checkKey]string, totalChecks)
 	for _, inv := range inventories {
 		for _, id := range inv.Checks {
 			k := checkKey{tool: inv.Tool, checkID: id}
@@ -154,7 +158,7 @@ func assemble(covered map[toolDomain]map[string]struct{}, inventories []ToolInve
 	for _, inv := range inventories {
 		dc := lookup(idx, inv.Tool, inv.Domain)
 		uniqueChecks := make([]string, 0, len(inv.Checks))
-		seen := make(map[string]struct{})
+		seen := make(map[string]struct{}, len(inv.Checks))
 		for _, id := range inv.Checks {
 			if _, ok := seen[id]; !ok {
 				seen[id] = struct{}{}

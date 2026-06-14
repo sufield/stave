@@ -268,7 +268,7 @@ func encodeCache(entries []cachedEntry) []byte {
 	}
 
 	var buf []byte
-	buf = append(buf, []byte(cacheMagic)...)
+	buf = append(buf, cacheMagic...)
 	buf = appendUint32(buf, cacheFormatVersion)
 	cv := []byte(celGoVersion())
 	if !fitsUint32(len(cv)) {

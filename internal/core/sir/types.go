@@ -410,7 +410,20 @@ type ExposureWindow struct {
 	Start                  time.Time `json:"start"`
 	End                    time.Time `json:"end"`
 	UnsafePredicateMatched bool      `json:"unsafe_predicate_matched"`
-	ContributingControls   []string  `json:"contributing_controls"`
+
+	// DurationUnreliable is true when [Start, End] is not a trustworthy
+	// dwell measurement: the source lifecycle resolved the window to a
+	// non-positive duration (Start == End) because the resolving (secure)
+	// observation landed at or before the opening (unsafe) observation —
+	// clock skew or a snapshot reorder. The engine renders such a
+	// lifecycle Inconclusive rather than crediting the zero dwell; the
+	// solver must likewise DECLINE to grade SLA breach from this window
+	// (as it declines on a CoverageGap) instead of reading Start == End as
+	// "exposed for 0s, therefore within any threshold." Omitted (false)
+	// for the normal positive-duration case.
+	DurationUnreliable bool `json:"duration_unreliable,omitempty"`
+
+	ContributingControls []string `json:"contributing_controls"`
 }
 
 // CoverageGap names a time interval in which an asset was not

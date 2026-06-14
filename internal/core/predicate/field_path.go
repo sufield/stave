@@ -24,11 +24,13 @@ func NewFieldPath(s string) FieldPath {
 		return FieldPath{}
 	}
 
-	rawParts := strings.Split(s, ".")
-	parts := make([]string, 0, len(rawParts))
-	for _, p := range rawParts {
-		if p != "" {
-			parts = append(parts, p)
+	var parts []string
+	rest := s
+	for rest != "" {
+		var part string
+		part, rest, _ = strings.Cut(rest, ".")
+		if part != "" {
+			parts = append(parts, part)
 		}
 	}
 

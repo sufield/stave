@@ -1,7 +1,6 @@
 package graph
 
 import (
-	"slices"
 	"strings"
 )
 
@@ -101,9 +100,8 @@ func ToResourceClass(providerType string) string {
 
 	// Token match first — split on _ and match whole tokens to avoid
 	// substring collisions (e.g. "ecr" inside "secretsmanager").
-	tokens := strings.Split(lower, "_")
 	for _, rule := range resourceClassRules {
-		if slices.Contains(tokens, rule.key) {
+		if hasToken(lower, rule.key) {
 			return rule.class
 		}
 	}
@@ -116,4 +114,16 @@ func ToResourceClass(providerType string) string {
 	}
 
 	return "unknown"
+}
+
+func hasToken(s, token string) bool {
+	rest := s
+	for rest != "" {
+		var part string
+		part, rest, _ = strings.Cut(rest, "_")
+		if part == token {
+			return true
+		}
+	}
+	return false
 }

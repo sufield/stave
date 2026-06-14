@@ -626,22 +626,41 @@ func exposureWindowsFromLifecycles(lifecycles map[kernel.ControlID]map[asset.ID]
 				continue
 			}
 			for _, w := range lc.History().Windows() {
+				// A resolved window with non-positive duration (End <= Start)
+				// is a clamped / zero-dwell window: the secure observation
+				// landed at or before the unsafe one, so its dwell is not a
+				// trustworthy measurement. Flag it so the solver declines to
+				// grade SLA breach from it rather than reading Start == End as
+				// "exposed for 0s." (Resolve never yields End < Start — it
+				// clamps to End == Start — so the non-After check captures both
+				// the clamped and the exactly-zero cases the lifecycle marks
+				// HasClampedWindow for.)
 				out = append(out, ExposureWindow{
 					AssetID:                string(assetID),
 					Start:                  w.OpenedAt(),
 					End:                    w.ResolvedAt(),
 					UnsafePredicateMatched: true,
+					DurationUnreliable:     !w.ResolvedAt().After(w.OpenedAt()),
 					ContributingControls:   []string{string(controlID)},
 				})
 			}
 			if lc.HasActiveWindow() {
-				out = append(out, ExposureWindow{
-					AssetID:                string(assetID),
-					Start:                  lc.FirstExposedAt(),
-					End:                    now,
-					UnsafePredicateMatched: true,
-					ContributingControls:   []string{string(controlID)},
-				})
+				start := lc.FirstExposedAt()
+				// Skip exposures that open after the evaluation instant:
+				// as of `now` the asset is not yet exposed, and emitting
+				// End=now would produce an inverted (End<Start) window that
+				// the downstream Z3 solver would read as a negative dwell.
+				// Mirrors ExposureDuration, which treats now<window-start as
+				// having no valid duration.
+				if !now.Before(start) {
+					out = append(out, ExposureWindow{
+						AssetID:                string(assetID),
+						Start:                  start,
+						End:                    now,
+						UnsafePredicateMatched: true,
+						ContributingControls:   []string{string(controlID)},
+					})
+				}
 			}
 		}
 	}

@@ -1868,6 +1868,14 @@ func exposureFacts(windows []sir.ExposureWindow) []Fact {
 		}
 		evid := fmt.Sprintf("temporal.windows[%d]", i)
 		out = append(out, Fact{Subject: w.AssetID, Predicate: "has_exposure_window", Object: "true", Source: "exposure", Evidence: evid})
+		// The exposure occurred (has_exposure_window above), but a clamped /
+		// zero-dwell window carries no trustworthy duration. Surface the SIR's
+		// DurationUnreliable signal as its own triple so a dwell/SLA query can
+		// exclude these windows (decline to grade) rather than reading them as
+		// a 0-second exposure within any threshold.
+		if w.DurationUnreliable {
+			out = append(out, Fact{Subject: w.AssetID, Predicate: "has_unreliable_exposure_duration", Object: "true", Source: "exposure", Evidence: evid + ".duration_unreliable"})
+		}
 		for _, ctrl := range w.ContributingControls {
 			out = append(out, Fact{Subject: w.AssetID, Predicate: "contributed_by", Object: ctrl, Source: "exposure", Evidence: evid + ".contributing_controls"})
 		}
@@ -1977,6 +1985,7 @@ var baselineSMT2Predicates = []string{
 	"has_type",
 	"has_unknown_delegated_principal",
 	"has_unknown_delegation",
+	"has_unreliable_exposure_duration",
 	"has_unused_service",
 	"has_unused_service_ratio",
 	"has_upload_key_mode",

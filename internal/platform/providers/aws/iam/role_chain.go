@@ -674,15 +674,11 @@ func trustPolicyAllows(trustPolicy *PolicyDocument, principalARN string) bool {
 		return false
 	}
 	for _, stmt := range trustPolicy.Allows() {
-		// Check if any action is sts:AssumeRole.
-		hasAssumeAction := false
-		for _, a := range stmt.Action {
-			if a == "sts:AssumeRole" || a == "sts:*" || a == "*" {
-				hasAssumeAction = true
-				break
-			}
-		}
-		if !hasAssumeAction {
+		// Check if any action admits an assumer. Use the shared
+		// isAssumeRoleAction predicate (case-insensitive, and inclusive
+		// of the federated sts:AssumeRoleWith* verbs) so the trust side
+		// agrees with the grant side in resolveChainRecursive.
+		if !slices.ContainsFunc(stmt.Action, isAssumeRoleAction) {
 			continue
 		}
 

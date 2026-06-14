@@ -25,10 +25,11 @@ func ParseSelector(s string) (Selector, error) {
 		return Selector{}, errors.New("empty selector")
 	}
 
-	parts := strings.Split(s, "/")
 	sel := Selector{}
-
-	for _, p := range parts {
+	rest := s
+	for rest != "" {
+		var p string
+		p, rest, _ = strings.Cut(rest, "/")
 		p = strings.ToLower(strings.TrimSpace(p))
 		if p == "" {
 			continue

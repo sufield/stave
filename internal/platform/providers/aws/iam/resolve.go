@@ -252,22 +252,36 @@ func scpAllowGrants(doc PolicyDocument) []ActionGrant {
 	return out
 }
 
-// intersectGrants returns only the grants present in both inputs.
-// Equality is by (action, resource) pair — wildcard expansion is the
-// caller's responsibility (the ceiling stays in literal form so the
-// downstream evaluator can apply matching semantics).
+// intersectGrants returns the grants allowed by BOTH inputs, honoring
+// wildcard subsumption rather than exact (action, resource) equality. A
+// grant from one side is in the intersection when the other side covers it
+// under matchesCeiling's wildcard semantics; the more specific of two
+// overlapping grants is kept. This is what makes the AWS-default
+// FullAWSAccess SCP behave correctly: {"*","*"} ∩ {s3:GetObject} =
+// {s3:GetObject}, not the empty (deny-everything) set an exact-pair
+// intersection produced. Two genuinely disjoint allow sets still intersect
+// to empty.
 func intersectGrants(a, b []ActionGrant) []ActionGrant {
 	if len(a) == 0 || len(b) == 0 {
 		return nil
 	}
-	bSet := make(map[ActionGrant]struct{}, len(b))
-	for _, g := range b {
-		bSet[g] = struct{}{}
+	seen := make(map[ActionGrant]struct{}, len(a)+len(b))
+	out := make([]ActionGrant, 0, len(a)+len(b))
+	add := func(g ActionGrant) {
+		if _, ok := seen[g]; ok {
+			return
+		}
+		seen[g] = struct{}{}
+		out = append(out, g)
 	}
-	out := make([]ActionGrant, 0, len(a))
 	for _, g := range a {
-		if _, ok := bSet[g]; ok {
-			out = append(out, g)
+		if matchesCeiling(g, b) {
+			add(g)
+		}
+	}
+	for _, g := range b {
+		if matchesCeiling(g, a) {
+			add(g)
 		}
 	}
 	return out
@@ -518,16 +532,19 @@ func classifyPrivilege(effective []ActionGrant) PrivilegeLevel {
 			continue
 		}
 
-		action := grant.Action
+		// IAM action names are case-insensitive in AWS, and actions are
+		// not case-normalized during resolution, so compare the indicator
+		// sets against the lowercased action.
+		action := strings.ToLower(grant.Action)
 		// Admin indicators
 		if action == "*" || action == "iam:*" ||
-			action == "iam:CreatePolicy" || action == "iam:PutUserPolicy" ||
-			action == "iam:PutRolePolicy" || action == "iam:AttachUserPolicy" ||
-			action == "iam:AttachRolePolicy" {
+			action == "iam:createpolicy" || action == "iam:putuserpolicy" ||
+			action == "iam:putrolepolicy" || action == "iam:attachuserpolicy" ||
+			action == "iam:attachrolepolicy" {
 			hasAdmin = true
 		}
 		// Elevated indicators
-		if action == "iam:PassRole" || action == "iam:CreateRole" ||
+		if action == "iam:passrole" || action == "iam:createrole" ||
 			action == "ec2:*" || action == "s3:*" ||
 			action == "lambda:*" || action == "kms:*" {
 			hasElevated = true

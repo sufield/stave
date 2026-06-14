@@ -82,7 +82,11 @@ func FormatDuration(d time.Duration) string {
 	if h >= hoursPerDay && float64(int64(h)) == h && int64(h)%hoursPerDay == 0 {
 		return fmt.Sprintf("%dd", int64(h)/hoursPerDay)
 	}
-	return fmt.Sprintf("%gh", h)
+	// Plain-decimal ('f', -1) rather than %g: %g switches to scientific
+	// notation for magnitudes >= 1e6 hours (still a valid time.Duration),
+	// producing strings like "2e+06h" that ParseDuration / time.ParseDuration
+	// cannot read back — breaking the Duration JSON/YAML round-trip contract.
+	return strconv.FormatFloat(h, 'f', -1, 64) + "h"
 }
 
 // FormatDurationHuman formats a duration for human display.
@@ -146,7 +150,9 @@ func normalizeDaysToHours(s string) (string, error) {
 			errOccurred = fmt.Errorf("invalid day value %q: %w", val, err)
 			return match
 		}
-		return fmt.Sprintf("%gh", days*hoursPerDay)
+		// Plain-decimal ('f', -1): %g would emit scientific notation for
+		// large day counts (e.g. "1.2e+06h"), which time.ParseDuration rejects.
+		return strconv.FormatFloat(days*hoursPerDay, 'f', -1, 64) + "h"
 	})
 
 	return result, errOccurred

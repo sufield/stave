@@ -18,9 +18,21 @@ import (
 // Callers (DocsRef, future JiraRef / TelemetryRef helpers) share
 // this so the segment-wise escape rule lives in one place.
 func EscapeFragment(topic string) string {
-	parts := strings.Split(topic, "/")
-	for i, p := range parts {
-		parts[i] = url.PathEscape(p)
+	if !strings.Contains(topic, "/") {
+		return url.PathEscape(topic)
 	}
-	return strings.Join(parts, "/")
+	var b strings.Builder
+	b.Grow(len(topic) + 10)
+	rest := topic
+	first := true
+	for rest != "" {
+		if !first {
+			b.WriteByte('/')
+		}
+		first = false
+		var part string
+		part, rest, _ = strings.Cut(rest, "/")
+		b.WriteString(url.PathEscape(part))
+	}
+	return b.String()
 }

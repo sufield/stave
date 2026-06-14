@@ -64,8 +64,8 @@ func (c *ExemptionConfig) Prepare() {
 		return
 	}
 	c.once.Do(func() {
-		c.exactMatches = make(map[string]*ExemptionRule)
-		c.globMatches = make([]*ExemptionRule, 0)
+		c.exactMatches = make(map[string]*ExemptionRule, len(c.Assets))
+		c.globMatches = make([]*ExemptionRule, 0, len(c.Assets))
 		for i := range c.Assets {
 			r := &c.Assets[i]
 			if strings.Contains(r.Pattern, "*") {
