@@ -43,8 +43,8 @@ func (JSONRenderer) Render(w io.Writer, out *stave.InvariantExport) error {
 // error keeps the original (un-normalized) format string in the
 // message, matching the historical wording verbatim.
 func NewRenderer(format string) (Renderer, error) {
-	switch strings.ToLower(strings.TrimSpace(format)) {
-	case "", "json":
+	trimmed := strings.TrimSpace(format)
+	if trimmed == "" || strings.EqualFold(trimmed, "json") {
 		return JSONRenderer{}, nil
 	}
 	return nil, fmt.Errorf("--format must be json (got %q): %w", format, stave.ErrInvalidInput)

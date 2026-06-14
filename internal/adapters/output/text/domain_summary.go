@@ -27,7 +27,21 @@ func GroupViolationsByDomain(rows []evaluation.ResourceCheck) []DomainCount {
 			continue
 		}
 
-		d := kernel.AssetDomain(strings.ToLower(strings.TrimSpace(string(rows[i].AssetDomain))))
+		domainStr := string(rows[i].AssetDomain)
+		needsLowerTrim := false
+		for j := 0; j < len(domainStr); j++ {
+			c := domainStr[j]
+			if (c >= 'A' && c <= 'Z') || c == ' ' || c == '\t' || c == '\n' || c == '\r' {
+				needsLowerTrim = true
+				break
+			}
+		}
+		var d kernel.AssetDomain
+		if needsLowerTrim {
+			d = kernel.AssetDomain(strings.ToLower(strings.TrimSpace(domainStr)))
+		} else {
+			d = rows[i].AssetDomain
+		}
 		if d == "" {
 			d = "unknown"
 		}

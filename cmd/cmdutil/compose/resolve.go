@@ -55,7 +55,7 @@ func ResolveClock(raw string) (ports.Clock, error) {
 // and reference it from there; format resolution itself does not
 // need the information.
 func ResolveFormatValue(raw string) (appcontracts.OutputFormat, error) {
-	f, err := ui.ParseOutputFormat(strings.ToLower(strings.TrimSpace(raw)))
+	f, err := ui.ParseOutputFormat(raw)
 	if err != nil {
 		return "", fmt.Errorf("parse output format: %w", err)
 	}

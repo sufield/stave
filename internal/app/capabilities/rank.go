@@ -33,7 +33,7 @@ type Hit struct {
 func Rank(catalog []Capability, query string) []Hit {
 	tokens := tokeniseQuery(query)
 	expanded := ExpandQuery(tokens)
-	phrase := strings.ToLower(strings.TrimSpace(query))
+	phrase := toLowerTrim(query)
 
 	out := make([]Hit, 0, 32)
 	for i := range catalog {
@@ -161,4 +161,19 @@ func containsFold(s, substrLower string) bool {
 		return false
 	}
 	return strings.Contains(strings.ToLower(s), substrLower)
+}
+
+func toLowerTrim(str string) string {
+	trimmed := strings.TrimSpace(str)
+	needsLower := false
+	for i := 0; i < len(trimmed); i++ {
+		if trimmed[i] >= 'A' && trimmed[i] <= 'Z' {
+			needsLower = true
+			break
+		}
+	}
+	if needsLower {
+		return strings.ToLower(trimmed)
+	}
+	return trimmed
 }

@@ -23,7 +23,18 @@ func FormatControlOutput(w io.Writer, cfg catalog.DiscoveryRequest, rows []catal
 	} else if strings.EqualFold(rawFormat, "text") || rawFormat == "" {
 		format = appcontracts.FormatText
 	} else {
-		format = appcontracts.OutputFormat(strings.ToLower(rawFormat))
+		needsLower := false
+		for i := 0; i < len(rawFormat); i++ {
+			if rawFormat[i] >= 'A' && rawFormat[i] <= 'Z' {
+				needsLower = true
+				break
+			}
+		}
+		if needsLower {
+			format = appcontracts.OutputFormat(strings.ToLower(rawFormat))
+		} else {
+			format = appcontracts.OutputFormat(rawFormat)
+		}
 	}
 
 	if format == appcontracts.FormatJSON {

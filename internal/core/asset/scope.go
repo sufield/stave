@@ -77,7 +77,7 @@ func (s *AuditScope) registerResourceIDs(ids []string) {
 
 func (s *AuditScope) registerTagCriteria(criteria map[string][]string) {
 	for key, values := range criteria {
-		k := strings.ToLower(strings.TrimSpace(key))
+		k := toLowerTrim(key)
 		if k == "" {
 			continue
 		}
@@ -89,13 +89,28 @@ func (s *AuditScope) registerTagCriteria(criteria map[string][]string) {
 
 		valSet := make(map[string]struct{})
 		for _, v := range values {
-			normalized := strings.ToLower(strings.TrimSpace(v))
+			normalized := toLowerTrim(v)
 			if normalized != "" {
 				valSet[normalized] = struct{}{}
 			}
 		}
 		s.tagSelectors[k] = valSet
 	}
+}
+
+func toLowerTrim(str string) string {
+	trimmed := strings.TrimSpace(str)
+	needsLower := false
+	for i := 0; i < len(trimmed); i++ {
+		if trimmed[i] >= 'A' && trimmed[i] <= 'Z' {
+			needsLower = true
+			break
+		}
+	}
+	if needsLower {
+		return strings.ToLower(trimmed)
+	}
+	return trimmed
 }
 
 // IsInScope evaluates if a specific cloud asset falls within the audit boundary.

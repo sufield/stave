@@ -72,7 +72,7 @@ func Test_RedGate_BundleEmptyType(t *testing.T) {
 	loader := NewObservationLoader()
 	if _, _, err := loader.process(perTimestampJSON, filepath.Join(dir, "snapshot.json")); err == nil {
 		t.Fatalf("premise broken: strict single-file path accepted empty-type asset (expected schema-validation error)")
-	} else if !strings.Contains(err.Error(), "type") && !strings.Contains(strings.ToLower(err.Error()), "schema") {
+	} else if !strings.Contains(err.Error(), "type") && !containsFold(err.Error(), "schema") {
 		// Not fatal to the gate, but record it: we expect the strict
 		// path to complain about the type / schema.
 		t.Logf("strict path rejected document but message did not mention type/schema: %v", err)
@@ -92,4 +92,33 @@ func Test_RedGate_BundleEmptyType(t *testing.T) {
 			"the strict single-file path rejects the byte-identical document, so the "+
 			"bundle path must reject it too to preserve the same-shape invariant", gotType)
 	}
+}
+
+func containsFold(s, substrLower string) bool {
+	if substrLower == "" {
+		return true
+	}
+	if len(s) < len(substrLower) {
+		return false
+	}
+	for i := 0; i <= len(s)-len(substrLower); i++ {
+		match := true
+		for j := 0; j < len(substrLower); j++ {
+			c1 := s[i+j]
+			c2 := substrLower[j]
+			if c1 != c2 {
+				if c1 >= 'A' && c1 <= 'Z' {
+					c1 += 'a' - 'A'
+				}
+				if c1 != c2 {
+					match = false
+					break
+				}
+			}
+		}
+		if match {
+			return true
+		}
+	}
+	return false
 }

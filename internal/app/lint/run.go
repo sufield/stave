@@ -67,8 +67,8 @@ func CollectYAMLFiles(ctx context.Context, root string) ([]string, error) {
 		return nil, fmt.Errorf("stat %s: %w", root, err)
 	}
 	if !info.IsDir() {
-		ext := strings.ToLower(filepath.Ext(root))
-		if ext == ".yaml" || ext == ".yml" {
+		ext := filepath.Ext(root)
+		if strings.EqualFold(ext, ".yaml") || strings.EqualFold(ext, ".yml") {
 			return []string{root}, nil
 		}
 		return nil, fmt.Errorf("unsupported file type %q", root)
@@ -85,8 +85,8 @@ func CollectYAMLFiles(ctx context.Context, root string) ([]string, error) {
 		if d.IsDir() {
 			return nil
 		}
-		ext := strings.ToLower(filepath.Ext(d.Name()))
-		if ext == ".yaml" || ext == ".yml" {
+		ext := filepath.Ext(d.Name())
+		if strings.EqualFold(ext, ".yaml") || strings.EqualFold(ext, ".yml") {
 			files = append(files, path)
 		}
 		return nil

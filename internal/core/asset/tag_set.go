@@ -119,7 +119,7 @@ func (ts TagSet) Conflicts() []TagConflict {
 type tagKey string
 
 func (k tagKey) normalize() tagKey {
-	return tagKey(strings.ToLower(strings.TrimSpace(string(k))))
+	return tagKey(toLowerTrim(string(k)))
 }
 
 func (k tagKey) isDiscardable() bool {
@@ -133,7 +133,7 @@ func (k tagKey) string() string {
 type tagValue string
 
 func (v tagValue) normalize() tagValue {
-	return tagValue(strings.ToLower(strings.TrimSpace(string(v))))
+	return tagValue(toLowerTrim(string(v)))
 }
 
 func (v tagValue) isDiscardable() bool {

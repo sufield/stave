@@ -330,10 +330,24 @@ func normalize(v string) string {
 	// crosswalk silently treated the two as different frameworks
 	// and the human-readable form never matched any registered
 	// canonical name.
-	v = strings.ToLower(strings.TrimSpace(v))
-	v = strings.ReplaceAll(v, "-", "_")
-	v = strings.ReplaceAll(v, " ", "_")
-	return v
+	trimmed := strings.TrimSpace(v)
+	if trimmed == "" {
+		return ""
+	}
+	var sb strings.Builder
+	sb.Grow(len(trimmed))
+	for i := 0; i < len(trimmed); i++ {
+		c := trimmed[i]
+		if c >= 'A' && c <= 'Z' {
+			c += 'a' - 'A'
+		}
+		if c == '-' || c == ' ' {
+			sb.WriteByte('_')
+		} else {
+			sb.WriteByte(c)
+		}
+	}
+	return sb.String()
 }
 
 // FrameworkStrings converts a slice of Framework to a slice of strings.

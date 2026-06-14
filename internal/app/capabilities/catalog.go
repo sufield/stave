@@ -258,7 +258,36 @@ func parseControlID(id string) (string, string) {
 		return "", ""
 	}
 	cat, _, _ := strings.Cut(rest2, ".")
-	return strings.ToLower(svc), strings.ToLower(cat)
+
+	needsLowerSvc := false
+	for i := 0; i < len(svc); i++ {
+		if svc[i] >= 'A' && svc[i] <= 'Z' {
+			needsLowerSvc = true
+			break
+		}
+	}
+	var resSvc string
+	if needsLowerSvc {
+		resSvc = strings.ToLower(svc)
+	} else {
+		resSvc = svc
+	}
+
+	needsLowerCat := false
+	for i := 0; i < len(cat); i++ {
+		if cat[i] >= 'A' && cat[i] <= 'Z' {
+			needsLowerCat = true
+			break
+		}
+	}
+	var resCat string
+	if needsLowerCat {
+		resCat = strings.ToLower(cat)
+	} else {
+		resCat = cat
+	}
+
+	return resSvc, resCat
 }
 
 func titleForGroup(service, category string, n int) string {
@@ -383,10 +412,12 @@ func addKeywords(seen map[string]struct{}, text string) {
 }
 
 func tokenise(s string) []string {
-	s = strings.ToLower(s)
 	var out []string
 	cur := strings.Builder{}
 	for _, r := range s {
+		if r >= 'A' && r <= 'Z' {
+			r += 'a' - 'A'
+		}
 		switch {
 		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
 			cur.WriteRune(r)

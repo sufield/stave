@@ -142,14 +142,20 @@ func (p PathModeFlag) String() string { return string(p) }
 // alias for "base") is accepted; any other unrecognised value is
 // rejected with an error listing the legal choices.
 func (p *PathModeFlag) Set(v string) error {
-	normalized := strings.ToLower(strings.TrimSpace(v))
-	switch normalized {
-	case "", "base", string(sanitize.PathFull):
-		*p = PathModeFlag(normalized)
+	trimmed := strings.TrimSpace(v)
+	if trimmed == "" {
+		*p = ""
 		return nil
-	default:
-		return fmt.Errorf("invalid --%s value %q (allowed: base, full)", FlagPathMode, v)
 	}
+	if strings.EqualFold(trimmed, "base") {
+		*p = "base"
+		return nil
+	}
+	if strings.EqualFold(trimmed, string(sanitize.PathFull)) {
+		*p = PathModeFlag(string(sanitize.PathFull))
+		return nil
+	}
+	return fmt.Errorf("invalid --%s value %q (allowed: base, full)", FlagPathMode, v)
 }
 
 // Type returns the pflag type label shown in --help.
@@ -169,19 +175,19 @@ func (p PathModeFlag) Type() string { return "string" }
 // (env vars, config files) — the warn-and-default behaviour stays so
 // those paths remain forgiving while the CLI stays strict.
 func ParsePathMode(s string) sanitize.PathMode {
-	normalized := strings.ToLower(strings.TrimSpace(s))
-	switch normalized {
-	case string(sanitize.PathBase): // "" — default
-		return sanitize.PathBase
-	case string(sanitize.PathFull):
-		return sanitize.PathFull
-	case "base": // explicit alias for the default
-		return sanitize.PathBase
-	default:
-		slog.Warn("cliflags: unrecognised PathMode value, defaulting to base",
-			"value", s, "expected", []string{string(sanitize.PathBase), string(sanitize.PathFull)})
+	trimmed := strings.TrimSpace(s)
+	if trimmed == "" || strings.EqualFold(trimmed, string(sanitize.PathBase)) {
 		return sanitize.PathBase
 	}
+	if strings.EqualFold(trimmed, "base") {
+		return sanitize.PathBase
+	}
+	if strings.EqualFold(trimmed, string(sanitize.PathFull)) {
+		return sanitize.PathFull
+	}
+	slog.Warn("cliflags: unrecognised PathMode value, defaulting to base",
+		"value", s, "expected", []string{string(sanitize.PathBase), string(sanitize.PathFull)})
+	return sanitize.PathBase
 }
 
 // --- Cobra Specific Helpers ---

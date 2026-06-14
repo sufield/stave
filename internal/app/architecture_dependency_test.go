@@ -236,9 +236,8 @@ func TestNoVendorStringsInCore(t *testing.T) {
 			if !ok || lit.Kind != token.STRING {
 				return true
 			}
-			lower := strings.ToLower(lit.Value)
 			for _, banned := range bannedSubstrings {
-				if strings.Contains(lower, banned) {
+				if containsFold(lit.Value, banned) {
 					pos := fset.Position(lit.Pos())
 					violations = append(violations,
 						fmt.Sprintf("%s:%d: literal %s contains banned substring %q",
@@ -277,4 +276,33 @@ func findModuleRoot(t *testing.T) string {
 		}
 		dir = parent
 	}
+}
+
+func containsFold(s, substrLower string) bool {
+	if substrLower == "" {
+		return true
+	}
+	if len(s) < len(substrLower) {
+		return false
+	}
+	for i := 0; i <= len(s)-len(substrLower); i++ {
+		match := true
+		for j := 0; j < len(substrLower); j++ {
+			c1 := s[i+j]
+			c2 := substrLower[j]
+			if c1 != c2 {
+				if c1 >= 'A' && c1 <= 'Z' {
+					c1 += 'a' - 'A'
+				}
+				if c1 != c2 {
+					match = false
+					break
+				}
+			}
+		}
+		if match {
+			return true
+		}
+	}
+	return false
 }

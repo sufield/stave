@@ -11,14 +11,6 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
-var validFields = map[string]struct{}{
-	"id":     {},
-	"name":   {},
-	"type":   {},
-	"risk":   {},
-	"domain": {},
-}
-
 // DiscoveryRequest defines the parameters for searching the policy catalog.
 type DiscoveryRequest struct {
 	PolicySource   string

@@ -58,7 +58,19 @@ func ServiceFromControlID(id kernel.ControlID) string {
 	if before == "" {
 		return "unknown"
 	}
-	svc := strings.ToLower(before)
+	var svc string
+	needsLower := false
+	for i := 0; i < len(before); i++ {
+		if before[i] >= 'A' && before[i] <= 'Z' {
+			needsLower = true
+			break
+		}
+	}
+	if needsLower {
+		svc = strings.ToLower(before)
+	} else {
+		svc = before
+	}
 	if svc == "secrets" {
 		return "secretsmanager"
 	}

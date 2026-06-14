@@ -36,17 +36,17 @@ var (
 func severityDecor(level string) (symbol, colorCode string) {
 	symbol = "[INFO]"
 	colorCode = ansiCodes["info"]
-	switch strings.ToLower(strings.TrimSpace(level)) {
-	case "error", "err":
+	trimmed := strings.TrimSpace(level)
+	if strings.EqualFold(trimmed, "error") || strings.EqualFold(trimmed, "err") {
 		symbol = "[ERR]"
 		colorCode = ansiCodes["error"]
-	case "warning", "warn":
+	} else if strings.EqualFold(trimmed, "warning") || strings.EqualFold(trimmed, "warn") {
 		symbol = "[WARN]"
 		colorCode = ansiCodes["warning"]
-	case "success", "ok":
+	} else if strings.EqualFold(trimmed, "success") || strings.EqualFold(trimmed, "ok") {
 		symbol = "[OK]"
 		colorCode = ansiCodes["success"]
-	case "info":
+	} else if strings.EqualFold(trimmed, "info") {
 		symbol = "[INFO]"
 		colorCode = ansiCodes["info"]
 	}

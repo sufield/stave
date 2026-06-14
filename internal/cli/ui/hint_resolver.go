@@ -31,10 +31,10 @@ func SuggestForError(err error) RemediationHint {
 		return hint
 	}
 
-	msg := strings.ToLower(err.Error())
+	errMsg := err.Error()
 	for _, entry := range hintRegistry {
 		for _, p := range entry.patterns {
-			if strings.Contains(msg, p) {
+			if containsFold(errMsg, p) {
 				return entry.hint
 			}
 		}
@@ -79,7 +79,20 @@ func lookupHintBySentinel(err error) (RemediationHint, bool) {
 }
 
 func buildSearchQueryFromError(message string) string {
-	clean := nonQueryToken.ReplaceAllString(strings.ToLower(message), " ")
+	var lowerMessage string
+	needsLower := false
+	for i := 0; i < len(message); i++ {
+		if message[i] >= 'A' && message[i] <= 'Z' {
+			needsLower = true
+			break
+		}
+	}
+	if needsLower {
+		lowerMessage = strings.ToLower(message)
+	} else {
+		lowerMessage = message
+	}
+	clean := nonQueryToken.ReplaceAllString(lowerMessage, " ")
 	fields := strings.Fields(clean)
 	if len(fields) == 0 {
 		return "troubleshooting"
@@ -88,4 +101,33 @@ func buildSearchQueryFromError(message string) string {
 		fields = fields[:5]
 	}
 	return strings.Join(fields, " ")
+}
+
+func containsFold(s, substrLower string) bool {
+	if substrLower == "" {
+		return true
+	}
+	if len(s) < len(substrLower) {
+		return false
+	}
+	for i := 0; i <= len(s)-len(substrLower); i++ {
+		match := true
+		for j := 0; j < len(substrLower); j++ {
+			c1 := s[i+j]
+			c2 := substrLower[j]
+			if c1 != c2 {
+				if c1 >= 'A' && c1 <= 'Z' {
+					c1 += 'a' - 'A'
+				}
+				if c1 != c2 {
+					match = false
+					break
+				}
+			}
+		}
+		if match {
+			return true
+		}
+	}
+	return false
 }

@@ -58,6 +58,6 @@ func (p *Prompter) Confirm(prompt string) bool {
 		return false
 	}
 
-	input := strings.ToLower(strings.TrimSpace(p.scanner.Text()))
-	return input == "y" || input == "yes"
+	trimmed := strings.TrimSpace(p.scanner.Text())
+	return strings.EqualFold(trimmed, "y") || strings.EqualFold(trimmed, "yes")
 }

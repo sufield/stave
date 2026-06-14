@@ -30,9 +30,9 @@ type Filter struct {
 
 // Search finds controls matching the filter criteria.
 func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
-	query := strings.ToLower(f.Query)
-	domainFilter := strings.ToLower(f.Domain)
-	profileFilter := strings.ToLower(f.Profile)
+	query := toLower(f.Query)
+	domainFilter := toLower(f.Domain)
+	profileFilter := toLower(f.Profile)
 	var results []SearchResult
 
 	for i := range controls {
@@ -134,7 +134,7 @@ func containsFold(s, substr string) bool {
 		}
 		return false
 	}
-	return strings.Contains(strings.ToLower(s), strings.ToLower(substr))
+	return strings.Contains(toLower(s), toLower(substr))
 }
 
 func extractDomain(controlID string) string {
@@ -143,5 +143,19 @@ func extractDomain(controlID string) string {
 		return ""
 	}
 	prov, _, _ := strings.Cut(rest, ".")
-	return strings.ToLower(prov)
+	return toLower(prov)
+}
+
+func toLower(s string) string {
+	needsLower := false
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 'A' && s[i] <= 'Z' {
+			needsLower = true
+			break
+		}
+	}
+	if needsLower {
+		return strings.ToLower(s)
+	}
+	return s
 }

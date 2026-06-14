@@ -89,16 +89,17 @@ func ccmRequirements(ccms []string) []string {
 }
 
 func sevID(sev string) int {
-	switch strings.ToLower(sev) {
-	case "critical":
+	if strings.EqualFold(sev, "critical") {
 		return 5
-	case "high":
-		return 4
-	case "medium":
-		return 3
-	case "low":
-		return 2
-	default:
-		return 1
 	}
+	if strings.EqualFold(sev, "high") {
+		return 4
+	}
+	if strings.EqualFold(sev, "medium") {
+		return 3
+	}
+	if strings.EqualFold(sev, "low") {
+		return 2
+	}
+	return 1
 }

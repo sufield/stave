@@ -1,12 +1,6 @@
 package initcmd
 
-import (
-	"regexp"
-	"strings"
-)
-
-// slugRegexp matches one or more non-alphanumeric characters for slug generation.
-var slugRegexp = regexp.MustCompile(`[^a-z0-9]+`)
+import "strings"
 
 func sanitizeSlug(name string) string {
 	trimmed := strings.TrimSpace(name)
@@ -32,7 +26,7 @@ func sanitizeSlug(name string) string {
 		}
 	}
 	res := sb.String()
-	if len(res) > 0 && res[len(res)-1] == '-' {
+	if res != "" && res[len(res)-1] == '-' {
 		res = res[:len(res)-1]
 	}
 	if res == "" {

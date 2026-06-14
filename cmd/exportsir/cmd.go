@@ -200,11 +200,11 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error 
 			}
 			return strings.ToLower(fmtTrimmed)
 		}(),
-		Now:             now,
-		Validate:        opts.Validate,
-		AllowlistMode:   allowlistMode,
-		ClosedWorld:     opts.ClosedWorld,
-		StripCatalog:    opts.StripCatalog,
+		Now:           now,
+		Validate:      opts.Validate,
+		AllowlistMode: allowlistMode,
+		ClosedWorld:   opts.ClosedWorld,
+		StripCatalog:  opts.StripCatalog,
 	})
 	if err != nil {
 		if errors.Is(err, stave.ErrInvalidInput) {

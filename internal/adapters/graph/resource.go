@@ -91,7 +91,19 @@ var resourceClassRules = []struct {
 // ToResourceClass maps a provider_type (e.g. "aws_s3_bucket") to a
 // provider-agnostic resource class (e.g. "storage").
 func ToResourceClass(providerType string) string {
-	lower := strings.ToLower(providerType)
+	var lower string
+	needsLower := false
+	for i := 0; i < len(providerType); i++ {
+		if providerType[i] >= 'A' && providerType[i] <= 'Z' {
+			needsLower = true
+			break
+		}
+	}
+	if needsLower {
+		lower = strings.ToLower(providerType)
+	} else {
+		lower = providerType
+	}
 
 	// Strip common prefixes.
 	for _, prefix := range []string{"aws_", "azure_", "gcp_"} {

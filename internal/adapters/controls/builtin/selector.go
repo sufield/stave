@@ -30,19 +30,30 @@ func ParseSelector(s string) (Selector, error) {
 	for rest != "" {
 		var p string
 		p, rest, _ = strings.Cut(rest, "/")
-		p = strings.ToLower(strings.TrimSpace(p))
-		if p == "" {
+		trimmedP := strings.TrimSpace(p)
+		if trimmedP == "" {
 			continue
 		}
-		if after, ok := strings.CutPrefix(p, "severity:"); ok {
-			sevStr := strings.TrimSuffix(after, "+")
+		if len(trimmedP) >= 9 && strings.EqualFold(trimmedP[:9], "severity:") {
+			sevStr := strings.TrimSuffix(trimmedP[9:], "+")
 			sev, err := policy.ParseSeverity(sevStr)
 			if err != nil || sev == policy.SeverityNone {
 				return Selector{}, fmt.Errorf("invalid severity %q (use: critical, high, medium, low, info)", sevStr)
 			}
 			sel.MinSeverity = sev
 		} else {
-			sel.Tags = append(sel.Tags, p)
+			needsLower := false
+			for i := 0; i < len(trimmedP); i++ {
+				if trimmedP[i] >= 'A' && trimmedP[i] <= 'Z' {
+					needsLower = true
+					break
+				}
+			}
+			if needsLower {
+				sel.Tags = append(sel.Tags, strings.ToLower(trimmedP))
+			} else {
+				sel.Tags = append(sel.Tags, trimmedP)
+			}
 		}
 	}
 

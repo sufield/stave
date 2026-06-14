@@ -142,15 +142,21 @@ func (l *Linter) checkVersion(path string, root *yaml.Node) []Diagnostic {
 	return nil
 }
 
-var forbiddenFields = map[string]struct{}{
-	"now": {}, "timestamp": {}, "generated_at": {}, "runtime": {},
-}
-
 func (l *Linter) walkDeterminism(path string, n *yaml.Node) []Diagnostic {
 	var diags []Diagnostic
 	walk(n, func(k, _ *yaml.Node) {
-		key := strings.ToLower(strings.TrimSpace(k.Value))
-		if _, ok := forbiddenFields[key]; ok {
+		trimmed := strings.TrimSpace(k.Value)
+		var key string
+		if strings.EqualFold(trimmed, "now") {
+			key = "now"
+		} else if strings.EqualFold(trimmed, "timestamp") {
+			key = "timestamp"
+		} else if strings.EqualFold(trimmed, "generated_at") {
+			key = "generated_at"
+		} else if strings.EqualFold(trimmed, "runtime") {
+			key = "runtime"
+		}
+		if key != "" {
 			diags = append(diags, newDiag(path, k.Line, k.Column, "CTL_NONDETERMINISTIC_FIELD",
 				fmt.Sprintf("field %q is not allowed in control contracts", k.Value), SeverityError))
 		}
@@ -221,8 +227,11 @@ func isSortedSequence(n *yaml.Node) bool {
 		}
 		hasSortableKey := false
 		for i := 0; i+1 < len(item.Content); i += 2 {
-			switch strings.ToLower(strings.TrimSpace(item.Content[i].Value)) {
-			case "id", "name", "key", "type":
+			trimmed := strings.TrimSpace(item.Content[i].Value)
+			if strings.EqualFold(trimmed, "id") ||
+				strings.EqualFold(trimmed, "name") ||
+				strings.EqualFold(trimmed, "key") ||
+				strings.EqualFold(trimmed, "type") {
 				hasSortableKey = true
 			}
 		}

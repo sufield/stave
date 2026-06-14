@@ -305,7 +305,7 @@ func iriPair(n *Node) (instanceIRI, classIRI string) {
 		// Bucket detection: resource_class=storage AND
 		// provider_type contains "bucket" (covers aws_s3_bucket,
 		// gcp_storage_bucket, azure_storage_container variants).
-		if class == "storage" && strings.Contains(strings.ToLower(n.ProviderType()), "bucket") {
+		if class == "storage" && containsFold(n.ProviderType(), "bucket") {
 			bucketName := lastPathSegment(n.ID)
 			return BucketIRI(n.AccountID(), bucketName), ontologyBaseIRI + "Bucket"
 		}
@@ -484,4 +484,33 @@ func stringProp(props map[string]any, key string) (string, bool) {
 	}
 	s, ok := v.(string)
 	return s, ok
+}
+
+func containsFold(s, substrLower string) bool {
+	if substrLower == "" {
+		return true
+	}
+	if len(s) < len(substrLower) {
+		return false
+	}
+	for i := 0; i <= len(s)-len(substrLower); i++ {
+		match := true
+		for j := 0; j < len(substrLower); j++ {
+			c1 := s[i+j]
+			c2 := substrLower[j]
+			if c1 != c2 {
+				if c1 >= 'A' && c1 <= 'Z' {
+					c1 += 'a' - 'A'
+				}
+				if c1 != c2 {
+					match = false
+					break
+				}
+			}
+		}
+		if match {
+			return true
+		}
+	}
+	return false
 }
