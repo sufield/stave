@@ -37,10 +37,15 @@ func ParseLevel(s string) slog.Level {
 
 // ParseFormat parses a string into a Format.
 func ParseFormat(s string) Format {
-	switch strings.ToLower(strings.TrimSpace(s)) {
-	case "json":
+	if s == "json" {
 		return FormatJSON
-	default:
+	}
+	if s == "text" || s == "" {
 		return FormatText
 	}
+	trimmed := strings.TrimSpace(s)
+	if strings.EqualFold(trimmed, "json") {
+		return FormatJSON
+	}
+	return FormatText
 }

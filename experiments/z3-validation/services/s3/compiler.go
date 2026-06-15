@@ -260,21 +260,39 @@ func stripCategory(p string) string {
 // account as "unknown" and the cross-account query short-circuits
 // to PASS in that case so a fixture without account context
 // produces no false positives.
-func accountFromBucketARN(arn string) string {
-	parts := strings.Split(arn, ":")
-	if len(parts) < 5 {
+func extractAccountID(arn string) string {
+	if !strings.HasPrefix(arn, "arn:") {
 		return ""
 	}
-	return parts[4]
+	remaining := arn[4:] // skip "arn:"
+	var found bool
+	// partition
+	_, remaining, found = strings.Cut(remaining, ":")
+	if !found {
+		return ""
+	}
+	// service
+	_, remaining, found = strings.Cut(remaining, ":")
+	if !found {
+		return ""
+	}
+	// region
+	_, remaining, found = strings.Cut(remaining, ":")
+	if !found {
+		return ""
+	}
+	// account-id
+	accountID, _, _ := strings.Cut(remaining, ":")
+	return accountID
+}
+
+func accountFromBucketARN(arn string) string {
+	return extractAccountID(arn)
 }
 
 // accountFromPrincipalARN parses the account ID out of an IAM
 // principal ARN (arn:aws:iam::<account>:role/Foo →
 // "<account>"). Returns "" on a non-IAM-shaped value.
 func accountFromPrincipalARN(arn string) string {
-	parts := strings.Split(arn, ":")
-	if len(parts) < 5 {
-		return ""
-	}
-	return parts[4]
+	return extractAccountID(arn)
 }

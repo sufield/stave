@@ -95,6 +95,15 @@ func globMatch(pattern, s string) bool {
 		return true
 	}
 
+	count := strings.Count(pattern, "*")
+	if count == 0 {
+		return pattern == s
+	}
+	if count == 1 {
+		prefix, suffix, _ := strings.Cut(pattern, "*")
+		return len(s) >= len(prefix)+len(suffix) && strings.HasPrefix(s, prefix) && strings.HasSuffix(s, suffix)
+	}
+
 	segments := strings.Split(pattern, "*")
 	if len(segments) == 1 {
 		return pattern == s

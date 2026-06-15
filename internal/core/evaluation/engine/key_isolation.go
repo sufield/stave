@@ -65,7 +65,7 @@ func buildKeyUsageIndexForSnapshot(snap asset.Snapshot) KeyUsageIndex {
 			continue
 		}
 		classification := extractClassification(a)
-		level := ParseSensitivity(strings.ToLower(strings.TrimSpace(classification)))
+		level := ParseSensitivity(toLowerTrim(classification))
 
 		entry, exists := idx[keyID]
 		if !exists {
@@ -222,7 +222,7 @@ func extractClassification(a asset.Asset) string {
 	// Check multiple common tag key variants.
 	for _, key := range []string{"data-classification", "data_classification", "DataClassification"} {
 		if dc, ok := tags[key].(string); ok && dc != "" {
-			return strings.ToLower(strings.TrimSpace(dc))
+			return toLowerTrim(dc)
 		}
 	}
 	return "unclassified"
@@ -240,4 +240,19 @@ func getOrCreateMap(m map[string]any, key string) map[string]any {
 	created := make(map[string]any, 2)
 	m[key] = created
 	return created
+}
+
+func toLowerTrim(str string) string {
+	trimmed := strings.TrimSpace(str)
+	needsLower := false
+	for i := 0; i < len(trimmed); i++ {
+		if trimmed[i] >= 'A' && trimmed[i] <= 'Z' {
+			needsLower = true
+			break
+		}
+	}
+	if needsLower {
+		return strings.ToLower(trimmed)
+	}
+	return trimmed
 }

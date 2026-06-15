@@ -22,7 +22,7 @@ const (
 
 // NewAssetType creates a normalized AssetType from a raw string.
 func NewAssetType(raw string) AssetType {
-	return AssetType(strings.ToLower(strings.TrimSpace(raw)))
+	return AssetType(toLowerTrim(raw))
 }
 
 // String returns the string representation.
@@ -86,4 +86,19 @@ func (a *AssetType) UnmarshalJSON(b []byte) error {
 
 	*a = normalized
 	return nil
+}
+
+func toLowerTrim(str string) string {
+	trimmed := strings.TrimSpace(str)
+	needsLower := false
+	for i := 0; i < len(trimmed); i++ {
+		if trimmed[i] >= 'A' && trimmed[i] <= 'Z' {
+			needsLower = true
+			break
+		}
+	}
+	if needsLower {
+		return strings.ToLower(trimmed)
+	}
+	return trimmed
 }

@@ -1844,7 +1844,7 @@ func emitPurposeFlags(subject string, props map[string]any, evidence string) []F
 			continue
 		}
 		k, v, _ := strings.Cut(t, "=")
-		key := strings.ToLower(strings.TrimSpace(k))
+		key := toLowerTrim(k)
 		val := strings.TrimSpace(v)
 		if key == "" {
 			continue
@@ -2282,4 +2282,19 @@ func (b *bufferedWriter) writeLine(s string) {
 	if _, err := io.WriteString(b.w, s+"\n"); err != nil {
 		b.err = err
 	}
+}
+
+func toLowerTrim(str string) string {
+	trimmed := strings.TrimSpace(str)
+	needsLower := false
+	for i := 0; i < len(trimmed); i++ {
+		if trimmed[i] >= 'A' && trimmed[i] <= 'Z' {
+			needsLower = true
+			break
+		}
+	}
+	if needsLower {
+		return strings.ToLower(trimmed)
+	}
+	return trimmed
 }

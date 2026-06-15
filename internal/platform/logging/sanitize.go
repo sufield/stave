@@ -6,6 +6,15 @@ import (
 	"github.com/sufield/stave/internal/sanitize"
 )
 
+func toLower(s string) string {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 'A' && s[i] <= 'Z' {
+			return strings.ToLower(s)
+		}
+	}
+	return s
+}
+
 // isSensitiveKey reports whether a flag name indicates its value is sensitive.
 // Sensitive names and tokens are defined centrally in the scrub package.
 func isSensitiveKey(key string) bool {
@@ -14,7 +23,7 @@ func isSensitiveKey(key string) bool {
 	}
 
 	// Normalize once: lowercase, strip CLI dashes, strip =value suffix.
-	norm := strings.ToLower(key)
+	norm := toLower(key)
 	norm = strings.TrimLeft(norm, "-")
 	norm, _, _ = strings.Cut(norm, "=")
 	if norm == "" {

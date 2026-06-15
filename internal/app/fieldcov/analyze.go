@@ -348,12 +348,16 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 
 // deriveAssetType guesses asset type from field path prefix.
 func deriveAssetType(field string) string {
-	parts := strings.SplitN(field, ".", 3)
-	if len(parts) < 2 {
+	_, rest, found := strings.Cut(field, ".")
+	if !found {
+		return "unknown"
+	}
+	part1, _, _ := strings.Cut(rest, ".")
+	if part1 == "" {
 		return "unknown"
 	}
 	// properties.storage → s3, properties.database → rds, etc.
-	switch parts[1] {
+	switch part1 {
 	case "storage":
 		return "s3_bucket"
 	case "database":
@@ -379,6 +383,6 @@ func deriveAssetType(field string) string {
 	case "k8s", "logging", "addons", "encryption", "endpoint", "nodegroup":
 		return "eks_cluster"
 	default:
-		return parts[1]
+		return part1
 	}
 }

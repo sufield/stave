@@ -3,7 +3,6 @@ package kernel
 import (
 	"fmt"
 	"slices"
-	"strings"
 	"sync"
 )
 
@@ -48,7 +47,7 @@ func (r *algorithmRegistry) register(algo EncryptionAlgorithm) {
 
 // parse normalizes raw and returns the matching algorithm, or an error.
 func (r *algorithmRegistry) parse(raw string) (EncryptionAlgorithm, error) {
-	norm := EncryptionAlgorithm(strings.ToLower(strings.TrimSpace(raw)))
+	norm := EncryptionAlgorithm(toLowerTrim(raw))
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	if slices.Contains(r.algos, norm) {

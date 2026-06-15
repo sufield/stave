@@ -242,9 +242,11 @@ func runWizard(in io.Reader, out io.Writer, cmd *cobra.Command, snapshotPath str
 	}
 
 	scopeTag := "aws"
-	idParts := strings.Split(controlID, ".")
-	if len(idParts) >= 2 {
-		scopeTag = "aws," + strings.ToLower(idParts[1])
+	if _, rest, found := strings.Cut(controlID, "."); found {
+		part1, _, _ := strings.Cut(rest, ".")
+		if part1 != "" {
+			scopeTag = "aws," + strings.ToLower(part1)
+		}
 	}
 
 	return runNonInteractive(cmd.Context(), out, nonInteractiveOpts{

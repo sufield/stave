@@ -3,7 +3,6 @@ package kernel
 import (
 	"encoding/json"
 	"errors"
-	"strings"
 )
 
 // Vendor represents a normalized identifier for a cloud or infrastructure provider.
@@ -21,7 +20,7 @@ func (v Vendor) String() string {
 // NewVendor normalizes and validates a raw string into a Vendor type.
 // It enforces lowercase and trims whitespace to ensure consistency across the domain.
 func NewVendor(raw string) (Vendor, error) {
-	v := Vendor(strings.ToLower(strings.TrimSpace(raw)))
+	v := Vendor(toLowerTrim(raw))
 	if v == "" {
 		return "", errors.New("vendor identifier cannot be empty")
 	}

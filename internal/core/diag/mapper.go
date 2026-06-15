@@ -87,7 +87,7 @@ func (m *FindingMapper) MapOne(raw RawIssue) Finding {
 		}
 	}
 
-	extCode := strings.ToLower(strings.TrimSpace(raw.Code()))
+	extCode := toLowerTrim(raw.Code())
 	builder := NewFinding(m.mapRule(extCode)).
 		Error().
 		Message(strings.TrimSpace(raw.Description())).
@@ -139,3 +139,18 @@ func requiredFieldRemediation(f string) string        { return remedyRequiredFie
 func expectedTypeRemediation(f string) string         { return remedyExpectedType.render(f) }
 func enumRemediation(f string) string                 { return remedyEnum.render(f) }
 func additionalPropertiesRemediation(f string) string { return remedyAdditionalProperty.render(f) }
+
+func toLowerTrim(str string) string {
+	trimmed := strings.TrimSpace(str)
+	needsLower := false
+	for i := 0; i < len(trimmed); i++ {
+		if trimmed[i] >= 'A' && trimmed[i] <= 'Z' {
+			needsLower = true
+			break
+		}
+	}
+	if needsLower {
+		return strings.ToLower(trimmed)
+	}
+	return trimmed
+}

@@ -7,9 +7,32 @@ import (
 	"github.com/sufield/stave/internal/util/suggest"
 )
 
+func toLowerTrim(s string) string {
+	start := 0
+	for start < len(s) && (s[start] == ' ' || s[start] == '\t' || s[start] == '\n' || s[start] == '\r') {
+		start++
+	}
+	end := len(s)
+	for end > start && (s[end-1] == ' ' || s[end-1] == '\t' || s[end-1] == '\n' || s[end-1] == '\r') {
+		end--
+	}
+	trimmed := s[start:end]
+	needsLower := false
+	for i := 0; i < len(trimmed); i++ {
+		if trimmed[i] >= 'A' && trimmed[i] <= 'Z' {
+			needsLower = true
+			break
+		}
+	}
+	if needsLower {
+		return strings.ToLower(trimmed)
+	}
+	return trimmed
+}
+
 // NormalizeToken returns a trimmed lowercase token for matching.
 func NormalizeToken(value string) string {
-	return strings.ToLower(strings.TrimSpace(value))
+	return toLowerTrim(value)
 }
 
 // ClosestToken returns the nearest candidate based on edit distance.

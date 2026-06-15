@@ -3,7 +3,6 @@ package kernel
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 )
 
 // PrincipalScope defines the identity boundary of an access grant or exposure.
@@ -69,7 +68,7 @@ func (s PrincipalScope) IsValid() bool {
 // ParsePrincipalScope converts a string label into its typed PrincipalScope.
 // It is case-insensitive and handles leading/trailing whitespace.
 func ParsePrincipalScope(raw string) (PrincipalScope, error) {
-	norm := strings.TrimSpace(strings.ToLower(raw))
+	norm := toLowerTrim(raw)
 	switch norm {
 	case "unknown", "":
 		return ScopeUnknown, nil

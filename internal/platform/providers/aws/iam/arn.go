@@ -15,20 +15,40 @@ type ARN struct {
 // ParseARN parses an AWS ARN string into its components.
 // Returns zero-value ARN if the input is not a valid ARN.
 func ParseARN(arn string) ARN {
-	const minParts = 6
 	if !strings.HasPrefix(arn, "arn:") {
 		return ARN{}
 	}
-	parts := strings.SplitN(arn, ":", minParts)
-	if len(parts) < minParts {
+	remaining := arn[4:] // skip "arn:"
+	var found bool
+
+	var partition, service, region, accountID, resource string
+
+	partition, remaining, found = strings.Cut(remaining, ":")
+	if !found {
 		return ARN{}
 	}
+
+	service, remaining, found = strings.Cut(remaining, ":")
+	if !found {
+		return ARN{}
+	}
+
+	region, remaining, found = strings.Cut(remaining, ":")
+	if !found {
+		return ARN{}
+	}
+
+	accountID, resource, found = strings.Cut(remaining, ":")
+	if !found {
+		return ARN{}
+	}
+
 	return ARN{
-		Partition: parts[1],
-		Service:   parts[2],
-		Region:    parts[3],
-		AccountID: parts[4],
-		Resource:  parts[5],
+		Partition: partition,
+		Service:   service,
+		Region:    region,
+		AccountID: accountID,
+		Resource:  resource,
 	}
 }
 

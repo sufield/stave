@@ -74,16 +74,43 @@ func Export(in Input) *Report {
 
 func parseAssetID(assetID string) (vendor, service, resourceID string) {
 	// Parse ARN: arn:aws:s3:::bucket-name
-	parts := strings.SplitN(assetID, ":", 7)
-	if len(parts) >= 3 && parts[0] == "arn" {
-		vendor = parts[1]
-		service = parts[2]
-		if len(parts) >= 7 {
-			resourceID = parts[6]
-		} else if len(parts) >= 6 {
-			resourceID = parts[5]
-		}
-		return vendor, service, resourceID
+	if !strings.HasPrefix(assetID, "arn:") {
+		return "", "", assetID
 	}
-	return "", "", assetID
+	remaining := assetID[4:] // skip "arn:"
+	var found bool
+
+	// segment 1: partition (vendor)
+	vendor, remaining, found = strings.Cut(remaining, ":")
+	if !found {
+		return vendor, "", ""
+	}
+
+	// segment 2: service
+	service, remaining, found = strings.Cut(remaining, ":")
+	if !found {
+		return vendor, service, ""
+	}
+
+	// segment 3: region
+	_, remaining, found = strings.Cut(remaining, ":")
+	if !found {
+		return vendor, service, ""
+	}
+
+	// segment 4: account-id
+	_, remaining, found = strings.Cut(remaining, ":")
+	if !found {
+		return vendor, service, ""
+	}
+
+	// segment 5: resource-type or resource-id
+	var part5 string
+	part5, remaining, found = strings.Cut(remaining, ":")
+	if !found {
+		return vendor, service, part5
+	}
+
+	// segment 6: resource-id (if there is a 6th colon)
+	return vendor, service, remaining
 }

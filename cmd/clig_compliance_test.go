@@ -62,7 +62,7 @@ func TestCligCompliance(t *testing.T) {
 					t.Skip("no Long description")
 				}
 				// First word should be capitalized (verb phrase).
-				first := strings.SplitN(long, " ", 2)[0]
+				first, _, _ := strings.Cut(long, " ")
 				if first != "" && first[0] >= 'a' && first[0] <= 'z' {
 					t.Errorf("%s: Long description should start with a capitalized verb, got %q", name, first)
 				}

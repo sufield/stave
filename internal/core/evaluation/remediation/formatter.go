@@ -166,11 +166,34 @@ func parseARNContext(assetID string) (ARNContext, bool) {
 	if !strings.HasPrefix(assetID, "arn:") {
 		return ARNContext{}, false
 	}
-	parts := strings.SplitN(assetID, ":", 6)
-	if len(parts) < 6 {
+	remaining := assetID[4:] // skip "arn:"
+	var found bool
+
+	// partition
+	_, remaining, found = strings.Cut(remaining, ":")
+	if !found {
 		return ARNContext{}, false
 	}
-	// parts[0]=arn, parts[1]=partition, parts[2]=service,
-	// parts[3]=region, parts[4]=account, parts[5]=resource
-	return ARNContext{Account: parts[4], Region: parts[3]}, true
+	// service
+	_, remaining, found = strings.Cut(remaining, ":")
+	if !found {
+		return ARNContext{}, false
+	}
+	// region
+	var region string
+	region, remaining, found = strings.Cut(remaining, ":")
+	if !found {
+		return ARNContext{}, false
+	}
+	// account
+	var account string
+	account, remaining, found = strings.Cut(remaining, ":")
+	if !found {
+		return ARNContext{}, false
+	}
+	// resource (checking that there is a 6th component)
+	_, _, found = strings.Cut(remaining, ":")
+	// If found is false, it means no more colons, which is fine since the resource is the final component (so we have exactly 6 components).
+	// We've successfully validated that there are at least 5 colons in the string, yielding exactly 6 components.
+	return ARNContext{Account: account, Region: region}, true
 }

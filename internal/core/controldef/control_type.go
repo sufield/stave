@@ -80,7 +80,7 @@ func (t ControlType) IsValid() bool {
 
 // ParseControlType converts a string name into a ControlType.
 func ParseControlType(s string) (ControlType, error) {
-	norm := strings.TrimSpace(strings.ToLower(s))
+	norm := toLowerTrim(s)
 	if norm == "" || norm == "unknown" {
 		return TypeUnknown, nil
 	}
@@ -133,4 +133,19 @@ func (t *ControlType) UnmarshalYAML(unmarshal func(any) error) error {
 		return err
 	}
 	return t.UnmarshalText([]byte(s))
+}
+
+func toLowerTrim(str string) string {
+	trimmed := strings.TrimSpace(str)
+	needsLower := false
+	for i := 0; i < len(trimmed); i++ {
+		if trimmed[i] >= 'A' && trimmed[i] <= 'Z' {
+			needsLower = true
+			break
+		}
+	}
+	if needsLower {
+		return strings.ToLower(trimmed)
+	}
+	return trimmed
 }

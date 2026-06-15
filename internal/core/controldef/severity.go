@@ -222,7 +222,7 @@ func ParseSeverity(s string) (Severity, error) {
 	case "none", "NONE", "None", "":
 		return SeverityNone, nil
 	}
-	switch strings.ToLower(strings.TrimSpace(s)) {
+	switch toLowerTrim(s) {
 	case "info":
 		return SeverityInfo, nil
 	case "low":

@@ -3,7 +3,6 @@ package kernel
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 )
 
 // TrustBoundary classifies the network/identity boundary of an access exposure.
@@ -34,7 +33,7 @@ func (b TrustBoundary) String() string {
 // ParseTrustBoundary converts a string label into its typed TrustBoundary.
 // It is case-insensitive and handles leading/trailing whitespace.
 func ParseTrustBoundary(raw string) (TrustBoundary, error) {
-	norm := strings.TrimSpace(strings.ToLower(raw))
+	norm := toLowerTrim(raw)
 	switch norm {
 	case "unknown", "":
 		return BoundaryUnknown, nil

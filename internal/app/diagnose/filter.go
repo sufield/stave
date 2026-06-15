@@ -17,6 +17,29 @@ func (f Filter) IsEmpty() bool {
 	return len(f.Cases) == 0 && f.SignalContains == ""
 }
 
+func toLowerTrim(s string) string {
+	start := 0
+	for start < len(s) && (s[start] == ' ' || s[start] == '\t' || s[start] == '\n' || s[start] == '\r') {
+		start++
+	}
+	end := len(s)
+	for end > start && (s[end-1] == ' ' || s[end-1] == '\t' || s[end-1] == '\n' || s[end-1] == '\r') {
+		end--
+	}
+	trimmed := s[start:end]
+	needsLower := false
+	for i := 0; i < len(trimmed); i++ {
+		if trimmed[i] >= 'A' && trimmed[i] <= 'Z' {
+			needsLower = true
+			break
+		}
+	}
+	if needsLower {
+		return strings.ToLower(trimmed)
+	}
+	return trimmed
+}
+
 // Apply applies the filter criteria to a diagnostic report and returns
 // a new report containing only the matching issues.
 func (f Filter) Apply(report *diagnosis.Report) *diagnosis.Report {
@@ -31,7 +54,7 @@ func (f Filter) Apply(report *diagnosis.Report) *diagnosis.Report {
 		}
 	}
 
-	needle := strings.ToLower(strings.TrimSpace(f.SignalContains))
+	needle := toLowerTrim(f.SignalContains)
 
 	filtered := *report
 	filtered.Issues = make([]diagnosis.Insight, 0, len(report.Issues))

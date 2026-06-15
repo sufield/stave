@@ -189,7 +189,22 @@ type PermissionResolver interface {
 func NormalizeActions(actions []string) []string {
 	out := make([]string, len(actions))
 	for i, a := range actions {
-		out[i] = strings.ToLower(strings.TrimSpace(a))
+		out[i] = toLowerTrim(a)
 	}
 	return out
+}
+
+func toLowerTrim(str string) string {
+	trimmed := strings.TrimSpace(str)
+	needsLower := false
+	for i := 0; i < len(trimmed); i++ {
+		if trimmed[i] >= 'A' && trimmed[i] <= 'Z' {
+			needsLower = true
+			break
+		}
+	}
+	if needsLower {
+		return strings.ToLower(trimmed)
+	}
+	return trimmed
 }

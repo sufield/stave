@@ -20,7 +20,7 @@ type BucketRef struct {
 
 // NewBucketRef creates a BucketRef from a bare bucket name.
 func NewBucketRef(name string) BucketRef {
-	return BucketRef{name: strings.ToLower(strings.TrimSpace(name))}
+	return BucketRef{name: toLowerTrim(name)}
 }
 
 // Name returns the bare bucket name.

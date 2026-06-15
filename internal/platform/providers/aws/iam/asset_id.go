@@ -19,9 +19,28 @@ func Region(id string) string {
 	if !IsARN(id) {
 		return ""
 	}
-	parts := strings.SplitN(id, ":", 6)
-	if len(parts) < 6 {
+	remaining := id[4:] // skip "arn:"
+	var found bool
+	// partition
+	_, remaining, found = strings.Cut(remaining, ":")
+	if !found {
 		return ""
 	}
-	return parts[3]
+	// service
+	_, remaining, found = strings.Cut(remaining, ":")
+	if !found {
+		return ""
+	}
+	// region
+	var region string
+	region, remaining, found = strings.Cut(remaining, ":")
+	if !found {
+		return ""
+	}
+	// account-id (to verify we have at least 5 segments/4 colons after "arn:")
+	_, _, found = strings.Cut(remaining, ":")
+	if !found {
+		return ""
+	}
+	return region
 }

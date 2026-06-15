@@ -3,7 +3,6 @@ package kernel
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 )
 
 // NetworkScope defines the network-level access boundary of a policy grant.
@@ -57,7 +56,7 @@ func (s NetworkScope) WeakerThan(other NetworkScope) bool {
 // ParseNetworkScope converts a string label into its typed NetworkScope.
 // It is case-insensitive and handles leading/trailing whitespace.
 func ParseNetworkScope(raw string) (NetworkScope, error) {
-	norm := strings.TrimSpace(strings.ToLower(raw))
+	norm := toLowerTrim(raw)
 	switch norm {
 	case "", "unknown":
 		return NetworkScopeUnknown, nil
