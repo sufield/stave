@@ -124,7 +124,7 @@ docker run --rm -it stave-workspace:edge bash -lc 'bash ~/examples/demo-ai-secur
 
 ```bash
 go install github.com/sufield/stave/cmd/stave@latest
-go install github.com/sufield/stave/cmd/stave-mcp@latest
+go install github.com/sufield/stave/cmd/mcp@latest
 # Or build from a clone:
 git clone https://github.com/sufield/stave.git && cd stave && make build
 ```

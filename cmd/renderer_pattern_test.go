@@ -39,7 +39,7 @@ import (
 var formatSwitchAllowlist = map[string]string{
 	"cmdutil/compose/output.go": "DefaultFindingWriter IS the FindingWriterFactory: the switch maps format " +
 		"strings to concrete FindingMarshaler types and returns them. A factory, not inline dispatch.",
-	"stave-mcp/main.go": "MCP JSON-RPC server (deliberately SDK-free protocol dispatcher): the switch maps " +
+	"mcp/main.go": "MCP JSON-RPC server (deliberately SDK-free protocol dispatcher): the switch maps " +
 		"tool args to MCP envelopes, not Renderer types. Out of scope of the cmd/ Renderer pattern.",
 }
 
