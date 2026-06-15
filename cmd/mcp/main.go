@@ -332,7 +332,7 @@ func isDataTool(name string) bool { return dataTools[name] }
 // hosted server — it tells the agent exactly how to get the tool.
 const hostedDataToolMsg = "This tool requires local installation. " +
 	"Snapshot data never leaves your machine. Install the local binary: " +
-	"go install github.com/sufield/stave/cmd/stave-mcp@latest"
+	"go install github.com/sufield/stave/cmd/mcp@latest"
 
 // handleInitialize returns a minimal MCP initialize response.
 // The protocolVersion field signals which spec generation we
@@ -1062,7 +1062,7 @@ func filterChainsBySeverity(chains []stave.ChainFinding, minSeverity string) []s
 	if strings.TrimSpace(minSeverity) == "" {
 		return chains
 	}
-	minRank := severityRank(stave.Severity(strings.ToLower(strings.TrimSpace(minSeverity))))
+	minRank := severityRank(stave.Severity(toLowerTrim(minSeverity)))
 	out := make([]stave.ChainFinding, 0, len(chains))
 	for i := range chains {
 		if severityRank(chains[i].Severity) >= minRank {

@@ -19,7 +19,7 @@ probabilistic proposer. The separation is the point.
 ## Install
 
 ```bash
-go install github.com/sufield/stave/cmd/stave-mcp@latest
+go install github.com/sufield/stave/cmd/mcp@latest
 ```
 
 This puts `stave-mcp` on your `$PATH` (in `$(go env GOPATH)/bin`).
@@ -118,7 +118,7 @@ one is rejected:
 ```
 This tool requires local installation. Snapshot data never leaves
 your machine. Install the local binary:
-go install github.com/sufield/stave/cmd/stave-mcp@latest
+go install github.com/sufield/stave/cmd/mcp@latest
 ```
 
 The `initialize` handshake reports the active mode so a client can

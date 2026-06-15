@@ -82,7 +82,7 @@ accept — credentialed access to your cloud.
 **In the code:** the [`stave apply`](./cmd/apply/) path makes zero
 network calls; [`--require-offline`](./cmd/apply/) makes that an
 *assertion* (it fails if proxy env vars are even set). The [MCP
-server's `--hosted` mode](./cmd/stave-mcp/README.md) is the strongest
+server's `--hosted` mode](./cmd/mcp/README.md) is the strongest
 form: the snapshot-touching tools are physically absent from the
 tool list and rejected on direct call, so a hosted server can't
 receive snapshot data even if asked. Air-gapped by architecture, not

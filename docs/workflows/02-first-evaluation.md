@@ -70,13 +70,13 @@ Stave ships an MCP server so an AI assistant can call it in
 conversation:
 
 ```bash
-go install github.com/sufield/stave/cmd/stave-mcp@latest
+go install github.com/sufield/stave/cmd/mcp@latest
 ```
 
-Add the config from [`cmd/stave-mcp/configs/claude-desktop.json`](../../cmd/stave-mcp/configs/claude-desktop.json)
+Add the config from [`cmd/mcp/configs/claude-desktop.json`](../../cmd/mcp/configs/claude-desktop.json)
 to your Claude Desktop config, then ask: *"Evaluate the snapshot in
 ./obs"* — the model calls the `stave.verify` tool and summarizes the
-result. See [`cmd/stave-mcp/README.md`](../../cmd/stave-mcp/README.md).
+result. See [`cmd/mcp/README.md`](../../cmd/mcp/README.md).
 
 ---
 

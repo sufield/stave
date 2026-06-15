@@ -17,7 +17,7 @@ import (
 // library call + format dispatch.
 //
 // This is the sixth command to clear the facade bar after
-// cmd/stave-mcp/, cmd/gaps/, cmd/readiness/, cmd/score/, and
+// cmd/mcp/, cmd/gaps/, cmd/readiness/, cmd/score/, and
 // cmd/exportinvariants/. Migration tracker + plan:
 // docs/architecture/pkg-stave-facade.md.
 func TestArchitecture_NoInternalImports(t *testing.T) {

@@ -7,7 +7,7 @@
   "license": "Apache-2.0",
   "categories": ["security", "cloud", "compliance", "devops"],
   "install": {
-    "go": "go install github.com/sufield/stave/cmd/stave-mcp@latest"
+    "go": "go install github.com/sufield/stave/cmd/mcp@latest"
   },
   "modes": {
     "local": "All tools. Snapshot-touching tools evaluate observation files on the local machine.",

@@ -105,7 +105,7 @@ Try:
 > *"Search for encryption controls."*
 
 Ready-made client configs are at `/opt/stave/examples/` and in the
-upstream repo at [`cmd/stave-mcp/configs/`](https://github.com/sufield/stave/tree/main/cmd/stave-mcp/configs).
+upstream repo at [`cmd/mcp/configs/`](https://github.com/sufield/stave/tree/main/cmd/mcp/configs).
 
 ---
 

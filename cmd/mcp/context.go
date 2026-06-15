@@ -6,9 +6,24 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"unicode"
 
 	"github.com/sufield/stave/pkg/stave"
 )
+
+// toLowerTrim returns the lower-cased, whitespace-trimmed form of s, skipping
+// the lower-casing allocation when the trimmed value has no upper-case
+// character. Defined here (not a separate file) because cmd/mcp must
+// import only pkg/stave + stdlib — no internal/ packages (see
+// architecture_test.go) — and the bare `stave-mcp` .gitignore rule would
+// otherwise ignore a new file in this dir. Mirrors strutil.ToLowerTrim.
+func toLowerTrim(s string) string {
+	s = strings.TrimSpace(s)
+	if strings.IndexFunc(s, unicode.IsUpper) < 0 {
+		return s
+	}
+	return strings.ToLower(s)
+}
 
 // contextArgs is the schema for stave.context — the drill-down tool.
 // The model calls it with a {type, id} to get detail about one
@@ -28,7 +43,7 @@ type contextArgs struct {
 // runContextTool routes a drill-down request by type. Returns an
 // unwrapped value; the dispatcher wraps it in the tool-result envelope.
 func runContextTool(ctx context.Context, args contextArgs) (any, error) {
-	kind := strings.ToLower(strings.TrimSpace(args.Type))
+	kind := toLowerTrim(args.Type)
 	if kind == "" || strings.TrimSpace(args.ID) == "" {
 		return nil, errors.New("type and id are required")
 	}

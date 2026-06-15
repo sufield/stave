@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/util/sets"
+	"github.com/sufield/stave/internal/util/strutil"
 )
 
 // MaxChainDepth is the maximum number of role assumption hops before
@@ -917,7 +918,7 @@ func conditionReferencesTag(rawCondition any) bool {
 }
 
 func isTagConditionKey(key string) bool {
-	lower := strings.ToLower(strings.TrimSpace(key))
+	lower := strutil.ToLowerTrim(key)
 	if lower == "aws:tagkeys" {
 		return true
 	}

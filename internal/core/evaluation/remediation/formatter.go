@@ -185,15 +185,12 @@ func parseARNContext(assetID string) (ARNContext, bool) {
 	if !found {
 		return ARNContext{}, false
 	}
-	// account
+	// account (the resource is whatever remains, and may itself contain
+	// colons — we don't parse it, so discard the tail)
 	var account string
-	account, remaining, found = strings.Cut(remaining, ":")
+	account, _, found = strings.Cut(remaining, ":")
 	if !found {
 		return ARNContext{}, false
 	}
-	// resource (checking that there is a 6th component)
-	_, _, found = strings.Cut(remaining, ":")
-	// If found is false, it means no more colons, which is fine since the resource is the final component (so we have exactly 6 components).
-	// We've successfully validated that there are at least 5 colons in the string, yielding exactly 6 components.
 	return ARNContext{Account: account, Region: region}, true
 }

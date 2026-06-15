@@ -17,7 +17,7 @@ import (
 // flag binding + library calls + format dispatch.
 //
 // This is the fourth command to clear the facade bar, after
-// cmd/stave-mcp/, cmd/gaps/, and cmd/readiness/. The migration
+// cmd/mcp/, cmd/gaps/, and cmd/readiness/. The migration
 // plan in docs/architecture/pkg-stave-facade.md tracks the rest;
 // the existing `cmd-no-infra` depguard rule in .golangci.yml plus
 // per-command architecture tests are how the rule ratchets up

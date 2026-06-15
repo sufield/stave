@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
@@ -15,6 +14,7 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/util/jsonutil"
+	"github.com/sufield/stave/internal/util/strutil"
 )
 
 // GateRunConfig parameterizes [RunGate]. It mirrors the `stave ci gate`
@@ -174,7 +174,7 @@ func gateRenderResult(format string, quiet bool, result *GateResult) ([]byte, er
 
 // parseGateFormat normalizes the --format value to "text" or "json".
 func parseGateFormat(raw string) (string, error) {
-	switch strings.ToLower(strings.TrimSpace(raw)) {
+	switch strutil.ToLowerTrim(raw) {
 	case "text", "":
 		return "text", nil
 	case "json":

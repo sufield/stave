@@ -994,7 +994,7 @@ func TestRun_HostedModeRejectsDataToolCall(t *testing.T) {
 	}
 	msg, _ := errBlock["message"].(string)
 	if !strings.Contains(msg, "requires local installation") ||
-		!strings.Contains(msg, "go install github.com/sufield/stave/cmd/stave-mcp@latest") {
+		!strings.Contains(msg, "go install github.com/sufield/stave/cmd/mcp@latest") {
 		t.Errorf("rejection message missing install guidance, got: %q", msg)
 	}
 }

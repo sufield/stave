@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check sync-guide docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check
+.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check sync-guide docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check refactor-scan refactor-scan-check refactor-scan-update
 # Binary name
 BINARY=stave
 
@@ -93,11 +93,11 @@ build-dev: sync-schemas sync-controls sync-alternatives
 
 ## mcp: Build the MCP server binary (stave-mcp)
 mcp: sync-schemas sync-controls sync-alternatives
-	$(GOBUILD) $(LDFLAGS) -o stave-mcp ./cmd/stave-mcp
+	$(GOBUILD) $(LDFLAGS) -o stave-mcp ./cmd/mcp
 
 ## mcp-test: Run the MCP server's protocol validation tests
 mcp-test: sync-schemas sync-controls sync-alternatives
-	$(GOTEST) ./cmd/stave-mcp/ -count=1
+	$(GOTEST) ./cmd/mcp/ -count=1
 
 ## Testing pyramid:
 ##
@@ -304,6 +304,22 @@ lint-debt:
 		echo "No change. Debt holds at the baseline ceiling."; \
 	fi
 
+## refactor-scan: list remaining Go modernization candidates per category.
+## Ratcheted categories (genuine targets) show full file:line lists; wide nets
+## show counts only. See scripts/refactor-scan.sh + docs/audits/refactor-scan-plan.md.
+refactor-scan:
+	@bash scripts/refactor-scan.sh list
+
+## refactor-scan-check: burn-down gate — fail if any ratcheted candidate count
+## grew above docs/audits/refactor-scan-baseline. Pairs with refactor-scan-update.
+refactor-scan-check:
+	@bash scripts/refactor-scan.sh check
+
+## refactor-scan-update: rewrite the ratcheted baseline to current counts; commit
+## it to tighten the ratchet when candidates drop (mirrors the lint-debt floor).
+refactor-scan-update:
+	@bash scripts/refactor-scan.sh update-baseline
+
 ## audit: Generate the report-only Go best-practices baseline (docs/audits/go-best-practices-baseline.{md,json}).
 ## audit-check: Verify the committed baseline matches current source (manual; NOT in CI — churn is per-commit volatile).
 ##
@@ -403,13 +419,13 @@ deadcode-check:
 ## to close the symlink/hardlink/TOCTOU redirect window. Scoped by grep because
 ## forbidigo cannot express "forbid in these dirs only" (RE2 has no negative
 ## lookahead) without flagging legitimate writes elsewhere in the tree.
-## Excludes _test.go (test fixtures) and cmd/stave-mcp (writes self-generated
+## Excludes _test.go (test fixtures) and cmd/mcp (writes self-generated
 ## os.TempDir() files, not user paths, and is pkg/stave-only by design).
 .PHONY: check-unsafe-writes
 check-unsafe-writes:
 	@hits=$$(grep -rnE 'os\.(Create|WriteFile)\(' cmd/ internal/app/ --include='*.go' \
 		| grep -v '_test\.go' \
-		| grep -v 'cmd/stave-mcp/'); \
+		| grep -v 'cmd/mcp/'); \
 	if [ -n "$$hits" ]; then \
 		echo "ERROR: use fsutil.SafeWriteFile/SafeCreateFile (symlink-safe) instead of os.Create/os.WriteFile:"; \
 		echo "$$hits"; \

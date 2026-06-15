@@ -4,7 +4,7 @@
 
 ```
 cmd/             →  imports ONLY pkg/stave  (the public API)
-cmd/stave-mcp/   →  imports ONLY pkg/stave  (enforced today by a test)
+cmd/mcp/   →  imports ONLY pkg/stave  (enforced today by a test)
 pkg/stave/       →  the stable facade; orchestrates internal/ packages
 internal/app/    →  application logic called BY pkg/stave
 internal/core/   →  domain logic called BY internal/app
@@ -166,7 +166,7 @@ honest path is phased:
 
 ### Phase 1 — establish the rule (this commit)
 
-- Enforce pkg/stave-only for `cmd/stave-mcp/` with a test
+- Enforce pkg/stave-only for `cmd/mcp/` with a test
   (`TestArchitecture_NoInternalImports`). Done.
 - Document the facade pattern (this file).
 - Refresh `pkg/stave/doc.go` to enumerate the public functions so

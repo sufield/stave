@@ -21,6 +21,7 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/sanitize"
 	"github.com/sufield/stave/internal/util/jsonutil"
+	"github.com/sufield/stave/internal/util/strutil"
 )
 
 // InputError marks a user-input failure (unknown format, bad assessment
@@ -47,7 +48,7 @@ const (
 // ParseFormat validates and returns a Format value (case-insensitive,
 // trimmed). An unrecognised value wraps [InputError] (exit 2).
 func ParseFormat(s string) (Format, error) {
-	normalized := Format(strings.ToLower(strings.TrimSpace(s)))
+	normalized := Format(strutil.ToLowerTrim(s))
 	switch normalized {
 	case FormatDot, FormatJSON:
 		return normalized, nil

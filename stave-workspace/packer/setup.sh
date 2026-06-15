@@ -62,7 +62,7 @@ git checkout "${STAVE_REF}"
 # Replicate that here, then build both binaries.
 make sync-schemas sync-controls sync-alternatives
 go build -trimpath -ldflags="-s -w" -o /usr/local/bin/stave     ./cmd/stave
-go build -trimpath -ldflags="-s -w" -o /usr/local/bin/stave-mcp ./cmd/stave-mcp
+go build -trimpath -ldflags="-s -w" -o /usr/local/bin/stave-mcp ./cmd/mcp
 stave version
 stave-mcp --hosted </dev/null >/dev/null 2>&1 || true  # sanity-start
 

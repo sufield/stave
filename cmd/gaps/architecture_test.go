@@ -17,7 +17,7 @@ import (
 // call + output formatting.
 //
 // This is the second command to clear the facade bar after
-// cmd/stave-mcp/architecture_test.go. The migration plan in
+// cmd/mcp/architecture_test.go. The migration plan in
 // docs/architecture/pkg-stave-facade.md tracks the rest; the existing
 // `cmd-no-infra` depguard rule in .golangci.yml plus per-command
 // architecture tests are how the rule ratchets up command by command

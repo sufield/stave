@@ -1,7 +1,7 @@
 // Package suggest provides fuzzy string matching utilities for CLI hints.
 package suggest
 
-import "strings"
+import "github.com/sufield/stave/internal/util/strutil"
 
 // Distance thresholds bucket inputs by length: short inputs (typos in
 // flags / short subcommands) tolerate at most one edit, while longer
@@ -62,7 +62,7 @@ func Closest(input string, candidates []string) string {
 }
 
 func normalize(s string) string {
-	return strings.ToLower(strings.TrimSpace(s))
+	return strutil.ToLowerTrim(s)
 }
 
 func threshold(inputLen int) int {

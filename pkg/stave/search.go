@@ -63,11 +63,11 @@ func SearchCatalog(q SearchQuery) ([]SearchHit, error) {
 	catalog := appcaps.Build(controls, nil)
 	hits := appcaps.Rank(catalog, q.Query)
 
-	wantSev := strings.ToUpper(strings.TrimSpace(q.Severity))
+	wantSev := strings.TrimSpace(q.Severity)
 	out := make([]SearchHit, 0, len(hits))
 	for i := range hits {
 		c := hits[i].Capability
-		if wantSev != "" && strings.ToUpper(c.Severity) != wantSev {
+		if wantSev != "" && !strings.EqualFold(c.Severity, wantSev) {
 			continue
 		}
 		out = append(out, SearchHit{

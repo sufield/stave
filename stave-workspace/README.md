@@ -19,7 +19,7 @@ bash ~/examples/demo-ai-security/run.sh
 | Tool / file | Where | What |
 |---|---|---|
 | `stave` | `/usr/local/bin/stave` | The CLI, built from `cmd/stave` |
-| `stave-mcp` | `/usr/local/bin/stave-mcp` | The MCP server, built from `cmd/stave-mcp` |
+| `stave-mcp` | `/usr/local/bin/stave-mcp` | The MCP server, built from `cmd/mcp` |
 | Control catalog | `/opt/stave/controls` (also `$STAVE_CONTROLS`) | 2,650+ controls |
 | Chain catalog | `/opt/stave/chains` (also `$STAVE_CHAINS`, `~/chains`) | 585+ compound-risk chains |
 | Examples | `/opt/stave/examples` (also `~/examples`) | Demo snapshots + `run.sh` per scenario |
@@ -108,5 +108,5 @@ to minimize surface area for adoption.
   what the agent prints on workspace launch.
 - [`docs/workflows/`](../docs/workflows/) — the six numbered
   workflow guides.
-- [`cmd/stave-mcp/README.md`](../cmd/stave-mcp/README.md) — MCP
+- [`cmd/mcp/README.md`](../cmd/mcp/README.md) — MCP
   server protocol, tool list, hosted-mode details.

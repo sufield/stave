@@ -3,10 +3,10 @@ package text
 import (
 	"cmp"
 	"slices"
-	"strings"
 
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/util/strutil"
 )
 
 // DomainCount represents the number of violations in a specific business domain.
@@ -27,21 +27,7 @@ func GroupViolationsByDomain(rows []evaluation.ResourceCheck) []DomainCount {
 			continue
 		}
 
-		domainStr := string(rows[i].AssetDomain)
-		needsLowerTrim := false
-		for j := 0; j < len(domainStr); j++ {
-			c := domainStr[j]
-			if (c >= 'A' && c <= 'Z') || c == ' ' || c == '\t' || c == '\n' || c == '\r' {
-				needsLowerTrim = true
-				break
-			}
-		}
-		var d kernel.AssetDomain
-		if needsLowerTrim {
-			d = kernel.AssetDomain(strings.ToLower(strings.TrimSpace(domainStr)))
-		} else {
-			d = rows[i].AssetDomain
-		}
+		d := kernel.AssetDomain(strutil.ToLowerTrim(string(rows[i].AssetDomain)))
 		if d == "" {
 			d = "unknown"
 		}

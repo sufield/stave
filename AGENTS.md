@@ -6,7 +6,7 @@ Rules for AI agents working on this codebase. These patterns were established th
 
 If this file disagrees with one of these, the canonical doc wins — open an issue noting the drift:
 
-- **Architecture:** [`docs/architecture/pkg-stave-facade.md`](docs/architecture/pkg-stave-facade.md) — the facade migration plan. `pkg/stave/` is the stable public API; both `cmd/` and `cmd/stave-mcp/` consume it. `cmd/stave-mcp/architecture_test.go` enforces zero `internal/` imports for the MCP server today; the CLI proper is mid-migration.
+- **Architecture:** [`docs/architecture/pkg-stave-facade.md`](docs/architecture/pkg-stave-facade.md) — the facade migration plan. `pkg/stave/` is the stable public API; both `cmd/` and `cmd/mcp/` consume it. `cmd/mcp/architecture_test.go` enforces zero `internal/` imports for the MCP server today; the CLI proper is mid-migration.
 - **Build + testing:** [`TESTING.md`](TESTING.md) and the project [`CLAUDE.md`](../CLAUDE.md).
 - **Goldens:** the regen-and-triage workflow at the top of `CLAUDE.md` (`make regenerate-goldens` with categorized diff).
 
