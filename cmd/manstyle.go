@@ -26,16 +26,6 @@ import (
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
-// Annotation keys for the man sections Cobra has no native field for. Populate
-// them via cobra.Command.Annotations to render OUTPUT / EXIT STATUS / FILES /
-// SEE ALSO; absent annotations simply omit the section.
-const (
-	AnnExitStatus = "man.exitStatus"
-	AnnOutput     = "man.output"
-	AnnFiles      = "man.files"
-	AnnSeeAlso    = "man.seeAlso"
-)
-
 func init() {
 	cobra.AddTemplateFunc("styleHeading", func(s string) string {
 		h := strings.ToUpper(s)
@@ -78,22 +68,10 @@ const manHelpTemplate = `{{styleHeading "name"}}
 {{end}}{{if .HasAvailableInheritedFlags}}
 {{styleHeading "global options"}}
 {{.InheritedFlags.FlagUsages | trimTrailingWhitespaces}}
-{{end}}{{with index .Annotations "` + AnnOutput + `"}}
-{{styleHeading "output"}}
-    {{.}}
-{{end}}{{with index .Annotations "` + AnnExitStatus + `"}}
-{{styleHeading "exit status"}}
-{{.}}
-{{end}}{{with index .Annotations "` + AnnFiles + `"}}
-{{styleHeading "files"}}
-    {{.}}
-{{end}}{{with index .Annotations "` + AnnSeeAlso + `"}}
-{{styleHeading "see also"}}
-    {{.}}
-{{else}}{{if .HasAvailableSubCommands}}
+{{end}}{{if .HasAvailableSubCommands}}
 {{styleHeading "see also"}}
     Use "{{.CommandPath}} [command] --help" for details on a subcommand.
-{{end}}{{end}}`
+{{end}}`
 
 // ApplyManStyle installs the man-page-style help template on the whole command
 // tree and pages the rendered help through the shared pager when stdout is a
