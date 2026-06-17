@@ -39,11 +39,7 @@ Stave evaluates configuration snapshots against declarative safety controls. As 
 | `unsafe_duration` | Resource unsafe longer than threshold | Supported |
 | `unsafe_recurrence` | Resource toggling safe/unsafe repeatedly | Supported |
 | `prefix_exposure` | Public access to non-approved S3 key prefixes | Supported |
-| `authorization_boundary` | Identity blast radius | Defined, not yet evaluated |
-| `audience_boundary` | Third-party audience isolation | Defined, not yet evaluated |
-| `justification_required` | Business justification proof | Defined, not yet evaluated |
-| `ownership_required` | Owner assignment verification | Defined, not yet evaluated |
-| `visibility_required` | Unknown exposure detection | Defined, not yet evaluated |
+| `marker` | Informational fact recorded for chain composition | Supported |
 
 Controls in the "Defined, not yet evaluated" category are valid YAML definitions that load without error but are silently skipped during evaluation.
 

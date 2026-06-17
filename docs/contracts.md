@@ -53,7 +53,7 @@ A control defines a safety check. Required fields:
 | `id` | string | yes | Unique ID (e.g., `CTL.S3.PUBLIC.001`) |
 | `name` | string | yes | Short human-readable name |
 | `description` | string | yes | What unsafe condition this detects |
-| `type` | string | yes | Check category (e.g., `unsafe_state`, `authorization_boundary`) |
+| `type` | string | yes | Check category (e.g., `unsafe_state`, `unsafe_duration`) |
 
 One of:
 

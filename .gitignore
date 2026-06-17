@@ -16,3 +16,9 @@ python/solver/tests/__pycache__/
 .sync-alternatives-hash
 stave-mcp
 .work/
+
+# e2e enforce scenarios regenerate their --out dir every run and verify it by
+# sha256 (expected.generated.path + expected.generated.sha256 are the goldens),
+# so the generated tree itself must never be tracked. See e2e/e2e_test.go
+# (RemoveAll(caseDir/outdir) before each run).
+testdata/e2e/*/outdir/

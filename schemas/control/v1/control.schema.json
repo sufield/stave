@@ -13,11 +13,6 @@
         "unsafe_state",
         "unsafe_duration",
         "unsafe_recurrence",
-        "authorization_boundary",
-        "audience_boundary",
-        "justification_required",
-        "ownership_required",
-        "visibility_required",
         "prefix_exposure",
         "marker"
       ]
@@ -231,7 +226,7 @@
         "type": {
           "$ref": "#/$defs/controlType",
           "title": "Check Type",
-          "description": "Category of safety check (e.g., unsafe_state, authorization_boundary)."
+          "description": "Category of safety check (e.g., unsafe_state, unsafe_duration)."
         },
         "classification": {
           "type": "string",

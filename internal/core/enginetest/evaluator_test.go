@@ -470,7 +470,7 @@ func TestEvaluator_UnsupportedTypeSkipped(t *testing.T) {
 		},
 		{
 			ID:   "CTL.TEST.UNSUPPORTED",
-			Type: policy.TypeAuthorizationBoundary, // Not supported in MVP 1.0
+			Type: policy.TypeUnknown, // unrecognized type → skipped
 			UnsafePredicate: policy.UnsafePredicate{
 				Any: []policy.PredicateRule{
 					{Field: predicate.NewFieldPath("properties.public"), Op: predicate.OpEq, Value: policy.Bool(true)},

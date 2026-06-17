@@ -185,8 +185,7 @@ func TestStrategyFor(t *testing.T) {
 		{policy.TypeUnsafeDuration, "*engine.unsafeDurationStrategy"},
 		{policy.TypeUnsafeRecurrence, "*engine.unsafeRecurrenceStrategy"},
 		{policy.TypePrefixExposure, "*engine.prefixExposureStrategy"},
-		{policy.TypeAuthorizationBoundary, "*engine.unsupportedStrategy"},
-		{policy.TypeAudienceBoundary, "*engine.unsupportedStrategy"},
+		{policy.TypeUnknown, "*engine.unsupportedStrategy"},
 	}
 
 	for _, tt := range tests {

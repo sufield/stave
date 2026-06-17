@@ -240,7 +240,7 @@ func TestExtractSourceEvidence(t *testing.T) {
 func TestUnsupportedStrategy(t *testing.T) {
 	ctl := &policy.ControlDefinition{
 		ID:   "CTL.TEST.001",
-		Type: policy.TypeAuthorizationBoundary,
+		Type: policy.TypeUnknown,
 	}
 	a := asset.Asset{ID: "bucket-1"}
 	tl, _ := asset.NewExposureLifecycle(a)

@@ -11,16 +11,11 @@ type ControlType int
 
 // Canonical control type constants.
 const (
-	TypeUnknown               ControlType = iota
-	TypeUnsafeState                       // 1
-	TypeUnsafeDuration                    // 2
-	TypeUnsafeRecurrence                  // 3
-	TypeAuthorizationBoundary             // 4
-	TypeAudienceBoundary                  // 5
-	TypeJustificationRequired             // 6
-	TypeOwnershipRequired                 // 7
-	TypeVisibilityRequired                // 8
-	TypePrefixExposure                    // 9
+	TypeUnknown          ControlType = iota
+	TypeUnsafeState                  // 1
+	TypeUnsafeDuration               // 2
+	TypeUnsafeRecurrence             // 3
+	TypePrefixExposure               // 4
 	// TypeMarker is a fact-recording control: the predicate
 	// evaluates the same way as TypeUnsafeState (a CEL expression
 	// over the asset's properties) but the resulting finding is
@@ -38,21 +33,16 @@ const (
 	// data-classification=phi is not a misconfiguration; it
 	// becomes one when combined with an over-privileged Cognito
 	// unauth role finding on the same bucket ARN.
-	TypeMarker // 10
+	TypeMarker // 5
 )
 
 // typeToName is the single source of truth for type↔string mapping.
 var typeToName = map[ControlType]string{
-	TypeUnsafeState:           "unsafe_state",
-	TypeUnsafeDuration:        "unsafe_duration",
-	TypeUnsafeRecurrence:      "unsafe_recurrence",
-	TypeAuthorizationBoundary: "authorization_boundary",
-	TypeAudienceBoundary:      "audience_boundary",
-	TypeJustificationRequired: "justification_required",
-	TypeOwnershipRequired:     "ownership_required",
-	TypeVisibilityRequired:    "visibility_required",
-	TypePrefixExposure:        "prefix_exposure",
-	TypeMarker:                "marker",
+	TypeUnsafeState:      "unsafe_state",
+	TypeUnsafeDuration:   "unsafe_duration",
+	TypeUnsafeRecurrence: "unsafe_recurrence",
+	TypePrefixExposure:   "prefix_exposure",
+	TypeMarker:           "marker",
 }
 
 // nameToType provides reverse lookup for parsing.

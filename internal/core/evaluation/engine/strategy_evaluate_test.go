@@ -299,7 +299,7 @@ func TestUnsupportedStrategy_ReturnsSkipped(t *testing.T) {
 		{base, false},
 	})
 
-	ctl := testControl("CTL.AUTH.001", policy.TypeAuthorizationBoundary)
+	ctl := testControl("CTL.AUTH.001", policy.TypeUnknown)
 	s := &unsupportedStrategy{ctl: ctl}
 
 	row, findings := s.Evaluate(tl, now, IdentityIndex{})

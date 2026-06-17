@@ -67,6 +67,25 @@ unsafe_predicate:
 Nesting is unrestricted; the engine evaluates depth-first with
 short-circuiting.
 
+## Control Types
+
+Every control declares a `type` that selects its evaluation
+strategy. The engine implements five:
+
+| Type | Status |
+|------|--------|
+| `unsafe_state` | Used — the default; the large majority of shipped controls |
+| `unsafe_duration` | Used — multi-snapshot dwell measurement |
+| `unsafe_recurrence` | Used — asset re-entering an unsafe state within a window |
+| `prefix_exposure` | Used — violation when protected prefixes are publicly readable |
+| `marker` | Used — records an informational fact for chain composition; never a violation on its own |
+
+The `ctrl.v1` schema rejects any `type` outside these five at load
+time. A control whose `type` is empty or otherwise unrecognized
+resolves to the internal `unknown` type, which has no strategy: it
+is **skipped**, not failed — it appears in `skipped_controls` with
+reason *"control type cannot be evaluated"*.
+
 ## Asset Evaluation
 
 The engine binds an asset's `properties` map to CEL variables

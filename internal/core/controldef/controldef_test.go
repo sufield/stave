@@ -201,12 +201,8 @@ func TestControlTypeString(t *testing.T) {
 		{TypeUnsafeState, "unsafe_state"},
 		{TypeUnsafeDuration, "unsafe_duration"},
 		{TypeUnsafeRecurrence, "unsafe_recurrence"},
-		{TypeAuthorizationBoundary, "authorization_boundary"},
-		{TypeAudienceBoundary, "audience_boundary"},
-		{TypeJustificationRequired, "justification_required"},
-		{TypeOwnershipRequired, "ownership_required"},
-		{TypeVisibilityRequired, "visibility_required"},
 		{TypePrefixExposure, "prefix_exposure"},
+		{TypeMarker, "marker"},
 	}
 	for _, tt := range tests {
 		if got := tt.ct.String(); got != tt.want {
@@ -563,7 +559,7 @@ func TestControlDefinitionIsEvaluatable(t *testing.T) {
 		}
 	}
 
-	notEvaluatable := []ControlType{TypeUnknown, TypeAuthorizationBoundary, TypeOwnershipRequired}
+	notEvaluatable := []ControlType{TypeUnknown}
 	for _, ct := range notEvaluatable {
 		ctl := ControlDefinition{Type: ct}
 		if ctl.IsEvaluatable() {

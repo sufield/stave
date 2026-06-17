@@ -36,8 +36,7 @@ This glossary maps Stave's internal terminology to security industry standards
 | `unsafe_duration` | Asset has been unsafe longer than the SLA threshold. |
 | `unsafe_recurrence` | Asset has been unsafe too many times within a window. |
 | `prefix_exposure` | Protected S3 key prefixes are publicly readable. |
-| `authorization_boundary` | IAM permission boundary violation. |
-| `audience_boundary` | Unintended principal scope exposure. |
+| `marker` | Informational fact recorded for chain composition; never a violation on its own. |
 
 ## Domain Terms
 
