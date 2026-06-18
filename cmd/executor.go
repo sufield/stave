@@ -256,26 +256,11 @@ func (a *App) handleExecutionError(err error) {
 	if idx := strings.Index(msg, "\n"); idx > 0 {
 		msg = msg[:idx]
 	}
-	// Classify context-cancelled / deadline-exceeded as interrupts
-	// rather than command failures: the command did not fault, the
-	// outer context tore it down (SIGINT, parent timeout). Logging
-	// these at the same level as a real command error makes
-	// signal-driven shutdowns look like crashes in the audit trail.
-	switch {
-	case errors.Is(err, context.Canceled):
-		logger.Info("command interrupted by context cancellation", "exit_code", exitCode)
-	case errors.Is(err, context.DeadlineExceeded):
-		logger.Info("command interrupted by deadline", "exit_code", exitCode)
-	default:
-		// Real command failures deserve warn-level visibility — the
-		// previous Debug routing meant a non-default log level
-		// dropped them entirely from operator-facing logs, so a
-		// production-mode invocation produced an exit code with no
-		// log line explaining why. Context-driven interrupts above
-		// stay at Info because they are routine (Ctrl-C, parent
-		// timeout) and not actionable.
-		logger.Warn("command failed", "error", msg, "exit_code", exitCode)
-	}
+	// Record the structured audit line for this finished command,
+	// classifying the outcome so a successful-but-non-zero result
+	// (violations found, security-audit gate) is not mislabeled as a
+	// fault.
+	logExecutionOutcome(logger, err, msg, exitCode)
 
 	// Sentinel errors (ErrViolationsFound, ErrSecurityAuditFindings,
 	// ErrInterrupted) already had their user-facing output produced
@@ -312,6 +297,38 @@ func (a *App) handleExecutionError(err error) {
 	a.cleanupBeforeExit()
 
 	a.exit(exitCode)
+}
+
+// logExecutionOutcome writes the structured audit line for a finished
+// command, classifying the outcome by error and exit code so the log
+// does not mislabel a successful-but-non-zero result as a fault:
+//
+//   - Interrupts (context cancellation / deadline) are routine teardown
+//     (Ctrl-C, parent timeout), logged at Info so signal-driven
+//     shutdowns don't look like crashes in the audit trail.
+//   - Completed-with-findings outcomes — exit 3 (violations,
+//     diagnostics, control-test findings) and exit 1 (security-audit
+//     gate) — mean the evaluation/audit ran to completion and is
+//     reporting findings via the exit code. That is the intended
+//     success-with-findings path, not an error. Logging it as "command
+//     failed" misled operators and early adopters into thinking the
+//     tool had errored when it had actually done its job. Logged at
+//     Info as "command completed with findings".
+//   - Everything else (input error exit 2, internal error exit 4) is a
+//     genuine fault and keeps warn-level "command failed" visibility,
+//     so a production-mode invocation never produces an exit code with
+//     no log line explaining why.
+func logExecutionOutcome(logger *slog.Logger, err error, msg string, exitCode int) {
+	switch {
+	case errors.Is(err, context.Canceled):
+		logger.Info("command interrupted by context cancellation", "exit_code", exitCode)
+	case errors.Is(err, context.DeadlineExceeded):
+		logger.Info("command interrupted by deadline", "exit_code", exitCode)
+	case exitCode == ui.ExitViolations || exitCode == ui.ExitSecurity:
+		logger.Info("command completed with findings", "error", msg, "exit_code", exitCode)
+	default:
+		logger.Warn("command failed", "error", msg, "exit_code", exitCode)
+	}
 }
 
 // cleanupBeforeExit releases process-level resources that postRun
