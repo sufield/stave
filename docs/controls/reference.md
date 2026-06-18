@@ -3,15 +3,15 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2673
-**Pack hash:** `9780e8eb296e5788cf8389e4ba1126df8b6a35788da2af46453d89c4a61b6d80`
+**Total controls:** 2674
+**Pack hash:** `ca0833cbdf6b0cd23db26eec3efce199bbfc12b1b3e233472d8aea072ddf0981`
 
 ## Summary
 
 | Severity | Count |
 |----------|-------|
 | critical | 275 |
-| high | 1163 |
+| high | 1164 |
 | info | 16 |
 | low | 204 |
 | medium | 1015 |
@@ -24,7 +24,7 @@
 | detection | 134 |
 | encryption | 113 |
 | exposure | 1195 |
-| governance | 578 |
+| governance | 579 |
 | hygiene | 18 |
 | identity | 426 |
 | lifecycle | 31 |
@@ -34245,6 +34245,21 @@ Warning: do not add Deny statements before scoping the Allow. A Deny that refere
 S3 bucket policies must not grant access to principal ARNs that don't exist in the IAM inventory. Unlike IAM trust policies (which replace deleted ARNs with unique IDs), resource-based policies evaluate ARN strings directly. A new entity created with the same name as a deleted principal inherits every permission the bucket policy grants. An attacker with iam:CreateRole can claim the deleted principal's name and gain bucket access.
 
 **Remediation:** Remove the ghost principal ARN from the bucket policy or recreate the intended principal.
+
+---
+
+### CTL.S3.POLICY.LOCKOUT.001
+
+**Bucket Policy Must Not Self-Lock Out Administration**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6;
+
+An S3 bucket policy must not contain a Deny statement that blocks the bucket owner's own policy-management actions (s3:PutBucketPolicy, s3:DeleteBucketPolicy) without a guaranteed administrative carve-out. The classic self-lockout pattern is a broad "Deny s3:* unless aws:SourceIp / aws:SourceVpce matches" that also covers policy management: if the operator loses that network path — an office IP change, a deleted VPC endpoint, a rotated CIDR — then no principal can edit the policy to recover. The bucket, often an audit-log or compliance bucket, becomes permanently unmanageable without AWS root or Support intervention. This is a resilience failure, not an exposure: the data stays private, but administration is irrecoverable.
+
+**Remediation:** Carve out break-glass administration from the Deny. Either (a) add an explicit Allow for s3:PutBucketPolicy / s3:DeleteBucketPolicy to a dedicated administrative role that is assumable WITHOUT the network condition, or (b) scope the Deny to data-plane actions only (s3:GetObject, s3:PutObject, ...) and keep policy-management actions out of the Deny entirely. Never gate policy-management behind a single IP/VPC condition.
 
 ---
 

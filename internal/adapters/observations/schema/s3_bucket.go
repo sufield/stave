@@ -44,6 +44,8 @@ var s3BucketSchema = Schema{
 
 		// Optional: declared so an audit-mode pass can flag them
 		// later, but absence is not a hard signal yet.
+		{Path: "properties.storage.access.has_self_lockout_deny", Required: false,
+			Doc: "bucket-policy self-lockout: a Deny over policy-management actions gated by a network condition with no admin carve-out (CTL.S3.POLICY.LOCKOUT.001)"},
 		{Path: "properties.storage.access.latent_public_list", Required: false,
 			Doc: "future-state signal; not consumed by any required control yet"},
 		{Path: "properties.storage.access.list_via_identity", Required: false,

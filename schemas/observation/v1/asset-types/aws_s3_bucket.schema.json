@@ -2,7 +2,7 @@
   "$id": "urn:stave:schema:asset-type:aws_s3_bucket",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": true,
-  "description": "Property schema for aws_s3_bucket observations. 81 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
+  "description": "Property schema for aws_s3_bucket observations. 82 controls declare applicable_asset_types for this type. Generated from the embedded control catalog — do not edit by hand.",
   "properties": {
     "delegation": {
       "additionalProperties": true,
@@ -83,6 +83,13 @@
             },
             "has_ip_condition": {
               "description": "Read by control(s): CTL.S3.NETWORK.VPC.001",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "has_self_lockout_deny": {
+              "description": "Read by control(s): CTL.S3.POLICY.LOCKOUT.001",
               "type": [
                 "boolean",
                 "null"
@@ -444,7 +451,7 @@
           }
         },
         "kind": {
-          "description": "Read by 80 controls: CTL.S3.ACCEL.001, CTL.S3.ACCESS.001, CTL.S3.ACCESS.002, …",
+          "description": "Read by 81 controls: CTL.S3.ACCEL.001, CTL.S3.ACCESS.001, CTL.S3.ACCESS.002, …",
           "type": [
             "string",
             "null"
