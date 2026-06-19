@@ -63,12 +63,8 @@ func TestRuntimeBeginProgress_QuietOrNoTTY(t *testing.T) {
 	rtNoTTY := NewRuntime(&bytes.Buffer{}, &stderr)
 	rtNoTTY.IsTTY = &isNotTTY
 	rtNoTTY.BeginProgress("non-tty")()
-	out := stderr.String()
-	if !strings.Contains(out, "Running: non-tty...") {
-		t.Fatalf("expected running output for non-tty, got %q", out)
-	}
-	if !strings.Contains(out, "Done:    non-tty (") {
-		t.Fatalf("expected done output for non-tty, got %q", out)
+	if out := stderr.String(); out != "" {
+		t.Fatalf("expected no progress output for non-tty, got %q", out)
 	}
 }
 

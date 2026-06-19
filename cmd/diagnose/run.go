@@ -65,11 +65,6 @@ func NewRunner(obsRepo appcontracts.ObservationRepository, ctlRepo appcontracts.
 
 // Run executes the standard diagnostic workflow.
 func (r *Runner) Run(ctx context.Context, cfg Config) error {
-	// Disclosed fallback: no --controls and no controls/ dir → embedded catalog.
-	if cfg.UseBuiltinControls && !cfg.Quiet && cfg.Stderr != nil {
-		fmt.Fprintf(cfg.Stderr, "note: no --controls given and no controls/ directory found — "+
-			"diagnosing against the built-in control catalog. Pass --controls <dir> to use your own.\n")
-	}
 
 	diagnoseRun, err := r.newDiagnosticEngine()
 	if err != nil {

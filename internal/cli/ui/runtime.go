@@ -96,14 +96,11 @@ func (r *Runtime) BeginProgress(label string) func() {
 	errOut := r.stderr()
 	start := time.Now()
 	if !r.isTerminal(errOut) {
-		_, _ = fmt.Fprintf(errOut, "Running: %s...\n", label)
-		var once sync.Once
-		return func() {
-			once.Do(func() {
-				elapsed := time.Since(start).Round(time.Millisecond)
-				_, _ = fmt.Fprintf(errOut, "Done:    %s (%s)\n", label, elapsed)
-			})
-		}
+		// Not a TTY (piped, redirected, or captured): stay silent.
+		// Progress is interactive feedback only; printing "Running/Done"
+		// lines to a non-terminal is stderr noise that pollutes pipes,
+		// logs, and command substitutions.
+		return func() {}
 	}
 
 	frames := []string{"|", "/", "-", "\\"}

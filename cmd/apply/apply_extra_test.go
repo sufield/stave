@@ -53,39 +53,6 @@ func TestParseProfile_Invalid(t *testing.T) {
 	}
 }
 
-// --- quoteArg ---
-
-func TestQuoteArg_NoSpecialChars(t *testing.T) {
-	got := quoteArg("simple")
-	if got != "simple" {
-		t.Fatalf("quoteArg = %q, want %q", got, "simple")
-	}
-}
-
-func TestQuoteArg_WithSpaces(t *testing.T) {
-	got := quoteArg("has spaces")
-	if !strings.HasPrefix(got, "'") || !strings.HasSuffix(got, "'") {
-		t.Fatalf("expected quoted string, got: %q", got)
-	}
-}
-
-func TestQuoteArg_WithSingleQuote(t *testing.T) {
-	got := quoteArg("it's")
-	if !strings.Contains(got, "\\'") {
-		t.Fatalf("expected escaped single quote, got: %q", got)
-	}
-}
-
-func TestQuoteArg_WithShellChars(t *testing.T) {
-	specialChars := []string{"$var", "`cmd`", "a|b", "a;b", "a&b", "a(b"}
-	for _, s := range specialChars {
-		got := quoteArg(s)
-		if !strings.HasPrefix(got, "'") {
-			t.Errorf("quoteArg(%q) = %q, expected quoted", s, got)
-		}
-	}
-}
-
 // --- readinessNextCommand ---
 
 func TestReadinessNextCommand_Ready(t *testing.T) {
@@ -165,7 +132,7 @@ func TestReporter_ReportApply_Pass(t *testing.T) {
 	}
 
 	res := stave.StandardResult{Gate: "ALLOW", SummaryMessage: "No violations found"}
-	if err := r.ReportApply(res, "controls/s3", "observations"); err != nil {
+	if err := r.ReportApply(res); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !strings.Contains(stderr.String(), "No violations found") {
@@ -182,7 +149,7 @@ func TestReporter_ReportApply_Fail(t *testing.T) {
 	}
 
 	res := stave.StandardResult{Gate: "BLOCK", SecurityState: "NON_COMPLIANT"}
-	if err := r.ReportApply(res, "controls/s3", "observations"); !errors.Is(err, ui.ErrViolationsFound) {
+	if err := r.ReportApply(res); !errors.Is(err, ui.ErrViolationsFound) {
 		t.Fatalf("expected ErrViolationsFound, got: %v", err)
 	}
 }
@@ -197,7 +164,7 @@ func TestReporter_ReportApply_Quiet(t *testing.T) {
 	}
 
 	res := stave.StandardResult{Gate: "ALLOW", SummaryMessage: "No violations found"}
-	if err := r.ReportApply(res, "controls/s3", "observations"); err != nil {
+	if err := r.ReportApply(res); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if stderr.Len() != 0 {
@@ -220,7 +187,7 @@ func TestReporter_ReportApply_QuietStillGates(t *testing.T) {
 		Quiet:   true,
 	}
 	res := stave.StandardResult{Gate: "BLOCK", SecurityState: "NON_COMPLIANT"}
-	if err := r.ReportApply(res, "controls/s3", "observations"); !errors.Is(err, ui.ErrViolationsFound) {
+	if err := r.ReportApply(res); !errors.Is(err, ui.ErrViolationsFound) {
 		t.Fatalf("expected ErrViolationsFound under Quiet=true, got: %v", err)
 	}
 	if stderr.Len() != 0 {

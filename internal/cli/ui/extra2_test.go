@@ -205,16 +205,15 @@ func TestRuntime_BeginProgress_Nil(t *testing.T) {
 }
 
 func TestRuntime_BeginProgress_NonTTY(t *testing.T) {
+	// Non-TTY (captured/redirected) stderr must stay silent — progress is
+	// interactive feedback only; "Running/Done" lines on a non-terminal are
+	// noise that pollutes pipes and logs.
 	var buf bytes.Buffer
 	r := &Runtime{Stderr: &buf}
 	done := r.BeginProgress("loading")
 	done()
-	out := buf.String()
-	if !strings.Contains(out, "Running: loading") {
-		t.Errorf("missing Running message: %q", out)
-	}
-	if !strings.Contains(out, "Done:    loading") {
-		t.Errorf("missing Done message: %q", out)
+	if out := buf.String(); out != "" {
+		t.Errorf("non-TTY progress must be silent, got: %q", out)
 	}
 }
 

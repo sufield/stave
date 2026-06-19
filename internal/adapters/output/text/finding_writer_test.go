@@ -134,7 +134,6 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 		"Skipped Controls: 1",
 		"Exempted Assets: 1",
 		"Excepted Findings: 1",
-		"run `stave diagnose --controls <dir> --observations <dir>`",
 	}
 	for _, want := range contains {
 		if !strings.Contains(out, want) {

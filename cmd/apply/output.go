@@ -59,52 +59,23 @@ func (r *Reporter) ShouldEmit() bool {
 	return r != nil && !r.Quiet
 }
 
-// hasInteractiveUI reports whether the reporter is wired to a
-// runtime capable of providing interactive feedback. The
-// constructor (NewReporter) normally injects a non-nil Runtime,
-// but tests and literal Reporter constructions may leave it nil;
-// this predicate names the capability so callers describe the
-// "we have a hint surface" check rather than a memory-safety
-// probe.
-func (r *Reporter) hasInteractiveUI() bool {
-	return r != nil && r.Runtime != nil
-}
-
 // ReportApply prints the outcome of an evaluation and returns an error when
 // the gate decision (precomputed by stave.EvaluateStandard) indicates a block.
 // The summary message + advisory/block hint plumbing are composed from the
 // primitive StandardResult; the diagnose hint + next steps are built
 // command-side from the security state and resolved dirs.
-func (r *Reporter) ReportApply(res stave.StandardResult, controlsDir, observationsDir string) error {
+func (r *Reporter) ReportApply(res stave.StandardResult) error {
 	if res.SummaryMessage != "" {
 		r.Emit(r.Stderr, res.SummaryMessage)
 	}
 
+	// The findings output is the result; unsolicited "Hint:" / "Next steps:"
+	// chatter on every run is noise (and trained users to ignore stderr).
+	// `stave diagnose` and the other follow-ups are documented in --help.
 	switch res.Gate {
-	case gateAllow:
-		return nil
-	case gateAdvisory:
-		if r.ShouldEmit() {
-			if diagnose := BuildDiagnoseHint(controlsDir, observationsDir); diagnose != "" {
-				ui.WriteHint(r.Stderr, diagnose)
-			}
-		}
+	case gateAllow, gateAdvisory:
 		return nil
 	default: // block
-		if r.ShouldEmit() {
-			// Only emit the diagnose hint when one was actually built. A
-			// bare WriteHint with an empty command renders as a misleading
-			// "next: <empty>" line in the operator's terminal.
-			diagnose := BuildDiagnoseHint(controlsDir, observationsDir)
-			if diagnose != "" {
-				ui.WriteHint(r.Stderr, diagnose)
-			}
-			// Skip the next-steps hint when no runtime is wired. The
-			// violation error is the foundational signal; the hint is UI.
-			if r.hasInteractiveUI() {
-				r.Runtime.PrintNextSteps(applyNextSteps(diagnose)...)
-			}
-		}
 		return ui.ErrViolationsFound
 	}
 }

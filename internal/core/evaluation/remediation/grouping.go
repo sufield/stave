@@ -83,11 +83,15 @@ func (a *accumulator) add(f *Finding) {
 	// the same asset into one group, regardless of remediation
 	// content — wholly unrelated rules would appear merged in the
 	// output. Substitute the (per-finding-unique) FindingID so each
-	// such row stays in its own group, and warn so the upstream
-	// fingerprint-skip surfaces in -v mode.
+	// such row stays in its own group. An empty fingerprint is a
+	// routine condition (a finding whose remediation plan has no
+	// hashable actions) that the fallback handles correctly and the
+	// operator cannot act on, so it is logged at Debug — visible under
+	// -v for diagnosability, but not surfaced as a warning on every
+	// normal run (which read as a failure to early adopters).
 	fingerprint := f.RemediationPlan.ActionsFingerprint
 	if fingerprint == "" {
-		slog.Warn("remediation grouping: empty ActionsFingerprint; falling back to per-finding key",
+		slog.Debug("remediation grouping: empty ActionsFingerprint; falling back to per-finding key",
 			"control_id", f.ControlID, "asset_id", f.AssetID, "finding_id", f.FindingID)
 		fingerprint = "no-fingerprint:" + string(f.FindingID)
 	}

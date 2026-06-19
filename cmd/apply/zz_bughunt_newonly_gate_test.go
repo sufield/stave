@@ -46,7 +46,7 @@ func TestBugHunt_NewOnlyGate_MatchesReportApply(t *testing.T) {
 		res := stave.StandardResult{Gate: gate}
 
 		rep := &Reporter{Quiet: true}
-		standardViolation := errors.Is(rep.ReportApply(res, "ctl", "obs"), ui.ErrViolationsFound)
+		standardViolation := errors.Is(rep.ReportApply(res), ui.ErrViolationsFound)
 		newOnlyViolation := errors.Is(gateViolations(res), ui.ErrViolationsFound)
 
 		if standardViolation != newOnlyViolation {

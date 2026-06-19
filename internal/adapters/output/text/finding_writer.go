@@ -59,7 +59,6 @@ func (w *FindingWriter) marshalVerbose(enriched *appcontracts.EnrichedResult) ([
 	w.writeHeader(d, &result)
 	if len(result.Findings) == 0 {
 		w.writeNoViolationsSummary(d)
-		w.writeCoveragePosture(d, enriched.CoveragePosture)
 		if d.err != nil {
 			return nil, d.err
 		}
@@ -77,10 +76,6 @@ func (w *FindingWriter) marshalVerbose(enriched *appcontracts.EnrichedResult) ([
 	w.writeSkippedControls(d, result.SkippedControls)
 	writeExemptedAssets(d, enriched.ExemptedAssets)
 	w.writeExceptedFindings(d, result.ExceptedFindings)
-	w.writeCoveragePosture(d, enriched.CoveragePosture)
-	if !env.Demo.IsTrue() {
-		d.f("\nNext step: run `stave diagnose --controls <dir> --observations <dir>` for root-cause guidance.\n")
-	}
 
 	if d.err != nil {
 		return nil, d.err

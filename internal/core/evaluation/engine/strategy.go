@@ -63,10 +63,12 @@ func validateCoverage(deps strategyDeps, t *asset.ExposureLifecycle, minSpan tim
 		// Treat a misconfigured validator as "coverage cannot
 		// be assessed" — force INCONCLUSIVE downstream rather
 		// than letting evaluation continue with a struct that
-		// would have produced wrong verdicts. The slog.Warn
-		// surfaces the misconfig so an operator can fix the
-		// strategy thresholds.
-		deps.Logger().Warn("strategy: coverage validator misconfigured; returning insufficient coverage",
+		// would have produced wrong verdicts. Logged at Debug, not
+		// Warn: with a single snapshot the span is legitimately
+		// zero, so this fires on ordinary one-shot evaluations and
+		// is not operator-actionable — surfacing it at warn level
+		// is stderr noise. Visible under -v for diagnosis.
+		deps.Logger().Debug("strategy: coverage validator misconfigured; returning insufficient coverage",
 			"min_span", minSpan, "max_gap", deps.ContinuityLimit(), "error", err)
 		return fmt.Sprintf("coverage validator misconfigured: %v", err), false
 	}

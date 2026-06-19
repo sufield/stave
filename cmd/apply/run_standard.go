@@ -23,12 +23,6 @@ func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio Sta
 	rt := ui.NewRuntime(sio.Stdout, sio.Stderr)
 	rt.Quiet = sio.Quiet
 
-	// Disclosed fallback: no --controls and no controls/ dir → embedded catalog.
-	if cfg.UseBuiltinCatalog {
-		fmt.Fprintf(sio.Stderr, "note: no --controls given and no controls/ directory found — "+
-			"evaluating against the built-in control catalog. Pass --controls <dir> to use your own.\n")
-	}
-
 	done := rt.BeginProgress("apply controls against observations")
 	res, err := stave.EvaluateStandard(ctx, stave.StandardRequest{
 		ControlsDir:        cfg.ControlsDir,
@@ -85,7 +79,7 @@ func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio Sta
 		return rep.CheckSLAPolicy(SLAPolicy(opts.SLAPolicy), res)
 	}
 
-	if reportErr := rep.ReportApply(res, cfg.ControlsDir, cfg.ObservationsDir); reportErr != nil {
+	if reportErr := rep.ReportApply(res); reportErr != nil {
 		return reportErr
 	}
 	return rep.CheckSLAPolicy(SLAPolicy(opts.SLAPolicy), res)

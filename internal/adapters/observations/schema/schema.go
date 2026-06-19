@@ -204,7 +204,12 @@ func LogValidationResult(logger *slog.Logger, res ValidationResult) {
 		logger = slog.Default()
 	}
 	if len(res.MissingRequired) > 0 {
-		logger.Warn("schema: required field absent in observation",
+		// Debug, not Warn: a partial snapshot (some fields not captured)
+		// is a normal, expected condition, not something the operator must
+		// act on. Surfacing it at warn level on every run is stderr noise
+		// that trains users to ignore warnings. It remains visible under
+		// -v for anyone debugging why a control did not fire.
+		logger.Debug("schema: required field absent in observation",
 			"category", "missing_required_field",
 			"asset_id", res.AssetID,
 			"asset_type", res.AssetType,
