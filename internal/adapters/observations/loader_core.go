@@ -2,6 +2,7 @@
 package observations
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -190,7 +191,7 @@ func isBundleFormat(data []byte) bool {
 	if err := json.Unmarshal(data, &probe); err != nil {
 		return false
 	}
-	return len(probe.Snapshots) > 0 && len(probe.Assets) == 0
+	return len(probe.Snapshots) > 0 && !bytes.Equal(bytes.TrimSpace(probe.Snapshots), []byte("null")) && len(probe.Assets) == 0
 }
 
 func buildInputHashes(fileHashes map[string]string) *evaluation.InputHashes {

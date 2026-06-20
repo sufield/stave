@@ -531,3 +531,24 @@ func TestObservationLoader_isBundleFormat_AmbiguousFile(t *testing.T) {
 		t.Errorf("expected error to mention additional properties, got: %v", err)
 	}
 }
+
+func TestIsBundleFormat_NullSnapshots(t *testing.T) {
+	// A JSON payload where "snapshots" is explicitly null, which should NOT be treated as a bundle.
+	content := []byte(`{"snapshots": null}`)
+	if isBundleFormat(content) {
+		t.Error("isBundleFormat should return false for snapshots: null, but returned true")
+	}
+
+	// It should also return false for actual empty/missing snapshots or when they are not an array.
+	contentEmpty := []byte(`{"assets": []}`)
+	if isBundleFormat(contentEmpty) {
+		t.Error("isBundleFormat should return false for missing snapshots")
+	}
+
+	// Let's check a valid bundle format
+	contentValid := []byte(`{"snapshots": []}`)
+	if !isBundleFormat(contentValid) {
+		t.Error("isBundleFormat should return true for empty snapshots array")
+	}
+}
+

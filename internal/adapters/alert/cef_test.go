@@ -90,6 +90,7 @@ func TestCEFEscape(t *testing.T) {
 		{`eq=sign`, `eq\=sign`},
 		{"new\nline", `new\nline`},
 		{`all\|=` + "\n", `all\\\|\=\n`},
+		{"carriage\rreturn", `carriage\rreturn`},
 	}
 	for _, tt := range tests {
 		got := cefEscape(tt.input)

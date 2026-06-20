@@ -337,6 +337,41 @@ func TestIdentityIndexAt(t *testing.T) {
 	}
 }
 
+func TestIdentityIndexAt_ConcurrentSnapshots(t *testing.T) {
+	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	idx := BuildIdentityIndex([]asset.Snapshot{
+		{CapturedAt: base, Identities: []asset.CloudIdentity{{ID: "id-1"}}},
+		{CapturedAt: base, Identities: []asset.CloudIdentity{{ID: "id-2"}}},
+		{CapturedAt: base.Add(2 * time.Hour), Identities: []asset.CloudIdentity{{ID: "id-3"}}},
+	})
+
+	// Exact match at concurrent timestamp
+	ids := idx.At(base)
+	if len(ids) != 2 {
+		t.Fatalf("expected 2 identities for concurrent snapshot, got %d: %v", len(ids), ids)
+	}
+	hasId1 := false
+	hasId2 := false
+	for _, id := range ids {
+		if id.ID == "id-1" {
+			hasId1 = true
+		}
+		if id.ID == "id-2" {
+			hasId2 = true
+		}
+	}
+	if !hasId1 || !hasId2 {
+		t.Fatalf("missing expected identities in concurrent snapshot: %v", ids)
+	}
+
+	// Fallback to concurrent snapshots
+	ids = idx.At(base.Add(time.Hour))
+	if len(ids) != 2 {
+		t.Fatalf("expected 2 fallback identities, got %d: %v", len(ids), ids)
+	}
+}
+
+
 func TestBuildIdentityIndex(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	snapshots := []asset.Snapshot{

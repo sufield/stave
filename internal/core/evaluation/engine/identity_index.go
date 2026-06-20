@@ -53,12 +53,36 @@ func (idx IdentityIndex) At(t time.Time) []asset.CloudIdentity {
 	})
 
 	if found && i < len(idx.entries) {
-		return idx.entries[i].identities
+		// Exact match found at index i.
+		// Since there may be multiple entries with the same timestamp, gather all of them.
+		matchTime := idx.entries[i].capturedAt
+		return idx.mergeIdentitiesAt(i, matchTime)
 	}
 
 	// i is the insertion point — the entry before it is the closest at-or-before.
 	if i > 0 {
-		return idx.entries[i-1].identities
+		matchTime := idx.entries[i-1].capturedAt
+		return idx.mergeIdentitiesAt(i-1, matchTime)
 	}
 	return nil
 }
+
+// mergeIdentitiesAt gathers and merges all identities from entries sharing matchTime,
+// starting the scan from a known index idxRef.
+func (idx IdentityIndex) mergeIdentitiesAt(idxRef int, matchTime time.Time) []asset.CloudIdentity {
+	start := idxRef
+	for start > 0 && idx.entries[start-1].capturedAt.Equal(matchTime) {
+		start--
+	}
+	end := idxRef
+	for end < len(idx.entries)-1 && idx.entries[end+1].capturedAt.Equal(matchTime) {
+		end++
+	}
+
+	var merged []asset.CloudIdentity
+	for k := start; k <= end; k++ {
+		merged = append(merged, idx.entries[k].identities...)
+	}
+	return merged
+}
+
