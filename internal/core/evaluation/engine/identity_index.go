@@ -85,4 +85,3 @@ func (idx IdentityIndex) mergeIdentitiesAt(idxRef int, matchTime time.Time) []as
 	}
 	return merged
 }
-

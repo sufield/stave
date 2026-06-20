@@ -371,7 +371,6 @@ func TestIdentityIndexAt_ConcurrentSnapshots(t *testing.T) {
 	}
 }
 
-
 func TestBuildIdentityIndex(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	snapshots := []asset.Snapshot{

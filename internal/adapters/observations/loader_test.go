@@ -551,4 +551,3 @@ func TestIsBundleFormat_NullSnapshots(t *testing.T) {
 		t.Error("isBundleFormat should return true for empty snapshots array")
 	}
 }
-
