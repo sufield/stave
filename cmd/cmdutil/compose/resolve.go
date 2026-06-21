@@ -11,8 +11,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/core/diag"
-	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
 )
 
@@ -60,40 +58,6 @@ func ResolveFormatValue(raw string) (appcontracts.OutputFormat, error) {
 		return "", fmt.Errorf("parse output format: %w", err)
 	}
 	return f, nil
-}
-
-// ResolveNowDiag parses a --now flag value and returns a diagnostic issue on failure.
-// Use this instead of inline ParseRFC3339 + diag.Finding construction.
-func ResolveNowDiag(raw string) (time.Time, *diag.Finding) {
-	t, err := cliflags.ParseRFC3339(raw, "--now")
-	if err != nil {
-		issue := diag.NewFinding(diag.RuleInvalidNowTime).
-			Error().
-			Remediation("Use RFC3339 format").
-			FixCommand("stave validate --now 2026-01-15T00:00:00Z").
-			Attribute("value", raw).
-			SensitiveAttribute("error", err.Error()).
-			Build()
-		return time.Time{}, &issue
-	}
-	return t, nil
-}
-
-// ResolveDurationDiag parses a duration flag value and returns a diagnostic issue on failure.
-// Use this instead of inline kernel.ParseDuration + diag.Finding construction.
-func ResolveDurationDiag(raw string) (*time.Duration, *diag.Finding) {
-	dur, err := kernel.ParseDuration(raw)
-	if err != nil {
-		issue := diag.NewFinding(diag.RuleInvalidMaxUnsafe).
-			Error().
-			Remediation("Use format like 168h, 7d, or 1d12h").
-			FixCommand("stave validate --max-unsafe 168h").
-			Attribute("value", raw).
-			SensitiveAttribute("error", err.Error()).
-			Build()
-		return nil, &issue
-	}
-	return &dur, nil
 }
 
 // EmptyDash returns "-" if the string is whitespace-only.

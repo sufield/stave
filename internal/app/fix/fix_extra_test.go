@@ -6,87 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/internal/core/asset"
-	"github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation"
-	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
 )
-
-func makeRemFinding(ctlID string, assetID string) remediation.Finding {
-	return remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:   kernel.ControlID(ctlID),
-			ControlName: ctlID,
-			AssetID:     asset.ID(assetID),
-			AssetType:   "aws_s3_bucket",
-		},
-	}
-}
-
-// ---------------------------------------------------------------------------
-// SelectFinding
-// ---------------------------------------------------------------------------
-
-func TestSelectFinding_Found(t *testing.T) {
-	findings := []remediation.Finding{
-		makeRemFinding("CTL.TEST.001", "bucket-a"),
-		makeRemFinding("CTL.TEST.002", "bucket-b"),
-	}
-	f, err := SelectFinding(findings, "CTL.TEST.002@bucket-b")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if f.ControlID != "CTL.TEST.002" {
-		t.Fatalf("got control %s", f.ControlID)
-	}
-}
-
-func TestSelectFinding_NotFound(t *testing.T) {
-	findings := []remediation.Finding{
-		makeRemFinding("CTL.TEST.001", "bucket-a"),
-	}
-	_, err := SelectFinding(findings, "CTL.TEST.999@bucket-z")
-	if err == nil {
-		t.Fatal("expected error for not found")
-	}
-	if !strings.Contains(err.Error(), "CTL.TEST.001@bucket-a") {
-		t.Fatalf("error should list available findings: %v", err)
-	}
-}
-
-// ---------------------------------------------------------------------------
-// FindingKey
-// ---------------------------------------------------------------------------
-
-func TestFindingKey(t *testing.T) {
-	f := makeRemFinding("CTL.S3.PUBLIC.001", "my-bucket")
-	got := FindingKey(&f)
-	if got != "CTL.S3.PUBLIC.001@my-bucket" {
-		t.Fatalf("FindingKey = %q", got)
-	}
-}
-
-// ---------------------------------------------------------------------------
-// WriteFixResult
-// ---------------------------------------------------------------------------
-
-func TestWriteFixResult(t *testing.T) {
-	f := makeRemFinding("CTL.TEST.001", "bucket-a")
-	f.RemediationSpec = controldef.RemediationSpec{Action: "Fix it"}
-	var buf bytes.Buffer
-	if err := WriteFixResult(&buf, &f); err != nil {
-		t.Fatal(err)
-	}
-	out := buf.String()
-	if !strings.Contains(out, "CTL.TEST.001") {
-		t.Fatalf("missing control ID: %s", out)
-	}
-	if !strings.Contains(out, "bucket-a") {
-		t.Fatalf("missing asset ID: %s", out)
-	}
-}
 
 // ---------------------------------------------------------------------------
 // ValidateLoopDirs

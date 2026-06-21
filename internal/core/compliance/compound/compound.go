@@ -26,29 +26,6 @@ type Finding struct {
 	Message string `json:"message"`
 }
 
-// IsFullyAcknowledged reports whether every TriggerID of this compound
-// finding is covered by the supplied set of valid acknowledgments. A
-// finding with no triggers (a degenerate or partially-constructed
-// rule) returns false — the absence of triggers is not equivalent to
-// acknowledgment, and treating it as "fully acked" would silently
-// drop compound findings whose rule omitted the trigger list.
-//
-// Used by the evaluate command to filter compound findings whose
-// underlying triggers have all been excepted; the filter semantics
-// belong on the type that owns TriggerIDs so callers stop iterating
-// the slice and reproducing the all-or-nothing rule by hand.
-func (f *Finding) IsFullyAcknowledged(validAcks map[string]struct{}) bool {
-	if f == nil || len(f.TriggerIDs) == 0 {
-		return false
-	}
-	for _, tid := range f.TriggerIDs {
-		if _, ok := validAcks[tid]; !ok {
-			return false
-		}
-	}
-	return true
-}
-
 // Rule defines a single compound risk detection pattern.
 type Rule struct {
 	// ID uniquely identifies this rule.

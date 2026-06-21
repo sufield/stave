@@ -48,9 +48,8 @@ func (r *TraceResult) RenderText(w io.Writer) error {
 }
 
 // stickyTraceWriter captures the first write error so subsequent
-// fmt.Fprintf calls become no-ops. Mirrors the stickyWriter pattern
-// in internal/profile/reporter/text.go so trace rendering and
-// profile rendering share the same error-handling shape.
+// fmt.Fprintf calls become no-ops — the shared stickyWriter pattern
+// so a broken pipe surfaces once instead of dropping trailing lines.
 type stickyTraceWriter struct {
 	w   io.Writer
 	err error

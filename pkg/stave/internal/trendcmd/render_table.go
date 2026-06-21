@@ -7,10 +7,9 @@ import (
 )
 
 // trendErrWriter captures the first write error so subsequent
-// fmt.Fprintf calls become no-ops. Mirrors the stickyWriter pattern
-// in internal/profile/reporter/text.go so trend renders surface
-// broken-pipe failures (operator pipes stave to head, etc.) instead
-// of dropping trailing lines silently.
+// fmt.Fprintf calls become no-ops — the shared stickyWriter pattern
+// so trend renders surface broken-pipe failures (operator pipes
+// stave to head, etc.) instead of dropping trailing lines silently.
 type trendErrWriter struct {
 	w   io.Writer
 	err error

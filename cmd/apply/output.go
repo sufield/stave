@@ -52,13 +52,6 @@ func (r *Reporter) Emit(w io.Writer, msg string) {
 	_, _ = fmt.Fprintln(w, msg)
 }
 
-// ShouldEmit reports whether the reporter is currently emitting
-// output. Used by call sites that wrap multiple prints in a single
-// branch (the LevelBlock case below).
-func (r *Reporter) ShouldEmit() bool {
-	return r != nil && !r.Quiet
-}
-
 // ReportApply prints the outcome of an evaluation and returns an error when
 // the gate decision (precomputed by stave.EvaluateStandard) indicates a block.
 // The summary message + advisory/block hint plumbing are composed from the

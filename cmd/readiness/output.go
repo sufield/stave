@@ -3,6 +3,7 @@ package readiness
 import (
 	"fmt"
 	"io"
+	"maps"
 	"slices"
 
 	"github.com/sufield/stave/pkg/stave"
@@ -152,10 +153,5 @@ func writeLines(w io.Writer, lines []string) error {
 }
 
 func sortedKeys(m map[stave.AssetType]int) []stave.AssetType {
-	keys := make([]stave.AssetType, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	slices.Sort(keys)
-	return keys
+	return slices.Sorted(maps.Keys(m))
 }

@@ -113,7 +113,6 @@
 //	ExportChanges      — remediation property changes as JSON.
 //	ExportTickets      — findings as ticket records (json/csv).
 //	RenderFeatures     — in-scope (discovered) + out-of-scope capability report.
-//	EvaluateSnapshot   — run a compliance profile over a snapshot (text/json).
 //	BisectControl      — find when a control was first violated (text/json).
 //	ExplainControl     — catalog-only explanation of one control.
 //	SuggestControlIDs  — fuzzy-suggest control IDs for a partial query.

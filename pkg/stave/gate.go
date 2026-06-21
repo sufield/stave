@@ -9,7 +9,6 @@ import (
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	"github.com/sufield/stave/internal/adapters/observations"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	infragate "github.com/sufield/stave/internal/app/gate"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -104,18 +103,6 @@ func (r *GateResult) PassLabel() string {
 		return "PASS"
 	}
 	return "FAIL"
-}
-
-// ExitError translates the gate result into the error sentinel CI
-// gates expect: nil on pass, appcontracts.ErrViolationsFound on fail.
-// The cmd/enforce/gate runner returns this directly so the
-// pkg/stave consumer and the CLI runner share one source of truth
-// for exit-code mapping.
-func (r *GateResult) ExitError() error {
-	if r.Passed {
-		return nil
-	}
-	return appcontracts.ErrViolationsFound
 }
 
 // MergeTeamVerdict folds a per-team gate result into this global
