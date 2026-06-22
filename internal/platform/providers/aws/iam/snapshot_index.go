@@ -131,11 +131,11 @@ func ExtractAccountIDFromARN(arn string) string {
 
 	// The account ID is between c4 and the next colon or the end of the string
 	rem := arn[c4+1:]
-	c5 := strings.IndexByte(rem, ':')
-	if c5 == -1 {
+	before, _, ok := strings.Cut(rem, ":")
+	if !ok {
 		return rem
 	}
-	return rem[:c5]
+	return before
 }
 
 // stringProperty walks a nested map[string]any using the supplied

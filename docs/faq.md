@@ -269,7 +269,7 @@ Stave is a pure function: files in, findings out.
 
 ## Are all controls YAML or are some implemented in Go?
 
-All 246 controls are declarative YAML. Zero controls are implemented as Go functions.
+All 2,674 controls are declarative YAML. Zero controls are implemented as Go functions.
 
 Every control is a YAML file with an `unsafe_predicate` evaluated by the CEL engine. Adding a new control means writing a YAML file — no Go code, no compilation, no engine changes.
 
@@ -467,40 +467,17 @@ go test ./cmd/stave/ -run TestScripts/smoke -v
 
 These tests run as part of `make test` (which executes `go test ./...`). They are the primary integration test suite — each script exercises the real CLI binary against real control YAML and observation JSON files embedded in the `.txtar` archive.
 
-## How does `security-audit` differ from the Logic Trace (`--trace`)?
+## What is the Logic Trace (`--trace`)?
 
-They serve different purposes at different layers.
-
-**`stave security-audit`** evaluates the Stave binary itself — supply chain
-integrity, build hardening, vulnerability assessment, SBOM generation. It
-answers: *"Is this tool trustworthy?"* It produces evidence for auditors about
-Stave's own security posture, not about the infrastructure Stave evaluates.
-
-**`stave apply --trace`** records the evaluation engine's reasoning chain —
+`stave apply --trace` records the evaluation engine's reasoning chain —
 step-by-step decisions for every control × asset pair. It answers: *"Why did
 the engine reach this verdict?"* It produces a `trace.v0.1` JSON with exemption
-checks, predicate evaluations, threshold checks, and verdict decisions.
-
-| | `security-audit` | `apply --trace` |
-|---|---|---|
-| **Subject** | The Stave binary | Infrastructure findings |
-| **Question** | "Is this tool secure?" | "Why did this fire?" |
-| **Output** | SBOM, vuln report, build info | trace.v0.1 JSON |
-| **Audience** | Auditors, compliance | Security engineers |
-| **Layer** | Meta (tool about itself) | Engine internals |
-
-They are complementary:
-
-- `security-audit` builds trust in the **tool**.
-- `--trace` builds trust in the **verdict**.
+checks, predicate evaluations, threshold checks, and verdict decisions — the
+evidence that builds trust in the **verdict**.
 
 Example workflow:
 
 ```bash
-# 1. Verify the tool itself is trustworthy
-stave security-audit --sbom cyclonedx --format json
-
-# 2. Evaluate infrastructure and record reasoning
 stave apply --controls controls/s3 --observations obs/ \
   --max-unsafe 168h --trace audit_trace.json --format json > eval.json
 ```

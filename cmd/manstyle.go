@@ -81,6 +81,13 @@ func ApplyManStyle(root *cobra.Command) {
 	// so non-interactive help can fall back to it.
 	base := root.HelpFunc()
 	root.SetHelpFunc(func(c *cobra.Command, args []string) {
+		// Filter the command listing by dev-only status before rendering,
+		// restoring original visibility afterwards so the toggle never
+		// leaks into the live command tree (gen-man / cli-schema walk the
+		// tree directly and must see the unfiltered set).
+		showDev, _ := c.Root().PersistentFlags().GetBool(flagShowDev)
+		defer applyDevVisibility(c, showDev)()
+
 		out := c.OutOrStdout()
 		// Non-interactive output (pipes, redirects, CI, the CLI-docs generator
 		// that scrapes `--help`, and golden tests) gets the STABLE default cobra
@@ -99,6 +106,44 @@ func ApplyManStyle(root *cobra.Command) {
 		c.SetOut(out)
 		_ = closePager()
 	})
+}
+
+// flagShowDev is the persistent flag that inverts the help listing to show
+// only development-only commands. Registered in AddGlobalFlags (flags.go),
+// read in the help func above.
+const flagShowDev = "show-dev"
+
+// applyDevVisibility hides commands from c's help listing according to showDev,
+// returning a restore func that reverts the change. With showDev false (the
+// default) it hides development-only commands so the listing is the production
+// surface; with showDev true it hides everything else, leaving only the
+// dev-only commands. Visibility is toggled, then restored by the caller's
+// defer, so the mutation lives only for the duration of one help render.
+//
+// When c is itself a dev-only command (e.g. `stave forge --help`), its whole
+// subtree is dev tooling — filtering there would hide the very subcommands the
+// user asked to see — so the filter is a no-op. It only applies at a mixed
+// listing such as the root, where dev and production commands coexist.
+func applyDevVisibility(c *cobra.Command, showDev bool) func() {
+	if isDevOnlyCommand(c) {
+		return func() {}
+	}
+	var restore []func()
+	for _, sub := range c.Commands() {
+		if sub.Hidden {
+			continue // already hidden (gen-man, etc.) — leave as-is
+		}
+		if isDevOnlyCommand(sub) != showDev {
+			s := sub
+			s.Hidden = true
+			restore = append(restore, func() { s.Hidden = false })
+		}
+	}
+	return func() {
+		for _, f := range restore {
+			f()
+		}
+	}
 }
 
 // NewGenManCmd generates real man pages (stave.1, stave-apply.1, …) into DIR.

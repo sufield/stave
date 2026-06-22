@@ -75,6 +75,10 @@ inherited_options:
       default_value: "false"
       usage: |
         Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: show-dev
+      default_value: "false"
+      usage: |
+        In --help, list only development-only commands (default: hide them from the listing)
     - name: strict
       default_value: "false"
       usage: |

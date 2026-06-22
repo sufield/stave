@@ -24,6 +24,14 @@ func AddGlobalFlags(root *cobra.Command, flags *globalFlagsType) {
 	p.BoolVarP(&flags.Yes, cliflags.FlagYes, "y", false, "Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)")
 	p.BoolVar(&flags.NoColor, "no-color", false, "Disable ANSI colors in output")
 
+	// Help-listing filter. Default --help hides development-only
+	// commands (forge, generate) so the standard listing is the
+	// production surface; --show-dev inverts the filter to list only
+	// those commands. Read in the help func (manstyle.go); never bound
+	// to a struct field because it affects help rendering only, not
+	// bootstrap config.
+	p.Bool(flagShowDev, false, "In --help, list only development-only commands (default: hide them from the listing)")
+
 	// Logging
 	p.CountVarP(&flags.Verbosity, "verbose", "v", "Increase verbosity (-v=INFO, -vv=DEBUG)")
 	p.Var(&flags.LogLevel, "log-level", "Log level: debug|info|warn|error (overrides -v)")

@@ -95,33 +95,31 @@ func resolveMapProperty(props map[string]any, path []string) map[string]any {
 
 func extractAccountID(arn string) string {
 	curr := arn
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		idx := strings.IndexByte(curr, ':')
 		if idx == -1 {
 			return ""
 		}
 		curr = curr[idx+1:]
 	}
-	if nextIdx := strings.IndexByte(curr, ':'); nextIdx != -1 {
-		return curr[:nextIdx]
+	if before, _, ok := strings.Cut(curr, ":"); ok {
+		return before
 	}
 	return curr
 }
 
 func extractService(arn string) string {
-	idx1 := strings.IndexByte(arn, ':')
-	if idx1 == -1 {
+	_, after, ok := strings.Cut(arn, ":")
+	if !ok {
 		return ""
 	}
-	rest1 := arn[idx1+1:]
-	idx2 := strings.IndexByte(rest1, ':')
-	if idx2 == -1 {
+	_, after, ok = strings.Cut(after, ":")
+	if !ok {
 		return ""
 	}
-	rest2 := rest1[idx2+1:]
-	idx3 := strings.IndexByte(rest2, ':')
-	if idx3 == -1 {
-		return rest2
+	before, _, ok := strings.Cut(after, ":")
+	if !ok {
+		return after
 	}
-	return rest2[:idx3]
+	return before
 }
