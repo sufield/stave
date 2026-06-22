@@ -148,57 +148,47 @@ References:
 - [SecurityWeek: AWS Trusted Advisor Tricked Into Showing Unprotected S3 Buckets as Secure](https://www.securityweek.com/aws-trusted-advisor-tricked-into-showing-unprotected-s3-buckets-as-secure/)
 - [CheckRed: AWS Bypass — Misconfigurations Still Threaten Cloud Security](https://checkred.com/resources/blog/when-secure-isnt-what-the-trusted-advisor-s3-bypass-reveals-about-aws-misconfigurations/)
 
-## How does Stave protect against accidental destruction in production?
+## How does Stave keep developer-only commands out of production?
 
-Stave uses a **two-key safety model** for any commands an operator marks
-as sensitive via the `blocked_commands` config. Both conditions must be
-true for the production guard to activate:
+Stave has **no destructive commands** — every command reads observation
+snapshots and writes findings; nothing modifies or deletes infrastructure.
+There is no "accidental destruction" for Stave to cause.
 
-1. **Key 1: Edition** — the binary must be built with the dev edition label (`stave-dev`)
-2. **Key 2: Environment** — the runtime must be detected as production (`STAVE_ENV=production` or a context with `production: true`)
+A few commands are **developer-workflow** tools, though, that have no place
+in a production environment:
 
-This is defense-in-depth. A single misconfiguration cannot cause a disaster:
+- `generate` — scaffolds starter artifacts (project/observation templates).
+- `forge` — authors and tests custom controls.
 
-| Scenario | Binary | Environment | Guard activates? | Result |
-|---|---|---|---|---|
-| CI pipeline | `stave` | production | No | All commands run freely (standard deployment) |
-| Developer laptop | `stave` or `stave-dev` | not production | No | All commands run freely (local sandbox) |
-| Shared environment | `stave-dev` | production | **Yes** | Destructive commands blocked, read-only commands warn |
-| Accidental env var | `stave` | production | No | Safe — production binary never activates guard |
+These are tagged **dev-only** in the CLI (a Cobra annotation,
+`cmdutil.AnnotationDevOnly`, on the command). Before any command runs, the
+bootstrap guard checks two things:
 
-**Why two keys instead of one?** If the guard only checked `STAVE_ENV`, then unsetting the variable (or a typo) would silently disable protection. Requiring the dev edition binary as the first key means the standard `stave` binary is always safe regardless of environment configuration. You have to **intentionally deploy the dev binary** to a production-marked environment for the guard to matter.
+1. **Is the command dev-only?** The check walks the command's ancestry, so
+   tagging `forge` or `generate` automatically covers every subcommand
+   (`forge new`, `generate observation`, …).
+2. **Is this a production environment?** Detected via `STAVE_ENV=production`,
+   or an active context with `production: true`:
 
-### Layer 1: Environment detection
+   ```yaml
+   contexts:
+     prod-us-east:
+       project_root: /ops/stave
+       production: true
+   ```
 
-Set `STAVE_ENV=production` in production CI/CD runners and deployment environments, or mark contexts as production:
-
-```yaml
-contexts:
-  prod-us-east:
-    project_root: /ops/stave
-    production: true
-```
-
-When detected, the dev binary:
-- **Hard-blocks** any command listed in `blocked_commands` with a clear error
-- **Warns** on read-only commands (allows break-glass debugging)
+If both are true, the command is **rejected** with a clear error and a
+non-zero exit code:
 
 ```bash
 export STAVE_ENV=production
-# With `blocked_commands: [enforce]` configured:
-stave-dev enforce   # BLOCKED: "command 'enforce' is blocked in production"
-stave-dev doctor    # WARNING printed, then runs (read-only)
+stave forge new        # error: command "new" is development-only and cannot run in production
+stave apply ...        # runs normally — not a dev-only command
 ```
 
-### Layer 2: IAM boundaries (the gold standard)
-
-The most robust defense ensures developer credentials cannot modify production data at the cloud layer:
-
-| Environment | Binary | Credentials | Can read | Can write/delete |
-|---|---|---|---|---|
-| CI/CD pipeline | `stave` | Service account | Yes | Yes |
-| Developer laptop | `stave-dev` | Developer IAM role | Yes (break-glass) | No |
-| Local sandbox | `stave` or `stave-dev` | Sandbox credentials | Yes | Yes |
+The dev-only set is declared **in code**, not via config — there is no
+`blocked_commands` list to set or keep in sync. Marking a new command
+dev-only is one annotation: `cmdutil.AnnotationDevOnly: "true"`.
 
 ## Why are there two binaries (`stave` and `stave-dev`)?
 
@@ -210,15 +200,18 @@ The only difference is the **edition label**:
 |---|---|---|
 | Edition | `production` | `dev` |
 | `--version` output | `0.0.3 (production)` | `0.0.3 (dev)` |
-| Production guard | Never activates | Activates when `STAVE_ENV=production` |
 | Panic recovery message | Suggests `doctor` | Suggests `bug-report` |
 
-**Why not a single binary with a flag?** The two-key model requires the safety decision to be made at **build time** (which binary to deploy), not at **runtime** (which flag to pass). A `--dev` flag could be accidentally included in a CI script. A deployment that installs `stave` instead of `stave-dev` is safe by construction — there is no flag to discover, no config to override.
+The edition is a **build-time diagnostic label** — it fixes what `--version`
+and crash hints report, so there is no runtime `--dev` flag to accidentally
+set in a CI script. It is *not* a safety toggle: the development-only command
+guard (see above) is keyed on the production environment, not on the edition,
+so **both** binaries reject `forge` / `generate` in production.
 
 **When to use which:**
 
-- **`stave`** — standard deployment for CI pipelines, production evaluation, and automated workflows. The production guard never activates, so all commands run without warnings or blocks.
-- **`stave-dev`** — for shared environments where you want the production guard active. Deploy alongside `STAVE_ENV=production` or production-marked contexts to block destructive commands while allowing break-glass debugging.
+- **`stave`** — standard deployment for CI pipelines, production evaluation, and automated workflows.
+- **`stave-dev`** — developer machines; its `--version` and crash hints point at developer tooling.
 
 ## What is the output contract schema (`out.v0.1`)?
 
@@ -375,7 +368,6 @@ Command Output Contracts:
   gate               gate.v0.1
   snapshot_archive   snapshot_archive.v0.1
   snapshot_plan      snapshot_plan.v0.1
-  snapshot_prune     snapshot_prune.v0.1
   snapshot_quality   snapshot_quality.v0.1
   validate           validate.v0.1
 

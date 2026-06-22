@@ -7,3 +7,13 @@ package cmdutil
 //
 //	Annotations: map[string]string{cmdutil.AnnotationConfigOptional: "true"}
 const AnnotationConfigOptional = "stave:config-optional"
+
+// AnnotationDevOnly marks a command (and, by ancestry, its subcommands) as a
+// developer-workflow command that must not run against production — e.g.
+// project scaffolding (`generate`) or control authoring (`forge`). The
+// bootstrap production guard rejects these when a production environment is
+// detected. The commands are not destructive; they simply have no place in
+// production. Set in the command's Annotations map:
+//
+//	Annotations: map[string]string{cmdutil.AnnotationDevOnly: "true"}
+const AnnotationDevOnly = "stave:dev-only"

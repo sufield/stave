@@ -11,7 +11,7 @@
 
 - [FAQ](faq.md) — Terminology, approach, and how Stave differs from existing tools
 - [Design Philosophy](design-philosophy.md) — Why Stave works the way it does
-- [System Controls as Code](system-invariant-as-code.md) — Controls-based safety evaluation
+- [System Invariant as Code](system-invariant-as-code.md) — invariant-based safety evaluation
 - [Evaluation Semantics](evaluation-semantics.md) — How findings are produced
 - [Risk Reasoning Engine](risk-reasoning.md) — Compound risk scoring, safety chains, attack stages, exposure ranking
 - [Blast Radius](blast-radius.md) — Scope-aware multipliers, detection blindness, interpreting output

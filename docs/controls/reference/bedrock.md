@@ -1,0 +1,367 @@
+# Control Reference — BEDROCK
+
+> Auto-generated from the built-in control catalog.
+> Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
+>
+> Back to the [control reference index](../reference.md).
+
+### CTL.BEDROCK.ACCESS.ADMIN.001
+
+**Bedrock API Keys Must Not Have Administrative Privileges**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+IAM users with Bedrock API keys must not have policies granting bedrock:* or full administrative access. A compromised overprivileged key can invoke models at scale, modify guardrails and logging, and escalate IAM privileges.
+
+**Remediation:** Scope the IAM user's policies to only the Bedrock actions required (e.g., bedrock:InvokeModel on specific models).
+
+---
+
+### CTL.BEDROCK.ACCESS.FULLACCESS.001
+
+**IAM Roles Must Not Use AmazonBedrockFullAccess Policy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+IAM roles (excluding service-linked roles) must not have the AWS-managed AmazonBedrockFullAccess policy attached. This policy grants unrestricted access to all Bedrock actions and resources. If the role is compromised, an attacker can invoke any model, modify guardrails and logging, and incur significant costs.
+
+**Remediation:** Replace AmazonBedrockFullAccess with a scoped policy granting only required Bedrock actions on specific model ARNs.
+
+---
+
+### CTL.BEDROCK.ACCESS.LONGTERM.001
+
+**Bedrock API Keys Must Not Be Long-Lived**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+Bedrock API keys must have appropriate expiration dates. Long-lived or non-expiring keys enable persistent access if compromised — unauthorized inference, exposure of prompts/outputs, uncontrolled cost, and inability to timely revoke credentials.
+
+**Remediation:** Set an appropriate expiration on the API key. Rotate keys regularly and use short-lived credentials where possible.
+
+---
+
+### CTL.BEDROCK.AGENT.ACTIONGROUPS.SPRAWL.001
+
+**Bedrock Agent Action-Group Count Must Be Bounded**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6, CM-2; owasp_nhi: NHI5; soc2: CC6.1, CC8.1;
+
+Bedrock agent has more than 10 action groups attached. Each action group is a Lambda function or API schema the agent can invoke; sprawled action-group lists expand the agent's blast radius beyond its stated purpose, often because teams stack ad-hoc tool integrations onto a single agent rather than splitting capability into purpose-built agents. Same shape as CTL.SQS.POLICY.SPRAWL and CTL.SECRETS.POLICY.SPRAWL — accumulated permission attachments that hide effective reachability. An attacker who controls the prompt enumerates the larger surface; legitimate operators no longer reason about what the agent can do.
+
+**Remediation:** Split the agent into purpose-built agents (one per customer workflow) so each agent's action-group list stays small and reviewable. Remove inactive or deprecated action groups via DeleteAgentActionGroup.
+
+---
+
+### CTL.BEDROCK.AGENT.GHOST.LAMBDA.001
+
+**Bedrock Agent Action Group Must Not Reference Deleted Lambda**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2, CM-8; owasp_nhi: NHI1; soc2: CC8.1;
+
+Bedrock agent has at least one action group whose actionGroupExecutor.lambda field references a Lambda function ARN that no longer exists. Same shape as the Cognito ghost-trigger family (CTL.COGNITO.GHOST.PRESIGNUP.001 et al) applied to Bedrock action groups. The agent's tool list advertises a capability it cannot deliver; either the action group should be deleted (because the underlying Lambda is gone) or the Lambda should be restored. Ghost references are the canonical NHI1 (improper offboarding) failure mode: the surrounding configuration retains active references to decommissioned dependencies.
+
+**Remediation:** Either delete the orphan action group via DeleteAgentActionGroup, or restore the missing Lambda function and reattach it. Re-prepare the agent with PrepareAgent after the change.
+
+---
+
+### CTL.BEDROCK.AGENT.GUARDRAIL.001
+
+**Bedrock Agents Must Have an Associated Guardrail**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-10; soc2: CC6.1;
+
+Bedrock agents must have a guardrail associated with their sessions. Without guardrails, agent exchanges may expose PII or internal data, accept prompt injections that manipulate tool calls, and produce unsafe or out-of-scope responses. Agents can invoke tools and APIs — an unguarded agent is an unguarded API caller.
+
+**Remediation:** Associate a guardrail with the agent via the guardrailConfiguration setting in the agent definition.
+
+---
+
+### CTL.BEDROCK.AGENT.LOGGING.001
+
+**Bedrock Agent Must Have Per-Agent Invocation Logging**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** hipaa: 164.312(b); nist_800_53_r5: AU-2, AU-12; owasp_nhi: NHI8; soc2: CC7.2;
+
+Bedrock agent invocations must be captured by per-agent logging. The account-level CTL.BEDROCK.LOG.INVOCATION.001 control checks the global ModelInvocationLoggingConfiguration; this control flags individual agents that opt out of, or are not covered by, invocation logging — so an operator can see "agent X has no audit trail" without scanning every agent's coverage manually. Without per-agent invocation records, prompt-injection attacks, unauthorized tool calls, and data-exfiltration attempts leave no forensic evidence.
+
+**Remediation:** Enable model invocation logging at the account level (PutModelInvocationLoggingConfiguration) and verify the agent's invocations land in the configured CloudWatch log group or S3 destination. For agents that need logging segregated from the account default, configure a dedicated logging configuration tagged with the agent ID.
+
+---
+
+### CTL.BEDROCK.AGENT.OVERPERM.LAMBDA.001
+
+**Bedrock Agent Execution Role Must Scope lambda:InvokeFunction**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+Bedrock agent execution role grants lambda:InvokeFunction on Resource: * — the agent can invoke any Lambda function in the account, not only the functions registered as action groups. An attacker who gains prompt control can direct the agent to invoke privileged Lambda functions beyond its intended tool set, turning the agent into a proxy for arbitrary Lambda execution. Scope lambda:InvokeFunction to the specific function ARNs registered in the agent's actionGroups.
+
+**Remediation:** Replace Resource: "*" on lambda:InvokeFunction with the explicit list of Lambda function ARNs the agent's actionGroups reference. Example: Resource: ["arn:aws:lambda:us-east-1:111122223333:function:order-lookup", "arn:aws:lambda:us-east-1:111122223333:function:product-search"].
+
+---
+
+### CTL.BEDROCK.AGENT.OVERPERM.MODEL.001
+
+**Bedrock Agent Execution Role Must Scope bedrock:InvokeModel**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+Bedrock agent execution role grants bedrock:InvokeModel on Resource: * — the agent can invoke any foundation model in the account, ignoring whatever model the agent's foundation_model field declares. An attacker who controls the agent's prompt or tool input can pivot the agent to invoke unintended models (cheaper, less restricted, or with different content policies) and bypass model-allowlist governance. Scope the bedrock:InvokeModel permission to the specific model ARN(s) the agent is configured to use.
+
+**Remediation:** Scope the role's bedrock:InvokeModel permission to the specific foundation model ARN(s) the agent uses. Replace Resource: "*" with explicit model ARNs such as arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0.
+
+---
+
+### CTL.BEDROCK.AGENT.OVERPERM.S3.001
+
+**Bedrock Agent Execution Role Must Scope S3 Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+Bedrock agent execution role grants s3:GetObject (or s3:*) on Resource: * — the agent can read any object in any bucket in the account, not only the buckets that back its action-group API schemas or knowledge-base data sources. An attacker who controls the agent's prompt or tool input can extract data from buckets the agent should never touch (PHI buckets, customer-tenant buckets, audit logs).
+
+**Remediation:** Scope the role's s3:GetObject (and any other S3 actions) to the specific bucket / prefix combinations the agent's action groups and knowledge bases reference. Use StringEquals on s3:prefix conditions to narrow further.
+
+---
+
+### CTL.BEDROCK.AGENT.PUBLIC.INVOCATION.001
+
+**Bedrock Agent Invocation Endpoint Must Not Be Publicly Accessible**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-3, SC-7; owasp_nhi: NHI6; soc2: CC6.6;
+
+Bedrock agent's invocation surface is reachable without authenticated AWS principals — for example, an API Gateway fronting InvokeAgent with no authorizer, a public Lambda URL proxying agent invocation, or a CloudFront distribution that forwards directly to the agent without auth. The agent's blast radius is whatever the agent's execution role can reach (knowledge-base contents, Lambda action groups, invoked models). Letting unauthenticated callers reach InvokeAgent turns the agent's internal data and tool surface into an internet-accessible API. The collector pre-computes the boolean from the agent's downstream invocation paths (API Gateway authorizers, Lambda URL auth_type, public CloudFront distributions pointing at the agent endpoint).
+
+**Remediation:** Front the agent invocation with an authenticated path: either an API Gateway authorizer (Cognito user pool, custom Lambda authorizer, or IAM auth), a Lambda URL with auth_type=AWS_IAM, or a private VPC integration. Remove any public Lambda URL or unrestricted API Gateway resource that proxies InvokeAgent.
+
+---
+
+### CTL.BEDROCK.AGENT.SESSION.TTL.001
+
+**Bedrock Agent Idle Session TTL Must Be Bounded**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(2)(iii); nist_800_53_r5: AC-12; owasp_nhi: NHI7; soc2: CC6.1;
+
+Bedrock agent's idle session TTL (idleSessionTTLInSeconds) is excessive — sessions persist longer than necessary, leaving partially-consumed agent contexts available to subsequent callers. A long-lived idle session keeps prompt history, tool-call results, and partially-populated working memory available to whoever next attaches to that session ID. The collector pre-computes whether the configured TTL exceeds the recommended threshold (1800 seconds / 30 minutes by default).
+
+**Remediation:** Reduce idleSessionTTLInSeconds on the agent to 1800 (30 minutes) or less. For agents handling sensitive workflows, 600 (10 minutes) is the tighter recommendation. Update via UpdateAgent and re-prepare with PrepareAgent.
+
+---
+
+### CTL.BEDROCK.AGENT.SHADOW.001
+
+**Bedrock Agent Must Be Managed by Infrastructure as Code**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2, CM-3, AC-3; owasp_nhi: NHI1, NHI6; soc2: CC8.1;
+
+Bedrock agent has no infrastructure-as-code management tag (managed_by, terraform, cloudformation, or equivalent). Agents created outside the IaC pipeline are not subject to code review, approval workflows, or drift detection — their permissions may exceed what the security team has approved, and there is no audit trail tying the agent's existence to a reviewed commit. Shadow agents are the canonical AI-surface ungoverned-configuration failure mode: production agents appear through console clicks or scripted CLI calls without going through change-management. The collector pre-computes the managed_by_iac boolean by inspecting the agent's tags against the organisation's IaC tagging convention.
+
+**Remediation:** Either (1) import the agent into your IaC pipeline via terraform import or aws cloudformation import, then tag it with managed_by=terraform / managed_by=cloudformation, or (2) delete the agent if it was created for ad-hoc testing and is no longer in active use. Reject any future untagged agents at the SCP / Service Control Policy level with a Deny statement on bedrock:CreateAgent missing the required tag.
+
+---
+
+### CTL.BEDROCK.AGENT.STALE.001
+
+**Bedrock Agent Must Not Be Idle Beyond Threshold**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-2(3); owasp_nhi: NHI1; soc2: CC6.1;
+
+Bedrock agent has not been invoked within the observation window (default 30 days). A stale agent retains its execution role permissions, its action-group registrations (the Lambdas it can call), and its knowledge-base associations — a dormant attack surface with active credentials. Same shape as CTL.SAGEMAKER.NOTEBOOK.IDLE.001 (idle data-science notebook) and CTL.LIFECYCLE.STAGING.STALE.001 (general stale-resource pattern) applied to Bedrock agents. Distinct from CTL.BEDROCK.AGENT.SESSION.TTL.001 (idle-session TTL too long): SESSION.TTL is per-session timeout configuration; this control flags agents whose entire identity is idle.
+
+**Remediation:** Either delete the agent + its execution role if the workload is truly abandoned, or document the agent's expected idle duration with a reviewed_at tag and a scheduled review date. Reduce blast radius by detaching high-privilege managed policies from the role even while the agent stays.
+
+---
+
+### CTL.BEDROCK.GHOST.KNOWLEDGEBASE.001
+
+**Bedrock Agent Must Not Reference Deleted Knowledge Base**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2, CM-8; owasp_nhi: NHI1; soc2: CC8.1;
+
+Bedrock agent's knowledgeBases list contains at least one knowledge-base ID that no longer exists in the current inventory. RAG queries through this agent will fail or return empty results — and the broken reference is invisible to runtime: the agent silently degrades. Sibling to CTL.BEDROCK.AGENT.GHOST.LAMBDA.001 (which catches the same pattern on actionGroups). Same shape as the Cognito ghost-trigger family (PRESIGNUP, PREAUTH, ...) applied to Bedrock agent KB references. The collector pre-computes the has_ghost_knowledge_base boolean by joining the agent's declared KB IDs against the live knowledge-base inventory.
+
+**Remediation:** Either remove the dead knowledge base from the agent via DisassociateAgentKnowledgeBase, or recreate the knowledge base if it was deleted accidentally. Re-prepare the agent with PrepareAgent after the change.
+
+---
+
+### CTL.BEDROCK.GUARDRAIL.PII.001
+
+**Bedrock Guardrails Must Enable Sensitive Information Filter**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: SI-10; soc2: CC6.1;
+
+Bedrock guardrails must configure sensitive information filters to block or mask PII and custom patterns in prompts and responses. Without filtering, prompts or outputs can reveal PII, credentials, financial records, or other sensitive data. LLMs may echo sensitive data from prompts or training data in responses.
+
+**Remediation:** Configure sensitive information filters in the guardrail to block or mask PII types (SSN, credit card, email, etc.) and custom regex patterns.
+
+---
+
+### CTL.BEDROCK.GUARDRAIL.PROMPTATTACK.001
+
+**Bedrock Guardrails Must Enable High-Strength Prompt Attack Filter**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-10; soc2: CC6.1;
+
+Bedrock guardrails must configure the prompt attack filter at HIGH strength. Without high-strength filtering, models are exposed to prompt injection and jailbreak attacks that can coerce disclosure of sensitive data, evade content policies, and trigger unintended tool execution.
+
+**Remediation:** Update the guardrail to set the prompt attack filter strength to HIGH via aws bedrock update-guardrail.
+
+---
+
+### CTL.BEDROCK.KB.DATASOURCE.CROSSACCOUNT.001
+
+**Bedrock Knowledge Base Data Source Must Not Cross Account Boundary**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(e)(1); nist_800_53_r5: AC-4, AC-6; owasp_nhi: NHI3, NHI6; soc2: CC6.1, CC6.6;
+
+Bedrock knowledge base reads from an S3 bucket in a different AWS account. Cross-account RAG ingestion expands the trust boundary of the agent's response surface: query results may include content from outside the workload's control plane, and a compromise of the source account propagates into the agent's outputs. Cross-account data sources are sometimes legitimate (a dedicated data-engineering account feeding a product account) but require explicit scoping — VPC endpoint policies, encryption-in-transit on the bucket policy, and pinned KMS key ARNs — none of which are visible to a casual reader of the knowledge-base config. This control flags the cross-account property so operators can confirm the scoping is in place.
+
+**Remediation:** Either (1) replicate the data source into the local account via S3 replication + recreate the knowledge base, or (2) keep the cross-account source but pin the bucket policy to require aws:PrincipalArn matching the KB role and add a VPC endpoint policy restricting the call path. Document the cross-account dependency in the agent's runbook.
+
+---
+
+### CTL.BEDROCK.KB.DATASOURCE.UNENCRYPTED.001
+
+**Bedrock Knowledge Base Data Source Must Use Encrypted Reads**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(e)(1), 164.312(e)(2)(ii); nist_800_53_r5: SC-8, SC-13; owasp_nhi: NHI6; soc2: CC6.7;
+
+Bedrock knowledge base reads its S3 data source without encryption in transit / encryption-context binding. RAG retrieval flows S3 object content through the knowledge base ingestion pipeline; without TLS-only bucket policy enforcement (aws:SecureTransport=true) and SSE-KMS with explicit encryption context, the data path is observable on shared network paths and AWS API logs do not bind retrieval to the intended decrypt key. The collector pre-computes the boolean data_source_encrypted assessment from the bucket policy, KMS key policy, and KB role's permission boundary.
+
+**Remediation:** Add aws:SecureTransport=true deny-rule to the source bucket's policy. Configure the bucket with SSE-KMS and a customer-managed CMK. Add a key policy permitting the KB role to decrypt with an explicit encryption context matching the knowledge-base ID.
+
+---
+
+### CTL.BEDROCK.KB.MARKER.INDEXES.001
+
+**Bedrock Knowledge Base Indexes S3 Bucket (Marker)**
+
+- **Severity:** low
+- **Type:** marker
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(c)(1);
+
+Fact-recording marker for Bedrock knowledge bases that index a specific S3 bucket. Emits an informational finding (NOT a violation) on every knowledge base whose data source carries a bucket ARN — so cross-resource chains can compose this fact with data-classification markers on the target bucket. Same pattern as CTL.S3.MARKER.PHI.001 + CTL.COGNITO.IDPOOL.UNAUTH.S3 / cognito_unauth_phi_s3 chain: a knowledge base indexing a bucket is the desired state — never a finding to triage. The marker exists so the chain engine can join "knowledge base side: indexes bucket X" with "storage side: bucket X is classified PHI" via scope_field on the shared bucket ARN.
+
+**Remediation:** None. This marker exists as a chain-detection ingredient. To suppress noise on dashboards, filter findings by control_id when rendering Findings — markers should appear in a separate "facts" panel rather than the violation list.
+
+---
+
+### CTL.BEDROCK.KB.OVERPERM.S3.001
+
+**Bedrock Knowledge Base Role Must Scope S3 Access to Data Sources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+Bedrock knowledge base IAM role grants S3 access broader than the buckets / prefixes declared in the knowledge base's dataSources. The collector compares the role's effective S3 resource set against the knowledge base's declared data-source ARNs; this control fires when the role can read S3 objects outside the declared sources. RAG retrieval becomes a data- exfiltration surface: queries that slip past topic filtering can pull content from any bucket the role can reach, not only the buckets the knowledge base is supposed to index.
+
+**Remediation:** Restrict the knowledge base role's S3 actions to the exact bucket ARNs (and inclusion prefixes) listed in the knowledge base's dataSources. Use StringEquals on s3:prefix conditions for prefix-scoped data sources.
+
+---
+
+### CTL.BEDROCK.LOG.ENCRYPT.001
+
+**Bedrock Invocation Logs Must Be Encrypted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; soc2: CC6.7;
+
+Bedrock model invocation logs must be stored in encrypted destinations — S3 with bucket encryption and CloudWatch Logs with KMS. Invocation logs contain prompts and responses which frequently include sensitive business data, PII, and confidential queries.
+
+**Remediation:** Enable KMS encryption on the CloudWatch Logs group and/or S3 bucket used for invocation log delivery.
+
+---
+
+### CTL.BEDROCK.LOG.INVOCATION.001
+
+**Bedrock Model Invocation Logging Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+Bedrock model invocation logging must be enabled to capture request/response data for Converse, InvokeModel, and streaming calls. Without invocation logs, there is no audit trail for what prompts were sent or what the model responded — credential misuse, prompt injection, and data exfiltration go undetected.
+
+**Remediation:** Enable model invocation logging via aws bedrock put-model-invocation-logging-configuration with S3 and/or CloudWatch Logs destinations.
+
+---
+
+### CTL.BEDROCK.VPC.ENDPOINTS.001
+
+**VPC Must Have Bedrock Interface Endpoints Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+VPCs using Bedrock must have interface endpoints for all Bedrock services (bedrock, bedrock-runtime, bedrock-agent, bedrock-agent-runtime). Without private endpoints, API traffic exits the VPC via internet gateway, exposing it to network-path threats and adding an internet dependency.
+
+**Remediation:** Create interface VPC endpoints for bedrock, bedrock-runtime, bedrock-agent, and bedrock-agent-runtime services.
+
+---
+

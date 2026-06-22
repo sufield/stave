@@ -11,13 +11,13 @@ each exercise a distinct misconfiguration pattern.
 ```bash
 git clone https://github.com/sufield/stave.git
 cd stave
-docker build -f docs-content/demo/Dockerfile -t stave-demo .
+docker compose -f stave/docker-compose.yaml build demo
 ```
 
 ## Detect a misconfiguration
 
 ```bash
-docker run --rm stave-demo
+docker compose -f stave/docker-compose.yaml run --rm demo
 ```
 
 Runs the default `public-read` scenario. The output shows:
@@ -28,14 +28,14 @@ Runs the default `public-read` scenario. The output shows:
 ## See all scenarios
 
 ```bash
-docker run --rm stave-demo --list
+docker compose -f stave/docker-compose.yaml run --rm demo --list
 ```
 
 Run any of them by name:
 
 ```bash
-docker run --rm stave-demo --scenario public-read
-docker run --rm stave-demo --scenario hipaa-compliance
+docker compose -f stave/docker-compose.yaml run --rm demo --scenario public-read
+docker compose -f stave/docker-compose.yaml run --rm demo --scenario hipaa-compliance
 ```
 
 ## Pass-through to stave
@@ -44,9 +44,9 @@ Any unrecognised arguments are forwarded to the `stave` binary inside
 the container:
 
 ```bash
-docker run --rm stave-demo --version
-docker run --rm stave-demo doctor
-docker run --rm stave-demo capabilities
+docker compose -f stave/docker-compose.yaml run --rm demo --version
+docker compose -f stave/docker-compose.yaml run --rm demo doctor
+docker compose -f stave/docker-compose.yaml run --rm demo capabilities
 ```
 
 ## Scenario reference

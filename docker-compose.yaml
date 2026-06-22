@@ -1,8 +1,24 @@
 services:
+  # Tutorial demo (numbered scenarios): `docker compose run --rm -T stave --scenario 1`
   stave:
     build:
       context: .
       dockerfile: build/docker/demo/Dockerfile
     image: stave-tutorials
+    tty: false
+    stdin_open: false
+
+  # Curated S3 misconfiguration demo (named scenarios):
+  #   docker compose run --rm demo --list
+  #   docker compose run --rm demo --scenario public-read
+  # Context is the repo root because the Dockerfile copies stave/ and
+  # docs-content/demo/. GO_VERSION matches go.mod's toolchain directive.
+  demo:
+    build:
+      context: ..
+      dockerfile: docs-content/demo/Dockerfile
+      args:
+        GO_VERSION: "1.26.4"
+    image: stave-demo
     tty: false
     stdin_open: false

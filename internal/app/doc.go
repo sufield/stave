@@ -16,6 +16,5 @@
 //   - [contracts]: Dependency-injection interfaces (ObservationRepository,
 //     ControlRepository, FindingMarshaler, SnapshotFile).
 //   - [hygiene]: Snapshot lifecycle reporting and risk computation.
-//   - [prune]: Snapshot retention planning orchestration.
 //   - [trace]: Predicate evaluation tracing orchestration.
 package app

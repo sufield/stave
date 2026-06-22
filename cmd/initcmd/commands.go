@@ -10,11 +10,16 @@ import (
 // NewGenerateCmd constructs the generate command tree.
 func NewGenerateCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "generate",
-		Short:       "Generate starter artifacts",
-		Long:        "Generate creates minimal deterministic templates for observations." + metadata.OfflineHelpSuffix,
-		Args:        cobra.NoArgs,
-		Annotations: map[string]string{cmdutil.AnnotationConfigOptional: "true"},
+		Use:   "generate",
+		Short: "Generate starter artifacts",
+		Long:  "Generate creates minimal deterministic templates for observations." + metadata.OfflineHelpSuffix,
+		Args:  cobra.NoArgs,
+		// Scaffolding is a developer-workflow command; the production guard
+		// rejects it (and its subcommands) when production is detected.
+		Annotations: map[string]string{
+			cmdutil.AnnotationConfigOptional: "true",
+			cmdutil.AnnotationDevOnly:        "true",
+		},
 	}
 
 	cmd.AddCommand(newGenerateObservationCmd())

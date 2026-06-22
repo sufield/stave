@@ -151,14 +151,6 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 		}
 	}
 
-	// Production guard blocked commands
-	if cmds := eval.BlockedCommands(); len(cmds) > 0 {
-		if err := SetBlockedCommands(cmds); err != nil {
-			logger.Warn("config: ignoring invalid blocked_commands entry",
-				"error", err)
-		}
-	}
-
 	// Max validation errors reported (default 3)
 	if n := eval.MaxValidationErrors(); n > 0 {
 		if n > MaxConfigurableValidationErrors {

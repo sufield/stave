@@ -11,7 +11,7 @@ func TestSchemaIsValid(t *testing.T) {
 	valid := []Schema{
 		SchemaObservation, SchemaControl, SchemaOutput, SchemaDiagnose,
 		SchemaDiff, SchemaBaseline, SchemaEnforce, SchemaGate,
-		SchemaValidate, SchemaSnapshotPlan, SchemaSnapshotPrune,
+		SchemaValidate, SchemaSnapshotPlan,
 		SchemaSnapshotQuality, SchemaSnapshotArchive, SchemaCIDiff,
 		SchemaFixLoop, SchemaCrosswalkResolution, SchemaSecurityAudit,
 		SchemaSecurityAuditArtifacts, SchemaSecurityAuditRunManifest,
@@ -95,7 +95,6 @@ func TestSchemaConstants_AllSupported(t *testing.T) {
 		"SchemaGate":                     SchemaGate,
 		"SchemaValidate":                 SchemaValidate,
 		"SchemaSnapshotPlan":             SchemaSnapshotPlan,
-		"SchemaSnapshotPrune":            SchemaSnapshotPrune,
 		"SchemaSnapshotQuality":          SchemaSnapshotQuality,
 		"SchemaSnapshotArchive":          SchemaSnapshotArchive,
 		"SchemaCIDiff":                   SchemaCIDiff,

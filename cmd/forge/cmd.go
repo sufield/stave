@@ -4,6 +4,8 @@ package forge
 
 import (
 	"github.com/spf13/cobra"
+
+	"github.com/sufield/stave/cmd/cmdutil"
 )
 
 // NewCmd creates the forge parent command with new, preview, and paths subcommands.
@@ -18,6 +20,9 @@ Subcommands:
   new       Interactive control authoring wizard
   preview   Evaluate a predicate against a snapshot without writing files
   paths     List available observation property paths from a snapshot`,
+		// Control authoring is a developer-workflow command; the production
+		// guard rejects it (and its subcommands) when production is detected.
+		Annotations:   map[string]string{cmdutil.AnnotationDevOnly: "true"},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}

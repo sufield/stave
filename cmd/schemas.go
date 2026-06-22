@@ -82,7 +82,6 @@ func writeSchemas(w io.Writer, format appcontracts.OutputFormat) error {
 			{"gate", kernel.SchemaGate.String()},
 			{"snapshot_archive", kernel.SchemaSnapshotArchive.String()},
 			{"snapshot_plan", kernel.SchemaSnapshotPlan.String()},
-			{"snapshot_prune", kernel.SchemaSnapshotPrune.String()},
 			{"snapshot_quality", kernel.SchemaSnapshotQuality.String()},
 			{"validate", kernel.SchemaValidate.String()},
 		},

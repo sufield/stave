@@ -122,7 +122,6 @@ type WorkspacePolicy struct {
 	MaxGapThreshold          string             `yaml:"max_gap_threshold"            governance:"include"`
 	ConfidenceHighMultiplier int                `yaml:"confidence_high_multiplier"   governance:"include"`
 	ConfidenceMedMultiplier  int                `yaml:"confidence_medium_multiplier" governance:"include"`
-	BlockedCommands          []string           `yaml:"blocked_commands"`
 	MaxValidationErrors      int                `yaml:"max_validation_errors"        governance:"include"`
 	TeamManifest             string             `yaml:"team_manifest"                governance:"include"`
 	OwnerTagKey              string             `yaml:"owner_tag_key"                governance:"include"`

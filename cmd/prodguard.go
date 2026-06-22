@@ -1,14 +1,14 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"os"
 	"strings"
-	"sync"
 
+	"github.com/spf13/cobra"
+
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/cli/ui"
 	contexts "github.com/sufield/stave/internal/config"
 )
@@ -54,13 +54,10 @@ func (d *EnvironmentDetector) Detect() Environment {
 	st, _, err := contexts.Load()
 	if err != nil {
 		// Surface the load failure so an operator can see why the
-		// production guard fell back to "non-production". The
-		// previous shape silently treated every load failure as
-		// "safe to run destructive commands" — fail-safe would be
-		// IsProduction=true, but flipping the default risks
-		// blocking every command in environments with transient
-		// context-store errors. Logging keeps the gap visible while
-		// preserving the established non-blocking behaviour.
+		// production guard fell back to "non-production". Logging keeps
+		// the gap visible while preserving the non-blocking behaviour
+		// (a transient context-store error should not block every
+		// command).
 		slog.Warn("production guard: failed to load context, assuming non-production", "error", err)
 		return Environment{}
 	}
@@ -76,138 +73,44 @@ func (d *EnvironmentDetector) Detect() Environment {
 }
 
 // ---------------------------------------------------------------------------
-// Policy: Production Guard
+// Production guard: keep developer-only commands out of production
 // ---------------------------------------------------------------------------
+//
+// Stave has no destructive commands — it reads snapshots and writes findings.
+// The guard exists only to stop *developer-workflow* commands (project
+// scaffolding, control authoring) from running against a production
+// environment, where they have no purpose. Such commands are tagged with
+// cmdutil.AnnotationDevOnly on the command (or a parent); the check walks the
+// command's ancestry so a tag on `forge` / `generate` covers every subcommand.
 
-// SafetyPolicy defines which commands are restricted in production.
-// The blocked list is mutated by governance config loading at bootstrap
-// (SetBlockedCommands) and read by ProductionGuard.Check; the mutex
-// serializes those accesses so a future caller that wires the guard
-// outside the bootstrap PreRun lifecycle (e.g. tests, parallel command
-// invocations sharing the package-level default) does not race on the
-// underlying map header.
-type SafetyPolicy struct {
-	mu              sync.RWMutex
-	blockedCommands map[string]struct{}
-}
-
-// IsBlocked reports whether cmdName is on the blocked list.
-func (p *SafetyPolicy) IsBlocked(cmdName string) bool {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
-	_, ok := p.blockedCommands[cmdName]
-	return ok
-}
-
-// Set replaces the blocked-command list. Pass nil or empty to clear.
-// Returns an error when any entry is empty after trimming — a
-// silently-ignored empty entry is the symptom of a typo'd config
-// that would otherwise leave production protection partially in
-// place.
-func (p *SafetyPolicy) Set(cmds []string) error {
-	m := make(map[string]struct{}, len(cmds))
-	for _, c := range cmds {
-		trimmed := strings.TrimSpace(c)
-		if trimmed == "" {
-			return errors.New("SafetyPolicy.Set: blocked command name must not be empty / whitespace")
-		}
-		m[trimmed] = struct{}{}
-	}
-	p.mu.Lock()
-	p.blockedCommands = m
-	p.mu.Unlock()
-	return nil
-}
-
-// DefaultSafetyPolicy blocks commands that permanently destroy evidence.
-// Override with SetBlockedCommands to customize for your environment.
-// Initialized via Set() rather than direct field assignment so the
-// init path takes the same write lock as runtime updates — keeps a
-// single canonical write sequence for the package-level default.
-var DefaultSafetyPolicy = func() *SafetyPolicy {
-	p := &SafetyPolicy{}
-	if err := p.Set([]string{"prune"}); err != nil {
-		// Static literal — the only way Set fails here is a code
-		// edit that introduces an empty entry. Panic so the
-		// regression is loud at process start rather than a
-		// silently-disabled production guard.
-		panic("prodguard: failed to seed DefaultSafetyPolicy: " + err.Error())
-	}
-	return p
-}()
-
-// SetBlockedCommands replaces the production guard blocked command list
-// on the package-level default. Pass nil or empty to keep the default.
-// Returns Set's validation error so a malformed config (empty entry,
-// whitespace-only) surfaces at the call site rather than leaving the
-// guard silently disabled.
-func SetBlockedCommands(cmds []string) error {
-	if len(cmds) == 0 {
-		return nil
-	}
-	return DefaultSafetyPolicy.Set(cmds)
-}
-
-// ProductionGuard prevents the developer binary from performing
-// dangerous operations against production environments.
-type ProductionGuard struct {
-	Edition Edition
-	Policy  *SafetyPolicy
-	Stderr  io.Writer
-}
-
-// Check evaluates whether a command is safe to run. Returns a UserError
-// if the command is hard-blocked, or prints a warning for read-only dev
-// commands running against production.
-func (g *ProductionGuard) Check(cmdName string, env Environment) error {
-	if g.Edition != EditionDev || !env.IsProduction {
+// checkDevProductionGuard rejects a development-only command when a production
+// environment is detected. Called from App.bootstrap before any command runs.
+func (a *App) checkDevProductionGuard(cmd *cobra.Command) error {
+	if !isDevOnlyCommand(cmd) {
 		return nil
 	}
 
-	if g.Policy != nil && g.Policy.IsBlocked(cmdName) {
-		// Generic message: the earlier shape hard-coded a
-		// "stave snapshot archive" suggestion that only made
-		// sense when the blocked command was prune. For any other
-		// blocked command (reset, scrub, etc.) the suggestion was
-		// misleading. Keep the actionable bit ("switch to a non-
-		// production context") and let the operator find the
-		// command-specific alternative themselves.
-		return &ui.UserError{
-			Err: fmt.Errorf(
-				"command %q is blocked in production (%s): "+
-					"switch to a non-production context to run it, "+
-					"or use a read-only alternative if one exists",
-				cmdName, env.Source),
-		}
+	env := (&EnvironmentDetector{EnvProvider: os.Getenv}).Detect()
+	if !env.IsProduction {
+		return nil
 	}
 
-	stderr := g.Stderr
-	if stderr == nil {
-		stderr = os.Stderr
+	return &ui.UserError{
+		Err: fmt.Errorf(
+			"command %q is development-only and cannot run in production (%s): "+
+				"scaffolding and control authoring belong in development",
+			cmd.Name(), env.Source),
 	}
-	fmt.Fprintf(stderr,
-		"WARNING: stave-dev running against production environment (%s).\n"+
-			"Dev commands are restricted to read-only mode for safety.\n\n",
-		env.Source)
-
-	return nil
 }
 
-// ---------------------------------------------------------------------------
-// Bootstrap integration
-// ---------------------------------------------------------------------------
-
-// checkDevProductionGuard detects the environment and runs the safety guard.
-// Called from App.bootstrap before any command executes.
-func (a *App) checkDevProductionGuard(cmd interface{ Name() string }) error {
-	detector := &EnvironmentDetector{EnvProvider: os.Getenv}
-	env := detector.Detect()
-
-	guard := &ProductionGuard{
-		Edition: a.Edition,
-		Policy:  DefaultSafetyPolicy,
-		Stderr:  a.Root.ErrOrStderr(),
+// isDevOnlyCommand reports whether cmd or any of its ancestors is tagged with
+// cmdutil.AnnotationDevOnly, so tagging a parent command (forge, generate)
+// protects its whole subtree.
+func isDevOnlyCommand(cmd *cobra.Command) bool {
+	for c := cmd; c != nil; c = c.Parent() {
+		if c.Annotations[cmdutil.AnnotationDevOnly] == "true" {
+			return true
+		}
 	}
-
-	return guard.Check(cmd.Name(), env)
+	return false
 }

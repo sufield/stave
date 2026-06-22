@@ -7,7 +7,7 @@ func TestOutputKind_IsValid(t *testing.T) {
 		KindBaseline, KindBaselineCheck, KindCIDiff,
 		KindEnforcement, KindGateCheck, KindObservationDelta,
 		KindRemediationReport, KindSnapshotArchive, KindSnapshotPlan,
-		KindSnapshotPrune, KindSnapshotQuality,
+		KindSnapshotQuality,
 	}
 	for _, k := range valid {
 		if !k.IsValid() {

@@ -30,8 +30,6 @@ const (
 	SchemaValidate Schema = "validate.v0.1"
 	// SchemaSnapshotPlan is the schema version for snapshot plan output.
 	SchemaSnapshotPlan Schema = "snapshot_plan.v0.1"
-	// SchemaSnapshotPrune is the schema version for snapshot prune output.
-	SchemaSnapshotPrune Schema = "snapshot_prune.v0.1"
 	// SchemaSnapshotQuality is the schema version for snapshot quality output.
 	SchemaSnapshotQuality Schema = "snapshot_quality.v0.1"
 	// SchemaSnapshotArchive is the schema version for snapshot archive output.
@@ -65,7 +63,6 @@ var validSchemas = NewEnumSet(
 	SchemaGate,
 	SchemaValidate,
 	SchemaSnapshotPlan,
-	SchemaSnapshotPrune,
 	SchemaSnapshotQuality,
 	SchemaSnapshotArchive,
 	SchemaCIDiff,

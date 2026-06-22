@@ -265,13 +265,6 @@ func (r *GovernanceResolver) ConfidenceMedMultiplier() int {
 	return r.Policy.ConfidenceMedMultiplier
 }
 
-func (r *GovernanceResolver) BlockedCommands() []string {
-	if r == nil || r.Policy == nil {
-		return nil
-	}
-	return r.Policy.BlockedCommands
-}
-
 func (r *GovernanceResolver) MaxValidationErrors() int {
 	if r == nil || r.Policy == nil {
 		return 0

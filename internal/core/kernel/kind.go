@@ -26,8 +26,6 @@ const (
 	KindSnapshotArchive OutputKind = "snapshot_archive"
 	// KindSnapshotPlan identifies a snapshot plan document.
 	KindSnapshotPlan OutputKind = "snapshot_plan"
-	// KindSnapshotPrune identifies a snapshot prune result document.
-	KindSnapshotPrune OutputKind = "snapshot_prune"
 	// KindSnapshotQuality identifies a snapshot quality report document.
 	KindSnapshotQuality OutputKind = "snapshot_quality"
 
@@ -46,7 +44,6 @@ var validOutputKinds = NewEnumSet(
 	KindRemediationReport,
 	KindSnapshotArchive,
 	KindSnapshotPlan,
-	KindSnapshotPrune,
 	KindSnapshotQuality,
 )
 
