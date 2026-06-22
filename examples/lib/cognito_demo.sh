@@ -84,7 +84,6 @@ cognito_demo_run() {
         out=$("$stave_bin" apply \
             --observations "$obs_dir" \
             --now 2026-05-09T12:00:00Z \
-            --allow-unknown-input \
             --format json 2>/dev/null) || true
 
         if [[ "$raw_mode" == "1" ]]; then

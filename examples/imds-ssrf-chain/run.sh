@@ -34,7 +34,7 @@ apply_filtered() {
     "$stave_bin" apply \
         --observations "$obs" \
         --now 2026-05-10T12:00:00Z \
-        --max-unsafe 168h --allow-unknown-input --format json > "$tmp" 2>/dev/null || rc=$?
+        --max-unsafe 168h --format json > "$tmp" 2>/dev/null || rc=$?
     rc=${rc:-0}
     if [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ]; then
         echo "stave apply exited $rc (unexpected)" >&2

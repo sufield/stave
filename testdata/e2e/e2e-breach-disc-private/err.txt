@@ -1,6 +1,0 @@
-[ERR] Input validation failed (INVALID_INPUT)
-  Message: execute evaluation: source_type unsupported: snapshot[0] has unsupported source_type "cloud.inventory" (use --allow-unknown-input to skip)
-Next: stave apply --controls ./controls --observations ./observations --allow-unknown-input
-More info: run 'stave docs search allow-unknown-input source_type'
-  Fix:     Try `stave apply --controls ./controls --observations ./observations --allow-unknown-input`. Check the command arguments and rerun with -v or -vv for additional context.
-  Help:    run 'stave docs search allow-unknown-input source_type'

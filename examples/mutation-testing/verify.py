@@ -30,10 +30,9 @@ import tempfile
 def stave_apply(stave_bin: str, obs_dir: str) -> int:
     """Run stave apply and return the finding count.
 
-    --now is fixed for determinism. --allow-unknown-input keeps
-    schema validation lenient on the synthetic mutations the
-    operator may emit. JSON output is parsed for the findings
-    array length.
+    --now is fixed for determinism. Custom/unknown observation
+    source types are accepted by default. JSON output is parsed
+    for the findings array length.
     """
     result = subprocess.run(
         [
@@ -41,7 +40,6 @@ def stave_apply(stave_bin: str, obs_dir: str) -> int:
             "apply",
             "--observations", obs_dir,
             "--now", "2026-05-09T12:00:00Z",
-            "--allow-unknown-input",
             "--format", "json",
         ],
         capture_output=True,

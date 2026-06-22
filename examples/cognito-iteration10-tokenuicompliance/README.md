@@ -44,12 +44,12 @@ make build
 
 ./stave apply \
     --observations examples/cognito-iteration10-tokenuicompliance/fixtures/writeup-config/observations \
-    --now 2026-05-09T12:00:00Z --allow-unknown-input --format json \
+    --now 2026-05-09T12:00:00Z --format json \
   | jq '{ctls: ([.findings[] | select(.control_id | test("CTL.COGNITO.(TOKEN|HOSTEDUI|RESOURCESRV|COMPLIANCE|CROSSACCT)"))] | map(.control_id) | sort | unique), chains: (.chain_findings // [] | map(.chain))}'
 
 ./stave apply \
     --observations examples/cognito-iteration10-tokenuicompliance/fixtures/remediated-config/observations \
-    --now 2026-05-09T12:00:00Z --allow-unknown-input --format json \
+    --now 2026-05-09T12:00:00Z --format json \
   | jq '{ctls: ([.findings[] | select(.control_id | test("CTL.COGNITO.(TOKEN|HOSTEDUI|RESOURCESRV|COMPLIANCE|CROSSACCT)"))] | length), chains: (.chain_findings // [] | length)}'
 ```
 

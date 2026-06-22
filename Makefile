@@ -367,11 +367,11 @@ install:
 
 ## run: Run with default fixtures
 run: build
-	./$(BINARY) apply --controls examples/public-bucket/controls --observations examples/public-bucket/observations --max-unsafe 168h --allow-unknown-input
+	./$(BINARY) apply --controls examples/public-bucket/controls --observations examples/public-bucket/observations --max-unsafe 168h
 
 ## run-now: Run with fixed time for deterministic output
 run-now: build
-	./$(BINARY) apply --controls examples/public-bucket/controls --observations examples/public-bucket/observations --max-unsafe 168h --now 2026-01-11T00:00:00Z --allow-unknown-input
+	./$(BINARY) apply --controls examples/public-bucket/controls --observations examples/public-bucket/observations --max-unsafe 168h --now 2026-01-11T00:00:00Z
 
 ## stale-terminology-check: Fail if active source/doc files reference
 ## architectural terms that have been renamed. Cheap drift gate.

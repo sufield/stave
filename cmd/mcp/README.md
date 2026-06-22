@@ -69,8 +69,8 @@ See the [main Stave README](../../README.md) for the engine itself.
 | `stave.gaps` | `observations_dir` (required), optional `top_n` | Absent observation fields and the controls each would unlock, ranked by impact |
 | `stave.readiness` | `observations_dir` (required), optional `top_n` | Which controls can fire vs. are blocked, readiness score, ranked action plan |
 | `stave.compliance` | `observations_dir`, `framework` | Requirement-level posture for one framework (met / not-met / not-evaluated, coverage %) |
-| `stave.verify` | `observations_dir` (required), optional `controls_dir`, `allow_unknown_input`, `format` | Evaluation result. `format`: `summary` (default) — posture score, severity breakdown, top findings; `detailed` — adds per-finding predicate/observed/fix; `raw` — full Assessment JSON |
-| `stave.dashboard` | `observations` (required), optional `controls`, `allow_unknown_input` | Renders an interactive HTML posture dashboard (gauge, severity bar, sortable/filterable findings table, SLA status) to a self-contained file; returns the path + a one-line summary |
+| `stave.verify` | `observations_dir` (required), optional `controls_dir`, `format` | Evaluation result. `format`: `summary` (default) — posture score, severity breakdown, top findings; `detailed` — adds per-finding predicate/observed/fix; `raw` — full Assessment JSON |
+| `stave.dashboard` | `observations` (required), optional `controls` | Renders an interactive HTML posture dashboard (gauge, severity bar, sortable/filterable findings table, SLA status) to a self-contained file; returns the path + a one-line summary |
 | `stave.scorecard` | `observations` (required), optional `frameworks` | Renders an interactive HTML compliance scorecard — framework tabs, per-framework requirement breakdown with expandable failures, cross-framework comparison — to a self-contained file; returns the path + per-framework percentages. Compliance is evaluated against the embedded catalog |
 | `stave.chains` | `observations` (required), optional `controls`, `chains`, `severity` | Detects compound risk chains and renders an interactive HTML visualizer — each chain's co-failing controls (legs) flowing into a compound-risk node, with attack narrative and break-any-link remediation. Zero chains is a good result. Needs a chains directory (defaults to `./chains`) |
 | `stave.context` | `type` + `id` (required), `observations`, optional `framework`/`controls`/`chains` | Drill into one item: `finding`, `asset` (all its findings), `chain` (legs + narrative + assets), `requirement` (status + failing controls; needs `framework`), or `framework` (full posture). The model-side endpoint a UI selection maps onto |
@@ -149,7 +149,7 @@ consistent shape across all tools.
 stave/stave-mcp <<EOF
 {"jsonrpc":"2.0","id":1,"method":"initialize"}
 {"jsonrpc":"2.0","id":2,"method":"tools/list"}
-{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"stave.verify","arguments":{"observations_dir":"examples/iam-overpermission-wildcard/fixtures/before/observations","controls_dir":"examples/iam-overpermission-wildcard/controls","allow_unknown_input":true}}}
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"stave.verify","arguments":{"observations_dir":"examples/iam-overpermission-wildcard/fixtures/before/observations","controls_dir":"examples/iam-overpermission-wildcard/controls"}}}
 EOF
 ```
 

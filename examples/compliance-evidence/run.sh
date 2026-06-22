@@ -51,8 +51,7 @@ run_one() {
         --controls "$controls" \
         --observations "$obs_dir" \
         --now 2026-01-09T00:00:00Z \
-        --format json \
-        --allow-unknown-input > "$findings" 2>/dev/null || true
+        --format json > "$findings" 2>/dev/null || true
     "$stave_bin" export-sir \
         --controls "$controls" \
         --observations "$obs_dir" \

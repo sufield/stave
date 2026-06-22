@@ -49,19 +49,19 @@ make build
 # Writeup: weak password + MFA disabled + no lockout + open self-reg
 ./stave apply \
     --observations examples/cognito-iteration3-authbaseline/fixtures/writeup-config/observations \
-    --now 2026-05-09T12:00:00Z --allow-unknown-input --format json \
+    --now 2026-05-09T12:00:00Z --format json \
   | jq '{ctls: ([.findings[] | select(.control_id | test("CTL.COGNITO.(PASSWORD|MFA|LOCKOUT|SELFREG|RECOVERY)"))] | map(.control_id) | sort | unique), chains: (.chain_findings // [] | map(.chain) | sort)}'
 
 # Recovery bypass: MFA enforced but SMS-only + recovery bypasses
 ./stave apply \
     --observations examples/cognito-iteration3-authbaseline/fixtures/recovery-bypass-config/observations \
-    --now 2026-05-09T12:00:00Z --allow-unknown-input --format json \
+    --now 2026-05-09T12:00:00Z --format json \
   | jq '{ctls: ([.findings[] | select(.control_id | test("CTL.COGNITO.(PASSWORD|MFA|LOCKOUT|SELFREG|RECOVERY)"))] | map(.control_id) | sort | unique), chains: (.chain_findings // [] | map(.chain) | sort)}'
 
 # Remediated: strong everything
 ./stave apply \
     --observations examples/cognito-iteration3-authbaseline/fixtures/remediated-config/observations \
-    --now 2026-05-09T12:00:00Z --allow-unknown-input --format json \
+    --now 2026-05-09T12:00:00Z --format json \
   | jq '{ctls: ([.findings[] | select(.control_id | test("CTL.COGNITO.(PASSWORD|MFA|LOCKOUT|SELFREG|RECOVERY)"))] | length), chains: (.chain_findings // [] | length)}'
 ```
 

@@ -72,5 +72,5 @@ even though neither control gates on the other.
   `target_has_existing_profile=true` would mean `CreateLoginProfile` fails
   and `UpdateLoginProfile` is the vehicle instead. Retained on the finding
   for observability even though they don't affect predicate evaluation.
-- `args.txt` uses `--allow-unknown-input` matching every other escalation
-  fixture.
+- The fixture snapshots have no `generated_by.source_type`, which Stave
+  accepts by default — matching every other escalation fixture.

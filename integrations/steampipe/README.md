@@ -122,13 +122,12 @@ stave apply \
   --observations observations \
   --max-unsafe 0s \
   --now $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-  --allow-unknown-input \
   --format text
 ```
 
-`--allow-unknown-input` is required because Steampipe's `source_type`
-("steampipe") isn't in stave's built-in connector registry. Stave
-rejects unknown sources by default to catch typos; the flag opts in.
+Steampipe's `source_type` ("steampipe") isn't in stave's built-in
+connector registry, but stave accepts unknown or custom source types
+by default, so no extra flag is needed.
 
 ## Sample observation
 
@@ -196,7 +195,6 @@ jobs:
             --observations observations \
             --max-unsafe 0s \
             --now $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-            --allow-unknown-input \
             --format sarif > stave.sarif
 
       - name: Upload SARIF
@@ -233,7 +231,7 @@ stave:
         --observations observations
         --max-unsafe 0s
         --now $(date -u +%Y-%m-%dT%H:%M:%SZ)
-        --allow-unknown-input
+       
         --format sarif > stave.sarif
   artifacts:
     when: always

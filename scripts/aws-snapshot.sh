@@ -219,7 +219,7 @@ echo ""
 
 # jq -s wraps the stream of objects into the obs.v0.1 envelope.
 # generated_by.source_type is required by `stave apply` unless
-# --allow-unknown-input is passed; aws.cli read-only is the right
+# is passed; aws.cli read-only is the right
 # value here.
 jq -s --arg captured_at "$TIMESTAMP" \
    '{
@@ -240,16 +240,16 @@ echo "════════════════════════�
 echo "Snapshot written: $TOTAL assets → $SNAPSHOT_FILE"
 echo ""
 echo "Next steps:"
-echo "  stave apply --observations $OUTPUT_DIR --allow-unknown-input"
+echo "  stave apply --observations $OUTPUT_DIR"
 echo ""
-echo "The --allow-unknown-input flag is required: this snapshot's"
+echo "The flag is required: this snapshot's"
 echo "source_type ('aws.cli') is not in stave's built-in connector"
 echo "manifest. The flag tells stave to evaluate anyway."
 echo ""
 echo "For machine-readable output:"
-echo "  stave apply --observations $OUTPUT_DIR --allow-unknown-input \\"
+echo "  stave apply --observations $OUTPUT_DIR \\"
 echo "       --format json | jq '.findings | length'"
 echo ""
 echo "To see compound chains:"
-echo "  stave apply --observations $OUTPUT_DIR --allow-unknown-input \\"
+echo "  stave apply --observations $OUTPUT_DIR \\"
 echo "       --format json | jq '.chains[]?'"

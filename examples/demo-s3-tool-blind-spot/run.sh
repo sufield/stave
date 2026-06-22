@@ -23,7 +23,7 @@ fmt_section "Findings — Security Tool Bypass"
 # stave apply exits 3 when violations are found (expected here);
 # capture output and continue.
 "$stave_bin" apply --observations "$obs" \
-    --now 2026-01-15T00:00:00Z --max-unsafe 168h --allow-unknown-input \
+    --now 2026-01-15T00:00:00Z --max-unsafe 168h \
     --format json > "$tmp" 2>/dev/null || rc=$?
 rc=${rc:-0}
 if [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ]; then

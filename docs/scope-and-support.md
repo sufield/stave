@@ -31,8 +31,8 @@
 
 Stave validates the `generated_by.source_type` field in observations against a
 built-in allowlist. Accepted source types do not imply cloud API access — all
-inputs are local snapshot files. To accept a source type that is not in the
-built-in list (for example, a custom extractor), pass `--allow-unknown-input`.
+inputs are local snapshot files. Source types that are not in the built-in
+list (for example, a custom extractor) are accepted by default.
 
 ## Status definitions
 

@@ -71,5 +71,5 @@ because the task framed it there and the Rhino publication treats it
 as a PassRole-adjacent pivot; the diagnostic `target_instance` field
 pins the specific instance involved.
 
-`args.txt` uses `--allow-unknown-input` matching every other escalation
-fixture.
+The fixture snapshots have no `generated_by.source_type`, which Stave accepts
+by default — matching every other escalation fixture.

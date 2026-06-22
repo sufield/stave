@@ -49,9 +49,6 @@ it in agent workflows; the looser default exists for hand-debugging.
   agent iterations.
 - `--max-unsafe <duration>` — override the SLA threshold (default 7 days).
   Affects duration-gated controls only.
-- `--allow-unknown-input` — accept observations missing
-  `generated_by.source_type`. Use when the observation was produced by
-  a non-standard collector.
 
 ### Reading the output
 

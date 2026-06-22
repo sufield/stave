@@ -42,8 +42,7 @@ cd stave
  --controls examples/duration/controls \
  --observations examples/duration/observations \
  --max-unsafe 12h \
- --now 2026-01-10T00:00:00Z \
- --allow-unknown-input
+ --now 2026-01-10T00:00:00Z
 ```
 
 ## Expected Result

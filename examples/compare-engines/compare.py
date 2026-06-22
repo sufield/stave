@@ -564,7 +564,6 @@ def run_stave_cel(fixture: dict) -> str:
         "--observations", str(fixture["observations"]),
         "--now", "2026-01-09T00:00:00Z",
         "--format", "json",
-        "--allow-unknown-input",
     ]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)

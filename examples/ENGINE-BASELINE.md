@@ -64,9 +64,9 @@ summary renders from — had been stale since **2026-05-08**, predating
 the rule expansion (2026-05-12 … 05-28) and badly undercounting
 coverage. It has now been **regenerated and committed** (the numbers
 below are measured, not projected). Regeneration also required fixing
-a harness bug: `cell_export` omitted `--allow-unknown-input`, so
-`export-sir` exited 4 on fixtures lacking `generated_by.source_type`
-and the SMT cell crashed on the missing file.
+a harness bug: `cell_export` produced no output for fixtures lacking
+`generated_by.source_type`, so `export-sir` failed and the SMT cell
+crashed on the missing file.
 
 Measured coverage (regenerated 2026-05-28, `clingo`/`pysat` run via
 their `.tools-venv` Python modules — there is no system `clingo`

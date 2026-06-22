@@ -122,7 +122,6 @@ green light.
 ```bash
 stave apply --observations ./observations \
     --now $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-    --allow-unknown-input \
     --format json
 ```
 
@@ -132,11 +131,9 @@ clock and the same snapshot produces different findings on different
 days. Pin `--now` to the observation's `captured_at` for reproducibility
 across CI runs and agent iterations.
 
-**`--allow-unknown-input`** lets the loader accept observations whose
-`generated_by.source_type` is missing or non-standard — common on
-fixtures and hand-authored test cases. Without the flag, those
-observations fail loading with exit 2 ("source_type missing"). Omit the
-flag only when you require strict source-type provenance.
+The loader accepts observations whose `generated_by.source_type` is
+missing or non-standard by default — common on fixtures and
+hand-authored test cases. No flag is required.
 
 Exit codes:
 - `0` — no findings
@@ -182,8 +179,7 @@ For chains the SIR projects, export facts and run an external solver:
 ```bash
 stave export-sir --format smt2 \
     --observations ./observations \
-    --now $(date -u +%Y-%m-%dT%H:%M:%SZ) \
-    --allow-unknown-input > facts.smt2
+    --now $(date -u +%Y-%m-%dT%H:%M:%SZ) > facts.smt2
 ```
 
 The export emits declarations + facts only — no query, no

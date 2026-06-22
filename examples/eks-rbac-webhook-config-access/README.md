@@ -44,8 +44,7 @@ Phase A:
  `CTL.K8S.AUTH.ACCESSKEYMAP.001` exists for that
  pattern.
 2. The engine silently drops `k8s_cluster` (and
- `aws_eks_cluster`) assets even with
- `--allow-unknown-input`, so the AccessKeyID-injection
+ `aws_eks_cluster`) assets, so the AccessKeyID-injection
  control's predicate cannot fire on real input. This
  is a Stave engine gap — separate from any iteration —
  that will need a small extractor or asset-type

@@ -70,7 +70,7 @@ as a scope boundary and that gate was lifted once the full 19-control
 audit confirmed the `.present` booleans were already principal-kind-
 agnostic.
 
-`args.txt` uses `--allow-unknown-input` because the fixture snapshots carry
-no `generated_by.source_type` — same convention as every other escalation
+The fixture snapshots carry no `generated_by.source_type`, which Stave accepts
+by default — same as every other escalation
 fixture (`e2e-iam-escalate-startbuild`, `e2e-iam-escalate-passrole-*`,
 `e2e-iam-escalate-self-cluster`).

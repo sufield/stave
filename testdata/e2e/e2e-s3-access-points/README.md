@@ -40,10 +40,10 @@
 
 ## Notes
 
-`args.txt` adds `--allow-unknown-input` because `aws_s3_access_point` is a new
-asset type not yet registered in the extractor source-type allowlist — it's the
-same flag the MRAP fixture uses for the parallel reason. This is expected per
-CLAUDE.md's guidance on custom observation source types.
+`aws_s3_access_point` is a new asset type whose `source_type` is not in the
+extractor allowlist; Stave accepts custom or unknown source types by default,
+so no extra flag is needed. This matches CLAUDE.md's guidance on custom
+observation source types.
 
 The bucket-side namespace for MRAP remains intact (`storage.mrap_*` on the bucket
 asset); single-region Access Points are modeled as their own asset because each

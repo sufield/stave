@@ -70,6 +70,6 @@ fires on role — in a single observation.
 `heidi-clean-role` is the role-side counterpart to `grace-clean` — both
 role-side techniques `.present = false`, stays silent.
 
-`args.txt` uses `--allow-unknown-input` because the fixture snapshots have no
-`generated_by.source_type` — the same convention every escalation fixture in
-this repo (`e2e-iam-escalate-startbuild`, `e2e-iam-escalate-passrole-*`) uses.
+The fixture snapshots have no `generated_by.source_type`, which Stave accepts
+by default — the same as every escalation fixture in this repo
+(`e2e-iam-escalate-startbuild`, `e2e-iam-escalate-passrole-*`).

@@ -43,7 +43,7 @@ engine reads in chronological order.
 | Field | Type | Notes |
 |---|---|---|
 | `source` | string | One of `"deployed"`, `"planned"`, `"local"`. Tells the engine whether this is reality, a Terraform plan, or a local dev snapshot. |
-| `generated_by.source_type` | string | Collector identifier. Stave rejects observations missing this UNLESS `--allow-unknown-input` is passed. |
+| `generated_by.source_type` | string | Collector identifier. Optional — Stave accepts observations with a missing or custom `source_type` by default. |
 | `generated_by.tool` | string | Collector name (e.g. `"steampipe"`). |
 | `generated_by.tool_version` | string | Collector version. |
 

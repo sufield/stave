@@ -53,9 +53,9 @@ to maintain — file presence is the contract.
 
 Each observation carries `generated_by.source_type` so findings can be
 traced back to the producing extractor. Steampipe and other custom
-producers use source types stave does not ship a schema for; pass
-`--allow-unknown-input` so the loader does not reject them. Built-in
-sources (Terraform State, AWS Config) need no flag.
+producers use source types stave does not ship a schema for; the
+loader accepts them by default. Built-in sources (Terraform State,
+AWS Config) carry recognized source types.
 
 ### Output — tools that consume stave findings
 

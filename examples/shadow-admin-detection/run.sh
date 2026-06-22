@@ -35,7 +35,7 @@ apply_json() {
     out=$("$STAVE" apply \
         --observations "$1" \
         --controls "$stave_root/controls/iam/entropy" \
-        --now "$NOW" --max-unsafe 168h --allow-unknown-input \
+        --now "$NOW" --max-unsafe 168h \
         --format json 2>/dev/null) || rc=$?
     rc=${rc:-0}
     if [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ]; then

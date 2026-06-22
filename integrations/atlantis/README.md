@@ -72,7 +72,6 @@ workflows:
             stave apply \
               --observations /tmp/stave-obs \
               --max-unsafe 0s \
-              --allow-unknown-input \
               --format text
 EOF
 ```

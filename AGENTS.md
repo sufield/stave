@@ -185,7 +185,6 @@ These terms are final. The renames are done. Use the canonical term.
 
 - Use `time.Now()` directly. Inject time via `core/ports.Clock` or function parameters. The architecture test enforces this.
 - Create test mocks for the database — there is no database. Stave is offline-first.
-- Skip the `--allow-unknown-input` flag for custom observation types in E2E tests.
 
 ## File Organization
 

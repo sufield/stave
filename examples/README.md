@@ -26,8 +26,7 @@ A bucket with public read access. Stave detects the exposure.
   --controls examples/public-bucket/controls \
   --observations examples/public-bucket/observations \
   --max-unsafe 12h \
-  --now 2026-01-02T00:00:00Z \
-  --allow-unknown-input
+  --now 2026-01-02T00:00:00Z
 ```
 
 Exit code 3 — violation found. The bucket has `public_read: true` for
@@ -43,8 +42,7 @@ policy change away from exposure.
   --controls examples/missing-pab/controls \
   --observations examples/missing-pab/observations \
   --max-unsafe 12h \
-  --now 2026-01-02T00:00:00Z \
-  --allow-unknown-input
+  --now 2026-01-02T00:00:00Z
 ```
 
 Exit code 3 — violation found. Public Access Block has been disabled
@@ -61,8 +59,7 @@ threshold.
   --controls examples/duration/controls \
   --observations examples/duration/observations \
   --max-unsafe 12h \
-  --now 2026-01-10T00:00:00Z \
-  --allow-unknown-input
+  --now 2026-01-10T00:00:00Z
 ```
 
 Exit code 3 — violation found. The bucket has been publicly readable
@@ -135,4 +132,3 @@ examples/lib/graph-export/
 | `--observations` | Directory containing JSON observation snapshots |
 | `--max-unsafe` | Maximum time a bucket may remain unsafe before violation |
 | `--now` | Fixed timestamp for deterministic output |
-| `--allow-unknown-input` | Accept observations with custom source types |

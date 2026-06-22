@@ -122,7 +122,6 @@ else
         --observations "$WORKDIR/observations" \
         --max-unsafe "$MAX_UNSAFE" \
         --now "$NOW" \
-        --allow-unknown-input \
         --format text \
         2>/dev/null || RC=$?
 fi

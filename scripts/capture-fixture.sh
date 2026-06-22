@@ -11,7 +11,8 @@
 #   ./scripts/capture-fixture.sh sadcloud
 #   ./scripts/capture-fixture.sh all
 #
-# Each lab has a directory under labs/<lab>/ with:
+# Each lab has a directory under ctf/<vendor>/ (sadcloud's automated capture
+# experiment -> ctf/nccgroup/automated) with:
 #   deploy.sh     — terraform apply (or equivalent)
 #   collect.sh    — run the collector, write observations/
 #   destroy.sh    — terraform destroy
@@ -24,7 +25,19 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-LABS_DIR="$REPO_ROOT/labs"
+
+# Vendor labs live under <repo-root>/ctf/<vendor>/ (e.g. sadcloud -> ctf/nccgroup),
+# each with deploy.sh / collect.sh / destroy.sh / manifest.json. Map the lab
+# name to its directory; KNOWN_LABS drives the "all" target.
+CTF_DIR="$(cd "$REPO_ROOT/../ctf" && pwd)"
+KNOWN_LABS=(sadcloud)
+
+resolve_lab_dir() {
+    case "$1" in
+        sadcloud) echo "$CTF_DIR/nccgroup/automated" ;;
+        *)        echo "" ;;
+    esac
+}
 
 compute_obs_hash() {
     local obs_dir="$1"
@@ -36,12 +49,11 @@ compute_obs_hash() {
 
 run_lab() {
     local lab="$1"
-    local lab_dir="$LABS_DIR/$lab"
+    local lab_dir; lab_dir="$(resolve_lab_dir "$lab")"
 
-    if [ ! -d "$lab_dir" ]; then
-        echo "ERROR: lab directory $lab_dir does not exist" >&2
-        echo "Available labs:" >&2
-        ls "$LABS_DIR" 2>/dev/null | sed 's/^/  /' >&2
+    if [ -z "$lab_dir" ] || [ ! -d "$lab_dir" ]; then
+        echo "ERROR: unknown lab '$lab' (dir: ${lab_dir:-<unmapped>})" >&2
+        echo "Known labs: ${KNOWN_LABS[*]}" >&2
         return 1
     fi
 
@@ -93,9 +105,8 @@ main() {
     local target="${1:-all}"
 
     if [ "$target" = "all" ]; then
-        for lab_dir in "$LABS_DIR"/*/; do
-            [ -d "$lab_dir" ] || continue
-            run_lab "$(basename "$lab_dir")"
+        for lab in "${KNOWN_LABS[@]}"; do
+            run_lab "$lab"
         done
     else
         run_lab "$target"

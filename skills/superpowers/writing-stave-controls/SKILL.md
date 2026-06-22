@@ -175,14 +175,14 @@ NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 # Fires on writeup
 stave apply --controls $(dirname your-control.yaml) \
     --observations fixtures/writeup/observations \
-    --format json --now $NOW --allow-unknown-input \
+    --format json --now $NOW \
     | jq '[.findings[] | select(.control_id == "YOUR.CTL.ID")] | length'
 # Expected: > 0
 
 # Silent on remediated
 stave apply --controls $(dirname your-control.yaml) \
     --observations fixtures/remediated/observations \
-    --format json --now $NOW --allow-unknown-input \
+    --format json --now $NOW \
     | jq '[.findings[] | select(.control_id == "YOUR.CTL.ID")] | length'
 # Expected: 0
 ```
