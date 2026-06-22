@@ -59,7 +59,6 @@ var facadeCleanBaseline = map[string]struct{}{
 	"enforce/gate":       {},
 	"enforce/generate":   {},
 	"enforce/graph":      {},
-	"evaluate":           {},
 	"exportsir":          {},
 	"cel":                {},
 	"compare":            {},

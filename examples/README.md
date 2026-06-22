@@ -84,6 +84,26 @@ docker compose build
 docker compose run --rm -T stave --z3-example
 ```
 
+## 5. Graph export (Go library example)
+
+A standalone Go program that uses Stave's library API
+(`pkg/stave.ExportGraph`) to project an `Assessment` into the
+cross-service relationship view — assets, the findings and chains
+that hang off them, and the edges between — then shows the
+`WithSIRDocument` enrichment that adds transitive IAM role chains
+and per-asset lifecycle. No external data or cgo required.
+
+```bash
+cd stave
+go run -tags graphexample ./examples/lib/graph-export
+```
+
+The `graphexample` build tag keeps it out of the normal module
+build. See
+[`lib/graph-export/README.md`](lib/graph-export/README.md) for the
+export shape, JSON output, and downstream consumers (Neo4j
+visualisers, Z3 reachability queries).
+
 ## What each example contains
 
 The first three examples follow this shape:
@@ -95,12 +115,16 @@ examples/<name>/
   README.md      Scenario details and expected output
 ```
 
-The Go-code example follows a different shape:
+The Go-code examples follow a different shape:
 
 ```
 examples/z3-public-exposure/
   main.go        The Go program (uses Stave library + go-z3)
   README.md      Build, run, and architectural notes
+
+examples/lib/graph-export/
+  main.go        The Go program (uses pkg/stave.ExportGraph)
+  README.md      Export shape, JSON output, downstream consumers
 ```
 
 ## Flags explained
