@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.FOOTHOLD.CICD.TRIPLE.001
+name: CI/CD Deploy Role Must Not Hold CloudFormation + IAM + Secrets Together
+description: >
+  A single CI/CD deploy role whose effective permissions span all three of
+  CloudFormation, IAM, and Secrets Manager has effective control of the entire
+  environment: it can create infrastructure, modify identity, and read secrets.
+  Any one of the three is normal for a pipeline — the conjunction is the
+  foothold. The role is classified CI/CD when its trust policy admits a CI
+  principal (GitHub Actions OIDC token.actions.githubusercontent.com, CodeBuild,
+  CodePipeline, GitLab, CircleCI, Jenkins) or its name matches a CI pattern
+  (*deploy*, *cicd*, *pipeline*, *build*, *github-actions*). The three
+  effective-access signals are derived from inline + attached managed policies +
+  permission boundaries, so wildcard (cloudformation:*) and specific
+  (cloudformation:CreateStack) grants both resolve to the same boolean.
+domain: identity
+severity: critical
+scope: compound
+corpus_reference: MITRE:T1078.004
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - cicd
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.cicd_role
+  - identity.effective_access.cloudformation
+  - identity.effective_access.iam
+  - identity.effective_access.secretsmanager
+remediation:
+  description: >
+    A CI/CD role holds CloudFormation, IAM, and Secrets Manager access
+    simultaneously — effective control of the environment from one assumable
+    identity.
+  action: >
+    Split the pipeline's privileges across separate roles: an
+    infrastructure-deploy role (CloudFormation) distinct from any
+    identity-management step (IAM) and from secret access (Secrets Manager).
+    Scope each to the specific stacks, roles, and secrets it needs, and never
+    grant all three to one role.
+  example: |
+    {
+      "identity": {
+        "kind": "iam_role",
+        "cicd_role": true,
+        "effective_access": { "cloudformation": true, "iam": false, "secretsmanager": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.cicd_role
+      op: eq
+      value: true
+    - field: properties.identity.effective_access.cloudformation
+      op: eq
+      value: true
+    - field: properties.identity.effective_access.iam
+      op: eq
+      value: true
+    - field: properties.identity.effective_access.secretsmanager
+      op: eq
+      value: true
+tests:
+  - name: GitHub Actions OIDC role with cfn+iam+secrets wildcards fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:role/github-actions-deploy
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: iam_role
+          cicd_role: true
+          effective_access:
+            cloudformation: true
+            iam: true
+            secretsmanager: true
+  - name: CI role with CloudFormation + iam:PassRole only, no secrets, passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:role/github-actions-deploy-noseecrets
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: iam_role
+          cicd_role: true
+          effective_access:
+            cloudformation: true
+            iam: true
+            secretsmanager: false
+  - name: CodeBuild role with specific (non-wildcard) actions across all three still fires (false-negative trap)
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:role/codebuild-deploy
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: iam_role
+          cicd_role: true
+          effective_access:
+            cloudformation: true
+            iam: true
+            secretsmanager: true

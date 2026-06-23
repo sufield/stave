@@ -1,0 +1,3 @@
+vuln   souffle=PATH  z3=sat
+fp     souffle=NONE  z3=unsat
+fn     souffle=PATH  z3=sat

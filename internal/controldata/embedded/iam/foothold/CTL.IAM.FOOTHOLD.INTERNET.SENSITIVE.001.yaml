@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.FOOTHOLD.INTERNET.SENSITIVE.001
+name: Internet-Facing Compute Identity Must Not Reach Sensitive Resources
+description: >
+  No IAM role attached to internet-facing compute may have transitive reach to a
+  sensitive resource. Internet-facing compute is an EC2 instance with a public
+  IP (or in a public subnet), an ECS task behind a public load balancer, or a
+  Lambda with a Function URL or API Gateway trigger. Sensitive resources are
+  Secrets Manager secrets, customer-managed KMS keys, RDS instances/clusters,
+  and S3 buckets tagged sensitive/pii/confidential/restricted/high. Reach is any
+  path — direct permission, sts:AssumeRole chain, iam:PassRole, or a
+  resource-based policy grant — from the internet-facing role to the sensitive
+  resource.
+
+  This control reads the `identity.reaches_sensitive` signal, which the graph
+  layer derives by full reachability (direct AND transitive). The companion
+  Soufflé + Z3 reasoning spec (examples/iam-foothold-internet-reach) computes
+  that signal and proves it three ways; this per-resource control surfaces the
+  derived verdict in the catalog. The two-hop case (role → AssumeRole →
+  intermediate role → secret) resolves to `reaches_sensitive: true`, so it is
+  caught here exactly like the direct case.
+
+  Fail-loud: if `identity.internet_facing` cannot be determined from the
+  snapshot, the collector MUST populate it as the explicit unknown sentinel and
+  surface it — it must never silently default to false (which would hide an
+  internet-facing role). This control assumes the signal is populated.
+domain: identity
+severity: critical
+scope: compound
+corpus_reference: MITRE:T1530
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05", "DSP-17"]
+scope_tags:
+  - aws
+  - iam
+  - reachability
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: collection
+observation_fields:
+  - identity.kind
+  - identity.internet_facing
+  - identity.reaches_sensitive
+remediation:
+  description: >
+    An IAM role attached to internet-facing compute can reach a sensitive
+    resource (Secrets Manager / KMS / RDS / tagged-sensitive S3), directly or
+    through an assume-role / pass-role / resource-policy chain.
+  action: >
+    Break the path: remove the internet-facing compute's role access to the
+    sensitive resource, or insert an isolation boundary (a non-internet-facing
+    intermediary the public workload cannot assume). Prefer short-lived,
+    narrowly-scoped credentials fetched at request time over a standing path
+    from a public workload to a secret. Re-run the reachability spec to confirm
+    UNSAT (no path).
+  example: |
+    {
+      "identity": {
+        "kind": "iam_role",
+        "internet_facing": true,
+        "reaches_sensitive": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.internet_facing
+      op: eq
+      value: true
+    - field: properties.identity.reaches_sensitive
+      op: eq
+      value: true
+tests:
+  - name: EC2 public-IP role with direct secretsmanager access fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:role/web-ec2-role
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: iam_role
+          internet_facing: true
+          reaches_sensitive: true
+  - name: EC2 private-IP-only role with the same secrets access passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:role/internal-ec2-role
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: iam_role
+          internet_facing: false
+          reaches_sensitive: true
+  - name: EC2 public-IP role reaching a secret via a two-hop assume chain still fires (false-negative trap)
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:role/web-ec2-role-twohop
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: iam_role
+          internet_facing: true
+          reaches_sensitive: true

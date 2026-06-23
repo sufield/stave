@@ -1,0 +1,43 @@
+// IAM-FOOTHOLD-001 — internet-facing compute identity reaching a sensitive
+// resource (Soufflé / Datalog). Full graph reachability over the IAM/resource
+// graph. The per-resource control reads the derived `reaches_sensitive` signal;
+// this program is one of the two engines that compute it (Z3 is the other).
+//
+//   souffle reachable.dl -F <facts-dir> -D <out-dir>
+//   -> out-dir/reachable.csv lists (internet_facing_role, sensitive_resource).
+//
+// Each input relation is true ONLY for the captured facts; an empty relation
+// (e.g. no internet_facing_role, the private-IP false-positive trap) yields no
+// reachable tuples = PASS.
+
+.decl internet_facing_role(role:symbol)
+.decl sensitive_resource(res:symbol, rtype:symbol)
+.decl can_assume(fromRole:symbol, toRole:symbol)       // role has sts:AssumeRole on another role
+.decl can_pass(fromRole:symbol, toRole:symbol)         // role has iam:PassRole for a role to a compute service
+.decl has_access(role:symbol, res:symbol, action:symbol)        // role policy grants action on resource
+.decl resource_policy_grants(res:symbol, principalRole:symbol)  // resource-based policy grants a role
+.input internet_facing_role
+.input sensitive_resource
+.input can_assume
+.input can_pass
+.input has_access
+.input resource_policy_grants
+
+// A role transitively controls another via assume-role or pass-role chains.
+.decl controls_role(fromRole:symbol, toRole:symbol)
+controls_role(F, T) :- can_assume(F, T).
+controls_role(F, T) :- can_pass(F, T).
+controls_role(F, T) :- controls_role(F, M), controls_role(M, T).
+
+// A role can reach a resource: directly (own permission or resource policy),
+// or through any role it controls.
+.decl can_reach(role:symbol, res:symbol)
+can_reach(R, Res) :- has_access(R, Res, _).
+can_reach(R, Res) :- resource_policy_grants(Res, R).
+can_reach(R, Res) :- controls_role(R, M), has_access(M, Res, _).
+can_reach(R, Res) :- controls_role(R, M), resource_policy_grants(Res, M).
+
+// The finding: an internet-facing role reaches a sensitive resource.
+.decl reachable(role:symbol, res:symbol)
+.output reachable
+reachable(R, Res) :- internet_facing_role(R), sensitive_resource(Res, _), can_reach(R, Res).

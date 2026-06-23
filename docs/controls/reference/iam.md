@@ -1262,6 +1262,38 @@ Federated role trust policy does not require session tags. Without session tags,
 
 ---
 
+### CTL.IAM.FOOTHOLD.CICD.TRIPLE.001
+
+**CI/CD Deploy Role Must Not Hold CloudFormation + IAM + Secrets Together**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+A single CI/CD deploy role whose effective permissions span all three of CloudFormation, IAM, and Secrets Manager has effective control of the entire environment: it can create infrastructure, modify identity, and read secrets. Any one of the three is normal for a pipeline — the conjunction is the foothold. The role is classified CI/CD when its trust policy admits a CI principal (GitHub Actions OIDC token.actions.githubusercontent.com, CodeBuild, CodePipeline, GitLab, CircleCI, Jenkins) or its name matches a CI pattern (*deploy*, *cicd*, *pipeline*, *build*, *github-actions*). The three effective-access signals are derived from inline + attached managed policies + permission boundaries, so wildcard (cloudformation:*) and specific (cloudformation:CreateStack) grants both resolve to the same boolean.
+
+**Remediation:** Split the pipeline's privileges across separate roles: an infrastructure-deploy role (CloudFormation) distinct from any identity-management step (IAM) and from secret access (Secrets Manager). Scope each to the specific stacks, roles, and secrets it needs, and never grant all three to one role.
+
+---
+
+### CTL.IAM.FOOTHOLD.INTERNET.SENSITIVE.001
+
+**Internet-Facing Compute Identity Must Not Reach Sensitive Resources**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+No IAM role attached to internet-facing compute may have transitive reach to a sensitive resource. Internet-facing compute is an EC2 instance with a public IP (or in a public subnet), an ECS task behind a public load balancer, or a Lambda with a Function URL or API Gateway trigger. Sensitive resources are Secrets Manager secrets, customer-managed KMS keys, RDS instances/clusters, and S3 buckets tagged sensitive/pii/confidential/restricted/high. Reach is any path — direct permission, sts:AssumeRole chain, iam:PassRole, or a resource-based policy grant — from the internet-facing role to the sensitive resource.
+This control reads the `identity.reaches_sensitive` signal, which the graph layer derives by full reachability (direct AND transitive). The companion Soufflé + Z3 reasoning spec (examples/iam-foothold-internet-reach) computes that signal and proves it three ways; this per-resource control surfaces the derived verdict in the catalog. The two-hop case (role → AssumeRole → intermediate role → secret) resolves to `reaches_sensitive: true`, so it is caught here exactly like the direct case.
+Fail-loud: if `identity.internet_facing` cannot be determined from the snapshot, the collector MUST populate it as the explicit unknown sentinel and surface it — it must never silently default to false (which would hide an internet-facing role). This control assumes the signal is populated.
+
+**Remediation:** Break the path: remove the internet-facing compute's role access to the sensitive resource, or insert an isolation boundary (a non-internet-facing intermediary the public workload cannot assume). Prefer short-lived, narrowly-scoped credentials fetched at request time over a standing path from a public workload to a secret. Re-run the reachability spec to confirm UNSAT (no path).
+
+---
+
 ### CTL.IAM.GROUP.EMPTY.001
 
 **IAM Group Has Policies But No Members**
