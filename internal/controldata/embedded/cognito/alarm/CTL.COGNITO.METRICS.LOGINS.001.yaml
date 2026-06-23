@@ -41,8 +41,8 @@ remediation:
     them as CloudWatch metrics so they're
     chartable, alarmable, and exportable to
     SIEM. Without this base layer of
-    metrics, the alarm controls in this
-    iteration have nothing to alarm on.
+    metrics, the Cognito sign-in alarm
+    controls have nothing to alarm on.
   example: |
     {
       "identity": {

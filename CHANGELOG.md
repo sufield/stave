@@ -102,7 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Lambda-2 — environment-variable security, KMS deepening,
   and Secrets Manager integration (6 new controls, 3 chains).**
-  Second Lambda gap-closure iteration. Closes the
+  Second Lambda gap-closure batch. Closes the
   credential-handling surface around Lambda environment
   variables. Spec asked for ~8 controls; one duplicated
   `CTL.LAMBDA.ENV.ENCRYPT.001` (which already covers
@@ -157,7 +157,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   history + sprawl).
 - **Lambda-1 — ghost references, function URL security,
   and resource policy deepening (6 new controls, 4 chains).**
-  First Lambda gap-closure iteration. Extends the
+  First Lambda gap-closure batch. Extends the
   ghost-reference family to serverless compute.
   Spec asked for ~10 controls; four duplicated existing
   catalog entries (CTL.LAMBDA.URL.AUTH.001 covered
@@ -212,7 +212,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   total in catalog: 48 → 54.
 - **RDS-6 — Aurora-specific, HA, and lifecycle controls
   (8 new controls, 3 chains).** Sixth and final RDS
-  gap-closure iteration. Closes the Aurora-specific
+  gap-closure batch. Closes the Aurora-specific
   surface (cluster topology, MySQL backtrack, serverless
   v1, Global Database secondary encryption), the HA
   surface beyond Multi-AZ (read-replica AZ placement,
@@ -264,13 +264,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   engines are caught, backtrack-pg-pass asserts the
   PostgreSQL gate skips the control), and a 3-diff
   REPLICA.CONFIG variant exercising compound drift.
-  8 triage overrides. Final RDS iteration; the 6
-  iterations together added 45 net-new RDS controls.
+  8 triage overrides. Final RDS batch; the 6
+  batches together added 45 net-new RDS controls.
 - **RDS-5 — backup deepening, cross-region DR, and
   snapshot sharing security (7 new controls, 3 chains).**
-  Fifth RDS gap-closure iteration. Closes the data-
+  Fifth RDS gap-closure batch. Closes the data-
   resilience and snapshot-boundary surface that the
-  earlier RDS iterations did not reach. Spec asked for
+  earlier RDS batches did not reach. Spec asked for
   ~8 controls; one duplicated `CTL.RDS.ENCRYPT.BACKUP.001`
   (RDS-1's automated-backup encryption check), so 7
   distinct additions shipped. Backup (3):
@@ -322,7 +322,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   partial → comprehensive.
 - **RDS-4 — authentication, Secrets Manager integration,
   and RDS Proxy security (6 new controls, 3 chains).**
-  Fourth RDS gap-closure iteration. Closes the credential-
+  Fourth RDS gap-closure batch. Closes the credential-
   lifecycle and Proxy-security surface that RDS-1/2/3 did
   not cover. Spec asked for ~8 controls; three duplicated
   existing catalog entries (CTL.RDS.IAMAUTH.001 covered
@@ -372,7 +372,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   comprehensive.
 - **RDS-3 — ghost references and orphaned resources
   (8 new controls, 3 chains).** Third RDS gap-closure
-  iteration. Extends Stave's ghost-reference pattern
+  batch. Extends Stave's ghost-reference pattern
   (cross-inventory existence checks) to the database
   domain. All 8 controls net-new — no overlap with
   the existing RDS catalog. Ghost references (6):
@@ -392,7 +392,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   high), `GHOST.PROXYSECRET` (RDS Proxy references a
   deleted Secrets Manager secret → DELAYED failure on
   pool refresh hours after the secret deletion,
-  critical — the only critical in the iteration and
+  critical — the only critical in the batch and
   the most dangerous ghost pattern in the catalog),
   `GHOST.SG` (instance attaches a deleted security
   group → undefined network policy at next
@@ -421,7 +421,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   catalog: 42 → 48.
 - **RDS-2 — logging deepening, CloudWatch alarms, and event
   subscriptions (10 new controls, 3 chains).** Second RDS
-  gap-closure iteration. Closes the operational-monitoring
+  gap-closure batch. Closes the operational-monitoring
   surface that RDS-1 (TLS / encryption / parameter group)
   did not reach. All 10 planned controls were net-new
   after dedup against existing CTL.RDS.MONITORING.001
@@ -471,7 +471,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   comprehensive.
 - **RDS-1 — TLS, encryption, and parameter-group security
   (6 new controls, 3 chains).** First RDS gap-closure
-  iteration. Closes the database-engine-configuration
+  batch. Closes the database-engine-configuration
   surface that VPC, IAM, and generic-encryption controls
   do not reach. Prompt spec asked for ~10 controls; four
   turned out to duplicate existing ones (`CTL.RDS.SSL.001`
@@ -516,10 +516,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   controls (combined with existing PARAM.GROUP / LOG).
 - **EC2-6 — key pair lifecycle and remaining EC2 gaps
   (6 new controls, 2 chains).** Final EC2 gap-closure
-  iteration. Closes the API-observable key-pair surface
+  batch. Closes the API-observable key-pair surface
   (most key-pair gaps — password auth, root login,
   authorized_keys, host key verification — are OS-level
-  and not visible from the EC2 / SSM API; this iteration
+  and not visible from the EC2 / SSM API; this batch
   covers what is visible) plus addressable LT/ASG drift.
   Key pair lifecycle (3): `KEYPAIR.SHARED` (key pair
   shared across > 5 instances → blast radius of one
@@ -547,13 +547,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   multiple drift signals reproduce on every launch).
   13 e2e fixtures (12 base pass/fail + extreme-50-instance
   variant for KEYPAIR.SHARED). 6 triage overrides.
-  EC2 gap closure complete: 6 iterations, 47 net-new
-  controls (≈8 per iteration; spec asked for ~58 but
+  EC2 gap closure complete: 6 batches, 47 net-new
+  controls (≈8 per batch; spec asked for ~58 but
   duplicates against existing catalog dropped each
-  iteration).
+  batch).
 - **EC2-5 — trusted platform and network exposure deepening
   (7 new controls, 3 chains).** Fifth EC2 gap-closure
-  iteration. Opens the trusted-platform domain (was 0
+  batch. Opens the trusted-platform domain (was 0
   controls) and deepens network exposure beyond the
   security-group surface that VPC-1 / VPC-7 covered.
   Prompt spec asked for ~8 controls; one turned out to
@@ -593,7 +593,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   7 triage overrides. Trusted platform: 0 → 4 controls.
 - **EC2-4 — instance lifecycle and orphaned resources
   (6 new controls, 3 chains).** Fourth EC2 gap-closure
-  iteration. Closes the post-termination decommission-leak
+  batch. Closes the post-termination decommission-leak
   surface and the long-lived-instance retirement surface.
   Prompt spec asked for ~8 controls; two turned out to
   duplicate existing ones (`CTL.EC2.INSTANCE.AGE.001`
@@ -626,7 +626,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   overrides.
 - **EC2-1 — launch template ghost references and AMI security
   (6 new controls, 3 chains).** First EC2 gap-closure
-  iteration. Extends the ghost-reference pattern to launch
+  batch. Extends the ghost-reference pattern to launch
   templates — Stave's architectural moat now covers the
   compute supply chain in addition to S3, IAM, KMS, VPC,
   EventBridge, CloudWatch, Route53, GitHub CODEOWNERS, and
@@ -656,9 +656,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   overrides. Ghost reference total across catalog: 37 → 41.
   Docs and README regenerated (1392 controls).
 - **VPC-8 — lateral movement, network segmentation, and IPv6
-  controls (8 controls, 3 chains). Final VPC iteration.** Closes
+  controls (8 controls, 3 chains). Final VPC batch.** Closes
   the category-14 (lateral movement) and category-12 (IPv6)
-  clusters; completes the eight-iteration VPC gap-closure
+  clusters; completes the eight-batch VPC gap-closure
   programme.
   Segmentation (5): `SEGMENT.ENVMIX` (production and non-
   production share network path, high), `SEGMENT.TIERING`
@@ -870,7 +870,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and zero trust principles. 0 flagged as ambiguous. 1 golden updated
   (e2e-hipaa-cross-domain, additive only — ROOT controls). Total
   authored: 121 of 675 controls (17.9%). Remaining IAM: 20 controls
-  across smaller sub-families. Next iteration: complete remaining IAM
+  across smaller sub-families. Next batch: complete remaining IAM
   (20 controls) then pivot to K8S (64 controls).
 - **Defect/infection/failure metadata on 38 IAM controls** —
   IAM.ESCALATE (22) and IAM.POLICY (16) sub-families authored. Covers
@@ -881,10 +881,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ghost references, inline policies, MFA enforcement). 0 controls
   flagged as ambiguous. 0 goldens updated (IAM controls not exercised
   by existing fixtures). Total authored: 81 of 675 controls (12.0%).
-  Next iteration: remaining IAM sub-families (62 controls) or pivot
+  Next batch: remaining IAM sub-families (62 controls) or pivot
   to K8S (64 controls).
 - **Defect/infection/failure metadata on all 29 CTL.EC2 controls** —
-  complete EC2 family authored in one iteration. Each control now carries
+  complete EC2 family authored in one batch. Each control now carries
   `defect`, `infection`, and `failure` prose enabling adopters to triage
   findings without external reference. Covers: encryption (EBS volumes,
   snapshots, Nitro Enclaves), network exposure (public IPs, IMDSv2,
@@ -893,9 +893,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   monitoring, SSM session logging), governance (launch templates, SSM
   management), resilience (ASG health checks, termination protection),
   and version currency (AMI age). Total authored: 43 of 675 controls
-  (14 S3 + IAM + Lambda prior + 29 EC2 this iteration). No case
+  (14 S3 + IAM + Lambda prior + 29 EC2 this batch). No case
   programs affected (none exercise EC2 controls). 1 golden file updated
-  (e2e-hipaa-cross-domain, additive only). Next iteration: IAM
+  (e2e-hipaa-cross-domain, additive only). Next batch: IAM
   sub-families (ESCALATE + POLICY, ~38 controls).
 - **Three per-service IAM privilege-escalation controls** grounded in
   three disclosed incidents. Each detects a distinct privesc path

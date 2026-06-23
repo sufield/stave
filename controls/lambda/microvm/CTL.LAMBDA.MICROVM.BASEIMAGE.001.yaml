@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.MICROVM.BASEIMAGE.001
+name: MicroVM Image Uses Unapproved Base Image
+description: >
+  MicroVM Image Uses Unapproved Base Image. Lab control for the Lambda MicroVM validation suite
+  (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot
+  (obs.v0.1) for this invariant.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+scope_tags:
+  - aws
+  - lambda
+  - microvm
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lambda_microvm_image
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    MicroVM Image Uses Unapproved Base Image — finding detected on the captured MicroVM configuration.
+  action: >
+    Build only from approved, current AWS base images (e.g. aws:microvm-image:al2023-*).
+  example: |
+    {
+      "microvm_image": {
+        "kind": "microvm_image",
+        "base_image": {
+          "approved": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.microvm_image.kind
+      op: eq
+      value: microvm_image
+    - field: properties.microvm_image.base_image.approved
+      op: eq
+      value: false

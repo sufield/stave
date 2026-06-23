@@ -545,6 +545,246 @@ Fact-recording marker for Lambda functions that are registered as a Bedrock agen
 
 ---
 
+### CTL.LAMBDA.MICROVM.BASEIMAGE.001
+
+**MicroVM Image Uses Unapproved Base Image**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-6;
+
+MicroVM Image Uses Unapproved Base Image. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+
+**Remediation:** Build only from approved, current AWS base images (e.g. aws:microvm-image:al2023-*).
+
+---
+
+### CTL.LAMBDA.MICROVM.BUILDROLE.001
+
+**MicroVM Build Role Is Over-Privileged**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6;
+
+MicroVM Build Role Is Over-Privileged. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+
+**Remediation:** Scope the build role to S3 read of the artifact bucket, ECR push, and CloudWatch logs only.
+
+---
+
+### CTL.LAMBDA.MICROVM.CONNORIGIN.001
+
+**MicroVM Uses Developer-Created Network Connector in Production**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-6;
+
+MicroVM Uses Developer-Created Network Connector in Production. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+
+**Remediation:** Use a network-team-provisioned connector in production; do not let developers create prod connectors.
+
+---
+
+### CTL.LAMBDA.MICROVM.CONNROLE.001
+
+**MicroVM Network Connector Role Is Over-Privileged**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6;
+
+MicroVM Network Connector Role Is Over-Privileged. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+
+**Remediation:** Scope the connector role to ENI management only (ec2:Create/Delete/DescribeNetworkInterfaces).
+
+---
+
+### CTL.LAMBDA.MICROVM.ENTROPY.001
+
+**MicroVM Does Not Reinitialize Entropy on Resume**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-6;
+
+MicroVM Does Not Reinitialize Entropy on Resume. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+
+**Remediation:** Configure lifecycle hooks that reinitialize entropy on run and resume.
+
+---
+
+### CTL.LAMBDA.MICROVM.EXECROLE.001
+
+**MicroVM Execution Role Is Over-Privileged**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6;
+
+MicroVM Execution Role Is Over-Privileged. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+
+**Remediation:** Scope the execution role to least privilege; remove wildcard actions and broad secretsmanager/s3 access.
+
+---
+
+### CTL.LAMBDA.MICROVM.IDENTITY.001
+
+**MicroVM Workload Identity Has No Identity Claims**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6;
+
+MicroVM Workload Identity Has No Identity Claims. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+
+**Remediation:** Ensure the MicroVM workload identity carries non-empty identity claims so the workload is governable.
+
+---
+
+### CTL.LAMBDA.MICROVM.IDLE.001
+
+**MicroVM Idle Duration Exceeds Organization Limit**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-6;
+
+MicroVM Idle Duration Exceeds Organization Limit. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+
+**Remediation:** Lower maxIdleDurationSeconds to within the org limit (<=1800s) for agent workloads.
+
+---
+
+### CTL.LAMBDA.MICROVM.INGRESSAUTH.001
+
+**MicroVM Ingress Authentication Not Securely Enabled**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6;
+
+MicroVM Ingress Authentication Not Securely Enabled. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+
+**Remediation:** Enable ingress authentication and constrain the auth token expiry; never disable ingress auth.
+
+---
+
+### CTL.LAMBDA.MICROVM.RUNTIME.001
+
+**MicroVM Maximum Runtime Exceeds Organization Limit**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-6;
+
+MicroVM Maximum Runtime Exceeds Organization Limit. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+
+**Remediation:** Lower the MicroVM maximum duration to within the org limit (<=1800s); 8h is the AWS ceiling, not a target.
+
+---
+
+### CTL.LAMBDA.MICROVM.S3PUBLIC.001
+
+**MicroVM Artifact Bucket Allows Public Access**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-6;
+
+MicroVM Artifact Bucket Allows Public Access. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+
+**Remediation:** Enable S3 Block Public Access on the artifact bucket and remove public bucket-policy grants.
+
+---
+
+### CTL.LAMBDA.MICROVM.S3VERSION.001
+
+**MicroVM Artifact Bucket Versioning Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-6;
+
+MicroVM Artifact Bucket Versioning Not Enabled. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+
+**Remediation:** Enable (not merely un-suspend) versioning on the artifact bucket for a deployment audit trail.
+
+---
+
+### CTL.LAMBDA.MICROVM.SG.001
+
+**MicroVM Network Connector Security Group Allows Unrestricted Ingress**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-6;
+
+MicroVM Network Connector Security Group Allows Unrestricted Ingress. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+
+**Remediation:** Restrict the connector security group ingress to specific ports and CIDRs; remove 0.0.0.0/0 rules.
+
+---
+
+### CTL.LAMBDA.MICROVM.SNAPSHOTSECRET.001
+
+**MicroVM Image Loads Secrets Into the Snapshot at Init**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6;
+
+MicroVM Image Loads Secrets Into the Snapshot at Init. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+
+**Remediation:** Defer secret loading to a runtime lifecycle hook; never read secrets at module scope before the snapshot.
+
+---
+
+### CTL.LAMBDA.MICROVM.SUBNET.001
+
+**MicroVM Network Connector Uses Unapproved Subnets**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-6;
+
+MicroVM Network Connector Uses Unapproved Subnets. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+
+**Remediation:** Attach the network connector only to approved private subnets; remove public or unlisted subnets.
+
+---
+
+### CTL.LAMBDA.MICROVM.TAGSESSION.001
+
+**MicroVM Execution Role Trust Policy Missing or Over-Broad sts:TagSession**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6;
+
+MicroVM Execution Role Trust Policy Missing or Over-Broad sts:TagSession. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+
+**Remediation:** Include sts:TagSession in the trust policy and avoid sts:* wildcards.
+
+---
+
 ### CTL.LAMBDA.OVERPERM.S3PHI.001
 
 **Lambda Execution Role Must Not Reach PHI-Tagged S3 Buckets**

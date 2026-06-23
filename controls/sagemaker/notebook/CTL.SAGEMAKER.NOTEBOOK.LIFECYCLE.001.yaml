@@ -10,8 +10,8 @@ description: >
   configuration and cannot be hardened consistently across
   the team. Lifecycle configurations are also the standard
   hook for auto-stop and credential rotation; their absence
-  is the upstream cause of several other lifecycle failures
-  in this iteration.
+  is the upstream cause of several other SageMaker notebook
+  lifecycle failures.
 domain: governance
 severity: medium
 compliance:

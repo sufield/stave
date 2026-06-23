@@ -1,0 +1,43 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.MICROVM.SG.001
+name: MicroVM Network Connector Security Group Allows Unrestricted Ingress
+description: >
+  MicroVM Network Connector Security Group Allows Unrestricted Ingress. Lab control for the Lambda MicroVM validation suite
+  (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot
+  (obs.v0.1) for this invariant.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+scope_tags:
+  - aws
+  - lambda
+  - microvm
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lambda_network_connector
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    MicroVM Network Connector Security Group Allows Unrestricted Ingress — finding detected on the captured MicroVM configuration.
+  action: >
+    Restrict the connector security group ingress to specific ports and CIDRs; remove 0.0.0.0/0 rules.
+  example: |
+    {
+      "network_connector": {
+        "kind": "network_connector",
+        "security_groups": {
+          "has_unrestricted_ingress": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network_connector.kind
+      op: eq
+      value: network_connector
+    - field: properties.network_connector.security_groups.has_unrestricted_ingress
+      op: eq
+      value: true

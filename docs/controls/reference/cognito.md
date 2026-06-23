@@ -1110,7 +1110,7 @@ Cognito user pool has neither account-level lockout configured nor advanced secu
 
 No CloudWatch metrics capture login success and failure rates for the user pool. The team has no baseline to detect anomalies against — no graph of 'what's normal,' no alert when the curve diverges, no data feed for SIEM ingestion.
 
-**Remediation:** Configure CloudWatch metric filters on CloudTrail events for InitiateAuth success / failure, RespondToAuthChallenge outcomes, and SignUp success. Publish them as CloudWatch metrics so they're chartable, alarmable, and exportable to SIEM. Without this base layer of metrics, the alarm controls in this iteration have nothing to alarm on.
+**Remediation:** Configure CloudWatch metric filters on CloudTrail events for InitiateAuth success / failure, RespondToAuthChallenge outcomes, and SignUp success. Publish them as CloudWatch metrics so they're chartable, alarmable, and exportable to SIEM. Without this base layer of metrics, the Cognito sign-in alarm controls have nothing to alarm on.
 
 ---
 

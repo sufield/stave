@@ -14,8 +14,8 @@ description: >
   Scope: gated on `identity.kind == "user"`. The `iam:PutUserPolicy`
   AWS action targets users specifically — roles cannot be the self-
   target. The role-side analogue is `iam:PutRolePolicy` on self, a
-  separate technique that will require its own
-  `CTL.IAM.ESCALATE.PUTROLEPOLICY.001` control in a future iteration.
+  separate technique covered by its own
+  `CTL.IAM.ESCALATE.PUTROLEPOLICY.001` control.
 domain: identity
 severity: critical
 scope: compound

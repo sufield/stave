@@ -504,7 +504,7 @@ A principal (IAM user or role) holding `iam:AttachRolePolicy` on a role it can r
 - **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A principal with `iam:AttachUserPolicy` whose Resource field includes its own user ARN can attach any managed policy — including `arn:aws:iam::aws:policy/AdministratorAccess` — to itself and become admin with a single API call. This is Rhino Security Labs privilege-escalation technique #1 ("IAM — Attach to user") and is covered by Prowler's iam_policy_allows_privilege_escalation and Pacu's iam__privesc_scan. No other permission is required; self-scoped AttachUserPolicy is a one-step path to full admin.
-Scope: gated on `identity.kind == "user"`. The `iam:AttachUserPolicy` AWS action targets users specifically — roles cannot be the self- target. The role-side analogue is `iam:AttachRolePolicy` on self, a separate technique that will require its own `CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001` control in a future iteration.
+Scope: gated on `identity.kind == "user"`. The `iam:AttachUserPolicy` AWS action targets users specifically — roles cannot be the self- target. The role-side analogue is `iam:AttachRolePolicy` on self, a separate technique covered by its own `CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001` control.
 
 **Remediation:** Remove `iam:AttachUserPolicy` from the principal, or scope its Resource field to user ARNs that do not include the principal itself (admin-only bootstrap roles, for example). Enforce at the organization level with an SCP that denies `iam:AttachUserPolicy` on `${aws:PrincipalArn}`. Also consider a permissions boundary on the principal that prevents the attached policy from taking effect.
 
@@ -1001,7 +1001,7 @@ A principal (IAM user or role) holding `iam:PutRolePolicy` on a role it can reac
 - **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
 A principal with `iam:PutUserPolicy` whose Resource field includes its own user ARN can write an arbitrary inline policy onto itself — including one that grants `"Action": "*"` on `"Resource": "*"`. This is Rhino Security Labs privilege-escalation technique #2 ("IAM — Put inline policy on user") and is covered by Prowler's iam_policy_allows_privilege_escalation and Pacu's iam__privesc_scan. A single PutUserPolicy call produces full admin access without touching any managed policy or group.
-Scope: gated on `identity.kind == "user"`. The `iam:PutUserPolicy` AWS action targets users specifically — roles cannot be the self- target. The role-side analogue is `iam:PutRolePolicy` on self, a separate technique that will require its own `CTL.IAM.ESCALATE.PUTROLEPOLICY.001` control in a future iteration.
+Scope: gated on `identity.kind == "user"`. The `iam:PutUserPolicy` AWS action targets users specifically — roles cannot be the self- target. The role-side analogue is `iam:PutRolePolicy` on self, a separate technique covered by its own `CTL.IAM.ESCALATE.PUTROLEPOLICY.001` control.
 
 **Remediation:** Remove `iam:PutUserPolicy` from the principal, or scope the Resource field so the principal cannot include itself. Organization SCPs can deny `iam:PutUserPolicy` on `${aws:PrincipalArn}` to close the path at the boundary.
 

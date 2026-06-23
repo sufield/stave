@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.MICROVM.CONNORIGIN.001
+name: MicroVM Uses Developer-Created Network Connector in Production
+description: >
+  MicroVM Uses Developer-Created Network Connector in Production. Lab control for the Lambda MicroVM validation suite
+  (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot
+  (obs.v0.1) for this invariant.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+scope_tags:
+  - aws
+  - lambda
+  - microvm
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lambda_network_connector
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    MicroVM Uses Developer-Created Network Connector in Production — finding detected on the captured MicroVM configuration.
+  action: >
+    Use a network-team-provisioned connector in production; do not let developers create prod connectors.
+  example: |
+    {
+      "network_connector": {
+        "kind": "network_connector",
+        "developer_created": false,
+        "environment": "production"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network_connector.kind
+      op: eq
+      value: network_connector
+    - field: properties.network_connector.developer_created
+      op: eq
+      value: true
+    - field: properties.network_connector.environment
+      op: eq
+      value: production

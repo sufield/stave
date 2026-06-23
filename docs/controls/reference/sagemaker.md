@@ -14,7 +14,7 @@
 - **Domain:** identity
 - **Compliance:** hipaa: 164.312(a)(1), 164.312(a)(2)(i); nist_800_53_r5: AC-2, AC-6; owasp_nhi: NHI5, NHI6; soc2: CC6.1;
 
-SageMaker Studio domain assigns a single execution role to every user profile in the domain. Every data scientist and ML engineer in the domain operates with identical IAM permissions — there is no per-user or per-team scoping. A compromise of any user's Studio session grants the attacker the same blast radius as the broadest user in the domain (typically the role's full s3:* / sagemaker:* / iam:PassRole footprint). The shared-role model is the default Studio onboarding pattern and is almost always a leftover from early platform setup — deferred from iteration 3 because the aws_sagemaker_domain asset type was not yet projected.
+SageMaker Studio domain assigns a single execution role to every user profile in the domain. Every data scientist and ML engineer in the domain operates with identical IAM permissions — there is no per-user or per-team scoping. A compromise of any user's Studio session grants the attacker the same blast radius as the broadest user in the domain (typically the role's full s3:* / sagemaker:* / iam:PassRole footprint). The shared-role model is the default Studio onboarding pattern and is almost always a leftover from early platform setup.
 
 **Remediation:** Create per-user-profile execution roles (or per-team roles) scoped to the buckets and services each user's workload requires. Update each UserProfile's ExecutionRole via UpdateUserProfile. Add a permissions boundary at the domain level that caps any per-user role's permissions to the domain's intended scope.
 
@@ -179,7 +179,7 @@ SageMaker notebook instances must disable DirectInternetAccess, forcing VPC-only
 - **Domain:** governance
 - **Compliance:** nist_800_53_r5: CM-2, CM-7; owasp_nhi: NHI1; soc2: CC8.1;
 
-SageMaker notebook has no LifecycleConfigName attached. A lifecycle configuration runs scripts at notebook creation/start to enforce hardening (mount restrictions, package allow-listing, idle-timeout enforcement, agent installation). Without one, notebooks come up with stock configuration and cannot be hardened consistently across the team. Lifecycle configurations are also the standard hook for auto-stop and credential rotation; their absence is the upstream cause of several other lifecycle failures in this iteration.
+SageMaker notebook has no LifecycleConfigName attached. A lifecycle configuration runs scripts at notebook creation/start to enforce hardening (mount restrictions, package allow-listing, idle-timeout enforcement, agent installation). Without one, notebooks come up with stock configuration and cannot be hardened consistently across the team. Lifecycle configurations are also the standard hook for auto-stop and credential rotation; their absence is the upstream cause of several other SageMaker notebook lifecycle failures.
 
 **Remediation:** Create a lifecycle configuration with on-create + on-start scripts that enforce idle-timeout, mount restrictions, and package install policy. Attach it to the notebook via UpdateNotebookInstance.
 

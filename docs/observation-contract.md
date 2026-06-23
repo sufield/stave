@@ -38,7 +38,7 @@ deprecation-candidate appendix) live in the
 ## Why the split
 
 The monolithic file had grown to ~1520 lines after the Prowler-coverage
-and Reju-Kole iterations added multiple namespaces. Every contract
+and Reju-Kole work added multiple namespaces. Every contract
 extension required reading the full document to place a new field.
 The split organizes by namespace prefix, matching the `controls/`
 directory's service-based organization. No semantic changes to field

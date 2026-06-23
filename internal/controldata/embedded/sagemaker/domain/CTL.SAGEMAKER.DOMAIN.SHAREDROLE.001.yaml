@@ -11,9 +11,7 @@ description: >
   domain (typically the role's full s3:* / sagemaker:* /
   iam:PassRole footprint). The shared-role model is the
   default Studio onboarding pattern and is almost always a
-  leftover from early platform setup — deferred from
-  iteration 3 because the aws_sagemaker_domain asset type
-  was not yet projected.
+  leftover from early platform setup.
 domain: identity
 severity: medium
 compliance:
