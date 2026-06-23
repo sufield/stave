@@ -91,7 +91,7 @@ func (a *AcknowledgmentEntry) DaysRemaining(now time.Time) (int, bool) {
 	// at -0.75 → int = 0 → "expiring_soon" instead of the correct
 	// "expired" — `int()` truncates toward zero for negative floats.
 	expiryDay := expiry.Truncate(24 * time.Hour)
-	nowDay := now.UTC().Truncate(24 * time.Hour)
+	nowDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	return int(expiryDay.Sub(nowDay).Hours() / 24), true
 }
 
@@ -232,7 +232,8 @@ func (f *AcceptanceFile) AddAcknowledgment(entry AcknowledgmentEntry, timestamp 
 	if tsErr != nil {
 		return fmt.Errorf("cannot validate expiry: invalid timestamp %q: %w", timestamp, tsErr)
 	}
-	if expiry.Before(ts.Truncate(24 * time.Hour)) {
+	tsDate := time.Date(ts.Year(), ts.Month(), ts.Day(), 0, 0, 0, 0, time.UTC)
+	if expiry.Before(tsDate) {
 		return fmt.Errorf("expiry_date %s is in the past", entry.ExpiryDate)
 	}
 
@@ -380,7 +381,8 @@ func (f *AcceptanceFile) Validate() []string {
 
 // Upcoming returns acknowledgments expiring within the given number of days from now.
 func (f *AcceptanceFile) Upcoming(days int, now time.Time) []AcknowledgmentEntry {
-	cutoff := now.AddDate(0, 0, days)
+	nowDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	cutoffDate := nowDate.AddDate(0, 0, days)
 	var result []AcknowledgmentEntry
 	for i := range f.Acknowledgments {
 		a := &f.Acknowledgments[i]
@@ -396,7 +398,7 @@ func (f *AcceptanceFile) Upcoming(days int, now time.Time) []AcknowledgmentEntry
 		// past is expired, not upcoming, so it must be excluded by the
 		// lower bound — without it, a long-lapsed acceptance still
 		// satisfies expiry < cutoff and is wrongly returned.
-		if !expiry.Before(now) && expiry.Before(cutoff) {
+		if !expiry.Before(nowDate) && expiry.Before(cutoffDate) {
 			result = append(result, *a)
 		}
 	}

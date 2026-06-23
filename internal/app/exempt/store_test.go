@@ -379,3 +379,60 @@ func TestAddAcknowledgment_ValidTimestamp(t *testing.T) {
 		t.Errorf("date = %q, want 2026-04-15", f.Acknowledgments[0].AcknowledgedDate)
 	}
 }
+
+func TestAddAcknowledgment_SameDayExpiryInTimezoneWithNegativeOffset(t *testing.T) {
+	f := &AcceptanceFile{SchemaVersion: "1"}
+
+	// June 22, 2026 at 20:18:10 in UTC-4 timezone (e.g. EDT) is June 23, 2026 at 00:18:10 UTC.
+	// If the expiry is June 22, 2026, it is the same calendar day in the local timezone,
+	// so it should not be considered "in the past" relative to the local date.
+	err := f.AddAcknowledgment(AcknowledgmentEntry{
+		ControlID:  "CTL.A",
+		AssetID:    "arn:a",
+		Reason:     "test",
+		Approver:   "alice",
+		ExpiryDate: "2026-06-22",
+	}, "2026-06-22T20:18:10-04:00")
+	if err != nil {
+		t.Errorf("expected no error for same day expiry in local timezone, got: %v", err)
+	}
+}
+
+func TestUpcoming_SameDayExpiry(t *testing.T) {
+	f := &AcceptanceFile{
+		SchemaVersion: "1",
+		Acknowledgments: []AcknowledgmentEntry{
+			{
+				ID: "CTL.A@arn:a", ControlID: "CTL.A", AssetID: "arn:a",
+				Reason: "test", Approver: "alice", ExpiryDate: "2026-06-22",
+				Status: "active",
+			},
+		},
+	}
+
+	// Checked on June 22 at 20:18:10 UTC-4 timezone (June 23 UTC).
+	// An entry expiring on June 22 is expiring today (same local calendar day) and is not yet in the past
+	// relative to the calendar day. It should be returned as upcoming (expiring within 30 days).
+	upcoming := f.Upcoming(30, time.Date(2026, 6, 22, 20, 18, 10, 0, time.FixedZone("EDT", -4*3600)))
+	if len(upcoming) != 1 {
+		t.Errorf("expected 1 upcoming entry for same day expiry, got %d", len(upcoming))
+	}
+}
+
+func TestDaysRemaining_SameDayInLocalTimezoneWithNegativeOffset(t *testing.T) {
+	// Acknowledgment rule expires on 2026-06-23 (tomorrow relative to the local date of June 22).
+	a := &AcknowledgmentEntry{
+		ExpiryDate: "2026-06-23",
+	}
+
+	// Checked on June 22 at 20:18:10 in UTC-4 timezone (June 23 UTC).
+	// In the local timezone, it is still June 22, so there is exactly 1 day remaining until June 23.
+	now := time.Date(2026, 6, 22, 20, 18, 10, 0, time.FixedZone("EDT", -4*3600))
+	days, ok := a.DaysRemaining(now)
+	if !ok {
+		t.Fatal("expected ok to be true")
+	}
+	if days != 1 {
+		t.Errorf("expected 1 day remaining, got %d", days)
+	}
+}

@@ -75,8 +75,9 @@ func (d ExpiryDate) IsExpired(now time.Time) bool {
 	if d.IsZero() {
 		return false
 	}
+	nowDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	expiryBoundary := time.Time(d).AddDate(0, 0, 1)
-	return !now.Before(expiryBoundary)
+	return !nowDate.Before(expiryBoundary)
 }
 
 // ExceptionRule defines a single exception entry from stave.yaml.

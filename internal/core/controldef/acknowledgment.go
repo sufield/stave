@@ -72,8 +72,9 @@ func (r *AcknowledgmentRule) IsExpired(now time.Time) bool {
 	if err != nil {
 		return false // unparseable = permanent
 	}
+	nowDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	expiryBoundary := expiry.AddDate(0, 0, 1)
-	return !now.Before(expiryBoundary)
+	return !nowDate.Before(expiryBoundary)
 }
 
 // CompensatingControlStatus reports whether a compensating control is passing.

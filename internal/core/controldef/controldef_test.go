@@ -1081,6 +1081,18 @@ func TestExpiryDateIsExpired(t *testing.T) {
 	}
 }
 
+func TestExpiryDate_SameDayExpiryInTimezoneWithNegativeOffset(t *testing.T) {
+	t.Parallel()
+	d, _ := ParseExpiryDate("2026-06-22")
+
+	// Checked on June 22 at 20:18:10 in UTC-4 timezone (June 23 UTC).
+	// It is still June 22 in the local timezone, so the exception remains valid.
+	now := time.Date(2026, 6, 22, 20, 18, 10, 0, time.FixedZone("EDT", -4*3600))
+	if d.IsExpired(now) {
+		t.Error("should not be expired on the same calendar day in local timezone")
+	}
+}
+
 func TestExceptionConfigShouldExcept(t *testing.T) {
 	t.Parallel()
 	rules := []ExceptionRule{

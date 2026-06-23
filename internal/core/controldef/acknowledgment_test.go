@@ -59,3 +59,16 @@ func TestAcknowledgmentConfig_Nil(t *testing.T) {
 		t.Error("expected nil for nil config")
 	}
 }
+
+func TestAcknowledgmentRule_SameDayExpiryInTimezoneWithNegativeOffset(t *testing.T) {
+	// Acknowledgment rule expires on 2026-06-22.
+	r := AcknowledgmentRule{ExpiryDate: "2026-06-22"}
+
+	// Checked on June 22 at 20:18:10 in UTC-4 timezone (June 23 UTC).
+	// It is still June 22 in the local timezone, so the acknowledgment remains valid
+	// for the entire day. It should NOT be considered expired.
+	now := time.Date(2026, 6, 22, 20, 18, 10, 0, time.FixedZone("EDT", -4*3600))
+	if r.IsExpired(now) {
+		t.Error("should not be expired on the same calendar day in local timezone")
+	}
+}
