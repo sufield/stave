@@ -64,12 +64,15 @@ resource* co-exist. Single-resource checks can't see that join.
   `identity.internet_facing: true` and `identity.reaches_sensitive: true`,
 - a `cardholder-data` S3 bucket tagged `data-classification: pii`.
 
-> The `internet_facing` / `reaches_sensitive` fields are **derived signals** a
-> collector computes by running the graph reasoning in Demo B over the real IAM
-> graph. The snapshot hand-sets them so you can see the catalog control consume
-> them. Classification (`data-classification: pii`) is the precondition for
-> "reaches a *sensitive* resource" to fire — an untagged bucket would be
-> invisible to the chain.
+> The `internet_facing` / `reaches_sensitive` fields are **derived signals** —
+> expected inputs that an external extractor populates by applying graph
+> reachability to a real IAM graph (Stave core never computes them; see
+> `docs/contract/reachability.md`). Demo B is the *proof that this reachability
+> logic is sound* — it does not itself populate the signal. The snapshot here
+> hand-sets the fields so you can see the catalog control consume them.
+> Classification (`data-classification: pii`) is the precondition for "reaches a
+> *sensitive* resource" to fire — an untagged bucket would be invisible to the
+> chain.
 
 ---
 
@@ -132,12 +135,16 @@ for the real breach was exactly this: enforce IMDSv2.
 
 | | Demo A (`stave apply`) | Demo B (reasoning spec) |
 |---|---|---|
-| Runs | the catalog control over a snapshot | Soufflé + Z3 over the IAM graph |
-| Reads | derived `identity.reaches_sensitive` | raw assume/pass/access edges |
-| Output | a finding (the verdict) | the proof the verdict rests on |
+| Runs | the catalog control over a snapshot | Soufflé + Z3 over fixed trap scenarios |
+| Reads | derived `identity.reaches_sensitive` | hand-built assume/pass/access edges |
+| Output | a finding (the verdict) | proof the reachability logic is sound |
 
-Demo A is what an operator runs; Demo B is the formal justification a collector
-computes offline to populate the signal Demo A consumes.
+Demo A is what an operator runs. Demo B is the **formal proof that the
+reachability logic behind `reaches_sensitive` is correct** — two independent
+engines agreeing on the trap cases. It validates the logic; it does **not**
+compute the signal. On a real account, an external extractor (not Stave core,
+not Demo B) applies that same reachability reasoning to the live IAM graph to
+populate `reaches_sensitive`, which Demo A then consumes.
 
 ## Notes / limitations of this demo
 
