@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.MODEL.FORMAT.INSECURE.001
+name: Model Artifact Must Not Use an Insecure Serialization Format
+description: >
+  A stored model artifact must not be serialized in a pickle-based format.
+  Pickle (and the formats that embed it — PyTorch's default .pt/.pth, joblib)
+  executes arbitrary code on deserialization, making a tampered or
+  attacker-supplied model checkpoint a remote-code-execution payload the moment
+  it is loaded. This is the primary model-supply-chain compromise vector. Safe,
+  structured formats (safetensors, ONNX, TFLite, protobuf, HDF5, Core ML) carry
+  weights as data with no executable code path.
+
+  The serialization format of a stored artifact is a static, cloud-visible
+  property — its file extension, content type, and any explicit format tag are
+  all readable from the snapshot. The collector resolves those into
+  ai.model_artifact.serialization_format (pickle / pytorch_pickle / joblib /
+  safetensors / onnx / …). A bare .pt/.pth resolves to pytorch_pickle unless an
+  explicit `format=safetensors` tag overrides it — PyTorch's default save uses
+  pickle, so absence of the override is treated as the unsafe default
+  (fail-closed). This control fires on any pickle-family format.
+domain: governance
+severity: high
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sagemaker_model_package
+  - aws_s3_object
+compliance:
+  nist_800_53_r5: "SI-7"
+  soc2: "CC7.1"
+  ccm_v4: ["STA-09"]
+scope_tags:
+  - aws
+  - model
+  - ai
+observation_fields:
+  - ai.model_artifact.kind
+  - ai.model_artifact.serialization_format
+remediation:
+  description: >
+    A model artifact is stored in a pickle-based serialization format, which
+    executes arbitrary code on load.
+  action: >
+    Re-serialize the model in a safe format — safetensors for transformer
+    weights, ONNX for cross-framework models — and replace the artifact. If a
+    .pt/.pth file genuinely holds safetensors-format data, tag it
+    format=safetensors so the resolver records it as safe.
+  example: |
+    {
+      "ai": {
+        "model_artifact": {
+          "kind": "model_artifact",
+          "serialization_format": "safetensors"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.model_artifact.kind
+      op: eq
+      value: model_artifact
+    - any:
+        - field: properties.ai.model_artifact.serialization_format
+          op: eq
+          value: pickle
+        - field: properties.ai.model_artifact.serialization_format
+          op: eq
+          value: pytorch_pickle
+        - field: properties.ai.model_artifact.serialization_format
+          op: eq
+          value: joblib
+defect: >
+  A model artifact is serialized in a pickle-family format (pickle, PyTorch
+  default, or joblib).
+infection: >
+  Loading the artifact deserializes attacker-controllable bytes as executable
+  code; a tampered or poisoned checkpoint becomes RCE in every process that
+  loads the model — training, inference, and CI alike.
+failure: >
+  A backdoored model checkpoint executes arbitrary code on load, compromising
+  the inference host and everything its role can reach.
+tests:
+  - name: pickle artifact fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "s3://ml-models-prod/models/classifier-v3.pkl"
+      asset_type: aws_s3_object
+      vendor: aws
+      properties:
+        ai:
+          model_artifact:
+            kind: model_artifact
+            serialization_format: pickle
+  - name: safetensors artifact passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "s3://ml-models-prod/models/classifier-v3.safetensors"
+      asset_type: aws_s3_object
+      vendor: aws
+      properties:
+        ai:
+          model_artifact:
+            kind: model_artifact
+            serialization_format: safetensors
+  - name: untagged .pt resolves to pytorch_pickle and fires (false-negative trap — default is pickle)
+    verdict: VIOLATION
+    asset:
+      asset_id: "s3://ml-models-prod/models/classifier-v3.pt"
+      asset_type: aws_s3_object
+      vendor: aws
+      properties:
+        ai:
+          model_artifact:
+            kind: model_artifact
+            serialization_format: pytorch_pickle

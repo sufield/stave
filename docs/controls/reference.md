@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2701
-**Pack hash:** `af41be92664d04d8eb6fa3d7936dc94236dba5be1233b8d2a55d61a88485de55`
+**Total controls:** 2703
+**Pack hash:** `686579cbc048da887ba59beaa3a009bbcd808e8c90e97475db06b2101a03d2d7`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,7 +14,7 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 281 |
-| high | 1176 |
+| high | 1178 |
 | info | 16 |
 | low | 205 |
 | medium | 1023 |
@@ -27,7 +27,7 @@ GitHub. Pick a service below.
 | detection | 134 |
 | encryption | 113 |
 | exposure | 1204 |
-| governance | 583 |
+| governance | 585 |
 | hygiene | 18 |
 | identity | 439 |
 | lifecycle | 31 |
@@ -96,6 +96,7 @@ GitHub. Pick a service below.
 | [M365](reference/m365.md) | 73 |
 | [MACIE](reference/macie.md) | 1 |
 | [META](reference/meta.md) | 1 |
+| [MODEL](reference/model.md) | 2 |
 | [MQ](reference/mq.md) | 1 |
 | [MSK](reference/msk.md) | 9 |
 | [NEPTUNE](reference/neptune.md) | 19 |

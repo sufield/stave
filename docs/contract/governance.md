@@ -46,6 +46,24 @@ reasoning specs (Soufflé + Z3), read by `scope: compound` catalog controls.
 
 Controls: `CTL.BEDROCK.KB.RETRIEVAL.OVERBROAD.001`, `CTL.BEDROCK.KB.RETRIEVAL.SCOPE.001`.
 
+## `ai.model_artifact.*` / `ai.model_store.*` — model supply-chain signals
+
+Model artifact serialization safety and integrity-verification configuration.
+The collector resolves a stored artifact's format (from extension, content type,
+and an optional `format` tag) and a model store's S3 integrity configuration.
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `ai.model_artifact.kind` | string | `model_artifact` (gate). |
+| `ai.model_artifact.serialization_format` | string | Resolved format: `pickle`, `pytorch_pickle`, `joblib` (insecure — execute code on load), or `safetensors`, `onnx`, `tflite`, `protobuf`, `hdf5`, `coreml` (safe). A bare `.pt`/`.pth` resolves to `pytorch_pickle` unless a `format=safetensors` tag overrides it (fail-closed default). |
+| `ai.model_store.kind` | string | `model_store` (gate). |
+| `ai.model_store.object_lock_enabled` | bool | S3 Object Lock enabled on the store. |
+| `ai.model_store.versioning_enabled` | bool | Bucket versioning **ENABLED** (SUSPENDED resolves to `false`). |
+| `ai.model_store.checksums_configured` | bool | Per-object checksum algorithm (SHA-256/CRC) required on artifacts. |
+| `ai.model_store.data_hash_recorded` | bool | SageMaker Model Package has a `ModelDataHashValue` recorded. |
+
+Controls: `CTL.MODEL.FORMAT.INSECURE.001`, `CTL.MODEL.INTEGRITY.CONFIG.001`.
+
 ## `microvm.*` — Lambda MicroVM audit signals
 
 Extends the existing `microvm.*` namespace (`microvm.kind`,

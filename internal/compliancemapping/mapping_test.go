@@ -110,11 +110,21 @@ func TestLoadAndEvaluate_RealAICM(t *testing.T) {
 	if c, ok := find("IAM-05"); !ok || c.Bucket != BucketCovered {
 		t.Errorf("IAM-05 should be covered, got %+v ok=%v", c, ok)
 	}
-	if c, ok := find("UEM-11"); !ok || c.Bucket != BucketGap {
-		t.Errorf("UEM-11 should be a gap, got %+v ok=%v", c, ok)
+	// MDS-13 (secure model format) is now covered; the model controls closed it.
+	if c, ok := find("MDS-13"); !ok || c.Bucket != BucketCovered {
+		t.Errorf("MDS-13 should be covered, got %+v ok=%v", c, ok)
+	}
+	// UEM-11 (endpoint DLP) was reclassified out-of-scope (organizational) —
+	// endpoint-device agents have no cloud-config proxy.
+	if c, ok := find("UEM-11"); !ok || c.Bucket != BucketOutOfScope || c.OutOfScopeKind != "ORGANIZATIONAL" {
+		t.Errorf("UEM-11 should be out-of-scope organizational, got %+v ok=%v", c, ok)
 	}
 	if c, ok := find("A&A-01"); !ok || c.Bucket != BucketOutOfScope || c.OutOfScopeKind != "ORGANIZATIONAL" {
 		t.Errorf("A&A-01 should be out-of-scope organizational, got %+v ok=%v", c, ok)
+	}
+	// All in-scope AICM controls now have Stave verification — zero gaps.
+	if len(rep.Gaps) != 0 {
+		t.Errorf("expected 0 in-scope gaps, got %d: %+v", len(rep.Gaps), rep.Gaps)
 	}
 }
 

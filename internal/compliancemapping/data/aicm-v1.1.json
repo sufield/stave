@@ -3030,12 +3030,12 @@
           "aicm_title": "Model Integrity Checks",
           "aicm_specification": "Regularly calculate and compare checksums using cryptographic hashes of model checkpoints to detect unauthorized modifications. Apply at least annually based on the level of risk, or after any change of hands.",
           "aicm_type": "AI-Specific",
-          "scope": "partial",
+          "scope": "config_posture",
           "stave_controls": [
-            "CTL.SAGEMAKER.GHOST.MODEL.001"
+            "CTL.MODEL.INTEGRITY.CONFIG.001"
           ],
-          "coverage": "none",
-          "notes": "AI-Specific. The integrity-check intent (recompute and compare cryptographic hashes of model checkpoints to detect tampering) is fundamentally a runtime/behavioral activity, but a related CONFIG posture (object integrity controls on the artifact store) could be checked. Stave has NO control that verifies model-checkpoint checksum/hash comparison. CTL.SAGEMAKER.GHOST.MODEL.001 only detects a deleted ModelDataUrl reference (existence), not integrity, so it is not a real match. Coverage 'none'. Gap: a control on the model-artifact store asserting integrity verification \u2014 e.g. S3 object-checksum / ChecksumAlgorithm enforcement on the model bucket, or a SageMaker Model Registry property attesting a stored cryptographic hash that is verified on load (properties.ai.model_artifact.integrity_hash_verified == true)."
+          "coverage": "partial",
+          "notes": "Config-verifiable portion closed: CTL.MODEL.INTEGRITY.CONFIG.001 requires the model store to have Object Lock + versioning + per-object checksums (and SageMaker ModelDataHashValue) \u2014 the infrastructure that ENABLES integrity comparison, the same proxy LOG controls use for audit. Partial, not full: the AICM requirement's periodic recompute-and-compare activity is runtime/behavioral and not snapshot-verifiable."
         },
         {
           "aicm_id": "MDS-09",
@@ -3093,9 +3093,11 @@
           "aicm_specification": "Adopt secure model formats and processes for AI model serialization where applicable.",
           "aicm_type": "Cloud & AI Related",
           "scope": "config_posture",
-          "stave_controls": [],
-          "coverage": "none",
-          "notes": "AI-Specific. This is a CONFIG-verifiable property in principle: the serialization format of a stored model artifact is a static attribute (e.g. prefer safetensors/ONNX over arbitrary-code-execution formats like Python pickle / Joblib). Stave has NO control inspecting model-artifact serialization format. Coverage 'none'. Gap: a control on the model-artifact store (S3 model object / SageMaker Model Registry / Bedrock imported model) asserting a safe serialization format \u2014 e.g. properties.ai.model_artifact.format in {safetensors, onnx, gguf} and NOT pickle/joblib \u2014 to block insecure-deserialization model formats."
+          "stave_controls": [
+            "CTL.MODEL.FORMAT.INSECURE.001"
+          ],
+          "coverage": "full",
+          "notes": "Closed. The serialization format of a stored model artifact is a static, cloud-visible property; CTL.MODEL.FORMAT.INSECURE.001 fails pickle-family formats (pickle/pytorch_pickle/joblib) and passes safetensors/onnx/etc. Fully config-verifiable."
         }
       ]
     },

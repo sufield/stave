@@ -1,0 +1,124 @@
+dsl_version: ctrl.v1
+id: CTL.MODEL.INTEGRITY.CONFIG.001
+name: Model Artifact Store Must Have Integrity Verification Configured
+description: >
+  A model artifact store must have the infrastructure to detect unauthorized
+  modification of model checkpoints: S3 Object Lock (tamper-resistance),
+  versioning (a known-good history to compare against), and per-object checksums
+  (SHA-256/CRC). The checksum-comparison activity itself is behavioral, but the
+  configuration that ENABLES it is cloud-visible — this is the same proxy Stave's
+  data-event controls use ("logging enabled" stands in for "audit happens").
+  Here, "integrity verification configured" stands in for "checksums are
+  compared."
+
+  The collector resolves the store's S3 Object Lock state, versioning status, and
+  per-object checksum coverage (and, for a SageMaker Model Package, whether a
+  ModelDataHashValue is recorded) into the derived booleans this predicate reads.
+  Fail-closed and precise on versioning: SUSPENDED is not ENABLED — a suspended
+  bucket has no history to compare a replaced artifact against, so it fires.
+domain: governance
+severity: high
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+  - aws_sagemaker_model_package
+compliance:
+  nist_800_53_r5: "SI-7"
+  soc2: "CC7.1"
+  ccm_v4: ["STA-09"]
+scope_tags:
+  - aws
+  - model
+  - ai
+observation_fields:
+  - ai.model_store.kind
+  - ai.model_store.object_lock_enabled
+  - ai.model_store.versioning_enabled
+  - ai.model_store.checksums_configured
+remediation:
+  description: >
+    A model artifact store is missing one or more integrity-verification
+    mechanisms (Object Lock, versioning, or per-object checksums), so a replaced
+    or tampered checkpoint cannot be reliably detected.
+  action: >
+    Enable S3 Object Lock (Governance or Compliance mode) and bucket versioning
+    on the model store, and require a checksum algorithm (SHA-256 preferred) on
+    every uploaded artifact. For SageMaker Model Packages, record a
+    ModelDataHashValue.
+  example: |
+    {
+      "ai": {
+        "model_store": {
+          "kind": "model_store",
+          "object_lock_enabled": true,
+          "versioning_enabled": true,
+          "checksums_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.model_store.kind
+      op: eq
+      value: model_store
+    - any:
+        - field: properties.ai.model_store.object_lock_enabled
+          op: ne
+          value: true
+        - field: properties.ai.model_store.versioning_enabled
+          op: ne
+          value: true
+        - field: properties.ai.model_store.checksums_configured
+          op: ne
+          value: true
+defect: >
+  A model artifact store lacks Object Lock, versioning, or per-object checksums.
+infection: >
+  Without tamper-resistance and a known-good history, a swapped or modified model
+  checkpoint cannot be detected by comparison; the integrity check the control
+  family requires has no foundation to run against.
+failure: >
+  A tampered model is loaded as trusted because no integrity mechanism could
+  flag that it differs from the approved artifact.
+tests:
+  - name: store with no object lock and no checksums fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::ml-models-prod"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        ai:
+          model_store:
+            kind: model_store
+            object_lock_enabled: false
+            versioning_enabled: true
+            checksums_configured: false
+  - name: fully configured store passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::ml-models-prod-secure"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        ai:
+          model_store:
+            kind: model_store
+            object_lock_enabled: true
+            versioning_enabled: true
+            checksums_configured: true
+            data_hash_recorded: true
+  - name: suspended versioning fires despite lock + checksums (false-negative trap — suspended != enabled)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::ml-models-prod-suspended"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        ai:
+          model_store:
+            kind: model_store
+            object_lock_enabled: true
+            versioning_enabled: false
+            checksums_configured: true

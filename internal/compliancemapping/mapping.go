@@ -127,6 +127,11 @@ func (m *Mapping) Evaluate(violated map[string]bool) Report {
 		Framework:        m.Framework,
 		FrameworkVersion: m.FrameworkVersion,
 		TotalControls:    m.TotalControls,
+		// Non-nil so JSON renders [] (not null) when a bucket is empty — e.g.
+		// zero in-scope gaps. The empty-array shape is part of the contract.
+		Covered:    []ControlResult{},
+		Gaps:       []ControlResult{},
+		OutOfScope: []ControlResult{},
 	}
 	for _, d := range m.Domains {
 		for _, c := range d.Controls {
