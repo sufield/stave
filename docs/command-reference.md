@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_140 commands across 7 groups._
+_141 commands across 7 groups._
 
 ## Getting Started
 
@@ -108,6 +108,7 @@ _140 commands across 7 groups._
 | `cel eval` | Evaluate a CEL expression against observation assets |
 | `check` | Compare before/after evaluations to check remediation |
 | `compare` | Compare compliance posture between two frameworks |
+| `compliance` | Evaluate a snapshot against a compliance framework and report coverage |
 | `contract` | Inspect Stave's per-asset-type input contracts |
 | `contract show` | Show the agent-facing contract for an asset type |
 | `controls` | Work with control definitions |

@@ -1,0 +1,25 @@
+// RAG-003 — KB retrieval role broader than the embedding role (Soufflé).
+// A permission set-difference, not reachability. Effective permissions of both
+// roles (inline + attached managed + boundary, wildcards pre-expanded) are
+// supplied as (service, action, resource) tuples. The retrieval role must be a
+// strict read-only subset; any permission it holds that the embedding role does
+// not (excluding bedrock:Retrieve, which is retrieval-only by design) — or any
+// write action — is a violation. The per-resource control reads the derived
+// `retrieval_broader_than_embedding` boolean; this is one of the two engines
+// that compute it.
+//
+//   souffle broader.dl -F <facts-dir> -D <out-dir>  -> out-dir/violation.csv
+
+.decl retrieval_perm(svc:symbol, act:symbol, res:symbol)
+.decl embedding_perm(svc:symbol, act:symbol, res:symbol)
+.decl write_action(act:symbol)
+.input retrieval_perm
+.input embedding_perm
+.input write_action
+
+.decl violation(reason:symbol, svc:symbol, act:symbol, res:symbol)
+.output violation
+// retrieval holds a (non-bedrock) permission the embedding role does not
+violation("broader", S, A, R) :- retrieval_perm(S, A, R), !embedding_perm(S, A, R), S != "bedrock".
+// retrieval holds any write action at all (must be read-only)
+violation("write", S, A, R) :- retrieval_perm(S, A, R), write_action(A).

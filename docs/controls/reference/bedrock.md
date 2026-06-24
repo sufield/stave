@@ -320,6 +320,38 @@ Bedrock knowledge base IAM role grants S3 access broader than the buckets / pref
 
 ---
 
+### CTL.BEDROCK.KB.RETRIEVAL.OVERBROAD.001
+
+**KB Retrieval Role Must Not Be Broader Than the Embedding Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+A Bedrock Knowledge Base has two roles: the embedding role (ingestion/sync — reads source data, writes the vector store) and the retrieval role (query — should only read the vector store and call bedrock:Retrieve). The retrieval role's effective permissions must be a strict subset of the embedding role's on data sources, and the retrieval role must hold no write access at all. If retrieval is broader — a wildcard the embedding role lacks, write access, or reach to a source the embedding role cannot touch — the query path can read or mutate data the KB was never designed to expose.
+This is a two-role comparison, not a single-role check. The reasoning layer resolves each role's effective permissions (inline + attached managed + boundary, with wildcards expanded) and computes the set difference, emitting ai.knowledge_base.retrieval_broader_than_embedding. The reasoning spec — Soufflé set-difference plus a Z3 cross-check — lives at examples/rag-retrieval-vs-embedding/.
+
+**Remediation:** Scope the retrieval role to read-only on exactly the vector store and the sources the embedding role reads, plus bedrock:Retrieve on the KB. Remove any write actions (s3:PutObject/DeleteObject, opensearchserverless Create/Update/Delete, bedrock:StartIngestionJob) and any wildcard grants. Check attached managed policies, not just inline.
+
+---
+
+### CTL.BEDROCK.KB.RETRIEVAL.SCOPE.001
+
+**KB Retrieval Role Must Not Reach Data Beyond Declared Sources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+A Bedrock Knowledge Base declares its data sources (specific S3 prefixes, OpenSearch collections). The retrieval role must not be able to reach data outside that declared set — not through a wildcard S3 prefix that happens to match other buckets, not through an AssumeRole hop to a role with broader access, and not through a resource-based policy on some other bucket that grants the retrieval role. Any such path lets the retrieval connector pull data the Knowledge Base was never scoped to serve.
+This is a compound (graph-reachability) control over a resource type that bridges IAM to data stores. The reasoning layer parses the KB's declared dataSourceConfiguration, resolves what the retrieval role can actually reach (IAM policies with wildcard expansion + assume chains + resource-based policies), and emits ai.knowledge_base.retrieval_exceeds_declared_scope when the reachable set is not contained in the declared set. The reasoning spec — Soufflé reachability plus a Z3 cross-check, including wildcard-prefix and resource-policy edges — lives at examples/rag-retrieval-scope/.
+
+**Remediation:** Scope the retrieval role's resource ARNs to exactly the declared data sources (no wildcard prefixes that overmatch). Remove assume-role edges that widen reach. Audit bucket/collection resource policies for grants to the retrieval role on non-source stores and remove them.
+
+---
+
 ### CTL.BEDROCK.LOG.ENCRYPT.001
 
 **Bedrock Invocation Logs Must Be Encrypted**

@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2693
-**Pack hash:** `53f16465e87dd58ddd25094ea5c0e0a927f3f58b16241a09fb496241b92e7901`
+**Total controls:** 2701
+**Pack hash:** `af41be92664d04d8eb6fa3d7936dc94236dba5be1233b8d2a55d61a88485de55`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,22 +14,22 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 281 |
-| high | 1170 |
+| high | 1176 |
 | info | 16 |
 | low | 205 |
-| medium | 1021 |
+| medium | 1023 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 89 |
+| audit | 90 |
 | capacity | 3 |
 | detection | 134 |
 | encryption | 113 |
 | exposure | 1204 |
-| governance | 580 |
+| governance | 583 |
 | hygiene | 18 |
-| identity | 435 |
+| identity | 439 |
 | lifecycle | 31 |
 | network | 32 |
 | resilience | 33 |
@@ -50,7 +50,7 @@ GitHub. Pick a service below.
 | [AZURE](reference/azure.md) | 141 |
 | [BACKUP](reference/backup.md) | 10 |
 | [BEANSTALK](reference/beanstalk.md) | 2 |
-| [BEDROCK](reference/bedrock.md) | 24 |
+| [BEDROCK](reference/bedrock.md) | 26 |
 | [CFN](reference/cfn.md) | 1 |
 | [CISCO](reference/cisco.md) | 30 |
 | [CLOUDFLARE](reference/cloudflare.md) | 29 |
@@ -63,6 +63,7 @@ GitHub. Pick a service below.
 | [COGNITO](reference/cognito.md) | 104 |
 | [COMPLIANCE](reference/compliance.md) | 1 |
 | [CONFIG](reference/config.md) | 50 |
+| [DATACLASS](reference/dataclass.md) | 3 |
 | [DMS](reference/dms.md) | 6 |
 | [DNS](reference/dns.md) | 3 |
 | [DOCUMENTDB](reference/documentdb.md) | 18 |
@@ -84,12 +85,12 @@ GitHub. Pick a service below.
 | [GLUE](reference/glue.md) | 12 |
 | [GUARDDUTY](reference/guardduty.md) | 6 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 186 |
+| [IAM](reference/iam.md) | 188 |
 | [INSPECTOR](reference/inspector.md) | 1 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 2 |
 | [KMS](reference/kms.md) | 45 |
-| [LAMBDA](reference/lambda.md) | 74 |
+| [LAMBDA](reference/lambda.md) | 75 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
 | [LIGHTSAIL](reference/lightsail.md) | 2 |
 | [M365](reference/m365.md) | 73 |

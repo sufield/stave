@@ -1,0 +1,119 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.AGENT.CHAIN.SENSITIVE.001
+name: Agent Role Must Not Reach Sensitive Resources via Trust Chain
+description: >
+  An agent-identified execution role must not be able to reach a sensitive
+  resource (Secrets Manager secret, customer-managed KMS key, RDS, or a bucket
+  tagged confidential/restricted/pii/phi) — directly, through an
+  AssumeRole/PassRole chain of arbitrary length, or via a resource-based policy.
+  Each hop can look least-privilege in isolation: the agent role only has
+  AssumeRole, the intermediate role only has access to one secret. The danger is
+  the composition — an attacker with prompt control over the agent inherits the
+  transitive reach.
+
+  This is a compound (graph-reachability) control. Per-resource CEL sees only
+  direct access; the transitive path is what the graph reasoning sees. The
+  catalog control reads the derived signals the reasoning layer computes:
+  identity.role.workload_type (the role is an agent / non-human identity) and
+  identity.agent_reaches_sensitive (graph reachability from this agent role to a
+  sensitive resource is true). The reasoning spec that computes the boolean —
+  and proves it two independent ways, Soufflé and Z3 — lives at
+  examples/agent-chain-sensitive-reach/. identity.agent_reach_path carries the
+  full path as finding evidence.
+
+  Fail-closed on the agent signal: a role whose reach the graph could not
+  resolve is not silently passed; the reasoning emits the boolean explicitly.
+domain: identity
+severity: high
+scope: compound
+corpus_reference: MITRE:T1530
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-18", "AIS-11", "AIS-13"]
+scope_tags:
+  - aws
+  - iam
+  - agent
+observation_fields:
+  - identity.role.workload_type
+  - identity.agent_reaches_sensitive
+  - identity.agent_reach_path
+remediation:
+  description: >
+    An agent-identified role can transitively reach a sensitive resource. Its
+    effective blast radius exceeds its declared tool scope.
+  action: >
+    Break the path: remove the AssumeRole/PassRole edge to the intermediate
+    role, scope the intermediate role's permissions off the sensitive resource,
+    or constrain the agent role's trust so it cannot pivot. Review
+    identity.agent_reach_path (the full hop-by-hop chain) to choose the
+    narrowest cut.
+  example: |
+    {
+      "identity": {
+        "role": { "workload_type": "agent" },
+        "agent_reaches_sensitive": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.role.workload_type
+      op: eq
+      value: agent
+    - field: properties.identity.agent_reaches_sensitive
+      op: eq
+      value: true
+defect: >
+  An agent execution role has a transitive path to a sensitive resource.
+infection: >
+  Prompt control over the agent becomes control over everything the agent's
+  role can reach through assume/pass chains and resource policies — the
+  compromise propagates along the trust graph, not just the agent's direct
+  grants.
+failure: >
+  An attacker drives the agent to read production secrets / decrypt with a
+  customer KMS key / reach a regulated datastore through a multi-hop path no
+  single-role review would surface.
+tests:
+  - name: agent role with a path to a sensitive resource fires (vulnerable — direct access)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/bedrock-order-agent"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          role:
+            workload_type: agent
+          agent_reaches_sensitive: true
+          agent_reach_path: "bedrock-order-agent -> prod-db-creds (secretsmanager:GetSecretValue)"
+  - name: agent role whose only reachable target is non-sensitive passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/bedrock-readonly-agent"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          role:
+            workload_type: agent
+          agent_reaches_sensitive: false
+          agent_reach_path: "bedrock-readonly-agent -> readonly-role -> public-assets-bucket (not sensitive)"
+  - name: three-hop sagemaker agent reaching KMS via PassRole still fires (false-negative trap — multi-hop)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/sagemaker-notebook"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          role:
+            workload_type: agent
+          agent_reaches_sensitive: true
+          agent_reach_path: "sagemaker-notebook -> etl-role -passrole-> admin-lambda-role -> cmk (kms:Decrypt)"

@@ -1,0 +1,119 @@
+dsl_version: ctrl.v1
+id: CTL.DATACLASS.TAG.TAXONOMY.001
+name: Data-Classification Tag Must Use an Approved Taxonomy Value
+description: >
+  When a data-bearing resource declares a data-classification, the value must
+  come from the approved taxonomy: public, internal, confidential, restricted,
+  pii, phi, or pci. Freeform values ("important", "sensitive-ish", "team-data")
+  defeat sensitivity-scoped controls just as surely as a missing tag — a control
+  that keys on data_classification == "phi" never matches "phi-data" or
+  "Protected Health Info". This control flags any non-approved value so the
+  taxonomy stays machine-comparable.
+
+  The collector emits governance.data_classification as the resolved tag value.
+  This predicate fires when that value is present but is none of the approved
+  terms.
+domain: governance
+severity: medium
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+  - aws_rds_instance
+  - aws_dynamodb_table
+  - aws_secretsmanager_secret
+  - aws_opensearch_domain
+  - aws_redshift_cluster
+  - aws_efs_filesystem
+compliance:
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - governance
+  - dataclass
+observation_fields:
+  - governance.is_data_bearing
+  - governance.data_classification
+remediation:
+  description: >
+    A data-classification tag holds a value outside the approved taxonomy, so
+    classification-scoped controls cannot reliably match it.
+  action: >
+    Replace the freeform value with an approved term: public, internal,
+    confidential, restricted, pii, phi, or pci. Enforce the allowed set in the
+    tagging policy / IaC validation.
+  example: |
+    {
+      "governance": {
+        "is_data_bearing": true,
+        "data_classification": "restricted"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.is_data_bearing
+      op: eq
+      value: true
+    - field: properties.governance.data_classification
+      op: present
+    - field: properties.governance.data_classification
+      op: ne
+      value: public
+    - field: properties.governance.data_classification
+      op: ne
+      value: internal
+    - field: properties.governance.data_classification
+      op: ne
+      value: confidential
+    - field: properties.governance.data_classification
+      op: ne
+      value: restricted
+    - field: properties.governance.data_classification
+      op: ne
+      value: pii
+    - field: properties.governance.data_classification
+      op: ne
+      value: phi
+    - field: properties.governance.data_classification
+      op: ne
+      value: pci
+defect: >
+  A data-classification tag uses a value outside the approved taxonomy.
+infection: >
+  Sensitivity-scoped controls silently skip the resource because their
+  exact-match predicates do not recognize the freeform value.
+failure: >
+  A resource believed to be classified is effectively unclassified to every
+  automated control; sensitive data goes unprotected.
+tests:
+  - name: freeform classification value fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::loosely-tagged"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        governance:
+          is_data_bearing: true
+          data_classification: sensitive-ish
+  - name: approved taxonomy value passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::properly-tagged"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        governance:
+          is_data_bearing: true
+          data_classification: pii
+  - name: capitalized near-miss value still fires (false-negative trap)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:dynamodb:us-east-1:111122223333:table/near-miss"
+      asset_type: aws_dynamodb_table
+      vendor: aws
+      properties:
+        governance:
+          is_data_bearing: true
+          data_classification: PHI

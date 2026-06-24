@@ -15,7 +15,8 @@ func TestWireCommands_CommandCount(t *testing.T) {
 	// Update this constant when adding or removing a root command.
 	// This is intentional friction to ensure awareness of tree changes.
 	// 56 includes the hidden gen-man command (man-page generation).
-	const want = 56
+	// 57 after adding `compliance`.
+	const want = 57
 	if got != want {
 		t.Errorf("root command count = %d, want %d; update this constant if a command was added/removed", got, want)
 	}

@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.AGENT.LONGLIVEDKEYS.001
+name: Agent / Non-Human Identity Must Not Hold Long-Lived Access Keys
+description: >
+  An IAM identity that represents an agent or automation workload (a non-human
+  identity, NHI) must obtain credentials through short-lived STS session
+  assumption, never through long-lived IAM access keys. NHIs now outnumber human
+  identities many times over; a static access key on an agent identity is a
+  durable, exfiltratable secret with no built-in expiry — exactly the credential
+  an attacker wants. Agent workloads should assume a role for the duration of a
+  task and let the session expire.
+
+  The collector classifies the identity's workload type from its trust policy
+  principals (bedrock/sagemaker/lambda/states service principals), name pattern
+  (*agent*, *bot*, *automation*, *pipeline*), or an explicit role-type/
+  workload-type tag, emitting identity.role.workload_type. It also emits
+  identity.role.long_lived_keys_present (an active IAM access key exists). This
+  control fires when an agent-classified identity has a long-lived key.
+
+  Complements the Bedrock-agent permission-scope controls
+  (CTL.BEDROCK.AGENT.OVERPERM.*): those bound what an agent role can do; this
+  bounds how its credentials are issued.
+domain: identity
+severity: high
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+  - aws_iam_user
+compliance:
+  owasp_nhi: "NHI1"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-18"]
+scope_tags:
+  - aws
+  - iam
+  - agent
+observation_fields:
+  - identity.role.workload_type
+  - identity.role.long_lived_keys_present
+remediation:
+  description: >
+    An agent / non-human identity holds a long-lived IAM access key instead of
+    using short-lived STS session credentials.
+  action: >
+    Delete the long-lived access key and have the workload assume a role
+    (instance profile, IRSA, Bedrock/SageMaker service role, or OIDC web-identity
+    federation) so credentials are session-scoped and expire automatically.
+  example: |
+    {
+      "identity": {
+        "role": {
+          "workload_type": "agent",
+          "long_lived_keys_present": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.role.workload_type
+      op: eq
+      value: agent
+    - field: properties.identity.role.long_lived_keys_present
+      op: eq
+      value: true
+defect: >
+  An agent / non-human identity has a long-lived IAM access key.
+infection: >
+  The static key can be copied from code, CI logs, or a compromised host and
+  reused indefinitely; unlike an STS session it does not expire, so the agent's
+  privileges are available to an attacker for as long as the key lives.
+failure: >
+  An exfiltrated agent access key grants persistent, non-expiring access to the
+  agent's permissions — durable account compromise through a non-human identity.
+tests:
+  - name: agent identity with long-lived key fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/order-agent"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          role:
+            workload_type: agent
+            long_lived_keys_present: true
+  - name: agent identity using session credentials passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/order-agent-sts"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          role:
+            workload_type: agent
+            long_lived_keys_present: false
+  - name: human identity with a long-lived key does not fire here (false-negative trap — scoped to agents)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/alice"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          role:
+            workload_type: human
+            long_lived_keys_present: true

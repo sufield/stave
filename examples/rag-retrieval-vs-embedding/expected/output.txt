@@ -1,0 +1,3 @@
+vuln   souffle=BROADER  z3=sat  
+fp     souffle=SUBSET   z3=unsat
+fn     souffle=BROADER  z3=sat  

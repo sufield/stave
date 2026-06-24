@@ -1,0 +1,20 @@
+// RAG-004 — KB retrieval role reaches data beyond the declared sources (Soufflé).
+// kb_data_source = the KB's declared dataSourceConfiguration (S3 prefixes,
+// OpenSearch collections). retrieval_can_access = everything the retrieval role
+// can actually reach, with wildcard prefixes expanded, assume-role hops
+// followed, and resource-based-policy grants included (the fact generator
+// pre-resolves those edges, the same way the foothold spec pre-resolves
+// has_access / resource_policy_grants). Any reachable resource that is not a
+// declared source is a scope exceedance. The per-resource control reads the
+// derived `retrieval_exceeds_declared_scope` boolean.
+//
+//   souffle scope.dl -F <facts-dir> -D <out-dir>  -> out-dir/exceeds.csv
+
+.decl kb_data_source(res:symbol)
+.decl retrieval_can_access(res:symbol)
+.input kb_data_source
+.input retrieval_can_access
+
+.decl exceeds(res:symbol)
+.output exceeds
+exceeds(Res) :- retrieval_can_access(Res), !kb_data_source(Res).

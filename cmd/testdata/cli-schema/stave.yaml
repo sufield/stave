@@ -153,6 +153,7 @@ see_also:
     - stave ci - CI/CD policy and baseline commands
     - stave compare - Compare compliance posture between two frameworks
     - stave completion - Generate shell completion scripts
+    - stave compliance - Evaluate a snapshot against a compliance framework and report coverage
     - stave config - Configuration commands
     - stave contract - Inspect Stave's per-asset-type input contracts
     - stave controls - Work with control definitions

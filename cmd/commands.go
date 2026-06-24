@@ -17,6 +17,7 @@ import (
 	stavecelcmd "github.com/sufield/stave/cmd/cel"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	stavecompare "github.com/sufield/stave/cmd/compare"
+	stavecompliance "github.com/sufield/stave/cmd/compliance"
 	contract "github.com/sufield/stave/cmd/contract"
 	stavecoverage "github.com/sufield/stave/cmd/coverage"
 	"github.com/sufield/stave/cmd/diagnose"
@@ -144,6 +145,7 @@ func WireCommands(app *App) error {
 	root.AddCommand(stavefingerprint.NewCmd())
 
 	// Export & Interop
+	root.AddCommand(stavecompliance.NewCmd())
 	root.AddCommand(staveexport.NewCmd())
 	root.AddCommand(staveexportinvariants.NewCmd())
 	root.AddCommand(staveexportsir.NewCmd())

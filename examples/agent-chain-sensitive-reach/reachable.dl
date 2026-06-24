@@ -1,0 +1,42 @@
+// AGENT-CHAIN-001 — agent-identified role reaching a sensitive resource
+// (Soufflé / Datalog). Full graph reachability over the IAM/resource graph,
+// rooted at agent roles instead of internet-facing roles. The per-resource
+// control reads the derived `agent_reaches_sensitive` signal; this program is
+// one of the two engines that compute it (Z3 is the other).
+//
+//   souffle reachable.dl -F <facts-dir> -D <out-dir>
+//   -> out-dir/reachable.csv lists (agent_role, sensitive_resource).
+//
+// An empty agent_role relation (no agents) or a target that is not a
+// sensitive_resource (the non-sensitive false-positive trap) yields no
+// reachable tuples = PASS.
+
+.decl agent_role(role:symbol)                          // role identified as an agent / NHI
+.decl sensitive_resource(res:symbol, rtype:symbol)     // secret, customer KMS key, RDS, sensitive-tagged S3
+.decl can_assume(fromRole:symbol, toRole:symbol)       // sts:AssumeRole
+.decl can_pass(fromRole:symbol, toRole:symbol)         // iam:PassRole
+.decl has_access(role:symbol, res:symbol, action:symbol)
+.decl resource_policy_grants(res:symbol, principalRole:symbol)
+.input agent_role
+.input sensitive_resource
+.input can_assume
+.input can_pass
+.input has_access
+.input resource_policy_grants
+
+// transitive control via assume / pass chains (arbitrary depth)
+.decl controls_role(fromRole:symbol, toRole:symbol)
+controls_role(F, T) :- can_assume(F, T).
+controls_role(F, T) :- can_pass(F, T).
+controls_role(F, T) :- controls_role(F, M), controls_role(M, T).
+
+.decl can_reach(role:symbol, res:symbol)
+can_reach(R, Res) :- has_access(R, Res, _).
+can_reach(R, Res) :- resource_policy_grants(Res, R).
+can_reach(R, Res) :- controls_role(R, M), has_access(M, Res, _).
+can_reach(R, Res) :- controls_role(R, M), resource_policy_grants(Res, M).
+
+// finding: an agent role reaches a sensitive resource
+.decl reachable(role:symbol, res:symbol)
+.output reachable
+reachable(R, Res) :- agent_role(R), sensitive_resource(Res, _), can_reach(R, Res).

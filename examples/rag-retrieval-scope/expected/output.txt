@@ -1,0 +1,3 @@
+vuln   souffle=EXCEEDS    z3=sat  
+fp     souffle=CONTAINED  z3=unsat
+fn     souffle=EXCEEDS    z3=sat  

@@ -605,6 +605,22 @@ MicroVM Network Connector Role Is Over-Privileged. Lab control for the Lambda Mi
 
 ---
 
+### CTL.LAMBDA.MICROVM.DATAEVENTS.001
+
+**Sensitive Lambda MicroVM Must Have Data-Event Logging**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.1;
+
+A Lambda MicroVM classified as sensitive must be covered by CloudTrail data-event logging for its control-plane API surface (RunMicrovm, CreateMicrovmAuthToken, SuspendMicrovm, ResumeMicrovm). MicroVMs are long-lived, addressable compute — unlike ephemeral function invocations, a MicroVM is a durable execution environment an attacker can reach and reuse. Without data-event coverage, creation, token issuance, and lifecycle transitions on that compute are invisible to forensics.
+Extends the existing CloudTrail data-event family (CTL.CLOUDTRAIL.DATA.LAMBDA.001, CTL.CLOUDTRAIL.DATA.DYNAMODB.001, CTL.SECRETS.AUDIT.DATAEVENTS.001) to the MicroVM compute layer. The collector emits microvm.kind, microvm.sensitive (the MicroVM runs a sensitive workload), and microvm.audit.data_events_enabled (a trail covers its API calls). This control fires on a sensitive MicroVM with no data-event coverage.
+
+**Remediation:** Add a CloudTrail data-event selector covering the MicroVM API surface (RunMicrovm, CreateMicrovmAuthToken, SuspendMicrovm, ResumeMicrovm) for the sensitive MicroVMs, on a multi-region trail with log-file validation.
+
+---
+
 ### CTL.LAMBDA.MICROVM.ENTROPY.001
 
 **MicroVM Does Not Reinitialize Entropy on Resume**

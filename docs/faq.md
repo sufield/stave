@@ -213,6 +213,36 @@ so **both** binaries reject `forge` / `generate` in production.
 - **`stave`** — standard deployment for CI pipelines, production evaluation, and automated workflows.
 - **`stave-dev`** — developer machines; its `--version` and crash hints point at developer tooling.
 
+## Why is there an OSCAL control in core *and* an `oscal-gaps` command in stave-coverage?
+
+They answer two different questions about OSCAL, so they live in two
+different places. The shared word "OSCAL" is just the input format.
+
+`CTL.COMPLIANCE.OSCAL.REPORT.CURRENT.001` (core catalog) is a runtime
+invariant over a **customer's snapshot**. It asks: *"Is the SOC report this
+account relies on present, unexpired (≤ 12 months past its coverage period),
+and in scope for the snapshot's region?"* It evaluates a derived
+`oscal_report` asset during `stave apply` and emits a finding — exactly what a
+control is, so it lives in the catalog with every other control.
+
+`stave-coverage oscal-gaps` never looks at a customer snapshot. It asks a
+**meta question about the catalog itself**: *"Of the customer- and
+shared-responsibility SOC 2 criteria AWS lists in its OSCAL report, which ones
+does the Stave catalog have no control for?"* That is catalog-coverage
+analysis, which is the entire reason `stave-coverage` exists as a separate
+tool — coverage logic never lives in core.
+
+| | Core control | `oscal-gaps` |
+|---|---|---|
+| Input | one account snapshot | the OSCAL report + the whole catalog |
+| Question | *is my evidence fresh & in scope?* | *does our rulebook cover what AWS says is my job?* |
+| Output | a finding in `stave apply` | a gap list (criteria with zero controls) |
+| Runs against | customer infrastructure | Stave's own catalog |
+
+No shared code (separate Go modules), no overlapping logic. The control is the
+shippable customer-facing invariant; `oscal-gaps` is an internal
+catalog-completeness tool that stands beside it.
+
 ## What is the output contract schema (`out.v0.1`)?
 
 Every `stave apply` command produces JSON conforming to the `out.v0.1` schema. This is a stable machine-readable contract that downstream tools — CI pipelines, dashboards, SIEM integrations, custom scripts — can rely on.

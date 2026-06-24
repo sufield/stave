@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.MICROVM.DATAEVENTS.001
+name: Sensitive Lambda MicroVM Must Have Data-Event Logging
+description: >
+  A Lambda MicroVM classified as sensitive must be covered by CloudTrail
+  data-event logging for its control-plane API surface (RunMicrovm,
+  CreateMicrovmAuthToken, SuspendMicrovm, ResumeMicrovm). MicroVMs are
+  long-lived, addressable compute — unlike ephemeral function invocations, a
+  MicroVM is a durable execution environment an attacker can reach and reuse.
+  Without data-event coverage, creation, token issuance, and lifecycle
+  transitions on that compute are invisible to forensics.
+
+  Extends the existing CloudTrail data-event family
+  (CTL.CLOUDTRAIL.DATA.LAMBDA.001, CTL.CLOUDTRAIL.DATA.DYNAMODB.001,
+  CTL.SECRETS.AUDIT.DATAEVENTS.001) to the MicroVM compute layer. The collector
+  emits microvm.kind, microvm.sensitive (the MicroVM runs a sensitive workload),
+  and microvm.audit.data_events_enabled (a trail covers its API calls). This
+  control fires on a sensitive MicroVM with no data-event coverage.
+domain: audit
+severity: high
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lambda_microvm
+compliance:
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - lambda
+  - microvm
+  - cloudtrail
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - microvm.kind
+  - microvm.sensitive
+  - microvm.audit.data_events_enabled
+remediation:
+  description: >
+    A sensitive Lambda MicroVM has no CloudTrail data-event coverage, so its
+    creation, auth-token issuance, and lifecycle API calls are unlogged.
+  action: >
+    Add a CloudTrail data-event selector covering the MicroVM API surface
+    (RunMicrovm, CreateMicrovmAuthToken, SuspendMicrovm, ResumeMicrovm) for the
+    sensitive MicroVMs, on a multi-region trail with log-file validation.
+  example: |
+    {
+      "microvm": {
+        "kind": "microvm",
+        "sensitive": true,
+        "audit": { "data_events_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.microvm.kind
+      op: eq
+      value: microvm
+    - field: properties.microvm.sensitive
+      op: eq
+      value: true
+    - field: properties.microvm.audit.data_events_enabled
+      op: eq
+      value: false
+defect: >
+  A sensitive Lambda MicroVM is not covered by CloudTrail data-event logging.
+infection: >
+  An attacker who creates, resumes, or issues auth tokens against the MicroVM
+  generates no audit record; the long-lived compute can be used and re-used with
+  no forensic trail.
+failure: >
+  Undetected use of sensitive MicroVM compute — the execution layer of an
+  intrusion leaves no evidence for investigation.
+tests:
+  - name: sensitive microvm without data-event coverage fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:microvm:pii-worker"
+      asset_type: aws_lambda_microvm
+      vendor: aws
+      properties:
+        microvm:
+          kind: microvm
+          sensitive: true
+          audit:
+            data_events_enabled: false
+  - name: sensitive microvm with data-event coverage passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:microvm:pii-worker-logged"
+      asset_type: aws_lambda_microvm
+      vendor: aws
+      properties:
+        microvm:
+          kind: microvm
+          sensitive: true
+          audit:
+            data_events_enabled: true
+  - name: non-sensitive microvm without coverage does not fire (false-negative trap — scoped to sensitive)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:microvm:public-worker"
+      asset_type: aws_lambda_microvm
+      vendor: aws
+      properties:
+        microvm:
+          kind: microvm
+          sensitive: false
+          audit:
+            data_events_enabled: false

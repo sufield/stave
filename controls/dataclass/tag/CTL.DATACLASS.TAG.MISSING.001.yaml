@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.DATACLASS.TAG.MISSING.001
+name: Data-Bearing Resource Must Carry a Classification Tag
+description: >
+  Every data-bearing resource (S3 bucket, RDS instance, DynamoDB table,
+  Secrets Manager secret, OpenSearch collection, Redshift cluster, EFS
+  filesystem) must declare a data-classification tag. Stave's intent-tag
+  controls only fire when a classification tag EXISTS and mismatches reality —
+  a resource with NO classification tag is invisible to them: there is no
+  declared intent to check against. This control closes that blind spot by
+  treating absence of classification as a violation, not a silent pass.
+
+  The collector normalizes whichever tag key the organization uses
+  (data_classification, data-classification, classification, sensitivity) into
+  the derived signals this predicate reads: governance.is_data_bearing (the
+  asset stores data and is therefore in scope) and
+  governance.data_classification (the resolved classification value, absent
+  when no recognized tag is present).
+
+  Fail-loud: an in-scope resource with no classification is a governance gap,
+  not "unclassified data is fine." Tag it, then the value-level controls
+  (taxonomy, PHI markers, retention) can reason about it.
+domain: governance
+severity: medium
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+  - aws_rds_instance
+  - aws_dynamodb_table
+  - aws_secretsmanager_secret
+  - aws_opensearch_domain
+  - aws_redshift_cluster
+  - aws_efs_filesystem
+compliance:
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-03", "DSP-04"]
+scope_tags:
+  - aws
+  - governance
+  - dataclass
+observation_fields:
+  - governance.is_data_bearing
+  - governance.data_classification
+remediation:
+  description: >
+    A data-bearing resource has no data-classification tag, so its sensitivity
+    is unknown and no intent-based control can evaluate it.
+  action: >
+    Apply a data-classification tag drawn from the approved taxonomy
+    (public, internal, confidential, restricted, pii, phi, pci). Wire tagging
+    into the resource's IaC module so new resources are classified at creation.
+  example: |
+    {
+      "governance": {
+        "is_data_bearing": true,
+        "data_classification": "confidential"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.is_data_bearing
+      op: eq
+      value: true
+    - field: properties.governance.data_classification
+      op: missing
+defect: >
+  A data-bearing resource carries no data-classification tag.
+infection: >
+  Sensitivity-driven controls (encryption posture for PHI, retention floors,
+  public-exposure-of-sensitive-data) cannot evaluate the resource — it is a
+  hole in every classification-scoped invariant.
+failure: >
+  Sensitive data sits in an unclassified resource; a leak is discovered only
+  after the fact because no control knew the data was sensitive.
+tests:
+  - name: data-bearing resource with no classification fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::unclassified-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        governance:
+          is_data_bearing: true
+  - name: data-bearing resource with a classification passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:db:classified-db"
+      asset_type: aws_rds_instance
+      vendor: aws
+      properties:
+        governance:
+          is_data_bearing: true
+          data_classification: confidential
+  - name: resource with other tags but no classification still fires (false-negative trap)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:db:tagged-but-unclassified"
+      asset_type: aws_rds_instance
+      vendor: aws
+      properties:
+        governance:
+          is_data_bearing: true
+          environment: production
+          team: backend

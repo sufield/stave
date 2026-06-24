@@ -35,6 +35,40 @@ AWS accounts must have no more than 2 users with full administrator access. Exce
 
 ---
 
+### CTL.IAM.AGENT.CHAIN.SENSITIVE.001
+
+**Agent Role Must Not Reach Sensitive Resources via Trust Chain**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+An agent-identified execution role must not be able to reach a sensitive resource (Secrets Manager secret, customer-managed KMS key, RDS, or a bucket tagged confidential/restricted/pii/phi) — directly, through an AssumeRole/PassRole chain of arbitrary length, or via a resource-based policy. Each hop can look least-privilege in isolation: the agent role only has AssumeRole, the intermediate role only has access to one secret. The danger is the composition — an attacker with prompt control over the agent inherits the transitive reach.
+This is a compound (graph-reachability) control. Per-resource CEL sees only direct access; the transitive path is what the graph reasoning sees. The catalog control reads the derived signals the reasoning layer computes: identity.role.workload_type (the role is an agent / non-human identity) and identity.agent_reaches_sensitive (graph reachability from this agent role to a sensitive resource is true). The reasoning spec that computes the boolean — and proves it two independent ways, Soufflé and Z3 — lives at examples/agent-chain-sensitive-reach/. identity.agent_reach_path carries the full path as finding evidence.
+Fail-closed on the agent signal: a role whose reach the graph could not resolve is not silently passed; the reasoning emits the boolean explicitly.
+
+**Remediation:** Break the path: remove the AssumeRole/PassRole edge to the intermediate role, scope the intermediate role's permissions off the sensitive resource, or constrain the agent role's trust so it cannot pivot. Review identity.agent_reach_path (the full hop-by-hop chain) to choose the narrowest cut.
+
+---
+
+### CTL.IAM.AGENT.LONGLIVEDKEYS.001
+
+**Agent / Non-Human Identity Must Not Hold Long-Lived Access Keys**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI1; soc2: CC6.1;
+
+An IAM identity that represents an agent or automation workload (a non-human identity, NHI) must obtain credentials through short-lived STS session assumption, never through long-lived IAM access keys. NHIs now outnumber human identities many times over; a static access key on an agent identity is a durable, exfiltratable secret with no built-in expiry — exactly the credential an attacker wants. Agent workloads should assume a role for the duration of a task and let the session expire.
+The collector classifies the identity's workload type from its trust policy principals (bedrock/sagemaker/lambda/states service principals), name pattern (*agent*, *bot*, *automation*, *pipeline*), or an explicit role-type/ workload-type tag, emitting identity.role.workload_type. It also emits identity.role.long_lived_keys_present (an active IAM access key exists). This control fires when an agent-classified identity has a long-lived key.
+Complements the Bedrock-agent permission-scope controls (CTL.BEDROCK.AGENT.OVERPERM.*): those bound what an agent role can do; this bounds how its credentials are issued.
+
+**Remediation:** Delete the long-lived access key and have the workload assume a role (instance profile, IRSA, Bedrock/SageMaker service role, or OIDC web-identity federation) so credentials are session-scoped and expire automatically.
+
+---
+
 ### CTL.IAM.ANALYZER.001
 
 **IAM Access Analyzer Must Be Enabled**

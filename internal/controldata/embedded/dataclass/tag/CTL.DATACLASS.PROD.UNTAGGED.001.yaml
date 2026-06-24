@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.DATACLASS.PROD.UNTAGGED.001
+name: Production Data-Bearing Resource Must Not Be Unclassified
+description: >
+  A data-bearing resource in a production environment with no data-classification
+  tag is treated as HIGH severity, not as routine hygiene. The fail-loud
+  principle applied to classification: absence of classification in production
+  is not "unclassified" — it is "unknown, assume worst case." Production data
+  that no control knows is sensitive is the root cause behind a large share of
+  data-leak incidents.
+
+  The collector emits governance.environment (the resolved environment, e.g.
+  production, derived from account tag / name pattern / org unit),
+  governance.is_data_bearing, and governance.data_classification. This predicate
+  fires on production + data-bearing + no classification.
+domain: governance
+severity: high
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+  - aws_rds_instance
+  - aws_dynamodb_table
+  - aws_secretsmanager_secret
+  - aws_opensearch_domain
+  - aws_redshift_cluster
+  - aws_efs_filesystem
+compliance:
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-03", "DSP-06"]
+scope_tags:
+  - aws
+  - governance
+  - dataclass
+observation_fields:
+  - governance.is_data_bearing
+  - governance.environment
+  - governance.data_classification
+remediation:
+  description: >
+    A production data-bearing resource has no data-classification, so its
+    sensitivity is unknown and it must be assumed to hold the most sensitive
+    data until proven otherwise.
+  action: >
+    Classify the resource immediately with an approved taxonomy value. If it
+    truly holds no sensitive data, tag it public/internal explicitly — silence
+    is not an acceptable classification in production.
+  example: |
+    {
+      "governance": {
+        "is_data_bearing": true,
+        "environment": "production",
+        "data_classification": "restricted"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.is_data_bearing
+      op: eq
+      value: true
+    - field: properties.governance.environment
+      op: eq
+      value: production
+    - field: properties.governance.data_classification
+      op: missing
+defect: >
+  A production data-bearing resource carries no data-classification.
+infection: >
+  The worst-case assumption (sensitive data) cannot be enforced because no
+  control knows to treat the resource as sensitive; protective invariants do
+  not apply.
+failure: >
+  A production datastore holding regulated data is exposed or under-protected
+  and the gap is invisible until a breach surfaces it.
+tests:
+  - name: production untagged data resource fires HIGH (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::prod-unknown"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        governance:
+          is_data_bearing: true
+          environment: production
+  - name: production resource with classification passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::prod-classified"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        governance:
+          is_data_bearing: true
+          environment: production
+          data_classification: confidential
+  - name: non-production untagged resource does not fire here (false-negative trap — scoped to prod)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::dev-scratch"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        governance:
+          is_data_bearing: true
+          environment: development
