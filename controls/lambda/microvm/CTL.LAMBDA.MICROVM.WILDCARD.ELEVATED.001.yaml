@@ -1,0 +1,124 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.MICROVM.WILDCARD.ELEVATED.001
+name: Agent or CI/CD Role With lambda:* Holds All MicroVM Permissions (Critical)
+description: >
+  An agent execution role or a CI/CD role holding lambda:* is CRITICAL: the
+  wildcard — granted for ordinary Lambda management before MicroVMs existed —
+  now includes lambda:CreateMicrovmShellAuthToken (interactive shell),
+  lambda:RunMicrovm, and lambda:Terminate/SuspendMicrovm. A prompt-injected
+  agent or a compromised pipeline credential gains full MicroVM control,
+  including a production shell, through a permission nobody reviewed for MicroVM
+  blast radius.
+
+  CRITICAL counterpart to CTL.LAMBDA.MICROVM.WILDCARD.001 (HIGH). ctrl.v1
+  severity is static per control, so the escalation is two disjoint controls:
+  this fires only when role.workload_type is agent or cicd; the HIGH one only
+  when it is neither. role.has_lambda_wildcard is resolved from effective
+  permissions (inline AND attached managed policies such as AWSLambda_FullAccess
+  AND boundaries) — so a scoped-looking inline policy does not hide a wildcard
+  granted by an attached managed policy.
+domain: identity
+severity: critical
+scope: atomic
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  owasp_nhi: "NHI5"
+scope_tags:
+  - aws
+  - lambda
+  - microvm
+  - agent
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - role.kind
+  - role.has_lambda_wildcard
+  - role.is_microvm_admin
+  - role.workload_type
+remediation:
+  description: >
+    An agent or CI/CD role holds lambda:*, silently granting it all MicroVM
+    actions including interactive shell, run, and lifecycle control.
+  action: >
+    Replace lambda:* with the explicit, minimal Lambda actions the automation
+    needs. Automation identities must never hold the MicroVM shell/run/lifecycle
+    actions; there is no microvm-admin exception for an agent or pipeline role.
+    Inspect attached managed policies (AWSLambda_FullAccess), not just inline.
+  example: |
+    {
+      "role": {
+        "kind": "iam_role",
+        "has_lambda_wildcard": false,
+        "workload_type": "agent"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.role.kind
+      op: eq
+      value: iam_role
+    - field: properties.role.has_lambda_wildcard
+      op: eq
+      value: true
+    - field: properties.role.is_microvm_admin
+      op: ne
+      value: true
+    - any:
+        - field: properties.role.workload_type
+          op: eq
+          value: agent
+        - field: properties.role.workload_type
+          op: eq
+          value: cicd
+defect: >
+  An agent or CI/CD (non-human automation) role holds lambda:*, silently
+  including all MicroVM actions.
+infection: >
+  Prompt injection of the agent, or theft of the pipeline credential, yields
+  full MicroVM control — launch, interactive shell, suspend/terminate — on
+  production compute, via an unreviewed wildcard grant.
+failure: >
+  An AI agent or CI/CD pipeline can run, shell into, and destroy production
+  MicroVMs through a long-standing lambda:* grant.
+tests:
+  - name: CI/CD deploy role with lambda:* fires CRITICAL (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/GitHubActions-DeployRole"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          has_lambda_wildcard: true
+          is_microvm_admin: false
+          workload_type: cicd
+  - name: agent role with inline-scoped lambda but lambda:* via attached managed policy fires CRITICAL (false-negative trap)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/order-agent"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          has_lambda_wildcard: true
+          is_microvm_admin: false
+          workload_type: agent
+  - name: ordinary human role with lambda:* does not fire here (false-positive trap — handled by WILDCARD.001 at HIGH)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/DevTeam-LambdaRole"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          has_lambda_wildcard: true
+          is_microvm_admin: false
+          workload_type: human

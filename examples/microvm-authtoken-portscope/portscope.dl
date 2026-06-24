@@ -1,0 +1,21 @@
+// MICROVM auth-token port scoping (Soufflé). Proves the logic behind
+// CTL.LAMBDA.MICROVM.AUTHTOKEN.PORTSCOPE.001: a token-creating role must scope
+// allowed ports and must never allow the lifecycle hook port. The catalog
+// control reads collector-resolved role.microvm_authtoken_* booleans; this spec
+// derives the verdict from permission + port-condition + lifecycle-port facts
+// and is cross-checked by Z3.
+.decl role_permission(role:symbol, service:symbol, action:symbol)
+.decl has_port_constraint(role:symbol)
+.decl allowed_port(role:symbol, port:number)
+.decl lifecycle_port(port:number)
+.input role_permission
+.input has_port_constraint
+.input allowed_port
+.input lifecycle_port
+.decl can_create_auth_token(role:symbol)
+can_create_auth_token(R) :- role_permission(R, "lambda", "CreateMicrovmAuthToken").
+can_create_auth_token(R) :- role_permission(R, "lambda", "*").
+.decl bad_port(role:symbol, reason:symbol)
+.output bad_port
+bad_port(R, "unscoped")  :- can_create_auth_token(R), !has_port_constraint(R).
+bad_port(R, "lifecycle") :- can_create_auth_token(R), has_port_constraint(R), allowed_port(R, P), lifecycle_port(P).

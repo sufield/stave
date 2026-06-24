@@ -1,0 +1,16 @@
+// MICROVM auth-token expiration (Soufflé). Proves the logic behind
+// CTL.LAMBDA.MICROVM.AUTHTOKEN.EXPIRY.001: a token-creating role must constrain
+// expiration to <= 30 min. The catalog control reads collector-resolved
+// role.microvm_authtoken_* booleans; this spec derives the verdict from the
+// underlying permission + condition facts and is cross-checked by Z3.
+.decl role_permission(role:symbol, service:symbol, action:symbol)
+.decl has_expiration_constraint(role:symbol, max_minutes:number)
+.input role_permission
+.input has_expiration_constraint
+.decl can_create_auth_token(role:symbol)
+can_create_auth_token(R) :- role_permission(R, "lambda", "CreateMicrovmAuthToken").
+can_create_auth_token(R) :- role_permission(R, "lambda", "*").   // wildcard includes it
+.decl bad_expiry(role:symbol, reason:symbol)
+.output bad_expiry
+bad_expiry(R, "unconstrained") :- can_create_auth_token(R), !has_expiration_constraint(R, _).
+bad_expiry(R, "excessive")     :- can_create_auth_token(R), has_expiration_constraint(R, M), M > 30.

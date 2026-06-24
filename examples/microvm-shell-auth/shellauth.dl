@@ -1,0 +1,30 @@
+// MICROVM shell-auth restriction (Soufflé). Proves the resolution + severity
+// logic behind CTL.LAMBDA.MICROVM.SHELLAUTH.001 (HIGH) and .ELEVATED.001
+// (CRITICAL). The catalog controls read a resolved role.microvm_shell_auth
+// boolean; this spec is where that resolution — including the lambda:*
+// wildcard that INCLUDES the shell action — is derived, and is cross-checked by
+// Z3 (query.smt2). The collector resolves effective permissions (inline +
+// attached managed + boundary) into role_permission facts.
+//
+//   souffle shellauth.dl -F <facts> -D <out>  -> out/unauthorized_shell_access.csv
+
+.decl role_permission(role:symbol, service:symbol, action:symbol)  // effective, resolved
+.decl role_break_glass(role:symbol)                                // tag break-glass:true OR name *break-glass*/*emergency*
+.decl agent_role(role:symbol)                                      // agent taxonomy
+.decl cicd_role(role:symbol)                                       // CI/CD trust heuristics
+.input role_permission
+.input role_break_glass
+.input agent_role
+.input cicd_role
+
+.decl has_shell_access(role:symbol)
+has_shell_access(R) :- role_permission(R, "lambda", "CreateMicrovmShellAuthToken").
+has_shell_access(R) :- role_permission(R, "lambda", "*").   // wildcard includes the shell action
+
+.decl unauthorized_shell_access(role:symbol, severity:symbol)
+.output unauthorized_shell_access
+// agent / CI-CD automation identities: CRITICAL (no break-glass exception)
+unauthorized_shell_access(R, "CRITICAL") :- has_shell_access(R), !role_break_glass(R), agent_role(R).
+unauthorized_shell_access(R, "CRITICAL") :- has_shell_access(R), !role_break_glass(R), cicd_role(R).
+// ordinary roles: HIGH
+unauthorized_shell_access(R, "HIGH") :- has_shell_access(R), !role_break_glass(R), !agent_role(R), !cicd_role(R).

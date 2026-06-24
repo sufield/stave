@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.MICROVM.OBSERVABILITY.ROLES.001
+name: Production MicroVM Must Have Both Build Role and Execution Role
+description: >
+  AWS makes both MicroVM roles optional: no build role means no build logs to
+  CloudWatch (no record of how the image was made); no execution role means no
+  runtime logs and no AWS-service access (zero observability into what the
+  MicroVM does at runtime). In production both are unacceptable — a MicroVM with
+  no execution role is an audit blind spot.
+
+  The control evaluates the running MicroVM. The collector emits
+  microvm.is_production, microvm.execution_role_present, and — surfaced from the
+  MicroVM's source image — microvm.build_role_present. A production MicroVM
+  missing EITHER role fires, so the image-level build-role gap (no record of
+  what was installed at build time) is caught at the MicroVM that runs from it.
+domain: detection
+severity: high
+scope: atomic
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lambda_microvm
+compliance:
+  nist_800_53_r5: "AU-12"
+  soc2: "CC7.1"
+scope_tags:
+  - aws
+  - lambda
+  - microvm
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - microvm.kind
+  - microvm.is_production
+  - microvm.execution_role_present
+  - microvm.build_role_present
+remediation:
+  description: >
+    A production MicroVM is missing its execution role (no runtime logs / no
+    AWS-service access / no observability) or its image's build role (no build
+    logs).
+  action: >
+    Attach an execution role to the MicroVM (runtime logs + scoped AWS access)
+    and a build role to its source image (build logs). Both are required in
+    production; only development sandboxes may omit them.
+  example: |
+    {
+      "microvm": {
+        "kind": "microvm",
+        "is_production": true,
+        "execution_role_present": true,
+        "build_role_present": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.microvm.kind
+      op: eq
+      value: microvm
+    - field: properties.microvm.is_production
+      op: eq
+      value: true
+    - any:
+        - field: properties.microvm.execution_role_present
+          op: ne
+          value: true
+        - field: properties.microvm.build_role_present
+          op: ne
+          value: true
+defect: >
+  A production MicroVM lacks an execution role and/or its image lacks a build
+  role.
+infection: >
+  Runtime activity (execution role) or build provenance (build role) goes
+  unlogged — an attacker operating in or building the MicroVM leaves no record.
+failure: >
+  Production MicroVM compute with no runtime observability or no build-time
+  provenance; incidents are uninvestigable.
+tests:
+  - name: production microvm with no execution role fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "microvm-abc123"
+      asset_type: aws_lambda_microvm
+      vendor: aws
+      properties:
+        microvm:
+          kind: microvm
+          is_production: true
+          execution_role_present: false
+          build_role_present: true
+  - name: production microvm with both roles passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "microvm-def456"
+      asset_type: aws_lambda_microvm
+      vendor: aws
+      properties:
+        microvm:
+          kind: microvm
+          is_production: true
+          execution_role_present: true
+          build_role_present: true
+  - name: production microvm whose image has no build role fires (false-negative trap — image-level gap)
+    verdict: VIOLATION
+    asset:
+      asset_id: "microvm-from-unlogged-image"
+      asset_type: aws_lambda_microvm
+      vendor: aws
+      properties:
+        microvm:
+          kind: microvm
+          is_production: true
+          execution_role_present: true
+          build_role_present: false

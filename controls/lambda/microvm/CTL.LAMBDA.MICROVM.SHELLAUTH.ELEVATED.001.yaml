@@ -1,0 +1,129 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.MICROVM.SHELLAUTH.ELEVATED.001
+name: Agent or CI/CD Role Must Never Hold MicroVM Shell-Auth Permission
+description: >
+  An agent execution role or a CI/CD role holding
+  lambda:CreateMicrovmShellAuthToken is CRITICAL, not merely high: a
+  prompt-injected AI agent or a compromised pipeline credential would gain an
+  interactive shell inside production MicroVMs. These workload classes should
+  never have interactive shell access under any circumstance — there is no
+  legitimate break-glass case for a non-human automation identity.
+
+  This is the CRITICAL-severity counterpart to
+  CTL.LAMBDA.MICROVM.SHELLAUTH.001 (HIGH, ordinary roles). ctrl.v1 controls
+  carry a single static severity, so the HIGH/CRITICAL escalation is expressed
+  as two disjoint controls: this one fires only when role.workload_type is agent
+  or cicd, the HIGH one only when it is neither — they never both fire on the
+  same role. The collector resolves role.microvm_shell_auth (effective, incl.
+  attached managed policies and the lambda:* wildcard),
+  role.is_break_glass, and role.workload_type (from the agent taxonomy and CI/CD
+  trust-policy heuristics).
+
+  Fail-loud: role.microvm_shell_auth must be emitted explicitly; a resolution
+  failure must surface, never read as a silent PASS.
+domain: identity
+severity: critical
+scope: atomic
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  owasp_nhi: "NHI5"
+scope_tags:
+  - aws
+  - lambda
+  - microvm
+  - agent
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - role.kind
+  - role.microvm_shell_auth
+  - role.is_break_glass
+  - role.workload_type
+remediation:
+  description: >
+    An agent or CI/CD role can call CreateMicrovmShellAuthToken, giving a
+    non-human automation identity an interactive shell inside production
+    MicroVMs.
+  action: >
+    Remove lambda:CreateMicrovmShellAuthToken and any lambda:*
+    grant from the agent/CI-CD role (inspect attached managed policies and
+    boundaries, not just inline). Automation identities must never hold
+    interactive shell access; there is no break-glass exception for them.
+  example: |
+    {
+      "role": {
+        "kind": "iam_role",
+        "microvm_shell_auth": false,
+        "workload_type": "agent"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.role.kind
+      op: eq
+      value: iam_role
+    - field: properties.role.microvm_shell_auth
+      op: eq
+      value: true
+    - field: properties.role.is_break_glass
+      op: ne
+      value: true
+    - any:
+        - field: properties.role.workload_type
+          op: eq
+          value: agent
+        - field: properties.role.workload_type
+          op: eq
+          value: cicd
+defect: >
+  An agent or CI/CD (non-human automation) role holds MicroVM shell-auth
+  permission.
+infection: >
+  Prompt injection of the agent, or theft of the pipeline credential, yields an
+  interactive shell inside production MicroVMs — automation compromise becomes
+  hands-on-keyboard access below the application layer.
+failure: >
+  An AI agent or CI/CD pipeline is driven into an interactive production shell;
+  full hands-on compromise of production compute.
+tests:
+  - name: bedrock agent role with shell auth fires CRITICAL (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/order-agent"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          microvm_shell_auth: true
+          is_break_glass: false
+          workload_type: agent
+  - name: CI/CD role with shell auth via managed policy fires CRITICAL (false-negative trap)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/GitHubActions-DeployRole"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          microvm_shell_auth: true
+          is_break_glass: false
+          workload_type: cicd
+  - name: ordinary human role does not fire here (false-positive trap — handled by SHELLAUTH.001 at HIGH)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/DevTeam-LambdaRole"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          microvm_shell_auth: true
+          is_break_glass: false
+          workload_type: human

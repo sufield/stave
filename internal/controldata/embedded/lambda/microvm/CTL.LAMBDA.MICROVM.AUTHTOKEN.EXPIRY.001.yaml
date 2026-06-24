@@ -1,0 +1,125 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.MICROVM.AUTHTOKEN.EXPIRY.001
+name: MicroVM Auth-Token Expiration Must Be Constrained to 30 Minutes or Less
+description: >
+  lambda:CreateMicrovmAuthToken mints a bearer token for a MicroVM and
+  takes an expiration parameter. AWS best practice is a 15–30 minute lifetime; a
+  long-lived token is a stolen-credential window (an 8-hour token gives an
+  attacker an 8-hour foothold). If a role that can create auth tokens has no IAM
+  policy condition constraining the expiration — or constrains it above 30
+  minutes — any caller can mint long-lived tokens.
+
+  This control reads collector-resolved signals, not raw policy JSON. The
+  collector resolves the role's effective permissions (inline + attached managed
+  + boundary, expanding lambda:* which includes CreateMicrovmAuthToken)
+  into role.microvm_authtoken_create, and inspects the Allow statement's
+  Condition for a numeric upper bound on the expiration condition key, emitting
+  role.microvm_authtoken_expiry_constrained and (when present)
+  role.microvm_authtoken_expiry_max_minutes.
+
+  Note on condition keys: the exact IAM condition key for MicroVM token
+  expiration may not yet be published by AWS. The collector matches whatever key
+  AWS uses (e.g. lambda:AuthTokenExpirationInMinutes); if it cannot
+  resolve a constraint it MUST emit expiry_constrained=false — fail-loud,
+  treated as unconstrained (FAIL), never a silent PASS.
+domain: identity
+severity: high
+scope: atomic
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+compliance:
+  nist_800_53_r5: "AC-12"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - lambda
+  - microvm
+params:
+  attack_stage: persistence
+observation_fields:
+  - role.kind
+  - role.microvm_authtoken_create
+  - role.microvm_authtoken_expiry_constrained
+  - role.microvm_authtoken_expiry_max_minutes
+remediation:
+  description: >
+    A role that can create MicroVM auth tokens does not constrain token
+    expiration to 30 minutes or less, so it can mint long-lived tokens.
+  action: >
+    Add an IAM policy Condition with a numeric upper bound (<= 30) on the
+    MicroVM auth-token expiration condition key to every Allow of
+    lambda:CreateMicrovmAuthToken (and narrow any lambda:*
+    grant). Check attached managed policies, not just inline.
+  example: |
+    {
+      "role": {
+        "kind": "iam_role",
+        "microvm_authtoken_create": true,
+        "microvm_authtoken_expiry_constrained": true,
+        "microvm_authtoken_expiry_max_minutes": 30
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.role.kind
+      op: eq
+      value: iam_role
+    - field: properties.role.microvm_authtoken_create
+      op: eq
+      value: true
+    - any:
+        - field: properties.role.microvm_authtoken_expiry_constrained
+          op: ne
+          value: true
+        - field: properties.role.microvm_authtoken_expiry_max_minutes
+          op: gt
+          value: 30
+defect: >
+  A role can mint MicroVM auth tokens with an unconstrained or excessive
+  (> 30 min) expiration.
+infection: >
+  A stolen token stays valid for the full (possibly multi-hour) lifetime,
+  extending an attacker's access window to the MicroVM well beyond detection and
+  rotation.
+failure: >
+  A leaked long-lived token grants prolonged access to production MicroVM
+  compute.
+tests:
+  - name: token-create role with no expiration condition fires (vulnerable — unconstrained)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/MicroVM-AppRole"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          microvm_authtoken_create: true
+          microvm_authtoken_expiry_constrained: false
+          microvm_authtoken_expiry_max_minutes: 0
+  - name: expiration constrained to 30 minutes passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/MicroVM-AppRole-Secure"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          microvm_authtoken_create: true
+          microvm_authtoken_expiry_constrained: true
+          microvm_authtoken_expiry_max_minutes: 30
+  - name: condition exists but allows 480 minutes fires (false-negative trap — too permissive)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/MicroVM-AppRole-TooLong"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          microvm_authtoken_create: true
+          microvm_authtoken_expiry_constrained: true
+          microvm_authtoken_expiry_max_minutes: 480

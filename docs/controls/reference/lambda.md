@@ -545,6 +545,40 @@ Fact-recording marker for Lambda functions that are registered as a Bedrock agen
 
 ---
 
+### CTL.LAMBDA.MICROVM.AUTHTOKEN.EXPIRY.001
+
+**MicroVM Auth-Token Expiration Must Be Constrained to 30 Minutes or Less**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-12; soc2: CC6.1;
+
+lambda:CreateMicrovmAuthToken mints a bearer token for a MicroVM and takes an expiration parameter. AWS best practice is a 15–30 minute lifetime; a long-lived token is a stolen-credential window (an 8-hour token gives an attacker an 8-hour foothold). If a role that can create auth tokens has no IAM policy condition constraining the expiration — or constrains it above 30 minutes — any caller can mint long-lived tokens.
+This control reads collector-resolved signals, not raw policy JSON. The collector resolves the role's effective permissions (inline + attached managed + boundary, expanding lambda:* which includes CreateMicrovmAuthToken) into role.microvm_authtoken_create, and inspects the Allow statement's Condition for a numeric upper bound on the expiration condition key, emitting role.microvm_authtoken_expiry_constrained and (when present) role.microvm_authtoken_expiry_max_minutes.
+Note on condition keys: the exact IAM condition key for MicroVM token expiration may not yet be published by AWS. The collector matches whatever key AWS uses (e.g. lambda:AuthTokenExpirationInMinutes); if it cannot resolve a constraint it MUST emit expiry_constrained=false — fail-loud, treated as unconstrained (FAIL), never a silent PASS.
+
+**Remediation:** Add an IAM policy Condition with a numeric upper bound (<= 30) on the MicroVM auth-token expiration condition key to every Allow of lambda:CreateMicrovmAuthToken (and narrow any lambda:* grant). Check attached managed policies, not just inline.
+
+---
+
+### CTL.LAMBDA.MICROVM.AUTHTOKEN.PORTSCOPE.001
+
+**MicroVM Auth Tokens Must Be Scoped to Specific Ports, Never the Lifecycle Port**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+lambda:CreateMicrovmAuthToken takes an allowedPorts parameter. A token minted without port scoping grants access to EVERY listening port on the MicroVM — the application port, debug ports, metrics, internal services, and critically the lifecycle hook port (the internal Lambda↔MicroVM API exposing /suspend, /terminate). An unscoped token lets its holder disrupt production or extract state. The lifecycle hook port (configured separately from the app port, per AWS) must never be reachable by an external auth token.
+Reads collector-resolved signals. The collector resolves role.microvm_authtoken_create (effective, incl. the lambda:* wildcard), whether the Allow statement constrains allowed ports (role.microvm_authtoken_port_scoped), and whether the allowed set includes the MicroVM's configured lifecycle hook port (role.microvm_authtoken_allows_lifecycle_port — cross-referenced against the MicroVM lifecycle-port config).
+Safe default / fail-loud: if no port constraint is resolvable (including when AWS has not yet published an allowed-ports condition key), the collector emits port_scoped=false → FAIL. An unscoped token is unsafe regardless of whether the constraint mechanism exists yet.
+
+**Remediation:** Add an IAM policy Condition scoping allowed ports to only the application port(s) on every Allow of lambda:CreateMicrovmAuthToken (and narrow any lambda:* grant). Never include the lifecycle hook port in the allowed set for externally-issued tokens.
+
+---
+
 ### CTL.LAMBDA.MICROVM.BASEIMAGE.001
 
 **MicroVM Image Uses Unapproved Base Image**
@@ -696,6 +730,22 @@ MicroVM Ingress Authentication Not Securely Enabled. Lab control for the Lambda 
 
 ---
 
+### CTL.LAMBDA.MICROVM.OBSERVABILITY.ROLES.001
+
+**Production MicroVM Must Have Both Build Role and Execution Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-12; soc2: CC7.1;
+
+AWS makes both MicroVM roles optional: no build role means no build logs to CloudWatch (no record of how the image was made); no execution role means no runtime logs and no AWS-service access (zero observability into what the MicroVM does at runtime). In production both are unacceptable — a MicroVM with no execution role is an audit blind spot.
+The control evaluates the running MicroVM. The collector emits microvm.is_production, microvm.execution_role_present, and — surfaced from the MicroVM's source image — microvm.build_role_present. A production MicroVM missing EITHER role fires, so the image-level build-role gap (no record of what was installed at build time) is caught at the MicroVM that runs from it.
+
+**Remediation:** Attach an execution role to the MicroVM (runtime logs + scoped AWS access) and a build role to its source image (build logs). Both are required in production; only development sandboxes may omit them.
+
+---
+
 ### CTL.LAMBDA.MICROVM.RUNTIME.001
 
 **MicroVM Maximum Runtime Exceeds Organization Limit**
@@ -756,6 +806,57 @@ MicroVM Network Connector Security Group Allows Unrestricted Ingress. Lab contro
 
 ---
 
+### CTL.LAMBDA.MICROVM.SHELLAUTH.001
+
+**MicroVM Shell-Auth Permission Must Be Restricted to Break-Glass Roles**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Lambda MicroVMs have first-class interactive shell access via lambda:CreateMicrovmShellAuthToken, which returns a bearer token granting an interactive shell inside a running MicroVM. Any non-break-glass IAM role holding this permission turns a single compromised credential into an interactive shell inside production compute, bypassing every application-layer control. Only explicitly designated break-glass roles may hold it.
+This control evaluates a derived signal, not raw policy JSON. The collector resolves the role's EFFECTIVE permissions (inline + attached managed policies + permission boundaries, expanding lambda:* — which includes the shell token action) and emits role.microvm_shell_auth. It also resolves role.is_break_glass (tag break-glass:true, or name matching *break-glass* / *emergency*) and role.workload_type (agent | cicd | human | service). This HIGH control fires for ordinary roles (human/service); agent and CI/CD roles are escalated to CRITICAL by CTL.LAMBDA.MICROVM.SHELLAUTH.ELEVATED.001, so the two never double-fire.
+Fail-loud: the collector MUST emit role.microvm_shell_auth explicitly (false when no grant); if effective-permission resolution fails it must surface that (e.g. present:false or an explicit marker), never omit the field — a missing signal must not read as a silent PASS.
+
+**Remediation:** Remove lambda:CreateMicrovmShellAuthToken (and any lambda:* grant that includes it) from the role — check attached managed policies and permission boundaries, not just inline policies. If interactive shell access is genuinely needed for emergencies, move it to a dedicated break-glass role (tag break-glass=true) with monitoring.
+
+---
+
+### CTL.LAMBDA.MICROVM.SHELLAUTH.ELEVATED.001
+
+**Agent or CI/CD Role Must Never Hold MicroVM Shell-Auth Permission**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+An agent execution role or a CI/CD role holding lambda:CreateMicrovmShellAuthToken is CRITICAL, not merely high: a prompt-injected AI agent or a compromised pipeline credential would gain an interactive shell inside production MicroVMs. These workload classes should never have interactive shell access under any circumstance — there is no legitimate break-glass case for a non-human automation identity.
+This is the CRITICAL-severity counterpart to CTL.LAMBDA.MICROVM.SHELLAUTH.001 (HIGH, ordinary roles). ctrl.v1 controls carry a single static severity, so the HIGH/CRITICAL escalation is expressed as two disjoint controls: this one fires only when role.workload_type is agent or cicd, the HIGH one only when it is neither — they never both fire on the same role. The collector resolves role.microvm_shell_auth (effective, incl. attached managed policies and the lambda:* wildcard), role.is_break_glass, and role.workload_type (from the agent taxonomy and CI/CD trust-policy heuristics).
+Fail-loud: role.microvm_shell_auth must be emitted explicitly; a resolution failure must surface, never read as a silent PASS.
+
+**Remediation:** Remove lambda:CreateMicrovmShellAuthToken and any lambda:* grant from the agent/CI-CD role (inspect attached managed policies and boundaries, not just inline). Automation identities must never hold interactive shell access; there is no break-glass exception for them.
+
+---
+
+### CTL.LAMBDA.MICROVM.SHELLINGRESS.001
+
+**Production MicroVM Must Not Be Launched With the SHELL_INGRESS Connector**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Interactive shell access to a MicroVM (lambda:CreateMicrovmShellAuthToken) fails with ValidationException unless the MicroVM was launched with the SHELL_INGRESS network connector (arn:aws:lambda:<region>:aws:network-connector:aws-network-connector:SHELL_INGRESS). Without that connector, shell access is STRUCTURALLY IMPOSSIBLE regardless of IAM. A production MicroVM launched with SHELL_INGRESS has shell access enabled at the infrastructure level.
+This is the stronger of the two shell controls: MICROVM-021 (infrastructure) > CTL.LAMBDA.MICROVM.SHELLAUTH.001 (IAM) in assurance — IAM restricts who MAY create a shell token; the connector decides whether a shell is possible AT ALL. Defense in depth: remove the connector in production and no IAM mistake can grant a shell.
+The collector emits microvm.shell_ingress_connector (any launched connector ARN matches the SHELL_INGRESS pattern) and microvm.is_production (tag environment=production/prod, or a production account/OU). Dev/staging MicroVMs with SHELL_INGRESS are intentionally out of scope for this control (acceptable for development); only production fires.
+
+**Remediation:** Relaunch the production MicroVM without the SHELL_INGRESS connector. Shell access then becomes impossible by construction — CreateMicrovmShellAuthToken returns ValidationException — independent of any IAM grant.
+
+---
+
 ### CTL.LAMBDA.MICROVM.SNAPSHOTSECRET.001
 
 **MicroVM Image Loads Secrets Into the Snapshot at Init**
@@ -798,6 +899,38 @@ MicroVM Network Connector Uses Unapproved Subnets. Lab control for the Lambda Mi
 MicroVM Execution Role Trust Policy Missing or Over-Broad sts:TagSession. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
 
 **Remediation:** Include sts:TagSession in the trust policy and avoid sts:* wildcards.
+
+---
+
+### CTL.LAMBDA.MICROVM.WILDCARD.001
+
+**Role With lambda:* Silently Gained All MicroVM Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+AWS placed the MicroVM actions inside the existing lambda: namespace, so any role granted lambda:* now ALSO holds lambda:RunMicrovm, lambda:CreateMicrovmAuthToken, lambda:CreateMicrovmShellAuthToken (interactive shell), lambda:TerminateMicrovm/SuspendMicrovm (lifecycle control), and lambda:CreateMicrovmImage. Most organizations granted lambda:* for ordinary Lambda-function management long before MicroVMs existed — those policies were never reviewed for MicroVM blast radius because MicroVMs did not exist when they were written. The blast radius expanded silently.
+This HIGH control flags a non-MicroVM-admin role holding lambda:* (human or service workloads); agent and CI/CD roles are escalated to CRITICAL by CTL.LAMBDA.MICROVM.WILDCARD.ELEVATED.001, so the two never double-fire. The collector resolves role.has_lambda_wildcard from EFFECTIVE permissions — inline AND attached managed policies (e.g. AWS-published AWSLambda_FullAccess, which grants lambda:*) AND boundaries — plus role.is_microvm_admin (tag microvm-admin:true or name *microvm-admin*) and role.workload_type. Expect findings in most Lambda-heavy accounts; that is the point.
+
+**Remediation:** Replace lambda:* with the explicit Lambda actions the role actually needs (e.g. lambda:InvokeFunction, lambda:UpdateFunctionCode). If the role is genuinely a MicroVM administrator, tag it microvm-admin=true to make the grant deliberate and reviewed. Check attached managed policies (AWSLambda_FullAccess grants lambda:*), not just inline.
+
+---
+
+### CTL.LAMBDA.MICROVM.WILDCARD.ELEVATED.001
+
+**Agent or CI/CD Role With lambda:* Holds All MicroVM Permissions (Critical)**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+An agent execution role or a CI/CD role holding lambda:* is CRITICAL: the wildcard — granted for ordinary Lambda management before MicroVMs existed — now includes lambda:CreateMicrovmShellAuthToken (interactive shell), lambda:RunMicrovm, and lambda:Terminate/SuspendMicrovm. A prompt-injected agent or a compromised pipeline credential gains full MicroVM control, including a production shell, through a permission nobody reviewed for MicroVM blast radius.
+CRITICAL counterpart to CTL.LAMBDA.MICROVM.WILDCARD.001 (HIGH). ctrl.v1 severity is static per control, so the escalation is two disjoint controls: this fires only when role.workload_type is agent or cicd; the HIGH one only when it is neither. role.has_lambda_wildcard is resolved from effective permissions (inline AND attached managed policies such as AWSLambda_FullAccess AND boundaries) — so a scoped-looking inline policy does not hide a wildcard granted by an attached managed policy.
+
+**Remediation:** Replace lambda:* with the explicit, minimal Lambda actions the automation needs. Automation identities must never hold the MicroVM shell/run/lifecycle actions; there is no microvm-admin exception for an agent or pipeline role. Inspect attached managed policies (AWSLambda_FullAccess), not just inline.
 
 ---
 

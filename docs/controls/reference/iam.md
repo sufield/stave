@@ -2122,6 +2122,22 @@ A customer-managed IAM policy has non-default versions containing broader permis
 
 ---
 
+### CTL.IAM.RCP.TAGAUTH.SESSION.001
+
+**RCP Must Block Exempt Session-Tag Injection (Two Separate Statements)**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Principal tags are the union of resource tags AND session tags. Layer 2 locks resource tags, but session tags can be injected via cross-account sts:AssumeRole, OIDC, or SAML — sources OUTSIDE the org that SCPs do not cover. An RCP (which applies to ALL principals, including external) must deny sts:TagSession for the exempt tag keys. Layer 3 of 4.
+It must be TWO SEPARATE statements (OR logic), not one (AND logic): (1) Deny sts:TagSession with exempt tag keys unless aws:PrincipalArn is the tagger role; (2) Deny sts:TagSession with exempt tag keys unless aws:ResourceOrgID equals aws:PrincipalOrgID. Combined into one statement the conditions AND, leaving two bypass paths (tagger outside org; non-tagger inside org). The collector emits identity.tag_auth.session_tag_injection_blocked = true only when BOTH statements exist SEPARATELY and BOTH are scoped by the aws:TagKeys exempt-prefix condition (an org-boundary statement missing the tag-keys scope is overly broad — it blocks all session tags, including the trusted tagger's — so it does not count).
+
+**Remediation:** Add an RCP with TWO separate Deny statements on sts:TagSession, both scoped by aws:TagKeys (exempt prefix): one exempting the tagger role (StringNotLike aws:PrincipalArn), one exempting same-org principals (StringNotEquals aws:ResourceOrgID vs aws:PrincipalOrgID). Keep them separate so the conditions OR.
+
+---
+
 ### CTL.IAM.ROLE.BREAKGLASS.001
 
 **Break-Glass Elevated Roles Must Not Persist**
@@ -2481,6 +2497,54 @@ SCP does not deny iam:CreateAccessKey for root users in member accounts. Root ac
 
 ---
 
+### CTL.IAM.SCP.TAGAUTH.ENFORCE.001
+
+**Sensitive-Action SCP Must Gate on a Principal-Tag Condition**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Tag-based authorization only works if an SCP denies the organization's declared sensitive actions for principals WITHOUT the exempt tag. Without it the tags exist but nothing checks them. Layer 1 of 4 in the tag-auth scheme (see CTL.IAM.TAGAUTH.COMPLETE.001).
+The collector parses the organization's SCPs against the declared sensitive actions (param sensitive_actions; default iam:CreateAccessKey, iam:UpdateAccessKey, iam:CreateLoginProfile, iam:UpdateLoginProfile) and emits identity.tag_auth.sensitive_actions_tag_gated = true only when every declared action is covered by a Deny statement whose Condition uses aws:PrincipalTag/<prefix> (StringNotEquals). A statement that uses aws:RequestTag instead of aws:PrincipalTag does NOT count — it checks what the caller is tagging a resource with, not whether the caller is authorized — so the collector reports gated=false (correctness, not mere existence).
+
+**Remediation:** Add an SCP Deny statement covering the sensitive actions with a Condition StringNotEquals on aws:PrincipalTag/<exempt-tag-key>. Use aws:PrincipalTag (who the caller is), never aws:RequestTag (what the caller is tagging).
+
+---
+
+### CTL.IAM.SCP.TAGAUTH.MUTATION.001
+
+**Exempt-Tag Mutation Must Be Locked to the Designated Tagger Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+If any principal can add the exempt tag to its own role, the enforcement SCP (CTL.IAM.SCP.TAGAUTH.ENFORCE.001) is bypassable: tag self, act, untag. An SCP must deny the tag-mutation actions (iam:TagRole, iam:TagUser, iam:UntagRole, iam:UntagUser, iam:CreateRole, iam:CreateUser) when the tag keys include the exempt prefix, UNLESS the caller is the designated tagger role. Layer 2 of 4.
+The collector emits identity.tag_auth.tag_mutation_locked = true only when an SCP covers ALL SIX actions with a ForAnyValue:StringLike condition on aws:TagKeys (exempt prefix) AND a StringNotLike exemption on aws:PrincipalArn for the tagger role. StringNotLike (wildcard) is required, not StringNotEquals — the tagger ARN's account id varies per account, so an exact-match exemption fails cross-account; the collector reports locked=false for the wrong operator and for incomplete action coverage (missing iam:CreateRole lets a principal create a NEW role pre-tagged).
+
+**Remediation:** Add an SCP denying iam:TagRole/TagUser/UntagRole/UntagUser/CreateRole/ CreateUser when aws:TagKeys matches the exempt prefix (ForAnyValue:StringLike), with a StringNotLike exemption on aws:PrincipalArn for the tagger role (wildcard ARN for cross-account).
+
+---
+
+### CTL.IAM.SCP.TAGAUTH.TAGGER.001
+
+**Tagger Role and Its Deployment Role Must Be Protected From Modification**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+If developers have admin in their accounts (common), they can modify or recreate the tagger role to assume it and self-exempt. An SCP must deny all IAM mutation actions on the tagger role AND on the deployment role that manages it (e.g. stacksets-exec-*), exempting only the deployment role. Layer 4 of 4.
+The collector emits identity.tag_auth.tagger_role_protected = true only when an SCP denies all 13 IAM mutation actions (AttachRolePolicy, CreateRole, DeleteRole, DeleteRolePermissionsBoundary, DeleteRolePolicy, DetachRolePolicy, PutRolePermissionsBoundary, PutRolePolicy, TagRole, UntagRole, UpdateAssumeRolePolicy, UpdateRole, UpdateRoleDescription) on BOTH the tagger role and the deployment role, exempting only the deployment role. Missing iam:UpdateAssumeRolePolicy lets a dev rewrite the trust policy and assume the tagger; not protecting the deployment role lets a dev pivot through it — both make the collector report protected=false.
+
+**Remediation:** Add an SCP denying all 13 IAM role-mutation actions on both the tagger role ARN and the deployment role ARN, exempting only the deployment role. Include iam:UpdateAssumeRolePolicy (trust-policy rewrite) explicitly.
+
+---
+
 ### CTL.IAM.SCP.TRAIL.PROTECT.001
 
 **SCPs Must Deny CloudTrail Disruption Actions**
@@ -2598,6 +2662,22 @@ An AWS IAM Identity Center permission set includes AdministratorAccess. Any user
 At least one IAM entity must have the AWSSupportAccess managed policy attached. This ensures someone can open support cases during security incidents without using root.
 
 **Remediation:** Create an IAM role with the AWSSupportAccess policy: aws iam attach-role-policy --role-name SupportRole --policy-arn arn:aws:iam::aws:policy/AWSSupportAccess
+
+---
+
+### CTL.IAM.TAGAUTH.COMPLETE.001
+
+**Tag-Based Authorization Scheme Must Be Complete (All Four Layers)**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+COMPOUND. The tag-based authorization scheme has four layers: enforcement (CTL.IAM.SCP.TAGAUTH.ENFORCE.001), tag-mutation lock (CTL.IAM.SCP.TAGAUTH.MUTATION.001), session-tag block (CTL.IAM.RCP.TAGAUTH.SESSION.001), and tagger protection (CTL.IAM.SCP.TAGAUTH.TAGGER.001). All four must hold SIMULTANEOUSLY — if any layer is missing OR present-but-incorrect, the scheme is bypassable, and the bypass path depends on which layer fails.
+This control reads the four per-layer derived booleans (each encoding correctness, not mere existence — a layer that exists with the wrong condition operator reports its boolean as false) and fires if ANY is not true. The reasoning spec examples/scp-tag-authorization/ proves the per-layer derivation and the four-way conjunction two ways (Soufflé enumerates the specific bypass path; Z3 proves scheme-complete = AND of the four).
+
+**Remediation:** Fix whichever layer's control is failing: ENFORCE (no enforcement), MUTATION (self-tag exemption), SESSION (session-tag injection), or TAGGER (tagger-role hijack). All four must hold simultaneously.
 
 ---
 

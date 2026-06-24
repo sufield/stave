@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.MICROVM.SHELLINGRESS.001
+name: Production MicroVM Must Not Be Launched With the SHELL_INGRESS Connector
+description: >
+  Interactive shell access to a MicroVM (lambda:CreateMicrovmShellAuthToken)
+  fails with ValidationException unless the MicroVM was launched with the
+  SHELL_INGRESS network connector
+  (arn:aws:lambda:<region>:aws:network-connector:aws-network-connector:SHELL_INGRESS).
+  Without that connector, shell access is STRUCTURALLY IMPOSSIBLE regardless of
+  IAM. A production MicroVM launched with SHELL_INGRESS has shell access enabled
+  at the infrastructure level.
+
+  This is the stronger of the two shell controls: MICROVM-021 (infrastructure) >
+  CTL.LAMBDA.MICROVM.SHELLAUTH.001 (IAM) in assurance — IAM restricts who MAY
+  create a shell token; the connector decides whether a shell is possible AT
+  ALL. Defense in depth: remove the connector in production and no IAM mistake
+  can grant a shell.
+
+  The collector emits microvm.shell_ingress_connector (any launched connector
+  ARN matches the SHELL_INGRESS pattern) and microvm.is_production (tag
+  environment=production/prod, or a production account/OU). Dev/staging MicroVMs
+  with SHELL_INGRESS are intentionally out of scope for this control (acceptable
+  for development); only production fires.
+domain: identity
+severity: high
+scope: atomic
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lambda_microvm
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - lambda
+  - microvm
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - microvm.kind
+  - microvm.shell_ingress_connector
+  - microvm.is_production
+remediation:
+  description: >
+    A production MicroVM was launched with the SHELL_INGRESS network connector,
+    making interactive shell access structurally possible.
+  action: >
+    Relaunch the production MicroVM without the SHELL_INGRESS connector. Shell
+    access then becomes impossible by construction — CreateMicrovmShellAuthToken
+    returns ValidationException — independent of any IAM grant.
+  example: |
+    {
+      "microvm": {
+        "kind": "microvm",
+        "shell_ingress_connector": false,
+        "is_production": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.microvm.kind
+      op: eq
+      value: microvm
+    - field: properties.microvm.shell_ingress_connector
+      op: eq
+      value: true
+    - field: properties.microvm.is_production
+      op: eq
+      value: true
+defect: >
+  A production MicroVM is launched with the SHELL_INGRESS connector.
+infection: >
+  Shell access to production compute is structurally enabled; any role that
+  obtains (or is mistakenly granted) shell-token permission gets an interactive
+  shell — the connector removes the structural barrier.
+failure: >
+  Interactive shell into production MicroVM compute, gated only by IAM rather
+  than made impossible by construction.
+tests:
+  - name: production microvm with SHELL_INGRESS connector fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "microvm-abc123"
+      asset_type: aws_lambda_microvm
+      vendor: aws
+      properties:
+        microvm:
+          kind: microvm
+          shell_ingress_connector: true
+          is_production: true
+  - name: production microvm without SHELL_INGRESS passes (false-positive trap — shell impossible)
+    verdict: PASS
+    asset:
+      asset_id: "microvm-def456"
+      asset_type: aws_lambda_microvm
+      vendor: aws
+      properties:
+        microvm:
+          kind: microvm
+          shell_ingress_connector: false
+          is_production: true
+  - name: untagged microvm in a production account with SHELL_INGRESS fires (false-negative trap — account-level prod)
+    verdict: VIOLATION
+    asset:
+      asset_id: "microvm-ghi789"
+      asset_type: aws_lambda_microvm
+      vendor: aws
+      properties:
+        microvm:
+          kind: microvm
+          shell_ingress_connector: true
+          is_production: true

@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.TAGAUTH.ENFORCE.001
+name: Sensitive-Action SCP Must Gate on a Principal-Tag Condition
+description: >
+  Tag-based authorization only works if an SCP denies the organization's
+  declared sensitive actions for principals WITHOUT the exempt tag. Without it
+  the tags exist but nothing checks them. Layer 1 of 4 in the tag-auth scheme
+  (see CTL.IAM.TAGAUTH.COMPLETE.001).
+
+  The collector parses the organization's SCPs against the declared sensitive
+  actions (param sensitive_actions; default iam:CreateAccessKey,
+  iam:UpdateAccessKey, iam:CreateLoginProfile, iam:UpdateLoginProfile) and emits
+  identity.tag_auth.sensitive_actions_tag_gated = true only when every declared
+  action is covered by a Deny statement whose Condition uses
+  aws:PrincipalTag/<prefix> (StringNotEquals). A statement that uses
+  aws:RequestTag instead of aws:PrincipalTag does NOT count — it checks what the
+  caller is tagging a resource with, not whether the caller is authorized — so
+  the collector reports gated=false (correctness, not mere existence).
+domain: identity
+severity: high
+scope: atomic
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - scp
+params:
+  attack_stage: privilege_escalation
+  tag_prefix: "scp-"
+  sensitive_actions: "iam:CreateAccessKey,iam:UpdateAccessKey,iam:CreateLoginProfile,iam:UpdateLoginProfile"
+observation_fields:
+  - identity.kind
+  - identity.tag_auth.sensitive_actions_tag_gated
+remediation:
+  description: >
+    The organization's sensitive actions are not gated by a principal-tag SCP
+    condition, so the tag-based authorization scheme has no enforcement.
+  action: >
+    Add an SCP Deny statement covering the sensitive actions with a Condition
+    StringNotEquals on aws:PrincipalTag/<exempt-tag-key>. Use aws:PrincipalTag
+    (who the caller is), never aws:RequestTag (what the caller is tagging).
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "tag_auth": { "sensitive_actions_tag_gated": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.tag_auth.sensitive_actions_tag_gated
+      op: ne
+      value: true
+defect: >
+  No SCP gates the declared sensitive actions on a principal-tag condition.
+infection: >
+  The exempt tags carry no force — any principal can perform the sensitive
+  actions because nothing denies the un-tagged case.
+failure: >
+  Tag-based authorization is decorative; sensitive actions are unrestricted.
+tests:
+  - name: no principal-tag SCP gating sensitive actions fires (vulnerable)
+    verdict: VIOLATION
+    asset: { asset_id: "arn:aws:organizations::111122223333:organization/o-novuln", asset_type: aws_organization, vendor: aws, properties: { identity: { kind: organization, tag_auth: { sensitive_actions_tag_gated: false } } } }
+  - name: principal-tag Deny covering sensitive actions passes (false-positive trap)
+    verdict: PASS
+    asset: { asset_id: "arn:aws:organizations::444455556666:organization/o-good", asset_type: aws_organization, vendor: aws, properties: { identity: { kind: organization, tag_auth: { sensitive_actions_tag_gated: true } } } }
+  - name: SCP uses aws:RequestTag instead of aws:PrincipalTag fires (false-negative trap — wrong condition key)
+    verdict: VIOLATION
+    asset: { asset_id: "arn:aws:organizations::777788889999:organization/o-reqtag", asset_type: aws_organization, vendor: aws, properties: { identity: { kind: organization, tag_auth: { sensitive_actions_tag_gated: false } } } }

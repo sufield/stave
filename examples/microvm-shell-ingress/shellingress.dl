@@ -1,0 +1,19 @@
+// MICROVM-021 (Soufflé): a production MicroVM launched with the SHELL_INGRESS
+// connector has shell access enabled at the infrastructure level. Proves the
+// production-identification join (tag OR account/OU) behind
+// CTL.LAMBDA.MICROVM.SHELLINGRESS.001; cross-checked by Z3.
+.decl microvm_shell_ingress(m:symbol)            // a launched connector ARN matches *SHELL_INGRESS
+.decl microvm_tag(m:symbol, k:symbol, v:symbol)
+.decl microvm_account(m:symbol, a:symbol)
+.decl production_account(a:symbol)
+.input microvm_shell_ingress
+.input microvm_tag
+.input microvm_account
+.input production_account
+.decl is_production(m:symbol)
+is_production(M) :- microvm_tag(M, "environment", "production").
+is_production(M) :- microvm_tag(M, "environment", "prod").
+is_production(M) :- microvm_account(M, A), production_account(A).
+.decl production_shell_enabled(m:symbol)
+.output production_shell_enabled
+production_shell_enabled(M) :- microvm_shell_ingress(M), is_production(M).

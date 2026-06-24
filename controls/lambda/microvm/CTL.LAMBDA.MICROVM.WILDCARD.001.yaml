@@ -1,0 +1,127 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.MICROVM.WILDCARD.001
+name: Role With lambda:* Silently Gained All MicroVM Permissions
+description: >
+  AWS placed the MicroVM actions inside the existing lambda: namespace, so any
+  role granted lambda:* now ALSO holds lambda:RunMicrovm,
+  lambda:CreateMicrovmAuthToken, lambda:CreateMicrovmShellAuthToken (interactive
+  shell), lambda:TerminateMicrovm/SuspendMicrovm (lifecycle control), and
+  lambda:CreateMicrovmImage. Most organizations granted lambda:* for ordinary
+  Lambda-function management long before MicroVMs existed — those policies were
+  never reviewed for MicroVM blast radius because MicroVMs did not exist when
+  they were written. The blast radius expanded silently.
+
+  This HIGH control flags a non-MicroVM-admin role holding lambda:* (human or
+  service workloads); agent and CI/CD roles are escalated to CRITICAL by
+  CTL.LAMBDA.MICROVM.WILDCARD.ELEVATED.001, so the two never double-fire. The
+  collector resolves role.has_lambda_wildcard from EFFECTIVE permissions —
+  inline AND attached managed policies (e.g. AWS-published AWSLambda_FullAccess,
+  which grants lambda:*) AND boundaries — plus role.is_microvm_admin (tag
+  microvm-admin:true or name *microvm-admin*) and role.workload_type. Expect
+  findings in most Lambda-heavy accounts; that is the point.
+domain: identity
+severity: high
+scope: atomic
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - lambda
+  - microvm
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - role.kind
+  - role.has_lambda_wildcard
+  - role.is_microvm_admin
+  - role.workload_type
+remediation:
+  description: >
+    A role holds lambda:* which now includes all MicroVM actions — shell-token
+    creation, auth-token creation, run/suspend/terminate, image creation. This
+    permission predates MicroVMs and was likely never reviewed for MicroVM blast
+    radius.
+  action: >
+    Replace lambda:* with the explicit Lambda actions the role actually needs
+    (e.g. lambda:InvokeFunction, lambda:UpdateFunctionCode). If the role is
+    genuinely a MicroVM administrator, tag it microvm-admin=true to make the
+    grant deliberate and reviewed. Check attached managed policies
+    (AWSLambda_FullAccess grants lambda:*), not just inline.
+  example: |
+    {
+      "role": {
+        "kind": "iam_role",
+        "has_lambda_wildcard": false,
+        "is_microvm_admin": false,
+        "workload_type": "service"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.role.kind
+      op: eq
+      value: iam_role
+    - field: properties.role.has_lambda_wildcard
+      op: eq
+      value: true
+    - field: properties.role.is_microvm_admin
+      op: ne
+      value: true
+    - field: properties.role.workload_type
+      op: ne
+      value: agent
+    - field: properties.role.workload_type
+      op: ne
+      value: cicd
+defect: >
+  A non-MicroVM-admin human/service role holds lambda:*, silently including all
+  MicroVM actions.
+infection: >
+  A compromise of the role can now launch, shell into, suspend, terminate, or
+  re-image production MicroVMs — capabilities the policy author never intended
+  to grant because MicroVMs did not exist when lambda:* was written.
+failure: >
+  Unreviewed MicroVM control (incl. interactive shell) reachable through a
+  long-standing lambda:* grant.
+tests:
+  - name: developer role with lambda wildcard (not microvm-admin) fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/DevTeam-LambdaRole"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          has_lambda_wildcard: true
+          is_microvm_admin: false
+          workload_type: human
+  - name: designated microvm-admin role passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/MicroVM-Admin-Role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          has_lambda_wildcard: true
+          is_microvm_admin: true
+          workload_type: human
+  - name: developer role with lambda:* via attached AWSLambda_FullAccess fires (false-negative trap — managed policy)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/dev-with-managed-fullaccess"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          has_lambda_wildcard: true
+          is_microvm_admin: false
+          workload_type: human

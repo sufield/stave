@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2703
-**Pack hash:** `686579cbc048da887ba59beaa3a009bbcd808e8c90e97475db06b2101a03d2d7`
+**Total controls:** 2716
+**Pack hash:** `cff3e6593da093885fd823f3f14669d0ae74cc227177354ee8f030bcba971f02`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,8 +13,8 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 281 |
-| high | 1178 |
+| critical | 284 |
+| high | 1188 |
 | info | 16 |
 | low | 205 |
 | medium | 1023 |
@@ -24,12 +24,12 @@ GitHub. Pick a service below.
 | access | 9 |
 | audit | 90 |
 | capacity | 3 |
-| detection | 134 |
+| detection | 135 |
 | encryption | 113 |
 | exposure | 1204 |
 | governance | 585 |
 | hygiene | 18 |
-| identity | 439 |
+| identity | 451 |
 | lifecycle | 31 |
 | network | 32 |
 | resilience | 33 |
@@ -85,12 +85,12 @@ GitHub. Pick a service below.
 | [GLUE](reference/glue.md) | 12 |
 | [GUARDDUTY](reference/guardduty.md) | 6 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 188 |
+| [IAM](reference/iam.md) | 193 |
 | [INSPECTOR](reference/inspector.md) | 1 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 2 |
 | [KMS](reference/kms.md) | 45 |
-| [LAMBDA](reference/lambda.md) | 75 |
+| [LAMBDA](reference/lambda.md) | 83 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
 | [LIGHTSAIL](reference/lightsail.md) | 2 |
 | [M365](reference/m365.md) | 73 |

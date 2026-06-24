@@ -1,0 +1,4 @@
+vuln      souffle=unconstrained z3=sat  
+fp        souffle=NONE          z3=unsat
+fn        souffle=excessive     z3=sat  
+wildcard  souffle=unconstrained z3=sat  

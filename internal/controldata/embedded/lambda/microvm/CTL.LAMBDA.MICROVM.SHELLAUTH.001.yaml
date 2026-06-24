@@ -1,0 +1,128 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.MICROVM.SHELLAUTH.001
+name: MicroVM Shell-Auth Permission Must Be Restricted to Break-Glass Roles
+description: >
+  Lambda MicroVMs have first-class interactive shell access via
+  lambda:CreateMicrovmShellAuthToken, which returns a bearer token
+  granting an interactive shell inside a running MicroVM. Any non-break-glass
+  IAM role holding this permission turns a single compromised credential into an
+  interactive shell inside production compute, bypassing every application-layer
+  control. Only explicitly designated break-glass roles may hold it.
+
+  This control evaluates a derived signal, not raw policy JSON. The collector
+  resolves the role's EFFECTIVE permissions (inline + attached managed policies +
+  permission boundaries, expanding lambda:* — which includes the shell
+  token action) and emits role.microvm_shell_auth. It also resolves
+  role.is_break_glass (tag break-glass:true, or name matching *break-glass* /
+  *emergency*) and role.workload_type (agent | cicd | human | service). This
+  HIGH control fires for ordinary roles (human/service); agent and CI/CD roles
+  are escalated to CRITICAL by CTL.LAMBDA.MICROVM.SHELLAUTH.ELEVATED.001, so the
+  two never double-fire.
+
+  Fail-loud: the collector MUST emit role.microvm_shell_auth explicitly (false
+  when no grant); if effective-permission resolution fails it must surface that
+  (e.g. present:false or an explicit marker), never omit the field — a missing
+  signal must not read as a silent PASS.
+domain: identity
+severity: high
+scope: atomic
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - lambda
+  - microvm
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - role.kind
+  - role.microvm_shell_auth
+  - role.is_break_glass
+  - role.workload_type
+remediation:
+  description: >
+    A non-break-glass IAM role can call CreateMicrovmShellAuthToken, granting an
+    interactive shell inside running production MicroVMs.
+  action: >
+    Remove lambda:CreateMicrovmShellAuthToken (and any
+    lambda:* grant that includes it) from the role — check attached
+    managed policies and permission boundaries, not just inline policies. If
+    interactive shell access is genuinely needed for emergencies, move it to a
+    dedicated break-glass role (tag break-glass=true) with monitoring.
+  example: |
+    {
+      "role": {
+        "kind": "iam_role",
+        "microvm_shell_auth": false,
+        "is_break_glass": false,
+        "workload_type": "service"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.role.kind
+      op: eq
+      value: iam_role
+    - field: properties.role.microvm_shell_auth
+      op: eq
+      value: true
+    - field: properties.role.is_break_glass
+      op: ne
+      value: true
+    - field: properties.role.workload_type
+      op: ne
+      value: agent
+    - field: properties.role.workload_type
+      op: ne
+      value: cicd
+defect: >
+  A non-break-glass human/service role holds MicroVM shell-auth permission.
+infection: >
+  A compromise of the role's credentials yields an interactive shell inside
+  production MicroVMs — the attacker operates below the application layer, where
+  no app control applies.
+failure: >
+  Interactive attacker access to production compute via a leaked everyday
+  credential.
+tests:
+  - name: developer role with lambda wildcard fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/DevTeam-LambdaRole"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          microvm_shell_auth: true
+          is_break_glass: false
+          workload_type: human
+  - name: break-glass role with shell auth passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/Emergency-BreakGlass-Admin"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          microvm_shell_auth: true
+          is_break_glass: true
+          workload_type: human
+  - name: service role with shell auth buried in an attached managed policy fires (false-negative trap)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/batch-worker-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          microvm_shell_auth: true
+          is_break_glass: false
+          workload_type: service

@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.RCP.TAGAUTH.SESSION.001
+name: RCP Must Block Exempt Session-Tag Injection (Two Separate Statements)
+description: >
+  Principal tags are the union of resource tags AND session tags. Layer 2 locks
+  resource tags, but session tags can be injected via cross-account
+  sts:AssumeRole, OIDC, or SAML — sources OUTSIDE the org that SCPs do not
+  cover. An RCP (which applies to ALL principals, including external) must deny
+  sts:TagSession for the exempt tag keys. Layer 3 of 4.
+
+  It must be TWO SEPARATE statements (OR logic), not one (AND logic):
+  (1) Deny sts:TagSession with exempt tag keys unless aws:PrincipalArn is the
+  tagger role; (2) Deny sts:TagSession with exempt tag keys unless
+  aws:ResourceOrgID equals aws:PrincipalOrgID. Combined into one statement the
+  conditions AND, leaving two bypass paths (tagger outside org; non-tagger
+  inside org). The collector emits identity.tag_auth.session_tag_injection_blocked
+  = true only when BOTH statements exist SEPARATELY and BOTH are scoped by the
+  aws:TagKeys exempt-prefix condition (an org-boundary statement missing the
+  tag-keys scope is overly broad — it blocks all session tags, including the
+  trusted tagger's — so it does not count).
+domain: identity
+severity: high
+scope: atomic
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - rcp
+params:
+  attack_stage: privilege_escalation
+  tag_prefix: "scp-"
+  tagger_role: "tagger"
+observation_fields:
+  - identity.kind
+  - identity.tag_auth.session_tag_injection_blocked
+remediation:
+  description: >
+    Exempt session-tag injection is not blocked by two separate RCP statements,
+    leaving a session-tag bypass of the tag-auth scheme.
+  action: >
+    Add an RCP with TWO separate Deny statements on sts:TagSession, both scoped
+    by aws:TagKeys (exempt prefix): one exempting the tagger role
+    (StringNotLike aws:PrincipalArn), one exempting same-org principals
+    (StringNotEquals aws:ResourceOrgID vs aws:PrincipalOrgID). Keep them
+    separate so the conditions OR.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "tag_auth": { "session_tag_injection_blocked": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.tag_auth.session_tag_injection_blocked
+      op: ne
+      value: true
+defect: >
+  Exempt session-tag injection is not blocked by two correctly-scoped, separate
+  RCP statements.
+infection: >
+  An external principal (cross-account assume, OIDC, SAML) injects the exempt
+  tag as a session tag and bypasses the SCP that only sees resource tags.
+failure: >
+  The exemption is forgeable from outside the organization entirely.
+tests:
+  - name: one combined statement (AND logic) fires (vulnerable)
+    verdict: VIOLATION
+    asset: { asset_id: "arn:aws:organizations::111122223333:organization/o-and", asset_type: aws_organization, vendor: aws, properties: { identity: { kind: organization, tag_auth: { session_tag_injection_blocked: false } } } }
+  - name: two separate scoped statements (OR logic) passes (false-positive trap)
+    verdict: PASS
+    asset: { asset_id: "arn:aws:organizations::444455556666:organization/o-or", asset_type: aws_organization, vendor: aws, properties: { identity: { kind: organization, tag_auth: { session_tag_injection_blocked: true } } } }
+  - name: org-boundary statement missing tag-keys scope fires (false-negative trap — overly broad, not a valid layer)
+    verdict: VIOLATION
+    asset: { asset_id: "arn:aws:organizations::777788889999:organization/o-broad", asset_type: aws_organization, vendor: aws, properties: { identity: { kind: organization, tag_auth: { session_tag_injection_blocked: false } } } }

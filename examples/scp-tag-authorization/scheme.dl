@@ -1,0 +1,20 @@
+// TAG-INTEGRITY-001 (Soufflé): the tag-based authorization scheme is complete
+// only if all four layers hold. Each layer_holds fact is the collector's
+// per-layer verdict (correctness, not mere existence — a layer present with the
+// wrong condition operator is NOT in layer_holds). Enumerates the specific
+// bypass path for whichever layer is missing.
+.decl declared_layer(layer:symbol)
+.decl layer_holds(layer:symbol)
+.input layer_holds
+declared_layer("scp-tag-001").
+declared_layer("scp-tag-002").
+declared_layer("rcp-tag-001").
+declared_layer("scp-tag-003").
+.decl layer_missing(layer:symbol)
+layer_missing(L) :- declared_layer(L), !layer_holds(L).
+.decl scheme_bypassable(bypass_path:symbol)
+.output scheme_bypassable
+scheme_bypassable("no-enforcement")        :- layer_missing("scp-tag-001").
+scheme_bypassable("self-tag-exemption")    :- layer_missing("scp-tag-002").
+scheme_bypassable("session-tag-injection") :- layer_missing("rcp-tag-001").
+scheme_bypassable("tagger-role-hijack")    :- layer_missing("scp-tag-003").

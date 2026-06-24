@@ -571,3 +571,19 @@ days count as unused.
 
 ---
 
+
+## `identity.tag_auth.*` — tag-based authorization scheme integrity (derived)
+
+The collector parses the organization's SCPs and RCPs and emits one boolean per
+layer of the tag-based authorization scheme, encoding **correctness** (a layer
+present with the wrong condition key/operator reports `false`). On the
+`aws_organization` asset (`identity.kind == organization`).
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `identity.tag_auth.sensitive_actions_tag_gated` | bool | Every declared sensitive action is denied by an SCP with an `aws:PrincipalTag/<prefix>` condition (not `aws:RequestTag`). |
+| `identity.tag_auth.tag_mutation_locked` | bool | All six tag-mutation actions are locked to the tagger role via `aws:TagKeys` (exempt prefix) + `StringNotLike` on `aws:PrincipalArn`. |
+| `identity.tag_auth.session_tag_injection_blocked` | bool | Two **separate** RCP statements (OR logic), both scoped by exempt `aws:TagKeys`, deny `sts:TagSession` for non-tagger and out-of-org principals. |
+| `identity.tag_auth.tagger_role_protected` | bool | All 13 IAM role-mutation actions denied on both the tagger and deployment role, exempting only the deployment role. |
+
+Controls: `CTL.IAM.SCP.TAGAUTH.ENFORCE.001`, `CTL.IAM.SCP.TAGAUTH.MUTATION.001`, `CTL.IAM.RCP.TAGAUTH.SESSION.001`, `CTL.IAM.SCP.TAGAUTH.TAGGER.001`, and the compound `CTL.IAM.TAGAUTH.COMPLETE.001` (reads all four). Params (tag_prefix, tagger_role, deployment_role, sensitive_actions) are collector inputs; defaults `scp-`, `tagger`, `stacksets-exec-*`, and the four IAM credential actions.

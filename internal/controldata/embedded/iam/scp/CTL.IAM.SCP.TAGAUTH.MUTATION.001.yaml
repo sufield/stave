@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.TAGAUTH.MUTATION.001
+name: Exempt-Tag Mutation Must Be Locked to the Designated Tagger Role
+description: >
+  If any principal can add the exempt tag to its own role, the enforcement SCP
+  (CTL.IAM.SCP.TAGAUTH.ENFORCE.001) is bypassable: tag self, act, untag. An SCP
+  must deny the tag-mutation actions (iam:TagRole, iam:TagUser, iam:UntagRole,
+  iam:UntagUser, iam:CreateRole, iam:CreateUser) when the tag keys include the
+  exempt prefix, UNLESS the caller is the designated tagger role. Layer 2 of 4.
+
+  The collector emits identity.tag_auth.tag_mutation_locked = true only when an
+  SCP covers ALL SIX actions with a ForAnyValue:StringLike condition on
+  aws:TagKeys (exempt prefix) AND a StringNotLike exemption on aws:PrincipalArn
+  for the tagger role. StringNotLike (wildcard) is required, not StringNotEquals
+  — the tagger ARN's account id varies per account, so an exact-match exemption
+  fails cross-account; the collector reports locked=false for the wrong operator
+  and for incomplete action coverage (missing iam:CreateRole lets a principal
+  create a NEW role pre-tagged).
+domain: identity
+severity: high
+scope: atomic
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - scp
+params:
+  attack_stage: privilege_escalation
+  tag_prefix: "scp-"
+  tagger_role: "tagger"
+observation_fields:
+  - identity.kind
+  - identity.tag_auth.tag_mutation_locked
+remediation:
+  description: >
+    Exempt-tag mutation is not fully locked to the tagger role, so a principal
+    can self-assign (or create a role pre-tagged with) the exempt tag.
+  action: >
+    Add an SCP denying iam:TagRole/TagUser/UntagRole/UntagUser/CreateRole/
+    CreateUser when aws:TagKeys matches the exempt prefix (ForAnyValue:StringLike),
+    with a StringNotLike exemption on aws:PrincipalArn for the tagger role
+    (wildcard ARN for cross-account).
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "tag_auth": { "tag_mutation_locked": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.tag_auth.tag_mutation_locked
+      op: ne
+      value: true
+defect: >
+  Exempt-tag mutation is not fully locked to the designated tagger role.
+infection: >
+  A principal self-assigns the exempt tag (or creates a pre-tagged role) and
+  walks past the enforcement SCP.
+failure: >
+  Tag-based authorization is self-service; the exemption is forgeable.
+tests:
+  - name: tag-mutation lock missing iam:CreateRole fires (vulnerable)
+    verdict: VIOLATION
+    asset: { asset_id: "arn:aws:organizations::111122223333:organization/o-nocreate", asset_type: aws_organization, vendor: aws, properties: { identity: { kind: organization, tag_auth: { tag_mutation_locked: false } } } }
+  - name: all six actions locked with StringNotLike tagger exemption passes (false-positive trap)
+    verdict: PASS
+    asset: { asset_id: "arn:aws:organizations::444455556666:organization/o-locked", asset_type: aws_organization, vendor: aws, properties: { identity: { kind: organization, tag_auth: { tag_mutation_locked: true } } } }
+  - name: exemption uses StringNotEquals instead of StringNotLike fires (false-negative trap — wrong operator)
+    verdict: VIOLATION
+    asset: { asset_id: "arn:aws:organizations::777788889999:organization/o-eq", asset_type: aws_organization, vendor: aws, properties: { identity: { kind: organization, tag_auth: { tag_mutation_locked: false } } } }

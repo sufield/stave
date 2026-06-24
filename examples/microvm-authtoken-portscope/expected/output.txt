@@ -1,0 +1,4 @@
+vuln      souffle=unscoped   z3=sat  
+fp        souffle=NONE       z3=unsat
+fn        souffle=lifecycle  z3=sat  
+wildcard  souffle=unscoped   z3=sat  

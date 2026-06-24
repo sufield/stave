@@ -1,7 +1,12 @@
 # Experiment: SIR Coverage Expansion
 
 ## Status
-**Phase 1 implemented and measured.** Default behavior unchanged.
+**CLOSED — Phase 1 + Phase 2 measured.** Default stays `curated`.
+Conclusion: `--allowlist-mode full` / `auto_prop_*` adds no capability a
+reasoning engine doesn't already have, because `ObservationFacts` already
+exports every observation scalar (all join keys) under its dotted path,
+unconditionally, in both modes. Phase 2 (Z3 wall-time, dense worst-case,
+consumer rule) is in `phase2/`; decision + watch-list at the bottom.
 
 ## Question
 
@@ -84,23 +89,112 @@ materialize on shipped fixtures. Two consequences:
    no new verdict. Worth doing only when a solver query needs a
    predicate the auto-projector emits.
 
-## Phase 2: not yet started
+## Phase 2: measured
 
-Open questions for the next person who picks this up:
+Scripts to reproduce live in `phase2/`. Run on a host with `z3` and
+`souffle` installed.
 
-- **Z3 wall-time impact.** Triple count is a proxy, not the
-  metric. Run `time z3 facts.smt2 +query.smt2` on the four
-  fixtures above in both modes; report the wall-time delta.
-  Expectation: indistinguishable, because the new predicates
-  don't appear in any query.
-- **Dense-fixture worst case.** Construct a synthetic fixture
-  where every catalog path is populated on every asset (e.g.
-  10 assets × 2,954 paths = 29,540 auto-generated triples).
-  Measure Z3 wall time vs the current ~5,000-triple baseline.
-- **Real consumer.** Write a Soufflé / Clingo rule that uses
-  `auto_prop_*` to derive a verdict that the curated predicates
-  can't express today. If no such rule exists, the auto-projector
-  is dead weight regardless of cost.
+### Z3 wall-time impact — the proxy was misleading in a deeper way
+
+The expectation ("indistinguishable delta, because the new predicates
+don't appear in any query") assumed Z3 *completes*. It does not. A bare
+`(check-sat)` over the open-world SIR base is **5,453 ground String-atom
+assertions under `(set-logic ALL)`** (no quantifiers), and Z3's time is
+**super-linear in fact count**:
+
+| facts | result | z3 time |
+|------:|--------|--------:|
+|   200 | sat     | 0.32 s |
+|   500 | sat     | 1.31 s |
+| 1,000 | sat     | 4.83 s |
+| 2,000 | **timeout** | >15 s |
+| 5,452 | **timeout** | >15 s |
+
+The cliff is ~1,500 facts; every shipped fixture's base is ~5,000+.
+So Z3 `check-sat` **times out in both curated and full mode** — the
+curated-vs-full delta is moot because *neither completes*. This is
+exactly what the SIR export header already says: `recommended: souffle,
+clingo (enumeration at scale); scoped_queries: z3, cvc5`. Z3 is the
+wrong engine for the whole base regardless of allowlist mode; the
++0.1–0.4% extra `auto_prop_*` facts are irrelevant next to that.
+
+### Dense-fixture worst case — and a correction to the estimate
+
+The "10 assets × 2,954 paths = 29,540" estimate was wrong about the
+*shape*: the projector is **asset-type-scoped** (an `aws_s3_bucket`
+asset emits `auto_prop_*` only for the S3 paths S3 controls read, not
+IAM/AI paths it happens to carry). The real per-asset ceiling is the
+**max paths a single type's controls read = 135** (Step Functions),
+not 2,954. Across all types there are **1,489 distinct (type, path)
+read-pairs**.
+
+`phase2/gen_dense_fixture.py` builds the true worst case (K assets per
+type, every path of that type populated):
+
+| fixture | assets | curated | full | auto_prop added | growth |
+|---|--:|--:|--:|--:|--:|
+| shipped (sparse) | ~3 | ~5,460 | ~5,485 | ~23 | 0.1–0.4% |
+| dense K=1 | 134 | 7,601 | 9,087 | 1,486 | 19.5% |
+| dense K=10 | 1,340 | 27,284 | 42,144 | 14,860 | 54% |
+
+Even the K=10 base (42k triples, larger than the old 29,540 estimate)
+is handled by Soufflé in **under 2 seconds**, where Z3 times out at 9k:
+
+| engine | base | wall time |
+|---|--:|--:|
+| z3 (`check-sat`) | 9,087 | **timeout (>15 s)** |
+| souffle | 27,284 (curated) | 525 ms |
+| souffle | 42,144 (full) | 1,829 ms |
+
+Full mode costs ~3.5× the curated souffle time at this synthetic worst
+case — but still sub-2-second, and the worst case is far denser than any
+real fixture. The cost concern that motivated hand-curating the
+allowlist does not materialize for the recommended engine.
+
+### Real consumer — and the finding that closes the experiment
+
+`phase2/to_souffle.py` translates the SIR jsonl to Soufflé facts and adds
+a rule that joins a Bedrock knowledge base to a PHI-classified bucket *by
+ARN* — a cross-resource verdict single-asset CEL cannot express:
+
+```prolog
+kb_ingests_phi(KB, B) :-
+  ai_knowledge_base_target_bucket_arn(KB, B),     // KB's target bucket
+  storage_tags_data_classification(B, "phi").     // that bucket is PHI
+```
+
+The verdict fires (`(…knowledge-base/PATIENTKB, arn:aws:s3:::patient-records)`).
+**But it fires in `curated` mode too** — which kills the case for `full`:
+
+> A third projector, **`ObservationFacts`**, emits a fact for *every*
+> scalar leaf in the observation under its literal dotted path
+> (`ai.knowledge_base.target_bucket_arn`, `storage.tags.data-classification`,
+> …) and is appended **unconditionally in both allowlist modes**
+> (`internal/core/sirfacts/observation_facts.go`).
+
+So the raw join-key primitives a reasoning engine needs are **already
+exported in `curated` mode**. The 23 `auto_prop_*` facts a full export adds
+to `demo-ai-security` are the *same 23 scalars* `ObservationFacts` already
+emits under dotted names — `auto_prop_*` is a **sanitized-name alias of a
+subset** of an always-on stream (`ObservationFacts` emits *more*: all
+leaves, not just catalog-read ones). Verified: the rule above run against
+the dotted `observationFacts` predicates returns the verdict in `curated`
+mode (1 row). An earlier draft of this section claimed "fires only in
+full mode" — that was an artifact of naming the rule after `auto_prop_*`;
+corrected here.
+
+### Verdict — close it
+
+`--allowlist-mode full` / `auto_prop_*` provides **no capability a
+reasoning engine doesn't already have in `curated` mode.** Phase 2 proved
+the cost concern was unfounded (souffle handles the worst case in <2s; z3
+was never viable on the full base in either mode), *and* that the feature
+is redundant with the always-on `ObservationFacts` export. The only thing
+`auto_prop_*` offers over the dotted stream is pre-sanitized predicate
+names — an ergonomic nicety any translator (like `to_souffle.py`) already
+handles. There is no verdict to chase: a downstream consumer should read
+the dotted `observationFacts` predicates, which need no allowlist flag at
+all.
 
 ## How to reproduce
 
@@ -126,8 +220,61 @@ Open questions for the next person who picks this up:
 - [x] Auto-generated predicates live in a separate namespace
       (`auto_prop_*`) so they never collide with curated has_*
 - [x] Measurement on shipped fixtures: 0.13% – 0.43% growth
-- [ ] Z3 wall-time measurement on both modes (run on a host
-      with Z3 installed; not part of CI)
-- [ ] Synthetic dense fixture to establish worst-case bound
-- [ ] First downstream consumer that uses `auto_prop_*` —
-      until this exists, the experiment is exploratory
+- [x] Z3 wall-time measurement on both modes — z3 times out on the
+      open-world base in BOTH modes (cliff ~1,500 ground String atoms;
+      bases are ~5,000+); delta moot. Souffle is the engine at scale.
+- [x] Synthetic dense fixture (`phase2/gen_dense_fixture.py`):
+      worst case is type-scoped (max 135 paths/type, 1,489 type-path
+      pairs); K=10 → 42,144 triples, souffle 1.8 s vs z3 timeout.
+- [x] First downstream consumer (`phase2/to_souffle.py`, rule
+      `kb_ingests_phi`, a KB→PHI-bucket join by ARN) — works, but fires
+      in `curated` mode too via the always-on `ObservationFacts` dotted
+      predicates. `auto_prop_*` is redundant with that stream, so the
+      consumer needs no allowlist flag. Experiment closed (see below).
+
+## Decision & action items
+
+The Phase 2 data resolves the original question. Outcome:
+
+1. **Do NOT flip the default to `full`, and do NOT build a generic
+   `auto_prop_*` consumer.** Cost was never the blocker (Phase 2), and
+   `auto_prop_*` is redundant with the always-on `ObservationFacts`
+   dotted stream — it grants no new capability. Default stays `curated`
+   (verified: `--allowlist-mode` defaults to `curated`; no code change).
+
+2. **Experiment CLOSED** with the finding above. Not "dead weight that's
+   expensive" (the Phase 1 fear) and not "valuable but unconsumed" (the
+   Phase 1 framing) — it is *redundant*: the raw primitives ship
+   unconditionally under dotted names already.
+
+3. **Need a raw property in a solver? Read the dotted `observationFacts`
+   predicate — no allowlist change required.** Every scalar leaf is
+   exported in both modes (e.g. `ai.knowledge_base.target_bucket_arn`,
+   `storage.tags.data-classification`). Sanitize dotted→underscore for
+   Soufflé (see `phase2/to_souffle.py`). The curated `has_*` allowlist
+   (`internal/core/sirfacts/observation_facts.go`) is *governance naming*
+   for a few predicates, not the gate on raw access; extend it only if
+   you want a stable named predicate, never to "unlock" a property.
+
+4. **Watch-list — cross-resource join keys** (for designing new compound
+   detections; all already exported via `observationFacts`). Of 3,014
+   catalog-read paths, 100 are join-key-named; these 12 carry raw value
+   keys (the rest are booleans / pre-derived signals):
+
+   | path | already covered by |
+   |---|---|
+   | `ai.knowledge_base.target_bucket_arn` | `compute.bedrock.role_reaches_phi_bucket` (pre-derived) |
+   | `cryptography.kms_key_id`, `storage.encryption.kms_key_id` | `CTL.KMS.CONCENTRATION` / `CTL.KMS.ISOLATION` |
+   | `storage.access.external_account_ids` | S3 cross-account / delegation controls |
+   | `storage.replication.destination_region` | sovereignty / region-SCP controls |
+   | `cdn.waf_web_acl_id` | `CTL.CLOUDFRONT.WAF.001` |
+   | `api.integration.lambda_arn` | trigger-auth / ghost-lambda controls |
+   | `compute.deployment.{apigw,eb}_targets_alias_arn` | alias/deployment controls |
+   | `governance.data_classification`, `reachability.anonymous_path.target_data_classification` | foothold / exposure `reaches_sensitive` |
+   | `auth.webhook.identity_mapping.uses_access_key_id` | (niche; no control today) |
+
+   "Already covered" is a catalog read, not an exhaustive audit — vet a
+   specific candidate against the control catalog before building. The
+   only one with no obvious existing control is the webhook access-key
+   mapping; if a compound detection ever needs it, the fact is already
+   in the export.

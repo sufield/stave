@@ -1,0 +1,20 @@
+// MICROVM-023 (Soufflé): a role with lambda:* now silently holds all MicroVM
+// actions. role_permission carries EFFECTIVE perms (inline + attached managed,
+// e.g. AWSLambda_FullAccess + boundaries — resolved by the collector), so a
+// wildcard from a managed policy is present regardless of the inline policy.
+// Severity tiers match the two disjoint catalog controls. Cross-checked by Z3.
+.decl role_permission(role:symbol, service:symbol, action:symbol)
+.decl role_microvm_admin(role:symbol)
+.decl agent_role(role:symbol)
+.decl cicd_role(role:symbol)
+.input role_permission
+.input role_microvm_admin
+.input agent_role
+.input cicd_role
+.decl has_lambda_wildcard(role:symbol)
+has_lambda_wildcard(R) :- role_permission(R, "lambda", "*").
+.decl silent_blast_radius(role:symbol, severity:symbol)
+.output silent_blast_radius
+silent_blast_radius(R, "CRITICAL") :- has_lambda_wildcard(R), !role_microvm_admin(R), agent_role(R).
+silent_blast_radius(R, "CRITICAL") :- has_lambda_wildcard(R), !role_microvm_admin(R), cicd_role(R).
+silent_blast_radius(R, "HIGH")     :- has_lambda_wildcard(R), !role_microvm_admin(R), !agent_role(R), !cicd_role(R).

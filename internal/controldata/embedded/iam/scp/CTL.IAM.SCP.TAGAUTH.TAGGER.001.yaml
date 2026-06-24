@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.TAGAUTH.TAGGER.001
+name: Tagger Role and Its Deployment Role Must Be Protected From Modification
+description: >
+  If developers have admin in their accounts (common), they can modify or
+  recreate the tagger role to assume it and self-exempt. An SCP must deny all
+  IAM mutation actions on the tagger role AND on the deployment role that
+  manages it (e.g. stacksets-exec-*), exempting only the deployment role.
+  Layer 4 of 4.
+
+  The collector emits identity.tag_auth.tagger_role_protected = true only when
+  an SCP denies all 13 IAM mutation actions (AttachRolePolicy, CreateRole,
+  DeleteRole, DeleteRolePermissionsBoundary, DeleteRolePolicy, DetachRolePolicy,
+  PutRolePermissionsBoundary, PutRolePolicy, TagRole, UntagRole,
+  UpdateAssumeRolePolicy, UpdateRole, UpdateRoleDescription) on BOTH the tagger
+  role and the deployment role, exempting only the deployment role. Missing
+  iam:UpdateAssumeRolePolicy lets a dev rewrite the trust policy and assume the
+  tagger; not protecting the deployment role lets a dev pivot through it — both
+  make the collector report protected=false.
+domain: identity
+severity: high
+scope: atomic
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - scp
+params:
+  attack_stage: privilege_escalation
+  tagger_role: "tagger"
+  deployment_role: "stacksets-exec-*"
+observation_fields:
+  - identity.kind
+  - identity.tag_auth.tagger_role_protected
+remediation:
+  description: >
+    The tagger role (or the deployment role that manages it) is not fully
+    protected from IAM modification, so a privileged principal can hijack it.
+  action: >
+    Add an SCP denying all 13 IAM role-mutation actions on both the tagger role
+    ARN and the deployment role ARN, exempting only the deployment role. Include
+    iam:UpdateAssumeRolePolicy (trust-policy rewrite) explicitly.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "tag_auth": { "tagger_role_protected": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.tag_auth.tagger_role_protected
+      op: ne
+      value: true
+defect: >
+  The tagger role and/or its deployment role is not fully protected from IAM
+  modification.
+infection: >
+  A privileged principal rewrites the tagger's trust policy (or pivots through
+  an unprotected deployment role), assumes the tagger, and self-exempts.
+failure: >
+  The root of the tag-auth scheme is hijackable; the whole scheme collapses.
+tests:
+  - name: tagger protection missing iam:UpdateAssumeRolePolicy fires (vulnerable)
+    verdict: VIOLATION
+    asset: { asset_id: "arn:aws:organizations::111122223333:organization/o-notrust", asset_type: aws_organization, vendor: aws, properties: { identity: { kind: organization, tag_auth: { tagger_role_protected: false } } } }
+  - name: all 13 actions on both roles, deployment-role-only exemption passes (false-positive trap)
+    verdict: PASS
+    asset: { asset_id: "arn:aws:organizations::444455556666:organization/o-prot", asset_type: aws_organization, vendor: aws, properties: { identity: { kind: organization, tag_auth: { tagger_role_protected: true } } } }
+  - name: deployment role (stacksets-exec) not also protected fires (false-negative trap — pivot path)
+    verdict: VIOLATION
+    asset: { asset_id: "arn:aws:organizations::777788889999:organization/o-nodeploy", asset_type: aws_organization, vendor: aws, properties: { identity: { kind: organization, tag_auth: { tagger_role_protected: false } } } }

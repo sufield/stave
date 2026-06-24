@@ -1,0 +1,138 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.MICROVM.AUTHTOKEN.PORTSCOPE.001
+name: MicroVM Auth Tokens Must Be Scoped to Specific Ports, Never the Lifecycle Port
+description: >
+  lambda:CreateMicrovmAuthToken takes an allowedPorts parameter. A
+  token minted without port scoping grants access to EVERY listening port on the
+  MicroVM — the application port, debug ports, metrics, internal services, and
+  critically the lifecycle hook port (the internal Lambda↔MicroVM API exposing
+  /suspend, /terminate). An unscoped token lets its holder disrupt production or
+  extract state. The lifecycle hook port (configured separately from the app
+  port, per AWS) must never be reachable by an external auth token.
+
+  Reads collector-resolved signals. The collector resolves
+  role.microvm_authtoken_create (effective, incl. the lambda:* wildcard),
+  whether the Allow statement constrains allowed ports
+  (role.microvm_authtoken_port_scoped), and whether the allowed set includes the
+  MicroVM's configured lifecycle hook port
+  (role.microvm_authtoken_allows_lifecycle_port — cross-referenced against the
+  MicroVM lifecycle-port config).
+
+  Safe default / fail-loud: if no port constraint is resolvable (including when
+  AWS has not yet published an allowed-ports condition key), the collector emits
+  port_scoped=false → FAIL. An unscoped token is unsafe regardless of whether the
+  constraint mechanism exists yet.
+domain: identity
+severity: high
+scope: atomic
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - lambda
+  - microvm
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - role.kind
+  - role.microvm_authtoken_create
+  - role.microvm_authtoken_port_scoped
+  - role.microvm_authtoken_allows_lifecycle_port
+remediation:
+  description: >
+    A role can mint MicroVM auth tokens that are not scoped to specific ports, or
+    that are scoped to include the lifecycle hook port — granting access to
+    lifecycle hooks (/suspend, /terminate), debug, and metrics endpoints.
+  action: >
+    Add an IAM policy Condition scoping allowed ports to only the application
+    port(s) on every Allow of lambda:CreateMicrovmAuthToken (and narrow
+    any lambda:* grant). Never include the lifecycle hook port in the
+    allowed set for externally-issued tokens.
+  example: |
+    {
+      "role": {
+        "kind": "iam_role",
+        "microvm_authtoken_create": true,
+        "microvm_authtoken_port_scoped": true,
+        "microvm_authtoken_allows_lifecycle_port": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.role.kind
+      op: eq
+      value: iam_role
+    - field: properties.role.microvm_authtoken_create
+      op: eq
+      value: true
+    - any:
+        - field: properties.role.microvm_authtoken_port_scoped
+          op: ne
+          value: true
+        - field: properties.role.microvm_authtoken_allows_lifecycle_port
+          op: eq
+          value: true
+defect: >
+  A role can mint MicroVM auth tokens that are unscoped, or scoped to include the
+  lifecycle hook port.
+infection: >
+  An unscoped or over-scoped token reaches the lifecycle hook port and other
+  internal services; its holder can suspend/terminate the MicroVM or pull state
+  from debug/metrics endpoints.
+failure: >
+  An external token holder disrupts production MicroVMs via lifecycle hooks or
+  exfiltrates state from internal ports the app team never meant to expose.
+tests:
+  - name: token-create role with no port constraint fires (vulnerable — unscoped)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/MicroVM-ClientRole"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          microvm_authtoken_create: true
+          microvm_authtoken_port_scoped: false
+          microvm_authtoken_allows_lifecycle_port: false
+  - name: token scoped to the app port only passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/MicroVM-ClientRole-Secure"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          microvm_authtoken_create: true
+          microvm_authtoken_port_scoped: true
+          microvm_authtoken_allows_lifecycle_port: false
+  - name: scoped but includes the lifecycle hook port fires (false-negative trap)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/MicroVM-ClientRole-TooMany"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          microvm_authtoken_create: true
+          microvm_authtoken_port_scoped: true
+          microvm_authtoken_allows_lifecycle_port: true
+  - name: lambda wildcard grants token creation with no scoping fires (false-negative trap — wildcard)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/MicroVM-Wildcard"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        role:
+          kind: iam_role
+          microvm_authtoken_create: true
+          microvm_authtoken_port_scoped: false
+          microvm_authtoken_allows_lifecycle_port: false

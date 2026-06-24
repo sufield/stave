@@ -1,0 +1,14 @@
+// MICROVM-022 (Soufflé): a production MicroVM must have an execution role (and
+// its image a build role). Behind CTL.LAMBDA.MICROVM.OBSERVABILITY.ROLES.001.
+.decl microvm(m:symbol)
+.decl microvm_is_production(m:symbol)
+.decl microvm_execution_role(m:symbol, r:symbol)
+.decl microvm_build_role(m:symbol, r:symbol)
+.input microvm
+.input microvm_is_production
+.input microvm_execution_role
+.input microvm_build_role
+.decl bad_observability(m:symbol, reason:symbol)
+.output bad_observability
+bad_observability(M, "no_exec_role")  :- microvm(M), microvm_is_production(M), !microvm_execution_role(M, _).
+bad_observability(M, "no_build_role") :- microvm(M), microvm_is_production(M), !microvm_build_role(M, _).

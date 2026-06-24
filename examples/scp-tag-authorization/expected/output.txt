@@ -1,0 +1,4 @@
+complete         souffle=NONE                   z3=sat  
+rcp_missing      souffle=session-tag-injection  z3=unsat
+mutation_wrongop souffle=self-tag-exemption     z3=unsat
+enforce_missing  souffle=no-enforcement         z3=unsat

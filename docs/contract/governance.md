@@ -64,6 +64,37 @@ and an optional `format` tag) and a model store's S3 integrity configuration.
 
 Controls: `CTL.MODEL.FORMAT.INSECURE.001`, `CTL.MODEL.INTEGRITY.CONFIG.001`.
 
+## `role.*` — MicroVM shell-auth role signals (derived)
+
+Resolved IAM-role signals for the MicroVM shell-auth controls. The collector
+resolves the role's **effective** permissions (inline + attached managed
+policies + boundaries, expanding `lambda:*`), its break-glass status,
+and its workload class.
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `role.kind` | string | `iam_role` (gate; existing MicroVM role namespace). |
+| `role.microvm_shell_auth` | bool | Role has effective `lambda:CreateMicrovmShellAuthToken` (directly or via the `lambda:*` wildcard). **Fail-loud: emit explicitly; never omit on resolution failure.** |
+| `role.is_break_glass` | bool | Role is a designated break-glass role — tag `break-glass:true` or name matching `*break-glass*` / `*emergency*`. |
+| `role.workload_type` | string | `agent` / `cicd` / `human` / `service` (mirrors `identity.role.workload_type`; drives the HIGH-vs-CRITICAL split). |
+
+Controls: `CTL.LAMBDA.MICROVM.SHELLAUTH.001` (HIGH), `CTL.LAMBDA.MICROVM.SHELLAUTH.ELEVATED.001` (CRITICAL — agent/cicd).
+
+### MicroVM auth-token constraint signals
+
+For roles holding `lambda:CreateMicrovmAuthToken` (directly or via
+`lambda:*`). The collector parses the Allow statement's Condition.
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `role.microvm_authtoken_create` | bool | Role has effective `CreateMicrovmAuthToken` (incl. the `lambda:*` wildcard). |
+| `role.microvm_authtoken_expiry_constrained` | bool | A policy Condition bounds the token expiration. Fail-loud: unresolved → `false`. |
+| `role.microvm_authtoken_expiry_max_minutes` | number | The expiration upper bound when constrained (compared against ≤ 30). |
+| `role.microvm_authtoken_port_scoped` | bool | A policy Condition constrains `allowedPorts`. Safe default: unresolved → `false`. |
+| `role.microvm_authtoken_allows_lifecycle_port` | bool | The allowed-ports set includes the MicroVM's configured lifecycle hook port (must never be true for external tokens). |
+
+Controls: `CTL.LAMBDA.MICROVM.AUTHTOKEN.EXPIRY.001`, `CTL.LAMBDA.MICROVM.AUTHTOKEN.PORTSCOPE.001`. The exact AWS condition-key names may not be published yet; the collector matches whatever AWS uses and fails loud (treats unresolved as unconstrained) so the controls flag unconstrained permissions regardless.
+
 ## `microvm.*` — Lambda MicroVM audit signals
 
 Extends the existing `microvm.*` namespace (`microvm.kind`,
@@ -73,5 +104,22 @@ Extends the existing `microvm.*` namespace (`microvm.kind`,
 |-------|------|---------|
 | `microvm.sensitive` | bool | The MicroVM runs a sensitive workload (classification tag or account). |
 | `microvm.audit.data_events_enabled` | bool | A CloudTrail trail covers the MicroVM control-plane API surface (`RunMicrovm`, `CreateMicrovmAuthToken`, `SuspendMicrovm`, `ResumeMicrovm`). |
+| `microvm.is_production` | bool | The MicroVM is production — env tag `production`/`prod`, or a production account/OU. |
+| `microvm.shell_ingress_connector` | bool | A launched network connector ARN matches `…:network-connector:aws-network-connector:SHELL_INGRESS` (makes shell access structurally possible). |
+| `microvm.execution_role_present` | bool | The running MicroVM has an execution role (runtime logs + AWS access). |
+| `microvm.build_role_present` | bool | The MicroVM's source image has a build role (build logs). |
 
-Control: `CTL.LAMBDA.MICROVM.DATAEVENTS.001`.
+Controls: `CTL.LAMBDA.MICROVM.DATAEVENTS.001`, `CTL.LAMBDA.MICROVM.SHELLINGRESS.001`, `CTL.LAMBDA.MICROVM.OBSERVABILITY.ROLES.001`.
+
+### MicroVM lambda:* blast-radius signals
+
+AWS placed the MicroVM actions in the `lambda:` IAM namespace, so `lambda:*`
+(common in Lambda-heavy accounts, often predating MicroVMs) now includes all
+MicroVM actions — shell/auth tokens, run, lifecycle, image creation.
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `role.has_lambda_wildcard` | bool | Role has effective `lambda:*` — inline OR attached managed policy (e.g. `AWSLambda_FullAccess`) OR boundary. |
+| `role.is_microvm_admin` | bool | Role is a designated MicroVM admin (tag `microvm-admin:true` or name `*microvm-admin*`). |
+
+Controls: `CTL.LAMBDA.MICROVM.WILDCARD.001` (HIGH), `CTL.LAMBDA.MICROVM.WILDCARD.ELEVATED.001` (CRITICAL — agent/cicd).

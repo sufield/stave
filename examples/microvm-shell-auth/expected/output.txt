@@ -1,0 +1,4 @@
+vuln      souffle=HIGH      z3=sat  
+fp        souffle=NONE      z3=unsat
+fn_cicd   souffle=CRITICAL  z3=sat  
+fn_agent  souffle=CRITICAL  z3=sat  
