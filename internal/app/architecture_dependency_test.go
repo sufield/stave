@@ -149,19 +149,20 @@ func TestNoFloatingInternalPackages(t *testing.T) {
 
 		// Cross-cutting helpers carved out by category. Each has a
 		// clear scope; new floating packages are not.
-		"compliance":  {}, // compliance-framework metadata
-		"config":      {}, // CLI config-file loading
-		"contracts":   {}, // legacy global contracts (internal/app/contracts is the active one)
-		"controldata": {}, // pre-Phase-5 control data; future move into adapters/controls
-		"doctor":      {}, // doctor diagnostics; semi-cmd-like
-		"env":         {}, // env-var loading helpers
-		"profile":     {}, // compliance profile evaluation
-		"sanitize":    {}, // ID sanitisation helpers
-		"testutil":    {}, // shared test helpers
-		"tools":       {}, // build-time code-gen tools
-		"util":        {}, // small pure-functional utilities
-		"version":     {}, // version-string constants
-		"yamlutil":    {}, // yaml parsing helpers
+		"compliance":        {}, // compliance-framework metadata
+		"compliancemapping": {}, // AICM (framework)->Stave mapping data + coverage-report logic; pure, read by cmd/compliance
+		"config":            {}, // CLI config-file loading
+		"contracts":         {}, // legacy global contracts (internal/app/contracts is the active one)
+		"controldata":       {}, // pre-Phase-5 control data; future move into adapters/controls
+		"doctor":            {}, // doctor diagnostics; semi-cmd-like
+		"env":               {}, // env-var loading helpers
+		"profile":           {}, // compliance profile evaluation
+		"sanitize":          {}, // ID sanitisation helpers
+		"testutil":          {}, // shared test helpers
+		"tools":             {}, // build-time code-gen tools
+		"util":              {}, // small pure-functional utilities
+		"version":           {}, // version-string constants
+		"yamlutil":          {}, // yaml parsing helpers
 	}
 
 	entries, err := os.ReadDir(internalDir)
