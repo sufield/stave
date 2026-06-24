@@ -100,6 +100,27 @@ diff <(PATH="$HOME/.local/bin:$PATH" bash examples/iam-foothold-internet-reach/r
      examples/iam-foothold-internet-reach/expected/output.txt && echo MATCHES
 ```
 
+### Demo B in Docker (no host tools to install)
+
+If you don't have `souffle`/`z3` on the host, run Demo B in a container that
+ships them preinstalled. The image needs no Go and no stave binary — just the
+two solvers and the reasoning spec.
+
+```bash
+cd stave
+docker build -f examples/demo-capital-one/Dockerfile -t stave-capone-demo .
+
+docker run --rm stave-capone-demo            # run the proof
+docker run --rm stave-capone-demo verify     # run + diff against expected output
+```
+
+`verify` prints the triplet and then `MATCHES committed expected output — both
+engines agree.` (exit 0), or diffs and exits non-zero. The image is
+`ubuntu:22.04` with `z3` from the base repos and `souffle` from the official
+Soufflé apt repo (Soufflé was dropped from Ubuntu's own repos; 22.04/jammy is
+the newest release the Soufflé repo publishes for). Build context must be the
+`stave/` repo root so the reasoning spec is in scope.
+
 The **false-positive** row is the point: enforce IMDSv2 (or remove the public
 reach) and the path collapses — `souffle=NONE / z3=unsat`, no finding. Stave
 proves the chain is *broken*, not just that one box is checked. The cheapest cut
