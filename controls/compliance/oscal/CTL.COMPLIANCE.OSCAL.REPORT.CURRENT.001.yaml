@@ -1,0 +1,139 @@
+dsl_version: ctrl.v1
+id: CTL.COMPLIANCE.OSCAL.REPORT.CURRENT.001
+name: AWS SOC Compliance Report Must Be Current
+description: >
+  The AWS SOC 1/SOC 2 attestation the organization relies on (downloaded from
+  AWS Artifact as a NIST OSCAL assessment-results document) must be present,
+  unexpired, and cover the region the snapshot was taken from. SOC reports cover
+  a rolling 12-month period; relying on a report whose coverage period ended
+  more than 12 months ago means there is an assurance gap — compliance claims
+  rest on stale evidence. A report that does not list the snapshot's region in
+  scope provides no assurance for that region at all.
+
+  This control evaluates a derived `oscal_report` asset, not a cloud resource.
+  The OSCAL JSON -> obs projection (an extractor/collector concern, not Stave
+  core) parses `metadata.last-modified`, `metadata.document-ids`, the
+  `reporting-period-start`/`reporting-period-end` props, and the in-scope region
+  list, and emits the three derived signals this predicate reads:
+  `oscal_report.present`, `oscal_report.months_since_period_end`, and
+  `oscal_report.region_in_scope`.
+
+  The 6-to-12-month "approaching expiry" WARN band the design calls for is not a
+  separate per-control predicate (ctrl.v1 predicates produce only VIOLATION or
+  PASS); it surfaces as an out.v0.1 risk_signal once months_since_period_end
+  crosses 6 but is still <= 12, the same way every numeric-threshold control
+  exposes approaching-threshold proximity. This control encodes only the hard
+  FAIL line at 12 months.
+
+  Fail-loud: if no OSCAL report can be located, the collector MUST emit the
+  asset with `oscal_report.present: false` (or fail ingest) — it must never
+  silently omit the asset, which would hide the missing-evidence finding. The
+  present/region predicates use `ne true` (fail-closed): a missing or unknown
+  signal is treated as a violation, not waved through.
+domain: governance
+severity: high
+scope: atomic
+corpus_reference: AWS:SharedResponsibility
+compliance:
+  soc2: "CC9.2"
+  nist_800_53_r5: "CA-2"
+  ccm_v4: ["STA-09", "A&A-02"]
+scope_tags:
+  - aws
+  - compliance
+  - oscal
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_oscal_report
+observation_fields:
+  - oscal_report.present
+  - oscal_report.months_since_period_end
+  - oscal_report.region_in_scope
+remediation:
+  description: >
+    The relied-upon AWS SOC report is missing, its coverage period ended more
+    than 12 months ago, or it does not cover the snapshot's region.
+  action: >
+    Download the current AWS SOC 2 Type II report (OSCAL format) from AWS
+    Artifact, confirm its reporting-period-end is within the last 12 months and
+    that the snapshot's region is listed in scope, and re-run the projection.
+    Schedule a recurring refresh so the report is replaced before its coverage
+    period ages past 12 months.
+  example: |
+    {
+      "oscal_report": {
+        "present": true,
+        "report_id": "soc2-type2-2026",
+        "months_since_period_end": 4,
+        "region_in_scope": true
+      }
+    }
+unsafe_predicate:
+  any:
+    - field: properties.oscal_report.present
+      op: ne
+      value: true
+    - field: properties.oscal_report.months_since_period_end
+      op: gt
+      value: 12
+    - field: properties.oscal_report.region_in_scope
+      op: ne
+      value: true
+defect: >
+  Relied-upon SOC report is missing, expired (> 12 months past coverage), or
+  does not cover the snapshot region.
+infection: >
+  Every compliance claim mapped to this attestation inherits the gap: there is
+  no current third-party evidence that AWS held up its side of the shared
+  responsibility model for the period and region in question.
+failure: >
+  Auditor-facing compliance posture rests on stale or out-of-scope assurance.
+tests:
+  - name: missing report fires (vulnerable — no OSCAL file)
+    verdict: VIOLATION
+    asset:
+      asset_id: "oscal:aws:soc2:none"
+      asset_type: aws_oscal_report
+      vendor: aws
+      properties:
+        oscal_report:
+          present: false
+          months_since_period_end: 0
+          region_in_scope: false
+  - name: current report, period ended 6 months ago, region in scope passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "oscal:aws:soc2:2026"
+      asset_type: aws_oscal_report
+      vendor: aws
+      properties:
+        oscal_report:
+          present: true
+          report_id: "soc2-type2-2026"
+          months_since_period_end: 6
+          region_in_scope: true
+  - name: report coverage ended 13 months ago fires (false-negative trap — expired)
+    verdict: VIOLATION
+    asset:
+      asset_id: "oscal:aws:soc2:2024"
+      asset_type: aws_oscal_report
+      vendor: aws
+      properties:
+        oscal_report:
+          present: true
+          report_id: "soc2-type2-2024"
+          months_since_period_end: 13
+          region_in_scope: true
+  - name: current report but snapshot region not in scope fires (false-negative trap — out of scope)
+    verdict: VIOLATION
+    asset:
+      asset_id: "oscal:aws:soc2:2026:eu"
+      asset_type: aws_oscal_report
+      vendor: aws
+      properties:
+        oscal_report:
+          present: true
+          report_id: "soc2-type2-2026"
+          months_since_period_end: 3
+          region_in_scope: false

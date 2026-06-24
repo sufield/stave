@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2692
-**Pack hash:** `9ac940a24b1cffe76599fa324ad9b2398b60df73aba97450a50fe62cb7e30de7`
+**Total controls:** 2693
+**Pack hash:** `53f16465e87dd58ddd25094ea5c0e0a927f3f58b16241a09fb496241b92e7901`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,7 +14,7 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 281 |
-| high | 1169 |
+| high | 1170 |
 | info | 16 |
 | low | 205 |
 | medium | 1021 |
@@ -27,7 +27,7 @@ GitHub. Pick a service below.
 | detection | 134 |
 | encryption | 113 |
 | exposure | 1204 |
-| governance | 579 |
+| governance | 580 |
 | hygiene | 18 |
 | identity | 435 |
 | lifecycle | 31 |
@@ -61,6 +61,7 @@ GitHub. Pick a service below.
 | [CODEBUILD](reference/codebuild.md) | 12 |
 | [CODECOMMIT](reference/codecommit.md) | 2 |
 | [COGNITO](reference/cognito.md) | 104 |
+| [COMPLIANCE](reference/compliance.md) | 1 |
 | [CONFIG](reference/config.md) | 50 |
 | [DMS](reference/dms.md) | 6 |
 | [DNS](reference/dns.md) | 3 |
