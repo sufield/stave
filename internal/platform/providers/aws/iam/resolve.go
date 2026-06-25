@@ -363,7 +363,6 @@ func intersectResource(r1, r2 string) (string, bool) {
 	return "", false
 }
 
-
 // collectBoundaryCeiling extracts the allowed actions from the permission
 // boundary. nil boundary means no ceiling.
 func collectBoundaryCeiling(boundary *PolicyDocument) []ActionGrant {
