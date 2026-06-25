@@ -9,9 +9,12 @@ description: >
   provisioning Lambdas using AdminUpdateUserAttributes bypass WriteAttributes
   entirely, so the mapping is the real control point.
 
-  The collector flags any custom:* attribute whose key contains (case-insensitive)
-  role / admin / tenant / permission / privilege / access — a configurable pattern
-  list, not an exact allow-list, so custom:accessLevel is caught (the FN trap).
+  The collector flags any custom:* attribute whose key matches a sensitive token
+  (case- and separator-insensitive, so camelCase like accessLevel/userAccountId
+  matches): role / admin / tenant / user_id / account_id / permission / privilege
+  / access / group / scope / entitlement — a configurable pattern list (the same
+  one the user-controlled WriteAttributes check uses), not an exact allow-list, so
+  custom:accessLevel and custom:groups are caught (the FN traps).
   Standard attributes (email, name, phone_number) are expected and do not fire.
   Distinct from CTL.COGNITO.SAML.ATTRMAP.001, which flags MISSING required
   attributes (the opposite direction).

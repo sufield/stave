@@ -1,0 +1,52 @@
+name: Control Security Review
+
+# Every PR that touches controls/ must have a security-focused differential
+# review of the diff (false negatives, edge-case coverage) before merge. The
+# review itself is a Claude Code skill (`differential-review`) run locally by
+# the author — CI cannot run an LLM review headlessly, so this gate requires
+# the author to attest it was done by checking the box in the PR description.
+# Make it a required check in branch protection to enforce "before merge".
+
+on:
+  pull_request:
+    paths:
+      - 'controls/**'
+      - '.github/workflows/control-security-review.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    name: Require differential-review on control changes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: List changed controls
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          {
+            echo "### Controls changed in this PR"
+            echo ""
+            git diff --name-only "$BASE"...HEAD -- controls/ | sed 's/^/- `/; s/$/`/'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Require differential-review attestation
+        # Pass the body through env (never inline ${{ }} into the script) so a
+        # PR description cannot inject shell.
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          set -euo pipefail
+          if printf '%s' "$BODY" | grep -qiE '\[[xX]\][^]]*differential-review'; then
+            echo "differential-review attested — gate passes."
+          else
+            echo "::error::This PR changes controls/ but the differential-review box in the PR description is unchecked. Run the \`differential-review\` skill on the control diff (focus: false negatives, edge cases), then check the box. See CONTRIBUTING.md."
+            exit 1
+          fi

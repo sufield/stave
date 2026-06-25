@@ -22,3 +22,7 @@ stave-mcp
 # so the generated tree itself must never be tracked. See e2e/e2e_test.go
 # (RemoveAll(caseDir/outdir) before each run).
 testdata/e2e/*/outdir/
+
+# Reasoning-spec run.sh regenerates Soufflé/Z3 fact dirs (facts-vuln/-fp/-fn)
+# on every run; expected/output.txt is the committed artifact, not the facts.
+examples/*/facts-*/

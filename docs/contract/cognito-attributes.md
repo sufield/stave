@@ -29,7 +29,7 @@ attribute**.
 | Field | Type | Meaning |
 |-------|------|---------|
 | `cognito.client_write_attributes_unset` | bool | The app client's `WriteAttributes` is empty/unset, so Cognito applies the **default — every attribute is writable**, including sensitive custom ones. Any authenticated user can self-modify `custom:Role` etc. → `CTL.COGNITO.CLIENT.WRITEATTR.DEFAULT.001` (CRITICAL). |
-| `cognito.client_write_sensitive_attr` | bool | `WriteAttributes` **is** set (scoped) but includes a security-sensitive custom attribute — key matches (case-insensitive) `role`/`admin`/`tenant`/`user_id`/`account_id`/`permission`. Catches the scoped-but-sensitive FN trap (`custom:userAccountId`). → `CTL.COGNITO.CLIENT.WRITEATTR.SENSITIVE.001` (HIGH). |
+| `cognito.client_write_sensitive_attr` | bool | `WriteAttributes` **is** set (scoped) but includes a security-sensitive custom attribute. Match is **case- and separator-insensitive** — normalize the key (lowercase, strip `_`/`-`) so camelCase concatenations match (`custom:userAccountId` → `accountid`). Sensitive tokens (the **same list** the SSO AttributeMapping check uses): `role`, `admin`, `tenant`, `userid` (`user_id`/`userId`), `accountid` (`account_id`/`accountId`), `permission`, `privilege`, `access`, `group`, `scope`, `entitlement`. Catches the FN trap `custom:userAccountId`. → `CTL.COGNITO.CLIENT.WRITEATTR.SENSITIVE.001` (HIGH). |
 | `cognito.client_write_sensitive_attr_name` | string | The sensitive attribute in `WriteAttributes` (evidence). |
 
 The two are disjoint: `…_unset` is the default (all writable); `…sensitive` is an

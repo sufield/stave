@@ -19,7 +19,7 @@ User Pools*.
 
 | Field | Type | Meaning |
 |-------|------|---------|
-| `cognito.sensitive_attribute_mapped` | bool | An external IdP's `AttributeMapping` maps a `custom:*` Cognito attribute whose key matches (case-insensitive) `role`/`admin`/`tenant`/`permission`/`privilege`/`access`. The pattern list is **configurable**; these are the defaults. |
+| `cognito.sensitive_attribute_mapped` | bool | An external IdP's `AttributeMapping` maps a `custom:*` Cognito attribute whose key matches a sensitive token (**case- and separator-insensitive** — normalize lowercase + strip `_`/`-`, so `userAccountId` matches `accountid`): `role`, `admin`, `tenant`, `userid`, `accountid`, `permission`, `privilege`, `access`, `group`, `scope`, `entitlement`. The **same list** the user-controlled write-attribute check uses (`docs/contract/cognito-attributes.md`); **configurable**, these are the defaults. |
 | `cognito.sensitive_attribute_idp` | string | The IdP with the sensitive mapping (evidence). |
 | `cognito.sensitive_attribute_name` | string | The Cognito attribute, e.g. `custom:role` (evidence). |
 | `cognito.sensitive_attribute_claim` | string | The IdP claim it maps from, e.g. `groups` (evidence). |

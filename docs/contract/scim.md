@@ -23,7 +23,7 @@ The one atomic gap the generic least-privilege checks miss.
 
 | Field | Type | Meaning |
 |-------|------|---------|
-| `identity.escalation.cognito_updateattr_unscoped.present` | bool | The principal can call `cognito-idp:AdminUpdateUserAttributes` (directly, via `cognito-idp:Admin*`/`cognito-idp:*`, or an attached managed policy such as `AmazonCognitoPowerUser`) **without** an attribute-scoping Condition (`cognito-idp:AllowedAttributesForUpdate` / `AllowedAttributes`). Unconstrained, it can set any attribute including `custom:role`/`custom:isAdmin` — privilege escalation. Resolved across inline + attached managed policies. |
+| `identity.escalation.cognito_updateattr_unscoped.present` | bool | The principal can call `cognito-idp:AdminUpdateUserAttributes` **and** no attribute-scoping Condition safely constrains it. The action match covers exact, `cognito-idp:*`, `*`, **and any partial wildcard whose glob covers it** (`cognito-idp:Admin*`, `cognito-idp:AdminUpdate*`) plus attached managed policies (`AmazonCognitoPowerUser`). "Safely constrained" means a `cognito-idp:AllowedAttributesForUpdate`/`AllowedAttributes` Condition is present **whose allowed set itself contains no sensitive attribute** — a condition that allows `custom:role` does NOT make it safe. Resolved across inline + attached managed policies. Unconstrained, it can set any attribute including `custom:role`/`custom:isAdmin` — privilege escalation. |
 
 `AdminUpdateUserAttributes` *with* an attribute-scoping condition is legitimate
 provisioning and does not fire.

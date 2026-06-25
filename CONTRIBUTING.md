@@ -325,6 +325,22 @@ Note: Control IDs must follow the format `CTL.<DOMAIN>.<CATEGORY>.<SEQ>` where:
 - CATEGORY: STATE, DURATION, RECURRENCE, AUTHZ, JUSTIFICATION, OWNERSHIP, or VISIBILITY
 - SEQ: 3-digit sequence number
 
+### Security review before merge
+
+Every PR that changes `controls/` must get a security-focused review of the
+diff before merge:
+
+- Run the **`differential-review`** Claude Code skill on the control diff —
+  focus on false negatives and edge-case coverage. Check the
+  `differential-review` box in the PR description to attest it was done.
+- Run **`fp-check`** on any new control's false-positive trap to confirm the
+  control does not fire on its safe scenario.
+
+The **Control Security Review** workflow
+(`.github/workflows/control-security-review.yml`) is path-filtered on
+`controls/**` and fails until the differential-review box is checked. Make it a
+required check in branch protection to enforce the gate.
+
 ## Secret Scanning
 
 The repository uses [gitleaks](https://github.com/gitleaks/gitleaks) to prevent accidental credential leaks. Configuration is in `.gitleaks.toml` at the repo root.

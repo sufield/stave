@@ -104,3 +104,23 @@ tests:
           is_data_bearing: true
           environment: production
           team: backend
+  - name: empty-string classification fires (false-negative trap — empty is treated as missing)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:db:empty-classification"
+      asset_type: aws_rds_instance
+      vendor: aws
+      properties:
+        governance:
+          is_data_bearing: true
+          data_classification: ""
+  - name: whitespace-only classification fires (false-negative trap — trimmed to empty)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:db:whitespace-classification"
+      asset_type: aws_rds_instance
+      vendor: aws
+      properties:
+        governance:
+          is_data_bearing: true
+          data_classification: "   "

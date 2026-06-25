@@ -16,9 +16,13 @@ description: >
   CTL.IAM.POLICY.SERVICEWILDCARD.001) do not catch this — AdminUpdateUserAttributes
   is a normal provisioning action, not a wildcard or admin grant. The collector
   resolves the permission across inline + attached managed policies (e.g.
-  AmazonCognitoPowerUser grants cognito-idp:* with no condition — the FN trap) and
-  sets the .present boolean only when the action is reachable AND no
-  attribute-scoping condition constrains it.
+  AmazonCognitoPowerUser grants cognito-idp:* with no condition) and matches not
+  just the exact action and cognito-idp:* but any partial wildcard whose glob
+  covers it (cognito-idp:Admin*, cognito-idp:AdminUpdate*) — FN traps. It sets the
+  .present boolean when the action is reachable AND no attribute-scoping condition
+  SAFELY constrains it: an AllowedAttributesForUpdate condition counts as safe
+  only when its allowed set contains no sensitive attribute — a condition that
+  allows custom:role does not make it safe.
 
   Infrastructure control inspired by Doyensec "SCIM Hunting — Beyond SSO".
 domain: identity

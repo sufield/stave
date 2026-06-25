@@ -3,8 +3,11 @@ id: CTL.COGNITO.CLIENT.WRITEATTR.SENSITIVE.001
 name: Cognito App Client WriteAttributes Includes a Sensitive Custom Attribute
 description: >
   A Cognito app client has WriteAttributes scoped to an explicit list, but that
-  list still includes a security-sensitive custom attribute — its key matches
-  role / admin / tenant / user_id / account_id / permission (case-insensitive).
+  list still includes a security-sensitive custom attribute — its key matches a
+  sensitive token (case- and separator-insensitive, so camelCase userAccountId
+  matches accountid): role, admin, tenant, user_id, account_id, permission,
+  privilege, access, group, scope, entitlement (the same list the SSO
+  AttributeMapping check uses).
   Any authenticated user can call update-user-attributes and self-modify that
   attribute. A scoped WriteAttributes looks safe (only a few attributes) but
   custom:userAccountId, custom:role, or custom:tenantId among them is still a
