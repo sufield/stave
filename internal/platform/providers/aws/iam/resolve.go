@@ -265,27 +265,104 @@ func intersectGrants(a, b []ActionGrant) []ActionGrant {
 	if len(a) == 0 || len(b) == 0 {
 		return nil
 	}
-	seen := make(map[ActionGrant]struct{}, len(a)+len(b))
-	out := make([]ActionGrant, 0, len(a)+len(b))
-	add := func(g ActionGrant) {
-		if _, ok := seen[g]; ok {
-			return
-		}
-		seen[g] = struct{}{}
-		out = append(out, g)
-	}
-	for _, g := range a {
-		if matchesCeiling(g, b) {
-			add(g)
-		}
-	}
-	for _, g := range b {
-		if matchesCeiling(g, a) {
-			add(g)
+	var out []ActionGrant
+	seen := make(map[ActionGrant]struct{})
+	for _, ga := range a {
+		for _, gb := range b {
+			act, actOk := intersectAction(ga.Action, gb.Action)
+			res, resOk := intersectResource(ga.Resource, gb.Resource)
+			if actOk && resOk {
+				g := ActionGrant{
+					Action:   act,
+					Resource: res,
+				}
+				if _, ok := seen[g]; !ok {
+					seen[g] = struct{}{}
+					out = append(out, g)
+				}
+			}
 		}
 	}
 	return out
 }
+
+func intersectAction(p1, p2 string) (string, bool) {
+	if p1 == "*" {
+		return p2, true
+	}
+	if p2 == "*" {
+		return p1, true
+	}
+	if strings.EqualFold(p1, p2) {
+		return p1, true
+	}
+	p1Wild := len(p1) > 2 && p1[len(p1)-1] == '*'
+	p2Wild := len(p2) > 2 && p2[len(p2)-1] == '*'
+	if p1Wild && p2Wild {
+		pref1 := p1[:len(p1)-1]
+		pref2 := p2[:len(p2)-1]
+		if strings.EqualFold(pref1, pref2) {
+			return p1, true
+		}
+		return "", false
+	}
+	if p1Wild {
+		pref1 := p1[:len(p1)-1]
+		if len(p2) >= len(pref1) && strings.EqualFold(p2[:len(pref1)], pref1) {
+			return p2, true
+		}
+		return "", false
+	}
+	if p2Wild {
+		pref2 := p2[:len(p2)-1]
+		if len(p1) >= len(pref2) && strings.EqualFold(p1[:len(pref2)], pref2) {
+			return p1, true
+		}
+		return "", false
+	}
+	return "", false
+}
+
+func intersectResource(r1, r2 string) (string, bool) {
+	if r1 == "*" {
+		return r2, true
+	}
+	if r2 == "*" {
+		return r1, true
+	}
+	if r1 == r2 {
+		return r1, true
+	}
+	r1Wild := len(r1) > 1 && r1[len(r1)-1] == '*'
+	r2Wild := len(r2) > 1 && r2[len(r2)-1] == '*'
+	if r1Wild && r2Wild {
+		pref1 := r1[:len(r1)-1]
+		pref2 := r2[:len(r2)-1]
+		if strings.HasPrefix(pref1, pref2) {
+			return r1, true
+		}
+		if strings.HasPrefix(pref2, pref1) {
+			return r2, true
+		}
+		return "", false
+	}
+	if r1Wild {
+		pref1 := r1[:len(r1)-1]
+		if strings.HasPrefix(r2, pref1) {
+			return r2, true
+		}
+		return "", false
+	}
+	if r2Wild {
+		pref2 := r2[:len(r2)-1]
+		if strings.HasPrefix(r1, pref2) {
+			return r1, true
+		}
+		return "", false
+	}
+	return "", false
+}
+
 
 // collectBoundaryCeiling extracts the allowed actions from the permission
 // boundary. nil boundary means no ceiling.
@@ -459,13 +536,13 @@ func actionMatches(pattern, target string) bool {
 	if pattern == "*" {
 		return true
 	}
-	if pattern == target {
+	if strings.EqualFold(pattern, target) {
 		return true
 	}
 	// service:* matches service:anything
 	if len(pattern) > 2 && pattern[len(pattern)-1] == '*' {
 		prefix := pattern[:len(pattern)-1]
-		if len(target) >= len(prefix) && target[:len(prefix)] == prefix {
+		if len(target) >= len(prefix) && strings.EqualFold(target[:len(prefix)], prefix) {
 			return true
 		}
 	}

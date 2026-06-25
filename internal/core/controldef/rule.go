@@ -85,6 +85,13 @@ func (r *PredicateRule) collect(ctx *EvalContext, misconfigurations []Misconfigu
 
 	val, found := resolvePropertyValue(ctx.PropertyMap(), r.Field.Parts())
 
+	unsafeVal := r.Value.Raw()
+	if r.ValueFromParam != "" {
+		if pVal, ok := ctx.Params.Get(string(r.ValueFromParam)); ok {
+			unsafeVal = pVal
+		}
+	}
+
 	return append(misconfigurations, Misconfiguration{
 		Property: predicate.NewFieldPath(r.Field.TrimPrefix(propertiesPathPrefix)),
 		// Only record val when the field was actually present. The
@@ -94,7 +101,7 @@ func (r *PredicateRule) collect(ctx *EvalContext, misconfigurations []Misconfigu
 		ActualValue: val,
 		FieldAbsent: !found,
 		Operator:    r.Op,
-		UnsafeValue: r.Value.Raw(),
+		UnsafeValue: unsafeVal,
 		Category:    classifyProperty(r.Field.String()),
 	})
 }
