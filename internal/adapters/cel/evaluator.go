@@ -131,6 +131,22 @@ func stringifyValue(v any) any {
 				cp[i] = stringifyValue(rv.Index(i).Interface())
 			}
 			return cp
+		case reflect.Map:
+			n := rv.Len()
+			out := make(map[string]any, n)
+			iter := rv.MapRange()
+			for iter.Next() {
+				k := iter.Key()
+				v := iter.Value()
+				var keyStr string
+				if k.Kind() == reflect.String {
+					keyStr = k.String()
+				} else {
+					keyStr = fmt.Sprintf("%v", k.Interface())
+				}
+				out[keyStr] = stringifyValue(v.Interface())
+			}
+			return out
 		case reflect.Struct, reflect.Pointer, reflect.Interface:
 			// Producer leaks: a custom struct (or pointer/interface
 			// wrapping one) escaped into the activation map. CEL

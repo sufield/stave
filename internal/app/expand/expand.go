@@ -112,8 +112,14 @@ func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 			if _, ok := have[svc]; ok {
 				continue
 			}
-			needle := "aws_" + svc
-			if strings.Contains(text, needle) {
+			found := false
+			for _, prefix := range []string{"aws_", "gcp_", "azure_"} {
+				if strings.Contains(text, prefix+svc) {
+					found = true
+					break
+				}
+			}
+			if found {
 				have[svc] = struct{}{}
 			}
 		}

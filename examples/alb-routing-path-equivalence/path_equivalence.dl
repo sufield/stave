@@ -1,0 +1,56 @@
+// ALB-ROUTING-006 — every path to a backend must carry equivalent controls
+// (Soufflé / Datalog). The master compound: a target group (and the backend
+// instances behind it) can be reached via multiple ALB/listener/rule paths.
+// If one path carries a control (auth / source-ip gate / WAF) and another
+// reaching the SAME backend instance does not, the control is bypassable.
+//
+// Reachability resolves to the INSTANCE, not the target-group ARN: two
+// different target groups that share an EC2 instance are the same backend for
+// the purpose of this check (the instance-level FN trap). The default rule of a
+// listener is just another path_to_tg tuple.
+//
+//   souffle path_equivalence.dl -F <facts-dir> -D <out-dir>
+//   -> out-dir/inconsistent.csv lists (instance, rule_a, rule_b) — non-empty = FAIL.
+//
+// Inspired by Doyensec CloudsecTidbits No. 5 — Navigating Lax Load Balancers.
+
+.decl tg_instance(tg:symbol, inst:symbol)                         // target group -> registered instance
+.decl path_to_tg(tg:symbol, alb:symbol, listener:symbol, rule:symbol)  // a routing path to a target group
+.decl rule_auth(rule:symbol)                                      // rule carries authenticate-oidc/cognito
+.decl rule_sourceip(rule:symbol)                                  // rule carries a source-ip condition
+.decl alb_waf(alb:symbol)                                         // the ALB has a WAF web ACL
+.input tg_instance
+.input path_to_tg
+.input rule_auth
+.input rule_sourceip
+.input alb_waf
+
+// A routing path reaches an instance when it forwards to a target group that
+// the instance is registered in. Instance-level — collapses different TGs that
+// share an instance.
+.decl path_to_instance(inst:symbol, alb:symbol, listener:symbol, rule:symbol)
+path_to_instance(I, A, L, R) :- path_to_tg(TG, A, L, R), tg_instance(TG, I).
+
+// inconsistent(instance, controlled_rule, bypass_rule): the instance is
+// reachable by a path that carries a control AND another path that does not.
+.decl inconsistent(inst:symbol, controlled_rule:symbol, bypass_rule:symbol)
+.output inconsistent
+
+// auth inconsistency
+inconsistent(I, R1, R2) :-
+  path_to_instance(I, _, _, R1), rule_auth(R1),
+  path_to_instance(I, _, _, R2), !rule_auth(R2),
+  R1 != R2.
+
+// source-ip gate inconsistency (subsumes ALB-ROUTING-003)
+inconsistent(I, R1, R2) :-
+  path_to_instance(I, _, _, R1), rule_sourceip(R1),
+  path_to_instance(I, _, _, R2), !rule_sourceip(R2),
+  R1 != R2.
+
+// WAF inconsistency (one ALB in front has WAF, another reaching the same
+// instance does not)
+inconsistent(I, R1, R2) :-
+  path_to_instance(I, A1, _, R1), alb_waf(A1),
+  path_to_instance(I, A2, _, R2), !alb_waf(A2),
+  R1 != R2.

@@ -1,0 +1,3 @@
+vuln   souffle=BYPASS   z3=sat  
+fp     souffle=CLEAN    z3=unsat
+fn     souffle=BYPASS   z3=sat  

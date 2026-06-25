@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.ALB.MTLS.SG.001
+name: mTLS-Protected ALB Has No Network Restriction on Its Security Group
+description: >
+  An ALB with mutual-TLS enabled still allows public inbound on its security
+  group (0.0.0.0/0 or ::/0). mTLS authenticates clients by certificate, but
+  defense-in-depth wants a network restriction too: without it, every host on
+  the internet can open a TLS handshake, reach the cert-verification path, and
+  probe for handshake/parsing flaws or exhaust connection capacity. Restrict the
+  SG to the expected client CIDRs in addition to mTLS.
+
+  The SG check resolves nested security-group references, so an ALB whose SG
+  references another SG that allows 0.0.0.0/0 is caught (the FN trap).
+
+  Inspired by Doyensec CloudsecTidbits No. 5 — Navigating Lax Load Balancers.
+  Validated against doyensec/ELBaph.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7, AC-4"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "1.3.1"
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+observation_fields:
+  - compute.kind
+  - compute.elb.mtls_enabled
+  - compute.elb.sg_allows_public
+remediation:
+  description: >
+    mTLS-protected ALB allows public inbound on its security group, losing the
+    network layer of defense-in-depth.
+  action: >
+    Restrict the ALB security group inbound to the expected client CIDR ranges
+    in addition to mTLS. Resolve and tighten any referenced security groups that
+    themselves allow 0.0.0.0/0.
+  example: |
+    {
+      "compute": {
+        "kind": "elb",
+        "elb": {
+          "mtls_enabled": true,
+          "sg_allows_public": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: elb
+    - field: properties.compute.elb.mtls_enabled
+      op: eq
+      value: true
+    - field: properties.compute.elb.sg_allows_public
+      op: eq
+      value: true
+tests:
+  - name: mTLS ALB with SG allowing 0.0.0.0/0 fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/m/1"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            mtls_enabled: true
+            sg_allows_public: true
+  - name: mTLS ALB with SG restricted to a private CIDR passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/m/2"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            mtls_enabled: true
+            sg_allows_public: false
+  - name: mTLS ALB whose SG references another SG allowing 0.0.0.0/0 fires (false-negative trap — nested SG)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/m/3"
+      asset_type: aws_elb
+      vendor: aws
+      properties:
+        compute:
+          kind: elb
+          elb:
+            mtls_enabled: true
+            sg_allows_public: true

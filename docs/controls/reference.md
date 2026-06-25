@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2717
-**Pack hash:** `5950288867a6dbac4451fb31f3e2157372abbc67f20cb63975f32ddc1addeea2`
+**Total controls:** 2722
+**Pack hash:** `402dbbcc4748922cc9509755127baac13450523eab581df366bec8ee631a979a`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 284 |
-| high | 1189 |
+| high | 1192 |
 | info | 16 |
 | low | 205 |
-| medium | 1023 |
+| medium | 1025 |
 
 | Domain | Count |
 |--------|-------|
@@ -31,7 +31,7 @@ GitHub. Pick a service below.
 | hygiene | 18 |
 | identity | 452 |
 | lifecycle | 31 |
-| network | 32 |
+| network | 37 |
 | resilience | 33 |
 | secrets | 4 |
 | storage | 8 |
@@ -74,7 +74,7 @@ GitHub. Pick a service below.
 | [EFS](reference/efs.md) | 13 |
 | [EKS](reference/eks.md) | 115 |
 | [ELASTICACHE](reference/elasticache.md) | 4 |
-| [ELB](reference/elb.md) | 75 |
+| [ELB](reference/elb.md) | 80 |
 | [EMR](reference/emr.md) | 5 |
 | [EVENTBRIDGE](reference/eventbridge.md) | 96 |
 | [EXPOSURE](reference/exposure.md) | 11 |

@@ -1,0 +1,37 @@
+// ALB-ROUTING-002 — auth action shadowed by a higher-precedence rule
+// (Soufflé / Datalog). ALB listener rules evaluate in ascending priority order.
+// If a non-auth rule at a LOWER priority number (higher precedence) has a path
+// condition that subsumes an auth rule's path, the auth rule never fires.
+//
+// A rule with no path condition matches everything — the collector normalizes
+// its prefix to "" (empty), which is a prefix of every path (the FN trap).
+//
+//   souffle rule_shadow.dl -F <facts-dir> -D <out-dir>
+//   -> out-dir/auth_shadowed.csv lists (listener, auth_rule, shadowing_rule) — non-empty = FAIL.
+//
+// Inspired by Doyensec CloudsecTidbits No. 5 — Navigating Lax Load Balancers.
+
+.decl listener_rule(listener:symbol, rule:symbol, priority:number)
+.decl rule_auth(rule:symbol)                 // rule carries authenticate-oidc/cognito
+.decl rule_prefix(rule:symbol, prefix:symbol) // normalized path prefix ("" = no path condition = /*)
+.input listener_rule
+.input rule_auth
+.input rule_prefix
+
+// broad subsumes narrow when broad's prefix is a prefix of narrow's prefix.
+// substr clamps, so a longer broad prefix can never spuriously match.
+.decl subsumes(broad:symbol, narrow:symbol)
+subsumes(B, N) :-
+  rule_prefix(B, PB), rule_prefix(N, PN),
+  PB = substr(PN, 0, strlen(PB)).
+
+// auth rule shadowed by a higher-precedence (lower number) non-auth rule whose
+// path subsumes it.
+.decl auth_shadowed(listener:symbol, auth_rule:symbol, shadowing_rule:symbol)
+.output auth_shadowed
+auth_shadowed(L, AuthR, ShadowR) :-
+  listener_rule(L, AuthR, AuthP), rule_auth(AuthR),
+  listener_rule(L, ShadowR, ShadowP), ShadowP < AuthP,
+  !rule_auth(ShadowR),
+  subsumes(ShadowR, AuthR),
+  AuthR != ShadowR.

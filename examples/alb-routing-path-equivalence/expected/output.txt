@@ -1,0 +1,3 @@
+vuln   souffle=INCONSISTENT  z3=sat  
+fp     souffle=CONSISTENT    z3=unsat
+fn     souffle=INCONSISTENT  z3=sat  

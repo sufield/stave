@@ -284,7 +284,7 @@ func TestValidateWithCatalog_AllKnown(t *testing.T) {
 		},
 	}
 
-	knownIDs := map[string]struct{}{"CTL.B": {}}
+	knownIDs := map[string]struct{}{"CTL.A": {}, "CTL.B": {}}
 	errs := f.ValidateWithCatalog(knownIDs)
 	if len(errs) != 0 {
 		t.Errorf("expected no errors, got: %v", errs)

@@ -1,0 +1,3 @@
+vuln   souffle=SHADOWED   z3=sat  
+fp     souffle=CLEAR      z3=unsat
+fn     souffle=SHADOWED   z3=sat  

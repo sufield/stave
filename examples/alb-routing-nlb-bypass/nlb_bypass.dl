@@ -1,0 +1,28 @@
+// ALB-ROUTING-008 — NLB forwarding to the same instances as a gated ALB
+// (Soufflé / Datalog). An NLB is Layer 4: it evaluates no listener rules, auth
+// actions, or path conditions. If it forwards to an EC2 instance that is also
+// behind an ALB carrying security controls, every ALB-layer control is
+// bypassable at the network level via the NLB.
+//
+// Reachability is at the INSTANCE level. The collector resolves NLB IP-type
+// targets to instance IDs first, so an IP-targeted NLB pointing at the same
+// private IP as an ALB-registered instance is caught (the FN trap).
+//
+//   souffle nlb_bypass.dl -F <facts-dir> -D <out-dir>
+//   -> out-dir/nlb_bypasses_alb.csv lists (nlb, alb, instance) — non-empty = FAIL.
+//
+// Inspired by Doyensec CloudsecTidbits No. 5 — Navigating Lax Load Balancers.
+
+.decl alb_target_instance(alb:symbol, inst:symbol)   // instance behind a gated ALB
+.decl nlb_target_instance(nlb:symbol, inst:symbol)   // instance behind an NLB (IP targets pre-resolved)
+.decl alb_has_security_controls(alb:symbol)          // the ALB carries auth / source-ip / WAF
+.input alb_target_instance
+.input nlb_target_instance
+.input alb_has_security_controls
+
+.decl nlb_bypasses_alb(nlb:symbol, alb:symbol, inst:symbol)
+.output nlb_bypasses_alb
+nlb_bypasses_alb(NLB, ALB, I) :-
+  nlb_target_instance(NLB, I),
+  alb_target_instance(ALB, I),
+  alb_has_security_controls(ALB).

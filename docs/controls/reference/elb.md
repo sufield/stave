@@ -140,6 +140,23 @@ ALB idle_timeout is configured for more than 300 seconds. Long-held idle connect
 
 ---
 
+### CTL.ELB.ALB.MTLS.SG.001
+
+**mTLS-Protected ALB Has No Network Restriction on Its Security Group**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7, AC-4; pci_dss_v4.0: 1.3.1; soc2: CC6.1;
+
+An ALB with mutual-TLS enabled still allows public inbound on its security group (0.0.0.0/0 or ::/0). mTLS authenticates clients by certificate, but defense-in-depth wants a network restriction too: without it, every host on the internet can open a TLS handshake, reach the cert-verification path, and probe for handshake/parsing flaws or exhaust connection capacity. Restrict the SG to the expected client CIDRs in addition to mTLS.
+The SG check resolves nested security-group references, so an ALB whose SG references another SG that allows 0.0.0.0/0 is caught (the FN trap).
+Inspired by Doyensec CloudsecTidbits No. 5 — Navigating Lax Load Balancers. Validated against doyensec/ELBaph.
+
+**Remediation:** Restrict the ALB security group inbound to the expected client CIDR ranges in addition to mTLS. Resolve and tighten any referenced security groups that themselves allow 0.0.0.0/0.
+
+---
+
 ### CTL.ELB.ALB.STICKY.COOKIE.INSECURE.001
 
 **ALB Application-Controlled Sticky Cookie Missing Secure Flag**
@@ -152,6 +169,23 @@ ALB idle_timeout is configured for more than 300 seconds. Long-held idle connect
 Target group is configured with application-controlled sticky session cookies, but the upstream application's cookie response doesn't set the Secure flag. The cookie is transmitted over plain HTTP whenever a user inadvertently lands on the http:// scheme, exposing the session affinity identifier to any party on the path.
 
 **Remediation:** Update the application emitting the sticky cookie to set Secure (and HttpOnly + SameSite as appropriate). Set-Cookie: AWSALBAPP-X=...; Path=/; Secure; HttpOnly; SameSite=Strict. For load-balancer-controlled stickiness (the default cookie name AWSALB), AWS sets Secure automatically when the listener is HTTPS — this control flags the application-managed variant where the operator owns the Set-Cookie header.
+
+---
+
+### CTL.ELB.ALB.XFF.PRESERVE.001
+
+**Internet-Facing ALB Preserves Client-Controlled X-Forwarded-For**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.1; soc2: CC6.1;
+
+An internet-facing ALB sets routing.http.xff_header_processing.mode to "preserve", so the client's X-Forwarded-For header is passed through unchanged. If any downstream service trusts XFF for access control, rate limiting, geo decisions, or audit logging, a client can spoof its source IP by setting the header. "append" (ALB adds the real client IP) or "remove" closes this.
+The ALB is treated as internet-facing not only when its scheme is internet-facing, but also when it is internal yet sits behind an internet-facing NLB (NLB->ALB passthrough) — the collector resolves that and sets internet_facing, so the FN trap is caught.
+Inspired by Doyensec CloudsecTidbits No. 5 — Navigating Lax Load Balancers. Validated against doyensec/ELBaph.
+
+**Remediation:** Set routing.http.xff_header_processing.mode to "append" (the ALB appends the true client IP) or "remove". Never "preserve" on an internet-facing ALB.
 
 ---
 
@@ -644,6 +678,8 @@ ELB target group exists but is not associated with any ALB, NLB, or CLB listener
 - **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.3; nist_800_53_r5: AC-3, SC-7; pci_dss_v4.0: 7.1, 7.2; soc2: CC6.1, CC6.3;
 
 ALB listener's default action forwards to a target group without any authentication action AND the listener has at least one rule that DOES carry authentication. The default rule catches every request that doesn't match a specific rule. If specific rules require auth but the default doesn't, any path not covered by a specific rule reaches the backend without authentication. Detects inconsistency, not the absence of auth — listeners with no auth on any rule are out of scope.
+The default action is checked at instance level: it also fires when the default forwards (without auth) to a target group whose backend EC2 instances overlap a target group an auth-protected rule forwards to — even when the two target groups have different ARNs (default_forwards_to_auth_target). A naive ARN-only match would miss this.
+Inspired by Doyensec CloudsecTidbits No. 5 — Navigating Lax Load Balancers.
 
 **Remediation:** Add an authenticate-oidc or authenticate-cognito action to the listener's default action chain (action types compose; auth then forward). For paths that should be public, define explicit rules with no auth before the default — the rule order matters. Verify with a request to a path that doesn't match any specific rule: the response should be a redirect to login or 401, not the backend's response.
 
@@ -829,6 +865,57 @@ ALB listener rule redirect action sends HTTP traffic to another HTTP target rath
 
 ---
 
+### CTL.ELB.ROUTING.NLBBYPASS.001
+
+**NLB Forwards to the Same Instances as a Gated ALB**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4, SC-7; pci_dss_v4.0: 1.3.1; soc2: CC6.1;
+
+A Network Load Balancer forwards (Layer 4 — no listener rules, auth actions, or path conditions) to one or more EC2 instances that also sit behind an ALB carrying security controls (authentication, source-ip gate, or WAF). Every ALB-layer control is bypassable at the network level by going through the NLB.
+Reachability is resolved at the instance level: the collector resolves NLB IP-type targets to instance IDs first, so an NLB that targets the same private IPs by address rather than instance ID is still caught (the FN trap). The derived signal network.elb.nlb_shares_gated_alb_instances is computed by the reasoning spec examples/alb-routing-nlb-bypass/ (Soufflé + Z3, which agree).
+Inspired by Doyensec CloudsecTidbits No. 5 — Navigating Lax Load Balancers. Validated against doyensec/ELBaph.
+
+**Remediation:** Apply equivalent network-level restrictions on the NLB path: tighten the target instances' security groups so they only accept traffic from the ALB, not the NLB; or remove the overlapping NLB targets; or front the NLB with the same controls. The instance security group is the enforcement point an NLB cannot bypass.
+
+---
+
+### CTL.ELB.ROUTING.PATHEQUIV.001
+
+**Backend Reachable Via Paths With Inconsistent Security Controls**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4; pci_dss_v4.0: 1.3.1; soc2: CC6.1;
+
+A backend EC2 instance is reachable through more than one ALB/listener/rule path, and those paths do not carry equivalent security controls. One path enforces authentication (authenticate-oidc/cognito), a source-ip gate, or sits behind a WAF; another path reaching the SAME instance does not. The strongest path is irrelevant — an attacker takes the weakest one, bypassing the control.
+The master compound for ALB routing: reachability resolves to the instance, not the target-group ARN, so two different target groups that share an EC2 instance are the same backend (instance-level overlap). A listener's default rule is just another path. Subsumes the source-ip-gate-bypass case (ALB-ROUTING-003). The derived signal network.elb.tg_path_controls_inconsistent is computed by the reasoning spec examples/alb-routing-path-equivalence/ (Soufflé + Z3, which agree on the trap-triplet).
+Inspired by Doyensec CloudsecTidbits No. 5 — Navigating Lax Load Balancers. Validated against doyensec/ELBaph.
+
+**Remediation:** Make every path to the backend carry equivalent controls, or collapse the paths. Apply the same authentication action, source-ip condition, and WAF association on every ALB/listener/rule that forwards to the shared target groups. If an alternate path is unintended, remove the listener rule or deregister the instance from the alternate target group. Treat the default rule as a path: point it at a fixed 403 response rather than the same backend.
+
+---
+
+### CTL.ELB.ROUTING.RULESHADOW.001
+
+**ALB Listener Rule Shadows an Authentication Action**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+An ALB listener has an authentication rule (authenticate-oidc/cognito) that is unreachable because a higher-precedence rule — one with a lower priority number — matches the same or a broader path without authentication. ALB rules evaluate in ascending priority order, so the broad rule wins and the auth action never fires. A pure ordering bug that silently bypasses authentication.
+A rule with no path condition matches everything (equivalent to /*), so a host-only wildcard at a low priority number shadows every auth rule behind it. The derived signal network.elb.auth_rule_shadowed is computed by the reasoning spec examples/alb-routing-rule-shadow/ (Soufflé + Z3, which agree on the trap-triplet, including the no-path-condition case).
+Inspired by Doyensec CloudsecTidbits No. 5 — Navigating Lax Load Balancers. Validated against doyensec/ELBaph.
+
+**Remediation:** Reorder the rules so the authentication rule has a lower priority number (higher precedence) than any broader non-auth rule that overlaps its path, or tighten the broad rule's path condition so it no longer subsumes the authenticated path. Give every rule an explicit path condition — a rule with no path condition matches everything.
+
+---
+
 ### CTL.ELB.SG.GHOST.001
 
 **Load Balancer References Deleted Security Group**
@@ -1011,14 +1098,15 @@ Internet-facing ALBs must have an AWS WAF web ACL associated.
 
 ### CTL.ELB.WAF.BYPASS.CF.001
 
-**CloudFront-Fronted ALB Without Custom Header Verification**
+**CloudFront-Fronted ALB Reachable Directly (Missing Header Check or Public SG)**
 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
 - **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: SC-7, SC-8; iso_27001_2022: A.8.20, A.8.22; nist_800_53_r5: SC-7, SC-8; pci_dss_v4.0: 1.3; soc2: CC6.1, CC6.6;
 
-ALB sits behind a CloudFront distribution but the ALB does not require a CloudFront-set custom header. Direct internet requests to the ALB DNS name reach the application without traversing CloudFront — bypassing CloudFront's WAF, caching, and Shield Advanced protection.
+ALB sits behind a CloudFront distribution but is reachable directly, bypassing CloudFront's WAF, caching, and Shield Advanced. Two bypass vectors fire this control: (1) the ALB does not require a CloudFront-set custom header, so any client that learns the ALB DNS name hits the application directly; or (2) the origin ALB's security group allows a public / over-broad inbound CIDR (0.0.0.0/0, ::/0, or a broad range that includes NAT-egress public IPs) instead of restricting to the com.amazonaws.global.cloudfront.origin-facing managed prefix list — direct access is not even blocked at the network layer.
+Inspired by Doyensec CloudsecTidbits No. 5 — Navigating Lax Load Balancers.
 
 **Remediation:** Configure CloudFront to set a custom request header (e.g., X-Origin-Verify with a long random secret stored in Secrets Manager) and add a WAF rule on the ALB requiring that header on every request. Direct ALB requests fail; only requests from the configured CloudFront distribution succeed. Rotate the header value periodically. The pattern is standard CloudFront-to-ALB origin protection.
 

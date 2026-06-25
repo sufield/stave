@@ -331,9 +331,22 @@ func (f *AcceptanceFile) ValidateWithCatalog(knownIDs map[string]struct{}) []str
 	}
 	for i := range f.Acknowledgments {
 		a := &f.Acknowledgments[i]
+		if a.ControlID != "" {
+			if _, ok := knownIDs[a.ControlID]; !ok {
+				errs = append(errs, fmt.Sprintf("acknowledgment[%d]: control %q not found in catalog", i, a.ControlID))
+			}
+		}
 		for _, cc := range a.CompensatingControls {
 			if _, ok := knownIDs[cc]; !ok {
 				errs = append(errs, fmt.Sprintf("acknowledgment[%d]: compensating control %q not found in catalog", i, cc))
+			}
+		}
+	}
+	for i := range f.Exceptions {
+		e := &f.Exceptions[i]
+		if e.ControlID != "" {
+			if _, ok := knownIDs[e.ControlID]; !ok {
+				errs = append(errs, fmt.Sprintf("exception[%d]: control %q not found in catalog", i, e.ControlID))
 			}
 		}
 	}

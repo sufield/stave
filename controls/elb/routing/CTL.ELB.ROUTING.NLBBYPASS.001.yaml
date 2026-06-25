@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.ROUTING.NLBBYPASS.001
+name: NLB Forwards to the Same Instances as a Gated ALB
+description: >
+  A Network Load Balancer forwards (Layer 4 — no listener rules, auth actions,
+  or path conditions) to one or more EC2 instances that also sit behind an ALB
+  carrying security controls (authentication, source-ip gate, or WAF). Every
+  ALB-layer control is bypassable at the network level by going through the NLB.
+
+  Reachability is resolved at the instance level: the collector resolves NLB
+  IP-type targets to instance IDs first, so an NLB that targets the same private
+  IPs by address rather than instance ID is still caught (the FN trap). The
+  derived signal network.elb.nlb_shares_gated_alb_instances is computed by the
+  reasoning spec examples/alb-routing-nlb-bypass/ (Soufflé + Z3, which agree).
+
+  Inspired by Doyensec CloudsecTidbits No. 5 — Navigating Lax Load Balancers.
+  Validated against doyensec/ELBaph.
+domain: network
+severity: high
+scope: compound
+corpus_reference: "MITRE:T1190"
+compliance:
+  nist_800_53_r5: "AC-4, SC-7"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "1.3.1"
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.elb.load_balancer_arn
+  - network.elb.nlb_shares_gated_alb_instances
+  - network.elb.nlb_bypassed_alb
+  - network.elb.nlb_shared_instance
+remediation:
+  description: >
+    An NLB reaches the same backend instances as a security-controlled ALB,
+    bypassing the ALB's auth/source-ip/WAF at Layer 4.
+  action: >
+    Apply equivalent network-level restrictions on the NLB path: tighten the
+    target instances' security groups so they only accept traffic from the ALB,
+    not the NLB; or remove the overlapping NLB targets; or front the NLB with the
+    same controls. The instance security group is the enforcement point an NLB
+    cannot bypass.
+  example: |
+    {
+      "network": {
+        "kind": "load_balancer",
+        "elb": {
+          "nlb_shares_gated_alb_instances": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: load_balancer
+    - field: properties.network.elb.nlb_shares_gated_alb_instances
+      op: eq
+      value: true
+tests:
+  - name: NLB targeting the same instances as a gated ALB fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/net/nlb-1/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            load_balancer_arn: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/net/nlb-1/abc"
+            nlb_shares_gated_alb_instances: true
+            nlb_bypassed_alb: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/alb-1/def"
+            nlb_shared_instance: "i-abc"
+  - name: NLB targeting disjoint instances passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/net/nlb-2/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            load_balancer_arn: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/net/nlb-2/abc"
+            nlb_shares_gated_alb_instances: false
+  - name: NLB IP target resolving to a gated ALB instance fires (false-negative trap — IP-to-instance)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/net/nlb-3/abc"
+      asset_type: aws_load_balancer
+      vendor: aws
+      properties:
+        network:
+          kind: load_balancer
+          elb:
+            load_balancer_arn: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/net/nlb-3/abc"
+            nlb_shares_gated_alb_instances: true
+            nlb_bypassed_alb: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/alb-1/def"
+            nlb_shared_instance: "i-abc"

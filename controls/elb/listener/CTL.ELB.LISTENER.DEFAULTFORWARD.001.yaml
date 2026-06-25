@@ -12,6 +12,17 @@ description: >
   backend without authentication. Detects
   inconsistency, not the absence of auth — listeners
   with no auth on any rule are out of scope.
+
+  The default action is checked at instance level: it
+  also fires when the default forwards (without auth)
+  to a target group whose backend EC2 instances overlap
+  a target group an auth-protected rule forwards to —
+  even when the two target groups have different ARNs
+  (default_forwards_to_auth_target). A naive ARN-only
+  match would miss this.
+
+  Inspired by Doyensec CloudsecTidbits No. 5 —
+  Navigating Lax Load Balancers.
 domain: governance
 severity: medium
 compliance:
@@ -63,9 +74,13 @@ unsafe_predicate:
     - field: properties.network.elb.listener_has_auth_rules
       op: eq
       value: true
-    - field: properties.network.elb.default_forwards_without_auth
-      op: eq
-      value: true
+    - any:
+        - field: properties.network.elb.default_forwards_without_auth
+          op: eq
+          value: true
+        - field: properties.network.elb.default_forwards_to_auth_target
+          op: eq
+          value: true
 defect: >
   Listener has authenticated rules but its default
   action forwards without authentication.
@@ -130,3 +145,18 @@ tests:
             default_has_auth: false
             default_forwards_without_auth: true
             listener_has_auth_rules: false
+  - name: default forwards to a different target group sharing instances with an auth target fires (false-negative trap — instance-level overlap)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/prod-alb/abc/ghi"
+      asset_type: aws_listener
+      vendor: aws
+      properties:
+        network:
+          kind: listener
+          elb:
+            default_action_type: "forward"
+            default_has_auth: false
+            default_forwards_without_auth: false
+            default_forwards_to_auth_target: true
+            listener_has_auth_rules: true

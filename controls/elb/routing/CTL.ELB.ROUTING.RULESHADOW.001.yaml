@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.ELB.ROUTING.RULESHADOW.001
+name: ALB Listener Rule Shadows an Authentication Action
+description: >
+  An ALB listener has an authentication rule (authenticate-oidc/cognito) that is
+  unreachable because a higher-precedence rule — one with a lower priority number
+  — matches the same or a broader path without authentication. ALB rules
+  evaluate in ascending priority order, so the broad rule wins and the auth
+  action never fires. A pure ordering bug that silently bypasses authentication.
+
+  A rule with no path condition matches everything (equivalent to /*), so a
+  host-only wildcard at a low priority number shadows every auth rule behind it.
+  The derived signal network.elb.auth_rule_shadowed is computed by the reasoning
+  spec examples/alb-routing-rule-shadow/ (Soufflé + Z3, which agree on the
+  trap-triplet, including the no-path-condition case).
+
+  Inspired by Doyensec CloudsecTidbits No. 5 — Navigating Lax Load Balancers.
+  Validated against doyensec/ELBaph.
+domain: network
+severity: high
+scope: compound
+corpus_reference: "MITRE:T1190"
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+scope_tags:
+  - aws
+  - elb
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - network.kind
+  - network.elb.listener_arn
+  - network.elb.auth_rule_shadowed
+  - network.elb.auth_rule_shadowed_auth_rule
+  - network.elb.auth_rule_shadowed_by
+remediation:
+  description: >
+    A listener rule with an authentication action is shadowed by a
+    higher-precedence rule that matches the same traffic without auth.
+  action: >
+    Reorder the rules so the authentication rule has a lower priority number
+    (higher precedence) than any broader non-auth rule that overlaps its path,
+    or tighten the broad rule's path condition so it no longer subsumes the
+    authenticated path. Give every rule an explicit path condition — a rule with
+    no path condition matches everything.
+  example: |
+    {
+      "network": {
+        "kind": "listener",
+        "elb": {
+          "auth_rule_shadowed": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: listener
+    - field: properties.network.elb.auth_rule_shadowed
+      op: eq
+      value: true
+tests:
+  - name: broad /* no-auth rule before /admin auth rule fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/alb-1/abc/l1"
+      asset_type: aws_listener
+      vendor: aws
+      properties:
+        network:
+          kind: listener
+          elb:
+            listener_arn: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/alb-1/abc/l1"
+            auth_rule_shadowed: true
+            auth_rule_shadowed_auth_rule: "rule/r20"
+            auth_rule_shadowed_by: "rule/r10"
+  - name: disjoint path prefixes — auth rule reachable passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/alb-1/abc/l2"
+      asset_type: aws_listener
+      vendor: aws
+      properties:
+        network:
+          kind: listener
+          elb:
+            listener_arn: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/alb-1/abc/l2"
+            auth_rule_shadowed: false
+  - name: host-wildcard no-path-condition rule shadows auth rule fires (false-negative trap — no path = /*)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/alb-1/abc/l3"
+      asset_type: aws_listener
+      vendor: aws
+      properties:
+        network:
+          kind: listener
+          elb:
+            listener_arn: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/app/alb-1/abc/l3"
+            auth_rule_shadowed: true
+            auth_rule_shadowed_auth_rule: "rule/r15"
+            auth_rule_shadowed_by: "rule/r5"
