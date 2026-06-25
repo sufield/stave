@@ -665,7 +665,61 @@ fuzz: sync-schemas sync-controls sync-alternatives
 	$(GOTEST) -fuzz=Fuzz -fuzztime=30s -run=FuzzNewControlID ./internal/core/kernel/
 	$(GOTEST) -fuzz=FuzzParseByteSize -fuzztime=30s ./internal/core/kernel/
 	$(GOTEST) -fuzz=FuzzParseDuration -fuzztime=30s ./internal/core/kernel/
-	$(GOTEST) -fuzz=Fuzz -fuzztime=30s ./internal/cel/
+	$(GOTEST) -fuzz=FuzzCompile -fuzztime=30s ./internal/adapters/cel/
+	$(GOTEST) -fuzz=FuzzParsePolicyDocument -fuzztime=30s ./internal/platform/providers/aws/iam/
+
+# Gosentry fuzzing (Trail of Bits' security-oriented Go toolchain fork:
+# LibAFL engine, grammar mode, race/leak/overflow detection). Same testing.F
+# harnesses as `make fuzz`. Requires gosentry built at GOSENTRY_PATH; not
+# vendored. See docs/fuzzing.md.
+GOSENTRY_PATH ?= /tmp/gosentry
+GOSENTRY_GO := $(GOSENTRY_PATH)/bin/go
+FUZZ_TIME ?= 30m
+
+.PHONY: fuzz-install fuzz-cel fuzz-snapshot fuzz-iam fuzz-all fuzz-coverage
+
+## fuzz-install: Build gosentry at GOSENTRY_PATH (one-time)
+# gosentry is a Go-toolchain fork: build it with src/make.bash (produces
+# ../bin/go), NOT `make`. Requires a Rust toolchain on PATH.
+fuzz-install:
+	@if [ ! -f $(GOSENTRY_GO) ]; then \
+		echo "Installing gosentry into $(GOSENTRY_PATH)..."; \
+		[ -d $(GOSENTRY_PATH)/.git ] || git clone https://github.com/trailofbits/gosentry.git $(GOSENTRY_PATH); \
+		cd $(GOSENTRY_PATH)/src && ./make.bash; \
+	fi
+	@echo "gosentry ready at $(GOSENTRY_GO)"
+
+## fuzz-cel: Fuzz the CEL predicate compiler with gosentry (FuzzCompile)
+fuzz-cel: fuzz-install
+	$(GOSENTRY_GO) test -fuzz=FuzzCompile \
+		--focus-on-new-code=false --catch-races=true --catch-leaks=true \
+		--panic-on=log.Fatal -fuzztime=$(FUZZ_TIME) \
+		./internal/adapters/cel/
+
+## fuzz-snapshot: Fuzz the obs.v0.1 snapshot parser with gosentry
+fuzz-snapshot: fuzz-install
+	$(GOSENTRY_GO) test -fuzz=FuzzLoadSnapshotFromReader \
+		--focus-on-new-code=false --catch-races=true --catch-leaks=true \
+		--panic-on=log.Fatal -fuzztime=$(FUZZ_TIME) \
+		./internal/adapters/observations/
+
+## fuzz-iam: Fuzz the IAM policy resolver with gosentry (grammar mode)
+fuzz-iam: fuzz-install
+	$(GOSENTRY_GO) test -fuzz=FuzzParsePolicyDocument \
+		--focus-on-new-code=false \
+		--use-grammar --grammar=fuzz/grammars/iam-policy-grammar.json \
+		--catch-races=true --catch-leaks=true \
+		--panic-on=log.Fatal -fuzztime=$(FUZZ_TIME) \
+		./internal/platform/providers/aws/iam/
+
+## fuzz-all: Run all gosentry fuzz targets
+fuzz-all: fuzz-cel fuzz-snapshot fuzz-iam
+
+## fuzz-coverage: Generate gosentry coverage reports for each target
+fuzz-coverage: fuzz-install
+	$(GOSENTRY_GO) test -fuzz=FuzzCompile --generate-coverage ./internal/adapters/cel/
+	$(GOSENTRY_GO) test -fuzz=FuzzLoadSnapshotFromReader --generate-coverage ./internal/adapters/observations/
+	$(GOSENTRY_GO) test -fuzz=FuzzParsePolicyDocument --generate-coverage ./internal/platform/providers/aws/iam/
 
 ## help: Show this help
 help:

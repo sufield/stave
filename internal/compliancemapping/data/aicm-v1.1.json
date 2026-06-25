@@ -139,6 +139,8 @@
           ],
           "stave_controls_note": "config-verifiable testing/scanning enablement",
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies image/dependency/host vulnerability scanning and required status checks are enabled; the testing strategy, defined acceptance criteria, and SAST/DAST gating thresholds are out of scope",
           "notes": "Config-verifiable slice: Stave confirms automated security testing is wired in (image/artifact vulnerability scanning enabled, dependency scanning on, Inspector enabled and covering hosts, branch status checks required before merge). Missing/organizational: the testing STRATEGY itself, defined acceptance criteria for new systems/upgrades, SAST/DAST tool configuration and gating thresholds, and whether tests actually pass. Those are process artifacts no snapshot encodes."
         },
         {
@@ -163,6 +165,8 @@
           ],
           "stave_controls_note": "config-verifiable deploy-pipeline hardening",
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies CodeBuild pipeline hardening (no privileged Docker, no plaintext secrets, scoped roles, required checks, immutable releases); change-approval gating and per-deploy compliance attestation are not checked",
           "notes": "Config-verifiable slice: Stave hardens the standardized deploy pipeline (CodeBuild buildspec not user-controlled, no privileged Docker, no plaintext secrets, least-privilege/scoped build roles, no embedded source creds, anchored webhook filters, required status checks, immutable releases, controlled stage auto-deploy, CI/CD role separation). Missing/organizational: the overall deployment STRATEGY, change-management/approval gating, and 'compliant' attestation of each deploy are process concerns not in a snapshot."
         },
         {
@@ -180,6 +184,8 @@
           ],
           "stave_controls_note": "config-verifiable remediation timeliness / scanner enablement",
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies scanners are enabled and flags findings aging past threshold; the remediation process itself (SLAs, triage, ticketing, ownership) and auto-remediation pipelines are not checked",
           "notes": "Config-verifiable slice: Stave detects unremediated findings aging past threshold (Inspector findings stale, patch scan stale) and that the detection prerequisites exist (Inspector/ECR scanning enabled, findings exported to Security Hub). Missing/organizational: the remediation PROCESS itself (SLAs, triage, ticketing, ownership) and automated-remediation pipelines are process artifacts. The aging-findings controls are the closest config proxy for whether remediation is keeping up."
         },
         {
@@ -214,6 +220,8 @@
           ],
           "stave_controls_note": "config_posture is the bulk; review-annually clause is organizational",
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies API authorization, TLS/mTLS, WAF, throttling/quota, CORS and access logging config; the spec's at-least-annual review-and-update of API procedures is out of scope",
           "notes": "Extensive config coverage of the CAIQ-named API security measures: authorization (route auth required, no sole-API-key auth, JWT audience/scope, Cognito scope, IAM resource restriction), API key/usage-plan management (quota, throttling, rate-based WAF), TLS/mTLS enforcement, WAF attachment, CORS hardening, private endpoints, response/credential exposure, and access logging. Mostly config_posture; marked partial only because the spec's 'review and update at least annually' clause is an organizational process that no snapshot can attest. Technical-measures portion is effectively full."
         },
         {
@@ -240,6 +248,8 @@
           ],
           "stave_controls_note": "config-verifiable input-validation enforcement at the infra/API layer",
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies API Gateway schema/request validation and WAF OWASP rules in block mode; application-layer business-logic validation and runtime detection of novel adversarial patterns are not checked",
           "notes": "Config-verifiable slice (strong): API Gateway request validation against JSON schema (body/query/path/params, closed schemas, payload size caps, WebSocket message validation) plus WAF managed/OWASP rules in BLOCK mode and parser-limit protection \u2014 these enforce structural and known-adversarial-pattern input filtering at the infrastructure boundary. The Bedrock prompt-attack guardrail filter is a config flag covering AI-input adversarial filtering. Missing: application-layer/business-logic validation inside app code and true runtime semantic detection of novel adversarial/failure patterns are not snapshot-derivable. Marked partial: infra enforcement covered, in-app validation not."
         },
         {
@@ -256,6 +266,8 @@
           ],
           "stave_controls_note": "config-verifiable presence of output filtering mechanisms",
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies output-filtering mechanisms are attached (Bedrock PII guardrail, response-header stripping); the runtime per-response validation of generated output against bad patterns is not checked",
           "notes": "Config-verifiable slice: presence of output-filtering mechanisms is checkable \u2014 Bedrock Guardrails sensitive-information (PII) filter and agent-must-have-guardrail confirm a GenAI output filter is attached; API Gateway response/server-header exposure controls strip internal detail from responses. Missing/runtime: the actual per-response validation of generated output against adversarial/failure patterns happens at inference time and is not a static config property. Stave can prove the filter is configured, not that it correctly blocks every bad output."
         },
         {
@@ -280,6 +292,8 @@
           ],
           "stave_controls_note": "AI-Specific: these are CONFIG properties of the agent's IAM/network/guardrail boundary, not runtime behavior",
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies the Bedrock agent's static perimeter (scoped role, guardrail, no public invocation, session TTL); runtime per-tool-call authorization and non-Bedrock agent runtimes are not checked",
           "notes": "AI-Specific. The security boundary of a (Bedrock) agent is largely config-verifiable: Stave scopes the agent execution role's lambda/model/S3 permissions (least-privilege blast radius), requires an attached guardrail, forbids public invocation endpoints, bounds idle session TTL, caps action-group sprawl, requires per-agent invocation logging, and flags dangling tool/KB references. These are static configuration of the agent's IAM/network/guardrail perimeter \u2014 NOT runtime tool-call interception. Missing: per-tool-call authorization decisions and dynamic boundary enforcement at execution time are runtime and out of snapshot scope; covered surface is AWS Bedrock-specific (no equivalent for other agent runtimes)."
         },
         {
@@ -309,6 +323,8 @@
           ],
           "stave_controls_note": "config_posture across GitHub + CodeCommit repo settings",
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies branch protection, code-review enforcement, signed commits, dependency/secret scanning on GitHub/CodeCommit; actual SAST tool configuration/results and GitLab/Bitbucket providers are not checked",
           "notes": "Strong config coverage of SCM practices: version control + branch protection, code review enforcement (required approvals, CODEOWNERS, dismiss stale reviews, status checks, admin enforcement, no force push, linear history, signed commits), repo access control (org MFA, default permission scope, CodeCommit resource policy/approval rules), plus dependency and secret scanning. Marked partial rather than full because the 'static code analysis' aspect maps only to dependency/secret scanning here \u2014 actual SAST tool configuration/results are not a repo-config property, and only GitHub/CodeCommit providers are covered (no GitLab/Bitbucket equivalents)."
         },
         {
@@ -333,6 +349,8 @@
           ],
           "stave_controls_note": "AI-Specific: these are CONFIG properties approximating isolation (network isolation, VPC placement, no-internet, enclave), not a true sandbox/seccomp runtime boundary",
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies network isolation, VPC-only placement and scoped agent permissions; a purpose-built AI-tool/plugin execution sandbox flag (microVM/container isolation, egress allowlist) is not checked",
           "notes": "AI-Specific. Stave has no control with a literal 'sandbox' property, but the isolation INTENT is partly config-verifiable: SageMaker model/training network isolation (no inbound/outbound), VPC-only placement for models/notebooks/training, notebook no-direct-internet, VPC-attached Lambda in private subnets, scoped agent tool-invocation permissions (limits lateral movement), Nitro Enclaves for cryptographic isolation, and prod/non-prod VPC isolation. These approximate 'isolated environment + limit lateral movement.' Missing/gap: no control models AI-tool/plugin execution sandboxing directly (e.g. container seccomp/gVisor/Firecracker microVM isolation flags, plugin egress allowlists). A purpose-built control SHOULD check the AI tool/plugin execution environment's isolation properties: network egress restriction, filesystem/credential scoping, and runtime sandbox flag (microVM/container isolation enabled)."
         },
         {
@@ -352,6 +370,8 @@
           ],
           "stave_controls_note": "AI-Specific: config-verifiable cache hardening on generic cache layers; no GenAI-cache-specific property",
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies generic cache encryption, cache-key scoping and TTL bounding (API Gateway, CloudFront, ElastiCache); a GenAI-specific prompt/embedding cache's per-tenant partitioning and PII exclusion is not modeled",
           "notes": "AI-Specific. Generic cache-protection properties that would back a GenAI cache are config-verifiable: API Gateway cache at-rest encryption and cache-key scoping (prevents cross-tenant cache key collisions), authorizer cache TTL bounding, CloudFront not caching authorized/per-user responses, and ElastiCache at-rest/in-transit encryption + AUTH token. Gap: no control models a GenAI-specific semantic/prompt-response cache (e.g. embedding cache, prompt cache) \u2014 its tenant-isolation, TTL, and PII-in-cache risks are not represented. A purpose-built control SHOULD check the GenAI cache layer: encryption, per-tenant cache-key partitioning, and exclusion of sensitive prompt/response content from shared caches."
         },
         {
@@ -477,6 +497,8 @@
             "CTL.BACKUP.RECOVERY.ISOLATION.002"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies backup plans exist, are recent, encrypted, vault-locked and AZ/region-replicated; the spec's restore-verification (test-restoring from backup to prove resiliency) is an operational test no snapshot evidences",
           "notes": "Strong config coverage for 'periodically perform backups' (backup plan exists, automated backups enabled per service, backups recent) and for backup CIA (encryption=confidentiality, vault lock + recovery-account isolation + soft-delete=integrity, multi-AZ/cross-region replication=availability). MISSING: the spec's restoration-verification clause ('verify restoration from backup for resiliency') is an operational test that no static snapshot or Stave control evidences. Hence partial, not full."
         },
         {
@@ -532,6 +554,8 @@
             "CTL.KMS.MULTIREGION.NONCOMPLIANT.REGION.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies per-service Multi-AZ/HA and cross-region replication; no control attests ALL critical equipment is redundant, and 'reasonable minimum distance per industry standards' is not evaluated as a quantitative geographic property",
           "notes": "Cloud equivalent of 'locally redundant' = Multi-AZ / HA across services (covered broadly) and 'geographically dispersed at minimum distance' = cross-region replication / multi-region keys (covered for RDS, S3, backup vault, EKS DR, KMS). MISSING for full: no single control attests that ALL business-critical equipment is redundant (coverage is per-resource-type, gated on criticality tags), and 'reasonable minimum distance in accordance with industry standards' is not evaluated as a quantitative property. A would-be gap control: verify every criticality-tagged resource has a redundant replica in a region at/above a minimum geographic separation."
         }
       ]
@@ -575,6 +599,8 @@
             "CTL.CLOUDFORMATION.STACKSETS.RESTRICT.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies AWS Config records all resources/regions and StackSets require admin approval; the change-management procedure itself and any CI/CD approval-gating workflow (e.g. CodePipeline approval stages) are not checked",
           "notes": "The procedure itself is organizational, but its technical enforcement IS config-verifiable. Stave confirms AWS Config is recording all resource types/regions (so changes are tracked) and that StackSet deployments require administrator approval. Missing: no control verifies a CI/CD change-management gating system (e.g. CodePipeline approval stages) exists."
         },
         {
@@ -596,6 +622,8 @@
             "CTL.CONFIG.ACCESS.NOSCP.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies per-service drift detection, stack termination protection and locked-down Config recorder access; the authorization procedure deciding who approves an asset add/remove/update is organizational and not checked",
           "notes": "Strong config coverage for preventing/detecting unauthorized changes: out-of-band/console drift detection (OpenSearch, StepFunctions, CloudFormation), termination protection on stacks, restricting who can stop/delete the change-tracking machinery (Config recorder/rule access + SCP). Partial: detection is per-service and not exhaustive across all asset types; the authorization PROCEDURE (who approves an add/remove) remains organizational."
         },
         {
@@ -623,6 +651,8 @@
             "CTL.CONFIG.RULE.DISABLED.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies a Config-rule/conformance-pack baseline is deployed and not disabled; the establish/document lifecycle, the baseline's substantive contents, and the annual review cadence are organizational and not checked",
           "notes": "A configuration baseline in AWS terms is a deployed set of Config rules / conformance packs. Stave verifies that active Config rules exist, that conformance packs are deployed (account + org level) and that rules are not disabled \u2014 i.e. that a baseline is actually established and enforced. Partial: the 'establish/document/review annually' lifecycle governance is organizational and the baseline's substantive contents are out of scope here."
         },
         {
@@ -645,6 +675,8 @@
             "CTL.CLOUDFRONT.ALARM.CONFIGCHANGE.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies Config rules are evaluating, drift detection is on, and notification plumbing (SNS, delivery/conformance alarms) exists; notification coverage is service-specific not universal, and alert-triage handling is not checked",
           "notes": "Excellent config-posture coverage of deviation detection + proactive notification: Config rules must be evaluating (not ERROR/never-triggered), drift detection enabled (CloudFormation, OpenSearch console, StepFunctions), and notification plumbing present (delivery SNS topic, delivery-failure and conformance-score alarms, per-service config-change alarms). Partial only because notification coverage is service-specific rather than universal; the deviation-detection capability itself is verifiable from snapshot config."
         },
         {
@@ -670,6 +702,8 @@
             "CTL.S3.LOG.BUCKET.VERSIONING.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies CloudFormation rollback enabled, ECS circuit-breaker auto-rollback, and versioned IaC state; the defined org-wide rollback process and any tested restore-to-known-good drill are not checked",
           "notes": "The rollback CAPABILITY is config-verifiable and Stave checks several aspects: CloudFormation stacks must have rollback enabled, ECS deployments must have circuit-breaker auto-rollback, IaC state must be versioned (enables restore to known-good). Partial: these are point checks per service; the org-wide 'define and implement a rollback process' remains procedural, and there is no general control verifying a tested restore/known-good-state mechanism exists for every asset class."
         }
       ]
@@ -701,7 +735,9 @@
             "CTL.BACKUP.RECOVERY.ISOLATION.002"
           ],
           "notes": "Defining roles is organizational, but the technical enforcement of separation-of-duties for key management is config-verifiable. Stave checks key-admin vs key-user on the same principal (CTL.KMS.SEPARATION.001, GCP encrypter/decrypter separation), broad key-administration grants (CTL.KMS.POLICY.ADMIN.BROAD.001), and data-admin not holding key-deletion (CTL.BACKUP.RECOVERY.ISOLATION.002). Coverage is partial: the documentation/assignment of named roles is not snapshot-verifiable.",
-          "coverage": "partial"
+          "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies technical separation-of-duties (key-admin vs key-user, no broad admin grants, data-admin lacks key-deletion); the documented assignment of named cryptographic roles/responsibilities is not snapshot-verifiable"
         },
         {
           "aicm_id": "CEK-03",
@@ -747,6 +783,8 @@
             "CTL.VSPHERE.VSAN.TRANSIT.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies encryption at-rest and in-transit (TLS) across nearly all data services; in-use/confidential-computing encryption and per-service FIPS-certified crypto-library validation are not checked",
           "notes": "Encryption-at-rest and in-transit are extensively covered across nearly every storage/data/transport service (S3, RDS, EBS, DynamoDB, EFS, Redshift, ElastiCache, OpenSearch, SNS/SQS, Kinesis, MSK, ELB/CloudFront/API Gateway TLS, plus Azure/GCP/vSphere equivalents) \u2014 the list above is representative, not exhaustive (147 *.ENCRYPT and 72 TLS/HTTPS controls exist). Partial, not full: (a) 'in-use' encryption (confidential computing / enclaves) is not checked; (b) 'cryptographic libraries certified to approved standards' (FIPS validation of the library) is only checked for KMS HSM origin (CTL.KMS.FIPS.001) and Redshift FIPS, not per-service."
         },
         {
@@ -772,6 +810,8 @@
             "CTL.AD.ACCOUNT.DESONLY.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies cert key algorithms, TLS minimum versions, and weak-cipher/VPN policies; ties to a data-classification tag and a generic AES-256+ symmetric-cipher check for arbitrary at-rest services are absent",
           "notes": "Algorithm/cipher strength is checked in many places: certificate key algorithms (ACM strong key algorithm, CloudFront/ELB weak-key RSA-1024, KeyVault RSA min size), TLS minimum versions and weak-cipher policies (ELB/API Gateway/CloudFront/RDS/OpenSearch/GCP SSL policy), weak VPN encryption, and DES-only Kerberos. Partial: no single control ties algorithm choice to a data-classification tag, and there is no generic 'symmetric encryption must use AES-256+' check for arbitrary at-rest services (most at-rest controls verify that encryption is on / CMK is used, not the cipher)."
         },
         {
@@ -837,6 +877,8 @@
             "CTL.GCS.ENCRYPT.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies resources use customer-managed keys (CMK/CMEK) rather than provider-owned keys; the service-provider's obligation to OFFER the key-management capability is not snapshot-provable",
           "notes": "Reframed for the customer side: Stave verifies that resources actually USE customer-managed keys (CMK/CMEK) rather than provider-owned/AWS-managed keys, across most services and all three clouds. This is the strongest evidence that customer key-management capability is being exercised. Partial because the AICM control is written from the service-PROVIDER obligation ('provide the capability'); a customer-posture snapshot cannot prove the provider offers the capability, only that the customer is using CMKs where available."
         },
         {
@@ -856,7 +898,9 @@
             "CTL.KMS.ALARM.CROSSACCOUNT.001"
           ],
           "notes": "The 'audit at least annually / continuously' frequency and the audit program are organizational. But the technical preconditions for continuous auditing are config-verifiable: Stave checks that CloudTrail data events are enabled for Secrets Manager and that CloudWatch alarms exist for KMS policy changes, grant creation, deletion, disable, rotation failures, decrypt failures, and cross-account usage. Partial: presence of monitoring is checked; the audit cadence and review of findings is not.",
-          "coverage": "partial"
+          "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies KMS/Secrets audit plumbing exists (CloudTrail data events, alarms on policy/grant/deletion/rotation/decrypt events); the audit cadence (annual/continuous) and review of findings are out of scope"
         },
         {
           "aicm_id": "CEK-10",
@@ -872,6 +916,8 @@
             "CTL.ACM.KEY.ALGORITHM.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies FIPS 140-2 HSM key origin, minimum RSA key size, and strong cert algorithms; the RNG type for imported/external key material is not independently asserted",
           "notes": "Key generation provenance/strength is partly verifiable: CTL.KMS.FIPS.001 requires keys originate from a FIPS 140-2 validated HSM (the industry-accepted-library + RNG assurance), KeyVault enforces minimum RSA key size, ACM enforces strong key algorithms. Partial/gap: a managed KMS key's generation already uses a vetted RNG inside the provider HSM, so the AICM emphasis on 'specifying the RNG' is largely satisfied by FIPS origin but not independently asserted. No control verifies the RNG type for imported/external key material beyond expiry presence."
         },
         {
@@ -888,6 +934,8 @@
             "CTL.KMS.POLICY.NOCONTEXT.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies key non-sharing/scoping heuristics (concentration cap, sensitivity-domain isolation, cross-env use, ViaService/context restriction); an explicit declared single-purpose attribute per key is not checked",
           "notes": "'Unique purpose' / key scoping is well captured: CTL.KMS.CONCENTRATION.001 (one key must not encrypt >50 resources), CTL.KMS.ISOLATION.001 (PHI/CDE key must not be shared across sensitivity domains), CTL.KMS.LIFECYCLE.CROSSENV.001 (key not used across prod and non-prod), and policy scoping via ViaService/encryption-context restrictions. Partial: these enforce non-sharing/scoping heuristics rather than an explicit declared single-purpose attribute per key."
         },
         {
@@ -930,7 +978,9 @@
             "CTL.KMS.STATE.DISABLED.001"
           ],
           "notes": "Revocation when an entity leaves the org is config-verifiable as stale grants/policy references: orphaned KMS grants (deleted principal), key policies referencing deleted principals, keys granting access to decommissioned accounts, GCP/KeyVault bindings to deleted members, dangling KMS key references in IAM policies. Partial: Stave detects un-revoked access (the negative evidence) but does not model an active revocation workflow or revoke-before-cryptoperiod-end timing; the procedural definition is organizational.",
-          "coverage": "partial"
+          "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies un-revoked stale access (orphan grants, ghost policy refs, decommissioned-account access); an active revocation workflow and revoke-before-cryptoperiod-end timing are not modeled"
         },
         {
           "aicm_id": "CEK-14",
@@ -947,7 +997,9 @@
             "CTL.SECRETS.GHOST.DELETION.REFERENCED.001"
           ],
           "notes": "Secure-destruction safeguards are config-verifiable: keys pending deletion while still referenced by active resources (CTL.KMS.STATE.PENDINGDELETION.001, CTL.KMS.PENDING.DELETION.001), minimum deletion waiting period as a safety window (CTL.KMS.DELETION.MINWAIT.001), high-density keys must have deletion protection (CTL.KMS.CONCENTRATION.002), Secrets Manager minimum recovery window and deletion-while-referenced. Partial: Stave guards AGAINST premature/unsafe destruction; it does not affirmatively verify that no-longer-needed keys ARE destroyed (that side is captured by dormant-key detection, CEK-17). The destruction process definition is organizational.",
-          "coverage": "partial"
+          "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies safeguards against premature destruction (deletion-while-referenced, minimum wait window, deletion protection); it does not affirmatively confirm no-longer-needed keys ARE destroyed, nor define the destruction process"
         },
         {
           "aicm_id": "CEK-15",
@@ -959,6 +1011,8 @@
             "CTL.KMS.STATE.PENDINGIMPORT.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies pending-import keys lacking material (operationally pre-active); a deliberate created-but-not-yet-authorized staging discipline and approval workflow are not modeled, as KMS has no first-class pre-activation state",
           "notes": "The pre-activation state maps closest to KMS Origin=EXTERNAL keys awaiting material import: CTL.KMS.STATE.PENDINGIMPORT.001 fires when a key exists but has no material (operationally pre-active). Partial: this control treats pending-import as a defect (no material) rather than affirming a deliberate pre-activated-then-authorized workflow. Gap: no control verifies an intended 'created-but-not-yet-authorized' staging discipline; KMS has no first-class pre-activation state beyond pending-import/disabled."
         },
         {
@@ -972,6 +1026,8 @@
             "CTL.KMS.ALARM.DISABLE.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies the KMS disabled (suspended) state and that a DisableKey alarm exists for monitoring transitions; the review/approve workflow for the suspension transition is organizational and not checked",
           "notes": "Suspension maps to the KMS Disabled state (reversible, no crypto ops). CTL.KMS.STATE.DISABLED.001 detects a key disabled while active resources still depend on it; CTL.KMS.ALARM.DISABLE.001 requires a CloudWatch alarm on DisableKey (the 'monitor transitions to/from suspension' intent). Partial: monitoring of the disable transition is covered; the review/approve workflow for the transition is organizational and not snapshot-verifiable."
         },
         {
@@ -989,6 +1045,8 @@
             "CTL.KMS.LIFECYCLE.DORMANT.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies missing-expiry, expired-material, and dormant (90+ day unused) keys; an automated deactivate-on-expiry action triggered at the expiration date is not modeled",
           "notes": "Deactivation-at-expiration is config-verifiable: imported KMS key material without an expiration (CTL.KMS.IMPORTED.EXPIRY.001), expired KMS material still present (CTL.KMS.MATERIAL.EXPIRED.001), Key Vault keys/secrets without expiry dates, and dormant keys unused 90+ days while policy still grants access (CTL.KMS.LIFECYCLE.DORMANT.001 \u2014 effectively un-deactivated stale keys). Partial: Stave detects missing-expiry and past-due/unused keys; it does not model an automated deactivate-on-expiry action."
         },
         {
@@ -1008,6 +1066,8 @@
             "CTL.KMS.LIFECYCLE.DORMANT.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies least-privilege key-policy access (no broad admin/decrypt/cross-account) and Key Vault repository hardening; a dedicated archived-key state and archival-repository lifecycle do not exist in KMS and are not checked",
           "notes": "'Secure repository with least-privilege access' maps to key-policy least-privilege controls: KMS policy must restrict to specific roles (CTL.KMS.POLICY.001), no broad admin/decrypt/cross-account, and the Key Vault is the explicit archival repository (soft-delete/purge protection, RBAC instead of access policies, no public network). Dormant-key policy minimization covers archived-but-still-granting keys. Partial: there is no first-class 'archived key' state in KMS; controls enforce least-privilege on keys generally, not a dedicated archival repository lifecycle."
         },
         {
@@ -1023,7 +1083,9 @@
             "CTL.KMS.POLICY.DECRYPT.BROAD.001"
           ],
           "notes": "The core requirement \u2014 restricting a compromised key to decrypt-only and never encrypt \u2014 has no direct KMS configuration analog (KMS key usage is encrypt+decrypt as a unit; you cannot config a key to decrypt-only). That handling discipline is organizational/runtime. Partial/weak: the closest config support is monitoring for anomalous/compromise-indicative usage (cross-account alarms, decrypt-volume/failure alarms) and restricting decrypt principals. Gap: a control asserting a flagged-compromised key is disabled for new encrypt operations would require a compromise-status property that does not exist; nearest practical action is CTL.KMS.STATE.DISABLED.001 / scheduled re-key.",
-          "coverage": "partial"
+          "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies compromise-indicative usage monitoring (cross-account/decrypt-volume/failure alarms) and decrypt-principal restriction; restricting a flagged-compromised key to decrypt-only (never encrypt) has no KMS config analog and is not enforced"
         },
         {
           "aicm_id": "CEK-20",
@@ -1042,7 +1104,9 @@
             "CTL.STEPFUNCTIONS.ENCRYPT.KMS.NOMULTIREGION.001"
           ],
           "notes": "The continuity-vs-exposure assessment is organizational, but its technical measures are config-verifiable: multi-region key replication for recoverability (CTL.KMS.MULTIREGION.NOREPLICA.001 and related), Key Vault soft-delete/purge protection (recoverable repository), backup-key account isolation (recovery without single-account loss), and deletion waiting period. Partial: Stave verifies the recoverability controls exist; the risk trade-off analysis itself is not snapshot-verifiable.",
-          "coverage": "partial"
+          "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies recoverability technical measures (multi-region replication, Key Vault soft-delete, backup-account isolation, deletion wait); the continuity-versus-exposure risk trade-off assessment itself is not snapshot-verifiable"
         },
         {
           "aicm_id": "CEK-21",
@@ -1062,6 +1126,8 @@
             "CTL.KMS.ALARM.ROTATION.FAILURE.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies per-key inventory hygiene and status (alias presence/integrity, disabled/pending/dormant states, policy/rotation alarms); Stave audits the inventory but does not constitute the authoritative KMS tracking/reporting system mandated",
           "notes": "Inventory hygiene and status tracking are config-verifiable: every key should have an alias for inventory (CTL.KMS.LIFECYCLE.NOALIAS.001), aliases must not be orphaned/ghost-pointing (inventory integrity), and key states (disabled, pending-deletion, pending-import, dormant) are all surfaced as findings \u2014 i.e. Stave evaluates the full key state inventory each snapshot and reports status. Change-in-status reporting is supported via alarm controls (policy change, rotation events). Partial: Stave reports per-key status but does not itself constitute the authoritative KMS inventory/reporting system the AICM control mandates; it audits the inventory rather than maintaining it."
         }
       ]
@@ -1132,6 +1198,8 @@
             "CTL.COGNITO.COMPLIANCE.NOTAG.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies specific resources carry data-classification/compliance tags (EKS, EventBridge, Cognito); physical-asset classification, a generic all-critical-resources-tagged check, and the documented annually-reviewed program are not checked",
           "notes": "Asset classification covers physical AND logical assets. The physical-asset classification and the documented, annually-reviewed classification program are organizational and out of scope. Stave can partially verify the logical-asset side: it checks that resources carry data-classification / compliance tags or labels (EKS namespace data-classification label, EventBridge data-classification tags, Cognito compliance tags). These verify the *artifact* of a classification scheme on specific resource types, not a comprehensive program. Missing: a generic cross-service 'all critical resources must carry an approved data-classification tag' control, plus the documented program and annual-review cadence (inherently organizational)."
         },
         {
@@ -1146,6 +1214,8 @@
             "CTL.OPENSEARCH.CCS.SHADOW.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies point inventory configs (S3 Inventory, restricted SSM Inventory, shadow-resource detection); physical-asset cataloguing, a unified authoritative estate inventory, and the annual catalogue review are not checked",
           "notes": "Catalogue and track physical AND logical assets in a secured system. Physical-asset cataloguing and the secured catalogue system / annual review are organizational. Logical-asset tracking has a config angle Stave partially covers: S3 Inventory enablement for object visibility, restricting SSM Inventory access, and shadow/unmanaged-resource detection (e.g. OpenSearch cross-cluster connection not in inventory). These are point checks, not a unified asset-catalogue assertion. Missing: a control verifying a complete, authoritative resource inventory (e.g. AWS Config recorder enabled across all resource types / regions) and tag-completeness across the estate; the catalogue program itself is organizational."
         },
         {
@@ -1263,6 +1333,8 @@
             "CTL.AUTOSCALING.MULTIAZ.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies tenant-workload technical measures (backups exist/recent, Multi-AZ, cross-region replication); the CSP datacenter's own continuous-operations program plus the documented/evaluated resilience procedures are inherited/organizational and not checked",
           "notes": "Define/implement/evaluate processes, procedures and technical measures for continuous operations. The 'define processes and procedures' and 'evaluate' aspects are organizational (continuity/resilience program). The 'technical measures' aspect is strongly config-verifiable and Stave covers it well at the tenant resource level: critical resources have backups (BACKUP.EXISTS / PLAN.EXISTS), backups are recent (BACKUP.RECENT), resources span multiple AZs (BACKUP.MULTIAZ, AUTOSCALING.MULTIAZ), and critical data is cross-region replicated (BACKUP.REPLICATION). Note these verify tenant-workload resilience config, not the CSP datacenter's own continuous-operations program (that part is inherited/organizational). Partial because the documented program and its evaluation cadence are out of scope."
         }
       ]
@@ -1294,6 +1366,8 @@
             "CTL.BACKUP.RECOVERY.ISOLATION.002"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies crypto-shred prerequisites (soft-delete/purge-protection, key-deletion separation of duties); forensic non-recoverability of the underlying media (NIST/DoD wipe) is not checked",
           "notes": "Secure disposal so data is non-recoverable. Stave can verify crypto-erase prerequisites and deletion safeguards (KMS key-deletion separation of duties, soft-delete/purge-protection settings) but cannot attest forensic non-recoverability of media (DoD/NIST wipe), which is the core requirement. Cloud disposal is largely provider-managed; key destruction (crypto-shredding) is the verifiable proxy. Missing: a control asserting CMK-backed encryption + key-destruction lifecycle as the disposal mechanism for a bucket/volume."
         },
         {
@@ -1311,6 +1385,8 @@
             "CTL.DATACLASS.PROD.UNTAGGED.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies storage resources carry a data-classification tag; the maintained enterprise inventory register of sensitive/regulated/personal data and its annual review are not checked",
           "notes": "Maintain a data inventory for sensitive/regulated/personal data. Stave checks that storage resources carry a data-classification tag (presence of inventory metadata) but does not maintain or validate an enterprise inventory register or its annual review. Tag-coverage is a partial proxy for inventory completeness."
         },
         {
@@ -1330,6 +1406,8 @@
             "CTL.DATACLASS.TAG.TAXONOMY.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies resources carry a classification tag from the taxonomy; whether the tag value is correct against actual data content is not checked, and many services (RDS, DynamoDB, EFS) are uncovered",
           "notes": "Classify data by type/criticality/sensitivity. Stave verifies that resources carry data-classification tags/labels (S3 buckets, EventBridge buses, EKS namespaces) but cannot verify the classification value is correct vs the actual data content; presence-of-tag only. Coverage is partial across resource types (S3, EventBridge, EKS) and absent for many services (RDS, DynamoDB, EFS, etc.)."
         },
         {
@@ -1367,6 +1445,8 @@
             "CTL.IAM.ZT.PERIMETER.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies specific secure defaults (encryption, public-access block, least-privilege, ZT perimeter); the security-by-design development principle and business-practice governance are not checked",
           "notes": "Security-by-design as a business-practice principle. The abstract principle is organizational, but Stave's entire catalog (encryption-at-rest/in-transit, PAB, least-privilege, segmentation) is the technical embodiment of secure defaults. Listed controls are representative; the AICM control itself is a broad principle so coverage is inherently partial - no single control satisfies it."
         },
         {
@@ -1382,6 +1462,8 @@
             "CTL.S3.CONTROLS.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies privacy-protective defaults (block-public-access, PII guardrail filter); the privacy-by-design program and per-jurisdiction lawful default configuration are not checked",
           "notes": "Privacy-by-default: privacy settings configured by default. Stave can verify restrictive defaults (block public access, PII filters, no public sensitive data) which embody privacy-protective defaults, but the legal/regulatory privacy-program aspect is organizational. Partial: config-default proxies exist, full privacy-by-design is not snapshot-verifiable."
         },
         {
@@ -1413,6 +1495,8 @@
             "CTL.EXPOSURE.SOVEREIGNTY.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies in-transit TLS enforcement and region sovereignty scoping; lawful-basis and purpose-scope limitation (data processed only as permitted by regulation) is not checked",
           "notes": "Transfer of personal/sensitive data protected from unauthorized access and processed only within permitted scope. Config-verifiable: in-transit encryption (TLS) enforcement broadly covered, plus jurisdictional access scoping (SOVEREIGNTY). Partial: 'only processed within scope permitted by laws' (purpose/legal scoping) is organizational and not fully covered."
         },
         {
@@ -1466,6 +1550,8 @@
             "CTL.APIGATEWAY.STAGE.AUTODEPLOY.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies cross-env stage routing/auto-deploy coupling; data-owner authorization and detection of production data actually copied into non-prod environments are not checked",
           "notes": "Obtain authorization and manage risk before replicating/using production data in non-production. The authorization step is organizational. Config-adjacent: detecting non-prod-to-prod routing/cross-env coupling. No Stave control detects copying of production data into a non-prod environment. Missing: a control flagging prod data classification tags on resources in non-prod accounts/environments."
         },
         {
@@ -1487,6 +1573,8 @@
             "CTL.BACKUP.VAULT.LOCK.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies a retention/object-lock/lifecycle policy exists and meets a floor; whether that retention value matches the specific governing law for that dataset is not checked",
           "notes": "Retention/archiving/deletion managed per business/legal requirements. Strongly config-verifiable: retention policies, object-lock/immutability, lifecycle rules, backup retention floors. Partial only because the per-dataset legal retention requirement must be supplied as policy; Stave verifies a configured retention/lock exists and meets a floor but not that the value matches the governing law for that specific data."
         },
         {
@@ -1509,6 +1597,8 @@
             "CTL.BEDROCK.KB.RETRIEVAL.SCOPE.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies static safeguards (encryption, no public access, Macie discovery, exposure/exfil reachability, VPC isolation); lifecycle process stages like creation and disposal handling are not checked",
           "notes": "Protect sensitive data throughout its lifecycle. Broad config coverage: KMS encryption of sensitive buckets, no public sensitive data, Macie discovery, exposure/exfil reachability, VPC isolation for sensitive workloads. Partial: 'throughout lifecycle' includes process stages (creation/disposal) that go beyond static config."
         },
         {
@@ -1538,6 +1628,8 @@
             "CTL.OPENSEARCH.SNAPSHOT.UNAUTHORIZED.REGION.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies enforced region residency constraints (SCPs, region conditions, resources/snapshots in unauthorized regions); the documented physical-location deliverable and attestation are not checked",
           "notes": "Specify/document physical locations where data is stored, processed, backed up. Config-verifiable residency: region-restriction SCPs/conditions, resources in unauthorized regions, sovereignty reachability, multi-region key placement, snapshot/backup region. Partial: the documentation deliverable and physical-location attestation are organizational; Stave verifies the enforced region constraints which is the technical core."
         },
         {
@@ -1552,6 +1644,8 @@
             "CTL.BEDROCK.KB.MARKER.INDEXES.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies which sources feed AI knowledge bases/training jobs and their cross-account boundaries; recorded data-lineage/source-of-record provenance metadata and legal availability are not checked",
           "notes": "Document/trace data sources (provenance) and make source available per law. Mostly organizational (lineage documentation). Config-adjacent: Stave can identify which data sources feed AI knowledge bases / training jobs (source bucket bindings, cross-account source boundaries), giving partial provenance visibility. No dedicated data-lineage/provenance-record control. Missing: a control asserting recorded source-of-record metadata for datasets."
         },
         {
@@ -1569,6 +1663,8 @@
             "CTL.SAGEMAKER.TRAINING.DATA.UNENCRYPTED.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies pipeline prevention prerequisites (encrypted, same-account, scoped training/KB data sources); continuous runtime poisoning detection via statistical/behavioral anomaly checks is not checked",
           "notes": "AI-Specific. Prevent AND continuously detect data poisoning in AI models. CONFIG aspect (prevention): Stave verifies training/KB data-source integrity prerequisites - source must not cross account boundaries, must be encrypted reads, S3 access scoped to declared sources - which harden the pipeline against unauthorized data injection. RUNTIME aspect (continuous detection): poisoning detection during/after training requires behavioral monitoring/statistical anomaly checks - out of scope for a static snapshot. Partial: prevention hardening covered, detection is runtime-only."
         },
         {
@@ -1582,6 +1678,8 @@
             "CTL.SAGEMAKER.TRAINING.DATA.UNENCRYPTED.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies training data encryption and a Bedrock PII guardrail filter; PETs on dataset content (differential privacy, k-anonymity, pseudonymization, federated learning) are not checked",
           "notes": "AI-Specific. Use Privacy Enhancing Technologies (PETs) for training data (differential privacy, federated learning, encryption, anonymization). CONFIG: Stave can verify training data is encrypted and that Bedrock guardrails enable a PII/sensitive-information filter (a deployable PET-adjacent control). It cannot verify differential privacy, k-anonymity, or pseudonymization applied to dataset content - those are dataset-content/algorithm properties not in a config snapshot. Largely a gap. Missing: control asserting an anonymization/DP transform is configured in the training pipeline."
         },
         {
@@ -1600,6 +1698,8 @@
             "CTL.SAGEMAKER.TRAINING.OVERPERM.S3.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies dataset versioning (S3/GCS object versioning), object-lock immutability, and scoped write access; regular consistency/conformity validation of training data is runtime and not checked",
           "notes": "AI-Specific. Validate consistency/conformity of training/fine-tuning/augmentation data; implement dataset versioning for traceability; enforce restrictions against unauthorized changes. CONFIG: dataset versioning (S3/GCS object versioning), immutability (object lock), and write-access restriction (scoped S3 roles, no cross-account source) are verifiable proxies for traceability + unauthorized-change prevention. RUNTIME: 'regularly validate consistency/conformity' is a data-quality validation job, behavioral/process - not config. Partial: versioning + access-restriction covered; consistency validation is runtime/process."
         },
         {
@@ -1969,6 +2069,8 @@
             "CTL.AD.STALE.ADMIN.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies the snapshot inventory of identities and flags stale/unused/ghost principals and credentials; the process of maintaining and regularly reviewing the inventory (cadence/sign-off) is not checked",
           "notes": "Inventory of identities + monitoring their access. Stave can verify config-observable aspects from a snapshot: enumerate IAM users/roles, flag inactive/stale/unused identities and credentials, and detect ghost/deleted principals still referenced in role assignments and resource policies. Missing: the organizational obligation to MAINTAIN and REGULARLY REVIEW the inventory as a process (review cadence/sign-off) is human process, not config."
         },
         {
@@ -1987,6 +2089,8 @@
             "CTL.BACKUP.RECOVERY.ISOLATION.002"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies a fixed set of toxic SoD pairs (encrypter+decrypter, key admin+user, secret read+write, escalation chains); an arbitrary org-defined requester-vs-approver SoD matrix is not evaluated",
           "notes": "Separation of duties when implementing system access. Stave verifies specific SoD-violating combinations from policy snapshots: encrypter+decrypter on one principal, key admin+user on one principal, SA admin+user on one principal, read+write to a secret by one principal, multi-step privilege-escalation paths, and data-admin holding KMS delete. Partial: there is no general engine that takes an arbitrary org-defined SoD matrix (e.g. requester vs approver, dev vs prod-deploy) and proves no single identity holds both halves; coverage is a fixed set of known toxic pairs."
         },
         {
@@ -2054,6 +2158,8 @@
             "CTL.AD.ACCOUNT.STALE.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies inactive accounts, unused credentials/roles and ghost principals/IdPs still referenced; timeliness relative to an HR joiner/mover/leaver event is not derivable from config",
           "notes": "De-provision or modify access in a timely manner. Stave detects the config-observable failure mode of late de-provisioning: inactive accounts still enabled, unused credentials/roles not disabled, stale/ghost principals and IdPs still referenced in role assignments/trust/resource policies. Missing: timeliness relative to an HR de-provisioning event (the 'in a timely manner' SLA tied to a leaver) is process-bound and not derivable from infra config alone."
         },
         {
@@ -2073,6 +2179,8 @@
             "CTL.KMS.SEPARATION.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies least-privilege violations, permission drift, unused grants and SoD pairs on every snapshot; the periodic access-recertification governance event (attestation, annual sign-off) is not checked",
           "notes": "'Review and revalidate identity access for least privilege and SoD ... at least annually.' Stave can produce the technical evidence a reviewer needs (current least-privilege violations, permission drift, unused grants, SoD pairs) on every snapshot, effectively continuous revalidation of the posture. Missing: the periodic-review GOVERNANCE event (attestation, sign-off, annual cadence) is organizational and not a config property."
         },
         {
@@ -2096,6 +2204,8 @@
             "CTL.BACKUP.RECOVERY.ISOLATION.002"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies privileged-role segregation in config (isolated admin perm-sets, PIM-gated, bounded non-nested admin groups, no broad owner); the org's full intended segregation model for every custom role pairing is not proven",
           "notes": "Segregation of privileged access roles. Stave verifies privileged-role segregation in config: admin perm-sets isolated, PIM/conditional-access required for privileged roles, privileged-role scope not at subscription level, admin/owner not broadly assigned, privileged-group membership bounded and non-nested, and toxic privileged combinations (KMS admin+user). Partial: it checks that privileged roles ARE segregated/restricted, but cannot prove the org's full intended segregation model for every custom privileged role pairing."
         },
         {
@@ -2117,6 +2227,8 @@
             "CTL.IAM.POLICY.PASSROLE.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies time-bounding (max session duration, short-lived/expiring credentials, Azure PIM); native AWS just-in-time elevation and an explicit no-standing-privileged-access guarantee are only partially modeled",
           "notes": "Privileged access granted for a TIME-LIMITED period + prevent accumulation of segregated privileged access. Time-bounding is config-verifiable: max session duration <=4h, federated session limits, short-lived credentials, credential expiry/TTL, Azure PIM (just-in-time). Accumulation is partly covered by permission-drift detection. Missing/partial: PIM-style just-in-time elevation for AWS native roles and an explicit 'no standing privileged access' check are only partially modeled; Azure PIM is the closest direct match."
         },
         {
@@ -2133,6 +2245,8 @@
             "CTL.IAM.TRUST.SOURCEARN.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies vendor-access config (revocable S3 delegation, non-over-privileged vendor role, scoped trust/delegated-admin); the customer-approval gating workflow for granting high-risk roles is not checked",
           "notes": "Service customers participate in granting high-risk privileged access (customer approval / vendor access controls). Mostly an approval-workflow obligation (organizational). Config-verifiable slivers Stave covers: customer can revoke a vendor's S3 access, vendor role is not over-privileged, delegated-admin scope, third-party trust scoping. Missing: the customer-approval gating workflow for granting the role is process, not config."
         },
         {
@@ -2162,6 +2276,8 @@
             "CTL.M365.EXCHANGE.SHAREDMAILBOX.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies per-resource/per-service roles, no shared/default service accounts and required RoleSessionName/SourceIdentity; it cannot prove every human has a distinct named login account-wide",
           "notes": "Activities identifiable through uniquely associated IDs. Config-verifiable aspects Stave covers well: discourage shared/default service principals (per-instance/per-service/per-function roles, no shared task/lambda/studio roles, no default service accounts, no shared mailbox sign-in), require RoleSessionName/SourceIdentity so federated actions trace to an individual, and discourage root/shared-account daily use. Partial: it cannot prove every human has a distinct named identity (no shared logins) account-wide \u2014 it catches the common shared-credential anti-patterns, not a complete uniqueness guarantee."
         },
         {
@@ -2253,6 +2369,8 @@
             "CTL.SECRETSMANAGER.POLICY.PUBLIC.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies authorizers are required and scoped (API/JWT/Cognito, K8s RBAC) and resource policies deny public/wildcard access; coverage is bounded to modeled surfaces, not all data and system functions",
           "notes": "Verify access to data and system functions is authorized (authorization mechanisms exist and are enforced). Config-verifiable: API routes require authorizers, IAM/JWT/Cognito authorizers properly scoped, K8s API server uses RBAC (not AlwaysAllow), data-layer resource policies deny unauthenticated/public/wildcard access. Partial because it spans the whole authorization surface; Stave verifies that authorization is configured and not bypassed on the surfaces it models, but 'all data and functions' is broader than any fixed control set."
         },
         {
@@ -2271,6 +2389,8 @@
             "CTL.SAGEMAKER.TRAINING.DATA.CROSSACCOUNT.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies access restrictions enforcing need-to-know (tenant/key isolation, roles not reaching PHI, KB/training data scoped to own sources); the need-to-know data-classification policy definition is not checked",
           "notes": "Need-to-know access to knowledge/information/data, including in the AI-system context. Config-verifiable enforcement Stave covers: tenant/prefix isolation, encryption-key isolation across sensitivity domains, roles not reaching PHI-tagged buckets, AI knowledge-base/training-data roles scoped to their own data sources and not crossing account boundaries. Partial: the data-classification + need-to-know POLICY itself ('define policy for need-to-know') is organizational; Stave verifies the resulting access restrictions, not the policy definition."
         },
         {
@@ -2301,6 +2421,8 @@
             "CTL.IAM.AGENT.CHAIN.SENSITIVE.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies Bedrock agent roles scope model/Lambda/S3 access and bound action-group count; agents outside Bedrock (LangChain-style/self-hosted, other providers) have no equivalent tool-grant control",
           "notes": "Restrict AGENTS' access to only the tools/plugins needed (need-to-know + least privilege for AI agents). Config-verifiable and directly modeled for Bedrock agents: execution role must scope bedrock:InvokeModel, lambda:InvokeFunction (tool invocation), and S3; action-group (tool/plugin) count must be bounded; knowledge-base role scoped to its data sources. This is exactly 'restrict agent access to necessary tools'. Partial, not full: coverage is Bedrock-specific. Agent frameworks outside Bedrock (e.g. self-hosted/LangChain-style agents, other providers' agent tool grants) have no equivalent control \u2014 a gap. A control checking per-agent allow-listed tool/plugin set against declared need would close it generally."
         }
       ]
@@ -2367,6 +2489,8 @@
             "CTL.CLOUDFLARE.ZONE.TLS.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies TLS-floor and HTTPS/SSL enforcement on major data-transport surfaces; it cannot assert ALL management/import/export channels (SFTP/Transfer Family, SSH/SCP, VPN/IPsec) are protected to a uniform cipher baseline",
           "notes": "Config-verifiable: 'cryptographically secure network protocols for management, import and export of data' maps to Stave's broad encryption-in-transit family. Stave verifies TLS-version floors and HTTPS/SSL enforcement on the data and management surfaces that move customer data: API Gateway (TLS 1.2, custom-domain TLS, mTLS client certs), CloudFront viewer/origin HTTPS+TLS, S3-via-CloudFront origin HTTP detection, load balancers (HTTP->HTTPS redirect, TLS 1.2, weak-cipher policies, plaintext-to-backend), DMS migration endpoints (SSL/TLS for data import/export), EFS/ElastiCache/DocumentDB/DAX in-transit encryption, and the Azure/GCP/Cloudflare HTTPS+TLS equivalents. These are unsafe_state checks on properties like properties.loadbalancer.encryption.tls_1_2_or_higher and origin_uses_http. Marked PARTIAL not FULL: (1) Stave's coverage is per-service and tied to whichever services appear in the snapshot, so it cannot assert that ALL management/import/export channels are protected (e.g. SFTP/Transfer Family, SSH/SCP management planes, generic VPN/IPsec tunnels, on-host application protocols are not all covered); (2) 'according to industry standards' implies a defined cipher/protocol baseline that Stave enforces only where a dedicated control exists (e.g. ELB weak-cipher, CloudFront/Cloudflare TLS floors) and not uniformly across every endpoint. The TLS-floor + HTTPS-enforcement intent is well covered for the major data-transport surfaces."
         },
         {
@@ -2416,6 +2540,8 @@
             "CTL.EKS.NS.NORESOURCEQUOTA.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies auto-scaling, capacity alarms, throttling and resource quotas are configured; whether planned capacity actually meets business performance targets is not assessed",
           "notes": "Config-verifiable aspects covered well: auto-scaling presence/config, capacity alarms, throttling/quotas, resource quotas. The 'plan availability/quality as determined by the business' aspect is organizational/process and not snapshot-verifiable. Mapped controls confirm scaling and capacity-headroom configuration exists; they do not assess whether planned capacity meets business performance targets."
         },
         {
@@ -2446,6 +2572,8 @@
             "CTL.VPC.FLOWLOG.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies security groups/NACLs/firewall rules restrict ports and TLS encrypts transit with flow logs on; the annual config review with documented justification of allowed services/protocols/ports is not checked",
           "notes": "Strong config coverage of restricting communications (security groups, NACLs, GCP firewall rules to authenticated/authorized ranges + ports) and encrypting communications (TLS/HTTPS enforcement, in-transit encryption across ELB, CloudFront, API Gateway, EFS, ElastiCache, DMS) plus monitoring (VPC flow logs). Not full: the AICM 'annual review with documented justification of all allowed services/protocols/ports/compensating controls' is an organizational/process requirement Stave cannot verify, and 'only authenticated and authorized connections' depends on app-layer authN that snapshots do not fully capture."
         },
         {
@@ -2474,6 +2602,8 @@
             "CTL.CODEBUILD.PRIVILEGED.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies key hardening flags (IMDSv2, SSM, patch/AMI currency, no-privileged/root containers); a complete CIS-style OS baseline and hypervisor-level hardening are not attested",
           "notes": "Host/guest OS and control-plane hardening config is broadly covered: IMDSv2 + hop limit, SSM management, patch currency, AMI currency/trust, Shielded VM, no-privileged/no-root/read-only-rootfs for containers and pods. Marked partial not full because 'according to their respective best practices as part of a security baseline' implies a full CIS-style benchmark; Stave checks key hardening flags but does not attest to a complete OS baseline, and hypervisor-level hardening (for self-managed virtualization) is largely the cloud provider's responsibility and not in a tenant snapshot."
         },
         {
@@ -2495,6 +2625,8 @@
             "CTL.LIFECYCLE.STAGING.STALE.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies prod/non-prod VPC, IAM and snapshot/KMS isolation; that production data was sanitized or masked before non-prod use is not checked (no unmasked-prod-data control)",
           "notes": "Production/non-production separation is well covered at the config layer: VPC env isolation, network env-mix, IAM cross-env access paths, and cross-env sharing of RDS/EBS snapshots and KMS keys. The specific requirement that 'production data is sanitized or protected before non-production use' (data masking/anonymization) is only partially observable: CTL.STEPFUNCTIONS.DEV.PROD.DATA.001 flags prod data in a dev workflow, but Stave has no general control verifying that copied/exported data was sanitized/masked. Gap: a control checking that non-prod datastores do not contain unmasked production/sensitive data."
         },
         {
@@ -2521,6 +2653,8 @@
             "CTL.KMS.ISOLATION.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies network tiering, peering/TGW routing, namespace/S3/SageMaker/KMS tenant isolation config; per-tenant runtime access monitoring and app-layer multi-tenancy design are not checked",
           "notes": "Tenant/workload segmentation and segregation broadly covered: network tiering, east-west inspection, peering/TGW least-access routing, EKS namespace multi-tenancy + network policy enforcement, S3 prefix tenant isolation, SageMaker network isolation, KMS key isolation across sensitivity domains. Marked partial because the AICM 'monitored' aspect (per-tenant runtime access monitoring) is runtime and the spec's full application-layer multi-tenancy design cannot be wholly verified from infrastructure config; covered surfaces are config-verifiable."
         },
         {
@@ -2540,6 +2674,8 @@
             "CTL.S3.ACCEL.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies DMS and TLS endpoints use encrypted, current-protocol channels; equivalent in-transit/approved-protocol checks for DataSync, Transfer Family, MGN and Snowball migration paths are absent",
           "notes": "Migration channel encryption/up-to-date-protocol verifiable for the data-migration service: DMS enforces SSL/TLS, is not publicly accessible, and logs source/target; TLS-minimum controls confirm only current protocols on the relevant transport endpoints. Partial because Stave covers the DMS migration path and generic TLS endpoints but has no control specifically attesting that ALL server/service/application migration channels (e.g. DataSync, Snowball, Transfer Family, Application Migration Service) use only up-to-date approved protocols. Gap: explicit in-transit-encryption + approved-protocol checks for DataSync/Transfer Family/MGN endpoints."
         },
         {
@@ -2579,6 +2715,8 @@
             "CTL.GCP.COMPUTE.FLOWLOGS.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies Network Firewall, DNS Firewall, Shield, GuardDuty, WAF and flow logs are deployed; timely runtime response to network-based attacks is a process Stave cannot evaluate",
           "notes": "Defense-in-depth protection + detection is config-verifiable and broadly covered: AWS Network Firewall (stateful rules, non-permissive, in-path, logging, TLS inspection), DNS Firewall, Shield Advanced (DDoS), GuardDuty (threat detection/malware), WAF across ELB/API Gateway/CloudFront, and VPC flow logs for detection. Partial because 'timely response to network-based attacks' is a runtime incident-response process Stave cannot evaluate from a snapshot; Stave verifies the defensive controls are deployed/configured, not the response execution."
         }
       ]
@@ -2686,6 +2824,8 @@
             "CTL.CLOUDWATCH.MONITOR.TRAIL.ACCESS.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies CloudTrail/CloudWatch log access is restricted (no public/cross-account/broad reads) with an access alarm; the accountability records of who accessed logs and when are runtime data, not config",
           "notes": "The 'restrict access to authorized identities' half is config-verifiable and well covered: broad/public read of the CloudTrail S3 bucket, unrestricted LookupEvents, public/cross-account CloudWatch log-group resource policies, and log-export destination restriction. The 'maintain records of that access' half is partly addressed by CTL.CLOUDWATCH.MONITOR.TRAIL.ACCESS.001 (alarm on unauthorized bucket access) but the accountability bookkeeping (who accessed logs and when) is data/process, not a static config property \u2014 hence partial."
         },
         {
@@ -2711,6 +2851,8 @@
             "CTL.AD.KERB.CLOCKSKEW.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies NTP config on Cisco/ESXi and Kerberos clock-skew; no cloud-native time-source check (EC2 chrony/Amazon Time Sync) confirms compute instances use a reliable NTP source",
           "notes": "Time-source configuration is config-verifiable, and Stave checks NTP configuration on Cisco network devices, NTP on ESXi hosts, and Kerberos clock-skew tolerance. Partial because there is no cloud-native time-source check (e.g., EC2/Linux chrony or Amazon Time Sync Service usage). Gap: a control verifying that compute instances point at a reliable/authenticated NTP source. In managed cloud (Lambda/managed services) clock sync is provider-handled, so this is mostly relevant to self-managed VMs."
         },
         {
@@ -2746,6 +2888,8 @@
             "CTL.LAMBDA.MICROVM.DATAEVENTS.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies CloudTrail management/data event selectors, flow logs and K8s/GCP/Azure audit logging are enabled; documenting and annually reviewing the logging scope is an organizational process",
           "notes": "The 'implement which events are logged' half is config-verifiable and strongly covered: management+data event selectors (S3/Lambda/DynamoDB/EventBridge/Secrets/SNS/SQS), global service events, write-only-vs-read coverage, VPC/network flow logs, K8s/EKS control-plane audit, GCP audit logging, Azure activity-log export. Partial because the 'establish/document and review the scope annually' governance half is organizational and not snapshot-verifiable."
         },
         {
@@ -2763,6 +2907,8 @@
             "CTL.S3.DETECT.MACIE.002"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies API Gateway param-masking, body-logging avoidance and Macie detection; a generic log-scrubbing/tokenization control (e.g. CloudWatch Logs PII data-protection policies) across all sinks is absent",
           "notes": "Config-verifiable measures that prevent sensitive data from reaching logs: API Gateway parameter-masking present when data tracing is on, execution logging not capturing full request/response bodies, the API-key header not being logged, plus Macie sensitive-data detection on storage. Partial because there is no generic log-scrubbing/tokenization control across all log sinks (e.g., CloudWatch Logs data-protection policies that mask PII). Gap: a control verifying CloudWatch Logs account/log-group data-protection (PII masking) policies are enabled."
         },
         {
@@ -2789,6 +2935,8 @@
             "CTL.GCP.LOGGING.AUDIT.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies logging is enabled and API Gateway access-log format carries security fields; field-level completeness of every record type (CloudTrail/flow-log content) is not validated",
           "notes": "Whether audit records are generated, and (for API Gateway) whether the access-log *format* includes the critical security fields, is config-verifiable and covered. Partial/full boundary: Stave confirms logging is enabled and that one surface (API Gateway) has a complete field set, but it does not validate the field-level content of every record type (e.g., that CloudTrail/flow-log records carry all 'relevant security information'). The presence side is well covered; field-completeness is only checked for select surfaces."
         },
         {
@@ -2896,6 +3044,8 @@
             "CTL.GCP.MONITORING.CHANNELS.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies monitoring-pipeline health (alarm INSUFFICIENT_DATA, no-action/disabled/ghost alarms, orphan metric filters, StopLogging alarm); the act of immediate notification to the accountable party is runtime",
           "notes": "The 'monitoring of the monitoring system' is well covered as config: alarms stuck in INSUFFICIENT_DATA, missing-data treated as not-breaching, alarms with no action / disabled / pointing at deleted SNS topics, metric filters with no alarm, subscription filters with no monitoring, Config delivery-failure monitoring, and detection that CloudTrail stopped logging plus an alarm on StopLogging \u2014 these detect failures/gaps in the monitoring pipeline itself. Partial because 'immediate notification to the accountable party' and the response process are runtime/organizational; Stave verifies the wiring (notification channel exists, not email-only, not single-topic blast radius) but not the act of notifying."
         },
         {
@@ -2911,6 +3061,8 @@
             "CTL.CLOUDTRAIL.DATA.LAMBDA.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies Bedrock invocation/agent input logging is enabled and encrypted; scoped to Bedrock only (no SageMaker/self-hosted equivalent) and runtime misuse-analysis of logged inputs is out of scope",
           "notes": "AI-Specific: the *config* property is whether model-invocation logging is enabled so input events are captured \u2014 CTL.BEDROCK.LOG.INVOCATION.001 checks properties.ai.logging.invocation_logging_enabled (captures request/response for InvokeModel/Converse/streaming) and CTL.BEDROCK.AGENT.LOGGING.001 checks per-agent invocation logging; log encryption protects the captured input. This is config-verifiable for Bedrock. Partial because: (1) it is scoped to Bedrock only \u2014 no equivalent input-logging config check for SageMaker endpoints or self-hosted model serving; and (2) the runtime 'monitor all input events for misuse' behavior is out of scope. The act of logging being *enabled* is config; analyzing the logged inputs is runtime."
         },
         {
@@ -2925,6 +3077,8 @@
             "CTL.BEDROCK.LOG.ENCRYPT.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies Bedrock invocation/agent logging captures response payloads and encrypts them; Bedrock-only and runtime inspection of output content for harmful/leaking responses is out of scope",
           "notes": "AI-Specific: Bedrock invocation logging captures both request and response payloads, so the same config property (properties.ai.logging.invocation_logging_enabled) that satisfies input capture also captures output/response events; CTL.BEDROCK.AGENT.LOGGING.001 covers per-agent response logging and log-encrypt protects them. Config-verifiable for Bedrock. Partial because: (1) Bedrock-only \u2014 no SageMaker/self-hosted output-logging config check; and (2) the runtime side, monitoring output *content* (e.g., harmful/leaking responses) at inference time, is out of scope; that behavioral filtering belongs to guardrails/runtime, not a snapshot. Enabling the logging is config; inspecting outputs is runtime."
         }
       ]
@@ -2953,6 +3107,8 @@
             "CTL.STEPFUNCTIONS.SAGEMAKER.NORUNTIME.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies the SageMaker training pipeline's infra config (volume/inter-container encryption, isolation, VPC, scoped S3/PassRole roles); the security policies/procedures and their periodic review are out of scope",
           "notes": "Mixed config + organizational (the spec demands policies/procedures plus technical measures, and 'regularly review/update' is process). The config-verifiable surface of a SageMaker training pipeline is well covered: training-volume encryption at rest, inter-container traffic encryption, encrypted data-source reads, cross-account data-source boundary, network isolation, VPC placement, scoped S3 and PassRole permissions on the training role, and PassRole-escalation guards on CreateTrainingJob/CreateProcessingJob. Partial because the organizational 'define/evaluate/review policies' component is out of scope for a snapshot evaluator, and the pipeline orchestration (e.g. Step Functions / pipeline DAG security) is only partially represented."
         },
         {
@@ -2969,6 +3125,8 @@
             "CTL.AZURE.ACR.SCAN.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies ECR/ACR/Artifact-Registry image scanning is on for container-packaged models; the model artifact itself (S3 pickle/safetensors blob) is not scanned for malicious-deserialization payloads",
           "notes": "AI-Specific. The 'scanning enabled / findings acted on' aspect is a CONFIG property and is verifiable: ECR/ACR/Artifact-Registry image scanning toggles and unresolved-finding windows confirm that the container image carrying a model is scanned. MISSING: there is no Stave control that scans the MODEL ARTIFACT ITSELF (e.g. a pickle/safetensors/ONNX blob in S3 or the SageMaker model registry) for malicious deserialization payloads or model-specific attacks. Model artifacts are typically stored as S3 objects (ModelDataUrl), not container images, so ECR scanning only covers the container-packaged case. Gap: a control on the model-artifact store (S3 bucket / SageMaker Model Registry / Bedrock custom-model import) asserting an artifact-malware/deserialization scan ran (e.g. properties.ai.model_artifact.scanned == true). Also organizational on the 'define/review policies' side."
         },
         {
@@ -3023,6 +3181,8 @@
             "CTL.BEDROCK.GUARDRAIL.PII.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies Bedrock guardrail association, HIGH prompt-attack filter and PII filter config; adversarial training, inference-time hardening and robustness testing are runtime/behavioral and not checked",
           "notes": "AI-Specific. Some hardening mitigations ARE config-verifiable: whether a Bedrock guardrail exists and is associated to an agent (guardrail_associated), whether the prompt-attack filter is at HIGH strength (prompt_attack_filter_high), and whether the sensitive-information/PII filter is enabled are all snapshot-readable config properties. Partial because true 'model hardening' (adversarial training, input sanitization at inference, output validation, robustness testing) is largely runtime/behavioral and process-driven; Stave only covers the Bedrock-guardrail configuration layer and has no SageMaker-side or generic model-hardening control."
         },
         {
@@ -3035,6 +3195,8 @@
             "CTL.MODEL.INTEGRITY.CONFIG.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies the model store has Object Lock, versioning and per-object/SageMaker checksums enabling integrity comparison; the periodic recompute-and-compare of cryptographic hashes is runtime",
           "notes": "Config-verifiable portion closed: CTL.MODEL.INTEGRITY.CONFIG.001 requires the model store to have Object Lock + versioning + per-object checksums (and SageMaker ModelDataHashValue) \u2014 the infrastructure that ENABLES integrity comparison, the same proxy LOG controls use for audit. Partial, not full: the AICM requirement's periodic recompute-and-compare activity is runtime/behavioral and not snapshot-verifiable."
         },
         {
@@ -3049,6 +3211,8 @@
             "CTL.LAMBDA.CODESIGN.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies container (ECR Notation/Cosign) and Lambda code-signing enforcement; direct cryptographic signature/provenance verification of S3 model objects or SageMaker/Bedrock model artifacts is not checked",
           "notes": "AI-Specific intent, config-verifiable property (signing enforcement is a static config flag). When the model is packaged as a container image, CTL.ECR.SIGNING.001 (AWS Signer/Notation/Cosign verification in enforce mode) covers signature verification on load. When packaged as a Lambda deployment artifact, CTL.LAMBDA.CODESIGN.ENFORCE.001/001 cover signed-package enforcement. Partial because these are container/Lambda code-signing surfaces, NOT direct model-artifact signing: a model stored as an S3 object (SageMaker ModelDataUrl) or in the Bedrock custom-model store has no Stave control verifying a cryptographic signature/provenance attestation. Gap: model-artifact signature-verification-on-load control for S3 model objects / SageMaker Model Registry / Bedrock imported models."
         },
         {
@@ -3061,6 +3225,8 @@
             "CTL.SAGEMAKER.ENDPOINT.MONITOR.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies a SageMaker endpoint has a model-monitor schedule attached; the live evaluation of prediction drift/performance metrics is runtime and there is no Bedrock-side equivalent",
           "notes": "AI-Specific. The actual monitoring of prediction drift/shift over time is RUNTIME/behavioral, but the CONFIG precondition \u2014 that a SageMaker endpoint has a model-monitoring schedule attached (data quality, model quality, bias drift, feature attribution) \u2014 is snapshot-verifiable via CTL.SAGEMAKER.ENDPOINT.MONITOR.001 (properties.compute.governance.has_model_monitor). Partial: Stave confirms monitoring is configured but cannot evaluate the live performance metrics, and there is no Bedrock-side model-monitoring equivalent. The 'define/evaluate processes' part is organizational."
         },
         {
@@ -3075,6 +3241,8 @@
             "CTL.SAGEMAKER.ENDPOINT.MONITOR.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies serving-infra resilience config (SageMaker endpoint redundancy, Bedrock throttle/quota guard, monitor schedule); model predictive-behavior failure and the risk-based lifecycle evaluation are out of scope",
           "notes": "AI-Specific. 'Model serving infrastructure failure' has a config-verifiable resilience dimension: CTL.SAGEMAKER.ENDPOINT.REDUNDANCY.001 (multiple instances behind an endpoint, removes single-instance failure point) and CTL.STEPFUNCTIONS.BEDROCK.NOQUOTA.001 (throttle/quota guard preventing serving overload) are static config properties; endpoint monitoring supports failure detection. Partial because 'model failure' as a property of the model's predictive behavior (not its infrastructure) is runtime, and the 'risk-based evaluation / regularly evaluate over lifecycle' part is organizational. Stave only covers the serving-infrastructure-resilience config slice."
         },
         {
@@ -3207,6 +3375,8 @@
             "CTL.CLOUDTRAIL.RETENTION.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies log/trail stores are immutable, retained, versioned, MFA-delete-protected and not public; no control asserts a DEDICATED incident-records repository exists, and the periodic pattern/root-cause review is organizational",
           "notes": "Two aspects. (1) Config-verifiable forensic-readiness: the 'secure repository of security incident records' maps to immutable/retained/access-controlled log & evidence storage. Stave verifies object-lock/WORM (CTL.CLOUDTRAIL.S3.OBJECTLOCK.001, CTL.S3.LOG.BUCKET.LOCK.001, CTL.AZURE.STORAGE.IMMUTABILITY.001), MFA-delete/no-delete (CTL.S3.MFADELETE.001, CTL.CLOUDTRAIL.S3.MFADELETE.001, CTL.CLOUDTRAIL.S3.NODELETE.001), versioning (CTL.S3.LOG.BUCKET.VERSIONING.001), retention (CTL.S3.LOG.RETENTION.001, CTL.CLOUDTRAIL.RETENTION.001, CTL.GCP.STORAGE.RETENTION.001, CTL.GCP.LOGGING.BUCKET.RETENTION.001), not-public (CTL.S3.LOG.BUCKET.PUBLIC.001) and log-file integrity validation (CTL.CLOUDTRAIL.LOG.VALIDATION.001). (2) Organizational: the 'regularly review records to find patterns/root-causes and implement corrective measures' is a human review process Stave cannot evaluate. Partial: config tamper-resistance of the evidence store is covered for generic CloudTrail/S3 log buckets, but there is no Stave control that asserts a DEDICATED incident-records repository exists with these properties (it only checks the standard log/trail buckets), so coverage of 'incident records' specifically is incidental, plus the review process is out of scope."
         },
         {
@@ -3327,6 +3497,8 @@
             "CTL.EKS.IMAGE.CVE.BLOCK.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies artifact-integrity substrate (registry scanning, image signing, digest pinning, tag immutability); no control generates or validates an actual SBOM document, AI model/training-data provenance, or the BOM review process",
           "notes": "AI-Specific. The BOM-establishment PROCESS (define/review/update annually) is organizational and out of scope. The config-verifiable proxy \u2014 integrity and traceability of the artifacts that make up the service supply chain \u2014 IS covered: registry vulnerability scanning (ECR/ACR/GCP Artifact), enhanced scanning + unresolved-finding gating, image signing/signature-verification admission, tag immutability, digest pinning, trusted-registry enforcement, and repo dependency scanning. GAP / what's missing: Stave has NO control that actually generates, ingests, or validates a software/model Bill-of-Materials document itself, and nothing for AI-specific BOM components (training-dataset provenance, model-card/foundation-model lineage). A purpose-built control would need an observation property like asset.sbom_present / sbom_components[] (or model.training_data_provenance) on compute/registry assets and assert its presence, completeness, and freshness \u2014 that does not exist today. Marked partial because the artifact-integrity substrate is checkable but the BOM artifact and AI provenance lineage are not."
         },
         {
@@ -3454,6 +3626,8 @@
             "CTL.AZURE.DEFENDER.CONTAINERS.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies vuln scanners (GuardDuty/Inspector/Security Hub/Defender, registry/dependency scanning) are enabled and in scope; the spec's mandated at-least-monthly scan cadence is not provable end-to-end from a snapshot",
           "notes": "Vulnerability-detection enablement across the estate is broadly config-verifiable: GuardDuty/Inspector/Security Hub/Defender enabled, container & registry scanning, dependency/secret scanning, SQL VA, patch-scan freshness. Stave confirms scanners are ON and in scope but cannot prove the org-mandated 'at least monthly' cadence end-to-end; freshness checks (patch-scan-stale) partially approximate it. Mark partial."
         },
         {
@@ -3477,6 +3651,8 @@
             "CTL.EC2.SSM.AGENT.STALE.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies update plumbing exists (Defender auto-provisioning on, SSM agent connected) as a proxy; the weekly signature/IOC/detection-tool update cadence and feed-freshness are not snapshot properties and are not checked",
           "notes": "Keep detection tools/signatures/IOCs updated weekly. Mostly a managed-service+process concern. Stave can assert agent/auto-provisioning health (Defender auto-provisioning on, SSM agent connected) as a proxy that update plumbing exists, but signature/IOC update cadence itself is not a snapshot property. Gap: a control asserting threat-feed/signature 'last updated within N days' freshness. Partial."
         },
         {
@@ -3496,6 +3672,8 @@
             "CTL.OPENSEARCH.ENGINE.OUTDATED.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies dependency scanning, unresolved image findings, CVE admission blocking, stale base images and outdated engine versions; the remediation/update-application process per the org's vuln-management policy is not checked",
           "notes": "Identify updates for apps using third-party/OSS libraries. Stave verifies dependency scanning is enabled, unresolved critical/high image findings, CVE admission blocking, stale base images, and outdated engine versions \u2014 strong coverage of the detection side. It does not verify the remediation/update-application process itself (org policy). Partial."
         },
         {
@@ -3571,6 +3749,8 @@
             "CTL.GUARDRAIL.INCOMPLETE.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies Bedrock agents have an associated guardrail enabling high-strength prompt-attack and PII filters; the spec's continuous re-evaluation of guardrails against changing regulatory/risk scenarios is runtime governance, not checked",
           "notes": "AI-Specific guardrails. Config-verifiable portion is strong: Stave checks Bedrock agents have an associated guardrail and that guardrails enable high-strength prompt-attack and PII/sensitive-info filters \u2014 these are config properties (properties.ai.guardrail.*, properties.ai.agent.guardrail_associated). However the spec also requires 'continuously evaluate guardrails for changes in regulatory requirements and risk scenarios', which is a runtime/governance aspect not snapshot-verifiable. Partial."
         }
       ]
@@ -3630,6 +3810,8 @@
             "CTL.EC2.SSM.AGENT.STALE.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies EC2 endpoints are SSM-enrolled and agent-reachable (the management-plane enrollment facet); user laptops/mobile (MDM enrollment) and full policy-enforcement on endpoints are out of scope",
           "notes": "AICM targets enforced management of all user endpoints (MDM enrollment). The cloud-endpoint analog Stave can verify is that EC2 compute endpoints are enrolled in and reachable by a management plane: CTL.EC2.SSM.MANAGED.001 (ssm_managed=false fails) and CTL.EC2.SSM.AGENT.STALE.001 (registered but agent ConnectionLost). Only covers AWS cloud-VM endpoints, not user laptops/mobile, and only the enrollment/reachability facet, not full policy enforcement. Process/procedure aspects are organizational."
         },
         {
@@ -3653,6 +3835,8 @@
             "CTL.EC2.AMI.CURRENCY.001"
           ],
           "coverage": "partial",
+          "confidence": "inferred",
+          "uncovered_aspects": "Verifies EC2 instances are SSM/Patch-Manager-managed and flags stale AMIs; the change-management workflow gating OS/patch/app changes, and user-endpoint OS patch levels, are not checked",
           "notes": "Core requirement is a change-management process for OS/patch/app changes (organizational). Config-verifiable cloud-VM analog: CTL.EC2.SSM.MANAGED.001 ensures instances are patchable via Patch Manager, and CTL.EC2.AMI.CURRENCY.001 flags stale base images. These cover AWS server-VM patch posture, not user-endpoint OS patch levels, and do not verify the change-management workflow itself."
         },
         {
@@ -3667,6 +3851,8 @@
             "CTL.EC2.EBS.DEFAULT.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies cloud-endpoint volume encryption-at-rest (WorkSpaces root/user volumes, EBS); physical laptop/mobile full-disk encryption (BitLocker/FileVault) on user devices is out of snapshot scope",
           "notes": "AICM means full-disk encryption on user endpoint devices (BitLocker/FileVault). Stave's cloud-endpoint analog is volume encryption-at-rest: CTL.WORKSPACES.ENCRYPT.001 (managed virtual-desktop root/user volumes \u2014 the closest match, WorkSpaces being a cloud user endpoint), plus CTL.EC2.EBS.ENCRYPT.001 and CTL.EC2.EBS.DEFAULT.001 for server volumes. Covers cloud-hosted endpoint/VM storage encryption only, not physical laptop/mobile disk encryption."
         },
         {
@@ -3680,6 +3866,8 @@
             "CTL.AZURE.DEFENDER.SERVERS.001"
           ],
           "coverage": "partial",
+          "confidence": "direct",
+          "uncovered_aspects": "Verifies a malware-detection service is enabled for cloud compute (GuardDuty EBS malware scan, Defender for Servers); AV/EDR agents running on user laptops/phones are not snapshot-derivable and not checked",
           "notes": "AICM means endpoint AV/EDR on user devices. Stave's cloud-VM analog: CTL.GUARDDUTY.MALWARE.PROTECT.001 verifies GuardDuty malware scanning of EBS volumes on EC2/ECS is enabled, and CTL.AZURE.DEFENDER.SERVERS.001 verifies Defender for Servers (threat protection) on Azure VMs. These verify that a malware-detection service is enabled for cloud compute, not that AV agents run on user laptops/phones. CTL.M365.DEFENDER.MALWARE.001 is email-attachment filtering, not endpoint AV, so excluded."
         },
         {

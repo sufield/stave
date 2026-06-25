@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 )
 
 // Mapping is the embedded framework→Stave mapping document.
@@ -40,6 +41,29 @@ type MappedControl struct {
 	StaveControls []string `json:"stave_controls"`
 	Coverage      string   `json:"coverage"`
 	Notes         string   `json:"notes"`
+	// Confidence records HOW the mapping was determined: "direct" (the framework
+	// control names the property Stave checks) or "inferred" (the framework
+	// control implies it). Empty defaults to "inferred" for backward compatibility.
+	Confidence string `json:"confidence,omitempty"`
+	// UncoveredAspects names what a partial mapping does NOT cover. Expected
+	// (warned if absent) when Coverage is "partial".
+	UncoveredAspects string `json:"uncovered_aspects,omitempty"`
+}
+
+// Confidence values.
+const (
+	ConfidenceDirect   = "direct"
+	ConfidenceInferred = "inferred"
+)
+
+// ConfidenceOrDefault returns the recorded confidence, defaulting an empty
+// value to "inferred" (backward compatibility with mappings authored before
+// the field existed).
+func (c MappedControl) ConfidenceOrDefault() string {
+	if c.Confidence == "" {
+		return ConfidenceInferred
+	}
+	return c.Confidence
 }
 
 // Coverage values used in the mapping.
@@ -82,21 +106,114 @@ type ControlResult struct {
 	FailedControls []string `json:"failed_controls,omitempty"`   // subset that violated (FAIL)
 	OutOfScopeKind string   `json:"out_of_scope_kind,omitempty"` // ORGANIZATIONAL | RUNTIME
 	Detail         string   `json:"detail,omitempty"`            // gap/OOS rationale (from notes)
+	Confidence     string   `json:"confidence,omitempty"`        // direct | inferred (covered only)
+	Uncovered      string   `json:"uncovered_aspects,omitempty"` // partial coverage: what's not covered
 }
 
 // Report is the three-list coverage outcome.
 type Report struct {
-	Framework        string          `json:"framework"`
-	FrameworkVersion string          `json:"framework_version"`
-	TotalControls    int             `json:"total_controls"`
-	Covered          []ControlResult `json:"covered"`
-	Gaps             []ControlResult `json:"gaps"`
-	OutOfScope       []ControlResult `json:"out_of_scope"`
-	InScope          int             `json:"in_scope"` // covered + gaps
-	Verified         int             `json:"verified"` // == len(covered)
-	Passed           int             `json:"passed"`
-	Failed           int             `json:"failed"`
-	CoveragePercent  float64         `json:"coverage_percent"` // verified / in_scope * 100
+	Framework        string           `json:"framework"`
+	FrameworkVersion string           `json:"framework_version"`
+	TotalControls    int              `json:"total_controls"`
+	Covered          []ControlResult  `json:"covered"`
+	Gaps             []ControlResult  `json:"gaps"`
+	OutOfScope       []ControlResult  `json:"out_of_scope"`
+	InScope          int              `json:"in_scope"` // covered + gaps
+	Verified         int              `json:"verified"` // == len(covered)
+	Passed           int              `json:"passed"`
+	Failed           int              `json:"failed"`
+	CoveragePercent  float64          `json:"coverage_percent"` // verified / in_scope * 100
+	Integrity        *IntegrityReport `json:"integrity,omitempty"`
+	VerifyOnly       bool             `json:"-"` // --verify-mapping: render only the integrity block
+}
+
+// IntegrityReport is the mapping self-check: does the mapping file reference
+// only real catalog controls, have unique IDs, and carry well-formed
+// confidence/uncovered_aspects metadata. It is the deterministic, premise-
+// independent part of "self-verifying mapping" — it does NOT cross-check the
+// curated framework mapping against controls' own compliance: keys, because in
+// this catalog those are an independent attribution layer (CCM/SOC2), not a
+// second source of the same framework's IDs.
+type IntegrityReport struct {
+	Framework         string            `json:"framework"`
+	DanglingRefs      []DanglingRef     `json:"dangling_refs"`       // ERROR: maps a non-existent control
+	DuplicateIDs      []string          `json:"duplicate_ids"`       // ERROR: aicm_id appears twice
+	InvalidConfidence []ConfidenceIssue `json:"invalid_confidence"`  // ERROR: confidence not direct|inferred
+	PartialNoReason   []string          `json:"partial_no_reason"`   // WARN: partial coverage, empty uncovered_aspects
+	ReferencedControl int               `json:"referenced_controls"` // distinct Stave controls the mapping uses
+	CatalogTotal      int               `json:"catalog_total"`       // controls in the catalog (0 = not loaded)
+}
+
+// DanglingRef is a mapping entry pointing at a control that is not in the catalog.
+type DanglingRef struct {
+	FrameworkID  string `json:"framework_id"`
+	StaveControl string `json:"stave_control"`
+}
+
+// ConfidenceIssue is a mapping entry with an unrecognized confidence value.
+type ConfidenceIssue struct {
+	FrameworkID string `json:"framework_id"`
+	Value       string `json:"value"`
+}
+
+// HasErrors reports gating problems (dangling refs, duplicate IDs, invalid
+// confidence). These are what --strict refuses to produce a report over.
+func (r IntegrityReport) HasErrors() bool {
+	return len(r.DanglingRefs) > 0 || len(r.DuplicateIDs) > 0 || len(r.InvalidConfidence) > 0
+}
+
+// HasWarnings reports non-gating issues (partial coverage missing a reason).
+func (r IntegrityReport) HasWarnings() bool { return len(r.PartialNoReason) > 0 }
+
+// Verify cross-references the mapping against the real control catalog. Pass
+// the set of catalog control IDs; an empty set skips the dangling-reference
+// check (so a failed catalog load does not flag every reference). Pure: no
+// Stave evaluation types, unit-testable without the engine.
+func (m *Mapping) Verify(catalogIDs map[string]bool) IntegrityReport {
+	rep := IntegrityReport{
+		Framework:         m.Framework,
+		DanglingRefs:      []DanglingRef{},
+		DuplicateIDs:      []string{},
+		InvalidConfidence: []ConfidenceIssue{},
+		PartialNoReason:   []string{},
+		CatalogTotal:      len(catalogIDs),
+	}
+	seen := map[string]bool{}
+	distinct := map[string]bool{}
+	for di := range m.Domains {
+		for ci := range m.Domains[di].Controls {
+			c := &m.Domains[di].Controls[ci]
+			if seen[c.ID] {
+				rep.DuplicateIDs = append(rep.DuplicateIDs, c.ID)
+			}
+			seen[c.ID] = true
+			if c.Confidence != "" && c.Confidence != ConfidenceDirect && c.Confidence != ConfidenceInferred {
+				rep.InvalidConfidence = append(rep.InvalidConfidence, ConfidenceIssue{FrameworkID: c.ID, Value: c.Confidence})
+			}
+			if c.Coverage == coveragePartial && strings.TrimSpace(c.UncoveredAspects) == "" {
+				rep.PartialNoReason = append(rep.PartialNoReason, c.ID)
+			}
+			for _, sc := range c.StaveControls {
+				distinct[sc] = true
+				if len(catalogIDs) > 0 && !catalogIDs[sc] {
+					rep.DanglingRefs = append(rep.DanglingRefs, DanglingRef{FrameworkID: c.ID, StaveControl: sc})
+				}
+			}
+		}
+	}
+	rep.ReferencedControl = len(distinct)
+	sort.Strings(rep.DuplicateIDs)
+	sort.Strings(rep.PartialNoReason)
+	sort.Slice(rep.DanglingRefs, func(i, j int) bool {
+		if rep.DanglingRefs[i].FrameworkID != rep.DanglingRefs[j].FrameworkID {
+			return rep.DanglingRefs[i].FrameworkID < rep.DanglingRefs[j].FrameworkID
+		}
+		return rep.DanglingRefs[i].StaveControl < rep.DanglingRefs[j].StaveControl
+	})
+	sort.Slice(rep.InvalidConfidence, func(i, j int) bool {
+		return rep.InvalidConfidence[i].FrameworkID < rep.InvalidConfidence[j].FrameworkID
+	})
+	return rep
 }
 
 // HasFailures reports whether any covered control failed — used to map to exit 3.
@@ -133,14 +250,17 @@ func (m *Mapping) Evaluate(violated map[string]bool) Report {
 		Gaps:       []ControlResult{},
 		OutOfScope: []ControlResult{},
 	}
-	for _, d := range m.Domains {
-		for _, c := range d.Controls {
+	for di := range m.Domains {
+		for ci := range m.Domains[di].Controls {
+			c := &m.Domains[di].Controls[ci]
 			switch c.Coverage {
 			case coverageFull, coveragePartial:
 				res := ControlResult{
 					ID: c.ID, Title: c.Title, Type: c.Type,
 					Bucket: BucketCovered, Partial: c.Coverage == coveragePartial,
 					StaveControls: c.StaveControls,
+					Confidence:    c.ConfidenceOrDefault(),
+					Uncovered:     c.UncoveredAspects,
 				}
 				var failed []string
 				for _, sc := range c.StaveControls {

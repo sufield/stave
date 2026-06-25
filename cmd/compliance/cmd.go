@@ -33,22 +33,35 @@ snapshot and reports one of three actionable lists:
 A coverage percentage (verified ÷ in-scope) makes progress visible: add a
 control, re-run, watch it climb.
 
+The report also runs a mapping-integrity self-check: the framework mapping must
+reference only controls that exist in the catalog, have unique framework IDs,
+and carry well-formed confidence/uncovered_aspects metadata. Errors are shown
+after the report; --strict turns them into a non-zero exit for CI. Use
+--verify-mapping to run only this check (no snapshot needed).
+
 Inputs:
-  --framework   compliance framework to evaluate (default: aicm-v1.1)
-  --snapshot    observation snapshot directory, or - for stdin
-  --controls    control directory (default: built-in catalog)
-  --format      text | json | markdown (default: text)
-  --now         override current time (RFC3339) for deterministic output
+  --framework       compliance framework to evaluate (default: aicm-v1.1)
+  --snapshot        observation snapshot directory, or - for stdin
+  --controls        control directory (default: built-in catalog)
+  --format          text | json | markdown (default: text)
+  --now             override current time (RFC3339) for deterministic output
+  --verify-mapping  check the mapping against the catalog and exit (no snapshot)
+  --strict          fail (exit 2) on mapping-integrity errors
 
 Outputs:
-  stdout        the three-list report in the chosen format
+  stdout        the three-list report (+ integrity section) in the chosen format
   exit code     0 = no failures, 3 = a covered control failed,
-                2 = input error, 4 = internal error
+                2 = input error or (with --strict) mapping-integrity error,
+                4 = internal error
+
+  Note: integrity errors use exit 2, not 1 — exit 1 is reserved for
+  security-audit gating across the CLI.
 
 Examples:
   stave compliance --framework aicm-v1.1 --snapshot ./my-config/
   stave compliance --snapshot ./snap --format json > coverage.json
-  stave compliance --snapshot ./snap --format markdown > COMPLIANCE.md`,
+  stave compliance --snapshot ./snap --format markdown > COMPLIANCE.md
+  stave compliance --verify-mapping --strict   # CI gate, no snapshot`,
 		Example: `  # Coverage report against the default framework
   stave compliance --snapshot ./my-config/
 
@@ -71,6 +84,8 @@ Examples:
 	f.StringVarP(&opts.controls, "controls", "i", "controls", "control definitions directory (default: built-in catalog)")
 	f.StringVarP(&opts.format, "format", "f", "text", "output format: text, json, markdown")
 	f.StringVar(&opts.now, "now", "", "override current time (RFC3339) for deterministic output")
+	f.BoolVar(&opts.verifyMapping, "verify-mapping", false, "check the framework mapping against the catalog and exit (no snapshot needed)")
+	f.BoolVar(&opts.strict, "strict", false, "fail (exit 2) on mapping-integrity errors (dangling refs, duplicate IDs, invalid confidence)")
 
 	return cmd
 }

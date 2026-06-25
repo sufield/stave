@@ -1,0 +1,85 @@
+name: Gosentry Fuzz
+
+# Weekly security fuzzing with gosentry (Trail of Bits' LibAFL-based Go
+# toolchain fork). Same testing.F harnesses as `make fuzz`; gosentry adds
+# race/leak/overflow detection and grammar mode. Opt-in (scheduled +
+# manual) — never gates PRs. See docs/fuzzing.md.
+
+on:
+  schedule:
+    - cron: '0 2 * * 1' # Mondays 02:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history for --focus-on-new-code
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache gosentry build
+        uses: actions/cache@v4
+        with:
+          path: /tmp/gosentry
+          key: gosentry-${{ hashFiles('.github/workflows/fuzz.yml') }}
+
+      - name: Install gosentry
+        run: |
+          if [ ! -f /tmp/gosentry/bin/go ]; then
+            [ -d /tmp/gosentry/.git ] || git clone https://github.com/trailofbits/gosentry.git /tmp/gosentry
+            cd /tmp/gosentry/src && ./make.bash
+          fi
+
+      - name: Cache fuzz corpus
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/go-build/fuzz
+          key: fuzz-corpus-${{ github.sha }}
+          restore-keys: |
+            fuzz-corpus-
+
+      - name: Fuzz CEL predicate compiler (30 min)
+        run: make fuzz-cel FUZZ_TIME=30m
+        env:
+          GOSENTRY_PATH: /tmp/gosentry
+
+      - name: Fuzz snapshot parser (30 min)
+        run: make fuzz-snapshot FUZZ_TIME=30m
+        env:
+          GOSENTRY_PATH: /tmp/gosentry
+
+      - name: Fuzz IAM policy resolver (grammar, 30 min)
+        run: make fuzz-iam FUZZ_TIME=30m
+        env:
+          GOSENTRY_PATH: /tmp/gosentry
+
+      - name: Generate coverage reports
+        if: always()
+        run: make fuzz-coverage
+        env:
+          GOSENTRY_PATH: /tmp/gosentry
+
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashes-${{ github.sha }}
+          path: |
+            **/testdata/fuzz/**
+            **/output/crashes/**
+            **/output/leaks/**
+          retention-days: 30

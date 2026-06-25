@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	cm "github.com/sufield/stave/internal/compliancemapping"
 )
@@ -46,6 +47,11 @@ type TextRenderer struct{}
 
 // Render implements Renderer.
 func (TextRenderer) Render(w io.Writer, r *cm.Report) error {
+	if r.VerifyOnly {
+		fmt.Fprintf(w, "%s %s — mapping integrity\n", r.Framework, r.FrameworkVersion)
+		renderIntegrityText(w, r.Integrity)
+		return nil
+	}
 	fmt.Fprintf(w, "%s %s — compliance coverage\n\n", r.Framework, r.FrameworkVersion)
 
 	fmt.Fprintf(w, "✅ COVERED (%d controls)\n", len(r.Covered))
@@ -71,18 +77,57 @@ func (TextRenderer) Render(w io.Writer, r *cm.Report) error {
 	if r.Failed > 0 {
 		fmt.Fprintf(w, "Failures: %d covered control(s) FAIL — fix these findings first.\n", r.Failed)
 	}
+	renderIntegrityText(w, r.Integrity)
 	return nil
 }
 
 func coveredDetail(c *cm.ControlResult) string {
-	if c.Status == cm.StatusFail {
-		return fmt.Sprintf("%d Stave control(s) failed", len(c.FailedControls))
+	var base string
+	switch {
+	case c.Status == cm.StatusFail:
+		base = fmt.Sprintf("%d Stave control(s) failed", len(c.FailedControls))
+	case c.Partial:
+		base = fmt.Sprintf("%d control(s) verified, partial mapping", len(c.StaveControls))
+	default:
+		base = fmt.Sprintf("%d Stave control(s) verified", len(c.StaveControls))
 	}
-	n := len(c.StaveControls)
-	if c.Partial {
-		return fmt.Sprintf("%d control(s) verified, partial mapping", n)
+	if c.Confidence != "" {
+		base += " [" + c.Confidence + "]"
 	}
-	return fmt.Sprintf("%d Stave control(s) verified", n)
+	if c.Partial && c.Uncovered != "" {
+		base += ": " + c.Uncovered
+	}
+	return base
+}
+
+// renderIntegrityText prints the mapping self-check. Shared by the coverage
+// report (appended) and --verify-mapping (standalone).
+func renderIntegrityText(w io.Writer, ir *cm.IntegrityReport) {
+	if ir == nil {
+		return
+	}
+	fmt.Fprintf(w, "\n🔎 MAPPING INTEGRITY\n")
+	if ir.CatalogTotal > 0 {
+		fmt.Fprintf(w, "  references %d of %d catalog controls\n", ir.ReferencedControl, ir.CatalogTotal)
+	} else {
+		fmt.Fprintf(w, "  references %d catalog controls (catalog not loaded — dangling check skipped)\n", ir.ReferencedControl)
+	}
+	if !ir.HasErrors() && !ir.HasWarnings() {
+		fmt.Fprintln(w, "  ✅ no integrity issues")
+		return
+	}
+	for _, d := range ir.DanglingRefs {
+		fmt.Fprintf(w, "  ❌ %s maps %s — control not in catalog\n", d.FrameworkID, d.StaveControl)
+	}
+	for _, id := range ir.DuplicateIDs {
+		fmt.Fprintf(w, "  ❌ duplicate framework ID: %s\n", id)
+	}
+	for _, ci := range ir.InvalidConfidence {
+		fmt.Fprintf(w, "  ❌ %s has invalid confidence %q (want direct|inferred)\n", ci.FrameworkID, ci.Value)
+	}
+	if n := len(ir.PartialNoReason); n > 0 {
+		fmt.Fprintf(w, "  ⚠️  %d partial mapping(s) missing uncovered_aspects: %s\n", n, strings.Join(ir.PartialNoReason, ", "))
+	}
 }
 
 // MarkdownRenderer writes a report suitable for documentation/auditor handoff.
@@ -90,6 +135,11 @@ type MarkdownRenderer struct{}
 
 // Render implements Renderer.
 func (MarkdownRenderer) Render(w io.Writer, r *cm.Report) error {
+	if r.VerifyOnly {
+		fmt.Fprintf(w, "# %s %s — Mapping Integrity\n", r.Framework, r.FrameworkVersion)
+		renderIntegrityMarkdown(w, r.Integrity)
+		return nil
+	}
 	fmt.Fprintf(w, "# %s %s — Compliance Coverage\n\n", r.Framework, r.FrameworkVersion)
 	fmt.Fprintf(w, "**Coverage: %d of %d in-scope controls verified (%.0f%%)** — %d passed, %d failed.\n\n",
 		r.Verified, r.InScope, r.CoveragePercent, r.Passed, r.Failed)
@@ -102,6 +152,9 @@ func (MarkdownRenderer) Render(w io.Writer, r *cm.Report) error {
 		status := string(c.Status)
 		if c.Partial {
 			status += " (partial)"
+		}
+		if c.Confidence != "" {
+			status += " — " + c.Confidence
 		}
 		fmt.Fprintf(w, "| %s | %s | %s | %s |\n", c.ID, mdEsc(c.Title), status, mdControls(c))
 	}
@@ -121,7 +174,36 @@ func (MarkdownRenderer) Render(w io.Writer, r *cm.Report) error {
 		c := &r.OutOfScope[i]
 		fmt.Fprintf(w, "| %s | %s | %s |\n", c.ID, mdEsc(c.Title), c.OutOfScopeKind)
 	}
+	renderIntegrityMarkdown(w, r.Integrity)
 	return nil
+}
+
+func renderIntegrityMarkdown(w io.Writer, ir *cm.IntegrityReport) {
+	if ir == nil {
+		return
+	}
+	fmt.Fprintf(w, "\n## 🔎 Mapping integrity\n\n")
+	if ir.CatalogTotal > 0 {
+		fmt.Fprintf(w, "References %d of %d catalog controls.\n\n", ir.ReferencedControl, ir.CatalogTotal)
+	} else {
+		fmt.Fprintf(w, "References %d catalog controls (catalog not loaded — dangling check skipped).\n\n", ir.ReferencedControl)
+	}
+	if !ir.HasErrors() && !ir.HasWarnings() {
+		fmt.Fprintln(w, "✅ No integrity issues.")
+		return
+	}
+	for _, d := range ir.DanglingRefs {
+		fmt.Fprintf(w, "- ❌ `%s` maps `%s` — control not in catalog\n", d.FrameworkID, d.StaveControl)
+	}
+	for _, id := range ir.DuplicateIDs {
+		fmt.Fprintf(w, "- ❌ duplicate framework ID: `%s`\n", id)
+	}
+	for _, ci := range ir.InvalidConfidence {
+		fmt.Fprintf(w, "- ❌ `%s` has invalid confidence `%s` (want direct|inferred)\n", ci.FrameworkID, ci.Value)
+	}
+	if n := len(ir.PartialNoReason); n > 0 {
+		fmt.Fprintf(w, "- ⚠️ %d partial mapping(s) missing `uncovered_aspects`: %s\n", n, strings.Join(ir.PartialNoReason, ", "))
+	}
 }
 
 func mdControls(c *cm.ControlResult) string {
