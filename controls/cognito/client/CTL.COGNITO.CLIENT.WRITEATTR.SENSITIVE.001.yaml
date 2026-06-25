@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CLIENT.WRITEATTR.SENSITIVE.001
+name: Cognito App Client WriteAttributes Includes a Sensitive Custom Attribute
+description: >
+  A Cognito app client has WriteAttributes scoped to an explicit list, but that
+  list still includes a security-sensitive custom attribute — its key matches
+  role / admin / tenant / user_id / account_id / permission (case-insensitive).
+  Any authenticated user can call update-user-attributes and self-modify that
+  attribute. A scoped WriteAttributes looks safe (only a few attributes) but
+  custom:userAccountId, custom:role, or custom:tenantId among them is still a
+  self-escalation path — the collector matches the pattern rather than only
+  checking whether WriteAttributes is set.
+
+  HIGH counterpart to CTL.COGNITO.CLIENT.WRITEATTR.DEFAULT.001 (CRITICAL, the
+  unset/all-writable default); the two are disjoint. The user-controlled
+  counterpart to the IdP-controlled CTL.COGNITO.FEDERATION.ATTRMAP.SENSITIVE.001.
+
+  Inspired by Doyensec CloudsecTidbits S1 #2 — Tampering User Attributes In AWS
+  Cognito User Pools.
+domain: exposure
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3, AC-16"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-09", "IAM-16"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cognito_app_client
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.cognito.client_write_sensitive_attr
+  - identity.cognito.client_write_sensitive_attr_name
+remediation:
+  description: >
+    App client WriteAttributes is scoped but includes a security-sensitive custom
+    attribute that authenticated users can therefore self-modify.
+  action: >
+    Remove the sensitive custom attribute from WriteAttributes. Write sensitive
+    attributes server-side with an admin/provisioning identity, never from the
+    client. Keep WriteAttributes limited to non-sensitive profile fields.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_app_client",
+        "cognito": {
+          "client_write_sensitive_attr": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_app_client
+    - field: properties.identity.cognito.client_write_sensitive_attr
+      op: eq
+      value: true
+tests:
+  - name: scoped WriteAttributes including custom:userAccountId fires (false-negative trap — pattern match, not just is-set)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_ABC/client/abc123"
+      asset_type: aws_cognito_app_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            client_write_sensitive_attr: true
+            client_write_sensitive_attr_name: "custom:userAccountId"
+  - name: WriteAttributes with only email passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_DEF/client/def456"
+      asset_type: aws_cognito_app_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            client_write_sensitive_attr: false

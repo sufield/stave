@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2736
-**Pack hash:** `051e817fc70e8851f5bf81296d8e81b85aa8f79483c97c24f63ea0e458d05cb7`
+**Total controls:** 2739
+**Pack hash:** `4446445c8127911d913524950840dd06f1973923bb96f33a3a38a6db28764e41`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,8 +13,8 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 288 |
-| high | 1201 |
+| critical | 289 |
+| high | 1203 |
 | info | 16 |
 | low | 206 |
 | medium | 1025 |
@@ -26,8 +26,8 @@ GitHub. Pick a service below.
 | capacity | 3 |
 | detection | 135 |
 | encryption | 113 |
-| exposure | 1206 |
-| governance | 586 |
+| exposure | 1208 |
+| governance | 587 |
 | hygiene | 18 |
 | identity | 463 |
 | lifecycle | 31 |
@@ -61,7 +61,7 @@ GitHub. Pick a service below.
 | [CLOUDWATCH](reference/cloudwatch.md) | 66 |
 | [CODEBUILD](reference/codebuild.md) | 12 |
 | [CODECOMMIT](reference/codecommit.md) | 2 |
-| [COGNITO](reference/cognito.md) | 110 |
+| [COGNITO](reference/cognito.md) | 113 |
 | [COMPLIANCE](reference/compliance.md) | 1 |
 | [CONFIG](reference/config.md) | 50 |
 | [DATACLASS](reference/dataclass.md) | 3 |

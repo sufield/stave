@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.CLIENT.WRITEATTR.DEFAULT.001
+name: Cognito App Client WriteAttributes Unset — Every Attribute Is Writable
+description: >
+  A Cognito app client has no WriteAttributes configured, so Cognito applies the
+  default: EVERY user attribute is writable from the client, including sensitive
+  custom attributes (custom:Role, custom:isAdmin, custom:tenantID, linking IDs).
+  Any authenticated user can call update-user-attributes and self-modify those
+  attributes. If the application trusts custom attributes for authorization, this
+  is direct privilege escalation. Most teams never set WriteAttributes and so get
+  this default silently.
+
+  CRITICAL counterpart to CTL.COGNITO.CLIENT.WRITEATTR.SENSITIVE.001 (HIGH, fires
+  when WriteAttributes IS scoped but still lists a sensitive attribute); the two
+  are disjoint. Distinct from CTL.COGNITO.CLIENT.ATTRRW.001, which requires read
+  AND write on ALL attributes — this fires on the write-default even when reads
+  are scoped. The user-controlled counterpart to the IdP-controlled
+  CTL.COGNITO.FEDERATION.ATTRMAP.SENSITIVE.001.
+
+  Inspired by Doyensec CloudsecTidbits S1 #2 — Tampering User Attributes In AWS
+  Cognito User Pools.
+domain: exposure
+severity: critical
+compliance:
+  owasp_nhi: "NHI5"
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-3, AC-6, AC-16"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-09", "IAM-16"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cognito_app_client
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.cognito.client_write_attributes_unset
+remediation:
+  description: >
+    App client has no WriteAttributes, so Cognito makes every attribute writable
+    by any authenticated user.
+  action: >
+    Set WriteAttributes explicitly to the minimal list the client needs (e.g.
+    email, name) and exclude all security-sensitive custom attributes. Treat
+    sensitive attributes as admin-only; write them server-side, never from the
+    client.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_app_client",
+        "cognito": {
+          "client_write_attributes_unset": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_app_client
+    - field: properties.identity.cognito.client_write_attributes_unset
+      op: eq
+      value: true
+tests:
+  - name: app client with no WriteAttributes set fires (vulnerable — default all writable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_ABC/client/abc123"
+      asset_type: aws_cognito_app_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            client_write_attributes_unset: true
+  - name: app client with scoped WriteAttributes passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_DEF/client/def456"
+      asset_type: aws_cognito_app_client
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_app_client
+          cognito:
+            client_write_attributes_unset: false

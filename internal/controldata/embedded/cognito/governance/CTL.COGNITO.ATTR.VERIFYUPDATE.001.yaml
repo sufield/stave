@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.ATTR.VERIFYUPDATE.001
+name: Cognito User Pool Does Not Require Verification Before Email/Phone Update
+description: >
+  A Cognito User Pool does not require attribute verification before update for
+  email and phone_number — UserAttributeUpdateSettings.
+  AttributesRequireVerificationBeforeUpdate omits one or both. Without it, a user
+  can change their email to victim@company.com (or a phone to a victim's number)
+  WITHOUT proving control of the new value. If any downstream flow trusts the
+  email/phone — password recovery, notifications, identity linking — this is an
+  account-takeover primitive. AWS recommends requiring verification before update
+  for these attributes.
+
+  Inspired by Doyensec CloudsecTidbits S1 #2 — Tampering User Attributes In AWS
+  Cognito User Pools.
+domain: governance
+severity: high
+compliance:
+  owasp_nhi: "NHI3"
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "IA-5, IA-8"
+  pci_dss_v4.0: "8.3"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cognito_user_pool
+params:
+  attack_stage: credential_access
+observation_fields:
+  - identity.kind
+  - identity.cognito.attr_verification_before_update
+  - identity.cognito.attr_verification_missing
+remediation:
+  description: >
+    The pool allows email/phone_number changes without verifying the new value,
+    enabling unverified email/phone takeover primitives.
+  action: >
+    Set UserAttributeUpdateSettings.AttributesRequireVerificationBeforeUpdate to
+    include both "email" and "phone_number". A changed value then stays pending
+    until the user verifies control of it.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "attr_verification_before_update": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.attr_verification_before_update
+      op: eq
+      value: false
+tests:
+  - name: pool not requiring verification before email update fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_ABC123"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            attr_verification_before_update: false
+            attr_verification_missing: "email"
+  - name: pool requiring verification for email and phone passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_DEF456"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            attr_verification_before_update: true

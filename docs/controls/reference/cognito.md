@@ -200,6 +200,22 @@ No CloudWatch alarm watches CloudTrail for UpdateUserPool API calls. User pool c
 
 ---
 
+### CTL.COGNITO.ATTR.VERIFYUPDATE.001
+
+**Cognito User Pool Does Not Require Verification Before Email/Phone Update**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: IA-5, IA-8; owasp_nhi: NHI3; pci_dss_v4.0: 8.3; soc2: CC6.1, CC6.7;
+
+A Cognito User Pool does not require attribute verification before update for email and phone_number — UserAttributeUpdateSettings. AttributesRequireVerificationBeforeUpdate omits one or both. Without it, a user can change their email to victim@company.com (or a phone to a victim's number) WITHOUT proving control of the new value. If any downstream flow trusts the email/phone — password recovery, notifications, identity linking — this is an account-takeover primitive. AWS recommends requiring verification before update for these attributes.
+Inspired by Doyensec CloudsecTidbits S1 #2 — Tampering User Attributes In AWS Cognito User Pools.
+
+**Remediation:** Set UserAttributeUpdateSettings.AttributesRequireVerificationBeforeUpdate to include both "email" and "phone_number". A changed value then stays pending until the user verifies control of it.
+
+---
+
 ### CTL.COGNITO.CLIENT.ACCESSTTL.001
 
 **Cognito App Client Access Token Validity Exceeds One Hour**
@@ -422,6 +438,40 @@ Cognito app clients must enable token revocation so revoked refresh tokens and t
 Cognito app client has a callback URL containing a wildcard (*) or other broad pattern. Wildcards in callback URLs enable open-redirect attacks: an attacker crafts an authorization request with a callback matching the wildcard but pointing to an attacker-controlled origin, and Cognito redirects the auth code there.
 
 **Remediation:** Remove all wildcard entries from callback_urls. Replace with explicit, full URLs for every callback the app legitimately needs. If multiple subdomains need the same client, list each subdomain explicitly rather than using *.example.com — Cognito callback URLs must match the registered list exactly.
+
+---
+
+### CTL.COGNITO.CLIENT.WRITEATTR.DEFAULT.001
+
+**Cognito App Client WriteAttributes Unset — Every Attribute Is Writable**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3, AC-6, AC-16; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1, CC6.3;
+
+A Cognito app client has no WriteAttributes configured, so Cognito applies the default: EVERY user attribute is writable from the client, including sensitive custom attributes (custom:Role, custom:isAdmin, custom:tenantID, linking IDs). Any authenticated user can call update-user-attributes and self-modify those attributes. If the application trusts custom attributes for authorization, this is direct privilege escalation. Most teams never set WriteAttributes and so get this default silently.
+CRITICAL counterpart to CTL.COGNITO.CLIENT.WRITEATTR.SENSITIVE.001 (HIGH, fires when WriteAttributes IS scoped but still lists a sensitive attribute); the two are disjoint. Distinct from CTL.COGNITO.CLIENT.ATTRRW.001, which requires read AND write on ALL attributes — this fires on the write-default even when reads are scoped. The user-controlled counterpart to the IdP-controlled CTL.COGNITO.FEDERATION.ATTRMAP.SENSITIVE.001.
+Inspired by Doyensec CloudsecTidbits S1 #2 — Tampering User Attributes In AWS Cognito User Pools.
+
+**Remediation:** Set WriteAttributes explicitly to the minimal list the client needs (e.g. email, name) and exclude all security-sensitive custom attributes. Treat sensitive attributes as admin-only; write them server-side, never from the client.
+
+---
+
+### CTL.COGNITO.CLIENT.WRITEATTR.SENSITIVE.001
+
+**Cognito App Client WriteAttributes Includes a Sensitive Custom Attribute**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3, AC-16; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A Cognito app client has WriteAttributes scoped to an explicit list, but that list still includes a security-sensitive custom attribute — its key matches role / admin / tenant / user_id / account_id / permission (case-insensitive). Any authenticated user can call update-user-attributes and self-modify that attribute. A scoped WriteAttributes looks safe (only a few attributes) but custom:userAccountId, custom:role, or custom:tenantId among them is still a self-escalation path — the collector matches the pattern rather than only checking whether WriteAttributes is set.
+HIGH counterpart to CTL.COGNITO.CLIENT.WRITEATTR.DEFAULT.001 (CRITICAL, the unset/all-writable default); the two are disjoint. The user-controlled counterpart to the IdP-controlled CTL.COGNITO.FEDERATION.ATTRMAP.SENSITIVE.001.
+Inspired by Doyensec CloudsecTidbits S1 #2 — Tampering User Attributes In AWS Cognito User Pools.
+
+**Remediation:** Remove the sensitive custom attribute from WriteAttributes. Write sensitive attributes server-side with an admin/provisioning identity, never from the client. Keep WriteAttributes limited to non-sensitive profile fields.
 
 ---
 
