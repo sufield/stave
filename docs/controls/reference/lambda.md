@@ -887,18 +887,33 @@ MicroVM Network Connector Uses Unapproved Subnets. Lab control for the Lambda Mi
 
 ---
 
-### CTL.LAMBDA.MICROVM.TAGSESSION.001
+### CTL.LAMBDA.MICROVM.TAGSESSION.MISSING.001
 
-**MicroVM Execution Role Trust Policy Missing or Over-Broad sts:TagSession**
+**MicroVM Execution Role Trust Policy Missing sts:TagSession**
 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
 - **Compliance:** nist_800_53_r5: AC-6;
 
-MicroVM Execution Role Trust Policy Missing or Over-Broad sts:TagSession. Lab control for the Lambda MicroVM validation suite (ctf/labs/microvm). Evaluates a captured MicroVM configuration snapshot (obs.v0.1) for this invariant.
+The MicroVM execution role's trust policy does not grant sts:TagSession (and has no sts:* wildcard that would cover it), so the role can never carry session tags. Without session tagging, attribute-based access control and tag-scoped guardrails cannot be applied to the role's sessions — a future-proofing gap that silently disables ABAC for every MicroVM that assumes this role. Distinct from the over-broad case (CTL.LAMBDA.MICROVM.TAGSESSION.WILDCARD.001): this is absence of the action, not an unscoped grant.
 
-**Remediation:** Include sts:TagSession in the trust policy and avoid sts:* wildcards.
+**Remediation:** Add sts:TagSession alongside sts:AssumeRole in the role's trust policy. Grant it as the explicit action, not via an sts:* wildcard.
+
+---
+
+### CTL.LAMBDA.MICROVM.TAGSESSION.WILDCARD.001
+
+**MicroVM Execution Role Trust Policy Grants sts:TagSession via Over-Broad sts:* Wildcard**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6;
+
+The MicroVM execution role's trust policy grants sts:TagSession through an sts:* wildcard rather than the explicit, scoped action. The wildcard also confers every other STS action (AssumeRoleWithWebIdentity, AssumeRoleWithSAML, GetFederationToken, …), expanding the trust relationship far beyond what session tagging requires. Distinct from the missing case (CTL.LAMBDA.MICROVM.TAGSESSION.MISSING.001): here the action is present, but granted over-broadly.
+
+**Remediation:** Replace sts:* with the explicit actions the role needs — sts:AssumeRole and sts:TagSession — so session tagging is allowed without the unscoped wildcard.
 
 ---
 

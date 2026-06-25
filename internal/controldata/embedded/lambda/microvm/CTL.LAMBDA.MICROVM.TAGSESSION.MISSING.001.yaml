@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.MICROVM.TAGSESSION.MISSING.001
+name: MicroVM Execution Role Trust Policy Missing sts:TagSession
+description: >
+  The MicroVM execution role's trust policy does not grant sts:TagSession (and
+  has no sts:* wildcard that would cover it), so the role can never carry session
+  tags. Without session tagging, attribute-based access control and tag-scoped
+  guardrails cannot be applied to the role's sessions — a future-proofing gap
+  that silently disables ABAC for every MicroVM that assumes this role. Distinct
+  from the over-broad case (CTL.LAMBDA.MICROVM.TAGSESSION.WILDCARD.001): this is
+  absence of the action, not an unscoped grant.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+scope_tags:
+  - aws
+  - lambda
+  - microvm
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    The execution role's trust policy is missing sts:TagSession, so its sessions
+    cannot be tagged and tag-based access control cannot apply.
+  action: >
+    Add sts:TagSession alongside sts:AssumeRole in the role's trust policy. Grant
+    it as the explicit action, not via an sts:* wildcard.
+  example: |
+    {
+      "role": {
+        "kind": "iam_role",
+        "purpose": "execution",
+        "trust_tagsession_present": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.role.kind
+      op: eq
+      value: iam_role
+    - field: properties.role.purpose
+      op: eq
+      value: execution
+    - field: properties.role.trust_tagsession_present
+      op: eq
+      value: false

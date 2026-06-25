@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2716
-**Pack hash:** `cff3e6593da093885fd823f3f14669d0ae74cc227177354ee8f030bcba971f02`
+**Total controls:** 2717
+**Pack hash:** `5950288867a6dbac4451fb31f3e2157372abbc67f20cb63975f32ddc1addeea2`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,7 +14,7 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 284 |
-| high | 1188 |
+| high | 1189 |
 | info | 16 |
 | low | 205 |
 | medium | 1023 |
@@ -29,7 +29,7 @@ GitHub. Pick a service below.
 | exposure | 1204 |
 | governance | 585 |
 | hygiene | 18 |
-| identity | 451 |
+| identity | 452 |
 | lifecycle | 31 |
 | network | 32 |
 | resilience | 33 |
@@ -90,7 +90,7 @@ GitHub. Pick a service below.
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 2 |
 | [KMS](reference/kms.md) | 45 |
-| [LAMBDA](reference/lambda.md) | 83 |
+| [LAMBDA](reference/lambda.md) | 84 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
 | [LIGHTSAIL](reference/lightsail.md) | 2 |
 | [M365](reference/m365.md) | 73 |
