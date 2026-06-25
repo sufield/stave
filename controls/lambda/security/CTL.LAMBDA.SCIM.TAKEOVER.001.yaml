@@ -1,0 +1,119 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.SCIM.TAKEOVER.001
+name: SCIM Handler Enables Provisioning Takeover (Public Endpoint + Overprivileged + Reachable Token)
+description: >
+  A SCIM integration handler sits at the centre of a critical compound exposure:
+  the SCIM endpoint it serves is publicly reachable with no effective gateway
+  authentication, its execution role is overprivileged, and the SCIM bearer token
+  is reachable. An attacker who obtains the token (from a Lambda env var, or a
+  secret readable by a compromised role) hits the public endpoint and operates
+  with the overprivileged handler's permissions — creating admin users, setting
+  passwords, modifying attributes. Full provisioning takeover.
+
+  This is the chain no individual control sees. It composes existing detections
+  (it does NOT duplicate them): the unauthenticated endpoint is also caught by
+  CTL.APIGATEWAY.AUTH.001, the env-var token by CTL.LAMBDA.ENV.SECRETS.001, the
+  overprivileged role by CTL.LAMBDA.ROLE.LEASTPRIV.001. The FN trap is an
+  AWS_IAM-authorized endpoint whose API Gateway resource policy allows
+  Principal:"*" — IAM auth with a permissive resource policy is effectively no
+  auth (reuses CTL.APIGATEWAY.AUTH.IAM.UNRESTRICTED.001). Computed by
+  examples/scim-provisioning-takeover/ (Soufflé + Z3, which agree).
+
+  Stave covers the infrastructure misconfiguration surface; the SCIM handler's
+  code behaviour (parser differentials, verification bypass, re-provisioning
+  fallback) requires application-level testing — see docs/contract/scim.md.
+
+  Infrastructure control inspired by Doyensec "SCIM Hunting — Beyond SSO".
+domain: identity
+severity: critical
+scope: compound
+corpus_reference: MITRE:T1190
+compliance:
+  owasp_nhi: "NHI5"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-6, SC-7"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-09", "IAM-16"]
+scope_tags:
+  - aws
+  - lambda
+  - scim
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lambda_function
+params:
+  attack_stage: initial_access
+observation_fields:
+  - compute.kind
+  - compute.scim.takeover_chain_present
+  - compute.scim.takeover_endpoint
+  - compute.scim.takeover_token
+  - compute.scim.takeover_path
+remediation:
+  description: >
+    A SCIM handler enables provisioning takeover: public endpoint + overprivileged
+    role + reachable token.
+  action: >
+    Break any one link: enforce gateway authentication on the SCIM route (and fix
+    a Principal:"*" API Gateway resource policy), scope the handler role to
+    provisioning-only on the managed pool, and move the token to Secrets Manager
+    with a restricted resource policy and rotation. Each fix also clears its
+    standalone finding (AUTH.001 / ROLE.LEASTPRIV.001 / ENV.SECRETS.001).
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "scim": {
+          "takeover_chain_present": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.scim.takeover_chain_present
+      op: eq
+      value: true
+tests:
+  - name: public endpoint + overprivileged handler + env-var token fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:scim-provisioner"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: function
+          scim:
+            takeover_chain_present: true
+            takeover_endpoint: "POST /v2/scim/Users"
+            takeover_token: "env:SCIM_BEARER_TOKEN"
+            takeover_path: "public SCIM endpoint → scim-provisioner (cognito-idp:Admin* on *) → token in env var"
+  - name: authed endpoint + scoped handler + secured token passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:scim-provisioner-safe"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: function
+          scim:
+            takeover_chain_present: false
+  - name: AWS_IAM auth but Principal star resource policy fires (false-negative trap — resource-policy bypass)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:scim-provisioner-iam"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: function
+          scim:
+            takeover_chain_present: true
+            takeover_endpoint: "POST /v2/scim/Users (AWS_IAM + Principal:* resource policy)"
+            takeover_token: "secret:scim-token (no resource policy)"
+            takeover_path: "IAM auth bypassed by Principal:* → scim-provisioner (overprivileged) → secret readable by any account role"

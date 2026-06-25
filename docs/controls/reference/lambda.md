@@ -1069,6 +1069,24 @@ Lambda functions using end-of-life runtimes do not receive security patches from
 
 ---
 
+### CTL.LAMBDA.SCIM.TAKEOVER.001
+
+**SCIM Handler Enables Provisioning Takeover (Public Endpoint + Overprivileged + Reachable Token)**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3, AC-6, SC-7; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1, CC6.6;
+
+A SCIM integration handler sits at the centre of a critical compound exposure: the SCIM endpoint it serves is publicly reachable with no effective gateway authentication, its execution role is overprivileged, and the SCIM bearer token is reachable. An attacker who obtains the token (from a Lambda env var, or a secret readable by a compromised role) hits the public endpoint and operates with the overprivileged handler's permissions — creating admin users, setting passwords, modifying attributes. Full provisioning takeover.
+This is the chain no individual control sees. It composes existing detections (it does NOT duplicate them): the unauthenticated endpoint is also caught by CTL.APIGATEWAY.AUTH.001, the env-var token by CTL.LAMBDA.ENV.SECRETS.001, the overprivileged role by CTL.LAMBDA.ROLE.LEASTPRIV.001. The FN trap is an AWS_IAM-authorized endpoint whose API Gateway resource policy allows Principal:"*" — IAM auth with a permissive resource policy is effectively no auth (reuses CTL.APIGATEWAY.AUTH.IAM.UNRESTRICTED.001). Computed by examples/scim-provisioning-takeover/ (Soufflé + Z3, which agree).
+Stave covers the infrastructure misconfiguration surface; the SCIM handler's code behaviour (parser differentials, verification bypass, re-provisioning fallback) requires application-level testing — see docs/contract/scim.md.
+Infrastructure control inspired by Doyensec "SCIM Hunting — Beyond SSO".
+
+**Remediation:** Break any one link: enforce gateway authentication on the SCIM route (and fix a Principal:"*" API Gateway resource policy), scope the handler role to provisioning-only on the managed pool, and move the token to Secrets Manager with a restricted resource policy and rotation. Each fix also clears its standalone finding (AUTH.001 / ROLE.LEASTPRIV.001 / ENV.SECRETS.001).
+
+---
+
 ### CTL.LAMBDA.SECRETS.BROKEN.REF.001
 
 **Lambda Secret References Must Match Execution Role Permissions**

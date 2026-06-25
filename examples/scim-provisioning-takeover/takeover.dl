@@ -1,0 +1,36 @@
+// SCIM-004 — SCIM provisioning takeover (Soufflé / Datalog). Composes three
+// conditions that no individual control sees together:
+//   1. the SCIM endpoint the handler serves is publicly reachable with no
+//      EFFECTIVE gateway auth                          scim_endpoint_public(api, path)
+//   2. the handler is wired to that endpoint           scim_handler_serves_api(lambda, api)
+//   3. the handler role is overprivileged              scim_handler_overprivileged(lambda, role)
+//   4. the SCIM token is reachable                      scim_token_reachable(token, via)
+//
+// "Publicly reachable with no effective auth" reuses CTL.APIGATEWAY.AUTH.001
+// (authorizationType NONE) AND CTL.APIGATEWAY.AUTH.IAM.UNRESTRICTED.001 — IAM
+// auth with a Principal:"*" resource policy is effectively no auth (the FN trap),
+// so the collector sets scim_endpoint_public true in that case too.
+// Overprivilege reuses CTL.LAMBDA.ROLE.LEASTPRIV.001; token reachability reuses
+// CTL.LAMBDA.ENV.SECRETS.001 / CTL.SECRETS.ROTATION.*.
+//
+//   souffle takeover.dl -F <facts-dir> -D <out-dir>
+//   -> out-dir/scim_provisioning_takeover.csv lists (api, lambda, token, path) — non-empty = FAIL.
+//
+// Infrastructure control inspired by Doyensec "SCIM Hunting — Beyond SSO".
+
+.decl scim_endpoint_public(api:symbol, path:symbol)
+.decl scim_handler_serves_api(lambda:symbol, api:symbol)
+.decl scim_handler_overprivileged(lambda:symbol, role:symbol)
+.decl scim_token_reachable(token:symbol, via:symbol)
+.input scim_endpoint_public
+.input scim_handler_serves_api
+.input scim_handler_overprivileged
+.input scim_token_reachable
+
+.decl scim_provisioning_takeover(api:symbol, lambda:symbol, token:symbol, path:symbol)
+.output scim_provisioning_takeover
+scim_provisioning_takeover(API, L, Tok, Path) :-
+  scim_endpoint_public(API, Path),
+  scim_handler_serves_api(L, API),
+  scim_handler_overprivileged(L, _),
+  scim_token_reachable(Tok, _).

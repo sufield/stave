@@ -559,6 +559,23 @@ IAM principals must have no multi-step permission chain that leads to administra
 
 ---
 
+### CTL.IAM.ESCALATE.COGNITO.UPDATEATTR.001
+
+**Principal Can Set Any User Attribute via Unscoped AdminUpdateUserAttributes**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6, AC-16; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal can call cognito-idp:AdminUpdateUserAttributes without an attribute-scoping Condition. The permission is legitimate for SCIM / JIT provisioning — but unconstrained, it can set ANY attribute on ANY user in the pool, including security-sensitive ones (custom:role, custom:isAdmin, custom:tenantID). A SCIM handler (or any holder of this permission) thus escalates: write custom:role=admin on a user and application-side authorization treats them as admin. The fix is an IAM Condition restricting which attributes may be updated (cognito-idp:AllowedAttributesForUpdate); with that condition present, the permission is safe and this control does not fire.
+Generic least-privilege controls (CTL.LAMBDA.ROLE.LEASTPRIV.001, CTL.IAM.POLICY.SERVICEWILDCARD.001) do not catch this — AdminUpdateUserAttributes is a normal provisioning action, not a wildcard or admin grant. The collector resolves the permission across inline + attached managed policies (e.g. AmazonCognitoPowerUser grants cognito-idp:* with no condition — the FN trap) and sets the .present boolean only when the action is reachable AND no attribute-scoping condition constrains it.
+Infrastructure control inspired by Doyensec "SCIM Hunting — Beyond SSO".
+
+**Remediation:** Add an IAM Condition restricting the updatable attributes (cognito-idp:AllowedAttributesForUpdate) to the non-sensitive set the integration needs, or remove AdminUpdateUserAttributes if provisioning does not require attribute writes. Inspect attached managed policies (AmazonCognitoPowerUser grants cognito-idp:* unconstrained).
+
+---
+
 ### CTL.IAM.ESCALATE.CONFUSED.CFN.UPDATE.001
 
 **Principal Must Not Escalate via Existing CloudFormation Stack (Confused Deputy)**

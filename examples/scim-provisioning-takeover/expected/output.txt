@@ -1,0 +1,3 @@
+vuln   souffle=TAKEOVER  z3=sat  
+fp     souffle=NONE      z3=unsat
+fn     souffle=TAKEOVER  z3=sat  

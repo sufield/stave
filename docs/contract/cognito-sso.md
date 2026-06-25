@@ -34,12 +34,16 @@ User Pools*.
 
 ## Homoglyph provider names — `CTL.COGNITO.IDP.HOMOGLYPH.001` + `CTL.COGNITO.IDP.CASECOLLISION.001` (SSO-004)
 
-The collector NFKC-normalizes provider names (Go `golang.org/x/text/unicode/norm`)
-and compares; Stave reads the booleans.
+The collector builds a confusables **skeleton** of each provider name — NFKC
+normalize (Go `golang.org/x/text/unicode/norm`), then fold known homoglyphs
+(Cyrillic/Greek → Latin, per Unicode TR39 confusables) — and compares skeletons.
+NFKC **alone is not sufficient**: Cyrillic `е` (U+0435) and Latin `e` have
+distinct NFKC forms, so the homoglyph table is required (the lab's `transform.sh`
+shows the reference subset). Stave reads the booleans.
 
 | Field | Type | Meaning |
 |-------|------|---------|
-| `cognito.homoglyph_collision_present` | bool | Two byte-distinct provider names normalize to the same NFKC form (e.g. Latin `LegitCorp` vs Cyrillic `LеgitCorp`). **FAIL.** |
+| `cognito.homoglyph_collision_present` | bool | Two byte-distinct provider names share a confusables skeleton (e.g. Latin `LegitCorp` vs Cyrillic `LеgitCorp`). **FAIL.** |
 | `cognito.homoglyph_collision_pair` | string | The colliding pair (evidence). |
 | `cognito.case_only_collision` | bool | Two provider names differ only by case (`CorpIdP` vs `corpidp`). Depends on downstream normalization — **WARN/info**, not FAIL. |
 
