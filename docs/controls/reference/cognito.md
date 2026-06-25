@@ -590,6 +590,57 @@ Cognito user pool custom domain does not enforce HTTPS — the hosted UI is reac
 
 ---
 
+### CTL.COGNITO.FEDERATION.ATTRMAP.SENSITIVE.001
+
+**Cognito IdP AttributeMapping Maps a Security-Sensitive Attribute**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6, AC-16; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+An external IdP's AttributeMapping writes a security-sensitive custom attribute (e.g. custom:role, custom:tenantID, custom:isAdmin, custom:permissions) from an IdP claim during federation. An attacker controlling the IdP can set arbitrary values for these attributes. Even with WriteAttributes restrictions, JIT provisioning Lambdas using AdminUpdateUserAttributes bypass WriteAttributes entirely, so the mapping is the real control point.
+The collector flags any custom:* attribute whose key contains (case-insensitive) role / admin / tenant / permission / privilege / access — a configurable pattern list, not an exact allow-list, so custom:accessLevel is caught (the FN trap). Standard attributes (email, name, phone_number) are expected and do not fire. Distinct from CTL.COGNITO.SAML.ATTRMAP.001, which flags MISSING required attributes (the opposite direction).
+Inspired by Doyensec CloudsecTidbits No. 4 — The Danger of Multi-SSO AWS Cognito User Pools.
+
+**Remediation:** Remove security-sensitive attributes (role/tenant/admin/permission/privilege/ access) from the IdP AttributeMapping. Derive authorization attributes server-side from a trusted source after federation, not from IdP claims. If a sensitive attribute must be mapped, validate and overwrite it in a PreSignUp or PreTokenGeneration trigger.
+
+---
+
+### CTL.COGNITO.FEDERATION.GHOST.IDENTITY.001
+
+**Cognito Pool Enables Ghost Identity Injection With Elevated Attributes**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2, AC-6; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Three conditions hold together on this Cognito User Pool: an external IdP is registered, there is no PreSignUp Lambda gate before user creation, and a security-sensitive attribute is mapped from that IdP's claims. An attacker controlling the IdP federates and a ghost identity is auto-created with the sensitive attribute (e.g. custom:role=admin) set from an attacker-controlled claim — no trigger prevented it, and the identity persists.
+Each condition alone is a finding (CTL.COGNITO.FEDERATION.PRESIGNUP.MISSING.001 for the missing gate, CTL.COGNITO.FEDERATION.ATTRMAP.SENSITIVE.001 for the mapping); this compound proves all hold for a specific IdP. The finding names the IdP that creates the risk — on a pool with one safe and one risky IdP, it fires for the risky one only. Computed by examples/cognito-ghost-identity/ (Soufflé + Z3, which agree).
+Inspired by Doyensec CloudsecTidbits No. 4 — The Danger of Multi-SSO AWS Cognito User Pools.
+
+**Remediation:** Break any one link: add a PreSignUp Lambda gate, remove the sensitive attribute from the IdP AttributeMapping, or remove the untrusted external IdP. Adding the PreSignUp gate addresses the broadest set of federation risks.
+
+---
+
+### CTL.COGNITO.FEDERATION.PRESIGNUP.MISSING.001
+
+**Cognito User Pool With External IdPs Has No PreSignUp Trigger**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2, IA-8; owasp_nhi: NHI3; pci_dss_v4.0: 8.3; soc2: CC6.1, CC6.3;
+
+A Cognito User Pool has one or more external identity providers registered (OIDC or SAML) but no PreSignUp Lambda trigger. The PreSignUp trigger is the only gate before user-object creation: without it, any federated user from any registered external IdP is automatically persisted. If an external IdP is malicious or compromised, ghost identities land in the pool with no validation, and there is no automatic rollback — cleanup is manual, and the window between creation and cleanup is exploitable.
+The trigger must specifically be PreSignUp. PreAuthentication and PostConfirmation do NOT fire on the first federated login, so they do not gate ghost-identity creation — the collector sets has_presignup_trigger only for an actual PreSignUp configuration (the FN trap). Distinct from CTL.COGNITO.GHOST.PRESIGNUP.001, which flags a PreSignUp trigger pointing at a deleted Lambda; this flags the trigger being absent entirely.
+Inspired by Doyensec CloudsecTidbits No. 4 — The Danger of Multi-SSO AWS Cognito User Pools.
+
+**Remediation:** Configure a PreSignUp Lambda trigger (LambdaConfig.PreSignUp) that validates the incoming federated profile (email domain, IdP, required claims) and rejects unexpected registrations before the user object is created. A PreAuthentication trigger is not a substitute — it does not fire on first federated login.
+
+---
+
 ### CTL.COGNITO.GHOST.CREATEAUTH.001
 
 **Cognito Create Auth Challenge Lambda Trigger References Deleted Function**
@@ -872,6 +923,55 @@ Cognito user pool hosted UI is configured to allow self-sign-up but the pool's A
 Cognito identity pools must disable unauthenticated (guest) identities. When enabled, any client can obtain temporary AWS credentials without signing in. The unauthenticated IAM role's permissions become effectively public.
 
 **Remediation:** Disable unauthenticated identities on the identity pool. If guest access is required, scope the unauthenticated role to minimal permissions.
+
+---
+
+### CTL.COGNITO.IDP.CASECOLLISION.001
+
+**Cognito Provider Names Differ Only by Case**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-4; soc2: CC7.1;
+
+Two IdP provider names in the same Cognito User Pool differ only by letter case (e.g. CorpIdP and corpidp). Cognito treats them as distinct, but any downstream component that does case-insensitive comparison (.lower()) resolves them to the same provider, risking identity split or lookup mismatch. This is advisory: it is only exploitable if a downstream component normalizes case, so it is a WARN-class finding (low severity), distinct from the homoglyph collision (CTL.COGNITO.IDP.HOMOGLYPH.001, high).
+Inspired by Doyensec CloudsecTidbits No. 4 — The Danger of Multi-SSO AWS Cognito User Pools.
+
+**Remediation:** Rename one provider so the names differ by more than case, and normalize provider-name comparisons consistently across all downstream components.
+
+---
+
+### CTL.COGNITO.IDP.HOMOGLYPH.001
+
+**Cognito User Pool Has Visually Confusable (Homoglyph) Provider Names**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** iso_27001_2022: A.8.16; nist_800_53_r5: IA-4, AU-10; owasp_nhi: NHI3; soc2: CC6.1, CC7.1;
+
+Two IdP provider names in the same Cognito User Pool are visually identical but byte-distinct, using Unicode homoglyphs — e.g. LegitCorp (Latin 'e') and LеgitCorp (Cyrillic 'е' U+0435). Cognito enforces uniqueness only on byte-equal names, so both are accepted. They look identical in UIs, logs, and CLI output; if any downstream component normalizes inconsistently (lower(), NFKC), identity split or lookup mismatch follows — a confused-deputy and audit-log-confusion risk.
+The collector NFKC-normalizes provider names (golang.org/x/text/unicode/norm) and flags a collision when two byte-distinct names share an NFKC form. Case-only collisions are a separate, lower-severity finding (CTL.COGNITO.IDP.CASECOLLISION.001).
+Inspired by Doyensec CloudsecTidbits No. 4 — The Danger of Multi-SSO AWS Cognito User Pools.
+
+**Remediation:** Rename one provider to an ASCII-only, visually distinct name. Restrict provider names to a known character set ([A-Za-z0-9_-]) at creation time and reject names that NFKC-normalize to an existing provider's form.
+
+---
+
+### CTL.COGNITO.IDP.IDENTIFIER.DUPLICATE.001
+
+**Cognito IdP Identifier Claimed by More Than One Provider**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: IA-8, AC-4; owasp_nhi: NHI3; pci_dss_v4.0: 8.3; soc2: CC6.1;
+
+Two different identity providers in the same Cognito User Pool register the same IdpIdentifier (e.g. both claim company.com). IdP identifiers drive email-domain routing, so a duplicate is an ambiguous routing conflict — which IdP receives users for that domain is undefined, and an attacker-controlled IdP that duplicates a legitimate domain identifier can intercept that domain's federation. Cognito does not reject byte-distinct duplicate identifiers across providers, so the platform must catch it. Detected even when the domain is not a public email domain (the FN trap).
+Inspired by Doyensec CloudsecTidbits No. 4 — The Danger of Multi-SSO AWS Cognito User Pools.
+
+**Remediation:** Ensure each IdpIdentifier is claimed by exactly one IdP. Remove the duplicate from the unintended provider and verify domain ownership before assigning a domain identifier to any IdP.
 
 ---
 
@@ -1447,14 +1547,15 @@ Cognito user pools should require administrator-created accounts (AllowAdminCrea
 
 ### CTL.COGNITO.SOCIAL.ANYDOMAIN.001
 
-**Cognito Social Provider Allows Any Email Domain**
+**Cognito Provider Allows Any Email Domain or Claims a Public-Domain Identifier**
 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** governance
 - **Compliance:** fedramp_moderate: AC-2, IA-2; iso_27001_2022: A.5.16, A.5.18; nist_800_53_r5: AC-2, IA-2, IA-8; owasp_nhi: NHI3; pci_dss_v4.0: 8.3; soc2: CC6.1, CC6.3;
 
-Cognito social identity provider has no domain restriction — anyone with a Google, Facebook, Apple, or Amazon account can register, regardless of email domain. For applications meant only for users with corporate identities, this opens registration to the entire internet population on those providers.
+Cognito federation has an open-domain routing risk. Either (1) a social identity provider has no domain restriction — anyone with a Google, Facebook, Apple, or Amazon account can register regardless of email domain; or (2) an IdP's IdpIdentifiers registers a public email domain (gmail.com, outlook.com, yahoo.com, hotmail.com, protonmail.com, icloud.com, …). IdP identifiers control email-domain routing (user@domain -> the IdP that owns the domain), and Cognito does not enforce domain ownership — so an IdP claiming a public domain hijacks routing for every user on that domain. For applications meant only for users with corporate identities, both open the front door to the internet.
+Inspired by Doyensec CloudsecTidbits No. 4 — The Danger of Multi-SSO AWS Cognito User Pools.
 
 **Remediation:** Decide which email domains should be permitted for federated registration. For internal-only applications, restrict to corporate domains. Use a pre-sign-up Lambda trigger to inspect the email domain on the incoming social-provider profile and reject non-matching registrations. Document the allow-list so future expansions don't silently bypass the gate.
 

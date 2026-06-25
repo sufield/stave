@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.PASSROLE.SUBMITJOB.001
+name: Principal Must Not Escalate via Batch Job Execution Role
+description: >
+  Principals with iam:PassRole on a role R, batch:RegisterJobDefinition, and
+  batch:SubmitJob can escalate to R's permissions. RegisterJobDefinition lets the
+  caller define an arbitrary job container (image, command, env) running under R;
+  SubmitJob executes it on the compute environment. Any code the principal
+  supplies runs with R's authority. When R's effective permissions exceed the
+  principal's own, this is a privilege-escalation path — and combined with an
+  IMDS-exposed EC2 compute environment (CTL.BATCH.IMDS.JOBACCESS.001) it reaches
+  the instance role too. The invocation step (SubmitJob) is folded into the
+  .present boolean upstream — PassRole + RegisterJobDefinition without a run path
+  is not an escalation. Permissions are resolved across inline + attached managed
+  policies (batch:*, AWSBatchFullAccess), so a CI/CD role granted Batch admin for
+  "convenience" still fires.
+
+  Mirrors CTL.IAM.ESCALATE.PASSROLE.CREATEJOB.001 (Glue). Inspired by Doyensec
+  CloudsecTidbits No. 3 — Messing Around With AWS Batch For Privilege
+  Escalations. Lab: github.com/doyensec/cloudsec-tidbits.
+domain: identity
+severity: high
+scope: compound
+corpus_reference: MITRE:T1525
+compliance:
+  owasp_nhi: "NHI5"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - batch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.passrole_submitjob.present
+remediation:
+  description: >
+    Principal has a Batch-mediated escalation path: its iam:PassRole reaches a
+    role whose effective permissions exceed its own, batch:RegisterJobDefinition
+    lets it author jobs under that role, and batch:SubmitJob lets it run them.
+  action: >
+    Scope iam:PassRole to a role whose effective permissions do not exceed the
+    principal's, or remove batch:RegisterJobDefinition. If Batch job authoring is
+    required, restrict iam:PassRole with a Condition on the target role ARN.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "passrole_submitjob": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.passrole_submitjob.present
+      op: eq
+      value: true
+tests:
+  - name: user with Batch SubmitJob escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/batch-admin
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            passrole_submitjob:
+              present: true
+  - name: read-only Batch role passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/analyst
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            passrole_submitjob:
+              present: false
+  - name: CI role with batch via AWSBatchFullAccess managed policy fires (false-negative trap — managed policy resolution)
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:role/ci-deploy-role
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          escalation:
+            passrole_submitjob:
+              present: true

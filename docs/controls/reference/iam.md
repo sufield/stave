@@ -964,6 +964,22 @@ Principals with iam:PassRole on a role R plus ec2:RunInstances can escalate to R
 
 ---
 
+### CTL.IAM.ESCALATE.PASSROLE.RUNTASK.001
+
+**Principal Must Not Escalate via ECS Task Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with iam:PassRole on a role R, ecs:RegisterTaskDefinition, and ecs:RunTask can escalate to R's permissions. RegisterTaskDefinition lets the caller define an arbitrary task container running under task role R; RunTask executes it. Any code the principal supplies runs with R's authority. When R's effective permissions exceed the principal's own, this is a privilege-escalation path — and on EC2 launch type, combined with an IMDS-exposed container instance (CTL.ECS.IMDS.INSTANCEROLE.001), it reaches the instance role too. The invocation step (RunTask) is folded into the .present boolean upstream. Permissions are resolved across inline + attached managed policies (ecs:*), so a role granted ECS admin still fires.
+The ECS equivalent of CTL.IAM.ESCALATE.PASSROLE.SUBMITJOB.001; mirrors CTL.IAM.ESCALATE.PASSROLE.CREATEJOB.001 (Glue). Inspired by Doyensec CloudsecTidbits No. 3 (the pattern applies to ECS EC2 launch type). Lab: github.com/doyensec/cloudsec-tidbits.
+
+**Remediation:** Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or remove ecs:RegisterTaskDefinition. If task authoring is required, restrict iam:PassRole with a Condition on the target role ARN.
+
+---
+
 ### CTL.IAM.ESCALATE.PASSROLE.SENDCOMMAND.001
 
 **Principal Must Not Escalate via SSM SendCommand On Privileged Instance**
@@ -976,6 +992,22 @@ Principals with iam:PassRole on a role R plus ec2:RunInstances can escalate to R
 Principals with ssm:SendCommand or ssm:StartSession on an EC2 instance whose attached instance profile role R has broader effective permissions than the principal can escalate to R. The command or interactive session executes on the instance under R (the instance-profile role is the caller from the OS's perspective); IMDS reads from that session return R's temporary credentials. Rhino Security Labs' iam__privesc_scan lists this technique; the iam:PassRole check captured upstream corresponds to whether the principal can also attach alternate instance profiles, which widens the target-role set. Distinct from PASSROLE.RUNINSTANCES, which covers creating a fresh instance with an attacker-chosen profile; this covers exploiting an already-running one.
 
 **Remediation:** Scope ssm:SendCommand and ssm:StartSession to instances whose instance-profile role does not exceed the principal's permissions. Use resource tags plus a Condition on ssm:resourceTag/<key> to bind the principal to a specific instance population. If the principal also has iam:PassRole reaching this or a broader role, also remove that grant — it enables replacing the instance profile entirely.
+
+---
+
+### CTL.IAM.ESCALATE.PASSROLE.SUBMITJOB.001
+
+**Principal Must Not Escalate via Batch Job Execution Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Principals with iam:PassRole on a role R, batch:RegisterJobDefinition, and batch:SubmitJob can escalate to R's permissions. RegisterJobDefinition lets the caller define an arbitrary job container (image, command, env) running under R; SubmitJob executes it on the compute environment. Any code the principal supplies runs with R's authority. When R's effective permissions exceed the principal's own, this is a privilege-escalation path — and combined with an IMDS-exposed EC2 compute environment (CTL.BATCH.IMDS.JOBACCESS.001) it reaches the instance role too. The invocation step (SubmitJob) is folded into the .present boolean upstream — PassRole + RegisterJobDefinition without a run path is not an escalation. Permissions are resolved across inline + attached managed policies (batch:*, AWSBatchFullAccess), so a CI/CD role granted Batch admin for "convenience" still fires.
+Mirrors CTL.IAM.ESCALATE.PASSROLE.CREATEJOB.001 (Glue). Inspired by Doyensec CloudsecTidbits No. 3 — Messing Around With AWS Batch For Privilege Escalations. Lab: github.com/doyensec/cloudsec-tidbits.
+
+**Remediation:** Scope iam:PassRole to a role whose effective permissions do not exceed the principal's, or remove batch:RegisterJobDefinition. If Batch job authoring is required, restrict iam:PassRole with a Condition on the target role ARN.
 
 ---
 

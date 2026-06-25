@@ -1,0 +1,122 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.FEDERATION.PRESIGNUP.MISSING.001
+name: Cognito User Pool With External IdPs Has No PreSignUp Trigger
+description: >
+  A Cognito User Pool has one or more external identity providers registered
+  (OIDC or SAML) but no PreSignUp Lambda trigger. The PreSignUp trigger is the
+  only gate before user-object creation: without it, any federated user from any
+  registered external IdP is automatically persisted. If an external IdP is
+  malicious or compromised, ghost identities land in the pool with no validation,
+  and there is no automatic rollback — cleanup is manual, and the window between
+  creation and cleanup is exploitable.
+
+  The trigger must specifically be PreSignUp. PreAuthentication and
+  PostConfirmation do NOT fire on the first federated login, so they do not gate
+  ghost-identity creation — the collector sets has_presignup_trigger only for an
+  actual PreSignUp configuration (the FN trap). Distinct from
+  CTL.COGNITO.GHOST.PRESIGNUP.001, which flags a PreSignUp trigger pointing at a
+  deleted Lambda; this flags the trigger being absent entirely.
+
+  Inspired by Doyensec CloudsecTidbits No. 4 — The Danger of Multi-SSO AWS
+  Cognito User Pools.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI3"
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-2, IA-8"
+  pci_dss_v4.0: "8.3"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cognito_user_pool
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.kind
+  - identity.cognito.external_idp_count
+  - identity.cognito.has_presignup_trigger
+remediation:
+  description: >
+    User pool federates external IdPs but has no PreSignUp Lambda gate, so any
+    federated user is auto-persisted with no pre-creation validation.
+  action: >
+    Configure a PreSignUp Lambda trigger (LambdaConfig.PreSignUp) that validates
+    the incoming federated profile (email domain, IdP, required claims) and
+    rejects unexpected registrations before the user object is created. A
+    PreAuthentication trigger is not a substitute — it does not fire on first
+    federated login.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "external_idp_count": 2,
+          "has_presignup_trigger": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.external_idp_count
+      op: gt
+      value: 0
+    - field: properties.identity.cognito.has_presignup_trigger
+      op: eq
+      value: false
+tests:
+  - name: pool with two external IdPs and no PreSignUp fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_ABC123"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            external_idp_count: 2
+            has_presignup_trigger: false
+  - name: pool with external IdP and a PreSignUp trigger passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_DEF456"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            external_idp_count: 1
+            has_presignup_trigger: true
+  - name: pool with PreAuthentication but no PreSignUp fires (false-negative trap — wrong trigger)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_GHI789"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            external_idp_count: 1
+            has_presignup_trigger: false
+  - name: pool with no external IdPs passes (false-positive trap — no federation surface)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_JKL000"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            external_idp_count: 0
+            has_presignup_trigger: false

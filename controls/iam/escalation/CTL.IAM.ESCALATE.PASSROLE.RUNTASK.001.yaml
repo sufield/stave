@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.PASSROLE.RUNTASK.001
+name: Principal Must Not Escalate via ECS Task Role
+description: >
+  Principals with iam:PassRole on a role R, ecs:RegisterTaskDefinition, and
+  ecs:RunTask can escalate to R's permissions. RegisterTaskDefinition lets the
+  caller define an arbitrary task container running under task role R; RunTask
+  executes it. Any code the principal supplies runs with R's authority. When R's
+  effective permissions exceed the principal's own, this is a privilege-escalation
+  path — and on EC2 launch type, combined with an IMDS-exposed container instance
+  (CTL.ECS.IMDS.INSTANCEROLE.001), it reaches the instance role too. The
+  invocation step (RunTask) is folded into the .present boolean upstream.
+  Permissions are resolved across inline + attached managed policies (ecs:*), so
+  a role granted ECS admin still fires.
+
+  The ECS equivalent of CTL.IAM.ESCALATE.PASSROLE.SUBMITJOB.001; mirrors
+  CTL.IAM.ESCALATE.PASSROLE.CREATEJOB.001 (Glue). Inspired by Doyensec
+  CloudsecTidbits No. 3 (the pattern applies to ECS EC2 launch type). Lab:
+  github.com/doyensec/cloudsec-tidbits.
+domain: identity
+severity: high
+scope: compound
+corpus_reference: MITRE:T1525
+compliance:
+  owasp_nhi: "NHI5"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.passrole_runtask.present
+remediation:
+  description: >
+    Principal has an ECS-mediated escalation path: its iam:PassRole reaches a
+    role whose effective permissions exceed its own, ecs:RegisterTaskDefinition
+    lets it author tasks under that role, and ecs:RunTask lets it run them.
+  action: >
+    Scope iam:PassRole to a role whose effective permissions do not exceed the
+    principal's, or remove ecs:RegisterTaskDefinition. If task authoring is
+    required, restrict iam:PassRole with a Condition on the target role ARN.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "passrole_runtask": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.passrole_runtask.present
+      op: eq
+      value: true
+tests:
+  - name: user with ECS RunTask escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/ecs-admin
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            passrole_runtask:
+              present: true
+  - name: read-only ECS role passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/analyst
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            passrole_runtask:
+              present: false
+  - name: role with ecs RunTask + RegisterTaskDefinition across two policy sources fires (false-negative trap — combine across policies)
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:role/pipeline-role
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          escalation:
+            passrole_runtask:
+              present: true

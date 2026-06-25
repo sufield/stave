@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.BATCH.IMDS.JOBACCESS.001
+name: Batch EC2 Compute Environment Exposes IMDS to Job Containers
+description: >
+  An AWS Batch compute environment with EC2 (or SPOT) orchestration runs job
+  containers with host networking, so they share the host EC2 instance's network
+  interface and can reach the instance metadata service at 169.254.169.254. When
+  IMDS is reachable from jobs, any job container can retrieve the EC2 instance
+  role credentials — typically far more privileged than the job execution role
+  (the instance role manages EFS mounts, EC2 lifecycle, networking). Fargate
+  orchestration has no host IMDS and is out of scope.
+
+  The collector resolves batch.imds_accessible_from_jobs with the same logic as
+  CTL.EC2.IMDSV2.002: reachable when the launch template's hop limit is > 1, the
+  endpoint is enabled with host/bridge networking, OR the launch-template
+  metadata options are absent (fail-loud — unknown defaults are treated as
+  reachable). IMDSv2 enforcement WITHOUT a hop-limit restriction is still
+  reachable: a job container completes the PUT-for-token handshake just like the
+  host.
+
+  Inspired by Doyensec CloudsecTidbits No. 3 — Messing Around With AWS Batch For
+  Privilege Escalations. Lab: github.com/doyensec/cloudsec-tidbits.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.6"
+  nist_800_53_r5: "CM-6, AC-6"
+  soc2: "CC6.6"
+  pci_dss_v4.0: "2.2.1"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - batch
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_batch_compute_environment
+params:
+  attack_stage: credential_access
+observation_fields:
+  - batch.kind
+  - batch.orchestration_ec2
+  - batch.imds_accessible_from_jobs
+  - batch.instance_role_arn
+remediation:
+  description: >
+    Batch EC2 compute environment lets job containers reach the host IMDS and
+    retrieve the EC2 instance role credentials.
+  action: >
+    Set the launch template metadata options to HttpPutResponseHopLimit=1 (and
+    HttpTokens=required), or disable the IMDS endpoint, on the compute
+    environment's launch template. Migrate to Fargate orchestration where job
+    isolation is required. Hop-limit 1 rejects the extra hop a job container adds.
+  example: |
+    {
+      "batch": {
+        "kind": "compute_environment",
+        "orchestration_ec2": true,
+        "imds_accessible_from_jobs": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.batch.kind
+      op: eq
+      value: compute_environment
+    - field: properties.batch.orchestration_ec2
+      op: eq
+      value: true
+    - field: properties.batch.imds_accessible_from_jobs
+      op: eq
+      value: true
+tests:
+  - name: EC2 compute environment with hop limit 2 fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:batch:us-east-1:111122223333:compute-environment/batch-prod-ec2"
+      asset_type: aws_batch_compute_environment
+      vendor: aws
+      properties:
+        batch:
+          kind: compute_environment
+          orchestration_ec2: true
+          imds_accessible_from_jobs: true
+  - name: Fargate compute environment passes (false-positive trap — no host IMDS)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:batch:us-east-1:111122223333:compute-environment/batch-prod-fargate"
+      asset_type: aws_batch_compute_environment
+      vendor: aws
+      properties:
+        batch:
+          kind: compute_environment
+          orchestration_ec2: false
+          imds_accessible_from_jobs: false
+  - name: EC2 with IMDSv2 required but hop limit 2 fires (false-negative trap — IMDSv2 is not enough)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:batch:us-east-1:111122223333:compute-environment/batch-prod-ec2-v2"
+      asset_type: aws_batch_compute_environment
+      vendor: aws
+      properties:
+        batch:
+          kind: compute_environment
+          orchestration_ec2: true
+          imds_accessible_from_jobs: true
+  - name: EC2 with no launch template fires (false-negative trap — fail-loud on unknown defaults)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:batch:us-east-1:111122223333:compute-environment/batch-prod-ec2-default"
+      asset_type: aws_batch_compute_environment
+      vendor: aws
+      properties:
+        batch:
+          kind: compute_environment
+          orchestration_ec2: true
+          imds_accessible_from_jobs: true

@@ -1,0 +1,29 @@
+// COGNITO-SSO-005 — ghost identity with elevated privileges (Soufflé / Datalog).
+// Three conditions on a Cognito User Pool create the worst case:
+//   1. an external IdP is registered                  pool_has_external_idp(pool, idp)
+//   2. no PreSignUp Lambda gate before user creation  pool_missing_presignup(pool)
+//   3. a sensitive attribute is mapped from IdP claims sensitive_attribute_mapped(pool, idp, attr, claim)
+// Result: an attacker controlling the IdP federates -> ghost identity auto-created
+// with the sensitive attribute set from an attacker-controlled claim, no gate.
+//
+// The finding is per-IdP: it must name the specific IdP with the sensitive
+// mapping (the FN trap has one safe IdP and one risky IdP on the same pool).
+//
+//   souffle ghost_identity.dl -F <facts-dir> -D <out-dir>
+//   -> out-dir/ghost_identity.csv lists (pool, idp, attr, claim) — non-empty = FAIL.
+//
+// Inspired by Doyensec CloudsecTidbits No. 4 — Multi-SSO AWS Cognito User Pools.
+
+.decl pool_has_external_idp(pool:symbol, idp:symbol)
+.decl pool_missing_presignup(pool:symbol)
+.decl sensitive_attribute_mapped(pool:symbol, idp:symbol, attr:symbol, claim:symbol)
+.input pool_has_external_idp
+.input pool_missing_presignup
+.input sensitive_attribute_mapped
+
+.decl ghost_identity(pool:symbol, idp:symbol, attr:symbol, claim:symbol)
+.output ghost_identity
+ghost_identity(P, IDP, Attr, Claim) :-
+  pool_has_external_idp(P, IDP),
+  pool_missing_presignup(P),
+  sensitive_attribute_mapped(P, IDP, Attr, Claim).

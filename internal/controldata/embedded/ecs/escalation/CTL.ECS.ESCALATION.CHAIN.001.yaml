@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.ESCALATION.CHAIN.001
+name: ECS EC2-Launch Task Enables Task-to-Instance-Role Escalation
+description: >
+  The ECS variant of the Doyensec Batch escalation chain. The full chain holds:
+  an EC2-launch-type task on a container instance whose host IMDS is reachable, a
+  task role that can author and run tasks (ecs:RegisterTaskDefinition +
+  ecs:RunTask + iam:PassRole), and a container-instance role with sensitive
+  access. A principal runs a malicious task, it reaches the host IMDS, retrieves
+  the instance role credentials, and uses them against the sensitive resource —
+  escalating from the task role to the privileged instance role.
+
+  Each condition alone is a finding (CTL.ECS.IMDS.INSTANCEROLE.001 catches IMDS,
+  CTL.IAM.ESCALATE.PASSROLE.RUNTASK.001 catches the combo); this compound proves
+  all hold. Sensitive instance-role access includes direct data, ecs:* (lateral
+  to other task roles), and iam:PassRole (chain extension). Computed by the
+  shared spec examples/batch-escalation-chain/ (Soufflé + Z3).
+
+  Inspired by Doyensec CloudsecTidbits No. 3 (the pattern applies to ECS EC2
+  launch type). Lab: github.com/doyensec/cloudsec-tidbits.
+domain: identity
+severity: critical
+scope: compound
+corpus_reference: MITRE:T1078
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-05", "IVS-04"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - container.kind
+  - container.escalation_chain_present
+  - container.escalation_path
+remediation:
+  description: >
+    An ECS EC2-launch task enables escalation from the task role to the
+    privileged container-instance role via IMDS.
+  action: >
+    Break any one link: restrict IMDS (hop limit 1) / use awsvpc, scope
+    iam:PassRole or remove ecs:RegisterTaskDefinition on the task role, or reduce
+    the container-instance role to least privilege. Fargate removes the IMDS link.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "escalation_chain_present": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.escalation_chain_present
+      op: eq
+      value: true
+tests:
+  - name: EC2-launch task with IMDS + combo + privileged instance role fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:task-definition/analytics:3"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: task_definition
+          escalation_chain_present: true
+          escalation_path: "task-role → RegisterTaskDefinition+RunTask → EC2 instance → IMDS → instance-role → s3://tenant-data"
+  - name: Fargate task with the combo but no IMDS passes (false-positive trap — chain broken)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:task-definition/analytics-fg:3"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: task_definition
+          escalation_chain_present: false
+  - name: EC2-launch task where instance role has iam:PassRole fires (false-negative trap — PassRole extends the chain)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:task-definition/pass:1"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: task_definition
+          escalation_chain_present: true
+          escalation_path: "task-role → new task → EC2 instance → IMDS → instance-role → iam:PassRole-chain-extension"

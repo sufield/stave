@@ -50,6 +50,23 @@ ECS cluster's EC2 launch type configuration permits tasks to mount the Docker so
 
 ---
 
+### CTL.ECS.ESCALATION.CHAIN.001
+
+**ECS EC2-Launch Task Enables Task-to-Instance-Role Escalation**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+The ECS variant of the Doyensec Batch escalation chain. The full chain holds: an EC2-launch-type task on a container instance whose host IMDS is reachable, a task role that can author and run tasks (ecs:RegisterTaskDefinition + ecs:RunTask + iam:PassRole), and a container-instance role with sensitive access. A principal runs a malicious task, it reaches the host IMDS, retrieves the instance role credentials, and uses them against the sensitive resource — escalating from the task role to the privileged instance role.
+Each condition alone is a finding (CTL.ECS.IMDS.INSTANCEROLE.001 catches IMDS, CTL.IAM.ESCALATE.PASSROLE.RUNTASK.001 catches the combo); this compound proves all hold. Sensitive instance-role access includes direct data, ecs:* (lateral to other task roles), and iam:PassRole (chain extension). Computed by the shared spec examples/batch-escalation-chain/ (Soufflé + Z3).
+Inspired by Doyensec CloudsecTidbits No. 3 (the pattern applies to ECS EC2 launch type). Lab: github.com/doyensec/cloudsec-tidbits.
+
+**Remediation:** Break any one link: restrict IMDS (hop limit 1) / use awsvpc, scope iam:PassRole or remove ecs:RegisterTaskDefinition on the task role, or reduce the container-instance role to least privilege. Fargate removes the IMDS link.
+
+---
+
 ### CTL.ECS.EXEC.001
 
 **ECS Exec Must Be Disabled on Production Services**
@@ -227,6 +244,23 @@ ECS task definitions must not reference container images that don't exist in the
 ECS task definitions must reference container images from the organization's trusted registry set (typically the account's own ECR or a curated approved list). Images from Docker Hub, third- party registries, or unknown sources may contain vulnerabilities, backdoors, or cryptocurrency miners.
 
 **Remediation:** Mirror the required image into the organization's ECR and reference the ECR copy in the task definition. Enable image scanning on the ECR repository to detect vulnerabilities in mirrored images.
+
+---
+
+### CTL.ECS.IMDS.INSTANCEROLE.001
+
+**ECS EC2-Launch-Type Task Can Reach Host IMDS and the Instance Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.6; nist_800_53_r5: CM-6, AC-6; pci_dss_v4.0: 2.2.1; soc2: CC6.6;
+
+An ECS task with EC2 launch type runs on a container instance whose host network is reachable, so the task container can query the host instance metadata service at 169.254.169.254 and retrieve the EC2 container-instance role credentials. That instance role is typically more privileged than the task role. This is distinct from the ECS task metadata endpoint (169.254.170.2, covered by CTL.ECS.METADATA.CREDENTIAL.001): here the task reaches the HOST instance role, the same escalation Doyensec documented for AWS Batch. Fargate tasks have no host IMDS and are out of scope.
+The collector resolves container.reaches_host_imds with CTL.EC2.IMDSV2.002 logic (host/bridge networking + hop limit > 1, fail-loud on unknown).
+Inspired by Doyensec CloudsecTidbits No. 3 — Messing Around With AWS Batch For Privilege Escalations (the article notes the pattern applies to ECS EC2 launch type). Lab: github.com/doyensec/cloudsec-tidbits.
+
+**Remediation:** Set HttpPutResponseHopLimit=1 on the container instances' launch template, prefer awsvpc over host/bridge network mode, or move the task to Fargate. Restrict the container-instance role to least privilege so a reachable IMDS yields minimal credentials.
 
 ---
 

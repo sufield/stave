@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.BATCH.ESCALATION.CHAIN.001
+name: Batch EC2 Compute Environment Enables Job-to-Instance-Role Escalation
+description: >
+  The full Doyensec escalation chain holds on this Batch compute environment: it
+  uses EC2 orchestration (host networking), IMDS is reachable from job
+  containers, a job/execution role can author and run jobs
+  (batch:RegisterJobDefinition + batch:SubmitJob + iam:PassRole), and the EC2
+  instance role has sensitive access. A principal submits a malicious job, it
+  runs on the host with network access to IMDS, retrieves the instance role
+  credentials, and uses them against the sensitive resource — escalating from a
+  scoped job role to the privileged instance role.
+
+  Each condition alone is a finding (CTL.BATCH.IMDS.JOBACCESS.001 catches IMDS,
+  CTL.IAM.ESCALATE.PASSROLE.SUBMITJOB.001 catches the combo); this compound
+  proves all hold simultaneously. Sensitive instance-role access includes direct
+  data (S3/EFS/Secrets/KMS), ecs:* (lateral to ECS task roles), and iam:PassRole
+  (chain extension). Computed by examples/batch-escalation-chain/ (Soufflé + Z3),
+  composing with chains/ec2_imds_container_escalation.
+
+  Inspired by Doyensec CloudsecTidbits No. 3 — Messing Around With AWS Batch For
+  Privilege Escalations. Lab: github.com/doyensec/cloudsec-tidbits.
+domain: identity
+severity: critical
+scope: compound
+corpus_reference: MITRE:T1078
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-05", "IVS-04"]
+scope_tags:
+  - aws
+  - batch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - batch.kind
+  - batch.escalation_chain_present
+  - batch.escalation_path
+  - batch.instance_role_arn
+remediation:
+  description: >
+    A Batch EC2 compute environment enables escalation from a job role to the
+    privileged instance role via IMDS.
+  action: >
+    Break any one link: restrict IMDS (hop limit 1) on the launch template,
+    scope iam:PassRole / remove batch:RegisterJobDefinition on the job role, or
+    reduce the instance role to least privilege. Migrating to Fargate removes the
+    IMDS link entirely.
+  example: |
+    {
+      "batch": {
+        "kind": "compute_environment",
+        "escalation_chain_present": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.batch.kind
+      op: eq
+      value: compute_environment
+    - field: properties.batch.escalation_chain_present
+      op: eq
+      value: true
+tests:
+  - name: EC2 CE with IMDS + job combo + privileged instance role fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:batch:us-east-1:111122223333:compute-environment/batch-prod"
+      asset_type: aws_batch_compute_environment
+      vendor: aws
+      properties:
+        batch:
+          kind: compute_environment
+          escalation_chain_present: true
+          escalation_path: "batch-job-role → RegisterJobDefinition+SubmitJob → batch-prod → IMDS → batch-instance-role → s3://tenant-data"
+          instance_role_arn: "arn:aws:iam::111122223333:role/batch-instance-role"
+  - name: Fargate CE with the job combo but no IMDS passes (false-positive trap — chain broken)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:batch:us-east-1:111122223333:compute-environment/batch-staging"
+      asset_type: aws_batch_compute_environment
+      vendor: aws
+      properties:
+        batch:
+          kind: compute_environment
+          escalation_chain_present: false
+  - name: EC2 CE where instance role has only ecs:* fires (false-negative trap — ecs:* is lateral escalation)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:batch:us-east-1:111122223333:compute-environment/batch-analytics"
+      asset_type: aws_batch_compute_environment
+      vendor: aws
+      properties:
+        batch:
+          kind: compute_environment
+          escalation_chain_present: true
+          escalation_path: "batch-job-role → new job → batch-analytics → IMDS → batch-analytics-role → ecs:*-lateral-to-task-role"
+          instance_role_arn: "arn:aws:iam::111122223333:role/batch-analytics-role"
+  - name: EC2 CE where instance role has iam:PassRole fires (false-negative trap — PassRole extends the chain)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:batch:us-east-1:111122223333:compute-environment/batch-pass"
+      asset_type: aws_batch_compute_environment
+      vendor: aws
+      properties:
+        batch:
+          kind: compute_environment
+          escalation_chain_present: true
+          escalation_path: "batch-job-role → new job → batch-pass → IMDS → batch-pass-instrole → iam:PassRole-chain-extension"
+          instance_role_arn: "arn:aws:iam::111122223333:role/batch-pass-instrole"

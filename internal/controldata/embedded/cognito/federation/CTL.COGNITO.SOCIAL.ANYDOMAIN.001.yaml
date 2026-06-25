@@ -1,15 +1,19 @@
 dsl_version: ctrl.v1
 id: CTL.COGNITO.SOCIAL.ANYDOMAIN.001
-name: Cognito Social Provider Allows Any Email Domain
+name: Cognito Provider Allows Any Email Domain or Claims a Public-Domain Identifier
 description: >
-  Cognito social identity provider has no
-  domain restriction — anyone with a Google,
-  Facebook, Apple, or Amazon account can
-  register, regardless of email domain. For
-  applications meant only for users with
-  corporate identities, this opens
-  registration to the entire internet
-  population on those providers.
+  Cognito federation has an open-domain routing risk. Either (1) a social
+  identity provider has no domain restriction — anyone with a Google, Facebook,
+  Apple, or Amazon account can register regardless of email domain; or (2) an
+  IdP's IdpIdentifiers registers a public email domain (gmail.com, outlook.com,
+  yahoo.com, hotmail.com, protonmail.com, icloud.com, …). IdP identifiers control
+  email-domain routing (user@domain -> the IdP that owns the domain), and Cognito
+  does not enforce domain ownership — so an IdP claiming a public domain hijacks
+  routing for every user on that domain. For applications meant only for users
+  with corporate identities, both open the front door to the internet.
+
+  Inspired by Doyensec CloudsecTidbits No. 4 — The Danger of Multi-SSO AWS
+  Cognito User Pools.
 domain: governance
 severity: medium
 compliance:
@@ -64,9 +68,13 @@ unsafe_predicate:
     - field: properties.identity.kind
       op: eq
       value: cognito_user_pool
-    - field: properties.identity.cognito.social_allows_any_domain
-      op: eq
-      value: true
+    - any:
+        - field: properties.identity.cognito.social_allows_any_domain
+          op: eq
+          value: true
+        - field: properties.identity.cognito.idp_identifier_public_domain
+          op: eq
+          value: true
 defect: >
   Cognito social provider permits registration
   from any email domain.
@@ -120,3 +128,28 @@ tests:
             social_provider: "Google"
             social_allowed_domains: ["company.com"]
             social_allows_any_domain: false
+            idp_identifier_public_domain: false
+  - name: IdP identifier registers a public domain (gmail.com) fires (public-domain arm)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_ABC123"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            social_allows_any_domain: false
+            idp_identifier_public_domain: true
+  - name: IdP identifier is a legitimate corporate domain passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_DEF456"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            social_allows_any_domain: false
+            idp_identifier_public_domain: false

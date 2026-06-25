@@ -1,0 +1,79 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.IDP.CASECOLLISION.001
+name: Cognito Provider Names Differ Only by Case
+description: >
+  Two IdP provider names in the same Cognito User Pool differ only by letter case
+  (e.g. CorpIdP and corpidp). Cognito treats them as distinct, but any downstream
+  component that does case-insensitive comparison (.lower()) resolves them to the
+  same provider, risking identity split or lookup mismatch. This is advisory: it
+  is only exploitable if a downstream component normalizes case, so it is a
+  WARN-class finding (low severity), distinct from the homoglyph collision
+  (CTL.COGNITO.IDP.HOMOGLYPH.001, high).
+
+  Inspired by Doyensec CloudsecTidbits No. 4 — The Danger of Multi-SSO AWS
+  Cognito User Pools.
+domain: identity
+severity: low
+compliance:
+  soc2: "CC7.1"
+  nist_800_53_r5: "IA-4"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cognito_user_pool
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - identity.kind
+  - identity.cognito.case_only_collision
+remediation:
+  description: >
+    Two provider names differ only by case; downstream case-insensitive
+    comparison may conflate them.
+  action: >
+    Rename one provider so the names differ by more than case, and normalize
+    provider-name comparisons consistently across all downstream components.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "case_only_collision": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.case_only_collision
+      op: eq
+      value: true
+tests:
+  - name: CorpIdP vs corpidp warns (case-only collision)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_ABC123"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            case_only_collision: true
+  - name: distinct provider names pass (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_DEF456"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            case_only_collision: false

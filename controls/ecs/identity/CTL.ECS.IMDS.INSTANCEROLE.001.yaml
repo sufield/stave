@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.IMDS.INSTANCEROLE.001
+name: ECS EC2-Launch-Type Task Can Reach Host IMDS and the Instance Role
+description: >
+  An ECS task with EC2 launch type runs on a container instance whose host
+  network is reachable, so the task container can query the host instance
+  metadata service at 169.254.169.254 and retrieve the EC2 container-instance
+  role credentials. That instance role is typically more privileged than the
+  task role. This is distinct from the ECS task metadata endpoint
+  (169.254.170.2, covered by CTL.ECS.METADATA.CREDENTIAL.001): here the task
+  reaches the HOST instance role, the same escalation Doyensec documented for
+  AWS Batch. Fargate tasks have no host IMDS and are out of scope.
+
+  The collector resolves container.reaches_host_imds with CTL.EC2.IMDSV2.002
+  logic (host/bridge networking + hop limit > 1, fail-loud on unknown).
+
+  Inspired by Doyensec CloudsecTidbits No. 3 — Messing Around With AWS Batch For
+  Privilege Escalations (the article notes the pattern applies to ECS EC2 launch
+  type). Lab: github.com/doyensec/cloudsec-tidbits.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.6"
+  nist_800_53_r5: "CM-6, AC-6"
+  soc2: "CC6.6"
+  pci_dss_v4.0: "2.2.1"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - ecs
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ecs_task_definition
+params:
+  attack_stage: credential_access
+observation_fields:
+  - container.kind
+  - container.launch_type
+  - container.reaches_host_imds
+remediation:
+  description: >
+    EC2-launch-type ECS task can reach the host IMDS and retrieve the container
+    instance role credentials.
+  action: >
+    Set HttpPutResponseHopLimit=1 on the container instances' launch template,
+    prefer awsvpc over host/bridge network mode, or move the task to Fargate.
+    Restrict the container-instance role to least privilege so a reachable IMDS
+    yields minimal credentials.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "launch_type": "EC2",
+        "reaches_host_imds": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.launch_type
+      op: eq
+      value: EC2
+    - field: properties.container.reaches_host_imds
+      op: eq
+      value: true
+tests:
+  - name: EC2-launch task reaching host IMDS fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:task-definition/app:1"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: task_definition
+          launch_type: EC2
+          reaches_host_imds: true
+  - name: Fargate task passes (false-positive trap — no host IMDS)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:task-definition/app-fg:1"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: task_definition
+          launch_type: FARGATE
+          reaches_host_imds: false
+  - name: EC2-launch task with awsvpc + hop limit 1 passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:task-definition/app-locked:1"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: task_definition
+          launch_type: EC2
+          reaches_host_imds: false

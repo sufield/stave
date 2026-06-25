@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.FEDERATION.ATTRMAP.SENSITIVE.001
+name: Cognito IdP AttributeMapping Maps a Security-Sensitive Attribute
+description: >
+  An external IdP's AttributeMapping writes a security-sensitive custom attribute
+  (e.g. custom:role, custom:tenantID, custom:isAdmin, custom:permissions) from an
+  IdP claim during federation. An attacker controlling the IdP can set arbitrary
+  values for these attributes. Even with WriteAttributes restrictions, JIT
+  provisioning Lambdas using AdminUpdateUserAttributes bypass WriteAttributes
+  entirely, so the mapping is the real control point.
+
+  The collector flags any custom:* attribute whose key contains (case-insensitive)
+  role / admin / tenant / permission / privilege / access — a configurable pattern
+  list, not an exact allow-list, so custom:accessLevel is caught (the FN trap).
+  Standard attributes (email, name, phone_number) are expected and do not fire.
+  Distinct from CTL.COGNITO.SAML.ATTRMAP.001, which flags MISSING required
+  attributes (the opposite direction).
+
+  Inspired by Doyensec CloudsecTidbits No. 4 — The Danger of Multi-SSO AWS
+  Cognito User Pools.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6, AC-16"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-09", "IAM-16"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cognito_user_pool
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.cognito.sensitive_attribute_mapped
+  - identity.cognito.sensitive_attribute_idp
+  - identity.cognito.sensitive_attribute_name
+  - identity.cognito.sensitive_attribute_claim
+remediation:
+  description: >
+    An external IdP maps a security-sensitive custom attribute from an
+    attacker-controllable IdP claim.
+  action: >
+    Remove security-sensitive attributes (role/tenant/admin/permission/privilege/
+    access) from the IdP AttributeMapping. Derive authorization attributes
+    server-side from a trusted source after federation, not from IdP claims. If a
+    sensitive attribute must be mapped, validate and overwrite it in a PreSignUp
+    or PreTokenGeneration trigger.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "sensitive_attribute_mapped": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.sensitive_attribute_mapped
+      op: eq
+      value: true
+tests:
+  - name: custom:role mapped from IdP groups claim fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_ABC123"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            sensitive_attribute_mapped: true
+            sensitive_attribute_idp: "CorpIdP"
+            sensitive_attribute_name: "custom:role"
+            sensitive_attribute_claim: "groups"
+  - name: only standard attributes mapped passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_DEF456"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            sensitive_attribute_mapped: false
+  - name: custom:accessLevel mapped fires (false-negative trap — case-insensitive pattern, not exact list)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_GHI789"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            sensitive_attribute_mapped: true
+            sensitive_attribute_idp: "PartnerIdP"
+            sensitive_attribute_name: "custom:accessLevel"
+            sensitive_attribute_claim: "role"

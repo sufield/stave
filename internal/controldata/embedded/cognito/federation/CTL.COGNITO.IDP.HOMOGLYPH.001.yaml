@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.IDP.HOMOGLYPH.001
+name: Cognito User Pool Has Visually Confusable (Homoglyph) Provider Names
+description: >
+  Two IdP provider names in the same Cognito User Pool are visually identical but
+  byte-distinct, using Unicode homoglyphs — e.g. LegitCorp (Latin 'e') and
+  LеgitCorp (Cyrillic 'е' U+0435). Cognito enforces uniqueness only on byte-equal
+  names, so both are accepted. They look identical in UIs, logs, and CLI output;
+  if any downstream component normalizes inconsistently (lower(), NFKC), identity
+  split or lookup mismatch follows — a confused-deputy and audit-log-confusion
+  risk.
+
+  The collector NFKC-normalizes provider names (golang.org/x/text/unicode/norm)
+  and flags a collision when two byte-distinct names share an NFKC form. Case-only
+  collisions are a separate, lower-severity finding
+  (CTL.COGNITO.IDP.CASECOLLISION.001).
+
+  Inspired by Doyensec CloudsecTidbits No. 4 — The Danger of Multi-SSO AWS
+  Cognito User Pools.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI3"
+  soc2: "CC6.1, CC7.1"
+  nist_800_53_r5: "IA-4, AU-10"
+  iso_27001_2022: "A.8.16"
+  ccm_v4: ["IAM-09", "LOG-13"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cognito_user_pool
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - identity.kind
+  - identity.cognito.homoglyph_collision_present
+  - identity.cognito.homoglyph_collision_pair
+remediation:
+  description: >
+    Two provider names are visually confusable (Unicode homoglyphs), risking
+    identity split and audit-log confusion.
+  action: >
+    Rename one provider to an ASCII-only, visually distinct name. Restrict
+    provider names to a known character set ([A-Za-z0-9_-]) at creation time and
+    reject names that NFKC-normalize to an existing provider's form.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "homoglyph_collision_present": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.homoglyph_collision_present
+      op: eq
+      value: true
+tests:
+  - name: Latin vs Cyrillic provider names collide fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_ABC123"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            homoglyph_collision_present: true
+            homoglyph_collision_pair: "LegitCorp / LеgitCorp"
+  - name: visually distinct provider names pass (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_DEF456"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            homoglyph_collision_present: false

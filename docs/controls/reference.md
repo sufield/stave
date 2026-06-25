@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2722
-**Pack hash:** `402dbbcc4748922cc9509755127baac13450523eab581df366bec8ee631a979a`
+**Total controls:** 2734
+**Pack hash:** `1918ee558d1b98512b6dbbef14456cadc2461dccd65671373c086f081bfffb5a`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,10 +13,10 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 284 |
-| high | 1192 |
+| critical | 287 |
+| high | 1200 |
 | info | 16 |
-| low | 205 |
+| low | 206 |
 | medium | 1025 |
 
 | Domain | Count |
@@ -26,10 +26,10 @@ GitHub. Pick a service below.
 | capacity | 3 |
 | detection | 135 |
 | encryption | 113 |
-| exposure | 1204 |
-| governance | 585 |
+| exposure | 1206 |
+| governance | 586 |
 | hygiene | 18 |
-| identity | 452 |
+| identity | 461 |
 | lifecycle | 31 |
 | network | 37 |
 | resilience | 33 |
@@ -49,6 +49,7 @@ GitHub. Pick a service below.
 | [AUTOSCALING](reference/autoscaling.md) | 3 |
 | [AZURE](reference/azure.md) | 141 |
 | [BACKUP](reference/backup.md) | 10 |
+| [BATCH](reference/batch.md) | 2 |
 | [BEANSTALK](reference/beanstalk.md) | 2 |
 | [BEDROCK](reference/bedrock.md) | 26 |
 | [CFN](reference/cfn.md) | 1 |
@@ -60,7 +61,7 @@ GitHub. Pick a service below.
 | [CLOUDWATCH](reference/cloudwatch.md) | 66 |
 | [CODEBUILD](reference/codebuild.md) | 12 |
 | [CODECOMMIT](reference/codecommit.md) | 2 |
-| [COGNITO](reference/cognito.md) | 104 |
+| [COGNITO](reference/cognito.md) | 110 |
 | [COMPLIANCE](reference/compliance.md) | 1 |
 | [CONFIG](reference/config.md) | 50 |
 | [DATACLASS](reference/dataclass.md) | 3 |
@@ -70,7 +71,7 @@ GitHub. Pick a service below.
 | [DYNAMODB](reference/dynamodb.md) | 35 |
 | [EC2](reference/ec2.md) | 98 |
 | [ECR](reference/ecr.md) | 10 |
-| [ECS](reference/ecs.md) | 48 |
+| [ECS](reference/ecs.md) | 50 |
 | [EFS](reference/efs.md) | 13 |
 | [EKS](reference/eks.md) | 115 |
 | [ELASTICACHE](reference/elasticache.md) | 4 |
@@ -85,7 +86,7 @@ GitHub. Pick a service below.
 | [GLUE](reference/glue.md) | 12 |
 | [GUARDDUTY](reference/guardduty.md) | 6 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 193 |
+| [IAM](reference/iam.md) | 195 |
 | [INSPECTOR](reference/inspector.md) | 1 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 2 |

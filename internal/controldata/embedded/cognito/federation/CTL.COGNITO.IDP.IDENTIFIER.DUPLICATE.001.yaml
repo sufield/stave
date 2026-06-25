@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.COGNITO.IDP.IDENTIFIER.DUPLICATE.001
+name: Cognito IdP Identifier Claimed by More Than One Provider
+description: >
+  Two different identity providers in the same Cognito User Pool register the
+  same IdpIdentifier (e.g. both claim company.com). IdP identifiers drive
+  email-domain routing, so a duplicate is an ambiguous routing conflict — which
+  IdP receives users for that domain is undefined, and an attacker-controlled IdP
+  that duplicates a legitimate domain identifier can intercept that domain's
+  federation. Cognito does not reject byte-distinct duplicate identifiers across
+  providers, so the platform must catch it. Detected even when the domain is not
+  a public email domain (the FN trap).
+
+  Inspired by Doyensec CloudsecTidbits No. 4 — The Danger of Multi-SSO AWS
+  Cognito User Pools.
+domain: governance
+severity: high
+compliance:
+  owasp_nhi: "NHI3"
+  soc2: "CC6.1"
+  nist_800_53_r5: "IA-8, AC-4"
+  pci_dss_v4.0: "8.3"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - cognito
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cognito_user_pool
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.kind
+  - identity.cognito.idp_identifier_duplicate
+  - identity.cognito.idp_identifier_conflict_value
+remediation:
+  description: >
+    Two IdPs in the pool register the same identifier, creating an ambiguous —
+    and hijackable — email-domain routing conflict.
+  action: >
+    Ensure each IdpIdentifier is claimed by exactly one IdP. Remove the duplicate
+    from the unintended provider and verify domain ownership before assigning a
+    domain identifier to any IdP.
+  example: |
+    {
+      "identity": {
+        "kind": "cognito_user_pool",
+        "cognito": {
+          "idp_identifier_duplicate": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: cognito_user_pool
+    - field: properties.identity.cognito.idp_identifier_duplicate
+      op: eq
+      value: true
+tests:
+  - name: two IdPs claiming company.com fires (false-negative trap — non-public duplicate)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_ABC123"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            idp_identifier_duplicate: true
+            idp_identifier_conflict_value: "company.com"
+  - name: each identifier claimed by one IdP passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_DEF456"
+      asset_type: aws_cognito_user_pool
+      vendor: aws
+      properties:
+        identity:
+          kind: cognito_user_pool
+          cognito:
+            idp_identifier_duplicate: false

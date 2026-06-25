@@ -1,0 +1,50 @@
+// BATCH-003 / ECS-003 — Batch/ECS-EC2 job-container privilege-escalation chain
+// (Soufflé / Datalog). The full Doyensec chain: a principal that can author and
+// run jobs/tasks on an EC2-orchestration compute environment reaches the host
+// IMDS (because job containers share the host network), retrieves the EC2
+// instance-role credentials, and those credentials reach a sensitive resource.
+//
+// Four conditions must hold simultaneously:
+//   1. EC2 orchestration (host networking)            batch_ec2_env(env, instance_role)
+//   2. IMDS accessible from job containers            imds_accessible(env)
+//   3. job/task role can create+run jobs              job_role_can_create_jobs(env, job_role)
+//   4. instance role has SENSITIVE access             instance_role_sensitive(...)
+//
+// Condition 3 is the batch:RegisterJobDefinition+SubmitJob (or ecs:RegisterTask
+// Definition+RunTask) + PassRole combo proven in examples/iam-21-privesc-5-
+// patterns — reused, not re-derived. Condition 4 treats ecs:* (lateral to ECS
+// task roles) and iam:PassRole (chain extension) as sensitive, not just direct
+// data access (the FN traps).
+//
+//   souffle escalation.dl -F <facts-dir> -D <out-dir>
+//   -> out-dir/escalation_chain.csv lists (env, job_role, instance_role, resource) — non-empty = FAIL.
+//
+// Inspired by Doyensec CloudsecTidbits No. 3 — Messing Around With AWS Batch.
+
+.decl batch_ec2_env(env:symbol, instance_role:symbol)        // EC2/SPOT orchestration CE + its instance role
+.decl imds_accessible(env:symbol)                            // job containers can reach 169.254.169.254
+.decl job_role_can_create_jobs(env:symbol, job_role:symbol)  // PassRole+RegisterJobDef+SubmitJob (or ECS RunTask)
+.decl instance_role_data_access(role:symbol, resource:symbol) // direct S3/EFS/Secrets/KMS
+.decl instance_role_ecs_wildcard(role:symbol)                // ecs:* — lateral to ECS task roles
+.decl instance_role_passrole(role:symbol)                    // iam:PassRole — extends the chain
+.input batch_ec2_env
+.input imds_accessible
+.input job_role_can_create_jobs
+.input instance_role_data_access
+.input instance_role_ecs_wildcard
+.input instance_role_passrole
+
+// The instance role's sensitive reach — direct data OR ecs:* OR PassRole.
+.decl instance_role_sensitive(role:symbol, resource:symbol)
+instance_role_sensitive(R, Res) :- instance_role_data_access(R, Res).
+instance_role_sensitive(R, "ecs:*-lateral-to-task-role") :- instance_role_ecs_wildcard(R).
+instance_role_sensitive(R, "iam:PassRole-chain-extension") :- instance_role_passrole(R).
+
+// The full escalation chain.
+.decl escalation_chain(env:symbol, job_role:symbol, instance_role:symbol, resource:symbol)
+.output escalation_chain
+escalation_chain(E, J, I, Res) :-
+  batch_ec2_env(E, I),
+  imds_accessible(E),
+  job_role_can_create_jobs(E, J),
+  instance_role_sensitive(I, Res).

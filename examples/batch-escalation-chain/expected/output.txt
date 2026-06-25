@@ -1,0 +1,4 @@
+vuln          souffle=CHAIN  z3=sat  
+fp            souffle=NONE   z3=unsat
+fn-ecs        souffle=CHAIN  z3=sat  
+fn-passrole   souffle=CHAIN  z3=sat  
