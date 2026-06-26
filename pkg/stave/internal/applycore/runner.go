@@ -178,9 +178,6 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(in.ControlIDAllowlist) > 0 {
-		controls = filterControlsByID(controls, in.ControlIDAllowlist)
-	}
 
 	// Project config: when supplied, resolve exception rules and any
 	// preloaded controls. nil project config keeps the prior behavior
@@ -196,6 +193,22 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 			controls = resolved.PreloadedControls
 			ctlRepo = nil
 		}
+	}
+
+	// Apply the --pack allowlist last, once the final control source is
+	// known. On the dir path resolveControls defers loading to ctlRepo and
+	// leaves controls nil; filtering nil would silently evaluate zero
+	// controls (a false COMPLIANT). Materialize the set eagerly, filter it,
+	// and preload it so the workflow honors the scope on every source.
+	if len(in.ControlIDAllowlist) > 0 {
+		if controls == nil && ctlRepo != nil {
+			controls, err = ctlRepo.LoadControls(ctx, in.ControlsDir)
+			if err != nil {
+				return nil, fmt.Errorf("load controls for --pack scope: %w", err)
+			}
+			ctlRepo = nil
+		}
+		controls = filterControlsByID(controls, in.ControlIDAllowlist)
 	}
 
 	maxUnsafe := in.MaxUnsafe
