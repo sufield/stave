@@ -55,7 +55,7 @@ Cross-reference of Prowler's 47 IAM checks against Stave's IAM control catalog.
 | 36 | `iam_rotate_access_key_90_days` | COVERED | `CTL.IAM.CRED.ROTATION.001` | Both enforce 90-day rotation. |
 | 37 | `iam_securityaudit_role_created` | NOT COVERED | — |  |
 | 38 | `iam_support_role_created` | COVERED | `CTL.IAM.SUPPORT.001` | Both check for an existing role with the AWSSupportAccess policy. |
-| 39 | `iam_user_access_not_stale_to_bedrock` | PARTIAL | `CTL.IAM.CRED.UNUSED.001`, `CTL.IAM.ROLE.PERMISSIONDRIFT.001` | Generic staleness; no Bedrock-specific freshness tracking. |
+| 39 | `iam_user_access_not_stale_to_bedrock` | PARTIAL | `CTL.IAM.CRED.UNUSED.001`, `CTL.IAM.ROLE.PERMISSIONDRIFT.001`, `CTL.IAM.USER.PERMISSIONDRIFT.001` | Generic staleness; no Bedrock-specific freshness tracking. |
 | 40 | `iam_user_accesskey_unused` | COVERED | `CTL.IAM.CRED.UNUSED.001`, `CTL.IAM.CRED.UNUSED45.001` | Stave has two thresholds; Prowler's 45-day matches UNUSED45.001 precisely. |
 | 41 | `iam_user_administrator_access_policy` | COVERED | `CTL.IAM.ADMIN.COUNT.001`, `CTL.IAM.POLICY.ADMIN.001` | Per-user admin attach plus account-wide admin-count threshold. |
 | 42 | `iam_user_console_access_unused` | COVERED | `CTL.IAM.ACCOUNT.INACTIVE.001`, `CTL.IAM.CRED.UNUSED.001` | Stave splits credential-unused from account-inactive; union matches. |

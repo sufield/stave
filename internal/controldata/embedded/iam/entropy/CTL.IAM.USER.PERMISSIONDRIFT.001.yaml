@@ -1,0 +1,150 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.USER.PERMISSIONDRIFT.001
+name: Users Must Not Accumulate Unused Permissions
+description: >
+  IAM users must not retain access to services that have never been used or
+  were last used more than 90 days ago, when the user itself has existed for
+  more than 90 days. A user with 30 accessible services where 25 are never
+  used has accumulated permissions far beyond their operational scope. An
+  attacker who compromises this user's credentials has access to 30 services
+  but the legitimate person only uses 5. The unused 25 are the hidden blast
+  radius. Access Advisor data from AWS provides exact timestamps of last
+  permission use — this is an operational fact, not a security assertion.
+
+  User-scoped sibling of CTL.IAM.ROLE.PERMISSIONDRIFT.001 — same Access Advisor
+  drift signal, age guard, and configurable threshold, applied to long-lived
+  IAM users (and their attached/inline/group-inherited policies).
+domain: identity
+severity: high
+compliance:
+  hipaa: "164.312(a)(2)(i)"
+  cis_aws_v3.0: "1.12"
+  nist_800_53_r5: "AC-2"
+  fedramp_moderate: "AC-2"
+  pci_dss_v4.0: "8.1.4"
+  soc2: "CC6.3"
+  ccm_v4: ["CCC-07", "IAM-02"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: parameterized_check
+applicable_asset_types:
+  - aws_iam_user
+params:
+  base_impact: 8
+  attack_stage: persistence
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    This user has accumulated permissions to services that are never used
+    or have not been used in over 90 days. The unused services represent
+    hidden blast radius that an attacker can exploit.
+  action: >
+    Review the unused service namespaces listed in this finding. Remove
+    permissions for services that are no longer needed (from attached,
+    inline, and group-inherited policies). For services intentionally
+    retained for emergency use, set the stave/permission-drift-threshold
+    tag on the user to document the justified exception (e.g.,
+    stave/permission-drift-threshold=0.40). Prefer migrating humans to
+    federated short-lived roles over long-lived IAM users.
+  example: |
+    {
+      "identity": {
+        "kind": "iam_user",
+        "user_age_days": 180,
+        "access_advisor": { "available": true },
+        "permission_drift": {
+          "unused_service_ratio": 0.15,
+          "threshold_override": null,
+          "threshold_exceeded": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: iam_user
+    - field: properties.identity.user_age_days
+      op: gt
+      value: 90
+    - field: properties.identity.access_advisor.available
+      op: eq
+      value: true
+    - field: properties.identity.permission_drift.threshold_exceeded
+      op: eq
+      value: true
+tests:
+  - name: "user with low drift passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123:user/clean-user"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: iam_user
+          user_age_days: 180
+          access_advisor:
+            available: true
+          permission_drift:
+            unused_service_ratio: 0.10
+            threshold_override: null
+            threshold_exceeded: false
+  - name: "user with high drift fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123:user/drifted-user"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: iam_user
+          user_age_days: 365
+          access_advisor:
+            available: true
+          permission_drift:
+            unused_service_ratio: 0.45
+            threshold_override: null
+            threshold_exceeded: true
+  - name: "young user with high drift passes (age guard)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123:user/new-user"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: iam_user
+          user_age_days: 45
+          access_advisor:
+            available: true
+          permission_drift:
+            unused_service_ratio: 0.40
+            threshold_override: null
+            threshold_exceeded: true
+  - name: "user with override above ratio passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123:user/override-user"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: iam_user
+          user_age_days: 540
+          access_advisor:
+            available: true
+          permission_drift:
+            unused_service_ratio: 0.40
+            threshold_override: 0.50
+            threshold_exceeded: false
+alternatives:
+  - tool: prowler
+    check_id: iam_user_access_not_stale_to_bedrock
+    coverage: partial
+    note: Generic unused-permissions staleness; no per-user drift ratio or configurable threshold.

@@ -2940,6 +2940,22 @@ IAM role trust policies must not use Principal "*" or Principal: {AWS: "*"}. A w
 
 ---
 
+### CTL.IAM.USER.PERMISSIONDRIFT.001
+
+**Users Must Not Accumulate Unused Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.12; fedramp_moderate: AC-2; hipaa: 164.312(a)(2)(i); nist_800_53_r5: AC-2; pci_dss_v4.0: 8.1.4; soc2: CC6.3;
+
+IAM users must not retain access to services that have never been used or were last used more than 90 days ago, when the user itself has existed for more than 90 days. A user with 30 accessible services where 25 are never used has accumulated permissions far beyond their operational scope. An attacker who compromises this user's credentials has access to 30 services but the legitimate person only uses 5. The unused 25 are the hidden blast radius. Access Advisor data from AWS provides exact timestamps of last permission use — this is an operational fact, not a security assertion.
+User-scoped sibling of CTL.IAM.ROLE.PERMISSIONDRIFT.001 — same Access Advisor drift signal, age guard, and configurable threshold, applied to long-lived IAM users (and their attached/inline/group-inherited policies).
+
+**Remediation:** Review the unused service namespaces listed in this finding. Remove permissions for services that are no longer needed (from attached, inline, and group-inherited policies). For services intentionally retained for emergency use, set the stave/permission-drift-threshold tag on the user to document the justified exception (e.g., stave/permission-drift-threshold=0.40). Prefer migrating humans to federated short-lived roles over long-lived IAM users.
+
+---
+
 ### CTL.IAM.VENDOR.DORMANT.001
 
 **Vendor Cross-Account Role Must Not Be Dormant**
