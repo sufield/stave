@@ -209,12 +209,12 @@ func annotateScheduledDeletions(chains []RoleChain, deletions map[string]time.Ti
 		// is scheduled for deletion, every chain it produces is
 		// stale on the same horizon.
 		if len(chains[i].Hops) > 0 {
-			if t, ok := deletions[chains[i].Hops[0].FromARN]; ok {
+			if t, _, ok := lookupDeletion(deletions, chains[i].Hops[0].FromARN); ok {
 				earliest = t
 			}
 		}
 		for _, hop := range chains[i].Hops {
-			t, ok := deletions[hop.ToARN]
+			t, _, ok := lookupDeletion(deletions, hop.ToARN)
 			if !ok {
 				continue
 			}
@@ -324,7 +324,7 @@ var serviceExecPrimitives = []serviceExec{
 //     pivots from that execution role would be picked up by the
 //     assume-role walker.
 func resolveServiceExecChains(input RoleChainInput) []RoleChain {
-	resolved, ok := input.ResolvedIndex[input.PrincipalARN]
+	resolved, _, ok := lookupResolved(input.ResolvedIndex, input.PrincipalARN)
 	if !ok {
 		return nil
 	}
@@ -348,8 +348,10 @@ func resolveServiceExecChains(input RoleChainInput) []RoleChain {
 			}
 
 			var level PrivilegeLevel
-			if targetResolved, inSnapshot := input.ResolvedIndex[targetARN]; inSnapshot {
+			targetResolved, canonicalTargetARN, inSnapshot := lookupResolved(input.ResolvedIndex, targetARN)
+			if inSnapshot {
 				level = targetResolved.PrivilegeLevel
+				targetARN = canonicalTargetARN
 			}
 
 			hop := RoleHop{
@@ -409,7 +411,7 @@ func isPassRoleAction(action string) bool {
 }
 
 func roleTrustsService(serviceTrusts map[string][]string, roleARN, servicePrincipal string) bool {
-	services, ok := serviceTrusts[roleARN]
+	services, _, ok := lookupServiceTrusts(serviceTrusts, roleARN)
 	if !ok {
 		return false
 	}
@@ -490,7 +492,7 @@ var invokeExistingPrimitives = []invokeExistingPrimitive{
 //     produced. Pivoting from the bound role's permissions onto
 //     another role is the assume walker's job.
 func resolveExistingResourceInvocations(input RoleChainInput) []RoleChain {
-	resolved, ok := input.ResolvedIndex[input.PrincipalARN]
+	resolved, _, ok := lookupResolved(input.ResolvedIndex, input.PrincipalARN)
 	if !ok {
 		return nil
 	}
@@ -507,7 +509,7 @@ func resolveExistingResourceInvocations(input RoleChainInput) []RoleChain {
 			if grant.Resource == "" || grant.Resource == "*" {
 				continue
 			}
-			binding, hasBinding := input.ResourceRoleBindings[grant.Resource]
+			binding, _, hasBinding := lookupResourceRoleBinding(input.ResourceRoleBindings, grant.Resource)
 			if !hasBinding {
 				continue
 			}
@@ -515,19 +517,19 @@ func resolveExistingResourceInvocations(input RoleChainInput) []RoleChain {
 				continue
 			}
 			targetRoleARN := binding.RoleARN
-			targetResolved, inSnapshot := input.ResolvedIndex[targetRoleARN]
+			targetResolved, canonicalTargetRoleARN, inSnapshot := lookupResolved(input.ResolvedIndex, targetRoleARN)
 			if !inSnapshot {
 				continue
 			}
 			hop := RoleHop{
 				FromARN:        input.PrincipalARN,
-				ToARN:          targetRoleARN,
-				IsCrossAccount: !principalInAccount(targetRoleARN, input.AccountID),
+				ToARN:          canonicalTargetRoleARN,
+				IsCrossAccount: !principalInAccount(canonicalTargetRoleARN, input.AccountID),
 				Type:           primitive.HopType,
 			}
 			chains = append(chains, RoleChain{
 				Hops:            []RoleHop{hop},
-				FinalRoleARN:    targetRoleARN,
+				FinalRoleARN:    canonicalTargetRoleARN,
 				TransitiveLevel: targetResolved.PrivilegeLevel,
 			})
 		}
@@ -587,7 +589,7 @@ func resolveChainRecursive(
 	defer func() { delete(visited, currentARN) }()
 
 	// Get resolved permissions for this principal.
-	resolved, ok := input.ResolvedIndex[currentARN]
+	resolved, _, ok := lookupResolved(input.ResolvedIndex, currentARN)
 	if !ok {
 		return // principal not resolved — can't determine assumable roles
 	}
@@ -629,7 +631,7 @@ func resolveChainRecursive(
 		targets.Add(targetARN)
 
 		// Check if the target role is in the snapshot.
-		targetResolved, inSnapshot := input.ResolvedIndex[targetARN]
+		targetResolved, canonicalTargetARN, inSnapshot := lookupResolved(input.ResolvedIndex, targetARN)
 		if !inSnapshot {
 			*chains = append(*chains, RoleChain{
 				Hops:              appendHop(currentHops, currentARN, targetARN, input.AccountID),
@@ -648,23 +650,24 @@ func resolveChainRecursive(
 		//     iam.Statement parser drops, including the account-root
 		//     pattern that admits every principal in a named account.
 		// Either channel admitting the assumer is sufficient.
-		trustPolicy := input.TrustPolicies[targetARN]
-		if !trustAllowsAssumer(trustPolicy, input.AWSPrincipalTrusts[targetARN], currentARN) {
+		trustPolicy, _, _ := lookupTrustPolicy(input.TrustPolicies, canonicalTargetARN)
+		awsTrust, _, _ := lookupAWSPrincipalTrusts(input.AWSPrincipalTrusts, canonicalTargetARN)
+		if !trustAllowsAssumer(trustPolicy, awsTrust, currentARN) {
 			continue // assumption not reciprocated
 		}
 
 		// Record this hop.
-		newHops := appendHop(currentHops, currentARN, targetARN, input.AccountID)
+		newHops := appendHop(currentHops, currentARN, canonicalTargetARN, input.AccountID)
 
 		// Record the chain with the target role's permissions.
 		*chains = append(*chains, RoleChain{
 			Hops:            cloneHops(newHops),
-			FinalRoleARN:    targetARN,
+			FinalRoleARN:    canonicalTargetARN,
 			TransitiveLevel: targetResolved.PrivilegeLevel,
 		})
 
 		// Recurse into the target role's chains.
-		resolveChainRecursive(input, targetARN, visited, depth+1, newHops, chains)
+		resolveChainRecursive(input, canonicalTargetARN, visited, depth+1, newHops, chains)
 	}
 }
 
@@ -807,7 +810,7 @@ func appendHop(hops []RoleHop, from, to, accountID string) []RoleHop {
 // counted; iam:CreateRole + reset-trust would be a separate
 // primitive worth a future pass).
 func resolveTagMutationChains(input RoleChainInput) []RoleChain {
-	resolved, ok := input.ResolvedIndex[input.PrincipalARN]
+	resolved, _, ok := lookupResolved(input.ResolvedIndex, input.PrincipalARN)
 	if !ok {
 		return nil
 	}
@@ -831,12 +834,12 @@ func resolveTagMutationChains(input RoleChainInput) []RoleChain {
 		}
 		seen.Add(targetARN)
 
-		trustPolicy, hasTrust := input.TrustPolicies[targetARN]
+		trustPolicy, canonicalTargetARN, hasTrust := lookupTrustPolicy(input.TrustPolicies, targetARN)
 		if !hasTrust || !trustPolicyHasTagCondition(trustPolicy) {
 			continue
 		}
 
-		targetResolved, inSnapshot := input.ResolvedIndex[targetARN]
+		targetResolved, _, inSnapshot := lookupResolved(input.ResolvedIndex, canonicalTargetARN)
 		var level PrivilegeLevel
 		if inSnapshot {
 			level = targetResolved.PrivilegeLevel
@@ -844,13 +847,13 @@ func resolveTagMutationChains(input RoleChainInput) []RoleChain {
 
 		hop := RoleHop{
 			FromARN:        input.PrincipalARN,
-			ToARN:          targetARN,
-			IsCrossAccount: !principalInAccount(targetARN, input.AccountID),
+			ToARN:          canonicalTargetARN,
+			IsCrossAccount: !principalInAccount(canonicalTargetARN, input.AccountID),
 			Type:           HopTypeTagMutation,
 		}
 		chains = append(chains, RoleChain{
 			Hops:            []RoleHop{hop},
-			FinalRoleARN:    targetARN,
+			FinalRoleARN:    canonicalTargetARN,
 			TransitiveLevel: level,
 		})
 	}
@@ -941,4 +944,76 @@ func cloneHops(hops []RoleHop) []RoleHop {
 	out := make([]RoleHop, len(hops))
 	copy(out, hops)
 	return out
+}
+
+func lookupResolved(m map[string]*ResolvedPermissions, key string) (*ResolvedPermissions, string, bool) {
+	if val, ok := m[key]; ok {
+		return val, key, true
+	}
+	for k, v := range m {
+		if strings.EqualFold(k, key) {
+			return v, k, true
+		}
+	}
+	return nil, "", false
+}
+
+func lookupTrustPolicy(m map[string]*PolicyDocument, key string) (*PolicyDocument, string, bool) {
+	if val, ok := m[key]; ok {
+		return val, key, true
+	}
+	for k, v := range m {
+		if strings.EqualFold(k, key) {
+			return v, k, true
+		}
+	}
+	return nil, "", false
+}
+
+func lookupAWSPrincipalTrusts(m map[string]AWSTrustedPrincipals, key string) (AWSTrustedPrincipals, string, bool) {
+	if val, ok := m[key]; ok {
+		return val, key, true
+	}
+	for k, v := range m {
+		if strings.EqualFold(k, key) {
+			return v, k, true
+		}
+	}
+	return AWSTrustedPrincipals{}, "", false
+}
+
+func lookupDeletion(m map[string]time.Time, key string) (time.Time, string, bool) {
+	if val, ok := m[key]; ok {
+		return val, key, true
+	}
+	for k, v := range m {
+		if strings.EqualFold(k, key) {
+			return v, k, true
+		}
+	}
+	return time.Time{}, "", false
+}
+
+func lookupServiceTrusts(m map[string][]string, key string) ([]string, string, bool) {
+	if val, ok := m[key]; ok {
+		return val, key, true
+	}
+	for k, v := range m {
+		if strings.EqualFold(k, key) {
+			return v, k, true
+		}
+	}
+	return nil, "", false
+}
+
+func lookupResourceRoleBinding(m map[string]ResourceRoleBinding, key string) (ResourceRoleBinding, string, bool) {
+	if val, ok := m[key]; ok {
+		return val, key, true
+	}
+	for k, v := range m {
+		if strings.EqualFold(k, key) {
+			return v, k, true
+		}
+	}
+	return ResourceRoleBinding{}, "", false
 }

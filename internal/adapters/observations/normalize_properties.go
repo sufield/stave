@@ -1,6 +1,7 @@
 package observations
 
 import (
+	"reflect"
 	"strings"
 )
 
@@ -33,6 +34,10 @@ func normalizeProperties(m map[string]any) {
 }
 
 func normalizeValue(v any) any {
+	if v == nil {
+		return nil
+	}
+
 	switch val := v.(type) {
 	case map[string]any:
 		// Mutate in place to match normalizeProperties' top-level
@@ -49,6 +54,25 @@ func normalizeValue(v any) any {
 		return out
 	case string:
 		return coerceString(val)
+	}
+
+	// Fallback to reflection for general typed maps and slices
+	val := reflect.ValueOf(v)
+	switch val.Kind() {
+	case reflect.Map:
+		out := make(map[string]any, val.Len())
+		iter := val.MapRange()
+		for iter.Next() {
+			k := iter.Key().String()
+			out[k] = normalizeValue(iter.Value().Interface())
+		}
+		return out
+	case reflect.Slice, reflect.Array:
+		out := make([]any, val.Len())
+		for i := 0; i < val.Len(); i++ {
+			out[i] = normalizeValue(val.Index(i).Interface())
+		}
+		return out
 	default:
 		return v
 	}

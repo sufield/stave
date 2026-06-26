@@ -292,6 +292,11 @@ func (f *AcceptanceFile) AddException(entry ExceptionEntry) error {
 	if entry.AssetID == "" {
 		return errors.New("asset_id is required")
 	}
+	if entry.ExpiryDate != "" {
+		if _, err := time.Parse("2006-01-02", entry.ExpiryDate); err != nil {
+			return fmt.Errorf("invalid expiry_date %q: expected YYYY-MM-DD", entry.ExpiryDate)
+		}
+	}
 	f.Exceptions = append(f.Exceptions, entry)
 	return nil
 }
@@ -382,6 +387,11 @@ func (f *AcceptanceFile) Validate() []string {
 		}
 		if e.AssetID == "" {
 			errs = append(errs, fmt.Sprintf("exception[%d]: asset_id required", i))
+		}
+		if e.ExpiryDate != "" {
+			if _, err := time.Parse("2006-01-02", e.ExpiryDate); err != nil {
+				errs = append(errs, fmt.Sprintf("exception[%d]: invalid expiry_date %q", i, e.ExpiryDate))
+			}
 		}
 	}
 	for i, e := range f.Exemptions {
