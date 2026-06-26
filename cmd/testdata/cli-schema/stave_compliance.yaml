@@ -14,22 +14,35 @@ description: |-
     A coverage percentage (verified ÷ in-scope) makes progress visible: add a
     control, re-run, watch it climb.
 
+    The report also runs a mapping-integrity self-check: the framework mapping must
+    reference only controls that exist in the catalog, have unique framework IDs,
+    and carry well-formed confidence/uncovered_aspects metadata. Errors are shown
+    after the report; --strict turns them into a non-zero exit for CI. Use
+    --verify-mapping to run only this check (no snapshot needed).
+
     Inputs:
-      --framework   compliance framework to evaluate (default: aicm-v1.1)
-      --snapshot    observation snapshot directory, or - for stdin
-      --controls    control directory (default: built-in catalog)
-      --format      text | json | markdown (default: text)
-      --now         override current time (RFC3339) for deterministic output
+      --framework       compliance framework to evaluate (default: aicm-v1.1)
+      --snapshot        observation snapshot directory, or - for stdin
+      --controls        control directory (default: built-in catalog)
+      --format          text | json | markdown (default: text)
+      --now             override current time (RFC3339) for deterministic output
+      --verify-mapping  check the mapping against the catalog and exit (no snapshot)
+      --strict          fail (exit 2) on mapping-integrity errors
 
     Outputs:
-      stdout        the three-list report in the chosen format
+      stdout        the three-list report (+ integrity section) in the chosen format
       exit code     0 = no failures, 3 = a covered control failed,
-                    2 = input error, 4 = internal error
+                    2 = input error or (with --strict) mapping-integrity error,
+                    4 = internal error
+
+      Note: integrity errors use exit 2, not 1 — exit 1 is reserved for
+      security-audit gating across the CLI.
 
     Examples:
       stave compliance --framework aicm-v1.1 --snapshot ./my-config/
       stave compliance --snapshot ./snap --format json > coverage.json
       stave compliance --snapshot ./snap --format markdown > COMPLIANCE.md
+      stave compliance --verify-mapping --strict   # CI gate, no snapshot
 usage: stave compliance [flags]
 options:
     - name: controls
@@ -51,6 +64,14 @@ options:
       usage: override current time (RFC3339) for deterministic output
     - name: snapshot
       usage: observation snapshot directory (or - for stdin)
+    - name: strict
+      default_value: "false"
+      usage: |
+        fail (exit 2) on mapping-integrity errors (dangling refs, duplicate IDs, invalid confidence)
+    - name: verify-mapping
+      default_value: "false"
+      usage: |
+        check the framework mapping against the catalog and exit (no snapshot needed)
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -97,10 +118,6 @@ inherited_options:
       default_value: "false"
       usage: |
         In --help, list only development-only commands (default: hide them from the listing)
-    - name: strict
-      default_value: "false"
-      usage: |
-        Enable strict integrity checks for embedded registries and references
     - name: verbose
       shorthand: v
       default_value: "0"
