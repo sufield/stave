@@ -41,6 +41,7 @@ import (
 	stavemap "github.com/sufield/stave/cmd/map"
 	stavemetrics "github.com/sufield/stave/cmd/metrics"
 	stavenep "github.com/sufield/stave/cmd/nep"
+	stavepack "github.com/sufield/stave/cmd/pack"
 	stavepath "github.com/sufield/stave/cmd/path"
 	staveprofile "github.com/sufield/stave/cmd/profile"
 	stavereadiness "github.com/sufield/stave/cmd/readiness"
@@ -146,6 +147,7 @@ func WireCommands(app *App) error {
 
 	// Export & Interop
 	root.AddCommand(stavecompliance.NewCmd())
+	root.AddCommand(stavepack.NewCmd())
 	root.AddCommand(staveexport.NewCmd())
 	root.AddCommand(staveexportinvariants.NewCmd())
 	root.AddCommand(staveexportsir.NewCmd())

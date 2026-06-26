@@ -209,12 +209,12 @@ func annotateScheduledDeletions(chains []RoleChain, deletions map[string]time.Ti
 		// is scheduled for deletion, every chain it produces is
 		// stale on the same horizon.
 		if len(chains[i].Hops) > 0 {
-			if t, _, ok := lookupDeletion(deletions, chains[i].Hops[0].FromARN); ok {
+			if t, ok := lookupDeletion(deletions, chains[i].Hops[0].FromARN); ok {
 				earliest = t
 			}
 		}
 		for _, hop := range chains[i].Hops {
-			t, _, ok := lookupDeletion(deletions, hop.ToARN)
+			t, ok := lookupDeletion(deletions, hop.ToARN)
 			if !ok {
 				continue
 			}
@@ -982,16 +982,16 @@ func lookupAWSPrincipalTrusts(m map[string]AWSTrustedPrincipals, key string) (AW
 	return AWSTrustedPrincipals{}, "", false
 }
 
-func lookupDeletion(m map[string]time.Time, key string) (time.Time, string, bool) {
+func lookupDeletion(m map[string]time.Time, key string) (time.Time, bool) {
 	if val, ok := m[key]; ok {
-		return val, key, true
+		return val, true
 	}
 	for k, v := range m {
 		if strings.EqualFold(k, key) {
-			return v, k, true
+			return v, true
 		}
 	}
-	return time.Time{}, "", false
+	return time.Time{}, false
 }
 
 func lookupServiceTrusts(m map[string][]string, key string) ([]string, string, bool) {

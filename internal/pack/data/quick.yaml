@@ -1,0 +1,29 @@
+name: quick
+title: "Quick scan — highest-severity, highest-impact controls"
+description: |
+  A fast first pass: every CRITICAL and HIGH severity control in the catalog,
+  capped at the most impactful. Use it for an initial read on a new account
+  before running concern-specific packs. Because it spans every service, its
+  data requirements are broad — collect a full SecurityAudit/ViewOnly snapshot.
+
+# Severity-driven membership (no fixed ID list): every control at or above
+# `min_severity`, capped at `limit` (highest severity first).
+controls:
+  min_severity: high
+  limit: 50
+
+requirements:
+  aws_api_calls:
+    - service: all
+      calls:
+        - "# quick spans the whole catalog — collect a full read-only snapshot"
+        - "steampipe / aws ... describe-* across every service in scope"
+      notes: "quick is severity-scoped, not service-scoped; use a full collector snapshot rather than a targeted call set. Run a concern pack (e.g. entropy) for a focused requirements manifest."
+
+  observation_signals:
+    - "(varies — quick draws from every control family; see the individual control's observation_fields)"
+
+  minimum_permissions: |
+    The collector IAM principal needs:
+      - arn:aws:iam::aws:policy/SecurityAudit
+      - arn:aws:iam::aws:policy/job-function/ViewOnlyAccess

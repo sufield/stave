@@ -179,6 +179,7 @@ see_also:
     - stave lint - Lint control files for design quality
     - stave map - ATT&CK tactic coverage and gap analysis
     - stave metrics - Write Prometheus scrape file for node_exporter
+    - stave pack - Concern packs — named control groupings and their data requirements
     - stave packs - Inspect built-in control packs
     - stave path - Export attack path graph data from active chain findings
     - stave permissions - Query net effective permissions from a snapshot

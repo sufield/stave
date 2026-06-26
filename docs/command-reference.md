@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_141 commands across 7 groups._
+_144 commands across 7 groups._
 
 ## Getting Started
 
@@ -159,6 +159,9 @@ _141 commands across 7 groups._
 | `lint` | Lint control files for design quality |
 | `map` | ATT&CK tactic coverage and gap analysis |
 | `metrics` | Write Prometheus scrape file for node_exporter |
+| `pack` | Concern packs — named control groupings and their data requirements |
+| `pack list` | List available concern packs and their control counts |
+| `pack show` | Show a pack's requirements manifest (AWS calls, signals, collector permissions) |
 | `packs` | Inspect built-in control packs |
 | `packs list` | List available built-in packs |
 | `packs show` | Show one built-in pack and its control IDs |

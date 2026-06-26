@@ -52,6 +52,7 @@ type SharedOptions struct {
 	MaxUnsafeDuration string
 	NowTime           string
 	Format            cmdutil.OutputFormat
+	Packs             []string // --pack: scope evaluation to one or more concern packs
 
 	// controlsSet / formatSet / obsSet track whether the respective
 	// flag was explicitly set by the user. All three are derived
@@ -67,6 +68,7 @@ func (o *SharedOptions) bindCommon(cmd *cobra.Command, defaultFormat cmdutil.Out
 	cliflags.RegisterControlsFlag(cmd, &o.ControlsDir, cliflags.DefaultControlsDir, "Path to control definitions directory")
 
 	f.StringVarP(&o.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory")
+	f.StringArrayVar(&o.Packs, "pack", nil, "Scope evaluation to a concern pack (repeatable). Example: stave apply --pack entropy -o snapshot/")
 	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339) for deterministic output")
 	o.Format = defaultFormat
@@ -149,6 +151,8 @@ Modes:
 Inputs:
   --controls, -i            Path to control definitions directory (default: controls/s3)
   --observations, -o        Path to observation snapshots directory (default: observations)
+  --pack                    Scope evaluation to a concern pack's controls (repeatable;
+                            see "stave pack list")
   --profile, -p             Evaluation profile (e.g., aws-s3)
   --input                   Path to observations bundle file (required with --profile)
   --max-unsafe              Maximum allowed unsafe duration (default: from project config)
@@ -178,6 +182,9 @@ Remediation scope:
   the boundary is the data, not the change.` + metadata.OfflineHelpSuffix,
 		Example: `  # Standard evaluation
   stave apply --controls ./controls --observations ./obs --format json
+
+  # Scope evaluation to one concern pack
+  stave apply --pack entropy --observations ./obs
 
   # Readiness check only (dry run)
   stave apply --dry-run

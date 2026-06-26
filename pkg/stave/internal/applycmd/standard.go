@@ -82,6 +82,10 @@ type StandardRequest struct {
 	NewOnly    bool
 	NewSince   string
 	HistoryDir string
+
+	// ControlIDAllowlist scopes evaluation to only these control IDs
+	// (`apply --pack`). Empty = whole catalog.
+	ControlIDAllowlist []string
 }
 
 // StandardResult is the rendered outcome of a standard evaluation. Everything
@@ -182,6 +186,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 		Tracer:              tracer,
 		ContextName:         req.ContextName,
 		ObservationRepo:     obsRepo,
+		ControlIDAllowlist:  req.ControlIDAllowlist,
 	})
 	if err != nil {
 		return StandardResult{}, fmt.Errorf("evaluate: %w", err)

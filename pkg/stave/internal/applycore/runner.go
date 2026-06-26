@@ -112,6 +112,12 @@ type Inputs struct {
 	// feed a stdin-reading repository. nil keeps the standard SnapshotsDir
 	// loader (with integrity options applied).
 	ObservationRepo appcontracts.ObservationRepository
+
+	// ControlIDAllowlist scopes evaluation to only these control IDs (used by
+	// `apply --pack`). Empty means evaluate the whole catalog. Filtering happens
+	// after load, so the report, summary, and fingerprint reflect only the
+	// scoped set.
+	ControlIDAllowlist []string
 }
 
 // Result is the engine's output: the full ComplianceReport plus the
@@ -171,6 +177,9 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 	controls, ctlRepo, err := resolveControls(in.ControlsDir)
 	if err != nil {
 		return nil, err
+	}
+	if len(in.ControlIDAllowlist) > 0 {
+		controls = filterControlsByID(controls, in.ControlIDAllowlist)
 	}
 
 	// Project config: when supplied, resolve exception rules and any
@@ -359,6 +368,22 @@ func annotateContributingFactIDs(
 		}
 	}
 	return doc
+}
+
+// filterControlsByID keeps only controls whose ID is in the allowlist,
+// preserving order. Used by `apply --pack` for scoped evaluation.
+func filterControlsByID(controls []policy.ControlDefinition, ids []string) []policy.ControlDefinition {
+	allow := make(map[string]bool, len(ids))
+	for _, id := range ids {
+		allow[id] = true
+	}
+	out := make([]policy.ControlDefinition, 0, len(allow))
+	for i := range controls {
+		if allow[string(controls[i].ID)] {
+			out = append(out, controls[i])
+		}
+	}
+	return out
 }
 
 // LoadControls loads the control catalog for read-only inspection

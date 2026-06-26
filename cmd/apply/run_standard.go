@@ -9,6 +9,20 @@ import (
 	"github.com/sufield/stave/pkg/stave"
 )
 
+// resolvePackAllowlist expands --pack names into the union of their control IDs
+// via the pkg/stave facade. Returns nil when no pack is set (the eval then runs
+// every control, unchanged). An unknown pack surfaces as a UserError → exit 2.
+func resolvePackAllowlist(opts *Options, cfg RunConfig) ([]string, error) {
+	ids, err := stave.ResolvePackControls(opts.Packs, cfg.ControlsDir, cfg.UseBuiltinCatalog)
+	if err != nil {
+		if errors.Is(err, stave.ErrInvalidInput) {
+			return nil, &ui.UserError{Err: err}
+		}
+		return nil, &ui.UserError{Err: fmt.Errorf("resolve --pack: %w", err)}
+	}
+	return ids, nil
+}
+
 // runStandardApply executes the standard evaluation through the pkg/stave
 // facade. The command owns flag/path resolution, the progress runtime, the
 // stdout/stderr writes, and exit-code routing; the load → evaluate → enrich →
@@ -20,11 +34,17 @@ func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio Sta
 		return decorateError(pcErr)
 	}
 
+	packAllow, packErr := resolvePackAllowlist(opts, cfg)
+	if packErr != nil {
+		return packErr
+	}
+
 	rt := ui.NewRuntime(sio.Stdout, sio.Stderr)
 	rt.Quiet = sio.Quiet
 
 	done := rt.BeginProgress("apply controls against observations")
 	res, err := stave.EvaluateStandard(ctx, stave.StandardRequest{
+		ControlIDAllowlist: packAllow,
 		ControlsDir:        cfg.ControlsDir,
 		ObservationsDir:    cfg.ObservationsDir,
 		MaxUnsafe:          opts.MaxUnsafeDuration,

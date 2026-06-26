@@ -12,6 +12,8 @@ description: |-
     Inputs:
       --controls, -i            Path to control definitions directory (default: controls/s3)
       --observations, -o        Path to observation snapshots directory (default: observations)
+      --pack                    Scope evaluation to a concern pack's controls (repeatable;
+                                see "stave pack list")
       --profile, -p             Evaluation profile (e.g., aws-s3)
       --input                   Path to observations bundle file (required with --profile)
       --max-unsafe              Maximum allowed unsafe duration (default: from project config)
@@ -103,6 +105,10 @@ options:
     - name: owner-filter
       default_value: '[]'
       usage: Team IDs to filter findings (repeatable or comma-separated)
+    - name: pack
+      default_value: '[]'
+      usage: |
+        Scope evaluation to a concern pack (repeatable). Example: stave apply --pack entropy -o snapshot/
     - name: profile
       shorthand: p
       usage: Evaluation profile (e.g. aws-s3)
@@ -188,6 +194,9 @@ inherited_options:
 example: |4-
       # Standard evaluation
       stave apply --controls ./controls --observations ./obs --format json
+
+      # Scope evaluation to one concern pack
+      stave apply --pack entropy --observations ./obs
 
       # Readiness check only (dry run)
       stave apply --dry-run

@@ -1,0 +1,91 @@
+name: entropy
+title: "Cloud Entropy — Privilege Creep, Drift, Sprawl, Blast Radius, API Decay"
+description: |
+  The forces of cloud entropy: configuration drift, privilege creep, resource
+  sprawl, blast-radius expansion, and API-surface decay. These act silently —
+  nothing breaks, no alarms fire — so they need invariant checks, not alerts.
+  This pack groups the controls that verify those invariants.
+
+# Membership resolves against the CTL.<DOMAIN>.<CATEGORY> ID convention — no
+# per-control tagging needed. Explicit IDs cover the named entropy controls;
+# patterns sweep the cross-cutting ghost/orphan/dormant/unused families.
+controls:
+  ids:
+    - CTL.IAM.ROLE.PERMISSIONDRIFT.001
+    - CTL.IAM.USER.PERMISSIONDRIFT.001
+    - CTL.KMS.ENTROPY.EXTERNAL.ORIGIN.001
+    - CTL.EC2.KEYPAIR.ALGORITHM.RSA.001
+    - CTL.EC2.TIMESYNC.EXTERNAL.001
+    - CTL.VPC.DHCP.NTP.EXTERNAL.001
+  id_patterns:
+    - "CTL.*.GHOST.*"          # ghost/dangling resources (sprawl)
+    - "CTL.*.ORPHAN.*"         # orphaned resources (sprawl)
+    - "CTL.*.DORMANT.*"        # dormant identities/resources (privilege creep)
+    - "CTL.IAM.*.UNUSED*"      # unused credentials/roles (privilege creep)
+    - "CTL.IAM.ROLE.ENTROPY.*" # IAM role entropy family
+    - "CTL.IAM.ROLE.INTENT*"   # role intent drift
+    - "CTL.IAM.*.PERMISSIONDRIFT.*" # assigned-vs-used delta (privilege creep)
+    - "CTL.EC2.IMDS*"          # IMDSv1/v2 (API-surface decay)
+    - "CTL.CLOUDTRAIL.*VALIDATION*" # log-integrity (drift forensics)
+    - "CTL.CONFIG.*"           # config recorder / conformance (drift detection)
+
+requirements:
+  aws_api_calls:
+    - service: iam
+      calls:
+        - "aws iam list-roles"
+        - "aws iam list-users"
+        - "aws iam get-role --role-name {ROLE}"
+        - "aws iam list-attached-role-policies --role-name {ROLE}"
+        - "aws iam list-role-policies --role-name {ROLE}"
+        - "aws iam generate-service-last-accessed-details --arn {ROLE_ARN}"
+        - "aws iam get-service-last-accessed-details --job-id {JOB_ID}"
+      notes: "Access Advisor (last-accessed) drives the permission-drift delta; generate + poll, allow 30-60s for large principals."
+    - service: ec2
+      calls:
+        - "aws ec2 describe-instances"
+        - "aws ec2 describe-security-groups"
+        - "aws ec2 describe-key-pairs"
+        - "aws ec2 describe-launch-templates"
+        - "aws ec2 describe-snapshots --owner-ids self"
+        - "aws ec2 describe-volumes"
+        - "aws ec2 describe-addresses"
+      notes: "Include stopped instances and unattached volumes/addresses for orphan detection; key-pairs for algorithm entropy; launch templates for time-source config."
+    - service: kms
+      calls:
+        - "aws kms list-keys"
+        - "aws kms describe-key --key-id {KEY_ID}"
+      notes: "Origin (AWS_KMS vs EXTERNAL) for key-material entropy."
+    - service: vpc
+      calls:
+        - "aws ec2 describe-vpcs"
+        - "aws ec2 describe-dhcp-options"
+      notes: "DHCP option-set ntp-servers for VPC-wide time source."
+    - service: cloudtrail
+      calls:
+        - "aws cloudtrail describe-trails"
+        - "aws cloudtrail get-trail-status --name {TRAIL}"
+    - service: config
+      calls:
+        - "aws configservice describe-configuration-recorders"
+        - "aws configservice describe-configuration-recorder-status"
+        - "aws configservice describe-conformance-packs"
+
+  observation_signals:
+    - identity.permission_drift.unused_service_ratio
+    - identity.permission_drift.threshold_exceeded
+    - identity.access_advisor.available
+    - identity.role_age_days
+    - identity.user_age_days
+    - cryptography.origin
+    - compute.keypair.key_type
+    - compute.time.external_ntp
+    - network.vpc.dhcp_ntp_external
+
+  minimum_permissions: |
+    The collector IAM principal needs:
+      - arn:aws:iam::aws:policy/SecurityAudit
+      - arn:aws:iam::aws:policy/job-function/ViewOnlyAccess
+    Plus (not in SecurityAudit):
+      - iam:GenerateServiceLastAccessedDetails
+      - iam:GetServiceLastAccessedDetails
