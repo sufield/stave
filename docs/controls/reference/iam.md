@@ -1105,6 +1105,21 @@ A principal with `iam:ResyncMFADevice` whose Resource field reaches another IAM 
 
 ---
 
+### CTL.IAM.ESCALATE.SAGEMAKER.PRESIGNEDURL.001
+
+**Principal Must Not Escalate via sagemaker:CreatePresignedNotebookInstanceUrl**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
+
+Principals with `sagemaker:CreatePresignedNotebookInstanceUrl` reaching an EXISTING SageMaker notebook instance whose execution role carries permissions exceeding the principal's own can escalate. The principal calls `CreatePresignedNotebookInstanceUrl` (often after `ListNotebookInstances`) to mint a presigned, pre-authenticated URL into the running notebook, opens the Jupyter UI, drops to a terminal, and reads the notebook's execution-role credentials from the Instance Metadata Service — then operates with that role's full authority. Unlike the SageMaker PassRole techniques (CreateNotebook/CreateTrainingJob/CreateProcessingJob, which spin up NEW compute with a passed role), this technique requires no `iam:PassRole`: it hijacks the identity of compute that already exists. It is the SageMaker analogue of `ssm:StartSession` and `ec2-instance-connect:SendSSHPublicKey` (access-existing-compute), not a PassRole-CreateX escalation. Bishop Fox iam-vulnerable ships it as privesc-sageMakerCreatePresignedNotebookURL.
+
+**Remediation:** Scope `sagemaker:CreatePresignedNotebookInstanceUrl` to specific notebook ARNs via resource conditions, or deny it entirely for principals that should not reach privileged notebooks. Keep notebook execution roles least-privilege so a presigned URL yields no excess authority, restrict notebook network access (no direct internet / VPC-only), and prefer SageMaker Studio with scoped user profiles over long-lived notebook instances.
+
+---
+
 ### CTL.IAM.ESCALATE.SENDSSHPUBLICKEY.001
 
 **Principal Must Not Escalate via ec2-instance-connect:SendSSHPublicKey**

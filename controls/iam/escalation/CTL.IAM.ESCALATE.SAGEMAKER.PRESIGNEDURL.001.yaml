@@ -1,0 +1,125 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.SAGEMAKER.PRESIGNEDURL.001
+name: Principal Must Not Escalate via sagemaker:CreatePresignedNotebookInstanceUrl
+description: >
+  Principals with `sagemaker:CreatePresignedNotebookInstanceUrl` reaching an
+  EXISTING SageMaker notebook instance whose execution role carries permissions
+  exceeding the principal's own can escalate. The principal calls
+  `CreatePresignedNotebookInstanceUrl` (often after `ListNotebookInstances`) to
+  mint a presigned, pre-authenticated URL into the running notebook, opens the
+  Jupyter UI, drops to a terminal, and reads the notebook's execution-role
+  credentials from the Instance Metadata Service — then operates with that
+  role's full authority. Unlike the SageMaker PassRole techniques
+  (CreateNotebook/CreateTrainingJob/CreateProcessingJob, which spin up NEW
+  compute with a passed role), this technique requires no `iam:PassRole`: it
+  hijacks the identity of compute that already exists. It is the SageMaker
+  analogue of `ssm:StartSession` and `ec2-instance-connect:SendSSHPublicKey`
+  (access-existing-compute), not a PassRole-CreateX escalation. Bishop Fox
+  iam-vulnerable ships it as privesc-sageMakerCreatePresignedNotebookURL.
+domain: identity
+severity: critical
+scope: compound
+corpus_reference: MITRE:T1569.002
+compliance:
+  owasp_nhi: "NHI5"
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_user
+  - aws_iam_role
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.sagemaker_presigned_url.present
+  - identity.escalation.sagemaker_presigned_url.target_notebook
+  - identity.escalation.sagemaker_presigned_url.target_role_arn
+  - identity.escalation.sagemaker_presigned_url.permission_delta
+remediation:
+  description: >
+    Principal can mint a presigned URL into an existing privileged SageMaker
+    notebook, open a terminal, and read its execution-role credentials from IMDS
+    — a role whose permissions exceed the principal's own.
+  action: >
+    Scope `sagemaker:CreatePresignedNotebookInstanceUrl` to specific notebook
+    ARNs via resource conditions, or deny it entirely for principals that should
+    not reach privileged notebooks. Keep notebook execution roles least-privilege
+    so a presigned URL yields no excess authority, restrict notebook network
+    access (no direct internet / VPC-only), and prefer SageMaker Studio with
+    scoped user profiles over long-lived notebook instances.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "sagemaker_presigned_url": {
+            "present": false
+          }
+        }
+      }
+    }
+mitre_attack:
+  - id: T1569.002
+    name: "System Services: Service Execution"
+    tactic: execution
+validated_against:
+  - vendor: bishopfox
+    lab: privesc-sageMakerCreatePresignedNotebookURL
+    result: detected
+    verified: "2026-06-26"
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.sagemaker_presigned_url.present
+      op: eq
+      value: true
+tests:
+  - name: user with SageMaker presigned-URL escalation path fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/mallory
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            sagemaker_presigned_url:
+              present: true
+              target_notebook: privileged-notebook
+              target_role_arn: arn:aws:iam::111122223333:role/sagemaker-exec-role
+              permission_delta:
+                - s3:*
+                - iam:PassRole
+  - name: user without escalation path passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:user/bob
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          escalation:
+            sagemaker_presigned_url:
+              present: false
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of the per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of the per-technique controls covering the aggregated Prowler check.
