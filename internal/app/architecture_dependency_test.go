@@ -156,6 +156,7 @@ func TestNoFloatingInternalPackages(t *testing.T) {
 		"controldata":       {}, // pre-Phase-5 control data; future move into adapters/controls
 		"doctor":            {}, // doctor diagnostics; semi-cmd-like
 		"env":               {}, // env-var loading helpers
+		"pack":              {}, // concern-pack model + resolver + embedded data; pure, read by cmd/pack and pkg/stave
 		"profile":           {}, // compliance profile evaluation
 		"sanitize":          {}, // ID sanitisation helpers
 		"testutil":          {}, // shared test helpers

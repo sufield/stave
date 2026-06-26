@@ -34,8 +34,24 @@ Exit codes: 0 = success, 2 = input error (unknown pack/format), 4 = internal.`,
 func newListCmd() *cobra.Command {
 	opts := &options{}
 	cmd := &cobra.Command{
-		Use:           "list",
-		Short:         "List available concern packs and their control counts",
+		Use:   "list",
+		Short: "List available concern packs and their control counts",
+		Long: `List the available concern packs and how many controls each resolves to from
+the active catalog.
+
+A concern pack is a named, cross-cutting grouping of controls (e.g. "entropy",
+"quick"). Use a pack name with "stave pack show <name>" to see its data
+requirements, or with "stave apply --pack <name>" to scope an evaluation.
+
+Inputs:  --format, -f (text|json); --controls, -i (catalog to resolve against).
+Outputs: pack names, titles, and resolved control counts on stdout.
+
+Exit codes: 0 = success, 2 = input error (bad --format), 4 = internal.`,
+		Example: `  # List all concern packs
+  stave pack list
+
+  # Machine-readable output
+  stave pack list --format json`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -56,8 +72,15 @@ exact AWS API calls to collect, the observation signals the controls read, and
 the minimum collector IAM permissions. Copy the calls, run them, and feed the
 output to a scoped evaluation.
 
-Example:
-  stave pack show entropy`,
+Inputs:  <name> (pack to show); --format, -f (text|json); --controls, -i.
+Outputs: the resolved manifest on stdout.
+
+Exit codes: 0 = success, 2 = input error (unknown pack/format), 4 = internal.`,
+		Example: `  # Show the entropy pack's data requirements
+  stave pack show entropy
+
+  # Machine-readable output
+  stave pack show entropy --format json`,
 		Args:          cobra.ExactArgs(1),
 		SilenceUsage:  true,
 		SilenceErrors: true,

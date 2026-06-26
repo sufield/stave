@@ -7,8 +7,10 @@ description: |-
     the minimum collector IAM permissions. Copy the calls, run them, and feed the
     output to a scoped evaluation.
 
-    Example:
-      stave pack show entropy
+    Inputs:  <name> (pack to show); --format, -f (text|json); --controls, -i.
+    Outputs: the resolved manifest on stdout.
+
+    Exit codes: 0 = success, 2 = input error (unknown pack/format), 4 = internal.
 usage: stave pack show <name> [flags]
 options:
     - name: controls
@@ -82,5 +84,11 @@ inherited_options:
       default_value: "false"
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: |4-
+      # Show the entropy pack's data requirements
+      stave pack show entropy
+
+      # Machine-readable output
+      stave pack show entropy --format json
 see_also:
     - stave pack - Concern packs — named control groupings and their data requirements

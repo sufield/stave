@@ -1,5 +1,17 @@
 name: stave pack list
 synopsis: List available concern packs and their control counts
+description: |-
+    List the available concern packs and how many controls each resolves to from
+    the active catalog.
+
+    A concern pack is a named, cross-cutting grouping of controls (e.g. "entropy",
+    "quick"). Use a pack name with "stave pack show <name>" to see its data
+    requirements, or with "stave apply --pack <name>" to scope an evaluation.
+
+    Inputs:  --format, -f (text|json); --controls, -i (catalog to resolve against).
+    Outputs: pack names, titles, and resolved control counts on stdout.
+
+    Exit codes: 0 = success, 2 = input error (bad --format), 4 = internal.
 usage: stave pack list [flags]
 options:
     - name: controls
@@ -73,5 +85,11 @@ inherited_options:
       default_value: "false"
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: |4-
+      # List all concern packs
+      stave pack list
+
+      # Machine-readable output
+      stave pack list --format json
 see_also:
     - stave pack - Concern packs — named control groupings and their data requirements
