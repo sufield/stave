@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.TIMESYNC.EXTERNAL.001
+name: EC2 Instances Must Use Amazon Time Sync, Not External Unauthenticated NTP
+description: >
+  An EC2 instance gets its clock from an external, unauthenticated NTP source
+  (a public pool such as pool.ntp.org or arbitrary servers reachable over UDP
+  123) instead of the Amazon Time Sync Service link-local endpoint
+  (169.254.169.123), which is served from the hypervisor with no network path
+  to attack. A network-positioned adversary can delay, replay, or spoof
+  unauthenticated NTP traffic and subtly skew the instance clock. Every
+  time-dependent control on that instance — certificate validity windows, token
+  expiry, log timestamp ordering — inherits the weakness.
+
+  The collector folds the instance's chrony/ntpd configuration together with its
+  security-group egress: a `server 169.254.169.123` (Amazon Time Sync) with no
+  outbound UDP 123 to internet-routable space is safe; an external NTP server,
+  OR an egress rule that lets UDP 123 reach the internet (including a
+  "restricted" CIDR like 10.0.0.0/8 whose range still routes to the internet via
+  a NAT gateway), sets `compute.time.external_ntp` true. Stave reads that
+  derived boolean.
+
+  Inspired by NCC Group "Time as an Attack Surface" white paper by Andy Davis.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-8, SC-45"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-06"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_instance
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    The instance's time source is external and unauthenticated (or external NTP
+    is network-reachable), so its clock can be skewed by a network-positioned
+    adversary.
+  action: >
+    Configure chrony to use Amazon Time Sync only —
+    `server 169.254.169.123 prefer iburst minpoll 4 maxpoll 4` — remove external
+    `server`/`pool` directives, and remove security-group egress rules allowing
+    UDP 123 to internet-routable destinations. On Amazon Linux 2/2023 this is
+    the default; verify custom AMIs.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "time": {
+          "external_ntp": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.time.external_ntp
+      op: eq
+      value: true
+tests:
+  - name: instance reaching external NTP fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:instance/i-vuln"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          time:
+            external_ntp: true
+  - name: instance on Amazon Time Sync only passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:instance/i-amazon-sync"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          time:
+            external_ntp: false
+  - name: restricted-looking CIDR egress still internet-routable via NAT fires (false-negative trap)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:instance/i-nat-routable"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          time:
+            external_ntp: true

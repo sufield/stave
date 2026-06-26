@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.DHCP.NTP.EXTERNAL.001
+name: VPC DHCP Option Sets Must Use Amazon Time Sync or Authenticated NTP
+description: >
+  A VPC's DHCP option set specifies external public NTP servers (a pool such as
+  pool.ntp.org or public IPs like the NIST servers 129.6.15.28/29) in its
+  `ntp-servers` option. The DHCP option set is the VPC-wide default, so EVERY
+  instance in the VPC that takes its NTP servers from DHCP inherits an
+  unauthenticated, network-spoofable time source — one setting that skews the
+  clock of the whole VPC. Time is effectively part of the cloud control plane;
+  an adversary who can influence it undermines certificate validation, token
+  expiry, and log-timestamp ordering fleet-wide.
+
+  The collector sets `network.vpc.dhcp_ntp_external` true when the option set's
+  `ntp-servers` lists any address that is neither the Amazon Time Sync
+  link-local endpoint (169.254.169.123) nor a private (RFC 1918) address.
+  Unset `ntp-servers` is safe — instances fall back to the Amazon Time Sync
+  link-local default. A private internal NTP server passes here; verifying that
+  server's OWN upstream is authenticated is out of snapshot scope (INFO).
+
+  Inspired by NCC Group "Time as an Attack Surface" white paper by Andy Davis.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-8, SC-45"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-06"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    The VPC DHCP option set points every instance at external, unauthenticated
+    NTP servers.
+  action: >
+    Remove external servers from the DHCP option set's `ntp-servers` (leave it
+    unset to use the Amazon Time Sync link-local default), or set it to
+    169.254.169.123. If you must run an internal NTP server, confirm that server
+    itself syncs from Amazon Time Sync or an authenticated upstream.
+  example: |
+    {
+      "network": {
+        "kind": "vpc",
+        "vpc": {
+          "dhcp_ntp_external": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc
+    - field: properties.network.vpc.dhcp_ntp_external
+      op: eq
+      value: true
+tests:
+  - name: DHCP option set with public NTP servers fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:vpc/vpc-public-ntp"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          vpc:
+            dhcp_ntp_external: true
+  - name: DHCP option set with no ntp-servers (Amazon Time Sync default) passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:vpc/vpc-default"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          vpc:
+            dhcp_ntp_external: false
+  - name: internal private NTP server passes — upstream verification out of scope (documented INFO limitation)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:vpc/vpc-internal-ntp"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          vpc:
+            dhcp_ntp_external: false

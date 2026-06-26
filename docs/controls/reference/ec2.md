@@ -842,6 +842,23 @@ EC2 instances stopped for longer than the decommission threshold (default 90 day
 
 ---
 
+### CTL.EC2.KEYPAIR.ALGORITHM.RSA.001
+
+**EC2 Key Pairs Should Use Ed25519, Not RSA**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-12, SC-13; soc2: CC6.1;
+
+An EC2 key pair uses the RSA algorithm. RSA keys generated with weak entropy (e.g. on a host with a depleted entropy pool) can have predictable or shared prime factors. Ed25519 derives its key from a single 256-bit seed through a deterministic process, making generation far less dependent on continuous high-quality randomness; it is also smaller (256-bit vs 2048-4096-bit) and faster. AWS has supported Ed25519 key pairs since 2021.
+Advisory (low severity), not a hard failure: RSA is not broken and many orgs use it legitimately. This control recommends migration, not enforcement. A `compliance:fips-required` tag does NOT suppress the finding — Ed25519 is also FIPS-approved (NIST SP 800-186, 2023), so the compliance rationale for RSA no longer holds; the tag is context for the reviewer, not an exemption.
+Entropy controls inspired by NCC Group "Time as an Attack Surface" white paper — extended to cover key material and key pair algorithm entropy properties.
+
+**Remediation:** Create a new Ed25519 key pair (aws ec2 create-key-pair --key-type ed25519), roll instances/authorized_keys to it, and delete the RSA pair. Ed25519 is FIPS-approved (NIST SP 800-186), so it satisfies FIPS requirements too.
+
+---
+
 ### CTL.EC2.KEYPAIR.NOKEY.SSHOPEN.001
 
 **EC2 Instances With SSH Open Must Have a Key Pair**
@@ -1424,6 +1441,23 @@ EC2 instances tagged as processing sensitive data (HIPAA, PCI, CONFIDENTIAL, Fed
 Production EC2 instances must have termination protection enabled to prevent accidental or malicious instance termination via API, console, or CLI.
 
 **Remediation:** aws ec2 modify-instance-attribute --instance-id <id> --disable-api-termination
+
+---
+
+### CTL.EC2.TIMESYNC.EXTERNAL.001
+
+**EC2 Instances Must Use Amazon Time Sync, Not External Unauthenticated NTP**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AU-8, SC-45; soc2: CC7.2;
+
+An EC2 instance gets its clock from an external, unauthenticated NTP source (a public pool such as pool.ntp.org or arbitrary servers reachable over UDP 123) instead of the Amazon Time Sync Service link-local endpoint (169.254.169.123), which is served from the hypervisor with no network path to attack. A network-positioned adversary can delay, replay, or spoof unauthenticated NTP traffic and subtly skew the instance clock. Every time-dependent control on that instance — certificate validity windows, token expiry, log timestamp ordering — inherits the weakness.
+The collector folds the instance's chrony/ntpd configuration together with its security-group egress: a `server 169.254.169.123` (Amazon Time Sync) with no outbound UDP 123 to internet-routable space is safe; an external NTP server, OR an egress rule that lets UDP 123 reach the internet (including a "restricted" CIDR like 10.0.0.0/8 whose range still routes to the internet via a NAT gateway), sets `compute.time.external_ntp` true. Stave reads that derived boolean.
+Inspired by NCC Group "Time as an Attack Surface" white paper by Andy Davis.
+
+**Remediation:** Configure chrony to use Amazon Time Sync only — `server 169.254.169.123 prefer iburst minpoll 4 maxpoll 4` — remove external `server`/`pool` directives, and remove security-group egress rules allowing UDP 123 to internet-routable destinations. On Amazon Linux 2/2023 this is the default; verify custom AMIs.
 
 ---
 

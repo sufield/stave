@@ -95,6 +95,23 @@ Active resources (EC2 instances, RDS instances, VPC-configured Lambda functions,
 
 ---
 
+### CTL.VPC.DHCP.NTP.EXTERNAL.001
+
+**VPC DHCP Option Sets Must Use Amazon Time Sync or Authenticated NTP**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AU-8, SC-45; soc2: CC7.2;
+
+A VPC's DHCP option set specifies external public NTP servers (a pool such as pool.ntp.org or public IPs like the NIST servers 129.6.15.28/29) in its `ntp-servers` option. The DHCP option set is the VPC-wide default, so EVERY instance in the VPC that takes its NTP servers from DHCP inherits an unauthenticated, network-spoofable time source — one setting that skews the clock of the whole VPC. Time is effectively part of the cloud control plane; an adversary who can influence it undermines certificate validation, token expiry, and log-timestamp ordering fleet-wide.
+The collector sets `network.vpc.dhcp_ntp_external` true when the option set's `ntp-servers` lists any address that is neither the Amazon Time Sync link-local endpoint (169.254.169.123) nor a private (RFC 1918) address. Unset `ntp-servers` is safe — instances fall back to the Amazon Time Sync link-local default. A private internal NTP server passes here; verifying that server's OWN upstream is authenticated is out of snapshot scope (INFO).
+Inspired by NCC Group "Time as an Attack Surface" white paper by Andy Davis.
+
+**Remediation:** Remove external servers from the DHCP option set's `ntp-servers` (leave it unset to use the Amazon Time Sync link-local default), or set it to 169.254.169.123. If you must run an internal NTP server, confirm that server itself syncs from Amazon Time Sync or an authenticated upstream.
+
+---
+
 ### CTL.VPC.DNSFIREWALL.ENABLED.001
 
 **VPC Does Not Have DNS Firewall**

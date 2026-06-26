@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2739
-**Pack hash:** `4446445c8127911d913524950840dd06f1973923bb96f33a3a38a6db28764e41`
+**Total controls:** 2743
+**Pack hash:** `74fab7b22cfc1ef27c011c1ba710c06bc6cf3d45c2702507e482f6d0bbabd5b5`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -16,8 +16,8 @@ GitHub. Pick a service below.
 | critical | 289 |
 | high | 1203 |
 | info | 16 |
-| low | 206 |
-| medium | 1025 |
+| low | 208 |
+| medium | 1027 |
 
 | Domain | Count |
 |--------|-------|
@@ -25,13 +25,13 @@ GitHub. Pick a service below.
 | audit | 90 |
 | capacity | 3 |
 | detection | 135 |
-| encryption | 113 |
+| encryption | 115 |
 | exposure | 1208 |
 | governance | 587 |
 | hygiene | 18 |
 | identity | 463 |
 | lifecycle | 31 |
-| network | 37 |
+| network | 39 |
 | resilience | 33 |
 | secrets | 4 |
 | storage | 8 |
@@ -69,7 +69,7 @@ GitHub. Pick a service below.
 | [DNS](reference/dns.md) | 3 |
 | [DOCUMENTDB](reference/documentdb.md) | 18 |
 | [DYNAMODB](reference/dynamodb.md) | 35 |
-| [EC2](reference/ec2.md) | 98 |
+| [EC2](reference/ec2.md) | 100 |
 | [ECR](reference/ecr.md) | 10 |
 | [ECS](reference/ecs.md) | 50 |
 | [EFS](reference/efs.md) | 13 |
@@ -90,7 +90,7 @@ GitHub. Pick a service below.
 | [INSPECTOR](reference/inspector.md) | 1 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 2 |
-| [KMS](reference/kms.md) | 45 |
+| [KMS](reference/kms.md) | 46 |
 | [LAMBDA](reference/lambda.md) | 85 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
 | [LIGHTSAIL](reference/lightsail.md) | 2 |
@@ -119,7 +119,7 @@ GitHub. Pick a service below.
 | [SQS](reference/sqs.md) | 37 |
 | [SSM](reference/ssm.md) | 8 |
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
-| [VPC](reference/vpc.md) | 78 |
+| [VPC](reference/vpc.md) | 79 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 8 |
 | [WORKSPACES](reference/workspaces.md) | 1 |

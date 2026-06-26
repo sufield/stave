@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.ENTROPY.EXTERNAL.ORIGIN.001
+name: KMS Customer Keys Should Use AWS-Generated Key Material, Not Imported External Material
+description: >
+  A customer-managed KMS key uses imported external key material (Origin:
+  EXTERNAL). Imported material may have been generated with insufficient entropy
+  on an external system — a laptop, an on-prem HSM of unknown configuration, or a
+  weak RNG. AWS-generated keys (Origin: AWS_KMS) and CloudHSM-generated keys
+  (Origin: AWS_CLOUDHSM) use FIPS 140-2 validated HSMs with a hardware RNG; the
+  entropy quality of imported material is unverifiable — Stave can see that a key
+  was imported, not how its bytes were produced.
+
+  Advisory (low severity), not a hard failure: imported material is a legitimate
+  pattern for key portability and multi-cloud/BYOK key management. This control
+  flags customer-managed EXTERNAL-origin keys for review — confirm the external
+  source used a CSPRNG backed by a hardware RNG. AWS-managed keys
+  (is_aws_managed) are skipped: they always use AWS-generated material. The
+  PendingImport state does not clear the concern — the intent is still to use
+  imported material whose entropy is unverifiable.
+
+  Entropy controls inspired by NCC Group "Time as an Attack Surface" white paper
+  — extended to cover key material and key pair algorithm entropy properties.
+domain: encryption
+severity: low
+compliance:
+  nist_800_53_r5: "SC-12, SC-13"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-10"]
+scope_tags:
+  - aws
+  - kms
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kms_key
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    A customer-managed KMS key was created from imported external material whose
+    entropy quality cannot be verified.
+  action: >
+    Prefer AWS-generated material: create the key with Origin AWS_KMS (or
+    AWS_CLOUDHSM). If imported material is required for portability/BYOK, confirm
+    the external source used a CSPRNG backed by a validated hardware RNG and
+    document the exception.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "is_aws_managed": false,
+        "origin": "AWS_KMS"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.is_aws_managed
+      op: eq
+      value: false
+    - field: properties.cryptography.origin
+      op: eq
+      value: EXTERNAL
+tests:
+  - name: customer-managed key with imported external material fires (vulnerable — entropy unverifiable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:123456789012:key/abc-123"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          is_aws_managed: false
+          origin: EXTERNAL
+  - name: customer-managed key with AWS-generated material passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:123456789012:key/aws-generated"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          is_aws_managed: false
+          origin: AWS_KMS
+  - name: AWS-managed key is skipped even if origin looks external (false-positive trap — only customer keys)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:123456789012:key/aws-managed"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          is_aws_managed: true
+          origin: EXTERNAL
+  - name: EXTERNAL-origin key still pending import still fires (false-negative trap — state does not clear the concern)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:123456789012:key/pending-import"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          is_aws_managed: false
+          origin: EXTERNAL
+          key_state: PendingImport

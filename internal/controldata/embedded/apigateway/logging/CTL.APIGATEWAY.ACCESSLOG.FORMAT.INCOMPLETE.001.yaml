@@ -6,14 +6,26 @@ description: >
   omits at least one of the fields needed for incident response
   and audit: $context.requestId, $context.identity.caller or
   $context.identity.user, $context.identity.sourceIp,
-  $context.responseLatency, $context.status. With these fields
-  missing, an investigator looking at the logs cannot answer the
-  questions an incident demands: who called this method, from
-  where, how long did it take, what status did API Gateway
-  return, what was the request correlation ID for cross-system
-  tracing. The log line still exists and counts as "logging
+  $context.responseLatency, $context.status, and a request
+  timestamp ($context.requestTimeEpoch preferred, or
+  $context.requestTime). With these fields missing, an
+  investigator looking at the logs cannot answer the questions an
+  incident demands: who called this method, from where, how long
+  did it take, what status did API Gateway return, what was the
+  request correlation ID for cross-system tracing, and WHEN it
+  happened. The log line still exists and counts as "logging
   enabled" in compliance reporting, but its forensic value is
   near zero.
+
+  The timestamp is the field this control adds for time-integrity:
+  without it, events cannot be ordered and cross-service
+  correlation degrades. $context.requestTimeEpoch (millisecond
+  epoch) is unambiguous for correlation across systems whose
+  clocks may disagree; the human-readable $context.requestTime
+  satisfies the requirement but is INFO-flagged to prefer epoch.
+
+  Inspired by NCC Group "Time as an Attack Surface" white paper by
+  Andy Davis.
 domain: audit
 severity: medium
 compliance:
@@ -65,3 +77,37 @@ unsafe_predicate:
     - field: properties.api.access_log.format_complete
       op: eq
       value: false
+tests:
+  - name: access log format omitting the request timestamp fires (vulnerable — time-integrity gap)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:apigateway:us-east-1::/restapis/api-no-ts/stages/prod"
+      asset_type: aws_apigateway_rest_api
+      vendor: aws
+      properties:
+        api:
+          kind: apigateway_stage
+          access_log:
+            format_complete: false
+  - name: format with requestTimeEpoch and the full field set passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:apigateway:us-east-1::/restapis/api-epoch/stages/prod"
+      asset_type: aws_apigateway_rest_api
+      vendor: aws
+      properties:
+        api:
+          kind: apigateway_stage
+          access_log:
+            format_complete: true
+  - name: human-readable requestTime satisfies completeness; epoch preferred is INFO-only (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:apigateway:us-east-1::/restapis/api-human-ts/stages/prod"
+      asset_type: aws_apigateway_rest_api
+      vendor: aws
+      properties:
+        api:
+          kind: apigateway_stage
+          access_log:
+            format_complete: true

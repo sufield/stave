@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.KEYPAIR.ALGORITHM.RSA.001
+name: EC2 Key Pairs Should Use Ed25519, Not RSA
+description: >
+  An EC2 key pair uses the RSA algorithm. RSA keys generated with weak entropy
+  (e.g. on a host with a depleted entropy pool) can have predictable or shared
+  prime factors. Ed25519 derives its key from a single 256-bit seed through a
+  deterministic process, making generation far less dependent on continuous
+  high-quality randomness; it is also smaller (256-bit vs 2048-4096-bit) and
+  faster. AWS has supported Ed25519 key pairs since 2021.
+
+  Advisory (low severity), not a hard failure: RSA is not broken and many orgs
+  use it legitimately. This control recommends migration, not enforcement. A
+  `compliance:fips-required` tag does NOT suppress the finding — Ed25519 is also
+  FIPS-approved (NIST SP 800-186, 2023), so the compliance rationale for RSA no
+  longer holds; the tag is context for the reviewer, not an exemption.
+
+  Entropy controls inspired by NCC Group "Time as an Attack Surface" white paper
+  — extended to cover key material and key pair algorithm entropy properties.
+domain: encryption
+severity: low
+compliance:
+  nist_800_53_r5: "SC-12, SC-13"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-04"]
+scope_tags:
+  - aws
+  - ec2
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_key_pair
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    The EC2 key pair uses RSA, which is larger and more sensitive to weak-entropy
+    key generation than Ed25519.
+  action: >
+    Create a new Ed25519 key pair (aws ec2 create-key-pair --key-type ed25519),
+    roll instances/authorized_keys to it, and delete the RSA pair. Ed25519 is
+    FIPS-approved (NIST SP 800-186), so it satisfies FIPS requirements too.
+  example: |
+    {
+      "compute": {
+        "kind": "key_pair",
+        "keypair": {
+          "key_type": "ed25519"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: key_pair
+    - field: properties.compute.keypair.key_type
+      op: eq
+      value: rsa
+tests:
+  - name: RSA key pair fires (vulnerable — weaker against weak-entropy generation)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:123456789012:key-pair/my-prod-key"
+      asset_type: aws_ec2_key_pair
+      vendor: aws
+      properties:
+        compute:
+          kind: key_pair
+          keypair:
+            key_type: rsa
+  - name: Ed25519 key pair passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:123456789012:key-pair/my-ed25519-key"
+      asset_type: aws_ec2_key_pair
+      vendor: aws
+      properties:
+        compute:
+          kind: key_pair
+          keypair:
+            key_type: ed25519
+  - name: RSA key pair tagged fips-required still fires (false-negative trap — Ed25519 is also FIPS-approved)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:123456789012:key-pair/fips-rsa-key"
+      asset_type: aws_ec2_key_pair
+      vendor: aws
+      properties:
+        compute:
+          kind: key_pair
+          keypair:
+            key_type: rsa
+          tags:
+            compliance: fips-required

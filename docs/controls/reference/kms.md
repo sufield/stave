@@ -230,6 +230,23 @@ KMS key is scheduled for deletion with the minimum waiting period (7 days). The 
 
 ---
 
+### CTL.KMS.ENTROPY.EXTERNAL.ORIGIN.001
+
+**KMS Customer Keys Should Use AWS-Generated Key Material, Not Imported External Material**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-12, SC-13; soc2: CC6.1;
+
+A customer-managed KMS key uses imported external key material (Origin: EXTERNAL). Imported material may have been generated with insufficient entropy on an external system — a laptop, an on-prem HSM of unknown configuration, or a weak RNG. AWS-generated keys (Origin: AWS_KMS) and CloudHSM-generated keys (Origin: AWS_CLOUDHSM) use FIPS 140-2 validated HSMs with a hardware RNG; the entropy quality of imported material is unverifiable — Stave can see that a key was imported, not how its bytes were produced.
+Advisory (low severity), not a hard failure: imported material is a legitimate pattern for key portability and multi-cloud/BYOK key management. This control flags customer-managed EXTERNAL-origin keys for review — confirm the external source used a CSPRNG backed by a hardware RNG. AWS-managed keys (is_aws_managed) are skipped: they always use AWS-generated material. The PendingImport state does not clear the concern — the intent is still to use imported material whose entropy is unverifiable.
+Entropy controls inspired by NCC Group "Time as an Attack Surface" white paper — extended to cover key material and key pair algorithm entropy properties.
+
+**Remediation:** Prefer AWS-generated material: create the key with Origin AWS_KMS (or AWS_CLOUDHSM). If imported material is required for portability/BYOK, confirm the external source used a CSPRNG backed by a validated hardware RNG and document the exception.
+
+---
+
 ### CTL.KMS.FIPS.001
 
 **KMS Keys Must Use FIPS 140-2 Validated HSM Origin**
