@@ -35,4 +35,3 @@ func isDaemonContext(ctx context.Context) bool {
 func DaemonContext(ctx context.Context) context.Context {
 	return context.WithValue(ctx, daemonContextKey{}, true)
 }
-
