@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_146 commands across 7 groups._
+_147 commands across 7 groups._
 
 ## Getting Started
 
@@ -184,6 +184,7 @@ _146 commands across 7 groups._
 | `search` | Find catalog entries matching a free-form intent |
 | `telemetry` | Emit structured NDJSON telemetry from assessment output |
 | `test` | Run embedded control test cases |
+| `transform` | Convert raw AWS CLI snapshots into obs.v0.1 observations (built-in jq) |
 | `trend` | Analyze compliance posture trends across assessment runs |
 | `trend forecast` | Project posture score trajectory with SLA breach warnings |
 | `trend oscillation` | Classify violation oscillation patterns across assessment history |

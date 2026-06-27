@@ -4,6 +4,7 @@
 - 2673 controls across 74 AWS/GCP/K8s/Azure service domains
 - 603 compound chain definitions — multi-step attack paths
 - Offline analysis of local configuration snapshots (obs.v0.1)
+- Built-in snapshot→observation conversion (`stave transform`, jq filters) for common AWS resources; external extractors (Steampipe, CloudQuery, custom) still supported for broader coverage
 - Deterministic findings and reports
 - 10 compliance framework profiles: HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0
 - Three reasoning engines: CEL, Soufflé, Z3
@@ -18,6 +19,7 @@
 
 ## Supported commands
 - `stave apply` — control evaluation (default and profile modes)
+- `stave transform` — convert raw AWS snapshots to obs.v0.1 (built-in jq filters)
 - `stave validate` — input validation
 - `stave diagnose` — per-control analysis
 - `stave ci` — CI/CD baseline and gating

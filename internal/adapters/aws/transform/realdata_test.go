@@ -7,61 +7,46 @@ import (
 	"testing"
 )
 
-// Proves runJQ reshapes a REAL committed lab snapshot into the exact obs.v0.1
-// asset the lab ships. The fixture is the nccgroup IAM password policy — a clean
-// single-file reshape, copied into testdata/ because the stave module syncs to
-// the public sufield/stave repo without the repo-root ctf/ lab tree.
-//
-// The account ID is injected as a jq arg (it is not present in the raw
-// get-account-password-policy output) — the same parameter aws-snapshot.sh
-// supplies at capture time. This is the Iteration 1 filter pattern, validated
-// here against working data.
-func TestRunJQ_NccgroupPasswordPolicy(t *testing.T) {
+// Drives the whole pipeline (detect → embedded filter → scrub → envelope →
+// obs.v0.1 validation) against a REAL committed lab snapshot, and checks the
+// produced asset matches the one the lab ships. The fixture is the nccgroup IAM
+// password policy — a clean single-file reshape — copied into testdata/ because
+// the stave module syncs to the public sufield/stave repo without the repo-root
+// ctf/ lab tree. The account ID is supplied via Options (the raw
+// get-account-password-policy output carries no ARN).
+func TestTransformFiles_NccgroupPasswordPolicy(t *testing.T) {
 	raw, err := os.ReadFile(filepath.Join("testdata", "nccgroup", "iam_password_policy.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	var input any
-	if err = json.Unmarshal(raw, &input); err != nil {
-		t.Fatal(err)
-	}
 
-	// Extracted mapping (Iter 1 moves this into filters/iam-password-policy.jq).
-	// $account is the only external input; everything else reshapes raw fields,
-	// defaulting absent fields to 0 (AWS omits PasswordReusePrevention/MaxPasswordAge
-	// when password reuse/expiry is unset).
-	filter := `.PasswordPolicy | {
-		id: ("arn:aws:iam::" + $account + ":password-policy"),
-		type: "aws_iam_password_policy",
-		vendor: "aws",
-		properties: { identity: {
-			kind: "password_policy",
-			password_policy: {
-				minimum_length: .MinimumPasswordLength,
-				require_uppercase: .RequireUppercaseCharacters,
-				require_lowercase: .RequireLowercaseCharacters,
-				require_numbers: .RequireNumbers,
-				require_symbols: .RequireSymbols,
-				reuse_prevention_count: (.PasswordReusePrevention // 0),
-				max_password_age: (.MaxPasswordAge // 0)
-			}
-		} }
-	}`
-
-	out, err := runJQWithArgs(filter, input, map[string]any{"account": "442426852386"})
+	out, stats, err := TransformFiles(
+		map[string][]byte{"iam_password_policy.json": raw},
+		Options{Account: "442426852386", CapturedAt: "2026-06-01T12:00:00Z"},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(out) != 1 {
-		t.Fatalf("want 1 asset, got %d", len(out))
+	if stats.Assets != 1 || stats.Skipped != 0 {
+		t.Fatalf("unexpected stats: %+v", stats)
+	}
+
+	var doc struct {
+		Assets []json.RawMessage `json:"assets"`
+	}
+	if err = json.Unmarshal(out, &doc); err != nil {
+		t.Fatal(err)
+	}
+	if len(doc.Assets) != 1 {
+		t.Fatalf("want 1 asset, got %d", len(doc.Assets))
 	}
 
 	want, err := os.ReadFile(filepath.Join("testdata", "nccgroup", "iam_password_policy.expected-asset.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !jsonEqual(t, out[0], want) {
-		t.Errorf("asset mismatch:\n got: %s\nwant: %s", out[0], want)
+	if !jsonEqual(t, doc.Assets[0], want) {
+		t.Errorf("asset mismatch:\n got: %s\nwant: %s", doc.Assets[0], want)
 	}
 }
 

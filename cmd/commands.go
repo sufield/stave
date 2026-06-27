@@ -55,6 +55,7 @@ import (
 	stavesnapshotdiff "github.com/sufield/stave/cmd/snapshotdiff"
 	stavetelemetry "github.com/sufield/stave/cmd/telemetry"
 	stavetest "github.com/sufield/stave/cmd/test"
+	stavetransform "github.com/sufield/stave/cmd/transform"
 	stavetrend "github.com/sufield/stave/cmd/trend"
 	validatemapping "github.com/sufield/stave/cmd/validatemapping"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
@@ -152,6 +153,7 @@ func WireCommands(app *App) error {
 	root.AddCommand(stavepack.NewCmd())
 	root.AddCommand(stavediscover.NewCmd())
 	root.AddCommand(staveplan.NewCmd())
+	root.AddCommand(stavetransform.NewCmd())
 	root.AddCommand(staveexport.NewCmd())
 	root.AddCommand(staveexportinvariants.NewCmd())
 	root.AddCommand(staveexportsir.NewCmd())

@@ -32,14 +32,13 @@ This runs in your terminal. Stave never sees your credentials.
 
 ## Step 2: Convert the snapshot into observations
 
-Use an extractor to convert the raw AWS CLI output into Stave's normalized observation format (`obs.v0.1` JSON). You can write your own extractor in any language, or use an existing one such as `stave-extractor`. See [Building an Extractor](extractor-prompt.md) for a jumpstart template.
-
-Your extractor should read the files in `snapshot-raw/` and produce one or more `obs.v0.1` JSON files in an output directory:
+Convert the raw AWS CLI output into Stave's normalized observation format (`obs.v0.1` JSON). The built-in `stave transform` does this with jq filters — no extractor to write:
 
 ```bash
-# Example: run your extractor
-./my-s3-extractor.sh ./snapshot-raw ./observations
+stave transform -i ./snapshot-raw -o ./observations
 ```
+
+For data sources or resource types the built-in filters don't cover, you can write your own extractor in any language, or use an existing one such as `stave-extractor`. See [Building an Extractor](extractor-prompt.md) for a jumpstart template.
 
 ## Step 3: Validate the observations
 

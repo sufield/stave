@@ -100,7 +100,7 @@ Three reasons:
 
 1. **Air-gapped environments** — security review and audit often happen in isolated networks where cloud API access is unavailable or prohibited.
 2. **Deterministic replay** — the same snapshot files produce the same findings on any machine, any time. Live API queries introduce non-determinism (state changes, API throttling, clock differences).
-3. **Separation of concerns** — extracting data from cloud APIs is a different problem from evaluating safety invariants. Stave handles evaluation; external extractors handle extraction. See [Building an Extractor](extractor-prompt.md).
+3. **Separation of concerns** — calling cloud APIs to collect data is a different problem from evaluating safety invariants. Collection stays external (your tools, your credentials); Stave handles evaluation and ships a built-in converter, `stave transform` (jq filters), that reshapes raw snapshots into `obs.v0.1`. For data sources beyond the built-in filters you can still write an external extractor — see [Building an Extractor](extractor-prompt.md).
 
 ## How is "evidence" different from "observation"?
 
@@ -336,7 +336,7 @@ Stave's CI/CD integration works as a gatekeeper on locally stored snapshots — 
 
 How it works:                                                                                                       
    
-  1. An extractor (external to stave, any language) calls AWS APIs and produces obs.v0.1 JSON files                     
+  1. A collector (external to stave) calls AWS APIs to capture raw snapshots; `stave transform` converts them to obs.v0.1 JSON (or an external extractor emits obs.v0.1 directly)
   2. Those JSON files are committed to the repo or stored as CI artifacts alongside the infrastructure code
   3. stave apply evaluates them in the pipeline — same as running locally
 

@@ -1,0 +1,123 @@
+name: stave transform
+synopsis: |
+    Convert raw AWS CLI snapshots into obs.v0.1 observations (built-in jq)
+description: |-
+    Convert raw AWS CLI output into Stave's obs.v0.1 observation format.
+
+    Stave never calls AWS. You collect raw snapshots yourself (AWS CLI, Steampipe,
+    …); transform reshapes them in-process with embedded jq filters, scrubs
+    sensitive values (UserData, env var values, secret-keyed tags are hashed; policy
+    documents, ARNs, names, and actions are left intact), merges data spread across
+    several API calls into one asset, and validates the result against the obs.v0.1
+    schema before writing it.
+
+    Each raw file is matched to a filter by its top-level JSON key (e.g.
+    "Roles" -> iam-roles). Files no filter recognizes are skipped, not fatal. Run
+    with --coverage to list the recognized shapes.
+
+    Inputs:  --in, -i   directory of raw AWS CLI JSON files (default: raw)
+             --account   AWS account ID for filters whose input carries no ARN
+             --now       captured_at timestamp (RFC3339); defaults to now
+             --format, -f  summary format: text or json
+    Outputs: one obs.v0.1 file written to --out (or stdout with --out -); a summary
+             on stdout (stderr when --out -).
+
+    Exit codes: 0 = success, 2 = input error (missing dir, bad JSON, bad flag),
+                4 = internal error (e.g. transform produced an invalid observation),
+                130 = interrupted.
+usage: stave transform [flags]
+options:
+    - name: account
+      usage: AWS account ID for filters whose raw input carries no ARN
+    - name: coverage
+      default_value: "false"
+      usage: list the raw input shapes transform recognizes, then exit
+    - name: format
+      shorthand: f
+      default_value: text
+      usage: 'summary format: text, json'
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for transform
+    - name: in
+      shorthand: i
+      default_value: raw
+      usage: directory of raw AWS CLI JSON files
+    - name: now
+      usage: |
+        captured_at timestamp (RFC3339); defaults to the current time
+    - name: out
+      shorthand: o
+      default_value: observations
+      usage: output directory for the observation file (or - for stdout)
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: quiet
+      default_value: "false"
+      usage: |
+        Suppress output (exit code only) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: show-dev
+      default_value: "false"
+      usage: |
+        In --help, list only development-only commands (default: hide them from the listing)
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: verbose
+      shorthand: v
+      default_value: "0"
+      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: |4-
+      # Convert a directory of raw snapshots into observations/
+      stave transform -i raw/ -o observations/
+
+      # Stream one observation document to stdout
+      stave transform -i raw/ -o -
+
+      # List the raw input shapes transform recognizes
+      stave transform --coverage
+see_also:
+    - stave - Configuration safety evaluator

@@ -89,8 +89,8 @@ If either property is true in a snapshot, Stave emits a finding.
 
 ## Scope boundaries
 
-- **Evaluation-only** — Stave evaluates observations; extractors and remediators are separate programs.
-- **Offline by design** — all inputs are local files; cloud API access belongs to extractors.
+- **Evaluation-first** — Stave evaluates observations and ships a built-in converter (`stave transform`, jq filters) that reshapes raw snapshots into `obs.v0.1`; collection and remediation are separate programs.
+- **Offline by design** — all inputs are local files; cloud API access belongs to collectors, not Stave.
 - **Deterministic** — same inputs always produce the same findings, scores, and rankings.
 
 ## Developer Workflow

@@ -140,7 +140,8 @@ You know your AWS services; Stave tells you what to collect, then evaluates it.
 ```bash
 stave discover --services iam,s3,ec2,lambda,cloudtrail   # what to collect (read-only API calls)
 stave plan     --services iam,s3,ec2,lambda,cloudtrail   # what will be checked, by severity
-# collect raw snapshots with your tool, then CONVERT them to obs.v0.1 observations (your extractor)
+# collect raw snapshots with your tool (AWS CLI/Steampipe/Pulumi), then convert:
+stave transform -i ./raw -o ./observations               # built-in jq conversion to obs.v0.1
 stave apply --services iam -o ./observations             # findings, per service group
 stave check --before ./observations --after ./observations-fixed   # resolved / remaining / new
 ```
@@ -164,7 +165,7 @@ stave apply --observations ./my-snapshot
 
 See [`docs/quickstart-own-data.md`](docs/quickstart-own-data.md) for prerequisites, the property mapping, and the time-budget breakdown.
 
-**Bring your own data:** See [`examples/agents/`](examples/agents/) for starter templates that transform Steampipe output into Stave observations.
+**Bring your own data:** the built-in `stave transform -i raw/ -o observations/` (jq filters) converts raw AWS CLI snapshots to `obs.v0.1` by default. For breadth beyond the built-in filters, see [`examples/agents/`](examples/agents/) for templates that transform Steampipe output into Stave observations.
 
 ### Long form — workflow for a real project
 
@@ -186,7 +187,7 @@ stave diagnose
 
 The pipeline is **Extract → Apply → Act**.
 
-1. **Extract.** An external collector (cloud APIs, Terraform state, the bundled `scripts/aws-snapshot.sh`, or your own) produces `obs.v0.1` JSON. Stave never touches your cloud directly.
+1. **Extract.** Collection stays external — you gather raw configuration with your own tools and credentials (cloud APIs, Terraform state, Steampipe, the bundled `scripts/aws-snapshot.sh`, …). Conversion to `obs.v0.1` is built in: `stave transform` runs jq filters in-process by default, or an external extractor can emit `obs.v0.1` directly. Stave never touches your cloud directly.
 2. **Apply.** Stave evaluates each control's predicate against each asset, then composes the resulting findings into compound chains (multiple co-failing controls on related assets = one chain finding).
 3. **Act.** Findings ship with explicit remediation, severity, and the evidence chain that justified them. Optionally pipe to nine external reasoning engines (Z3, Soufflé, Clingo, Prolog, …) for formal proofs, blast-radius enumeration, or attacker-cost ROI.
 

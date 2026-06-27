@@ -150,7 +150,10 @@ jobs:
           # a live, in-scope command.
           check_pattern 'stave monitor\b'            '`stave monitor` removed — continuous monitoring is out of scope'
           check_pattern 'stave watch\b'              '`stave watch` removed — continuous monitoring is out of scope'
-          check_pattern 'stave plan\b'               '`stave plan` removed — remediation planning is out of scope'
+          # NOTE: `stave plan` is NOT gated — the name was reused this cycle for a
+          # live coverage-preview command (which controls evaluate, by service ×
+          # severity). The removed remediation-planning surface that stays gated is
+          # rank/simulate/deadline/budget below. Mirrors features/scope.yaml.
           check_pattern 'stave rank\b'               '`stave rank` removed — remediation planning is out of scope'
           check_pattern 'stave simulate\b'           '`stave simulate` removed — remediation planning is out of scope'
           check_pattern 'stave forensics\b'          '`stave forensics` removed — incident response is out of scope'

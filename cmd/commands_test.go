@@ -19,7 +19,8 @@ func TestWireCommands_CommandCount(t *testing.T) {
 	// 58 after adding `pack` (concern packs — list/show + apply --pack).
 	// 59 after adding `discover` (service-keyed pack lookup → collection manifest).
 	// 60 after adding `plan` (coverage preview by service × severity).
-	const want = 60
+	// 61 after adding `transform` (raw AWS snapshots → obs.v0.1, built-in jq).
+	const want = 61
 	if got != want {
 		t.Errorf("root command count = %d, want %d; update this constant if a command was added/removed", got, want)
 	}
