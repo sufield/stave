@@ -1,0 +1,141 @@
+name: "Stave Security Verification"
+description: >
+  Run Stave deterministic security verification against cloud configuration
+  snapshots. Emits SARIF to the GitHub Security tab, posts a Pull Request
+  comment, and (in strict mode) fails the check when violations are found.
+author: "sufield"
+branding:
+  icon: "shield"
+  color: "blue"
+
+inputs:
+  snapshot-path:
+    description: "Directory containing obs.v0.1 snapshot JSON files to evaluate."
+    required: true
+  pack:
+    description: >
+      Concern pack to scope evaluation (e.g. 'quick', 'entropy'). Empty (default)
+      evaluates the full built-in catalog — the safe default for a gate, since a
+      narrow pack can miss the controls relevant to a given snapshot.
+    required: false
+    default: ""
+  controls:
+    description: "Path to a controls directory. Empty uses the built-in catalog."
+    required: false
+    default: ""
+  strict:
+    description: "Fail the check (exit 1) when any finding is produced."
+    required: false
+    default: "true"
+  sarif:
+    description: "Emit SARIF and upload it to the GitHub Security tab."
+    required: false
+    default: "true"
+  comment:
+    description: "Post a summary comment on the Pull Request (pull_request events only)."
+    required: false
+    default: "true"
+  now:
+    description: "Override evaluation time (RFC3339) for deterministic runs. Empty = real time."
+    required: false
+    default: ""
+  stave-binary:
+    description: >
+      Path to a prebuilt `stave` binary. If empty, the action downloads the
+      release named by `stave-version` from sufield/stave.
+    required: false
+    default: ""
+  stave-version:
+    description: "Stave release tag to download when `stave-binary` is empty (e.g. v0.1.0 or 'latest')."
+    required: false
+    default: "latest"
+  github-token:
+    description: "Token used to post the PR comment. Defaults to the workflow token."
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  finding-count:
+    description: "Number of findings produced."
+    value: ${{ steps.evaluate.outputs.finding-count }}
+  status:
+    description: "pass or fail."
+    value: ${{ steps.evaluate.outputs.status }}
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve stave binary
+      id: resolve
+      shell: bash
+      run: |
+        set -euo pipefail
+        if [ -n "${{ inputs.stave-binary }}" ]; then
+          echo "bin=${{ inputs.stave-binary }}" >> "$GITHUB_OUTPUT"
+        else
+          os=$(uname -s | tr '[:upper:]' '[:lower:]'); arch=$(uname -m)
+          [ "$arch" = "x86_64" ] && arch=amd64; [ "$arch" = "aarch64" ] && arch=arm64
+          tag="${{ inputs.stave-version }}"
+          if [ "$tag" = "latest" ]; then
+            tag=$(curl -fsSL https://api.github.com/repos/sufield/stave/releases/latest | jq -r .tag_name)
+          fi
+          asset="stave_${os}_${arch}"
+          curl -fsSL -o /tmp/stave "https://github.com/sufield/stave/releases/download/${tag}/${asset}"
+          chmod +x /tmp/stave
+          echo "bin=/tmp/stave" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Evaluate
+      id: evaluate
+      shell: bash
+      env:
+        STAVE: ${{ steps.resolve.outputs.bin }}
+      run: |
+        set -euo pipefail
+        args=( apply -o "${{ inputs.snapshot-path }}" )
+        [ -n "${{ inputs.pack }}" ]     && args+=( --pack "${{ inputs.pack }}" )
+        [ -n "${{ inputs.controls }}" ] && args+=( --controls "${{ inputs.controls }}" )
+        [ -n "${{ inputs.now }}" ]      && args+=( --now "${{ inputs.now }}" )
+
+        # JSON (for the comment + gate). Exit 3 = violations found; treat as success here.
+        "$STAVE" "${args[@]}" --format json > "${RUNNER_TEMP:-/tmp}/stave.json" 2>/tmp/stave.err || rc=$?; rc=${rc:-0}
+        if [ "$rc" != "0" ] && [ "$rc" != "3" ]; then
+          echo "stave apply failed (exit $rc):"; cat /tmp/stave.err; exit "$rc"
+        fi
+        if [ "${{ inputs.sarif }}" = "true" ]; then
+          "$STAVE" "${args[@]}" --format sarif > "${RUNNER_TEMP:-/tmp}/stave.sarif" 2>/dev/null || true
+        fi
+
+        n=$(python3 "${{ github.action_path }}/stave_pr_report.py" \
+              --findings "${RUNNER_TEMP:-/tmp}/stave.json" \
+              --out "${RUNNER_TEMP:-/tmp}/stave-comment.md")
+        echo "finding-count=$n" >> "$GITHUB_OUTPUT"
+        [ "$n" = "0" ] && echo "status=pass" >> "$GITHUB_OUTPUT" || echo "status=fail" >> "$GITHUB_OUTPUT"
+        echo "Stave: $n finding(s)."
+
+    - name: Upload SARIF
+      if: ${{ inputs.sarif == 'true' && hashFiles(format('{0}/stave.sarif', runner.temp)) != '' }}
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ runner.temp }}/stave.sarif
+        category: stave
+
+    - name: Comment on PR
+      if: ${{ inputs.comment == 'true' && github.event_name == 'pull_request' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        gh pr comment "${{ github.event.pull_request.number }}" \
+          --body-file "${RUNNER_TEMP:-/tmp}/stave-comment.md" --edit-last 2>/dev/null \
+          || gh pr comment "${{ github.event.pull_request.number }}" \
+               --body-file "${RUNNER_TEMP:-/tmp}/stave-comment.md"
+
+    - name: Enforce gate
+      if: ${{ inputs.strict == 'true' }}
+      shell: bash
+      run: |
+        if [ "${{ steps.evaluate.outputs.finding-count }}" != "0" ]; then
+          echo "::error::Stave found ${{ steps.evaluate.outputs.finding-count }} violation(s) — failing the check (strict mode)."
+          exit 1
+        fi

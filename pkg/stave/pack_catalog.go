@@ -3,6 +3,7 @@ package stave
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/sufield/stave/internal/adapters/controls/builtin"
 	predicates "github.com/sufield/stave/internal/adapters/predicate"
@@ -75,6 +76,31 @@ func ResolvePackControls(packNames []string, controlsDir string, useBuiltin bool
 				seen[id] = true
 				ids = append(ids, id)
 			}
+		}
+	}
+	return ids, nil
+}
+
+// ResolveServiceControls returns the catalog control IDs belonging to any of the
+// given AWS services (matched by control-ID domain, e.g. CTL.IAM.* -> iam).
+// Empty services returns nil (the caller then evaluates every control). Used by
+// `apply --services` for per-service-group evaluation.
+func ResolveServiceControls(services []string, controlsDir string, useBuiltin bool) ([]string, error) {
+	if len(services) == 0 {
+		return nil, nil
+	}
+	sums, err := CatalogControlSummaries(controlsDir, useBuiltin)
+	if err != nil {
+		return nil, err
+	}
+	want := map[string]bool{}
+	for _, s := range services {
+		want[strings.ToLower(strings.TrimSpace(s))] = true
+	}
+	var ids []string
+	for _, s := range sums {
+		if want[pack.ServiceForControlID(s.ID)] {
+			ids = append(ids, s.ID)
 		}
 	}
 	return ids, nil

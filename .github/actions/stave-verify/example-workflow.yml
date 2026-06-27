@@ -1,0 +1,24 @@
+# Example: drop this in a consuming repo at .github/workflows/stave.yml
+# It verifies obs.v0.1 snapshots committed under security/snapshots/ on every PR.
+name: Stave Security Verification
+on:
+  pull_request:
+    paths: ["security/snapshots/**", "**/*.tf"]
+
+permissions:
+  contents: read
+  security-events: write   # upload SARIF to the Security tab
+  pull-requests: write     # post the PR comment
+
+jobs:
+  stave:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: sufield/stave/.github/actions/stave-verify@main
+        with:
+          snapshot-path: security/snapshots
+          # pack: quick          # optional: scope to a pack (default = full catalog)
+          strict: "true"          # fail the check on any finding
+          sarif: "true"           # upload to the Security tab
+          comment: "true"         # post a PR comment

@@ -17,7 +17,9 @@ func TestWireCommands_CommandCount(t *testing.T) {
 	// 56 includes the hidden gen-man command (man-page generation).
 	// 57 after adding `compliance`.
 	// 58 after adding `pack` (concern packs — list/show + apply --pack).
-	const want = 58
+	// 59 after adding `discover` (service-keyed pack lookup → collection manifest).
+	// 60 after adding `plan` (coverage preview by service × severity).
+	const want = 60
 	if got != want {
 		t.Errorf("root command count = %d, want %d; update this constant if a command was added/removed", got, want)
 	}

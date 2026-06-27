@@ -1,6 +1,7 @@
 package exempt
 
 import (
+	"slices"
 	"testing"
 )
 
@@ -38,13 +39,7 @@ func TestBugHunt_ExceptionExpiryValidation(t *testing.T) {
 	})
 
 	errs := f.Validate()
-	found := false
-	for _, e := range errs {
-		if e == `exception[1]: invalid expiry_date "2027-13-45"` {
-			found = true
-			break
-		}
-	}
+	found := slices.Contains(errs, `exception[1]: invalid expiry_date "2027-13-45"`)
 	if !found {
 		t.Errorf("expected Validate to return error for invalid expiry date '2027-13-45', got: %v", errs)
 	}

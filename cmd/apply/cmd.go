@@ -53,6 +53,8 @@ type SharedOptions struct {
 	NowTime           string
 	Format            cmdutil.OutputFormat
 	Packs             []string // --pack: scope evaluation to one or more concern packs
+	Services          []string // --services: scope evaluation to controls for these AWS services
+	AllStaged         bool     // --all: evaluate the full catalog, output grouped per service then compound
 
 	// controlsSet / formatSet / obsSet track whether the respective
 	// flag was explicitly set by the user. All three are derived
@@ -69,6 +71,8 @@ func (o *SharedOptions) bindCommon(cmd *cobra.Command, defaultFormat cmdutil.Out
 
 	f.StringVarP(&o.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory")
 	f.StringArrayVar(&o.Packs, "pack", nil, "Scope evaluation to a concern pack (repeatable). Example: stave apply --pack entropy -o snapshot/")
+	f.StringSliceVar(&o.Services, "services", nil, "Scope evaluation to controls for these AWS services (comma-separated). Example: stave apply --services iam,s3 -o snapshot/")
+	f.BoolVar(&o.AllStaged, "all", false, "Evaluate the full catalog and print findings grouped per service, then compound, then a summary")
 	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339) for deterministic output")
 	o.Format = defaultFormat
@@ -153,6 +157,10 @@ Inputs:
   --observations, -o        Path to observation snapshots directory (default: observations)
   --pack                    Scope evaluation to a concern pack's controls (repeatable;
                             see "stave pack list")
+  --services                Scope evaluation to controls for these AWS services
+                            (comma-separated, e.g. iam,s3 — see "stave plan")
+  --all                     Evaluate the full catalog; print findings grouped per
+                            service, then compound, then a summary
   --profile, -p             Evaluation profile (e.g., aws-s3)
   --input                   Path to observations bundle file (required with --profile)
   --max-unsafe              Maximum allowed unsafe duration (default: from project config)

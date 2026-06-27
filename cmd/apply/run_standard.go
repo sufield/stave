@@ -9,16 +9,38 @@ import (
 	"github.com/sufield/stave/pkg/stave"
 )
 
-// resolvePackAllowlist expands --pack names into the union of their control IDs
-// via the pkg/stave facade. Returns nil when no pack is set (the eval then runs
-// every control, unchanged). An unknown pack surfaces as a UserError → exit 2.
+// resolvePackAllowlist expands --pack and --services into the union of their
+// control IDs via the pkg/stave facade. Returns nil when neither is set (the
+// eval then runs every control, unchanged). An unknown pack surfaces as a
+// UserError → exit 2.
 func resolvePackAllowlist(opts *Options, cfg RunConfig) ([]string, error) {
-	ids, err := stave.ResolvePackControls(opts.Packs, cfg.ControlsDir, cfg.UseBuiltinCatalog)
+	packIDs, err := stave.ResolvePackControls(opts.Packs, cfg.ControlsDir, cfg.UseBuiltinCatalog)
 	if err != nil {
 		if errors.Is(err, stave.ErrInvalidInput) {
 			return nil, &ui.UserError{Err: err}
 		}
 		return nil, &ui.UserError{Err: fmt.Errorf("resolve --pack: %w", err)}
+	}
+	svcIDs, err := stave.ResolveServiceControls(opts.Services, cfg.ControlsDir, cfg.UseBuiltinCatalog)
+	if err != nil {
+		return nil, &ui.UserError{Err: fmt.Errorf("resolve --services: %w", err)}
+	}
+	if len(opts.Packs) == 0 && len(opts.Services) == 0 {
+		return nil, nil // no scoping
+	}
+	// Union: a control runs if it's in any selected pack or any selected service.
+	seen := map[string]bool{}
+	var ids []string
+	for _, id := range append(packIDs, svcIDs...) {
+		if !seen[id] {
+			seen[id] = true
+			ids = append(ids, id)
+		}
+	}
+	if len(ids) == 0 {
+		// Scoping was requested but matched nothing (e.g. a typo'd --services).
+		// Fail loud rather than silently fall back to evaluating every control.
+		return nil, &ui.UserError{Err: fmt.Errorf("%w: --pack/--services matched no controls in the catalog", stave.ErrInvalidInput)}
 	}
 	return ids, nil
 }
@@ -39,6 +61,15 @@ func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio Sta
 		return packErr
 	}
 
+	// --all evaluates the full catalog and renders findings grouped per service
+	// then compound, so any --pack/--services scoping is ignored and the report
+	// format is JSON internally (re-rendered staged below).
+	reportFormat := string(sio.Format)
+	if opts.AllStaged {
+		packAllow = nil
+		reportFormat = "json"
+	}
+
 	rt := ui.NewRuntime(sio.Stdout, sio.Stderr)
 	rt.Quiet = sio.Quiet
 
@@ -51,7 +82,7 @@ func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio Sta
 		Now:                opts.NowTime,
 		SanitizeIDs:        cs.GlobalFlags.Sanitize,
 		PathMode:           string(cs.GlobalFlags.PathMode),
-		Format:             string(sio.Format),
+		Format:             reportFormat,
 		Verbose:            opts.Verbose,
 		ExemptionFile:      opts.ExemptionFile,
 		AckFile:            opts.AcknowledgmentFile,
@@ -79,6 +110,21 @@ func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio Sta
 			return &ui.UserError{Err: err}
 		}
 		return decorateError(err)
+	}
+
+	// --all: render the staged (per-service then compound) view over the JSON
+	// findings, then apply the same violation + SLA gates as the normal path.
+	if opts.AllStaged {
+		if rerr := renderAllStaged(res.Output, sio.Stdout); rerr != nil {
+			return decorateError(rerr)
+		}
+		for _, w := range res.Warnings {
+			fmt.Fprintln(sio.Stderr, w)
+		}
+		if gateErr := gateViolations(res); gateErr != nil {
+			return gateErr
+		}
+		return NewReporter(sio, rt).CheckSLAPolicy(SLAPolicy(opts.SLAPolicy), res)
 	}
 
 	if _, werr := sio.Stdout.Write(res.Output); werr != nil {

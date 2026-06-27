@@ -1,0 +1,13 @@
+[project]
+name = "stave-verify"
+version = "0.1.0"
+description = "Deterministic cloud-config security verification as an agent tool (LangChain, CrewAI, GSD, Superpowers). Wraps the Stave CLI."
+requires-python = ">=3.9"
+dependencies = []                      # core is stdlib-only; the `stave` binary must be on PATH
+
+[project.optional-dependencies]
+langchain = ["langchain-core", "pydantic>=2"]
+crewai = ["crewai"]
+
+[project.urls]
+Homepage = "https://github.com/sufield/stave"

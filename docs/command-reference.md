@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_144 commands across 7 groups._
+_146 commands across 7 groups._
 
 ## Getting Started
 
@@ -120,6 +120,7 @@ _144 commands across 7 groups._
 | `controls search` | Search the built-in control catalog |
 | `coverage` | Analyze observation field coverage against control predicates |
 | `diff` | Compare two observation snapshots or control catalogs |
+| `discover` | Resolve AWS services to the data Stave needs (the collection manifest) |
 | `doctor` | Check local environment readiness for Stave workflows |
 | `exempt` | Manage risk acceptances (acknowledgments, exceptions, exemptions) |
 | `exempt acknowledge` | Add a formal risk acceptance |
@@ -170,6 +171,7 @@ _144 commands across 7 groups._
 | `permissions principal` | Resolve permissions for a specific principal ARN |
 | `permissions resource` | Show who has effective access to a resource |
 | `permissions summary` | Aggregate NEP metrics across all principals |
+| `plan` | Preview which controls will evaluate, by service and severity |
 | `profile` | Manage compliance profiles |
 | `profile create` | Generate a starter profile YAML |
 | `profile list` | List available compliance profiles |

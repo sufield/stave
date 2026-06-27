@@ -160,6 +160,7 @@ see_also:
     - stave coverage - Analyze observation field coverage against control predicates
     - stave diagnose - Diagnose evaluation inputs and results
     - stave diff - Compare two observation snapshots or control catalogs
+    - stave discover - Resolve AWS services to the data Stave needs (the collection manifest)
     - stave doctor - Check local environment readiness for Stave workflows
     - stave enforce - Generate deterministic enforcement templates from evaluation output
     - stave exempt - Manage risk acceptances (acknowledgments, exceptions, exemptions)
@@ -183,6 +184,7 @@ see_also:
     - stave packs - Inspect built-in control packs
     - stave path - Export attack path graph data from active chain findings
     - stave permissions - Query net effective permissions from a snapshot
+    - stave plan - Preview which controls will evaluate, by service and severity
     - stave profile - Manage compliance profiles
     - stave readiness - Report what Stave can/can't evaluate given the supplied observations
     - stave report - Generate executive security posture report

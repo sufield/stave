@@ -78,7 +78,11 @@ out_of_scope:
     # `deadline` managed SLA-deadline policy files (remediation timelines);
     # SLA *evaluation* stays (apply/ci-gate/score), only the authoring
     # command is gone. `simulate` was its posture-impact subcommand.
-    forbids: ["plan", "rank", "budget", "deadline", "simulate"]
+    # `plan` is NOT forbidden: the name is reused for `stave plan`, a coverage
+    # preview (which controls apply, by service/severity) — it emits no
+    # remediation plan. The remediation-planning surface that stays forbidden is
+    # rank/budget/deadline/simulate.
+    forbids: ["rank", "budget", "deadline", "simulate"]
 
   - id: incident_forensics
     label: "Incident Forensics"

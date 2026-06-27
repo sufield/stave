@@ -38,16 +38,16 @@ type Selector struct {
 
 // Requirements is the manifest: what data a snapshot must carry for this pack.
 type Requirements struct {
-	AWSAPICalls        []ServiceCalls `yaml:"aws_api_calls"`
-	ObservationSignals []string       `yaml:"observation_signals"`
-	MinimumPermissions string         `yaml:"minimum_permissions"`
+	AWSAPICalls        []ServiceCalls `yaml:"aws_api_calls" json:"aws_api_calls"`
+	ObservationSignals []string       `yaml:"observation_signals" json:"observation_signals"`
+	MinimumPermissions string         `yaml:"minimum_permissions" json:"minimum_permissions"`
 }
 
 // ServiceCalls groups the AWS CLI calls for one service.
 type ServiceCalls struct {
-	Service string   `yaml:"service"`
-	Calls   []string `yaml:"calls"`
-	Notes   string   `yaml:"notes"`
+	Service string   `yaml:"service" json:"service"`
+	Calls   []string `yaml:"calls" json:"calls"`
+	Notes   string   `yaml:"notes" json:"notes,omitempty"`
 }
 
 // ControlMeta is the minimal control info pack resolution needs.

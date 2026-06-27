@@ -91,6 +91,6 @@ func renderShowText(w io.Writer, s showPayload) {
 		}
 	}
 
-	fmt.Fprintf(w, "\nNext: collect the calls above into a snapshot dir, then evaluate.\n")
-	fmt.Fprintf(w, "      (scoped run: `stave apply --pack %s -o <snapshot>` — see roadmap)\n", p.Name)
+	fmt.Fprintf(w, "\nNext: collect the calls above (raw snapshots), convert them to obs.v0.1\n")
+	fmt.Fprintf(w, "      observations with your extractor, then: `stave apply --pack %s -o <observations>`\n", p.Name)
 }

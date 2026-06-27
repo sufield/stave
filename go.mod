@@ -16,6 +16,7 @@ require (
 	github.com/aclements/go-z3 v0.0.0-20220809013456-4675d5f90ca5
 	github.com/google/cel-go v0.28.1
 	github.com/google/go-cmp v0.7.0
+	github.com/itchyny/gojq v0.12.19
 	github.com/rogpeppe/go-internal v1.15.0
 	golang.org/x/sync v0.21.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240826202546-f6391c0de4c7
@@ -28,6 +29,7 @@ require (
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+	github.com/itchyny/timefmt-go v0.1.8 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect

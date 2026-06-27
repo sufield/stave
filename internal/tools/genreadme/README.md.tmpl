@@ -133,6 +133,21 @@ For formal verification, blast-radius enumeration, or compound-attack proofs, in
 
 ## Quick start
 
+### New here? The 5-minute workflow
+
+You know your AWS services; Stave tells you what to collect, then evaluates it.
+
+```bash
+stave discover --services iam,s3,ec2,lambda,cloudtrail   # what to collect (read-only API calls)
+stave plan     --services iam,s3,ec2,lambda,cloudtrail   # what will be checked, by severity
+# collect raw snapshots with your tool, then CONVERT them to obs.v0.1 observations (your extractor)
+stave apply --services iam -o ./observations             # findings, per service group
+stave check --before ./observations --after ./observations-fixed   # resolved / remaining / new
+```
+
+Or run `scripts/quickstart.sh`. Full walkthrough: [`docs/WORKFLOW.md`](docs/WORKFLOW.md).
+Stave never has AWS credentials — it reads the `obs.v0.1` observations you convert.
+
 ### Try a demo against a bundled snapshot (30 seconds, zero AWS access)
 
 ```bash
