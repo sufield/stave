@@ -147,7 +147,12 @@ func stringifyValue(v any) any {
 				out[keyStr] = stringifyValue(v.Interface())
 			}
 			return out
-		case reflect.Struct, reflect.Pointer, reflect.Interface:
+		case reflect.Pointer, reflect.Interface:
+			if rv.IsNil() {
+				return nil
+			}
+			return stringifyValue(rv.Elem().Interface())
+		case reflect.Struct:
 			// Producer leaks: a custom struct (or pointer/interface
 			// wrapping one) escaped into the activation map. CEL
 			// cannot dereference fields on Go structs and the

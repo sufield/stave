@@ -18,7 +18,7 @@
 #
 # Environment:
 #   PLANFILE          — path to terraform plan JSON (set by Atlantis)
-#   STAVE_CONTROLS    — controls directory (default: controls/)
+#   STAVE_CONTROLS    — controls directory (default: unset = built-in catalog)
 #   STAVE_PROFILE     — compliance profile (optional, must be alphanumeric/hyphen)
 #   STAVE_MAX_UNSAFE  — max unsafe duration (default: 0s for plan checks)
 #
@@ -43,7 +43,11 @@ if [ -z "$PLANFILE" ] || [ ! -f "$PLANFILE" ]; then
     exit 0
 fi
 
-CONTROLS="${STAVE_CONTROLS:-controls}"
+# Default to the built-in catalog: leave CONTROLS empty unless the user
+# points STAVE_CONTROLS at a directory. Passing --controls to a path that
+# doesn't exist (an Atlantis repo has no controls/ dir) errors exit 4 and
+# the gate silently passes; omitting --controls uses the embedded catalog.
+CONTROLS="${STAVE_CONTROLS:-}"
 MAX_UNSAFE="${STAVE_MAX_UNSAFE:-0s}"
 NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
@@ -60,8 +64,11 @@ WORKDIR=$(mktemp -d)
 trap 'rm -rf "$WORKDIR"' EXIT
 mkdir -p "$WORKDIR/observations"
 
-# Generate plan JSON if not already JSON.
-if file "$PLANFILE" | grep -q "text"; then
+# Use the plan file directly if it is already JSON; otherwise render it
+# with terraform show. jq is already a required dependency, so probe with
+# it rather than `file` (whose output strings are not portable and which
+# is not checked as a prerequisite).
+if jq -e . "$PLANFILE" >/dev/null 2>&1; then
     PLAN_JSON="$PLANFILE"
 else
     terraform show -json "$PLANFILE" > "$WORKDIR/plan.json"
@@ -71,7 +78,9 @@ fi
 # Extract planned resource configurations to obs.v0.1.
 # Recursively walks root_module and all child_modules to catch
 # resources in nested Terraform modules.
-OBS_FILE="$WORKDIR/observations/$NOW.json"
+# Colons are legal in POSIX filenames but trip up many tools; keep the
+# colon-bearing RFC3339 stamp in captured_at only, not the filename.
+OBS_FILE="$WORKDIR/observations/snapshot.json"
 jq '{
   schema_version: "obs.v0.1",
   captured_at: "'"$NOW"'",
@@ -91,11 +100,13 @@ jq '{
     exit 0
 }
 
-# For plan checks, use --max-unsafe 0s (any unsafe state = fail).
-# No need for a second snapshot — 0s threshold means even a single
-# point-in-time violation triggers a finding. The dual-snapshot
-# pattern is only needed for duration-based controls (e.g., "unsafe
-# for >168h"). Plan checks are instantaneous safety gates.
+# A plan is a single point in time, so one snapshot is enough — the
+# observations directory loader accepts a single snapshot. Point-in-time
+# controls (unsafe_state) fire on it regardless of --max-unsafe;
+# duration-based controls (e.g. "unsafe for >168h") need two snapshots
+# with a real time gap, which a plan cannot provide, so they stay quiet.
+# Note: --max-unsafe 0s is treated as "unset" and falls back to the
+# default threshold — it does NOT mean "any unsafe state fails".
 
 # ── Run evaluation ───────────────────────────────────────
 
@@ -104,21 +115,27 @@ echo ""
 
 RC=0
 if [ -n "$PROFILE" ]; then
+    # --profile reads --input as an observation *bundle*
+    # ({"schema_version":"obs.v0.1","snapshots":[...]}), not a single
+    # per-timestamp snapshot — wrap the snapshot in a bundle first.
+    BUNDLE="$WORKDIR/bundle.json"
+    jq '{schema_version: "obs.v0.1", snapshots: [.]}' "$OBS_FILE" > "$BUNDLE"
+
     stave apply \
         --profile "$PROFILE" \
-        --input "$OBS_FILE" \
+        --input "$BUNDLE" \
         --now "$NOW" \
         --format text \
         2>/dev/null || RC=$?
 else
-    # Single-snapshot mode: copy to create the minimum two snapshots
-    # required by the observations directory loader.
-    SECOND_TS=$(date -u +%Y-%m-%dT%H%M%SZ)
-    jq ".captured_at = \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"" "$OBS_FILE" \
-        > "$WORKDIR/observations/${SECOND_TS}.json"
+    # Only pass --controls when STAVE_CONTROLS is set; otherwise Stave
+    # evaluates against the built-in catalog. The guarded expansion keeps
+    # an empty array safe under `set -u` on bash 3.2.
+    CONTROLS_ARGS=()
+    [ -n "$CONTROLS" ] && CONTROLS_ARGS=(--controls "$CONTROLS")
 
     stave apply \
-        --controls "$CONTROLS" \
+        ${CONTROLS_ARGS[@]+"${CONTROLS_ARGS[@]}"} \
         --observations "$WORKDIR/observations" \
         --max-unsafe "$MAX_UNSAFE" \
         --now "$NOW" \

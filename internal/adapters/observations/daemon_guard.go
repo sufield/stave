@@ -29,3 +29,10 @@ func isDaemonContext(ctx context.Context) bool {
 	v, _ := ctx.Value(daemonContextKey{}).(bool)
 	return v
 }
+
+// DaemonContext returns a new context tagged as belonging to a daemon-style
+// long-running caller.
+func DaemonContext(ctx context.Context) context.Context {
+	return context.WithValue(ctx, daemonContextKey{}, true)
+}
+

@@ -100,16 +100,22 @@ func SanitizeArgs(args []string) []string {
 		}
 		// If the next arg is itself a known sensitive flag,
 		// don't consume it — let the next loop iteration
-		// redact it independently. The previous shape consumed
-		// blindly, so `--token --password mysecret` redacted
-		// only `--password` (treated as --token's value) and
-		// left `mysecret` exposed in position 2.
-		//
-		// The look-ahead requires the next arg to start with
-		// `--` so a *value* that happens to contain a
-		// sensitive token (e.g. `-very-secret-pass`) is not
-		// mistaken for a flag.
+		// redact it independently.
+		isNextFlag := false
 		if strings.HasPrefix(args[i+1], "--") && isSensitiveKey(args[i+1]) {
+			isNextFlag = true
+		} else if strings.HasPrefix(args[i+1], "-") && !strings.HasPrefix(args[i+1], "--") && isSensitiveKey(args[i+1]) {
+			// For single-dash arguments, they are likely to be flags (rather than values
+			// starting with a dash) if they don't contain separators in their name.
+			normNext := toLower(args[i+1])
+			normNext = strings.TrimLeft(normNext, "-")
+			normNext, _, _ = strings.Cut(normNext, "=")
+			if !strings.ContainsAny(normNext, "_-.:") {
+				isNextFlag = true
+			}
+		}
+
+		if isNextFlag {
 			result[i] = arg + " " + sanitizedValueMissing
 			continue
 		}
