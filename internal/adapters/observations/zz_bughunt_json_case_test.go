@@ -18,13 +18,13 @@ func TestBugHunt_ListObservationFiles_JSONCase(t *testing.T) {
 	file2 := filepath.Join(tmpDir, "snap2.JSON")
 	file3 := filepath.Join(tmpDir, "snap3.Json")
 
-	if err := os.WriteFile(file1, []byte("{}"), 0o600); err != nil {
+	if err = os.WriteFile(file1, []byte("{}"), 0o600); err != nil {
 		t.Fatalf("failed to write file1: %v", err)
 	}
-	if err := os.WriteFile(file2, []byte("{}"), 0o600); err != nil {
+	if err = os.WriteFile(file2, []byte("{}"), 0o600); err != nil {
 		t.Fatalf("failed to write file2: %v", err)
 	}
-	if err := os.WriteFile(file3, []byte("{}"), 0o600); err != nil {
+	if err = os.WriteFile(file3, []byte("{}"), 0o600); err != nil {
 		t.Fatalf("failed to write file3: %v", err)
 	}
 

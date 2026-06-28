@@ -73,4 +73,3 @@ func TestParity_ConsistentPass(t *testing.T) {
 		t.Errorf("consistent pass = %d, want 2", result.ConsistentPass)
 	}
 }
-
