@@ -8,13 +8,14 @@ description: |-
     Default sanitization hashes asset IDs and replaces 12-digit account
     IDs in property values. Custom rules can be provided via --rules.
 
+    Output goes to stdout; redirect to a file as needed.
+
     Inputs:
       --snapshot PATH   Observation snapshot JSON file (required)
       --rules PATH      Custom sanitization rules YAML (optional)
-      --out PATH        Output file path (required)
 
     Exit Codes:
-      0   Sanitized snapshot written
+      0   Sanitized snapshot written to stdout
       2   Invalid input
 usage: stave sanitize [flags]
 options:
@@ -22,8 +23,6 @@ options:
       shorthand: h
       default_value: "false"
       usage: help for sanitize
-    - name: out
-      usage: output file path (required)
     - name: rules
       usage: path to custom sanitization rules YAML
     - name: snapshot
@@ -88,7 +87,7 @@ inherited_options:
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
 example: |4-
-      stave sanitize --snapshot snapshot.json --out sanitized.json
-      stave sanitize --snapshot snapshot.json --rules rules.yaml --out sanitized.json
+      stave sanitize --snapshot snapshot.json > sanitized.json
+      stave sanitize --snapshot snapshot.json --rules rules.yaml > sanitized.json
 see_also:
     - stave - Configuration safety evaluator

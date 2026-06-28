@@ -33,6 +33,8 @@ func main() {
 	check := flag.Bool("check", false, "check mode: exit 1 if the command reference is stale")
 	catalog := flag.String("catalog", "", "generate the curated when-to-use catalog (from catalog_meta.go annotations) to this path")
 	catalogCheck := flag.String("catalog-check", "", "verify the curated catalog at this path is in sync with the annotations + binary")
+	site := flag.String("site", "", "generate Docusaurus CLI reference pages into this directory")
+	siteCheck := flag.String("site-check", "", "verify the site CLI reference pages are in sync with the binary")
 	flag.Parse()
 
 	app, err := cmd.NewApp()
@@ -67,6 +69,25 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Printf("wrote %s (%d annotated commands)\n", *catalog, len(catalogAnnotations))
+		return
+	}
+
+	// Site mode: generate or check Docusaurus CLI reference pages.
+	if *site != "" || *siteCheck != "" {
+		if *siteCheck != "" {
+			if err := checkSite(app.Root, *siteCheck); err != nil {
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+				os.Exit(1)
+			}
+			fmt.Printf("%s: in sync\n", *siteCheck)
+			return
+		}
+		n, err := renderSite(app.Root, *site)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("wrote %d pages to %s\n", n, *site)
 		return
 	}
 

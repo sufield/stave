@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check sync-guide docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check refactor-scan refactor-scan-check refactor-scan-update
+.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check refactor-scan refactor-scan-check refactor-scan-update
 # Binary name
 BINARY=stave
 
@@ -778,6 +778,20 @@ docs-commands:
 ## docs-commands-check: Verify the command reference matches the binary
 docs-commands-check:
 	$(GOCMD) run ./internal/tools/gencommanddocs -check
+
+SITE_CLI_REF ?= ../stave-guide/reference/cli-reference
+
+## docs-site: Generate Docusaurus CLI reference pages from the cobra tree
+docs-site:
+	$(GOCMD) run ./internal/tools/gencommanddocs -site $(SITE_CLI_REF)
+
+## docs-site-check: Verify the site CLI reference pages match the binary
+docs-site-check:
+	@if [ -d $(SITE_CLI_REF) ]; then \
+	  $(GOCMD) run ./internal/tools/gencommanddocs -site-check $(SITE_CLI_REF); \
+	else \
+	  echo "skip: $(SITE_CLI_REF) not present in this checkout"; \
+	fi
 
 ## sync-guide: Refresh stave-guide/ real-file copies of generated + sub-repo docs.
 ## stave-guide/ is the Docusaurus SSG source (real files, not symlinks — SSG can't
