@@ -1,0 +1,14 @@
+{
+  "id": "arn:aws:kms:us-east-1:442426852386:key/mrk-971fcb44ed554c9a9f5fc429d9d9d0d6",
+  "type": "aws_kms_key",
+  "vendor": "aws",
+  "properties": {
+    "cryptography": {
+      "kind": "key",
+      "key_rotation_enabled": true,
+      "policy": {
+        "has_wildcard_principal": false
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+    "Functions": [
+        {
+            "FunctionName": "pl-prod-lambda-004-to-iam-002-target-function",
+            "FunctionArn": "arn:aws:lambda:us-east-1:442426852386:function:pl-prod-lambda-004-to-iam-002-target-function",
+            "Runtime": "python3.11",
+            "Role": "arn:aws:iam::442426852386:role/pl-prod-lambda-004-to-iam-002-lambda-role",
+            "Handler": "lambda_function.lambda_handler",
+            "CodeSize": 297,
+            "Description": "",
+            "Timeout": 30,
+            "MemorySize": 128,
+            "LastModified": "2026-05-30T13:21:42.209+0000",
+            "CodeSha256": "bdbG06gJLVimCw2W4y0EkQ0h6BsJ7NzQJyLuTW7y0CI=",
+            "Version": "$LATEST",
+            "TracingConfig": {
+                "Mode": "PassThrough"
+            },
+            "RevisionId": "39c2cb16-7ce6-41ae-99b3-343913ddb0fa",
+            "PackageType": "Zip",
+            "Architectures": [
+                "x86_64"
+            ],
+            "EphemeralStorage": {
+                "Size": 512
+            },
+            "SnapStart": {
+                "ApplyOn": "None",
+                "OptimizationStatus": "Off"
+            },
+            "LoggingConfig": {
+                "LogFormat": "Text",
+                "LogGroup": "/aws/lambda/pl-prod-lambda-004-to-iam-002-target-function"
+            }
+        }
+    ]
+}

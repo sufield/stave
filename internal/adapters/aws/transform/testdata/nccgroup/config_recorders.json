@@ -1,0 +1,25 @@
+{
+    "ConfigurationRecorders": [
+        {
+            "arn": "arn:aws:config:us-east-1:442426852386:configuration-recorder/sadcloud-config/v4mttoi81or5qyar",
+            "name": "sadcloud-config",
+            "roleARN": "arn:aws:iam::442426852386:role/awsconfig-example-role",
+            "recordingGroup": {
+                "allSupported": true,
+                "includeGlobalResourceTypes": false,
+                "resourceTypes": [],
+                "exclusionByResourceTypes": {
+                    "resourceTypes": []
+                },
+                "recordingStrategy": {
+                    "useOnly": "ALL_SUPPORTED_RESOURCE_TYPES"
+                }
+            },
+            "recordingMode": {
+                "recordingFrequency": "CONTINUOUS",
+                "recordingModeOverrides": []
+            },
+            "recordingScope": "PAID"
+        }
+    ]
+}

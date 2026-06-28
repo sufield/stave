@@ -25,9 +25,14 @@ fastest path from those demos to a finding on your own infrastructure.
 bash scripts/aws-snapshot.sh ./my-snapshot
 ```
 
-The script writes a single `snapshot-<timestamp>.json` file under
-`./my-snapshot/`. It performs read-only AWS CLI calls only and never
-sends data outside the local filesystem.
+The script collects raw AWS CLI JSON into `./my-snapshot/raw/`, then runs
+`stave transform` to convert it into an obs.v0.1 file under
+`./my-snapshot/observations/`. It performs read-only AWS CLI calls only and
+never sends data outside the local filesystem. Evaluate with:
+
+```bash
+stave apply --observations ./my-snapshot/observations
+```
 
 What gets collected:
 

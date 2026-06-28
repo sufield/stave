@@ -13,6 +13,7 @@
 package transform
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -48,32 +49,67 @@ func TransformFiles(files map[string][]byte, opts Options) ([]byte, Stats, error
 	var stats Stats
 	assets := []json.RawMessage{} // non-nil so an all-skipped run still marshals "assets": []
 
-	// Deterministic order: sort by filename so asset order is stable across runs.
 	names := make([]string, 0, len(files))
 	for name := range files {
 		names = append(names, name)
 	}
 	sort.Strings(names)
 
+	// Phase 1: parse, derive a filename key if needed, detect the filter, and
+	// categorize. Skipped files (no matching filter) are counted, not fatal.
+	type pendingDoc struct {
+		name, filter string
+		parsed       map[string]any
+		category     int
+	}
+	var docs []pendingDoc
 	for _, name := range names {
 		stats.Files++
-		fileAssets, ok, err := transformDoc(name, files[name], opts)
-		if err != nil {
-			return nil, stats, fmt.Errorf("transform %s: %w", name, err)
+		// An empty / whitespace-only file is skipped, not fatal: a collector
+		// commonly leaves an empty file for a resource that returned nothing. A
+		// non-empty file that won't parse is corrupt data and fails loud.
+		if len(bytes.TrimSpace(files[name])) == 0 {
+			stats.Skipped++
+			continue
 		}
+		var parsed map[string]any
+		if err := json.Unmarshal(files[name], &parsed); err != nil {
+			return nil, stats, fmt.Errorf("transform %s: parse raw JSON: %w", name, err)
+		}
+		injectFilenameKey(name, parsed)
+		filter, ok := detectFilter(parsed)
 		if !ok {
 			stats.Skipped++
 			continue
 		}
+		docs = append(docs, pendingDoc{name, filter, parsed, filterCategory(filter)})
+	}
+
+	// Merge order is by CATEGORY, not filename: base assets must be created
+	// before enrichments deep-merge their fields on top, otherwise a base
+	// default could overwrite an enrichment (e.g. "group-inline-*.json" sorts
+	// before "iam_groups.json"). base -> self-describing -> enrichment, then name.
+	sort.SliceStable(docs, func(i, j int) bool {
+		if docs[i].category != docs[j].category {
+			return docs[i].category < docs[j].category
+		}
+		return docs[i].name < docs[j].name
+	})
+
+	// Phase 2: run each filter and scrub its output.
+	for _, d := range docs {
+		fileAssets, err := runFilter(d.filter, d.parsed, opts)
+		if err != nil {
+			return nil, stats, fmt.Errorf("transform %s: %w", d.name, err)
+		}
 		assets = append(assets, fileAssets...)
 	}
 
-	// Cross-call merge: one AWS resource is often spread across several API
-	// calls (a bucket's list-buckets entry + its public-access-block + its
-	// encryption). Each filter emits an object carrying the resource `id`;
-	// objects sharing an id are deep-merged into one asset here. Files are
-	// processed in sorted-name order, so a base list ("s3-buckets.json") merges
-	// before its enrichments ("s3-pab-<bucket>.json"), which add/override fields.
+	// Cross-call merge: one AWS resource is often spread across several API calls
+	// (a bucket's list-buckets entry + its public-access-block + its encryption).
+	// Each filter emits an object carrying the resource `id`; objects sharing an
+	// id are deep-merged into one asset here, with later (enrichment) fields
+	// winning over earlier (base) ones.
 	merged, err := mergeByID(assets)
 	if err != nil {
 		return nil, stats, err
@@ -166,44 +202,31 @@ func deepMerge(dst, src map[string]any) {
 	}
 }
 
-// transformDoc converts a single raw document: derive a filename key if needed,
-// detect the filter, run it, and scrub each produced asset. The bool is false
-// when no filter recognizes the document. name is the source filename, used to
-// derive a join key for raw per-call enrichment files.
-func transformDoc(name string, raw []byte, opts Options) ([]json.RawMessage, bool, error) {
-	var parsed map[string]any
-	if err := json.Unmarshal(raw, &parsed); err != nil {
-		return nil, false, fmt.Errorf("parse raw JSON: %w", err)
-	}
-	// Derive the merge key from the filename when the content doesn't carry one
-	// (annotation in the content always wins).
-	injectFilenameKey(name, parsed)
-	filterName, ok := detectFilter(parsed)
-	if !ok {
-		return nil, false, nil
-	}
+// runFilter runs a detected filter over a parsed document and scrubs each
+// produced asset.
+func runFilter(filterName string, parsed map[string]any, opts Options) ([]json.RawMessage, error) {
 	program, err := filterProgram(filterName)
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
 	out, err := runJQWithArgs(program, parsed, map[string]any{"account": opts.Account})
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
 	assets := make([]json.RawMessage, 0, len(out))
 	for _, a := range out {
 		var node any
 		if err := json.Unmarshal(a, &node); err != nil {
-			return nil, false, fmt.Errorf("parse filter output: %w", err)
+			return nil, fmt.Errorf("parse filter output: %w", err)
 		}
 		scrubAsset(node)
 		scrubbed, err := json.Marshal(node)
 		if err != nil {
-			return nil, false, fmt.Errorf("re-marshal scrubbed asset: %w", err)
+			return nil, fmt.Errorf("re-marshal scrubbed asset: %w", err)
 		}
 		assets = append(assets, scrubbed)
 	}
-	return assets, true, nil
+	return assets, nil
 }
 
 // runJQ compiles a jq program and runs it over a single decoded JSON document,

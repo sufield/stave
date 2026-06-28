@@ -1,0 +1,32 @@
+{
+    "Users": [
+        {
+            "Path": "/",
+            "UserName": "admin-cli",
+            "UserId": "AIDAWOAVSAQRK4LHSIK6V",
+            "Arn": "arn:aws:iam::442426852386:user/admin-cli",
+            "CreateDate": "2025-02-20T14:32:08+00:00"
+        },
+        {
+            "Path": "/",
+            "UserName": "pl-admin-user-for-cleanup-scripts",
+            "UserId": "AIDAWOAVSAQRIC6GXJJOJ",
+            "Arn": "arn:aws:iam::442426852386:user/pl-admin-user-for-cleanup-scripts",
+            "CreateDate": "2026-05-30T13:21:32+00:00"
+        },
+        {
+            "Path": "/",
+            "UserName": "pl-readonly-user-prod",
+            "UserId": "AIDAWOAVSAQRNBTVP7AKH",
+            "Arn": "arn:aws:iam::442426852386:user/pl-readonly-user-prod",
+            "CreateDate": "2026-05-30T13:21:32+00:00"
+        },
+        {
+            "Path": "/",
+            "UserName": "sadcloudInlineUser",
+            "UserId": "AIDAWOAVSAQRM4I7SIDUF",
+            "Arn": "arn:aws:iam::442426852386:user/sadcloudInlineUser",
+            "CreateDate": "2026-06-01T13:03:46+00:00"
+        }
+    ]
+}

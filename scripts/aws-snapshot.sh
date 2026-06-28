@@ -1,49 +1,47 @@
 #!/usr/bin/env bash
 #
-# Minimal AWS snapshot collector for Stave
+# AWS snapshot collector for Stave (collect-only)
 #
-# Produces a single obs.v0.1 snapshot file under <output-dir>/ containing
-# read-only configuration data for the user's S3 buckets and IAM roles.
-# Suitable for `stave apply --observations <output-dir>` to produce the
-# first compound finding on the user's own account in under 5 minutes.
+# Gathers read-only AWS CLI JSON into a raw/ directory, then calls
+# `stave transform` to convert it into obs.v0.1 observations. This script does NO
+# mapping: the snapshot→observation logic lives entirely in the embedded jq
+# filters (the single source of truth). This script only collects raw API output
+# and supplies the per-resource join keys (by filename for S3/IAM-inline, by an
+# annotation for IAM-role enrichment).
 #
 # Usage:
 #   bash scripts/aws-snapshot.sh [output-directory]
 #
+# Layout produced under <output-directory>/:
+#   raw/            raw AWS CLI JSON (collected here)
+#   observations/   obs.v0.1 written by `stave transform`
+#
 # Environment:
-#   AWS_PROFILE      Standard AWS CLI profile selector.
-#   AWS_REGION       Standard AWS CLI region selector.
+#   AWS_PROFILE / AWS_REGION   Standard AWS CLI selectors.
+#   STAVE                      Path to the stave binary (default: stave on PATH).
 #
 # Prerequisites:
-#   - AWS CLI v2 configured with read-only credentials (the
-#     SecurityAudit managed policy is sufficient).
-#   - jq on PATH.
+#   - AWS CLI v2 with read-only credentials (SecurityAudit is sufficient).
+#   - jq on PATH (lists resource names and stamps role join keys).
+#   - stave on PATH (the converter).
 #
-# Scope (deliberate, do not expand without a follow-up iteration):
-#   - S3 buckets: name, public-access-block, encryption-at-rest, tagging.
-#   - IAM roles (excluding AWSServiceRole*): name, trust policy's
-#     trusted services, attached managed-policy ARNs, tags.
+# Coverage: S3, IAM (roles/users/groups/password policy/inline policies), EBS,
+# EC2 (instances, security groups), CloudTrail, AWS Config, OpenSearch,
+# CloudWatch alarms. Some calls below feed filters still in development (admin
+# analysis, SES, KMS, event selectors, ENIs, instance user-data); they are
+# collected now so a snapshot is complete when those filters land — `stave
+# transform` simply skips raw files it has no filter for yet.
 #
-# This is the minimal collector for the "my own data" onboarding step.
-# It is not a full extractor — policy-statement analysis,
-# cross-account-trust derivation, ghost-reference resolution, and
-# every service beyond S3 + IAM are out of scope here. See
-# docs/extractor-prompt.md for the full extractor template.
-#
-# Exit codes:
-#   0  snapshot written
-#   1  missing prerequisite (aws or jq)
-#   2  AWS API call failed in a non-recoverable way
-#
-# The script is air-gap-aware on its outputs: it never sends data
-# outside the local filesystem. All AWS calls are read-only.
+# Exit codes: 0 observations written; 1 missing prerequisite.
+# All AWS calls are read-only; nothing leaves the local filesystem.
 
 set -uo pipefail
 
 OUTPUT_DIR="${1:-./my-snapshot}"
-mkdir -p "$OUTPUT_DIR"
-
-# ----- prerequisites -------------------------------------------------------
+RAW_DIR="$OUTPUT_DIR/raw"
+OBS_DIR="$OUTPUT_DIR/observations"
+STAVE="${STAVE:-stave}"
+mkdir -p "$RAW_DIR" "$OBS_DIR"
 
 need() {
 	command -v "$1" >/dev/null 2>&1 || {
@@ -53,203 +51,131 @@ need() {
 }
 need aws
 need jq
+need "$STAVE"
 
-TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-SNAPSHOT_FILE="$OUTPUT_DIR/snapshot-$(date -u +"%Y%m%dT%H%M%SZ").json"
+NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+ACCOUNT=$(aws sts get-caller-identity --query Account --output text 2>/dev/null || echo "")
 
-echo "==> Collecting AWS snapshot"
-echo "    Output: $SNAPSHOT_FILE"
-echo "    Timestamp: $TIMESTAMP"
-echo ""
-
-# Accumulator. The script appends one JSON object per asset into a temp
-# file, then jq -s wraps them into the obs.v0.1 envelope at the end.
-ASSETS_TMP=$(mktemp)
-trap 'rm -f "$ASSETS_TMP"' EXIT INT TERM
-
-# ----- S3 buckets ---------------------------------------------------------
-
-echo "==> S3 buckets"
-S3_COUNT=0
-BUCKETS=$(aws s3api list-buckets --query 'Buckets[].Name' --output text 2>/dev/null) || {
-	echo "  WARN: list-buckets failed (insufficient permissions?); skipping S3" >&2
-	BUCKETS=""
+# cap <relative-output> <fallback-json> : run the AWS CLI command on stdin,
+# writing non-empty output to RAW_DIR/<relative-output>; on failure/empty write
+# the fallback (or, if fallback is "-", remove the file so transform skips it).
+cap() {
+	local out="$RAW_DIR/$1" fb="$2"
+	if cat >"$out.tmp" 2>/dev/null && [ -s "$out.tmp" ]; then
+		mv "$out.tmp" "$out"
+	else
+		rm -f "$out.tmp"
+		if [ "$fb" = "-" ]; then rm -f "$out"; else printf '%s\n' "$fb" >"$out"; fi
+	fi
 }
 
-for bucket in $BUCKETS; do
-	echo "  $bucket"
+echo "==> Collecting raw AWS snapshots into $RAW_DIR (read-only)"
 
-	# Every per-bucket API can fail for valid reasons (no policy, no
-	# encryption, no tags, no PAB). Each failure falls back to an empty
-	# JSON shape so the resulting observation still validates.
-	PAB=$(aws s3api get-public-access-block --bucket "$bucket" 2>/dev/null \
-		| jq '.PublicAccessBlockConfiguration // {}' 2>/dev/null) || PAB="{}"
-	PAB="${PAB:-{\}}"
+# ----- IAM -----------------------------------------------------------------
+echo "  IAM"
+aws iam get-account-authorization-details 2>/dev/null | cap iam-authorization-details.json '-'
+aws iam get-account-password-policy 2>/dev/null | cap iam-password-policy.json '-'
 
-	ENCRYPTION=$(aws s3api get-bucket-encryption --bucket "$bucket" 2>/dev/null \
-		| jq '.ServerSideEncryptionConfiguration.Rules[0].ApplyServerSideEncryptionByDefault // {}' 2>/dev/null) || ENCRYPTION="{}"
-	ENCRYPTION="${ENCRYPTION:-{\}}"
+aws iam list-roles 2>/dev/null | cap iam-roles.json '{"Roles":[]}'
+while IFS=$'\t' read -r role arn; do
+	[ -z "$role" ] && continue
+	case "$role" in AWSServiceRole*) continue ;; esac
+	aws iam list-attached-role-policies --role-name "$role" 2>/dev/null \
+		| jq --arg arn "$arn" '. + {RoleArn: $arn}' | cap "iam-attached-$role.json" "{\"RoleArn\":\"$arn\",\"AttachedPolicies\":[]}"
+	aws iam list-role-tags --role-name "$role" 2>/dev/null \
+		| jq --arg arn "$arn" '. + {RoleArn: $arn}' | cap "iam-tags-$role.json" "{\"RoleArn\":\"$arn\",\"Tags\":[]}"
+done < <(jq -r '.Roles[] | "\(.RoleName)\t\(.Arn)"' "$RAW_DIR/iam-roles.json" 2>/dev/null)
 
-	TAGS=$(aws s3api get-bucket-tagging --bucket "$bucket" 2>/dev/null \
-		| jq '(.TagSet // []) | map({(.Key): .Value}) | add // {}' 2>/dev/null) || TAGS="{}"
-	TAGS="${TAGS:-{\}}"
+aws iam list-users 2>/dev/null | cap iam-users.json '{"Users":[]}'
+while read -r user; do
+	[ -z "$user" ] && continue
+	# user-inline-<user>.json is filename-keyed (raw {"PolicyNames":[...]}).
+	aws iam list-user-policies --user-name "$user" 2>/dev/null | cap "user-inline-$user.json" '-'
+done < <(jq -r '.Users[].UserName' "$RAW_DIR/iam-users.json" 2>/dev/null)
 
-	# Build the asset. The shape mirrors the fixtures under
-	# examples/demo-s3-*/fixtures/observations/ so it satisfies the
-	# controls that read properties.storage.controls.public_access_block.*
-	# and properties.storage.tags out of the box.
-	jq -n \
-		--arg id "$bucket" \
-		--arg arn_id "aws:s3:::$bucket" \
-		--argjson pab "$PAB" \
-		--argjson encryption "$ENCRYPTION" \
-		--argjson tags "$TAGS" \
-		'{
-			id: $id,
-			type: "aws_s3_bucket",
-			vendor: "aws",
-			properties: {
-				storage: {
-					kind: "bucket",
-					name: $id,
-					id: $arn_id,
-					controls: {
-						public_access_block: {
-							block_public_acls:       ($pab.BlockPublicAcls       // false),
-							block_public_policy:     ($pab.BlockPublicPolicy     // false),
-							ignore_public_acls:      ($pab.IgnorePublicAcls      // false),
-							restrict_public_buckets: ($pab.RestrictPublicBuckets // false)
-						},
-						public_access_fully_blocked: (
-							($pab.BlockPublicAcls // false)
-							and ($pab.BlockPublicPolicy // false)
-							and ($pab.IgnorePublicAcls // false)
-							and ($pab.RestrictPublicBuckets // false)
-						)
-					},
-					encryption: {
-						algorithm: ($encryption.SSEAlgorithm // "none"),
-						kms_key_id: ($encryption.KMSMasterKeyID // null)
-					},
-					tags: $tags
-				}
-			}
-		}' >> "$ASSETS_TMP"
-	S3_COUNT=$((S3_COUNT + 1))
+aws iam list-groups 2>/dev/null | cap iam-groups.json '{"Groups":[]}'
+while read -r group; do
+	[ -z "$group" ] && continue
+	aws iam list-group-policies --group-name "$group" 2>/dev/null | cap "group-inline-$group.json" '-'
+done < <(jq -r '.Groups[].GroupName' "$RAW_DIR/iam-groups.json" 2>/dev/null)
+
+# ----- S3 ------------------------------------------------------------------
+echo "  S3 buckets"
+aws s3api list-buckets 2>/dev/null | cap s3-buckets.json '{"Buckets":[]}'
+for bucket in $(jq -r '.Buckets[].Name' "$RAW_DIR/s3-buckets.json" 2>/dev/null); do
+	aws s3api get-public-access-block --bucket "$bucket" 2>/dev/null | cap "s3-pab-$bucket.json" '{"PublicAccessBlockConfiguration":{}}'
+	aws s3api get-bucket-encryption --bucket "$bucket" 2>/dev/null | cap "s3-encryption-$bucket.json" '{"ServerSideEncryptionConfiguration":{}}'
+	aws s3api get-bucket-tagging --bucket "$bucket" 2>/dev/null | cap "s3-tags-$bucket.json" '{"TagSet":[]}'
 done
 
-echo "    → $S3_COUNT buckets"
+# ----- EC2 -----------------------------------------------------------------
+echo "  EC2"
+aws ec2 describe-volumes 2>/dev/null | cap ec2_volumes.json '{"Volumes":[]}'
+aws ec2 describe-security-groups 2>/dev/null | cap ec2_security_groups.json '{"SecurityGroups":[]}'
+# For SG is_unused (filter in development): which ENIs reference which SG.
+aws ec2 describe-network-interfaces 2>/dev/null | cap ec2_network_interfaces.json '-'
+aws ec2 describe-instances 2>/dev/null | cap ec2_instances.json '{"Reservations":[]}'
+while read -r instance; do
+	[ -z "$instance" ] && continue
+	# user-data for has_secrets (filter in development).
+	aws ec2 describe-instance-attribute --instance-id "$instance" --attribute userData 2>/dev/null | cap "ec2-userdata-$instance.json" '-'
+done < <(jq -r '.Reservations[].Instances[].InstanceId' "$RAW_DIR/ec2_instances.json" 2>/dev/null)
+
+# ----- CloudTrail ----------------------------------------------------------
+echo "  CloudTrail"
+aws cloudtrail describe-trails 2>/dev/null | cap cloudtrail_trails.json '{"trailList":[]}'
+while read -r trail; do
+	[ -z "$trail" ] && continue
+	# event selectors for data_events_s3 (filter in development).
+	aws cloudtrail get-event-selectors --trail-name "$trail" 2>/dev/null | cap "cloudtrail-eventselectors-$trail.json" '-'
+done < <(jq -r '.trailList[].Name' "$RAW_DIR/cloudtrail_trails.json" 2>/dev/null)
+
+# ----- AWS Config ----------------------------------------------------------
+echo "  AWS Config"
+aws configservice describe-configuration-recorders 2>/dev/null | cap config_recorders.json '{"ConfigurationRecorders":[]}'
+
+# ----- OpenSearch ----------------------------------------------------------
+echo "  OpenSearch"
+aws opensearch list-domain-names 2>/dev/null | cap es_domains.json '{"DomainNames":[]}'
+while read -r domain; do
+	[ -z "$domain" ] && continue
+	aws opensearch describe-domain --domain-name "$domain" 2>/dev/null | cap "es_domain_$domain.json" '-'
+done < <(jq -r '.DomainNames[].DomainName' "$RAW_DIR/es_domains.json" 2>/dev/null)
+
+# ----- CloudWatch ----------------------------------------------------------
+echo "  CloudWatch alarms"
+aws cloudwatch describe-alarms 2>/dev/null | cap cloudwatch_alarms.json '{"MetricAlarms":[]}'
+
+# ----- KMS -----------------------------------------------------------------
+# get-key-rotation-status is self-describing (returns KeyId as the full ARN);
+# get-key-policy carries no key identity, so stamp it with the KeyArn.
+echo "  KMS"
+aws kms list-keys 2>/dev/null | cap kms_keys.json '{"Keys":[]}'
+while IFS=$'\t' read -r keyid keyarn; do
+	[ -z "$keyid" ] && continue
+	aws kms get-key-rotation-status --key-id "$keyid" 2>/dev/null | cap "kms-rotation-$keyid.json" '-'
+	aws kms get-key-policy --key-id "$keyid" --policy-name default 2>/dev/null \
+		| jq --arg arn "$keyarn" '. + {KeyArn: $arn}' | cap "kms-policy-$keyid.json" '-'
+done < <(jq -r '.Keys[] | "\(.KeyId)\t\(.KeyArn)"' "$RAW_DIR/kms_keys.json" 2>/dev/null)
+
+# ----- SES (filters in development) ---------------------------------------
+echo "  SES"
+aws ses list-identities 2>/dev/null | cap ses_identities.json '{"Identities":[]}'
+while read -r ident; do
+	[ -z "$ident" ] && continue
+	aws ses get-identity-dkim-attributes --identities "$ident" 2>/dev/null | cap "ses-dkim-$ident.json" '-'
+	aws ses list-identity-policies --identity "$ident" 2>/dev/null | cap "ses-policies-$ident.json" '-'
+done < <(jq -r '.Identities[]' "$RAW_DIR/ses_identities.json" 2>/dev/null)
+
+# ----- convert (the .jq filters are the single source of truth) ------------
 echo ""
+echo "==> Converting raw snapshots → obs.v0.1 (stave transform)"
+"$STAVE" transform -i "$RAW_DIR" -o "$OBS_DIR" --account "$ACCOUNT" --now "$NOW"
 
-# ----- IAM roles ----------------------------------------------------------
-
-echo "==> IAM roles"
-IAM_COUNT=0
-ROLES=$(aws iam list-roles --query 'Roles[].RoleName' --output text 2>/dev/null) || {
-	echo "  WARN: list-roles failed (insufficient permissions?); skipping IAM" >&2
-	ROLES=""
-}
-
-for role in $ROLES; do
-	# Skip AWS service-linked roles. Their trust policies and tags are
-	# AWS-managed; including them inflates the asset count without
-	# producing actionable findings.
-	[[ "$role" == AWSServiceRole* ]] && continue
-
-	echo "  $role"
-
-	ROLE_DOC=$(aws iam get-role --role-name "$role" 2>/dev/null) || ROLE_DOC='{}'
-	ROLE_ARN=$(echo "$ROLE_DOC" | jq -r '.Role.Arn // empty')
-	[ -z "$ROLE_ARN" ] && continue
-
-	# trusted_services comes from AssumeRolePolicyDocument's Statement[].Principal.Service.
-	# AWS returns Principal.Service as either a string or array; the jq
-	# below normalises both shapes into a flat unique list.
-	TRUSTED=$(echo "$ROLE_DOC" \
-		| jq -c '[
-			(.Role.AssumeRolePolicyDocument.Statement // [])[]
-			| .Principal.Service?
-			| if type == "array" then .[] else . end
-		] | map(select(. != null)) | unique' 2>/dev/null) || TRUSTED='[]'
-
-	POLICY_ARNS=$(aws iam list-attached-role-policies --role-name "$role" 2>/dev/null \
-		| jq -c '[(.AttachedPolicies // [])[].PolicyArn]' 2>/dev/null) || POLICY_ARNS='[]'
-	POLICY_ARNS="${POLICY_ARNS:-[]}"
-
-	TAGS=$(aws iam list-role-tags --role-name "$role" 2>/dev/null \
-		| jq '(.Tags // []) | map({(.Key): .Value}) | add // {}' 2>/dev/null) || TAGS="{}"
-	TAGS="${TAGS:-{\}}"
-
-	# is_admin_equivalent: a coarse heuristic. The AWS-managed
-	# AdministratorAccess policy ARN is the canonical signal. Full
-	# detection requires expanding inline policies and resolving
-	# wildcard actions — out of scope for the minimal collector.
-	HAS_ADMIN=$(echo "$POLICY_ARNS" \
-		| jq 'any(. == "arn:aws:iam::aws:policy/AdministratorAccess")')
-
-	jq -n \
-		--arg id "$ROLE_ARN" \
-		--arg role_name "$role" \
-		--argjson trusted "$TRUSTED" \
-		--argjson policy_arns "$POLICY_ARNS" \
-		--argjson tags "$TAGS" \
-		--argjson has_admin "$HAS_ADMIN" \
-		'{
-			id: $id,
-			type: "aws_iam_role",
-			vendor: "aws",
-			properties: {
-				identity: {
-					kind: "role",
-					name: $role_name,
-					trusted_services: $trusted,
-					is_admin_equivalent: $has_admin,
-					attached_policy_arns: $policy_arns,
-					tags: $tags
-				}
-			}
-		}' >> "$ASSETS_TMP"
-	IAM_COUNT=$((IAM_COUNT + 1))
-done
-
-echo "    → $IAM_COUNT roles (excluding AWSServiceRole*)"
 echo ""
-
-# ----- assemble the snapshot ----------------------------------------------
-
-# jq -s wraps the stream of objects into the obs.v0.1 envelope.
-# generated_by.source_type is required by `stave apply` unless
-# is passed; aws.cli read-only is the right
-# value here.
-jq -s --arg captured_at "$TIMESTAMP" \
-   '{
-	schema_version: "obs.v0.1",
-	captured_at: $captured_at,
-	source: "deployed",
-	generated_by: {
-		source_type: "aws.cli",
-		tool: "stave-aws-snapshot",
-		tool_version: "0.1.0",
-		provider: "aws"
-	},
-	assets: .
-   }' "$ASSETS_TMP" > "$SNAPSHOT_FILE"
-
-TOTAL=$((S3_COUNT + IAM_COUNT))
 echo "════════════════════════════════════════════════════════════"
-echo "Snapshot written: $TOTAL assets → $SNAPSHOT_FILE"
-echo ""
 echo "Next steps:"
-echo "  stave apply --observations $OUTPUT_DIR"
+echo "  stave apply --observations $OBS_DIR"
 echo ""
-echo "The flag is required: this snapshot's"
-echo "source_type ('aws.cli') is not in stave's built-in connector"
-echo "manifest. The flag tells stave to evaluate anyway."
-echo ""
-echo "For machine-readable output:"
-echo "  stave apply --observations $OUTPUT_DIR \\"
-echo "       --format json | jq '.findings | length'"
-echo ""
-echo "To see compound chains:"
-echo "  stave apply --observations $OUTPUT_DIR \\"
-echo "       --format json | jq '.chains[]?'"
+echo "  # machine-readable:"
+echo "  stave apply --observations $OBS_DIR --format json | jq '.findings | length'"

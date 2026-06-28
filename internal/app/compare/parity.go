@@ -44,6 +44,7 @@ type ParityInput struct {
 	GeneratedAt  string
 	Environments map[string][]remediation.Finding // env name → findings
 	EnvOrder     []string                         // first = production
+	AllControls  []string                         // Optional: list of all evaluated control IDs
 }
 
 // AnalyzeParity compares findings across environments.
@@ -71,6 +72,14 @@ func AnalyzeParity(input ParityInput) *ParityResult {
 
 	var consistentFail, prodRegression, envHardening, mixed []ParityItem
 	consistentPassCount := 0
+
+	// Calculate consistent passes from the total evaluated controls set.
+	for _, cidStr := range input.AllControls {
+		cid := kernel.ControlID(cidStr)
+		if _, ok := allControls[cid]; !ok {
+			consistentPassCount++
+		}
+	}
 
 	sevOrder := policy.SeverityOrderOf
 

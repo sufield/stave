@@ -1,0 +1,6 @@
+{
+  "arn:aws:ec2:us-east-1:442426852386:instance/i-001ca35afdbfef529": {
+    "has_public_ip": true,
+    "imdsv2_required": false
+  }
+}

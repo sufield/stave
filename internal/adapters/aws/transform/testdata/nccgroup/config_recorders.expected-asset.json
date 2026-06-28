@@ -1,0 +1,13 @@
+{
+  "id": "arn:aws:config:us-east-1:442426852386:config-recorder/sadcloud-config",
+  "type": "aws_config_recorder",
+  "vendor": "aws",
+  "properties": {
+    "compliance": {
+      "kind": "config_recorder",
+      "config": {
+        "records_all_resources": false
+      }
+    }
+  }
+}

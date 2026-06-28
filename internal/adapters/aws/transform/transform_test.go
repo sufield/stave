@@ -2,6 +2,8 @@ package transform
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -244,6 +246,127 @@ func TestTransformFiles_S3FullEnrichment(t *testing.T) {
 	}
 }
 
+// iam-users base: one asset per user, identity.kind == "user".
+func TestTransformFiles_UsersBase(t *testing.T) {
+	raw := []byte(`{"Users":[
+		{"UserName":"alice","Arn":"arn:aws:iam::1:user/alice"},
+		{"UserName":"bob","Arn":"arn:aws:iam::1:user/bob"}]}`)
+	out, stats, err := TransformFiles(map[string][]byte{"iam_users.json": raw},
+		Options{CapturedAt: "2026-06-01T12:00:00Z"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stats.Assets != 2 {
+		t.Fatalf("want 2 user assets, got %d", stats.Assets)
+	}
+	a := assets(t, out)[0]
+	id := a["properties"].(map[string]any)["identity"].(map[string]any)
+	if a["type"] != "aws_iam_user" || id["kind"] != "user" || id["name"] == nil {
+		t.Errorf("unexpected user asset: %v", a)
+	}
+}
+
+// iam-groups base parity-tested against the committed nccgroup groups: the base
+// produces the right asset id + group.name for both groups (the computed
+// membership signals are added by enrichment, not the base).
+func TestTransformFiles_GroupsBase_NccgroupParity(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join("testdata", "nccgroup", "iam_groups.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, stats, err := TransformFiles(map[string][]byte{"iam_groups.json": raw},
+		Options{CapturedAt: "2026-06-01T12:00:00Z"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stats.Assets != 2 {
+		t.Fatalf("want 2 group assets, got %d", stats.Assets)
+	}
+	gotNames := map[string]string{} // id -> group.name
+	for _, a := range assets(t, out) {
+		if a["type"] != "aws_iam_group" {
+			t.Errorf("wrong type: %v", a["type"])
+		}
+		g := a["properties"].(map[string]any)["identity"].(map[string]any)["group"].(map[string]any)
+		gotNames[a["id"].(string)] = g["name"].(string)
+	}
+	want := map[string]string{
+		"arn:aws:iam::442426852386:group/sadcloudInlineGroup": "sadcloudInlineGroup",
+		"arn:aws:iam::442426852386:group/sadcloud_superuser":  "sadcloud_superuser",
+	}
+	for id, name := range want {
+		if gotNames[id] != name {
+			t.Errorf("group %s: name = %q, want %q", id, gotNames[id], name)
+		}
+	}
+}
+
+// Computed has_inline_policies, unblocked by filename-derived keys: a raw
+// user-inline list (no principal in content) named user-inline-<user>.json
+// merges onto the base user. Parity-checked against the committed nccgroup user
+// (sadcloudInlineUser → has_inline_policies true).
+func TestTransformFiles_UserInlineFilenameKey_NccgroupParity(t *testing.T) {
+	users, err := os.ReadFile(filepath.Join("testdata", "nccgroup", "iam_users.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	inline, err := os.ReadFile(filepath.Join("testdata", "nccgroup", "user-inline-sadcloudInlineUser.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, _, err := TransformFiles(map[string][]byte{
+		"iam_users.json":                      users,
+		"user-inline-sadcloudInlineUser.json": inline, // filename supplies UserName
+	}, Options{Account: "442426852386", CapturedAt: "2026-06-01T12:00:00Z"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var found bool
+	for _, a := range assets(t, out) {
+		if a["id"] == "arn:aws:iam::442426852386:user/sadcloudInlineUser" {
+			found = true
+			pol := a["properties"].(map[string]any)["identity"].(map[string]any)["policies"].(map[string]any)
+			if pol["has_inline_policies"] != true {
+				t.Errorf("has_inline_policies = %v, want true", pol["has_inline_policies"])
+			}
+		}
+	}
+	if !found {
+		t.Fatal("sadcloudInlineUser asset not produced (base+enrichment merge by id failed)")
+	}
+}
+
+// Group inline via filename key: group-inline-<group>.json (raw {PolicyNames})
+// merges has_inline_policies onto the base group.
+func TestTransformFiles_GroupInlineFilenameKey(t *testing.T) {
+	groups, err := os.ReadFile(filepath.Join("testdata", "nccgroup", "iam_groups.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	inline, err := os.ReadFile(filepath.Join("testdata", "nccgroup", "group-inline-sadcloudInlineGroup.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, _, err := TransformFiles(map[string][]byte{
+		"iam_groups.json":                       groups,
+		"group-inline-sadcloudInlineGroup.json": inline,
+	}, Options{Account: "442426852386", CapturedAt: "2026-06-01T12:00:00Z"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, a := range assets(t, out) {
+		if a["id"] == "arn:aws:iam::442426852386:group/sadcloudInlineGroup" {
+			g := a["properties"].(map[string]any)["identity"].(map[string]any)["group"].(map[string]any)
+			if g["has_inline_policies"] != true {
+				t.Errorf("group has_inline_policies = %v, want true", g["has_inline_policies"])
+			}
+			if g["name"] != "sadcloudInlineGroup" {
+				t.Errorf("base name lost after merge: %v", g["name"])
+			}
+		}
+	}
+}
+
 // Filename-derived key: a RAW per-call file (no Bucket in content) named
 // s3-pab-<bucket>.json contributes its public-access-block to the base bucket
 // asset — the key comes from the filename, no manual annotation.
@@ -286,6 +409,29 @@ func TestInjectFilenameKey_NoMatch(t *testing.T) {
 	}
 	if _, ok := parsed["Bucket"]; ok {
 		t.Error("Bucket should not be injected for an unmatched filename")
+	}
+}
+
+// An empty / whitespace-only raw file is skipped (a collector commonly leaves
+// one for a resource that returned nothing); a non-empty malformed file fails
+// loud.
+func TestTransformFiles_EmptyVsMalformed(t *testing.T) {
+	_, stats, err := TransformFiles(map[string][]byte{
+		"empty.json":      {},
+		"whitespace.json": []byte("  \n"),
+		"buckets.json":    []byte(`{"Buckets":[{"Name":"b"}]}`),
+	}, Options{CapturedAt: "2026-06-01T12:00:00Z"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stats.Skipped != 2 || stats.Assets != 1 {
+		t.Fatalf("empty files should skip, not fail: %+v", stats)
+	}
+
+	if _, _, err := TransformFiles(map[string][]byte{
+		"corrupt.json": []byte(`{"Buckets":[`),
+	}, Options{CapturedAt: "2026-06-01T12:00:00Z"}); err == nil {
+		t.Fatal("a non-empty malformed file must fail loud")
 	}
 }
 

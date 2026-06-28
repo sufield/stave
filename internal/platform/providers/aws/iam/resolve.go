@@ -301,8 +301,11 @@ func intersectAction(p1, p2 string) (string, bool) {
 	if p1Wild && p2Wild {
 		pref1 := p1[:len(p1)-1]
 		pref2 := p2[:len(p2)-1]
-		if strings.EqualFold(pref1, pref2) {
+		if len(pref1) >= len(pref2) && strings.HasPrefix(strings.ToLower(pref1), strings.ToLower(pref2)) {
 			return p1, true
+		}
+		if len(pref2) >= len(pref1) && strings.HasPrefix(strings.ToLower(pref2), strings.ToLower(pref1)) {
+			return p2, true
 		}
 		return "", false
 	}

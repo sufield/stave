@@ -1,0 +1,40 @@
+{
+    "Keys": [
+        {
+            "KeyId": "05237279-14c9-4882-9416-39821a8aa0e3",
+            "KeyArn": "arn:aws:kms:us-east-1:442426852386:key/05237279-14c9-4882-9416-39821a8aa0e3"
+        },
+        {
+            "KeyId": "3fad6f1e-52b0-42a2-bb23-3ca864087702",
+            "KeyArn": "arn:aws:kms:us-east-1:442426852386:key/3fad6f1e-52b0-42a2-bb23-3ca864087702"
+        },
+        {
+            "KeyId": "6ccca9f0-4eba-403c-9620-d91b57962f29",
+            "KeyArn": "arn:aws:kms:us-east-1:442426852386:key/6ccca9f0-4eba-403c-9620-d91b57962f29"
+        },
+        {
+            "KeyId": "7454646a-b6da-49c7-a41e-b78bed19113e",
+            "KeyArn": "arn:aws:kms:us-east-1:442426852386:key/7454646a-b6da-49c7-a41e-b78bed19113e"
+        },
+        {
+            "KeyId": "c8e6ceed-fc17-45d8-a5a9-33e4cc4eafe2",
+            "KeyArn": "arn:aws:kms:us-east-1:442426852386:key/c8e6ceed-fc17-45d8-a5a9-33e4cc4eafe2"
+        },
+        {
+            "KeyId": "cd118372-8a9d-4478-9f32-fcfd3df0ebc3",
+            "KeyArn": "arn:aws:kms:us-east-1:442426852386:key/cd118372-8a9d-4478-9f32-fcfd3df0ebc3"
+        },
+        {
+            "KeyId": "de8a09af-3bc6-4cba-80be-81e24adb3b9e",
+            "KeyArn": "arn:aws:kms:us-east-1:442426852386:key/de8a09af-3bc6-4cba-80be-81e24adb3b9e"
+        },
+        {
+            "KeyId": "f7fef98f-41d7-43c7-9955-1123bebbe0da",
+            "KeyArn": "arn:aws:kms:us-east-1:442426852386:key/f7fef98f-41d7-43c7-9955-1123bebbe0da"
+        },
+        {
+            "KeyId": "mrk-971fcb44ed554c9a9f5fc429d9d9d0d6",
+            "KeyArn": "arn:aws:kms:us-east-1:442426852386:key/mrk-971fcb44ed554c9a9f5fc429d9d9d0d6"
+        }
+    ]
+}

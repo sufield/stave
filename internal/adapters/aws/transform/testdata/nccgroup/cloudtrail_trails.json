@@ -1,0 +1,16 @@
+{
+    "trailList": [
+        {
+            "Name": "sadcloud",
+            "S3BucketName": "sadcloud20260601131607254900000001",
+            "IncludeGlobalServiceEvents": false,
+            "IsMultiRegionTrail": false,
+            "HomeRegion": "us-east-1",
+            "TrailARN": "arn:aws:cloudtrail:us-east-1:442426852386:trail/sadcloud",
+            "LogFileValidationEnabled": false,
+            "HasCustomEventSelectors": false,
+            "HasInsightSelectors": false,
+            "IsOrganizationTrail": false
+        }
+    ]
+}

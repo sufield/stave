@@ -1,6 +1,9 @@
 package transform
 
-import "sort"
+import (
+	"slices"
+	"sort"
+)
 
 // detect.go maps a raw AWS CLI document to the filter that converts it, keyed by
 // the top-level JSON key AWS uses for the resource (e.g. `aws iam list-roles`
@@ -11,9 +14,20 @@ import "sort"
 // topLevelKeyToFilter maps the distinctive top-level key of a raw AWS CLI list
 // response to its base filter. Order does not matter; the first present key wins.
 var topLevelKeyToFilter = map[string]string{
-	"PasswordPolicy": "iam-password-policy",
-	"Roles":          "iam-roles",
-	"Buckets":        "s3-buckets",
+	"PasswordPolicy":         "iam-password-policy",
+	"Roles":                  "iam-roles",
+	"Users":                  "iam-users",
+	"Groups":                 "iam-groups",
+	"Buckets":                "s3-buckets",
+	"Volumes":                "ec2-volumes",
+	"SecurityGroups":         "ec2-security-groups",
+	"Reservations":           "ec2-instances",
+	"trailList":              "cloudtrail-trails",
+	"ConfigurationRecorders": "config-recorders",
+	"DomainStatus":           "opensearch-domains",
+	"MetricAlarms":           "cloudwatch-alarms",
+	"Keys":                   "kms-keys",
+	"Functions":              "lambda-functions",
 }
 
 // enrichment describes a per-resource input that enriches a base asset rather
@@ -49,6 +63,31 @@ var enrichments = []enrichment{
 	{"s3-tags", "TagSet", "Bucket"},
 	{"iam-role-attached-policies", "AttachedPolicies", "RoleArn"},
 	{"iam-role-tags", "Tags", "RoleArn"},
+	{"iam-user-inline", "PolicyNames", "UserName"},
+	{"iam-group-inline", "PolicyNames", "GroupName"},
+	{"kms-key-rotation", "KeyRotationEnabled", "KeyId"}, // KeyId is the full ARN (self-keyed)
+	{"kms-key-policy", "Policy", "KeyArn"},              // KeyArn annotated by the collector
+}
+
+// filter categories control merge order: base assets are created before
+// enrichments deep-merge fields onto them.
+const (
+	catBase           = 0
+	catSelfDescribing = 1
+	catEnrichment     = 2
+)
+
+// filterCategory classifies a filter for merge ordering.
+func filterCategory(name string) int {
+	for _, f := range topLevelKeyToFilter {
+		if f == name {
+			return catBase
+		}
+	}
+	if slices.Contains(selfDescribingFilters, name) {
+		return catSelfDescribing
+	}
+	return catEnrichment
 }
 
 // referencedFilters returns every filter name the runner can invoke (base list
@@ -113,16 +152,23 @@ func detectFilter(raw map[string]any) (string, bool) {
 		return "", false
 	}
 
-	// Enrichment inputs are matched next (more specific than base lists). An
-	// enrichment whose primaryKey is present but whose joinKey (the annotation
-	// supplying the merge id) is missing is skipped — no id to merge onto.
+	// Enrichment inputs are matched next (more specific than base lists). Several
+	// enrichments share a primaryKey (PolicyNames → user/group inline;
+	// AttachedPolicies → role/group), discriminated by their joinKey. So try ALL
+	// enrichments for a full (primaryKey + joinKey) match before giving up. If
+	// some primaryKey matched but no joinKey did, the input is an un-annotated
+	// enrichment with no id to merge onto — skip it.
+	primaryMatched := false
 	for _, e := range enrichments {
 		if _, ok := raw[e.primaryKey]; !ok {
 			continue
 		}
+		primaryMatched = true
 		if _, hasJoin := raw[e.joinKey]; hasJoin {
 			return e.filter, true
 		}
+	}
+	if primaryMatched {
 		return "", false
 	}
 

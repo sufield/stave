@@ -1,0 +1,18 @@
+{
+    "Groups": [
+        {
+            "Path": "/",
+            "GroupName": "sadcloudInlineGroup",
+            "GroupId": "AGPAWOAVSAQRKCYS43GNM",
+            "Arn": "arn:aws:iam::442426852386:group/sadcloudInlineGroup",
+            "CreateDate": "2026-06-01T13:03:46+00:00"
+        },
+        {
+            "Path": "/",
+            "GroupName": "sadcloud_superuser",
+            "GroupId": "AGPAWOAVSAQRJBD3PI2RQ",
+            "Arn": "arn:aws:iam::442426852386:group/sadcloud_superuser",
+            "CreateDate": "2026-06-01T13:03:46+00:00"
+        }
+    ]
+}

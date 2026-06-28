@@ -1,0 +1,36 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:ec2:us-east-1:442426852386:volume/vol-09360d09a5289a49d",
+      "type": "aws_ebs_volume",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "volume",
+          "ebs": {
+            "attached": true,
+            "is_error_state": false,
+            "is_gp2": true,
+            "encrypted": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ec2:us-east-1:442426852386:volume/vol-066754a3f7691201f",
+      "type": "aws_ebs_volume",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "volume",
+          "ebs": {
+            "attached": false,
+            "is_error_state": false,
+            "is_gp2": true,
+            "encrypted": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -59,3 +59,18 @@ func TestParity_EnvHardening(t *testing.T) {
 		t.Errorf("env hardening = %d, want 1", len(result.EnvHardening))
 	}
 }
+
+func TestParity_ConsistentPass(t *testing.T) {
+	result := AnalyzeParity(ParityInput{
+		EnvOrder: []string{"prod", "staging"},
+		Environments: map[string][]remediation.Finding{
+			"prod":    {},
+			"staging": {},
+		},
+		AllControls: []string{"CTL.A.001", "CTL.A.002"},
+	})
+	if result.ConsistentPass != 2 {
+		t.Errorf("consistent pass = %d, want 2", result.ConsistentPass)
+	}
+}
+

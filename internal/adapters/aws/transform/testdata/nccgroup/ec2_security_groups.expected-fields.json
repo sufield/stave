@@ -1,0 +1,86 @@
+{
+  "arn:aws:ec2:us-east-1:442426852386:security-group/sg-013eb32d61d9e9e9b": {
+    "has_broad_port_range": true,
+    "high_risk_ports_exposed": false,
+    "icmp_all_types_from_internet": false,
+    "has_broad_cidr": false
+  },
+  "arn:aws:ec2:us-east-1:442426852386:security-group/sg-0dcbe4f0e376e83c0": {
+    "has_broad_port_range": false,
+    "high_risk_ports_exposed": false,
+    "icmp_all_types_from_internet": true,
+    "has_broad_cidr": false
+  },
+  "arn:aws:ec2:us-east-1:442426852386:security-group/sg-0e3cdccac3be64bc4": {
+    "has_broad_port_range": false,
+    "high_risk_ports_exposed": false,
+    "icmp_all_types_from_internet": false,
+    "has_broad_cidr": false
+  },
+  "arn:aws:ec2:us-east-1:442426852386:security-group/sg-098a4b9a02323aa45": {
+    "has_broad_port_range": false,
+    "high_risk_ports_exposed": false,
+    "icmp_all_types_from_internet": false,
+    "has_broad_cidr": false
+  },
+  "arn:aws:ec2:us-east-1:442426852386:security-group/sg-0b0a7d7880781f26f": {
+    "has_broad_port_range": false,
+    "high_risk_ports_exposed": false,
+    "icmp_all_types_from_internet": false,
+    "has_broad_cidr": true
+  },
+  "arn:aws:ec2:us-east-1:442426852386:security-group/sg-069f74ce85176353b": {
+    "has_broad_port_range": false,
+    "high_risk_ports_exposed": false,
+    "icmp_all_types_from_internet": false,
+    "has_broad_cidr": true
+  },
+  "arn:aws:ec2:us-east-1:442426852386:security-group/sg-054b9e1e6867caa26": {
+    "has_broad_port_range": false,
+    "high_risk_ports_exposed": false,
+    "icmp_all_types_from_internet": false,
+    "has_broad_cidr": true
+  },
+  "arn:aws:ec2:us-east-1:442426852386:security-group/sg-0b668fea3ca281fe0": {
+    "has_broad_port_range": false,
+    "high_risk_ports_exposed": false,
+    "icmp_all_types_from_internet": false,
+    "has_broad_cidr": true
+  },
+  "arn:aws:ec2:us-east-1:442426852386:security-group/sg-070a735508b8d0e81": {
+    "has_broad_port_range": false,
+    "high_risk_ports_exposed": false,
+    "icmp_all_types_from_internet": false,
+    "has_broad_cidr": false
+  },
+  "arn:aws:ec2:us-east-1:442426852386:security-group/sg-03798f8ae4373d461": {
+    "has_broad_port_range": false,
+    "high_risk_ports_exposed": false,
+    "icmp_all_types_from_internet": false,
+    "has_broad_cidr": false
+  },
+  "arn:aws:ec2:us-east-1:442426852386:security-group/sg-0b42b06ed8169f6ac": {
+    "has_broad_port_range": false,
+    "high_risk_ports_exposed": false,
+    "icmp_all_types_from_internet": false,
+    "has_broad_cidr": true
+  },
+  "arn:aws:ec2:us-east-1:442426852386:security-group/sg-0b2118fcba5cf1633": {
+    "has_broad_port_range": false,
+    "high_risk_ports_exposed": true,
+    "icmp_all_types_from_internet": false,
+    "has_broad_cidr": false
+  },
+  "arn:aws:ec2:us-east-1:442426852386:security-group/sg-05eba9b174856a7d8": {
+    "has_broad_port_range": false,
+    "high_risk_ports_exposed": false,
+    "icmp_all_types_from_internet": false,
+    "has_broad_cidr": true
+  },
+  "arn:aws:ec2:us-east-1:442426852386:security-group/sg-03d101f8b850d0f55": {
+    "has_broad_port_range": false,
+    "high_risk_ports_exposed": false,
+    "icmp_all_types_from_internet": false,
+    "has_broad_cidr": true
+  }
+}

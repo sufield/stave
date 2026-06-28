@@ -1,0 +1,21 @@
+{
+  "id": "arn:aws:cloudtrail:us-east-1:442426852386:trail/sadcloud",
+  "type": "aws_cloudtrail_trail",
+  "vendor": "aws",
+  "properties": {
+    "audit_trail": {
+      "kind": "trail",
+      "log_file_validation_enabled": false,
+      "multi_region_enabled": false
+    },
+    "audit": {
+      "kind": "trail",
+      "cloudtrail": {
+        "include_global_events": false
+      }
+    },
+    "trail": {
+      "log_file_validation_enabled": false
+    }
+  }
+}

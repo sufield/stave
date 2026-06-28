@@ -1,0 +1,89 @@
+{
+    "DomainStatus": {
+        "DomainId": "442426852386/sadcloud",
+        "DomainName": "sadcloud",
+        "ARN": "arn:aws:es:us-east-1:442426852386:domain/sadcloud",
+        "Created": true,
+        "Deleted": true,
+        "Endpoint": "search-sadcloud-akbwbvhhqqnj6oocezswpeu6si.us-east-1.es.amazonaws.com",
+        "Processing": true,
+        "UpgradeProcessing": false,
+        "ElasticsearchVersion": "6.0",
+        "ElasticsearchClusterConfig": {
+            "InstanceType": "t2.small.elasticsearch",
+            "InstanceCount": 1,
+            "DedicatedMasterEnabled": false,
+            "ZoneAwarenessEnabled": false,
+            "WarmEnabled": false,
+            "ColdStorageOptions": {
+                "Enabled": false
+            }
+        },
+        "EBSOptions": {
+            "EBSEnabled": true,
+            "VolumeType": "gp2",
+            "VolumeSize": 10
+        },
+        "AccessPolicies": "",
+        "SnapshotOptions": {
+            "AutomatedSnapshotStartHour": 0
+        },
+        "CognitoOptions": {
+            "Enabled": false
+        },
+        "EncryptionAtRestOptions": {
+            "Enabled": false
+        },
+        "NodeToNodeEncryptionOptions": {
+            "Enabled": false
+        },
+        "AdvancedOptions": {
+            "override_main_response_version": "false",
+            "rest.action.multi.allow_explicit_index": "true"
+        },
+        "LogPublishingOptions": {
+            "SEARCH_SLOW_LOGS": {
+                "CloudWatchLogsLogGroupArn": "arn:aws:logs:us-east-1:442426852386:log-group:sadcloud",
+                "Enabled": false
+            },
+            "INDEX_SLOW_LOGS": {
+                "CloudWatchLogsLogGroupArn": "arn:aws:logs:us-east-1:442426852386:log-group:sadcloud",
+                "Enabled": false
+            }
+        },
+        "ServiceSoftwareOptions": {
+            "CurrentVersion": "Elasticsearch_6_0_R20260428",
+            "NewVersion": "",
+            "UpdateAvailable": false,
+            "Cancellable": false,
+            "UpdateStatus": "COMPLETED",
+            "Description": "There is no software update available for this domain.",
+            "AutomatedUpdateDate": "1969-12-31T19:00:00-05:00",
+            "OptionalDeployment": true
+        },
+        "DomainEndpointOptions": {
+            "EnforceHTTPS": false,
+            "TLSSecurityPolicy": "Policy-Min-TLS-1-2-2019-07",
+            "CustomEndpointEnabled": false
+        },
+        "AdvancedSecurityOptions": {
+            "Enabled": false,
+            "InternalUserDatabaseEnabled": false,
+            "AnonymousAuthEnabled": false
+        },
+        "AutoTuneOptions": {
+            "State": "DISABLED"
+        },
+        "ChangeProgressDetails": {
+            "ChangeId": "3eb686c9-c143-4949-86f8-b844f346ff2a",
+            "ConfigChangeStatus": "ApplyingChanges",
+            "StartTime": "2026-06-01T11:05:20.657000-04:00",
+            "LastUpdatedTime": "2026-06-01T11:05:56.387000-04:00"
+        },
+        "DomainProcessingStatus": "Deleting",
+        "ModifyingProperties": [],
+        "DeploymentStrategyOptions": {
+            "DeploymentStrategy": "CapacityOptimized"
+        }
+    }
+}

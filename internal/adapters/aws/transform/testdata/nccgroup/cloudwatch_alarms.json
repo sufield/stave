@@ -1,0 +1,27 @@
+{
+    "MetricAlarms": [
+        {
+            "AlarmName": "sadcloud-cloudwatch",
+            "AlarmArn": "arn:aws:cloudwatch:us-east-1:442426852386:alarm:sadcloud-cloudwatch",
+            "AlarmConfigurationUpdatedTimestamp": "2026-06-01T10:18:10.424000-04:00",
+            "ActionsEnabled": true,
+            "OKActions": [],
+            "AlarmActions": [],
+            "InsufficientDataActions": [],
+            "StateValue": "INSUFFICIENT_DATA",
+            "StateReason": "Unchecked: Initial alarm creation",
+            "StateUpdatedTimestamp": "2026-06-01T10:18:10.424000-04:00",
+            "MetricName": "GetRequests",
+            "Namespace": "AWS/S3",
+            "Statistic": "Average",
+            "Dimensions": [],
+            "Period": 120,
+            "EvaluationPeriods": 2,
+            "Threshold": 10000.0,
+            "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+            "TreatMissingData": "missing",
+            "StateTransitionedTimestamp": "2026-06-01T10:18:10.424000-04:00"
+        }
+    ],
+    "CompositeAlarms": []
+}

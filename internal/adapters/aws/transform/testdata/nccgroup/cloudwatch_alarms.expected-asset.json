@@ -1,0 +1,13 @@
+{
+  "id": "arn:aws:cloudwatch:us-east-1:442426852386:alarm:sadcloud-cloudwatch",
+  "type": "aws_cloudwatch_alarm",
+  "vendor": "aws",
+  "properties": {
+    "monitoring": {
+      "kind": "alarm",
+      "cloudwatch": {
+        "has_any_action": false
+      }
+    }
+  }
+}

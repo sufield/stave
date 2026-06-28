@@ -1,0 +1,16 @@
+{
+  "id": "arn:aws:es:us-east-1:442426852386:domain/sadcloud",
+  "type": "aws_opensearch_domain",
+  "vendor": "aws",
+  "properties": {
+    "search_service": {
+      "kind": "domain",
+      "logging": {
+        "audit_logs_enabled": false
+      },
+      "access": {
+        "policy_allows_wildcard": true
+      }
+    }
+  }
+}

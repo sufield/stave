@@ -61,9 +61,10 @@ transforms them, computing the observation signals from Step 1. This is **not** 
 your collector/extractor (`aws + jq`, Steampipe transforms, or a provided adapter):
 
 ```bash
-# e.g. the repo's collector, or your own — produces obs.v0.1 carrying the required signals
-bash scripts/aws-snapshot.sh ./observations          # collect + convert in one step
-# or convert pre-collected snapshots: <your-extractor> snapshots/ -> observations/
+# e.g. the repo's collector: collects raw AWS CLI JSON into ./acct/raw, then
+# runs `stave transform` to write obs.v0.1 into ./acct/observations
+bash scripts/aws-snapshot.sh ./acct
+# or convert pre-collected raw snapshots yourself: stave transform -i raw/ -o observations/
 ```
 
 The boundary: Stave reads `observations/*.json`. How those files get there is the extractor's

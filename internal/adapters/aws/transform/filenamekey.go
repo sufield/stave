@@ -27,6 +27,13 @@ var filenameKeyPatterns = []filenameKeyPattern{
 	{regexp.MustCompile(`^s3-pab-(.+)\.json$`), "Bucket"},
 	{regexp.MustCompile(`^s3-encryption-(.+)\.json$`), "Bucket"},
 	{regexp.MustCompile(`^s3-tags-(.+)\.json$`), "Bucket"},
+	// IAM user/group inline-policy lists: the per-principal file
+	// (user-inline-<user>.json = {"PolicyNames":[...]}) names the principal only
+	// in the filename. The enrichment filter rebuilds the principal ARN from the
+	// injected name + the --account ID, so this is valid for the default path
+	// ("/") — a principal under a non-default IAM path needs explicit annotation.
+	{regexp.MustCompile(`^user-inline-(.+)\.json$`), "UserName"},
+	{regexp.MustCompile(`^group-inline-(.+)\.json$`), "GroupName"},
 }
 
 // injectFilenameKey sets parsed[field] = <key from filename> when name matches a

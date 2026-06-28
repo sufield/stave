@@ -1,0 +1,781 @@
+{
+    "SecurityGroups": [
+        {
+            "GroupId": "sg-07db54f46b557448f",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [
+                        {
+                            "CidrIpv6": "::/0"
+                        }
+                    ],
+                    "PrefixListIds": []
+                }
+            ],
+            "VpcId": "vpc-0587631b31f69746f",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-07db54f46b557448f",
+            "OwnerId": "442426852386",
+            "GroupName": "default",
+            "Description": "default VPC security group",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [
+                        {
+                            "UserId": "442426852386",
+                            "GroupId": "sg-07db54f46b557448f"
+                        }
+                    ],
+                    "IpRanges": [],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-013eb32d61d9e9e9b",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [
+                        {
+                            "CidrIpv6": "::/0"
+                        }
+                    ],
+                    "PrefixListIds": []
+                }
+            ],
+            "VpcId": "vpc-0587631b31f69746f",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-013eb32d61d9e9e9b",
+            "OwnerId": "442426852386",
+            "GroupName": "sadcloud-ec2-opens_port_range",
+            "Description": "Managed by Terraform",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 21,
+                    "ToPort": 25,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-01841bdd25ee3ea4d",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ],
+            "VpcId": "vpc-06faf481723e7477d",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-01841bdd25ee3ea4d",
+            "OwnerId": "442426852386",
+            "GroupName": "default_elb_297ff895-9330-328c-ba77-d32a9eddb5e5",
+            "Description": "ELB created security group used when no security group is specified during ELB creation - modifications could impact traffic to future ELBs",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 80,
+                    "ToPort": 80,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-0dcbe4f0e376e83c0",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [
+                        {
+                            "CidrIpv6": "::/0"
+                        }
+                    ],
+                    "PrefixListIds": []
+                }
+            ],
+            "VpcId": "vpc-0587631b31f69746f",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-0dcbe4f0e376e83c0",
+            "OwnerId": "442426852386",
+            "GroupName": "sadcloud-ec2-icmp_to_all",
+            "Description": "Managed by Terraform",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "icmp",
+                    "FromPort": 0,
+                    "ToPort": 0,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-0e3cdccac3be64bc4",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [
+                        {
+                            "CidrIpv6": "::/0"
+                        }
+                    ],
+                    "PrefixListIds": []
+                }
+            ],
+            "VpcId": "vpc-0587631b31f69746f",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-0e3cdccac3be64bc4",
+            "OwnerId": "442426852386",
+            "GroupName": "sadcloud-ec2-opens_plaintext_port",
+            "Description": "Managed by Terraform",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 21,
+                    "ToPort": 21,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                },
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 23,
+                    "ToPort": 23,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-098a4b9a02323aa45",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [
+                        {
+                            "CidrIpv6": "::/0"
+                        }
+                    ],
+                    "PrefixListIds": []
+                }
+            ],
+            "VpcId": "vpc-0587631b31f69746f",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-098a4b9a02323aa45",
+            "OwnerId": "442426852386",
+            "GroupName": "sadcloud-ec2-whitelists_unknown_cidrs",
+            "Description": "Managed by Terraform",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "8.8.8.8/32"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-0b0a7d7880781f26f",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [
+                        {
+                            "CidrIpv6": "::/0"
+                        }
+                    ],
+                    "PrefixListIds": []
+                }
+            ],
+            "VpcId": "vpc-0587631b31f69746f",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-0b0a7d7880781f26f",
+            "OwnerId": "442426852386",
+            "GroupName": "sadcloud-ec2-whitelists_aws",
+            "Description": "Managed by Terraform",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "52.14.0.0/16"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-069f74ce85176353b",
+            "IpPermissionsEgress": [],
+            "VpcId": "vpc-06faf481723e7477d",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-069f74ce85176353b",
+            "OwnerId": "442426852386",
+            "GroupName": "sadcloud-ec2-unneeded_security_group",
+            "Description": "Managed by Terraform",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "127.0.0.0/8"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-054b9e1e6867caa26",
+            "IpPermissionsEgress": [],
+            "VpcId": "vpc-06faf481723e7477d",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-054b9e1e6867caa26",
+            "OwnerId": "442426852386",
+            "GroupName": "sadcloud-ec2-overlapping_security_group",
+            "Description": "Managed by Terraform",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "162.168.2.0/25"
+                        },
+                        {
+                            "CidrIp": "162.168.2.0/24"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-0844146ee0cff7ca1",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ],
+            "VpcId": "vpc-0da51e41f431853b2",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-0844146ee0cff7ca1",
+            "OwnerId": "442426852386",
+            "GroupName": "default",
+            "Description": "default VPC security group",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [
+                        {
+                            "UserId": "442426852386",
+                            "GroupId": "sg-0844146ee0cff7ca1"
+                        }
+                    ],
+                    "IpRanges": [],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-0b668fea3ca281fe0",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [
+                        {
+                            "CidrIpv6": "::/0"
+                        }
+                    ],
+                    "PrefixListIds": []
+                }
+            ],
+            "VpcId": "vpc-0587631b31f69746f",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-0b668fea3ca281fe0",
+            "OwnerId": "442426852386",
+            "GroupName": "sadcloud-ec2-whitelists_aws_ip_from_banned_region",
+            "Description": "Managed by Terraform",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "52.28.0.0/16"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-070a735508b8d0e81",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [
+                        {
+                            "CidrIpv6": "::/0"
+                        }
+                    ],
+                    "PrefixListIds": []
+                }
+            ],
+            "VpcId": "vpc-06faf481723e7477d",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-070a735508b8d0e81",
+            "OwnerId": "442426852386",
+            "GroupName": "sadcloud-ec2-unused_security_group",
+            "Description": "Managed by Terraform",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "8.8.8.8/32"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-0a6d62dad9fd13971",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ],
+            "VpcId": "vpc-06faf481723e7477d",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-0a6d62dad9fd13971",
+            "OwnerId": "442426852386",
+            "GroupName": "default",
+            "Description": "default VPC security group",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [
+                        {
+                            "UserId": "442426852386",
+                            "GroupId": "sg-0a6d62dad9fd13971"
+                        }
+                    ],
+                    "IpRanges": [],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-03798f8ae4373d461",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [
+                        {
+                            "CidrIpv6": "::/0"
+                        }
+                    ],
+                    "PrefixListIds": []
+                }
+            ],
+            "VpcId": "vpc-0587631b31f69746f",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-03798f8ae4373d461",
+            "OwnerId": "442426852386",
+            "GroupName": "sadcloud-ec2-opens_port_to_all",
+            "Description": "Managed by Terraform",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 21,
+                    "ToPort": 21,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-0b42b06ed8169f6ac",
+            "IpPermissionsEgress": [],
+            "VpcId": "vpc-06faf481723e7477d",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-0b42b06ed8169f6ac",
+            "OwnerId": "442426852386",
+            "GroupName": "sadcloud-ec2-unexpected_security_group",
+            "Description": "Managed by Terraform",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/8"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-0b2118fcba5cf1633",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [
+                        {
+                            "CidrIpv6": "::/0"
+                        }
+                    ],
+                    "PrefixListIds": []
+                }
+            ],
+            "VpcId": "vpc-0587631b31f69746f",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-0b2118fcba5cf1633",
+            "OwnerId": "442426852386",
+            "GroupName": "sadcloud-ec2-known_port_to_all",
+            "Description": "Managed by Terraform",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 1433,
+                    "ToPort": 1433,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                },
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 1521,
+                    "ToPort": 1521,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                },
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 5432,
+                    "ToPort": 5432,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                },
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 22,
+                    "ToPort": 22,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                },
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 25,
+                    "ToPort": 25,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                },
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 27017,
+                    "ToPort": 27017,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                },
+                {
+                    "IpProtocol": "udp",
+                    "FromPort": 53,
+                    "ToPort": 53,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                },
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 3306,
+                    "ToPort": 3306,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                },
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 3389,
+                    "ToPort": 3389,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                },
+                {
+                    "IpProtocol": "tcp",
+                    "FromPort": 2049,
+                    "ToPort": 2049,
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-05eba9b174856a7d8",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [
+                        {
+                            "CidrIpv6": "::/0"
+                        }
+                    ],
+                    "PrefixListIds": []
+                }
+            ],
+            "VpcId": "vpc-0587631b31f69746f",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-05eba9b174856a7d8",
+            "OwnerId": "442426852386",
+            "GroupName": "sadcloud-ec2-all_ports_to_all",
+            "Description": "Managed by Terraform",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        },
+        {
+            "GroupId": "sg-03d101f8b850d0f55",
+            "IpPermissionsEgress": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [
+                        {
+                            "CidrIpv6": "::/0"
+                        }
+                    ],
+                    "PrefixListIds": []
+                }
+            ],
+            "VpcId": "vpc-0587631b31f69746f",
+            "SecurityGroupArn": "arn:aws:ec2:us-east-1:442426852386:security-group/sg-03d101f8b850d0f55",
+            "OwnerId": "442426852386",
+            "GroupName": "sadcloud-ec2-all_ports_to_self",
+            "Description": "Managed by Terraform",
+            "IpPermissions": [
+                {
+                    "IpProtocol": "-1",
+                    "UserIdGroupPairs": [
+                        {
+                            "UserId": "442426852386",
+                            "GroupId": "sg-03d101f8b850d0f55"
+                        }
+                    ],
+                    "IpRanges": [
+                        {
+                            "CidrIp": "0.0.0.0/0"
+                        }
+                    ],
+                    "Ipv6Ranges": [],
+                    "PrefixListIds": []
+                }
+            ]
+        }
+    ]
+}

@@ -116,7 +116,7 @@ func listObservationFiles(dir string) ([]os.DirEntry, error) {
 		return nil, fmt.Errorf("read observations: %w", err)
 	}
 	entries = slices.DeleteFunc(entries, func(e os.DirEntry) bool {
-		return e.IsDir() || !strings.HasSuffix(e.Name(), ".json")
+		return e.IsDir() || !strings.HasSuffix(strings.ToLower(e.Name()), ".json")
 	})
 	return entries, nil
 }
