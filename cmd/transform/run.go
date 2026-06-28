@@ -25,6 +25,26 @@ func run(cmd *cobra.Command, o *options) error {
 		return nil
 	}
 
+	if o.scaffold != "" {
+		return scaffold(cmd, o.scaffold)
+	}
+
+	if o.lint {
+		issues, lerr := awstransform.LintFilters()
+		if lerr != nil {
+			return fmt.Errorf("lint filters: %w", lerr)
+		}
+		if err = r.RenderLint(cmd.OutOrStdout(), issues); err != nil {
+			return fmt.Errorf("render lint: %w", err)
+		}
+		for _, is := range issues {
+			if is.Fatal {
+				return &ui.UserError{Err: fmt.Errorf("filter lint found %d fatal issue(s)", countFatal(issues))}
+			}
+		}
+		return nil
+	}
+
 	files, err := readRawDir(o.inDir)
 	if err != nil {
 		return &ui.UserError{Err: err}
@@ -93,6 +113,56 @@ func readRawDir(dir string) (map[string][]byte, error) {
 		files[e.Name()] = b
 	}
 	return files, nil
+}
+
+// scaffoldDir is where --scaffold writes a new filter in a dev checkout.
+const scaffoldDir = "internal/adapters/aws/transform/filters"
+
+// scaffold writes a starter filter for name. In a dev checkout (the filters dir
+// exists under cwd) it writes the file; otherwise it prints the skeleton to
+// stdout so the contributor can save it themselves.
+func scaffold(cmd *cobra.Command, name string) error {
+	content := awstransform.ScaffoldContent(name, "REPLACE_TopLevelKey")
+	if !dirExists(scaffoldDir) {
+		fmt.Fprintf(cmd.OutOrStdout(), "%s\n", content)
+		fmt.Fprintf(cmd.ErrOrStderr(),
+			"# not in a stave checkout — save the above as %s/%s.jq\n", scaffoldDir, name)
+		return nil
+	}
+	path := filepath.Join(scaffoldDir, name+".jq")
+	if fileExists(path) {
+		return &ui.UserError{Err: fmt.Errorf("filter already exists: %s", path)}
+	}
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		return fmt.Errorf("write scaffold %s: %w", path, err)
+	}
+	fmt.Fprintf(cmd.OutOrStdout(), "Created %s\n", path)
+	fmt.Fprintf(cmd.OutOrStdout(), "Next:\n")
+	fmt.Fprintf(cmd.OutOrStdout(), "  1. Map the raw fields in %s\n", path)
+	fmt.Fprintf(cmd.OutOrStdout(), "  2. Register the top-level key in topLevelKeyToFilter (detect.go)\n")
+	fmt.Fprintf(cmd.OutOrStdout(), "  3. Add a parity test against committed lab data (see docs/transform/CONTRIBUTING.md)\n")
+	fmt.Fprintf(cmd.OutOrStdout(), "  4. Verify: go test ./internal/adapters/aws/transform/ && stave transform --lint\n")
+	return nil
+}
+
+func dirExists(p string) bool {
+	info, err := os.Stat(p)
+	return err == nil && info.IsDir()
+}
+
+func fileExists(p string) bool {
+	_, err := os.Stat(p)
+	return err == nil
+}
+
+func countFatal(issues []awstransform.FilterIssue) int {
+	n := 0
+	for _, is := range issues {
+		if is.Fatal {
+			n++
+		}
+	}
+	return n
 }
 
 // observationFilename derives the obs snapshot filename from captured_at,

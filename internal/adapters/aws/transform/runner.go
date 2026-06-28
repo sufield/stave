@@ -57,7 +57,7 @@ func TransformFiles(files map[string][]byte, opts Options) ([]byte, Stats, error
 
 	for _, name := range names {
 		stats.Files++
-		fileAssets, ok, err := transformDoc(files[name], opts)
+		fileAssets, ok, err := transformDoc(name, files[name], opts)
 		if err != nil {
 			return nil, stats, fmt.Errorf("transform %s: %w", name, err)
 		}
@@ -166,14 +166,18 @@ func deepMerge(dst, src map[string]any) {
 	}
 }
 
-// transformDoc converts a single raw document: detect the filter, run it, and
-// scrub each produced asset. The bool is false when no filter recognizes the
-// document.
-func transformDoc(raw []byte, opts Options) ([]json.RawMessage, bool, error) {
+// transformDoc converts a single raw document: derive a filename key if needed,
+// detect the filter, run it, and scrub each produced asset. The bool is false
+// when no filter recognizes the document. name is the source filename, used to
+// derive a join key for raw per-call enrichment files.
+func transformDoc(name string, raw []byte, opts Options) ([]json.RawMessage, bool, error) {
 	var parsed map[string]any
 	if err := json.Unmarshal(raw, &parsed); err != nil {
 		return nil, false, fmt.Errorf("parse raw JSON: %w", err)
 	}
+	// Derive the merge key from the filename when the content doesn't carry one
+	// (annotation in the content always wins).
+	injectFilenameKey(name, parsed)
 	filterName, ok := detectFilter(parsed)
 	if !ok {
 		return nil, false, nil

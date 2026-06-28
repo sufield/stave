@@ -44,6 +44,10 @@ options:
       shorthand: i
       default_value: raw
       usage: directory of raw AWS CLI JSON files
+    - name: lint
+      default_value: "false"
+      usage: |
+        lint the embedded jq filters (compile + shape checks), then exit
     - name: now
       usage: |
         captured_at timestamp (RFC3339); defaults to the current time
@@ -51,6 +55,9 @@ options:
       shorthand: o
       default_value: observations
       usage: output directory for the observation file (or - for stdout)
+    - name: scaffold
+      usage: |
+        scaffold a starter filter for NAME (e.g. kms-keys), then exit
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"

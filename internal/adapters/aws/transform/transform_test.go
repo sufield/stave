@@ -174,6 +174,132 @@ func TestTransformFiles_S3CrossCallMerge(t *testing.T) {
 	}
 }
 
+// Full role assembly: list-roles base + annotated attached-policies + annotated
+// role-tags merge into one role asset matching aws-snapshot.sh's field shape
+// (trusted_services, attached_policy_arns, is_admin_equivalent, tags).
+func TestTransformFiles_RoleEnrichment(t *testing.T) {
+	roles := []byte(`{"Roles":[{"RoleName":"deploy","Arn":"arn:aws:iam::1:role/deploy",
+		"AssumeRolePolicyDocument":{"Statement":[{"Principal":{"Service":"lambda.amazonaws.com"}}]}}]}`)
+	attached := []byte(`{"RoleArn":"arn:aws:iam::1:role/deploy","AttachedPolicies":[
+		{"PolicyArn":"arn:aws:iam::aws:policy/AdministratorAccess"},
+		{"PolicyArn":"arn:aws:iam::aws:policy/AmazonS3FullAccess"}]}`)
+	tags := []byte(`{"RoleArn":"arn:aws:iam::1:role/deploy","Tags":[{"Key":"team","Value":"platform"}]}`)
+
+	out, stats, err := TransformFiles(map[string][]byte{
+		"iam-roles.json":         roles,
+		"iam-role-attached.json": attached,
+		"iam-role-tags.json":     tags,
+	}, Options{CapturedAt: "2026-06-01T12:00:00Z"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stats.Assets != 1 { // three inputs, merged into one role
+		t.Fatalf("want 1 role asset, got %d (stats %+v)", stats.Assets, stats)
+	}
+
+	id := assets(t, out)[0]["properties"].(map[string]any)["identity"].(map[string]any)
+	if !equalStrSlice(id["trusted_services"], []string{"lambda.amazonaws.com"}) {
+		t.Errorf("trusted_services = %v", id["trusted_services"])
+	}
+	if id["is_admin_equivalent"] != true {
+		t.Errorf("is_admin_equivalent = %v (AdministratorAccess attached)", id["is_admin_equivalent"])
+	}
+	if !equalStrSlice(id["attached_policy_arns"], []string{
+		"arn:aws:iam::aws:policy/AdministratorAccess", "arn:aws:iam::aws:policy/AmazonS3FullAccess"}) {
+		t.Errorf("attached_policy_arns = %v", id["attached_policy_arns"])
+	}
+	if tagsMap, _ := id["tags"].(map[string]any); tagsMap["team"] != "platform" {
+		t.Errorf("tags = %v", id["tags"])
+	}
+}
+
+// Full bucket assembly: list-buckets base + PAB + encryption + tags enrichments
+// merge into one bucket asset.
+func TestTransformFiles_S3FullEnrichment(t *testing.T) {
+	files := map[string][]byte{
+		"s3-buckets.json":   []byte(`{"Buckets":[{"Name":"data"}]}`),
+		"s3-pab-data.json":  []byte(`{"Bucket":"data","PublicAccessBlockConfiguration":{"BlockPublicAcls":true,"BlockPublicPolicy":true,"IgnorePublicAcls":true,"RestrictPublicBuckets":true}}`),
+		"s3-enc-data.json":  []byte(`{"Bucket":"data","ServerSideEncryptionConfiguration":{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"aws:kms","KMSMasterKeyID":"key-123"}}]}}`),
+		"s3-tags-data.json": []byte(`{"Bucket":"data","TagSet":[{"Key":"env","Value":"prod"}]}`),
+	}
+	out, stats, err := TransformFiles(files, Options{CapturedAt: "2026-06-01T12:00:00Z"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stats.Assets != 1 {
+		t.Fatalf("want 1 bucket asset, got %d", stats.Assets)
+	}
+	storage := assets(t, out)[0]["properties"].(map[string]any)["storage"].(map[string]any)
+	if storage["name"] != "data" {
+		t.Errorf("base name lost: %v", storage)
+	}
+	if c, _ := storage["controls"].(map[string]any); c["public_access_fully_blocked"] != true {
+		t.Errorf("PAB enrichment missing: %v", storage["controls"])
+	}
+	if e, _ := storage["encryption"].(map[string]any); e["algorithm"] != "aws:kms" || e["kms_key_id"] != "key-123" {
+		t.Errorf("encryption enrichment wrong: %v", storage["encryption"])
+	}
+	if tg, _ := storage["tags"].(map[string]any); tg["env"] != "prod" {
+		t.Errorf("tags enrichment wrong: %v", storage["tags"])
+	}
+}
+
+// Filename-derived key: a RAW per-call file (no Bucket in content) named
+// s3-pab-<bucket>.json contributes its public-access-block to the base bucket
+// asset — the key comes from the filename, no manual annotation.
+func TestTransformFiles_FilenameDerivedKey(t *testing.T) {
+	out, stats, err := TransformFiles(map[string][]byte{
+		"s3-buckets.json": []byte(`{"Buckets":[{"Name":"data"}]}`),
+		// raw get-public-access-block output — NO Bucket field in content:
+		"s3-pab-data.json": []byte(`{"PublicAccessBlockConfiguration":{"BlockPublicAcls":true,"BlockPublicPolicy":true,"IgnorePublicAcls":true,"RestrictPublicBuckets":true}}`),
+	}, Options{CapturedAt: "2026-06-01T12:00:00Z"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stats.Assets != 1 || stats.Skipped != 0 {
+		t.Fatalf("filename key should merge raw PAB onto the bucket: %+v", stats)
+	}
+	storage := assets(t, out)[0]["properties"].(map[string]any)["storage"].(map[string]any)
+	c, ok := storage["controls"].(map[string]any)
+	if !ok || c["public_access_fully_blocked"] != true {
+		t.Errorf("PAB not merged via filename key: %v", storage)
+	}
+}
+
+// Content annotation wins over the filename: a file misleadingly named
+// s3-pab-wrong.json but whose content says Bucket "right" keys to "right".
+func TestInjectFilenameKey_ContentWins(t *testing.T) {
+	parsed := map[string]any{"Bucket": "right", "PublicAccessBlockConfiguration": map[string]any{}}
+	if injectFilenameKey("s3-pab-wrong.json", parsed) {
+		t.Error("filename key should not override content-supplied Bucket")
+	}
+	if parsed["Bucket"] != "right" {
+		t.Errorf("Bucket = %v, want right", parsed["Bucket"])
+	}
+}
+
+// A file whose name matches no pattern is left untouched.
+func TestInjectFilenameKey_NoMatch(t *testing.T) {
+	parsed := map[string]any{"PublicAccessBlockConfiguration": map[string]any{}}
+	if injectFilenameKey("random.json", parsed) {
+		t.Error("no pattern should match random.json")
+	}
+	if _, ok := parsed["Bucket"]; ok {
+		t.Error("Bucket should not be injected for an unmatched filename")
+	}
+}
+
+func assets(t *testing.T, out []byte) []map[string]any {
+	t.Helper()
+	var doc struct {
+		Assets []map[string]any `json:"assets"`
+	}
+	if err := json.Unmarshal(out, &doc); err != nil {
+		t.Fatal(err)
+	}
+	return doc.Assets
+}
+
 // An un-annotated public-access-block (no Bucket key) has no join key and is
 // skipped, not fatal.
 func TestTransformFiles_UnannotatedPABSkipped(t *testing.T) {

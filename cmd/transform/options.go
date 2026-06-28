@@ -17,6 +17,8 @@ type options struct {
 	now      string
 	format   string
 	coverage bool
+	lint     bool
+	scaffold string
 }
 
 func addFlags(cmd *cobra.Command, o *options) {
@@ -28,6 +30,8 @@ func addFlags(cmd *cobra.Command, o *options) {
 	f.StringVar(&o.now, "now", "", "captured_at timestamp (RFC3339); defaults to the current time")
 	f.StringVarP(&o.format, "format", "f", "text", "summary format: text, json")
 	f.BoolVar(&o.coverage, "coverage", false, "list the raw input shapes transform recognizes, then exit")
+	f.BoolVar(&o.lint, "lint", false, "lint the embedded jq filters (compile + shape checks), then exit")
+	f.StringVar(&o.scaffold, "scaffold", "", "scaffold a starter filter for NAME (e.g. kms-keys), then exit")
 }
 
 // Prepare validates flags at the CLI boundary (PreRunE).

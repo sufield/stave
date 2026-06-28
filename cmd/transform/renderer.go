@@ -23,6 +23,7 @@ type result struct {
 type Renderer interface {
 	Render(w io.Writer, r result) error
 	RenderCoverage(w io.Writer, s []awstransform.Supported) error
+	RenderLint(w io.Writer, issues []awstransform.FilterIssue) error
 }
 
 // NewRenderer maps a format string to its Renderer (unknown -> exit 2 at the factory).
@@ -44,6 +45,10 @@ func (jsonRenderer) Render(w io.Writer, r result) error {
 
 func (jsonRenderer) RenderCoverage(w io.Writer, s []awstransform.Supported) error {
 	return encodeJSON(w, s)
+}
+
+func (jsonRenderer) RenderLint(w io.Writer, issues []awstransform.FilterIssue) error {
+	return encodeJSON(w, issues)
 }
 
 func encodeJSON(w io.Writer, v any) error {
@@ -79,5 +84,20 @@ func (textRenderer) RenderCoverage(w io.Writer, s []awstransform.Supported) erro
 		fmt.Fprintf(w, "  %-42s %s\n", in.TopLevelKey, in.Filter)
 	}
 	fmt.Fprintf(w, "\nFiles whose top-level key matches none of these are skipped.\n")
+	return nil
+}
+
+func (textRenderer) RenderLint(w io.Writer, issues []awstransform.FilterIssue) error {
+	if len(issues) == 0 {
+		fmt.Fprintf(w, "All filters compile and set the obs.v0.1 asset shape. ✓\n")
+		return nil
+	}
+	for _, is := range issues {
+		level := "warning"
+		if is.Fatal {
+			level = "error"
+		}
+		fmt.Fprintf(w, "  [%s] %s: %s\n", level, is.Filter, is.Message)
+	}
 	return nil
 }

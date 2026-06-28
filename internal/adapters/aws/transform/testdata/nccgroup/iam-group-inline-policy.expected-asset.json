@@ -1,0 +1,20 @@
+{
+  "id": "arn:aws:iam::442426852386:inline-policy/sadcloudInlineGroup/terraform-20260601130346489300000007",
+  "type": "aws_iam_policy",
+  "vendor": "aws",
+  "properties": {
+    "identity": {
+      "kind": "policy",
+      "policy": {
+        "shadow_logic": {
+          "has_not_action": true,
+          "not_action_values": [
+            "ec2:*"
+          ],
+          "effect": "Allow",
+          "resource": "*"
+        }
+      }
+    }
+  }
+}

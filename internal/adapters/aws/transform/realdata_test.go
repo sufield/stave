@@ -50,6 +50,42 @@ func TestTransformFiles_NccgroupPasswordPolicy(t *testing.T) {
 	}
 }
 
+// Computed shadow-logic signal (a NotAction over-grant) parity-tested against
+// the two committed nccgroup inline-policy assets: a user inline policy
+// (NotAction "s3:DeleteBucket", string form) and a group inline policy
+// (NotAction ["ec2:*"], array form). The input files are self-describing.
+func TestTransformFiles_NccgroupInlinePolicyShadowLogic(t *testing.T) {
+	cases := []struct{ in, want string }{
+		{"iam-user-inline-policy.json", "iam-user-inline-policy.expected-asset.json"},
+		{"iam-group-inline-policy.json", "iam-group-inline-policy.expected-asset.json"},
+	}
+	for _, c := range cases {
+		raw, err := os.ReadFile(filepath.Join("testdata", "nccgroup", c.in))
+		if err != nil {
+			t.Fatal(err)
+		}
+		out, stats, err := TransformFiles(
+			map[string][]byte{c.in: raw},
+			Options{Account: "442426852386", CapturedAt: "2026-06-01T12:00:00Z"},
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if stats.Assets != 1 {
+			t.Fatalf("%s: want 1 asset, got %d", c.in, stats.Assets)
+		}
+		got := assets(t, out)[0]
+		gotJSON, _ := json.Marshal(got)
+		want, err := os.ReadFile(filepath.Join("testdata", "nccgroup", c.want))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !jsonEqual(t, gotJSON, want) {
+			t.Errorf("%s: asset mismatch:\n got: %s\nwant: %s", c.in, gotJSON, want)
+		}
+	}
+}
+
 // jsonEqual compares two JSON documents structurally (key order / whitespace
 // independent).
 func jsonEqual(t *testing.T, a, b []byte) bool {

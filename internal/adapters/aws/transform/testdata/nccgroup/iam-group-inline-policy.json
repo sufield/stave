@@ -1,0 +1,16 @@
+{
+    "GroupName": "sadcloudInlineGroup",
+    "PolicyName": "terraform-20260601130346489300000007",
+    "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "NotAction": [
+                    "ec2:*"
+                ],
+                "Resource": "*"
+            }
+        ]
+    }
+}

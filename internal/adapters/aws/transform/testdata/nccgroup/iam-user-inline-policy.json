@@ -1,0 +1,14 @@
+{
+    "UserName": "sadcloudInlineUser",
+    "PolicyName": "terraform-20260601130346607600000008",
+    "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "NotAction": "s3:DeleteBucket",
+                "Resource": "*"
+            }
+        ]
+    }
+}
