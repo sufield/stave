@@ -17,8 +17,6 @@ options:
       shorthand: h
       default_value: "false"
       usage: help for ocsf
-    - name: output
-      usage: write NDJSON to file
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -78,6 +76,6 @@ inherited_options:
       default_value: "false"
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
-example: '  stave export ocsf --assessment findings.json --output ocsf-events.json'
+example: '  stave export ocsf --assessment findings.json'
 see_also:
     - stave export - Export controls and compliance evidence

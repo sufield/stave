@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/stave"
@@ -18,7 +17,6 @@ type options struct {
 	OutputFile  string
 	ControlsDir string
 	Format      string
-	OutPath     string
 	MinControls int
 	NoPager     bool
 }
@@ -38,13 +36,13 @@ Exit Codes:
   2   Invalid input
   4   Internal error`,
 		Example: `  stave map
-  stave map --output assessment.json --format navigator --out layer.json`,
+  stave map --output assessment.json --format navigator > layer.json`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			// Page only the human table to a terminal — json/navigator/markdown
-			// are machine formats, and --out writes to a file.
-			pageable := !opts.NoPager && opts.OutPath == "" && opts.Format == "table"
+			// are machine formats redirected with a shell pipe.
+			pageable := !opts.NoPager && opts.Format == "table"
 			pw, closePager := ui.NewPager(cmd.Context(), cmd.OutOrStdout(), pageable)
 			err := runMap(cmd.Context(), pw, opts)
 			if cerr := closePager(); cerr != nil && err == nil {
@@ -57,7 +55,6 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.OutputFile, "output", "", "path to out.v0.1.json for posture overlay")
 	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "path to controls directory")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json | navigator | markdown")
-	cmd.Flags().StringVar(&opts.OutPath, "out", "", "write to file instead of stdout")
 	cmd.Flags().BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
 	cmd.Flags().IntVar(&opts.MinControls, "min-controls", 2, "thin coverage threshold")
 
@@ -80,11 +77,8 @@ func runMap(ctx context.Context, stdout io.Writer, opts *options) error {
 	if err != nil {
 		return err //nolint:wrapcheck // facade already wrapped; all map errors are exit-4 plain.
 	}
-	if err := cmdutil.WriteTo(stdout, opts.OutPath, func(w io.Writer) error {
-		_, werr := w.Write(out)
-		return werr
-	}); err != nil {
-		return fmt.Errorf("write coverage map: %w", err)
+	if _, werr := stdout.Write(out); werr != nil {
+		return fmt.Errorf("write coverage map: %w", werr)
 	}
 	return nil
 }

@@ -22,8 +22,6 @@ options:
       shorthand: h
       default_value: "false"
       usage: help for oscal
-    - name: out
-      usage: write to file
     - name: system-uuid
       usage: system UUID for POA&M generation
     - name: type
@@ -89,7 +87,7 @@ inherited_options:
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
 example: |4-
-      stave export oscal --assessment findings.json --out oscal-results.json
+      stave export oscal --assessment findings.json
       stave export oscal --assessment findings.json --type poam --system-uuid abc-123
 see_also:
     - stave export - Export controls and compliance evidence

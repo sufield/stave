@@ -10,7 +10,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	builtinctl "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/app/narrative"
@@ -31,7 +30,6 @@ type explainNarrativeOpts struct {
 	ChainsDir   string
 	Format      string
 	Depth       string
-	Out         string
 }
 
 // NewExplainNarrativeCmd constructs the diagnose explain subcommand.
@@ -74,7 +72,6 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.ChainsDir, "chains", opts.ChainsDir, "chains directory")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", opts.Format, "output format: narrative | json | markdown")
 	cmd.Flags().StringVar(&opts.Depth, "depth", opts.Depth, "detail level: brief | standard | detailed")
-	cmd.Flags().StringVar(&opts.Out, "out", "", "write output to file")
 
 	_ = cmd.MarkFlagRequired("output")
 
@@ -148,9 +145,7 @@ func runExplainNarrative(stdout io.Writer, opts *explainNarrativeOpts) error {
 	if rendErr != nil {
 		return rendErr
 	}
-	if err := cmdutil.WriteTo(stdout, opts.Out, func(out io.Writer) error {
-		return renderer.Render(out, playbooks)
-	}); err != nil {
+	if err := renderer.Render(stdout, playbooks); err != nil {
 		return fmt.Errorf("write narrative output: %w", err)
 	}
 	return nil

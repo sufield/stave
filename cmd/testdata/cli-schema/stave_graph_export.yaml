@@ -29,8 +29,6 @@ options:
       shorthand: h
       default_value: "false"
       usage: help for export
-    - name: out
-      usage: Write output to file instead of stdout
     - name: output
       usage: Path to out.v0.1 assessment JSON
 inherited_options:
@@ -95,7 +93,7 @@ inherited_options:
 example: |4-
       stave graph export --output assessment.json
       stave graph export --output assessment.json --format stix
-      stave graph export --output assessment.json --format jsonld --out graph.jsonld
-      stave graph export --output assessment.json --format graphml --out graph.graphml
+      stave graph export --output assessment.json --format jsonld > graph.jsonld
+      stave graph export --output assessment.json --format graphml > graph.graphml
 see_also:
     - stave graph - Visualize control and asset relationships

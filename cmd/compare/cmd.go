@@ -11,7 +11,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/stave"
@@ -22,7 +21,6 @@ type options struct {
 	To         string
 	Assessment string
 	Format     string
-	OutFile    string
 	Mode       string
 	Before     string
 	After      string
@@ -86,7 +84,6 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.To, "to", "", "target framework key (required)")
 	cmd.Flags().StringVar(&opts.Assessment, "assessment", "", "stave apply JSON output (required)")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json | markdown")
-	cmd.Flags().StringVar(&opts.OutFile, "out", "", "write to file")
 	cmd.Flags().StringVar(&opts.Mode, "mode", "", "Comparison mode: remediation")
 	cmd.Flags().StringVar(&opts.Before, "before", "", "Before assessment path (--mode remediation)")
 	cmd.Flags().StringVar(&opts.After, "after", "", "After assessment path (--mode remediation)")
@@ -113,11 +110,8 @@ func runCompare(ctx context.Context, stdout io.Writer, opts *options) error {
 		}
 		return err //nolint:wrapcheck // facade already wrapped; preserve the exit-4 render message verbatim.
 	}
-	if err := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
-		_, werr := w.Write(out)
-		return werr
-	}); err != nil {
-		return fmt.Errorf("write comparison output: %w", err)
+	if _, werr := stdout.Write(out); werr != nil {
+		return fmt.Errorf("write comparison output: %w", werr)
 	}
 	return nil
 }
@@ -135,11 +129,8 @@ func runRemediationImpact(ctx context.Context, stdout io.Writer, opts *options) 
 		return err //nolint:wrapcheck // facade already wrapped; preserve the exit code verbatim.
 	}
 
-	if err := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
-		_, werr := w.Write(out)
-		return werr
-	}); err != nil {
-		return fmt.Errorf("write remediation impact: %w", err)
+	if _, werr := stdout.Write(out); werr != nil {
+		return fmt.Errorf("write remediation impact: %w", werr)
 	}
 	return nil
 }

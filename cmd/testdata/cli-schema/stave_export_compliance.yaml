@@ -25,7 +25,7 @@ description: |-
       stave export compliance --snapshot obs.json --profile hipaa
 
       stave export compliance --snapshot obs.json --profile soc2 \
-        --include-pass --out evidence.json
+        --include-pass
 
       stave export compliance --snapshot obs.json --profile pci_dss_v4.0 \
         --min-severity high
@@ -53,8 +53,6 @@ options:
     - name: min-severity
       default_value: all
       usage: 'minimum severity filter: critical|high|medium|low|all'
-    - name: out
-      usage: write output to file instead of stdout
     - name: profile
       usage: compliance profile ID (required)
     - name: profile-file
@@ -124,6 +122,6 @@ inherited_options:
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
 example: |4-
       stave export compliance --snapshot obs.json --profile hipaa
-      stave export compliance --snapshot obs.json --profile soc2 --out evidence.json
+      stave export compliance --snapshot obs.json --profile soc2
 see_also:
     - stave export - Export controls and compliance evidence

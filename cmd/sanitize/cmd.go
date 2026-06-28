@@ -11,14 +11,12 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/stave"
 )
 
 type options struct {
 	Snapshot string
 	Rules    string
-	OutPath  string
 }
 
 // NewCmd constructs the sanitize command.
@@ -35,16 +33,17 @@ evaluable by stave apply.
 Default sanitization hashes asset IDs and replaces 12-digit account
 IDs in property values. Custom rules can be provided via --rules.
 
+Output goes to stdout; redirect to a file as needed.
+
 Inputs:
   --snapshot PATH   Observation snapshot JSON file (required)
   --rules PATH      Custom sanitization rules YAML (optional)
-  --out PATH        Output file path (required)
 
 Exit Codes:
-  0   Sanitized snapshot written
+  0   Sanitized snapshot written to stdout
   2   Invalid input`,
-		Example: `  stave sanitize --snapshot snapshot.json --out sanitized.json
-  stave sanitize --snapshot snapshot.json --rules rules.yaml --out sanitized.json`,
+		Example: `  stave sanitize --snapshot snapshot.json > sanitized.json
+  stave sanitize --snapshot snapshot.json --rules rules.yaml > sanitized.json`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(_ *cobra.Command, _ []string) error {
@@ -54,9 +53,7 @@ Exit Codes:
 
 	cmd.Flags().StringVar(&opts.Snapshot, "snapshot", "", "path to observation snapshot JSON (required)")
 	cmd.Flags().StringVar(&opts.Rules, "rules", "", "path to custom sanitization rules YAML")
-	cmd.Flags().StringVar(&opts.OutPath, "out", "", "output file path (required)")
 	cliflags.MustMarkRequired(cmd, "snapshot")
-	cliflags.MustMarkRequired(cmd, "out")
 
 	return cmd
 }
@@ -80,10 +77,9 @@ func run(opts *options) error {
 		slog.Warn("sanitize: no assets matched — input may be empty or rules may be mis-targeted")
 	}
 
-	if err := fsutil.SafeWriteFile(opts.OutPath, data, fsutil.ConfigWriteOpts()); err != nil {
+	if _, err := os.Stdout.Write(data); err != nil {
 		return fmt.Errorf("write output: %w", err)
 	}
 
-	fmt.Fprintf(os.Stderr, "Wrote sanitized snapshot to %s\n", opts.OutPath)
 	return nil
 }

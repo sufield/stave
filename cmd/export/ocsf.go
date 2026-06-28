@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -15,7 +14,7 @@ import (
 )
 
 func newOCSFCmd() *cobra.Command {
-	var assessmentPath, outputPath string
+	var assessmentPath string
 
 	cmd := &cobra.Command{
 		Use:   "ocsf",
@@ -28,22 +27,21 @@ Output is NDJSON — one event per line.
 Exit Codes:
   0   Export complete
   2   Invalid input`,
-		Example:       `  stave export ocsf --assessment findings.json --output ocsf-events.json`,
+		Example:       `  stave export ocsf --assessment findings.json`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runOCSF(cmd.OutOrStdout(), assessmentPath, outputPath)
+			return runOCSF(cmd.OutOrStdout(), assessmentPath)
 		},
 	}
 
 	cmd.Flags().StringVar(&assessmentPath, "assessment", "", "stave apply JSON output (required)")
-	cmd.Flags().StringVar(&outputPath, "output", "", "write NDJSON to file")
 	cliflags.MustMarkRequired(cmd, "assessment")
 
 	return cmd
 }
 
-func runOCSF(stdout io.Writer, assessmentPath, outputPath string) error {
+func runOCSF(stdout io.Writer, assessmentPath string) error {
 	data, err := fsutil.ReadFileLimited(assessmentPath)
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("read assessment: %w", err)}
@@ -55,10 +53,7 @@ func runOCSF(stdout io.Writer, assessmentPath, outputPath string) error {
 		}
 		return err //nolint:wrapcheck // facade already wrapped; preserve exit code.
 	}
-	if err := cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
-		_, werr := w.Write(out)
-		return werr
-	}); err != nil {
+	if _, err := stdout.Write(out); err != nil {
 		return fmt.Errorf("write OCSF export: %w", err)
 	}
 	return nil

@@ -7,14 +7,13 @@ import (
 	"io"
 	"strings"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/stave"
 )
 
 // runCompliance builds the export config from the flags, delegates the
 // load → evaluate → render pipeline to the facade, writes the rendered
-// document (to --out or stdout), and maps the compliance outcome to the
+// document to stdout, and maps the compliance outcome to the
 // standard exit-code sentinels.
 func runCompliance(ctx context.Context, opts *options, w io.Writer) error {
 	cfg := stave.ComplianceExportConfig{
@@ -39,10 +38,7 @@ func runCompliance(ctx context.Context, opts *options, w io.Writer) error {
 		return err //nolint:wrapcheck // facade already wrapped ("evaluate"/"render..."); preserve exit 4.
 	}
 
-	if writeErr := cmdutil.WriteTo(w, opts.Out, func(dst io.Writer) error {
-		_, e := dst.Write(out)
-		return e
-	}); writeErr != nil {
+	if _, writeErr := w.Write(out); writeErr != nil {
 		return fmt.Errorf("write compliance export: %w", writeErr)
 	}
 

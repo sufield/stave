@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/stave"
@@ -16,7 +15,6 @@ import (
 
 type exportOptions struct {
 	OutputFile string
-	OutPath    string
 	Format     string
 }
 
@@ -46,8 +44,8 @@ Exit Codes:
   2   Input error`,
 		Example: `  stave graph export --output assessment.json
   stave graph export --output assessment.json --format stix
-  stave graph export --output assessment.json --format jsonld --out graph.jsonld
-  stave graph export --output assessment.json --format graphml --out graph.graphml`,
+  stave graph export --output assessment.json --format jsonld > graph.jsonld
+  stave graph export --output assessment.json --format graphml > graph.graphml`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -57,7 +55,6 @@ Exit Codes:
 	}
 
 	cmd.Flags().StringVar(&opts.OutputFile, "output", "", "Path to out.v0.1 assessment JSON")
-	cmd.Flags().StringVar(&opts.OutPath, "out", "", "Write output to file instead of stdout")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "json", "Output format: json | stix | jsonld | graphml")
 	_ = cmd.MarkFlagRequired("output")
 
@@ -78,10 +75,7 @@ func runExport(stdout io.Writer, opts *exportOptions) error {
 		return err //nolint:wrapcheck // facade already wrapped ("render..."/"unsupported format"); preserve exit codes.
 	}
 
-	if writeErr := cmdutil.WriteTo(stdout, opts.OutPath, func(w io.Writer) error {
-		_, e := w.Write(out)
-		return e
-	}); writeErr != nil {
+	if _, writeErr := stdout.Write(out); writeErr != nil {
 		return fmt.Errorf("write graph export: %w", writeErr)
 	}
 	return nil

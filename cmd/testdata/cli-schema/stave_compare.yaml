@@ -41,8 +41,6 @@ options:
       usage: help for compare
     - name: mode
       usage: 'Comparison mode: remediation'
-    - name: out
-      usage: write to file
     - name: simulated
       usage: Simulated output for efficiency comparison
     - name: to

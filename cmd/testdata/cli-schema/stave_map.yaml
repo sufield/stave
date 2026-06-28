@@ -28,8 +28,6 @@ options:
     - name: no-pager
       default_value: "false"
       usage: never page output, even on a terminal
-    - name: out
-      usage: write to file instead of stdout
     - name: output
       usage: path to out.v0.1.json for posture overlay
 inherited_options:
@@ -93,6 +91,6 @@ inherited_options:
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
 example: |4-
       stave map
-      stave map --output assessment.json --format navigator --out layer.json
+      stave map --output assessment.json --format navigator > layer.json
 see_also:
     - stave - Configuration safety evaluator

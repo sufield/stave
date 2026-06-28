@@ -19,7 +19,7 @@ import (
 // the evidence-generating assessment, the per-requirement export DTOs, and
 // the json/table/markdown/oscal renderers) moved into
 // stave.ExportCompliance (pkg/stave/internal/compliancexport); the command
-// keeps only flag wiring, the --out file write, and the exit-code signal.
+// keeps only flag wiring, the stdout write, and the exit-code signal.
 // See docs/architecture/pkg-stave-facade.md.
 func TestArchitecture_FacadeOnly(t *testing.T) {
 	exempt := []string{

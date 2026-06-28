@@ -21,7 +21,7 @@ import (
 // executive-summary renderers moved into stave.TrendReport /
 // PredictReadiness / ForecastPosture / ClassifyOscillation
 // (pkg/stave/internal/trendcmd); the commands keep only flag wiring, the
-// pager, the --out file write, and the stderr load warnings. See
+// pager, and the stderr load warnings. See
 // docs/architecture/pkg-stave-facade.md.
 func TestArchitecture_FacadeOnly(t *testing.T) {
 	exempt := []string{

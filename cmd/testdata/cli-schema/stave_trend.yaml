@@ -15,7 +15,7 @@ description: |-
     Examples:
       stave trend --history ./assessments/
       stave trend --files run1.json,run2.json,run3.json --format json
-      stave trend --history ./assessments/ --window 10 --out trend.json
+      stave trend --history ./assessments/ --window 10
 usage: stave trend [flags]
 options:
     - name: compliance
@@ -39,8 +39,6 @@ options:
     - name: no-pager
       default_value: "false"
       usage: never page output, even on a terminal
-    - name: out
-      usage: write output to file instead of stdout
     - name: regression-only
       default_value: "false"
       usage: show only regressing teams
@@ -114,7 +112,7 @@ inherited_options:
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
 example: |4-
       stave trend --history ./assessments/
-      stave trend --history ./assessments/ --format json --out trend.json
+      stave trend --history ./assessments/ --format json
 see_also:
     - stave - Configuration safety evaluator
     - stave trend forecast - Project posture score trajectory with SLA breach warnings

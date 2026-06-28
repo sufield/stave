@@ -13,7 +13,6 @@ description: |-
       --output PATH     Path to stave apply JSON output (required)
       --chains PATH     Path to chains directory (default: chains)
       --format STRING   Output format: json (default) | dot | csv-edges
-      --out PATH        Write to file instead of stdout
 
     Outputs:
       stdout            Attack path graph in selected format
@@ -35,8 +34,6 @@ options:
       shorthand: h
       default_value: "false"
       usage: help for path
-    - name: out
-      usage: write to file instead of stdout
     - name: output
       usage: path to stave apply JSON output (required)
 inherited_options:

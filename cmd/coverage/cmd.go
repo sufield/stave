@@ -11,7 +11,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/stave"
 )
@@ -20,7 +19,6 @@ type options struct {
 	SnapshotPath string
 	ControlsDir  string
 	Format       string
-	OutFile      string
 	NoPager      bool
 }
 
@@ -48,7 +46,6 @@ Inputs:
   --snapshot PATH     Path to observation snapshot JSON (required)
   --controls PATH     Path to controls directory (default: controls)
   --format STRING     Output format: table (default) | json
-  --out PATH          Write to file instead of stdout
 
 Exit Codes:
   0   No silent risk controls
@@ -66,8 +63,8 @@ Exit Codes:
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			// Page only the human table to a terminal — never JSON, and never
-			// when writing to a file (--out) or --no-pager is set.
-			pageable := !opts.NoPager && opts.Format != "json" && opts.OutFile == ""
+			// when --no-pager is set.
+			pageable := !opts.NoPager && opts.Format != "json"
 			pw, closePager := ui.NewPager(cmd.Context(), cmd.OutOrStdout(), pageable)
 			err := runCoverage(cmd.Context(), pw, opts)
 			if cerr := closePager(); cerr != nil && err == nil {
@@ -81,7 +78,6 @@ Exit Codes:
 	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "path to controls directory")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json")
 	cmd.Flags().BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
-	cmd.Flags().StringVar(&opts.OutFile, "out", "", "write to file instead of stdout")
 
 	_ = cmd.MarkFlagRequired("snapshot")
 
@@ -104,11 +100,8 @@ func runCoverage(ctx context.Context, stdout io.Writer, opts *options) error {
 		return err //nolint:wrapcheck // facade already wrapped ("load controls"/"encode json"); preserve exit 4.
 	}
 
-	if writeErr := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
-		_, e := w.Write(out)
-		return e
-	}); writeErr != nil {
-		return fmt.Errorf("write coverage output: %w", writeErr)
+	if _, err := stdout.Write(out); err != nil {
+		return fmt.Errorf("write coverage output: %w", err)
 	}
 
 	if silentRisk {

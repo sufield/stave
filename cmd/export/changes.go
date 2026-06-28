@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -16,7 +15,7 @@ import (
 )
 
 func newChangesCmd() *cobra.Command {
-	var assessmentPath, outputPath string
+	var assessmentPath string
 	var minConfidence float64
 
 	cmd := &cobra.Command{
@@ -33,23 +32,22 @@ Exit Codes:
   0   Export complete
   2   Invalid input`,
 		Example: `  stave export changes --assessment findings.json
-  stave export changes --assessment findings.json --min-confidence 0.8 --output changes.json`,
+  stave export changes --assessment findings.json --min-confidence 0.8`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runChanges(cmd.OutOrStdout(), assessmentPath, outputPath, minConfidence)
+			return runChanges(cmd.OutOrStdout(), assessmentPath, minConfidence)
 		},
 	}
 
 	cmd.Flags().StringVar(&assessmentPath, "assessment", "", "stave apply JSON output (required)")
-	cmd.Flags().StringVar(&outputPath, "output", "", "write JSON to file")
 	cmd.Flags().Float64Var(&minConfidence, "min-confidence", 0, "minimum remediation confidence (0.0-1.0)")
 	cliflags.MustMarkRequired(cmd, "assessment")
 
 	return cmd
 }
 
-func runChanges(stdout io.Writer, assessmentPath, outputPath string, minConfidence float64) error {
+func runChanges(stdout io.Writer, assessmentPath string, minConfidence float64) error {
 	data, err := fsutil.ReadFileLimited(assessmentPath)
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("read assessment: %w", err)}
@@ -61,10 +59,7 @@ func runChanges(stdout io.Writer, assessmentPath, outputPath string, minConfiden
 		}
 		return err //nolint:wrapcheck // facade already wrapped; preserve exit code.
 	}
-	if err := cmdutil.WriteTo(stdout, outputPath, func(w io.Writer) error {
-		_, werr := w.Write(out)
-		return werr
-	}); err != nil {
+	if _, err := stdout.Write(out); err != nil {
 		return fmt.Errorf("write changes export: %w", err)
 	}
 	return nil

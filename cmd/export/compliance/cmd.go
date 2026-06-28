@@ -8,7 +8,6 @@ type options struct {
 	Snapshot       string
 	Profile        string
 	Format         string
-	Out            string
 	MinSeverity    string
 	IncludePass    bool
 	Verbose        bool
@@ -53,12 +52,12 @@ Examples:
   stave export compliance --snapshot obs.json --profile hipaa
 
   stave export compliance --snapshot obs.json --profile soc2 \
-    --include-pass --out evidence.json
+    --include-pass
 
   stave export compliance --snapshot obs.json --profile pci_dss_v4.0 \
     --min-severity high`,
 		Example: `  stave export compliance --snapshot obs.json --profile hipaa
-  stave export compliance --snapshot obs.json --profile soc2 --out evidence.json`,
+  stave export compliance --snapshot obs.json --profile soc2`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -70,7 +69,6 @@ Examples:
 	cmd.Flags().StringVar(&opts.Snapshot, "snapshot", "", "path to snapshot file (required)")
 	cmd.Flags().StringVar(&opts.Profile, "profile", "", "compliance profile ID (required)")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "json", "output format: json | table | markdown")
-	cmd.Flags().StringVar(&opts.Out, "out", "", "write output to file instead of stdout")
 	cmd.Flags().StringVar(&opts.MinSeverity, "min-severity", "all", "minimum severity filter: critical|high|medium|low|all")
 	cmd.Flags().BoolVar(&opts.IncludePass, "include-pass", false, "include passing evidence records")
 	cmd.Flags().BoolVar(&opts.Verbose, "verbose", false, "include reasoning traces in table output")

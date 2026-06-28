@@ -32,16 +32,16 @@ Exit Codes:
 Examples:
   stave trend --history ./assessments/
   stave trend --files run1.json,run2.json,run3.json --format json
-  stave trend --history ./assessments/ --window 10 --out trend.json`,
+  stave trend --history ./assessments/ --window 10`,
 		Example: `  stave trend --history ./assessments/
-  stave trend --history ./assessments/ --format json --out trend.json`,
+  stave trend --history ./assessments/ --format json`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			// Page only the human table to a terminal — never the json/openmetrics
-			// machine formats, and never when writing to a file (--out).
-			pageable := !opts.NoPager && opts.Out == "" &&
+			// machine formats.
+			pageable := !opts.NoPager &&
 				opts.Format != "json" && opts.Format != "openmetrics"
 			pw, closePager := ui.NewPager(cmd.Context(), cmd.OutOrStdout(), pageable)
 			err := runTrend(cmd.Context(), pw, cmd.ErrOrStderr(), opts)
@@ -56,7 +56,6 @@ Examples:
 	cmd.Flags().StringVar(&opts.Files, "files", "", "comma-separated assessment files in chronological order")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json | openmetrics")
 	cmd.Flags().BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
-	cmd.Flags().StringVar(&opts.Out, "out", "", "write output to file instead of stdout")
 	cmd.Flags().IntVar(&opts.Window, "window", 0, "limit to most recent N assessments (0 = all)")
 	cmd.Flags().IntVar(&opts.MinRuns, "min-runs", 2, "minimum assessment files required")
 	cmd.Flags().StringVar(&opts.Compliance, "compliance", "", "comma-separated framework profiles for trajectory (hipaa,soc2,...)")
@@ -77,7 +76,6 @@ type trendOptions struct {
 	Files          string
 	Compliance     string
 	Format         string
-	Out            string
 	Window         int
 	MinRuns        int
 	TeamManifest   string

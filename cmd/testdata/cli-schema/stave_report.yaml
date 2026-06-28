@@ -15,7 +15,6 @@ description: |-
       --sla-profile-file PATH SLA policy
       --team-manifest PATH    Team manifest
       --format STRING         json (default) | markdown
-      --out PATH              Write to file
       --title STRING          Report title
       --period STRING         Reporting period label
 
@@ -42,8 +41,6 @@ options:
       usage: help for report
     - name: history
       usage: history directory (required)
-    - name: out
-      usage: write to file
     - name: period
       usage: reporting period label
     - name: sla-profile-file
@@ -121,6 +118,6 @@ example: |4-
       stave report --history ./history --snapshot latest.json
       stave report --history ./history --snapshot latest.json \
         --sla-profile-file sla.yaml --team-manifest teams.yaml \
-        --format markdown --out report.md
+        --format markdown > report.md
 see_also:
     - stave - Configuration safety evaluator

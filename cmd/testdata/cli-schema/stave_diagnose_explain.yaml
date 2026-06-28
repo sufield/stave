@@ -36,8 +36,6 @@ options:
       shorthand: h
       default_value: "false"
       usage: help for explain
-    - name: out
-      usage: write output to file
     - name: output
       usage: path to out.v0.1.json (required)
 inherited_options:

@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -15,7 +14,6 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/stave"
 )
 
@@ -27,7 +25,6 @@ type options struct {
 	SLAFile       string
 	TeamManifest  string
 	Format        cmdutil.OutputFormat
-	OutFile       string
 	Title         string
 	Period        string
 	TeamBreakdown bool
@@ -59,7 +56,6 @@ Inputs:
   --sla-profile-file PATH SLA policy
   --team-manifest PATH    Team manifest
   --format STRING         json (default) | markdown
-  --out PATH              Write to file
   --title STRING          Report title
   --period STRING         Reporting period label
 
@@ -70,7 +66,7 @@ Exit Codes:
 		Example: `  stave report --history ./history --snapshot latest.json
   stave report --history ./history --snapshot latest.json \
     --sla-profile-file sla.yaml --team-manifest teams.yaml \
-    --format markdown --out report.md`,
+    --format markdown > report.md`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -85,7 +81,6 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.SLAFile, "sla-profile-file", "", "SLA policy file")
 	cmd.Flags().StringVar(&opts.TeamManifest, "team-manifest", "", "team manifest")
 	cmd.Flags().VarP(&opts.Format, "format", "f", "output format: json | markdown")
-	cmd.Flags().StringVar(&opts.OutFile, "out", "", "write to file")
 	cmd.Flags().StringVar(&opts.Title, "title", "Security Posture Report", "report title")
 	cmd.Flags().StringVar(&opts.Period, "period", "", "reporting period label")
 	cmd.Flags().BoolVar(&opts.TeamBreakdown, "team-breakdown", false, "Include per-team findings breakdown in report")
@@ -115,35 +110,7 @@ func runReport(ctx context.Context, stdout io.Writer, opts *options) error {
 		return err //nolint:wrapcheck // facade already wrapped; preserve the exit-4 message verbatim.
 	}
 
-	return writeReportOutput(stdout, opts.OutFile, data)
-}
-
-// writeReportOutput writes the rendered report to OutFile (symlink-safe,
-// 0o600 — a report may carry sensitive asset identifiers) or to stdout.
-// Preserves the close-error-after-write rule: write errors win over
-// close errors so partial-output failures aren't masked.
-func writeReportOutput(stdout io.Writer, outFile string, data []byte) error {
-	w := stdout
-	var f *os.File
-	if outFile != "" {
-		writeOpts := fsutil.DefaultWriteOpts()
-		writeOpts.Overwrite = true
-		var fErr error
-		f, fErr = fsutil.SafeCreateFile(outFile, writeOpts)
-		if fErr != nil {
-			return fmt.Errorf("create output file: %w", fErr)
-		}
-		w = f
-	}
-
-	_, writeErr := w.Write(data)
-	if f != nil {
-		closeErr := f.Close()
-		if writeErr == nil {
-			writeErr = closeErr
-		}
-	}
-	if writeErr != nil {
+	if _, writeErr := stdout.Write(data); writeErr != nil {
 		return fmt.Errorf("write report: %w", writeErr)
 	}
 	return nil

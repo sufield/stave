@@ -16,7 +16,6 @@ description: |-
       --snapshot PATH     Path to observation snapshot JSON (required)
       --controls PATH     Path to controls directory (default: controls)
       --format STRING     Output format: table (default) | json
-      --out PATH          Write to file instead of stdout
 
     Exit Codes:
       0   No silent risk controls
@@ -39,8 +38,6 @@ options:
     - name: no-pager
       default_value: "false"
       usage: never page output, even on a terminal
-    - name: out
-      usage: write to file instead of stdout
     - name: snapshot
       usage: path to observation snapshot JSON (required)
 inherited_options:

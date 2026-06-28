@@ -18,7 +18,7 @@ import (
 // All ten subcommands' load → mutate/compute → render logic (the
 // acceptance-file CRUD, the OSCAL POA&M builder, and the exemption-suggestion
 // analysis) moved into pkg/stave (exempt*.go); the commands keep only flag
-// wiring, confirmation messages, the --out file write, and the validate exit
+// wiring, confirmation messages, the stdout write, and the validate exit
 // signal. See docs/architecture/pkg-stave-facade.md.
 func TestArchitecture_FacadeOnly(t *testing.T) {
 	exempt := []string{

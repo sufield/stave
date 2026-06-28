@@ -22,8 +22,6 @@ options:
     - name: min-confidence
       default_value: "0"
       usage: minimum remediation confidence (0.0-1.0)
-    - name: output
-      usage: write JSON to file
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -85,6 +83,6 @@ inherited_options:
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
 example: |4-
       stave export changes --assessment findings.json
-      stave export changes --assessment findings.json --min-confidence 0.8 --output changes.json
+      stave export changes --assessment findings.json --min-confidence 0.8
 see_also:
     - stave export - Export controls and compliance evidence

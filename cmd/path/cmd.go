@@ -10,7 +10,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/stave"
@@ -20,7 +19,6 @@ type options struct {
 	AssessmentPath string
 	ChainsDir      string
 	Format         string
-	OutFile        string
 }
 
 // NewCmd constructs the path command.
@@ -45,7 +43,6 @@ Inputs:
   --output PATH     Path to stave apply JSON output (required)
   --chains PATH     Path to chains directory (default: chains)
   --format STRING   Output format: json (default) | dot | csv-edges
-  --out PATH        Write to file instead of stdout
 
 Outputs:
   stdout            Attack path graph in selected format
@@ -72,7 +69,6 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.AssessmentPath, "output", "", "path to stave apply JSON output (required)")
 	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "chains", "path to chains directory")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "json", "output format: json | dot | csv-edges")
-	cmd.Flags().StringVar(&opts.OutFile, "out", "", "write to file instead of stdout")
 
 	cliflags.MustMarkRequired(cmd, "output")
 
@@ -89,11 +85,8 @@ func runPath(stdout io.Writer, opts *options) error {
 	if err != nil {
 		return err //nolint:wrapcheck // facade already wrapped; all path errors are exit-4 plain.
 	}
-	if err := cmdutil.WriteTo(stdout, opts.OutFile, func(w io.Writer) error {
-		_, werr := w.Write(out)
-		return werr
-	}); err != nil {
-		return fmt.Errorf("write attack path: %w", err)
+	if _, werr := stdout.Write(out); werr != nil {
+		return fmt.Errorf("write attack path: %w", werr)
 	}
 	return nil
 }
