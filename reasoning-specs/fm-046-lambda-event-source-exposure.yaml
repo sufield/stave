@@ -1,0 +1,1370 @@
+# reasoning-spec: fm-046-lambda-event-source-exposure
+# engine: souffle
+# trial-fixture: trials/souffle-lambda-event-source/
+# failure-mode: FM-046 (Lambda Interaction Patterns)
+
+question: >
+  Given a Lambda function, what can trigger it, through how many
+  paths, with what level of authentication? Combined with the
+  execution role's blast radius (from FM-042), what is the compound
+  exposure?
+
+context: >
+  FM-042 traces OUTWARD: given a Lambda, what can its role reach?
+  FM-046 traces INWARD: what can trigger this Lambda?
+
+  The critical compound finding emerges at the intersection: an
+  untrusted or weakly-authenticated trigger source invokes a Lambda
+  whose execution role has broad reach. Neither chain alone produces
+  this finding.
+
+  Two invocation mechanisms:
+
+  1. Pull-based (Event Source Mappings): Lambda polls SQS, Kinesis,
+     DynamoDB Streams, MQ, MSK. Trust surface = who can write to
+     the source.
+
+  2. Push-based (resource-based policies): S3, SNS, EventBridge,
+     API Gateway, ALB, Cognito, Step Functions invoke Lambda
+     directly. Trust surface = who can trigger the source service +
+     how constrained the resource-based policy grant is.
+
+  Seven exposure patterns (see prompt):
+    1. Public trigger surface (API Gateway no auth)
+    2. Write-accessible source → privileged execution
+    3. Cross-account invoke via resource-based policy
+    4. Unconstrained resource-based policy (any bucket can invoke)
+    5. Trigger chain amplification (A → queue → B, B more privileged)
+    6. DynamoDB Streams / Kinesis as implicit trust relay
+    7. EventBridge broad event pattern
+
+# =========================================================================
+# Section 1: Fact Schema — Event Source Mapping Facts
+# =========================================================================
+
+fact_schema:
+  event_source_mappings:
+    description: >
+      Pull-based invocation paths. Lambda polls a source service via
+      an Event Source Mapping (ESM). The trust surface is the set of
+      principals that can write to the source resource.
+
+    predicates:
+      - name: esm_maps
+        arity: 3
+        fields:
+          subject: Lambda function ARN
+          predicate: esm_maps
+          object: source resource ARN (SQS queue, Kinesis stream, DynamoDB stream, MQ broker, MSK cluster)
+        source:
+          api: lambda:ListEventSourceMappings
+          path: EventSourceMappings[].{FunctionArn, EventSourceArn}
+        notes: >
+          One fact per ESM. The EventSourceArn identifies the source.
+          For DynamoDB Streams, the ARN is the stream ARN, not the
+          table ARN — the projector must also emit the parent table
+          mapping.
+
+      - name: esm_state
+        arity: 2
+        fields:
+          subject: ESM UUID (or Lambda+source composite key)
+          object: state string ("Enabled", "Disabled", "Creating", etc.)
+        source:
+          api: lambda:ListEventSourceMappings
+          path: EventSourceMappings[].State
+        notes: >
+          Only "Enabled" ESMs represent active trigger paths. Others
+          are dormant (Rule 5). The projector normalizes to lambda_arn
+          as subject.
+
+      - name: esm_type
+        arity: 2
+        fields:
+          subject: Lambda function ARN
+          object: source type ("sqs", "kinesis", "dynamodb_streams", "mq", "msk", "kafka")
+        source:
+          derived: from EventSourceArn service prefix
+        notes: >
+          Derived by the projector from the ARN structure.
+
+      - name: esm_has_filter
+        arity: 2
+        fields:
+          subject: Lambda function ARN
+          object: source resource ARN
+        source:
+          api: lambda:ListEventSourceMappings
+          path: EventSourceMappings[].FilterCriteria
+        notes: >
+          Presence-only predicate. If FilterCriteria is non-empty,
+          the ESM filters events before Lambda processes them. This
+          is a mitigating factor (reduces effective exposure) but
+          does NOT eliminate the trigger path — the Lambda service
+          still polls and evaluates the filter, so the source trust
+          surface is unchanged. Noted in findings as a mitigating
+          annotation.
+
+      - name: dynamodb_stream_table
+        arity: 2
+        fields:
+          subject: DynamoDB stream ARN
+          object: parent DynamoDB table ARN
+        source:
+          derived: >
+            DynamoDB stream ARNs encode the table name. The projector
+            extracts the table ARN from the stream ARN structure:
+            arn:aws:dynamodb:{region}:{account}:table/{name}/stream/{timestamp}
+            → arn:aws:dynamodb:{region}:{account}:table/{name}
+        notes: >
+          Needed to join the stream ESM with the table's access
+          policy. The trust surface of the stream is the set of
+          principals that can write to the parent table (PutItem,
+          UpdateItem, DeleteItem, BatchWriteItem).
+
+    source_trust_derivation:
+      sqs: >
+        SQS queue trust = who can sqs:SendMessage. Check:
+        1. Queue access policy (resource-based): if it allows
+           SendMessage from broad principals or * → public/broad.
+        2. IAM identities with sqs:SendMessage on the queue ARN
+           (from has_action + policy_matches_resource facts).
+        If queue policy allows SendMessage from * → source_trust_level = public.
+        If queue policy allows from specific accounts → cross_account.
+        If queue policy scoped to same-account roles only → scoped_internal.
+        If no queue policy captured → unknown.
+
+      kinesis: >
+        Kinesis stream trust = who can kinesis:PutRecord / PutRecords.
+        Same pattern as SQS but using Kinesis resource policy +
+        IAM identities.
+
+      dynamodb_streams: >
+        DynamoDB stream trust = who can write to the parent table.
+        Join dynamodb_stream_table with IAM analysis: if many roles
+        can PutItem/UpdateItem on the table → broad_internal. If the
+        table is written by an application tier that processes user
+        input → implicit trust relay (pattern 6). The snapshot
+        cannot determine whether user input reaches the table; this
+        is flagged as "user_input_possible" when the table is
+        written to by roles also used by Lambda/ECS/EC2 services
+        that may process external traffic.
+
+      mq: >
+        Amazon MQ trust = who has broker credentials. The snapshot
+        typically does not capture broker user lists. MQ sources
+        are classified as trust_level = unknown unless the broker
+        is in a VPC with security group analysis available.
+
+      msk: >
+        MSK trust = who can produce to the topic. Requires MSK
+        cluster policies + IAM auth configuration. Most MSK setups
+        use IAM auth; trust surface = IAM identities with
+        kafka-cluster:WriteData on the topic resource.
+
+# =========================================================================
+# Section 2: Fact Schema — Resource-Based Policy Facts
+# =========================================================================
+
+  resource_based_policy:
+    description: >
+      Push-based invocation paths. A source service invokes Lambda
+      directly. The Lambda function's resource-based policy grants
+      invoke permission. Each statement decomposes into invoke grant
+      facts.
+
+    predicates:
+      - name: lambda_invoke_grant
+        arity: 5
+        fields:
+          subject: Lambda function ARN
+          field_1: principal_type ("aws_account", "iam_role", "iam_user", "service", "federated", "wildcard")
+          field_2: principal_value (ARN, service principal, or "*")
+          field_3: condition_key ("aws:SourceArn", "aws:SourceAccount", "aws:PrincipalOrgID", "none")
+          field_4: condition_value (the constraint value, or "" if no condition)
+        source:
+          api: lambda:GetPolicy
+          path: Policy (JSON-encoded, parse Statement[])
+        notes: >
+          One fact per (statement × principal) combination. A statement
+          with multiple principals emits multiple facts.
+
+          The projector parses the resource-based policy JSON, iterating
+          over Statement[]. For each Allow statement with Action
+          containing "lambda:InvokeFunction" or "lambda:*":
+            - Extract Principal (may be string or map)
+            - Classify principal_type
+            - Extract Condition if present
+            - Emit one lambda_invoke_grant per principal
+
+          Deny statements are not emitted — they narrow the invoke
+          surface. If a deny statement exists, the projector emits
+          a separate lambda_invoke_deny fact.
+
+          If GetPolicy returns ResourceNotFoundException (no
+          resource-based policy exists), emit no facts. Closed-world:
+          no lambda_invoke_grant = no push-based invocation paths
+          from resource-based policy.
+
+      - name: lambda_invoke_deny
+        arity: 4
+        fields:
+          subject: Lambda function ARN
+          field_1: principal_type
+          field_2: principal_value
+          field_3: condition ("none" or condition description)
+        source:
+          api: lambda:GetPolicy
+          path: Policy Statement[] where Effect=Deny
+        notes: >
+          Deny facts suppress invoke grants. The Datalog rules check
+          for deny facts before emitting invocation path findings.
+
+    source_tiers:
+      tier_1_must_have:
+        description: >
+          Highest frequency in real deployments. Must be analyzed.
+
+        - name: s3_notification
+          predicate: s3_notifies_lambda
+          arity: 3
+          fields:
+            subject: S3 bucket ARN
+            predicate: s3_notifies_lambda
+            object: Lambda function ARN
+          source:
+            api: s3:GetBucketNotificationConfiguration
+            path: >
+              LambdaFunctionConfigurations[].{LambdaFunctionArn,
+              Events[], Filter}
+          snapshot_status: captured (part of S3 asset collection)
+          notes: >
+            One fact per notification configuration. The Events[]
+            array specifies which S3 events trigger (ObjectCreated,
+            ObjectRemoved, etc.). The Filter specifies prefix/suffix
+            key name filtering. Neither affects the trust surface
+            (they affect which objects trigger, not who can create
+            objects).
+
+        - name: sns_subscribes_lambda
+          predicate: sns_subscribes_lambda
+          arity: 2
+          fields:
+            subject: SNS topic ARN
+            object: Lambda function ARN
+          source:
+            api: sns:ListSubscriptionsByTopic
+            path: Subscriptions[] where Protocol=lambda
+          snapshot_status: captured (part of SNS asset collection)
+
+        - name: eventbridge_targets_lambda
+          predicate: eventbridge_targets_lambda
+          arity: 3
+          fields:
+            subject: EventBridge rule ARN
+            predicate: eventbridge_targets_lambda
+            object: Lambda function ARN
+          source:
+            api: events:ListTargets-by-Rule
+            path: Targets[] where Arn matches Lambda ARN pattern
+          snapshot_status: partial (requires EventBridge rules in snapshot)
+
+        - name: eventbridge_rule_pattern
+          predicate: eventbridge_rule_pattern_breadth
+          arity: 2
+          fields:
+            subject: EventBridge rule ARN
+            object: breadth classification ("narrow", "moderate", "broad")
+          source:
+            derived: >
+              From the rule's EventPattern JSON:
+              - Single source + single detail-type → narrow
+              - Single source + all detail-types → moderate
+              - Multiple sources or all events → broad
+              - Custom event bus with permissive resource policy → broad
+          notes: >
+            Heuristic classification, not a completeness guarantee.
+            Full semantic analysis of EventBridge patterns is out of
+            scope. The classification determines the source trust
+            level input to Rule 4.
+
+        - name: apigw_integrates_lambda
+          predicate: apigw_integrates_lambda
+          arity: 3
+          fields:
+            subject: API Gateway REST API / HTTP API resource
+            predicate: apigw_integrates_lambda
+            object: Lambda function ARN
+          source:
+            api: apigateway:GetIntegration
+            path: >
+              Integration where type=AWS_PROXY and uri contains
+              Lambda function ARN
+          snapshot_status: partial (requires API Gateway in snapshot)
+
+        - name: apigw_auth_type
+          predicate: apigw_auth_type
+          arity: 2
+          fields:
+            subject: API Gateway resource/method identifier
+            object: auth type ("NONE", "AWS_IAM", "COGNITO", "CUSTOM", "API_KEY")
+          source:
+            api: apigateway:GetMethod
+            path: Method.AuthorizationType, Method.ApiKeyRequired
+          notes: >
+            auth_type = "NONE" + no API key = public trigger surface.
+            auth_type = "AWS_IAM" = authenticated (IAM principals).
+            auth_type = "COGNITO" = authenticated (Cognito user pool).
+            auth_type = "CUSTOM" = unknown (custom authorizer logic
+            not analyzable from snapshot).
+
+        - name: alb_targets_lambda
+          predicate: alb_targets_lambda
+          arity: 2
+          fields:
+            subject: ALB target group ARN
+            object: Lambda function ARN
+          source:
+            api: elbv2:DescribeTargetHealth
+            path: TargetHealthDescriptions[] where Target.Id matches Lambda ARN
+          snapshot_status: captured (part of ELB asset collection)
+
+      tier_2_should_have:
+        description: >
+          Common but narrower exposure surface.
+
+        - name: cognito_trigger
+          predicate: cognito_triggers_lambda
+          arity: 3
+          fields:
+            subject: Cognito User Pool ID
+            predicate: cognito_triggers_lambda
+            object: Lambda function ARN
+          source:
+            api: cognito-idp:DescribeUserPool
+            path: UserPool.LambdaConfig.{PreSignUp, PostConfirmation, ...}
+          snapshot_status: captured (part of Cognito asset collection)
+          notes: >
+            Cognito triggers are authenticated by definition — the
+            trigger fires in response to a user pool operation
+            (sign-up, sign-in, etc.). However, if the user pool
+            allows self-registration, the trigger surface includes
+            unauthenticated sign-up attempts. The projector checks
+            self_registration_unrestricted to classify trust.
+
+        - name: stepfunctions_invokes_lambda
+          predicate: stepfunctions_invokes_lambda
+          arity: 2
+          fields:
+            subject: Step Functions state machine ARN
+            object: Lambda function ARN
+          source:
+            api: states:DescribeStateMachine
+            path: Definition (JSON parsed for Task states with Resource = Lambda ARN)
+          snapshot_status: partial (requires Step Functions in snapshot)
+          notes: >
+            Step Functions invocations are internal and authenticated
+            (the state machine's execution role calls Lambda). Trust
+            surface = who can start the state machine execution.
+
+        - name: cloudwatch_events_targets_lambda
+          predicate: cloudwatch_events_targets_lambda
+          arity: 2
+          fields:
+            subject: CloudWatch Events rule ARN
+            object: Lambda function ARN
+          source:
+            api: events:ListTargetsByRule (legacy CloudWatch Events)
+          snapshot_status: same as EventBridge (unified service)
+
+      tier_3_future:
+        description: >
+          Uncommon, lower priority for initial implementation.
+        sources:
+          - IoT rules (iot:GetTopicRule)
+          - Lex bots (lex:GetBotAlias → fulfillmentActivity)
+          - CloudFormation custom resources (parsed template → ServiceToken)
+          - Alexa Skills (external, not in AWS snapshot)
+
+# =========================================================================
+# Section 3: Fact Schema — Source Trust Surface Facts
+# =========================================================================
+
+  source_trust_surface:
+    description: >
+      For each event source that can trigger a Lambda, classify the
+      trust level: how easy is it for an untrusted party to inject
+      events into this source?
+
+    predicate: source_trust_level
+    arity: 3
+    fields:
+      subject: source resource ARN
+      predicate: source_trust_level
+      object: trust_level string
+
+    trust_levels:
+      - name: public
+        definition: >
+          The source accepts input from unauthenticated internet users.
+        examples:
+          - Public S3 bucket (bucket policy allows PutObject from *)
+          - API Gateway method with AuthorizationType=NONE and no API key
+          - Public SNS topic (topic policy allows Publish from *)
+          - EventBridge with public custom event bus
+          - ALB listener accessible from 0.0.0.0/0
+
+      - name: cross_account
+        definition: >
+          The source's resource policy allows access from principals
+          in other AWS accounts.
+        examples:
+          - SQS queue policy allowing SendMessage from external account
+          - S3 bucket policy allowing PutObject from external account
+          - Lambda resource-based policy granting InvokeFunction to
+            external account principal
+
+      - name: broad_internal
+        definition: >
+          The source is accessible to many principals within the
+          account but not publicly.
+        examples:
+          - SQS queue with permissive IAM policy granting SendMessage
+            to multiple roles (>3 distinct roles)
+          - DynamoDB table writable by many application roles
+          - EventBridge default bus (any IAM principal in the account
+            can PutEvents)
+
+      - name: scoped_internal
+        definition: >
+          The source is accessible only to a small, identifiable set
+          of internal principals (≤3 roles).
+        examples:
+          - SQS queue with queue policy allowing SendMessage from
+            one specific role
+          - S3 bucket with bucket policy scoped to one application role
+
+      - name: authenticated
+        definition: >
+          The source requires authentication and authorization that
+          the snapshot can verify.
+        examples:
+          - API Gateway with AWS_IAM auth
+          - API Gateway with Cognito authorizer
+          - Step Functions (execution role must start execution)
+          - Cognito trigger (user pool operation required)
+
+      - name: unknown
+        definition: >
+          The source's trust surface cannot be determined from the
+          snapshot.
+        examples:
+          - Self-managed Kafka (bootstrap servers outside AWS)
+          - Amazon MQ broker (user credentials not in snapshot)
+          - API Gateway with CUSTOM authorizer (logic opaque)
+          - Resources whose policies were not captured in snapshot
+
+    classification_rules:
+      s3_bucket:
+        - "bucket policy allows PutObject from * → public"
+        - "bucket policy allows PutObject from external account → cross_account"
+        - "bucket policy allows PutObject from >3 internal roles → broad_internal"
+        - "bucket policy allows PutObject from ≤3 internal roles → scoped_internal"
+        - "no bucket policy captured → unknown"
+
+      sqs_queue:
+        - "queue policy allows SendMessage from * → public"
+        - "queue policy allows SendMessage from external account → cross_account"
+        - "IAM analysis shows >3 roles with sqs:SendMessage on queue → broad_internal"
+        - "IAM analysis shows ≤3 roles with sqs:SendMessage → scoped_internal"
+        - "no queue policy captured and no IAM analysis → unknown"
+
+      api_gateway:
+        - "AuthorizationType=NONE, no API key → public"
+        - "AuthorizationType=AWS_IAM → authenticated"
+        - "AuthorizationType=COGNITO_USER_POOLS → authenticated"
+        - "AuthorizationType=CUSTOM → unknown (authorizer logic opaque)"
+        - "API key required but no IAM auth → broad_internal (API keys are not secrets)"
+
+      sns_topic:
+        - "topic policy allows Publish from * → public"
+        - "topic policy allows Publish from external account → cross_account"
+        - "topic policy scoped to internal principals → scoped_internal"
+        - "no topic policy captured → unknown"
+
+      dynamodb_table:
+        - ">5 roles with write access → broad_internal"
+        - "≤3 roles with write access → scoped_internal"
+        - "write access analysis unavailable → unknown"
+
+      kinesis_stream:
+        - "same pattern as SQS but with PutRecord/PutRecords"
+
+      eventbridge:
+        - "default event bus (any IAM principal can PutEvents) → broad_internal"
+        - "custom event bus with permissive resource policy → broad_internal or public"
+        - "custom event bus with scoped resource policy → scoped_internal"
+
+      alb:
+        - "ALB listener on 0.0.0.0/0 security group → public"
+        - "ALB in private subnet / restricted SG → scoped_internal"
+        - "ALB security group analysis unavailable → unknown"
+
+      cognito:
+        - "user pool allows self-registration → broad_internal"
+        - "user pool requires admin-created users → scoped_internal"
+
+      stepfunctions:
+        - "authenticated (execution role required) → authenticated"
+
+# =========================================================================
+# Section 4: Datalog Rules
+# =========================================================================
+
+datalog:
+  program_file: examples/lambda-event-source/event_source_exposure.dl
+
+  composition_approach: |
+    **Runtime composition** (single Soufflé invocation).
+
+    FM-042's output facts (lambda_blast_radius, lambda_can_reach,
+    lambda_sensitive_reach, exfiltration_path) are loaded as input
+    relations in the same Soufflé program. The transform script
+    concatenates FM-042's output JSONL with FM-046's projected facts
+    before running Soufflé.
+
+    Trade-off:
+    - Runtime composition: simpler (one souffle invocation), enables
+      joins between trigger paths and blast radius in the same
+      evaluation, no orchestration layer needed. Downside: the two
+      programs are coupled — changing FM-042's output schema requires
+      updating FM-046's input declarations.
+    - Sequential composition: modular (two independent runs), but
+      requires an orchestration script to run FM-042 first, collect
+      output, feed as input to FM-046. Adds complexity for the same
+      result.
+
+    Runtime composition wins because:
+    1. The join (trigger path × blast radius) is the core value
+       proposition. Separating the programs means duplicating the
+       join logic in orchestration glue.
+    2. Soufflé handles the combined fact set efficiently — bottom-up
+       evaluation doesn't care which "module" produced a fact.
+    3. FM-042's output is small (counts per Lambda, not per-resource).
+       The combined input relations are not significantly larger.
+
+    If FM-042 output is unavailable (its facts are simply absent),
+    Rules 1, 2, and 5 still produce valid output. Rules 3 and 4
+    degrade: trigger chains cannot be traversed (no reach facts),
+    trust boundary violations cannot quantify blast radius. Findings
+    carry an annotation: fm042_status = "unavailable".
+
+  input_relations:
+    from_fm042:
+      - lambda_blast_radius    # (lambda, total_count)
+      - lambda_can_reach       # (lambda, target, via_role)
+      - lambda_sensitive_reach # (lambda, target, level)
+      - lambda_reach_target    # (lambda, target)
+
+    new_esm:
+      - esm_maps               # (lambda, source_arn)
+      - esm_state              # (lambda, state)
+      - esm_type               # (lambda, source_type)
+      - esm_has_filter         # (lambda, source_arn)
+      - dynamodb_stream_table  # (stream_arn, table_arn)
+
+    new_resource_policy:
+      - lambda_invoke_grant    # 5-arity: see arity note below
+      - lambda_invoke_deny     # 4-arity
+      - s3_notifies_lambda     # (bucket_arn, lambda_arn)
+      - sns_subscribes_lambda  # (topic_arn, lambda_arn)
+      - eventbridge_targets_lambda # (rule_arn, lambda_arn)
+      - eventbridge_rule_pattern_breadth # (rule_arn, breadth)
+      - apigw_integrates_lambda # (api_resource, lambda_arn)
+      - apigw_auth_type        # (api_resource, auth_type)
+      - alb_targets_lambda     # (target_group_arn, lambda_arn)
+      - cognito_triggers_lambda # (pool_id, lambda_arn)
+      - stepfunctions_invokes_lambda # (sfn_arn, lambda_arn)
+
+    new_trust:
+      - source_trust_level     # (source_arn, trust_level)
+
+    from_existing:
+      - has_type               # (asset, type)
+      - triggers_lambda        # (trigger_arn, lambda_arn) — from FM-042
+      - lambda_role            # (lambda, role)
+
+    arity_note: |
+      Soufflé relations are flat (no nested fields). The 5-arity
+      lambda_invoke_grant is declared as:
+        .decl lambda_invoke_grant(lambda: symbol, principal_type: symbol,
+              principal_value: symbol, condition_key: symbol,
+              condition_value: symbol)
+      The transform script maps JSONL fields to positional TSV columns.
+
+  rules:
+    # --- Rule 1: Invocation path enumeration ---
+    - name: invocation_path_enumeration
+      description: >
+        For each Lambda function, enumerate all invocation paths —
+        both ESM-based (pull) and resource-policy-based (push).
+      output: >
+        lambda_invocation_path(lambda, source_arn, mechanism,
+                               trust_level)
+      rule: |
+        // Pull-based: ESM invocation paths.
+        .decl lambda_invocation_path(lambda: symbol, source: symbol,
+                                     mechanism: symbol, trust: symbol)
+        .output lambda_invocation_path
+
+        // SQS ESM
+        lambda_invocation_path(L, S, "esm_sqs", T) :-
+            esm_maps(L, S),
+            esm_type(L, "sqs"),
+            esm_state(L, "Enabled"),
+            source_trust_level(S, T).
+
+        // Kinesis ESM
+        lambda_invocation_path(L, S, "esm_kinesis", T) :-
+            esm_maps(L, S),
+            esm_type(L, "kinesis"),
+            esm_state(L, "Enabled"),
+            source_trust_level(S, T).
+
+        // DynamoDB Streams ESM — trust level from parent table
+        lambda_invocation_path(L, Stream, "esm_dynamodb_streams", T) :-
+            esm_maps(L, Stream),
+            esm_type(L, "dynamodb_streams"),
+            esm_state(L, "Enabled"),
+            dynamodb_stream_table(Stream, Table),
+            source_trust_level(Table, T).
+
+        // MQ ESM
+        lambda_invocation_path(L, S, "esm_mq", "unknown") :-
+            esm_maps(L, S),
+            esm_type(L, "mq"),
+            esm_state(L, "Enabled").
+
+        // MSK ESM
+        lambda_invocation_path(L, S, "esm_msk", T) :-
+            esm_maps(L, S),
+            esm_type(L, "msk"),
+            esm_state(L, "Enabled"),
+            source_trust_level(S, T).
+
+        // Push-based: S3 notification → Lambda
+        lambda_invocation_path(L, Bucket, "push_s3", T) :-
+            s3_notifies_lambda(Bucket, L),
+            source_trust_level(Bucket, T).
+
+        // Push-based: SNS subscription → Lambda
+        lambda_invocation_path(L, Topic, "push_sns", T) :-
+            sns_subscribes_lambda(Topic, L),
+            source_trust_level(Topic, T).
+
+        // Push-based: EventBridge rule → Lambda
+        lambda_invocation_path(L, Rule, "push_eventbridge", T) :-
+            eventbridge_targets_lambda(Rule, L),
+            source_trust_level(Rule, T).
+
+        // Push-based: API Gateway → Lambda
+        lambda_invocation_path(L, API, "push_apigw", T) :-
+            apigw_integrates_lambda(API, L),
+            apigw_auth_type(API, AuthType),
+            apigw_trust(AuthType, T).
+
+        // Helper: API Gateway auth type → trust level mapping
+        .decl apigw_trust(auth_type: symbol, trust: symbol)
+        apigw_trust("NONE", "public").
+        apigw_trust("AWS_IAM", "authenticated").
+        apigw_trust("COGNITO", "authenticated").
+        apigw_trust("CUSTOM", "unknown").
+        apigw_trust("API_KEY", "broad_internal").
+
+        // Push-based: ALB target → Lambda
+        lambda_invocation_path(L, TG, "push_alb", T) :-
+            alb_targets_lambda(TG, L),
+            source_trust_level(TG, T).
+
+        // Tier 2: Cognito trigger → Lambda
+        lambda_invocation_path(L, Pool, "push_cognito", T) :-
+            cognito_triggers_lambda(Pool, L),
+            source_trust_level(Pool, T).
+
+        // Tier 2: Step Functions → Lambda
+        lambda_invocation_path(L, SFN, "push_stepfunctions", "authenticated") :-
+            stepfunctions_invokes_lambda(SFN, L).
+
+        // Direct cross-account invoke via resource-based policy
+        lambda_invocation_path(L, Principal, "push_direct_invoke", "cross_account") :-
+            lambda_invoke_grant(L, "aws_account", Principal, _, _),
+            !lambda_invoke_deny(L, "aws_account", Principal, _).
+
+        lambda_invocation_path(L, Principal, "push_direct_invoke", "cross_account") :-
+            lambda_invoke_grant(L, "iam_role", Principal, _, _),
+            cross_account_principal(L, Principal),
+            !lambda_invoke_deny(L, "iam_role", Principal, _).
+
+        // Wildcard principal = public
+        lambda_invocation_path(L, "*", "push_direct_invoke", "public") :-
+            lambda_invoke_grant(L, "wildcard", "*", _, _),
+            !lambda_invoke_deny(L, "wildcard", "*", _).
+
+        // Cross-account principal detection
+        .decl cross_account_principal(lambda: symbol, principal: symbol)
+        cross_account_principal(L, P) :-
+            lambda_invoke_grant(L, _, P, _, _),
+            lambda_role(L, R),
+            account_id(R, AccL),
+            account_id_from_arn(P, AccP),
+            AccL != AccP.
+
+    # --- Rule 2: Unconstrained resource-based policy detection ---
+    - name: unconstrained_grant_detection
+      description: >
+        Identify Lambda resource-based policy statements that grant
+        invoke permission more broadly than needed.
+      output: >
+        unconstrained_invoke_grant(lambda, principal, missing_condition,
+                                    effective_scope)
+      rule: |
+        .decl unconstrained_invoke_grant(lambda: symbol, principal: symbol,
+                                          missing: symbol, scope: symbol)
+        .output unconstrained_invoke_grant
+
+        // Service principal with no SourceArn condition
+        unconstrained_invoke_grant(L, P, "aws:SourceArn",
+            "any_resource_of_service") :-
+            lambda_invoke_grant(L, "service", P, "none", "").
+
+        // AWS account principal with no SourceAccount constraint
+        unconstrained_invoke_grant(L, P, "aws:SourceAccount",
+            "full_account_access") :-
+            lambda_invoke_grant(L, "aws_account", P, "none", "").
+
+        // Service principal with SourceArn → constrained (no finding)
+        // Service principal with SourceAccount → partially constrained
+        unconstrained_invoke_grant(L, P, "aws:SourceArn",
+            "any_resource_in_account") :-
+            lambda_invoke_grant(L, "service", P, "aws:SourceAccount", _),
+            !has_source_arn_condition(L, P).
+
+        .decl has_source_arn_condition(lambda: symbol, principal: symbol)
+        has_source_arn_condition(L, P) :-
+            lambda_invoke_grant(L, "service", P, "aws:SourceArn", _).
+
+    # --- Rule 3: Trigger chain traversal ---
+    - name: trigger_chain_traversal
+      description: >
+        Compose invocation paths with FM-042 outbound reach. For each
+        Lambda A with an invocation path, check if Lambda A can write
+        to a resource that is an event source for Lambda B.
+      output: >
+        trigger_chain(entry_source, lambda_a, intermediate_resource,
+                      lambda_b, depth)
+        self_invocation_cycle(lambda, via_resource)
+      rule: |
+        // Base case: direct trigger.
+        .decl trigger_chain(entry: symbol, la: symbol, intermediate: symbol,
+                            lb: symbol, depth: number)
+        .output trigger_chain
+
+        trigger_chain(Src, LA, Mid, LB, 1) :-
+            lambda_invocation_path(LA, Src, _, _),
+            lambda_reach_target(LA, Mid),
+            triggers_lambda(Mid, LB),
+            LA != LB.
+
+        // Recursive case: extend chain up to depth 5.
+        trigger_chain(Src, LA, Mid2, LC, D + 1) :-
+            trigger_chain(Src, _, _, LA, D),
+            lambda_reach_target(LA, Mid2),
+            triggers_lambda(Mid2, LC),
+            LA != LC,
+            D < 5.
+
+        // Self-invocation cycle detection.
+        .decl self_invocation_cycle(lambda: symbol, via_resource: symbol)
+        .output self_invocation_cycle
+        self_invocation_cycle(L, Mid) :-
+            lambda_reach_target(L, Mid),
+            triggers_lambda(Mid, L).
+
+        // Transitive trigger exposure: the total blast radius
+        // reachable from an entry source through the entire chain.
+        .decl chain_terminal_lambda(entry: symbol, terminal: symbol)
+        chain_terminal_lambda(Src, LB) :-
+            trigger_chain(Src, _, _, LB, _).
+
+        .decl transitive_trigger_exposure(entry: symbol, trust: symbol,
+                                           terminal: symbol, blast: number)
+        .output transitive_trigger_exposure
+        transitive_trigger_exposure(Src, T, Terminal, BR) :-
+            lambda_invocation_path(_, Src, _, T),
+            chain_terminal_lambda(Src, Terminal),
+            lambda_blast_radius(Terminal, BR).
+
+    # --- Rule 4: Trust boundary violation detection ---
+    - name: trust_boundary_violation
+      description: >
+        A trigger source with low trust invokes a Lambda (directly or
+        via chain) whose execution role has high blast radius.
+      output: >
+        trust_boundary_violation(lambda, source, trust_level,
+                                  blast_radius, sensitive_reach,
+                                  violation_type)
+      rule: |
+        .decl trust_boundary_violation(lambda: symbol, source: symbol,
+                                        trust: symbol, blast: number,
+                                        sensitive: symbol, vtype: symbol)
+        .output trust_boundary_violation
+
+        // Public trigger → privileged Lambda (>10 reach or sensitive)
+        trust_boundary_violation(L, Src, "public", BR, "true",
+            "public_to_privileged") :-
+            lambda_invocation_path(L, Src, _, "public"),
+            lambda_blast_radius(L, BR),
+            BR > 10.
+        trust_boundary_violation(L, Src, "public", BR, "true",
+            "public_to_privileged") :-
+            lambda_invocation_path(L, Src, _, "public"),
+            lambda_blast_radius(L, BR),
+            lambda_sensitive_reach(L, _, _).
+
+        // Cross-account → privileged Lambda with sensitive access
+        trust_boundary_violation(L, Src, "cross_account", BR, "true",
+            "cross_account_to_privileged") :-
+            lambda_invocation_path(L, Src, _, "cross_account"),
+            lambda_blast_radius(L, BR),
+            lambda_sensitive_reach(L, _, _).
+
+        // Broad internal → sensitive resource access
+        trust_boundary_violation(L, Src, "broad_internal", BR, "true",
+            "broad_to_sensitive") :-
+            lambda_invocation_path(L, Src, _, "broad_internal"),
+            lambda_blast_radius(L, BR),
+            lambda_sensitive_reach(L, _, _).
+
+        // API Gateway no auth → any Lambda
+        trust_boundary_violation(L, API, "public", BR, Sensitive,
+            "unauthenticated_api") :-
+            lambda_invocation_path(L, API, "push_apigw", "public"),
+            lambda_blast_radius(L, BR),
+            (lambda_sensitive_reach(L, _, _), Sensitive = "true" ;
+             !lambda_sensitive_reach(L, _, _), Sensitive = "false").
+
+        // Chain amplification: terminal Lambda has >2x blast radius
+        // of entry Lambda
+        trust_boundary_violation(Terminal, Src, T, BRTerminal, "true",
+            "chain_amplification") :-
+            transitive_trigger_exposure(Src, T, Terminal, BRTerminal),
+            lambda_invocation_path(LA, Src, _, T),
+            lambda_blast_radius(LA, BREntry),
+            BRTerminal > BREntry * 2,
+            (T = "public" ; T = "cross_account" ; T = "broad_internal").
+
+    # --- Rule 5: Dormant but dangerous ---
+    - name: dormant_triggers
+      description: >
+        Lambda functions with disabled ESMs or ghost trigger references.
+      output: >
+        dormant_trigger(lambda, source, mechanism, status,
+                        risk_if_activated)
+      rule: |
+        .decl dormant_trigger(lambda: symbol, source: symbol,
+                               mechanism: symbol, status: symbol,
+                               risk: number)
+        .output dormant_trigger
+
+        // Disabled ESM with blast radius data available
+        dormant_trigger(L, S, Mech, "disabled", BR) :-
+            esm_maps(L, S),
+            esm_type(L, Mech),
+            esm_state(L, "Disabled"),
+            lambda_blast_radius(L, BR).
+
+        // Disabled ESM without blast radius data
+        dormant_trigger(L, S, Mech, "disabled", 0) :-
+            esm_maps(L, S),
+            esm_type(L, Mech),
+            esm_state(L, "Disabled"),
+            !lambda_blast_radius(L, _).
+
+# =========================================================================
+# Section 5: Chain Definition
+# =========================================================================
+
+chain_definition:
+  file: chains/lambda_event_source_exposure.yaml
+  content: |
+    id: lambda_event_source_exposure
+    controls:
+      - CTL.LAMBDA.TRIGGER.APIGATEWAY.NOAUTH.001
+      - CTL.LAMBDA.TRIGGER.CONFUSEDDEPUTY.001
+      - CTL.LAMBDA.TRIGGER.GHOST.001
+      - CTL.LAMBDA.ESM.NODLQ.001
+      - CTL.LAMBDA.ESM.BISECT.001
+      - CTL.LAMBDA.INVOKE.PUBLIC.001
+    escalation_threshold: 2
+    compound_severity: critical
+    preconditions:
+      - initial_access
+    postconditions:
+      - ec2_code_execution
+      - data_access
+
+  prerequisite_controls:
+    existing:
+      - CTL.LAMBDA.TRIGGER.APIGATEWAY.NOAUTH.001
+      - CTL.LAMBDA.TRIGGER.CONFUSEDDEPUTY.001
+      - CTL.LAMBDA.TRIGGER.GHOST.001
+      - CTL.LAMBDA.ESM.NODLQ.001
+      - CTL.LAMBDA.ESM.BISECT.001
+      - CTL.LAMBDA.INVOKE.PUBLIC.001
+    notes: >
+      These per-resource controls check individual trigger properties.
+      When ≥2 co-fire on assets sharing a Lambda invocation context,
+      the chain engine emits a compound finding. The Soufflé program
+      adds graph-level trigger chain traversal and trust boundary
+      analysis that chains cannot express.
+
+  required_fact_types:
+    required:
+      - esm_maps
+      - esm_state
+      - esm_type
+      - lambda_invoke_grant
+      - source_trust_level
+      - lambda_role
+      - has_type
+    optional:
+      - esm_has_filter
+      - lambda_invoke_deny
+      - dynamodb_stream_table
+      - s3_notifies_lambda
+      - sns_subscribes_lambda
+      - eventbridge_targets_lambda
+      - eventbridge_rule_pattern_breadth
+      - apigw_integrates_lambda
+      - apigw_auth_type
+      - alb_targets_lambda
+      - cognito_triggers_lambda
+      - stepfunctions_invokes_lambda
+      - lambda_blast_radius   # from FM-042
+      - lambda_can_reach      # from FM-042
+      - lambda_reach_target   # from FM-042
+      - lambda_sensitive_reach # from FM-042
+      - triggers_lambda       # from FM-042
+      - account_id
+
+  required_api_calls:
+    hard_prerequisite:
+      - api: lambda:ListEventSourceMappings
+        effect_if_missing: chain cannot run
+      - api: lambda:ListFunctions
+        effect_if_missing: chain cannot run (no Lambda inventory)
+
+    soft_prerequisite:
+      - api: lambda:GetPolicy
+        effect_if_missing: skip push-based analysis; annotate "resource-based policy not captured"
+      - api: s3:GetBucketNotificationConfiguration
+        effect_if_missing: skip S3 push-source analysis
+      - api: sns:ListSubscriptionsByTopic
+        effect_if_missing: skip SNS push-source analysis
+      - api: events:ListTargetsByRule
+        effect_if_missing: skip EventBridge push-source analysis
+      - api: apigateway:GetIntegration
+        effect_if_missing: skip API Gateway push-source analysis
+      - api: elbv2:DescribeTargetHealth
+        effect_if_missing: skip ALB push-source analysis
+      - api: cognito-idp:DescribeUserPool
+        effect_if_missing: skip Cognito push-source analysis
+      - api: states:DescribeStateMachine
+        effect_if_missing: skip Step Functions push-source analysis
+
+  fm042_composition:
+    contract: >
+      FM-046 consumes these FM-042 output relations as input:
+        lambda_blast_radius(lambda, total_count)
+        lambda_can_reach(lambda, target, via_role)
+        lambda_reach_target(lambda, target) — deduplicated from lambda_can_reach
+        lambda_sensitive_reach(lambda, target, level)
+        triggers_lambda(trigger_arn, lambda_arn)
+
+      If FM-042 has not run, these relations are empty. Behavior:
+        Rule 1 (invocation paths): unaffected — no FM-042 dependency
+        Rule 2 (unconstrained grants): unaffected
+        Rule 3 (trigger chains): degrades — no lambda_reach_target
+          means no trigger chains detected. Finding: "trigger chain
+          analysis unavailable — run FM-042 first"
+        Rule 4 (trust boundary): degrades — no blast radius means
+          violations cannot be quantified. Finding includes trust
+          exposure but not blast radius. Annotation: fm042_status =
+          "unavailable"
+        Rule 5 (dormant triggers): blast radius annotation is 0
+
+    finding_completeness:
+      - complete: both FM-042 and FM-046 ran; findings include blast
+        radius and trigger chain data
+      - partial_trigger_only: FM-046 ran without FM-042; findings
+        include trigger paths and trust levels but not blast radius
+        or trigger chains
+
+# =========================================================================
+# Section 6: Finding Schema
+# =========================================================================
+
+finding_schema:
+  fields:
+    - lambda_arn: Lambda function ARN being analyzed
+    - invocation_path_count: total distinct trigger paths
+    - invocation_paths:
+        - source_arn: event source resource ARN
+          source_type: resource type (s3, sqs, apigw, etc.)
+          mechanism: esm_sqs | push_s3 | push_apigw | ...
+          trust_level: public | cross_account | broad_internal | scoped_internal | authenticated | unknown
+          constrained: true | false (resource-based policy scoped)
+          has_filter: true | false (ESM filter criteria present)
+    - trust_boundary_violations:
+        - source_arn: trigger source
+          source_trust_level: trust level
+          blast_radius_count: from FM-042 (0 if unavailable)
+          sensitive_reach: true | false
+          violation_type: public_to_privileged | cross_account_to_privileged | broad_to_sensitive | unauthenticated_api | chain_amplification
+    - trigger_chains:
+        - entry_source: initial trigger resource
+          chain: [{lambda, intermediate_resource}, ...]
+          terminal_lambda: final Lambda in chain
+          terminal_blast_radius: blast radius of terminal Lambda
+          chain_depth: number of hops
+    - unconstrained_grants:
+        - principal: service principal or account
+          missing_condition: aws:SourceArn | aws:SourceAccount
+          effective_scope: description of what the grant permits
+    - dormant_triggers:
+        - source_arn: disabled/ghost trigger source
+          mechanism: trigger type
+          status: disabled | ghost
+          risk_if_activated: blast radius if ESM re-enabled
+    - self_invocation_cycles:
+        - lambda_arn: function in cycle
+          via_resource: intermediate resource (queue, topic)
+    - annotations:
+        fm042_status: "available" | "unavailable"
+        finding_completeness: "complete" | "partial_trigger_only"
+        tier_coverage: which tiers were analyzed (1, 2, 3)
+
+  severity_mapping:
+    - condition: public trigger → Lambda with >10 reach or sensitive
+      severity: critical
+      rationale: Unauthenticated internet traffic triggers privileged execution
+
+    - condition: unconstrained service principal (no SourceArn)
+      severity: critical
+      rationale: Any resource of that service type in any account can invoke
+
+    - condition: cross_account invoke with no source constraint
+      severity: high
+      rationale: External account controls invocation timing and payload
+
+    - condition: chain_amplification (terminal >2x entry privilege)
+      severity: high
+      rationale: Trigger chain multiplies blast radius through service coupling
+
+    - condition: API Gateway AuthType=NONE → any Lambda
+      severity: high
+      rationale: Public API endpoint with no auth gateway to Lambda execution
+
+    - condition: broad_internal trigger → sensitive resource access
+      severity: high
+      rationale: Many internal principals can trigger access to sensitive data
+
+    - condition: DynamoDB Streams / Kinesis with broadly writable source
+      severity: medium
+      rationale: Implicit trust relay — user input flows through data tier to Lambda
+
+    - condition: unconstrained grant but Lambda has minimal permissions
+      severity: medium
+      rationale: Policy misconfiguration present but blast radius is contained
+
+    - condition: dormant trigger for privileged Lambda
+      severity: medium
+      rationale: Latent risk — re-enabling ESM or reconnecting source exposes blast radius
+
+    - condition: self_invocation_cycle
+      severity: medium
+      rationale: Cost explosion / infinite loop risk, not privilege escalation
+
+    - condition: EventBridge broad pattern → low-privilege Lambda
+      severity: low
+      rationale: Broad trigger surface but contained execution privilege
+
+    - condition: fully scoped paths with authenticated sources
+      severity: informational
+      rationale: All invocation paths are well-constrained
+
+# =========================================================================
+# Section 7: Worked Example
+# =========================================================================
+
+worked_example:
+  description: >
+    Pattern 2: Write-accessible S3 bucket triggers privileged Lambda
+    execution, with trigger chain amplification to a second Lambda.
+
+  snapshot_fragment:
+    s3_bucket:
+      arn: "arn:aws:s3:::user-uploads"
+      bucket_policy:
+        - effect: Allow
+          principal: "*"
+          action: "s3:PutObject"
+          resource: "arn:aws:s3:::user-uploads/*"
+
+    s3_notification:
+      bucket: "arn:aws:s3:::user-uploads"
+      lambda_function_arn: "arn:aws:lambda:us-east-1:123456789012:function:process-upload"
+      events: ["s3:ObjectCreated:*"]
+
+    lambda_functions:
+      - arn: "arn:aws:lambda:us-east-1:123456789012:function:process-upload"
+        role: "arn:aws:iam::123456789012:role/UploadProcessorRole"
+        resource_based_policy:
+          - effect: Allow
+            principal: {Service: "s3.amazonaws.com"}
+            action: "lambda:InvokeFunction"
+            condition:
+              ArnLike:
+                aws:SourceArn: "arn:aws:s3:::user-uploads"
+
+      - arn: "arn:aws:lambda:us-east-1:123456789012:function:notify-user"
+        role: "arn:aws:iam::123456789012:role/NotifierRole"
+
+    iam_roles:
+      - arn: "arn:aws:iam::123456789012:role/UploadProcessorRole"
+        policy:
+          - effect: Allow
+            actions: ["dynamodb:PutItem"]
+            resources: ["arn:aws:dynamodb:us-east-1:123456789012:table/production-*"]
+          - effect: Allow
+            actions: ["sqs:SendMessage"]
+            resources: ["arn:aws:sqs:us-east-1:123456789012:results-queue"]
+
+      - arn: "arn:aws:iam::123456789012:role/NotifierRole"
+        policy:
+          - effect: Allow
+            actions: ["ses:SendEmail"]
+            resources: ["*"]
+          - effect: Allow
+            actions: ["dynamodb:GetItem"]
+            resources: ["arn:aws:dynamodb:us-east-1:123456789012:table/users"]
+
+    sqs_queue:
+      arn: "arn:aws:sqs:us-east-1:123456789012:results-queue"
+
+    esm:
+      - function_arn: "arn:aws:lambda:us-east-1:123456789012:function:notify-user"
+        event_source_arn: "arn:aws:sqs:us-east-1:123456789012:results-queue"
+        state: "Enabled"
+
+    dynamodb_tables:
+      - "arn:aws:dynamodb:us-east-1:123456789012:table/production-uploads"
+      - "arn:aws:dynamodb:us-east-1:123456789012:table/production-orders"
+      - "arn:aws:dynamodb:us-east-1:123456789012:table/production-sessions"
+      - "arn:aws:dynamodb:us-east-1:123456789012:table/production-events"
+      - "arn:aws:dynamodb:us-east-1:123456789012:table/users"
+
+  projected_facts:
+    trust_classification:
+      - {subject: "arn:aws:s3:::user-uploads", predicate: source_trust_level, object: "public"}
+      - {subject: "arn:aws:sqs:us-east-1:123456789012:results-queue", predicate: source_trust_level, object: "scoped_internal"}
+
+    esm_facts:
+      - {subject: "arn:aws:lambda:us-east-1:123456789012:function:notify-user", predicate: esm_maps, object: "arn:aws:sqs:us-east-1:123456789012:results-queue"}
+      - {subject: "arn:aws:lambda:us-east-1:123456789012:function:notify-user", predicate: esm_state, object: "Enabled"}
+      - {subject: "arn:aws:lambda:us-east-1:123456789012:function:notify-user", predicate: esm_type, object: "sqs"}
+
+    push_facts:
+      - {subject: "arn:aws:s3:::user-uploads", predicate: s3_notifies_lambda, object: "arn:aws:lambda:us-east-1:123456789012:function:process-upload"}
+
+    resource_policy_facts:
+      - {subject: "arn:aws:lambda:us-east-1:123456789012:function:process-upload", predicate: lambda_invoke_grant, fields: ["service", "s3.amazonaws.com", "aws:SourceArn", "arn:aws:s3:::user-uploads"]}
+
+    fm042_output_facts:
+      - {subject: "arn:aws:lambda:us-east-1:123456789012:function:process-upload", predicate: lambda_blast_radius, object: "5"}
+      - {subject: "arn:aws:lambda:us-east-1:123456789012:function:process-upload", predicate: lambda_reach_target, object: "arn:aws:dynamodb:us-east-1:123456789012:table/production-uploads"}
+      - {subject: "arn:aws:lambda:us-east-1:123456789012:function:process-upload", predicate: lambda_reach_target, object: "arn:aws:dynamodb:us-east-1:123456789012:table/production-orders"}
+      - {subject: "arn:aws:lambda:us-east-1:123456789012:function:process-upload", predicate: lambda_reach_target, object: "arn:aws:dynamodb:us-east-1:123456789012:table/production-sessions"}
+      - {subject: "arn:aws:lambda:us-east-1:123456789012:function:process-upload", predicate: lambda_reach_target, object: "arn:aws:dynamodb:us-east-1:123456789012:table/production-events"}
+      - {subject: "arn:aws:lambda:us-east-1:123456789012:function:process-upload", predicate: lambda_reach_target, object: "arn:aws:sqs:us-east-1:123456789012:results-queue"}
+      - {subject: "arn:aws:lambda:us-east-1:123456789012:function:notify-user", predicate: lambda_blast_radius, object: "2"}
+      - {subject: "arn:aws:lambda:us-east-1:123456789012:function:notify-user", predicate: lambda_reach_target, object: "arn:aws:dynamodb:us-east-1:123456789012:table/users"}
+      - {subject: "arn:aws:sqs:us-east-1:123456789012:results-queue", predicate: triggers_lambda, object: "arn:aws:lambda:us-east-1:123456789012:function:notify-user"}
+
+  souffle_trace:
+    rule_1_invocation_paths:
+      - "lambda_invocation_path(process-upload, user-uploads, push_s3, public)"
+      - "  S3 notification → Lambda, bucket is public → trust = public"
+      - "lambda_invocation_path(notify-user, results-queue, esm_sqs, scoped_internal)"
+      - "  ESM on SQS queue, queue scoped to UploadProcessorRole → scoped_internal"
+
+    rule_2_unconstrained_grants:
+      - "resource-based policy has SourceArn condition → constrained"
+      - "unconstrained_invoke_grant: empty for process-upload"
+
+    rule_3_trigger_chain:
+      - "trigger_chain(user-uploads, process-upload, results-queue, notify-user, 1)"
+      - "  process-upload reaches results-queue (from FM-042 lambda_reach_target)"
+      - "  results-queue triggers notify-user (from triggers_lambda)"
+      - "  depth = 1"
+      - "transitive_trigger_exposure(user-uploads, public, notify-user, 2)"
+      - "  entry source: user-uploads (public)"
+      - "  terminal: notify-user with blast radius 2"
+      - "  chain: user-uploads → process-upload → results-queue → notify-user"
+
+    rule_4_trust_boundary:
+      - "trust_boundary_violation(process-upload, user-uploads, public, 5, false, public_to_privileged)"
+      - "  public bucket triggers Lambda with blast radius 5 (> threshold of 3)"
+      - "  no sensitive resources in process-upload's reach"
+      - "  BUT: blast radius includes 4 production DynamoDB tables"
+
+    rule_5_dormant:
+      - "No dormant triggers (all ESMs enabled)"
+
+  compound_finding:
+    lambda_arn: "arn:aws:lambda:us-east-1:123456789012:function:process-upload"
+    invocation_path_count: 1
+    invocation_paths:
+      - source_arn: "arn:aws:s3:::user-uploads"
+        source_type: s3
+        mechanism: push_s3
+        trust_level: public
+        constrained: true
+        has_filter: false
+    trust_boundary_violations:
+      - source_arn: "arn:aws:s3:::user-uploads"
+        source_trust_level: public
+        blast_radius_count: 5
+        sensitive_reach: false
+        violation_type: public_to_privileged
+    trigger_chains:
+      - entry_source: "arn:aws:s3:::user-uploads"
+        chain:
+          - lambda: "arn:aws:lambda:us-east-1:123456789012:function:process-upload"
+            intermediate_resource: "arn:aws:sqs:us-east-1:123456789012:results-queue"
+          - lambda: "arn:aws:lambda:us-east-1:123456789012:function:notify-user"
+        terminal_lambda: "arn:aws:lambda:us-east-1:123456789012:function:notify-user"
+        terminal_blast_radius: 2
+        chain_depth: 1
+    unconstrained_grants: []
+    dormant_triggers: []
+    self_invocation_cycles: []
+    annotations:
+      fm042_status: "available"
+      finding_completeness: "complete"
+      tier_coverage: [1]
+    severity: critical
+    severity_reasons:
+      - "Public S3 bucket (user-uploads allows PutObject from *) triggers Lambda execution"
+      - "Lambda blast radius = 5 resources including 4 production DynamoDB tables"
+      - "Trigger chain amplifies exposure: public upload → process-upload → results-queue → notify-user"
+      - "Combined chain reaches production data (DynamoDB) + user data + email (SES)"
+    remediation_hint: >
+      1. Restrict user-uploads bucket policy: require authenticated
+         uploads via IAM or pre-signed URLs instead of public PutObject.
+      2. Scope UploadProcessorRole to the single production-uploads
+         table instead of production-* wildcard.
+      3. Consider removing SQS intermediary — write notification
+         results directly to the same table to eliminate the trigger
+         chain.
+
+  # --- Mitigated case ---
+  mitigated_case:
+    description: >
+      Same topology but S3 bucket requires authenticated uploads,
+      and UploadProcessorRole is scoped to one specific table.
+
+    snapshot_diff: |
+      user-uploads bucket policy change:
+        Principal: "*"
+        →
+        Principal: {"AWS": "arn:aws:iam::123456789012:role/WebAppRole"}
+        Condition: {"StringEquals": {"aws:PrincipalOrgID": "o-example"}}
+
+      UploadProcessorRole policy change:
+        resources: ["arn:aws:dynamodb:us-east-1:123456789012:table/production-*"]
+        →
+        resources: ["arn:aws:dynamodb:us-east-1:123456789012:table/production-uploads"]
+
+      SQS SendMessage permission removed from UploadProcessorRole.
+
+    trust_classification:
+      - source_trust_level(user-uploads, scoped_internal)
+
+    souffle_output:
+      invocation_paths: "(process-upload, user-uploads, push_s3, scoped_internal)"
+      trigger_chains: "(empty — no SQS reach, no chain)"
+      trust_boundary_violations: "(empty — scoped_internal, blast radius = 1, no sensitive)"
+      dormant_triggers: "(empty)"
+
+    finding: >
+      One invocation path: scoped_internal S3 → Lambda. No trigger
+      chain. Blast radius = 1 table, not sensitive. No trust boundary
+      violation. Severity = informational.
+
+    explanation: >
+      Restricting the bucket policy to authenticated same-org principals
+      raised trust from public to scoped_internal. Scoping the role to
+      one table reduced blast radius from 5 to 1. Removing SQS
+      SendMessage eliminated the trigger chain. The invocation path
+      is fully scoped and well-constrained.
+
+# =========================================================================
+# Fact projection gap analysis
+# =========================================================================
+
+fact_projection_gap: >
+  New projector functions needed in sirfacts/facts.go:
+
+  1. esmFacts(assets []sir.AssetFact) []Fact
+     For each Lambda function, extract EventSourceMappings from the
+     snapshot and emit esm_maps, esm_state, esm_type facts. For
+     DynamoDB Stream sources, also emit dynamodb_stream_table.
+
+  2. lambdaResourcePolicyFacts(assets []sir.AssetFact) []Fact
+     For each Lambda function with a resource-based policy (GetPolicy
+     response in snapshot), parse the policy JSON and emit
+     lambda_invoke_grant and lambda_invoke_deny facts.
+
+  3. pushSourceFacts(assets []sir.AssetFact) []Fact
+     For each push source type (S3, SNS, EventBridge, API Gateway,
+     ALB, Cognito, Step Functions), extract the Lambda integration
+     and emit the corresponding predicate (s3_notifies_lambda,
+     sns_subscribes_lambda, etc.).
+
+  4. sourceTrustFacts(assets []sir.AssetFact) []Fact
+     For each event source, classify trust level based on the source
+     resource's access policy. Uses the classification rules from
+     Section 3. Requires reading bucket policies, queue policies,
+     topic policies, API Gateway auth types, etc.
+
+  5. eventBridgePatternFacts(assets []sir.AssetFact) []Fact
+     For each EventBridge rule, classify the event pattern breadth
+     (narrow/moderate/broad) and emit
+     eventbridge_rule_pattern_breadth.
+
+  The transform.sh script needs updating for the new predicates,
+  especially lambda_invoke_grant (5-arity → 5-column TSV).
+
+validation:
+  exact_match:
+    - invocation_path_count
+    - trust_boundary_violation presence
+    - trigger_chain presence and depth
+    - severity
+  semantic_match:
+    - trust_level classification
+    - remediation_hint
+  ignore:
+    - ordering of invocation paths
+    - Soufflé stderr warnings for empty optional relations

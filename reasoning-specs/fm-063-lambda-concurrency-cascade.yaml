@@ -1,0 +1,913 @@
+# reasoning-spec: fm-063-lambda-concurrency-cascade
+# engine: souffle
+# trial-fixture: trials/souffle-lambda-concurrency/
+# failure-mode: FM-063 (Lambda Interaction Patterns)
+
+question: >
+  When Lambda functions compete for execution capacity in a shared
+  concurrency pool, which functions can exhaust the pool, which
+  business-critical functions are throttled, and which throttle
+  behaviors create feedback loops that amplify the cascade?
+
+context: >
+  FM-042 analyzes permission boundaries (what can a role reach).
+  FM-046 analyzes invocation boundaries (what can trigger a Lambda).
+  FM-063 analyzes availability boundaries (what happens when Lambdas
+  compete for concurrency).
+
+  The three compose: FM-046 identifies a public trigger, FM-063
+  determines the triggered Lambda shares a pool with 40 others,
+  and the compound finding is that a public trigger can DoS the
+  entire account's Lambda fleet via concurrency exhaustion.
+
+  AWS Lambda regional concurrency model:
+  - Account-level limit (default 1,000, adjustable via quota)
+  - Reserved concurrency: per-function carve-out, subtracted from
+    the shared pool, provides isolation
+  - Provisioned concurrency: pre-warmed environments, counted
+    against reserved (if set) or unreserved pool (if not),
+    provides cold-start protection NOT contention isolation
+  - Unreserved pool: limit minus sum of all reservations, shared
+    by every function without reserved concurrency
+  - AWS minimum: 100 unreserved must remain
+
+  Six compound failure modes (per-resource controls cannot detect):
+  1. Unreserved pool exhaustion blast radius
+  2. Critical function without isolation
+  3. ESM retry amplification (SQS backlog, Kinesis iterator stall)
+  4. Provisioned concurrency false isolation
+  5. Reserved concurrency starvation of the unreserved pool
+  6. Concurrency exhaustion as DoS vector (composes with FM-046)
+
+# =========================================================================
+# Section 1: Fact Schema — Account Concurrency Limit Facts
+# =========================================================================
+
+fact_schema:
+  account_concurrency:
+    predicates:
+      - name: account_concurrency_limit
+        arity: 2
+        fields:
+          subject: region identifier (e.g., "us-east-1")
+          object: concurrency limit (integer, typically 1000)
+        source:
+          api: lambda:GetAccountSettings
+          path: AccountLimit.ConcurrentExecutions
+        notes: >
+          One fact per region in the snapshot. If absent, the chain
+          cannot run — the pool arithmetic requires this value.
+          The default is 1,000 but accounts may have increased it
+          via service quota request; the snapshot captures the
+          actual current value.
+
+# =========================================================================
+# Section 2: Fact Schema — Per-Function Concurrency Facts
+# =========================================================================
+
+  function_concurrency:
+    predicates:
+      - name: function_reserved
+        arity: 2
+        fields:
+          subject: Lambda function ARN
+          object: reserved concurrent executions (integer)
+        source:
+          api: lambda:GetFunctionConcurrency
+          path: ReservedConcurrentExecutions
+        notes: >
+          Only emitted for functions that HAVE reserved concurrency.
+          Closed-world: absence = no reservation = shares unreserved
+          pool. A function with reserved concurrency is isolated —
+          it cannot be throttled by others and cannot exhaust the
+          shared pool.
+
+      - name: function_provisioned
+        arity: 2
+        fields:
+          subject: Lambda function ARN
+          object: provisioned concurrent executions (integer)
+        source:
+          api: lambda:ListProvisionedConcurrencyConfigs
+          path: ProvisionedConcurrencyConfigs[].AllocatedProvisionedConcurrentExecutions
+        notes: >
+          Sum across all aliases/versions if multiple provisioned
+          configs exist. Provisioned WITHOUT reserved = false
+          isolation (failure mode 4). Provisioned WITH reserved =
+          true isolation with cold-start protection.
+
+      - name: function_region
+        arity: 2
+        fields:
+          subject: Lambda function ARN
+          object: region identifier
+        source:
+          derived: extracted from ARN field 4
+
+      - name: function_timeout
+        arity: 2
+        fields:
+          subject: Lambda function ARN
+          object: timeout in seconds (integer)
+        source:
+          api: lambda:GetFunctionConfiguration
+          path: Configuration.Timeout
+
+# =========================================================================
+# Section 3: Fact Schema — Function Criticality Classification
+# =========================================================================
+
+  criticality:
+    predicate: function_criticality
+    arity: 3
+    fields:
+      subject: Lambda function ARN
+      field_1: level ("critical", "high", "medium", "low", "unknown")
+      field_2: source ("tag", "inferred", "default")
+
+    classification_rules:
+      tag_based:
+        description: >
+          Highest priority. The projector scans function tags for
+          known criticality keys and maps values to levels.
+        tag_keys: ["criticality", "tier", "priority", "business-criticality"]
+        value_mapping:
+          critical: ["critical", "p1", "tier-1", "tier1"]
+          high: ["high", "p2", "tier-2", "tier2", "production"]
+          medium: ["medium", "p3", "tier-3", "tier3"]
+          low: ["low", "p4", "development", "staging"]
+
+      inferred:
+        description: >
+          Heuristic. If no tag, infer from connected resources and
+          invocation sources. Finding notes the classification is
+          inferred, not declared.
+        rules:
+          - "API Gateway trigger → inferred high (user-facing)"
+          - "ESM on table named *payment*, *order*, *transaction* → inferred critical"
+          - "ESM on table named *log*, *metric*, *thumbnail* → inferred low"
+          - "Environment tag production on connected resources → inferred high"
+
+      default:
+        description: >
+          No signal available. Classify as unknown, not low.
+          Absence of evidence is not evidence of low criticality.
+
+# =========================================================================
+# Section 4: Fact Schema — Throttle Behavior Facts
+# =========================================================================
+
+  throttle_behavior:
+    predicate: throttle_behavior
+    arity: 3
+    fields:
+      subject: Lambda function ARN
+      field_1: mechanism (from FM-046 invocation path mechanism)
+      field_2: behavior ("absorb", "backlog", "retry", "fail_fast", "unknown")
+
+    classification:
+      esm_sqs: backlog
+      esm_kinesis: backlog
+      esm_dynamodb_streams: backlog
+      esm_mq: backlog
+      esm_msk: backlog
+      push_s3: retry
+      push_sns: retry
+      push_eventbridge: retry
+      push_apigw: fail_fast
+      push_alb: fail_fast
+      push_cognito: fail_fast
+      push_stepfunctions: fail_fast
+      push_direct_invoke: fail_fast
+
+    notes: >
+      Requires FM-046 invocation path data. If FM-046 has not run,
+      emit throttle_behavior as unknown for all functions. The
+      projector derives behavior from the mechanism type, not from
+      runtime configuration — e.g., SQS ESMs always have backlog
+      behavior because SQS visibility timeout causes re-delivery.
+
+      absorb: not used by default classification — only assigned
+      when explicit evidence exists (e.g., SQS ESM with
+      MaxReceiveCount=1 and DLQ configured, meaning the message
+      goes to DLQ on first failure rather than retrying).
+
+# =========================================================================
+# Section 5: Datalog Rules
+# =========================================================================
+
+datalog:
+  program_file: examples/lambda-concurrency/concurrency_cascade.dl
+
+  input_relations:
+    - has_type               # (asset, type)
+    - lambda_role            # (lambda, role)
+    - account_concurrency_limit # (region, limit)
+    - function_reserved      # (fn, reserved_amount)
+    - function_provisioned   # (fn, provisioned_amount)
+    - function_region        # (fn, region)
+    - function_timeout       # (fn, timeout_seconds)
+    - function_criticality   # 3-arity: (fn, level, source)
+    - throttle_behavior      # 3-arity: (fn, mechanism, behavior)
+    # FM-046 output (optional)
+    - lambda_invocation_path # (lambda, source, mechanism, trust)
+
+  rules:
+    # --- Rule 1: Pool topology computation ---
+    - name: pool_topology
+      description: >
+        Compute effective concurrency pool structure per region.
+      output: >
+        unreserved_pool_member(fn, region)
+        total_reserved(region, sum)
+        unreserved_pool_size(region, size)
+        unreserved_member_count(region, count)
+        per_function_fair_share(region, share)
+      rule: |
+        // A function is an unreserved pool member if it has no
+        // reserved concurrency and is in the given region.
+        .decl unreserved_pool_member(fn: symbol, region: symbol)
+        unreserved_pool_member(F, R) :-
+            has_type(F, "aws_lambda_function"),
+            function_region(F, R),
+            !function_reserved(F, _).
+
+        // Reserved function (for completeness / output).
+        .decl reserved_function(fn: symbol, region: symbol, amount: number)
+        reserved_function(F, R, A) :-
+            function_reserved(F, A),
+            function_region(F, R).
+
+        // Total reserved per region.
+        // Soufflé sum aggregate: project reserved amounts, then sum.
+        .decl region_has_reserved(region: symbol)
+        region_has_reserved(R) :- reserved_function(_, R, _).
+
+        .decl total_reserved(region: symbol, total: number)
+        .output total_reserved
+        total_reserved(R, S) :-
+            region_has_reserved(R),
+            S = sum A : { reserved_function(_, R, A) }.
+        // Regions with no reservations: total = 0.
+        total_reserved(R, 0) :-
+            account_concurrency_limit(R, _),
+            !region_has_reserved(R).
+
+        // Unreserved pool size.
+        .decl unreserved_pool_size(region: symbol, size: number)
+        .output unreserved_pool_size
+        unreserved_pool_size(R, Limit - TotalRes) :-
+            account_concurrency_limit(R, Limit),
+            total_reserved(R, TotalRes).
+
+        // Count of unreserved pool members.
+        .decl unreserved_member_count(region: symbol, n: number)
+        .output unreserved_member_count
+        unreserved_member_count(R, N) :-
+            unreserved_pool_member(_, R),
+            N = count : { unreserved_pool_member(_, R) }.
+
+        // Per-function fair share (integer division).
+        .decl per_function_fair_share(region: symbol, share: number)
+        .output per_function_fair_share
+        per_function_fair_share(R, PoolSize / MemberCount) :-
+            unreserved_pool_size(R, PoolSize),
+            unreserved_member_count(R, MemberCount),
+            MemberCount > 0.
+
+    # --- Rule 2: Critical function exposure ---
+    - name: critical_function_exposure
+      description: >
+        Critical/high-criticality functions in the unreserved pool.
+      output: >
+        critical_function_exposed(fn, criticality, pool_size,
+                                   co_tenant_count, fair_share)
+      rule: |
+        .decl critical_function_exposed(fn: symbol, crit: symbol,
+                                         pool: number, tenants: number,
+                                         share: number)
+        .output critical_function_exposed
+        critical_function_exposed(F, C, P, T, S) :-
+            function_criticality(F, C, _),
+            (C = "critical" ; C = "high"),
+            unreserved_pool_member(F, R),
+            unreserved_pool_size(R, P),
+            unreserved_member_count(R, T),
+            per_function_fair_share(R, S).
+
+    # --- Rule 3: Pool exhaustion candidates ---
+    - name: exhaustion_candidates
+      description: >
+        Functions most likely to exhaust the unreserved pool.
+      output: >
+        exhaustion_candidate(fn, risk_factor, reason)
+      rule: |
+        .decl exhaustion_candidate(fn: symbol, risk: symbol, reason: symbol)
+        .output exhaustion_candidate
+
+        // Long timeout — holds pool slots for extended periods.
+        exhaustion_candidate(F, "long_timeout", "timeout_exceeds_300s") :-
+            unreserved_pool_member(F, _),
+            function_timeout(F, T),
+            T > 300.
+
+        // No concurrency cap — can burst arbitrarily into pool.
+        exhaustion_candidate(F, "no_concurrency_cap", "no_reserved_concurrency") :-
+            unreserved_pool_member(F, _).
+
+        // Public trigger — can be flooded externally (from FM-046).
+        exhaustion_candidate(F, "public_trigger", "publicly_invocable") :-
+            unreserved_pool_member(F, _),
+            lambda_invocation_path(F, _, _, "public").
+
+        // Backlog event source — creates retry amplification.
+        exhaustion_candidate(F, "retry_amplification", "backlog_event_source") :-
+            unreserved_pool_member(F, _),
+            throttle_behavior(F, _, "backlog").
+
+        // Retry event source — sustained retry pressure.
+        exhaustion_candidate(F, "retry_pressure", "retry_event_source") :-
+            unreserved_pool_member(F, _),
+            throttle_behavior(F, _, "retry").
+
+    # --- Rule 4: Cascade path detection ---
+    - name: cascade_paths
+      description: >
+        Compose pool topology with exhaustion candidates and
+        criticality to produce cascade paths.
+      output: >
+        cascade_path(trigger_fn, victim_fn, victim_criticality,
+                     pool_size)
+        cascade_blast_radius(trigger_fn, victim_count,
+                              critical_count, backlog_count)
+      rule: |
+        .decl cascade_path(trigger: symbol, victim: symbol,
+                            vcrit: symbol, pool: number)
+        .output cascade_path
+        cascade_path(Trigger, Victim, VCrit, Pool) :-
+            exhaustion_candidate(Trigger, _, _),
+            unreserved_pool_member(Trigger, R),
+            unreserved_pool_member(Victim, R),
+            Trigger != Victim,
+            function_criticality(Victim, VCrit, _),
+            unreserved_pool_size(R, Pool).
+
+        // Blast radius per trigger: count victims.
+        .decl trigger_victim(trigger: symbol, victim: symbol)
+        trigger_victim(T, V) :- cascade_path(T, V, _, _).
+
+        .decl cascade_blast_radius(trigger: symbol, victims: number,
+                                    crit_victims: number,
+                                    backlog_victims: number)
+        .output cascade_blast_radius
+
+        // Total victim count.
+        .decl trigger_victim_count(trigger: symbol, n: number)
+        trigger_victim_count(T, N) :-
+            trigger_victim(T, _),
+            N = count : { trigger_victim(T, _) }.
+
+        // Critical victim count.
+        .decl trigger_crit_victim(trigger: symbol, victim: symbol)
+        trigger_crit_victim(T, V) :-
+            cascade_path(T, V, C, _),
+            (C = "critical" ; C = "high").
+
+        .decl trigger_crit_count(trigger: symbol, n: number)
+        trigger_crit_count(T, N) :-
+            trigger_crit_victim(T, _),
+            N = count : { trigger_crit_victim(T, _) }.
+        trigger_crit_count(T, 0) :-
+            trigger_victim(T, _),
+            !trigger_crit_victim(T, _).
+
+        // Backlog victim count.
+        .decl trigger_backlog_victim(trigger: symbol, victim: symbol)
+        trigger_backlog_victim(T, V) :-
+            cascade_path(T, V, _, _),
+            throttle_behavior(V, _, "backlog").
+
+        .decl trigger_backlog_count(trigger: symbol, n: number)
+        trigger_backlog_count(T, N) :-
+            trigger_backlog_victim(T, _),
+            N = count : { trigger_backlog_victim(T, _) }.
+        trigger_backlog_count(T, 0) :-
+            trigger_victim(T, _),
+            !trigger_backlog_victim(T, _).
+
+        // Compose into blast radius.
+        cascade_blast_radius(T, V, C, B) :-
+            trigger_victim_count(T, V),
+            trigger_crit_count(T, C),
+            trigger_backlog_count(T, B).
+
+    # --- Rule 5: Feedback loop detection ---
+    - name: feedback_loops
+      description: >
+        Cascade paths where victims have backlog or retry behavior,
+        creating amplification feedback. Circular loops where two
+        backlog victims mutually amplify.
+      output: >
+        feedback_loop(trigger_fn, victim_fn, mechanism, behavior)
+        circular_feedback(fn_a, fn_b, region)
+      rule: |
+        .decl feedback_loop(trigger: symbol, victim: symbol,
+                             mechanism: symbol, behavior: symbol)
+        .output feedback_loop
+        feedback_loop(T, V, Mech, Behav) :-
+            cascade_path(T, V, _, _),
+            throttle_behavior(V, Mech, Behav),
+            (Behav = "backlog" ; Behav = "retry").
+
+        // Circular feedback: two backlog victims in the same pool
+        // that can mutually amplify. Both are exhaustion candidates
+        // AND backlog victims of each other.
+        .decl circular_feedback(a: symbol, b: symbol, region: symbol)
+        .output circular_feedback
+        circular_feedback(A, B, R) :-
+            unreserved_pool_member(A, R),
+            unreserved_pool_member(B, R),
+            throttle_behavior(A, _, "backlog"),
+            throttle_behavior(B, _, "backlog"),
+            exhaustion_candidate(A, _, _),
+            exhaustion_candidate(B, _, _),
+            A < B.  // canonical ordering to avoid duplicates
+
+    # --- Rule 6: Reservation starvation detection ---
+    - name: reservation_starvation
+      description: >
+        Region-level finding when aggregate reservations starve the
+        unreserved pool.
+      output: >
+        reservation_starvation(region, limit, reserved, pool_size,
+                                members, fair_share)
+      rule: |
+        .decl reservation_starvation(region: symbol, limit: number,
+                                      reserved: number, pool: number,
+                                      members: number, share: number)
+        .output reservation_starvation
+        reservation_starvation(R, Limit, Res, Pool, Members, Share) :-
+            account_concurrency_limit(R, Limit),
+            total_reserved(R, Res),
+            unreserved_pool_size(R, Pool),
+            unreserved_member_count(R, Members),
+            per_function_fair_share(R, Share),
+            Share < 5.  // configurable threshold
+
+    # --- Rule 7: Provisioned-without-reserved detection ---
+    - name: false_isolation
+      description: >
+        Functions with provisioned concurrency but no reserved
+        concurrency. Cold-start protection without contention
+        isolation.
+      output: >
+        false_isolation(fn, provisioned_amount)
+      rule: |
+        .decl false_isolation(fn: symbol, provisioned: number)
+        .output false_isolation
+        false_isolation(F, P) :-
+            function_provisioned(F, P),
+            !function_reserved(F, _),
+            P > 0.
+
+# =========================================================================
+# Section 6: Chain Definition
+# =========================================================================
+
+chain_definition:
+  file: chains/lambda_concurrency_cascade.yaml
+  content: |
+    id: lambda_concurrency_cascade
+    controls:
+      - CTL.LAMBDA.CONCURRENCY.001
+      - CTL.LAMBDA.CONFIG.CONCURRENCY.NOLIMIT.001
+      - CTL.LAMBDA.CONFIG.TIMEOUT.EXCESSIVE.001
+      - CTL.LAMBDA.DLQ.MISSING.001
+      - CTL.LAMBDA.ESM.BISECT.001
+    escalation_threshold: 2
+    compound_severity: critical
+    preconditions:
+      - service_disruption
+    postconditions:
+      - service_disruption
+
+  prerequisite_controls:
+    existing:
+      - CTL.LAMBDA.CONCURRENCY.001
+      - CTL.LAMBDA.CONFIG.CONCURRENCY.NOLIMIT.001
+      - CTL.LAMBDA.CONFIG.TIMEOUT.EXCESSIVE.001
+      - CTL.LAMBDA.DLQ.MISSING.001
+      - CTL.LAMBDA.ESM.BISECT.001
+    notes: >
+      Per-resource controls check individual concurrency and timeout
+      configuration. When ≥2 co-fire on functions sharing an
+      unreserved pool, the chain emits a compound finding. The
+      Soufflé program adds pool topology, cascade path, and feedback
+      loop analysis.
+
+  required_fact_types:
+    required:
+      - account_concurrency_limit
+      - function_region
+      - has_type
+    optional:
+      - function_reserved
+      - function_provisioned
+      - function_timeout
+      - function_criticality   # enhances severity
+      - throttle_behavior      # requires FM-046
+      - lambda_invocation_path # from FM-046, for public trigger detection
+
+  configurable_parameters:
+    unreserved_starvation_threshold:
+      default: 5
+      description: >
+        Per-function fair share below which reservation starvation
+        is flagged. Fair share = unreserved_pool_size / member_count.
+    cascade_minimum_victims:
+      default: 3
+      description: >
+        Minimum co-tenant count to emit a cascade finding. A pool
+        with 2 functions is not really a "cascade."
+    critical_function_tag_keys:
+      default: ["criticality", "tier", "priority", "business-criticality"]
+    critical_function_tag_values:
+      default:
+        critical: ["critical", "p1", "tier-1", "tier1"]
+        high: ["high", "p2", "tier-2", "tier2", "production"]
+
+  fm046_composition:
+    contract: >
+      FM-063 consumes FM-046's lambda_invocation_path relation for:
+      - Public trigger detection (exhaustion_candidate rule)
+      - Throttle behavior derivation (mechanism → behavior mapping)
+
+      If FM-046 has not run:
+      - lambda_invocation_path is empty
+      - exhaustion_candidate omits public_trigger risk factor
+      - throttle_behavior is unknown for all functions
+      - Feedback loop detection (Rule 5) degrades — all behaviors
+        are unknown, so no backlog/retry loops detected
+      - Annotation: fm046_status = "unavailable"
+
+  required_api_calls:
+    hard_prerequisite:
+      - api: lambda:GetAccountSettings
+        effect_if_missing: chain cannot run (account limit unknown)
+      - api: lambda:ListFunctions
+        effect_if_missing: chain cannot run (no function inventory)
+    soft_prerequisite:
+      - api: lambda:GetFunctionConcurrency
+        effect_if_missing: treat function as unreserved pool member
+      - api: lambda:GetFunctionConfiguration
+        effect_if_missing: timeout unknown, omit long_timeout risk factor
+      - api: lambda:ListProvisionedConcurrencyConfigs
+        effect_if_missing: skip false isolation detection
+
+# =========================================================================
+# Section 7: Finding Schema
+# =========================================================================
+
+finding_schema:
+  category_a_cascade_path:
+    fields:
+      - trigger_function_arn: the function that can exhaust the pool
+      - trigger_risk_factors:
+          - {factor: "long_timeout", reason: "timeout 900s"}
+          - {factor: "public_trigger", reason: "API Gateway no auth"}
+      - pool_context:
+          region: "us-east-1"
+          account_limit: 1000
+          total_reserved: 900
+          unreserved_pool_size: 100
+          unreserved_member_count: 20
+          per_function_fair_share: 5
+      - victim_inventory:
+          - function_arn: "..."
+            criticality: "critical"
+            criticality_source: "tag"
+            throttle_behavior: "fail_fast"
+          - function_arn: "..."
+            criticality: "high"
+            criticality_source: "tag"
+            throttle_behavior: "backlog"
+            amplification_mechanism: "SQS ESM re-delivery"
+      - blast_radius:
+          total_victims: 19
+          critical_victims: 1
+          high_victims: 1
+          backlog_victims: 1
+          retry_victims: 3
+      - feedback_loops:
+          - victim: "..."
+            mechanism: "esm_sqs"
+            behavior: "backlog"
+      - circular_feedback_loops:
+          - fn_a: "..."
+            fn_b: "..."
+
+    severity_mapping:
+      - condition: public trigger + critical victim in pool
+        severity: critical
+      - condition: critical function in starved pool (fair_share < 5)
+        severity: critical
+      - condition: circular feedback loop detected
+        severity: critical
+      - condition: high-throughput source + >10 victims + backlog victim
+        severity: high
+      - condition: feedback loop (backlog victims re-exhaust pool)
+        severity: high
+      - condition: pool starvation (fair_share < 5) + >20 co-tenants
+        severity: high
+      - condition: exhaustion candidate + >3 victims, no critical
+        severity: medium
+      - condition: provisioned-without-reserved, high-throughput source
+        severity: medium
+      - condition: provisioned-without-reserved, low-throughput source
+        severity: low
+
+  category_b_pool_starvation:
+    fields:
+      - region: AWS region
+      - account_limit: concurrency limit
+      - total_reserved: sum of all reservations
+      - unreserved_pool_size: remainder
+      - unreserved_member_count: co-tenant count
+      - per_function_fair_share: pool_size / member_count
+      - top_reservers:
+          - {function_arn: "...", reserved: 400}
+          - {function_arn: "...", reserved: 300}
+
+  category_c_false_isolation:
+    fields:
+      - function_arn: function with provisioned but no reserved
+      - provisioned_amount: pre-warmed environments
+      - pool_membership: unreserved_shared
+      - exposure: "can burst into pool AND can be throttled by others above provisioned level"
+      - recommendation: "add reserved concurrency >= provisioned amount"
+    severity:
+      - condition: provisioned > 50
+        severity: medium
+      - condition: provisioned <= 50
+        severity: low
+
+# =========================================================================
+# Section 8: Worked Example
+# =========================================================================
+
+worked_example:
+  description: >
+    Failure mode 2 (critical function without isolation) combined
+    with failure mode 3 (ESM retry amplification). Account with
+    aggressive reservations starving the unreserved pool; critical
+    payment function sharing a 100-slot pool with 19 other functions.
+
+  snapshot_fragment:
+    account:
+      region: us-east-1
+      concurrency_limit: 1000
+
+    reserved_functions:
+      - arn: "arn:aws:lambda:us-east-1:123456789012:function:image-resizer"
+        reserved: 200
+      - arn: "arn:aws:lambda:us-east-1:123456789012:function:video-transcoder"
+        reserved: 300
+      - arn: "arn:aws:lambda:us-east-1:123456789012:function:ml-inference"
+        reserved: 400
+
+    unreserved_functions:
+      - arn: "arn:aws:lambda:us-east-1:123456789012:function:payment-processor"
+        timeout: 30
+        tags: {criticality: critical}
+        trigger: "API Gateway (synchronous)"
+        throttle_behavior: fail_fast
+
+      - arn: "arn:aws:lambda:us-east-1:123456789012:function:order-notifier"
+        timeout: 60
+        tags: {criticality: high}
+        trigger: "SQS ESM (batch 10, visibility 60s)"
+        throttle_behavior: backlog
+
+      - arn: "arn:aws:lambda:us-east-1:123456789012:function:log-shipper"
+        timeout: 300
+        tags: {}
+        trigger: "CloudWatch Events (every 1m)"
+        throttle_behavior: retry
+
+      - arn: "arn:aws:lambda:us-east-1:123456789012:function:thumbnail-generator"
+        timeout: 120
+        tags: {}
+        trigger: "S3 notification (ObjectCreated)"
+        throttle_behavior: retry
+
+      - arn: "arn:aws:lambda:us-east-1:123456789012:function:report-builder"
+        timeout: 900
+        tags: {}
+        trigger: "EventBridge (rate 1 hour)"
+        throttle_behavior: retry
+
+  projected_facts: |
+    // Account limit
+    {"subject":"us-east-1","predicate":"account_concurrency_limit","object":"1000"}
+
+    // Reserved functions
+    {"subject":"arn:aws:lambda:us-east-1:123456789012:function:image-resizer","predicate":"function_reserved","object":"200"}
+    {"subject":"arn:aws:lambda:us-east-1:123456789012:function:video-transcoder","predicate":"function_reserved","object":"300"}
+    {"subject":"arn:aws:lambda:us-east-1:123456789012:function:ml-inference","predicate":"function_reserved","object":"400"}
+
+    // All functions: has_type, function_region
+    // (20 unreserved + 3 reserved = 23 total)
+
+    // Per-function: function_timeout, function_criticality
+    {"subject":"...payment-processor","predicate":"function_criticality","field_1":"critical","field_2":"tag"}
+    {"subject":"...order-notifier","predicate":"function_criticality","field_1":"high","field_2":"tag"}
+    {"subject":"...log-shipper","predicate":"function_criticality","field_1":"unknown","field_2":"default"}
+    // ...
+
+    // Throttle behaviors (from FM-046)
+    {"subject":"...payment-processor","predicate":"throttle_behavior","field_1":"push_apigw","field_2":"fail_fast"}
+    {"subject":"...order-notifier","predicate":"throttle_behavior","field_1":"esm_sqs","field_2":"backlog"}
+    {"subject":"...log-shipper","predicate":"throttle_behavior","field_1":"push_eventbridge","field_2":"retry"}
+    {"subject":"...thumbnail-generator","predicate":"throttle_behavior","field_1":"push_s3","field_2":"retry"}
+    {"subject":"...report-builder","predicate":"throttle_behavior","field_1":"push_eventbridge","field_2":"retry"}
+
+  souffle_trace:
+    rule_1_pool_topology:
+      - "total_reserved(us-east-1, 900)"
+      - "unreserved_pool_size(us-east-1, 100)"
+      - "unreserved_member_count(us-east-1, 20)"
+      - "per_function_fair_share(us-east-1, 5)"
+      - "  (100 / 20 = 5 — at starvation threshold)"
+
+    rule_2_critical_exposure:
+      - "critical_function_exposed(payment-processor, critical, 100, 20, 5)"
+      - "critical_function_exposed(order-notifier, high, 100, 20, 5)"
+
+    rule_3_exhaustion_candidates:
+      - "exhaustion_candidate(report-builder, long_timeout, timeout_exceeds_300s)"
+      - "  (timeout 900s = 15 minutes, holds pool slots)"
+      - "exhaustion_candidate(*, no_concurrency_cap, no_reserved_concurrency)"
+      - "  (all 20 unreserved functions are candidates)"
+      - "exhaustion_candidate(order-notifier, retry_amplification, backlog_event_source)"
+      - "  (SQS ESM with backlog behavior)"
+      - "exhaustion_candidate(log-shipper, retry_pressure, retry_event_source)"
+      - "exhaustion_candidate(thumbnail-generator, retry_pressure, retry_event_source)"
+      - "exhaustion_candidate(report-builder, retry_pressure, retry_event_source)"
+
+    rule_4_cascade_paths:
+      - "cascade_path(thumbnail-generator, payment-processor, critical, 100)"
+      - "cascade_path(thumbnail-generator, order-notifier, high, 100)"
+      - "cascade_path(thumbnail-generator, log-shipper, unknown, 100)"
+      - "  ... (thumbnail-generator → 19 victims)"
+      - "cascade_blast_radius(thumbnail-generator, 19, 2, 1)"
+      - "  (19 victims, 2 critical+high, 1 backlog)"
+      - "cascade_blast_radius(report-builder, 19, 2, 1)"
+      - "  (same pool, same victims)"
+
+    rule_5_feedback:
+      - "feedback_loop(thumbnail-generator, order-notifier, esm_sqs, backlog)"
+      - "  order-notifier's SQS messages pile up during throttle, burst on recovery"
+      - "feedback_loop(thumbnail-generator, log-shipper, push_eventbridge, retry)"
+      - "  log-shipper retries with backoff during throttle"
+      - "circular_feedback: none"
+      - "  (only order-notifier has backlog; thumbnail-generator has retry,"
+      - "   but circular requires BOTH to have backlog)"
+
+    rule_6_starvation:
+      - "reservation_starvation(us-east-1, 1000, 900, 100, 20, 5)"
+      - "  fair share = 5 (at threshold: < 5 would be strictly starved)"
+      - "  NOTE: 5 is NOT < 5, so this rule does NOT fire with strict <"
+      - "  The threshold is configurable; at exactly 5, this is borderline"
+
+    rule_7_false_isolation:
+      - "No provisioned-without-reserved in this example"
+
+  compound_findings:
+    category_a:
+      trigger: "arn:aws:lambda:us-east-1:123456789012:function:thumbnail-generator"
+      risk_factors:
+        - {factor: "no_concurrency_cap", reason: "no_reserved_concurrency"}
+        - {factor: "retry_pressure", reason: "retry_event_source"}
+      pool_context:
+        region: us-east-1
+        account_limit: 1000
+        total_reserved: 900
+        unreserved_pool_size: 100
+        unreserved_member_count: 20
+        per_function_fair_share: 5
+      blast_radius:
+        total_victims: 19
+        critical_victims: 1
+        high_victims: 1
+        backlog_victims: 1
+      feedback_loops:
+        - victim: "arn:aws:lambda:us-east-1:123456789012:function:order-notifier"
+          mechanism: esm_sqs
+          behavior: backlog
+      severity: critical
+      severity_reasons:
+        - "Exhaustion candidate shares pool with critical function (payment-processor)"
+        - "19 co-tenant functions throttled if pool exhausted"
+        - "Feedback loop: order-notifier SQS backlog creates burst on recovery"
+
+    category_b:
+      region: us-east-1
+      account_limit: 1000
+      total_reserved: 900
+      unreserved_pool_size: 100
+      unreserved_member_count: 20
+      per_function_fair_share: 5
+      top_reservers:
+        - {function: "ml-inference", reserved: 400}
+        - {function: "video-transcoder", reserved: 300}
+        - {function: "image-resizer", reserved: 200}
+      severity: high
+      severity_reason: "90% of concurrency reserved; 20 functions share 100 slots (5 per function)"
+
+    remediation_hint: >
+      1. Add reserved concurrency for payment-processor (50) and
+         order-notifier (30) to isolate critical functions.
+      2. Request account limit increase to 2,000 via service quota.
+      3. Reduce report-builder timeout from 900s to 60s.
+      4. Tag all Lambda functions with criticality levels.
+
+  # --- Mitigated case ---
+  mitigated_case:
+    description: >
+      payment-processor gets reserved 50, order-notifier gets reserved
+      30, account limit increased to 2,000, report-builder timeout
+      reduced to 60s.
+
+    snapshot_diff: |
+      account_concurrency_limit: 1000 → 2000
+      payment-processor: reserved = 50 (now isolated)
+      order-notifier: reserved = 30 (now isolated)
+      report-builder: timeout 900 → 60
+      Total reserved: 900 + 50 + 30 = 980
+      Unreserved pool: 2000 - 980 = 1020
+      Unreserved members: 18 (payment-processor and order-notifier
+        moved to reserved_isolated)
+      Fair share: 1020 / 18 = 56
+
+    souffle_output:
+      pool_topology:
+        total_reserved: "(us-east-1, 980)"
+        unreserved_pool_size: "(us-east-1, 1020)"
+        unreserved_member_count: "(us-east-1, 18)"
+        per_function_fair_share: "(us-east-1, 56)"
+      critical_function_exposed: "(empty — both critical functions now reserved)"
+      exhaustion_candidates: "only no_concurrency_cap for 18 functions (no long_timeout, no public_trigger)"
+      cascade_paths: "18 functions × 17 victims = 306 paths, all unknown criticality"
+      cascade_blast_radius: "each trigger: 17 victims, 0 critical, 0 backlog"
+      feedback_loops: "(empty — order-notifier now reserved)"
+      reservation_starvation: "(empty — fair share 56 >> 5)"
+      false_isolation: "(empty)"
+
+    finding: >
+      No critical or high victims in unreserved pool. No feedback
+      loops. Fair share 56 (well above threshold). Remaining:
+      cascade_path findings for 18 unknown-criticality functions,
+      severity = low. Remediation recommendation: tag remaining
+      functions with criticality levels for better analysis.
+
+# =========================================================================
+# Fact projection gap analysis
+# =========================================================================
+
+fact_projection_gap: >
+  New projector functions needed in sirfacts/facts.go:
+
+  1. accountConcurrencyFacts(assets []sir.AssetFact) []Fact
+     From the account settings asset, emit
+     (region, "account_concurrency_limit", limit).
+
+  2. functionConcurrencyFacts(assets []sir.AssetFact) []Fact
+     For each Lambda function:
+     - If ReservedConcurrentExecutions is set: emit function_reserved
+     - If ProvisionedConcurrencyConfigs exists: emit function_provisioned
+     - Always emit function_region (from ARN) and function_timeout
+
+  3. functionCriticalityFacts(assets []sir.AssetFact) []Fact
+     Scan function tags for criticality keys. Emit function_criticality
+     with the highest-priority match, or "unknown"/"default" if no
+     tag found. For inferred classification, check connected resource
+     names and invocation sources.
+
+  4. throttleBehaviorFacts(invocationPaths []Fact) []Fact
+     Derive from FM-046's lambda_invocation_path facts using the
+     mechanism → behavior mapping table. If FM-046 hasn't run,
+     emit nothing (closed-world: no throttle_behavior = unknown).
+
+validation:
+  exact_match:
+    - unreserved_pool_size
+    - per_function_fair_share
+    - critical_function_exposed count
+    - cascade_blast_radius counts
+  semantic_match:
+    - exhaustion_candidate risk factors
+    - feedback_loop detection
+    - severity classification
+  ignore:
+    - ordering of cascade paths
+    - Soufflé stderr warnings for empty optional relations

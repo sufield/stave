@@ -1,0 +1,1300 @@
+# reasoning-spec: fm-042-lambda-role-blast-radius
+# engine: souffle
+# trial-fixture: trials/souffle-lambda-blast-radius/
+# failure-mode: FM-042 (Lambda Interaction Patterns)
+
+question: >
+  Given a Lambda function and its execution role, what is the total
+  blast radius — the set of resources reachable through the role's
+  direct permissions and transitively through assumed roles? If the
+  blast radius includes sensitive resources, exfiltration paths, or
+  cross-account reach, what is the severity?
+
+context: >
+  Per-resource Lambda controls (runtime, timeout, DLQ, VPC, env-var
+  encryption) check whether the function itself is configured safely.
+  They cannot answer "if this function is compromised, what can the
+  attacker reach?" — that requires traversing the IAM permission graph
+  from the execution role to concrete resources in the account.
+
+  Six blast radius aspects that per-resource CEL cannot detect:
+
+  1. Direct over-privilege — role grants access to far more resources
+     than the function needs.
+  2. Transitive role assumption — role can sts:AssumeRole to more
+     privileged roles, multiplying reach.
+  3. Wildcard action blast radius — Action:* / Resource:* = full
+     account compromise entry point.
+  4. Service-coupled write access — role can write to a trigger
+     service (SQS, SNS) that invokes a more-privileged Lambda.
+  5. Data exfiltration paths — role has read on sensitive sources
+     AND write to output channels in the same execution context.
+  6. Cross-account reach — role can assume roles in other accounts.
+
+  FM-042 traces OUTWARD from the Lambda (what can it reach).
+  FM-046 traces INWARD (what can trigger it). The two compose
+  without overlap: FM-042 covers execution-role blast radius,
+  FM-046 covers event-source trust surface.
+
+  Existing predicates (sirfacts/facts.go):
+    has_action(role, action)         — Allow statement actions
+    has_resource(role, resource_pat) — Allow statement resource patterns
+    has_deny_action(role, action)    — Deny statement actions
+    has_deny_resource(role, res_pat) — Deny statement resource patterns
+    can_assume(from_role, to_role)   — Resolved assume edge (policy ∩ trust)
+    trusts_service(role, service)    — Trust policy service principals
+    has_type(asset, type)            — Asset type classification
+    has_tag(asset, "key=value")      — Asset tags
+    has_privilege_level(role, level) — admin/poweruser/readonly
+
+  Existing Datalog (reachability.dl):
+    transitive_role(start, end)      — Transitive closure of can_assume
+    reachable(principal, resource, action) — Full blast radius
+
+# =========================================================================
+# Section 1: Fact Schema — Lambda Execution Context Facts
+# =========================================================================
+
+fact_schema:
+  lambda_context:
+    description: >
+      Facts linking a Lambda function to its execution context: the
+      IAM role it runs as, VPC placement, and outward trigger targets.
+
+    predicates:
+      - name: lambda_role
+        arity: 2
+        fields:
+          subject: Lambda function ARN
+          object: Execution role ARN
+        source:
+          api: lambda:GetFunctionConfiguration
+          path: Configuration.Role
+        notes: >
+          One fact per Lambda function. Every Lambda has exactly one
+          execution role. This is the entry point for blast radius
+          traversal.
+
+      - name: lambda_vpc_subnet
+        arity: 2
+        fields:
+          subject: Lambda function ARN
+          object: Subnet ID
+        source:
+          api: lambda:GetFunctionConfiguration
+          path: VpcConfig.SubnetIds[]
+        notes: >
+          One fact per subnet. Non-VPC Lambda functions emit no facts
+          (closed-world: absence = not VPC-attached). VPC attachment
+          constrains network reachability but does not constrain IAM
+          blast radius — a VPC-attached Lambda with s3:* still reaches
+          all buckets via the S3 VPC endpoint or public endpoint.
+          Used for network-scoped blast radius narrowing (optional).
+
+      - name: lambda_trigger_target
+        arity: 3
+        fields:
+          subject: Lambda function ARN
+          predicate: lambda_trigger_target
+          object: target resource ARN (SQS queue, SNS topic, etc.)
+        source:
+          derived: >
+            Cross-reference lambda_role's has_action/has_resource for
+            write actions (sqs:SendMessage, sns:Publish,
+            events:PutEvents, lambda:InvokeFunction) against
+            resource_exists inventory.
+        notes: >
+          FM-042/FM-046 boundary: this predicate covers outward
+          trigger targets (what the Lambda can write to that triggers
+          another Lambda). FM-046 covers inward event source mappings
+          (what triggers this Lambda). lambda_trigger_target is derived
+          in the Datalog rules, not emitted by the projector.
+
+      - name: lambda_env_resource
+        arity: 3
+        fields:
+          subject: Lambda function ARN
+          predicate: lambda_env_resource
+          object: resource ARN extracted from environment variable value
+        source:
+          api: lambda:GetFunctionConfiguration
+          path: Environment.Variables
+        notes: >
+          Heuristic: scan environment variable values for ARN patterns
+          (arn:aws:...). These indicate intended targets vs. the full
+          permission scope. Not used for blast radius calculation
+          (permissions are authoritative), but used for over-privilege
+          detection: if the role can reach 47 buckets but env vars
+          reference only 1, the over-privilege ratio is 47:1.
+          Optional — absence produces no over-privilege annotation,
+          not false findings.
+
+# =========================================================================
+# Section 2: Fact Schema — IAM Permission Graph Facts
+# =========================================================================
+
+  iam_permission_graph:
+    description: >
+      Most IAM facts already exist in the projector. This section
+      documents what exists vs. what's new.
+
+    existing_predicates:
+      - name: has_action
+        status: EXISTS
+        notes: >
+          Emitted by iamPolicyFacts. One fact per action in each Allow
+          statement. Action wildcards are emitted as-is (e.g., "s3:*",
+          "*"). The Datalog rules or pre-computation must resolve
+          wildcards against concrete actions.
+
+      - name: has_resource
+        status: EXISTS
+        notes: >
+          Emitted by iamPolicyFacts. One fact per resource pattern in
+          each Allow statement. Patterns are emitted as-is (e.g.,
+          "arn:aws:s3:::*", "*"). Not resolved against inventory.
+
+      - name: has_deny_action
+        status: EXISTS
+        notes: Emitted by denyPolicyFacts. Same shape as has_action.
+
+      - name: has_deny_resource
+        status: EXISTS
+        notes: Emitted by denyPolicyFacts. Same shape as has_resource.
+
+      - name: can_assume
+        status: EXISTS
+        notes: >
+          Emitted by assumeEdgeFacts. Already resolved: the edge
+          exists only when role A has sts:AssumeRole on role B AND
+          role B's trust policy permits assumption by role A. No
+          additional trust policy resolution needed in Datalog.
+
+      - name: trusts_service
+        status: EXISTS
+        notes: Emitted by trustPolicyFacts.
+
+      - name: has_privilege_level
+        status: EXISTS
+        notes: >
+          Emitted by iamPolicyFacts. Values: "admin", "poweruser",
+          "readonly". Useful as a fast filter — if privilege_level =
+          "admin", skip detailed resolution and flag immediately.
+
+    new_predicates:
+      - name: policy_matches_resource
+        arity: 3
+        status: NEW — pre-computed by fact projector
+        fields:
+          subject: role ARN
+          predicate: policy_matches_resource
+          object: concrete resource ARN from inventory
+        source:
+          derived: >
+            For each (role, resource_pattern) in has_resource, and each
+            concrete resource ARN in resource_exists, test whether the
+            pattern matches the ARN using IAM glob semantics. Emit one
+            fact per match.
+
+        design_rationale: |
+          Pattern matching must be pre-computed in the fact projector,
+          not done in Soufflé. Reasons:
+
+          1. Soufflé's string operations (substr, strlen, cat) cannot
+             express IAM glob matching (multi-segment wildcards, `?`
+             single-character, ARN field-level patterns). There are no
+             regex or glob built-in functors.
+
+          2. Pre-computation in Go is straightforward: the projector
+             already has the has_resource patterns and the
+             resource_exists inventory. A Go glob matcher implementing
+             IAM semantics runs once during export-sir.
+
+          3. Scale: for 2,000 roles × 50,000 resources, the naive
+             cross-product is 100M comparisons. But most roles have
+             < 20 resource patterns, and most patterns match a small
+             fraction of resources. The projector can short-circuit
+             on pattern structure (literal ARN = hash lookup, `*` =
+             match all, prefix pattern = trie lookup). Estimated
+             output: 500K-2M facts for a large account.
+
+          4. Demand-driven optimization: the projector only resolves
+             patterns for roles reachable from Lambda execution roles
+             (via the lambda_role + can_assume graph). This reduces
+             the working set from 2,000 roles to ~200. Soufflé's
+             magic set transformation could achieve similar demand-
+             driven behavior, but the pattern matching itself still
+             can't be expressed in Datalog.
+
+          Trade-off: the JSONL fact file grows larger (2M facts vs.
+          50K without resolution). But Soufflé's bottom-up evaluation
+          is I/O-bound on fact loading, not computation-bound — and
+          the alternative (no resolution) means the Datalog rules
+          can't join policy patterns against concrete resources at all.
+
+      - name: policy_action_matches
+        arity: 3
+        status: NEW — pre-computed by fact projector
+        fields:
+          subject: role ARN
+          predicate: policy_action_matches
+          object: concrete action string
+        source:
+          derived: >
+            For each (role, action_pattern) in has_action, expand the
+            pattern against the known IAM action namespace. "s3:*"
+            expands to all known S3 actions. "*" expands to all
+            actions. Literal actions emit as-is.
+        notes: >
+          The known action namespace is bounded (~12,000 unique AWS
+          actions). The projector carries a static action catalog.
+          Expansion is bounded and deterministic.
+
+          Simplification: for blast radius, we don't need per-action
+          granularity for most queries. The Datalog rules use coarse
+          action categories:
+            read_action(role, service)  — role can read from this service
+            write_action(role, service) — role can write to this service
+            admin_action(role, service) — role has admin-level access
+          The projector pre-classifies expanded actions into these
+          categories, reducing the fact count from ~millions to ~thousands.
+
+      - name: deny_matches_resource
+        arity: 3
+        status: NEW — pre-computed by fact projector
+        fields:
+          subject: role ARN
+          predicate: deny_matches_resource
+          object: concrete resource ARN
+        source:
+          derived: >
+            Same glob matching as policy_matches_resource, but for
+            has_deny_resource patterns.
+
+      - name: permission_boundary_allows
+        arity: 3
+        status: NEW
+        fields:
+          subject: role ARN
+          predicate: permission_boundary_allows
+          object: action pattern
+        source:
+          api: iam:GetRole
+          path: Role.PermissionsBoundary.PermissionsBoundaryArn
+                → iam:GetPolicyVersion → Document.Statement[].Action
+        notes: >
+          Permission boundaries restrict effective permissions. An
+          action not in the boundary is effectively denied. Emitted
+          only for roles that have a permission boundary attached.
+          Roles without boundaries emit no facts (closed-world:
+          absence = no boundary = all actions permitted by the
+          boundary layer).
+
+      - name: not_action_allow
+        arity: 3
+        status: NEW
+        fields:
+          subject: role ARN
+          predicate: not_action_allow
+          object: excluded action string
+        source:
+          derived: >
+            From Allow statements with NotAction instead of Action.
+            The projector emits the excluded actions. The Datalog
+            rule inverts: the role can perform any action EXCEPT
+            those listed.
+
+      - name: not_resource_allow
+        arity: 3
+        status: NEW
+        fields:
+          subject: role ARN
+          predicate: not_resource_allow
+          object: excluded resource pattern
+        source:
+          derived: >
+            From Allow statements with NotResource instead of
+            Resource. The role can access any resource EXCEPT those
+            matching the excluded patterns.
+
+# =========================================================================
+# Section 3: Fact Schema — Target Resource Inventory Facts
+# =========================================================================
+
+  resource_inventory:
+    description: >
+      Concrete resources in the account that IAM policies can target.
+      Used to resolve policy resource patterns against actual resources.
+
+    predicate: resource_exists
+    arity: 3
+    fields:
+      subject: resource ARN
+      predicate: resource_exists
+      object: service name (e.g., "s3", "dynamodb", "kms")
+
+    sources:
+      - service: s3
+        api: s3:ListBuckets
+        arn_pattern: "arn:aws:s3:::{bucket_name}"
+        snapshot_status: captured
+
+      - service: dynamodb
+        api: dynamodb:ListTables + DescribeTable
+        arn_pattern: "arn:aws:dynamodb:{region}:{account}:table/{name}"
+        snapshot_status: captured
+
+      - service: sqs
+        api: sqs:ListQueues
+        arn_pattern: "arn:aws:sqs:{region}:{account}:{name}"
+        snapshot_status: captured
+
+      - service: sns
+        api: sns:ListTopics
+        arn_pattern: "arn:aws:sns:{region}:{account}:{name}"
+        snapshot_status: captured
+
+      - service: kms
+        api: kms:ListKeys + DescribeKey
+        arn_pattern: "arn:aws:kms:{region}:{account}:key/{id}"
+        snapshot_status: captured
+        sensitivity: high
+
+      - service: secretsmanager
+        api: secretsmanager:ListSecrets
+        arn_pattern: "arn:aws:secretsmanager:{region}:{account}:secret:{name}"
+        snapshot_status: captured
+        sensitivity: high
+
+      - service: ssm
+        api: ssm:DescribeParameters
+        arn_pattern: "arn:aws:ssm:{region}:{account}:parameter/{name}"
+        snapshot_status: partial (SecureString type must be in snapshot)
+        sensitivity: high (SecureString only)
+
+      - service: rds
+        api: rds:DescribeDBInstances
+        arn_pattern: "arn:aws:rds:{region}:{account}:db:{name}"
+        snapshot_status: captured
+        sensitivity: high
+
+      - service: iam
+        api: iam:ListRoles
+        arn_pattern: "arn:aws:iam::{account}:role/{name}"
+        snapshot_status: captured
+        notes: >
+          Roles as targets of sts:AssumeRole. Already in snapshot
+          as assets with has_type = aws_iam_role.
+
+      - service: lambda
+        api: lambda:ListFunctions
+        arn_pattern: "arn:aws:lambda:{region}:{account}:function:{name}"
+        snapshot_status: captured
+        notes: >
+          Lambda functions as targets of lambda:InvokeFunction.
+          Cross-Lambda invocation is a service-coupled escalation
+          path if the target has a more-privileged role.
+
+      - service: ec2
+        api: ec2:DescribeInstances
+        arn_pattern: "arn:aws:ec2:{region}:{account}:instance/{id}"
+        snapshot_status: captured
+        notes: >
+          EC2 instances as targets of ssm:SendCommand (command
+          execution). SSM command execution from a Lambda is a
+          privilege escalation to the EC2's IAM instance profile.
+
+      - service: ecs
+        api: ecs:ListTasks
+        arn_pattern: "arn:aws:ecs:{region}:{account}:task/{cluster}/{id}"
+        snapshot_status: partial (requires DescribeServices)
+        notes: >
+          ECS tasks as targets of ecs:RunTask. Requires ECS services
+          in the snapshot — if absent, no ECS-related findings.
+
+    sensitivity_classification:
+      predicate: sensitive_resource
+      arity: 2
+      fields:
+        subject: resource ARN
+        object: sensitivity level ("high", "critical")
+      derivation: >
+        A resource is classified as sensitive if:
+        1. Service is kms, secretsmanager, or rds → high
+        2. SSM parameter with Type=SecureString → high
+        3. S3 bucket tagged with classification=confidential or
+           classification=restricted → high
+        4. IAM role with has_privilege_level = admin → critical
+        5. Any resource tagged with data-classification=phi or
+           data-classification=pii → critical
+
+        The projector derives sensitivity from resource properties
+        and tags. Unclassified resources are not sensitive (closed-
+        world).
+
+# =========================================================================
+# Section 4: Datalog Rules
+# =========================================================================
+
+datalog:
+  program_file: examples/lambda-blast-radius/blast_radius.dl
+
+  input_relations:
+    existing:
+      - has_type         # (asset, type)
+      - has_action       # (role, action_pattern)
+      - has_resource     # (role, resource_pattern)
+      - has_deny_action  # (role, action)
+      - has_deny_resource # (role, resource_pattern)
+      - can_assume       # (from_role, to_role) — resolved
+      - trusts_service   # (role, service_principal)
+      - has_tag          # (asset, "key=value")
+      - has_privilege_level # (role, level)
+    new:
+      - lambda_role               # (lambda_arn, role_arn)
+      - resource_exists           # (resource_arn, service)
+      - sensitive_resource        # (resource_arn, level)
+      - policy_matches_resource   # (role_arn, resource_arn) — pre-computed
+      - deny_matches_resource     # (role_arn, resource_arn) — pre-computed
+      - permission_boundary_allows # (role_arn, action_pattern)
+      - not_action_allow          # (role_arn, excluded_action)
+      - not_resource_allow        # (role_arn, excluded_resource_pattern)
+      - lambda_vpc_subnet         # (lambda_arn, subnet_id) — optional
+      - read_action               # (role_arn, service) — pre-classified
+      - write_action              # (role_arn, service) — pre-classified
+      - admin_action              # (role_arn, service) — pre-classified
+
+  rules:
+    # --- Rule 1: Direct reach ---
+    - name: lambda_direct_reach
+      description: >
+        For each Lambda function, resolve its execution role's allow
+        statements against the resource inventory. A resource is
+        directly reachable if the role's policy matches it (via
+        pre-computed policy_matches_resource) and no unconditional
+        deny suppresses it.
+      input: [lambda_role, policy_matches_resource, deny_matches_resource, has_type]
+      output: lambda_can_reach(lambda_arn, target_arn, via_role)
+      rule: |
+        // Transitive role assumption — reuse from reachability.dl.
+        .decl transitive_role(start: symbol, end: symbol)
+        transitive_role(A, B) :- can_assume(A, B).
+        transitive_role(A, C) :- transitive_role(A, B), can_assume(B, C).
+
+        // Direct reach: role's policy matches a concrete resource.
+        .decl role_reaches(role: symbol, target: symbol)
+        role_reaches(R, T) :-
+            policy_matches_resource(R, T),
+            !deny_reaches(R, T).
+
+        // Deny suppression: unconditional deny on the same resource.
+        .decl deny_reaches(role: symbol, target: symbol)
+        deny_reaches(R, T) :- deny_matches_resource(R, T).
+
+        // Lambda direct reach via its execution role.
+        .decl lambda_can_reach(lambda: symbol, target: symbol, via_role: symbol)
+        lambda_can_reach(L, T, R) :-
+            lambda_role(L, R),
+            role_reaches(R, T).
+      notes: |
+        Pattern matching semantics (implemented in Go projector):
+        - Case-sensitive for action service prefix (s3 ≠ S3)
+        - Case-insensitive for action name (getobject = GetObject)
+          (IAM's actual behavior)
+        - Case-sensitive for resource ARNs
+        - Glob: * matches zero or more characters, ? matches exactly
+          one character
+        - ARN field-level: arn:aws:s3:::bucket/* matches
+          arn:aws:s3:::bucket/key but not arn:aws:s3:::other/key
+
+        Simplification: ? (single-character wildcard) is ignored in
+        this iteration. Impact: potential false negatives for policies
+        using ? — rare in practice (< 0.1% of policies). The projector
+        logs a warning when it encounters ? patterns so the gap is
+        visible.
+
+    # --- Rule 2: Transitive role assumption ---
+    - name: lambda_transitive_reach
+      description: >
+        For each Lambda execution role that can assume other roles
+        (directly or transitively), extend the blast radius to include
+        everything the assumed roles can reach.
+      input: [lambda_role, can_assume, transitive_role, role_reaches]
+      output: lambda_can_reach(lambda_arn, target_arn, via_role)
+      rule: |
+        // Extend reach through assumed roles.
+        lambda_can_reach(L, T, AssumedRole) :-
+            lambda_role(L, R),
+            transitive_role(R, AssumedRole),
+            role_reaches(AssumedRole, T).
+      termination: >
+        Terminates because transitive_role is computed over the finite
+        can_assume relation. Cycles (A assumes B assumes A) reach a
+        fixed point — transitive_role(A,A) and transitive_role(B,B)
+        are derived, and role_reaches is a function of the fixed
+        role_reaches base, not of the transitive closure itself.
+
+    # --- Rule 3: Explicit deny resolution ---
+    - name: deny_resolution
+      description: >
+        IAM evaluation: explicit deny overrides allow. The deny_reaches
+        relation suppresses reach facts.
+      input: [deny_matches_resource]
+      output: deny_reaches(role, target)
+      rule: |
+        // Already defined in Rule 1. deny_reaches(R, T) fires when
+        // deny_matches_resource(R, T) — the pre-computed deny
+        // pattern matched the concrete resource.
+
+        // Permission boundary: if the role has a boundary, any
+        // action NOT in the boundary is effectively denied.
+        // Modeled as: role_reaches only fires when no boundary
+        // exists OR the boundary allows the action's service.
+        .decl has_boundary(role: symbol)
+        has_boundary(R) :- permission_boundary_allows(R, _).
+
+        .decl boundary_allows_service(role: symbol, service: symbol)
+        boundary_allows_service(R, S) :-
+            permission_boundary_allows(R, A),
+            action_service(A, S).
+
+        // Override role_reaches to respect boundaries.
+        // A resource is reachable only if:
+        //   (a) no boundary exists, OR
+        //   (b) the boundary allows the target's service.
+        // This is a conservative approximation — the boundary
+        // check is per-service, not per-action. A boundary
+        // allowing "s3:GetObject" is approximated as allowing
+        // all S3 actions. Exact per-action boundary intersection
+        // requires the pre-computed action matching.
+      notes: |
+        FM-042 / FM-060 boundary:
+
+        FM-042 handles: unconditional Deny statements (Deny + Action +
+        Resource, no Condition block). The deny_matches_resource
+        pre-computation resolves the deny pattern against concrete
+        resources. If the deny matches, the reach is suppressed.
+
+        FM-060 handles: Deny statements with Condition blocks. Whether
+        the deny actually applies depends on the request context
+        (caller ARN, source IP, tags) — this is a satisfiability
+        question requiring Z3.
+
+        When a conditional deny exists on a reachable resource, FM-042
+        emits a conditional_deny_annotation:
+          conditional_deny_present(role, target, "condition_deny")
+        This means the blast radius is an upper bound — the actual
+        blast radius may be narrower if the conditional deny fires.
+        The finding schema carries this annotation.
+
+        .decl conditional_deny_present(role: symbol, target: symbol, note: symbol)
+        conditional_deny_present(R, T, "conditional_deny") :-
+            policy_matches_resource(R, T),
+            has_deny_resource(R, DPat),
+            has_deny_condition(R, DPat, _),
+            // deny pattern matches target but has conditions
+            deny_matches_resource(R, T).
+
+    # --- Rule 4: Blast radius aggregation ---
+    - name: blast_radius_aggregation
+      description: >
+        For each Lambda function, aggregate all reachable resources
+        into summary metrics.
+      input: [lambda_can_reach, resource_exists, sensitive_resource, has_type]
+      output: >
+        lambda_blast_radius(lambda, total_count)
+        lambda_blast_by_service(lambda, service, count)
+        lambda_sensitive_reach(lambda, target, sensitivity)
+        lambda_cross_account_reach(lambda, external_account)
+        lambda_escalation_path(lambda, target_lambda, target_role)
+      rule: |
+        // Total blast radius per Lambda.
+        .decl lambda_reach_target(lambda: symbol, target: symbol)
+        lambda_reach_target(L, T) :- lambda_can_reach(L, T, _).
+
+        .decl lambda_blast_radius(lambda: symbol, total: number)
+        .output lambda_blast_radius
+        lambda_blast_radius(L, N) :-
+            lambda_reach_target(L, _),
+            N = count : { lambda_reach_target(L, _) }.
+
+        // Blast radius by service.
+        .decl lambda_reach_service(lambda: symbol, target: symbol, service: symbol)
+        lambda_reach_service(L, T, S) :-
+            lambda_can_reach(L, T, _),
+            resource_exists(T, S).
+
+        .decl lambda_service_target(lambda: symbol, service: symbol)
+        lambda_service_target(L, S) :- lambda_reach_service(L, _, S).
+
+        .decl lambda_blast_by_service(lambda: symbol, service: symbol, n: number)
+        .output lambda_blast_by_service
+        lambda_blast_by_service(L, S, N) :-
+            lambda_service_target(L, S),
+            N = count : { lambda_reach_service(L, _, S) }.
+
+        // Sensitive resource reach.
+        .decl lambda_sensitive_reach(lambda: symbol, target: symbol, level: symbol)
+        .output lambda_sensitive_reach
+        lambda_sensitive_reach(L, T, Lvl) :-
+            lambda_can_reach(L, T, _),
+            sensitive_resource(T, Lvl).
+
+        // Cross-account reach: assumed role ARN has a different
+        // account ID than the Lambda's account.
+        .decl lambda_cross_account(lambda: symbol, role: symbol)
+        lambda_cross_account(L, ExtRole) :-
+            lambda_role(L, R),
+            transitive_role(R, ExtRole),
+            cross_account(R, ExtRole).
+
+        .decl cross_account(local: symbol, remote: symbol)
+        cross_account(A, B) :-
+            can_assume(A, B),
+            account_id(A, AccA),
+            account_id(B, AccB),
+            AccA != AccB.
+
+        .decl lambda_cross_account_reach(lambda: symbol, ext_account: symbol)
+        .output lambda_cross_account_reach
+        lambda_cross_account_reach(L, AccB) :-
+            lambda_cross_account(L, ExtRole),
+            account_id(ExtRole, AccB).
+
+        // Service-coupled escalation: Lambda A can write to a
+        // trigger service that invokes Lambda B with a more
+        // privileged role.
+        .decl lambda_escalation_path(lambda: symbol, target_lambda: symbol, target_role: symbol)
+        .output lambda_escalation_path
+        lambda_escalation_path(LA, LB, RB) :-
+            lambda_can_reach(LA, Q, _),
+            // Q is a queue/topic that triggers LB
+            triggers_lambda(Q, LB),
+            lambda_role(LB, RB),
+            lambda_blast_radius(LA, BRA),
+            lambda_blast_radius(LB, BRB),
+            BRB > BRA.
+      notes: >
+        triggers_lambda(queue_or_topic, lambda) is a new input
+        predicate emitted by the projector from Lambda event source
+        mappings. It maps SQS queues, SNS topics, and EventBridge
+        rules to the Lambda functions they invoke. This is the
+        FM-042/FM-046 boundary: FM-042 uses triggers_lambda to detect
+        outward escalation paths; FM-046 analyzes the full event
+        source trust surface inward.
+
+        account_id(arn, account) is a new input predicate extracted
+        from the ARN structure (field 5 of the colon-delimited ARN).
+        The projector extracts it during resource_exists emission.
+
+    # --- Rule 5: Data exfiltration path detection ---
+    - name: exfiltration_paths
+      description: >
+        Detect Lambda functions whose execution role has both read
+        access to sensitive resources and write access to output
+        channels.
+      input: [lambda_can_reach, sensitive_resource, read_action, write_action, resource_exists]
+      output: exfiltration_path(lambda, read_source, write_target)
+      rule: |
+        // Read source: role can read from a sensitive resource.
+        .decl lambda_reads_sensitive(lambda: symbol, source: symbol, service: symbol)
+        lambda_reads_sensitive(L, T, S) :-
+            lambda_can_reach(L, T, _),
+            sensitive_resource(T, _),
+            resource_exists(T, S),
+            lambda_role(L, R),
+            read_action(R, S).
+
+        // Write target: role can write to an output channel.
+        // Output channels: S3 (PutObject), SQS (SendMessage),
+        // SNS (Publish), Lambda (InvokeFunction to less-restricted fn).
+        .decl lambda_writes_output(lambda: symbol, target: symbol, service: symbol)
+        lambda_writes_output(L, T, S) :-
+            lambda_can_reach(L, T, _),
+            resource_exists(T, S),
+            lambda_role(L, R),
+            write_action(R, S),
+            (S = "s3"; S = "sqs"; S = "sns"; S = "lambda").
+
+        .decl exfiltration_path(lambda: symbol, read_source: symbol, write_target: symbol)
+        .output exfiltration_path
+        exfiltration_path(L, Src, Tgt) :-
+            lambda_reads_sensitive(L, Src, _),
+            lambda_writes_output(L, Tgt, _),
+            Src != Tgt.
+
+  additional_input_predicates:
+    - name: triggers_lambda
+      arity: 2
+      fields:
+        subject: trigger resource ARN (SQS queue, SNS topic)
+        object: Lambda function ARN
+      source:
+        api: lambda:ListEventSourceMappings
+        path: EventSourceMappings[].EventSourceArn → FunctionArn
+
+    - name: account_id
+      arity: 2
+      fields:
+        subject: resource ARN
+        object: AWS account ID (12-digit string)
+      source:
+        derived: extracted from ARN field 5
+
+    - name: action_service
+      arity: 2
+      fields:
+        subject: action string (e.g., "s3:GetObject")
+        object: service name (e.g., "s3")
+      source:
+        derived: split on colon, take prefix
+
+    - name: has_deny_condition
+      arity: 3
+      fields:
+        subject: role ARN
+        object: deny resource pattern
+        extra: condition operator string
+      source:
+        derived: from denyPolicyFacts when Condition block is present
+
+  not_action_not_resource_encoding: |
+    NotAction and NotResource invert matching logic. The projector
+    handles them as follows:
+
+    NotAction Allow: "allow all actions EXCEPT these."
+      Projector emits: not_action_allow(role, excluded_action) for
+      each excluded action.
+      Datalog rule: treat as if has_action(role, "*") minus the
+      excluded set. Since the action namespace is finite (~12K),
+      the projector can emit the complement set. But this is
+      expensive — instead, the Datalog rule uses negation:
+
+        role_has_effective_action(R, A) :-
+            not_action_allow(R, _),  // role uses NotAction
+            known_action(A),         // A is a known AWS action
+            !not_action_allow(R, A). // A is not in the excluded set
+
+      known_action is a static input relation of all AWS actions.
+
+    NotResource Allow: "allow on all resources EXCEPT these."
+      Projector emits: not_resource_allow(role, excluded_pattern).
+      Datalog rule:
+
+        role_reaches_via_not_resource(R, T) :-
+            not_resource_allow(R, _),    // role uses NotResource
+            resource_exists(T, _),       // T is a concrete resource
+            !not_resource_matches(R, T). // T is not in excluded set
+
+        not_resource_matches(R, T) :-
+            not_resource_allow(R, ExPat),
+            glob_matches(ExPat, T).  // pre-computed by projector
+
+    NotAction + NotResource dramatically expand blast radius.
+    The finding schema flags these as "inverted_policy" to highlight
+    the risk.
+
+  scalability_note: |
+    For a large account (500 Lambda functions, 2,000 IAM roles,
+    50,000 resources):
+
+    Demand-driven optimization: the projector only emits
+    policy_matches_resource for roles in the Lambda execution role
+    reachability set:
+      1. Collect all lambda_role(_, R) execution role ARNs.
+      2. Compute the transitive_role closure from those ARNs.
+      3. Only resolve patterns for roles in that closure.
+
+    This reduces the pattern-matching work from 2,000 roles to
+    ~50-200 roles (typical Lambda execution role fan-out). The
+    policy_matches_resource fact count drops proportionally.
+
+    Soufflé's magic set transformation is NOT needed — demand-
+    driving happens at the projector level, not in the Datalog
+    program. The Datalog rules are bottom-up over the pre-filtered
+    fact set.
+
+    Estimated fact counts for a large account:
+      resource_exists:           50,000
+      policy_matches_resource:   200,000 (200 roles × 1,000 avg matches)
+      lambda_can_reach:          100,000 (500 Lambdas × 200 avg reach)
+      Total JSONL:               ~500,000 facts
+      Soufflé wall time:         < 10 seconds
+
+  scp_handling: |
+    If SCP facts are available in the snapshot (emitted as
+    scp_denies_action(org_unit, action) and
+    scp_denies_resource(org_unit, resource_pattern) by an SCP
+    projector), the Datalog rules apply them as an additional
+    ceiling:
+
+      scp_suppressed(R, T) :-
+          scp_denies_resource(_, T),
+          role_reaches(R, T).
+
+      // Override role_reaches to exclude SCP-denied.
+      effective_role_reaches(R, T) :-
+          role_reaches(R, T),
+          !scp_suppressed(R, T).
+
+    If SCP facts are absent, all findings carry an annotation:
+      scp_status: "unaware"
+    Meaning: blast radius may be narrower than reported if SCPs
+    are in effect. The finding schema includes this field.
+
+# =========================================================================
+# Section 5: Chain Definition
+# =========================================================================
+
+chain_definition:
+  file: chains/lambda_role_blast_radius.yaml
+  content: |
+    id: lambda_role_blast_radius
+    description: >
+      Blast radius of Lambda execution roles. Traces from each Lambda
+      function through its execution role's IAM permission graph —
+      including transitive role assumption, service-coupled escalation,
+      and cross-account reach — to enumerate all resources a compromised
+      Lambda can access. Compounds per-resource Lambda and IAM controls
+      with graph-level blast radius analysis.
+    controls:
+      - CTL.LAMBDA.ROLE.SHARED.001
+      - CTL.LAMBDA.ROLE.LEASTPRIV.001
+      - CTL.IAM.IDENTITY.BLASTRADIUS.001
+      - CTL.IAM.IDENTITY.BLASTRADIUS.004
+      - CTL.IAM.POLICY.SOD.001
+      - CTL.IAM.ROLE.CROSSSERVICE.001
+    escalation_threshold: 2
+    compound_severity: critical
+    preconditions:
+      - ec2_code_execution
+    postconditions:
+      - data_access
+      - iam_credential_theft
+
+  prerequisite_controls:
+    existing:
+      - CTL.LAMBDA.ROLE.SHARED.001    # Lambda role shared across functions
+      - CTL.LAMBDA.ROLE.LEASTPRIV.001 # Lambda role least privilege violation
+      - CTL.IAM.IDENTITY.BLASTRADIUS.001  # High blast radius identity
+      - CTL.IAM.IDENTITY.BLASTRADIUS.004  # Admin-level identity
+      - CTL.IAM.POLICY.SOD.001        # Separation of duties violation
+      - CTL.IAM.ROLE.CROSSSERVICE.001 # Cross-service shared role
+    notes: >
+      These controls fire per-resource. When ≥2 co-fire on assets
+      sharing a Lambda execution context, the chain engine emits a
+      compound finding. The Soufflé program adds the graph-level
+      blast radius enumeration that chains cannot express.
+
+  required_fact_types:
+    required:
+      - lambda_role
+      - has_action
+      - has_resource
+      - has_deny_action
+      - has_deny_resource
+      - can_assume
+      - has_type
+      - resource_exists
+      - policy_matches_resource
+      - deny_matches_resource
+    optional:
+      - sensitive_resource
+      - read_action
+      - write_action
+      - permission_boundary_allows
+      - not_action_allow
+      - not_resource_allow
+      - triggers_lambda
+      - account_id
+      - lambda_vpc_subnet
+      - has_tag
+    notes: >
+      Missing optional facts degrade the analysis gracefully:
+      - No sensitive_resource → no sensitivity annotations
+      - No triggers_lambda → no escalation path detection
+      - No permission_boundary_allows → boundary not applied
+        (blast radius is an upper bound)
+      - No account_id → no cross-account detection
+
+  silence_threshold: >
+    The chain is silent (emits no finding) when:
+    - Lambda blast radius ≤ 3 resources AND
+    - All reachable resources are in the same service AND
+    - No sensitive resources are reachable AND
+    - No cross-account reach AND
+    - No exfiltration paths
+
+    A Lambda with an execution role granting only
+    logs:CreateLogGroup + logs:CreateLogStream + logs:PutLogEvents
+    on its own log group ARN has blast radius = 1. No finding.
+
+    The threshold of 3 is chosen because a typical minimally-scoped
+    Lambda role touches 1-3 resources (log group, one data source,
+    maybe one output). Below this threshold, the role is likely
+    well-scoped and a finding would be noise.
+
+# =========================================================================
+# Section 6: Finding Schema
+# =========================================================================
+
+finding_schema:
+  fields:
+    - lambda_arn: Lambda function ARN (entry point)
+    - execution_role_arn: the role being analyzed
+    - direct_reach:
+        count: number of resources reachable via the role's own policies
+        resources: list of {arn, service, sensitivity}
+    - transitive_reach:
+        count: number of additional resources via assumed roles
+        assumption_chains:
+          - path: [role1_arn, role2_arn, ...]
+            resources_added: count
+    - total_blast_radius:
+        count: union of direct + transitive, deduplicated
+    - blast_radius_by_service:
+        - {service: "s3", count: 47}
+        - {service: "dynamodb", count: 8}
+    - sensitive_resource_reach:
+        count: number of sensitive resources reachable
+        resources: list of {arn, service, sensitivity_level}
+    - exfiltration_paths:
+        - {read_source: arn, write_target: arn}
+    - cross_account_reach:
+        - {account_id: "999999999999", assumed_role: arn}
+    - escalation_paths:
+        - {target_lambda: arn, target_role: arn, target_blast_radius: count}
+    - annotations:
+        conditional_deny_present: boolean
+        scp_status: "aware" | "unaware"
+        inverted_policy: boolean (NotAction or NotResource used)
+        boundary_applied: boolean
+
+  severity_mapping:
+    - condition: has_privilege_level(role, "admin") OR Action:* Resource:*
+      severity: critical
+      rationale: Full account compromise entry point
+
+    - condition: sensitive_resource_reach.count > 0 AND sensitivity = "critical"
+      severity: critical
+      rationale: KMS keys, Secrets Manager, RDS directly reachable
+
+    - condition: exfiltration_paths is non-empty
+      severity: critical
+      rationale: Read-sensitive + write-external in same execution context
+
+    - condition: transitive_reach.count > direct_reach.count * 2
+      severity: high
+      rationale: Role assumption amplifies blast radius >2x
+
+    - condition: cross_account_reach is non-empty
+      severity: high
+      rationale: Blast radius extends beyond account boundary
+
+    - condition: total_blast_radius.count > 50 AND blast_radius_by_service has > 3 services
+      severity: high
+      rationale: Broad cross-service reach
+
+    - condition: escalation_paths is non-empty
+      severity: high
+      rationale: Can trigger more-privileged Lambda via service coupling
+
+    - condition: total_blast_radius.count > 10 AND blast_radius_by_service has 1-2 services
+      severity: medium
+      rationale: Moderate reach within a service domain
+
+    - condition: total_blast_radius.count > 3 AND no sensitive targets
+      severity: low
+      rationale: Informational — role has broader reach than minimum but no high-value targets
+
+# =========================================================================
+# Section 7: Worked Example — Transitive Role Assumption
+# =========================================================================
+
+worked_example:
+  description: >
+    Lambda function data-processor with execution role that can assume
+    two elevated roles. Demonstrates direct reach (1 bucket), transitive
+    reach (30 buckets + 8 DynamoDB tables via ElevatedDeploy, 1 bucket
+    via ElevatedAudit with boundary), and exfiltration path detection.
+
+  snapshot_fragment:
+    lambda_function:
+      arn: "arn:aws:lambda:us-east-1:123456789012:function:data-processor"
+      role: "arn:aws:iam::123456789012:role/DataProcessorRole"
+
+    roles:
+      - arn: "arn:aws:iam::123456789012:role/DataProcessorRole"
+        inline_policy:
+          - effect: Allow
+            actions: ["s3:GetObject"]
+            resources: ["arn:aws:s3:::input-bucket/*"]
+          - effect: Allow
+            actions: ["sts:AssumeRole"]
+            resources: ["arn:aws:iam::123456789012:role/Elevated*"]
+        trust_policy:
+          principals: ["lambda.amazonaws.com"]
+
+      - arn: "arn:aws:iam::123456789012:role/ElevatedDeploy"
+        managed_policy:
+          - effect: Allow
+            actions: ["s3:*"]
+            resources: ["*"]
+          - effect: Allow
+            actions: ["dynamodb:*"]
+            resources: ["*"]
+        trust_policy:
+          principals: ["arn:aws:iam::123456789012:role/DataProcessorRole"]
+        permission_boundary: null
+
+      - arn: "arn:aws:iam::123456789012:role/ElevatedAudit"
+        managed_policy:
+          - effect: Allow
+            actions: ["cloudtrail:LookupEvents", "s3:GetObject"]
+            resources: ["arn:aws:s3:::audit-logs/*"]
+        trust_policy:
+          principals: ["arn:aws:iam::123456789012:role/DataProcessorRole"]
+        permission_boundary:
+          actions: ["cloudtrail:Lookup*", "s3:Get*", "s3:List*"]
+
+    resources:
+      s3_buckets:
+        count: 30
+        names: ["input-bucket", "audit-logs", "data-lake", "backups", "logs", "...28 total"]
+      dynamodb_tables:
+        count: 8
+        names: ["users", "orders", "sessions", "events", "...8 total"]
+      kms_keys:
+        count: 4
+        arns: ["arn:aws:kms:us-east-1:123456789012:key/key-1", "...4 total"]
+      sensitive:
+        - {arn: "arn:aws:kms:us-east-1:123456789012:key/key-1", level: "high"}
+        - {arn: "arn:aws:kms:us-east-1:123456789012:key/key-2", level: "high"}
+
+  projected_facts:
+    lambda_context:
+      - {subject: "arn:aws:lambda:us-east-1:123456789012:function:data-processor", predicate: lambda_role, object: "arn:aws:iam::123456789012:role/DataProcessorRole"}
+      - {subject: "arn:aws:lambda:us-east-1:123456789012:function:data-processor", predicate: has_type, object: "aws_lambda_function"}
+
+    iam_graph:
+      # DataProcessorRole policies
+      - {subject: "arn:aws:iam::123456789012:role/DataProcessorRole", predicate: has_action, object: "s3:GetObject"}
+      - {subject: "arn:aws:iam::123456789012:role/DataProcessorRole", predicate: has_resource, object: "arn:aws:s3:::input-bucket/*"}
+      - {subject: "arn:aws:iam::123456789012:role/DataProcessorRole", predicate: has_action, object: "sts:AssumeRole"}
+      - {subject: "arn:aws:iam::123456789012:role/DataProcessorRole", predicate: has_resource, object: "arn:aws:iam::123456789012:role/Elevated*"}
+      # Resolved assume edges
+      - {subject: "arn:aws:iam::123456789012:role/DataProcessorRole", predicate: can_assume, object: "arn:aws:iam::123456789012:role/ElevatedDeploy"}
+      - {subject: "arn:aws:iam::123456789012:role/DataProcessorRole", predicate: can_assume, object: "arn:aws:iam::123456789012:role/ElevatedAudit"}
+      # ElevatedDeploy policies
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedDeploy", predicate: has_action, object: "s3:*"}
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedDeploy", predicate: has_resource, object: "*"}
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedDeploy", predicate: has_action, object: "dynamodb:*"}
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedDeploy", predicate: has_privilege_level, object: "admin"}
+      # ElevatedAudit policies
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedAudit", predicate: has_action, object: "cloudtrail:LookupEvents"}
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedAudit", predicate: has_action, object: "s3:GetObject"}
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedAudit", predicate: has_resource, object: "arn:aws:s3:::audit-logs/*"}
+      # ElevatedAudit permission boundary
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedAudit", predicate: permission_boundary_allows, object: "cloudtrail:Lookup*"}
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedAudit", predicate: permission_boundary_allows, object: "s3:Get*"}
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedAudit", predicate: permission_boundary_allows, object: "s3:List*"}
+
+    pre_computed_matches:
+      # DataProcessorRole matches
+      - {subject: "arn:aws:iam::123456789012:role/DataProcessorRole", predicate: policy_matches_resource, object: "arn:aws:s3:::input-bucket"}
+      - {subject: "arn:aws:iam::123456789012:role/DataProcessorRole", predicate: read_action, object: "s3"}
+      # ElevatedDeploy matches (Resource:* → all 30 buckets + 8 tables + 4 KMS keys)
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedDeploy", predicate: policy_matches_resource, object: "arn:aws:s3:::input-bucket"}
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedDeploy", predicate: policy_matches_resource, object: "arn:aws:s3:::audit-logs"}
+      - "... (30 S3 + 8 DynamoDB + 4 KMS = 42 policy_matches_resource facts)"
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedDeploy", predicate: read_action, object: "s3"}
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedDeploy", predicate: write_action, object: "s3"}
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedDeploy", predicate: admin_action, object: "s3"}
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedDeploy", predicate: read_action, object: "dynamodb"}
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedDeploy", predicate: write_action, object: "dynamodb"}
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedDeploy", predicate: admin_action, object: "dynamodb"}
+      # ElevatedAudit matches (boundary-constrained to read-only)
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedAudit", predicate: policy_matches_resource, object: "arn:aws:s3:::audit-logs"}
+      - {subject: "arn:aws:iam::123456789012:role/ElevatedAudit", predicate: read_action, object: "s3"}
+
+    resource_inventory:
+      - "30 resource_exists(bucket_arn, 's3') facts"
+      - "8 resource_exists(table_arn, 'dynamodb') facts"
+      - "4 resource_exists(key_arn, 'kms') facts"
+      - {subject: "arn:aws:kms:us-east-1:123456789012:key/key-1", predicate: sensitive_resource, object: "high"}
+      - {subject: "arn:aws:kms:us-east-1:123456789012:key/key-2", predicate: sensitive_resource, object: "high"}
+
+  souffle_trace:
+    description: Rule firing for the vulnerable case.
+
+    rule_1_direct_reach:
+      - "role_reaches(DataProcessorRole, input-bucket)"
+      - "lambda_can_reach(data-processor, input-bucket, DataProcessorRole)"
+      - "Direct reach: 1 resource"
+
+    rule_2_transitive_reach:
+      - "transitive_role(DataProcessorRole, ElevatedDeploy)"
+      - "transitive_role(DataProcessorRole, ElevatedAudit)"
+      - "role_reaches(ElevatedDeploy, input-bucket)"
+      - "role_reaches(ElevatedDeploy, audit-logs)"
+      - "role_reaches(ElevatedDeploy, data-lake)"
+      - "... (42 resources via ElevatedDeploy)"
+      - "role_reaches(ElevatedAudit, audit-logs)"
+      - "  (boundary applied: only s3:Get* and cloudtrail:Lookup*)"
+      - "lambda_can_reach(data-processor, *, ElevatedDeploy) → 42 facts"
+      - "lambda_can_reach(data-processor, audit-logs, ElevatedAudit) → 1 fact"
+      - "Transitive reach: 42 via ElevatedDeploy + 1 via ElevatedAudit = 43"
+      - "  (audit-logs deduplicated — already in ElevatedDeploy set)"
+
+    rule_3_deny_resolution:
+      - "No explicit denies in this example."
+      - "deny_reaches: empty."
+
+    rule_4_aggregation:
+      - "lambda_blast_radius(data-processor, 42)"
+      - "  (1 direct + 42 transitive, deduped = 42 unique)"
+      - "lambda_blast_by_service(data-processor, s3, 30)"
+      - "lambda_blast_by_service(data-processor, dynamodb, 8)"
+      - "lambda_blast_by_service(data-processor, kms, 4)"
+      - "lambda_sensitive_reach(data-processor, key-1, high)"
+      - "lambda_sensitive_reach(data-processor, key-2, high)"
+
+    rule_5_exfiltration:
+      - "lambda_reads_sensitive(data-processor, key-1, kms)"
+      - "  (ElevatedDeploy has kms:* → read_action on kms)"
+      - "lambda_writes_output(data-processor, *, s3)"
+      - "  (ElevatedDeploy has s3:* → write_action on s3)"
+      - "exfiltration_path(data-processor, key-1, data-lake)"
+      - "  (read KMS key + write to any S3 bucket)"
+
+  compound_finding:
+    lambda_arn: "arn:aws:lambda:us-east-1:123456789012:function:data-processor"
+    execution_role_arn: "arn:aws:iam::123456789012:role/DataProcessorRole"
+    direct_reach:
+      count: 1
+      resources:
+        - {arn: "arn:aws:s3:::input-bucket", service: "s3"}
+    transitive_reach:
+      count: 41
+      assumption_chains:
+        - path: ["DataProcessorRole", "ElevatedDeploy"]
+          resources_added: 41
+        - path: ["DataProcessorRole", "ElevatedAudit"]
+          resources_added: 0
+    total_blast_radius:
+      count: 42
+    blast_radius_by_service:
+      - {service: "s3", count: 30}
+      - {service: "dynamodb", count: 8}
+      - {service: "kms", count: 4}
+    sensitive_resource_reach:
+      count: 2
+      resources:
+        - {arn: "arn:aws:kms:us-east-1:123456789012:key/key-1", service: "kms", sensitivity_level: "high"}
+        - {arn: "arn:aws:kms:us-east-1:123456789012:key/key-2", service: "kms", sensitivity_level: "high"}
+    exfiltration_paths:
+      - {read_source: "arn:aws:kms:us-east-1:123456789012:key/key-1", write_target: "arn:aws:s3:::data-lake"}
+    cross_account_reach: []
+    escalation_paths: []
+    annotations:
+      conditional_deny_present: false
+      scp_status: "unaware"
+      inverted_policy: false
+      boundary_applied: true
+    severity: critical
+    severity_reasons:
+      - "ElevatedDeploy has admin-level access (s3:* + dynamodb:* on *)"
+      - "Sensitive resources reachable (2 KMS keys)"
+      - "Exfiltration path detected (read KMS + write S3)"
+    remediation_hint: >
+      Scope DataProcessorRole's sts:AssumeRole to specific role ARNs
+      instead of the Elevated* wildcard pattern. Remove ElevatedDeploy
+      from the assumable set if the Lambda does not need deploy-level
+      access. Apply a permission boundary to ElevatedDeploy limiting
+      it to the specific buckets and tables the Lambda needs.
+
+  # --- Mitigated case ---
+  mitigated_case:
+    description: >
+      Same topology but DataProcessorRole's sts:AssumeRole is scoped
+      to ElevatedAudit only (no wildcard), and ElevatedAudit has the
+      read-only permission boundary.
+
+    snapshot_diff: |
+      DataProcessorRole inline policy change:
+        resources: ["arn:aws:iam::123456789012:role/Elevated*"]
+        →
+        resources: ["arn:aws:iam::123456789012:role/ElevatedAudit"]
+
+      can_assume edges: only DataProcessorRole → ElevatedAudit
+      (ElevatedDeploy no longer assumable)
+
+    souffle_output:
+      lambda_blast_radius: "(data-processor, 2)"
+      blast_by_service: "(data-processor, s3, 2)"
+      sensitive_reach: "(empty — no KMS keys reachable)"
+      exfiltration_paths: "(empty — read-only boundary on ElevatedAudit)"
+
+    finding: >
+      Total blast radius = 2 (input-bucket + audit-logs), both
+      read-only S3. No sensitive targets. No exfiltration paths.
+      Below severity threshold for medium — severity = low
+      (informational). Below silence threshold of 3 — no finding
+      emitted.
+
+    explanation: >
+      Scoping sts:AssumeRole to the specific audit role and applying
+      a read-only permission boundary eliminated the admin-level
+      transitive reach, the KMS key exposure, and the exfiltration
+      path. Blast radius dropped from 42 to 2, severity from
+      critical to silent.
+
+# =========================================================================
+# Fact projection gap analysis
+# =========================================================================
+
+fact_projection_gap: >
+  New projector functions needed in sirfacts/facts.go:
+
+  1. lambdaRoleFacts(assets []sir.AssetFact) []Fact
+     For each asset with has_type = aws_lambda_function, extract
+     properties.compute.role (the execution role ARN) and emit
+     (lambda_arn, "lambda_role", role_arn).
+
+  2. resourceInventoryFacts(assets []sir.AssetFact) []Fact
+     For each asset, emit (arn, "resource_exists", service) where
+     service is derived from the asset type (aws_s3_bucket → "s3",
+     aws_dynamodb_table → "dynamodb", etc.). Also emit
+     (arn, "account_id", account) extracted from the ARN.
+
+  3. sensitivityClassificationFacts(assets []sir.AssetFact) []Fact
+     Derive sensitivity from asset type (kms, secretsmanager, rds
+     → high) and tags (data-classification=phi → critical).
+
+  4. policyMatchFacts(assets []sir.AssetFact, lambdaRoles []string) []Fact
+     Pre-compute glob matching: for each role in the Lambda
+     reachability set, match has_resource patterns against
+     resource_exists ARNs. Emit (role, "policy_matches_resource",
+     target_arn). Also emit deny_matches_resource similarly.
+     Also emit read_action/write_action/admin_action per
+     (role, service) based on action classification.
+
+  5. triggerLambdaFacts(assets []sir.AssetFact) []Fact
+     From Lambda event source mappings, emit
+     (trigger_arn, "triggers_lambda", lambda_arn).
+
+  The transform.sh script needs updating to pre-create empty .facts
+  files for all new predicates.
+
+validation:
+  exact_match:
+    - total_blast_radius.count
+    - severity
+    - exfiltration_paths presence
+  semantic_match:
+    - blast_radius_by_service
+    - assumption_chains
+    - remediation_hint
+  ignore:
+    - ordering of resources within lists
+    - Soufflé stderr warnings for empty optional relations

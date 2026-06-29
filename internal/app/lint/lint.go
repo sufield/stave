@@ -223,7 +223,7 @@ func isSortedSequence(n *yaml.Node) bool {
 	}
 	for _, item := range n.Content {
 		if item.Kind != yaml.MappingNode {
-			return true
+			continue
 		}
 		hasSortableKey := false
 		for i := 0; i+1 < len(item.Content); i += 2 {

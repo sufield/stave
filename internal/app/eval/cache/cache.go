@@ -482,6 +482,5 @@ func appendUint32(b []byte, v uint32) []byte {
 }
 
 func fitsUint32(n int) bool {
-	const uint32Max = int(^uint32(0))
-	return n >= 0 && n <= uint32Max
+	return n >= 0 && uint64(n) <= 0xffffffff
 }

@@ -1,0 +1,336 @@
+// event_source_exposure.dl — Lambda event source exposure analysis.
+//
+// Traces INWARD to each Lambda function: what can trigger it, through
+// how many paths, with what trust level? Composes with FM-042's blast
+// radius output (loaded as input relations) to detect trust boundary
+// violations and trigger chain amplification.
+
+// =====================================================
+// Input relations — base facts from projector.
+// =====================================================
+.decl has_type(asset: symbol, asset_type: symbol)
+.input has_type
+.decl lambda_role(lambda: symbol, role: symbol)
+.input lambda_role
+.decl account_id(resource: symbol, account: symbol)
+.input account_id
+
+// ESM facts.
+.decl esm_maps(lambda: symbol, source: symbol)
+.input esm_maps
+.decl esm_state(lambda: symbol, state: symbol)
+.input esm_state
+.decl esm_type(lambda: symbol, source_type: symbol)
+.input esm_type
+.decl esm_has_filter(lambda: symbol, source: symbol)
+.input esm_has_filter
+.decl dynamodb_stream_table(stream: symbol, table: symbol)
+.input dynamodb_stream_table
+
+// Resource-based policy facts.
+.decl lambda_invoke_grant(lambda: symbol, ptype: symbol,
+                          pvalue: symbol, ckey: symbol, cval: symbol)
+.input lambda_invoke_grant
+.decl lambda_invoke_deny(lambda: symbol, ptype: symbol,
+                         pvalue: symbol, cond: symbol)
+.input lambda_invoke_deny
+
+// Push source link facts (Tier 1).
+.decl s3_notifies_lambda(bucket: symbol, lambda: symbol)
+.input s3_notifies_lambda
+.decl sns_subscribes_lambda(topic: symbol, lambda: symbol)
+.input sns_subscribes_lambda
+.decl eventbridge_targets_lambda(rule: symbol, lambda: symbol)
+.input eventbridge_targets_lambda
+.decl eventbridge_rule_pattern_breadth(rule: symbol, breadth: symbol)
+.input eventbridge_rule_pattern_breadth
+.decl apigw_integrates_lambda(api_resource: symbol, lambda: symbol)
+.input apigw_integrates_lambda
+.decl apigw_auth_type(api_resource: symbol, auth_type: symbol)
+.input apigw_auth_type
+.decl alb_targets_lambda(target_group: symbol, lambda: symbol)
+.input alb_targets_lambda
+
+// Push source link facts (Tier 2).
+.decl cognito_triggers_lambda(pool: symbol, lambda: symbol)
+.input cognito_triggers_lambda
+.decl stepfunctions_invokes_lambda(sfn: symbol, lambda: symbol)
+.input stepfunctions_invokes_lambda
+
+// Trust classification.
+.decl source_trust_level(source: symbol, trust: symbol)
+.input source_trust_level
+
+// FM-042 output facts (optional — empty if FM-042 has not run).
+.decl lambda_blast_radius(lambda: symbol, total: number)
+.input lambda_blast_radius
+.decl lambda_reach_target(lambda: symbol, target: symbol)
+.input lambda_reach_target
+.decl lambda_sensitive_reach(lambda: symbol, target: symbol, level: symbol)
+.input lambda_sensitive_reach
+.decl triggers_lambda(trigger: symbol, lambda: symbol)
+.input triggers_lambda
+
+// =====================================================
+// Helper: API Gateway auth → trust level mapping.
+// =====================================================
+.decl apigw_trust(auth_type: symbol, trust: symbol)
+apigw_trust("NONE", "public").
+apigw_trust("AWS_IAM", "authenticated").
+apigw_trust("COGNITO", "authenticated").
+apigw_trust("CUSTOM", "unknown").
+apigw_trust("API_KEY", "broad_internal").
+
+// =====================================================
+// Helper: cross-account principal detection.
+// =====================================================
+.decl account_id_from_principal(principal: symbol, account: symbol)
+.input account_id_from_principal
+
+.decl lambda_account(lambda: symbol, account: symbol)
+lambda_account(L, Acc) :- lambda_role(L, R), account_id(R, Acc).
+
+.decl is_cross_account_grant(lambda: symbol, principal: symbol)
+is_cross_account_grant(L, P) :-
+    lambda_invoke_grant(L, _, P, _, _),
+    lambda_account(L, AccL),
+    account_id_from_principal(P, AccP),
+    AccL != AccP.
+
+// =====================================================
+// Rule 1: Invocation path enumeration.
+// =====================================================
+.decl lambda_invocation_path(lambda: symbol, source: symbol,
+                              mechanism: symbol, trust: symbol)
+.output lambda_invocation_path
+
+// ESM: SQS
+lambda_invocation_path(L, S, "esm_sqs", T) :-
+    esm_maps(L, S), esm_type(L, "sqs"),
+    esm_state(L, "Enabled"), source_trust_level(S, T).
+
+// ESM: Kinesis
+lambda_invocation_path(L, S, "esm_kinesis", T) :-
+    esm_maps(L, S), esm_type(L, "kinesis"),
+    esm_state(L, "Enabled"), source_trust_level(S, T).
+
+// ESM: DynamoDB Streams — trust from parent table
+lambda_invocation_path(L, Stream, "esm_dynamodb_streams", T) :-
+    esm_maps(L, Stream), esm_type(L, "dynamodb_streams"),
+    esm_state(L, "Enabled"),
+    dynamodb_stream_table(Stream, Table),
+    source_trust_level(Table, T).
+
+// ESM: MQ — trust always unknown
+lambda_invocation_path(L, S, "esm_mq", "unknown") :-
+    esm_maps(L, S), esm_type(L, "mq"),
+    esm_state(L, "Enabled").
+
+// ESM: MSK
+lambda_invocation_path(L, S, "esm_msk", T) :-
+    esm_maps(L, S), esm_type(L, "msk"),
+    esm_state(L, "Enabled"), source_trust_level(S, T).
+
+// Push: S3 notification
+lambda_invocation_path(L, Bucket, "push_s3", T) :-
+    s3_notifies_lambda(Bucket, L), source_trust_level(Bucket, T).
+
+// Push: SNS subscription
+lambda_invocation_path(L, Topic, "push_sns", T) :-
+    sns_subscribes_lambda(Topic, L), source_trust_level(Topic, T).
+
+// Push: EventBridge rule
+lambda_invocation_path(L, Rule, "push_eventbridge", T) :-
+    eventbridge_targets_lambda(Rule, L),
+    source_trust_level(Rule, T).
+
+// Push: API Gateway
+lambda_invocation_path(L, API, "push_apigw", T) :-
+    apigw_integrates_lambda(API, L),
+    apigw_auth_type(API, AuthType),
+    apigw_trust(AuthType, T).
+
+// Push: ALB
+lambda_invocation_path(L, TG, "push_alb", T) :-
+    alb_targets_lambda(TG, L), source_trust_level(TG, T).
+
+// Push: Cognito trigger
+lambda_invocation_path(L, Pool, "push_cognito", T) :-
+    cognito_triggers_lambda(Pool, L), source_trust_level(Pool, T).
+
+// Push: Step Functions
+lambda_invocation_path(L, SFN, "push_stepfunctions", "authenticated") :-
+    stepfunctions_invokes_lambda(SFN, L).
+
+// Direct cross-account invoke
+lambda_invocation_path(L, P, "push_direct_invoke", "cross_account") :-
+    lambda_invoke_grant(L, "aws_account", P, _, _),
+    !lambda_invoke_deny(L, "aws_account", P, _).
+
+lambda_invocation_path(L, P, "push_direct_invoke", "cross_account") :-
+    lambda_invoke_grant(L, "iam_role", P, _, _),
+    is_cross_account_grant(L, P),
+    !lambda_invoke_deny(L, "iam_role", P, _).
+
+// Wildcard principal = public
+lambda_invocation_path(L, "*", "push_direct_invoke", "public") :-
+    lambda_invoke_grant(L, "wildcard", "*", _, _),
+    !lambda_invoke_deny(L, "wildcard", "*", _).
+
+// Invocation path count per Lambda.
+.decl lambda_path_count(lambda: symbol, n: number)
+.output lambda_path_count
+lambda_path_count(L, N) :-
+    lambda_invocation_path(L, _, _, _),
+    N = count : { lambda_invocation_path(L, _, _, _) }.
+
+// =====================================================
+// Rule 2: Unconstrained resource-based policy detection.
+// =====================================================
+.decl unconstrained_invoke_grant(lambda: symbol, principal: symbol,
+                                  missing: symbol, scope: symbol)
+.output unconstrained_invoke_grant
+
+// Service principal with no SourceArn condition
+unconstrained_invoke_grant(L, P, "aws:SourceArn",
+    "any_resource_of_service") :-
+    lambda_invoke_grant(L, "service", P, "none", "").
+
+// AWS account with no SourceAccount constraint
+unconstrained_invoke_grant(L, P, "aws:SourceAccount",
+    "full_account_access") :-
+    lambda_invoke_grant(L, "aws_account", P, "none", "").
+
+// Service principal with SourceAccount but no SourceArn
+.decl has_source_arn_condition(lambda: symbol, principal: symbol)
+has_source_arn_condition(L, P) :-
+    lambda_invoke_grant(L, "service", P, "aws:SourceArn", _).
+
+unconstrained_invoke_grant(L, P, "aws:SourceArn",
+    "any_resource_in_account") :-
+    lambda_invoke_grant(L, "service", P, "aws:SourceAccount", _),
+    !has_source_arn_condition(L, P).
+
+// =====================================================
+// Rule 3: Trigger chain traversal.
+// =====================================================
+.decl trigger_chain(entry: symbol, la: symbol, mid: symbol,
+                    lb: symbol, depth: number)
+.output trigger_chain
+
+// Base case: Lambda A can reach a resource that triggers Lambda B.
+trigger_chain(Src, LA, Mid, LB, 1) :-
+    lambda_invocation_path(LA, Src, _, _),
+    lambda_reach_target(LA, Mid),
+    triggers_lambda(Mid, LB),
+    LA != LB.
+
+// Recursive: extend chain, depth ≤ 5.
+trigger_chain(Src, LPrev, Mid2, LC, D + 1) :-
+    trigger_chain(Src, _, _, LPrev, D),
+    lambda_reach_target(LPrev, Mid2),
+    triggers_lambda(Mid2, LC),
+    LPrev != LC,
+    D < 5.
+
+// Self-invocation cycle detection.
+.decl self_invocation_cycle(lambda: symbol, via_resource: symbol)
+.output self_invocation_cycle
+self_invocation_cycle(L, Mid) :-
+    lambda_reach_target(L, Mid),
+    triggers_lambda(Mid, L).
+
+// Transitive trigger exposure.
+.decl chain_terminal(entry: symbol, terminal: symbol)
+chain_terminal(Src, LB) :- trigger_chain(Src, _, _, LB, _).
+
+.decl transitive_trigger_exposure(entry: symbol, trust: symbol,
+                                   terminal: symbol, blast: number)
+.output transitive_trigger_exposure
+transitive_trigger_exposure(Src, T, Terminal, BR) :-
+    lambda_invocation_path(_, Src, _, T),
+    chain_terminal(Src, Terminal),
+    lambda_blast_radius(Terminal, BR).
+
+// =====================================================
+// Rule 4: Trust boundary violation detection.
+// =====================================================
+.decl trust_boundary_violation(lambda: symbol, source: symbol,
+                                trust: symbol, blast: number,
+                                sensitive: symbol, vtype: symbol)
+.output trust_boundary_violation
+
+// Public → privileged (>10 reach)
+trust_boundary_violation(L, Src, "public", BR, "false",
+    "public_to_privileged") :-
+    lambda_invocation_path(L, Src, _, "public"),
+    lambda_blast_radius(L, BR),
+    BR > 10,
+    !lambda_sensitive_reach(L, _, _).
+
+// Public → privileged (sensitive reach)
+trust_boundary_violation(L, Src, "public", BR, "true",
+    "public_to_privileged") :-
+    lambda_invocation_path(L, Src, _, "public"),
+    lambda_blast_radius(L, BR),
+    lambda_sensitive_reach(L, _, _).
+
+// Public → any Lambda (lower threshold for public)
+trust_boundary_violation(L, Src, "public", BR, "false",
+    "public_to_privileged") :-
+    lambda_invocation_path(L, Src, _, "public"),
+    lambda_blast_radius(L, BR),
+    BR > 3.
+
+// Cross-account → sensitive
+trust_boundary_violation(L, Src, "cross_account", BR, "true",
+    "cross_account_to_privileged") :-
+    lambda_invocation_path(L, Src, _, "cross_account"),
+    lambda_blast_radius(L, BR),
+    lambda_sensitive_reach(L, _, _).
+
+// Broad internal → sensitive
+trust_boundary_violation(L, Src, "broad_internal", BR, "true",
+    "broad_to_sensitive") :-
+    lambda_invocation_path(L, Src, _, "broad_internal"),
+    lambda_blast_radius(L, BR),
+    lambda_sensitive_reach(L, _, _).
+
+// API Gateway no auth → any Lambda
+trust_boundary_violation(L, API, "public", BR, Sensitive,
+    "unauthenticated_api") :-
+    lambda_invocation_path(L, API, "push_apigw", "public"),
+    lambda_blast_radius(L, BR),
+    (lambda_sensitive_reach(L, _, _), Sensitive = "true" ;
+     !lambda_sensitive_reach(L, _, _), Sensitive = "false").
+
+// Chain amplification: terminal >2x entry blast radius
+trust_boundary_violation(Terminal, Src, T, BRTerminal, "true",
+    "chain_amplification") :-
+    transitive_trigger_exposure(Src, T, Terminal, BRTerminal),
+    lambda_invocation_path(LA, Src, _, T),
+    lambda_blast_radius(LA, BREntry),
+    BRTerminal > BREntry * 2,
+    (T = "public" ; T = "cross_account" ; T = "broad_internal").
+
+// =====================================================
+// Rule 5: Dormant but dangerous.
+// =====================================================
+.decl dormant_trigger(lambda: symbol, source: symbol,
+                       mechanism: symbol, status: symbol,
+                       risk: number)
+.output dormant_trigger
+
+// Disabled ESM with blast radius
+dormant_trigger(L, S, Mech, "disabled", BR) :-
+    esm_maps(L, S),
+    esm_type(L, Mech),
+    esm_state(L, "Disabled"),
+    lambda_blast_radius(L, BR).
+
+// Disabled ESM without blast radius
+dormant_trigger(L, S, Mech, "disabled", 0) :-
+    esm_maps(L, S),
+    esm_type(L, Mech),
+    esm_state(L, "Disabled"),
+    !lambda_blast_radius(L, _).

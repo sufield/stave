@@ -1,0 +1,15 @@
+id: lambda_role_blast_radius
+controls:
+  - CTL.LAMBDA.ROLE.SHARED.001
+  - CTL.LAMBDA.ROLE.LEASTPRIV.001
+  - CTL.IAM.IDENTITY.BLASTRADIUS.001
+  - CTL.IAM.IDENTITY.BLASTRADIUS.004
+  - CTL.IAM.POLICY.SOD.001
+  - CTL.IAM.ROLE.CROSSSERVICE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ec2_code_execution
+postconditions:
+  - data_access
+  - iam_credential_theft

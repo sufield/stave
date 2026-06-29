@@ -1,0 +1,15 @@
+id: lambda_event_source_exposure
+controls:
+  - CTL.LAMBDA.TRIGGER.APIGATEWAY.NOAUTH.001
+  - CTL.LAMBDA.TRIGGER.CONFUSEDDEPUTY.001
+  - CTL.LAMBDA.TRIGGER.GHOST.001
+  - CTL.LAMBDA.ESM.NODLQ.001
+  - CTL.LAMBDA.ESM.BISECT.001
+  - CTL.LAMBDA.INVOKE.PUBLIC.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - initial_access
+postconditions:
+  - ec2_code_execution
+  - data_access

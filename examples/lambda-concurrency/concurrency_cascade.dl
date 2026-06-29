@@ -1,0 +1,238 @@
+// concurrency_cascade.dl — Lambda concurrency pool contention analysis.
+//
+// Computes pool topology, identifies exhaustion candidates, traces
+// cascade paths to critical function victims, detects feedback loops
+// where backlog/retry behaviors amplify the cascade.  Composes with
+// FM-046 (invocation paths) and FM-042 (blast radius).
+
+// =====================================================
+// Input relations — base facts from projector.
+// =====================================================
+.decl has_type(asset: symbol, asset_type: symbol)
+.input has_type
+.decl account_concurrency_limit(region: symbol, limit: number)
+.input account_concurrency_limit
+.decl function_reserved(fn: symbol, amount: number)
+.input function_reserved
+.decl function_provisioned(fn: symbol, amount: number)
+.input function_provisioned
+.decl function_region(fn: symbol, region: symbol)
+.input function_region
+.decl function_timeout(fn: symbol, timeout: number)
+.input function_timeout
+
+// 3-arity: (fn, level, source).
+.decl function_criticality(fn: symbol, level: symbol, source: symbol)
+.input function_criticality
+
+// 3-arity: (fn, mechanism, behavior).
+.decl throttle_behavior(fn: symbol, mechanism: symbol, behavior: symbol)
+.input throttle_behavior
+
+// From FM-046 (optional).
+.decl lambda_invocation_path(lambda: symbol, source: symbol, mechanism: symbol, trust: symbol)
+.input lambda_invocation_path
+
+// =====================================================
+// Rule 1: Pool topology computation.
+// =====================================================
+
+// Unreserved pool member: Lambda with no reserved concurrency.
+.decl unreserved_pool_member(fn: symbol, region: symbol)
+unreserved_pool_member(F, R) :-
+    has_type(F, "aws_lambda_function"),
+    function_region(F, R),
+    !function_reserved(F, _).
+
+// Reserved function projection.
+.decl reserved_function(fn: symbol, region: symbol, amount: number)
+reserved_function(F, R, A) :-
+    function_reserved(F, A),
+    function_region(F, R).
+
+// Total reserved per region.
+.decl region_has_reserved(region: symbol)
+region_has_reserved(R) :- reserved_function(_, R, _).
+
+.decl total_reserved(region: symbol, total: number)
+.output total_reserved
+total_reserved(R, S) :-
+    region_has_reserved(R),
+    S = sum A : { reserved_function(_, R, A) }.
+total_reserved(R, 0) :-
+    account_concurrency_limit(R, _),
+    !region_has_reserved(R).
+
+// Unreserved pool size = limit - reserved.
+.decl unreserved_pool_size(region: symbol, size: number)
+.output unreserved_pool_size
+unreserved_pool_size(R, Limit - TotalRes) :-
+    account_concurrency_limit(R, Limit),
+    total_reserved(R, TotalRes).
+
+// Count of unreserved pool members.
+.decl unreserved_member_count(region: symbol, n: number)
+.output unreserved_member_count
+unreserved_member_count(R, N) :-
+    unreserved_pool_member(_, R),
+    N = count : { unreserved_pool_member(_, R) }.
+
+// Per-function fair share (integer division).
+.decl per_function_fair_share(region: symbol, share: number)
+.output per_function_fair_share
+per_function_fair_share(R, PoolSize / MemberCount) :-
+    unreserved_pool_size(R, PoolSize),
+    unreserved_member_count(R, MemberCount),
+    MemberCount > 0.
+
+// =====================================================
+// Rule 2: Critical function exposure.
+// =====================================================
+
+.decl critical_function_exposed(fn: symbol, crit: symbol, pool: number, tenants: number, share: number)
+.output critical_function_exposed
+critical_function_exposed(F, C, P, T, S) :-
+    function_criticality(F, C, _),
+    (C = "critical" ; C = "high"),
+    unreserved_pool_member(F, R),
+    unreserved_pool_size(R, P),
+    unreserved_member_count(R, T),
+    per_function_fair_share(R, S).
+
+// =====================================================
+// Rule 3: Pool exhaustion candidates.
+// =====================================================
+
+.decl exhaustion_candidate(fn: symbol, risk: symbol, reason: symbol)
+.output exhaustion_candidate
+
+// Long timeout — holds pool slots.
+exhaustion_candidate(F, "long_timeout", "timeout_exceeds_300s") :-
+    unreserved_pool_member(F, _),
+    function_timeout(F, T),
+    T > 300.
+
+// No concurrency cap — can burst.
+exhaustion_candidate(F, "no_concurrency_cap", "no_reserved_concurrency") :-
+    unreserved_pool_member(F, _).
+
+// Public trigger — can be flooded externally (from FM-046).
+exhaustion_candidate(F, "public_trigger", "publicly_invocable") :-
+    unreserved_pool_member(F, _),
+    lambda_invocation_path(F, _, _, "public").
+
+// Backlog event source — SQS/Kinesis retry amplification.
+exhaustion_candidate(F, "retry_amplification", "backlog_event_source") :-
+    unreserved_pool_member(F, _),
+    throttle_behavior(F, _, "backlog").
+
+// Retry event source — sustained retry pressure.
+exhaustion_candidate(F, "retry_pressure", "retry_event_source") :-
+    unreserved_pool_member(F, _),
+    throttle_behavior(F, _, "retry").
+
+// =====================================================
+// Rule 4: Cascade path detection.
+// =====================================================
+
+.decl cascade_path(trigger: symbol, victim: symbol, vcrit: symbol, pool: number)
+.output cascade_path
+cascade_path(Trigger, Victim, VCrit, Pool) :-
+    exhaustion_candidate(Trigger, _, _),
+    unreserved_pool_member(Trigger, R),
+    unreserved_pool_member(Victim, R),
+    Trigger != Victim,
+    function_criticality(Victim, VCrit, _),
+    unreserved_pool_size(R, Pool).
+
+// Blast radius per trigger.
+.decl trigger_victim(trigger: symbol, victim: symbol)
+trigger_victim(T, V) :- cascade_path(T, V, _, _).
+
+.decl trigger_victim_count(trigger: symbol, n: number)
+trigger_victim_count(T, N) :-
+    trigger_victim(T, _),
+    N = count : { trigger_victim(T, _) }.
+
+// Critical victim count per trigger.
+.decl trigger_crit_victim(trigger: symbol, victim: symbol)
+trigger_crit_victim(T, V) :-
+    cascade_path(T, V, C, _),
+    (C = "critical" ; C = "high").
+
+.decl trigger_crit_count(trigger: symbol, n: number)
+trigger_crit_count(T, N) :-
+    trigger_crit_victim(T, _),
+    N = count : { trigger_crit_victim(T, _) }.
+trigger_crit_count(T, 0) :-
+    trigger_victim(T, _),
+    !trigger_crit_victim(T, _).
+
+// Backlog victim count per trigger.
+.decl trigger_backlog_victim(trigger: symbol, victim: symbol)
+trigger_backlog_victim(T, V) :-
+    cascade_path(T, V, _, _),
+    throttle_behavior(V, _, "backlog").
+
+.decl trigger_backlog_count(trigger: symbol, n: number)
+trigger_backlog_count(T, N) :-
+    trigger_backlog_victim(T, _),
+    N = count : { trigger_backlog_victim(T, _) }.
+trigger_backlog_count(T, 0) :-
+    trigger_victim(T, _),
+    !trigger_backlog_victim(T, _).
+
+.decl cascade_blast_radius(trigger: symbol, victims: number, crit_victims: number, backlog_victims: number)
+.output cascade_blast_radius
+cascade_blast_radius(T, V, C, B) :-
+    trigger_victim_count(T, V),
+    trigger_crit_count(T, C),
+    trigger_backlog_count(T, B).
+
+// =====================================================
+// Rule 5: Feedback loop detection.
+// =====================================================
+
+.decl feedback_loop(trigger: symbol, victim: symbol, mechanism: symbol, behavior: symbol)
+.output feedback_loop
+feedback_loop(T, V, Mech, Behav) :-
+    cascade_path(T, V, _, _),
+    throttle_behavior(V, Mech, Behav),
+    (Behav = "backlog" ; Behav = "retry").
+
+// Circular feedback: two backlog members that can mutually amplify.
+.decl circular_feedback(a: symbol, b: symbol, region: symbol)
+.output circular_feedback
+circular_feedback(A, B, R) :-
+    unreserved_pool_member(A, R),
+    unreserved_pool_member(B, R),
+    throttle_behavior(A, _, "backlog"),
+    throttle_behavior(B, _, "backlog"),
+    exhaustion_candidate(A, _, _),
+    exhaustion_candidate(B, _, _),
+    A < B.
+
+// =====================================================
+// Rule 6: Reservation starvation detection.
+// =====================================================
+
+.decl reservation_starvation(region: symbol, limit: number, reserved: number, pool: number, members: number, share: number)
+.output reservation_starvation
+reservation_starvation(R, Limit, Res, Pool, Members, Share) :-
+    account_concurrency_limit(R, Limit),
+    total_reserved(R, Res),
+    unreserved_pool_size(R, Pool),
+    unreserved_member_count(R, Members),
+    per_function_fair_share(R, Share),
+    Share < 5.
+
+// =====================================================
+// Rule 7: Provisioned-without-reserved (false isolation).
+// =====================================================
+
+.decl false_isolation(fn: symbol, provisioned: number)
+.output false_isolation
+false_isolation(F, P) :-
+    function_provisioned(F, P),
+    !function_reserved(F, _),
+    P > 0.

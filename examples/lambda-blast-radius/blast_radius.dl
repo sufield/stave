@@ -1,0 +1,209 @@
+// blast_radius.dl — Lambda execution role blast radius analysis.
+//
+// Traces from each Lambda function through its execution role's IAM
+// permission graph (direct + transitive assumption) to enumerate all
+// reachable resources. Detects exfiltration paths, cross-account
+// reach, and service-coupled escalation.
+
+// =====================================================
+// Input relations — base facts from projector.
+// =====================================================
+.decl has_type(asset: symbol, asset_type: symbol)
+.input has_type
+.decl has_action(role: symbol, action: symbol)
+.input has_action
+.decl has_resource(role: symbol, resource: symbol)
+.input has_resource
+.decl has_deny_action(role: symbol, action: symbol)
+.input has_deny_action
+.decl has_deny_resource(role: symbol, resource: symbol)
+.input has_deny_resource
+.decl can_assume(from_role: symbol, to_role: symbol)
+.input can_assume
+.decl has_tag(asset: symbol, kv: symbol)
+.input has_tag
+.decl has_privilege_level(role: symbol, level: symbol)
+.input has_privilege_level
+
+// New input relations.
+.decl lambda_role(lambda: symbol, role: symbol)
+.input lambda_role
+.decl resource_exists(resource: symbol, service: symbol)
+.input resource_exists
+.decl sensitive_resource(resource: symbol, level: symbol)
+.input sensitive_resource
+.decl policy_matches_resource(role: symbol, resource: symbol)
+.input policy_matches_resource
+.decl deny_matches_resource(role: symbol, resource: symbol)
+.input deny_matches_resource
+.decl read_action(role: symbol, service: symbol)
+.input read_action
+.decl write_action(role: symbol, service: symbol)
+.input write_action
+.decl admin_action(role: symbol, service: symbol)
+.input admin_action
+.decl triggers_lambda(trigger: symbol, lambda: symbol)
+.input triggers_lambda
+.decl account_id(resource: symbol, account: symbol)
+.input account_id
+
+// =====================================================
+// Transitive role assumption (from reachability.dl).
+// =====================================================
+.decl transitive_role(start: symbol, end: symbol)
+transitive_role(A, B) :- can_assume(A, B).
+transitive_role(A, C) :- transitive_role(A, B), can_assume(B, C).
+
+// =====================================================
+// Rule 1: Direct reach — role's policy matches a concrete
+// resource, with deny suppression.
+// =====================================================
+.decl deny_reaches(role: symbol, target: symbol)
+deny_reaches(R, T) :- deny_matches_resource(R, T).
+
+.decl role_reaches(role: symbol, target: symbol)
+role_reaches(R, T) :-
+    policy_matches_resource(R, T),
+    !deny_reaches(R, T).
+
+// =====================================================
+// Rule 2: Lambda can reach — direct + transitive.
+// =====================================================
+.decl lambda_can_reach(lambda: symbol, target: symbol, via_role: symbol)
+
+// Direct: Lambda's own execution role.
+lambda_can_reach(L, T, R) :-
+    lambda_role(L, R),
+    role_reaches(R, T).
+
+// Transitive: through assumed roles.
+lambda_can_reach(L, T, AssumedRole) :-
+    lambda_role(L, R),
+    transitive_role(R, AssumedRole),
+    role_reaches(AssumedRole, T).
+
+// =====================================================
+// Rule 3: Blast radius aggregation.
+// =====================================================
+
+// Deduplicated reach (drop via_role dimension).
+.decl lambda_reach_target(lambda: symbol, target: symbol)
+lambda_reach_target(L, T) :- lambda_can_reach(L, T, _).
+
+.decl lambda_blast_radius(lambda: symbol, total: number)
+.output lambda_blast_radius
+lambda_blast_radius(L, N) :-
+    lambda_reach_target(L, _),
+    N = count : { lambda_reach_target(L, _) }.
+
+// By service.
+.decl lambda_reach_service(lambda: symbol, target: symbol, service: symbol)
+lambda_reach_service(L, T, S) :-
+    lambda_reach_target(L, T),
+    resource_exists(T, S).
+
+.decl lambda_service_pair(lambda: symbol, service: symbol)
+lambda_service_pair(L, S) :- lambda_reach_service(L, _, S).
+
+.decl lambda_blast_by_service(lambda: symbol, service: symbol, n: number)
+.output lambda_blast_by_service
+lambda_blast_by_service(L, S, N) :-
+    lambda_service_pair(L, S),
+    N = count : { lambda_reach_service(L, _, S) }.
+
+// =====================================================
+// Rule 4: Sensitive resource reach.
+// =====================================================
+.decl lambda_sensitive_reach(lambda: symbol, target: symbol, level: symbol)
+.output lambda_sensitive_reach
+lambda_sensitive_reach(L, T, Lvl) :-
+    lambda_reach_target(L, T),
+    sensitive_resource(T, Lvl).
+
+// =====================================================
+// Rule 5: Cross-account reach.
+// =====================================================
+.decl cross_account(local: symbol, remote: symbol)
+cross_account(A, B) :-
+    can_assume(A, B),
+    account_id(A, AccA),
+    account_id(B, AccB),
+    AccA != AccB.
+
+.decl lambda_cross_account(lambda: symbol, ext_role: symbol)
+lambda_cross_account(L, ExtRole) :-
+    lambda_role(L, R),
+    transitive_role(R, ExtRole),
+    cross_account(R, ExtRole).
+
+.decl lambda_cross_account_reach(lambda: symbol, ext_account: symbol)
+.output lambda_cross_account_reach
+lambda_cross_account_reach(L, AccB) :-
+    lambda_cross_account(L, ExtRole),
+    account_id(ExtRole, AccB).
+
+// =====================================================
+// Rule 6: Service-coupled escalation — Lambda A can write
+// to a trigger that invokes Lambda B with higher blast radius.
+// =====================================================
+.decl lambda_escalation_path(lambda: symbol, target_lambda: symbol, target_role: symbol)
+.output lambda_escalation_path
+lambda_escalation_path(LA, LB, RB) :-
+    lambda_reach_target(LA, Q),
+    triggers_lambda(Q, LB),
+    lambda_role(LB, RB),
+    lambda_blast_radius(LA, BRA),
+    lambda_blast_radius(LB, BRB),
+    BRB > BRA.
+
+// =====================================================
+// Rule 7: Exfiltration paths — read sensitive + write output.
+// =====================================================
+.decl lambda_reads_sensitive(lambda: symbol, source: symbol, service: symbol)
+lambda_reads_sensitive(L, T, S) :-
+    lambda_reach_target(L, T),
+    sensitive_resource(T, _),
+    resource_exists(T, S),
+    lambda_role(L, R),
+    (read_action(R, S); transitive_read(L, S)).
+
+.decl transitive_read(lambda: symbol, service: symbol)
+transitive_read(L, S) :-
+    lambda_role(L, R),
+    transitive_role(R, TR),
+    read_action(TR, S).
+
+.decl lambda_writes_output(lambda: symbol, target: symbol, service: symbol)
+lambda_writes_output(L, T, S) :-
+    lambda_reach_target(L, T),
+    resource_exists(T, S),
+    lambda_role(L, R),
+    (write_action(R, S); transitive_write(L, S)),
+    (S = "s3"; S = "sqs"; S = "sns"; S = "lambda").
+
+.decl transitive_write(lambda: symbol, service: symbol)
+transitive_write(L, S) :-
+    lambda_role(L, R),
+    transitive_role(R, TR),
+    write_action(TR, S).
+
+.decl exfiltration_path(lambda: symbol, read_source: symbol, write_target: symbol)
+.output exfiltration_path
+exfiltration_path(L, Src, Tgt) :-
+    lambda_reads_sensitive(L, Src, _),
+    lambda_writes_output(L, Tgt, _),
+    Src != Tgt.
+
+// =====================================================
+// Rule 8: Admin-level entry point — fast path for Lambda
+// roles with admin privilege or wildcard grants.
+// =====================================================
+.decl lambda_admin_entry(lambda: symbol, role: symbol)
+.output lambda_admin_entry
+lambda_admin_entry(L, R) :-
+    lambda_role(L, R),
+    has_privilege_level(R, "admin").
+lambda_admin_entry(L, AssumedRole) :-
+    lambda_role(L, R),
+    transitive_role(R, AssumedRole),
+    has_privilege_level(AssumedRole, "admin").
