@@ -21,6 +21,7 @@ var builtinNames = []string{
 	"audit_trail_destroyed",
 	"automation_hijack",
 	"aws_root_access",
+	"az_failure",
 	"cdn_bypass_data_access",
 	"cloudfront_origin_configured",
 	"cloudtrail_data_access",

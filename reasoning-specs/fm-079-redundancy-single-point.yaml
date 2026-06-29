@@ -1,0 +1,926 @@
+# reasoning-spec: fm-079-redundancy-single-point
+# engine: souffle
+# trial-fixture: trials/souffle-az-redundancy/
+# failure-mode: FM-079 (Redundancy Single-Point)
+
+question: >
+  Given a set of infrastructure resources with AZ placement facts and
+  dependency edges, does any resource dependency chain converge to a
+  single Availability Zone — creating a single-point-of-failure that
+  survives per-resource redundancy checks?
+
+context: >
+  Per-resource CEL controls (CTL.ELB.TARGET.SINGLEAZ.001,
+  CTL.RDS.MULTIAZ.001, CTL.VPC.NAT.SINGLEAZ.001, etc.) detect when an
+  individual resource lacks AZ redundancy. But single-point-of-failure
+  detection is a graph problem: infrastructure can appear redundant at
+  the resource level while converging to one AZ at the dependency graph
+  level. An ALB with cross-AZ subnets whose target group instances are
+  all in us-east-1a passes every per-resource check — the ALB is
+  configured correctly, each instance has valid placement — but 100% of
+  capacity dies on an AZ failure.
+
+  Five compound failure categories that per-resource CEL structurally
+  cannot detect:
+
+  1. Convergent AZ placement behind a load balancer — targets all in
+     one AZ despite cross-AZ LB configuration.
+
+  2. NAT Gateway as single egress point — all private subnets routing
+     through a NAT GW in one AZ.
+
+  3. Database dependency without regional failover — multi-AZ compute
+     tier depending on single-AZ data tier.
+
+  4. Cross-service choke point — API Gateway → Lambda in VPC with
+     subnets only in one AZ.
+
+  5. EBS-anchored state without replication — stateful EC2 in an ASG
+     where cross-AZ scaling cannot preserve EBS access.
+
+  Detection requires the Soufflé/Datalog pipeline: project AZ placement
+  and dependency edge facts from the snapshot, then reason over the
+  full resource graph to find AZ convergence points.
+
+# =========================================================================
+# Section 1: Fact Schema — AZ Placement Facts
+# =========================================================================
+
+fact_schema:
+  az_placement:
+    description: >
+      One fact per (resource, AZ) pair. Multi-AZ resources emit two
+      facts. AZ-scoped resources emit one. Regional resources are
+      excluded (see out_of_scope below).
+
+    predicate: resource_az
+    arity: 2
+    fields:
+      subject: resource ARN (e.g., "arn:aws:ec2:us-east-1:123456789012:instance/i-abc123")
+      object: AZ identifier (e.g., "us-east-1a")
+
+    sources:
+      - resource_type: aws_ec2_instance
+        api: ec2:DescribeInstances
+        path: Reservations[].Instances[].Placement.AvailabilityZone
+
+      - resource_type: aws_rds_instance
+        api: rds:DescribeDBInstances
+        path: DBInstances[].AvailabilityZone
+        notes: >
+          Multi-AZ instances emit two facts: one for AvailabilityZone,
+          one for SecondaryAvailabilityZone (when MultiAZ=true).
+          Aurora cluster readers in different AZs emit per-instance
+          facts.
+
+      - resource_type: aws_elasticache_node
+        api: elasticache:DescribeCacheClusters
+        path: CacheClusters[].CacheNodes[].CustomerAvailabilityZone
+        notes: >
+          Per-node facts. A 3-node cluster across 2 AZs emits 3 facts.
+
+      - resource_type: aws_nat_gateway
+        api: ec2:DescribeNatGateways
+        path: NatGateways[].SubnetId → (join) Subnets[].AvailabilityZone
+        notes: >
+          NAT GW doesn't report AZ directly; derived from its subnet's AZ.
+
+      - resource_type: aws_ebs_volume
+        api: ec2:DescribeVolumes
+        path: Volumes[].AvailabilityZone
+
+      - resource_type: aws_lambda_function
+        api: lambda:GetFunctionConfiguration
+        path: VpcConfig.SubnetIds[] → (join) Subnets[].AvailabilityZone
+        notes: >
+          Lambda AZ is determined by VPC subnets. Non-VPC Lambda
+          functions are regional — emit no resource_az fact (they are
+          not AZ-scoped). One fact per subnet AZ.
+
+      - resource_type: aws_efs_mount_target
+        api: elasticfilesystem:DescribeMountTargets
+        path: MountTargets[].AvailabilityZoneId
+
+      - resource_type: aws_elb
+        api: elasticloadbalancingv2:DescribeLoadBalancers
+        path: LoadBalancers[].AvailabilityZones[].ZoneName
+        notes: >
+          One fact per AZ the LB is configured in. ALB/NLB only.
+
+      - resource_type: aws_subnet
+        api: ec2:DescribeSubnets
+        path: Subnets[].AvailabilityZone
+
+    out_of_scope:
+      - resource_type: aws_dynamodb_table
+        reason: Regional service; no AZ failure mode. DynamoDB on-demand and provisioned tables replicate across AZs automatically.
+      - resource_type: aws_s3_bucket
+        reason: Regional service; S3 replicates across ≥3 AZs by design.
+      - resource_type: aws_iam_role
+        reason: Global control plane resource; not AZ-scoped.
+      - resource_type: aws_cloudfront_distribution
+        reason: Edge service; not bound to any AZ or region.
+      - resource_type: aws_route53_hosted_zone
+        reason: Global DNS service; not AZ-scoped.
+      - resource_type: aws_sqs_queue
+        reason: Regional service; SQS replicates across AZs.
+      - resource_type: aws_sns_topic
+        reason: Regional service; SNS replicates across AZs.
+      - resource_type: aws_api_gateway_rest_api
+        reason: Regional managed service; API Gateway itself is not AZ-scoped (but its VPC integrations may be).
+
+  resource_type_scope:
+    description: >
+      Declares whether each resource type is AZ-scoped or regional.
+      Rules use this to avoid flagging regional resources as
+      single-AZ choke points.
+    predicate: az_scoped
+    arity: 2
+    fields:
+      subject: resource ARN
+      object: '"true"' (AZ-scoped) or absent (regional — no fact emitted)
+    notes: >
+      Only AZ-scoped resources get an az_scoped fact. Regional resources
+      emit nothing — closed-world assumption means absence = regional.
+      The projector derives this from the resource type: if a resource_az
+      fact was emitted, the corresponding az_scoped fact is also emitted.
+
+# =========================================================================
+# Section 2: Fact Schema — Dependency Edge Facts
+# =========================================================================
+
+  dependency_edges:
+    description: >
+      One fact per directed dependency between two resources. The
+      subject depends on the object — if the object fails, the subject
+      is affected.
+
+    predicate: depends_on
+    arity: 3
+    fields:
+      subject: source resource ARN (the dependent)
+      predicate: "depends_on"
+      object: target resource ARN (the dependency)
+    notes: >
+      The third dimension (dependency type) is encoded in a separate
+      predicate to keep the core depends_on relation binary for
+      Soufflé join efficiency. See dependency_type below.
+
+    dependency_type:
+      predicate: dep_type
+      arity: 3
+      fields:
+        subject: source resource ARN
+        object: target resource ARN
+        extra: dependency type label
+      types:
+        - load_balance
+        - route
+        - subnet_membership
+        - execution_environment
+        - storage_attachment
+        - event_trigger
+        - data_tier
+
+    sources:
+      - edge: ALB/NLB → target group → registered targets
+        api: elasticloadbalancingv2:DescribeTargetGroups, DescribeTargetHealth
+        dep_type: load_balance
+        notes: >
+          LB depends_on target group; target group depends_on each
+          registered target (instance, IP, Lambda ARN). Two hops.
+
+      - edge: ASG → subnets
+        api: autoscaling:DescribeAutoScalingGroups
+        path: AutoScalingGroups[].VPCZoneIdentifier (comma-separated subnet IDs)
+        dep_type: execution_environment
+        notes: >
+          ASG depends_on each subnet in its VPCZoneIdentifier list.
+
+      - edge: Route table → NAT Gateway
+        api: ec2:DescribeRouteTables
+        path: RouteTables[].Routes[] where NatGatewayId is present
+        dep_type: route
+        notes: >
+          Filter to routes with destination 0.0.0.0/0 or ::/0.
+
+      - edge: Subnet → route table
+        api: ec2:DescribeRouteTables
+        path: RouteTables[].Associations[].SubnetId
+        dep_type: route
+
+      - edge: Subnet → VPC
+        api: ec2:DescribeSubnets
+        path: Subnets[].VpcId
+        dep_type: subnet_membership
+
+      - edge: Lambda → VPC subnets
+        api: lambda:GetFunctionConfiguration
+        path: VpcConfig.SubnetIds[]
+        dep_type: execution_environment
+        notes: >
+          Non-VPC Lambda has no subnet dependency — no edge emitted.
+
+      - edge: EC2 → EBS volume (non-root)
+        api: ec2:DescribeInstances
+        path: Reservations[].Instances[].BlockDeviceMappings[] where DeviceName != root
+        dep_type: storage_attachment
+        notes: >
+          Root volume excluded (always co-located with instance).
+          Only non-root EBS attachments create a cross-AZ concern
+          in ASG replacement scenarios.
+
+      - edge: EC2 → ENI → subnet
+        api: ec2:DescribeNetworkInterfaces
+        dep_type: subnet_membership
+        notes: >
+          Secondary ENIs create subnet dependencies. Primary ENI
+          is implicit in instance placement.
+
+      - edge: API Gateway → Lambda integration
+        api: apigateway:GetIntegration, apigatewayv2:GetIntegrations
+        path: IntegrationUri (Lambda ARN)
+        dep_type: event_trigger
+
+      - edge: ECS service → subnets
+        api: ecs:DescribeServices
+        path: Services[].NetworkConfiguration.AwsvpcConfiguration.Subnets[]
+        dep_type: execution_environment
+        notes: >
+          awsvpc network mode only. Bridge/host mode instances use
+          the EC2 → subnet path.
+        snapshot_prerequisite: >
+          ECS task-level subnet data requires DescribeServices with
+          running tasks. If ECS services are not in the snapshot, these
+          edges are absent and no ECS-related findings are produced.
+
+      - edge: RDS → DB subnet group → subnets
+        api: rds:DescribeDBSubnetGroups
+        path: DBSubnetGroups[].Subnets[].SubnetIdentifier
+        dep_type: data_tier
+
+      - edge: Application → RDS (inferred)
+        dep_type: data_tier
+        notes: >
+          Application-to-database dependencies are not directly
+          observable from AWS API snapshots. This edge is inferred
+          when an ASG/ECS service and an RDS instance share the same
+          VPC and the RDS security group allows ingress from the
+          compute security group. Heuristic, not guaranteed.
+          Absence of this edge means category 3 findings require
+          the operator to declare the dependency explicitly via tags
+          or a dependency manifest.
+
+# =========================================================================
+# Section 3: Datalog Rules
+# =========================================================================
+
+datalog:
+  program_file: examples/az-redundancy/redundancy.dl
+
+  input_relations:
+    - resource_az      # (resource, az)
+    - az_scoped        # (resource, "true")
+    - depends_on       # (source, target)
+    - dep_type         # (source, target, type_label)
+    - has_type         # (resource, resource_type) — existing predicate
+
+  rules:
+    # --- Transitive dependency closure ---
+    - name: transitive_dep
+      description: >
+        Transitive closure of depends_on. If A depends on B and B
+        depends on C, then A transitively depends on C. Soufflé's
+        bottom-up evaluation computes this in one pass over the
+        finite snapshot graph.
+      input: [depends_on]
+      output: transitive_dep(source, target)
+      rule: |
+        .decl transitive_dep(source: symbol, target: symbol)
+        transitive_dep(A, B) :- depends_on(A, B).
+        transitive_dep(A, C) :- transitive_dep(A, B), depends_on(B, C).
+      termination: >
+        Stratifiable — no negation. Finite because depends_on is
+        derived from a finite snapshot. Circular dependencies (A→B→A)
+        produce a fixed point (transitive_dep(A,A), transitive_dep(B,B))
+        without divergence.
+
+    # --- AZ set collection per dependency root ---
+    - name: downstream_az
+      description: >
+        For each resource R that has downstream dependents, collect
+        the AZ of every AZ-scoped resource R transitively depends on.
+      input: [transitive_dep, resource_az, az_scoped]
+      output: downstream_az(root, downstream_resource, az)
+      rule: |
+        .decl downstream_az(root: symbol, dep: symbol, az: symbol)
+        downstream_az(R, D, AZ) :-
+            transitive_dep(R, D),
+            az_scoped(D, "true"),
+            resource_az(D, AZ).
+
+    # --- Category 1: Convergent AZ behind load balancer ---
+    - name: single_az_behind_lb
+      description: >
+        An ELB/ALB/NLB whose transitive targets are all in one AZ.
+        Fires when the set of distinct AZs across all targets = 1.
+      input: [has_type, transitive_dep, resource_az, az_scoped]
+      output: single_az_behind_lb(lb, sole_az, target_count)
+      rule: |
+        .decl lb_target_az(lb: symbol, target: symbol, az: symbol)
+        lb_target_az(LB, T, AZ) :-
+            has_type(LB, "aws_elb"),
+            transitive_dep(LB, T),
+            az_scoped(T, "true"),
+            resource_az(T, AZ),
+            has_type(T, "aws_ec2_instance").
+        lb_target_az(LB, T, AZ) :-
+            has_type(LB, "aws_elb"),
+            transitive_dep(LB, T),
+            az_scoped(T, "true"),
+            resource_az(T, AZ),
+            has_type(T, "aws_lambda_function").
+
+        // Count distinct AZs behind this LB.
+        .decl lb_az_count(lb: symbol, n: number)
+        lb_az_count(LB, count : {AZ}) :- lb_target_az(LB, _, AZ).
+
+        // Count total targets behind this LB.
+        .decl lb_target_count(lb: symbol, n: number)
+        lb_target_count(LB, count : {T}) :- lb_target_az(LB, T, _).
+
+        .decl single_az_behind_lb(lb: symbol, az: symbol, target_count: number)
+        .output single_az_behind_lb
+        single_az_behind_lb(LB, AZ, N) :-
+            lb_az_count(LB, 1),
+            lb_target_az(LB, _, AZ),
+            lb_target_count(LB, N).
+
+    # --- Category 2: NAT Gateway single egress ---
+    - name: nat_single_egress
+      description: >
+        All private subnets in a VPC route through NAT Gateways in a
+        single AZ. Fires when the set of distinct NAT GW AZs serving
+        private subnets = 1 but the private subnets span >1 AZ.
+      input: [depends_on, dep_type, has_type, resource_az]
+      output: nat_single_egress(vpc, nat_az, subnet_count)
+      rule: |
+        // A private subnet routes through a NAT Gateway.
+        .decl subnet_nat(subnet: symbol, nat: symbol)
+        subnet_nat(S, N) :-
+            depends_on(S, RT),
+            dep_type(S, RT, "route"),
+            depends_on(RT, N),
+            dep_type(RT, N, "route"),
+            has_type(N, "aws_nat_gateway").
+
+        // Collect NAT GW AZs serving private subnets in a VPC.
+        .decl vpc_nat_az(vpc: symbol, nat_az: symbol)
+        vpc_nat_az(VPC, NAZ) :-
+            depends_on(S, VPC),
+            dep_type(S, VPC, "subnet_membership"),
+            subnet_nat(S, N),
+            resource_az(N, NAZ).
+
+        // Collect private subnet AZs in a VPC.
+        .decl vpc_private_subnet_az(vpc: symbol, subnet_az: symbol)
+        vpc_private_subnet_az(VPC, SAZ) :-
+            depends_on(S, VPC),
+            dep_type(S, VPC, "subnet_membership"),
+            subnet_nat(S, _),
+            resource_az(S, SAZ).
+
+        .decl vpc_nat_az_count(vpc: symbol, n: number)
+        vpc_nat_az_count(VPC, count : {AZ}) :- vpc_nat_az(VPC, AZ).
+
+        .decl vpc_private_subnet_az_count(vpc: symbol, n: number)
+        vpc_private_subnet_az_count(VPC, count : {AZ}) :- vpc_private_subnet_az(VPC, AZ).
+
+        .decl nat_single_egress(vpc: symbol, nat_az: symbol, subnet_count: number)
+        .output nat_single_egress
+        nat_single_egress(VPC, NAZ, SC) :-
+            vpc_nat_az_count(VPC, 1),
+            vpc_private_subnet_az_count(VPC, SC),
+            SC > 1,
+            vpc_nat_az(VPC, NAZ).
+
+    # --- Category 3: Database without AZ redundancy ---
+    - name: single_az_data_tier
+      description: >
+        Multi-AZ compute tier depends on a single-AZ data tier.
+        The compute layer has resource_az facts in ≥2 AZs, but the
+        RDS/ElastiCache it depends on is in 1 AZ.
+      input: [transitive_dep, has_type, resource_az, dep_type]
+      output: single_az_data_tier(compute_root, db, db_az, compute_az_count)
+      rule: |
+        .decl compute_depends_db(compute: symbol, db: symbol)
+        compute_depends_db(C, DB) :-
+            transitive_dep(C, DB),
+            has_type(DB, "aws_rds_instance"),
+            (has_type(C, "aws_autoscaling_group");
+             has_type(C, "aws_ecs_service")).
+        compute_depends_db(C, DB) :-
+            transitive_dep(C, DB),
+            has_type(DB, "aws_elasticache_cluster"),
+            (has_type(C, "aws_autoscaling_group");
+             has_type(C, "aws_ecs_service")).
+
+        // Count distinct AZs the compute tier spans.
+        .decl compute_az_count(compute: symbol, n: number)
+        compute_az_count(C, count : {AZ}) :-
+            compute_depends_db(C, _),
+            downstream_az(C, _, AZ),
+            // Only count AZs from compute-layer resources, not from
+            // the DB itself. Filter by type.
+            transitive_dep(C, D),
+            resource_az(D, AZ),
+            (has_type(D, "aws_ec2_instance");
+             has_type(D, "aws_subnet")).
+
+        // Count distinct AZs the database spans.
+        .decl db_az_count(db: symbol, n: number)
+        db_az_count(DB, count : {AZ}) :- resource_az(DB, AZ).
+
+        .decl single_az_data_tier(compute: symbol, db: symbol, db_az: symbol, compute_azs: number)
+        .output single_az_data_tier
+        single_az_data_tier(C, DB, DBAZ, CAZ) :-
+            compute_depends_db(C, DB),
+            db_az_count(DB, 1),
+            compute_az_count(C, CAZ),
+            CAZ >= 2,
+            resource_az(DB, DBAZ).
+
+    # --- Category 4: Cross-service AZ choke point ---
+    - name: cross_service_az_choke
+      description: >
+        API Gateway → Lambda in VPC with subnets in a single AZ.
+        The managed service (API GW) is regional, but the Lambda
+        execution environment is AZ-scoped via its VPC subnets.
+      input: [depends_on, dep_type, has_type, resource_az]
+      output: cross_service_az_choke(api_gw, lambda_fn, sole_az)
+      rule: |
+        .decl apigw_lambda_az(apigw: symbol, lambda: symbol, az: symbol)
+        apigw_lambda_az(GW, LFN, AZ) :-
+            depends_on(GW, LFN),
+            dep_type(GW, LFN, "event_trigger"),
+            has_type(GW, "aws_api_gateway_rest_api"),
+            has_type(LFN, "aws_lambda_function"),
+            resource_az(LFN, AZ).
+
+        .decl apigw_lambda_az_count(apigw: symbol, lambda: symbol, n: number)
+        apigw_lambda_az_count(GW, LFN, count : {AZ}) :- apigw_lambda_az(GW, LFN, AZ).
+
+        .decl cross_service_az_choke(apigw: symbol, lambda: symbol, az: symbol)
+        .output cross_service_az_choke
+        cross_service_az_choke(GW, LFN, AZ) :-
+            apigw_lambda_az_count(GW, LFN, 1),
+            apigw_lambda_az(GW, LFN, AZ).
+
+    # --- Category 5: EBS-anchored state in ASG ---
+    - name: ebs_anchored_asg
+      description: >
+        EC2 instance in an ASG with non-root EBS attachment. ASG
+        cross-AZ scaling cannot preserve access to AZ-scoped EBS
+        volumes — replacement instances in other AZs lose the state.
+      input: [depends_on, dep_type, has_type, resource_az]
+      output: ebs_anchored_asg(asg, instance, volume, volume_az)
+      rule: |
+        .decl ebs_anchored_asg(asg: symbol, instance: symbol, volume: symbol, vol_az: symbol)
+        .output ebs_anchored_asg
+        ebs_anchored_asg(ASG, I, V, VAZ) :-
+            has_type(ASG, "aws_autoscaling_group"),
+            transitive_dep(ASG, I),
+            has_type(I, "aws_ec2_instance"),
+            depends_on(I, V),
+            dep_type(I, V, "storage_attachment"),
+            has_type(V, "aws_ebs_volume"),
+            resource_az(V, VAZ).
+
+    # --- General-purpose: any AZ convergence ---
+    - name: az_convergence
+      description: >
+        General catch-all. For any resource R with ≥2 downstream
+        AZ-scoped dependents, if all dependents are in 1 AZ, emit
+        a finding. Catches patterns the five specific rules miss.
+      input: [transitive_dep, resource_az, az_scoped, has_type]
+      output: az_convergence(root, root_type, sole_az, dependent_count)
+      rule: |
+        .decl root_downstream_az(root: symbol, dep: symbol, az: symbol)
+        root_downstream_az(R, D, AZ) :-
+            transitive_dep(R, D),
+            R != D,
+            az_scoped(D, "true"),
+            resource_az(D, AZ).
+
+        .decl root_dep_count(root: symbol, n: number)
+        root_dep_count(R, count : {D}) :- root_downstream_az(R, D, _).
+
+        .decl root_az_count(root: symbol, n: number)
+        root_az_count(R, count : {AZ}) :- root_downstream_az(R, _, AZ).
+
+        .decl az_convergence(root: symbol, rtype: symbol, az: symbol, dep_count: number)
+        .output az_convergence
+        az_convergence(R, RT, AZ, N) :-
+            root_dep_count(R, N),
+            N >= 2,
+            root_az_count(R, 1),
+            root_downstream_az(R, _, AZ),
+            has_type(R, RT).
+
+    # --- AZ skew detection ---
+    - name: az_skew
+      description: >
+        Lower-severity finding. A load balancer has targets in ≥2
+        AZs, but >75% of targets are in a single AZ. Not a
+        single-point failure, but a capacity risk.
+      input: [has_type, transitive_dep, resource_az, az_scoped]
+      output: az_skew(lb, dominant_az, dominant_count, total_count)
+      threshold_parameter: az_skew_threshold
+      default_threshold: 75
+      notes: >
+        The 75% default is a parameter in the chain definition's
+        params section. The Datalog rule computes counts; the
+        threshold comparison uses Soufflé arithmetic.
+      rule: |
+        // Per-AZ target count behind an LB.
+        .decl lb_az_target_count(lb: symbol, az: symbol, n: number)
+        lb_az_target_count(LB, AZ, count : {T}) :- lb_target_az(LB, T, AZ).
+
+        .decl az_skew(lb: symbol, dominant_az: symbol, dominant_n: number, total_n: number)
+        .output az_skew
+        az_skew(LB, AZ, DN, TN) :-
+            lb_target_count(LB, TN),
+            TN >= 2,
+            lb_az_target_count(LB, AZ, DN),
+            lb_az_count(LB, AZC),
+            AZC >= 2,
+            DN * 100 / TN > 75.
+
+  stratification_note: >
+    All rules are stratifiable: no negation, no aggregation through
+    negation. Aggregates (count) use Soufflé's aggregate functors
+    which are stratification-safe. The transitive_dep closure
+    terminates on the finite depends_on relation. Circular
+    dependencies (A→B→A) reach a fixed point without divergence.
+
+# =========================================================================
+# Section 4: Chain Definition
+# =========================================================================
+
+chain_definition:
+  file: chains/redundancy_single_point.yaml
+  content: |
+    id: redundancy_single_point
+    description: >
+      Compound detection of single-point-of-failure topology across
+      Availability Zones. Composes per-resource AZ controls with
+      graph-level Soufflé analysis of dependency chains. When
+      individual resources pass their own AZ checks but the aggregate
+      topology converges to a single AZ, this chain escalates the
+      finding to reflect the true blast radius.
+    controls:
+      - CTL.ELB.TARGET.SINGLEAZ.001
+      - CTL.ELB.NETWORK.SINGLEAZ.001
+      - CTL.VPC.NAT.SINGLEAZ.001
+      - CTL.RDS.MULTIAZ.001
+      - CTL.AUTOSCALING.MULTIAZ.001
+      - CTL.EFS.MULTIAZ.001
+    escalation_threshold: 2
+    compound_severity: critical
+    preconditions:
+      - az_failure
+    postconditions:
+      - service_outage
+
+  notes: >
+    The chain definition uses the existing control-composition format.
+    When ≥2 of the listed controls fire on assets that share a VPC
+    (scope_field candidate: properties.network.vpc_id), the chain
+    engine emits a compound finding. The Soufflé program runs
+    separately via the export-sir pipeline and produces the graph-level
+    findings (single_az_behind_lb, nat_single_egress, etc.) that
+    name the full dependency chain and blast radius.
+
+    The chain catches the simpler case (multiple per-resource AZ
+    failures co-occurring). The Soufflé program catches the harder
+    case (per-resource checks pass, but the topology is single-AZ).
+    Together they cover FM-079 completely.
+
+  required_fact_types:
+    required:
+      - resource_az
+      - az_scoped
+      - depends_on
+      - dep_type
+      - has_type
+    optional:
+      - resource_az (aws_elasticache_node)
+      - resource_az (aws_efs_mount_target)
+    notes: >
+      Missing optional fact types produce no findings for those
+      resource types — not false findings. If describe-nat-gateways
+      was not captured, the nat_single_egress rule has no subnet_nat
+      tuples and emits nothing.
+
+# =========================================================================
+# Section 5: Finding Schema
+# =========================================================================
+
+finding_schema:
+  description: >
+    Each output relation maps to one finding type. The Soufflé output
+    CSV is post-processed into structured findings by the run script.
+
+  fields:
+    - finding_type: >
+        convergent_lb_targets | nat_single_egress |
+        single_az_data_tier | cross_service_choke |
+        ebs_anchored_asg | az_convergence_general | az_skew
+
+    - blast_radius: >
+        Count of resources transitively reachable from the choke
+        point. Derived from the Soufflé output: for single_az_behind_lb,
+        this is target_count; for nat_single_egress, this is subnet_count;
+        for az_convergence, this is dependent_count.
+
+    - dependency_chain: >
+        Ordered list of (resource_arn, resource_type, dependency_type)
+        tuples from the entry point to the AZ-convergent choke point.
+        Reconstructed by walking the depends_on edges from root to
+        the AZ-scoped terminal resources.
+        Example:
+          [
+            {"arn": "arn:...:loadbalancer/app/my-alb/abc",
+             "type": "aws_elb", "role": "entry_point"},
+            {"arn": "arn:...:targetgroup/my-tg/def",
+             "type": "aws_elb_target_group", "edge": "load_balance"},
+            {"arn": "arn:...:instance/i-111",
+             "type": "aws_ec2_instance", "edge": "load_balance",
+             "az": "us-east-1a"},
+            {"arn": "arn:...:instance/i-222",
+             "type": "aws_ec2_instance", "edge": "load_balance",
+             "az": "us-east-1a"}
+          ]
+
+    - az_distribution: >
+        Map of AZ → count showing where resources are placed.
+        Example: {"us-east-1a": 4, "us-east-1b": 0}
+        For single-AZ findings, only one key is present.
+        For az_skew findings, the dominant AZ is marked.
+
+    - remediation_hint: >
+        Minimum topology change to eliminate the single point.
+        Per category:
+          convergent_lb_targets: "Register targets in ≥1 additional AZ
+            for target group <arn>"
+          nat_single_egress: "Deploy NAT Gateways in subnets
+            <subnet-ids> (AZs: <az-list>) and update route tables"
+          single_az_data_tier: "Enable Multi-AZ for <db-arn> or deploy
+            a read replica in a second AZ"
+          cross_service_choke: "Add subnets in ≥1 additional AZ to
+            Lambda function <fn-arn> VPC configuration"
+          ebs_anchored_asg: "Replace EBS-anchored state with EFS or
+            replicated storage; or remove instance from ASG and manage
+            as a standalone stateful instance"
+          az_skew: "Rebalance targets: move ≥N instances from <dominant-az>
+            to <other-azs> to reduce skew below 75%"
+
+  severity_mapping:
+    - finding_type: convergent_lb_targets
+      severity: critical
+      rationale: 100% capacity loss on AZ failure
+
+    - finding_type: nat_single_egress
+      severity: critical
+      rationale: All private subnet egress lost on AZ failure
+
+    - finding_type: single_az_data_tier
+      severity: high
+      rationale: Data tier is the bottleneck; compute redundancy is wasted
+
+    - finding_type: cross_service_choke
+      severity: high
+      rationale: Entire API surface down despite regional managed services
+
+    - finding_type: ebs_anchored_asg
+      severity: medium
+      rationale: Depends on whether EBS state is disposable; operator judgment needed
+
+    - finding_type: az_convergence_general
+      severity: high
+      rationale: Catch-all; severity may vary — default high, downgrade if blast_radius < 3
+
+    - finding_type: az_skew
+      severity: medium
+      rationale: Not a single-point failure, but disproportionate capacity risk
+
+# =========================================================================
+# Section 6: Worked Example — Category 1 (Convergent AZ behind LB)
+# =========================================================================
+
+worked_example:
+  description: >
+    End-to-end walkthrough: ALB with 4 EC2 instances, all in us-east-1a.
+
+  # --- Snapshot fragment ---
+  snapshot_fragment:
+    resources:
+      - arn: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/my-alb/50dc6c495c0c9188"
+        type: aws_elb
+        availability_zones: ["us-east-1a", "us-east-1b"]
+
+      - arn: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/my-tg/73e2d6bc24d8a067"
+        type: aws_elb_target_group
+        targets:
+          - "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00001"
+          - "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00002"
+          - "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00003"
+          - "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00004"
+
+      - arn: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00001"
+        type: aws_ec2_instance
+        placement: {availability_zone: "us-east-1a"}
+
+      - arn: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00002"
+        type: aws_ec2_instance
+        placement: {availability_zone: "us-east-1a"}
+
+      - arn: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00003"
+        type: aws_ec2_instance
+        placement: {availability_zone: "us-east-1a"}
+
+      - arn: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00004"
+        type: aws_ec2_instance
+        placement: {availability_zone: "us-east-1a"}
+
+  # --- Fact projector output ---
+  projected_facts:
+    az_placement:
+      - {subject: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/my-alb/50dc6c495c0c9188", predicate: resource_az, object: "us-east-1a"}
+      - {subject: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/my-alb/50dc6c495c0c9188", predicate: resource_az, object: "us-east-1b"}
+      - {subject: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00001", predicate: resource_az, object: "us-east-1a"}
+      - {subject: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00002", predicate: resource_az, object: "us-east-1a"}
+      - {subject: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00003", predicate: resource_az, object: "us-east-1a"}
+      - {subject: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00004", predicate: resource_az, object: "us-east-1a"}
+
+    az_scoped:
+      - {subject: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/my-alb/50dc6c495c0c9188", predicate: az_scoped, object: "true"}
+      - {subject: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00001", predicate: az_scoped, object: "true"}
+      - {subject: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00002", predicate: az_scoped, object: "true"}
+      - {subject: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00003", predicate: az_scoped, object: "true"}
+      - {subject: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00004", predicate: az_scoped, object: "true"}
+
+    dependency_edges:
+      - {subject: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/my-alb/50dc6c495c0c9188", predicate: depends_on, object: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/my-tg/73e2d6bc24d8a067"}
+      - {subject: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/my-tg/73e2d6bc24d8a067", predicate: depends_on, object: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00001"}
+      - {subject: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/my-tg/73e2d6bc24d8a067", predicate: depends_on, object: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00002"}
+      - {subject: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/my-tg/73e2d6bc24d8a067", predicate: depends_on, object: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00003"}
+      - {subject: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/my-tg/73e2d6bc24d8a067", predicate: depends_on, object: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00004"}
+
+    dependency_types:
+      - {subject: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/my-alb/50dc6c495c0c9188", predicate: dep_type, object: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/my-tg/73e2d6bc24d8a067\tload_balance"}
+      - {subject: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/my-tg/73e2d6bc24d8a067", predicate: dep_type, object: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00001\tload_balance"}
+      - {subject: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/my-tg/73e2d6bc24d8a067", predicate: dep_type, object: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00002\tload_balance"}
+      - {subject: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/my-tg/73e2d6bc24d8a067", predicate: dep_type, object: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00003\tload_balance"}
+      - {subject: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/my-tg/73e2d6bc24d8a067", predicate: dep_type, object: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00004\tload_balance"}
+
+    has_type:
+      - {subject: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/my-alb/50dc6c495c0c9188", predicate: has_type, object: "aws_elb"}
+      - {subject: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/my-tg/73e2d6bc24d8a067", predicate: has_type, object: "aws_elb_target_group"}
+      - {subject: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00001", predicate: has_type, object: "aws_ec2_instance"}
+      - {subject: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00002", predicate: has_type, object: "aws_ec2_instance"}
+      - {subject: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00003", predicate: has_type, object: "aws_ec2_instance"}
+      - {subject: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00004", predicate: has_type, object: "aws_ec2_instance"}
+
+  # --- Soufflé execution trace ---
+  souffle_trace:
+    description: >
+      Datalog rule firing for the UNSAFE case (all targets in 1 AZ).
+
+    derived_facts:
+      transitive_dep:
+        - [ALB, target_group]
+        - [ALB, instance_1]
+        - [ALB, instance_2]
+        - [ALB, instance_3]
+        - [ALB, instance_4]
+        - [target_group, instance_1]
+        - [target_group, instance_2]
+        - [target_group, instance_3]
+        - [target_group, instance_4]
+
+      lb_target_az:
+        - [ALB, instance_1, "us-east-1a"]
+        - [ALB, instance_2, "us-east-1a"]
+        - [ALB, instance_3, "us-east-1a"]
+        - [ALB, instance_4, "us-east-1a"]
+
+      lb_az_count:
+        - [ALB, 1]
+
+      lb_target_count:
+        - [ALB, 4]
+
+    output: >
+      single_az_behind_lb.csv:
+        ALB  us-east-1a  4
+
+  # --- Compound finding ---
+  compound_finding:
+    finding_type: convergent_lb_targets
+    severity: critical
+    blast_radius: 4
+    dependency_chain:
+      - {arn: "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/my-alb/50dc6c495c0c9188",
+         type: "aws_elb", role: "entry_point", az: ["us-east-1a", "us-east-1b"]}
+      - {arn: "arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/my-tg/73e2d6bc24d8a067",
+         type: "aws_elb_target_group", edge: "load_balance"}
+      - {arn: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00001",
+         type: "aws_ec2_instance", edge: "load_balance", az: "us-east-1a"}
+      - {arn: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00002",
+         type: "aws_ec2_instance", edge: "load_balance", az: "us-east-1a"}
+      - {arn: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00003",
+         type: "aws_ec2_instance", edge: "load_balance", az: "us-east-1a"}
+      - {arn: "arn:aws:ec2:us-east-1:111122223333:instance/i-0a1b2c3d4e5f00004",
+         type: "aws_ec2_instance", edge: "load_balance", az: "us-east-1a"}
+    az_distribution:
+      us-east-1a: 4
+    remediation_hint: >
+      Register targets in ≥1 additional AZ for target group
+      arn:aws:elasticloadbalancing:us-east-1:111122223333:targetgroup/my-tg/73e2d6bc24d8a067.
+      The ALB is configured for us-east-1a and us-east-1b, but all 4
+      targets are in us-east-1a. Move ≥1 instance to us-east-1b.
+
+  # --- Passing case ---
+  passing_case:
+    description: >
+      Same topology, instances spread across two AZs. The rule does
+      not fire.
+
+    snapshot_diff: >
+      instance i-0a1b2c3d4e5f00003: placement.availability_zone = "us-east-1b"
+      instance i-0a1b2c3d4e5f00004: placement.availability_zone = "us-east-1b"
+
+    derived_facts:
+      lb_target_az:
+        - [ALB, instance_1, "us-east-1a"]
+        - [ALB, instance_2, "us-east-1a"]
+        - [ALB, instance_3, "us-east-1b"]
+        - [ALB, instance_4, "us-east-1b"]
+
+      lb_az_count:
+        - [ALB, 2]
+
+    output: >
+      single_az_behind_lb.csv: (empty — no output)
+
+    explanation: >
+      lb_az_count(ALB, 2) — the guard "lb_az_count(LB, 1)" is not
+      satisfied, so single_az_behind_lb does not fire. The chain is
+      silent when redundancy exists.
+
+# =========================================================================
+# Fact projection gap analysis
+# =========================================================================
+
+fact_projection_gap: >
+  The current fact projector (sirfacts/facts.go) emits no AZ placement
+  or dependency edge facts. Implementing this spec requires two new
+  projector functions:
+
+  1. azPlacementFacts(assets []sir.AssetFact) []Fact
+     Walks each asset's Properties map, extracts AZ data based on
+     asset type, emits (arn, "resource_az", az) and (arn, "az_scoped",
+     "true") triples. Source paths:
+       - properties.compute.placement.availability_zone (EC2)
+       - properties.database.availability_zone + secondary_availability_zone (RDS)
+       - properties.network.availability_zones[] (ELB)
+       - properties.network.availability_zone (subnet, NAT GW)
+       - properties.compute.vpc_config.subnet_ids → cross-ref subnet AZ (Lambda)
+       - properties.storage.availability_zone (EBS)
+       - properties.storage.mount_targets[].availability_zone_id (EFS)
+
+  2. dependencyEdgeFacts(assets []sir.AssetFact) []Fact
+     Walks each asset's Properties map, extracts relationship fields,
+     emits (source, "depends_on", target) and (source+target,
+     "dep_type", label) triples. This requires the SIR to carry
+     cross-resource references (target group ARNs, subnet IDs, route
+     table associations, etc.) in asset properties — most of these
+     fields are already captured by existing collectors; the projector
+     function is the new code.
+
+  The transform.sh script needs updating to pre-create empty .facts
+  files for the new predicates: resource_az, az_scoped, depends_on,
+  dep_type.
+
+validation:
+  exact_match:
+    - finding_type
+    - severity
+    - blast_radius
+  semantic_match:
+    - dependency_chain
+    - remediation_hint
+  ignore:
+    - fact ordering in JSONL
+    - Soufflé stderr warnings for empty optional relations

@@ -1,0 +1,237 @@
+# reasoning-spec: fm-060-iam-condition-key-complexity
+# engine: z3
+# trial-fixture: trials/z3-iam-condition-key/input.smt2
+# failure-mode: FM-060 (IAM Condition Key Complexity)
+
+question: >
+  Given an IAM policy with multiple condition operators on overlapping
+  keys, is there a request context (caller ARN, source IP, tags) that
+  satisfies ALL Allow conditions while evading ALL Deny conditions?
+  If SAT, report the witness — the specific (principal, statement,
+  request-context) triple that threads the needle.
+
+context: >
+  AWS IAM condition blocks combine operators (StringEquals,
+  StringNotLike, ArnLike, IpAddress, …) with context keys
+  (aws:PrincipalArn, aws:SourceIp, aws:RequestedRegion, …).
+  Within a single statement, multiple condition operators are
+  AND-joined; multiple values within one operator are OR-joined.
+  Across statements, explicit Deny overrides Allow regardless of
+  order. CEL-based controls can check whether a condition key is
+  present, but cannot prove whether the intersection of an Allow's
+  ArnLike pattern and a Deny's StringNotLike pattern is empty or
+  satisfiable — that requires an SMT solver.
+
+  Three classes of defect arise from condition key complexity:
+
+  1. Dead statement: an Allow whose conditions are logically
+     unsatisfiable (e.g., StringEquals "us-east-1" AND
+     StringNotEquals "us-east-1" on the same key). The statement
+     can never fire; a policy author probably made an error.
+
+  2. Deny bypass: a Deny statement whose condition leaves a
+     gap — a request context that matches the Allow but not the
+     Deny. Example: Deny on StringNotLike "arn:aws:iam::*:role/Admin*"
+     paired with Allow on ArnLike "arn:aws:iam::*:role/*" — any
+     role matching "Admin*" slips through the Deny.
+
+  3. Operator mismatch: different operators on the same key that
+     interact non-obviously. StringEquals vs ArnLike on
+     aws:PrincipalArn, or IpAddress vs StringNotLike on
+     aws:SourceIp — the type semantics differ but both bind the
+     same request-context variable.
+
+input:
+  source: stave export-sir --format smt2 + appended query
+  format: smt-lib
+  fixture: trials/z3-iam-condition-key/input.smt2
+
+  required_fields:
+    - has_condition(<principal>, "<operator>:<key>")
+    - has_condition_value(<principal>, "<operator>:<key>=<value>")
+
+  extended_fields:
+    - stmt_effect(<principal>, <stmt_index>, "Allow"|"Deny")
+    - stmt_condition(<principal>, <stmt_index>, "<operator>:<key>=<value>")
+    - stmt_action(<principal>, <stmt_index>, <action>)
+    - stmt_resource(<principal>, <stmt_index>, <resource_pattern>)
+
+  fact_projection_gap: >
+    The current fact projector (sirfacts/facts.go:conditionFacts)
+    emits has_condition and has_condition_value as binary predicates
+    collapsed to strings. These predicates lose per-statement
+    association: you can tell that a principal HAS a StringNotLike
+    condition somewhere, but not WHICH statement it belongs to.
+    This spec requires per-statement condition facts
+    (stmt_condition) so the solver can reason about Allow/Deny
+    interaction on the same key across statements. The SIR already
+    carries IAMPolicyStatementFact with per-statement Conditions
+    []ConditionFact — the projector needs to emit these as ternary
+    (principal, stmt_index, "op:key=value") facts alongside the
+    existing binary predicates.
+
+reasoning:
+  steps:
+    - step: 1
+      action: >
+        Parse the SMT-LIB fact base. Identify all principals and
+        their per-statement condition facts. Build a mental model
+        of which statements are Allow vs Deny, and which condition
+        operators+keys each statement asserts.
+      input: >
+        input.smt2 — ground atoms for stmt_effect, stmt_condition,
+        stmt_action, stmt_resource, plus closed-world axioms.
+      output: >
+        Per-principal statement map: { stmt_index → (effect,
+        [(operator, key, value), ...], [actions], [resources]) }.
+      rule: >
+        Closed-world: any (principal, stmt_index, value) triple
+        not explicitly asserted is false. Do not infer conditions
+        that are absent.
+
+    - step: 2
+      action: >
+        For each principal, identify all Deny statements and their
+        condition predicates. Model each condition operator's
+        semantics as an SMT constraint over a free string variable
+        representing the request-context value for that key.
+      input: Step 1 output — the per-statement condition map.
+      output: >
+        Per-key constraint system: for each condition key that
+        appears in both an Allow and a Deny statement, a pair
+        of SMT assertions (allow_constraint ∧ ¬deny_constraint)
+        representing the bypass region.
+      rule: |
+        Operator semantics for SMT encoding:
+
+        StringEquals(key, V)       → (= ctx_key V)
+        StringNotEquals(key, V)    → (not (= ctx_key V))
+        StringLike(key, "a*b")     → (str.prefixof "a" ctx_key) if simple prefix
+                                     else str.in_re with wildcard→regex
+        StringNotLike(key, "a*b")  → (not <StringLike encoding>)
+        ArnLike(key, pattern)      → str.in_re with arn-segment→regex
+                                     ("*" = any within segment,
+                                      segment separator = ":")
+        ArnNotLike(key, pattern)   → (not <ArnLike encoding>)
+        IpAddress(key, CIDR)       → int range check on parsed IP
+                                     (encode as bitvector #b... or
+                                      bounded Int with mask arithmetic)
+        NotIpAddress(key, CIDR)    → (not <IpAddress encoding>)
+        StringEqualsIgnoreCase     → (= (str.to_lower ctx_key) (str.to_lower V))
+        DateLessThan(key, V)       → (< ctx_key_epoch V_epoch)
+                                     (encode dates as Int epoch seconds)
+        Null(key, "true")          → (= ctx_key "")
+                                     (closed-world: absent = empty string)
+        Null(key, "false")         → (not (= ctx_key ""))
+
+        Multi-value within one operator: OR-joined.
+          StringEquals(key, ["a","b"]) → (or (= ctx V_a) (= ctx V_b))
+
+        Multi-operator on same key within one statement: AND-joined.
+          {StringEquals: {k: "a"}, StringNotEquals: {k: "b"}}
+          → (and (= ctx "a") (not (= ctx "b")))
+
+    - step: 3
+      action: >
+        Construct the satisfiability query. For each condition key
+        that appears in both Allow and Deny statements, declare a
+        free string variable. Assert the Allow's condition
+        constraints AND the negation of the Deny's condition
+        constraints. If SAT, a request context exists that the
+        Allow permits but the Deny does not block.
+      input: Step 2 constraint pairs.
+      output: |
+        Three query classes, each a (check-sat) + (get-value):
+
+        Q1 — Dead statement detection:
+          For each Allow statement, assert ALL its conditions.
+          SAT = statement is reachable. UNSAT = dead statement.
+
+        Q2 — Deny bypass detection:
+          For each (Allow, Deny) pair sharing a condition key:
+          assert Allow conditions ∧ ¬(Deny conditions).
+          SAT = bypass exists, witness is the request context.
+
+        Q3 — Operator mismatch detection:
+          For each key with two different operators across
+          statements, assert both operator semantics on the same
+          free variable. SAT = a value satisfies both (which may
+          be surprising). UNSAT = the operators are contradictory
+          (possible dead code or unintended mutual exclusion).
+      rule: >
+        The query must be decidable. Use QF_S (quantifier-free
+        strings) for string operators, QF_LIA for IP/date ranges.
+        Avoid quantifiers — the fact base is finite and closed-world
+        axioms already enumerate all principals and statements.
+
+    - step: 4
+      action: >
+        Interpret the solver result and map to finding severity.
+      input: Z3 output (sat/unsat + witness values).
+      output: |
+        Finding schema:
+
+        finding:
+          type: dead_statement | deny_bypass | operator_mismatch
+          principal: <arn>
+          statement_index: <int>
+          condition_key: <aws:ContextKey>
+          operators_involved: [<op1>, <op2>]
+          witness:            # present only when SAT
+            context_value: <string that threads the needle>
+          severity: >
+            dead_statement → medium (policy author error, not exploitable)
+            deny_bypass → critical (attacker can evade the deny)
+            operator_mismatch → high (surprising interaction, likely unintended)
+      rule: >
+        A deny_bypass finding means the Allow's condition space
+        minus the Deny's condition space is non-empty. The witness
+        is a concrete request-context value an attacker could use.
+        This is the highest-severity class because it represents a
+        gap in an explicit deny — the policy author intended to
+        block something and failed.
+
+output:
+  format: text
+  schema:
+    verdict: SAT | UNSAT
+    query_class: dead_statement | deny_bypass | operator_mismatch
+    findings:
+      - type: deny_bypass
+        principal: "arn:aws:iam::123456789012:role/DataProcessor"
+        statement_index: 1
+        condition_key: "aws:PrincipalArn"
+        operators_involved: ["StringNotLike", "ArnLike"]
+        witness:
+          context_value: "arn:aws:iam::123456789012:role/AdminBackdoor"
+
+  expected_result:
+    verdict: SAT
+    query_class: deny_bypass
+    principal: "arn:aws:iam::123456789012:role/DataProcessor"
+    witness_value: "arn:aws:iam::123456789012:role/AdminBackdoor"
+    explanation: >
+      The Deny statement uses StringNotLike on aws:PrincipalArn
+      with pattern "arn:aws:iam::*:role/Admin*", which excludes
+      principals matching "Admin*". The Allow statement uses ArnLike
+      on the same key with pattern "arn:aws:iam::*:role/*", which
+      admits any role. A principal whose ARN matches "Admin*"
+      satisfies the Allow (ArnLike matches) but evades the Deny
+      (StringNotLike excludes it from the deny set, meaning the
+      deny does NOT fire for Admin* principals). The Deny was
+      likely intended to ONLY allow Admin roles, but the negation
+      logic is inverted — StringNotLike means "deny everything
+      NOT matching", so it denies non-Admin roles and permits
+      Admin roles through.
+
+validation:
+  exact_match:
+    - verdict
+    - query_class
+  semantic_match:
+    - witness_value
+    - explanation
+  ignore:
+    - solver warnings
+    - whitespace in get-value output
+    - ordering of findings when multiple queries run

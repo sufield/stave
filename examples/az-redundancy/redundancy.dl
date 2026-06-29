@@ -1,0 +1,276 @@
+// redundancy.dl — AZ single-point-of-failure detection over Stave's
+// JSONL fact export.
+//
+// Detects infrastructure that appears redundant at the per-resource
+// level but converges to a single Availability Zone at the dependency
+// graph level. Five specific rules plus a general-purpose catch-all
+// and an AZ skew detector.
+//
+// Pipeline:
+//   stave export-sir --format jsonl  →  facts.jsonl
+//   transform.sh                     →  per-predicate .facts TSVs
+//   souffle -F facts/ -D out/ redundancy.dl  →  per-relation .csv
+//
+// Every input relation is declared with .input; the transform script
+// pre-creates empty .facts files for relations the fixture does not
+// populate.
+
+// =====================================================
+// Input relations
+// =====================================================
+.decl has_type(asset: symbol, asset_type: symbol)
+.input has_type
+.decl resource_az(resource: symbol, az: symbol)
+.input resource_az
+.decl az_scoped(resource: symbol, flag: symbol)
+.input az_scoped
+.decl depends_on(source: symbol, target: symbol)
+.input depends_on
+.decl dep_type(source: symbol, target: symbol, dtype: symbol)
+.input dep_type
+
+// =====================================================
+// Transitive dependency closure
+// =====================================================
+.decl transitive_dep(source: symbol, target: symbol)
+transitive_dep(A, B) :- depends_on(A, B).
+transitive_dep(A, C) :- transitive_dep(A, B), depends_on(B, C).
+
+// =====================================================
+// Category 1: Convergent AZ behind load balancer
+// =====================================================
+
+// Targets behind an LB with their AZ placement.
+.decl lb_target_az(lb: symbol, target: symbol, az: symbol)
+lb_target_az(LB, T, AZ) :-
+    has_type(LB, "aws_elb"),
+    transitive_dep(LB, T),
+    az_scoped(T, "true"),
+    resource_az(T, AZ),
+    has_type(T, "aws_ec2_instance").
+lb_target_az(LB, T, AZ) :-
+    has_type(LB, "aws_elb"),
+    transitive_dep(LB, T),
+    az_scoped(T, "true"),
+    resource_az(T, AZ),
+    has_type(T, "aws_lambda_function").
+
+// Project to distinct (lb, az) for counting.
+.decl lb_az(lb: symbol, az: symbol)
+lb_az(LB, AZ) :- lb_target_az(LB, _, AZ).
+
+.decl lb_az_count(lb: symbol, n: number)
+lb_az_count(LB, N) :- lb_az(LB, _), N = count : { lb_az(LB, _) }.
+
+// Project to distinct (lb, target) for counting.
+.decl lb_target(lb: symbol, target: symbol)
+lb_target(LB, T) :- lb_target_az(LB, T, _).
+
+.decl lb_target_count(lb: symbol, n: number)
+lb_target_count(LB, N) :- lb_target(LB, _), N = count : { lb_target(LB, _) }.
+
+// Finding: all targets in 1 AZ.
+.decl single_az_behind_lb(lb: symbol, az: symbol, target_count: number)
+.output single_az_behind_lb
+single_az_behind_lb(LB, AZ, N) :-
+    lb_az_count(LB, 1),
+    lb_az(LB, AZ),
+    lb_target_count(LB, N).
+
+// =====================================================
+// Category 2: NAT Gateway single egress
+// =====================================================
+
+// A subnet routes through a NAT Gateway.
+.decl subnet_nat(subnet: symbol, nat: symbol)
+subnet_nat(S, N) :-
+    depends_on(S, RT),
+    dep_type(S, RT, "route"),
+    depends_on(RT, N),
+    dep_type(RT, N, "route"),
+    has_type(N, "aws_nat_gateway").
+
+// NAT GW AZs serving private subnets in a VPC.
+.decl vpc_nat_az(vpc: symbol, nat_az: symbol)
+vpc_nat_az(VPC, NAZ) :-
+    depends_on(S, VPC),
+    dep_type(S, VPC, "subnet_membership"),
+    subnet_nat(S, N),
+    resource_az(N, NAZ).
+
+// Private subnet AZs in a VPC.
+.decl vpc_private_subnet_az(vpc: symbol, subnet_az: symbol)
+vpc_private_subnet_az(VPC, SAZ) :-
+    depends_on(S, VPC),
+    dep_type(S, VPC, "subnet_membership"),
+    subnet_nat(S, _),
+    resource_az(S, SAZ).
+
+.decl vpc_nat_az_count(vpc: symbol, n: number)
+vpc_nat_az_count(VPC, N) :- vpc_nat_az(VPC, _), N = count : { vpc_nat_az(VPC, _) }.
+
+.decl vpc_private_subnet_az_count(vpc: symbol, n: number)
+vpc_private_subnet_az_count(VPC, N) :- vpc_private_subnet_az(VPC, _), N = count : { vpc_private_subnet_az(VPC, _) }.
+
+// Finding: all NAT GWs in 1 AZ but subnets span >1 AZ.
+.decl nat_single_egress(vpc: symbol, nat_az: symbol, subnet_az_count: number)
+.output nat_single_egress
+nat_single_egress(VPC, NAZ, SC) :-
+    vpc_nat_az_count(VPC, 1),
+    vpc_private_subnet_az_count(VPC, SC),
+    SC > 1,
+    vpc_nat_az(VPC, NAZ).
+
+// =====================================================
+// Category 3: Single-AZ data tier behind multi-AZ compute
+// =====================================================
+
+// Compute resource depends on a database.
+.decl compute_depends_db(compute: symbol, db: symbol)
+compute_depends_db(C, DB) :-
+    transitive_dep(C, DB),
+    has_type(DB, "aws_rds_instance"),
+    has_type(C, "aws_autoscaling_group").
+compute_depends_db(C, DB) :-
+    transitive_dep(C, DB),
+    has_type(DB, "aws_rds_instance"),
+    has_type(C, "aws_ecs_service").
+compute_depends_db(C, DB) :-
+    transitive_dep(C, DB),
+    has_type(DB, "aws_elasticache_cluster"),
+    has_type(C, "aws_autoscaling_group").
+compute_depends_db(C, DB) :-
+    transitive_dep(C, DB),
+    has_type(DB, "aws_elasticache_cluster"),
+    has_type(C, "aws_ecs_service").
+
+// AZs the compute tier's instances span.
+.decl compute_instance_az(compute: symbol, az: symbol)
+compute_instance_az(C, AZ) :-
+    compute_depends_db(C, _),
+    transitive_dep(C, D),
+    has_type(D, "aws_ec2_instance"),
+    resource_az(D, AZ).
+compute_instance_az(C, AZ) :-
+    compute_depends_db(C, _),
+    transitive_dep(C, D),
+    has_type(D, "aws_subnet"),
+    resource_az(D, AZ).
+
+.decl compute_az_count(compute: symbol, n: number)
+compute_az_count(C, N) :- compute_instance_az(C, _), N = count : { compute_instance_az(C, _) }.
+
+// AZs the database spans.
+.decl db_az(db: symbol, az: symbol)
+db_az(DB, AZ) :- resource_az(DB, AZ), has_type(DB, "aws_rds_instance").
+db_az(DB, AZ) :- resource_az(DB, AZ), has_type(DB, "aws_elasticache_cluster").
+
+.decl db_az_count(db: symbol, n: number)
+db_az_count(DB, N) :- db_az(DB, _), N = count : { db_az(DB, _) }.
+
+// Finding: multi-AZ compute, single-AZ database.
+.decl single_az_data_tier(compute: symbol, db: symbol, db_az: symbol, compute_azs: number)
+.output single_az_data_tier
+single_az_data_tier(C, DB, DBAZ, CAZ) :-
+    compute_depends_db(C, DB),
+    db_az_count(DB, 1),
+    compute_az_count(C, CAZ),
+    CAZ >= 2,
+    db_az(DB, DBAZ).
+
+// =====================================================
+// Category 4: Cross-service AZ choke point
+// =====================================================
+
+// API GW triggers Lambda; collect Lambda's AZs.
+.decl apigw_lambda_az(apigw: symbol, lambda: symbol, az: symbol)
+apigw_lambda_az(GW, LFN, AZ) :-
+    depends_on(GW, LFN),
+    dep_type(GW, LFN, "event_trigger"),
+    has_type(GW, "aws_api_gateway_rest_api"),
+    has_type(LFN, "aws_lambda_function"),
+    resource_az(LFN, AZ).
+
+// Project to distinct (gw, lambda, az) — already distinct.
+.decl apigw_lambda_az_distinct(apigw: symbol, lambda: symbol, az: symbol)
+apigw_lambda_az_distinct(GW, LFN, AZ) :- apigw_lambda_az(GW, LFN, AZ).
+
+.decl apigw_lambda_az_count(apigw: symbol, lambda: symbol, n: number)
+apigw_lambda_az_count(GW, LFN, N) :- apigw_lambda_az(GW, LFN, _), N = count : { apigw_lambda_az_distinct(GW, LFN, _) }.
+
+// Finding: Lambda in VPC with subnets in only 1 AZ.
+.decl cross_service_az_choke(apigw: symbol, lambda: symbol, az: symbol)
+.output cross_service_az_choke
+cross_service_az_choke(GW, LFN, AZ) :-
+    apigw_lambda_az_count(GW, LFN, 1),
+    apigw_lambda_az(GW, LFN, AZ).
+
+// =====================================================
+// Category 5: EBS-anchored state in ASG
+// =====================================================
+
+.decl ebs_anchored_asg(asg: symbol, instance: symbol, volume: symbol, vol_az: symbol)
+.output ebs_anchored_asg
+ebs_anchored_asg(ASG, I, V, VAZ) :-
+    has_type(ASG, "aws_autoscaling_group"),
+    transitive_dep(ASG, I),
+    has_type(I, "aws_ec2_instance"),
+    depends_on(I, V),
+    dep_type(I, V, "storage_attachment"),
+    has_type(V, "aws_ebs_volume"),
+    resource_az(V, VAZ).
+
+// =====================================================
+// General: any AZ convergence with >=2 dependents
+// =====================================================
+
+.decl root_downstream_az(root: symbol, dep: symbol, az: symbol)
+root_downstream_az(R, D, AZ) :-
+    transitive_dep(R, D),
+    R != D,
+    az_scoped(D, "true"),
+    resource_az(D, AZ).
+
+// Project to distinct (root, dep) for counting.
+.decl root_downstream(root: symbol, dep: symbol)
+root_downstream(R, D) :- root_downstream_az(R, D, _).
+
+.decl root_dep_count(root: symbol, n: number)
+root_dep_count(R, N) :- root_downstream(R, _), N = count : { root_downstream(R, _) }.
+
+// Project to distinct (root, az) for counting.
+.decl root_az(root: symbol, az: symbol)
+root_az(R, AZ) :- root_downstream_az(R, _, AZ).
+
+.decl root_az_count(root: symbol, n: number)
+root_az_count(R, N) :- root_az(R, _), N = count : { root_az(R, _) }.
+
+.decl az_convergence(root: symbol, rtype: symbol, az: symbol, dep_count: number)
+.output az_convergence
+az_convergence(R, RT, AZ, N) :-
+    root_dep_count(R, N),
+    N >= 2,
+    root_az_count(R, 1),
+    root_az(R, AZ),
+    has_type(R, RT).
+
+// =====================================================
+// AZ skew: >75% of LB targets in one AZ
+// =====================================================
+
+// Per-AZ target count: project (lb, target) per AZ, then count.
+.decl lb_target_in_az(lb: symbol, target: symbol, az: symbol)
+lb_target_in_az(LB, T, AZ) :- lb_target_az(LB, T, AZ).
+
+.decl lb_az_target_count(lb: symbol, az: symbol, n: number)
+lb_az_target_count(LB, AZ, N) :- lb_target_in_az(LB, _, AZ), N = count : { lb_target_in_az(LB, _, AZ) }.
+
+.decl az_skew(lb: symbol, dominant_az: symbol, dominant_count: number, total_count: number)
+.output az_skew
+az_skew(LB, AZ, DN, TN) :-
+    lb_target_count(LB, TN),
+    TN >= 2,
+    lb_az_target_count(LB, AZ, DN),
+    lb_az_count(LB, AZC),
+    AZC >= 2,
+    DN * 100 / TN > 75.

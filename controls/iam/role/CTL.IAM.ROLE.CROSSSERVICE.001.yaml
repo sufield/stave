@@ -22,6 +22,7 @@ description: >
 domain: identity
 severity: high
 scope: compound
+corpus_reference: MITRE:T1078.004
 compliance:
   soc2: "CC6.1"
   nist_800_53_r5: "AC-6"
