@@ -1,0 +1,831 @@
+# reasoning-spec: fm-034-snapshot-freshness
+# engine: cel (meta-control — evaluates input quality, not infrastructure)
+# failure-mode: FM-034 (Temporal Degradation)
+
+question: >
+  How stale is the snapshot data, and what does that mean for the
+  confidence level of every finding derived from it?
+
+context: >
+  Stave evaluates snapshots captured at time T and reports PASS/FAIL
+  verdicts. If T was five minutes ago, those verdicts are nearly
+  certain. If T was three weeks ago, they may be wrong — the
+  infrastructure may have changed. The system currently provides no
+  signal about this gap. FM-034 adds a confidence qualifier so users
+  know when findings are based on data that may no longer reflect
+  the current state.
+
+# =========================================================================
+# Section 1: Snapshot Timestamp Schema
+# =========================================================================
+
+timestamp_schema:
+  decision: option_a_single_captured_at
+  rationale: >
+    Option A: single `captured_at` per snapshot file.
+
+    Stave already has this. The `asset.Snapshot` struct has a single
+    `CapturedAt time.Time` field, validated by `HasTimestamp()` and
+    enforced by `normalizeSnapshotTypes()` which returns
+    `ErrMissingTimestamp` if zero. The observation schema `obs.v0.1`
+    requires `captured_at` at the top level.
+
+    This is the right granularity because:
+
+    1. **Collection is fast relative to freshness thresholds.** A
+       typical `stave collect` run takes 2–20 minutes. Freshness
+       thresholds are 1–168 hours. The imprecision from using one
+       timestamp per file (up to 20 minutes within a file) is noise
+       within any practical threshold. Adding per-service-group
+       timestamps would be 10x implementation complexity for <1%
+       precision gain.
+
+    2. **The existing schema already works.** Every snapshot file
+       in production today has a single `captured_at`. No schema
+       migration needed. No new fields to populate. No backward
+       compatibility concerns.
+
+    3. **Compound findings cross service groups anyway.** FM-042
+       (Lambda → IAM → S3) would need the oldest group timestamp,
+       which converges to the file-level timestamp for snapshots
+       collected in a single run. For multi-file snapshots (separate
+       collection runs), each file already has its own `captured_at`,
+       and the freshness check applies per-file.
+
+  schema:
+    existing_go_struct: >
+      type Snapshot struct {
+          SchemaVersion kernel.Schema   `json:"schema_version"`
+          CapturedAt    time.Time       `json:"captured_at"`
+          Source        SnapshotSource  `json:"source"`
+          Assets        []Asset         `json:"assets"`
+          // ...
+      }
+
+    existing_json: |
+      {
+        "schema_version": "obs.v0.1",
+        "captured_at": "2025-06-28T14:30:00Z",
+        "source": "deployed",
+        "assets": [...]
+      }
+
+    no_schema_change_needed: true
+
+  timestamp_source: >
+    Wall clock of the machine running `stave collect` (or the
+    extractor script) at the moment the API response batch is
+    finalized. This is the right source because freshness measures
+    when Stave observed the state, not when AWS last modified it.
+    AWS API timestamps can differ due to response caching,
+    CloudTrail propagation delays, or cross-service clock skew.
+    The collection-side clock is the single consistent reference.
+
+  now_interaction:
+    description: >
+      `--now` overrides the evaluation-side timestamp. Freshness
+      is computed as: age = now - captured_at.
+
+      With `--now`: age uses the override value. Deterministic.
+      Without `--now`: age uses system clock at eval start.
+
+      For multi-file snapshots (directory of observation files),
+      each file has its own `captured_at`. The freshness check
+      runs per-snapshot. A finding's freshness is determined by
+      the `captured_at` of the snapshot containing the asset the
+      finding evaluates.
+
+    determinism_guarantee: >
+      Given the same snapshot file and the same `--now` value,
+      `stave apply` produces identical freshness qualifications.
+      The freshness check never reads the system clock if `--now`
+      is provided.
+
+# =========================================================================
+# Section 2: Freshness Qualification (not UNCERTAIN verdict)
+# =========================================================================
+
+freshness_model:
+  decision: post_evaluation_confidence_qualifier
+  rationale: >
+    NOT a new verdict type. Use the existing `ConfidenceLevel` field
+    on `ResourceCheck` (already has HIGH, MEDIUM, LOW, INCONCLUSIVE).
+
+    Stave already separates verdict (PASS/FAIL/VIOLATION/INCONCLUSIVE/
+    SKIPPED/NOT_APPLICABLE) from confidence (HIGH/MEDIUM/LOW/
+    INCONCLUSIVE). Adding a new verdict UNCERTAIN would create a
+    seventh verdict state that every downstream consumer must handle.
+    Using the existing confidence axis avoids this: the verdict stays
+    PASS or VIOLATION, the confidence drops to LOW or INCONCLUSIVE
+    when data is stale. This matches the epistemic claim exactly:
+    "the check ran and produced a verdict, but we have low confidence
+    the verdict reflects the current state."
+
+    The post-evaluation qualifier approach:
+
+    1. **Evaluate the CEL predicate normally** → PASS or VIOLATION.
+    2. **Compute snapshot age**: age = now - snapshot.captured_at.
+    3. **Adjust confidence based on age**:
+       - age ≤ threshold → confidence = HIGH (default, unchanged)
+       - age > threshold → confidence = LOW
+    4. **Preserve the underlying verdict.** The finding says
+       "VIOLATION (confidence: LOW)" not "UNCERTAIN." The user
+       knows what was found AND how much to trust it.
+
+    This satisfies both use cases:
+
+    - **Breach reconstruction**: `--now` set near `captured_at`
+      → age is small → confidence stays HIGH. No override needed.
+    - **Stale pipeline**: age exceeds threshold → confidence drops
+      to LOW. The user sees all their PASS/VIOLATION verdicts with
+      a confidence qualifier, not a wall of UNCERTAIN that hides
+      the underlying result.
+
+  why_not_uncertain_verdict: >
+    A new UNCERTAIN verdict violates three principles:
+
+    1. **Information loss.** UNCERTAIN replaces the PASS/FAIL
+       distinction. The user can't tell "this was FAIL when captured
+       but may have been fixed" from "this was PASS when captured
+       but may have broken." Both become UNCERTAIN. The confidence
+       axis preserves the underlying verdict.
+
+    2. **Combinatorial explosion.** Every switch on Verdict (exit
+       code logic, severity mapping, report grouping, SARIF export,
+       ASFF export, issue consolidation) needs a new case. The
+       confidence axis is already handled — callers that care about
+       confidence already check it; callers that don't, don't.
+
+    3. **Semantic conflation.** UNCERTAIN/INCONCLUSIVE already
+       exists for "the control couldn't determine a verdict" (e.g.,
+       missing properties). Snapshot staleness is a different
+       concern: the control DID determine a verdict, but the input
+       may not be current. These are orthogonal axes — conflating
+       them into the same verdict space confuses consumers.
+
+  confidence_levels:
+    mapping:
+      fresh:
+        condition: "age ≤ freshness_threshold"
+        confidence: HIGH
+        meaning: "Verdict derived from data captured within the threshold."
+      stale:
+        condition: "age > freshness_threshold"
+        confidence: LOW
+        meaning: >
+          Verdict derived from data that may not reflect the
+          current state. The infrastructure may have changed
+          since the snapshot was captured.
+
+    why_binary_not_graduated: >
+      Binary (fresh/stale) over graduated (CONFIDENT/CURRENT/
+      UNCERTAIN/STALE) because:
+
+      1. **Users act on two states, not four.** Either you trust
+         the finding or you re-collect. There is no meaningful
+         action for "CURRENT" that differs from "CONFIDENT." The
+         graduated model adds configuration complexity (four
+         thresholds to tune) without adding actionable information.
+
+      2. **One threshold is tunable enough.** The default covers
+         the common case (24h for continuous governance). Breach
+         reconstruction overrides via `--now` or
+         `--freshness-threshold`. Per-service-group thresholds
+         add complexity that only helps edge cases where IAM is
+         fresh but EC2 is stale within the same snapshot — but
+         those are separate snapshot files with separate
+         `captured_at` values, so the per-file check already
+         handles it.
+
+      3. **Downstream consumers handle one boolean.** JSON
+         consumers check `confidence == "HIGH"` or not. Adding
+         CURRENT vs UNCERTAIN vs STALE means every consumer needs
+         to decide which ones to treat as "actionable."
+
+  default_threshold:
+    value: "24h"
+    rationale: >
+      24 hours balances the three core use cases:
+
+      - Continuous governance (nightly collection): a snapshot
+        collected yesterday is fresh today; one from two days
+        ago triggers the freshness warning.
+      - M&A diligence: snapshots are typically days to weeks old;
+        24h will trigger LOW confidence, which is correct — the
+        evaluator should request fresh snapshots.
+      - Breach reconstruction: `--now` is set near the capture
+        time, so the threshold rarely applies.
+
+      24h is also the natural "one collection cycle" for most
+      operational workflows.
+
+  per_service_group_thresholds:
+    decision: no
+    rationale: >
+      Not needed because:
+
+      1. Stave's `captured_at` is per-file, not per-service-group.
+         A collection run that captures IAM and EC2 in one file
+         produces one `captured_at`. If they're in separate files
+         (separate collection runs), they already have separate
+         `captured_at` values and the per-file freshness check
+         applies independently.
+
+      2. The change-velocity argument ("IAM changes less than EC2")
+         is about the probability of the verdict being wrong, not
+         about the quality of the input data. The freshness check
+         answers "is this data current?" not "is this verdict likely
+         correct?" — a 7-day-old IAM snapshot is 7 days old
+         regardless of how frequently IAM changes.
+
+      3. Configuration complexity: per-group thresholds would
+         require mapping controls to service groups, which doesn't
+         exist and would be fragile. The single threshold is
+         simple, understandable, and overridable.
+
+# =========================================================================
+# Section 3: CEL Integration
+# =========================================================================
+
+cel_integration:
+  approach: post_evaluation_confidence_adjustment
+
+  evaluation_order:
+    description: >
+      1. Load snapshot(s), read `captured_at` from each.
+      2. Determine evaluation time (`--now` or system clock).
+      3. Evaluate all CEL controls normally → PASS/VIOLATION.
+      4. For each finding, compute the snapshot age of the asset's
+         source snapshot.
+      5. If age > threshold, set `confidence = LOW` on the
+         ResourceCheck. Add a `freshness_reason` annotation.
+      6. Emit findings with confidence qualifier.
+
+      Step 4 happens in the post-evaluation enrichment pass,
+      which already annotates findings with chain membership,
+      exposure scores, and SLA data. The freshness qualifier
+      is another enrichment — same pass, same lifecycle.
+
+  no_cel_predicate_needed: >
+    The freshness check is NOT a CEL predicate. It's a Go-level
+    enrichment that compares two timestamps and adjusts a field.
+    Writing it as a CEL predicate would mean:
+
+    - Every control YAML gets a freshness wrapper (2,746 files)
+    - Or a CEL macro/function that every control implicitly calls
+    - Or a special "meta-control" that evaluates the snapshot
+      itself, not an asset
+
+    None of these are necessary. The freshness check is a
+    cross-cutting concern at the enrichment layer, not a
+    per-control predicate. Implementing it as Go code in the
+    post-evaluation enrichment pass is simpler, faster, and
+    doesn't touch any control YAML.
+
+  implementation_site: >
+    The enrichment pass in `internal/app/eval/workflow.go` (or
+    equivalent). After the evaluator produces ResourceChecks,
+    before findings are compiled into the report. Pseudo-code:
+
+    ```go
+    func qualifyFreshness(checks []ResourceCheck, snapshots Snapshots, now time.Time, threshold time.Duration) {
+        for i := range checks {
+            snap := findSnapshotForAsset(checks[i].AssetID, snapshots)
+            if snap == nil {
+                continue
+            }
+            age := now.Sub(snap.CapturedAt)
+            if age > threshold {
+                checks[i].Confidence = ConfidenceLow
+                checks[i].Reason = fmt.Sprintf(
+                    "snapshot age %s exceeds freshness threshold %s",
+                    age.Truncate(time.Minute), threshold,
+                )
+            }
+        }
+    }
+    ```
+
+  example_s3_public:
+    before: >
+      CTL.S3.PUBLIC.001 evaluates the S3 bucket's public access
+      settings via CEL. If PublicAccessBlockConfiguration is
+      incomplete, verdict = VIOLATION, confidence = HIGH.
+
+    after: >
+      Same evaluation. Same verdict = VIOLATION. But if the
+      snapshot was captured 40 hours ago (> 24h threshold):
+      confidence = LOW, reason = "snapshot age 40h0m exceeds
+      freshness threshold 24h0m".
+
+      The finding reads: "S3 bucket `prod-data` has incomplete
+      public access block. (Confidence: LOW — snapshot captured
+      40 hours ago; re-collect for a current assessment.)"
+
+# =========================================================================
+# Section 4: Compound Chain Propagation
+# =========================================================================
+
+compound_propagation:
+  decision: finding_level_overlay
+  rationale: >
+    Option B: finding-level overlay. Compound chains run normally
+    using underlying PASS/VIOLATION verdicts. After the chain
+    produces a compound finding, the freshness of each input
+    snapshot is checked. If any input snapshot is stale, the
+    compound finding's confidence drops to LOW.
+
+    Why not fact-level tagging (Option A):
+    - Would require adding a freshness column to every Datalog
+      input relation and propagating it through every join. This
+      changes every Soufflé program.
+    - Datalog is Boolean: a fact is present or absent. There's no
+      natural way to represent "this fact is present but uncertain."
+
+    Why not worst-case-only (Option C):
+    - Worst-case is actually what we want: the compound finding's
+      confidence is the minimum confidence of its inputs. This IS
+      Option B in practice — the overlay checks all input snapshots
+      and uses the stalest one.
+
+  implementation: >
+    For compound findings (chain findings in the ResultDTO), the
+    enrichment pass:
+
+    1. Identifies which control findings are members of the chain.
+    2. For each member finding, checks its snapshot's `captured_at`.
+    3. The compound finding's confidence = min(member confidences).
+    4. If any member is LOW, the compound finding is LOW, with
+       metadata listing which input is stale.
+
+  cross_group_example: >
+    FM-042 Lambda blast radius: inputs from IAM snapshot (captured
+    1 hour ago, fresh) and S3 snapshot (captured 9 days ago, stale).
+    IAM member findings: confidence HIGH. S3 member findings:
+    confidence LOW. Compound finding: confidence LOW, reason:
+    "S3 snapshot captured 9 days ago exceeds freshness threshold."
+
+    The finding text: "Lambda `data-processor` can reach 38
+    resources via role assumption. Confidence: LOW — S3 data
+    captured 9 days ago. IAM data is current. Re-collect the S3
+    snapshot for an accurate blast radius."
+
+# =========================================================================
+# Section 5: Export Engine Propagation
+# =========================================================================
+
+export_propagation:
+  decision: assert_normally_annotate_result
+  rationale: >
+    Option 3: assert all facts normally in Z3/Soufflé, annotate the
+    engine's output with freshness metadata post-evaluation.
+
+    Why: consistency with the CEL-level approach. The philosophy is
+    "evaluate fully, then qualify the result." Omitting stale facts
+    from Z3 would create false negatives on compound analysis (a
+    satisfiable attack path becomes unsatisfiable because stale
+    facts are missing). Adding a freshness column to Soufflé
+    relations changes every program.
+
+    The export layer already produces JSONL facts from snapshot
+    data. The freshness metadata is NOT encoded in the facts
+    themselves but in the output consumer: when a Soufflé compound
+    finding is produced, the freshness qualifier is applied to the
+    compound finding based on which snapshot files contributed
+    input facts.
+
+  z3_smt_lib: >
+    Z3 assertions include all facts regardless of freshness.
+    The Z3 result (SAT/UNSAT with model) is post-processed:
+    if any input snapshot is stale, the result is annotated
+    with confidence = LOW. The SMT-LIB assertions themselves
+    do not change.
+
+  souffle_datalog: >
+    Soufflé input relations include all facts regardless of
+    freshness. The Soufflé output relations are post-processed:
+    each output tuple is tagged with the stalest input snapshot's
+    age. This tagging happens in the Go consumer of Soufflé output,
+    not in the Datalog program.
+
+# =========================================================================
+# Section 6: Finding Schema
+# =========================================================================
+
+finding_schema:
+  changes_to_existing_schema:
+    resource_check: >
+      No new fields needed. ResourceCheck already has:
+      - Verdict: PASS/VIOLATION (unchanged)
+      - Confidence: HIGH/MEDIUM/LOW/INCONCLUSIVE (now used for freshness)
+      - Reason: string (now includes freshness explanation)
+
+    finding_dto: >
+      Add optional freshness metadata to the output DTO for
+      machine-readable consumption:
+
+      ```go
+      type FreshnessDTO struct {
+          CapturedAt   time.Time       `json:"captured_at"`
+          EvaluatedAt  time.Time       `json:"evaluated_at"`
+          Age          kernel.Duration `json:"age"`
+          Threshold    kernel.Duration `json:"threshold"`
+          IsFresh      bool            `json:"is_fresh"`
+      }
+      ```
+
+      This appears on each FindingDTO as an optional field:
+      ```go
+      Freshness *FreshnessDTO `json:"freshness,omitempty"`
+      ```
+
+    result_dto_summary: >
+      Add a freshness summary to ResultDTO:
+
+      ```go
+      type FreshnessSummaryDTO struct {
+          Threshold     kernel.Duration `json:"threshold"`
+          FreshFindings int             `json:"fresh_findings"`
+          StaleFindings int             `json:"stale_findings"`
+          StalestInput  *FreshnessDTO   `json:"stalest_input,omitempty"`
+      }
+      ```
+
+  example_output_json: |
+    {
+      "finding_id": "F-001",
+      "control_id": "CTL.S3.PUBLIC.001",
+      "asset_id": "arn:aws:s3:::prod-data",
+      "verdict": "VIOLATION",
+      "confidence": "LOW",
+      "reason": "snapshot age 40h0m exceeds freshness threshold 24h0m",
+      "freshness": {
+        "captured_at": "2025-06-26T10:00:00Z",
+        "evaluated_at": "2025-06-28T02:00:00Z",
+        "age": "40h0m",
+        "threshold": "24h0m",
+        "is_fresh": false
+      }
+    }
+
+# =========================================================================
+# Section 7: CLI and Report Integration
+# =========================================================================
+
+cli_integration:
+  new_flags:
+    freshness_threshold:
+      name: "--freshness-threshold"
+      type: duration
+      default: "24h"
+      description: >
+        Maximum age of snapshot data before findings are marked
+        with LOW confidence. Set to 0 to disable freshness checking.
+      example: "--freshness-threshold=168h"
+
+    skip_freshness:
+      name: "--skip-freshness"
+      type: boolean
+      default: false
+      description: >
+        Disable freshness checking entirely. Equivalent to
+        --freshness-threshold=0. Convenience flag for breach
+        reconstruction and forensic analysis where old data
+        is intentional.
+
+  display:
+    default_behavior: >
+      Stale findings are shown with their normal verdict plus a
+      confidence annotation. Not hidden. Not grouped separately.
+      The finding line includes the confidence qualifier:
+
+      ```
+      VIOLATION  CTL.S3.PUBLIC.001  arn:aws:s3:::prod-data
+                 S3 bucket has incomplete public access block
+                 [LOW CONFIDENCE — snapshot captured 40h ago]
+      ```
+
+    summary_line: >
+      At the top of the report, before findings:
+
+      ```
+      ⚠ 83 of 127 findings based on stale data (captured >24h ago).
+        Re-collect snapshots for current results.
+      ```
+
+      This is the "first control evaluated" requirement: the
+      freshness summary appears before any findings, so the user
+      sees the data quality warning first.
+
+    freshness_first_guarantee: >
+      The freshness summary is rendered first in text output
+      and appears as the first element in JSON output's
+      `freshness_summary` field. The enrichment pass runs
+      before report compilation, so stale findings are already
+      marked when the report is assembled.
+
+  exit_codes:
+    decision: no_change
+    rationale: >
+      Stale data does not change the exit code. Exit 3 means
+      "violations found" — violations were found, they're just
+      qualified with LOW confidence. Exit 0 means "no violations"
+      — the data is stale but nothing was flagged.
+
+      A separate exit code for staleness (e.g., exit 5) would
+      break CI/CD pipelines that switch on exit codes. The
+      freshness signal belongs in the report, not the exit code.
+
+      Users who want to gate on freshness can check the JSON
+      output's `freshness_summary.stale_findings > 0` in their
+      pipeline script.
+
+    why_not_exit_code: >
+      Exit codes are for machine-readable control flow in scripts.
+      Adding a new exit code for "findings exist but data is stale"
+      means every `stave apply` wrapper script needs to handle a
+      new code. The existing contract (0=clean, 3=violations) is
+      simple and stable. Freshness is a data quality concern, not
+      a control flow concern.
+
+  gate_mode:
+    not_applicable: >
+      Stave does not have a `--gate` flag. CI/CD gating is done
+      by checking the exit code (3 = violations = block). Freshness
+      does not change the exit code, so gating behavior is unchanged.
+
+      If a team wants strict freshness gating (block on stale data),
+      they add a pipeline step:
+
+      ```bash
+      stale=$(stave apply --format json ... | jq '.freshness_summary.stale_findings')
+      if [ "$stale" -gt 0 ]; then
+        echo "Pipeline blocked: snapshot data is stale"
+        exit 1
+      fi
+      ```
+
+      This keeps the freshness policy in the pipeline, not in Stave.
+      Different teams have different freshness requirements; encoding
+      them as a Stave flag creates configuration sprawl.
+
+# =========================================================================
+# Section 8: Backward Compatibility
+# =========================================================================
+
+backward_compatibility:
+  missing_captured_at:
+    behavior: >
+      Existing snapshot files without `captured_at` already fail
+      validation in `normalizeSnapshotTypes()` — the function
+      returns `ErrMissingTimestamp` ("captured_at must be a
+      non-zero RFC3339 timestamp"). This is not a new failure
+      mode; it's the current behavior. FM-034 does not change it.
+
+      No backward compatibility concern: every valid `obs.v0.1`
+      snapshot already has `captured_at`. The schema requires it.
+
+  zero_threshold:
+    behavior: >
+      `--freshness-threshold=0` disables freshness checking.
+      All findings get confidence = HIGH regardless of snapshot
+      age. This is the legacy behavior and the default for users
+      who don't want freshness checking.
+
+      Actually, the default IS freshness checking with 24h
+      threshold. `--freshness-threshold=0` or `--skip-freshness`
+      opts out. This is a change from current behavior (no
+      freshness checking at all). But the change is additive: it
+      only adds a confidence annotation. No verdict changes. No
+      exit code changes. No finding suppression. A tool that
+      parses Stave JSON and ignores the `confidence` field will
+      see no difference.
+
+# =========================================================================
+# Section 9: Worked Examples
+# =========================================================================
+
+worked_examples:
+  scenario_a_stale_pipeline:
+    description: >
+      Platform team runs `stave apply` nightly at 02:00 UTC.
+      Collection pipeline failed on 06/27 and 06/28. The most
+      recent snapshot was collected on 2025-06-26T10:00:00Z.
+
+    command: "stave apply -o observations/ -i controls/ --now=2025-06-28T02:00:00Z"
+
+    computation:
+      evaluation_time: "2025-06-28T02:00:00Z"
+      captured_at: "2025-06-26T10:00:00Z"
+      age: "40h"
+      threshold: "24h"
+      exceeds: true
+
+    output: |
+      ⚠ 83 of 83 findings based on stale data (captured >24h ago).
+        Snapshot captured at 2025-06-26T10:00:00Z (40h ago).
+        Re-collect snapshots for current results.
+
+      VIOLATION  CTL.S3.PUBLIC.001  arn:aws:s3:::prod-data
+                 S3 bucket has incomplete public access block
+                 [LOW CONFIDENCE — snapshot captured 40h ago]
+
+      VIOLATION  CTL.IAM.ROLE.LEASTPRIV.001  arn:aws:iam::123456789012:role/DataRole
+                 IAM role has wildcard actions in attached policy
+                 [LOW CONFIDENCE — snapshot captured 40h ago]
+
+      ... (81 more findings, all LOW CONFIDENCE)
+
+      Summary: 83 violations, 0 passes (confidence: LOW on all findings)
+
+    alert_integration: >
+      The team's alert fires on `freshness_summary.stale_findings > 0`
+      in the JSON output. This tells them the collection pipeline is
+      broken — the alert is about data freshness, not about any
+      specific finding.
+
+  scenario_b_breach_reconstruction:
+    description: >
+      IR team evaluates a snapshot captured at 2025-01-10T08:00:00Z.
+      Breach occurred approximately 2025-01-15T14:00:00Z.
+
+    option_1_now_override:
+      command: "stave apply -o observations/ -i controls/ --now=2025-01-15T14:00:00Z"
+      computation:
+        evaluation_time: "2025-01-15T14:00:00Z"
+        captured_at: "2025-01-10T08:00:00Z"
+        age: "5d6h"
+        threshold: "24h"
+        exceeds: true
+        confidence: LOW
+      note: >
+        Age exceeds threshold. Findings are LOW confidence. The IR
+        team can either widen the threshold or skip freshness.
+
+    option_2_widen_threshold:
+      command: "stave apply -o observations/ -i controls/ --now=2025-01-15T14:00:00Z --freshness-threshold=168h"
+      computation:
+        age: "5d6h"
+        threshold: "168h (7 days)"
+        exceeds: false
+        confidence: HIGH
+      note: >
+        5d6h < 168h. Findings are HIGH confidence. The IR team
+        chose a threshold that makes sense for their forensic
+        use case: the snapshot is close enough to the breach time.
+
+    option_3_skip_freshness:
+      command: "stave apply -o observations/ -i controls/ --now=2025-01-15T14:00:00Z --skip-freshness"
+      computation:
+        freshness_disabled: true
+        confidence: HIGH
+      note: >
+        Freshness checking disabled. All findings are HIGH
+        confidence. The snapshot age is recorded in the run
+        metadata but does not affect any finding's confidence.
+
+  scenario_c_mixed_freshness:
+    description: >
+      Multi-file observation directory. identity.json captured
+      1 hour ago, storage.json captured 8 days ago.
+
+    setup:
+      files:
+        - name: "observations/identity-2025-06-28T01.json"
+          captured_at: "2025-06-28T01:00:00Z"
+          contents: "IAM roles, policies, users"
+        - name: "observations/storage-2025-06-20T10.json"
+          captured_at: "2025-06-20T10:00:00Z"
+          contents: "S3 buckets, DynamoDB tables"
+
+    command: "stave apply -o observations/ -i controls/ --now=2025-06-28T02:00:00Z"
+
+    per_file_freshness:
+      identity:
+        age: "1h"
+        threshold: "24h"
+        exceeds: false
+        confidence: HIGH
+      storage:
+        age: "7d16h"
+        threshold: "24h"
+        exceeds: true
+        confidence: LOW
+
+    finding_results:
+      iam_finding:
+        control: "CTL.IAM.ROLE.LEASTPRIV.001"
+        asset: "arn:aws:iam::123456789012:role/DataRole"
+        verdict: VIOLATION
+        confidence: HIGH
+        reason: "IAM snapshot captured 1h ago (fresh)"
+
+      s3_finding:
+        control: "CTL.S3.PUBLIC.001"
+        asset: "arn:aws:s3:::prod-data"
+        verdict: VIOLATION
+        confidence: LOW
+        reason: "S3 snapshot captured 7d16h ago (stale)"
+
+      compound_finding:
+        chain: "lambda_role_blast_radius"
+        description: >
+          Lambda `data-processor` can reach 38 resources via role
+          assumption chain.
+        confidence: LOW
+        reason: >
+          Compound finding confidence = min(member confidences).
+          IAM data: HIGH (1h old). S3 data: LOW (7d16h old).
+          The IAM permission chain is current but the target
+          resource inventory may have changed. Re-collect the S3
+          snapshot for an accurate blast radius.
+
+    output_summary: |
+      ⚠ 47 of 127 findings based on stale data (captured >24h ago).
+        Stale: observations/storage-2025-06-20T10.json (7d16h old)
+        Fresh: observations/identity-2025-06-28T01.json (1h old)
+
+# =========================================================================
+# Section 10: Implementation Scope
+# =========================================================================
+
+implementation_scope:
+  what_changes:
+    - file: "internal/app/eval/workflow.go (or equivalent enrichment pass)"
+      change: >
+        Add `qualifyFreshness()` call after control evaluation,
+        before report compilation. Compares each finding's source
+        snapshot `captured_at` against `now - threshold`. Sets
+        confidence = LOW and adds reason string when stale.
+
+    - file: "internal/adapters/output/dto/types_result.go"
+      change: >
+        Add FreshnessDTO struct and FreshnessSummaryDTO struct.
+        Add optional `freshness` field to FindingDTO. Add
+        `freshness_summary` field to ResultDTO.
+
+    - file: "internal/adapters/output/text/ (text renderer)"
+      change: >
+        Render freshness summary at top of report. Render
+        "[LOW CONFIDENCE — ...]" annotation on stale findings.
+
+    - file: "cmd/ (flag registration)"
+      change: >
+        Add `--freshness-threshold` (duration, default 24h) and
+        `--skip-freshness` (boolean, default false) flags to
+        `apply`, `diagnose`, and other evaluation commands.
+
+  what_does_not_change:
+    - "No control YAML files modified"
+    - "No new control ID created"
+    - "No new verdict type added"
+    - "No exit code changes"
+    - "No schema version bump (additive field addition)"
+    - "No Soufflé program changes"
+    - "No Z3 assertion changes"
+    - "No changes to fact projection"
+
+  test_plan:
+    unit_tests:
+      - "qualifyFreshness with fresh snapshot → confidence HIGH"
+      - "qualifyFreshness with stale snapshot → confidence LOW, reason set"
+      - "qualifyFreshness with --skip-freshness → all HIGH"
+      - "qualifyFreshness with --freshness-threshold=0 → all HIGH"
+      - "qualifyFreshness with --now override → uses override, not clock"
+      - "Multi-snapshot directory: per-file freshness applied correctly"
+      - "Compound finding confidence = min(member confidences)"
+
+    e2e_tests:
+      - >
+        Stale pipeline scenario: snapshot 40h old, --now set,
+        all findings LOW confidence, summary line present.
+      - >
+        Fresh snapshot scenario: snapshot 1h old, all findings
+        HIGH confidence, no freshness warning.
+      - >
+        Mixed freshness scenario: two snapshot files, one fresh
+        one stale, per-file confidence applied correctly.
+      - >
+        --skip-freshness: stale snapshot, all findings HIGH.
+      - >
+        JSON output includes freshness_summary and per-finding
+        freshness metadata.
+
+  trap_triplet:
+    vulnerable:
+      description: "Snapshot captured 72h ago, threshold 24h"
+      command: "stave apply --now=2025-06-28T02:00:00Z --freshness-threshold=24h"
+      snapshot_captured_at: "2025-06-25T02:00:00Z"
+      expected: "All findings confidence = LOW"
+
+    fp_trap:
+      description: "Fresh snapshot, must NOT trigger low confidence"
+      command: "stave apply --now=2025-06-28T02:00:00Z --freshness-threshold=24h"
+      snapshot_captured_at: "2025-06-28T00:00:00Z"
+      expected: "All findings confidence = HIGH (must not fire)"
+
+    fn_trap:
+      description: "Snapshot 25h old (just over threshold), must trigger"
+      command: "stave apply --now=2025-06-28T02:00:00Z --freshness-threshold=24h"
+      snapshot_captured_at: "2025-06-27T01:00:00Z"
+      expected: "All findings confidence = LOW (must fire)"
