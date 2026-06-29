@@ -2232,6 +2232,21 @@ IAM roles must not combine permissions from structurally incompatible categories
 
 ---
 
+### CTL.IAM.ROLE.CROSSSERVICE.001
+
+**IAM Role Must Not Be Shared Across Multiple Compute Service Types**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.8.2; nist_800_53_r5: AC-6; soc2: CC6.1;
+
+An IAM role trusted by three or more distinct compute service principals (lambda.amazonaws.com, ecs-tasks.amazonaws.com, ec2.amazonaws.com, states.amazonaws.com, etc.) is a common mode failure point. If the role's permissions are misconfigured or its credentials compromised, every service type that assumes the role is affected simultaneously — Lambda functions, ECS tasks, EC2 instances, and Step Functions state machines all share the same blast radius. Per-service controls (CTL.LAMBDA.ROLE.SHARED.001, CTL.ECS.TASKROLE.SHARED.001, CTL.EC2.PROFILE.SHARED.001, CTL.STEPFUNCTIONS.ROLE.SHARED.001) detect sharing within a single service type. This control detects sharing across service types, which is the common mode failure: a single dependency point for heterogeneous workloads that should be isolated. The threshold of three is intentional — two service types sharing a role is common in legitimate patterns (Lambda + Step Functions orchestration); three or more indicates the role has become a catch-all that should be split.
+
+**Remediation:** Split the role into per-service roles scoped to each service type's specific needs. Use IaC modules to keep the boilerplate manageable. A Lambda execution role should not also be an EC2 instance profile role and an ECS task role — each service gets its own role with minimum required permissions.
+
+---
+
 ### CTL.IAM.ROLE.ENTROPY.INCOMPLETE.001
 
 **Complete Data Required for Entitlement Entropy Assessment**

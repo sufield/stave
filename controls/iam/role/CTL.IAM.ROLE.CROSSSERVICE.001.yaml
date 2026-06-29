@@ -1,0 +1,144 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROLE.CROSSSERVICE.001
+name: IAM Role Must Not Be Shared Across Multiple Compute Service Types
+description: >
+  An IAM role trusted by three or more distinct compute service
+  principals (lambda.amazonaws.com, ecs-tasks.amazonaws.com,
+  ec2.amazonaws.com, states.amazonaws.com, etc.) is a common mode
+  failure point. If the role's permissions are misconfigured or its
+  credentials compromised, every service type that assumes the role
+  is affected simultaneously — Lambda functions, ECS tasks, EC2
+  instances, and Step Functions state machines all share the same
+  blast radius. Per-service controls (CTL.LAMBDA.ROLE.SHARED.001,
+  CTL.ECS.TASKROLE.SHARED.001, CTL.EC2.PROFILE.SHARED.001,
+  CTL.STEPFUNCTIONS.ROLE.SHARED.001) detect sharing within a single
+  service type. This control detects sharing across service types,
+  which is the common mode failure: a single dependency point for
+  heterogeneous workloads that should be isolated. The threshold of
+  three is intentional — two service types sharing a role is common
+  in legitimate patterns (Lambda + Step Functions orchestration);
+  three or more indicates the role has become a catch-all that
+  should be split.
+domain: identity
+severity: high
+scope: compound
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.8.2"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: parameterized_check
+applicable_asset_types:
+  - aws_iam_role
+params:
+  base_impact: 8
+  attack_stage: lateral_movement
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    IAM role is trusted by three or more compute service types,
+    creating a cross-service common mode failure point.
+  action: >
+    Split the role into per-service roles scoped to each service
+    type's specific needs. Use IaC modules to keep the boilerplate
+    manageable. A Lambda execution role should not also be an EC2
+    instance profile role and an ECS task role — each service gets
+    its own role with minimum required permissions.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "trust_policy": {
+          "compute_service_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.trust_policy.compute_service_count
+      op: gte
+      value: 3
+defect: >
+  Role is trusted by three or more compute service types.
+infection: >
+  Compromise of any one service type that assumes the role
+  gives the attacker the same credentials as every other
+  service type sharing the role. Lambda code injection,
+  container escape, and EC2 SSRF all lead to the same
+  credential. The blast radius is the union of all service
+  types' workloads, not just the compromised one.
+failure: >
+  Cross-service common mode failure. One role, many service
+  types, single point of compromise.
+tests:
+  - name: role trusted by 4 compute services fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/shared-compute-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust_policy:
+            trusted_services:
+              - lambda.amazonaws.com
+              - ecs-tasks.amazonaws.com
+              - ec2.amazonaws.com
+              - states.amazonaws.com
+            compute_service_count: 4
+  - name: role trusted by 2 compute services passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/lambda-step-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust_policy:
+            trusted_services:
+              - lambda.amazonaws.com
+              - states.amazonaws.com
+            compute_service_count: 2
+  - name: role trusted by 3 compute services at threshold fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/three-service-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust_policy:
+            trusted_services:
+              - lambda.amazonaws.com
+              - ecs-tasks.amazonaws.com
+              - ec2.amazonaws.com
+            compute_service_count: 3
+  - name: role trusted only by non-compute services passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/monitoring-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust_policy:
+            trusted_services:
+              - monitoring.amazonaws.com
+              - cloudwatch.amazonaws.com
+              - logs.amazonaws.com
+            compute_service_count: 0
