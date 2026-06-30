@@ -65,6 +65,21 @@ SageMaker inference endpoint has not received traffic within the observation win
 
 ---
 
+### CTL.SAGEMAKER.ENDPOINT.VPC.001
+
+**SageMaker Endpoint Must Use VPC Configuration**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+SageMaker endpoint configuration does not deploy inference containers in a VPC. Without VpcConfig, inference traffic routes through the public AWS network rather than staying within the customer's VPC. Model and training VPC controls exist (CTL.SAGEMAKER.MODEL.VPC.001, CTL.SAGEMAKER.TRAINING.VPC.001) but an endpoint without VPC configuration leaves the inference path exposed even when the model artifact was trained and stored in-VPC. An attacker with network access can intercept model input/output or exfiltrate inference results.
+
+**Remediation:** Add VpcConfig with subnets and security groups to the endpoint configuration. Use CreateEndpointConfig with VpcConfig parameter specifying at least two subnets in different AZs and a security group that restricts inbound to authorized callers only.
+
+---
+
 ### CTL.SAGEMAKER.GHOST.MODEL.001
 
 **SageMaker Endpoint Must Not Reference Deleted Model Artifact**
@@ -152,6 +167,21 @@ SageMaker notebook instances must encrypt the ML storage volume at rest with KMS
 SageMaker notebook instance has been idle for more than 30 days. An idle notebook keeps an interactive identity active with cached credentials, attached EBS volumes containing research data, and any IAM role permissions the notebook carries. The cost is real (notebook compute is billed per running hour) but the security cost is larger: stale notebooks accumulate forgotten data, credentials become unrotated, and the notebook becomes an offboarding gap when the data scientist who owned it leaves. The collector pre-computes the boolean idle assessment from the instance's LastModifiedTime / NotebookInstanceStatus fields.
 
 **Remediation:** StopNotebookInstance now; review the attached lifecycle configuration to enforce auto-stop on future idle periods; delete the notebook + role if the workload is truly abandoned.
+
+---
+
+### CTL.SAGEMAKER.NOTEBOOK.IMDS.001
+
+**SageMaker Notebook Must Require IMDSv2**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3, SC-7; soc2: CC6.1, CC6.6;
+
+SageMaker notebook instance does not require Instance Metadata Service v2 (IMDSv2). IMDSv1 is vulnerable to SSRF attacks — an attacker who can make the notebook issue HTTP requests (e.g. through a malicious notebook cell or imported library) can steal the notebook's IAM role credentials from the metadata endpoint at 169.254.169.254. IMDSv2 requires a PUT request with a hop-limited token header, blocking most SSRF vectors. AWS added InstanceMetadataServiceConfiguration to CreateNotebookInstance in 2023; notebooks created before that default to IMDSv1.
+
+**Remediation:** Set InstanceMetadataServiceConfiguration.MinimumInstanceMetadataServiceVersion to "2" when creating or updating the notebook instance. For existing notebooks: stop the instance, update with UpdateNotebookInstance setting MinimumInstanceMetadataServiceVersion=2, then restart.
 
 ---
 
@@ -332,6 +362,21 @@ SageMaker training jobs must encrypt ML storage volumes at rest with KMS. Traini
 SageMaker training jobs must enable network isolation to prevent training containers from making inbound or outbound network calls. Without isolation, a compromised training container can exfiltrate training data or model artifacts to external endpoints.
 
 **Remediation:** Set EnableNetworkIsolation to true on the training job.
+
+---
+
+### CTL.SAGEMAKER.TRAINING.LOGGING.001
+
+**SageMaker Training Job Must Enable CloudWatch Logging**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** nist_800_53_r5: AU-2, AU-3; soc2: CC7.2;
+
+SageMaker training job does not send logs to CloudWatch. Without CloudWatch logging, training job stdout/stderr output is only available during the job's lifetime and is lost after termination. An attacker who tampers with training data or injects malicious code into a training container leaves no persistent audit trail. Bedrock has invocation and agent logging controls (CTL.BEDROCK.LOG.INVOCATION.001, CTL.BEDROCK.AGENT.LOGGING.001) but SageMaker training had no equivalent. The EnableCloudWatchMetrics and CloudWatchLogsGroupName fields on the training job control whether logs persist beyond the job.
+
+**Remediation:** Ensure the training job's IAM role has logs:CreateLogStream and logs:PutLogEvents permissions for the SageMaker log group (/aws/sagemaker/TrainingJobs). SageMaker writes to CloudWatch by default when the role has permissions — verify the role policy does not deny CloudWatch access.
 
 ---
 

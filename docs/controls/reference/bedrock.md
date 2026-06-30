@@ -50,6 +50,21 @@ Bedrock API keys must have appropriate expiration dates. Long-lived or non-expir
 
 ---
 
+### CTL.BEDROCK.ACCESS.MODELSCOPE.001
+
+**Bedrock Model Access Allows All Foundation Models**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6, CM-7; soc2: CC6.1;
+
+AWS account's Bedrock model access configuration enables all available foundation models rather than restricting to an approved subset. When all models are enabled, any IAM principal with bedrock:InvokeModel permission can call any model — including expensive models (increasing cost blast radius) and models with capabilities beyond what the workload requires (e.g. code generation, image generation). Restricting model access to the approved set limits both cost exposure and the capability surface available to compromised credentials. The model access list is an account-level setting managed through the Bedrock console or bedrock:PutFoundationModelEntitlement API.
+
+**Remediation:** Review the enabled models in the Bedrock console under Model access. Disable models not required by any workload. Enable only the specific models each team needs and enforce per-model IAM conditions (bedrock:InvokeModel with Resource ARN scoped to specific model IDs) in IAM policies.
+
+---
+
 ### CTL.BEDROCK.AGENT.ACTIONGROUPS.SPRAWL.001
 
 **Bedrock Agent Action-Group Count Must Be Bounded**
@@ -62,6 +77,21 @@ Bedrock API keys must have appropriate expiration dates. Long-lived or non-expir
 Bedrock agent has more than 10 action groups attached. Each action group is a Lambda function or API schema the agent can invoke; sprawled action-group lists expand the agent's blast radius beyond its stated purpose, often because teams stack ad-hoc tool integrations onto a single agent rather than splitting capability into purpose-built agents. Same shape as CTL.SQS.POLICY.SPRAWL and CTL.SECRETS.POLICY.SPRAWL — accumulated permission attachments that hide effective reachability. An attacker who controls the prompt enumerates the larger surface; legitimate operators no longer reason about what the agent can do.
 
 **Remediation:** Split the agent into purpose-built agents (one per customer workflow) so each agent's action-group list stays small and reviewable. Remove inactive or deprecated action groups via DeleteAgentActionGroup.
+
+---
+
+### CTL.BEDROCK.AGENT.CROSSACCOUNT.001
+
+**Bedrock Agent Resource Policy Allows Cross-Account Invocation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3, AC-6; owasp_nhi: NHI4; soc2: CC6.1;
+
+Bedrock agent's resource-based policy grants InvokeAgent permission to principals outside the owning account. A cross-account invocation grant means any principal in the allowed account can invoke the agent, including compromised roles and automated pipelines. The agent's blast radius is its full tool surface — knowledge bases, action-group Lambdas, and the foundation model's inference cost. Cross-account access should use a dedicated proxy role with SourceAccount / SourceArn conditions rather than a direct resource-policy grant, matching the confused deputy prevention pattern used for S3, Lambda, and SQS cross-account access.
+
+**Remediation:** Remove the cross-account principal from the agent's resource policy. Instead, create a proxy role in the agent's account that the remote account assumes via sts:AssumeRole with ExternalId, and scope that role to bedrock:InvokeAgent on the specific agent ARN. Add aws:SourceAccount and aws:SourceArn conditions to the agent's resource policy if cross-account access is genuinely required.
 
 ---
 

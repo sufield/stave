@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENT.CROSSACCOUNT.001
+name: Bedrock Agent Resource Policy Allows Cross-Account Invocation
+description: >
+  Bedrock agent's resource-based policy grants InvokeAgent permission
+  to principals outside the owning account. A cross-account invocation
+  grant means any principal in the allowed account can invoke the
+  agent, including compromised roles and automated pipelines. The
+  agent's blast radius is its full tool surface — knowledge bases,
+  action-group Lambdas, and the foundation model's inference cost.
+  Cross-account access should use a dedicated proxy role with
+  SourceAccount / SourceArn conditions rather than a direct
+  resource-policy grant, matching the confused deputy prevention
+  pattern used for S3, Lambda, and SQS cross-account access.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI4"
+  nist_800_53_r5: "AC-3, AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agent
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    Bedrock agent resource policy allows cross-account invocation.
+    Any principal in the allowed account can invoke the agent and
+    access its knowledge bases, action groups, and model.
+  action: >
+    Remove the cross-account principal from the agent's resource
+    policy. Instead, create a proxy role in the agent's account
+    that the remote account assumes via sts:AssumeRole with
+    ExternalId, and scope that role to bedrock:InvokeAgent on
+    the specific agent ARN. Add aws:SourceAccount and
+    aws:SourceArn conditions to the agent's resource policy
+    if cross-account access is genuinely required.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agent",
+        "agent": { "allows_cross_account_invoke": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agent
+    - field: properties.ai.agent.allows_cross_account_invoke
+      op: eq
+      value: true
+observation_fields:
+  - ai.kind
+  - ai.agent.allows_cross_account_invoke
+tests:
+  - name: "agent with cross-account invocation — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent/ABCDEF1234"
+      asset_type: aws_bedrock_agent
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agent
+          agent:
+            allows_cross_account_invoke: true
+  - name: "agent without cross-account invocation — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent/GHIJKL5678"
+      asset_type: aws_bedrock_agent
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agent
+          agent:
+            allows_cross_account_invoke: false

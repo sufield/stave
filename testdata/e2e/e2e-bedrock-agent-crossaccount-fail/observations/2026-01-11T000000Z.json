@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:agent/ABCDEF1234",
+      "type": "aws_bedrock_agent",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_agent",
+          "agent": {
+            "allows_cross_account_invoke": true
+          }
+        }
+      }
+    }
+  ]
+}

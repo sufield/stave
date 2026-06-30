@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.ENDPOINT.VPC.001
+name: SageMaker Endpoint Must Use VPC Configuration
+description: >
+  SageMaker endpoint configuration does not deploy inference
+  containers in a VPC. Without VpcConfig, inference traffic
+  routes through the public AWS network rather than staying
+  within the customer's VPC. Model and training VPC controls
+  exist (CTL.SAGEMAKER.MODEL.VPC.001,
+  CTL.SAGEMAKER.TRAINING.VPC.001) but an endpoint without VPC
+  configuration leaves the inference path exposed even when
+  the model artifact was trained and stored in-VPC. An attacker
+  with network access can intercept model input/output or
+  exfiltrate inference results.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sagemaker_endpoint_config
+params:
+  attack_stage: exfiltration
+remediation:
+  description: SageMaker endpoint is not configured with VPC settings.
+  action: >
+    Add VpcConfig with subnets and security groups to the endpoint
+    configuration. Use CreateEndpointConfig with VpcConfig parameter
+    specifying at least two subnets in different AZs and a security
+    group that restricts inbound to authorized callers only.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_endpoint_config",
+        "network": { "in_vpc": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_endpoint_config
+    - field: properties.compute.network.in_vpc
+      op: eq
+      value: false
+tests:
+  - name: "endpoint without VPC — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:endpoint-config/inference-prod"
+      asset_type: aws_sagemaker_endpoint_config
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_endpoint_config
+          network:
+            in_vpc: false
+  - name: "endpoint with VPC — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:endpoint-config/inference-prod"
+      asset_type: aws_sagemaker_endpoint_config
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_endpoint_config
+          network:
+            in_vpc: true

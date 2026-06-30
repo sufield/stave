@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.NOTEBOOK.IMDS.001
+name: SageMaker Notebook Must Require IMDSv2
+description: >
+  SageMaker notebook instance does not require Instance Metadata
+  Service v2 (IMDSv2). IMDSv1 is vulnerable to SSRF attacks —
+  an attacker who can make the notebook issue HTTP requests
+  (e.g. through a malicious notebook cell or imported library)
+  can steal the notebook's IAM role credentials from the metadata
+  endpoint at 169.254.169.254. IMDSv2 requires a PUT request
+  with a hop-limited token header, blocking most SSRF vectors.
+  AWS added InstanceMetadataServiceConfiguration to
+  CreateNotebookInstance in 2023; notebooks created before that
+  default to IMDSv1.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, SC-7"
+  soc2: "CC6.1, CC6.6"
+  ccm_v4: ["IAM-04", "IVS-03"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sagemaker_notebook
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    SageMaker notebook instance allows IMDSv1 requests, exposing
+    IAM role credentials to SSRF attacks.
+  action: >
+    Set InstanceMetadataServiceConfiguration.MinimumInstanceMetadataServiceVersion
+    to "2" when creating or updating the notebook instance. For
+    existing notebooks: stop the instance, update with
+    UpdateNotebookInstance setting MinimumInstanceMetadataServiceVersion=2,
+    then restart.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_notebook",
+        "network": { "imds_v2_required": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_notebook
+    - field: properties.compute.network.imds_v2_required
+      op: eq
+      value: false
+observation_fields:
+  - compute.kind
+  - compute.network.imds_v2_required
+tests:
+  - name: "notebook without IMDSv2 — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:notebook-instance/dev-notebook"
+      asset_type: aws_sagemaker_notebook
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_notebook
+          network:
+            imds_v2_required: false
+  - name: "notebook with IMDSv2 required — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:notebook-instance/secure-notebook"
+      asset_type: aws_sagemaker_notebook
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_notebook
+          network:
+            imds_v2_required: true

@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.TRAINING.LOGGING.001
+name: SageMaker Training Job Must Enable CloudWatch Logging
+description: >
+  SageMaker training job does not send logs to CloudWatch. Without
+  CloudWatch logging, training job stdout/stderr output is only
+  available during the job's lifetime and is lost after termination.
+  An attacker who tampers with training data or injects malicious
+  code into a training container leaves no persistent audit trail.
+  Bedrock has invocation and agent logging controls
+  (CTL.BEDROCK.LOG.INVOCATION.001, CTL.BEDROCK.AGENT.LOGGING.001)
+  but SageMaker training had no equivalent. The
+  EnableCloudWatchMetrics and CloudWatchLogsGroupName fields on
+  the training job control whether logs persist beyond the job.
+domain: audit
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2, AU-3"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-01", "LOG-03"]
+scope_tags:
+  - aws
+  - sagemaker
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sagemaker_training
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    SageMaker training job does not write logs to CloudWatch.
+    Training output and errors are lost after job termination.
+  action: >
+    Ensure the training job's IAM role has logs:CreateLogStream
+    and logs:PutLogEvents permissions for the SageMaker log group
+    (/aws/sagemaker/TrainingJobs). SageMaker writes to CloudWatch
+    by default when the role has permissions — verify the role
+    policy does not deny CloudWatch access.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_training",
+        "governance": { "cloudwatch_logging_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_training
+    - field: properties.compute.governance.cloudwatch_logging_enabled
+      op: eq
+      value: false
+observation_fields:
+  - compute.kind
+  - compute.governance.cloudwatch_logging_enabled
+tests:
+  - name: "training job without CloudWatch logging — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:training-job/bert-finetune-2026"
+      asset_type: aws_sagemaker_training
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_training
+          governance:
+            cloudwatch_logging_enabled: false
+  - name: "training job with CloudWatch logging — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:training-job/bert-finetune-2026"
+      asset_type: aws_sagemaker_training
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_training
+          governance:
+            cloudwatch_logging_enabled: true
