@@ -20,6 +20,21 @@ Kinesis Data Streams must use server-side encryption with KMS to protect records
 
 ---
 
+### CTL.KINESIS.MONITORING.001
+
+**Kinesis Streams Must Have Enhanced Shard-Level Monitoring Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Kinesis Data Streams must have enhanced shard-level monitoring enabled. Without it, only stream-level CloudWatch metrics are available — aggregated across all shards. Shard-level metrics (IncomingBytes, IncomingRecords, ReadProvisionedThroughputExceeded, WriteProvisionedThroughputExceeded, IteratorAgeMilliseconds per shard) are required to detect hot shards, consumer lag on individual shards, and anomalous write patterns that indicate data exfiltration or injection. A bulk data extraction targeting a single shard is invisible at the stream level if other shards are idle. Enhanced monitoring adds per-shard metrics to CloudWatch at one-minute granularity, enabling shard-level alarms and forensic analysis.
+
+**Remediation:** Enable enhanced monitoring on the stream: aws kinesis enable-enhanced-monitoring --stream-name <name> --shard-level-metrics ALL. Review per-shard metrics in CloudWatch to identify hot shards and configure alarms on ReadProvisionedThroughputExceeded and IteratorAgeMilliseconds per shard.
+
+---
+
 ### CTL.KINESIS.RETENTION.001
 
 **Kinesis Streams Must Meet Minimum Data Retention Period**

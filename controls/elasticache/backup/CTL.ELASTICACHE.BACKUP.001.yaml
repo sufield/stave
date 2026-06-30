@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.ELASTICACHE.BACKUP.001
+name: ElastiCache Redis Automatic Backups Must Be Enabled
+description: >
+  ElastiCache Redis replication groups must have automatic backups
+  enabled with a retention period of at least 1 day. Without automatic
+  backups, a node failure, accidental FLUSHALL, or ransomware event
+  destroys all cached data with no recovery path. ElastiCache backups
+  are RDB snapshots stored in S3 — they capture the full dataset at a
+  point in time and can restore to a new replication group. A retention
+  period of 0 disables automatic backups entirely. Every comparable
+  database service (RDS, DocumentDB, Neptune, DynamoDB) enforces
+  automated backups; ElastiCache Redis supports them but does not
+  enable them by default.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "CC7.1"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - elasticache
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    ElastiCache Redis replication group does not have automatic backups
+    enabled. Data loss from node failure or destructive commands is
+    unrecoverable.
+  action: >
+    Enable automatic backups by setting the snapshot retention limit to
+    at least 1 day: aws elasticache modify-replication-group
+    --replication-group-id <id> --snapshot-retention-limit 7
+    --apply-immediately. For compliance workloads, set retention to
+    match your RPO requirement (max 35 days).
+  example: |
+    {
+      "cache": {
+        "kind": "cluster",
+        "backup": {
+          "automatic_backup_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cache.kind
+      op: eq
+      value: cluster
+    - field: properties.cache.backup.automatic_backup_enabled
+      op: eq
+      value: false

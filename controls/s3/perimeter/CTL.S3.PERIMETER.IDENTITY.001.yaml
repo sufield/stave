@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PERIMETER.IDENTITY.001
+name: S3 Bucket Cross-Account Grant Without PrincipalOrgID
+description: >
+  S3 bucket policy grants cross-account access without an
+  aws:PrincipalOrgID or aws:PrincipalOrgPaths condition. Without the
+  identity dimension of the data perimeter, any AWS account — inside or
+  outside the organization — that obtains valid credentials can access
+  the bucket. PrincipalOrgID restricts access to principals whose
+  accounts are members of the specified AWS Organization, collapsing the
+  reachable principal set from every AWS account on Earth to only
+  accounts in the org. This condition is automatically satisfied by
+  all principals in the org without per-account enumeration, making it
+  the scalable identity boundary for resource policies. Without it,
+  adding a new account to the org requires updating every resource
+  policy that should grant access — a gap that grows with org size.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  hipaa: "164.312(a)(1)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: initial_access
+  base_impact: 7
+  blast_radius:
+    type: prevention
+    scope: resource
+    multiplier: 1.5
+observation_fields:
+  - storage.kind
+  - storage.access.has_cross_account_grant
+  - storage.perimeter.identity_enforced
+remediation:
+  description: >
+    S3 bucket policy grants cross-account access without PrincipalOrgID.
+    Any AWS account with valid credentials can access the bucket — the
+    identity dimension of the data perimeter is missing.
+  action: >
+    Add an aws:PrincipalOrgID condition to all cross-account Allow
+    statements: {"StringEquals": {"aws:PrincipalOrgID": "o-exampleorgid"}}.
+    For SCPs, enforce at the org level so all resource policies inherit
+    the boundary. For buckets that must grant access outside the org
+    (partner integrations), use aws:PrincipalAccount to enumerate
+    specific accounts instead of relying on open cross-account grants.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "access": {
+          "has_cross_account_grant": true
+        },
+        "perimeter": {
+          "identity_enforced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.has_cross_account_grant
+      op: eq
+      value: true
+    - field: properties.storage.perimeter.identity_enforced
+      op: eq
+      value: false
+tests:
+  - name: "cross-account grant without PrincipalOrgID — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::shared-data"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            has_cross_account_grant: true
+          perimeter:
+            identity_enforced: false
+  - name: "cross-account grant with PrincipalOrgID — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::shared-data"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            has_cross_account_grant: true
+          perimeter:
+            identity_enforced: true
+  - name: "no cross-account grant — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::internal-only"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            has_cross_account_grant: false
+          perimeter:
+            identity_enforced: false

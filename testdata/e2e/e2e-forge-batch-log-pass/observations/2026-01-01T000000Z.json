@@ -1,0 +1,25 @@
+{
+  "assets": [
+    {
+      "id": "test-batch-job-definition",
+      "properties": {
+        "batch": {
+          "kind": "job_definition",
+          "logging": {
+            "driver_configured": true
+          }
+        }
+      },
+      "type": "aws_batch_job_definition",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  }
+}

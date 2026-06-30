@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PERIMETER.NETWORKBYPASS.001
+name: S3 Bucket SourceIp Condition Without VPC Endpoint Coverage
+description: >
+  S3 bucket policy uses aws:SourceIp for network restriction but lacks a
+  VPC endpoint condition (aws:SourceVpce or aws:SourceVpc). When requests
+  route through a VPC gateway endpoint for S3, the aws:SourceIp key is
+  absent from the request context — the IP condition silently evaluates to
+  no match, and a Deny-with-SourceIp fails to deny. An attacker who
+  compromises a workload inside a VPC with an S3 gateway endpoint can
+  exfiltrate data from the bucket while the SourceIp restriction provides
+  no protection. The fix is not to remove SourceIp (it still protects
+  against direct internet access) but to add aws:SourceVpce or aws:SourceVpc
+  alongside it so the policy covers both network paths. This is the most
+  common data perimeter gap in AWS environments and the canonical example
+  in AWS's data perimeter guidance.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  hipaa: "164.312(e)(1)"
+  pci_dss_v4.0: "1.3.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "DCS-07"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: exfiltration
+  base_impact: 8
+  blast_radius:
+    type: prevention
+    scope: resource
+    multiplier: 1.5
+observation_fields:
+  - storage.kind
+  - storage.access.has_ip_condition
+  - storage.access.has_vpc_condition
+remediation:
+  description: >
+    S3 bucket policy relies on aws:SourceIp for network restriction but
+    has no VPC endpoint condition. VPC endpoint traffic bypasses the IP
+    restriction entirely — aws:SourceIp is absent from VPC endpoint
+    request context.
+  action: >
+    Add a VPC endpoint condition alongside the existing SourceIp
+    condition. Use aws:SourceVpce to restrict to specific VPC endpoints
+    or aws:SourceVpc to restrict to specific VPCs. The policy should
+    deny access when the request comes from neither an allowed IP range
+    nor an allowed VPC endpoint. Example Deny statement condition:
+    {"StringNotEquals": {"aws:SourceVpce": "vpce-1a2b3c4d"},
+    "NotIpAddress": {"aws:SourceIp": "203.0.113.0/24"}}.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "access": {
+          "has_ip_condition": true,
+          "has_vpc_condition": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.has_ip_condition
+      op: eq
+      value: true
+    - field: properties.storage.access.has_vpc_condition
+      op: eq
+      value: false
+tests:
+  - name: "bucket with SourceIp only, no VPC condition — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::data-lake-prod"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            has_ip_condition: true
+            has_vpc_condition: false
+  - name: "bucket with both SourceIp and VPC condition — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::data-lake-prod"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            has_ip_condition: true
+            has_vpc_condition: true
+  - name: "bucket with neither condition — passes (caught by S3.NETWORK.VPC.001)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::public-assets"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            has_ip_condition: false
+            has_vpc_condition: false

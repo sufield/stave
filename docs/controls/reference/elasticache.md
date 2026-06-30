@@ -20,6 +20,21 @@ ElastiCache Redis clusters must have an AUTH token configured. Without AUTH, any
 
 ---
 
+### CTL.ELASTICACHE.BACKUP.001
+
+**ElastiCache Redis Automatic Backups Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-9; soc2: CC7.1;
+
+ElastiCache Redis replication groups must have automatic backups enabled with a retention period of at least 1 day. Without automatic backups, a node failure, accidental FLUSHALL, or ransomware event destroys all cached data with no recovery path. ElastiCache backups are RDB snapshots stored in S3 — they capture the full dataset at a point in time and can restore to a new replication group. A retention period of 0 disables automatic backups entirely. Every comparable database service (RDS, DocumentDB, Neptune, DynamoDB) enforces automated backups; ElastiCache Redis supports them but does not enable them by default.
+
+**Remediation:** Enable automatic backups by setting the snapshot retention limit to at least 1 day: aws elasticache modify-replication-group --replication-group-id <id> --snapshot-retention-limit 7 --apply-immediately. For compliance workloads, set retention to match your RPO requirement (max 35 days).
+
+---
+
 ### CTL.ELASTICACHE.ENCRYPT.REST.001
 
 **ElastiCache Redis Must Have At-Rest Encryption Enabled**

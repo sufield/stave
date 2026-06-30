@@ -39,3 +39,18 @@ Inspired by Doyensec CloudsecTidbits No. 3 — Messing Around With AWS Batch For
 
 ---
 
+### CTL.BATCH.LOG.001
+
+**Batch Job Definitions Must Have Log Configuration**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-2; hipaa: 164.312(b); nist_800_53_r5: AU-2; pci_dss_v4.0: 10.2.1; soc2: CC7.1;
+
+AWS Batch job definitions must have a log driver configured in containerProperties.logConfiguration. Without logging, job container stdout and stderr are discarded — job invocations, errors, and execution output leave no audit trail. A compromised job container generating no logs is forensically invisible. Batch defaults to no log configuration when logConfiguration is omitted from the job definition, unlike ECS Fargate which requires awslogs. EC2 and Fargate orchestration types both support logConfiguration; the absence of a log driver means job output is silently lost regardless of compute backend.
+
+**Remediation:** Add logConfiguration to the job definition's containerProperties: aws batch register-job-definition --job-definition-name <name> --type container --container-properties '{"logConfiguration":{"logDriver":"awslogs","options":{"awslogs-group":"/aws/batch/job","awslogs-region":"us-east-1","awslogs-stream-prefix":"batch"}}}'. Use awslogs for CloudWatch integration or splunk/fluentd for third-party log aggregation.
+
+---
+

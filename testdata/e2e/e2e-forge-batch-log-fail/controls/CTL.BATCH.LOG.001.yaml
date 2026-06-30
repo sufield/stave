@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.BATCH.LOG.001
+name: Batch Job Definitions Must Have Log Configuration
+description: >
+  AWS Batch job definitions must have a log driver configured in
+  containerProperties.logConfiguration. Without logging, job container
+  stdout and stderr are discarded — job invocations, errors, and
+  execution output leave no audit trail. A compromised job container
+  generating no logs is forensically invisible. Batch defaults to no
+  log configuration when logConfiguration is omitted from the job
+  definition, unlike ECS Fargate which requires awslogs. EC2 and
+  Fargate orchestration types both support logConfiguration; the
+  absence of a log driver means job output is silently lost regardless
+  of compute backend.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AU-2"
+  fedramp_moderate: "AU-2"
+  hipaa: "164.312(b)"
+  pci_dss_v4.0: "10.2.1"
+  soc2: "CC7.1"
+  ccm_v4: ["IVS-06", "LOG-12"]
+scope_tags:
+  - aws
+  - batch
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Batch job definition does not have a log driver configured. Job
+    container output is discarded with no audit trail.
+  action: >
+    Add logConfiguration to the job definition's containerProperties:
+    aws batch register-job-definition --job-definition-name <name>
+    --type container --container-properties
+    '{"logConfiguration":{"logDriver":"awslogs","options":{"awslogs-group":"/aws/batch/job","awslogs-region":"us-east-1","awslogs-stream-prefix":"batch"}}}'.
+    Use awslogs for CloudWatch integration or splunk/fluentd for
+    third-party log aggregation.
+  example: |
+    {
+      "batch": {
+        "kind": "job_definition",
+        "logging": {
+          "driver_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.batch.kind
+      op: eq
+      value: job_definition
+    - field: properties.batch.logging.driver_configured
+      op: eq
+      value: false

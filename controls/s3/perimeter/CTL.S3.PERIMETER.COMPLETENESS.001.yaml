@@ -1,0 +1,101 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PERIMETER.COMPLETENESS.001
+name: S3 Bucket Data Perimeter Is Incomplete
+description: >
+  S3 bucket's data perimeter is missing one or more of the three
+  required dimensions — identity, network, or confused deputy. A
+  complete data perimeter ensures: (1) identity — only principals from
+  the organization can access the bucket (aws:PrincipalOrgID);
+  (2) network — access is restricted to known network paths with
+  coverage for both internet (aws:SourceIp) and VPC endpoint
+  (aws:SourceVpce) traffic; (3) confused deputy — AWS services
+  acting on behalf of other accounts are restricted to the
+  organization (aws:SourceOrgID). Any missing dimension creates a
+  bypass path that the other dimensions cannot compensate for.
+  Identity without network allows exfiltration from compromised VPC
+  workloads. Network without identity allows any account's credentials
+  to reach the bucket from allowed networks. Both without confused
+  deputy allow service-to-service cross-organization access. This
+  control is the meta-check — it fires when any dimension is absent,
+  complementing the per-dimension controls that identify which specific
+  dimension is missing.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, SC-7"
+  fedramp_moderate: "AC-3, SC-7"
+  hipaa: "164.312(a)(1), 164.312(e)(1)"
+  pci_dss_v4.0: "1.3.1, 7.2.1"
+  soc2: "CC6.1, CC6.6"
+  ccm_v4: ["IAM-05", "IVS-03", "DCS-07"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: exfiltration
+  base_impact: 8
+  blast_radius:
+    type: prevention
+    scope: resource
+    multiplier: 2.0
+observation_fields:
+  - storage.kind
+  - storage.perimeter.complete
+remediation:
+  description: >
+    S3 bucket data perimeter is incomplete — one or more of the three
+    dimensions (identity, network, confused deputy) is missing.
+  action: >
+    Implement all three data perimeter dimensions. Identity: add
+    aws:PrincipalOrgID to all cross-account grants. Network: add both
+    aws:SourceIp (for internet access) and aws:SourceVpce or
+    aws:SourceVpc (for VPC endpoint access) — SourceIp alone is
+    bypassed by VPC endpoint traffic. Confused deputy: add
+    aws:SourceOrgID to all service-principal grants. Enforce at the
+    SCP/RCP level to cover all resource policies in the account.
+    Reference: AWS data perimeter guidance at
+    docs.aws.amazon.com/whitepapers/latest/building-a-data-perimeter-on-aws.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "perimeter": {
+          "complete": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.perimeter.complete
+      op: eq
+      value: false
+tests:
+  - name: "incomplete data perimeter — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::sensitive-data"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          perimeter:
+            complete: false
+  - name: "complete data perimeter — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::sensitive-data"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          perimeter:
+            complete: true

@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.KINESIS.MONITORING.001
+name: Kinesis Streams Must Have Enhanced Shard-Level Monitoring Enabled
+description: >
+  Kinesis Data Streams must have enhanced shard-level monitoring
+  enabled. Without it, only stream-level CloudWatch metrics are
+  available — aggregated across all shards. Shard-level metrics
+  (IncomingBytes, IncomingRecords, ReadProvisionedThroughputExceeded,
+  WriteProvisionedThroughputExceeded, IteratorAgeMilliseconds per
+  shard) are required to detect hot shards, consumer lag on individual
+  shards, and anomalous write patterns that indicate data exfiltration
+  or injection. A bulk data extraction targeting a single shard is
+  invisible at the stream level if other shards are idle. Enhanced
+  monitoring adds per-shard metrics to CloudWatch at one-minute
+  granularity, enabling shard-level alarms and forensic analysis.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - kinesis
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Kinesis stream does not have enhanced shard-level monitoring
+    enabled. Hot shard detection and per-shard anomaly analysis are
+    unavailable.
+  action: >
+    Enable enhanced monitoring on the stream:
+    aws kinesis enable-enhanced-monitoring --stream-name <name>
+    --shard-level-metrics ALL. Review per-shard metrics in CloudWatch
+    to identify hot shards and configure alarms on
+    ReadProvisionedThroughputExceeded and IteratorAgeMilliseconds
+    per shard.
+  example: |
+    {
+      "streaming": {
+        "kind": "kinesis_stream",
+        "monitoring": {
+          "enhanced_monitoring_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.streaming.kind
+      op: eq
+      value: kinesis_stream
+    - field: properties.streaming.monitoring.enhanced_monitoring_enabled
+      op: eq
+      value: false

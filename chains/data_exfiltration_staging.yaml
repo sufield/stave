@@ -1,0 +1,22 @@
+id: data_exfiltration_staging
+description: >
+  Production database snapshot shared with a non-production account
+  combined with a staging endpoint that is publicly reachable or a
+  snapshot export path to S3. Data leaves the compliance boundary
+  through a lower-trust environment: prod snapshot → staging account
+  → public endpoint or S3 export. The staging environment has weaker
+  controls, fewer monitors, and broader access — the exfiltration
+  path bypasses production guardrails entirely. Threshold 2 fires
+  when the cross-environment data flow coexists with at least one
+  egress path from the staging environment.
+controls:
+  - CTL.RDS.SNAPSHOT.CROSSENV.001
+  - CTL.RDS.SNAPSHOT.EXPORT.001
+  - CTL.APIGATEWAY.STAGE.CROSSENV.001
+  - CTL.LIFECYCLE.STAGING.STALE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - s3_data_access
+postconditions:
+  - data_destruction

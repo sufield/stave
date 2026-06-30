@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2746
-**Pack hash:** `482c260414991b6f8cd55d55ff55f030309d3b40f8918022e764db9c5ff56e4b`
+**Total controls:** 2749
+**Pack hash:** `8f51219a532aa04360f2f44aa4d66a69081b69cc811086db814fbf5c57c10adf`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 290 |
-| high | 1205 |
+| high | 1206 |
 | info | 16 |
 | low | 208 |
-| medium | 1027 |
+| medium | 1029 |
 
 | Domain | Count |
 |--------|-------|
@@ -26,13 +26,13 @@ GitHub. Pick a service below.
 | capacity | 3 |
 | detection | 135 |
 | encryption | 115 |
-| exposure | 1208 |
-| governance | 587 |
+| exposure | 1209 |
+| governance | 588 |
 | hygiene | 18 |
 | identity | 466 |
 | lifecycle | 31 |
 | network | 39 |
-| resilience | 33 |
+| resilience | 34 |
 | secrets | 4 |
 | storage | 8 |
 
@@ -49,7 +49,7 @@ GitHub. Pick a service below.
 | [AUTOSCALING](reference/autoscaling.md) | 3 |
 | [AZURE](reference/azure.md) | 141 |
 | [BACKUP](reference/backup.md) | 10 |
-| [BATCH](reference/batch.md) | 2 |
+| [BATCH](reference/batch.md) | 3 |
 | [BEANSTALK](reference/beanstalk.md) | 2 |
 | [BEDROCK](reference/bedrock.md) | 26 |
 | [CFN](reference/cfn.md) | 1 |
@@ -74,7 +74,7 @@ GitHub. Pick a service below.
 | [ECS](reference/ecs.md) | 50 |
 | [EFS](reference/efs.md) | 13 |
 | [EKS](reference/eks.md) | 115 |
-| [ELASTICACHE](reference/elasticache.md) | 4 |
+| [ELASTICACHE](reference/elasticache.md) | 5 |
 | [ELB](reference/elb.md) | 80 |
 | [EMR](reference/emr.md) | 5 |
 | [EVENTBRIDGE](reference/eventbridge.md) | 96 |
@@ -89,7 +89,7 @@ GitHub. Pick a service below.
 | [IAM](reference/iam.md) | 199 |
 | [INSPECTOR](reference/inspector.md) | 1 |
 | [K8S](reference/k8s.md) | 68 |
-| [KINESIS](reference/kinesis.md) | 2 |
+| [KINESIS](reference/kinesis.md) | 3 |
 | [KMS](reference/kms.md) | 46 |
 | [LAMBDA](reference/lambda.md) | 85 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |

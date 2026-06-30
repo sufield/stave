@@ -1,0 +1,25 @@
+{
+  "assets": [
+    {
+      "id": "test-elasticache-cluster",
+      "properties": {
+        "cache": {
+          "backup": {
+            "automatic_backup_enabled": false
+          },
+          "kind": "cluster"
+        }
+      },
+      "type": "aws_elasticache_cluster",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  }
+}

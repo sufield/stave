@@ -1,0 +1,25 @@
+id: cicd_pipeline_integrity
+description: >
+  CI/CD pipeline has integrity gaps across multiple stages: source
+  review, build isolation, and deploy trust. Individual chains cover
+  single links (supply_chain_ingress covers OIDC trust,
+  codebuild_supply_chain_compromise covers build secrets). This chain
+  fires when the full pipeline has gaps in at least three of five
+  integrity dimensions: no branch protection on source repo, build
+  project accepts user-controlled buildspecs, build runs in
+  privileged mode, OIDC federation trust is unscoped, or deploy role
+  has wildcard permissions. Three simultaneous gaps indicate the
+  pipeline has no integrity discipline — not a single misconfigured
+  link but a structurally untrustworthy path from PR to production.
+controls:
+  - CTL.GITHUB.REPO.BRANCHPROT.001
+  - CTL.CODEBUILD.BUILDSPEC.USERCONTROLLED.001
+  - CTL.CODEBUILD.PRIVILEGED.001
+  - CTL.IAM.TRUST.OIDC.001
+  - CTL.CODEBUILD.ROLE.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution

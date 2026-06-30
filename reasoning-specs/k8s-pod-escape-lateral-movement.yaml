@@ -1,0 +1,288 @@
+# reasoning-spec: k8s-pod-escape-lateral-movement
+# engine: souffle
+# trial-fixture: (pending)
+# failure-mode: Container/K8s runtime failures (Cat 5/10)
+
+question: >
+  Given an EKS pod and its security context, namespace policy, and
+  identity bindings, what escape and lateral movement paths exist?
+  If a pod can reach the node, the IMDS endpoint, other namespaces,
+  or cross-cluster IAM roles, what is the compound blast radius?
+
+context: >
+  Per-resource EKS controls check individual security properties:
+  privileged mode, hostNetwork, root user, SA token automount. 10
+  existing chains detect compound pod-security failures
+  (eks_pod_security_collapsed, eks_node_imds_unsafe, eks_irsa_unsafe,
+  etc.). What they cannot answer is the full escape-to-blast-radius
+  path: "if this pod is compromised, can the attacker reach the node,
+  steal IMDS credentials, move to other namespaces, and assume
+  cross-account roles?"
+
+  This spec models two compound paths that require graph traversal:
+
+  Path 1 — Pod Escape to Node Compromise:
+    pod has privileged OR hostPID OR hostNetwork
+    → pod reaches node kernel/network namespace
+    → node has IMDSv1 OR hop limit > 1
+    → pod reads node instance profile credentials
+    → node role has broad permissions (s3:*, ec2:*, etc.)
+    = cluster-wide credential theft from a single pod
+
+  Path 2 — Lateral Movement Across Namespaces:
+    pod has SA token automounted
+    → no network policy default-deny in namespace
+    → pod reaches Kubernetes API server
+    → RBAC grants list/get on secrets in other namespaces
+    OR IRSA trust policy has no sub filter (any pod assumes role)
+    = cross-namespace data access or privilege escalation
+
+  These paths compose: a pod that escapes to the node (Path 1) AND
+  has lateral movement capability (Path 2) achieves both node-level
+  AWS credentials and cross-namespace Kubernetes access. The
+  combined blast radius exceeds either path alone.
+
+  Existing EKS predicates needed:
+    pod_privileged(pod)           — SecurityContext.privileged=true
+    pod_hostpid(pod)              — hostPID=true
+    pod_hostnetwork(pod)          — hostNetwork=true
+    pod_hostpath(pod, path)       — hostPath volume mount
+    pod_runasroot(pod)            — runAsUser=0 or unset
+    pod_privesc(pod)              — allowPrivilegeEscalation=true
+    pod_sa_automount(pod)         — automountServiceAccountToken=true
+    pod_namespace(pod, ns)        — namespace membership
+    pod_serviceaccount(pod, sa)   — bound service account
+
+  EKS cluster/node predicates:
+    node_imdsv1(nodegroup)        — IMDSv1 permitted
+    node_hoplimit(nodegroup, n)   — IMDS hop limit
+    node_role(nodegroup, role)    — IAM role attached to node group
+
+  Namespace predicates:
+    ns_psa_enforce(ns, level)     — PSA enforcement label
+    ns_netpol_default_deny(ns, direction) — default-deny ingress/egress
+    ns_resourcequota(ns)          — ResourceQuota exists
+
+  Identity predicates:
+    irsa_role(sa, role)           — IRSA binding
+    irsa_sub_unscoped(role)       — trust policy has no sub filter
+    irsa_aud_missing(role)        — trust policy has no audience condition
+    pod_identity(sa, role)        — Pod Identity Association
+    rbac_cluster_admin(sa)        — cluster-admin binding
+
+  Reachability predicates (from existing reachability.dl):
+    has_action(role, action)
+    has_resource(role, resource_pat)
+    transitive_role(start, end)
+
+# =========================================================================
+# Section 1: Fact Schema — Pod Execution Context
+# =========================================================================
+
+fact_schema:
+  pod_context:
+    description: >
+      Facts linking a pod to its security context, namespace, service
+      account, and node group. These are the entry points for escape
+      and lateral movement traversal.
+
+    predicates:
+      - name: pod_escape_capable
+        arity: 2
+        fields:
+          subject: Pod name (namespace/name)
+          object: Escape vector (privileged|hostpid|hostnetwork|hostpath)
+        source:
+          api: EKS Pod spec (from obs.v0.1 snapshot)
+          path: spec.securityContext / spec.containers[].securityContext
+        notes: >
+          One fact per escape vector per pod. A pod with both privileged
+          and hostPID emits two facts. Any single escape vector is
+          sufficient for node-level access.
+
+      - name: pod_node_placement
+        arity: 2
+        fields:
+          subject: Pod name (namespace/name)
+          object: Node group name
+        source:
+          derived: >
+            Cross-reference pod node affinity/selector with node group
+            labels. If unscoped, pod can land on any node group.
+        notes: >
+          Links pod escape capability to the specific node group's IMDS
+          configuration and IAM role. A pod that escapes to a node with
+          IMDSv1 and a broad role has a larger blast radius than one
+          escaping to a node with IMDSv2 and a minimal role.
+
+      - name: namespace_isolation
+        arity: 3
+        fields:
+          subject: Namespace name
+          predicate: isolation dimension (psa|netpol_ingress|netpol_egress)
+          object: Enforcement level (enforce|audit|warn|none)
+        source:
+          api: EKS namespace labels and NetworkPolicy objects
+        notes: >
+          Three facts per namespace (one per dimension). PSA level is
+          from the pod-security.kubernetes.io/enforce label. Network
+          policy is derived from existence of default-deny policies.
+          A namespace with psa=privileged AND netpol=none has no
+          isolation on either axis.
+
+# =========================================================================
+# Section 2: Datalog Rules — Escape Path
+# =========================================================================
+
+rules:
+  pod_escape:
+    description: >
+      A pod can escape to its node if it has any escape vector AND
+      the node permits credential access (IMDSv1 or high hop limit).
+
+    datalog: |
+      // Pod has at least one escape vector
+      .decl can_escape(pod: symbol)
+      can_escape(pod) :- pod_escape_capable(pod, _).
+
+      // Node is credential-accessible from pod
+      .decl node_cred_accessible(ng: symbol)
+      node_cred_accessible(ng) :- node_imdsv1(ng).
+      node_cred_accessible(ng) :- node_hoplimit(ng, n), n > 1.
+
+      // Pod-to-node credential theft path
+      .decl pod_node_cred_theft(pod: symbol, ng: symbol, role: symbol)
+      pod_node_cred_theft(pod, ng, role) :-
+        can_escape(pod),
+        pod_node_placement(pod, ng),
+        node_cred_accessible(ng),
+        node_role(ng, role).
+
+  lateral_movement:
+    description: >
+      A pod can move laterally if it has API server access (SA token)
+      AND the namespace lacks network isolation AND either RBAC or
+      IRSA permits cross-namespace or cross-account access.
+
+    datalog: |
+      // Pod has API server access
+      .decl has_api_access(pod: symbol)
+      has_api_access(pod) :- pod_sa_automount(pod).
+
+      // Pod's namespace lacks isolation
+      .decl ns_unisolated(ns: symbol)
+      ns_unisolated(ns) :-
+        namespace_isolation(ns, "netpol_egress", "none").
+
+      // IRSA role assumable by any pod (no sub filter)
+      .decl irsa_any_pod(role: symbol)
+      irsa_any_pod(role) :- irsa_sub_unscoped(role).
+
+      // Lateral movement path
+      .decl lateral_path(pod: symbol, target: symbol, via: symbol)
+      lateral_path(pod, role, "irsa_unscoped") :-
+        has_api_access(pod),
+        pod_namespace(pod, ns),
+        ns_unisolated(ns),
+        pod_serviceaccount(pod, sa),
+        irsa_role(sa, role),
+        irsa_any_pod(role).
+      lateral_path(pod, role, "cluster_admin") :-
+        has_api_access(pod),
+        pod_serviceaccount(pod, sa),
+        rbac_cluster_admin(sa),
+        irsa_role(_, role).
+
+  compound_blast_radius:
+    description: >
+      Compound path: pod escapes to node AND has lateral movement.
+      Blast radius is the union of node role permissions and IRSA
+      role permissions reachable through transitive assumption.
+
+    datalog: |
+      // Full compound: escape + lateral
+      .decl compound_compromise(pod: symbol, node_role: symbol, lateral_role: symbol)
+      compound_compromise(pod, nr, lr) :-
+        pod_node_cred_theft(pod, _, nr),
+        lateral_path(pod, lr, _).
+
+      // Blast radius: all resources reachable from either role
+      .decl blast_radius(pod: symbol, resource: symbol, action: symbol, via: symbol)
+      blast_radius(pod, res, act, "node_role") :-
+        pod_node_cred_theft(pod, _, role),
+        reachable(role, res, act).
+      blast_radius(pod, res, act, "lateral") :-
+        lateral_path(pod, role, _),
+        reachable(role, res, act).
+
+# =========================================================================
+# Section 3: Severity Classification
+# =========================================================================
+
+severity:
+  critical:
+    condition: >
+      compound_compromise fires (both escape AND lateral) OR
+      pod_node_cred_theft fires with a node role that has
+      has_privilege_level(role, "admin").
+    rationale: >
+      Pod escape to admin node role = full account compromise from a
+      single pod. Compound escape + lateral = cluster-wide + account-
+      wide access.
+
+  high:
+    condition: >
+      pod_node_cred_theft fires with a node role that has
+      has_privilege_level(role, "poweruser") OR lateral_path fires
+      with an IRSA role that has cross-account sts:AssumeRole.
+    rationale: >
+      Node escape to poweruser role or lateral movement to cross-
+      account IRSA = significant blast radius but not full admin.
+
+  medium:
+    condition: >
+      pod_node_cred_theft fires with readonly node role OR
+      lateral_path fires within a single namespace.
+    rationale: >
+      Escape exists but blast radius is limited by role scope or
+      namespace boundary.
+
+# =========================================================================
+# Section 4: Relationship to Existing Chains
+# =========================================================================
+
+existing_coverage:
+  - chain: eks_pod_security_collapsed
+    overlap: >
+      Detects ≥2 pod security violations (privileged, host namespace,
+      hostPath, root, privEsc). This spec's pod_escape_capable uses
+      the same signals but composes them with node IMDS and IAM role
+      to compute blast radius, which the chain cannot.
+
+  - chain: eks_node_imds_unsafe
+    overlap: >
+      Detects IMDSv1 + hop limit. This spec links IMDS vulnerability
+      to specific pods that can exploit it (escape-capable pods on
+      the affected node group).
+
+  - chain: eks_irsa_unsafe
+    overlap: >
+      Detects unscoped IRSA (no sub + no aud). This spec links IRSA
+      vulnerability to pods with API access in unisolated namespaces,
+      computing which pods can actually exploit the unscoped trust.
+
+  - chain: eks_netpol_isolation_collapsed
+    overlap: >
+      Detects ≥2 network policy gaps. This spec uses network isolation
+      as a gate in the lateral movement path rather than a standalone
+      finding.
+
+  gap_this_spec_fills: >
+    Existing chains detect individual link failures. This spec
+    composes escape + credential theft + lateral movement into full
+    attack paths with blast radius computation. A cluster where
+    eks_pod_security_collapsed, eks_node_imds_unsafe, and
+    eks_irsa_unsafe all fire has three independent findings. This
+    spec shows they compose into a single path from pod compromise
+    to account-wide access — a severity escalation no individual
+    chain can detect.

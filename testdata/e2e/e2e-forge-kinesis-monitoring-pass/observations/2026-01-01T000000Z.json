@@ -1,0 +1,25 @@
+{
+  "assets": [
+    {
+      "id": "test-kinesis-stream",
+      "properties": {
+        "streaming": {
+          "kind": "kinesis_stream",
+          "monitoring": {
+            "enhanced_monitoring_enabled": true
+          }
+        }
+      },
+      "type": "aws_kinesis_stream",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  }
+}

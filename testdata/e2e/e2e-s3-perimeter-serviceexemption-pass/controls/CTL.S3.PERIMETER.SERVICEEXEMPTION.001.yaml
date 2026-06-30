@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.S3.PERIMETER.SERVICEEXEMPTION.001
+name: S3 Bucket Has Unrestricted AWS Service Exemption
+description: >
+  S3 bucket policy exempts all AWS service principals from data perimeter
+  conditions using a broad aws:PrincipalIsAWSService condition without
+  restricting which services are exempted. A condition like
+  {"Bool": {"aws:PrincipalIsAWSService": "true"}} applied to an Allow
+  statement with no further scoping grants every AWS service principal
+  access to the bucket, bypassing the identity and network dimensions
+  of the data perimeter. Only services that actually need access (e.g.,
+  CloudTrail for log delivery, Config for snapshots) should be exempted,
+  and each exemption should be scoped with aws:SourceOrgID to maintain
+  the confused deputy boundary. Broad service exemptions are the most
+  common cause of data perimeter completeness failures because they
+  appear to preserve the perimeter while creating a bypass path through
+  any AWS service.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  fedramp_moderate: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - s3
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: defense_evasion
+  base_impact: 7
+  blast_radius:
+    type: prevention
+    scope: resource
+    multiplier: 1.5
+observation_fields:
+  - storage.kind
+  - storage.perimeter.service_exemption_present
+  - storage.perimeter.service_exemption_restricted
+remediation:
+  description: >
+    S3 bucket policy has a broad aws:PrincipalIsAWSService exemption
+    that bypasses data perimeter conditions for all AWS service
+    principals. Any AWS service can access the bucket.
+  action: >
+    Replace the broad PrincipalIsAWSService exemption with specific
+    service principal grants scoped by aws:SourceOrgID. For each
+    service that needs access, add a separate statement:
+    {"Effect": "Allow", "Principal": {"Service": "cloudtrail.amazonaws.com"},
+    "Action": "s3:PutObject", "Resource": "arn:aws:s3:::bucket/*",
+    "Condition": {"StringEquals": {"aws:SourceOrgID": "o-exampleorgid"}}}.
+    If the PrincipalIsAWSService exemption is required for
+    compatibility, at minimum add aws:SourceOrgID to the same
+    statement to maintain the confused deputy boundary.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "perimeter": {
+          "service_exemption_present": true,
+          "service_exemption_restricted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.perimeter.service_exemption_present
+      op: eq
+      value: true
+    - field: properties.storage.perimeter.service_exemption_restricted
+      op: eq
+      value: false
+tests:
+  - name: "broad service exemption without restrictions — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::central-logs"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          perimeter:
+            service_exemption_present: true
+            service_exemption_restricted: false
+  - name: "service exemption with SourceOrgID restriction — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::central-logs"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          perimeter:
+            service_exemption_present: true
+            service_exemption_restricted: true
+  - name: "no service exemption — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::app-data"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          perimeter:
+            service_exemption_present: false
+            service_exemption_restricted: false
