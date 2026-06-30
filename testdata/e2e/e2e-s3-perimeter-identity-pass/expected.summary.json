@@ -1,6 +1,5 @@
 {
-  "security_state": "COMPLIANT",
-  "total_controls": 1,
-  "controls_violated": 0,
-  "controls_passed": 1
+  "total_assets": 1,
+  "exposed_resources": 0,
+  "violations": 0
 }

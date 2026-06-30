@@ -16,6 +16,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math"
 	"sort"
 
 	"github.com/itchyny/gojq"
@@ -175,6 +176,9 @@ func mergeByID(assets []json.RawMessage) ([]json.RawMessage, error) {
 		order = append(order, id)
 	}
 
+	if len(order) > math.MaxInt-len(passthrough) {
+		return nil, fmt.Errorf("merge: asset count overflows int: %d + %d", len(order), len(passthrough))
+	}
 	out := make([]json.RawMessage, 0, len(order)+len(passthrough))
 	for _, id := range order {
 		b, err := json.Marshal(byID[id])

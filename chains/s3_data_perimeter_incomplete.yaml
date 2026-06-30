@@ -1,0 +1,31 @@
+id: s3_data_perimeter_incomplete
+description: >
+  S3 bucket data perimeter is incomplete across multiple dimensions.
+  A complete data perimeter requires three dimensions: identity
+  (aws:PrincipalOrgID restricts who), network (aws:SourceIp + VPC
+  endpoint conditions restrict where), and confused deputy
+  (aws:SourceOrgID restricts which organization's services). When
+  multiple dimensions are missing simultaneously, the remaining
+  dimension cannot compensate — identity without network allows
+  exfiltration from compromised VPC workloads, network without
+  identity allows any account's credentials from allowed networks,
+  and both without confused deputy allow cross-organization
+  service-to-service access. The most dangerous gap is the VPC
+  endpoint network bypass: aws:SourceIp is silently absent from
+  VPC endpoint request context, so a SourceIp-only policy provides
+  no protection for VPC traffic. Threshold of 2 fires when at least
+  two perimeter dimensions are compromised, indicating the data
+  perimeter is structurally incomplete rather than missing a single
+  condition.
+controls:
+  - CTL.S3.PERIMETER.NETWORKBYPASS.001
+  - CTL.S3.PERIMETER.IDENTITY.001
+  - CTL.S3.PERIMETER.CONFUSEDDEPUTY.001
+  - CTL.S3.PERIMETER.SERVICEEXEMPTION.001
+  - CTL.S3.PERIMETER.COMPLETENESS.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - s3_data_access
+postconditions:
+  - invisible_data_exfiltration

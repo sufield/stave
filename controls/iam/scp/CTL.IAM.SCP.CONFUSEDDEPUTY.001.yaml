@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.CONFUSEDDEPUTY.001
+name: SCP Does Not Prevent Confused Deputy Role Assumption
+description: >
+  Organization SCPs do not deny sts:AssumeRole when an AWS service
+  principal assumes a role on behalf of a resource outside the account.
+  The confused deputy SCP pattern denies sts:AssumeRole when
+  aws:PrincipalIsAWSService is true AND aws:SourceAccount does not
+  match aws:ResourceAccount (the role's account). Without this SCP,
+  each role's trust policy is the sole defense against confused deputy
+  — one misconfigured trust policy equals one exploitable role. The
+  SCP catches confused deputy at the organization level regardless of
+  individual role trust policies, providing defense in depth. This is
+  the organizational complement to per-role confused deputy protection
+  (CTL.IAM.TRUST.CONFUSEDDEPUTY.001, CTL.IAM.TRUST.SOURCEARN.001).
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI4"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: persistence
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_confused_deputy_assume_role
+remediation:
+  description: >
+    Organization SCPs do not deny confused deputy role assumption.
+    Individual role trust policies are the sole defense — one
+    misconfigured trust policy equals one exploitable role.
+  action: >
+    Add an SCP that denies sts:AssumeRole when the requesting service
+    principal operates on behalf of a resource outside the role's
+    account. SCP statement: {"Effect": "Deny", "Action": "sts:AssumeRole",
+    "Resource": "*", "Condition": {"Bool": {"aws:PrincipalIsAWSService":
+    "true"}, "StringNotEquals": {"aws:SourceAccount":
+    "${aws:ResourceAccount}"}}}.  Add a second statement for the Null
+    case: {"Condition": {"Bool": {"aws:PrincipalIsAWSService": "true"},
+    "Null": {"aws:SourceAccount": "true"}}}.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_confused_deputy_assume_role": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_confused_deputy_assume_role
+      op: eq
+      value: false
+tests:
+  - name: "organization without confused deputy SCP — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_confused_deputy_assume_role: false
+  - name: "organization with confused deputy SCP — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_confused_deputy_assume_role: true

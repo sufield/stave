@@ -2441,6 +2441,21 @@ SCP does not deny AWS Config modification or deletion in member accounts. AWS Co
 
 ---
 
+### CTL.IAM.SCP.CONFUSEDDEPUTY.001
+
+**SCP Does Not Prevent Confused Deputy Role Assumption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3, AC-6; owasp_nhi: NHI4; soc2: CC6.1;
+
+Organization SCPs do not deny sts:AssumeRole when an AWS service principal assumes a role on behalf of a resource outside the account. The confused deputy SCP pattern denies sts:AssumeRole when aws:PrincipalIsAWSService is true AND aws:SourceAccount does not match aws:ResourceAccount (the role's account). Without this SCP, each role's trust policy is the sole defense against confused deputy — one misconfigured trust policy equals one exploitable role. The SCP catches confused deputy at the organization level regardless of individual role trust policies, providing defense in depth. This is the organizational complement to per-role confused deputy protection (CTL.IAM.TRUST.CONFUSEDDEPUTY.001, CTL.IAM.TRUST.SOURCEARN.001).
+
+**Remediation:** Add an SCP that denies sts:AssumeRole when the requesting service principal operates on behalf of a resource outside the role's account. SCP statement: {"Effect": "Deny", "Action": "sts:AssumeRole", "Resource": "*", "Condition": {"Bool": {"aws:PrincipalIsAWSService": "true"}, "StringNotEquals": {"aws:SourceAccount": "${aws:ResourceAccount}"}}}.  Add a second statement for the Null case: {"Condition": {"Bool": {"aws:PrincipalIsAWSService": "true"}, "Null": {"aws:SourceAccount": "true"}}}.
+
+---
+
 ### CTL.IAM.SCP.CREATEACCOUNT.001
 
 **SCPs Must Restrict Unauthorized IAM User and Account Creation**

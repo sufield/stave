@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2749
-**Pack hash:** `8f51219a532aa04360f2f44aa4d66a69081b69cc811086db814fbf5c57c10adf`
+**Total controls:** 2755
+**Pack hash:** `540b0fa340be544c61d77f2c56eb5a5694dff550cead387f2f391eadb929e0e2`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 290 |
-| high | 1206 |
+| high | 1211 |
 | info | 16 |
 | low | 208 |
-| medium | 1029 |
+| medium | 1030 |
 
 | Domain | Count |
 |--------|-------|
@@ -26,10 +26,10 @@ GitHub. Pick a service below.
 | capacity | 3 |
 | detection | 135 |
 | encryption | 115 |
-| exposure | 1209 |
-| governance | 588 |
+| exposure | 1210 |
+| governance | 589 |
 | hygiene | 18 |
-| identity | 466 |
+| identity | 470 |
 | lifecycle | 31 |
 | network | 39 |
 | resilience | 34 |
@@ -86,7 +86,7 @@ GitHub. Pick a service below.
 | [GLUE](reference/glue.md) | 12 |
 | [GUARDDUTY](reference/guardduty.md) | 6 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 199 |
+| [IAM](reference/iam.md) | 200 |
 | [INSPECTOR](reference/inspector.md) | 1 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 3 |
@@ -108,7 +108,7 @@ GitHub. Pick a service below.
 | [RDS](reference/rds.md) | 68 |
 | [REDSHIFT](reference/redshift.md) | 26 |
 | [ROUTE53](reference/route53.md) | 50 |
-| [S3](reference/s3.md) | 125 |
+| [S3](reference/s3.md) | 130 |
 | [SAGEMAKER](reference/sagemaker.md) | 25 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |

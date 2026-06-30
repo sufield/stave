@@ -30,7 +30,7 @@ classification: state_assertion
 applicable_asset_types:
   - aws_s3_bucket
 params:
-  attack_stage: defense_evasion
+  attack_stage: detection_evasion
   base_impact: 7
   blast_radius:
     type: prevention
