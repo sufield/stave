@@ -1,10 +1,9 @@
-// Package remediationimpact compares before/after assessments to
-// measure actual remediation effectiveness, including chain
-// deactivations and predicted-vs-realized score delta.
 package remediationimpact
 
 import (
+	"cmp"
 	"errors"
+	"slices"
 
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -74,6 +73,9 @@ type Input struct {
 // returns an error rather than panicking. Callers load both assessments
 // up front, so in practice this guards a programming error at the package
 // boundary.
+//
+// Outputs (closed, deactivated) are sorted deterministically so byte-identical
+// input yields byte-identical reports.
 func Analyze(in Input) (*Report, error) {
 	if in.Before == nil || in.After == nil {
 		return nil, errors.New("remediationimpact: Before and After assessments must both be non-nil")
@@ -94,14 +96,19 @@ func Analyze(in Input) (*Report, error) {
 			})
 		}
 	}
+	slices.SortFunc(closed, func(a, b ClosedFinding) int {
+		if n := cmp.Compare(string(a.ControlID), string(b.ControlID)); n != 0 {
+			return n
+		}
+		return cmp.Compare(string(a.AssetID), string(b.AssetID))
+	})
 
 	// Find deactivated chains. Project (ChainID, severity-label)
 	// off the assessment without naming findings.CompoundFinding —
 	// the only fields read are c.ChainID and c.Severity.String().
 	// Iterates Before first to build the set, then deletes any
 	// chain still active in After, matching the original semantics
-	// of two-map set difference (with the same non-deterministic
-	// output ordering the original carried).
+	// of two-map set difference.
 	beforeSev := make(map[kernel.ChainID]string, len(in.Before.ChainFindings))
 	for i := range in.Before.ChainFindings {
 		c := &in.Before.ChainFindings[i]
@@ -117,6 +124,9 @@ func Analyze(in Input) (*Report, error) {
 			PreviousSeverity: sev,
 		})
 	}
+	slices.SortFunc(deactivated, func(a, b DeactivatedChain) int {
+		return cmp.Compare(a.ChainID, b.ChainID)
+	})
 
 	// Score delta.
 	scoreBefore := computeSimpleScore(in.Before)

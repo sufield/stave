@@ -1,6 +1,8 @@
 package remediation
 
 import (
+	"slices"
+
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -86,7 +88,7 @@ func (s FindingSet) GroupByOwner() map[string][]Finding {
 	return out
 }
 
-// ViolatedRequirements returns the distinct requirement IDs the
+// ViolatedRequirements returns a sorted list of unique requirement IDs that the
 // set's findings violate for the given compliance framework. A
 // finding contributes its ControlCompliance entry; controls that
 // declare no citation for the framework are skipped.
@@ -112,6 +114,7 @@ func (s FindingSet) ViolatedRequirements(framework policy.ComplianceFramework) [
 	for k := range seen {
 		out = append(out, k)
 	}
+	slices.Sort(out)
 	return out
 }
 

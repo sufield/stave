@@ -296,13 +296,19 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 		}
 	}
 
-	// Sort by severity (critical first).
+	// Sort by severity (critical first) and ControlID as tie-breaker.
 	sevOrder := policy.SeverityOrderOf
 	slices.SortFunc(silentRisk, func(a, b ControlResult) int {
-		return cmp.Compare(sevOrder(a.Severity), sevOrder(b.Severity))
+		if sa, sb := sevOrder(a.Severity), sevOrder(b.Severity); sa != sb {
+			return cmp.Compare(sa, sb)
+		}
+		return cmp.Compare(a.ControlID, b.ControlID)
 	})
 	slices.SortFunc(incomplete, func(a, b ControlResult) int {
-		return cmp.Compare(sevOrder(a.Severity), sevOrder(b.Severity))
+		if sa, sb := sevOrder(a.Severity), sevOrder(b.Severity); sa != sb {
+			return cmp.Compare(sa, sb)
+		}
+		return cmp.Compare(a.ControlID, b.ControlID)
 	})
 
 	report.SilentRisk = silentRisk
@@ -334,11 +340,14 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 		})
 	}
 
-	// Sort shopping list items by severity.
+	// Sort shopping list items by severity, with Field as tie-breaker.
 	for at := range report.ShoppingList {
 		items := report.ShoppingList[at]
 		slices.SortFunc(items, func(a, b ShoppingItem) int {
-			return cmp.Compare(sevOrder(a.MaxSeverity), sevOrder(b.MaxSeverity))
+			if sa, sb := sevOrder(a.MaxSeverity), sevOrder(b.MaxSeverity); sa != sb {
+				return cmp.Compare(sa, sb)
+			}
+			return cmp.Compare(a.Field, b.Field)
 		})
 		report.ShoppingList[at] = items
 	}
