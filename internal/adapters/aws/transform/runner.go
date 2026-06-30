@@ -16,13 +16,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"math"
 	"sort"
 
 	"github.com/itchyny/gojq"
 
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 )
+
+// maxMergeAssets caps the combined asset count in mergeByID to prevent
+// allocation-size overflow (CWE-190). 10M assets is far beyond any realistic
+// AWS snapshot but well below math.MaxInt on 32-bit platforms.
+const maxMergeAssets = 10_000_000
 
 // Options configures a transform run. Account supplies the AWS account ID for
 // filters whose raw input carries no ARN (e.g. the account password policy).
@@ -176,10 +180,11 @@ func mergeByID(assets []json.RawMessage) ([]json.RawMessage, error) {
 		order = append(order, id)
 	}
 
-	if len(order) > math.MaxInt-len(passthrough) {
-		return nil, fmt.Errorf("merge: asset count overflows int: %d + %d", len(order), len(passthrough))
+	total := len(order) + len(passthrough)
+	if total < 0 || total > maxMergeAssets {
+		return nil, fmt.Errorf("merge: asset count %d exceeds limit %d", total, maxMergeAssets)
 	}
-	out := make([]json.RawMessage, 0, len(order)+len(passthrough))
+	out := make([]json.RawMessage, 0, total)
 	for _, id := range order {
 		b, err := json.Marshal(byID[id])
 		if err != nil {
