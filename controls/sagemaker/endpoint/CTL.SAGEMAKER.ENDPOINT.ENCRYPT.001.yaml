@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.ENDPOINT.ENCRYPT.001
+name: SageMaker Endpoint Must Use Customer-Managed KMS Key
+description: >
+  SageMaker endpoint configuration does not specify a customer-
+  managed KMS key for encrypting data on the ML instances. Without
+  a customer-managed key, data at rest on the endpoint instances
+  uses AWS-managed encryption, which does not allow key rotation
+  control, key policy restrictions, or CloudTrail logging of key
+  usage. For endpoints processing sensitive data, customer-managed
+  KMS keys provide the audit trail and access control required for
+  compliance.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - sagemaker
+  - ai
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: SageMaker endpoint uses AWS-managed encryption instead of customer KMS.
+  action: >
+    Specify a KmsKeyId on the endpoint configuration. Use a
+    customer-managed KMS key with a key policy scoped to the
+    SageMaker service principal and authorized administrators.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_endpoint_config",
+        "encryption": { "uses_customer_kms": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_endpoint_config
+    - field: properties.compute.encryption.uses_customer_kms
+      op: eq
+      value: false

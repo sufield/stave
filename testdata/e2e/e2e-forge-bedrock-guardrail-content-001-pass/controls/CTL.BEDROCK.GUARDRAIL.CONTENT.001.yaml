@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.GUARDRAIL.CONTENT.001
+name: Bedrock Guardrails Must Enable Content Filter
+description: >
+  Bedrock guardrails must configure content filters to block harmful
+  content categories (hate, insults, sexual, violence, misconduct).
+  Without content filtering, the model can generate or accept content
+  in regulated categories. Content filters operate on both prompts
+  and responses, providing defense-in-depth against prompt injection
+  attacks that attempt to elicit harmful outputs.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-10"
+  soc2: "CC6.1"
+  ccm_v4: ["AIS-06"]
+scope_tags:
+  - aws
+  - bedrock
+  - ai
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_guardrail
+params:
+  attack_stage: impact
+remediation:
+  description: Bedrock guardrail does not have content filters configured.
+  action: >
+    Configure content filters in the guardrail for all applicable
+    categories (hate, insults, sexual, violence, misconduct) with
+    appropriate strength levels.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_guardrail",
+        "guardrail": { "content_filter_enabled": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_guardrail
+    - field: properties.ai.guardrail.content_filter_enabled
+      op: eq
+      value: false

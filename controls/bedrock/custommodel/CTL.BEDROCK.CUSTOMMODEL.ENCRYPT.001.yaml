@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.CUSTOMMODEL.ENCRYPT.001
+name: Bedrock Custom Model Must Use Customer-Managed KMS Key
+description: >
+  Bedrock custom model (fine-tuned or imported) does not use a
+  customer-managed KMS key for encryption. Custom models contain
+  organization-specific training data encoded in model weights.
+  Without a customer-managed key, the model artifact uses AWS-
+  managed encryption, which does not allow key rotation control,
+  key policy restrictions, or CloudTrail logging of key usage.
+  For models fine-tuned on proprietary or regulated data, customer-
+  managed KMS keys provide the audit trail and access control
+  required for compliance.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - bedrock
+  - ai
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_custom_model
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Bedrock custom model uses AWS-managed encryption.
+  action: >
+    Specify a customModelKmsKeyId when creating the custom model
+    via CreateModelCustomizationJob. Use a customer-managed KMS
+    key with a key policy scoped to the Bedrock service principal.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_custom_model",
+        "encryption": { "uses_customer_kms": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_custom_model
+    - field: properties.ai.encryption.uses_customer_kms
+      op: eq
+      value: false

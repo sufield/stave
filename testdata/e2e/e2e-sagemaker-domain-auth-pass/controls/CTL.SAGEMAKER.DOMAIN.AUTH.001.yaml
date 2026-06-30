@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.DOMAIN.AUTH.001
+name: SageMaker Studio Domain Must Use IAM Identity Center Authentication
+description: >
+  SageMaker Studio domain uses IAM authentication mode instead of
+  IAM Identity Center (SSO). IAM authentication mode assigns Studio
+  access based on IAM users and roles, which lacks centralized
+  identity governance — no single sign-on, no session duration
+  controls, no MFA enforcement at the identity provider level, and
+  no automatic deprovisioning when a user leaves the organization.
+  IAM Identity Center provides federated access with organization-
+  managed lifecycle controls.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "IA-2, IA-5"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-02", "IAM-04"]
+scope_tags:
+  - aws
+  - sagemaker
+  - ai
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: SageMaker Studio domain uses IAM authentication instead of SSO.
+  action: >
+    Recreate the SageMaker Studio domain with AuthMode set to SSO
+    (IAM Identity Center). Note: AuthMode cannot be changed on an
+    existing domain — the domain must be deleted and recreated.
+    Migrate user profiles to the new SSO-backed domain.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_domain",
+        "identity": { "auth_mode": "SSO" }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_domain
+    - field: properties.compute.identity.auth_mode
+      op: eq
+      value: IAM

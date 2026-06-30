@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:custom-model/my-finetuned-model",
+      "type": "aws_bedrock_custom_model",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_custom_model",
+          "encryption": {
+            "uses_customer_kms": true
+          }
+        }
+      }
+    }
+  ]
+}

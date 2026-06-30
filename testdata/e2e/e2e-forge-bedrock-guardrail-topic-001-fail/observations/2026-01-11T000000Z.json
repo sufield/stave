@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:guardrail/abc123",
+      "type": "aws_bedrock_guardrail",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_guardrail",
+          "guardrail": {
+            "topic_policy_defined": false
+          }
+        }
+      }
+    }
+  ]
+}

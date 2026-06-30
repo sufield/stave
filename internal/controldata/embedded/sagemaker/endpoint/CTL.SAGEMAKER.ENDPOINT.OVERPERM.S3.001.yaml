@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.ENDPOINT.OVERPERM.S3.001
+name: SageMaker Endpoint Execution Role Must Scope S3 Access
+description: >
+  SageMaker endpoint execution role grants s3:GetObject or s3:*
+  on Resource: * — the inference container can read any object in
+  any bucket in the account. An endpoint processes untrusted input
+  (inference requests from callers) and runs model code that may
+  include custom inference scripts. Broad S3 access lets a
+  compromised endpoint exfiltrate data from any bucket the role
+  can reach.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-04", "IAM-05", "DSP-07"]
+scope_tags:
+  - aws
+  - sagemaker
+  - ai
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    SageMaker endpoint execution role can read any S3 object in
+    the account.
+  action: >
+    Restrict the role's s3:GetObject permission to the specific
+    bucket ARN(s) containing model artifacts. Use resource-level
+    conditions so the endpoint container cannot access data
+    beyond its model artifact bucket.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_endpoint_config",
+        "identity": {
+          "execution_role": { "has_broad_s3_access": false }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_endpoint_config
+    - field: properties.compute.identity.execution_role.has_broad_s3_access
+      op: eq
+      value: true

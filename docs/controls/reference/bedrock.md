@@ -245,6 +245,21 @@ Bedrock agent has not been invoked within the observation window (default 30 day
 
 ---
 
+### CTL.BEDROCK.CUSTOMMODEL.ENCRYPT.001
+
+**Bedrock Custom Model Must Use Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; soc2: CC6.7;
+
+Bedrock custom model (fine-tuned or imported) does not use a customer-managed KMS key for encryption. Custom models contain organization-specific training data encoded in model weights. Without a customer-managed key, the model artifact uses AWS- managed encryption, which does not allow key rotation control, key policy restrictions, or CloudTrail logging of key usage. For models fine-tuned on proprietary or regulated data, customer- managed KMS keys provide the audit trail and access control required for compliance.
+
+**Remediation:** Specify a customModelKmsKeyId when creating the custom model via CreateModelCustomizationJob. Use a customer-managed KMS key with a key policy scoped to the Bedrock service principal.
+
+---
+
 ### CTL.BEDROCK.GHOST.KNOWLEDGEBASE.001
 
 **Bedrock Agent Must Not Reference Deleted Knowledge Base**
@@ -257,6 +272,21 @@ Bedrock agent has not been invoked within the observation window (default 30 day
 Bedrock agent's knowledgeBases list contains at least one knowledge-base ID that no longer exists in the current inventory. RAG queries through this agent will fail or return empty results — and the broken reference is invisible to runtime: the agent silently degrades. Sibling to CTL.BEDROCK.AGENT.GHOST.LAMBDA.001 (which catches the same pattern on actionGroups). Same shape as the Cognito ghost-trigger family (PRESIGNUP, PREAUTH, ...) applied to Bedrock agent KB references. The collector pre-computes the has_ghost_knowledge_base boolean by joining the agent's declared KB IDs against the live knowledge-base inventory.
 
 **Remediation:** Either remove the dead knowledge base from the agent via DisassociateAgentKnowledgeBase, or recreate the knowledge base if it was deleted accidentally. Re-prepare the agent with PrepareAgent after the change.
+
+---
+
+### CTL.BEDROCK.GUARDRAIL.CONTENT.001
+
+**Bedrock Guardrails Must Enable Content Filter**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-10; soc2: CC6.1;
+
+Bedrock guardrails must configure content filters to block harmful content categories (hate, insults, sexual, violence, misconduct). Without content filtering, the model can generate or accept content in regulated categories. Content filters operate on both prompts and responses, providing defense-in-depth against prompt injection attacks that attempt to elicit harmful outputs.
+
+**Remediation:** Configure content filters in the guardrail for all applicable categories (hate, insults, sexual, violence, misconduct) with appropriate strength levels.
 
 ---
 
@@ -287,6 +317,21 @@ Bedrock guardrails must configure sensitive information filters to block or mask
 Bedrock guardrails must configure the prompt attack filter at HIGH strength. Without high-strength filtering, models are exposed to prompt injection and jailbreak attacks that can coerce disclosure of sensitive data, evade content policies, and trigger unintended tool execution.
 
 **Remediation:** Update the guardrail to set the prompt attack filter strength to HIGH via aws bedrock update-guardrail.
+
+---
+
+### CTL.BEDROCK.GUARDRAIL.TOPIC.001
+
+**Bedrock Guardrails Must Define Topic Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Bedrock guardrails must configure a topic policy to deny specific subjects the model should not engage with. Without a topic policy, the guardrail relies solely on content filters, which operate on toxicity categories but cannot enforce business-specific restrictions — for example, preventing a customer-facing model from discussing competitors, providing medical advice, or generating legal opinions.
+
+**Remediation:** Add a topic policy to the guardrail with denied topics appropriate for the model's use case. Define clear topic definitions and sample phrases for each denied topic.
 
 ---
 

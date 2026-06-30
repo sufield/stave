@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.SAGEMAKER.DOMAIN.AUTH.001
+
+**SageMaker Studio Domain Must Use IAM Identity Center Authentication**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-2, IA-5; soc2: CC6.1;
+
+SageMaker Studio domain uses IAM authentication mode instead of IAM Identity Center (SSO). IAM authentication mode assigns Studio access based on IAM users and roles, which lacks centralized identity governance — no single sign-on, no session duration controls, no MFA enforcement at the identity provider level, and no automatic deprovisioning when a user leaves the organization. IAM Identity Center provides federated access with organization- managed lifecycle controls.
+
+**Remediation:** Recreate the SageMaker Studio domain with AuthMode set to SSO (IAM Identity Center). Note: AuthMode cannot be changed on an existing domain — the domain must be deleted and recreated. Migrate user profiles to the new SSO-backed domain.
+
+---
+
 ### CTL.SAGEMAKER.DOMAIN.SHAREDROLE.001
 
 **SageMaker Studio Domain Must Not Use a Single Shared Execution Role**
@@ -20,6 +35,51 @@ SageMaker Studio domain assigns a single execution role to every user profile in
 
 ---
 
+### CTL.SAGEMAKER.ENDPOINT.DATACAPTURE.001
+
+**SageMaker Endpoint Must Have Data Capture Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AU-2, AU-3; soc2: CC7.2;
+
+SageMaker endpoint configuration does not have data capture enabled. Data capture records inference requests and responses to S3, providing the audit trail for model behavior analysis, drift detection, and incident investigation. Without data capture, there is no record of what the model received or returned — making it impossible to detect adversarial inputs, investigate model misbehavior, or demonstrate compliance with data processing requirements.
+
+**Remediation:** Add a DataCaptureConfig to the endpoint configuration with EnableCapture set to true. Configure the destination S3 URI and specify which data to capture (Input, Output, or both).
+
+---
+
+### CTL.SAGEMAKER.ENDPOINT.ENCRYPT.001
+
+**SageMaker Endpoint Must Use Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.7;
+
+SageMaker endpoint configuration does not specify a customer- managed KMS key for encrypting data on the ML instances. Without a customer-managed key, data at rest on the endpoint instances uses AWS-managed encryption, which does not allow key rotation control, key policy restrictions, or CloudTrail logging of key usage. For endpoints processing sensitive data, customer-managed KMS keys provide the audit trail and access control required for compliance.
+
+**Remediation:** Specify a KmsKeyId on the endpoint configuration. Use a customer-managed KMS key with a key policy scoped to the SageMaker service principal and authorized administrators.
+
+---
+
+### CTL.SAGEMAKER.ENDPOINT.ISOLATION.001
+
+**SageMaker Endpoint Configuration Must Enable Network Isolation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+SageMaker endpoint configuration must enable network isolation to prevent model containers from making outbound network calls during inference. Without isolation, a compromised or malicious model container can exfiltrate inference data, cached training data, or model weights to external endpoints. Network isolation at the endpoint level is independent of VPC placement — an endpoint can be in a VPC but still allow outbound calls if isolation is not enabled.
+
+**Remediation:** Set EnableNetworkIsolation to true on the endpoint configuration. This prevents all outbound network access from model containers.
+
+---
+
 ### CTL.SAGEMAKER.ENDPOINT.MONITOR.001
 
 **SageMaker Endpoint Configuration Must Have Model Monitoring**
@@ -32,6 +92,21 @@ SageMaker Studio domain assigns a single execution role to every user profile in
 SageMaker endpoint configuration has no model monitoring schedule attached. Without a monitoring schedule (data quality, model quality, bias drift, or feature attribution), a deployed endpoint can drift, be silently replaced, or serve adversarial inputs without detection. Model monitoring is the equivalent of CloudTrail for ML inference: the audit surface that distinguishes "the model is doing what it promised" from "the model is doing something useful enough for the dashboard to look healthy."
 
 **Remediation:** Attach a monitoring schedule via CreateMonitoringSchedule targeting the endpoint. At minimum, configure a data- quality monitor with a baseline statistics file. For production endpoints serving regulated data, also attach model-quality and bias-drift monitors.
+
+---
+
+### CTL.SAGEMAKER.ENDPOINT.OVERPERM.S3.001
+
+**SageMaker Endpoint Execution Role Must Scope S3 Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+SageMaker endpoint execution role grants s3:GetObject or s3:* on Resource: * — the inference container can read any object in any bucket in the account. An endpoint processes untrusted input (inference requests from callers) and runs model code that may include custom inference scripts. Broad S3 access lets a compromised endpoint exfiltrate data from any bucket the role can reach.
+
+**Remediation:** Restrict the role's s3:GetObject permission to the specific bucket ARN(s) containing model artifacts. Use resource-level conditions so the endpoint container cannot access data beyond its model artifact bucket.
 
 ---
 
