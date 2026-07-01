@@ -1,7 +1,8 @@
-// Package catalog implements `stave capabilities catalog` — the
-// user-facing catalog view that groups controls + chains +
-// operational features by service and renders a browse-friendly
-// listing. Paired with `stave search` for query-by-intent.
+// Package catalog implements `stave catalog` (and its alias
+// `stave capabilities catalog`) — the user-facing catalog view that
+// groups controls + chains + operational features by service and
+// renders a browse-friendly listing. Subcommands: stats, inspect.
+// Paired with `stave search` for query-by-intent.
 package catalog
 
 import (
@@ -28,7 +29,10 @@ type options struct {
 	Leaf        bool
 }
 
-// NewCmd constructs the `catalog` subcommand of `capabilities`.
+// NewCmd constructs the `catalog` command. Registered both as a
+// top-level command (`stave catalog`) and as a subcommand of
+// `capabilities` (`stave capabilities catalog`). Each call site
+// must call NewCmd separately — Cobra cannot share instances.
 func NewCmd() *cobra.Command {
 	opts := &options{
 		Format:      "auto",
@@ -79,11 +83,15 @@ Exit codes:
   2   Invalid input
   4   Internal error
 `,
-		Example: `  stave capabilities catalog
-  stave capabilities catalog s3
-  stave capabilities catalog --service s3
-  stave capabilities catalog --kind chain
-  stave capabilities catalog --format json | jq '.capabilities | length'`,
+		Example: `  stave catalog
+  stave catalog s3
+  stave catalog --service s3 --leaf
+  stave catalog --kind chain
+  stave catalog --format json | jq '.capabilities | length'
+  stave catalog stats
+  stave catalog inspect CTL.S3.PUBLIC.001
+  stave catalog coverage
+  stave catalog gaps checklist.yaml`,
 		// Wrap the arg-count check in a UserError so a surplus positional
 		// (e.g. `catalog s3 iam`) exits 2 (invalid input), not 4 (internal):
 		// cobra's raw "accepts at most 1 arg(s)" error isn't unknown-command-
@@ -114,6 +122,10 @@ Exit codes:
 	cmd.Flags().BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
 	cmd.Flags().StringVar(&opts.Severity, "severity", "", "show only leaf controls of this severity: critical | high | medium | low | info")
 	cmd.Flags().BoolVar(&opts.Leaf, "leaf", false, "drill to leaf controls (the individual control IDs); pairs with a service")
+	cmd.AddCommand(newStatsCmd())
+	cmd.AddCommand(newInspectCmd())
+	cmd.AddCommand(newCoverageCmd())
+	cmd.AddCommand(newGapsCmd())
 	return cmd
 }
 

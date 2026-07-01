@@ -13,6 +13,7 @@ description: >
 domain: identity
 severity: medium
 scope: compound
+corpus_reference: MITRE:T1098.003
 compliance:
   nist_800_53_r5: "CM-7"
   soc2: "CC6.1"

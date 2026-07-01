@@ -26,7 +26,7 @@ func wireHelpGroups(root *cobra.Command) {
 		groupCore:           {"validate", "apply", "diagnose", "explain", "expand"},
 		groupWorkflow:       {"ci", "snapshot", "status"},
 		groupArtifacts:      {"enforce", "report"},
-		groupIntrospection:  {"inspect", "features"},
+		groupIntrospection:  {"catalog", "inspect", "features", "services"},
 		groupSettings:       {"config"},
 	}
 	for groupID, names := range groupMap {

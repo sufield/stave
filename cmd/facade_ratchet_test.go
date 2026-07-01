@@ -97,6 +97,7 @@ var facadeCleanBaseline = map[string]struct{}{
 	"score":              {},
 	"scorecard":          {},
 	"search":             {},
+	"services":           {},
 	"snapshotdiff":       {},
 	"stave":              {},
 	"stave-dev":          {},

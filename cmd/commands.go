@@ -52,6 +52,7 @@ import (
 	stavescore "github.com/sufield/stave/cmd/score"
 	stavescorecard "github.com/sufield/stave/cmd/scorecard"
 	search "github.com/sufield/stave/cmd/search"
+	staveservices "github.com/sufield/stave/cmd/services"
 	stavesnapshotdiff "github.com/sufield/stave/cmd/snapshotdiff"
 	stavetelemetry "github.com/sufield/stave/cmd/telemetry"
 	stavetest "github.com/sufield/stave/cmd/test"
@@ -231,6 +232,16 @@ func WireCommands(app *App) error {
 	// only declared schema paths, and covers the catalog's read
 	// surface for that asset type before it ships an observation.
 	root.AddCommand(validatemapping.NewCmd())
+
+	// User-facing catalog: grouped detections + chains + operational
+	// features. Also registered under `capabilities catalog` below
+	// for backward compatibility (each registration is a separate
+	// Command instance — Cobra cannot share).
+	root.AddCommand(catalog.NewCmd())
+
+	// Service registry — tracks the AWS service universe and
+	// Stave's coverage. Hidden; internal development tooling.
+	root.AddCommand(staveservices.NewCmd())
 
 	// Free-form search across controls + chains + asset types.
 	// Bridges user intent ("public S3 bucket") to catalog vocabulary

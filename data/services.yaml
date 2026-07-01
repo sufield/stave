@@ -1,0 +1,359 @@
+# Service Registry — Stave's explicit AWS service universe.
+#
+# Source of truth for which AWS services Stave is aware of. The control
+# catalog provides per-control data; this file provides per-service
+# metadata. Control counts are derived at runtime by joining against
+# the catalog (never duplicated here).
+#
+# Status values:
+#   active            — AWS service available, Stave has controls
+#   known_not_covered — AWS service exists, no Stave controls yet
+#   out_of_scope      — outside Stave's configuration-security scope
+#   retired           — AWS deprecated/removed the service
+#   preview           — AWS service in preview/beta, tracking only
+
+services:
+
+  # ─── ACTIVE (Stave has controls) ────────────────────────────
+
+  - id: acm
+    name: AWS Certificate Manager
+    short_name: ACM
+    category: security
+
+  - id: ad
+    name: AWS Directory Service
+    short_name: AD
+    category: identity
+
+  - id: apigateway
+    name: Amazon API Gateway
+    short_name: APIGW
+    category: networking
+
+  - id: apigw2
+    name: Amazon API Gateway v2
+    short_name: APIGWv2
+    category: networking
+
+  - id: appstream
+    name: Amazon AppStream 2.0
+    short_name: AppStream
+    category: compute
+
+  - id: athena
+    name: Amazon Athena
+    short_name: Athena
+    category: analytics
+
+  - id: autoscaling
+    name: Amazon EC2 Auto Scaling
+    short_name: ASG
+    category: compute
+
+  - id: backup
+    name: AWS Backup
+    short_name: Backup
+    category: storage
+
+  - id: batch
+    name: AWS Batch
+    short_name: Batch
+    category: compute
+
+  - id: beanstalk
+    name: AWS Elastic Beanstalk
+    short_name: EB
+    category: compute
+
+  - id: bedrock
+    name: Amazon Bedrock
+    short_name: Bedrock
+    category: ai
+
+  - id: cloudformation
+    name: AWS CloudFormation
+    short_name: CFN
+    category: management
+
+  - id: cloudfront
+    name: Amazon CloudFront
+    short_name: CF
+    category: networking
+
+  - id: cloudtrail
+    name: AWS CloudTrail
+    short_name: CT
+    category: management
+
+  - id: cloudwatch
+    name: Amazon CloudWatch
+    short_name: CW
+    category: management
+
+  - id: codebuild
+    name: AWS CodeBuild
+    short_name: CB
+    category: compute
+
+  - id: codecommit
+    name: AWS CodeCommit
+    short_name: CC
+    category: management
+
+  - id: cognito
+    name: Amazon Cognito
+    short_name: Cognito
+    category: identity
+
+  - id: config
+    name: AWS Config
+    short_name: Config
+    category: management
+
+  - id: dms
+    name: AWS Database Migration Service
+    short_name: DMS
+    category: database
+
+  - id: documentdb
+    name: Amazon DocumentDB
+    short_name: DocDB
+    category: database
+
+  - id: dynamodb
+    name: Amazon DynamoDB
+    short_name: DDB
+    category: database
+
+  - id: ec2
+    name: Amazon Elastic Compute Cloud
+    short_name: EC2
+    category: compute
+
+  - id: ecr
+    name: Amazon Elastic Container Registry
+    short_name: ECR
+    category: compute
+
+  - id: ecs
+    name: Amazon Elastic Container Service
+    short_name: ECS
+    category: compute
+
+  - id: efs
+    name: Amazon Elastic File System
+    short_name: EFS
+    category: storage
+
+  - id: eks
+    name: Amazon Elastic Kubernetes Service
+    short_name: EKS
+    category: compute
+
+  - id: elasticache
+    name: Amazon ElastiCache
+    short_name: ElastiCache
+    category: database
+
+  - id: elb
+    name: Elastic Load Balancing
+    short_name: ELB
+    category: networking
+
+  - id: emr
+    name: Amazon EMR
+    short_name: EMR
+    category: analytics
+
+  - id: eventbridge
+    name: Amazon EventBridge
+    short_name: EB
+    category: messaging
+
+  - id: glue
+    name: AWS Glue
+    short_name: Glue
+    category: analytics
+
+  - id: guardduty
+    name: Amazon GuardDuty
+    short_name: GD
+    category: security
+
+  - id: iam
+    name: AWS Identity and Access Management
+    short_name: IAM
+    category: identity
+
+  - id: inspector
+    name: Amazon Inspector
+    short_name: Inspector
+    category: security
+
+  - id: kinesis
+    name: Amazon Kinesis
+    short_name: Kinesis
+    category: messaging
+
+  - id: kms
+    name: AWS Key Management Service
+    short_name: KMS
+    category: security
+
+  - id: lambda
+    name: AWS Lambda
+    short_name: Lambda
+    category: compute
+
+  - id: lightsail
+    name: Amazon Lightsail
+    short_name: Lightsail
+    category: compute
+
+  - id: macie
+    name: Amazon Macie
+    short_name: Macie
+    category: security
+
+  - id: mq
+    name: Amazon MQ
+    short_name: MQ
+    category: messaging
+
+  - id: msk
+    name: Amazon Managed Streaming for Apache Kafka
+    short_name: MSK
+    category: messaging
+
+  - id: neptune
+    name: Amazon Neptune
+    short_name: Neptune
+    category: database
+
+  - id: netfirewall
+    name: AWS Network Firewall
+    short_name: NFW
+    category: networking
+
+  - id: opensearch
+    name: Amazon OpenSearch Service
+    short_name: OpenSearch
+    category: analytics
+
+  - id: org
+    name: AWS Organizations
+    short_name: Org
+    category: identity
+
+  - id: ram
+    name: AWS Resource Access Manager
+    short_name: RAM
+    category: identity
+
+  - id: rds
+    name: Amazon Relational Database Service
+    short_name: RDS
+    category: database
+
+  - id: redshift
+    name: Amazon Redshift
+    short_name: Redshift
+    category: database
+
+  - id: route53
+    name: Amazon Route 53
+    short_name: R53
+    category: networking
+
+  - id: s3
+    name: Amazon Simple Storage Service
+    short_name: S3
+    category: storage
+
+  - id: sagemaker
+    name: Amazon SageMaker
+    short_name: SM
+    category: ai
+
+  - id: secretsmanager
+    name: AWS Secrets Manager
+    short_name: SM
+    category: security
+
+  - id: securityhub
+    name: AWS Security Hub
+    short_name: SecHub
+    category: security
+
+  - id: shield
+    name: AWS Shield
+    short_name: Shield
+    category: security
+
+  - id: sns
+    name: Amazon Simple Notification Service
+    short_name: SNS
+    category: messaging
+
+  - id: sqs
+    name: Amazon Simple Queue Service
+    short_name: SQS
+    category: messaging
+
+  - id: ssm
+    name: AWS Systems Manager
+    short_name: SSM
+    category: management
+
+  - id: stepfunctions
+    name: AWS Step Functions
+    short_name: SFN
+    category: compute
+
+  - id: vpc
+    name: Amazon Virtual Private Cloud
+    short_name: VPC
+    category: networking
+
+  - id: waf
+    name: AWS WAF
+    short_name: WAF
+    category: security
+
+  - id: workspaces
+    name: Amazon WorkSpaces
+    short_name: WS
+    category: compute
+
+  # ─── OUT OF SCOPE ───────────────────────────────────────────
+
+  - id: marketplace
+    name: AWS Marketplace
+    short_name: Marketplace
+    category: management
+    status: out_of_scope
+    notes: Procurement, not infrastructure security configuration.
+
+  - id: support
+    name: AWS Support
+    short_name: Support
+    category: management
+    status: out_of_scope
+    notes: Support plans, not security configuration.
+
+  - id: billing
+    name: AWS Billing
+    short_name: Billing
+    category: management
+    status: out_of_scope
+    notes: Cost management, not security configuration.
+
+  # ─── RETIRED ────────────────────────────────────────────────
+
+  - id: simpledb
+    name: Amazon SimpleDB
+    short_name: SDB
+    category: database
+    status: retired
+    notes: Fully deprecated by AWS. Use DynamoDB.

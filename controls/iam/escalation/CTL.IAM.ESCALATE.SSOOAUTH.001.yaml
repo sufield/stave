@@ -16,6 +16,7 @@ description: >
 domain: identity
 severity: high
 scope: compound
+corpus_reference: MITRE:T1550.001
 compliance:
   owasp_nhi: "NHI5"
   nist_800_53_r5: "AC-6(5)"
