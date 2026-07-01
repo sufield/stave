@@ -148,6 +148,7 @@ see_also:
     - stave bisect - Find when a control was first violated
     - stave bundle - Generate a sealed evidence bundle for air-gap GRC integration
     - stave capabilities - Print supported input types and version constraints (default) or a user-facing catalog (subcommand)
+    - stave catalog - Print the user-facing capability catalog
     - stave cel - CEL expression tools
     - stave check - Compare before/after evaluations to check remediation
     - stave ci - CI/CD policy and baseline commands

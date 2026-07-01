@@ -1,4 +1,4 @@
-name: stave capabilities catalog
+name: stave catalog
 synopsis: Print the user-facing capability catalog
 description: |
     Catalog emits the grouped view of what Stave can check: control
@@ -41,7 +41,7 @@ description: |
       0   Success
       2   Invalid input
       4   Internal error
-usage: stave capabilities catalog [flags]
+usage: stave catalog [flags]
 options:
     - name: category
       usage: filter to one category (requires --service)
@@ -144,8 +144,8 @@ example: |4-
       stave catalog coverage
       stave catalog gaps checklist.yaml
 see_also:
-    - stave capabilities - Print supported input types and version constraints (default) or a user-facing catalog (subcommand)
-    - stave capabilities catalog coverage - Show per-service control coverage
-    - stave capabilities catalog gaps - Compare catalog against an external checklist
-    - stave capabilities catalog inspect - Show full metadata for a single control
-    - stave capabilities catalog stats - Print aggregate catalog statistics
+    - stave - Configuration safety evaluator
+    - stave catalog coverage - Show per-service control coverage
+    - stave catalog gaps - Compare catalog against an external checklist
+    - stave catalog inspect - Show full metadata for a single control
+    - stave catalog stats - Print aggregate catalog statistics
