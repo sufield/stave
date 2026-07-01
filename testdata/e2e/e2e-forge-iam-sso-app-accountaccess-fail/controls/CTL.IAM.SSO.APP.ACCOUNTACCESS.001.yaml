@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SSO.APP.ACCOUNTACCESS.001
+name: Identity Center Application Must Not Have Account Access Scope
+description: >
+  An IAM Identity Center application has the sso:account:access scope
+  enabled. This grants the application the ability to call
+  ListAccounts, ListAccountRoles, and GetRoleCredentials on behalf of
+  any authenticated user — effectively impersonating users into any
+  account and role they have access to. The application's effective
+  permissions become the union of every authenticated user's
+  permissions across the entire organization. A Lambda function with a
+  minimal execution role that has this scope can assume
+  AdministratorAccess in every account — on behalf of any user who
+  signs in. One misconfigured application creates organization-wide
+  privilege escalation.
+domain: identity
+severity: critical
+scope: compound
+compliance:
+  owasp_nhi: "NHI5, NHI6"
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05", "IAM-04"]
+scope_tags:
+  - aws
+  - iam
+  - sso
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sso_application
+params:
+  attack_stage: privilege_escalation
+  base_impact: 10
+  blast_radius:
+    type: prevention
+    scope: organization
+    multiplier: 3.0
+observation_fields:
+  - identity.kind
+  - identity.sso.app.has_account_access_scope
+  - identity.sso.app.scopes
+remediation:
+  description: >
+    This IAM Identity Center application has the sso:account:access
+    scope enabled, granting it the ability to assume IAM roles in any
+    account on behalf of any user who authenticates to it. The
+    application's effective permissions are the union of all its
+    users' permissions — a single application with admin users becomes
+    an organization-wide privilege escalation vector.
+  action: >
+    Review whether this application requires account access scope. If
+    the application only needs to authenticate users (not assume roles
+    on their behalf), remove the sso:account:access scope. AWS
+    currently provides no mechanism to scope which accounts or roles
+    an application can impersonate into — the access is all-or-
+    nothing. Restrict which users can authenticate to the application
+    via assignment configuration.
+  example: |
+    # Remove account access scope
+    aws sso-admin delete-application-access-scope \
+      --application-arn <APP_ARN> \
+      --scope sso:account:access
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: sso_application
+    - field: properties.identity.sso.app.has_account_access_scope
+      op: eq
+      value: true

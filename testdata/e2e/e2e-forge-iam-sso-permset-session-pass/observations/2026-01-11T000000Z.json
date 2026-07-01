@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:sso:::permissionSet/ssoins-1234567890abcdef/ps-bounded",
+      "type": "aws_sso_permission_set",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "sso_permission_set",
+          "sso": {
+            "session_duration_hours": 4
+          }
+        }
+      }
+    }
+  ]
+}

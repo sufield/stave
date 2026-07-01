@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SSO.APP.SPRAWL.001
+name: Identity Center Must Not Have Excessive Applications With Account Access
+description: >
+  Multiple IAM Identity Center applications have sso:account:access
+  scope enabled. Each application is a separate impersonation vector
+  — a distinct entry point for credential brokering into any account
+  and role. More applications with account access means more code
+  paths to audit, more Lambda functions or services that can trigger
+  impersonation, and more governance surface area. A single
+  application with account access is a deliberate architectural
+  choice; multiple applications with account access is sprawl.
+domain: identity
+severity: medium
+scope: compound
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - iam
+  - sso
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sso_instance
+params:
+  attack_stage: discovery
+observation_fields:
+  - identity.kind
+  - identity.sso.account_access_app_count
+remediation:
+  description: >
+    Multiple Identity Center applications have sso:account:access
+    scope. Each is a separate impersonation vector requiring
+    independent governance.
+  action: >
+    Consolidate account access scope to the minimum number of
+    applications that genuinely need to assume roles on behalf of
+    users. Remove sso:account:access from applications that only
+    need authentication. Audit each application's purpose and
+    whether it requires credential brokering.
+  example: |
+    {
+      "identity": {
+        "kind": "sso_instance",
+        "sso": {
+          "account_access_app_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: sso_instance
+    - field: properties.identity.sso.account_access_app_count
+      op: gt
+      value: 3

@@ -1180,6 +1180,21 @@ Principals with sqs:AddPermission can modify an SQS queue's resource-based polic
 
 ---
 
+### CTL.IAM.ESCALATE.SSOOAUTH.001
+
+**Principal Must Not Escalate via sso-oauth:CreateTokenWithIAM**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
+
+An IAM principal has sso-oauth:CreateTokenWithIAM permission. This is the IAM-side gate for IAM Identity Center application impersonation — it allows the principal's compute (Lambda, ECS, EC2) to exchange an IdP token for SSO credentials on behalf of any user who authenticates to an Identity Center application. Combined with an application that has sso:account:access scope, this permission enables organization-wide privilege escalation: the compute can call GetRoleCredentials to assume any role the authenticated user has access to, in any account. The permission name suggests narrow SSO functionality; its actual effect is user impersonation across the entire organization.
+
+**Remediation:** Remove sso-oauth:CreateTokenWithIAM from the principal's policies unless the principal's compute explicitly needs to broker user credentials. If the permission is required, scope the Resource to the specific application ARN that needs it — never use Resource: *. Audit which applications have sso:account:access scope to understand the blast radius.
+
+---
+
 ### CTL.IAM.ESCALATE.STARTBUILD.001
 
 **Principal Must Not Escalate via CodeBuild Source Injection**
@@ -2699,6 +2714,51 @@ Role trust policy does not require sts:SourceIdentity. In role chaining (A assum
 
 ---
 
+### CTL.IAM.SSO.APP.ACCOUNTACCESS.001
+
+**Identity Center Application Must Not Have Account Access Scope**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5, NHI6; soc2: CC6.1;
+
+An IAM Identity Center application has the sso:account:access scope enabled. This grants the application the ability to call ListAccounts, ListAccountRoles, and GetRoleCredentials on behalf of any authenticated user — effectively impersonating users into any account and role they have access to. The application's effective permissions become the union of every authenticated user's permissions across the entire organization. A Lambda function with a minimal execution role that has this scope can assume AdministratorAccess in every account — on behalf of any user who signs in. One misconfigured application creates organization-wide privilege escalation.
+
+**Remediation:** Review whether this application requires account access scope. If the application only needs to authenticate users (not assume roles on their behalf), remove the sso:account:access scope. AWS currently provides no mechanism to scope which accounts or roles an application can impersonate into — the access is all-or- nothing. Restrict which users can authenticate to the application via assignment configuration.
+
+---
+
+### CTL.IAM.SSO.APP.ASSIGNMENT.001
+
+**Identity Center Application Must Require User Assignment**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2, AC-6; soc2: CC6.1;
+
+An IAM Identity Center application does not require user assignment — any user in the Identity Center directory can authenticate to it. When assignment is not required, the application is accessible to the entire directory population. Combined with sso:account:access scope, this means any user in the organization can trigger user impersonation through the application. Even without account access scope, an unassigned application expands the attack surface by allowing any compromised directory account to access the application's resources.
+
+**Remediation:** Enable assignment required on the application via PutApplicationAssignmentConfiguration. Then explicitly assign only the users and groups that need access to the application.
+
+---
+
+### CTL.IAM.SSO.APP.SPRAWL.001
+
+**Identity Center Must Not Have Excessive Applications With Account Access**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.1;
+
+Multiple IAM Identity Center applications have sso:account:access scope enabled. Each application is a separate impersonation vector — a distinct entry point for credential brokering into any account and role. More applications with account access means more code paths to audit, more Lambda functions or services that can trigger impersonation, and more governance surface area. A single application with account access is a deliberate architectural choice; multiple applications with account access is sprawl.
+
+**Remediation:** Consolidate account access scope to the minimum number of applications that genuinely need to assume roles on behalf of users. Remove sso:account:access from applications that only need authentication. Audit each application's purpose and whether it requires credential brokering.
+
+---
+
 ### CTL.IAM.SSO.LEGACY.001
 
 **Legacy IAM Users Must Not Coexist with SSO**
@@ -2741,6 +2801,21 @@ MFA is not enforced at the AWS Identity Center level. MFA enforcement may be del
 An AWS IAM Identity Center permission set includes AdministratorAccess. Any user or group assigned this permission set gets full admin access to the assigned accounts. SSO makes this easy to configure and hard to notice — one permission set, one group assignment, organization-wide admin.
 
 **Remediation:** Replace the AdministratorAccess policy with scoped permission sets that grant only the permissions needed for the role. Use separate permission sets for different job functions. Reserve admin access for break-glass scenarios with time-limited elevation.
+
+---
+
+### CTL.IAM.SSO.PERMSET.SESSION.001
+
+**SSO Permission Set Session Duration Must Be Bounded**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-12; soc2: CC6.1;
+
+An IAM Identity Center permission set has a session duration exceeding the recommended threshold. Long session durations extend the window during which credentials are valid — including credentials obtained through the CreateTokenWithIAM impersonation flow. The Identity Center default is 1 hour but permission sets can be configured up to 12 hours. A 12-hour session on a permission set flagged by CTL.IAM.SSO.PERMSET.ADMIN.001 (AdministratorAccess) means impersonated admin credentials remain valid for 12 hours after the initial token exchange.
+
+**Remediation:** Reduce session duration to 4 hours or less. For permission sets with AdministratorAccess or broad privileges, consider 1 hour. Shorter sessions force re-authentication, limiting the blast radius of credential theft through the impersonation feature.
 
 ---
 

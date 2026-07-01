@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SSO.PERMSET.SESSION.001
+name: SSO Permission Set Session Duration Must Be Bounded
+description: >
+  An IAM Identity Center permission set has a session duration
+  exceeding the recommended threshold. Long session durations
+  extend the window during which credentials are valid — including
+  credentials obtained through the CreateTokenWithIAM impersonation
+  flow. The Identity Center default is 1 hour but permission sets
+  can be configured up to 12 hours. A 12-hour session on a
+  permission set flagged by CTL.IAM.SSO.PERMSET.ADMIN.001
+  (AdministratorAccess) means impersonated admin credentials remain
+  valid for 12 hours after the initial token exchange.
+domain: identity
+severity: medium
+scope: compound
+compliance:
+  nist_800_53_r5: "AC-12"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - iam
+  - sso
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sso_permission_set
+params:
+  attack_stage: persistence
+observation_fields:
+  - identity.kind
+  - identity.sso.session_duration_hours
+remediation:
+  description: >
+    SSO permission set session duration exceeds recommended threshold.
+    Long sessions extend the window for credential misuse, especially
+    on permission sets flagged by CTL.IAM.SSO.PERMSET.ADMIN.001.
+  action: >
+    Reduce session duration to 4 hours or less. For permission sets
+    with AdministratorAccess or broad privileges, consider 1 hour.
+    Shorter sessions force re-authentication, limiting the blast
+    radius of credential theft through the impersonation feature.
+  example: |
+    {
+      "identity": {
+        "kind": "sso_permission_set",
+        "sso": {
+          "session_duration_hours": 4
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: sso_permission_set
+    - field: properties.identity.sso.session_duration_hours
+      op: gt
+      value: 4

@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.SSOOAUTH.001
+name: Principal Must Not Escalate via sso-oauth:CreateTokenWithIAM
+description: >
+  An IAM principal has sso-oauth:CreateTokenWithIAM permission. This
+  is the IAM-side gate for IAM Identity Center application
+  impersonation — it allows the principal's compute (Lambda, ECS,
+  EC2) to exchange an IdP token for SSO credentials on behalf of any
+  user who authenticates to an Identity Center application. Combined
+  with an application that has sso:account:access scope, this
+  permission enables organization-wide privilege escalation: the
+  compute can call GetRoleCredentials to assume any role the
+  authenticated user has access to, in any account. The permission
+  name suggests narrow SSO functionality; its actual effect is user
+  impersonation across the entire organization.
+domain: identity
+severity: high
+scope: compound
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - sso
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_user
+  - aws_iam_role
+params:
+  attack_stage: privilege_escalation
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: organization
+    multiplier: 2.5
+observation_fields:
+  - identity.kind
+  - identity.escalation.sso_oauth_create_token.present
+  - identity.escalation.sso_oauth_create_token.target_application
+remediation:
+  description: >
+    IAM principal has sso-oauth:CreateTokenWithIAM permission,
+    enabling the impersonation flow. Combined with an Identity Center
+    application that has sso:account:access scope
+    (CTL.IAM.SSO.APP.ACCOUNTACCESS.001), this creates an
+    organization-wide privilege escalation path.
+  action: >
+    Remove sso-oauth:CreateTokenWithIAM from the principal's
+    policies unless the principal's compute explicitly needs to
+    broker user credentials. If the permission is required, scope
+    the Resource to the specific application ARN that needs it —
+    never use Resource: *. Audit which applications have
+    sso:account:access scope to understand the blast radius.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "escalation": {
+          "sso_oauth_create_token": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.sso_oauth_create_token.present
+      op: eq
+      value: true

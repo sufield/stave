@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SSO.APP.ASSIGNMENT.001
+name: Identity Center Application Must Require User Assignment
+description: >
+  An IAM Identity Center application does not require user
+  assignment — any user in the Identity Center directory can
+  authenticate to it. When assignment is not required, the
+  application is accessible to the entire directory population.
+  Combined with sso:account:access scope, this means any user in
+  the organization can trigger user impersonation through the
+  application. Even without account access scope, an unassigned
+  application expands the attack surface by allowing any
+  compromised directory account to access the application's
+  resources.
+domain: identity
+severity: high
+scope: compound
+compliance:
+  nist_800_53_r5: "AC-2, AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - sso
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sso_application
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.kind
+  - identity.sso.app.assignment_required
+remediation:
+  description: >
+    Identity Center application does not require user assignment.
+    Any user in the directory can authenticate to it, broadening the
+    attack surface. When this application also has sso:account:access
+    scope (CTL.IAM.SSO.APP.ACCOUNTACCESS.001), any directory user
+    can trigger organization-wide impersonation.
+  action: >
+    Enable assignment required on the application via
+    PutApplicationAssignmentConfiguration. Then explicitly assign
+    only the users and groups that need access to the application.
+  example: |
+    aws sso-admin put-application-assignment-configuration \
+      --application-arn <APP_ARN> \
+      --assignment-required
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: sso_application
+    - field: properties.identity.sso.app.assignment_required
+      op: eq
+      value: false
