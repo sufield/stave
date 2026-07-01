@@ -1,9 +1,7 @@
-// Package exemptionsuggest analyzes assessment history to identify
-// findings that have been open long enough to warrant a formal
-// governance decision — either fix, formally accept risk, or escalate.
 package exemptionsuggest
 
 import (
+	"cmp"
 	"fmt"
 	"slices"
 	"time"
@@ -224,7 +222,10 @@ func Suggest(in Input) *Result {
 				}
 				return 1
 			}
-			return 0
+			if n := cmp.Compare(string(a.ControlID), string(b.ControlID)); n != 0 {
+				return n
+			}
+			return cmp.Compare(string(a.AssetID), string(b.AssetID))
 		})
 	}
 	sortCandidates(oscillating)

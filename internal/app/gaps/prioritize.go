@@ -45,10 +45,16 @@ func Prioritize(gaps []FieldGap) {
 			return 1
 		}
 		// 6. Stable alphabetical fallback.
-		if a.PropertyPath < b.PropertyPath {
+		if a.PropertyPath != b.PropertyPath {
+			if a.PropertyPath < b.PropertyPath {
+				return -1
+			}
+			return 1
+		}
+		if a.AssetType < b.AssetType {
 			return -1
 		}
-		if a.PropertyPath > b.PropertyPath {
+		if a.AssetType > b.AssetType {
 			return 1
 		}
 		return 0

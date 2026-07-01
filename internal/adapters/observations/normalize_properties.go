@@ -60,6 +60,9 @@ func normalizeValue(v any) any {
 	val := reflect.ValueOf(v)
 	switch val.Kind() {
 	case reflect.Map:
+		if val.IsNil() {
+			return nil
+		}
 		out := make(map[string]any, val.Len())
 		iter := val.MapRange()
 		for iter.Next() {
@@ -67,7 +70,16 @@ func normalizeValue(v any) any {
 			out[k] = normalizeValue(iter.Value().Interface())
 		}
 		return out
-	case reflect.Slice, reflect.Array:
+	case reflect.Slice:
+		if val.IsNil() {
+			return nil
+		}
+		out := make([]any, val.Len())
+		for i := 0; i < val.Len(); i++ {
+			out[i] = normalizeValue(val.Index(i).Interface())
+		}
+		return out
+	case reflect.Array:
 		out := make([]any, val.Len())
 		for i := 0; i < val.Len(); i++ {
 			out[i] = normalizeValue(val.Index(i).Interface())
