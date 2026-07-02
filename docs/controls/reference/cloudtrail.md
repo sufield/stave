@@ -370,6 +370,21 @@ CloudTrail logs must be encrypted at rest using a KMS customer-managed key. Defa
 
 ---
 
+### CTL.CLOUDTRAIL.EVENTSELECTORS.001
+
+**CloudTrail Must Use Advanced Event Selectors for Granular Logging**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-3; soc2: CC7.1;
+
+CloudTrail trails should use advanced event selectors instead of basic event selectors. Basic selectors provide coarse control (all management events, all/none S3 data events). Advanced selectors allow per-resource-type filtering, field-level conditions, and exclude high-volume read operations that add cost without security value. A trail with only basic selectors either logs too much (cost) or too little (gaps).
+
+**Remediation:** Convert the trail to use advanced event selectors with put-event-selectors --advanced-event-selectors. Define field selectors for readOnly, resources.type, and resources.ARN to control exactly which data events are logged.
+
+---
+
 ### CTL.CLOUDTRAIL.GHOST.CWLOGS.001
 
 **CloudTrail Trail CloudWatch Logs Group Does Not Exist**

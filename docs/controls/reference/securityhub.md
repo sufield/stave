@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.SECURITYHUB.AUTOENABLE.001
+
+**Security Hub Must Auto-Enable for New Organization Accounts**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Security Hub must be configured to auto-enable for new member accounts in the organization. Without auto-enable, newly created or invited accounts have no Security Hub coverage until manually configured — a gap that can persist indefinitely if onboarding procedures are missed.
+
+**Remediation:** Enable auto-enable: aws securityhub update-organization-configuration --auto-enable
+
+---
+
 ### CTL.SECURITYHUB.ENABLED.001
 
 **AWS Security Hub Must Be Enabled**
@@ -46,6 +61,21 @@ The observation snapshot is missing required Security Hub properties.
 Safety mechanism integrity control. Checks that security guardrails are actively enforcing, not just present.
 
 **Remediation:** Review the specific guardrail identified in this finding and restore it to an enforcing state.
+
+---
+
+### CTL.SECURITYHUB.STANDARDS.NONE.001
+
+**Security Hub Must Have Security Standards Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-4; pci_dss_v4.0: 11.3.1; soc2: CC7.1;
+
+Security Hub must have at least one security standard enabled (AWS Foundational Security Best Practices, CIS Benchmarks, or PCI DSS). Security Hub without standards is a findings aggregator with no baseline — it collects third-party findings but performs no continuous posture evaluation. Standards provide automated security checks that run continuously against account resources.
+
+**Remediation:** Enable security standards in Security Hub: aws securityhub batch-enable-standards. At minimum enable AWS Foundational Security Best Practices (FSBP).
 
 ---
 

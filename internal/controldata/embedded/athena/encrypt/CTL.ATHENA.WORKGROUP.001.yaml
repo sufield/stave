@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.ATHENA.WORKGROUP.001
+name: Athena Workgroups Must Enforce Query Result Location
+description: >
+  Athena workgroups must enforce a specific query result location
+  and override client-side settings. Without this enforcement,
+  individual users can direct query results to arbitrary S3 buckets
+  outside the organization's control, potentially exfiltrating
+  data or bypassing encryption and access logging.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+  ccm_v4: ["DSP-13"]
+scope_tags: [aws, athena]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - database.kind
+  - database.workgroup.enforce_configuration
+remediation:
+  description: >
+    Athena workgroup does not enforce its configuration. Users can
+    override the result location and direct output to arbitrary
+    S3 buckets.
+  action: >
+    Enable enforce workgroup configuration in the workgroup settings.
+    This forces all queries to use the workgroup's output location
+    and encryption settings.
+  example: |
+    {
+      "database": {
+        "kind": "athena_workgroup",
+        "workgroup": {
+          "enforce_configuration": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: athena_workgroup
+    - field: properties.database.workgroup.enforce_configuration
+      op: eq
+      value: false
+tests:
+  - name: workgroup without enforcement fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:athena:us-east-1:111122223333:workgroup/open-wg"
+      asset_type: aws_athena_workgroup
+      vendor: aws
+      properties:
+        database:
+          kind: athena_workgroup
+          workgroup:
+            enforce_configuration: false
+  - name: workgroup with enforcement passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:athena:us-east-1:111122223333:workgroup/locked-wg"
+      asset_type: aws_athena_workgroup
+      vendor: aws
+      properties:
+        database:
+          kind: athena_workgroup
+          workgroup:
+            enforce_configuration: true

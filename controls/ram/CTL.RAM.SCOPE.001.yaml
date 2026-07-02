@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.RAM.SCOPE.001
+name: RAM Resource Shares Must Restrict Resource Types
+description: >
+  RAM resource shares must restrict the types of resources shared to
+  only those explicitly required. Unrestricted sharing exposes all
+  shareable resource types (subnets, Transit Gateways, Resolver rules,
+  License Manager configs, Outposts, etc.) when only a subset is
+  needed. Each additional shared resource type extends the blast
+  radius of the share.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ram_share
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    RAM resource share has overly broad resource type permissions.
+  action: >
+    Review shared resource types and remove any not explicitly needed.
+    Use separate shares for different resource types to limit scope.
+  example: |
+    {
+      "governance": {
+        "ram": {
+          "overly_broad_resource_types": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.ram.overly_broad_resource_types
+      op: eq
+      value: true
+tests:
+  - name: share with overly broad resource types fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ram:us-east-1:111122223333:resource-share/rs-broad"
+      asset_type: aws_ram_share
+      vendor: aws
+      properties:
+        governance:
+          ram:
+            share_name: "broad-share"
+            overly_broad_resource_types: true
+            shared_resource_types:
+              - "ec2:Subnet"
+              - "ec2:TransitGateway"
+              - "route53resolver:ResolverRule"
+              - "license-manager:LicenseConfiguration"
+  - name: share with restricted resource types passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ram:us-east-1:111122223333:resource-share/rs-scoped"
+      asset_type: aws_ram_share
+      vendor: aws
+      properties:
+        governance:
+          ram:
+            share_name: "subnet-share"
+            overly_broad_resource_types: false
+            shared_resource_types:
+              - "ec2:Subnet"

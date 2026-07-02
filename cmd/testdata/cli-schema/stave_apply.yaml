@@ -5,6 +5,8 @@ description: |-
 
     Modes:
       Default        Evaluate observations against controls in a project directory.
+      --auto         Discover→plan→evaluate pipeline. Requires --services or --pack.
+                     Prints a severity-weighted plan to stderr, then evaluates.
       --dry-run      Run readiness checks only, without evaluating controls.
       --profile      Evaluate a bundled observations file against a built-in control pack.
                      Requires --input. Example: stave apply --profile aws-s3 --input obs.json
@@ -59,6 +61,10 @@ options:
       usage: Fail if no snapshot newer than this duration (e.g. 48h)
     - name: assets
       usage: asset sensitivity classification manifest YAML
+    - name: auto
+      default_value: "false"
+      usage: |
+        Run discover→plan→evaluate: resolve services, show severity plan, evaluate in weighted order
     - name: baseline
       usage: SARIF baseline file for baseline state comparison
     - name: bucket-allowlist
@@ -204,6 +210,9 @@ inherited_options:
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
 example: |4-
+      # Guided evaluation: discover services, plan severity order, evaluate
+      stave apply --auto --services iam,s3,lambda -o ./snapshots/
+
       # Standard evaluation
       stave apply --controls ./controls --observations ./obs --format json
 

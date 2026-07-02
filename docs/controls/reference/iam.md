@@ -99,6 +99,21 @@ IAM Access Analyzer must be in ACTIVE status and findings must be reviewed withi
 
 ---
 
+### CTL.IAM.ANALYZER.ORG.001
+
+**IAM Access Analyzer Must Be Configured at Organization Level**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; scs_c02: 12.2; soc2: CC6.1;
+
+IAM Access Analyzer should include an organization-level analyzer (type ORGANIZATION), not just account-level analyzers. An account- level analyzer only detects access from outside that specific account. An organization-level analyzer detects access from outside the entire organization — including cross-account access between member accounts that bypasses intended boundaries. Without an org-level analyzer, a role trusted by another member account looks "internal" to the account analyzer but may violate organizational access policy.
+
+**Remediation:** Create an organization-level Access Analyzer from the management or delegated admin account: aws accessanalyzer create-analyzer --analyzer-name org-analyzer --type ORGANIZATION.
+
+---
+
 ### CTL.IAM.BOUNDARY.001
 
 **IAM Roles Must Have Permissions Boundary**
@@ -2201,6 +2216,21 @@ A customer-managed IAM policy has non-default versions containing broader permis
 
 ---
 
+### CTL.IAM.RCP.DENY.EXTERNAL.001
+
+**RCP Must Restrict External Principal Access to Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; scs_c02: 1.2; soc2: CC6.1;
+
+Resource Control Policies (RCPs) must include a policy that restricts external principals from accessing organization resources. Unlike SCPs (which constrain what member account principals can do), RCPs constrain who can access resources regardless of resource-based policies. Without an external-access-deny RCP, any S3 bucket policy or IAM role trust policy that grants access to an external account is effective — RCPs are the only mechanism that can override resource-based policies at the organizational level.
+
+**Remediation:** Create an RCP that denies access from principals outside the organization using aws:PrincipalOrgID condition. Attach it to the organization root or target OUs.
+
+---
+
 ### CTL.IAM.RCP.TAGAUTH.SESSION.001
 
 **RCP Must Block Exempt Session-Tag Injection (Two Separate Statements)**
@@ -2756,6 +2786,21 @@ An IAM Identity Center application does not require user assignment — any user
 Multiple IAM Identity Center applications have sso:account:access scope enabled. Each application is a separate impersonation vector — a distinct entry point for credential brokering into any account and role. More applications with account access means more code paths to audit, more Lambda functions or services that can trigger impersonation, and more governance surface area. A single application with account access is a deliberate architectural choice; multiple applications with account access is sprawl.
 
 **Remediation:** Consolidate account access scope to the minimum number of applications that genuinely need to assume roles on behalf of users. Remove sso:account:access from applications that only need authentication. Audit each application's purpose and whether it requires credential brokering.
+
+---
+
+### CTL.IAM.SSO.DELEGATED.ADMIN.001
+
+**Identity Center Must Use Delegated Administration**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); scs_c02: 3.1; soc2: CC6.1;
+
+IAM Identity Center should be administered from a delegated administrator account, not the management account. Running IC from the management account means IC administrators also have implicit access to organizational management operations. Delegating IC administration to a dedicated security account follows least- privilege and reduces the blast radius of compromised IC admin credentials.
+
+**Remediation:** Register a delegated administrator account for IAM Identity Center using aws organizations register-delegated-administrator --account-id <security-account> --service-principal sso.amazonaws.com.
 
 ---
 

@@ -119,12 +119,17 @@ func stringifyValue(v any) any {
 			return rv.Uint()
 		case reflect.Float32, reflect.Float64:
 			return rv.Float()
-		case reflect.Slice, reflect.Array:
-			// Concrete typed slices like []map[string]any or
-			// []asset.CloudIdentity do not match `case []any` above,
-			// but we still need to walk their elements so any
-			// named-string types nested inside (e.g. asset.ID,
-			// kernel.AssetType) are converted before CEL sees them.
+		case reflect.Slice:
+			if rv.IsNil() {
+				return nil
+			}
+			n := rv.Len()
+			cp := make([]any, n)
+			for i := range n {
+				cp[i] = stringifyValue(rv.Index(i).Interface())
+			}
+			return cp
+		case reflect.Array:
 			n := rv.Len()
 			cp := make([]any, n)
 			for i := range n {
@@ -132,6 +137,9 @@ func stringifyValue(v any) any {
 			}
 			return cp
 		case reflect.Map:
+			if rv.IsNil() {
+				return nil
+			}
 			n := rv.Len()
 			out := make(map[string]any, n)
 			iter := rv.MapRange()

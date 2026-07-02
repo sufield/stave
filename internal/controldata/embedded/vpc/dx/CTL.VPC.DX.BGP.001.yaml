@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.DX.BGP.001
+name: Direct Connect BGP Must Use Authentication
+description: >
+  Direct Connect virtual interfaces must configure BGP MD5
+  authentication. Without BGP authentication, an attacker on the same
+  physical link or co-location facility can inject BGP route
+  advertisements, redirecting traffic through attacker-controlled
+  paths. BGP MD5 authentication prevents unauthorized route injection.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_dx_virtual_interface
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    Direct Connect virtual interface does not use BGP MD5
+    authentication. Route injection is possible.
+  action: >
+    Configure BGP authentication key on the virtual interface:
+    aws directconnect create-private-virtual-interface
+    --connection-id <id> --new-private-virtual-interface
+    authKey=<md5-key>,...
+  example: |
+    {
+      "network": {
+        "kind": "dx_virtual_interface",
+        "bgp": {
+          "auth_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: dx_virtual_interface
+    - field: properties.network.bgp.auth_enabled
+      op: eq
+      value: false
+tests:
+  - name: VIF without BGP auth fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:directconnect:us-east-1:111122223333:dxvif/dxvif-abc123"
+      asset_type: aws_dx_virtual_interface
+      vendor: aws
+      properties:
+        network:
+          kind: dx_virtual_interface
+          bgp:
+            auth_enabled: false
+  - name: VIF with BGP auth passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:directconnect:us-east-1:111122223333:dxvif/dxvif-def456"
+      asset_type: aws_dx_virtual_interface
+      vendor: aws
+      properties:
+        network:
+          kind: dx_virtual_interface
+          bgp:
+            auth_enabled: true

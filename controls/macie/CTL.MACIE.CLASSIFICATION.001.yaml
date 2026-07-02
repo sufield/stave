@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.MACIE.CLASSIFICATION.001
+name: Macie Must Have Automated Sensitive Data Discovery Enabled
+description: >
+  Macie automated sensitive data discovery must be enabled. Basic
+  Macie enablement (CTL.MACIE.ENABLED.001) activates the service but
+  does not start scanning. Automated discovery continuously samples
+  S3 objects across the account to find PII, financial data, and
+  credentials without requiring manual classification job creation.
+  Without automated discovery, sensitive data detection depends on
+  manually-created jobs that may miss newly created buckets.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "RA-5"
+  soc2: "CC7.1"
+  pci_dss_v4.0: "3.4.1"
+  ccm_v4: ["DSP-17"]
+scope_tags: [aws, macie]
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_macie_config
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Macie automated sensitive data discovery is not enabled. Sensitive
+    data in S3 goes undetected unless manual jobs are created.
+  action: >
+    Enable automated discovery:
+    aws macie2 update-automated-discovery-configuration --status ENABLED
+  example: |
+    {
+      "governance": {
+        "kind": "macie_config",
+        "automated_discovery": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: macie_config
+    - field: properties.governance.automated_discovery.enabled
+      op: eq
+      value: false
+tests:
+  - name: automated discovery disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:macie2:us-east-1:111122223333:config"
+      asset_type: aws_macie_config
+      vendor: aws
+      properties:
+        governance:
+          kind: macie_config
+          automated_discovery:
+            enabled: false
+  - name: automated discovery enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:macie2:us-east-1:111122223333:config"
+      asset_type: aws_macie_config
+      vendor: aws
+      properties:
+        governance:
+          kind: macie_config
+          automated_discovery:
+            enabled: true

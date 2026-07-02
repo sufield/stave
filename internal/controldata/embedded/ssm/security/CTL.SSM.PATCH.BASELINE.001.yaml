@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.SSM.PATCH.BASELINE.001
+name: SSM Patch Manager Must Use a Custom Patch Baseline
+description: >
+  SSM Patch Manager should use a custom patch baseline, not the AWS
+  default. The default baseline auto-approves Critical and Important
+  patches after 7 days but excludes all other classifications. A
+  custom baseline lets the organization define which patches to
+  approve, set approval delays per severity, and include patches
+  the default baseline ignores (e.g., Moderate, Low, application-
+  level patches).
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "CC7.1"
+  ccm_v4: ["TVM-02"]
+  scs_c02: "8.1"
+scope_tags: [aws, ssm]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    SSM Patch Manager uses the default patch baseline. Patch
+    approval policy is not tailored to organizational requirements.
+  action: >
+    Create a custom patch baseline with approval rules matching
+    your patching policy. Set it as the default for the relevant
+    patch group. Define maintenance windows for automated patching.
+  example: |
+    {
+      "governance": {
+        "kind": "ssm_patch_baseline",
+        "compliance": {
+          "is_custom_baseline": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: ssm_patch_baseline
+    - field: properties.governance.compliance.is_custom_baseline
+      op: eq
+      value: false

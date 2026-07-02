@@ -619,6 +619,21 @@ AWS Config remediation action references an SSM Automation document that has bee
 
 ---
 
+### CTL.CONFIG.REMEDIATION.NONE.001
+
+**AWS Config Must Have At Least One Remediation Action Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: IR-4; scs_c02: 12.1; soc2: CC7.4;
+
+AWS Config should have at least one automatic remediation action configured across its rules. Config without remediation is detect- only — it identifies non-compliant resources but takes no corrective action. For incident response automation, Config remediation actions (via SSM Automation documents) provide the mechanism to automatically correct security drift without manual intervention.
+
+**Remediation:** Configure remediation actions on critical Config rules using SSM Automation documents. Start with high-severity rules like s3-bucket-public-read-prohibited, encrypted-volumes, and iam-password-policy.
+
+---
+
 ### CTL.CONFIG.REMEDIATION.RETRIES.EXHAUSTED.001
 
 **Config Remediation Retries Exhausted**

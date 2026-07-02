@@ -112,6 +112,36 @@ Inspired by NCC Group "Time as an Attack Surface" white paper by Andy Davis.
 
 ---
 
+### CTL.VPC.DNS.HOSTNAMES.001
+
+**VPC Must Have DNS Hostnames Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-22; soc2: CC6.6;
+
+VPC does not have DNS hostnames (EnableDnsHostnames) enabled. Without DNS hostnames, EC2 instances do not receive public DNS hostnames, preventing external resolution to their public IPs and breaking patterns that depend on hostname-based identity (ACM certificate validation, some load balancer health checks). Required for VPC endpoints to generate private DNS entries.
+
+**Remediation:** Enable DNS hostnames on the VPC.
+
+---
+
+### CTL.VPC.DNS.RESOLUTION.001
+
+**VPC Must Have DNS Resolution Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-22; soc2: CC6.6;
+
+VPC does not have DNS resolution (EnableDnsSupport) enabled. Without DNS resolution, instances cannot resolve public DNS hostnames to private IP addresses within the VPC, breaking VPC endpoint connectivity and service discovery. Required for VPC endpoints, PrivateLink, and Route 53 Resolver integration.
+
+**Remediation:** Enable DNS resolution on the VPC.
+
+---
+
 ### CTL.VPC.DNSFIREWALL.ENABLED.001
 
 **VPC Does Not Have DNS Firewall**
@@ -142,6 +172,21 @@ DNS Firewall is associated with the VPC but the rule group does not include AWS 
 
 ---
 
+### CTL.VPC.DX.BGP.001
+
+**Direct Connect BGP Must Use Authentication**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-8; soc2: CC6.6;
+
+Direct Connect virtual interfaces must configure BGP MD5 authentication. Without BGP authentication, an attacker on the same physical link or co-location facility can inject BGP route advertisements, redirecting traffic through attacker-controlled paths. BGP MD5 authentication prevents unauthorized route injection.
+
+**Remediation:** Configure BGP authentication key on the virtual interface: aws directconnect create-private-virtual-interface --connection-id <id> --new-private-virtual-interface authKey=<md5-key>,...
+
+---
+
 ### CTL.VPC.DX.ENCRYPTION.001
 
 **Direct Connect Without Encryption**
@@ -154,6 +199,36 @@ DNS Firewall is associated with the VPC but the rule group does not include AWS 
 Direct Connect connection carries unencrypted traffic. Neither a site-to-site VPN overlay nor MACsec is configured. Direct Connect is a dedicated physical link — not shared with other customers — but the traffic on it is plaintext by default. Anyone with physical access to the fiber path (datacenter staff, transit providers, co-location personnel) can tap the connection and read traffic. Either a VPN over the Direct Connect or MACsec provides confidentiality; the control passes if either is configured.
 
 **Remediation:** Add encryption to the Direct Connect path. Either (a) configure a site-to-site VPN over the Direct Connect connection and route all traffic through the VPN, or (b) enable MACsec on the Direct Connect ports (supported on 10 Gbps and 100 Gbps dedicated connections). VPN overlay is more widely supported; MACsec offers lower latency but requires compatible hardware on both ends.
+
+---
+
+### CTL.VPC.DX.GATEWAY.001
+
+**Direct Connect Gateway Must Have Virtual Interface Associations**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-8; soc2: CC6.1;
+
+A Direct Connect gateway without virtual interface (VIF) associations is an unused resource consuming a dedicated physical connection. An unassociated gateway may indicate incomplete setup (traffic still routes over the internet) or a decommissioned circuit that was not cleaned up.
+
+**Remediation:** Associate a virtual interface with the gateway, or delete the unused gateway. Use aws directconnect create-private-virtual-interface to create a VIF, or delete-direct-connect-gateway to remove it.
+
+---
+
+### CTL.VPC.DX.RESILIENCY.001
+
+**Direct Connect Must Have Redundant Connections**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-8; scs_c02: 9.1; soc2: A1.2;
+
+AWS Direct Connect should have at least two connections for resiliency. A single DX connection is a single point of failure — if the connection, port, or the DX location itself fails, all hybrid connectivity is lost. AWS recommends at minimum two connections at different DX locations for production workloads. Without redundancy, a physical failure at one location takes down the entire hybrid network path.
+
+**Remediation:** Provision a second Direct Connect connection at a different DX location. Configure BGP failover between the two connections. Consider using DX SiteLink for multi-site resiliency.
 
 ---
 

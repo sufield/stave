@@ -20,3 +20,33 @@ AWS Resource Access Manager (RAM) shares resources (subnets, Transit Gateways, R
 
 ---
 
+### CTL.RAM.PERMISSION.001
+
+**RAM Resource Shares Must Use Specific Permissions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.2; soc2: CC6.3;
+
+RAM resource shares must use specific, granular permissions rather than default full access. When a resource share uses default permissions, the consuming account gets the broadest possible access to the shared resource. Custom permissions restrict actions to only what the consumer needs.
+
+**Remediation:** Replace the default permission with a custom managed permission that grants only the specific actions required. Use aws ram create-permission to define a scoped permission, then associate it with the resource share.
+
+---
+
+### CTL.RAM.SCOPE.001
+
+**RAM Resource Shares Must Restrict Resource Types**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.6;
+
+RAM resource shares must restrict the types of resources shared to only those explicitly required. Unrestricted sharing exposes all shareable resource types (subnets, Transit Gateways, Resolver rules, License Manager configs, Outposts, etc.) when only a subset is needed. Each additional shared resource type extends the blast radius of the share.
+
+**Remediation:** Review shared resource types and remove any not explicitly needed. Use separate shares for different resource types to limit scope.
+
+---
+

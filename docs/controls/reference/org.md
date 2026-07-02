@@ -20,3 +20,18 @@ AWS Organizations must have a Service Control Policy that restricts resource cre
 
 ---
 
+### CTL.ORG.TRUSTEDACCESS.001
+
+**AWS Organizations Trusted Access Must Be Reviewed**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.3;
+
+AWS Organizations trusted access allows AWS services to perform operations across all accounts in the organization. Each enabled trusted access service (CloudTrail, GuardDuty, Config, etc.) gains cross-account permissions. Unreviewed trusted access means services may have organization-wide permissions that were enabled for a project and never revoked.
+
+**Remediation:** Review all enabled trusted access services. Disable any that are no longer needed. Use aws organizations list-aws-service-access-for-organization to list enabled services and disable-aws-service-access to revoke.
+
+---
+

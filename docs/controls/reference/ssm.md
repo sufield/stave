@@ -65,6 +65,21 @@ SSM Parameter Store holds database passwords, API keys, certificates, and other 
 
 ---
 
+### CTL.SSM.PATCH.BASELINE.001
+
+**SSM Patch Manager Must Use a Custom Patch Baseline**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; scs_c02: 8.1; soc2: CC7.1;
+
+SSM Patch Manager should use a custom patch baseline, not the AWS default. The default baseline auto-approves Critical and Important patches after 7 days but excludes all other classifications. A custom baseline lets the organization define which patches to approve, set approval delays per severity, and include patches the default baseline ignores (e.g., Moderate, Low, application- level patches).
+
+**Remediation:** Create a custom patch baseline with approval rules matching your patching policy. Set it as the default for the relevant patch group. Define maintenance windows for automated patching.
+
+---
+
 ### CTL.SSM.PATCH.COMPLIANCE.001
 
 **SSM Managed Instances Must Be Patch Compliant**
@@ -77,6 +92,21 @@ SSM Parameter Store holds database passwords, API keys, certificates, and other 
 SSM-managed instances must report patch compliance against defined baselines. Non-compliant instances are missing required security patches.
 
 **Remediation:** Apply missing patches via SSM Patch Manager.
+
+---
+
+### CTL.SSM.PATCH.WINDOW.001
+
+**SSM Patch Manager Must Use Maintenance Windows**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; soc2: CC8.1;
+
+SSM Patch Manager operations must be scheduled through maintenance windows to prevent uncoordinated patching. Without maintenance windows, patches can be applied at arbitrary times — potentially during peak traffic, during change freezes, or simultaneously across all instances without rolling deployment.
+
+**Remediation:** Create a maintenance window: aws ssm create-maintenance-window --name "patch-window" --schedule "cron(0 2 ? * SUN *)" --duration 4 --cutoff 1
 
 ---
 
@@ -122,6 +152,36 @@ SSM Run Command allows executing arbitrary commands on managed EC2 instances. Wi
 AWS Systems Manager Parameter Store parameters that store values in String or StringList type when their path indicates sensitive content are readable by any IAM principal with ssm:GetParameter. SecureString parameters are KMS-encrypted at rest and require kms:Decrypt to read. This control checks the parameter type field — not the parameter value.
 
 **Remediation:** Create a new SecureString parameter with the same value and update all references. SSM does not support changing parameter type in place — you must create a new parameter. Use aws ssm put-parameter --name <path> --type SecureString --value <value> --overwrite.
+
+---
+
+### CTL.SSM.SESSION.ENCRYPT.001
+
+**SSM Session Manager Must Encrypt Sessions with KMS**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-8; soc2: CC6.7;
+
+SSM Session Manager session preferences do not enable KMS encryption. Without KMS encryption, session data traverses the SSM channel without end-to-end encryption beyond the TLS transport layer. KMS encryption adds a customer-managed key layer, ensuring session data at rest in logs is encrypted with a key the account controls.
+
+**Remediation:** Configure the SSM-SessionManagerRunShell document to encrypt sessions with a KMS key.
+
+---
+
+### CTL.SSM.SESSION.LOGGING.001
+
+**SSM Session Manager Must Have Logging Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.2;
+
+SSM Session Manager session preferences do not enable logging to S3 or CloudWatch Logs. Without session logging, interactive shell sessions to EC2 instances leave no audit trail. An attacker or insider who accesses an instance via Session Manager can execute arbitrary commands without detection. Session logging is configured via the SSM-SessionManagerRunShell document.
+
+**Remediation:** Configure the SSM-SessionManagerRunShell document to log sessions to an S3 bucket or CloudWatch Logs log group.
 
 ---
 

@@ -1,237 +1,1162 @@
 # reasoning-spec: fm-060-iam-condition-key-complexity
 # engine: z3
-# trial-fixture: trials/z3-iam-condition-key/input.smt2
+# trial-fixture: trials/z3-iam-condition-key/
 # failure-mode: FM-060 (IAM Condition Key Complexity)
 
 question: >
-  Given an IAM policy with multiple condition operators on overlapping
-  keys, is there a request context (caller ARN, source IP, tags) that
-  satisfies ALL Allow conditions while evading ALL Deny conditions?
-  If SAT, report the witness — the specific (principal, statement,
-  request-context) triple that threads the needle.
+  Given an IAM policy with one or more Condition blocks, do the condition
+  operators and keys interact to produce unintended access? Specifically:
+  are any Allow statements unsatisfiable (dead code), does any request
+  context satisfy all Allow conditions while evading all Deny conditions
+  (deny bypass), and do any condition keys use operators with mismatched
+  semantics on overlapping string domains (operator mismatch)?
 
 context: >
-  AWS IAM condition blocks combine operators (StringEquals,
-  StringNotLike, ArnLike, IpAddress, …) with context keys
-  (aws:PrincipalArn, aws:SourceIp, aws:RequestedRegion, …).
-  Within a single statement, multiple condition operators are
-  AND-joined; multiple values within one operator are OR-joined.
-  Across statements, explicit Deny overrides Allow regardless of
-  order. CEL-based controls can check whether a condition key is
-  present, but cannot prove whether the intersection of an Allow's
-  ArnLike pattern and a Deny's StringNotLike pattern is empty or
-  satisfiable — that requires an SMT solver.
+  CEL controls evaluate individual condition keys: whether a policy uses
+  aws:PrincipalOrgID, whether StringLike is used where StringEquals is
+  intended, whether SourceIp restricts sensitive actions. This is
+  node-level analysis — one condition key, one operator, one verdict.
 
-  Three classes of defect arise from condition key complexity:
+  What CEL structurally cannot do is prove whether COMBINATIONS of
+  condition operators across keys within the same statement or across
+  statements in the same policy interact to produce unintended access.
+  This is a satisfiability problem requiring a constraint solver.
 
-  1. Dead statement: an Allow whose conditions are logically
-     unsatisfiable (e.g., StringEquals "us-east-1" AND
-     StringNotEquals "us-east-1" on the same key). The statement
-     can never fire; a policy author probably made an error.
+  Four problem classes:
 
-  2. Deny bypass: a Deny statement whose condition leaves a
-     gap — a request context that matches the Allow but not the
-     Deny. Example: Deny on StringNotLike "arn:aws:iam::*:role/Admin*"
-     paired with Allow on ArnLike "arn:aws:iam::*:role/*" — any
-     role matching "Admin*" slips through the Deny.
+  1. Dead policy (contradictory conditions): A statement requires
+     aws:PrincipalArn ArnLike "arn:aws:iam::*:role/Admin*" AND
+     aws:PrincipalArn StringNotEquals "arn:aws:iam::*:role/Admin*".
+     The constraints contradict — no request context satisfies both.
+     The statement never fires. It is dead code in the policy,
+     creating a false sense of restriction.
 
-  3. Operator mismatch: different operators on the same key that
-     interact non-obviously. StringEquals vs ArnLike on
-     aws:PrincipalArn, or IpAddress vs StringNotLike on
-     aws:SourceIp — the type semantics differ but both bind the
-     same request-context variable.
+  2. Access leak (unintended satisfying assignments): A Deny statement
+     uses StringNotLike on aws:PrincipalArn to exclude "Admin*"
+     principals from the deny. The author intended to deny non-Admin
+     access, but StringNotLike's semantics mean Admin-matching
+     principals EVADE the deny entirely while still matching an
+     Allow statement's broader ArnLike pattern. The deny has a hole.
 
-input:
-  source: stave export-sir --format smt2 + appended query
-  format: smt-lib
-  fixture: trials/z3-iam-condition-key/input.smt2
+  3. Shadow allow (cross-statement interaction): Statement A allows
+     with condition aws:SourceIp IpAddress 10.0.0.0/8. Statement B
+     denies with condition aws:PrincipalArn ArnLike "...:role/Break*".
+     A principal whose ARN does not match the deny pattern AND whose
+     source IP is in the CIDR gets through. Whether this assignment
+     exists depends on the constraint interaction, not either statement
+     alone.
 
-  required_fields:
-    - has_condition(<principal>, "<operator>:<key>")
-    - has_condition_value(<principal>, "<operator>:<key>=<value>")
+  4. Operator mismatch: StringLike performs case-sensitive glob matching.
+     ArnLike performs case-insensitive, colon-delimited, account-expanded
+     matching. A condition combining both on the same key may have
+     different satisfying sets than the author intended because the
+     operators define different match semantics over the same string
+     domain.
 
-  extended_fields:
-    - stmt_effect(<principal>, <stmt_index>, "Allow"|"Deny")
-    - stmt_condition(<principal>, <stmt_index>, "<operator>:<key>=<value>")
-    - stmt_action(<principal>, <stmt_index>, <action>)
-    - stmt_resource(<principal>, <stmt_index>, <resource_pattern>)
+  FM-060 covers condition key interaction within and across statements
+  of policies attached to a single IAM entity (user, role, group).
+  Cross-entity analysis (role A's policy interacts with role B's trust
+  policy) is a separate failure mode (covered by FM-042's can_assume
+  resolution).
 
-  fact_projection_gap: >
-    The current fact projector (sirfacts/facts.go:conditionFacts)
-    emits has_condition and has_condition_value as binary predicates
-    collapsed to strings. These predicates lose per-statement
-    association: you can tell that a principal HAS a StringNotLike
-    condition somewhere, but not WHICH statement it belongs to.
-    This spec requires per-statement condition facts
-    (stmt_condition) so the solver can reason about Allow/Deny
-    interaction on the same key across statements. The SIR already
-    carries IAMPolicyStatementFact with per-statement Conditions
-    []ConditionFact — the projector needs to emit these as ternary
-    (principal, stmt_index, "op:key=value") facts alongside the
-    existing binary predicates.
+  Existing predicates (sirfacts/facts.go):
+    has_condition(asset, "operator:key")        — condition presence
+    has_condition_value(asset, "op:key=value")  — condition with value
+    has_action(role, action)                    — Allow actions
+    has_resource(role, resource_pat)            — Allow resources
+    has_deny_action(role, action)               — Deny actions
+    has_deny_resource(role, res_pat)            — Deny resources
+    has_type(asset, type)                       — Asset classification
 
-reasoning:
-  steps:
-    - step: 1
-      action: >
-        Parse the SMT-LIB fact base. Identify all principals and
-        their per-statement condition facts. Build a mental model
-        of which statements are Allow vs Deny, and which condition
-        operators+keys each statement asserts.
-      input: >
-        input.smt2 — ground atoms for stmt_effect, stmt_condition,
-        stmt_action, stmt_resource, plus closed-world axioms.
-      output: >
-        Per-principal statement map: { stmt_index → (effect,
-        [(operator, key, value), ...], [actions], [resources]) }.
-      rule: >
-        Closed-world: any (principal, stmt_index, value) triple
-        not explicitly asserted is false. Do not infer conditions
-        that are absent.
+  Existing trial (trials/z3-iam-condition-key/input.smt2):
+    Demonstrates deny bypass detection using per-statement predicates
+    and QF_S string regex matching.
 
-    - step: 2
-      action: >
-        For each principal, identify all Deny statements and their
-        condition predicates. Model each condition operator's
-        semantics as an SMT constraint over a free string variable
-        representing the request-context value for that key.
-      input: Step 1 output — the per-statement condition map.
-      output: >
-        Per-key constraint system: for each condition key that
-        appears in both an Allow and a Deny statement, a pair
-        of SMT assertions (allow_constraint ∧ ¬deny_constraint)
-        representing the bypass region.
-      rule: |
-        Operator semantics for SMT encoding:
+# =========================================================================
+# Section 1: Fact Schema — Condition Key Facts
+# =========================================================================
 
-        StringEquals(key, V)       → (= ctx_key V)
-        StringNotEquals(key, V)    → (not (= ctx_key V))
-        StringLike(key, "a*b")     → (str.prefixof "a" ctx_key) if simple prefix
-                                     else str.in_re with wildcard→regex
-        StringNotLike(key, "a*b")  → (not <StringLike encoding>)
-        ArnLike(key, pattern)      → str.in_re with arn-segment→regex
-                                     ("*" = any within segment,
-                                      segment separator = ":")
-        ArnNotLike(key, pattern)   → (not <ArnLike encoding>)
-        IpAddress(key, CIDR)       → int range check on parsed IP
-                                     (encode as bitvector #b... or
-                                      bounded Int with mask arithmetic)
-        NotIpAddress(key, CIDR)    → (not <IpAddress encoding>)
-        StringEqualsIgnoreCase     → (= (str.to_lower ctx_key) (str.to_lower V))
-        DateLessThan(key, V)       → (< ctx_key_epoch V_epoch)
-                                     (encode dates as Int epoch seconds)
-        Null(key, "true")          → (= ctx_key "")
-                                     (closed-world: absent = empty string)
-        Null(key, "false")         → (not (= ctx_key ""))
+fact_schema:
+  condition_key_facts:
+    description: >
+      Facts for Z3 condition key analysis. Combines existing binary
+      predicates (has_condition, has_condition_value) with new
+      per-statement ternary predicates that preserve statement-level
+      structure for cross-statement reasoning.
 
-        Multi-value within one operator: OR-joined.
-          StringEquals(key, ["a","b"]) → (or (= ctx V_a) (= ctx V_b))
+    existing_predicates:
+      - name: has_condition
+        status: EXISTS
+        encoding: "(asset, 'operator:key')"
+        notes: >
+          Emitted by conditionFacts in sirfacts/facts.go. Colon-joined
+          operator:key in the object field. One fact per unique
+          (operator, key) pair per asset. Used for presence checks
+          ("does this role use StringLike on an identity key?") but
+          loses statement-level structure — cannot distinguish which
+          statement carries which condition.
 
-        Multi-operator on same key within one statement: AND-joined.
-          {StringEquals: {k: "a"}, StringNotEquals: {k: "b"}}
-          → (and (= ctx "a") (not (= ctx "b")))
+      - name: has_condition_value
+        status: EXISTS
+        encoding: "(asset, 'operator:key=value')"
+        notes: >
+          Emitted by conditionFacts. Extends has_condition with the
+          concrete condition value. One fact per (operator, key, value)
+          triple. The '=' delimiter is unambiguous — IAM condition keys
+          never contain '='. Used by the SMT-LIB serializer for ground
+          truth assertions.
 
-    - step: 3
-      action: >
-        Construct the satisfiability query. For each condition key
-        that appears in both Allow and Deny statements, declare a
-        free string variable. Assert the Allow's condition
-        constraints AND the negation of the Deny's condition
-        constraints. If SAT, a request context exists that the
-        Allow permits but the Deny does not block.
-      input: Step 2 constraint pairs.
-      output: |
-        Three query classes, each a (check-sat) + (get-value):
+      - name: has_action
+        status: EXISTS
+        notes: Allow statement actions. Binary (asset, action).
 
-        Q1 — Dead statement detection:
-          For each Allow statement, assert ALL its conditions.
-          SAT = statement is reachable. UNSAT = dead statement.
+      - name: has_resource
+        status: EXISTS
+        notes: Allow statement resource patterns. Binary (asset, pattern).
 
-        Q2 — Deny bypass detection:
-          For each (Allow, Deny) pair sharing a condition key:
-          assert Allow conditions ∧ ¬(Deny conditions).
-          SAT = bypass exists, witness is the request context.
+      - name: has_deny_action
+        status: EXISTS
+        notes: Deny statement actions. Binary (asset, action).
 
-        Q3 — Operator mismatch detection:
-          For each key with two different operators across
-          statements, assert both operator semantics on the same
-          free variable. SAT = a value satisfies both (which may
-          be surprising). UNSAT = the operators are contradictory
-          (possible dead code or unintended mutual exclusion).
-      rule: >
-        The query must be decidable. Use QF_S (quantifier-free
-        strings) for string operators, QF_LIA for IP/date ranges.
-        Avoid quantifiers — the fact base is finite and closed-world
-        axioms already enumerate all principals and statements.
+      - name: has_deny_resource
+        status: EXISTS
+        notes: Deny statement resource patterns. Binary (asset, pattern).
 
-    - step: 4
-      action: >
-        Interpret the solver result and map to finding severity.
-      input: Z3 output (sat/unsat + witness values).
-      output: |
-        Finding schema:
+      - name: has_type
+        status: EXISTS
+        notes: Asset type classification. Binary (asset, type).
 
-        finding:
-          type: dead_statement | deny_bypass | operator_mismatch
-          principal: <arn>
-          statement_index: <int>
-          condition_key: <aws:ContextKey>
-          operators_involved: [<op1>, <op2>]
-          witness:            # present only when SAT
-            context_value: <string that threads the needle>
-          severity: >
-            dead_statement → medium (policy author error, not exploitable)
-            deny_bypass → critical (attacker can evade the deny)
-            operator_mismatch → high (surprising interaction, likely unintended)
-      rule: >
-        A deny_bypass finding means the Allow's condition space
-        minus the Deny's condition space is non-empty. The witness
-        is a concrete request-context value an attacker could use.
-        This is the highest-severity class because it represents a
-        gap in an explicit deny — the policy author intended to
-        block something and failed.
+    new_predicates:
+      - name: stmt_effect
+        arity: 3
+        fields:
+          subject: IAM entity ARN (role, user, group)
+          index: statement index (string-encoded integer)
+          object: "Allow" or "Deny"
+        smtlib_encoding: "(declare-fun stmt_effect (String String String) Bool)"
+        notes: >
+          One fact per statement. String-encoded index for uniform
+          (String, String, String) arity — Z3's QF_S theory handles
+          homogeneous string sorts more efficiently than mixed sorts.
+          The trial input.smt2 already uses this encoding.
 
-output:
-  format: text
-  schema:
-    verdict: SAT | UNSAT
-    query_class: dead_statement | deny_bypass | operator_mismatch
-    findings:
-      - type: deny_bypass
-        principal: "arn:aws:iam::123456789012:role/DataProcessor"
-        statement_index: 1
-        condition_key: "aws:PrincipalArn"
-        operators_involved: ["StringNotLike", "ArnLike"]
-        witness:
-          context_value: "arn:aws:iam::123456789012:role/AdminBackdoor"
+      - name: stmt_condition
+        arity: 3
+        fields:
+          subject: IAM entity ARN
+          index: statement index
+          object: "operator:key=value" (same encoding as has_condition_value)
+        smtlib_encoding: "(declare-fun stmt_condition (String String String) Bool)"
+        notes: >
+          One fact per (statement, operator, key, value) tuple. A
+          statement with multiple conditions emits multiple facts,
+          all sharing the same statement index. This preserves the
+          AND semantics within a statement — all conditions with the
+          same index must be simultaneously satisfiable.
 
-  expected_result:
-    verdict: SAT
-    query_class: deny_bypass
-    principal: "arn:aws:iam::123456789012:role/DataProcessor"
-    witness_value: "arn:aws:iam::123456789012:role/AdminBackdoor"
-    explanation: >
-      The Deny statement uses StringNotLike on aws:PrincipalArn
-      with pattern "arn:aws:iam::*:role/Admin*", which excludes
-      principals matching "Admin*". The Allow statement uses ArnLike
-      on the same key with pattern "arn:aws:iam::*:role/*", which
-      admits any role. A principal whose ARN matches "Admin*"
-      satisfies the Allow (ArnLike matches) but evades the Deny
-      (StringNotLike excludes it from the deny set, meaning the
-      deny does NOT fire for Admin* principals). The Deny was
-      likely intended to ONLY allow Admin roles, but the negation
-      logic is inverted — StringNotLike means "deny everything
-      NOT matching", so it denies non-Admin roles and permits
-      Admin roles through.
+      - name: stmt_action
+        arity: 3
+        fields:
+          subject: IAM entity ARN
+          index: statement index
+          object: action string (e.g., "s3:GetObject")
+        smtlib_encoding: "(declare-fun stmt_action (String String String) Bool)"
+        notes: >
+          One fact per (statement, action). Used by Q2 (deny bypass)
+          to identify which Allow actions are at risk.
+
+      - name: stmt_resource
+        arity: 3
+        fields:
+          subject: IAM entity ARN
+          index: statement index
+          object: resource ARN or pattern
+        smtlib_encoding: "(declare-fun stmt_resource (String String String) Bool)"
+        notes: >
+          One fact per (statement, resource). Used to correlate deny
+          bypass findings with specific resource scope.
+
+  projection_source: >
+    The projector reads from the same property path as conditionFacts:
+
+      properties.identity.policies.attached_policies[].statements[]
+
+    For each statement, emit:
+      1. stmt_effect(entity_arn, stmt_index, effect)
+      2. stmt_condition(entity_arn, stmt_index, "op:key=value")
+         for each (operator, key, value) tuple in Condition
+      3. stmt_action(entity_arn, stmt_index, action)
+         for each action in Action
+      4. stmt_resource(entity_arn, stmt_index, resource)
+         for each resource in Resource
+
+    The existing has_condition / has_condition_value facts continue
+    to be emitted — they serve per-asset aggregate queries and
+    existing CEL controls. The new per-statement facts are additive.
+
+# =========================================================================
+# Section 2: SMT-LIB Encoding — IAM Operator Semantics
+# =========================================================================
+
+smtlib_encoding:
+  logic_selection: >
+    FM-060 uses three SMT-LIB theories, selected per condition key type:
+
+    - QF_S (quantifier-free strings with regex): String operators
+      (StringEquals, StringLike, ArnLike, etc.). Z3's string theory
+      supports str.in_re for regex matching, str.= for equality, and
+      str.contains/str.prefixof/str.suffixof for substring checks.
+
+    - QF_BV (quantifier-free bitvectors): IpAddress/NotIpAddress.
+      IPv4 addresses are 32-bit bitvectors; CIDR matching is a
+      bitwise AND against the mask. IPv6 extends to 128-bit.
+
+    - QF_LIA (quantifier-free linear integer arithmetic): Numeric
+      and Date operators. Dates are epoch seconds (integer); numeric
+      comparisons are integer/real comparisons.
+
+    When a single policy mixes operator types (e.g., StringEquals on
+    PrincipalArn AND IpAddress on SourceIp), the combined logic is
+    QF_SLIA or the general ALL logic. Z3 handles multi-theory
+    combination natively via its DPLL(T) architecture.
+
+  operator_mapping:
+    string_operators:
+      - operator: StringEquals
+        z3_encoding: "(= request_key \"concrete_value\")"
+        theory: QF_S
+        semantics: >
+          Exact case-sensitive string match. The condition value is a
+          concrete string constant. Multiple values are OR'd.
+
+      - operator: StringNotEquals
+        z3_encoding: "(not (= request_key \"concrete_value\"))"
+        theory: QF_S
+        semantics: >
+          Negation of StringEquals. Case-sensitive inequality.
+
+      - operator: StringLike
+        z3_encoding: "(str.in_re request_key (compiled_glob_regex))"
+        theory: QF_S
+        semantics: >
+          Case-sensitive glob matching. '*' matches any sequence of
+          characters; '?' matches exactly one character. The projector
+          compiles the IAM glob to a Z3 regex:
+            '*' → (re.* re.allchar)
+            '?' → re.allchar
+            literal chars → (str.to_re "c")
+          Concatenated with re.++.
+
+      - operator: StringNotLike
+        z3_encoding: "(not (str.in_re request_key (compiled_glob_regex)))"
+        theory: QF_S
+        semantics: >
+          Negation of StringLike. Matches when the value does NOT
+          match the glob pattern.
+
+    arn_operators:
+      - operator: ArnEquals
+        z3_encoding: "(= request_key \"concrete_arn\")"
+        theory: QF_S
+        semantics: >
+          Exact ARN match. Identical to StringEquals for concrete ARNs.
+
+      - operator: ArnNotEquals
+        z3_encoding: "(not (= request_key \"concrete_arn\"))"
+        theory: QF_S
+        semantics: Negation of ArnEquals.
+
+      - operator: ArnLike
+        z3_encoding: >
+          ARN is decomposed into 6 colon-delimited fields:
+          arn:partition:service:region:account:resource. Each field
+          is matched independently:
+            - Concrete field → (= field_i "value")
+            - Wildcard '*' → no constraint on field_i
+            - Glob pattern → (str.in_re field_i (compiled_glob))
+          Fields are conjoined (AND) because all 6 must match.
+
+          Implementation:
+            (declare-const arn_partition String)
+            (declare-const arn_service String)
+            (declare-const arn_region String)
+            (declare-const arn_account String)
+            (declare-const arn_resource String)
+            (assert (= request_key
+              (str.++ "arn:" arn_partition ":"
+                      arn_service ":" arn_region ":"
+                      arn_account ":" arn_resource)))
+            ; Then per-field constraints from the pattern
+        theory: QF_S
+        semantics: >
+          Case-insensitive ARN matching with per-field wildcards.
+          NOTE: IAM's ArnLike is case-INSENSITIVE on the resource
+          portion. Z3's string theory is case-sensitive. The projector
+          lowercases both pattern and concrete values before emission
+          to simulate case-insensitivity within QF_S.
+
+      - operator: ArnNotLike
+        z3_encoding: "Negation of ArnLike's conjunction."
+        theory: QF_S
+        semantics: Matches when the ARN does NOT match the pattern.
+
+    ip_operators:
+      - operator: IpAddress
+        z3_encoding: >
+          IPv4 CIDR matching using bitvectors:
+            (declare-const source_ip (_ BitVec 32))
+            ; CIDR 10.0.0.0/8 → base = 0x0A000000, mask = 0xFF000000
+            (assert (= (bvand source_ip #xFF000000) #x0A000000))
+
+          Multiple CIDRs are OR'd:
+            (assert (or
+              (= (bvand source_ip mask1) base1)
+              (= (bvand source_ip mask2) base2)))
+
+          The projector converts CIDR notation to (base, mask) pairs.
+          IPv6 uses (_ BitVec 128) with the same bvand pattern.
+        theory: QF_BV
+        semantics: >
+          Request source IP is within the specified CIDR range.
+          Multiple CIDRs form a disjunction — any match satisfies.
+
+      - operator: NotIpAddress
+        z3_encoding: "Negation of IpAddress's disjunction."
+        theory: QF_BV
+        semantics: Matches when source IP is NOT in any specified CIDR.
+
+    date_operators:
+      - operator: DateEquals
+        z3_encoding: "(= request_date epoch_seconds)"
+        theory: QF_LIA
+        semantics: >
+          Date comparison on epoch seconds. The projector parses
+          ISO 8601 date strings to integer epoch seconds.
+
+      - operator: DateNotEquals
+        z3_encoding: "(not (= request_date epoch_seconds))"
+        theory: QF_LIA
+        semantics: Negation of DateEquals.
+
+      - operator: DateLessThan
+        z3_encoding: "(< request_date epoch_seconds)"
+        theory: QF_LIA
+        semantics: Request date is before the specified date.
+
+      - operator: DateGreaterThan
+        z3_encoding: "(> request_date epoch_seconds)"
+        theory: QF_LIA
+        semantics: Request date is after the specified date.
+
+      - operator: DateLessThanEquals
+        z3_encoding: "(<= request_date epoch_seconds)"
+        theory: QF_LIA
+        semantics: Request date is at or before the specified date.
+
+      - operator: DateGreaterThanEquals
+        z3_encoding: "(>= request_date epoch_seconds)"
+        theory: QF_LIA
+        semantics: Request date is at or after the specified date.
+
+    numeric_operators:
+      - operator: NumericEquals
+        z3_encoding: "(= request_numeric value)"
+        theory: QF_LIA
+        semantics: Exact numeric match.
+
+      - operator: NumericNotEquals
+        z3_encoding: "(not (= request_numeric value))"
+        theory: QF_LIA
+        semantics: Numeric inequality.
+
+      - operator: NumericLessThan
+        z3_encoding: "(< request_numeric value)"
+        theory: QF_LIA
+        semantics: Strictly less than.
+
+      - operator: NumericGreaterThan
+        z3_encoding: "(> request_numeric value)"
+        theory: QF_LIA
+        semantics: Strictly greater than.
+
+      - operator: NumericLessThanEquals
+        z3_encoding: "(<= request_numeric value)"
+        theory: QF_LIA
+        semantics: Less than or equal.
+
+      - operator: NumericGreaterThanEquals
+        z3_encoding: "(>= request_numeric value)"
+        theory: QF_LIA
+        semantics: Greater than or equal.
+
+    boolean_operators:
+      - operator: Bool
+        z3_encoding: "(= request_bool true_or_false)"
+        theory: QF_LIA
+        semantics: >
+          Boolean condition keys (e.g., aws:SecureTransport,
+          aws:MultiFactorAuthPresent). Encoded as integer 0/1 for
+          QF_LIA compatibility: true = 1, false = 0.
+
+    null_operators:
+      - operator: "Null"
+        z3_encoding: >
+          (ite null_flag
+            (= request_key_exists 0)   ; Null: true → key absent
+            (= request_key_exists 1))  ; Null: false → key present
+
+          request_key_exists is an auxiliary integer variable (0 = absent,
+          1 = present). When Null: "true", the condition requires the key
+          to be absent from the request context.
+        theory: QF_LIA
+        semantics: >
+          Tests whether a condition key is present or absent in the
+          request context. Null: "true" matches when the key is NOT
+          in the request. Null: "false" matches when it IS present.
+
+  if_exists_variants: >
+    Every operator has an IfExists variant (e.g., StringEqualsIfExists,
+    ArnLikeIfExists). Semantics: if the key is present in the request,
+    apply the operator; if absent, the condition evaluates to true
+    (vacuously satisfied).
+
+    Z3 encoding:
+
+      (declare-const key_exists Int)
+      (assert (or (= key_exists 0) (= key_exists 1)))
+      ; IfExists: absent → true, present → apply operator
+      (assert (or (= key_exists 0) <operator_constraint>))
+
+    This is a disjunction: either the key is absent (key_exists = 0)
+    OR the operator constraint holds. If Z3 finds a satisfying
+    assignment where key_exists = 0, the IfExists condition is trivially
+    satisfied — this is INTENTIONAL and should be flagged as a finding
+    if the policy author likely intended the key to always be present.
+
+  multi_value_conditions: >
+    IAM conditions on a single key can carry multiple values:
+
+      "StringEquals": {"aws:PrincipalOrgID": ["o-abc123", "o-def456"]}
+
+    Multiple values are OR'd within the same key:
+
+      (assert (or (= request_key "o-abc123") (= request_key "o-def456")))
+
+    Multiple keys within the same operator are AND'd:
+
+      "StringEquals": {
+        "aws:PrincipalOrgID": "o-abc123",
+        "aws:SourceAccount": "111122223333"
+      }
+
+      (assert (= request_org "o-abc123"))
+      (assert (= request_account "111122223333"))
+
+    Multiple operators within the same statement are AND'd:
+
+      "Condition": {
+        "StringEquals": {"aws:PrincipalOrgID": "o-abc123"},
+        "IpAddress": {"aws:SourceIp": "10.0.0.0/8"}
+      }
+
+      (assert (= request_org "o-abc123"))
+      (assert (= (bvand source_ip #xFF000000) #x0A000000))
+
+  iam_evaluation_model: >
+    IAM policy evaluation within a single policy:
+
+    1. All statements are evaluated independently.
+    2. Explicit Deny always wins — if any Deny statement matches,
+       the action is denied regardless of Allow statements.
+    3. An action is allowed only if at least one Allow statement
+       matches AND no Deny statement matches.
+
+    Z3 encoding of this model:
+
+      ; For each Allow statement i:
+      ;   allow_i = conjunction of all conditions in statement i
+      ; For each Deny statement j:
+      ;   deny_j = conjunction of all conditions in statement j
+
+      ; Access is granted when:
+      (assert (or allow_0 allow_1 ... allow_n))       ; some Allow matches
+      (assert (not (or deny_0 deny_1 ... deny_m)))    ; no Deny matches
+
+    If this combined assertion is SAT, there exists a request context
+    that gets through. The model is the concrete assignment.
+
+    For the deny bypass query specifically:
+      (assert allow_i)                                  ; specific Allow fires
+      (assert (not deny_j))                             ; specific Deny evaded
+
+    The per-statement ternary facts (stmt_effect, stmt_condition)
+    enable this per-statement reasoning.
+
+# =========================================================================
+# Section 3: Fact Projection Requirements
+# =========================================================================
+
+fact_projection:
+  input_contract:
+    description: >
+      The projector reads IAM policy JSON from the same property path
+      used by the existing conditionFacts function:
+
+        properties.identity.policies.attached_policies[].statements[]
+
+      For each statement, it reads:
+        - Effect: "Allow" or "Deny"
+        - Action: list of action strings
+        - Resource: list of resource ARN patterns
+        - Condition: map of operator → {key → values}
+
+    fields_read:
+      - path: properties.identity.policies.attached_policies[].statements[].Effect
+        required: true
+        notes: Must be "Allow" or "Deny". Other values are rejected.
+
+      - path: properties.identity.policies.attached_policies[].statements[].Action
+        required: true
+        notes: >
+          List of action strings. May include wildcards (s3:*, *).
+          Not expanded — emitted as-is. The solver uses action overlap
+          only for cross-statement correlation (do Allow and Deny cover
+          the same actions?), not for action enumeration.
+
+      - path: properties.identity.policies.attached_policies[].statements[].Resource
+        required: true
+        notes: >
+          List of resource ARN patterns. Emitted as-is. Resource overlap
+          between Allow and Deny statements determines whether the deny
+          bypass is on the same resource scope.
+
+      - path: properties.identity.policies.attached_policies[].statements[].Condition
+        required: false
+        notes: >
+          The condition block. May be absent — statements without
+          conditions are unconstrained (trivially satisfiable). The
+          projector emits no stmt_condition facts for such statements.
+          An Allow without conditions matches all requests — this is
+          not a dead statement but may interact with a Deny.
+
+  output_schema:
+    single_policy: >
+      For a single IAM entity with one policy:
+
+        ; Entity and type
+        (assert (has_type "arn:aws:iam::123456789012:role/R" "aws_iam_role"))
+
+        ; Statement 0: Allow
+        (assert (stmt_effect "...role/R" "0" "Allow"))
+        (assert (stmt_action "...role/R" "0" "s3:GetObject"))
+        (assert (stmt_resource "...role/R" "0" "arn:aws:s3:::bucket/*"))
+        (assert (stmt_condition "...role/R" "0" "ArnLike:aws:PrincipalArn=arn:aws:iam::*:role/*"))
+
+        ; Statement 1: Deny
+        (assert (stmt_effect "...role/R" "1" "Deny"))
+        (assert (stmt_action "...role/R" "1" "s3:GetObject"))
+        (assert (stmt_resource "...role/R" "1" "arn:aws:s3:::bucket/*"))
+        (assert (stmt_condition "...role/R" "1" "StringNotLike:aws:PrincipalArn=arn:aws:iam::*:role/Admin*"))
+
+        ; Aggregate predicates (existing projector output, retained)
+        (assert (has_condition "...role/R" "ArnLike:aws:PrincipalArn"))
+        (assert (has_condition "...role/R" "StringNotLike:aws:PrincipalArn"))
+        (assert (has_condition_value "...role/R" "ArnLike:aws:PrincipalArn=arn:aws:iam::*:role/*"))
+        (assert (has_condition_value "...role/R" "StringNotLike:aws:PrincipalArn=arn:aws:iam::*:role/Admin*"))
+
+        ; Closed-world axioms (one per predicate)
+        (assert (forall ((x String) (y String) (z String))
+          (=> (stmt_effect x y z) (enumeration of ground atoms))))
+
+    multiple_policies: >
+      When an entity has multiple attached policies, statement indices
+      are globally scoped to the entity: policy A's statements are
+      indexed 0..N-1, policy B's statements are indexed N..N+M-1.
+      This avoids index collision — each (entity, index) pair uniquely
+      identifies one statement regardless of which policy it comes from.
+
+    multiple_entities: >
+      FM-060 scope is per-entity. The projector emits one SMT-LIB file
+      per IAM entity. Cross-entity condition interaction is out of scope
+      (separate FM). Each file is a self-contained Z3 problem — the
+      solver processes entities independently with no shared state.
+
+  scope_boundaries:
+    in_scope:
+      - Condition key interactions within one IAM entity's policies
+      - Cross-statement interactions (Allow vs. Deny within same entity)
+      - Operator semantics mismatch on the same condition key
+      - IfExists vacuous satisfaction detection
+    out_of_scope:
+      - Cross-entity interaction (role A's policy + role B's trust policy)
+      - SCP / RCP interaction (organization-level policies)
+      - Resource-based policy interaction with identity-based policy
+      - Session policy constraints
+    rationale: >
+      Cross-entity and cross-policy-type interactions require the full
+      IAM evaluation model (identity + resource + SCP + session).
+      FM-060 targets the common case: a single entity's conditions
+      are internally contradictory or semantically mismatched. This
+      is the highest-ROI check because it catches authoring errors
+      in the most frequently written policy type (identity-based).
+
+# =========================================================================
+# Section 4: Z3 Queries
+# =========================================================================
+
+z3_queries:
+  q1_satisfiability:
+    name: "Dead statement detection"
+    purpose: >
+      For each Allow statement with conditions, determine whether any
+      request context can satisfy all conditions simultaneously. If
+      UNSAT, the statement is dead — it never matches any request.
+
+    encoding: >
+      For Allow statement i with conditions C_1, C_2, ..., C_k:
+
+        ; Declare request context variables for each condition key
+        (declare-const request_principal_arn String)
+        (declare-const request_source_ip (_ BitVec 32))
+        ; ... one per unique condition key
+
+        ; Assert all conditions from statement i (AND semantics)
+        (assert <C_1_encoding>)
+        (assert <C_2_encoding>)
+        ...
+        (assert <C_k_encoding>)
+
+        (check-sat)
+
+      If UNSAT: statement i is dead. The proof core identifies which
+      conditions contradict.
+
+      If SAT: statement i is satisfiable. No finding for Q1.
+
+    complexity: >
+      One Z3 invocation per Allow statement with 2+ conditions. Single-
+      condition statements are trivially satisfiable and skipped.
+      Typical policy: 2-5 Allow statements, each with 1-3 conditions.
+      Total: 0-5 Z3 calls per entity.
+
+    decidability: >
+      Each query uses only ground terms (concrete condition values from
+      the snapshot) and bounded theories (QF_S with finite regex,
+      QF_BV with fixed-width bitvectors, QF_LIA with bounded integers).
+      All queries are decidable.
+
+  q2_deny_bypass:
+    name: "Deny bypass detection"
+    purpose: >
+      For each (Allow_i, Deny_j) pair where both statements cover
+      overlapping actions and resources, determine whether a request
+      context exists that satisfies Allow_i's conditions but does NOT
+      satisfy Deny_j's conditions. If SAT, the model is a concrete
+      request that slips through the deny.
+
+    encoding: >
+      For Allow statement i with conditions A_1..A_m
+      and Deny statement j with conditions D_1..D_n:
+
+        ; Pre-check: do the statements share any actions?
+        ; (Computed by the projector — only emit queries for
+        ;  overlapping action sets)
+
+        ; Declare request context variables
+        (declare-const caller_arn String)
+        ; ... one per unique condition key across both statements
+
+        ; Allow conditions: all must be satisfied
+        (assert <A_1_encoding>)
+        ...
+        (assert <A_m_encoding>)
+
+        ; Deny conditions: at least one must be violated
+        ; (Deny fires when ALL its conditions match. To evade the deny,
+        ;  at least one deny condition must fail.)
+        (assert (not (and <D_1_encoding> ... <D_n_encoding>)))
+
+        (check-sat)
+        (get-value (caller_arn ...))
+
+      If SAT: deny bypass found. The model is the concrete request
+      context (e.g., caller_arn = "arn:aws:iam::111122223333:role/AdminDev")
+      that satisfies the Allow but evades the Deny.
+
+      If UNSAT: no bypass — the Deny correctly covers all requests
+      that the Allow would match. No finding for this pair.
+
+    optimization: >
+      Only check (Allow_i, Deny_j) pairs where:
+        1. Action sets overlap (at least one common action or wildcard)
+        2. Resource sets overlap (at least one common resource or wildcard)
+      Otherwise the deny cannot be bypassed because it covers a
+      different action/resource scope.
+
+      For a policy with M Allow and N Deny statements, worst case is
+      M × N queries. With overlap filtering, typically 1-3 queries.
+
+    witness_format: >
+      When SAT, Z3 produces a model — the concrete values for each
+      request context variable that thread the needle. The finding
+      includes this witness:
+
+        bypass_witness:
+          caller_arn: "arn:aws:iam::111122223333:role/AdminDev"
+          source_ip: "10.0.0.42"      # if applicable
+          request_time: "2026-06-15T12:00:00Z"  # if applicable
+
+      The witness is the proof. An auditor can verify the bypass by
+      constructing a request with these values and confirming the
+      Allow fires while the Deny does not.
+
+  q3_operator_mismatch:
+    name: "Operator semantics mismatch detection"
+    purpose: >
+      Detect when the same condition key appears with different
+      operators that have incompatible matching semantics, either
+      within the same statement or across statements in the same
+      policy. Incompatible operators produce different satisfying
+      sets over the same string domain — the policy author likely
+      intended one semantics but wrote another.
+
+    detection_method: >
+      This is a structural check, not a satisfiability query. The
+      projector scans has_condition facts for each entity and groups
+      by condition key. If a key appears with two operators from
+      different semantic classes, it is a mismatch.
+
+      Semantic classes:
+        1. Exact: StringEquals, StringNotEquals, ArnEquals, ArnNotEquals
+        2. Glob: StringLike, StringNotLike
+        3. ARN-structured: ArnLike, ArnNotLike
+        4. CIDR: IpAddress, NotIpAddress
+        5. Ordered: DateLessThan, DateGreaterThan, NumericLessThan, etc.
+        6. Boolean: Bool
+        7. Presence: Null
+
+      Mismatches:
+        - Exact + Glob on same key (e.g., StringEquals + StringLike on
+          aws:PrincipalArn): StringLike admits wildcards in the VALUE
+          being matched, expanding the satisfying set.
+        - Exact + ARN-structured on same key: ArnLike is case-insensitive
+          and supports per-field wildcards; StringEquals is case-sensitive
+          and literal.
+        - Glob + ARN-structured on same key: StringLike treats the entire
+          ARN as a flat string with * and ?; ArnLike decomposes into
+          6 fields. "arn:aws:iam::*:role/*" means different things.
+
+    z3_confirmation: >
+      For each detected mismatch, optionally run a Z3 query to
+      confirm the sets differ:
+
+        ; Operator A: StringLike "Admin*" (flat glob)
+        (declare-const v String)
+        (assert (str.in_re v (re.++ (str.to_re "Admin") (re.* re.allchar))))
+        ; Operator B: ArnLike "Admin*" (ARN-structured, case-insensitive)
+        ; In this case, they happen to agree on non-ARN strings.
+        ; On ARN strings, ArnLike lowercases before matching.
+        ; Z3 can find a witness in the symmetric difference:
+        (assert (not (= (str.to_lower v) v)))  ; v has uppercase chars
+        (check-sat)
+
+      If SAT: the witness is a value that matches under one operator
+      but not the other — confirming the mismatch has real effect.
+      If UNSAT: the operators agree on the value domain (unlikely but
+      possible for trivial patterns) — downgrade to informational.
+
+# =========================================================================
+# Section 5: Finding Schema
+# =========================================================================
+
+finding_schema:
+  finding_types:
+    - type: dead_statement
+      query: Q1
+      severity: medium
+      rationale: >
+        A dead statement is waste, not exposure. It creates a false
+        sense of restriction — the operator thinks a Deny is active
+        when it never fires. Medium because it indicates a policy
+        authoring error that may signal deeper misunderstanding, but
+        does not directly expand access.
+      fields:
+        - entity_arn: IAM entity ARN
+        - statement_index: which statement is dead
+        - statement_effect: "Allow" or "Deny" (dead Deny is worse — the
+            intended restriction does not exist)
+        - contradicting_conditions:
+            - {operator: "ArnLike", key: "aws:PrincipalArn", value: "..."}
+            - {operator: "StringNotEquals", key: "aws:PrincipalArn", value: "..."}
+        - z3_proof_core: >
+            The UNSAT core — the minimal subset of assertions that
+            contradicts. Identifies exactly which conditions conflict.
+        - dead_deny_upgrade: >
+            If the dead statement is a Deny, severity upgrades to High.
+            A dead Deny means an intended restriction does not exist —
+            the author believes access is denied but it isn't.
+
+    - type: deny_bypass
+      query: Q2
+      severity: critical
+      rationale: >
+        A deny bypass is an access leak. The author intended to deny
+        access but the condition operators admit a request context that
+        evades the deny while satisfying an allow. Critical because
+        the bypass may admit unintended principals, IPs, or request
+        times to actions the deny was supposed to block.
+      fields:
+        - entity_arn: IAM entity ARN
+        - allow_statement_index: which Allow statement is satisfied
+        - deny_statement_index: which Deny statement is bypassed
+        - bypass_witness:
+            caller_arn: "concrete value from Z3 model"
+            source_ip: "if applicable"
+            request_time: "if applicable"
+        - bypassed_actions: list of actions the Allow grants that the
+            Deny intended to block
+        - bypassed_resources: list of resources in scope
+        - root_cause: >
+            Human-readable explanation: "Deny uses StringNotLike which
+            EXCLUDES matching principals from the deny. Principals
+            matching 'Admin*' evade the deny."
+
+    - type: operator_mismatch
+      query: Q3
+      severity: high
+      rationale: >
+        Operator mismatch indicates a likely authoring error where
+        the policy author used an operator with different semantics
+        than intended. High because the expanded or contracted
+        satisfying set may admit or exclude requests unexpectedly.
+      fields:
+        - entity_arn: IAM entity ARN
+        - condition_key: the key with mismatched operators
+        - operator_a:
+            operator: "StringLike"
+            statement_index: 0
+            semantic_class: "glob"
+        - operator_b:
+            operator: "ArnLike"
+            statement_index: 1
+            semantic_class: "arn_structured"
+        - semantic_difference: >
+            One-sentence description of how the satisfying sets differ.
+            E.g., "ArnLike is case-insensitive; StringLike is case-
+            sensitive. A principal ARN with uppercase letters matches
+            ArnLike but not StringLike."
+        - z3_witness: >
+            If Z3 confirmation was run: the concrete value in the
+            symmetric difference. Otherwise: null.
+
+  severity_summary:
+    dead_statement_allow: medium
+    dead_statement_deny: high
+    deny_bypass: critical
+    operator_mismatch: high
+    operator_mismatch_confirmed_no_effect: informational
+
+# =========================================================================
+# Section 6: Chain Definition
+# =========================================================================
+
+chain_definition:
+  file: chains/iam_condition_key_complexity.yaml
+  content: |
+    id: iam_condition_key_complexity
+    description: >
+      Condition key constraint interactions produce unintended access.
+      Z3 satisfiability analysis detects dead statements (contradictory
+      conditions that never fire), deny bypasses (request contexts that
+      thread between Allow and Deny conditions), and operator mismatches
+      (different matching semantics on the same key). Compounds the
+      per-condition CEL controls with formal verification of cross-
+      condition interactions.
+    controls:
+      - CTL.IAM.POLICY.CONDITION.ORGID.001
+      - CTL.IAM.POLICY.CONDITION.STRINGLIKE.001
+      - CTL.IAM.POLICY.CONDITION.NOTRESOURCE.001
+      - CTL.IAM.POLICY.CONDITION.SOURCEIP.001
+      - CTL.IAM.POLICY.CONDITION.TEMPORAL.001
+      - CTL.IAM.POLICY.CONDITION.VIASERVICE.001
+      - CTL.IAM.POLICY.CONDITION.REGION.001
+      - CTL.IAM.POLICY.PASSROLE.CONDITION.001
+    escalation_threshold: 2
+    compound_severity: critical
+    preconditions:
+      - iam_condition_bypass
+    postconditions:
+      - iam_shadow_admin
+
+  prerequisite_controls:
+    existing:
+      - CTL.IAM.POLICY.CONDITION.ORGID.001        # Missing PrincipalOrgID
+      - CTL.IAM.POLICY.CONDITION.STRINGLIKE.001    # StringLike where StringEquals intended
+      - CTL.IAM.POLICY.CONDITION.NOTRESOURCE.001   # NotResource usage
+      - CTL.IAM.POLICY.CONDITION.SOURCEIP.001      # Missing SourceIp on sensitive actions
+      - CTL.IAM.POLICY.CONDITION.TEMPORAL.001      # Date condition without expiration
+      - CTL.IAM.POLICY.CONDITION.VIASERVICE.001    # KMS without ViaService
+      - CTL.IAM.POLICY.CONDITION.REGION.001        # No region restriction
+      - CTL.IAM.POLICY.PASSROLE.CONDITION.001      # PassRole without PassedToService
+    notes: >
+      These controls fire per-resource on individual condition key
+      issues. When ≥2 co-fire on the same IAM entity, the chain
+      engine emits a compound finding. The Z3 analysis adds formal
+      cross-condition interaction proofs that per-resource CEL cannot
+      express.
+
+  required_fact_types:
+    required:
+      - has_condition
+      - has_condition_value
+      - has_type
+      - stmt_effect
+      - stmt_condition
+      - stmt_action
+      - stmt_resource
+    optional:
+      - has_action
+      - has_resource
+      - has_deny_action
+      - has_deny_resource
+    notes: >
+      The optional action/resource facts enable the deny bypass
+      optimization (skip non-overlapping Allow/Deny pairs). Without
+      them, all pairs are checked — more Z3 calls but no false
+      negatives.
+
+# =========================================================================
+# Section 7: Worked Example — Deny Bypass Detection
+# =========================================================================
+
+worked_example:
+  description: >
+    IAM role DataProcessor with two policy statements. Statement 0
+    allows s3:GetObject with ArnLike on aws:PrincipalArn matching
+    any role. Statement 1 denies s3:GetObject with StringNotLike on
+    aws:PrincipalArn excluding "Admin*" from the deny. The deny has
+    a hole: Admin-pattern principals evade the deny while still
+    matching the allow. Z3 proves the bypass exists and produces a
+    concrete witness.
+
+  iam_policy_json: |
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Sid": "AllowRoleAccess",
+          "Effect": "Allow",
+          "Action": "s3:GetObject",
+          "Resource": "arn:aws:s3:::data-lake/*",
+          "Condition": {
+            "ArnLike": {
+              "aws:PrincipalArn": "arn:aws:iam::*:role/*"
+            }
+          }
+        },
+        {
+          "Sid": "DenyNonAdmin",
+          "Effect": "Deny",
+          "Action": "s3:GetObject",
+          "Resource": "arn:aws:s3:::data-lake/*",
+          "Condition": {
+            "StringNotLike": {
+              "aws:PrincipalArn": "arn:aws:iam::*:role/Admin*"
+            }
+          }
+        }
+      ]
+    }
+
+  policy_intent: >
+    The author intended: allow all roles to read the data lake, but
+    deny non-Admin roles. The Deny uses StringNotLike to exclude
+    principals NOT matching "Admin*" — meaning the Deny fires for
+    non-Admin principals and does NOT fire for Admin principals.
+
+    The flaw: StringNotLike "Admin*" means "deny when the principal
+    does NOT match Admin*". So Admin-matching principals are EXCLUDED
+    from the deny. Combined with the Allow's ArnLike which matches
+    any role, Admin-pattern principals get s3:GetObject on the data
+    lake with the deny completely bypassed.
+
+    This is the correct behavior per IAM evaluation rules, but likely
+    not the author's intent. The author probably wanted to restrict
+    access TO Admins only, not FROM Admins.
+
+  fact_projection_output: >
+    The projector reads the policy JSON and emits:
+
+    Per-statement facts (NEW):
+
+      stmt_effect("...role/DataProcessor", "0", "Allow")
+      stmt_action("...role/DataProcessor", "0", "s3:GetObject")
+      stmt_resource("...role/DataProcessor", "0", "arn:aws:s3:::data-lake/*")
+      stmt_condition("...role/DataProcessor", "0", "ArnLike:aws:PrincipalArn=arn:aws:iam::*:role/*")
+
+      stmt_effect("...role/DataProcessor", "1", "Deny")
+      stmt_action("...role/DataProcessor", "1", "s3:GetObject")
+      stmt_resource("...role/DataProcessor", "1", "arn:aws:s3:::data-lake/*")
+      stmt_condition("...role/DataProcessor", "1", "StringNotLike:aws:PrincipalArn=arn:aws:iam::*:role/Admin*")
+
+    Aggregate facts (EXISTING, retained):
+
+      has_condition("...role/DataProcessor", "ArnLike:aws:PrincipalArn")
+      has_condition("...role/DataProcessor", "StringNotLike:aws:PrincipalArn")
+      has_condition_value("...role/DataProcessor", "ArnLike:aws:PrincipalArn=arn:aws:iam::*:role/*")
+      has_condition_value("...role/DataProcessor", "StringNotLike:aws:PrincipalArn=arn:aws:iam::*:role/Admin*")
+      has_type("...role/DataProcessor", "aws_iam_role")
+
+  smtlib_query: >
+    The solver constructs the Q2 deny bypass query. Full file at
+    trials/z3-iam-condition-key/input.smt2.
+
+    Key sections:
+
+      (set-logic QF_S)
+
+      ; Ground facts from projector
+      (assert (stmt_effect "...role/DataProcessor" "0" "Allow"))
+      (assert (stmt_condition "...role/DataProcessor" "0"
+        "ArnLike:aws:PrincipalArn=arn:aws:iam::*:role/*"))
+      (assert (stmt_effect "...role/DataProcessor" "1" "Deny"))
+      (assert (stmt_condition "...role/DataProcessor" "1"
+        "StringNotLike:aws:PrincipalArn=arn:aws:iam::*:role/Admin*"))
+
+      ; Request context variable
+      (declare-const caller_arn String)
+
+      ; Allow condition: ArnLike "arn:aws:iam::*:role/*"
+      (assert (str.in_re caller_arn
+        (re.++ (str.to_re "arn:aws:iam::")
+               (re.+ (re.range "0" "9"))
+               (str.to_re ":role/")
+               (re.+ (re.union (re.range "A" "Z") (re.range "a" "z")
+                               (re.range "0" "9") (str.to_re "-") (str.to_re "_"))))))
+
+      ; Deny evasion: principal matches "Admin*" → deny does NOT fire
+      (assert (str.in_re caller_arn
+        (re.++ (str.to_re "arn:aws:iam::")
+               (re.+ (re.range "0" "9"))
+               (str.to_re ":role/Admin")
+               (re.* (re.union ...)))))
+
+      (check-sat)
+      (get-value (caller_arn))
+
+  z3_result: >
+    Z3 returns:
+
+      sat
+      ((caller_arn "arn:aws:iam::111111111111:role/AdminDev"))
+
+    The model is a concrete request context: a principal with ARN
+    "arn:aws:iam::111111111111:role/AdminDev" satisfies the Allow's
+    ArnLike pattern AND matches "Admin*", which means the Deny's
+    StringNotLike does NOT fire for this principal.
+
+  stave_finding: |
+    {
+      "type": "deny_bypass",
+      "severity": "critical",
+      "entity_arn": "arn:aws:iam::123456789012:role/DataProcessor",
+      "allow_statement_index": 0,
+      "deny_statement_index": 1,
+      "bypass_witness": {
+        "caller_arn": "arn:aws:iam::111111111111:role/AdminDev"
+      },
+      "bypassed_actions": ["s3:GetObject"],
+      "bypassed_resources": ["arn:aws:s3:::data-lake/*"],
+      "root_cause": "Deny uses StringNotLike which excludes matching principals from the deny. Principals matching 'Admin*' evade the deny while still matching the Allow's ArnLike pattern.",
+      "remediation_hint": "Replace the Deny's StringNotLike with a positive condition on the Allow: add StringLike restricting to 'Admin*', or use a Deny with StringLike (not StringNotLike) to deny non-Admin patterns.",
+      "annotations": {
+        "operator_mismatch": true,
+        "operator_a": "ArnLike",
+        "operator_b": "StringNotLike",
+        "semantic_classes": ["arn_structured", "glob"]
+      }
+    }
+
+  mitigated_case:
+    description: >
+      The policy is corrected: the Allow restricts to Admin* principals
+      directly via ArnLike, and the Deny is removed.
+
+    corrected_policy: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Sid": "AllowAdminRoleAccess",
+            "Effect": "Allow",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::data-lake/*",
+            "Condition": {
+              "ArnLike": {
+                "aws:PrincipalArn": "arn:aws:iam::*:role/Admin*"
+              }
+            }
+          }
+        ]
+      }
+
+    z3_output: >
+      Q1 (satisfiability): SAT — the Allow is satisfiable. Not dead.
+      Q2 (deny bypass): No Deny statements — no bypass possible.
+      Q3 (operator mismatch): Only one operator on aws:PrincipalArn.
+      Result: no findings.
+
+# =========================================================================
+# Fact projection gap analysis
+# =========================================================================
+
+fact_projection_gap: >
+  New projector function needed in sirfacts/facts.go:
+
+  1. stmtFacts(assets []sir.AssetFact) []Fact
+     Walks the same property path as conditionFacts but emits
+     per-statement ternary facts:
+
+       stmt_effect(entity, stmt_index, effect)
+       stmt_action(entity, stmt_index, action)
+       stmt_resource(entity, stmt_index, resource)
+       stmt_condition(entity, stmt_index, "op:key=value")
+
+     The existing conditionFacts function emits aggregate predicates
+     (has_condition, has_condition_value). stmtFacts emits per-statement
+     predicates. Both coexist — aggregate for CEL controls,
+     per-statement for Z3 cross-statement analysis.
+
+     Implementation note: stmtFacts shares the same property path
+     traversal as conditionFacts. The two functions can be merged or
+     stmtFacts can call into conditionFacts' traversal logic with a
+     different emit callback. The statement index is already tracked
+     during traversal (see the si loop variable in conditionFacts).
+
+  2. SMT-LIB serializer extension
+     The existing SMT-LIB serializer handles binary predicates. The
+     new ternary predicates (stmt_effect, stmt_condition, stmt_action,
+     stmt_resource) need ternary assertion generation:
+
+       (assert (stmt_effect "entity" "index" "value"))
+
+     And ternary closed-world axioms:
+
+       (assert (forall ((x String) (y String) (z String))
+         (=> (stmt_effect x y z) (or (ground atom enumeration)))))
+
+     The existing trial file (input.smt2) demonstrates the format.
 
 validation:
   exact_match:
-    - verdict
-    - query_class
+    - finding.type (dead_statement | deny_bypass | operator_mismatch)
+    - finding.severity
+    - bypass_witness (if SAT)
   semantic_match:
-    - witness_value
-    - explanation
+    - root_cause explanation
+    - contradicting_conditions (for dead statements)
+    - remediation_hint
   ignore:
-    - solver warnings
-    - whitespace in get-value output
-    - ordering of findings when multiple queries run
+    - Z3 model variable naming
+    - UNSAT core ordering
+    - closed-world axiom ordering

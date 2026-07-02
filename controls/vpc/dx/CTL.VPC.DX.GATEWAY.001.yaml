@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.DX.GATEWAY.001
+name: Direct Connect Gateway Must Have Virtual Interface Associations
+description: >
+  A Direct Connect gateway without virtual interface (VIF)
+  associations is an unused resource consuming a dedicated physical
+  connection. An unassociated gateway may indicate incomplete setup
+  (traffic still routes over the internet) or a decommissioned
+  circuit that was not cleaned up.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-8"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-09"]
+scope_tags: [aws, vpc]
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_directconnect_gateway
+params:
+  attack_stage: discovery
+observation_fields:
+  - network.kind
+  - network.dx.gateway_id
+  - network.dx.has_vif_associations
+remediation:
+  description: >
+    Direct Connect gateway has no virtual interface associations.
+    The gateway is unused and traffic is not routing over the
+    dedicated connection.
+  action: >
+    Associate a virtual interface with the gateway, or delete
+    the unused gateway. Use aws directconnect
+    create-private-virtual-interface to create a VIF, or
+    delete-direct-connect-gateway to remove it.
+  example: |
+    {
+      "network": {
+        "kind": "directconnect_gateway",
+        "dx": {
+          "has_vif_associations": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: directconnect_gateway
+    - field: properties.network.dx.has_vif_associations
+      op: eq
+      value: false
+tests:
+  - name: gateway without VIF associations fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:directconnect::111122223333:dx-gateway/dxgw-noassoc"
+      asset_type: aws_directconnect_gateway
+      vendor: aws
+      properties:
+        network:
+          kind: directconnect_gateway
+          dx:
+            gateway_id: "dxgw-noassoc"
+            has_vif_associations: false
+  - name: gateway with VIF associations passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:directconnect::111122223333:dx-gateway/dxgw-active"
+      asset_type: aws_directconnect_gateway
+      vendor: aws
+      properties:
+        network:
+          kind: directconnect_gateway
+          dx:
+            gateway_id: "dxgw-active"
+            has_vif_associations: true

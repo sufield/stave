@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.REMEDIATION.NONE.001
+name: AWS Config Must Have At Least One Remediation Action Configured
+description: >
+  AWS Config should have at least one automatic remediation action
+  configured across its rules. Config without remediation is detect-
+  only — it identifies non-compliant resources but takes no corrective
+  action. For incident response automation, Config remediation actions
+  (via SSM Automation documents) provide the mechanism to automatically
+  correct security drift without manual intervention.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "IR-4"
+  soc2: "CC7.4"
+  ccm_v4: ["SEF-06"]
+  scs_c02: "12.1"
+scope_tags: [aws, config]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    No Config rules have automatic remediation actions configured.
+    Non-compliant resources require manual correction.
+  action: >
+    Configure remediation actions on critical Config rules using
+    SSM Automation documents. Start with high-severity rules like
+    s3-bucket-public-read-prohibited, encrypted-volumes, and
+    iam-password-policy.
+  example: |
+    {
+      "governance": {
+        "kind": "config_remediation_summary",
+        "config": {
+          "has_any_remediation": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: config_remediation_summary
+    - field: properties.governance.config.has_any_remediation
+      op: eq
+      value: false

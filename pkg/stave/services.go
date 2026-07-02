@@ -17,12 +17,22 @@ import (
 
 // ServiceEntry is one service in the registry.
 type ServiceEntry struct {
-	ID        string `yaml:"id"         json:"id"`
-	Name      string `yaml:"name"       json:"name"`
-	ShortName string `yaml:"short_name" json:"short_name"`
-	Category  string `yaml:"category"   json:"category"`
-	Status    string `yaml:"status"     json:"status,omitempty"`
-	Notes     string `yaml:"notes"      json:"notes,omitempty"`
+	ID              string           `yaml:"id"                         json:"id"`
+	Name            string           `yaml:"name"                       json:"name"`
+	ShortName       string           `yaml:"short_name"                 json:"short_name"`
+	Category        string           `yaml:"category"                   json:"category"`
+	Status          string           `yaml:"status"                     json:"status,omitempty"`
+	Notes           string           `yaml:"notes"                      json:"notes,omitempty"`
+	ExternalSources []ExternalSource `yaml:"external_collection_sources" json:"external_collection_sources,omitempty"`
+}
+
+// ExternalSource describes a third-party tool that can collect
+// snapshot data for a service Stave doesn't natively collect.
+type ExternalSource struct {
+	Tool   string   `yaml:"tool"   json:"tool"`
+	Plugin string   `yaml:"plugin" json:"plugin"`
+	Tables []string `yaml:"tables" json:"tables"`
+	Notes  string   `yaml:"notes"  json:"notes,omitempty"`
 }
 
 type serviceRegistryFile struct {
@@ -292,6 +302,20 @@ func renderServicesInspectText(buf *bytes.Buffer, r serviceInspectResult) {
 		fmt.Fprintf(tw, "  %s\t%s\t%s\n", c.ID, c.Severity, c.Name)
 	}
 	_ = tw.Flush()
+
+	if len(r.ExternalSources) > 0 {
+		fmt.Fprintf(buf, "\nEXTERNAL COLLECTION SOURCES:\n")
+		for i := range r.ExternalSources {
+			src := &r.ExternalSources[i]
+			fmt.Fprintf(buf, "  %s (%s)\n", src.Tool, src.Plugin)
+			for _, t := range src.Tables {
+				fmt.Fprintf(buf, "    - %s\n", t)
+			}
+			if src.Notes != "" {
+				fmt.Fprintf(buf, "    %s\n", src.Notes)
+			}
+		}
+	}
 }
 
 type categoryCoverage struct {

@@ -1,0 +1,70 @@
+dsl_version: ctrl.v1
+id: CTL.ACM.RENEWAL.001
+name: ACM Certificate Renewal Must Not Be In Failed State
+description: >
+  ACM-managed certificates must not be in a failed renewal state.
+  When ACM cannot auto-renew a certificate (DNS validation record
+  removed, domain no longer resolves, CAA record blocks issuance),
+  the certificate will expire on its expiry date. A failed renewal
+  requires manual intervention — the certificate will not self-heal.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.7"
+  pci_dss_v4.0: "4.2.1"
+  ccm_v4: ["CEK-03", "CEK-04"]
+scope_tags:
+  - aws
+  - acm
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_acm_certificate
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    ACM certificate renewal has failed. The certificate will expire
+    unless manually renewed.
+  action: >
+    Check the renewal status: aws acm describe-certificate. Common
+    causes: DNS CNAME validation record was deleted, domain DNS is
+    not resolving, CAA record blocks ACM issuance. Fix the underlying
+    cause and ACM will retry renewal automatically.
+  example: |
+    {
+      "certificate": {
+        "kind": "amazon_issued",
+        "renewal_failed": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.certificate.kind
+      op: eq
+      value: amazon_issued
+    - field: properties.certificate.renewal_failed
+      op: eq
+      value: true
+tests:
+  - name: certificate with failed renewal fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:certificate/failed-renewal"
+      asset_type: aws_acm_certificate
+      vendor: aws
+      properties:
+        certificate:
+          kind: amazon_issued
+          renewal_failed: true
+  - name: certificate with healthy renewal passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:certificate/healthy-cert"
+      asset_type: aws_acm_certificate
+      vendor: aws
+      properties:
+        certificate:
+          kind: amazon_issued
+          renewal_failed: false

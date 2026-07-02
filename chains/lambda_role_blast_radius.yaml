@@ -1,4 +1,11 @@
 id: lambda_role_blast_radius
+description: >
+  Blast radius of Lambda execution roles. Traces from each Lambda
+  function through its execution role's IAM permission graph —
+  including transitive role assumption, service-coupled escalation,
+  and cross-account reach — to enumerate all resources a compromised
+  Lambda can access. Compounds per-resource Lambda and IAM controls
+  with graph-level blast radius analysis via Soufflé/Datalog.
 controls:
   - CTL.LAMBDA.ROLE.SHARED.001
   - CTL.LAMBDA.ROLE.LEASTPRIV.001

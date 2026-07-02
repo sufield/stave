@@ -1,0 +1,32 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.DNS.RESOLUTION.001
+name: VPC Must Have DNS Resolution Enabled
+description: >
+  VPC does not have DNS resolution (EnableDnsSupport) enabled.
+  Without DNS resolution, instances cannot resolve public DNS
+  hostnames to private IP addresses within the VPC, breaking
+  VPC endpoint connectivity and service discovery. Required for
+  VPC endpoints, PrivateLink, and Route 53 Resolver integration.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "SC-22"
+  soc2: "CC6.6"
+scope_tags: [aws, vpc]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: VPC DNS resolution is disabled.
+  action: Enable DNS resolution on the VPC.
+  example: |
+    {"network": {"kind": "vpc", "dns": {"resolution_enabled": true, "hostnames_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc
+    - field: properties.network.dns.resolution_enabled
+      op: eq
+      value: false

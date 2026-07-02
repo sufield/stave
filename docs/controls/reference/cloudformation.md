@@ -64,6 +64,21 @@ CloudFormation stack outputs must not contain hardcoded secrets. Stack outputs a
 
 ---
 
+### CTL.CLOUDFORMATION.STACKPOLICY.001
+
+**CloudFormation Stacks Must Have a Stack Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-3; soc2: CC8.1;
+
+CloudFormation stack has no stack policy. Without a stack policy, any IAM principal with UpdateStack permission can modify or replace any resource in the stack. A stack policy acts as a secondary authorization control, preventing accidental or malicious resource replacement even when IAM allows the update.
+
+**Remediation:** Set a stack policy that protects critical resources from replacement.
+
+---
+
 ### CTL.CLOUDFORMATION.STACKSETS.RESTRICT.001
 
 **CloudFormation StackSets Must Require Administrator Approval**

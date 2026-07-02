@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.DNS.HOSTNAMES.001
+name: VPC Must Have DNS Hostnames Enabled
+description: >
+  VPC does not have DNS hostnames (EnableDnsHostnames) enabled.
+  Without DNS hostnames, EC2 instances do not receive public DNS
+  hostnames, preventing external resolution to their public IPs
+  and breaking patterns that depend on hostname-based identity
+  (ACM certificate validation, some load balancer health checks).
+  Required for VPC endpoints to generate private DNS entries.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "SC-22"
+  soc2: "CC6.6"
+scope_tags: [aws, vpc]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: VPC DNS hostnames are disabled.
+  action: Enable DNS hostnames on the VPC.
+  example: |
+    {"network": {"kind": "vpc", "dns": {"hostnames_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc
+    - field: properties.network.dns.hostnames_enabled
+      op: eq
+      value: false

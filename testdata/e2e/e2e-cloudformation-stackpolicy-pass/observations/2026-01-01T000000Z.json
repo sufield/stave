@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cf:us-east-1:111122223333:stack/prod-app/xyz",
+      "type": "aws_cloudformation_stack",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "cloudformation_stack",
+          "config": {
+            "has_stack_policy": true
+          }
+        }
+      }
+    }
+  ]
+}

@@ -81,6 +81,88 @@ func ResolvePackControls(packNames []string, controlsDir string, useBuiltin bool
 	return ids, nil
 }
 
+// ServiceSeverityCounts is a per-severity control breakdown for one service.
+type ServiceSeverityCounts struct {
+	Service  string `json:"service"`
+	Critical int    `json:"critical"`
+	High     int    `json:"high"`
+	Medium   int    `json:"medium"`
+	Low      int    `json:"low"`
+	Info     int    `json:"info"`
+	Total    int    `json:"total"`
+}
+
+// AutoPlanResult is the resolved plan for an --auto evaluation.
+type AutoPlanResult struct {
+	Services   []string
+	ControlIDs []string
+	Counts     []ServiceSeverityCounts
+}
+
+// AutoPlanSummary resolves packs and/or services into a plan summary:
+// which controls would evaluate and their severity breakdown per service.
+func AutoPlanSummary(packNames, services []string, controlsDir string, useBuiltin bool) (*AutoPlanResult, error) {
+	sums, err := CatalogControlSummaries(controlsDir, useBuiltin)
+	if err != nil {
+		return nil, fmt.Errorf("load control catalog: %w", err)
+	}
+	metas := make([]pack.ControlMeta, len(sums))
+	for i, s := range sums {
+		metas[i] = pack.ControlMeta{ID: s.ID, Severity: s.Severity}
+	}
+
+	seen := map[string]bool{}
+	var controlIDs []string
+	svcs := append([]string{}, services...)
+
+	if len(packNames) > 0 {
+		for _, name := range packNames {
+			p, perr := pack.Load(name)
+			if perr != nil {
+				return nil, fmt.Errorf("load pack %s: %w", name, perr)
+			}
+			for _, id := range p.Resolve(metas) {
+				if !seen[id] {
+					seen[id] = true
+					controlIDs = append(controlIDs, id)
+				}
+			}
+			if len(svcs) == 0 {
+				svcs = pack.ServicesForPack(p, metas)
+			}
+		}
+	} else {
+		all, lerr := pack.LoadAll()
+		if lerr != nil {
+			return nil, fmt.Errorf("load packs: %w", lerr)
+		}
+		for _, n := range pack.PacksForServices(svcs, all, metas) {
+			for _, id := range all[n].Resolve(metas) {
+				if !seen[id] {
+					seen[id] = true
+					controlIDs = append(controlIDs, id)
+				}
+			}
+		}
+	}
+
+	if len(svcs) == 0 || len(controlIDs) == 0 {
+		return nil, nil
+	}
+
+	counts := pack.CountByService(controlIDs, metas, svcs)
+	var result []ServiceSeverityCounts
+	for svc, c := range counts {
+		result = append(result, ServiceSeverityCounts{
+			Service: svc, Critical: c.Critical, High: c.High,
+			Medium: c.Medium, Low: c.Low, Info: c.Info, Total: c.Total,
+		})
+	}
+	sort.Slice(result, func(i, j int) bool { return result[i].Service < result[j].Service })
+
+	return &AutoPlanResult{Services: svcs, ControlIDs: controlIDs, Counts: result}, nil
+}
+
 // ResolveServiceControls returns the catalog control IDs belonging to any of the
 // given AWS services (matched by control-ID domain, e.g. CTL.IAM.* -> iam).
 // Empty services returns nil (the caller then evaluates every control). Used by

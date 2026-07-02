@@ -51,8 +51,8 @@ func Write(w io.Writer, in Input) {
 		writeComment(w, "stave_chain_active", "Active chain by ID")
 		for i := range a.ChainFindings {
 			cf := &a.ChainFindings[i]
-			fmt.Fprintf(w, "stave_chain_active{chain=%q,severity=%q} 1\n",
-				cf.ChainID, cf.Severity.String())
+			fmt.Fprintf(w, "stave_chain_active{chain=%q,severity=%q,asset_id=%q,scope_id=%q} 1\n",
+				cf.ChainID, cf.Severity.String(), cf.AssetID, cf.ScopeID)
 		}
 		fmt.Fprintln(w)
 	}

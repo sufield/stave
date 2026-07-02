@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYHUB.AUTOENABLE.001
+name: Security Hub Must Auto-Enable for New Organization Accounts
+description: >
+  Security Hub must be configured to auto-enable for new member
+  accounts in the organization. Without auto-enable, newly created or
+  invited accounts have no Security Hub coverage until manually
+  configured — a gap that can persist indefinitely if onboarding
+  procedures are missed.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - securityhub
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_securityhub_hub
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Security Hub does not auto-enable for new organization accounts.
+    New accounts lack security monitoring until manually configured.
+  action: >
+    Enable auto-enable:
+    aws securityhub update-organization-configuration --auto-enable
+  example: |
+    {
+      "security_hub": {
+        "kind": "hub",
+        "auto_enable_new_accounts": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.security_hub.kind
+      op: eq
+      value: hub
+    - field: properties.security_hub.auto_enable_new_accounts
+      op: eq
+      value: false
+tests:
+  - name: auto-enable disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:securityhub:us-east-1:111122223333:hub/default"
+      asset_type: aws_securityhub_hub
+      vendor: aws
+      properties:
+        security_hub:
+          kind: hub
+          auto_enable_new_accounts: false
+  - name: auto-enable enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:securityhub:us-east-1:111122223333:hub/default"
+      asset_type: aws_securityhub_hub
+      vendor: aws
+      properties:
+        security_hub:
+          kind: hub
+          auto_enable_new_accounts: true

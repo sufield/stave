@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.INSPECTOR.COVERAGE.001
+name: Amazon Inspector Must Cover All Scan Types
+description: >
+  Amazon Inspector must have all available scan types enabled —
+  EC2 scanning, ECR container scanning, Lambda function scanning,
+  and Lambda code scanning. Each scan type covers a different
+  attack surface. EC2 scanning detects OS-level CVEs, ECR scanning
+  finds container image vulnerabilities, Lambda scanning identifies
+  dependency vulnerabilities in function code. Partial coverage
+  leaves entire resource classes unscanned.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "RA-5"
+  soc2: "CC7.1"
+  pci_dss_v4.0: "11.3.1"
+  ccm_v4: ["TVM-01", "TVM-02"]
+scope_tags: [aws, inspector]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+observation_fields:
+  - governance.kind
+  - governance.scanner.ec2_enabled
+  - governance.scanner.ecr_enabled
+  - governance.scanner.lambda_enabled
+remediation:
+  description: >
+    Amazon Inspector does not have all scan types enabled. Some
+    resource classes are not being scanned for vulnerabilities.
+  action: >
+    Enable all scan types in Inspector. Use aws inspector2
+    enable --resource-types EC2 ECR LAMBDA LAMBDA_CODE to enable
+    all supported scan types.
+  example: |
+    {
+      "governance": {
+        "kind": "inspector_config",
+        "scanner": {
+          "ec2_enabled": true,
+          "ecr_enabled": true,
+          "lambda_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: inspector_config
+    - any:
+        - field: properties.governance.scanner.ec2_enabled
+          op: eq
+          value: false
+        - field: properties.governance.scanner.ecr_enabled
+          op: eq
+          value: false
+        - field: properties.governance.scanner.lambda_enabled
+          op: eq
+          value: false
+tests:
+  - name: partial scan coverage fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:inspector2:us-east-1:111122223333:inspector/partial"
+      asset_type: aws_inspector_config
+      vendor: aws
+      properties:
+        governance:
+          kind: inspector_config
+          scanner:
+            ec2_enabled: true
+            ecr_enabled: true
+            lambda_enabled: false
+  - name: full scan coverage passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:inspector2:us-east-1:111122223333:inspector/full"
+      asset_type: aws_inspector_config
+      vendor: aws
+      properties:
+        governance:
+          kind: inspector_config
+          scanner:
+            ec2_enabled: true
+            ecr_enabled: true
+            lambda_enabled: true

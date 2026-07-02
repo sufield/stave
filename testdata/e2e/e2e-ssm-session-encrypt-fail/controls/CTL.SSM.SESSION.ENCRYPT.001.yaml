@@ -1,0 +1,36 @@
+dsl_version: ctrl.v1
+id: CTL.SSM.SESSION.ENCRYPT.001
+name: SSM Session Manager Must Encrypt Sessions with KMS
+description: >
+  SSM Session Manager session preferences do not enable KMS
+  encryption. Without KMS encryption, session data traverses
+  the SSM channel without end-to-end encryption beyond the TLS
+  transport layer. KMS encryption adds a customer-managed key
+  layer, ensuring session data at rest in logs is encrypted with
+  a key the account controls.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-8"
+  soc2: "CC6.7"
+  ccm_v4: ["DSP-10"]
+scope_tags: [aws, ssm]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: SSM Session Manager KMS encryption is not enabled.
+  action: >
+    Configure the SSM-SessionManagerRunShell document to encrypt
+    sessions with a KMS key.
+  example: |
+    {"governance": {"kind": "ssm_session_preferences", "encryption": {"kms_enabled": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: ssm_session_preferences
+    - field: properties.governance.encryption.kms_enabled
+      op: eq
+      value: false

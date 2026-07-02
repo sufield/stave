@@ -1,0 +1,11 @@
+# 2026/07/02 12:09:02.331831 [TestProperty_FindingsAreOrderIndependent] [rapid] draw snapshots: 1
+# 2026/07/02 12:09:02.331877 [TestProperty_FindingsAreOrderIndependent] [rapid] draw assets_in_snapshot: 0
+# 2026/07/02 12:09:02.351325 [TestProperty_FindingsAreOrderIndependent] Apply returned an error on a well-formed fixture: run: applycore: failed to load embedded library: derive control refs: derive control refs: walk control YAMLs in embedded: duplicate control ID "CTL.SECURITYHUB.STANDARDS.001": defined in embedded/guardrail/CTL.SECURITYHUB.STANDARDS.001.yaml and embedded/securityhub/hub/CTL.SECURITYHUB.STANDARDS.001.yaml
+# 
+v0.4.8#15560762690588745120
+0x0
+0x0
+0x0
+0x0
+0x0
+0x0

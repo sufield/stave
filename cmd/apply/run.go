@@ -32,6 +32,12 @@ func runApply(ctx context.Context, opts *Options, cs cobraState) error {
 		return runDryRun(ctx, dryCfg)
 	}
 
+	if opts.Auto {
+		if autoErr := printAutoPlan(cs.Stderr, opts); autoErr != nil {
+			return fmt.Errorf("auto plan: %w", autoErr)
+		}
+	}
+
 	if err = runStrictIntegrityCheck(cs.GlobalFlags.Strict, cs.Stdout, cs.Stderr); err != nil {
 		return err // already wrapped inside runStrictIntegrityCheck
 	}

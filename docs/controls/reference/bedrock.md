@@ -245,6 +245,21 @@ Bedrock agent has not been invoked within the observation window (default 30 day
 
 ---
 
+### CTL.BEDROCK.AGENT.TOOLACCESS.BROAD.001
+
+**Bedrock Agent Must Not Have Excessive Action Groups**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_llm: LLM08; scs_c02: 13.1; soc2: CC6.1;
+
+Bedrock agents should have a minimal set of action groups — each action group grants the agent access to an additional Lambda function or API schema. OWASP LLM08 (Excessive Agency) identifies this as a top LLM risk: agents with many tools have a larger attack surface for prompt injection. An attacker who gains prompt control can invoke any tool the agent has access to. Limit action groups to the minimum set required for the agent's purpose.
+
+**Remediation:** Review each action group and remove any that are not required for the agent's primary purpose. Split agents with many tools into specialized agents with fewer, scoped action groups.
+
+---
+
 ### CTL.BEDROCK.CUSTOMMODEL.ENCRYPT.001
 
 **Bedrock Custom Model Must Use Customer-Managed KMS Key**
@@ -424,6 +439,21 @@ A Bedrock Knowledge Base declares its data sources (specific S3 prefixes, OpenSe
 This is a compound (graph-reachability) control over a resource type that bridges IAM to data stores. The reasoning layer parses the KB's declared dataSourceConfiguration, resolves what the retrieval role can actually reach (IAM policies with wildcard expansion + assume chains + resource-based policies), and emits ai.knowledge_base.retrieval_exceeds_declared_scope when the reachable set is not contained in the declared set. The reasoning spec — Soufflé reachability plus a Z3 cross-check, including wildcard-prefix and resource-policy edges — lives at examples/rag-retrieval-scope/.
 
 **Remediation:** Scope the retrieval role's resource ARNs to exactly the declared data sources (no wildcard prefixes that overmatch). Remove assume-role edges that widen reach. Audit bucket/collection resource policies for grants to the retrieval role on non-source stores and remove them.
+
+---
+
+### CTL.BEDROCK.LOG.CONTENT.001
+
+**Bedrock Model Invocation Logging Must Include Input and Output Content**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-3; owasp_llm: LLM02; scs_c02: 13.2; soc2: CC7.1;
+
+Bedrock model invocation logging must capture both input (prompt) and output (response) content, not just metadata. OWASP LLM02 (Insecure Output Handling) and LLM06 (Sensitive Information Disclosure) require visibility into what data flows through model invocations. Without content logging, prompt injection attacks and data exfiltration via model responses go undetected in forensic review.
+
+**Remediation:** Update the model invocation logging configuration to include input and output data logging to S3 or CloudWatch Logs.
 
 ---
 

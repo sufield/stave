@@ -1,0 +1,21 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ssm:us-east-1:111122223333:document/SSM-SessionManagerRunShell",
+      "type": "aws_ssm_document",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "ssm_session_preferences",
+          "logging": {
+            "s3_enabled": false,
+            "cloudwatch_enabled": false
+          }
+        }
+      }
+    }
+  ]
+}

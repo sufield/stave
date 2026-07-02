@@ -1,0 +1,52 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.RCP.DENY.EXTERNAL.001
+name: RCP Must Restrict External Principal Access to Resources
+description: >
+  Resource Control Policies (RCPs) must include a policy that restricts
+  external principals from accessing organization resources. Unlike
+  SCPs (which constrain what member account principals can do), RCPs
+  constrain who can access resources regardless of resource-based
+  policies. Without an external-access-deny RCP, any S3 bucket policy
+  or IAM role trust policy that grants access to an external account
+  is effective — RCPs are the only mechanism that can override
+  resource-based policies at the organizational level.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-10"]
+  scs_c02: "1.2"
+scope_tags:
+  - aws
+  - organizations
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    No RCP restricts external principals from accessing organization
+    resources. Resource-based policies granting external access are
+    not overridden at the organizational level.
+  action: >
+    Create an RCP that denies access from principals outside the
+    organization using aws:PrincipalOrgID condition. Attach it to
+    the organization root or target OUs.
+  example: |
+    {
+      "organization": {
+        "kind": "rcp_policy_set",
+        "rcp": {
+          "has_external_deny": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: rcp_policy_set
+    - field: properties.organization.rcp.has_external_deny
+      op: eq
+      value: false

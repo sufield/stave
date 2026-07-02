@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.LOG.CONTENT.001
+name: Bedrock Model Invocation Logging Must Include Input and Output Content
+description: >
+  Bedrock model invocation logging must capture both input (prompt)
+  and output (response) content, not just metadata. OWASP LLM02
+  (Insecure Output Handling) and LLM06 (Sensitive Information
+  Disclosure) require visibility into what data flows through model
+  invocations. Without content logging, prompt injection attacks
+  and data exfiltration via model responses go undetected in
+  forensic review.
+domain: exposure
+severity: medium
+compliance:
+  owasp_llm: "LLM02"
+  nist_800_53_r5: "AU-3"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-05"]
+  scs_c02: "13.2"
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_logging_config
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Bedrock model invocation logging does not capture input/output
+    content. Model interactions cannot be forensically reviewed.
+  action: >
+    Update the model invocation logging configuration to include
+    input and output data logging to S3 or CloudWatch Logs.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_logging_config",
+        "logging": {
+          "input_content_logged": true,
+          "output_content_logged": true
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - all:
+        - field: properties.ai.kind
+          op: eq
+          value: bedrock_logging_config
+        - field: properties.ai.logging.input_content_logged
+          op: eq
+          value: false
+    - all:
+        - field: properties.ai.kind
+          op: eq
+          value: bedrock_logging_config
+        - field: properties.ai.logging.output_content_logged
+          op: eq
+          value: false

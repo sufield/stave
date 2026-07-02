@@ -186,6 +186,7 @@ func ResolveControlCrosswalk(
 			return cmp.Or(
 				cmp.Compare(string(a.Framework), string(b.Framework)),
 				cmp.Compare(a.ControlID, b.ControlID),
+				cmp.Compare(a.Rationale, b.Rationale),
 			)
 		})
 		byCheck[cid] = refs

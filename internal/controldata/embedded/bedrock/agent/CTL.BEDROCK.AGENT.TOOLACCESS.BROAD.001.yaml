@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENT.TOOLACCESS.BROAD.001
+name: Bedrock Agent Must Not Have Excessive Action Groups
+description: >
+  Bedrock agents should have a minimal set of action groups — each
+  action group grants the agent access to an additional Lambda
+  function or API schema. OWASP LLM08 (Excessive Agency) identifies
+  this as a top LLM risk: agents with many tools have a larger
+  attack surface for prompt injection. An attacker who gains prompt
+  control can invoke any tool the agent has access to. Limit action
+  groups to the minimum set required for the agent's purpose.
+domain: identity
+severity: medium
+compliance:
+  owasp_llm: "LLM08"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+  scs_c02: "13.1"
+scope_tags:
+  - aws
+  - bedrock
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agent
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Bedrock agent has an excessive number of action groups. The
+    agent's tool surface is larger than necessary.
+  action: >
+    Review each action group and remove any that are not required
+    for the agent's primary purpose. Split agents with many tools
+    into specialized agents with fewer, scoped action groups.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agent",
+        "agent": {
+          "action_group_count_excessive": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agent
+    - field: properties.ai.agent.action_group_count_excessive
+      op: eq
+      value: true

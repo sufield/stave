@@ -1,4 +1,12 @@
 id: lambda_event_source_exposure
+description: >
+  Event source exposure of Lambda functions. Traces inward to each
+  Lambda — enumerating all invocation paths (ESM pull and push-based),
+  classifying source trust levels, detecting unconstrained resource-based
+  policy grants, and identifying trigger chain amplification where
+  weakly-authenticated sources transitively invoke privileged execution
+  roles. Composes with FM-042 blast radius for trust boundary violation
+  detection.
 controls:
   - CTL.LAMBDA.TRIGGER.APIGATEWAY.NOAUTH.001
   - CTL.LAMBDA.TRIGGER.CONFUSEDDEPUTY.001

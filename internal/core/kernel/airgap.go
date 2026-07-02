@@ -133,6 +133,10 @@ func DefaultPolicy() AirgapPolicy {
 			"internal/cli/ui/template.go": {
 				`"text/template"`: {},
 			},
+			// services.go has a struct tag yaml:"plugin" — not an import.
+			"pkg/stave/services.go": {
+				`"plugin"`: {},
+			},
 		},
 		bannedCredentialKeys: airgapInputs.snapshotBannedKeys(),
 		cloudPermissions:     airgapInputs.snapshotCloudPermissions(),

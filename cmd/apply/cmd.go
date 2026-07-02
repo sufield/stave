@@ -112,6 +112,7 @@ type Options struct {
 	SARIFBaseline      string
 	AssertRecent       string
 	Verbose            bool
+	Auto               bool // --auto: print severity plan, then evaluate
 }
 
 // IsNewOnlyMode reports whether the run is in new-only mode —
@@ -148,6 +149,8 @@ func NewApplyCmd() *cobra.Command {
 
 Modes:
   Default        Evaluate observations against controls in a project directory.
+  --auto         Discover→plan→evaluate pipeline. Requires --services or --pack.
+                 Prints a severity-weighted plan to stderr, then evaluates.
   --dry-run      Run readiness checks only, without evaluating controls.
   --profile      Evaluate a bundled observations file against a built-in control pack.
                  Requires --input. Example: stave apply --profile aws-s3 --input obs.json
@@ -188,7 +191,10 @@ Remediation scope:
   tooling — AI prompts, CI/CD pipelines, ticket systems — for fix
   generation. There is no --apply-fixes flag and no auto-fix mode;
   the boundary is the data, not the change.` + metadata.OfflineHelpSuffix,
-		Example: `  # Standard evaluation
+		Example: `  # Guided evaluation: discover services, plan severity order, evaluate
+  stave apply --auto --services iam,s3,lambda -o ./snapshots/
+
+  # Standard evaluation
   stave apply --controls ./controls --observations ./obs --format json
 
   # Scope evaluation to one concern pack
@@ -266,6 +272,7 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.StringVar(&o.SARIFBaseline, "baseline", "", "SARIF baseline file for baseline state comparison")
 	f.StringVar(&o.AssertRecent, "assert-recent", "", "Fail if no snapshot newer than this duration (e.g. 48h)")
 	f.BoolVarP(&o.Verbose, "verbose", "v", false, "Show full evidence, reasoning, and remediation for each finding")
+	f.BoolVar(&o.Auto, "auto", false, "Run discover→plan→evaluate: resolve services, show severity plan, evaluate in weighted order")
 }
 
 // validSLAPolicyValues is the closed set of accepted --sla-policy
@@ -298,6 +305,9 @@ func (o *Options) validate() error {
 	}
 	if (o.NewOnly || o.NewSince != "") && o.HistoryDir == "" {
 		return &ui.UserError{Err: errors.New("--history is required when using --new-only or --new-since")}
+	}
+	if o.Auto && len(o.Services) == 0 && len(o.Packs) == 0 {
+		return &ui.UserError{Err: errors.New("--auto requires --services or --pack")}
 	}
 	if !o.hasSupportedSLAPolicy() {
 		return &ui.UserError{Err: fmt.Errorf("--sla-policy %q invalid (allowed: %s)",

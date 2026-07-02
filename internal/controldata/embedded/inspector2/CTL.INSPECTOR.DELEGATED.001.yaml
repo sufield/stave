@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.INSPECTOR.DELEGATED.001
+name: Inspector Delegated Administrator Must Be Configured
+description: >
+  Amazon Inspector must have a delegated administrator configured in
+  AWS Organizations for centralized vulnerability management. Without
+  delegation, each account manages Inspector independently — scan
+  results are fragmented, no single team has visibility into
+  organization-wide vulnerabilities, and coverage gaps go undetected.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "RA-5"
+  soc2: "CC7.1"
+  ccm_v4: ["TVM-02"]
+scope_tags: [aws, inspector2]
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_inspector2_config
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Inspector does not have a delegated administrator configured.
+    Vulnerability management is fragmented across accounts.
+  action: >
+    Designate a delegated administrator:
+    aws inspector2 enable-delegated-admin-account --delegated-admin-account-id <account-id>
+  example: |
+    {
+      "governance": {
+        "kind": "inspector_config",
+        "delegated_admin": {
+          "configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: inspector_config
+    - field: properties.governance.delegated_admin.configured
+      op: eq
+      value: false
+tests:
+  - name: no delegated admin fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:inspector2:us-east-1:111122223333:config"
+      asset_type: aws_inspector2_config
+      vendor: aws
+      properties:
+        governance:
+          kind: inspector_config
+          delegated_admin:
+            configured: false
+  - name: delegated admin configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:inspector2:us-east-1:111122223333:config"
+      asset_type: aws_inspector2_config
+      vendor: aws
+      properties:
+        governance:
+          kind: inspector_config
+          delegated_admin:
+            configured: true

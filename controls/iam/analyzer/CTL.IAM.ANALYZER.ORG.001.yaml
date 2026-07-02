@@ -1,0 +1,52 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ANALYZER.ORG.001
+name: IAM Access Analyzer Must Be Configured at Organization Level
+description: >
+  IAM Access Analyzer should include an organization-level analyzer
+  (type ORGANIZATION), not just account-level analyzers. An account-
+  level analyzer only detects access from outside that specific
+  account. An organization-level analyzer detects access from outside
+  the entire organization — including cross-account access between
+  member accounts that bypasses intended boundaries. Without an
+  org-level analyzer, a role trusted by another member account looks
+  "internal" to the account analyzer but may violate organizational
+  access policy.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-03"]
+  scs_c02: "12.2"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    No organization-level IAM Access Analyzer exists. Cross-account
+    access within the organization is not analyzed.
+  action: >
+    Create an organization-level Access Analyzer from the
+    management or delegated admin account: aws accessanalyzer
+    create-analyzer --analyzer-name org-analyzer --type ORGANIZATION.
+  example: |
+    {
+      "identity": {
+        "kind": "access_analyzer_summary",
+        "analyzer": {
+          "has_org_analyzer": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: access_analyzer_summary
+    - field: properties.identity.analyzer.has_org_analyzer
+      op: eq
+      value: false

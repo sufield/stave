@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.RAM.PERMISSION.001
+name: RAM Resource Shares Must Use Specific Permissions
+description: >
+  RAM resource shares must use specific, granular permissions rather
+  than default full access. When a resource share uses default
+  permissions, the consuming account gets the broadest possible
+  access to the shared resource. Custom permissions restrict actions
+  to only what the consumer needs.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.3"
+  pci_dss_v4.0: "7.2.2"
+  ccm_v4: ["IAM-05"]
+scope_tags: [aws, ram]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - governance.ram.share_name
+  - governance.ram.uses_default_permission
+  - governance.ram.shared_resource_types
+remediation:
+  description: >
+    RAM resource share uses default (full) permissions. Consuming
+    accounts have broader access than necessary.
+  action: >
+    Replace the default permission with a custom managed permission
+    that grants only the specific actions required. Use
+    aws ram create-permission to define a scoped permission,
+    then associate it with the resource share.
+  example: |
+    {
+      "governance": {
+        "ram": {
+          "uses_default_permission": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.ram.uses_default_permission
+      op: eq
+      value: true
+tests:
+  - name: default permission fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ram:us-east-1:111122223333:resource-share/rs-default"
+      asset_type: aws_ram_share
+      vendor: aws
+      properties:
+        governance:
+          ram:
+            share_name: "broad-share"
+            uses_default_permission: true
+            shared_resource_types:
+              - "ec2:Subnet"
+  - name: custom permission passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ram:us-east-1:111122223333:resource-share/rs-custom"
+      asset_type: aws_ram_share
+      vendor: aws
+      properties:
+        governance:
+          ram:
+            share_name: "scoped-share"
+            uses_default_permission: false
+            shared_resource_types:
+              - "ec2:Subnet"

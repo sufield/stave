@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.EVENTSELECTORS.001
+name: CloudTrail Must Use Advanced Event Selectors for Granular Logging
+description: >
+  CloudTrail trails should use advanced event selectors instead of
+  basic event selectors. Basic selectors provide coarse control
+  (all management events, all/none S3 data events). Advanced
+  selectors allow per-resource-type filtering, field-level
+  conditions, and exclude high-volume read operations that add
+  cost without security value. A trail with only basic selectors
+  either logs too much (cost) or too little (gaps).
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-3"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-05"]
+scope_tags: [aws, cloudtrail]
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cloudtrail_trail
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - audit_trail.kind
+  - audit_trail.event_selectors.uses_advanced
+remediation:
+  description: >
+    CloudTrail trail uses basic event selectors. Logging granularity
+    is limited to all-or-nothing per event category.
+  action: >
+    Convert the trail to use advanced event selectors with
+    put-event-selectors --advanced-event-selectors. Define
+    field selectors for readOnly, resources.type, and
+    resources.ARN to control exactly which data events are logged.
+  example: |
+    {
+      "audit_trail": {
+        "kind": "trail",
+        "event_selectors": {
+          "uses_advanced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit_trail.kind
+      op: eq
+      value: trail
+    - field: properties.audit_trail.event_selectors.uses_advanced
+      op: eq
+      value: false
+tests:
+  - name: basic event selectors fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/basic-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit_trail:
+          kind: trail
+          event_selectors:
+            uses_advanced: false
+  - name: advanced event selectors passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/advanced-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit_trail:
+          kind: trail
+          event_selectors:
+            uses_advanced: true

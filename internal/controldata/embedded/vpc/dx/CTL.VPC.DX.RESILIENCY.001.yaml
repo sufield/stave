@@ -1,0 +1,49 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.DX.RESILIENCY.001
+name: Direct Connect Must Have Redundant Connections
+description: >
+  AWS Direct Connect should have at least two connections for
+  resiliency. A single DX connection is a single point of failure —
+  if the connection, port, or the DX location itself fails, all
+  hybrid connectivity is lost. AWS recommends at minimum two
+  connections at different DX locations for production workloads.
+  Without redundancy, a physical failure at one location takes
+  down the entire hybrid network path.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-8"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-07"]
+  scs_c02: "9.1"
+scope_tags: [aws, vpc]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    Only one Direct Connect connection exists. Hybrid connectivity
+    has no redundancy.
+  action: >
+    Provision a second Direct Connect connection at a different DX
+    location. Configure BGP failover between the two connections.
+    Consider using DX SiteLink for multi-site resiliency.
+  example: |
+    {
+      "network": {
+        "kind": "dx_account_summary",
+        "dx": {
+          "connection_count": 2,
+          "has_redundancy": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: dx_account_summary
+    - field: properties.network.dx.has_redundancy
+      op: eq
+      value: false

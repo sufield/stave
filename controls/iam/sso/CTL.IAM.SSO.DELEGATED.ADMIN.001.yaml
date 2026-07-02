@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SSO.DELEGATED.ADMIN.001
+name: Identity Center Must Use Delegated Administration
+description: >
+  IAM Identity Center should be administered from a delegated
+  administrator account, not the management account. Running IC from
+  the management account means IC administrators also have implicit
+  access to organizational management operations. Delegating IC
+  administration to a dedicated security account follows least-
+  privilege and reduces the blast radius of compromised IC admin
+  credentials.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-02"]
+  scs_c02: "3.1"
+scope_tags:
+  - aws
+  - iam
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Identity Center is administered from the management account.
+    IC administrators have implicit organizational management access.
+  action: >
+    Register a delegated administrator account for IAM Identity
+    Center using aws organizations register-delegated-administrator
+    --account-id <security-account> --service-principal
+    sso.amazonaws.com.
+  example: |
+    {
+      "identity": {
+        "kind": "sso_instance",
+        "sso": {
+          "delegated_admin_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: sso_instance
+    - field: properties.identity.sso.delegated_admin_configured
+      op: eq
+      value: false

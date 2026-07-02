@@ -1,0 +1,33 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFORMATION.STACKPOLICY.001
+name: CloudFormation Stacks Must Have a Stack Policy
+description: >
+  CloudFormation stack has no stack policy. Without a stack
+  policy, any IAM principal with UpdateStack permission can
+  modify or replace any resource in the stack. A stack policy
+  acts as a secondary authorization control, preventing
+  accidental or malicious resource replacement even when IAM
+  allows the update.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-3"
+  soc2: "CC8.1"
+scope_tags: [aws, cloudformation]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+remediation:
+  description: CloudFormation stack has no stack policy.
+  action: Set a stack policy that protects critical resources from replacement.
+  example: |
+    {"governance": {"kind": "cloudformation_stack", "config": {"has_stack_policy": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: cloudformation_stack
+    - field: properties.governance.config.has_stack_policy
+      op: eq
+      value: false

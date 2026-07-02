@@ -1,0 +1,24 @@
+id: iam_condition_key_complexity
+description: >
+  Condition key constraint interactions produce unintended access.
+  Z3 satisfiability analysis detects dead statements (contradictory
+  conditions that never fire), deny bypasses (request contexts that
+  thread between Allow and Deny conditions), and operator mismatches
+  (different matching semantics on the same key). Compounds the
+  per-condition CEL controls with formal verification of cross-
+  condition interactions.
+controls:
+  - CTL.IAM.POLICY.CONDITION.ORGID.001
+  - CTL.IAM.POLICY.CONDITION.STRINGLIKE.001
+  - CTL.IAM.POLICY.CONDITION.NOTRESOURCE.001
+  - CTL.IAM.POLICY.CONDITION.SOURCEIP.001
+  - CTL.IAM.POLICY.CONDITION.TEMPORAL.001
+  - CTL.IAM.POLICY.CONDITION.VIASERVICE.001
+  - CTL.IAM.POLICY.CONDITION.REGION.001
+  - CTL.IAM.POLICY.PASSROLE.CONDITION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - resource_policy_escalation

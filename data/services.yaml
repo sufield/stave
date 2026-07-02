@@ -70,6 +70,18 @@ services:
     name: Amazon Bedrock
     short_name: Bedrock
     category: ai
+    external_collection_sources:
+      - tool: cloudquery
+        plugin: cloudquery/aws
+        tables:
+          - aws_bedrock_model_invocation_logging_configurations
+          - aws_bedrock_custom_models
+          - aws_bedrock_guardrails
+      - tool: steampipe
+        plugin: aws
+        tables:
+          - aws_bedrock_custom_model
+          - aws_bedrock_agent_agent
 
   - id: cloudformation
     name: AWS CloudFormation
@@ -85,6 +97,17 @@ services:
     name: AWS CloudTrail
     short_name: CT
     category: management
+    external_collection_sources:
+      - tool: cloudquery
+        plugin: cloudquery/aws
+        tables:
+          - aws_cloudtrail_trails
+          - aws_cloudtrail_trail_event_selectors
+      - tool: steampipe
+        plugin: aws
+        tables:
+          - aws_cloudtrail_trail
+          - aws_cloudtrail_trail_event
 
   - id: cloudwatch
     name: Amazon CloudWatch
@@ -130,6 +153,22 @@ services:
     name: Amazon Elastic Compute Cloud
     short_name: EC2
     category: compute
+    external_collection_sources:
+      - tool: cloudquery
+        plugin: cloudquery/aws
+        tables:
+          - aws_ec2_instances
+          - aws_ec2_security_groups
+          - aws_ec2_ebs_volumes
+          - aws_ec2_ebs_snapshots
+      - tool: steampipe
+        plugin: aws
+        tables:
+          - aws_ec2_instance
+          - aws_vpc_security_group
+          - aws_ebs_volume
+          - aws_ebs_snapshot
+          - aws_ec2_instance_metadata_options
 
   - id: ecr
     name: Amazon Elastic Container Registry
@@ -140,6 +179,19 @@ services:
     name: Amazon Elastic Container Service
     short_name: ECS
     category: compute
+    external_collection_sources:
+      - tool: cloudquery
+        plugin: cloudquery/aws
+        tables:
+          - aws_ecs_clusters
+          - aws_ecs_services
+          - aws_ecs_task_definitions
+      - tool: steampipe
+        plugin: aws
+        tables:
+          - aws_ecs_cluster
+          - aws_ecs_service
+          - aws_ecs_task_definition
 
   - id: efs
     name: Amazon Elastic File System
@@ -150,6 +202,16 @@ services:
     name: Amazon Elastic Kubernetes Service
     short_name: EKS
     category: compute
+    external_collection_sources:
+      - tool: cloudquery
+        plugin: cloudquery/aws
+        tables:
+          - aws_eks_clusters
+          - aws_eks_cluster_encryption_configs
+      - tool: steampipe
+        plugin: aws
+        tables:
+          - aws_eks_cluster
 
   - id: elasticache
     name: Amazon ElastiCache
@@ -185,6 +247,25 @@ services:
     name: AWS Identity and Access Management
     short_name: IAM
     category: identity
+    external_collection_sources:
+      - tool: cloudquery
+        plugin: cloudquery/aws
+        tables:
+          - aws_iam_users
+          - aws_iam_roles
+          - aws_iam_policies
+          - aws_iam_credential_reports
+          - aws_iam_password_policies
+          - aws_iam_access_analyzers
+      - tool: steampipe
+        plugin: aws
+        tables:
+          - aws_iam_user
+          - aws_iam_role
+          - aws_iam_policy
+          - aws_iam_credential_report
+          - aws_iam_account_password_policy
+          - aws_iam_access_analyzer
 
   - id: inspector
     name: Amazon Inspector
@@ -200,11 +281,33 @@ services:
     name: AWS Key Management Service
     short_name: KMS
     category: security
+    external_collection_sources:
+      - tool: cloudquery
+        plugin: cloudquery/aws
+        tables:
+          - aws_kms_keys
+          - aws_kms_key_policies
+      - tool: steampipe
+        plugin: aws
+        tables:
+          - aws_kms_key
+          - aws_kms_key_rotation_status
 
   - id: lambda
     name: AWS Lambda
     short_name: Lambda
     category: compute
+    external_collection_sources:
+      - tool: cloudquery
+        plugin: cloudquery/aws
+        tables:
+          - aws_lambda_functions
+          - aws_lambda_function_url_configs
+      - tool: steampipe
+        plugin: aws
+        tables:
+          - aws_lambda_function
+          - aws_lambda_alias
 
   - id: lightsail
     name: Amazon Lightsail
@@ -255,6 +358,17 @@ services:
     name: Amazon Relational Database Service
     short_name: RDS
     category: database
+    external_collection_sources:
+      - tool: cloudquery
+        plugin: cloudquery/aws
+        tables:
+          - aws_rds_instances
+          - aws_rds_clusters
+      - tool: steampipe
+        plugin: aws
+        tables:
+          - aws_rds_db_instance
+          - aws_rds_db_cluster
 
   - id: redshift
     name: Amazon Redshift
@@ -270,11 +384,37 @@ services:
     name: Amazon Simple Storage Service
     short_name: S3
     category: storage
+    external_collection_sources:
+      - tool: cloudquery
+        plugin: cloudquery/aws
+        tables:
+          - aws_s3_buckets
+          - aws_s3_bucket_encryption_rules
+          - aws_s3_bucket_policies
+          - aws_s3_bucket_public_access_blocks
+      - tool: steampipe
+        plugin: aws
+        tables:
+          - aws_s3_bucket
+          - aws_s3_account_settings
 
   - id: sagemaker
     name: Amazon SageMaker
     short_name: SM
     category: ai
+    external_collection_sources:
+      - tool: cloudquery
+        plugin: cloudquery/aws
+        tables:
+          - aws_sagemaker_notebook_instances
+          - aws_sagemaker_endpoints
+          - aws_sagemaker_endpoint_configurations
+          - aws_sagemaker_training_jobs
+      - tool: steampipe
+        plugin: aws
+        tables:
+          - aws_sagemaker_notebook_instance
+          - aws_sagemaker_endpoint_configuration
 
   - id: secretsmanager
     name: AWS Secrets Manager
@@ -315,6 +455,21 @@ services:
     name: Amazon Virtual Private Cloud
     short_name: VPC
     category: networking
+    external_collection_sources:
+      - tool: cloudquery
+        plugin: cloudquery/aws
+        tables:
+          - aws_ec2_vpcs
+          - aws_ec2_flow_logs
+          - aws_ec2_security_groups
+          - aws_ec2_network_acls
+      - tool: steampipe
+        plugin: aws
+        tables:
+          - aws_vpc
+          - aws_vpc_flow_log
+          - aws_vpc_security_group
+          - aws_vpc_network_acl
 
   - id: waf
     name: AWS WAF

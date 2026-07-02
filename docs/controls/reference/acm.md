@@ -20,6 +20,21 @@ SSL/TLS certificates imported into ACM must not be within 30 days of expiry or a
 
 ---
 
+### CTL.ACM.CERT.VALIDATION.001
+
+**ACM Certificates Must Use DNS Validation**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-17; scs_c02: 6.2; soc2: CC6.1;
+
+ACM certificates should use DNS validation, not email validation. Email validation requires manual intervention for each renewal — if the domain contact email is stale, renewal fails silently and the certificate expires. DNS validation enables automatic renewal as long as the CNAME record exists, eliminating human-dependent renewal processes.
+
+**Remediation:** Re-request the certificate with DNS validation. Add the CNAME record ACM provides to your DNS zone. This enables automatic renewal without human intervention.
+
+---
+
 ### CTL.ACM.KEY.ALGORITHM.001
 
 **ACM Certificates Must Use Strong Key Algorithms**
@@ -32,6 +47,21 @@ SSL/TLS certificates imported into ACM must not be within 30 days of expiry or a
 ACM certificates must use RSA-2048+ or ECDSA P-256+ key algorithms. Weak algorithms (RSA-1024, ECDSA P-192) are vulnerable to factoring or discrete logarithm attacks.
 
 **Remediation:** Request a new certificate with RSA-2048 or ECDSA P-256.
+
+---
+
+### CTL.ACM.RENEWAL.001
+
+**ACM Certificate Renewal Must Not Be In Failed State**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+
+ACM-managed certificates must not be in a failed renewal state. When ACM cannot auto-renew a certificate (DNS validation record removed, domain no longer resolves, CAA record blocks issuance), the certificate will expire on its expiry date. A failed renewal requires manual intervention — the certificate will not self-heal.
+
+**Remediation:** Check the renewal status: aws acm describe-certificate. Common causes: DNS CNAME validation record was deleted, domain DNS is not resolving, CAA record blocks ACM issuance. Fix the underlying cause and ACM will retry renewal automatically.
 
 ---
 

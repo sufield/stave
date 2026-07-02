@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.TRUSTEDACCESS.001
+name: AWS Organizations Trusted Access Must Be Reviewed
+description: >
+  AWS Organizations trusted access allows AWS services to perform
+  operations across all accounts in the organization. Each enabled
+  trusted access service (CloudTrail, GuardDuty, Config, etc.) gains
+  cross-account permissions. Unreviewed trusted access means services
+  may have organization-wide permissions that were enabled for a
+  project and never revoked.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.3"
+  ccm_v4: ["IAM-05", "GRC-02"]
+scope_tags: [aws, organizations]
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+observation_fields:
+  - organization.kind
+  - organization.trusted_access.has_unreviewed_services
+  - organization.trusted_access.enabled_services
+remediation:
+  description: >
+    AWS Organizations has trusted access enabled for services that
+    have not been reviewed. These services have cross-account
+    permissions across the entire organization.
+  action: >
+    Review all enabled trusted access services. Disable any that
+    are no longer needed. Use aws organizations
+    list-aws-service-access-for-organization to list enabled
+    services and disable-aws-service-access to revoke.
+  example: |
+    {
+      "organization": {
+        "kind": "org_trusted_access",
+        "trusted_access": {
+          "has_unreviewed_services": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: org_trusted_access
+    - field: properties.organization.trusted_access.has_unreviewed_services
+      op: eq
+      value: true
+tests:
+  - name: unreviewed trusted access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organizations_config
+      vendor: aws
+      properties:
+        organization:
+          kind: org_trusted_access
+          trusted_access:
+            has_unreviewed_services: true
+            enabled_services:
+              - cloudtrail.amazonaws.com
+              - guardduty.amazonaws.com
+              - config.amazonaws.com
+              - fms.amazonaws.com
+  - name: reviewed trusted access passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organizations_config
+      vendor: aws
+      properties:
+        organization:
+          kind: org_trusted_access
+          trusted_access:
+            has_unreviewed_services: false
+            enabled_services:
+              - cloudtrail.amazonaws.com
+              - guardduty.amazonaws.com

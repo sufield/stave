@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.ALLFEATURES.001
+name: AWS Organizations Must Be in All Features Mode
+description: >
+  AWS Organizations must operate in ALL_FEATURES mode, not
+  CONSOLIDATED_BILLING. Consolidated-billing-only mode disables SCPs,
+  tag policies, AI opt-out policies, and backup policies — the entire
+  organizational governance layer is unavailable. Without ALL_FEATURES
+  mode, the management account cannot enforce guardrails on member
+  accounts. Migrating from consolidated-billing to all-features
+  requires consent from every member account.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.1"
+  ccm_v4: ["GRC-02"]
+  scs_c02: "1.1"
+scope_tags:
+  - aws
+  - organizations
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    AWS Organizations is in CONSOLIDATED_BILLING mode. SCPs and
+    organizational policies are unavailable.
+  action: >
+    Enable all features in the organization via the AWS Organizations
+    console or EnableAllFeatures API. This sends an invitation to each
+    member account that must be accepted.
+  example: |
+    {
+      "organization": {
+        "kind": "org_config",
+        "feature_set": "ALL"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: org_config
+    - field: properties.organization.feature_set
+      op: ne
+      value: ALL

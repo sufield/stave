@@ -1,0 +1,70 @@
+dsl_version: ctrl.v1
+id: CTL.SSM.PATCH.WINDOW.001
+name: SSM Patch Manager Must Use Maintenance Windows
+description: >
+  SSM Patch Manager operations must be scheduled through maintenance
+  windows to prevent uncoordinated patching. Without maintenance
+  windows, patches can be applied at arbitrary times — potentially
+  during peak traffic, during change freezes, or simultaneously across
+  all instances without rolling deployment.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "CC8.1"
+  ccm_v4: ["TVM-02"]
+scope_tags: [aws, ssm]
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ssm_maintenance_window
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    SSM Patch Manager does not use maintenance windows. Patches may
+    be applied at uncontrolled times.
+  action: >
+    Create a maintenance window:
+    aws ssm create-maintenance-window --name "patch-window"
+    --schedule "cron(0 2 ? * SUN *)" --duration 4 --cutoff 1
+  example: |
+    {
+      "governance": {
+        "kind": "maintenance_window",
+        "patch_window": {
+          "configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: maintenance_window
+    - field: properties.governance.patch_window.configured
+      op: eq
+      value: false
+tests:
+  - name: no maintenance window fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ssm:us-east-1:111122223333:maintenancewindow/mw-none"
+      asset_type: aws_ssm_maintenance_window
+      vendor: aws
+      properties:
+        governance:
+          kind: maintenance_window
+          patch_window:
+            configured: false
+  - name: maintenance window configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ssm:us-east-1:111122223333:maintenancewindow/mw-weekly"
+      asset_type: aws_ssm_maintenance_window
+      vendor: aws
+      properties:
+        governance:
+          kind: maintenance_window
+          patch_window:
+            configured: true
