@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENTCORE.VPC.001
+name: AgentCore Runtime Must Be VPC-Attached
+description: >
+  AgentCore runtime networkConfiguration.networkMode is PUBLIC —
+  the runtime executes on the public network rather than within a
+  customer VPC. A public-mode runtime sends all egress traffic
+  (tool calls, API requests, model invocations) over the internet,
+  exposing it to network-path threats. VPC mode routes traffic
+  through customer-controlled subnets and security groups, enabling
+  VPC endpoint routing, security group filtering, and flow log
+  capture.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7, AC-4"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agentcore_runtime
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    AgentCore runtime runs on the public network. Agent traffic
+    is not isolated within a VPC.
+  action: >
+    Set networkConfiguration.networkMode to VPC and configure
+    subnets and security groups via networkModeConfig. Use
+    private subnets with VPC endpoints for AWS service access.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_runtime",
+        "runtime": { "network_mode": "VPC" }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agentcore_runtime
+    - field: properties.ai.runtime.network_mode
+      op: eq
+      value: "PUBLIC"
+observation_fields:
+  - ai.kind
+  - ai.runtime.network_mode
+tests:
+  - name: "runtime on public network — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-PUBLIC"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            network_mode: "PUBLIC"
+  - name: "runtime VPC-attached — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-VPC"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            network_mode: "VPC"

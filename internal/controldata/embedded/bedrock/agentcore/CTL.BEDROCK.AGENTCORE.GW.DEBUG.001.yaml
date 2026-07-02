@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENTCORE.GW.DEBUG.001
+name: AgentCore Gateway Must Not Expose Debug Exceptions
+description: >
+  AgentCore gateway exceptionLevel is set to DEBUG — error
+  responses include full stack traces, internal service names,
+  and configuration details. An attacker probing the gateway can
+  use these details to map internal architecture, identify
+  software versions, and craft targeted exploits. DEBUG exception
+  level should never be enabled in production.
+domain: exposure
+severity: medium
+compliance:
+  owasp_nhi: "NHI9"
+  nist_800_53_r5: "SI-11"
+  soc2: "CC7.2"
+  ccm_v4: ["DSP-01"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agentcore_gateway
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    AgentCore gateway returns debug-level error details to
+    callers, leaking internal architecture information.
+  action: >
+    Remove the exceptionLevel setting or set it to a
+    non-DEBUG value. DEBUG is appropriate only for development
+    gateways in isolated environments.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_gateway",
+        "gateway": { "exception_level": "STANDARD" }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agentcore_gateway
+    - field: properties.ai.gateway.exception_level
+      op: eq
+      value: "DEBUG"
+observation_fields:
+  - ai.kind
+  - ai.gateway.exception_level
+tests:
+  - name: "gateway with DEBUG exceptions — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agentcore-gateway/gw-DEBUG"
+      asset_type: aws_bedrock_agentcore_gateway
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_gateway
+          gateway:
+            exception_level: "DEBUG"
+  - name: "gateway without DEBUG — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agentcore-gateway/gw-STD"
+      asset_type: aws_bedrock_agentcore_gateway
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_gateway
+          gateway:
+            exception_level: "STANDARD"

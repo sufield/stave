@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENTCORE.NOAUTH.001
+name: AgentCore Gateway Must Require Authentication
+description: >
+  AgentCore gateway authorizer type is set to NONE — the gateway
+  endpoint accepts unauthenticated requests. Any caller with network
+  access to the gateway can invoke the agent, triggering model
+  inference, tool execution, and memory access without identity
+  attribution. AgentCore supports CUSTOM_JWT, AWS_IAM, and
+  AUTHENTICATE_ONLY authorizer types; NONE should never be used
+  outside development.
+domain: identity
+severity: critical
+compliance:
+  owasp_nhi: "NHI4"
+  nist_800_53_r5: "AC-3, IA-2"
+  soc2: "CC6.1"
+  hipaa: "164.312(d)"
+  ccm_v4: ["IAM-02", "IAM-04"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+  - identity-perimeter
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agentcore_gateway
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    AgentCore gateway has no authentication — any network-reachable
+    caller can invoke the agent.
+  action: >
+    Set the gateway authorizer type to AWS_IAM (recommended) or
+    configure a JWT authorizer with a trusted identity provider.
+    NONE authorizer is appropriate only for internal development
+    endpoints isolated within a private VPC.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_gateway",
+        "gateway": { "authorizer_type": "AWS_IAM" }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agentcore_gateway
+    - field: properties.ai.gateway.authorizer_type
+      op: eq
+      value: "NONE"
+observation_fields:
+  - ai.kind
+  - ai.gateway.authorizer_type
+tests:
+  - name: "gateway with no auth — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agentcore-gateway/gw-NOAUTH"
+      asset_type: aws_bedrock_agentcore_gateway
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_gateway
+          gateway:
+            authorizer_type: "NONE"
+  - name: "gateway with IAM auth — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agentcore-gateway/gw-IAM"
+      asset_type: aws_bedrock_agentcore_gateway
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_gateway
+          gateway:
+            authorizer_type: "AWS_IAM"

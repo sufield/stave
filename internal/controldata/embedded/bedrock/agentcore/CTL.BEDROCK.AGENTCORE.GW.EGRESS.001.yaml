@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENTCORE.GW.EGRESS.001
+name: AgentCore Gateway Targets Must Use Private Endpoints
+description: >
+  AgentCore gateway target does not use a private endpoint —
+  traffic between the gateway and the target (MCP server, Lambda,
+  HTTP endpoint) traverses the public internet. AgentCore supports
+  VPC egress private endpoints via VPC Lattice for gateway targets,
+  routing traffic through the customer's VPC without internet
+  exposure. Without private endpoints, credentials, tool payloads,
+  and agent context are exposed to network-path interception.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7, SC-8"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agentcore_gateway
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    AgentCore gateway target routes traffic over the public
+    internet — credentials and payloads are exposed.
+  action: >
+    Configure a private endpoint for the gateway target via the
+    privateEndpoint field on the GatewayTarget resource. This
+    creates a VPC Lattice-managed endpoint within the customer
+    VPC.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_gateway",
+        "gateway": { "targets_use_private_endpoints": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agentcore_gateway
+    - field: properties.ai.gateway.targets_use_private_endpoints
+      op: eq
+      value: false
+observation_fields:
+  - ai.kind
+  - ai.gateway.targets_use_private_endpoints
+tests:
+  - name: "gateway targets without private endpoints — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agentcore-gateway/gw-PUB"
+      asset_type: aws_bedrock_agentcore_gateway
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_gateway
+          gateway:
+            targets_use_private_endpoints: false
+  - name: "gateway targets with private endpoints — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agentcore-gateway/gw-PRIV"
+      asset_type: aws_bedrock_agentcore_gateway
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_gateway
+          gateway:
+            targets_use_private_endpoints: true

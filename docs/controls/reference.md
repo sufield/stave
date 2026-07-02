@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2802
-**Pack hash:** `6b52a24afe97aa2b578cfba1e77c02aa44273d5a785112d362efb40fd1349628`
+**Total controls:** 2812
+**Pack hash:** `55c7e0b01292305e2659a7e0b0f0fc833ffbf3461ca9859911c3ab716051d1d7`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,23 +13,23 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 291 |
-| high | 1224 |
+| critical | 292 |
+| high | 1228 |
 | info | 16 |
 | low | 211 |
-| medium | 1060 |
+| medium | 1065 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 91 |
+| audit | 92 |
 | capacity | 3 |
 | detection | 135 |
-| encryption | 117 |
-| exposure | 1237 |
+| encryption | 119 |
+| exposure | 1241 |
 | governance | 592 |
 | hygiene | 18 |
-| identity | 483 |
+| identity | 486 |
 | lifecycle | 31 |
 | network | 40 |
 | resilience | 34 |
@@ -51,7 +51,7 @@ GitHub. Pick a service below.
 | [BACKUP](reference/backup.md) | 10 |
 | [BATCH](reference/batch.md) | 3 |
 | [BEANSTALK](reference/beanstalk.md) | 2 |
-| [BEDROCK](reference/bedrock.md) | 33 |
+| [BEDROCK](reference/bedrock.md) | 43 |
 | [CFN](reference/cfn.md) | 1 |
 | [CISCO](reference/cisco.md) | 30 |
 | [CLOUDFLARE](reference/cloudflare.md) | 29 |

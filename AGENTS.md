@@ -361,7 +361,7 @@ Stave's multi-domain capability is a **schema specification**, not code. The obs
 ### Do
 
 - Define new security checks as YAML controls in `controls/` following the ctrl.v1 DSL.
-- Use `make forge` to scaffold new controls with E2E test fixtures.
+- Use `make gencontrol` to scaffold new controls with E2E test fixtures.
 - Accompany every new control with at least two observation snapshots: one that triggers the finding and one that confirms evaluation works.
 - Place controls in domain-specific subdirectories: `controls/s3/`, `controls/iam/`, `controls/gcs/`, `controls/dns/`.
 - Run `make sync-controls` after adding controls to update the embedded pack.

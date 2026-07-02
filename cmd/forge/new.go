@@ -23,7 +23,7 @@ func newNewCmd() *cobra.Command {
 for control metadata, lets you browse property paths from a real snapshot,
 and shows live CEL evaluation before writing files.
 
-Use --non-interactive to accept all inputs from flags (equivalent to make forge).
+Use --non-interactive to accept all inputs from flags (equivalent to make gencontrol).
 
 Exit Codes:
   0   Control generated successfully

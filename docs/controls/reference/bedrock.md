@@ -260,6 +260,156 @@ Bedrock agents should have a minimal set of action groups — each action group 
 
 ---
 
+### CTL.BEDROCK.AGENTCORE.GW.DEBUG.001
+
+**AgentCore Gateway Must Not Expose Debug Exceptions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-11; owasp_nhi: NHI9; soc2: CC7.2;
+
+AgentCore gateway exceptionLevel is set to DEBUG — error responses include full stack traces, internal service names, and configuration details. An attacker probing the gateway can use these details to map internal architecture, identify software versions, and craft targeted exploits. DEBUG exception level should never be enabled in production.
+
+**Remediation:** Remove the exceptionLevel setting or set it to a non-DEBUG value. DEBUG is appropriate only for development gateways in isolated environments.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.GW.EGRESS.001
+
+**AgentCore Gateway Targets Must Use Private Endpoints**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(e)(1); nist_800_53_r5: SC-7, SC-8; soc2: CC6.6;
+
+AgentCore gateway target does not use a private endpoint — traffic between the gateway and the target (MCP server, Lambda, HTTP endpoint) traverses the public internet. AgentCore supports VPC egress private endpoints via VPC Lattice for gateway targets, routing traffic through the customer's VPC without internet exposure. Without private endpoints, credentials, tool payloads, and agent context are exposed to network-path interception.
+
+**Remediation:** Configure a private endpoint for the gateway target via the privateEndpoint field on the GatewayTarget resource. This creates a VPC Lattice-managed endpoint within the customer VPC.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.GW.ENCRYPT.001
+
+**AgentCore Gateway Must Use Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-12, SC-28; soc2: CC6.1;
+
+AgentCore gateway does not have a customer-managed KMS key (kmsKeyArn is absent). Without CMK encryption, gateway data (OAuth tokens, credential provider secrets, session context) is encrypted with the AWS-managed default key, which the customer cannot rotate, audit, or revoke independently. CMK provides cryptographic isolation — revoking the key immediately renders all gateway data inaccessible, a critical incident-response capability for agent infrastructure handling third-party credentials.
+
+**Remediation:** Create a KMS key for AgentCore gateway encryption and set kmsKeyArn on the gateway. Use a key policy that restricts access to the gateway service role and security operators.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.GW.WAF.001
+
+**AgentCore Gateway Must Have WAF Web ACL Attached**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7(5); soc2: CC6.6;
+
+AgentCore gateway does not have a WAF web ACL (webAclArn is absent). Without WAF, the gateway has no request-level filtering — no rate limiting, no IP reputation blocking, no managed rule groups for known attack patterns. AgentCore gateways are internet-facing MCP endpoints; WAF provides the first line of defense against volumetric abuse, credential stuffing, and prompt-injection payloads delivered via malformed requests.
+
+**Remediation:** Create a WAF web ACL with appropriate managed rule groups (AWSManagedRulesCommonRuleSet, AWSManagedRulesBotControlRuleSet) and associate it with the AgentCore gateway via webAclArn.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.IMDS.001
+
+**AgentCore Runtime Must Require IMDSv2**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-3, SC-23; owasp_nhi: NHI5; soc2: CC6.1;
+
+AgentCore runtime metadataConfiguration.requireMMDSV2 is false — the runtime accepts IMDSv1 requests. IMDSv1 uses a simple GET without a session token, making it exploitable via SSRF attacks: any code running in the agent that can issue HTTP requests to 169.254.169.254 can steal the runtime's IAM credentials. IMDSv2 requires a PUT-based token exchange that SSRF payloads typically cannot perform. This mirrors CTL.EC2.IMDSV2.001 applied to the AgentCore execution environment.
+
+**Remediation:** Set metadataConfiguration.requireMMDSV2 to true on the AgentCore runtime via UpdateAgentRuntime.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.LOGGING.001
+
+**AgentCore Runtime Must Have Logging Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** hipaa: 164.312(b); nist_800_53_r5: AU-2, AU-12; owasp_nhi: NHI8; soc2: CC7.2;
+
+AgentCore runtime does not have S3 logging configured — agent invocations, tool calls, and session events leave no audit trail. Without log uploads, prompt-injection attacks, unauthorized tool execution, and data exfiltration through the agent produce no forensic evidence. AgentCore supports S3LoggingConfiguration for durable log storage.
+
+**Remediation:** Configure S3LoggingConfiguration on the runtime via CreateAgentRuntime or UpdateAgentRuntime. Point to an S3 bucket with appropriate lifecycle policies and encryption.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.MEM.ENCRYPT.001
+
+**AgentCore Memory Must Use Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-12, SC-28; soc2: CC6.1;
+
+AgentCore memory does not have a customer-managed KMS key (encryptionKeyArn is absent). Agent memory stores conversation history, tool-call results, extracted facts, and strategy outputs — potentially including PII, credentials, and business logic. Without CMK encryption, this data is encrypted with the AWS-managed default key, which the customer cannot independently rotate or revoke. CMK provides cryptographic kill-switch capability: revoking the key immediately makes all stored memory inaccessible.
+
+**Remediation:** Create a KMS key for AgentCore memory encryption and set encryptionKeyArn on the memory resource. The key policy should restrict access to the memory execution role and security operators.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.NOAUTH.001
+
+**AgentCore Gateway Must Require Authentication**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(d); nist_800_53_r5: AC-3, IA-2; owasp_nhi: NHI4; soc2: CC6.1;
+
+AgentCore gateway authorizer type is set to NONE — the gateway endpoint accepts unauthenticated requests. Any caller with network access to the gateway can invoke the agent, triggering model inference, tool execution, and memory access without identity attribution. AgentCore supports CUSTOM_JWT, AWS_IAM, and AUTHENTICATE_ONLY authorizer types; NONE should never be used outside development.
+
+**Remediation:** Set the gateway authorizer type to AWS_IAM (recommended) or configure a JWT authorizer with a trusted identity provider. NONE authorizer is appropriate only for internal development endpoints isolated within a private VPC.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.SESSION.001
+
+**AgentCore Runtime Session Lifetime Must Be Bounded**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(2)(iii); nist_800_53_r5: AC-12; owasp_nhi: NHI7; soc2: CC6.1;
+
+AgentCore runtime lifecycleConfiguration.maxLifetime exceeds the recommended threshold. Long-lived runtime sessions extend the window during which a compromised agent retains its execution role credentials, memory context, and tool access. The collector pre-computes whether maxLifetime exceeds the threshold (default 28800 seconds / 8 hours). Shorter lifetimes force credential rotation and limit the blast radius of prompt-injection or credential-theft attacks.
+
+**Remediation:** Reduce lifecycleConfiguration.maxLifetime to 28800 seconds (8 hours) or less. For agents handling sensitive data, 3600 seconds (1 hour) is the tighter recommendation. Update via UpdateAgentRuntime.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.VPC.001
+
+**AgentCore Runtime Must Be VPC-Attached**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(e)(1); nist_800_53_r5: SC-7, AC-4; soc2: CC6.6;
+
+AgentCore runtime networkConfiguration.networkMode is PUBLIC — the runtime executes on the public network rather than within a customer VPC. A public-mode runtime sends all egress traffic (tool calls, API requests, model invocations) over the internet, exposing it to network-path threats. VPC mode routes traffic through customer-controlled subnets and security groups, enabling VPC endpoint routing, security group filtering, and flow log capture.
+
+**Remediation:** Set networkConfiguration.networkMode to VPC and configure subnets and security groups via networkModeConfig. Use private subnets with VPC endpoints for AWS service access.
+
+---
+
 ### CTL.BEDROCK.CUSTOMMODEL.ENCRYPT.001
 
 **Bedrock Custom Model Must Use Customer-Managed KMS Key**

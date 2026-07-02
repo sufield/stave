@@ -123,7 +123,7 @@ What happened over 2 months, what's left, and what to never repeat.
 ## Phase 2 Roadmap: Foundation to Product
 
 ### 1. Policy Forge (DONE)
-~~Skill SDK Generator~~ → Corrected to **Policy Forge** (`make forge` / `internal/tools/gencontrol`).
+~~Skill SDK Generator~~ → Corrected to **Policy Forge** (`make gencontrol` / `internal/tools/gencontrol`).
 Controls are declarative YAML+CEL, not imperative Go. The forge scaffolds ctrl.v1 YAML + pass/fail E2E fixtures with validation. Generates new controls in <30 seconds.
 
 ### 2. Air-Gap Trust (DONE — binary inspection)

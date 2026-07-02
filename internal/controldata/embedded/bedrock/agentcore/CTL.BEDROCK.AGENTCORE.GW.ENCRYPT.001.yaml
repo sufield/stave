@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENTCORE.GW.ENCRYPT.001
+name: AgentCore Gateway Must Use Customer-Managed KMS Key
+description: >
+  AgentCore gateway does not have a customer-managed KMS key
+  (kmsKeyArn is absent). Without CMK encryption, gateway data
+  (OAuth tokens, credential provider secrets, session context) is
+  encrypted with the AWS-managed default key, which the customer
+  cannot rotate, audit, or revoke independently. CMK provides
+  cryptographic isolation — revoking the key immediately renders
+  all gateway data inaccessible, a critical incident-response
+  capability for agent infrastructure handling third-party
+  credentials.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-12, SC-28"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03", "DSP-01"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agentcore_gateway
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    AgentCore gateway uses the AWS-managed default key — the
+    customer cannot independently rotate, audit, or revoke it.
+  action: >
+    Create a KMS key for AgentCore gateway encryption and set
+    kmsKeyArn on the gateway. Use a key policy that restricts
+    access to the gateway service role and security operators.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_gateway",
+        "gateway": { "cmk_configured": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agentcore_gateway
+    - field: properties.ai.gateway.cmk_configured
+      op: eq
+      value: false
+observation_fields:
+  - ai.kind
+  - ai.gateway.cmk_configured
+tests:
+  - name: "gateway without CMK — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agentcore-gateway/gw-NOKEY"
+      asset_type: aws_bedrock_agentcore_gateway
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_gateway
+          gateway:
+            cmk_configured: false
+  - name: "gateway with CMK — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agentcore-gateway/gw-CMK"
+      asset_type: aws_bedrock_agentcore_gateway
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_gateway
+          gateway:
+            cmk_configured: true

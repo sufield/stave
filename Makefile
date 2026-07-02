@@ -739,10 +739,10 @@ readme: sync-controls
 readme-check: sync-controls
 	$(GOCMD) run ./internal/tools/genreadme -check
 
-## forge: Scaffold a new control with E2E test fixtures (usage: make forge ID=CTL.S3.NEW.001 NAME="..." FIELD=... REMEDIATION="...")
-forge:
+## gencontrol: Scaffold a new control with E2E test fixtures (usage: make gencontrol ID=CTL.S3.NEW.001 NAME="..." FIELD=... REMEDIATION="...")
+gencontrol:
 ifndef ID
-	$(error Usage: make forge ID=CTL.S3.NEW.001 NAME="Control Name" FIELD=properties.storage.access.public_read REMEDIATION="Fix action text")
+	$(error Usage: make gencontrol ID=CTL.S3.NEW.001 NAME="Control Name" FIELD=properties.storage.access.public_read REMEDIATION="Fix action text")
 endif
 	$(GOCMD) run ./internal/tools/gencontrol --id "$(ID)" --name "$(NAME)" --field "$(FIELD)" --remediation "$(REMEDIATION)" $(if $(DOMAIN),--domain "$(DOMAIN)") $(if $(SEVERITY),--severity "$(SEVERITY)") $(if $(SCOPE_TAGS),--scope-tags "$(SCOPE_TAGS)") $(if $(ASSET_TYPE),--asset-type "$(ASSET_TYPE)") $(if $(OP),--op "$(OP)") $(if $(VALUE),--value "$(VALUE)") $(if $(COMPLIANCE),--compliance "$(COMPLIANCE)") $(if $(OUT),--out "$(OUT)")
 

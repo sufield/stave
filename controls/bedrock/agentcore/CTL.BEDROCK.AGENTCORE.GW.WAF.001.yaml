@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENTCORE.GW.WAF.001
+name: AgentCore Gateway Must Have WAF Web ACL Attached
+description: >
+  AgentCore gateway does not have a WAF web ACL (webAclArn is
+  absent). Without WAF, the gateway has no request-level filtering
+  — no rate limiting, no IP reputation blocking, no managed rule
+  groups for known attack patterns. AgentCore gateways are
+  internet-facing MCP endpoints; WAF provides the first line of
+  defense against volumetric abuse, credential stuffing, and
+  prompt-injection payloads delivered via malformed requests.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7(5)"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-09"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agentcore_gateway
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    AgentCore gateway has no WAF web ACL — no request filtering
+    or rate limiting is applied.
+  action: >
+    Create a WAF web ACL with appropriate managed rule groups
+    (AWSManagedRulesCommonRuleSet, AWSManagedRulesBotControlRuleSet)
+    and associate it with the AgentCore gateway via webAclArn.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_gateway",
+        "gateway": { "waf_configured": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agentcore_gateway
+    - field: properties.ai.gateway.waf_configured
+      op: eq
+      value: false
+observation_fields:
+  - ai.kind
+  - ai.gateway.waf_configured
+tests:
+  - name: "gateway without WAF — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agentcore-gateway/gw-NOWAF"
+      asset_type: aws_bedrock_agentcore_gateway
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_gateway
+          gateway:
+            waf_configured: false
+  - name: "gateway with WAF — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agentcore-gateway/gw-WAF"
+      asset_type: aws_bedrock_agentcore_gateway
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_gateway
+          gateway:
+            waf_configured: true

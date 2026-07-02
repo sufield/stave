@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENTCORE.LOGGING.001
+name: AgentCore Runtime Must Have Logging Configured
+description: >
+  AgentCore runtime does not have S3 logging configured — agent
+  invocations, tool calls, and session events leave no audit trail.
+  Without log uploads, prompt-injection attacks, unauthorized tool
+  execution, and data exfiltration through the agent produce no
+  forensic evidence. AgentCore supports S3LoggingConfiguration for
+  durable log storage.
+domain: audit
+severity: high
+compliance:
+  owasp_nhi: "NHI8"
+  nist_800_53_r5: "AU-2, AU-12"
+  soc2: "CC7.2"
+  hipaa: "164.312(b)"
+  ccm_v4: ["LOG-01", "LOG-12"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+  - logging
+  - attribution
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agentcore_runtime
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    AgentCore runtime has no logging — agent actions are
+    unauditable.
+  action: >
+    Configure S3LoggingConfiguration on the runtime via
+    CreateAgentRuntime or UpdateAgentRuntime. Point to an S3
+    bucket with appropriate lifecycle policies and encryption.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_runtime",
+        "runtime": { "logging_configured": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agentcore_runtime
+    - field: properties.ai.runtime.logging_configured
+      op: eq
+      value: false
+observation_fields:
+  - ai.kind
+  - ai.runtime.logging_configured
+tests:
+  - name: "runtime without logging — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-NOLOG"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            logging_configured: false
+  - name: "runtime with logging — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-LOGGED"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            logging_configured: true

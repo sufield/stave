@@ -72,7 +72,7 @@ This glossary maps Stave's internal terminology to security industry standards
 
 | Term | Definition |
 |---|---|
-| **Policy Forge** | The `make forge` tool that scaffolds new controls with validated YAML and pass/fail E2E test fixtures. |
+| **Policy Forge** | The `make gencontrol` tool that scaffolds new controls with validated YAML and pass/fail E2E test fixtures. |
 | **Extractor** | An external program (any language) that produces `obs.v0.1` JSON from cloud infrastructure. Not part of Stave. |
 | **Semantic Alias** | A named shorthand for a predicate (e.g., `s3.is_public_readable`). Resolved at control load time. |
 | **Pack** | A named collection of controls (e.g., `s3`, `iam`, `gcs`, `dns`, `hipaa`). Registered in `index.yaml`. |

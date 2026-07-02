@@ -95,7 +95,7 @@ worrying about side effects.
 The fastest way to create a new control with test fixtures:
 
 ```bash
-make forge \
+make gencontrol \
   ID=CTL.S3.EXAMPLE.001 \
   NAME="Example Safety Check" \
   DOMAIN=exposure \
@@ -408,7 +408,7 @@ full field dictionary.
 
 ```bash
 # Generate control + pass/fail fixtures
-make forge ID=CTL.S3.NEW.001 NAME="My Control" \
+make gencontrol ID=CTL.S3.NEW.001 NAME="My Control" \
   FIELD=properties.storage.access.public_read \
   REMEDIATION="Disable public read."
 
