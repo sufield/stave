@@ -19,6 +19,9 @@ compliance:
   ccm_v4: ["IVS-09", "DSP-13"]
 scope_tags:
   - aws
+taxonomy:
+  - compliance-mapping
+  - network-isolation
 type: unsafe_state
 classification: state_assertion
 params:

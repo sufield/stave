@@ -23,6 +23,11 @@ compliance:
 scope_tags:
   - aws
   - elb
+taxonomy:
+  - credential-lifecycle
+  - identity-perimeter
+  - least-privilege
+  - logging
 type: unsafe_state
 classification: state_assertion
 params:

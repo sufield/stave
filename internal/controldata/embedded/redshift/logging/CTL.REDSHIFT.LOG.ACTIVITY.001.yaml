@@ -13,6 +13,9 @@ compliance:
 scope_tags:
 - aws
 - redshift
+taxonomy:
+  - compliance-mapping
+  - logging
 type: unsafe_state
 classification: state_assertion
 params:

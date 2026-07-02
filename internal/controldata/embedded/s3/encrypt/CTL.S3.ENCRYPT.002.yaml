@@ -23,6 +23,9 @@ compliance:
 scope_tags:
   - aws
   - s3
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

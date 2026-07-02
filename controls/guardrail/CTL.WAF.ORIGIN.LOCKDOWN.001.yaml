@@ -38,6 +38,10 @@ compliance:
 scope_tags:
   - aws
   - waf
+taxonomy:
+  - logging
+  - network-isolation
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

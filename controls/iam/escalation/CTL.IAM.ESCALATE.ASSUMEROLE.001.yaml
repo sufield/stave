@@ -29,6 +29,11 @@ compliance:
 scope_tags:
   - aws
   - iam
+taxonomy:
+  - credential-lifecycle
+  - identity-perimeter
+  - logging
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 params:

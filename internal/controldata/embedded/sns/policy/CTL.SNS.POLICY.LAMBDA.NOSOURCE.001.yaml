@@ -25,6 +25,10 @@ compliance:
 scope_tags:
   - aws
   - sns
+taxonomy:
+  - compliance-mapping
+  - confused-deputy
+  - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -23,6 +23,10 @@ compliance:
 scope_tags:
   - aws
   - sagemaker
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - least-privilege
 type: unsafe_state
 classification: state_assertion
 params:

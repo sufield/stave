@@ -20,6 +20,8 @@ scope_tags:
   - s3
   - sensitive-data
   - hipaa
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

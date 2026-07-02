@@ -36,6 +36,10 @@ scope_tags:
   - aws
   - iam
   - agent
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - least-privilege
 observation_fields:
   - identity.role.workload_type
   - identity.role.long_lived_keys_present

@@ -24,6 +24,10 @@ compliance:
 scope_tags:
   - aws
   - eks
+taxonomy:
+  - credential-lifecycle
+  - least-privilege
+  - resource-sprawl
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

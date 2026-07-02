@@ -15,6 +15,10 @@ compliance:
   soc2: "CC6.3"
   ccm_v4: ["IAM-05", "GRC-02"]
 scope_tags: [aws, organizations]
+taxonomy:
+  - account-governance
+  - logging
+  - monitoring
 type: unsafe_state
 classification: state_assertion
 params:

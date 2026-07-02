@@ -23,6 +23,8 @@ compliance:
 scope_tags:
   - aws
   - cloudfront
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

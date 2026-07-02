@@ -16,6 +16,10 @@ scope_tags:
   - aws
   - cloudwatch
   - ec2
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+  - logging
 type: unsafe_state
 classification: state_assertion
 params:

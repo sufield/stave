@@ -11,6 +11,8 @@ compliance:
   nist_800_53_r5: "AC-3"
   soc2: "CC6.2"
 scope_tags: [m365]
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

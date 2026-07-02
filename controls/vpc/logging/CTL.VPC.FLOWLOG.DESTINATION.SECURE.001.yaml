@@ -27,6 +27,10 @@ compliance:
 scope_tags:
   - aws
   - vpc
+taxonomy:
+  - compute-hardening
+  - logging
+  - network-isolation
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -24,6 +24,8 @@ compliance:
   hipaa: "164.312(a)(1)"
   ccm_v4: ["IVS-09", "DSP-17"]
 scope_tags: [aws, ec2]
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

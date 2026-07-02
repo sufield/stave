@@ -12,6 +12,8 @@ compliance:
   nist_800_53_r5: "SI-4"
   soc2: "CC7.1"
 scope_tags: [azure]
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

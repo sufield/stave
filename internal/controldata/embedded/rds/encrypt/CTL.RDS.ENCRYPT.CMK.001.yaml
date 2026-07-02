@@ -24,6 +24,9 @@ compliance:
   hipaa: "164.312(a)(2)(iv)"
   ccm_v4: ["CEK-03", "CEK-07"]
 scope_tags: [aws, rds]
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
 type: unsafe_state
 classification: state_assertion
 params:

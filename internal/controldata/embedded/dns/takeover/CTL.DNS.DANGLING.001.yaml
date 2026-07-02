@@ -16,6 +16,10 @@ exposure:
 severity: critical
 scope_tags:
   - dns
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - trust-decay
 type: unsafe_state
 classification: state_assertion
 params:

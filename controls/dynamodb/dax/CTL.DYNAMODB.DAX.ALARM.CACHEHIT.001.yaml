@@ -23,6 +23,9 @@ compliance:
 scope_tags:
   - aws
   - dynamodb
+taxonomy:
+  - compliance-mapping
+  - monitoring
 type: unsafe_state
 classification: state_assertion
 params:

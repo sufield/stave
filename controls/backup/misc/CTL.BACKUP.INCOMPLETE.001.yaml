@@ -11,6 +11,8 @@ severity: low
 scope_tags:
   - aws
   - backup
+taxonomy:
+  - compliance-mapping
 applicable_asset_types:
   - aws_backup_plan
 type: unsafe_state

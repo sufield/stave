@@ -28,6 +28,8 @@ compliance:
 scope_tags:
   - aws
   - iam
+taxonomy:
+  - compliance-mapping
 remediation:
   description: >
     No remediation. Production tagging on IAM roles is the

@@ -23,6 +23,10 @@ compliance:
 scope_tags:
 - aws
 - documentdb
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 params:

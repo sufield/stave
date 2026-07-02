@@ -24,6 +24,10 @@ scope_tags:
   - aws
   - ec2
   - ebs
+taxonomy:
+  - encryption-at-rest
+  - key-management
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

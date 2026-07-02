@@ -15,6 +15,10 @@ compliance:
 scope_tags:
   - aws
   - ecs
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

@@ -13,6 +13,9 @@ compliance:
 scope_tags:
   - aws
   - s3
+taxonomy:
+  - compliance-mapping
+  - logging
 type: unsafe_recurrence
 classification: aggregate_check
 params:

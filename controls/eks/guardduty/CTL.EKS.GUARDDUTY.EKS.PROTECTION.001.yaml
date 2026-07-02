@@ -24,6 +24,9 @@ compliance:
 scope_tags:
   - aws
   - eks
+taxonomy:
+  - compliance-mapping
+  - monitoring
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

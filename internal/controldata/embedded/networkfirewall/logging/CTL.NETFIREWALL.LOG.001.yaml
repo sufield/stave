@@ -13,6 +13,9 @@ compliance:
   soc2: "CC7.1"
   ccm_v4: ["LOG-03", "LOG-05"]
 scope_tags: [aws, networkfirewall]
+taxonomy:
+  - compliance-mapping
+  - logging
 type: unsafe_state
 classification: state_assertion
 params:

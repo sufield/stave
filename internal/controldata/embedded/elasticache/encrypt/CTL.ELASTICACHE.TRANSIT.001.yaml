@@ -18,6 +18,9 @@ compliance:
 scope_tags:
   - aws
   - elasticache
+taxonomy:
+  - compliance-mapping
+  - encryption-in-transit
 type: unsafe_state
 classification: state_assertion
 params:

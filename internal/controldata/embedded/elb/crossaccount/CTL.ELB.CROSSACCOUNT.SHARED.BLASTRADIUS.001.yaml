@@ -24,6 +24,10 @@ compliance:
 scope_tags:
   - aws
   - elb
+taxonomy:
+  - least-privilege
+  - network-perimeter
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 params:

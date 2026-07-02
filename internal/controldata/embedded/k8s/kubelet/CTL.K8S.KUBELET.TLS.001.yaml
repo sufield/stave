@@ -12,6 +12,10 @@ compliance:
 scope_tags:
   - kubernetes
   - kubelet
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - encryption-in-transit
 type: unsafe_state
 classification: state_assertion
 params:

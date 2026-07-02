@@ -13,6 +13,9 @@ compliance:
   ccm_v4: ["CEK-03"]
 scope_tags:
   - azure
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
 type: unsafe_state
 classification: state_assertion
 params:

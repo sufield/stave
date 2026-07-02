@@ -27,6 +27,7 @@ type CatalogOptions struct {
 	ControlsDir string
 	ChainsDir   string
 	Severity    string
+	Taxonomy    string
 	Leaf        bool
 }
 
@@ -93,7 +94,7 @@ func RenderCatalog(ctx context.Context, opts CatalogOptions) ([]byte, error) {
 	mode := catalogResolveView(opts)
 	var leafs []appcaps.LeafControl
 	if mode == catalogViewLeaf {
-		leafs = appcaps.LeafControls(controls, opts.Service, opts.Category, opts.Severity)
+		leafs = appcaps.LeafControls(controls, opts.Service, opts.Category, opts.Severity, opts.Taxonomy)
 	}
 
 	report := catalogReport{
@@ -130,7 +131,7 @@ func RenderCatalog(ctx context.Context, opts CatalogOptions) ([]byte, error) {
 // catalogResolveView maps the flags to a human-view mode.
 func catalogResolveView(opts CatalogOptions) catalogViewMode {
 	switch {
-	case opts.Leaf || opts.Severity != "":
+	case opts.Leaf || opts.Severity != "" || opts.Taxonomy != "":
 		return catalogViewLeaf
 	case opts.KindFilter == "chain" || opts.KindFilter == "operational":
 		return catalogViewKind

@@ -22,6 +22,9 @@ compliance:
 scope_tags:
   - aws
   - rds
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

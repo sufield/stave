@@ -28,6 +28,10 @@ compliance:
 scope_tags:
   - aws
   - ecs
+taxonomy:
+  - credential-lifecycle
+  - encryption-at-rest
+  - logging
 type: unsafe_state
 classification: state_assertion
 params:

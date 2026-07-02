@@ -19,6 +19,10 @@ compliance:
 scope_tags:
   - aws
   - ec2
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - monitoring
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

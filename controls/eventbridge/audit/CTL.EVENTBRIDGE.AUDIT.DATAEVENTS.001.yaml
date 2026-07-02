@@ -22,6 +22,9 @@ compliance:
 scope_tags:
   - aws
   - eventbridge
+taxonomy:
+  - compliance-mapping
+  - logging
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -11,6 +11,9 @@ compliance:
   pci_dss_v4: "4.1"
   soc2: "CC6.7"
 scope_tags: [cloudflare]
+taxonomy:
+  - compliance-mapping
+  - encryption-in-transit
 type: unsafe_state
 classification: state_assertion
 params:

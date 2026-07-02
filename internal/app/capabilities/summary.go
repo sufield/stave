@@ -120,15 +120,19 @@ type LeafControl struct {
 // have no severity and never appear here; the caller documents that a --severity
 // filter therefore excludes those un-rated kinds rather than silently dropping
 // them.
-func LeafControls(controls []policy.ControlDefinition, service, category, severity string) []LeafControl {
+func LeafControls(controls []policy.ControlDefinition, service, category, severity, taxonomy string) []LeafControl {
+	var taxFilter []string
+	if taxonomy != "" {
+		for t := range strings.SplitSeq(taxonomy, ",") {
+			taxFilter = append(taxFilter, strings.TrimSpace(t))
+		}
+	}
 	out := make([]LeafControl, 0, len(controls))
 	for i := range controls {
 		svc, cat := parseControlID(string(controls[i].ID))
 		if svc == "" {
 			continue
 		}
-		// Case-insensitive: services/categories are stored lowercase, but the
-		// summary table prints them uppercase, so users pass "S3"/"PUBLIC".
 		if service != "" && !strings.EqualFold(svc, service) {
 			continue
 		}
@@ -136,6 +140,9 @@ func LeafControls(controls []policy.ControlDefinition, service, category, severi
 			continue
 		}
 		if severity != "" && !controls[i].Severity.Matches(severity) {
+			continue
+		}
+		if len(taxFilter) > 0 && !hasTaxonomyMatch(controls[i].Taxonomy, taxFilter) {
 			continue
 		}
 		out = append(out, LeafControl{
@@ -156,4 +163,15 @@ func LeafControls(controls []policy.ControlDefinition, service, category, severi
 		return cmp.Compare(a.ID, b.ID)
 	})
 	return out
+}
+
+func hasTaxonomyMatch(tags, filter []string) bool {
+	for _, f := range filter {
+		for _, t := range tags {
+			if strings.EqualFold(t, f) {
+				return true
+			}
+		}
+	}
+	return false
 }

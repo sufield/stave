@@ -14,6 +14,9 @@ compliance:
   ccm_v4: ["LOG-05", "LOG-12"]
 scope_tags:
   - active_directory
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
 params:

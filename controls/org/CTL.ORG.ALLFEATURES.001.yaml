@@ -19,6 +19,9 @@ compliance:
 scope_tags:
   - aws
   - organizations
+taxonomy:
+  - account-governance
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

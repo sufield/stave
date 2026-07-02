@@ -16,6 +16,10 @@ compliance:
   ccm_v4: ["IAM-15"]
 scope_tags:
   - active_directory
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

@@ -16,6 +16,10 @@ compliance:
 scope_tags:
   - aws
   - scp
+taxonomy:
+  - account-governance
+  - compliance-mapping
+  - logging
 type: unsafe_state
 classification: state_assertion
 params:

@@ -12,6 +12,9 @@ compliance:
   nist_800_53_r5: "AC-6"
   soc2: "CC6.1"
 scope_tags: [gcp]
+taxonomy:
+  - compliance-mapping
+  - least-privilege
 type: unsafe_state
 classification: state_assertion
 params:

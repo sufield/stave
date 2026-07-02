@@ -19,6 +19,10 @@ compliance:
 scope_tags:
   - aws
   - s3
+taxonomy:
+  - compliance-mapping
+  - least-privilege
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

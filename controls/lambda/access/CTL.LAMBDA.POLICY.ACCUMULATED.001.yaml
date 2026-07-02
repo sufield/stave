@@ -27,6 +27,10 @@ compliance:
   nist_800_53_r5: "AC-3"
   ccm_v4: ["IAM-08", "CCC-04"]
 scope_tags: [aws, lambda]
+taxonomy:
+  - compliance-mapping
+  - least-privilege
+  - trust-decay
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

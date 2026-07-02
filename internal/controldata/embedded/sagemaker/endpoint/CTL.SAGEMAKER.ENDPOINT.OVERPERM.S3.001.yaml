@@ -21,6 +21,9 @@ scope_tags:
   - aws
   - sagemaker
   - ai
+taxonomy:
+  - compliance-mapping
+  - least-privilege
 type: unsafe_state
 classification: state_assertion
 params:

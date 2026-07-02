@@ -22,6 +22,10 @@ compliance:
 scope_tags:
   - aws
   - config
+taxonomy:
+  - account-governance
+  - compliance-mapping
+  - compute-hardening
 applicable_asset_types:
   - aws_config_aggregator
 type: unsafe_state

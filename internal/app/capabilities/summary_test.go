@@ -95,7 +95,7 @@ func TestServiceRollup_PerServiceCapsControlsMaxSev(t *testing.T) {
 }
 
 func TestLeafControls_FilterByServiceCategorySeverity(t *testing.T) {
-	all := LeafControls(sampleControls(), "", "", "")
+	all := LeafControls(sampleControls(), "", "", "", "")
 	if len(all) != 4 {
 		t.Errorf("unfiltered leaf controls = %d, want 4", len(all))
 	}
@@ -104,42 +104,42 @@ func TestLeafControls_FilterByServiceCategorySeverity(t *testing.T) {
 		t.Errorf("first leaf service = %q, want iam", all[0].Service)
 	}
 
-	s3only := LeafControls(sampleControls(), "s3", "", "")
+	s3only := LeafControls(sampleControls(), "s3", "", "", "")
 	if len(s3only) != 3 {
 		t.Errorf("s3 leaf controls = %d, want 3", len(s3only))
 	}
 
 	// Category filter narrows within a service: s3/public has 2 controls.
-	pub := LeafControls(sampleControls(), "s3", "public", "")
+	pub := LeafControls(sampleControls(), "s3", "public", "", "")
 	if len(pub) != 2 {
 		t.Errorf("s3/public leaf controls = %d, want 2", len(pub))
 	}
 	// Category filter without a service still applies.
-	enc := LeafControls(sampleControls(), "", "encryption", "")
+	enc := LeafControls(sampleControls(), "", "encryption", "", "")
 	if len(enc) != 1 || enc[0].ID != "CTL.S3.ENCRYPTION.001" {
 		t.Errorf("category=encryption = %+v, want exactly CTL.S3.ENCRYPTION.001", enc)
 	}
 
 	// Exact severity match (case-insensitive), control groups only.
-	crit := LeafControls(sampleControls(), "", "", "CRITICAL")
+	crit := LeafControls(sampleControls(), "", "", "CRITICAL", "")
 	if len(crit) != 1 || crit[0].ID != "CTL.S3.PUBLIC.002" {
 		t.Errorf("critical leaf controls = %+v, want exactly CTL.S3.PUBLIC.002", crit)
 	}
-	med := LeafControls(sampleControls(), "", "", "medium")
+	med := LeafControls(sampleControls(), "", "", "medium", "")
 	if len(med) != 2 {
 		t.Errorf("medium leaf controls = %d, want 2", len(med))
 	}
 	// Combined service + category + severity.
-	if got := LeafControls(sampleControls(), "s3", "public", "critical"); len(got) != 1 || got[0].ID != "CTL.S3.PUBLIC.002" {
+	if got := LeafControls(sampleControls(), "s3", "public", "critical", ""); len(got) != 1 || got[0].ID != "CTL.S3.PUBLIC.002" {
 		t.Errorf("s3+public+critical = %+v, want exactly CTL.S3.PUBLIC.002", got)
 	}
 
 	// Service/category matching is case-insensitive: the summary table prints
 	// service names UPPERCASE, so a user types what they see ("S3"/"PUBLIC").
-	if up := LeafControls(sampleControls(), "S3", "", ""); len(up) != 3 {
+	if up := LeafControls(sampleControls(), "S3", "", "", ""); len(up) != 3 {
 		t.Errorf("uppercase service S3 = %d, want 3 (case-insensitive)", len(up))
 	}
-	if up := LeafControls(sampleControls(), "S3", "PUBLIC", ""); len(up) != 2 {
+	if up := LeafControls(sampleControls(), "S3", "PUBLIC", "", ""); len(up) != 2 {
 		t.Errorf("uppercase S3/PUBLIC = %d, want 2 (case-insensitive)", len(up))
 	}
 }

@@ -14,6 +14,10 @@ compliance:
   soc2: "CC6.1"
   ccm_v4: ["IVS-03", "DSP-17"]
 scope_tags: [aws, vpc]
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+  - trust-decay
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

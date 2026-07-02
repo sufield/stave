@@ -19,6 +19,10 @@ compliance:
 scope_tags:
 - aws
 - documentdb
+taxonomy:
+  - credential-lifecycle
+  - least-privilege
+  - logging
 type: unsafe_state
 classification: state_assertion
 params:

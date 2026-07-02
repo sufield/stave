@@ -27,6 +27,9 @@ scope_tags:
   - aws
   - iam
   - cloudformation
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
 params:

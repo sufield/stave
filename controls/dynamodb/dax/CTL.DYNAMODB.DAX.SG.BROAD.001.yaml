@@ -24,6 +24,10 @@ compliance:
 scope_tags:
   - aws
   - dynamodb
+taxonomy:
+  - least-privilege
+  - network-isolation
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

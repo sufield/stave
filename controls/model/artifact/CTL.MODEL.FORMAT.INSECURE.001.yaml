@@ -33,6 +33,8 @@ scope_tags:
   - aws
   - model
   - ai
+taxonomy:
+  - compliance-mapping
 observation_fields:
   - ai.model_artifact.kind
   - ai.model_artifact.serialization_format

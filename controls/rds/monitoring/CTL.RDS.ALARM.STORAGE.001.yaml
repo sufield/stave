@@ -26,6 +26,9 @@ compliance:
   soc2: "A1.2"
   ccm_v4: ["BCR-09", "LOG-08"]
 scope_tags: [aws, rds]
+taxonomy:
+  - compliance-mapping
+  - monitoring
 type: unsafe_state
 classification: state_assertion
 params:

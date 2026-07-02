@@ -27,6 +27,11 @@ compliance:
 scope_tags:
   - aws
   - dynamodb
+taxonomy:
+  - credential-lifecycle
+  - encryption-at-rest
+  - encryption-in-transit
+  - network-isolation
 type: unsafe_state
 classification: state_assertion
 params:

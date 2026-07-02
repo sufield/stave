@@ -11,6 +11,8 @@ compliance:
   nist_ssdf: "RV.1"
   soc2: "CC8.1"
 scope_tags: [github]
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

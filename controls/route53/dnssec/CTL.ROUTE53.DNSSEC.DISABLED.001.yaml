@@ -23,6 +23,10 @@ compliance:
 scope_tags:
   - aws
   - route53
+taxonomy:
+  - compliance-mapping
+  - key-management
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 params:

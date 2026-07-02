@@ -17,6 +17,10 @@ compliance:
 scope_tags:
   - aws
   - iam
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

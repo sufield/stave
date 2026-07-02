@@ -12,6 +12,10 @@ compliance:
   soc2: "CC7.1"
   ccm_v4: ["LOG-03", "LOG-05"]
 scope_tags: [azure]
+taxonomy:
+  - compliance-mapping
+  - logging
+  - network-isolation
 type: unsafe_state
 classification: state_assertion
 params:

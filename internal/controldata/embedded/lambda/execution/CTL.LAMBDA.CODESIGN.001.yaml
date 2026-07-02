@@ -21,6 +21,10 @@ compliance:
 scope_tags:
   - aws
   - lambda
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+  - monitoring
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

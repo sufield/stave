@@ -17,6 +17,10 @@ compliance:
 scope_tags:
   - aws
   - opensearch
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - encryption-in-transit
 type: unsafe_state
 classification: state_assertion
 params:

@@ -12,6 +12,10 @@ compliance:
   ccm_v4: ["IAM-09", "IVS-04"]
 scope_tags:
   - active_directory
+taxonomy:
+  - compute-hardening
+  - least-privilege
+  - trust-decay
 type: unsafe_state
 classification: state_assertion
 params:

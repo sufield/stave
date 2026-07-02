@@ -27,6 +27,8 @@ compliance:
   hipaa: "164.316(b)(2)(i)"
   ccm_v4: ["BCR-09"]
 scope_tags: [aws, rds]
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

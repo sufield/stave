@@ -13,6 +13,8 @@ compliance:
   nist_800_53_r5: "SC-22"
   soc2: "CC6.6"
 scope_tags: [aws, vpc]
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

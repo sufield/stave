@@ -13,6 +13,9 @@ exposure:
   principal_scope: public
 severity: critical
 scope_tags: [aws, s3]
+taxonomy:
+  - compliance-mapping
+  - resource-sprawl
 type: unsafe_state
 classification: state_assertion
 params:

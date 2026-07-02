@@ -13,6 +13,8 @@ scope_tags:
   - aws
   - cross-service
   - compliance
+taxonomy:
+  - compliance-mapping
 applicable_asset_types:
   - aws_reachability_analysis
 type: unsafe_state

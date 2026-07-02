@@ -27,6 +27,10 @@ compliance:
 scope_tags:
   - aws
   - route53
+taxonomy:
+  - encryption-at-rest
+  - key-management
+  - logging
 type: unsafe_state
 classification: state_assertion
 params:

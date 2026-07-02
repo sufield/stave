@@ -16,6 +16,8 @@ exposure:
 severity: critical
 scope_tags:
   - dns
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

@@ -12,6 +12,8 @@ compliance:
   nist_800_53_r5: "AC-4"
   soc2: "CC6.6"
 scope_tags: [gcp]
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

@@ -10,6 +10,8 @@ compliance:
 scope_tags:
   - aws
   - apigateway
+taxonomy:
+  - compliance-mapping
 applicable_asset_types:
   - aws_apigateway_rest_api
 type: unsafe_state

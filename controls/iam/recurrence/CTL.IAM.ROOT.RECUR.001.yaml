@@ -16,6 +16,10 @@ compliance:
 scope_tags:
   - aws
   - iam
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - logging
 type: unsafe_recurrence
 classification: aggregate_check
 params:

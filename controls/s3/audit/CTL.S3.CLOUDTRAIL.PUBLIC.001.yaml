@@ -16,6 +16,10 @@ scope_tags:
   - aws
   - s3
   - cloudtrail
+taxonomy:
+  - compliance-mapping
+  - logging
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

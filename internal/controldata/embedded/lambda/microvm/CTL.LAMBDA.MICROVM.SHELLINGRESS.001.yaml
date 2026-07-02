@@ -35,6 +35,9 @@ scope_tags:
   - aws
   - lambda
   - microvm
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
 params:
   attack_stage: privilege_escalation
 observation_fields:

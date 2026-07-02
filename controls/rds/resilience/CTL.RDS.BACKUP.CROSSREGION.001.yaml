@@ -27,6 +27,9 @@ compliance:
   nist_800_53_r5: "CP-6"
   ccm_v4: ["BCR-08", "BCR-09"]
 scope_tags: [aws, rds]
+taxonomy:
+  - compliance-mapping
+  - redundancy
 type: unsafe_state
 classification: state_assertion
 params:

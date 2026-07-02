@@ -31,6 +31,10 @@ scope_tags:
   - aws
   - iam
   - cloudformation
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+  - confused-deputy
 type: unsafe_state
 classification: state_assertion
 params:

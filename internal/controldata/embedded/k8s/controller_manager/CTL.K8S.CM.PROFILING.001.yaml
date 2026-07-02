@@ -13,6 +13,8 @@ compliance:
 scope_tags:
   - kubernetes
   - controller_manager
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

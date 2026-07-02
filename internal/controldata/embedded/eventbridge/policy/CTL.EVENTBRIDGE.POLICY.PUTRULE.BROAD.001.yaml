@@ -23,6 +23,12 @@ compliance:
 scope_tags:
   - aws
   - eventbridge
+taxonomy:
+  - identity-perimeter
+  - least-privilege
+  - logging
+  - network-perimeter
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

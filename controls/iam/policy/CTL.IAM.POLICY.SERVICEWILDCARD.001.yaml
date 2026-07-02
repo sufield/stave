@@ -40,6 +40,10 @@ compliance:
 scope_tags:
   - aws
   - iam
+taxonomy:
+  - compliance-mapping
+  - least-privilege
+  - logging
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

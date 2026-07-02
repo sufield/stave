@@ -31,6 +31,10 @@ compliance:
 scope_tags:
   - aws
   - lambda
+taxonomy:
+  - compliance-mapping
+  - confused-deputy
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

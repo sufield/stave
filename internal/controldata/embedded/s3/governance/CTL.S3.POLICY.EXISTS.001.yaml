@@ -16,6 +16,10 @@ compliance:
 scope_tags:
   - aws
   - s3
+taxonomy:
+  - encryption-at-rest
+  - identity-perimeter
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

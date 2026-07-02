@@ -23,6 +23,11 @@ compliance:
 scope_tags:
   - aws
   - kms
+taxonomy:
+  - credential-lifecycle
+  - key-management
+  - logging
+  - monitoring
 type: unsafe_state
 classification: state_assertion
 params:

@@ -17,6 +17,9 @@ scope_tags:
   - aws
   - ecs
   - supply-chain
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
 type: unsafe_state
 classification: state_assertion
 params:

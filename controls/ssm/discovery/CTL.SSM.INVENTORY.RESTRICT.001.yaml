@@ -17,6 +17,8 @@ compliance:
 scope_tags:
   - aws
   - ssm
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

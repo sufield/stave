@@ -16,6 +16,8 @@ compliance:
 scope_tags:
   - aws
   - backup
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: parameterized_check
 params:

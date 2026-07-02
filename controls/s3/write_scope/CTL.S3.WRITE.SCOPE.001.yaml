@@ -13,6 +13,8 @@ exposure:
   principal_scope: public
 severity: high
 scope_tags: [aws, s3]
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

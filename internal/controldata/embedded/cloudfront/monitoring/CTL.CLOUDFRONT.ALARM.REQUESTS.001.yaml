@@ -24,6 +24,10 @@ compliance:
 scope_tags:
   - aws
   - cloudfront
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - monitoring
 type: unsafe_state
 classification: state_assertion
 params:

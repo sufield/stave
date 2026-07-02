@@ -20,6 +20,9 @@ compliance:
 scope_tags:
   - aws
   - bedrock
+taxonomy:
+  - compliance-mapping
+  - logging
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

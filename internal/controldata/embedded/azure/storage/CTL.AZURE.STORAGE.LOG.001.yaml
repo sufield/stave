@@ -13,6 +13,9 @@ compliance:
   ccm_v4: ["LOG-03"]
 scope_tags:
   - azure
+taxonomy:
+  - compliance-mapping
+  - logging
 type: unsafe_state
 classification: state_assertion
 params:

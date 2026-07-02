@@ -26,6 +26,10 @@ scope_tags:
   - aws
   - iam
   - sso
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - impersonation
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

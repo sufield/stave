@@ -21,6 +21,10 @@ scope_tags:
   - aws
   - cloudwatch
   - iam
+taxonomy:
+  - credential-lifecycle
+  - logging
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 params:

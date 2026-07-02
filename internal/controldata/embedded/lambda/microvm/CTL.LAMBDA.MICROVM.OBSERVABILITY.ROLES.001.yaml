@@ -27,6 +27,8 @@ scope_tags:
   - aws
   - lambda
   - microvm
+taxonomy:
+  - compliance-mapping
 params:
   attack_stage: detection_evasion
 observation_fields:

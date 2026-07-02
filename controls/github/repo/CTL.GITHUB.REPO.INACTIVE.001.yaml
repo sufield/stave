@@ -11,6 +11,9 @@ compliance:
   nist_800_53_r5: "CM-3"
   soc2: "CC8.1"
 scope_tags: [github]
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
 params:

@@ -17,6 +17,8 @@ compliance:
 scope_tags:
   - cisco
   - ios
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

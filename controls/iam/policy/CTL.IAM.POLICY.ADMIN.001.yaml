@@ -22,6 +22,10 @@ compliance:
 scope_tags:
   - aws
   - iam
+taxonomy:
+  - least-privilege
+  - logging
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 corpus_reference: MITRE:T1078.004

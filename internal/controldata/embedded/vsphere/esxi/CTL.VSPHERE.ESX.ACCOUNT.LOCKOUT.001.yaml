@@ -18,6 +18,10 @@ compliance:
 scope_tags:
   - vmware
   - esxi
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

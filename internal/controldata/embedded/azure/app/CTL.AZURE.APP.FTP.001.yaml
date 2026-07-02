@@ -11,6 +11,9 @@ compliance:
   nist_800_53_r5: "SC-8"
   soc2: "CC6.1"
 scope_tags: [azure]
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
 params:

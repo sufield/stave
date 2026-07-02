@@ -23,6 +23,10 @@ compliance:
   soc2: "CC6.5"
   ccm_v4: ["DSP-15", "DSP-17"]
 scope_tags: [aws, ec2]
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+  - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

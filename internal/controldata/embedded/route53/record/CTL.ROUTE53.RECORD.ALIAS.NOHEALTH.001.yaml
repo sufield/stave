@@ -28,6 +28,8 @@ compliance:
 scope_tags:
   - aws
   - route53
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

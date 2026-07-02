@@ -25,6 +25,11 @@ compliance:
 scope_tags:
   - aws
   - codecommit
+taxonomy:
+  - credential-lifecycle
+  - logging
+  - network-perimeter
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 params:

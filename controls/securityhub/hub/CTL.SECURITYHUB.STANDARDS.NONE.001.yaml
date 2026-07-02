@@ -18,6 +18,10 @@ compliance:
 scope_tags:
   - aws
   - securityhub
+taxonomy:
+  - account-governance
+  - compliance-mapping
+  - monitoring
 type: unsafe_state
 classification: state_assertion
 params:

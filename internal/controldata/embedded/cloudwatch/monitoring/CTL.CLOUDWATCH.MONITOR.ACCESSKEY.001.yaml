@@ -18,6 +18,10 @@ scope_tags:
   - aws
   - cloudwatch
   - iam
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - logging
 type: unsafe_state
 classification: state_assertion
 defect: >

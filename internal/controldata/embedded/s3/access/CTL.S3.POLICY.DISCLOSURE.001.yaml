@@ -26,6 +26,11 @@ severity: high
 scope_tags:
   - aws
   - s3
+taxonomy:
+  - credential-lifecycle
+  - identity-perimeter
+  - network-perimeter
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

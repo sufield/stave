@@ -14,6 +14,9 @@ compliance:
   ccm_v4: ["DSP-17", "IVS-03"]
 scope_tags:
   - azure
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

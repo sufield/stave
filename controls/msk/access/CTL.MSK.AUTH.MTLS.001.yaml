@@ -15,6 +15,9 @@ compliance:
 scope_tags:
   - aws
   - msk
+taxonomy:
+  - compliance-mapping
+  - impersonation
 type: unsafe_state
 classification: state_assertion
 params:

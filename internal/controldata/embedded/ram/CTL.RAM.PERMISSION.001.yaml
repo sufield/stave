@@ -15,6 +15,9 @@ compliance:
   pci_dss_v4.0: "7.2.2"
   ccm_v4: ["IAM-05"]
 scope_tags: [aws, ram]
+taxonomy:
+  - compliance-mapping
+  - network-isolation
 type: unsafe_state
 classification: state_assertion
 params:

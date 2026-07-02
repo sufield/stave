@@ -31,6 +31,8 @@ scope_tags:
   - aws
   - model
   - ai
+taxonomy:
+  - compliance-mapping
 observation_fields:
   - ai.model_store.kind
   - ai.model_store.object_lock_enabled

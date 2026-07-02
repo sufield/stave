@@ -14,6 +14,9 @@ classification: state_assertion
 scope_tags:
   - aws
   - kms
+taxonomy:
+  - compliance-mapping
+  - key-management
 compliance:
   hipaa: "164.312(a)(2)(iv)"
   nist_800_53_r5: "SC-12, SC-28"

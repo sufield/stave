@@ -30,6 +30,10 @@ compliance:
 scope_tags:
   - aws
   - route53
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+  - redundancy
 type: unsafe_state
 classification: state_assertion
 params:

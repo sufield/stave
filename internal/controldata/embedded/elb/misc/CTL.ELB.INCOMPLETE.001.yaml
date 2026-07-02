@@ -12,6 +12,8 @@ severity: low
 scope_tags:
   - aws
   - elb
+taxonomy:
+  - compliance-mapping
 applicable_asset_types:
   - aws_elb_load_balancer
   - aws_elbv2_load_balancer

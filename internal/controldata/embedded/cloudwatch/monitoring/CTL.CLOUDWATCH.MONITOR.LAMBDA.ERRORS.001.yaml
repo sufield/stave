@@ -18,6 +18,10 @@ scope_tags:
   - aws
   - cloudwatch
   - lambda
+taxonomy:
+  - compliance-mapping
+  - logging
+  - monitoring
 type: unsafe_state
 classification: state_assertion
 params:

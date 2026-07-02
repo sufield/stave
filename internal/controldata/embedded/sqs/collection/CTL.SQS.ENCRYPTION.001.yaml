@@ -18,6 +18,10 @@ compliance:
 scope_tags:
   - aws
   - sqs
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - monitoring
 type: unsafe_state
 classification: state_assertion
 params:

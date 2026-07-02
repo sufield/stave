@@ -23,6 +23,9 @@ compliance:
 scope_tags:
   - aws
   - config
+taxonomy:
+  - compliance-mapping
+  - logging
 type: unsafe_state
 classification: state_assertion
 params:

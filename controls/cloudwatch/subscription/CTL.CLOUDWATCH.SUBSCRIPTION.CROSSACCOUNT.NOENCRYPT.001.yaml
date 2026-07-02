@@ -23,6 +23,11 @@ compliance:
 scope_tags:
   - aws
   - cloudwatch
+taxonomy:
+  - credential-lifecycle
+  - encryption-at-rest
+  - logging
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 params:

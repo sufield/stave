@@ -28,6 +28,9 @@ compliance:
   pci_dss_v4: "9.4"
   ccm_v4: ["DSP-15", "DSP-17"]
 scope_tags: [aws, rds]
+taxonomy:
+  - compliance-mapping
+  - trust-decay
 type: unsafe_state
 classification: state_assertion
 params:

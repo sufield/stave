@@ -17,6 +17,10 @@ compliance:
 scope_tags:
   - aws
   - vpc
+taxonomy:
+  - least-privilege
+  - network-isolation
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

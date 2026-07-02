@@ -23,6 +23,10 @@ compliance:
 scope_tags:
   - aws
   - cloudwatch
+taxonomy:
+  - compliance-mapping
+  - identity-perimeter
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 params:

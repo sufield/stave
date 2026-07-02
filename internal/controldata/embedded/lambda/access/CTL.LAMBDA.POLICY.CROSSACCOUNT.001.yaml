@@ -29,6 +29,11 @@ compliance:
   pci_dss_v4: "7.2"
   ccm_v4: ["IAM-08", "DSP-17"]
 scope_tags: [aws, lambda]
+taxonomy:
+  - confused-deputy
+  - identity-perimeter
+  - trust-boundary
+  - trust-decay
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

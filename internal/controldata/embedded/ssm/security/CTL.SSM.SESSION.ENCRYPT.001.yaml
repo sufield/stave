@@ -15,6 +15,9 @@ compliance:
   soc2: "CC6.7"
   ccm_v4: ["DSP-10"]
 scope_tags: [aws, ssm]
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
 type: unsafe_state
 classification: state_assertion
 params:

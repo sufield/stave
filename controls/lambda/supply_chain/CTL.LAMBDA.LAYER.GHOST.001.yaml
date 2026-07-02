@@ -13,6 +13,9 @@ compliance:
   soc2: "CC6.1"
   ccm_v4: ["AIS-06"]
 scope_tags: [aws, lambda]
+taxonomy:
+  - compliance-mapping
+  - trust-decay
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

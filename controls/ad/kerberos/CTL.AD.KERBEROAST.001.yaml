@@ -16,6 +16,10 @@ compliance:
   ccm_v4: ["CEK-04", "IAM-14"]
 scope_tags:
   - active_directory
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+  - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
 params:

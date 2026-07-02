@@ -213,6 +213,15 @@
             "minLength": 1
           }
         },
+        "taxonomy": {
+          "type": "array",
+          "title": "Security Concept Taxonomy",
+          "description": "Security concept categories from the fixed vocabulary (e.g., least-privilege, credential-lifecycle, encryption-at-rest). Controls may belong to multiple categories.",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
         "applicable_asset_types": {
           "type": "array",
           "title": "Applicable Asset Types",

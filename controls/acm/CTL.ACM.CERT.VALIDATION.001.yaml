@@ -16,6 +16,9 @@ compliance:
   ccm_v4: ["CEK-02"]
   scs_c02: "6.2"
 scope_tags: [aws, acm]
+taxonomy:
+  - compliance-mapping
+  - trust-decay
 type: unsafe_state
 classification: state_assertion
 params:

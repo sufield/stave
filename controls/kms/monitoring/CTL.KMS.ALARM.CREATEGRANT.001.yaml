@@ -26,6 +26,12 @@ compliance:
 scope_tags:
   - aws
   - kms
+taxonomy:
+  - key-management
+  - least-privilege
+  - logging
+  - monitoring
+  - resource-sprawl
 type: unsafe_state
 classification: state_assertion
 params:

@@ -14,6 +14,8 @@ compliance:
   ccm_v4: ["IAM-09", "IVS-04"]
 scope_tags:
   - active_directory
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

@@ -24,6 +24,11 @@ compliance:
 scope_tags:
   - aws
   - sns
+taxonomy:
+  - confused-deputy
+  - least-privilege
+  - logging
+  - resource-sprawl
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

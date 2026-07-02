@@ -31,6 +31,8 @@ compliance:
   hipaa: "164.312(a)(1)"
   ccm_v4: ["DSP-17", "DSP-18"]
 scope_tags: [aws, rds]
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

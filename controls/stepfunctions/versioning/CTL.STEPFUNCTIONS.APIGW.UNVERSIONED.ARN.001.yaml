@@ -19,6 +19,9 @@ compliance:
 scope_tags:
   - aws
   - stepfunctions
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

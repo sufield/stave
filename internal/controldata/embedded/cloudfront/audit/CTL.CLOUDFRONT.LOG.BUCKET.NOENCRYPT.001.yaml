@@ -27,6 +27,10 @@ compliance:
 scope_tags:
   - aws
   - cloudfront
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - logging
 type: unsafe_state
 classification: state_assertion
 params:

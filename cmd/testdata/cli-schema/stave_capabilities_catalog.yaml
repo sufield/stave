@@ -74,6 +74,8 @@ options:
     - name: severity
       usage: |
         show only leaf controls of this severity: critical | high | medium | low | info
+    - name: taxonomy
+      usage: filter by taxonomy category (comma-separated, OR-joined)
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -149,3 +151,4 @@ see_also:
     - stave capabilities catalog gaps - Compare catalog against an external checklist
     - stave capabilities catalog inspect - Show full metadata for a single control
     - stave capabilities catalog stats - Print aggregate catalog statistics
+    - stave capabilities catalog taxonomy - List taxonomy categories with control counts

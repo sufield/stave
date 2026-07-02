@@ -11,6 +11,9 @@ compliance:
   soc2: "CC6.7"
   ccm_v4: ["CEK-03"]
 scope_tags: [aws, athena]
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
 type: unsafe_state
 classification: state_assertion
 params:

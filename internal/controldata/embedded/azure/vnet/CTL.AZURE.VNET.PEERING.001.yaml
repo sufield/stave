@@ -12,6 +12,10 @@ compliance:
   soc2: "CC6.6"
   ccm_v4: ["IVS-03"]
 scope_tags: [azure]
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

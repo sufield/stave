@@ -18,6 +18,10 @@ scope_tags:
   - aws
   - iam
   - supply-chain
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

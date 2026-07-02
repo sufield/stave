@@ -22,6 +22,10 @@ severity: medium
 scope_tags:
 - aws
 - s3
+taxonomy:
+  - identity-perimeter
+  - network-perimeter
+  - trust-boundary
 version: ctrl.v1
 type: unsafe_duration
 classification: aggregate_check

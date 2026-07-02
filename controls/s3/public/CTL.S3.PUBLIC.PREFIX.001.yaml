@@ -16,6 +16,8 @@ severity: high
 scope_tags:
   - aws
   - s3
+taxonomy:
+  - compliance-mapping
 type: prefix_exposure
 classification: absence_check
 applicable_asset_types:

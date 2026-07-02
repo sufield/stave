@@ -14,6 +14,9 @@ compliance:
 scope_tags:
   - vmware
   - esxi
+taxonomy:
+  - compliance-mapping
+  - logging
 type: unsafe_state
 classification: state_assertion
 params:

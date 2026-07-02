@@ -32,6 +32,8 @@ type yamlControlDefinition struct {
 	ValidatedAgainst     []yamlLabValidation  `yaml:"validated_against,omitempty"`
 	Tests                []policy.ControlTest `yaml:"tests,omitempty"`
 
+	Taxonomy []string `yaml:"taxonomy,omitempty"`
+
 	// Defect / Infection / Failure carry the authored triage
 	// chain from Andreas Zeller's Why Programs Fail, applied to
 	// cloud misconfigurations. All three are optional during

@@ -10,6 +10,8 @@ compliance:
   nist_800_53_r5: "AC-3"
   ccm_v4: ["DSP-17"]
 scope_tags: [aws, route53]
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

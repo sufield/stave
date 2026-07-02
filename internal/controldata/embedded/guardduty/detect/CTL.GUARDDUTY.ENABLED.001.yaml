@@ -18,6 +18,10 @@ compliance:
 scope_tags:
   - aws
   - guardduty
+taxonomy:
+  - compliance-mapping
+  - logging
+  - monitoring
 type: unsafe_state
 classification: state_assertion
 params:

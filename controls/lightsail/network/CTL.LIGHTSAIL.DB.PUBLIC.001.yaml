@@ -10,6 +10,9 @@ compliance:
   soc2: "CC6.6"
   ccm_v4: ["IVS-03"]
 scope_tags: [aws, lightsail]
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

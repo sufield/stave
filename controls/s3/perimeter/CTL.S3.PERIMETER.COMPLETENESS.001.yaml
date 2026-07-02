@@ -31,6 +31,12 @@ compliance:
 scope_tags:
   - aws
   - s3
+taxonomy:
+  - confused-deputy
+  - credential-lifecycle
+  - data-perimeter
+  - identity-perimeter
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

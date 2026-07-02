@@ -16,6 +16,8 @@ compliance:
   ccm_v4: ["SEF-06"]
   scs_c02: "12.1"
 scope_tags: [aws, config]
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

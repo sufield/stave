@@ -14,6 +14,9 @@ compliance:
 scope_tags:
   - aws
   - apigateway
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
 type: unsafe_state
 classification: state_assertion
 params:

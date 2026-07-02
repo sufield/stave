@@ -12,6 +12,8 @@ compliance:
 scope_tags:
 - aws
 - documentdb
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

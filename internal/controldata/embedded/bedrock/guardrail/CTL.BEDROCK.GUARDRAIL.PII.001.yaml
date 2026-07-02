@@ -17,6 +17,10 @@ compliance:
 scope_tags:
   - aws
   - bedrock
+taxonomy:
+  - ai-guardrails
+  - compliance-mapping
+  - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

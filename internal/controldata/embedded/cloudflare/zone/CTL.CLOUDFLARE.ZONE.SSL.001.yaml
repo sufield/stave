@@ -12,6 +12,9 @@ compliance:
   soc2: "CC6.7"
   hipaa: "164.312(e)(1)"
 scope_tags: [cloudflare]
+taxonomy:
+  - compliance-mapping
+  - encryption-in-transit
 type: unsafe_state
 classification: state_assertion
 params:

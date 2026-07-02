@@ -22,6 +22,8 @@ compliance:
   soc2: "CC6.8"
   ccm_v4: ["IVS-09"]
 scope_tags: [aws, ec2]
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

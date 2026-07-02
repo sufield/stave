@@ -24,6 +24,9 @@ compliance:
 scope_tags:
   - aws
   - opensearch
+taxonomy:
+  - compliance-mapping
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

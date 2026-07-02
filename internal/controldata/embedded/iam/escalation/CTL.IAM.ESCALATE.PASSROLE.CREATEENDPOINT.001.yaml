@@ -27,6 +27,9 @@ scope_tags:
   - aws
   - iam
   - sagemaker
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -30,6 +30,10 @@ compliance:
 scope_tags:
   - aws
   - sns
+taxonomy:
+  - compliance-mapping
+  - confused-deputy
+  - logging
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

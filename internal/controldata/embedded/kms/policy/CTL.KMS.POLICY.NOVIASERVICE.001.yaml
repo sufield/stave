@@ -30,6 +30,10 @@ compliance:
 scope_tags:
   - aws
   - kms
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
 type: unsafe_state
 classification: state_assertion
 params:

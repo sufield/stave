@@ -21,6 +21,10 @@ scope_tags:
   - aws
   - iam
   - kms
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

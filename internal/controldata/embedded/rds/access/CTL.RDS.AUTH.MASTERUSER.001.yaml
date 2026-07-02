@@ -23,6 +23,9 @@ compliance:
   pci_dss_v4: "8.3"
   ccm_v4: ["IAM-08"]
 scope_tags: [aws, rds]
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
 params:

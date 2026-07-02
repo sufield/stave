@@ -32,6 +32,10 @@ compliance:
 scope_tags:
   - aws
   - iam
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - trust-boundary
 type: unsafe_state
 classification: parameterized_check
 applicable_asset_types:

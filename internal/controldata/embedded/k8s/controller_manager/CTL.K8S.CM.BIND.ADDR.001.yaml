@@ -13,6 +13,9 @@ compliance:
 scope_tags:
   - kubernetes
   - controller_manager
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

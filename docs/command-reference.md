@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_156 commands across 7 groups._
+_158 commands across 7 groups._
 
 ## Getting Started
 
@@ -63,6 +63,7 @@ _156 commands across 7 groups._
 | `catalog gaps` | Compare catalog against an external checklist |
 | `catalog inspect` | Show full metadata for a single control |
 | `catalog stats` | Print aggregate catalog statistics |
+| `catalog taxonomy` | List taxonomy categories with control counts |
 | `features` | Show what Stave does and deliberately does not do |
 | `inspect` | Low-level security analysis primitives |
 | `inspect acl` | Analyze S3 ACL grants |
@@ -113,6 +114,7 @@ _156 commands across 7 groups._
 | `capabilities catalog gaps` | Compare catalog against an external checklist |
 | `capabilities catalog inspect` | Show full metadata for a single control |
 | `capabilities catalog stats` | Print aggregate catalog statistics |
+| `capabilities catalog taxonomy` | List taxonomy categories with control counts |
 | `cel` | CEL expression tools |
 | `cel eval` | Evaluate a CEL expression against observation assets |
 | `check` | Compare before/after evaluations to check remediation |

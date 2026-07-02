@@ -21,6 +21,9 @@ compliance:
   soc2: "A1.2"
   ccm_v4: ["BCR-08", "CCC-04"]
 scope_tags: [aws, ec2]
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

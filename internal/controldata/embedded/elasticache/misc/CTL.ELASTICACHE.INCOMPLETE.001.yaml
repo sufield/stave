@@ -10,6 +10,9 @@ compliance:
 scope_tags:
   - aws
   - elasticache
+taxonomy:
+  - compliance-mapping
+  - encryption-in-transit
 applicable_asset_types:
   - aws_elasticache_cluster
 type: unsafe_state

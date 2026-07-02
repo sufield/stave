@@ -12,6 +12,9 @@ compliance:
   nist_800_53_r5: "AU-5"
   soc2: "CC7.2"
 scope_tags: [azure]
+taxonomy:
+  - compliance-mapping
+  - trust-decay
 type: unsafe_state
 classification: state_assertion
 params:

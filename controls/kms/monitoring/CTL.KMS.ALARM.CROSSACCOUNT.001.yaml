@@ -28,6 +28,11 @@ compliance:
 scope_tags:
   - aws
   - kms
+taxonomy:
+  - key-management
+  - logging
+  - monitoring
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 params:

@@ -32,6 +32,9 @@ scope_tags:
   - aws
   - s3
   - supply-chain
+taxonomy:
+  - compliance-mapping
+  - least-privilege
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

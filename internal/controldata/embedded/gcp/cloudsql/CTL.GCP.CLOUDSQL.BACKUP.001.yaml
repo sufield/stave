@@ -12,6 +12,8 @@ compliance:
   hipaa: "164.308(a)(7)"
   soc2: "A1.2"
 scope_tags: [gcp]
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

@@ -26,6 +26,9 @@ compliance:
   hipaa: "164.316(b)(2)(i)"
   ccm_v4: ["LOG-13"]
 scope_tags: [aws, rds]
+taxonomy:
+  - compliance-mapping
+  - logging
 type: unsafe_state
 classification: state_assertion
 params:

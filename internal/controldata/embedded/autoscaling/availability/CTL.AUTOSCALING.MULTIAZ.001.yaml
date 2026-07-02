@@ -11,6 +11,9 @@ compliance:
 scope_tags:
   - aws
   - autoscaling
+taxonomy:
+  - compliance-mapping
+  - redundancy
 type: unsafe_state
 classification: parameterized_check
 params:

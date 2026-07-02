@@ -20,6 +20,11 @@ compliance:
 scope_tags:
   - aws
   - sqs
+taxonomy:
+  - confused-deputy
+  - identity-perimeter
+  - monitoring
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

@@ -16,6 +16,10 @@ compliance:
 scope_tags:
   - aws
   - iam
+taxonomy:
+  - compliance-mapping
+  - confused-deputy
+  - identity-perimeter
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

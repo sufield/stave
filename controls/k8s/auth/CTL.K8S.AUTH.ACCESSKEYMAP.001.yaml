@@ -17,6 +17,10 @@ compliance:
 scope_tags:
   - kubernetes
   - auth
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - impersonation
 type: unsafe_state
 classification: state_assertion
 params:

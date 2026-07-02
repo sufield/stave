@@ -12,6 +12,8 @@ severity: low
 scope_tags:
   - aws
   - ecr
+taxonomy:
+  - compliance-mapping
 applicable_asset_types:
   - aws_ecr_repository
 type: unsafe_state

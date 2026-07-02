@@ -18,6 +18,9 @@ compliance:
 scope_tags:
   - aws
   - s3
+taxonomy:
+  - compliance-mapping
+  - confused-deputy
 type: unsafe_state
 classification: state_assertion
 scope: compound

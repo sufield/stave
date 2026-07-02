@@ -16,6 +16,9 @@ compliance:
 scope_tags:
   - aws
   - glue
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
 type: unsafe_state
 classification: state_assertion
 params:

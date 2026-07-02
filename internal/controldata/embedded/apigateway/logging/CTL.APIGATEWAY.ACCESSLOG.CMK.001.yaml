@@ -28,6 +28,10 @@ compliance:
 scope_tags:
   - aws
   - apigateway
+taxonomy:
+  - encryption-at-rest
+  - key-management
+  - logging
 type: unsafe_state
 classification: state_assertion
 params:

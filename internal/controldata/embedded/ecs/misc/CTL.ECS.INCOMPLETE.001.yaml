@@ -11,6 +11,8 @@ severity: low
 scope_tags:
   - aws
   - ecs
+taxonomy:
+  - compliance-mapping
 applicable_asset_types:
   - aws_ecs_service
 type: unsafe_state

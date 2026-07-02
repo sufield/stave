@@ -21,6 +21,10 @@ compliance:
 scope_tags:
   - aws
   - sagemaker
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+  - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

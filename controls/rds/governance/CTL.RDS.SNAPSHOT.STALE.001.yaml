@@ -26,6 +26,10 @@ compliance:
   ccm_v4: ["DSP-15", "DCS-06"]
   hipaa: "164.310(d)(2)(i)"
 scope_tags: [aws, rds]
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - trust-decay
 type: unsafe_state
 classification: state_assertion
 params:

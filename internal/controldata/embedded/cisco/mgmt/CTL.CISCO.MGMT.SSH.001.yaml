@@ -17,6 +17,10 @@ compliance:
 scope_tags:
   - cisco
   - ios
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - network-perimeter
 type: unsafe_state
 classification: parameterized_check
 params:

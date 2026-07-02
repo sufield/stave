@@ -11,6 +11,8 @@ compliance:
   ccm_v4: ["IAM-08", "IAM-09"]
 scope_tags:
   - active_directory
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: parameterized_check
 params:

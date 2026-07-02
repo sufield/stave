@@ -18,6 +18,8 @@ compliance:
 scope_tags:
   - aws
   - iam
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -37,6 +37,9 @@ compliance:
 scope_tags:
   - aws
   - waf
+taxonomy:
+  - compliance-mapping
+  - logging
 type: unsafe_state
 classification: state_assertion
 params:

@@ -14,6 +14,9 @@ compliance:
 scope_tags:
   - gcp
   - gcs
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

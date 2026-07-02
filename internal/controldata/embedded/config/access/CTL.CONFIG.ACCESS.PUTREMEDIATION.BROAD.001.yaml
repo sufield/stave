@@ -30,6 +30,10 @@ compliance:
 scope_tags:
   - aws
   - config
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+  - least-privilege
 type: unsafe_state
 classification: state_assertion
 params:

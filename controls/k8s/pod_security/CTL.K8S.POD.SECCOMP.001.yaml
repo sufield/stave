@@ -13,6 +13,8 @@ compliance:
   cis_kubernetes: "5.7.2"
   ccm_v4: ["IVS-03"]
 scope_tags: [kubernetes]
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

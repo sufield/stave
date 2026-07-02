@@ -14,6 +14,9 @@ compliance:
   pci_dss_v4: "8.2"
   soc2: "CC6.1"
 scope_tags: [gcp]
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
 params:

@@ -22,6 +22,10 @@ scope_tags:
   - aws
   - bedrock
   - ai
+taxonomy:
+  - encryption-at-rest
+  - key-management
+  - logging
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

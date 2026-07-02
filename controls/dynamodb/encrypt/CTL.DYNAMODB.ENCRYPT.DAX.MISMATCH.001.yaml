@@ -26,6 +26,10 @@ compliance:
 scope_tags:
   - aws
   - dynamodb
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - encryption-at-rest
 type: unsafe_state
 classification: state_assertion
 params:

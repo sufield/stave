@@ -39,6 +39,8 @@ scope_tags:
   - aws
   - governance
   - dataclass
+taxonomy:
+  - compliance-mapping
 observation_fields:
   - governance.is_data_bearing
   - governance.data_classification

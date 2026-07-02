@@ -27,6 +27,11 @@ scope_tags:
   - aws
   - ec2
   - ebs
+taxonomy:
+  - credential-lifecycle
+  - logging
+  - monitoring
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

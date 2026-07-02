@@ -13,6 +13,9 @@ compliance:
 scope_tags:
   - kubernetes
   - apiserver
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

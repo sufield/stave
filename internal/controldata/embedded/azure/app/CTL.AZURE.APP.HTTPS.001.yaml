@@ -13,6 +13,9 @@ compliance:
   pci_dss_v4: "4.2.1"
   soc2: "CC6.1"
 scope_tags: [azure]
+taxonomy:
+  - compliance-mapping
+  - encryption-in-transit
 type: unsafe_state
 classification: state_assertion
 params:

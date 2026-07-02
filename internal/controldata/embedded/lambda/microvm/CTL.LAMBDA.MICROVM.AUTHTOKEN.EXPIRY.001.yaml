@@ -36,6 +36,9 @@ scope_tags:
   - aws
   - lambda
   - microvm
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
 params:
   attack_stage: persistence
 observation_fields:

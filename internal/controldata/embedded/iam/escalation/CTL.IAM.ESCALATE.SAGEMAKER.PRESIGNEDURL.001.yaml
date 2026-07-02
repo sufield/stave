@@ -29,6 +29,10 @@ scope_tags:
   - aws
   - iam
   - sagemaker
+taxonomy:
+  - compute-hardening
+  - credential-lifecycle
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

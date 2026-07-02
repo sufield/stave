@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.ORG.ALLFEATURES.001
+
+**AWS Organizations Must Be in All Features Mode**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7; scs_c02: 1.1; soc2: CC6.1;
+
+AWS Organizations must operate in ALL_FEATURES mode, not CONSOLIDATED_BILLING. Consolidated-billing-only mode disables SCPs, tag policies, AI opt-out policies, and backup policies — the entire organizational governance layer is unavailable. Without ALL_FEATURES mode, the management account cannot enforce guardrails on member accounts. Migrating from consolidated-billing to all-features requires consent from every member account.
+
+**Remediation:** Enable all features in the organization via the AWS Organizations console or EnableAllFeatures API. This sends an invitation to each member account that must be accepted.
+
+---
+
 ### CTL.ORG.REGION.SCP.001
 
 **AWS Organizations Must Have an SCP Restricting Resource Creation to Approved Regions**

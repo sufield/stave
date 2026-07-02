@@ -22,6 +22,10 @@ compliance:
 scope_tags:
 - aws
 - redshift
+taxonomy:
+  - compliance-mapping
+  - encryption-in-transit
+  - key-management
 type: unsafe_state
 classification: state_assertion
 params:

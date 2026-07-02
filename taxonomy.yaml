@@ -1,0 +1,145 @@
+version: v1
+categories:
+  - id: least-privilege
+    name: Least Privilege
+    definition: >
+      Permissions broader than necessary. Wildcard actions/resources,
+      admin policies, overly broad service access, unused permissions.
+
+  - id: credential-lifecycle
+    name: Credential Lifecycle
+    definition: >
+      Credentials that outlive their need. Access key age, session
+      duration, long-lived tokens, rotation, unused credentials.
+
+  - id: trust-boundary
+    name: Trust Boundary
+    definition: >
+      Trust relationships crossing organizational or account boundaries.
+      Cross-account role assumption, external trust policies, wildcard
+      principals, third-party access.
+
+  - id: trust-decay
+    name: Trust Decay
+    definition: >
+      Trust decisions that persist beyond their valid context. Stale
+      resources, idle agents, orphaned permissions, ghost references
+      to deleted resources.
+
+  - id: confused-deputy
+    name: Confused Deputy
+    definition: >
+      Missing protections against confused deputy attacks. Service
+      principals without SourceAccount, cross-account trust without
+      ExternalId, missing SourceOrgID.
+
+  - id: attribution
+    name: Attribution
+    definition: >
+      Configuration gaps preventing action attribution. Missing
+      SourceIdentity enforcement, missing logging, identity chain
+      breaks across role assumption hops.
+
+  - id: identity-perimeter
+    name: Identity Perimeter
+    definition: >
+      Missing organizational identity restrictions. Access granted
+      without validating the caller belongs to the organization.
+
+  - id: impersonation
+    name: Impersonation
+    definition: >
+      Configurations allowing one entity to act as another. SSO
+      application with account access scope, role assumption without
+      scoping, delegated access without attribution.
+
+  - id: network-perimeter
+    name: Network Perimeter
+    definition: >
+      Incomplete network boundary enforcement. Missing VPC endpoint
+      policies, public access, unrestricted ingress/egress.
+
+  - id: data-perimeter
+    name: Data Perimeter
+    definition: >
+      Completeness of the three-dimensional data perimeter: identity,
+      network, and confused deputy protection.
+
+  - id: encryption-at-rest
+    name: Encryption at Rest
+    definition: >
+      Missing or weak encryption for stored data. Volumes, databases,
+      buckets, filesystems, logs, models.
+
+  - id: encryption-in-transit
+    name: Encryption in Transit
+    definition: >
+      Missing encryption for data in motion. TLS enforcement, SSL
+      configuration, inter-container encryption.
+
+  - id: key-management
+    name: Key Management
+    definition: >
+      KMS key misconfigurations. Rotation, key policy access,
+      customer-managed vs AWS-managed keys, key lifecycle.
+
+  - id: network-isolation
+    name: Network Isolation
+    definition: >
+      Missing network isolation for compute and AI workloads. VPC
+      deployment, security group rules, private endpoints.
+
+  - id: compute-hardening
+    name: Compute Hardening
+    definition: >
+      Insecure compute configurations. Privileged containers, root
+      access, IMDSv2, deprecated runtimes, image pinning.
+
+  - id: redundancy
+    name: Redundancy & Availability
+    definition: >
+      Single points of failure. Single-AZ deployment, missing
+      Multi-AZ, single NAT gateway.
+
+  - id: logging
+    name: Logging & Audit
+    definition: >
+      Missing logging configuration. CloudTrail, CloudWatch, VPC
+      flow logs, access logging, invocation logging.
+
+  - id: monitoring
+    name: Monitoring & Detection
+    definition: >
+      Missing monitoring service enablement. GuardDuty, Security Hub,
+      Config, Inspector, Macie, model monitoring.
+
+  - id: ai-guardrails
+    name: AI Guardrails
+    definition: >
+      Missing or incomplete guardrail configuration on AI services.
+      Content filters, topic policies, PII filters, prompt attack.
+
+  - id: ai-supply-chain
+    name: AI Supply Chain
+    definition: >
+      Supply chain risks in AI infrastructure. Image scanning,
+      container image pinning, model registry controls, ghost
+      references to deleted models or functions.
+
+  - id: resource-sprawl
+    name: Resource Sprawl
+    definition: >
+      Uncontrolled proliferation of resources. Multiple agents with
+      broad access, excessive idle resources, shadow resources.
+
+  - id: account-governance
+    name: Account Governance
+    definition: >
+      Missing organizational governance. SCP enforcement, RCP
+      enforcement, delegated admin, Control Tower, Organizations.
+
+  - id: compliance-mapping
+    name: Compliance Mapping
+    definition: >
+      Controls that map to specific compliance frameworks. CIS, NIST,
+      CCM, HIPAA, SOC 2, PCI DSS. A filter for framework alignment.

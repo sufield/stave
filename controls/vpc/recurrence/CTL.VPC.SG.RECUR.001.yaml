@@ -15,6 +15,10 @@ compliance:
 scope_tags:
   - aws
   - vpc
+taxonomy:
+  - compliance-mapping
+  - logging
+  - network-perimeter
 type: unsafe_recurrence
 classification: aggregate_check
 params:

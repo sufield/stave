@@ -26,6 +26,11 @@ compliance:
 scope_tags:
   - aws
   - sqs
+taxonomy:
+  - confused-deputy
+  - identity-perimeter
+  - network-perimeter
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

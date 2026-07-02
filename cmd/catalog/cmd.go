@@ -26,6 +26,7 @@ type options struct {
 	ChainsDir   string
 	NoPager     bool
 	Severity    string
+	Taxonomy    string
 	Leaf        bool
 }
 
@@ -121,11 +122,13 @@ Exit codes:
 	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "chains", "chain catalog directory")
 	cmd.Flags().BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
 	cmd.Flags().StringVar(&opts.Severity, "severity", "", "show only leaf controls of this severity: critical | high | medium | low | info")
+	cmd.Flags().StringVar(&opts.Taxonomy, "taxonomy", "", "filter by taxonomy category (comma-separated, OR-joined)")
 	cmd.Flags().BoolVar(&opts.Leaf, "leaf", false, "drill to leaf controls (the individual control IDs); pairs with a service")
 	cmd.AddCommand(newStatsCmd())
 	cmd.AddCommand(newInspectCmd())
 	cmd.AddCommand(newCoverageCmd())
 	cmd.AddCommand(newGapsCmd())
+	cmd.AddCommand(newTaxonomyCmd())
 	return cmd
 }
 
@@ -145,6 +148,7 @@ func run(ctx context.Context, w io.Writer, opts *options) error {
 		ControlsDir: opts.ControlsDir,
 		ChainsDir:   opts.ChainsDir,
 		Severity:    opts.Severity,
+		Taxonomy:    opts.Taxonomy,
 		Leaf:        opts.Leaf,
 	})
 	if err != nil {

@@ -21,6 +21,8 @@ compliance:
 scope_tags:
   - aws
   - cognito
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -12,6 +12,9 @@ severity: low
 scope_tags:
   - aws
   - iam
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
 type: unsafe_state
 classification: absence_check
 applicable_asset_types:

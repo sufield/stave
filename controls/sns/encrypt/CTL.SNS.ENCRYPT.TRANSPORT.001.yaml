@@ -27,6 +27,10 @@ compliance:
 scope_tags:
   - aws
   - sns
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - encryption-in-transit
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -13,6 +13,9 @@ compliance:
   soc2: "CC6.1"
   ccm_v4: ["DSP-17"]
 scope_tags: [aws, route53]
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
 params:

@@ -29,6 +29,9 @@ compliance:
 scope_tags:
   - aws
   - apigateway
+taxonomy:
+  - account-governance
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

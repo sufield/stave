@@ -47,6 +47,7 @@ func (y yamlControlDefinition) ToDomain() (policy.ControlDefinition, error) {
 		MitreAttack:          mitreAttackToDomain(y.MitreAttack),
 		ValidatedAgainst:     labValidationToDomain(y.ValidatedAgainst),
 		Tests:                y.Tests,
+		Taxonomy:             y.Taxonomy,
 		Defect:               y.Defect,
 		Infection:            y.Infection,
 		Failure:              y.Failure,

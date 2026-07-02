@@ -33,6 +33,10 @@ scope_tags:
   - aws
   - iam
   - rcp
+taxonomy:
+  - account-governance
+  - confused-deputy
+  - identity-perimeter
 params:
   attack_stage: privilege_escalation
   tag_prefix: "scp-"

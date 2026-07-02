@@ -33,6 +33,10 @@ scope_tags:
   - lambda
   - microvm
   - agent
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - least-privilege
 params:
   attack_stage: privilege_escalation
 observation_fields:

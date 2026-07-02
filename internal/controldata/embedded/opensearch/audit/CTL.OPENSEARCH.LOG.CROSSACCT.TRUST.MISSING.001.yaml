@@ -25,6 +25,10 @@ compliance:
 scope_tags:
   - aws
   - opensearch
+taxonomy:
+  - confused-deputy
+  - logging
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

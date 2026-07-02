@@ -20,6 +20,8 @@ compliance:
 scope_tags:
   - vmware
   - vcenter
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

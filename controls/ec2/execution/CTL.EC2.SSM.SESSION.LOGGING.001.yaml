@@ -19,6 +19,10 @@ scope_tags:
   - aws
   - ec2
   - ssm
+taxonomy:
+  - compliance-mapping
+  - logging
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

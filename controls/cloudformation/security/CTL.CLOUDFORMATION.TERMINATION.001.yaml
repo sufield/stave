@@ -11,6 +11,8 @@ compliance:
   soc2: "A1.1"
   ccm_v4: ["BCR-08"]
 scope_tags: [aws, cloudformation]
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

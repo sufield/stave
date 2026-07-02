@@ -16,6 +16,9 @@ compliance:
 scope_tags:
   - aws
   - kms
+taxonomy:
+  - compliance-mapping
+  - key-management
 type: unsafe_state
 classification: parameterized_check
 applicable_asset_types:

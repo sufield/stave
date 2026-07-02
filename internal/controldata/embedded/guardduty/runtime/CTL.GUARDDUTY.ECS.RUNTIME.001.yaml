@@ -17,6 +17,10 @@ scope_tags:
   - aws
   - guardduty
   - ecs
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - monitoring
 type: unsafe_state
 classification: state_assertion
 params:

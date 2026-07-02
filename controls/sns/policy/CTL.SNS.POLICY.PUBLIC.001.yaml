@@ -21,6 +21,11 @@ compliance:
 scope_tags:
   - aws
   - sns
+taxonomy:
+  - confused-deputy
+  - identity-perimeter
+  - monitoring
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

@@ -24,6 +24,10 @@ scope_tags:
   - s3
   - sensitive-data
   - hipaa
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
 type: unsafe_state
 classification: state_assertion
 params:

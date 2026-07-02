@@ -10,6 +10,9 @@ compliance:
 scope_tags:
   - aws
   - autoscaling
+taxonomy:
+  - compliance-mapping
+  - redundancy
 applicable_asset_types:
   - aws_autoscaling_group
 type: unsafe_state

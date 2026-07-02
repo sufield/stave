@@ -17,6 +17,10 @@ compliance:
   ccm_v4: ["IVS-03", "IVS-04", "IVS-06"]
 scope_tags:
   - kubernetes
+taxonomy:
+  - compute-hardening
+  - credential-lifecycle
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

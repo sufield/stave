@@ -11,6 +11,9 @@ compliance:
   nist_800_53_r5: "SI-4"
   soc2: "CC7.1"
 scope_tags: [m365]
+taxonomy:
+  - compliance-mapping
+  - impersonation
 type: unsafe_state
 classification: state_assertion
 params:

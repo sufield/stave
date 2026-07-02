@@ -31,6 +31,10 @@ scope_tags:
   - aws
   - iam
   - scp
+taxonomy:
+  - account-governance
+  - credential-lifecycle
+  - network-perimeter
 params:
   attack_stage: privilege_escalation
   tag_prefix: "scp-"

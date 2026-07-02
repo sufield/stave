@@ -23,6 +23,10 @@ compliance:
 scope_tags:
   - aws
   - cloudtrail
+taxonomy:
+  - compute-hardening
+  - logging
+  - monitoring
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

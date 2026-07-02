@@ -15,6 +15,9 @@ scope_tags:
   - aws
   - cloudwatch
   - vpc
+taxonomy:
+  - compliance-mapping
+  - network-isolation
 type: unsafe_state
 classification: state_assertion
 params:

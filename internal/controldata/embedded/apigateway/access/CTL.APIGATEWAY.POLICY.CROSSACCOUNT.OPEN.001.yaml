@@ -26,6 +26,10 @@ compliance:
 scope_tags:
   - aws
   - apigateway
+taxonomy:
+  - confused-deputy
+  - identity-perimeter
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 params:

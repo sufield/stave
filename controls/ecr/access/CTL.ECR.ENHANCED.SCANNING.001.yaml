@@ -27,6 +27,9 @@ compliance:
 scope_tags:
   - aws
   - ecr
+taxonomy:
+  - ai-supply-chain
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

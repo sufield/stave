@@ -20,6 +20,9 @@ compliance:
   pci_dss_v4: "4.1"
   ccm_v4: ["CEK-09", "DSP-10"]
 scope_tags: [aws, rds]
+taxonomy:
+  - compliance-mapping
+  - encryption-in-transit
 type: unsafe_state
 classification: state_assertion
 params:

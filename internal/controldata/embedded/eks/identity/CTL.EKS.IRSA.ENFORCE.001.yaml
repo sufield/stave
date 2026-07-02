@@ -20,6 +20,10 @@ compliance:
 scope_tags:
   - aws
   - eks
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - monitoring
 type: unsafe_state
 classification: state_assertion
 params:

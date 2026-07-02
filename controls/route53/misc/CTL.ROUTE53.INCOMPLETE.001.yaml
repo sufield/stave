@@ -10,6 +10,8 @@ compliance:
 scope_tags:
   - aws
   - route53
+taxonomy:
+  - compliance-mapping
 applicable_asset_types:
   - aws_route53_hosted_zone
 type: unsafe_state

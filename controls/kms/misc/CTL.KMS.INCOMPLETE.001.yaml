@@ -11,6 +11,10 @@ compliance:
 scope_tags:
   - aws
   - kms
+taxonomy:
+  - compliance-mapping
+  - key-management
+  - trust-boundary
 type: unsafe_state
 classification: absence_check
 applicable_asset_types:

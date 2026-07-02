@@ -14,6 +14,9 @@ compliance:
   soc2: "CC6.1"
   ccm_v4: ["IAM-16", "DSP-17"]
 scope_tags: [aws, sqs]
+taxonomy:
+  - compliance-mapping
+  - trust-decay
 type: unsafe_state
 classification: state_assertion
 params:

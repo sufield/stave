@@ -19,6 +19,8 @@ scope_tags:
   - aws
   - s3
   - iam
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 scope: compound

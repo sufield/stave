@@ -10,6 +10,8 @@ compliance:
 scope_tags:
   - aws
   - config
+taxonomy:
+  - compliance-mapping
 applicable_asset_types:
   - aws_config_recorder
 type: unsafe_state

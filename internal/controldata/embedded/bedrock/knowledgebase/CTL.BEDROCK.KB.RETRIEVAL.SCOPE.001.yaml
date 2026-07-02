@@ -34,6 +34,8 @@ scope_tags:
   - aws
   - bedrock
   - rag
+taxonomy:
+  - compliance-mapping
 observation_fields:
   - ai.kind
   - ai.knowledge_base.retrieval_exceeds_declared_scope

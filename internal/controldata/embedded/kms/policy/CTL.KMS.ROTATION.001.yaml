@@ -22,6 +22,9 @@ compliance:
 scope_tags:
   - aws
   - kms
+taxonomy:
+  - compliance-mapping
+  - key-management
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

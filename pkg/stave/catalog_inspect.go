@@ -35,6 +35,7 @@ type ControlDetail struct {
 	ApplicableAssetTypes []string          `json:"applicable_asset_types,omitempty"`
 	Compliance           map[string]string `json:"compliance,omitempty"`
 	ObservationFields    []string          `json:"observation_fields,omitempty"`
+	Taxonomy             []string          `json:"taxonomy,omitempty"`
 	Chains               []string          `json:"chains,omitempty"`
 	Remediation          *remediationView  `json:"remediation,omitempty"`
 }
@@ -122,6 +123,7 @@ func controlDetailFrom(c *policy.ControlDefinition, chainIDs []string) ControlDe
 		ApplicableAssetTypes: assets,
 		Compliance:           compliance,
 		ObservationFields:    c.ObservationFields,
+		Taxonomy:             c.Taxonomy,
 		Chains:               chainIDs,
 		Remediation:          rem,
 	}
@@ -177,6 +179,13 @@ func renderControlDetailText(buf *bytes.Buffer, d ControlDetail) {
 		fmt.Fprintf(buf, "\nObservation Fields:\n")
 		for _, f := range d.ObservationFields {
 			fmt.Fprintf(buf, "  %s\n", f)
+		}
+	}
+
+	if len(d.Taxonomy) > 0 {
+		fmt.Fprintf(buf, "\nTaxonomy:\n")
+		for _, t := range d.Taxonomy {
+			fmt.Fprintf(buf, "  %s\n", t)
 		}
 	}
 

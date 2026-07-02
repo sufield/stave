@@ -53,6 +53,8 @@ type ControlDefinition struct {
 	ValidatedAgainst     []LabValidation  // vendor lab verification records
 	Tests                []ControlTest    `yaml:"tests,omitempty" json:"-"`
 
+	Taxonomy []string
+
 	// Defect / Infection / Failure carry authored triage prose
 	// following Andreas Zeller's Why Programs Fail failure-theory
 	// chain. Optional; empty strings render as skipped sections.

@@ -11,6 +11,9 @@ compliance:
   nist_800_53_r5: "AC-3"
   soc2: "CC6.1"
 scope_tags: [cloudflare]
+taxonomy:
+  - compliance-mapping
+  - trust-decay
 type: unsafe_state
 classification: state_assertion
 params:

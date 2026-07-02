@@ -15,6 +15,10 @@ compliance:
 scope_tags:
   - aws
   - efs
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - encryption-in-transit
 type: unsafe_state
 classification: state_assertion
 params:

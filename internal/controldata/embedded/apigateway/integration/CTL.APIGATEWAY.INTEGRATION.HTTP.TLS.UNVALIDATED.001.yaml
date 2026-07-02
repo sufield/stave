@@ -27,6 +27,10 @@ compliance:
 scope_tags:
   - aws
   - apigateway
+taxonomy:
+  - credential-lifecycle
+  - encryption-in-transit
+  - impersonation
 type: unsafe_state
 classification: state_assertion
 params:

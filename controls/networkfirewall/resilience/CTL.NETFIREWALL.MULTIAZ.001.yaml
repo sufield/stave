@@ -12,6 +12,10 @@ compliance:
   soc2: "A1.1"
   ccm_v4: ["BCR-08"]
 scope_tags: [aws, networkfirewall]
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+  - redundancy
 type: unsafe_state
 classification: state_assertion
 params:

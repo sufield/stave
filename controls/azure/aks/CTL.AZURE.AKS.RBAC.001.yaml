@@ -10,6 +10,8 @@ compliance:
   soc2: "CC6.1"
   ccm_v4: ["IAM-16"]
 scope_tags: [azure]
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

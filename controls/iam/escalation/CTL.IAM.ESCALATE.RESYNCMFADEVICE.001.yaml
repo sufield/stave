@@ -31,6 +31,10 @@ compliance:
 scope_tags:
   - aws
   - iam
+taxonomy:
+  - compute-hardening
+  - credential-lifecycle
+  - logging
 type: unsafe_state
 classification: state_assertion
 params:

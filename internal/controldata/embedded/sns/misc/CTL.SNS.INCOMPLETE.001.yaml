@@ -10,6 +10,8 @@ compliance:
 scope_tags:
   - aws
   - sns
+taxonomy:
+  - compliance-mapping
 applicable_asset_types:
   - aws_sns_topic
 type: unsafe_state

@@ -12,6 +12,9 @@ compliance:
   ccm_v4: ["DCS-07", "IAM-07"]
 scope_tags:
   - active_directory
+taxonomy:
+  - compliance-mapping
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 params:

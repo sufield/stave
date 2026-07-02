@@ -13,6 +13,8 @@ compliance:
 scope_tags:
   - vmware
   - vm
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

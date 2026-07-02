@@ -22,6 +22,10 @@ compliance:
 scope_tags:
   - aws
   - elb
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+  - redundancy
 type: unsafe_state
 classification: state_assertion
 params:

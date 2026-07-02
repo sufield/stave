@@ -27,6 +27,8 @@ compliance:
 scope_tags:
   - aws
   - ecs
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

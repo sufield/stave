@@ -17,6 +17,9 @@ compliance:
 scope_tags:
   - aws
   - backup
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
 params:

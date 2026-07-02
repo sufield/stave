@@ -19,6 +19,9 @@ compliance:
 scope_tags:
   - aws
   - iam
+taxonomy:
+  - compliance-mapping
+  - least-privilege
 type: unsafe_state
 classification: state_assertion
 params:

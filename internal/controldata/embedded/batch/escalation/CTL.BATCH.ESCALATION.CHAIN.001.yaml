@@ -33,6 +33,10 @@ compliance:
 scope_tags:
   - aws
   - batch
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+  - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
 params:

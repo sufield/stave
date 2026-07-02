@@ -13,6 +13,10 @@ compliance:
 scope_tags:
   - kubernetes
   - pod_security
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 params:

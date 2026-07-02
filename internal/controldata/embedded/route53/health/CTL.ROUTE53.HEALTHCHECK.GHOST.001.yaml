@@ -21,6 +21,9 @@ severity: low
 compliance:
   ccm_v4: ["BCR-03", "DCS-06"]
 scope_tags: [aws, route53]
+taxonomy:
+  - compliance-mapping
+  - trust-decay
 type: unsafe_state
 classification: state_assertion
 params:

@@ -22,6 +22,11 @@ compliance:
 scope_tags:
 - aws
 - documentdb
+taxonomy:
+  - encryption-at-rest
+  - identity-perimeter
+  - key-management
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 params:

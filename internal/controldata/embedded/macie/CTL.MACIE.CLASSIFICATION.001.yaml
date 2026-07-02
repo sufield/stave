@@ -17,6 +17,10 @@ compliance:
   pci_dss_v4.0: "3.4.1"
   ccm_v4: ["DSP-17"]
 scope_tags: [aws, macie]
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - monitoring
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

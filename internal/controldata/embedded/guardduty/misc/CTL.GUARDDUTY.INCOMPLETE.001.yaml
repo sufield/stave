@@ -10,6 +10,9 @@ compliance:
 scope_tags:
   - aws
   - guardduty
+taxonomy:
+  - compliance-mapping
+  - monitoring
 applicable_asset_types:
   - aws_guardduty_detector
 type: unsafe_state

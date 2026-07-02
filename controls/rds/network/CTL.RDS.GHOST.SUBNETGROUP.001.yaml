@@ -24,6 +24,10 @@ compliance:
   soc2: "A1.2"
   ccm_v4: ["BCR-08", "IVS-04"]
 scope_tags: [aws, rds]
+taxonomy:
+  - network-isolation
+  - redundancy
+  - trust-decay
 type: unsafe_state
 classification: state_assertion
 params:

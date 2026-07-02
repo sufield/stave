@@ -13,6 +13,8 @@ compliance:
 scope_tags:
   - kubernetes
   - scheduler
+taxonomy:
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 params:

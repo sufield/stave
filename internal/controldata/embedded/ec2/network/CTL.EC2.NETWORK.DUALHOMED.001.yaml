@@ -24,6 +24,10 @@ compliance:
   pci_dss_v4: "1.4"
   ccm_v4: ["IVS-04"]
 scope_tags: [aws, ec2]
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+  - trust-decay
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

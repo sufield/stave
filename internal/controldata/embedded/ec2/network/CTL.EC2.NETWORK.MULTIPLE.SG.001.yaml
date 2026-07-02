@@ -23,6 +23,9 @@ compliance:
   nist_800_53_r5: "AC-4"
   ccm_v4: ["IVS-04"]
 scope_tags: [aws, ec2]
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

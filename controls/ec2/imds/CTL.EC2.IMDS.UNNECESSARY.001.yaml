@@ -29,6 +29,10 @@ compliance:
 scope_tags:
   - aws
   - ec2
+taxonomy:
+  - compute-hardening
+  - credential-lifecycle
+  - redundancy
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

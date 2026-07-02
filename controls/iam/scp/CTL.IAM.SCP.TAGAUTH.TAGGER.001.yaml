@@ -32,6 +32,10 @@ scope_tags:
   - aws
   - iam
   - scp
+taxonomy:
+  - account-governance
+  - compliance-mapping
+  - compute-hardening
 params:
   attack_stage: privilege_escalation
   tagger_role: "tagger"

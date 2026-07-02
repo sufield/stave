@@ -25,6 +25,10 @@ compliance:
 scope_tags:
   - aws
   - dynamodb
+taxonomy:
+  - compute-hardening
+  - credential-lifecycle
+  - least-privilege
 type: unsafe_state
 classification: state_assertion
 params:

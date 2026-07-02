@@ -15,6 +15,9 @@ compliance:
 scope_tags:
   - vmware
   - esxi
+taxonomy:
+  - compliance-mapping
+  - impersonation
 type: unsafe_state
 classification: state_assertion
 params:
