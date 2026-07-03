@@ -66,7 +66,7 @@ func Export(findings []remediation.Finding) []ComplianceFinding {
 				Status:       "FAILED",
 			},
 			Resources: []OCSFResource{
-				{UID: string(f.AssetID), Type: string(f.AssetID)},
+				{UID: string(f.AssetID), Type: string(f.AssetType)},
 			},
 		})
 	}

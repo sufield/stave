@@ -73,6 +73,9 @@ func Predict(in Input) *Prediction {
 
 	totalControls := max(latest.Summary.TotalAssets, 1)
 	currentReadiness := (1.0 - float64(latest.Summary.Violations)/float64(totalControls)) * 100
+	if currentReadiness < 0 {
+		currentReadiness = 0
+	}
 	gap := in.TargetReadiness - currentReadiness
 	if gap <= 0 {
 		return &Prediction{
@@ -88,6 +91,9 @@ func Predict(in Input) *Prediction {
 	// Estimate days to close gap based on MTTR.
 	avgMTTRDays := weightedMTTR(latest.Findings, mttr)
 	controlsToFix := int(math.Ceil(float64(totalFindings) * gap / 100))
+	if controlsToFix > totalFindings {
+		controlsToFix = totalFindings
+	}
 	projectedDays := int(float64(controlsToFix) * avgMTTRDays)
 
 	projected := in.Now.AddDate(0, 0, projectedDays)

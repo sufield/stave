@@ -2,6 +2,7 @@ package gaps
 
 import (
 	"strings"
+	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -177,36 +178,20 @@ func hasProperty(a asset.Asset, path string) bool {
 	return true
 }
 
-// latestPerAsset deduplicates assets by ID, retaining the latest
-// snapshot's view. When two snapshots carry the same asset, the
-// snapshot with the later CapturedAt wins; ties resolve in
-// snapshot order. Callers reading freshness from this map should
-// be aware that asset.LastSeen would be a more accurate query;
-// for gap purposes "do you observe this property NOW?" is the
-// right semantic.
 func latestPerAsset(snapshots []asset.Snapshot) map[asset.ID]asset.Asset {
 	out := map[asset.ID]asset.Asset{}
+	latestTime := map[asset.ID]time.Time{}
 	for i := range snapshots {
 		for j := range snapshots[i].Assets {
 			a := &snapshots[i].Assets[j]
-			cur, ok := out[a.ID]
-			if !ok || !snapshots[i].CapturedAt.Before(snapshotOf(cur, snapshots).CapturedAt) {
+			prevTime, ok := latestTime[a.ID]
+			if !ok || !snapshots[i].CapturedAt.Before(prevTime) {
 				out[a.ID] = *a
+				latestTime[a.ID] = snapshots[i].CapturedAt
 			}
 		}
 	}
 	return out
-}
-
-// snapshotOf is a no-op helper retained for symmetry with the
-// "find the snapshot that produced this asset" path; for now we
-// don't need it (latestPerAsset uses snapshot ordering only). A
-// follow-on could carry the CapturedAt on the Asset itself.
-func snapshotOf(_ asset.Asset, snaps []asset.Snapshot) asset.Snapshot {
-	if len(snaps) == 0 {
-		return asset.Snapshot{}
-	}
-	return snaps[len(snaps)-1]
 }
 
 // intentPaths returns the canonical set of "intent property"
