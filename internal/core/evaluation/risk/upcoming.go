@@ -2,9 +2,7 @@ package risk
 
 import (
 	"cmp"
-	"fmt"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -12,24 +10,6 @@ import (
 	findingsdata "github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
-
-// ValidateStatuses normalizes and validates a slice of status strings.
-// Stays in risk/ — it's a producer-side helper, not a data shape.
-func ValidateStatuses(statuses []string) ([]findingsdata.ThresholdStatus, error) {
-	out := make([]findingsdata.ThresholdStatus, 0, len(statuses))
-	for _, raw := range statuses {
-		norm := findingsdata.ThresholdStatus(strings.ToUpper(strings.TrimSpace(raw)))
-		switch norm {
-		case "":
-			continue
-		case findingsdata.StatusOverdue, findingsdata.StatusDueNow, findingsdata.StatusUpcoming:
-			out = append(out, norm)
-		default:
-			return nil, fmt.Errorf("invalid status %q (expected: OVERDUE, DUE_NOW, UPCOMING)", raw)
-		}
-	}
-	return out, nil
-}
 
 // ThresholdRequest provides the inputs required to compute upcoming risk.
 type ThresholdRequest struct {

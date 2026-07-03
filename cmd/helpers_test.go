@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"context"
-	"errors"
 	"sync"
 	"testing"
 	"time"
@@ -11,10 +9,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/cmdutil/runid"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
-	"github.com/sufield/stave/internal/core/asset"
-	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/platform/logging"
 )
 
@@ -122,77 +117,5 @@ func TestResolveNow_Invalid(t *testing.T) {
 	_, err := compose.ResolveNow("not-a-timestamp")
 	if err == nil {
 		t.Fatal("expected error for invalid timestamp")
-	}
-}
-
-// Mock implementations for testing Provider.LoadAssets.
-
-type mockObsRepo struct {
-	snapshots []asset.Snapshot
-	err       error
-}
-
-func (m *mockObsRepo) LoadSnapshots(_ context.Context, _ string) (appcontracts.LoadResult, error) {
-	return appcontracts.LoadResult{Snapshots: m.snapshots}, m.err
-}
-
-type mockCtlRepo struct {
-	controls []policy.ControlDefinition
-	err      error
-}
-
-func (m *mockCtlRepo) LoadControls(_ context.Context, _ string) ([]policy.ControlDefinition, error) {
-	return m.controls, m.err
-}
-
-func TestLoadAssets_Success(t *testing.T) {
-	snap := asset.Snapshot{CapturedAt: time.Now()}
-	ctl := policy.ControlDefinition{ID: "TEST.001"}
-	obs := &mockObsRepo{snapshots: []asset.Snapshot{snap}}
-	ctlR := &mockCtlRepo{controls: []policy.ControlDefinition{ctl}}
-	newObs := func() (appcontracts.ObservationRepository, error) { return obs, nil }
-	newCtl := func() (appcontracts.ControlRepository, error) { return ctlR, nil }
-
-	res, err := compose.LoadAssets(context.Background(), newObs, newCtl, "obs", "ctl")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if len(res.Snapshots) != 1 {
-		t.Fatalf("got %d snapshots, want 1", len(res.Snapshots))
-	}
-	if len(res.Controls) != 1 {
-		t.Fatalf("got %d controls, want 1", len(res.Controls))
-	}
-}
-
-func TestLoadAssets_ObsError(t *testing.T) {
-	obsErr := errors.New("obs boom")
-	obs := &mockObsRepo{err: obsErr}
-	ctlR := &mockCtlRepo{controls: []policy.ControlDefinition{{ID: "T"}}}
-	newObs := func() (appcontracts.ObservationRepository, error) { return obs, nil }
-	newCtl := func() (appcontracts.ControlRepository, error) { return ctlR, nil }
-
-	_, err := compose.LoadAssets(context.Background(), newObs, newCtl, "obs", "ctl")
-	if err == nil {
-		t.Fatal("expected error")
-	}
-	if !errors.Is(err, obsErr) {
-		t.Fatalf("expected wrapped obs error, got: %v", err)
-	}
-}
-
-func TestLoadAssets_CtlError(t *testing.T) {
-	ctlErr := errors.New("ctl boom")
-	obs := &mockObsRepo{snapshots: []asset.Snapshot{{}}}
-	ctlR := &mockCtlRepo{err: ctlErr}
-	newObs := func() (appcontracts.ObservationRepository, error) { return obs, nil }
-	newCtl := func() (appcontracts.ControlRepository, error) { return ctlR, nil }
-
-	_, err := compose.LoadAssets(context.Background(), newObs, newCtl, "obs", "ctl")
-	if err == nil {
-		t.Fatal("expected error")
-	}
-	if !errors.Is(err, ctlErr) {
-		t.Fatalf("expected wrapped ctl error, got: %v", err)
 	}
 }

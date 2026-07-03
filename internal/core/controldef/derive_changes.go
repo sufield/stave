@@ -58,20 +58,6 @@ func DeriveChanges(misconfigs []Misconfiguration) []PropertyChange {
 	return changes
 }
 
-// ConfidenceFloat maps a confidence level string to a float64.
-func ConfidenceFloat(level string) float64 {
-	switch level {
-	case "HIGH":
-		return 1.0
-	case "MEDIUM":
-		return 0.7
-	case "LOW":
-		return 0.4
-	default:
-		return 0.5
-	}
-}
-
 func isBooleanInversion(m *Misconfiguration) bool {
 	if m.Operator != predicate.OpEq {
 		return false

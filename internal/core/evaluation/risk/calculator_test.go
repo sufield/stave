@@ -104,15 +104,6 @@ func TestChainEscalation(t *testing.T) {
 	}
 }
 
-func TestLookupSensitivity(t *testing.T) {
-	if got := LookupSensitivity("phi"); got != 3.0 {
-		t.Errorf("phi = %f, want 3.0", got)
-	}
-	if got := LookupSensitivity("unknown"); got != 1.0 {
-		t.Errorf("unknown = %f, want 1.0", got)
-	}
-}
-
 func TestLookupExposure(t *testing.T) {
 	if got := LookupExposure("public_internet"); got != 2.0 {
 		t.Errorf("public = %f, want 2.0", got)

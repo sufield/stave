@@ -54,15 +54,6 @@ func (m *mockEnforceGen) GenerateTemplate(_ context.Context, _ EnforceRequest) (
 	return m.resp, m.err
 }
 
-type mockPromptGen struct {
-	resp PromptFromFindingResponse
-	err  error
-}
-
-func (m *mockPromptGen) GeneratePrompt(_ context.Context, _ PromptFromFindingRequest) (PromptFromFindingResponse, error) {
-	return m.resp, m.err
-}
-
 type mockDiagnoseRunner struct {
 	data any
 	err  error
@@ -79,24 +70,6 @@ type mockDiagnoseDetail struct {
 
 func (m *mockDiagnoseDetail) RunDetail(_ context.Context, _, _, _, _ string) (any, error) {
 	return m.data, m.err
-}
-
-type mockDocsSearcher struct {
-	resp DocsSearchResponse
-	err  error
-}
-
-func (m *mockDocsSearcher) SearchDocs(_ context.Context, _ DocsSearchRequest) (DocsSearchResponse, error) {
-	return m.resp, m.err
-}
-
-type mockDocsOpener struct {
-	resp DocsOpenResponse
-	err  error
-}
-
-func (m *mockDocsOpener) OpenDoc(_ context.Context, _ DocsOpenRequest) (DocsOpenResponse, error) {
-	return m.resp, m.err
 }
 
 func canceled() context.Context {
@@ -213,31 +186,6 @@ func TestEnforce(t *testing.T) {
 	})
 }
 
-// --- PromptFromFinding ---
-
-func TestPromptFromFinding(t *testing.T) {
-	t.Run("happy", func(t *testing.T) {
-		_, err := PromptFromFinding(context.Background(), PromptFromFindingRequest{EvaluationFile: "e", AssetID: "a"}, PromptFromFindingDeps{Generator: &mockPromptGen{}})
-		assertNoErr(t, err)
-	})
-	t.Run("empty eval", func(t *testing.T) {
-		_, err := PromptFromFinding(context.Background(), PromptFromFindingRequest{AssetID: "a"}, PromptFromFindingDeps{Generator: &mockPromptGen{}})
-		assertErr(t, err)
-	})
-	t.Run("empty asset", func(t *testing.T) {
-		_, err := PromptFromFinding(context.Background(), PromptFromFindingRequest{EvaluationFile: "e"}, PromptFromFindingDeps{Generator: &mockPromptGen{}})
-		assertErr(t, err)
-	})
-	t.Run("error", func(t *testing.T) {
-		_, err := PromptFromFinding(context.Background(), PromptFromFindingRequest{EvaluationFile: "e", AssetID: "a"}, PromptFromFindingDeps{Generator: &mockPromptGen{err: errors.New("fail")}})
-		assertErr(t, err)
-	})
-	t.Run("ctx", func(t *testing.T) {
-		_, err := PromptFromFinding(canceled(), PromptFromFindingRequest{EvaluationFile: "e", AssetID: "a"}, PromptFromFindingDeps{Generator: &mockPromptGen{}})
-		assertCanceled(t, err)
-	})
-}
-
 // --- Diagnose ---
 
 func TestDiagnose(t *testing.T) {
@@ -262,52 +210,6 @@ func TestDiagnose(t *testing.T) {
 	})
 	t.Run("ctx", func(t *testing.T) {
 		_, err := Diagnose(canceled(), DiagnoseRequest{}, DiagnoseDeps{Runner: &mockDiagnoseRunner{}, Detail: &mockDiagnoseDetail{}})
-		assertCanceled(t, err)
-	})
-}
-
-// --- DocsSearch ---
-
-func TestDocsSearch(t *testing.T) {
-	t.Run("happy", func(t *testing.T) {
-		_, err := DocsSearch(context.Background(), DocsSearchRequest{Query: "q", MaxResults: 10}, DocsSearchDeps{Searcher: &mockDocsSearcher{}})
-		assertNoErr(t, err)
-	})
-	t.Run("empty query", func(t *testing.T) {
-		_, err := DocsSearch(context.Background(), DocsSearchRequest{MaxResults: 10}, DocsSearchDeps{Searcher: &mockDocsSearcher{}})
-		assertErr(t, err)
-	})
-	t.Run("bad max", func(t *testing.T) {
-		_, err := DocsSearch(context.Background(), DocsSearchRequest{Query: "q", MaxResults: 0}, DocsSearchDeps{Searcher: &mockDocsSearcher{}})
-		assertErr(t, err)
-	})
-	t.Run("error", func(t *testing.T) {
-		_, err := DocsSearch(context.Background(), DocsSearchRequest{Query: "q", MaxResults: 10}, DocsSearchDeps{Searcher: &mockDocsSearcher{err: errors.New("fail")}})
-		assertErr(t, err)
-	})
-	t.Run("ctx", func(t *testing.T) {
-		_, err := DocsSearch(canceled(), DocsSearchRequest{Query: "q", MaxResults: 10}, DocsSearchDeps{Searcher: &mockDocsSearcher{}})
-		assertCanceled(t, err)
-	})
-}
-
-// --- DocsOpen ---
-
-func TestDocsOpen(t *testing.T) {
-	t.Run("happy", func(t *testing.T) {
-		_, err := DocsOpen(context.Background(), DocsOpenRequest{Topic: "t"}, DocsOpenDeps{Opener: &mockDocsOpener{}})
-		assertNoErr(t, err)
-	})
-	t.Run("empty", func(t *testing.T) {
-		_, err := DocsOpen(context.Background(), DocsOpenRequest{}, DocsOpenDeps{Opener: &mockDocsOpener{}})
-		assertErr(t, err)
-	})
-	t.Run("error", func(t *testing.T) {
-		_, err := DocsOpen(context.Background(), DocsOpenRequest{Topic: "t"}, DocsOpenDeps{Opener: &mockDocsOpener{err: errors.New("fail")}})
-		assertErr(t, err)
-	})
-	t.Run("ctx", func(t *testing.T) {
-		_, err := DocsOpen(canceled(), DocsOpenRequest{Topic: "t"}, DocsOpenDeps{Opener: &mockDocsOpener{}})
 		assertCanceled(t, err)
 	})
 }

@@ -29,20 +29,6 @@ const (
 	// noNetworkMultiplier reduces risk for assets with no network
 	// exposure — exploitation requires pre-existing access.
 	noNetworkMultiplier = 0.5
-
-	// phiSensitivity is the multiplier for Protected Health Information.
-	// HIPAA breach penalties drive the highest sensitivity classification.
-	phiSensitivity = 3.0
-
-	// cdeSensitivity is the multiplier for Cardholder Data Environment.
-	// PCI DSS breach penalties match PHI severity.
-	cdeSensitivity = 3.0
-
-	// productionSensitivity is the multiplier for production workloads.
-	productionSensitivity = 2.0
-
-	// devSensitivity reduces risk for development environments.
-	devSensitivity = 0.5
 )
 
 // Environmental computes the per-finding environmental risk score.
@@ -99,17 +85,6 @@ func ChainEscalation(failingCount int) float64 {
 	}
 }
 
-// assetSensitivity maps data classification tags to multipliers.
-// Access via GetAssetSensitivity / LookupSensitivity.
-var assetSensitivity = map[string]float64{
-	"phi":        phiSensitivity,
-	"cde":        cdeSensitivity,
-	"production": productionSensitivity,
-	"internal":   1.0,
-	"dev":        devSensitivity,
-	"sandbox":    devSensitivity,
-}
-
 // exposureVector maps network reachability to multipliers.
 // Access via GetExposureScore / LookupExposure.
 var exposureVector = map[string]float64{
@@ -117,15 +92,6 @@ var exposureVector = map[string]float64{
 	"cross_account":   crossAccountMultiplier,
 	"vpc_internal":    1.0,
 	"no_network":      noNetworkMultiplier,
-}
-
-// LookupSensitivity returns the sensitivity multiplier for a classification.
-// Returns 1.0 for unknown classifications.
-func LookupSensitivity(classification string) float64 {
-	if v, ok := assetSensitivity[classification]; ok {
-		return v
-	}
-	return 1.0
 }
 
 // LookupExposure returns the exposure multiplier for a vector.

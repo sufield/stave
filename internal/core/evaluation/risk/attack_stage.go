@@ -5,7 +5,6 @@ import (
 	"slices"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
-	findingsdata "github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -89,25 +88,6 @@ func BuildAttackStageSummary(
 	}
 
 	return summary
-}
-
-// AttackStagesFromFindings extracts the unique, sorted attack stages
-// from a set of compound findings.
-func AttackStagesFromFindings(findings []findingsdata.CompoundFinding) []kernel.AttackStage {
-	seen := make(map[kernel.AttackStage]struct{})
-	for i := range findings {
-		for _, s := range findings[i].AttackStages {
-			seen[s] = struct{}{}
-		}
-	}
-	stages := make([]kernel.AttackStage, 0, len(seen))
-	for s := range seen {
-		stages = append(stages, s)
-	}
-	slices.SortFunc(stages, func(a, b kernel.AttackStage) int {
-		return cmp.Compare(string(a), string(b))
-	})
-	return stages
 }
 
 // killChainOrder defines the MITRE ATT&CK-aligned kill chain

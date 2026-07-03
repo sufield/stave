@@ -5,7 +5,6 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
-	findingsdata "github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -99,18 +98,4 @@ func TestSortStagesByKillChain(t *testing.T) {
 			t.Errorf("got %v, want [initial_access, unknown_stage]", got)
 		}
 	})
-}
-
-func TestAttackStagesFromFindings(t *testing.T) {
-	findings := []findingsdata.CompoundFinding{
-		{AttackStages: []kernel.AttackStage{"exfiltration", "initial_access"}},
-		{AttackStages: []kernel.AttackStage{"initial_access", "persistence"}},
-	}
-	stages := AttackStagesFromFindings(findings)
-	if len(stages) != 3 {
-		t.Fatalf("expected 3 unique stages, got %d: %v", len(stages), stages)
-	}
-	if stages[0] != "exfiltration" || stages[1] != "initial_access" || stages[2] != "persistence" {
-		t.Errorf("stages not sorted: %v", stages)
-	}
 }

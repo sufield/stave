@@ -87,21 +87,3 @@ func TestDeriveChanges_EmptyInput(t *testing.T) {
 		t.Errorf("expected 0 changes for nil input, got %d", len(changes))
 	}
 }
-
-func TestConfidenceFloat(t *testing.T) {
-	tests := []struct {
-		level string
-		want  float64
-	}{
-		{"HIGH", 1.0},
-		{"MEDIUM", 0.7},
-		{"LOW", 0.4},
-		{"INCONCLUSIVE", 0.5},
-		{"", 0.5},
-	}
-	for _, tt := range tests {
-		if got := ConfidenceFloat(tt.level); got != tt.want {
-			t.Errorf("ConfidenceFloat(%q) = %f, want %f", tt.level, got, tt.want)
-		}
-	}
-}

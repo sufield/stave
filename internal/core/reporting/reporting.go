@@ -2,7 +2,6 @@ package reporting
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -55,53 +54,6 @@ func Enforce(ctx context.Context, req EnforceRequest, deps EnforceDeps) (Enforce
 		return EnforceResponse{}, fmt.Errorf("enforce: %w", err)
 	}
 	return resp, nil
-}
-
-// --- Prompt From Finding ---
-
-// PromptGeneratorPort generates an LLM prompt from evaluation findings.
-type PromptGeneratorPort interface {
-	GeneratePrompt(ctx context.Context, req PromptFromFindingRequest) (PromptFromFindingResponse, error)
-}
-
-// PromptFromFindingDeps represents a promptfromfindingdeps value.
-type PromptFromFindingDeps struct {
-	Generator PromptGeneratorPort
-}
-
-// PromptFromFinding generates an LLM prompt from evaluation findings for a specific asset.
-func PromptFromFinding(ctx context.Context, req PromptFromFindingRequest, deps PromptFromFindingDeps) (PromptFromFindingResponse, error) {
-	if err := ctx.Err(); err != nil {
-		return PromptFromFindingResponse{}, fmt.Errorf("prompt-from-finding: %w", err)
-	}
-	if req.EvaluationFile == "" {
-		return PromptFromFindingResponse{}, errors.New("prompt-from-finding: evaluation file is required")
-	}
-	if req.AssetID == "" {
-		return PromptFromFindingResponse{}, errors.New("prompt-from-finding: asset ID is required")
-	}
-	resp, err := deps.Generator.GeneratePrompt(ctx, req)
-	if err != nil {
-		return PromptFromFindingResponse{}, fmt.Errorf("prompt-from-finding: %w", err)
-	}
-	return resp, nil
-}
-
-// --- Prompt Types ---
-
-// PromptFromFindingRequest represents a promptfromfindingrequest value.
-type PromptFromFindingRequest struct {
-	EvaluationFile  string `json:"evaluation_file"`
-	AssetID         string `json:"asset_id"`
-	ControlsDir     string `json:"controls_dir,omitempty"`
-	ObservationsDir string `json:"observations_dir,omitempty"`
-}
-
-// PromptFromFindingResponse represents a promptfromfindingresponse value.
-type PromptFromFindingResponse struct {
-	Rendered   string   `json:"rendered"`
-	FindingIDs []string `json:"finding_ids"`
-	AssetID    string   `json:"asset_id"`
 }
 
 // --- Report Types ---

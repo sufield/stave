@@ -2,7 +2,6 @@ package compose
 
 import (
 	"bytes"
-	"errors"
 	"io"
 	"strings"
 	"testing"
@@ -263,18 +262,6 @@ func TestDefaultFactories_Callable(t *testing.T) {
 	}
 	if _, err := f.NewSnapshotRepo(); err != nil {
 		t.Fatalf("NewSnapshotRepo() error: %v", err)
-	}
-}
-
-// --- LoadSnapshotsFrom nil factory ---
-
-func TestLoadSnapshotsFrom_NilFactory(t *testing.T) {
-	nilFactory := func() (appcontracts.ObservationRepository, error) {
-		return nil, errors.New("nil factory")
-	}
-	_, err := LoadSnapshotsFrom(t.Context(), nilFactory, "some-dir")
-	if err == nil {
-		t.Fatal("expected error for nil factory")
 	}
 }
 

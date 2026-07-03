@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 
-	"golang.org/x/sync/errgroup"
-
 	"github.com/sufield/stave/internal/adapters/artifacts"
 	s3resolver "github.com/sufield/stave/internal/adapters/aws/s3"
 	stavecel "github.com/sufield/stave/internal/adapters/cel"
@@ -69,9 +67,6 @@ type SnapshotLoader = func(ctx context.Context, dir string) ([]asset.Snapshot, e
 
 // ControlLoaderFunc loads control definitions from a directory.
 type ControlLoaderFunc = func(ctx context.Context, dir string) ([]policy.ControlDefinition, error)
-
-// AssetLoaderFunc loads assets from observation and control directories.
-type AssetLoaderFunc = func(ctx context.Context, obsDir, ctlDir string) (Assets, error)
 
 // --- Factories (replaces Provider) ---
 
@@ -152,53 +147,4 @@ func DefaultFactories() Factories {
 			return s3resolver.NewResolver()
 		},
 	}
-}
-
-// --- Asset Loading ---
-
-// Assets represents the data loaded for an evaluation.
-type Assets struct {
-	Snapshots []asset.Snapshot
-	Controls  []policy.ControlDefinition
-}
-
-// LoadAssets concurrently fetches observations and controls using the
-// provided factory functions.
-func LoadAssets(ctx context.Context, newObs ObsRepoFactory, newCtl CtlRepoFactory, obsDir, ctlDir string) (Assets, error) {
-	obsRepo, err := newObs()
-	if err != nil {
-		return Assets{}, fmt.Errorf("create observation loader: %w", err)
-	}
-	ctlRepo, err := newCtl()
-	if err != nil {
-		return Assets{}, fmt.Errorf("create control loader: %w", err)
-	}
-
-	var snapshots []asset.Snapshot
-	var controls []policy.ControlDefinition
-
-	g, gCtx := errgroup.WithContext(ctx)
-
-	g.Go(func() error {
-		loadResult, loadErr := obsRepo.LoadSnapshots(gCtx, obsDir)
-		if loadErr != nil {
-			return fmt.Errorf("load observations from %q: %w", obsDir, loadErr)
-		}
-		snapshots = loadResult.Snapshots
-		return nil
-	})
-
-	g.Go(func() error {
-		ctls, loadErr := ctlRepo.LoadControls(gCtx, ctlDir)
-		if loadErr != nil {
-			return fmt.Errorf("load controls from %q: %w", ctlDir, loadErr)
-		}
-		controls = ctls
-		return nil
-	})
-
-	if err := g.Wait(); err != nil {
-		return Assets{}, fmt.Errorf("load assets: %w", err)
-	}
-	return Assets{Snapshots: snapshots, Controls: controls}, nil
 }

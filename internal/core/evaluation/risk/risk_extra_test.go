@@ -33,54 +33,6 @@ func TestNormalizeActions(t *testing.T) {
 	}
 }
 
-func TestValidateStatuses(t *testing.T) {
-	t.Run("valid statuses", func(t *testing.T) {
-		got, err := ValidateStatuses([]string{"overdue", "DUE_NOW", " upcoming "})
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		want := []findingsdata.ThresholdStatus{findingsdata.StatusOverdue, findingsdata.StatusDueNow, findingsdata.StatusUpcoming}
-		if len(got) != len(want) {
-			t.Fatalf("len = %d, want %d", len(got), len(want))
-		}
-		for i := range want {
-			if got[i] != want[i] {
-				t.Errorf("index %d = %q, want %q", i, got[i], want[i])
-			}
-		}
-	})
-
-	t.Run("empty strings skipped", func(t *testing.T) {
-		got, err := ValidateStatuses([]string{"", "  ", "OVERDUE"})
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if len(got) != 1 {
-			t.Fatalf("len = %d, want 1", len(got))
-		}
-		if got[0] != findingsdata.StatusOverdue {
-			t.Errorf("got %q, want OVERDUE", got[0])
-		}
-	})
-
-	t.Run("invalid status", func(t *testing.T) {
-		_, err := ValidateStatuses([]string{"INVALID"})
-		if err == nil {
-			t.Fatal("expected error for invalid status")
-		}
-	})
-
-	t.Run("empty input", func(t *testing.T) {
-		got, err := ValidateStatuses(nil)
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-		if len(got) != 0 {
-			t.Errorf("len = %d, want 0", len(got))
-		}
-	})
-}
-
 func TestThresholdItems_CountOverdue(t *testing.T) {
 	items := findingsdata.ThresholdItems{
 		{Status: findingsdata.StatusOverdue},

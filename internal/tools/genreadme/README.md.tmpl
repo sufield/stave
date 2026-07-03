@@ -185,11 +185,13 @@ stave diagnose
 
 ## How it works
 
-The pipeline is **Extract → Apply → Act**.
+The pipeline is **Discover → Collect → Transform → Apply → Act**. Three of the five steps are built-in commands.
 
-1. **Extract.** Collection stays external — you gather raw configuration with your own tools and credentials (cloud APIs, Terraform state, Steampipe, the bundled `scripts/aws-snapshot.sh`, …). Conversion to `obs.v0.1` is built in: `stave transform` runs jq filters in-process by default, or an external extractor can emit `obs.v0.1` directly. Stave never touches your cloud directly.
-2. **Apply.** Stave evaluates each control's predicate against each asset, then composes the resulting findings into compound chains (multiple co-failing controls on related assets = one chain finding).
-3. **Act.** Findings ship with explicit remediation, severity, and the evidence chain that justified them. Optionally pipe to nine external reasoning engines (Z3, Soufflé, Clingo, Prolog, …) for formal proofs, blast-radius enumeration, or attacker-cost ROI.
+1. **Discover.** `stave discover --services iam,s3,ec2` resolves your services to a collection manifest — the exact read-only API calls, observation signals, and minimum IAM permissions you need. Nothing runs against AWS; it just tells you what to collect.
+2. **Collect.** Run the AWS CLI calls from the manifest. The bundled `scripts/aws-snapshot.sh` does this for you, or use Steampipe, Terraform state, or any tool that produces raw JSON. This is the only step that touches your cloud.
+3. **Transform.** `stave transform -i raw/ -o observations/` converts raw AWS CLI JSON into `obs.v0.1` observations using embedded jq filters — in-process, no external `jq` needed. Sensitive values (UserData, env vars, secret-keyed tags) are hashed; policy documents, ARNs, and actions are left intact.
+4. **Apply.** `stave apply` evaluates each control's predicate against each asset, then composes the resulting findings into compound chains (multiple co-failing controls on related assets = one chain finding).
+5. **Act.** Findings ship with explicit remediation, severity, and the evidence chain that justified them. Optionally pipe to nine external reasoning engines (Z3, Soufflé, Clingo, Prolog, …) for formal proofs, blast-radius enumeration, or attacker-cost ROI.
 
 Full architecture in [docs/architecture/overview.md](docs/architecture/overview.md). The reasoning-engine catalog and what each one answers: [docs/engines.md (in docs/index.md)](docs/index.md).
 
