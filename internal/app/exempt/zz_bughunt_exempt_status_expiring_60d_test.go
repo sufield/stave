@@ -10,11 +10,11 @@ func TestBugHunt_ComputeStatus_Expiring60dListed(t *testing.T) {
 	file := &AcceptanceFile{
 		Acknowledgments: []AcknowledgmentEntry{
 			{
-				ControlID:   "CTL.A.001",
-				AssetID:     "asset-1",
-				ExpiryDate:  "2026-05-15", // 44 days after now (within 60d)
-				Status:      "active",
-				Reason:      "migration",
+				ControlID:  "CTL.A.001",
+				AssetID:    "asset-1",
+				ExpiryDate: "2026-05-15", // 44 days after now (within 60d)
+				Status:     "active",
+				Reason:     "migration",
 			},
 		},
 	}

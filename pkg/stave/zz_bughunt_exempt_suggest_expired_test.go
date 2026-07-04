@@ -90,8 +90,8 @@ func TestBugHunt_SuggestExemptions_ExpiredException(t *testing.T) {
 		t.Fatal(err)
 	}
 	acceptancePath := filepath.Join(tmp, "exemptions.yaml")
-	if err := os.WriteFile(acceptancePath, afData, 0o644); err != nil {
-		t.Fatal(err)
+	if writeErr := os.WriteFile(acceptancePath, afData, 0o644); writeErr != nil {
+		t.Fatal(writeErr)
 	}
 
 	// 3. Run suggest. Since the exception is expired, we expect it to NOT be exempted.

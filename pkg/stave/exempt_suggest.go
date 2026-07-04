@@ -48,31 +48,7 @@ func SuggestExemptions(ctx context.Context, cfg SuggestConfig) ([]byte, error) {
 
 	var result *exemptionsuggest.Result
 	if len(history) > 0 {
-		exemptedKeys := make(map[string]struct{})
-		if cfg.AcceptanceFile != "" {
-			if af, loadErr := appexempt.Load(cfg.AcceptanceFile); loadErr == nil {
-				for i := range af.Acknowledgments {
-					if af.Acknowledgments[i].IsActive() {
-						exemptedKeys[af.Acknowledgments[i].ID] = struct{}{}
-					}
-				}
-				for i := range af.Exceptions {
-					exc := &af.Exceptions[i]
-					if exc.ExpiryDate != "" {
-						expiry, err := time.Parse("2006-01-02", exc.ExpiryDate)
-						if err == nil {
-							nowUTC := time.Now().UTC()
-							nowDate := time.Date(nowUTC.Year(), nowUTC.Month(), nowUTC.Day(), 0, 0, 0, 0, time.UTC)
-							if expiry.Before(nowDate) {
-								continue
-							}
-						}
-					}
-					key := exc.ControlID + "@" + exc.AssetID
-					exemptedKeys[key] = struct{}{}
-				}
-			}
-		}
+		exemptedKeys := exemptCollectKeys(cfg.AcceptanceFile)
 		result = exemptionsuggest.Suggest(exemptionsuggest.Input{
 			History:      history,
 			Window:       window,
@@ -149,6 +125,35 @@ func exemptWriteSuggestTable(w io.Writer, r *exemptionsuggest.Result) error {
 	}
 
 	return nil
+}
+
+func exemptCollectKeys(acceptanceFile string) map[string]struct{} {
+	keys := make(map[string]struct{})
+	if acceptanceFile == "" {
+		return keys
+	}
+	af, loadErr := appexempt.Load(acceptanceFile)
+	if loadErr != nil {
+		return keys
+	}
+	for i := range af.Acknowledgments {
+		if af.Acknowledgments[i].IsActive() {
+			keys[af.Acknowledgments[i].ID] = struct{}{}
+		}
+	}
+	nowUTC := time.Now().UTC()
+	nowDate := time.Date(nowUTC.Year(), nowUTC.Month(), nowUTC.Day(), 0, 0, 0, 0, time.UTC)
+	for i := range af.Exceptions {
+		exc := &af.Exceptions[i]
+		if exc.ExpiryDate != "" {
+			expiry, parseErr := time.Parse("2006-01-02", exc.ExpiryDate)
+			if parseErr == nil && expiry.Before(nowDate) {
+				continue
+			}
+		}
+		keys[exc.ControlID+"@"+exc.AssetID] = struct{}{}
+	}
+	return keys
 }
 
 func exemptLoadSuggestHistory(ctx context.Context, dir string) ([]*report.Assessment, error) {
