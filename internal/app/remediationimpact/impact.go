@@ -145,16 +145,22 @@ func Analyze(in Input) (*Report, error) {
 	// Efficiency metric.
 	if in.PredictedDelta != 0 {
 		realized := scoreAfter - scoreBefore
-		ratio := realized / in.PredictedDelta
-		if ratio < 0 {
+		var ratio float64
+		var verdict EfficiencyVerdict
+		if realized <= 0 {
 			ratio = 0
-		}
-
-		verdict := VerdictComplete
-		if ratio < 0.5 {
 			verdict = VerdictIncomplete
-		} else if ratio < 0.9 {
-			verdict = VerdictPartial
+		} else {
+			ratio = realized / in.PredictedDelta
+			if ratio < 0 {
+				ratio = 0
+			}
+			verdict = VerdictComplete
+			if ratio < 0.5 {
+				verdict = VerdictIncomplete
+			} else if ratio < 0.9 {
+				verdict = VerdictPartial
+			}
 		}
 
 		var stillOpen []string

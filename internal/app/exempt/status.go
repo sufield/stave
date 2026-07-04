@@ -77,6 +77,13 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 			})
 		case "expiring_60d":
 			report.ExpiringDays60++
+			report.ExpiringItems = append(report.ExpiringItems, ExpiryItem{
+				ControlID:     ack.ControlID,
+				AssetID:       ack.AssetID,
+				ExpiryDate:    ack.ExpiryDate,
+				DaysRemaining: daysRemaining,
+				Reason:        ack.Reason,
+			})
 		}
 
 		key := ack.ControlID + "@" + ack.AssetID

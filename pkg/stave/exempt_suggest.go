@@ -57,7 +57,18 @@ func SuggestExemptions(ctx context.Context, cfg SuggestConfig) ([]byte, error) {
 					}
 				}
 				for i := range af.Exceptions {
-					key := af.Exceptions[i].ControlID + "@" + af.Exceptions[i].AssetID
+					exc := &af.Exceptions[i]
+					if exc.ExpiryDate != "" {
+						expiry, err := time.Parse("2006-01-02", exc.ExpiryDate)
+						if err == nil {
+							nowUTC := time.Now().UTC()
+							nowDate := time.Date(nowUTC.Year(), nowUTC.Month(), nowUTC.Day(), 0, 0, 0, 0, time.UTC)
+							if expiry.Before(nowDate) {
+								continue
+							}
+						}
+					}
+					key := exc.ControlID + "@" + exc.AssetID
 					exemptedKeys[key] = struct{}{}
 				}
 			}

@@ -3,6 +3,8 @@
 package auditbundle
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -27,7 +29,7 @@ type Component struct {
 	SHA256      string `json:"sha256,omitempty"`
 }
 
-// AssembleInput holds the inputs for package assembly.
+// AssembleInput holds all candidate components for the audit bundle.
 type AssembleInput struct {
 	Framework      string
 	Period         string
@@ -40,11 +42,12 @@ type AssembleInput struct {
 	GeneratedAt    time.Time
 }
 
-// Assemble creates the audit evidence package directory.
+// Assemble validates OutputDir, writes all non-nil components, and produces
+// a manifest JSON file with file descriptions and SHA-256 integrity hashes.
 func Assemble(input AssembleInput) (*Package, error) {
 	dir := input.OutputDir
-	if err := os.MkdirAll(dir, 0o750); err != nil {
-		return nil, fmt.Errorf("create output dir: %w", err)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return nil, fmt.Errorf("create output directory: %w", err)
 	}
 
 	pkg := &Package{
@@ -64,9 +67,13 @@ func Assemble(input AssembleInput) (*Package, error) {
 		if err := fsutil.SafeWriteFile(path, data, fsutil.ConfigWriteOpts()); err != nil {
 			return fmt.Errorf("write %s: %w", filename, err)
 		}
+		h := sha256.New()
+		h.Write(data)
+		sha := hex.EncodeToString(h.Sum(nil))
 		pkg.Components = append(pkg.Components, Component{
 			Filename:    filename,
 			Description: desc,
+			SHA256:      sha,
 		})
 		return nil
 	}
