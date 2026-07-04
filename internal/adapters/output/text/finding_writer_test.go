@@ -52,9 +52,6 @@ func TestFindingWriter_NoViolations(t *testing.T) {
 	if !strings.Contains(out, "No violations found.") {
 		t.Fatalf("expected no-violations message, got:\n%s", out)
 	}
-	if !strings.Contains(out, "run `stave verify`") {
-		t.Fatalf("expected verify next-step hint, got:\n%s", out)
-	}
 }
 
 func TestFindingWriter_ViolationsWithSections(t *testing.T) {

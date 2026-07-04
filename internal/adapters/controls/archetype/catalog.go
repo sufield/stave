@@ -41,7 +41,7 @@ var Catalog = []Archetype{
 			"silently or with non-obvious errors.",
 		Guidance: "If your decommissioning process missed this reference, it " +
 			"likely missed others. Generate snapshots for the services listed " +
-			"below and re-run stave verify to find all ghost references across " +
+			"below and re-run stave apply to find all ghost references across " +
 			"your infrastructure.",
 		Services: []string{
 			"s3", "route53", "cloudfront", "sqs", "sns", "kms",

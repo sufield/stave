@@ -187,9 +187,6 @@ func (w *FindingWriter) writeHeader(d *drawer, result *evaluation.ComplianceRepo
 
 func (w *FindingWriter) writeNoViolationsSummary(d *drawer) {
 	d.f("No violations found.\n")
-	if !env.Demo.IsTrue() {
-		d.f("\nNext step: run `stave verify` after remediation snapshots to confirm no regressions.\n")
-	}
 }
 
 // writeViolationsFromEnriched renders violation output from pre-enriched findings.
