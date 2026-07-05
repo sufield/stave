@@ -1251,6 +1251,21 @@ Transit Gateway route table has routes that allow every attached VPC to communic
 
 ---
 
+### CTL.VPC.TRAFFICMIRROR.UNRESTRICTED.001
+
+**SCP Must Restrict VPC Traffic Mirroring**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** mitre_attack: T1020.001; nist_800_53_r5: AC-4; soc2: CC6.6;
+
+Organization SCPs must deny ec2:CreateTrafficMirrorSession and ec2:CreateTrafficMirrorTarget for non-approved principals. VPC traffic mirroring duplicates network packets from an ENI to a target (another ENI or a Network Load Balancer) — a legitimate network monitoring feature that is also a complete exfiltration channel. MITRE ATT&CK T1020.001 (Automated Exfiltration: Traffic Duplication) documents this technique: an attacker creates a mirror session on a production ENI, sends all traffic to an attacker- controlled target, and captures credentials, API keys, and application data in transit. Unlike most exfiltration techniques this requires no application-level access — it operates at the network layer. Without SCP restriction, any principal with ec2:CreateTrafficMirrorSession can silently duplicate all VPC traffic.
+
+**Remediation:** Add an SCP that denies ec2:CreateTrafficMirrorSession and ec2:CreateTrafficMirrorTarget for all principals except an approved network-monitoring role. Restrict to specific accounts where traffic mirroring is operationally needed.
+
+---
+
 ### CTL.VPC.VPN.ENCRYPTION.WEAK.001
 
 **VPN Connection Uses Weak Encryption**

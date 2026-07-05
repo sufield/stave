@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.TRAFFICMIRROR.UNRESTRICTED.001
+name: SCP Must Restrict VPC Traffic Mirroring
+description: >
+  Organization SCPs must deny ec2:CreateTrafficMirrorSession and
+  ec2:CreateTrafficMirrorTarget for non-approved principals. VPC
+  traffic mirroring duplicates network packets from an ENI to a
+  target (another ENI or a Network Load Balancer) — a legitimate
+  network monitoring feature that is also a complete exfiltration
+  channel. MITRE ATT&CK T1020.001 (Automated Exfiltration: Traffic
+  Duplication) documents this technique: an attacker creates a mirror
+  session on a production ENI, sends all traffic to an attacker-
+  controlled target, and captures credentials, API keys, and
+  application data in transit. Unlike most exfiltration techniques
+  this requires no application-level access — it operates at the
+  network layer. Without SCP restriction, any principal with
+  ec2:CreateTrafficMirrorSession can silently duplicate all VPC
+  traffic.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-4"
+  mitre_attack: "T1020.001"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - account-governance
+  - compliance-mapping
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_traffic_mirror_create
+remediation:
+  description: >
+    Organization SCPs do not restrict VPC traffic mirroring API
+    calls. Any principal with EC2 permissions can create a mirror
+    session to duplicate and exfiltrate network traffic.
+  action: >
+    Add an SCP that denies ec2:CreateTrafficMirrorSession and
+    ec2:CreateTrafficMirrorTarget for all principals except an
+    approved network-monitoring role. Restrict to specific accounts
+    where traffic mirroring is operationally needed.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_traffic_mirror_create": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_traffic_mirror_create
+      op: eq
+      value: false
+tests:
+  - name: "organization without traffic mirror restriction fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_traffic_mirror_create: false
+  - name: "organization with traffic mirror restriction passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_traffic_mirror_create: true

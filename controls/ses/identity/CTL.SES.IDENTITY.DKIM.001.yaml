@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.SES.IDENTITY.DKIM.001
+name: SES Identity Must Have DKIM Signing Enabled
+description: >
+  SES sending identities (domains and email addresses) must have
+  DomainKeys Identified Mail (DKIM) signing enabled. Without DKIM,
+  emails sent through SES lack a cryptographic signature that
+  receiving mail servers use to verify the sender's identity.
+  An attacker who compromises IAM credentials with ses:SendEmail
+  permission can send phishing emails that appear to originate from
+  the organization's domain. DKIM signing combined with a strict
+  DMARC policy causes receiving servers to reject unsigned emails,
+  limiting the blast radius of compromised SES credentials. Stratus
+  Red Team's ses-enumerate technique specifically checks for SES
+  identities that lack DKIM — these are the identities an attacker
+  would abuse for phishing campaigns.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-8"
+  soc2: "CC6.6"
+  ccm_v4: ["TVM-01"]
+scope_tags:
+  - aws
+  - ses
+taxonomy:
+  - compliance-mapping
+  - identity-perimeter
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    SES identity does not have DKIM signing enabled. Emails sent
+    from this identity lack cryptographic authentication, making
+    them easier to spoof and more likely to pass through spam
+    filters when sent by an attacker.
+  action: >
+    Enable DKIM signing for the SES identity using Easy DKIM or
+    BYODKIM. For domains, also configure SPF (via SES MAIL FROM)
+    and a DMARC policy with p=reject. Verify DKIM status shows
+    "Success" in the SES console before relying on it.
+  example: |
+    {
+      "email": {
+        "kind": "ses_identity",
+        "dkim_enabled": true,
+        "dkim_status": "success"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.email.kind
+      op: eq
+      value: ses_identity
+    - field: properties.email.dkim_enabled
+      op: eq
+      value: false
+tests:
+  - name: "SES identity without DKIM fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ses:us-east-1:111122223333:identity/example.com"
+      asset_type: aws_ses_identity
+      vendor: aws
+      properties:
+        email:
+          kind: ses_identity
+          dkim_enabled: false
+          dkim_status: not_started
+  - name: "SES identity with DKIM enabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ses:us-east-1:444455556666:identity/secure.com"
+      asset_type: aws_ses_identity
+      vendor: aws
+      properties:
+        email:
+          kind: ses_identity
+          dkim_enabled: true
+          dkim_status: success

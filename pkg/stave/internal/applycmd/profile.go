@@ -3,6 +3,7 @@ package applycmd
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -256,7 +257,14 @@ func writeResults(ctx context.Context, req ProfileRequest, sanitizer kernel.Sani
 	if err := pipeline.Run(ctx, &buf, result); err != nil {
 		return nil, fmt.Errorf("run output pipeline: %w", err)
 	}
-	return buf.Bytes(), nil
+	data := buf.Bytes()
+	if len(data) == 0 {
+		return nil, errors.New("output pipeline produced empty output")
+	}
+	if req.Format == "json" && !json.Valid(data) {
+		return nil, fmt.Errorf("output pipeline produced invalid JSON (%d bytes)", len(data))
+	}
+	return data, nil
 }
 
 // finalizeOutcome carries the post-evaluation stderr warnings, diagnose hint,

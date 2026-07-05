@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2851
-**Pack hash:** `f4762d7945127917dffb78f0d6e875b6fd615904e96b128b17a72c468c1033b1`
+**Total controls:** 2856
+**Pack hash:** `ec96481c85da54a88ea3359310c2770acab04e7f29da064d8c65fdc57d4dc69b`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -17,7 +17,7 @@ GitHub. Pick a service below.
 | high | 1248 |
 | info | 16 |
 | low | 213 |
-| medium | 1081 |
+| medium | 1086 |
 
 | Domain | Count |
 |--------|-------|
@@ -26,12 +26,12 @@ GitHub. Pick a service below.
 | capacity | 3 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1252 |
+| exposure | 1254 |
 | governance | 600 |
 | hygiene | 18 |
-| identity | 498 |
+| identity | 500 |
 | lifecycle | 31 |
-| network | 42 |
+| network | 43 |
 | resilience | 35 |
 | secrets | 4 |
 | storage | 8 |
@@ -55,7 +55,7 @@ GitHub. Pick a service below.
 | [CFN](reference/cfn.md) | 1 |
 | [CISCO](reference/cisco.md) | 30 |
 | [CLOUDFLARE](reference/cloudflare.md) | 29 |
-| [CLOUDFORMATION](reference/cloudformation.md) | 8 |
+| [CLOUDFORMATION](reference/cloudformation.md) | 9 |
 | [CLOUDFRONT](reference/cloudfront.md) | 72 |
 | [CLOUDTRAIL](reference/cloudtrail.md) | 51 |
 | [CLOUDWATCH](reference/cloudwatch.md) | 67 |
@@ -68,8 +68,8 @@ GitHub. Pick a service below.
 | [DMS](reference/dms.md) | 6 |
 | [DNS](reference/dns.md) | 3 |
 | [DOCUMENTDB](reference/documentdb.md) | 18 |
-| [DYNAMODB](reference/dynamodb.md) | 36 |
-| [EC2](reference/ec2.md) | 101 |
+| [DYNAMODB](reference/dynamodb.md) | 37 |
+| [EC2](reference/ec2.md) | 102 |
 | [ECR](reference/ecr.md) | 10 |
 | [ECS](reference/ecs.md) | 50 |
 | [EFS](reference/efs.md) | 13 |
@@ -84,7 +84,7 @@ GitHub. Pick a service below.
 | [GHOST](reference/ghost.md) | 2 |
 | [GITHUB](reference/github.md) | 22 |
 | [GLUE](reference/glue.md) | 12 |
-| [GUARDDUTY](reference/guardduty.md) | 13 |
+| [GUARDDUTY](reference/guardduty.md) | 14 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
 | [IAM](reference/iam.md) | 220 |
 | [INSPECTOR](reference/inspector.md) | 3 |
@@ -119,7 +119,7 @@ GitHub. Pick a service below.
 | [SQS](reference/sqs.md) | 37 |
 | [SSM](reference/ssm.md) | 13 |
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
-| [VPC](reference/vpc.md) | 87 |
+| [VPC](reference/vpc.md) | 88 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 8 |
 | [WORKSPACES](reference/workspaces.md) | 1 |

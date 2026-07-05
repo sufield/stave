@@ -3,6 +3,7 @@ package applycmd
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -310,7 +311,14 @@ func renderReport(ctx context.Context, format string, verbose bool, sanitizer ke
 	if err := pipeline.Run(ctx, &buf, report); err != nil {
 		return nil, fmt.Errorf("run output pipeline: %w", err)
 	}
-	return buf.Bytes(), nil
+	data := buf.Bytes()
+	if len(data) == 0 {
+		return nil, errors.New("output pipeline produced empty output")
+	}
+	if format == "json" && !json.Valid(data) {
+		return nil, fmt.Errorf("output pipeline produced invalid JSON (%d bytes)", len(data))
+	}
+	return data, nil
 }
 
 // --- enrichment (moved verbatim from cmd/apply/run_owners.go + run_reachability.go) ---

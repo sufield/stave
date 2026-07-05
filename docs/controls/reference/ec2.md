@@ -635,6 +635,21 @@ EBS volume uses the gp2 type. gp3 is the successor with consistent 3,000 IOPS / 
 
 ---
 
+### CTL.EC2.EICE.UNRESTRICTED.001
+
+**EC2 Instance Connect Endpoint Must Restrict Target Subnets**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** mitre_attack: T1021.008; nist_800_53_r5: AC-17; soc2: CC6.6;
+
+EC2 Instance Connect Endpoints (EICE) must be configured with security group rules that restrict which subnets and instances can be reached. EICE creates a tunnel from the internet to a private instance without requiring the instance to have a public IP or an open inbound port — it bypasses security groups entirely for the initial connection. MITRE ATT&CK T1021.008 (Remote Services: Direct Cloud VM Connections) documents this as a lateral movement technique: an attacker with ec2-instance-connect:OpenTunnel permission can reach any instance in the EICE's VPC without triggering security group denials. An unrestricted EICE with broad security group rules turns every private instance into a reachable target. The endpoint's security group is the only network-level control — if it allows all traffic, the EICE provides unrestricted private network access.
+
+**Remediation:** Restrict the EICE security group to allow traffic only to specific subnets or instance security groups. Add an IAM policy condition on ec2-instance-connect:OpenTunnel that restricts by instance tag, subnet, or security group. Enable client IP preservation to ensure instance-level security groups can filter EICE traffic.
+
+---
+
 ### CTL.EC2.EIP.UNASSIGNED.001
 
 **Elastic IPs Must Be Associated with Resources**

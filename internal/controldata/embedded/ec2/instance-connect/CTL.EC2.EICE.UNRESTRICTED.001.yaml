@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EICE.UNRESTRICTED.001
+name: EC2 Instance Connect Endpoint Must Restrict Target Subnets
+description: >
+  EC2 Instance Connect Endpoints (EICE) must be configured with
+  security group rules that restrict which subnets and instances
+  can be reached. EICE creates a tunnel from the internet to a
+  private instance without requiring the instance to have a public
+  IP or an open inbound port — it bypasses security groups entirely
+  for the initial connection. MITRE ATT&CK T1021.008 (Remote
+  Services: Direct Cloud VM Connections) documents this as a lateral
+  movement technique: an attacker with ec2-instance-connect:OpenTunnel
+  permission can reach any instance in the EICE's VPC without
+  triggering security group denials. An unrestricted EICE with
+  broad security group rules turns every private instance into a
+  reachable target. The endpoint's security group is the only
+  network-level control — if it allows all traffic, the EICE
+  provides unrestricted private network access.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-17"
+  mitre_attack: "T1021.008"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_instance_connect_endpoint
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    EC2 Instance Connect Endpoint allows unrestricted access to
+    private instances. Any principal with OpenTunnel permission
+    can reach instances across the VPC without security group
+    restrictions.
+  action: >
+    Restrict the EICE security group to allow traffic only to
+    specific subnets or instance security groups. Add an IAM
+    policy condition on ec2-instance-connect:OpenTunnel that
+    restricts by instance tag, subnet, or security group. Enable
+    client IP preservation to ensure instance-level security
+    groups can filter EICE traffic.
+  example: |
+    {
+      "network": {
+        "kind": "instance_connect_endpoint",
+        "security_group_unrestricted": false,
+        "preserves_client_ip": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: instance_connect_endpoint
+    - field: properties.network.security_group_unrestricted
+      op: eq
+      value: true
+tests:
+  - name: "EICE with unrestricted security group fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:instance-connect-endpoint/eice-abc123"
+      asset_type: aws_ec2_instance_connect_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: instance_connect_endpoint
+          security_group_unrestricted: true
+          preserves_client_ip: false
+  - name: "EICE with restricted security group passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:444455556666:instance-connect-endpoint/eice-def456"
+      asset_type: aws_ec2_instance_connect_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: instance_connect_endpoint
+          security_group_unrestricted: false
+          preserves_client_ip: true

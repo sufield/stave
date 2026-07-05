@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFORMATION.TEMPLATE.S3.INJECTION.001
+name: S3 Bucket Hosting CloudFormation Templates Must Restrict Write Access
+description: >
+  S3 buckets used as CloudFormation template sources must restrict
+  PutObject and PutBucketNotification to trusted principals only.
+  Pacu's cfn__resource_injection module exploits this: the attacker
+  adds a bucket notification (Lambda or SNS trigger) that intercepts
+  template uploads, then modifies the template to inject an admin
+  IAM role before CloudFormation reads it. The attack requires two
+  permissions on the template bucket: s3:PutBucketNotification (to
+  install the interception trigger) and s3:PutObject (to replace the
+  template with a malicious version). If the CloudFormation stack
+  deploys with CAPABILITY_IAM or CAPABILITY_NAMED_IAM, the injected
+  role is created with full admin permissions. This is a supply-chain
+  attack on infrastructure-as-code: the template looks correct in
+  source control but is modified in transit via S3.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-7"
+  soc2: "CC8.1"
+  ccm_v4: ["AIS-06", "CCC-04"]
+scope_tags:
+  - aws
+  - cloudformation
+  - s3
+taxonomy:
+  - compliance-mapping
+  - supply-chain
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    S3 bucket used for CloudFormation templates allows untrusted
+    principals to write objects or configure bucket notifications.
+    An attacker can intercept and modify templates before
+    CloudFormation reads them.
+  action: >
+    Restrict the bucket policy to allow s3:PutObject only from
+    the CI/CD pipeline's IAM role. Deny s3:PutBucketNotification
+    for all principals except the bucket owner. Enable S3 Object
+    Lock or versioning with MFA Delete to prevent silent object
+    replacement. Consider using CloudFormation's template validation
+    and stack policies to limit which resource types can be created.
+  example: |
+    {
+      "cfn": {
+        "template_source": {
+          "kind": "s3_bucket",
+          "allows_untrusted_write": false,
+          "has_bucket_notification": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cfn.template_source.kind
+      op: eq
+      value: s3_bucket
+    - field: properties.cfn.template_source.allows_untrusted_write
+      op: eq
+      value: true
+tests:
+  - name: "template bucket with untrusted write access fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::my-cfn-templates"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        cfn:
+          template_source:
+            kind: s3_bucket
+            allows_untrusted_write: true
+            has_bucket_notification: true
+  - name: "template bucket with restricted write access passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::secure-cfn-templates"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        cfn:
+          template_source:
+            kind: s3_bucket
+            allows_untrusted_write: false
+            has_bucket_notification: false

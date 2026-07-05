@@ -535,7 +535,14 @@ func processFixture(name, fixDir string, dryRun bool) fixtureReport {
 		}
 		cat = mergeCategory(cat, subCat)
 		if !dryRun && subCat != catClean {
-			if err := os.WriteFile(filepath.Join(fixDir, g), newContent, 0o644); err != nil {
+			target := filepath.Join(fixDir, g)
+			tmpPath := target + ".tmp"
+			if err := os.WriteFile(tmpPath, newContent, 0o644); err != nil {
+				r.Category = catError
+				r.Err = err
+				return r
+			}
+			if err := os.Rename(tmpPath, target); err != nil {
 				r.Category = catError
 				r.Err = err
 				return r
@@ -634,7 +641,11 @@ func runCmd(args []string) ([]byte, int, error) {
 	} else if err != nil {
 		return nil, 0, fmt.Errorf("exec: %w\nstderr: %s", err, stderr.String())
 	}
-	return stdout.Bytes(), exitCode, nil
+	out := stdout.Bytes()
+	if len(out) == 0 && exitCode != 0 && exitCode != 3 {
+		return nil, 0, fmt.Errorf("stave exited %d with no stdout; stderr: %s", exitCode, stderr.String())
+	}
+	return out, exitCode, nil
 }
 
 // detectGoldens lists golden filenames present in the fixture dir.

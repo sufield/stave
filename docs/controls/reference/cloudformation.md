@@ -109,6 +109,21 @@ Terraform state files must be stored in a versioned backend (S3 with versioning,
 
 ---
 
+### CTL.CLOUDFORMATION.TEMPLATE.S3.INJECTION.001
+
+**S3 Bucket Hosting CloudFormation Templates Must Restrict Write Access**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-7; soc2: CC8.1;
+
+S3 buckets used as CloudFormation template sources must restrict PutObject and PutBucketNotification to trusted principals only. Pacu's cfn__resource_injection module exploits this: the attacker adds a bucket notification (Lambda or SNS trigger) that intercepts template uploads, then modifies the template to inject an admin IAM role before CloudFormation reads it. The attack requires two permissions on the template bucket: s3:PutBucketNotification (to install the interception trigger) and s3:PutObject (to replace the template with a malicious version). If the CloudFormation stack deploys with CAPABILITY_IAM or CAPABILITY_NAMED_IAM, the injected role is created with full admin permissions. This is a supply-chain attack on infrastructure-as-code: the template looks correct in source control but is modified in transit via S3.
+
+**Remediation:** Restrict the bucket policy to allow s3:PutObject only from the CI/CD pipeline's IAM role. Deny s3:PutBucketNotification for all principals except the bucket owner. Enable S3 Object Lock or versioning with MFA Delete to prevent silent object replacement. Consider using CloudFormation's template validation and stack policies to limit which resource types can be created.
+
+---
+
 ### CTL.CLOUDFORMATION.TERMINATION.001
 
 **CloudFormation Stacks Must Have Termination Protection Enabled**

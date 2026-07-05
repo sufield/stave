@@ -34,6 +34,8 @@ var builtinNames = []string{
 	"data_warehouse_compromise",
 	"database_compromise",
 	"db_credential_theft",
+	"detection_fragmented",
+	"detection_without_response",
 	"domain_takeover",
 	"ec2_code_execution",
 	"encryption_bypass",

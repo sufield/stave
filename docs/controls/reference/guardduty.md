@@ -79,6 +79,21 @@ The observation snapshot is missing required GuardDuty properties.
 
 ---
 
+### CTL.GUARDDUTY.IPSET.UNRESTRICTED.001
+
+**SCP Must Restrict GuardDuty IPSet Modification**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC6.6;
+
+Organization SCPs must deny guardduty:CreateIPSet and guardduty:UpdateIPSet for non-approved principals. GuardDuty trusted IP lists (IPSets) suppress all findings for traffic originating from listed IPs. Pacu's guardduty__whitelist_ip module exploits this: it adds the attacker's IP to a trusted IP list, causing GuardDuty to ignore all subsequent attacker activity — port scans, credential exfiltration, API abuse — as legitimate traffic. This is a complete detection evasion technique: a single API call (CreateIPSet or UpdateIPSet) blinds the entire GuardDuty detector for that IP. Unlike disabling GuardDuty (which CTL.IAM.SCP.GUARDDUTY.001 prevents), IPSet manipulation leaves GuardDuty running and appearing healthy while silently suppressing findings. The SCP must deny both CreateIPSet (new trusted list) and UpdateIPSet (modify existing list) to prevent this bypass.
+
+**Remediation:** Add an SCP that denies guardduty:CreateIPSet, guardduty:UpdateIPSet, and guardduty:CreateThreatIntelSet for all principals except an approved security-operations role. Audit existing IPSets for unauthorized entries.
+
+---
+
 ### CTL.GUARDDUTY.LAMBDAPROTECTION.001
 
 **GuardDuty Lambda Protection Must Be Enabled**

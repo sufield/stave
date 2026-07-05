@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.IPSET.UNRESTRICTED.001
+name: SCP Must Restrict GuardDuty IPSet Modification
+description: >
+  Organization SCPs must deny guardduty:CreateIPSet and
+  guardduty:UpdateIPSet for non-approved principals. GuardDuty
+  trusted IP lists (IPSets) suppress all findings for traffic
+  originating from listed IPs. Pacu's guardduty__whitelist_ip
+  module exploits this: it adds the attacker's IP to a trusted
+  IP list, causing GuardDuty to ignore all subsequent attacker
+  activity — port scans, credential exfiltration, API abuse — as
+  legitimate traffic. This is a complete detection evasion
+  technique: a single API call (CreateIPSet or UpdateIPSet) blinds
+  the entire GuardDuty detector for that IP. Unlike disabling
+  GuardDuty (which CTL.IAM.SCP.GUARDDUTY.001 prevents), IPSet
+  manipulation leaves GuardDuty running and appearing healthy
+  while silently suppressing findings. The SCP must deny both
+  CreateIPSet (new trusted list) and UpdateIPSet (modify existing
+  list) to prevent this bypass.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC6.6"
+  ccm_v4: ["TVM-01"]
+scope_tags:
+  - aws
+  - guardduty
+taxonomy:
+  - account-governance
+  - compliance-mapping
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_guardduty_ipset_modify
+remediation:
+  description: >
+    Organization SCPs do not restrict GuardDuty IPSet modification.
+    Any principal with guardduty:CreateIPSet or guardduty:UpdateIPSet
+    can whitelist attacker IPs, suppressing all findings for that
+    traffic.
+  action: >
+    Add an SCP that denies guardduty:CreateIPSet,
+    guardduty:UpdateIPSet, and guardduty:CreateThreatIntelSet for
+    all principals except an approved security-operations role.
+    Audit existing IPSets for unauthorized entries.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_guardduty_ipset_modify": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_guardduty_ipset_modify
+      op: eq
+      value: false
+tests:
+  - name: "organization without IPSet restriction fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_guardduty_ipset_modify: false
+  - name: "organization with IPSet restriction passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_guardduty_ipset_modify: true
