@@ -1,0 +1,45 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.CROSSACCOUNT.001
+name: VPC Endpoint Policy Must Not Allow Cross-Account Resource Access
+description: >
+  VPC endpoint policies must not allow access to resources in external
+  accounts. An endpoint policy with Resource ARNs containing account IDs
+  different from the VPC's own account creates an explicit cross-account
+  data path through the organization's network. A compromised workload
+  or indirect prompt injection can use this path to exfiltrate data to
+  the external account's resources without triggering IAM policy denials.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03", "DSP-17"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-perimeter
+  - data-perimeter
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_endpoint
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    VPC endpoint policy allows access to resources in external accounts.
+    This creates an exfiltration path through the organization's network.
+  action: >
+    Remove cross-account resource ARNs from the endpoint policy. Restrict
+    the Resource field to ARNs within the VPC's own account, or add an
+    aws:ResourceOrgID condition to limit access to organizational resources.
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_endpoint
+    - field: properties.network.endpoint_policy.allows_cross_account_resources
+      op: eq
+      value: true

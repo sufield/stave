@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2812
-**Pack hash:** `55c7e0b01292305e2659a7e0b0f0fc833ffbf3461ca9859911c3ab716051d1d7`
+**Total controls:** 2816
+**Pack hash:** `611c8b947418e0c7178a5159b02b21a15e909663f46368691d953db474bac894`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,7 +14,7 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 292 |
-| high | 1228 |
+| high | 1232 |
 | info | 16 |
 | low | 211 |
 | medium | 1065 |
@@ -29,9 +29,9 @@ GitHub. Pick a service below.
 | exposure | 1241 |
 | governance | 592 |
 | hygiene | 18 |
-| identity | 486 |
+| identity | 488 |
 | lifecycle | 31 |
-| network | 40 |
+| network | 42 |
 | resilience | 34 |
 | secrets | 4 |
 | storage | 8 |
@@ -86,7 +86,7 @@ GitHub. Pick a service below.
 | [GLUE](reference/glue.md) | 12 |
 | [GUARDDUTY](reference/guardduty.md) | 6 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 208 |
+| [IAM](reference/iam.md) | 210 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 3 |
@@ -119,7 +119,7 @@ GitHub. Pick a service below.
 | [SQS](reference/sqs.md) | 37 |
 | [SSM](reference/ssm.md) | 12 |
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
-| [VPC](reference/vpc.md) | 84 |
+| [VPC](reference/vpc.md) | 86 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 8 |
 | [WORKSPACES](reference/workspaces.md) | 1 |

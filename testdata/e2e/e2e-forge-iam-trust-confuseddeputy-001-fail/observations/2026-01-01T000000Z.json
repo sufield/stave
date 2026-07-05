@@ -15,7 +15,8 @@
           "kind": "role",
           "trust_policy": {
             "has_third_party_principal": true,
-            "confused_deputy_protected": false
+            "confused_deputy_protected": false,
+            "principal_is_account_root": true
           }
         }
       }

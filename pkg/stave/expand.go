@@ -156,7 +156,7 @@ func renderExpandText(w io.Writer, arch archetype.Archetype, matched []policy.Co
 		if len(snap.Missing) > 0 {
 			fmt.Fprintln(w)
 			fmt.Fprintln(w, "Generate missing snapshots, then re-run:")
-			fmt.Fprintln(w, "  stave apply")
+			fmt.Fprintln(w, "  stave verify")
 		}
 	}
 }

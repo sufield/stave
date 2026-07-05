@@ -5,7 +5,8 @@
       "properties": {
         "identity": {
           "role": {
-            "cross_account_trust_without_external_id": false
+            "cross_account_trust_without_external_id": false,
+            "principal_is_account_root": true
           }
         }
       },

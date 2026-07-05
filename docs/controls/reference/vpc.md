@@ -292,6 +292,21 @@ VPC endpoint policies for S3 must restrict which buckets can be accessed. Withou
 
 ---
 
+### CTL.VPC.ENDPOINT.CROSSACCOUNT.001
+
+**VPC Endpoint Policy Must Not Allow Cross-Account Resource Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.1;
+
+VPC endpoint policies must not allow access to resources in external accounts. An endpoint policy with Resource ARNs containing account IDs different from the VPC's own account creates an explicit cross-account data path through the organization's network. A compromised workload or indirect prompt injection can use this path to exfiltrate data to the external account's resources without triggering IAM policy denials.
+
+**Remediation:** Remove cross-account resource ARNs from the endpoint policy. Restrict the Resource field to ARNs within the VPC's own account, or add an aws:ResourceOrgID condition to limit access to organizational resources.
+
+---
+
 ### CTL.VPC.ENDPOINT.DNS.001
 
 **Interface VPC Endpoint Private DNS Not Enabled**
@@ -349,6 +364,21 @@ VPC endpoint policies must include IAM conditions (aws:PrincipalArn, aws:Princip
 VPC with private subnets does not have interface endpoints for one or more critical security services: KMS, Secrets Manager, STS, SSM, CloudWatch Logs, ECR. Traffic to these services either fails (no NAT) or exits through the NAT gateway to the public endpoint over the internet. Each of these services carries sensitive data or credentials — KMS operations on encryption keys, Secrets Manager secret retrieval, STS AssumeRole calls, SSM session and parameter data, CloudWatch Logs ingestion, ECR image pulls. Keeping this traffic on AWS's internal network via interface endpoints eliminates the public-internet leg and enables endpoint-policy scoping. The critical-services list is configurable via the `critical_services_missing` observation field — the finding enumerates exactly which services lack coverage so remediation is specific.
 
 **Remediation:** Create interface VPC endpoints for the missing services (KMS, Secrets Manager, STS, SSM, CloudWatch Logs, ECR). Enable Private DNS on each so existing SDK calls route automatically through the endpoint. Scope each endpoint's security group to the subnets or SGs that actually use the service, not the whole VPC. Consider an endpoint policy that restricts which principals (by OrgID or AccountID) can use the endpoint.
+
+---
+
+### CTL.VPC.ENDPOINT.ORGRESTRICTION.001
+
+**VPC Endpoint Policy Must Restrict Destination to Organizational Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.6;
+
+VPC endpoint policies for data services (S3, DynamoDB, Secrets Manager, Bedrock, SageMaker) must restrict access to organizational resources using aws:ResourceOrgID, aws:ResourceAccount, or specific resource ARNs. Without destination restriction, a compromised workload can reach any resource in the service globally — including attacker-controlled resources in external accounts — through the organization's own endpoint. This is the network-level enforcement layer that catches what IAM policy gaps miss.
+
+**Remediation:** Add an aws:ResourceOrgID condition to the endpoint policy to restrict access to resources owned by your organization, or restrict the Resource field to specific resource ARNs.
 
 ---
 

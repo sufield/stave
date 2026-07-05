@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-03
 **Fixture:** lordofheaven (2 snapshots, multi-asset S3 evaluation)
-**Catalog:** 2673 built-in controls
+**Catalog:** 2816 built-in controls
 **Machine:** Linux x86_64, 8 CPUs
 
 ## Results
@@ -23,7 +23,7 @@ BenchmarkApplyColdStart-8    1    5455333973 ns/op    699279048 B/op    10267318
 
 - **10M allocations per run** — the dominant cost. Each (control, asset)
   pair allocates findings, evidence maps, and observation slices.
-- **Cold start adds ~2s** — CEL program compilation for 2673 controls.
+- **Cold start adds ~2s** — CEL program compilation for 2816 controls.
   The warm path reuses the compile cache.
 - **693 MB heap** — dominated by control catalog loading + per-finding
   allocations. A sync.Pool for findings would reduce both alloc count

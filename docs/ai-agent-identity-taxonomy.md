@@ -7,7 +7,7 @@ today, and identifies observation-schema gaps.
 | | |
 |---|---|
 | Audit date | 2026-05-10 |
-| Catalog version | 2618 controls |
+| Catalog version | 2816 controls |
 | Scope | AWS only — Azure / GCP / Anthropic API not yet covered |
 
 ## TL;DR

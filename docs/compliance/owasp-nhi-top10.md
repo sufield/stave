@@ -5,7 +5,7 @@ controls that detect or prevent it. Annotations live in each
 control's `compliance.owasp_nhi` field, queryable via
 `stave controls list --format json`.
 
-- Catalog version: 2618 controls
+- Catalog version: 2816 controls
 - Reference: <https://owasp.org/www-project-non-human-identities-top-10/>
 
 ## Coverage Summary

@@ -81,7 +81,7 @@ The impact step does NOT run queries against the full SIR
 SMT-LIB export. Stave's SMT export emits closed-world axioms
 for every predicate it declares (so absence-of-fact is
 provably distinct from "predicate true on something not
-asserted"). With 2592 controls' worth of predicates and 5000+
+asserted"). With 2816 controls' worth of predicates and 5000+
 facts, Z3 takes minutes-to-never to discharge the universals.
 
 The impact step instead reuses

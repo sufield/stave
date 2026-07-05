@@ -2,7 +2,7 @@
 
 7 curated S3 misconfiguration scenarios in Docker. No AWS credentials required.
 
-Stave ships with 2590 controls across 74 domains. This Docker demo
+Stave ships with 2816 controls across 78 domains. This Docker demo
 covers the S3 domain (112 controls) through 7 curated scenarios that
 each exercise a distinct misconfiguration pattern.
 
@@ -68,7 +68,7 @@ has `observations/` (snapshot) and `expected.txt` (golden output).
 
 ## Beyond S3: the full catalog
 
-This demo covers S3. Stave evaluates 2590 controls across 74 domains.
+This demo covers S3. Stave evaluates 2816 controls across 78 domains.
 Outside Docker, point `stave apply --profile` at any built-in pack with
 a bundled observation file:
 

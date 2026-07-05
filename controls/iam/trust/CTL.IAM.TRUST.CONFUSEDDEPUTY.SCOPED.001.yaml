@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.CONFUSEDDEPUTY.SCOPED.001
+name: Scoped Third-Party Trust Should Have Confused Deputy Protection
+description: >
+  IAM roles trusting a specific third-party role ARN
+  (arn:aws:iam::X:role/Name from outside the organization) without
+  sts:ExternalId or aws:SourceAccount conditions are exposed to the
+  confused deputy problem. While narrower than account-root trust
+  (only the named role can assume), the missing protection still
+  means a compromise of that specific role in the vendor's account
+  grants immediate access to your resources. ExternalId binds the
+  trust to a specific customer relationship so that the vendor
+  cannot accidentally (or maliciously) route one customer's requests
+  through another customer's role.
+domain: identity
+severity: high
+scope: compound
+corpus_reference: MITRE:T1199
+compliance:
+  owasp_nhi: "NHI4"
+  hipaa: "164.312(a)(1)"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-3"
+  pci_dss_v4.0: "7.2.1"
+  soc2: "CC6.1, CC9.2"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["DCS-07", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - compliance-mapping
+  - confused-deputy
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+params:
+  base_impact: 7
+  attack_stage: persistence
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.2
+remediation:
+  description: >
+    An IAM role trusts a specific third-party role ARN without
+    confused deputy protection. A compromise of that role grants
+    immediate assumption.
+  action: >
+    Add an sts:ExternalId condition with a unique per-relationship value to
+    the role trust policy. Alternatively, add aws:SourceAccount scoped to the
+    specific account that should be permitted. Do not use wildcard values —
+    ExternalId set to * provides no protection.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "trust_policy": {
+          "has_third_party_principal": true,
+          "principal_is_account_root": false,
+          "confused_deputy_protected": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.trust_policy.has_third_party_principal
+      op: eq
+      value: true
+    - field: properties.identity.trust_policy.confused_deputy_protected
+      op: eq
+      value: false
+    - field: properties.identity.trust_policy.principal_is_account_root
+      op: eq
+      value: false

@@ -1,17 +1,24 @@
 dsl_version: ctrl.v1
 id: CTL.IAM.TRUST.EXTERNALID.001
-name: Cross-Account Trust Must Require External ID
+name: Account-Root Cross-Account Trust Must Require External ID
 description: >
-  IAM roles with cross-account trust policies must include an
-  sts:ExternalId condition. Without an external ID, any principal in
-  the trusted account can assume the role — including compromised
-  service accounts, OAuth applications, or test tenants. The
-  Microsoft Midnight Blizzard 2024 breach exploited a legacy test
-  OAuth app to assume a role with full_access_as_app permissions,
-  pivoting from a test tenant to production Exchange mailboxes.
+  IAM roles trusting an account root principal (arn:aws:iam::X:root)
+  without an sts:ExternalId condition allow ANY principal in the
+  trusted account to assume the role. This is the most dangerous
+  cross-account trust pattern — a compromised service account, OAuth
+  app, or test tenant in the trusted account can assume the role.
+  The Microsoft Midnight Blizzard 2024 breach exploited a legacy
+  test OAuth app to assume a role with full_access_as_app
+  permissions, pivoting from a test tenant to production Exchange
+  mailboxes. Account-root trust without ExternalId is critical
+  because the blast radius is the entire trusted account's principal
+  population.
 domain: identity
 severity: critical
+scope: compound
+corpus_reference: MITRE:T1199
 compliance:
+  owasp_nhi: "NHI4"
   soc2: "CC6.1"
   pci_dss_v4.0: "7.2.1"
   nist_800_53_r5: "AC-3"
@@ -21,13 +28,16 @@ compliance:
 scope_tags:
   - aws
   - iam
+taxonomy:
+  - compliance-mapping
+  - trust-boundary
 type: unsafe_state
 classification: state_assertion
 params:
   attack_stage: lateral_movement
 remediation:
   description: >
-    Cross-account IAM role trust policy allows assumption without
+    Cross-account IAM role trusts an account root principal without
     an external ID condition. Any principal in the trusted account
     can assume this role.
   action: >
@@ -39,12 +49,16 @@ remediation:
       "identity": {
         "kind": "role",
         "role": {
-          "cross_account_trust_without_external_id": false
+          "cross_account_trust_without_external_id": false,
+          "principal_is_account_root": true
         }
       }
     }
 unsafe_predicate:
   all:
     - field: properties.identity.role.cross_account_trust_without_external_id
+      op: eq
+      value: true
+    - field: properties.identity.role.principal_is_account_root
       op: eq
       value: true

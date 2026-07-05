@@ -1,16 +1,19 @@
 dsl_version: ctrl.v1
 id: CTL.IAM.TRUST.CONFUSEDDEPUTY.001
-name: Third-Party Role Trust Must Have Confused Deputy Protection
+name: Account-Root Third-Party Trust Must Have Confused Deputy Protection
 description: >
-  IAM roles trusted by third-party AWS accounts (accounts outside your
-  organization) must include sts:ExternalId or aws:SourceAccount conditions.
-  Without these guardrails, the confused deputy problem allows any customer
-  of the same third-party vendor to assume your role through the vendor's
-  IAM system. The Microsoft Midnight Blizzard 2024 breach exploited a legacy
-  cross-tenant trust without per-customer binding to pivot from a test tenant
-  to production Exchange mailboxes. Coupa/Corecard-pattern SaaS integrations
-  with shared IAM roles and no ExternalId allow cross-customer data access
-  if the vendor's IAM system is compromised.
+  IAM roles trusting a third-party account root principal
+  (arn:aws:iam::X:root from outside the organization) without
+  sts:ExternalId or aws:SourceAccount conditions are maximally
+  exposed to the confused deputy problem. Any customer of the same
+  third-party vendor can assume your role through the vendor's IAM
+  system — because the trust grants access to ALL principals in the
+  account, not just one specific role. The Microsoft Midnight
+  Blizzard 2024 breach exploited a legacy cross-tenant trust without
+  per-customer binding to pivot from a test tenant to production
+  Exchange mailboxes. Account-root trust is critical because the
+  blast radius is the entire third-party account's principal
+  population.
 domain: identity
 severity: critical
 scope: compound
@@ -42,9 +45,9 @@ params:
     multiplier: 2.0
 remediation:
   description: >
-    An IAM role trusts a third-party AWS account without confused deputy
-    protection. Any customer of the third-party vendor can assume this role
-    through the vendor's IAM system.
+    An IAM role trusts a third-party account root principal without
+    confused deputy protection. Any customer of the third-party vendor
+    can assume this role through the vendor's IAM system.
   action: >
     Add an sts:ExternalId condition with a unique per-relationship value to
     the role trust policy. Alternatively, add aws:SourceAccount scoped to the
@@ -56,6 +59,7 @@ remediation:
         "kind": "role",
         "trust_policy": {
           "has_third_party_principal": true,
+          "principal_is_account_root": true,
           "confused_deputy_protected": true
         }
       }
@@ -68,6 +72,9 @@ unsafe_predicate:
     - field: properties.identity.trust_policy.confused_deputy_protected
       op: eq
       value: false
+    - field: properties.identity.trust_policy.principal_is_account_root
+      op: eq
+      value: true
 alternatives:
   - tool: prowler
     check_id: iam_role_cross_service_confused_deputy_prevention

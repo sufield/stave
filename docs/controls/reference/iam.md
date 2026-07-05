@@ -2897,14 +2897,29 @@ This control reads the four per-layer derived booleans (each encoding correctnes
 
 ### CTL.IAM.TRUST.CONFUSEDDEPUTY.001
 
-**Third-Party Role Trust Must Have Confused Deputy Protection**
+**Account-Root Third-Party Trust Must Have Confused Deputy Protection**
 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
 - **Compliance:** fedramp_moderate: AC-3; hipaa: 164.312(a)(1); iso_27001_2022: A.8.3; nist_800_53_r5: AC-3, AC-6; owasp_nhi: NHI4; pci_dss_v4.0: 7.2.1; soc2: CC6.1, CC9.2;
 
-IAM roles trusted by third-party AWS accounts (accounts outside your organization) must include sts:ExternalId or aws:SourceAccount conditions. Without these guardrails, the confused deputy problem allows any customer of the same third-party vendor to assume your role through the vendor's IAM system. The Microsoft Midnight Blizzard 2024 breach exploited a legacy cross-tenant trust without per-customer binding to pivot from a test tenant to production Exchange mailboxes. Coupa/Corecard-pattern SaaS integrations with shared IAM roles and no ExternalId allow cross-customer data access if the vendor's IAM system is compromised.
+IAM roles trusting a third-party account root principal (arn:aws:iam::X:root from outside the organization) without sts:ExternalId or aws:SourceAccount conditions are maximally exposed to the confused deputy problem. Any customer of the same third-party vendor can assume your role through the vendor's IAM system — because the trust grants access to ALL principals in the account, not just one specific role. The Microsoft Midnight Blizzard 2024 breach exploited a legacy cross-tenant trust without per-customer binding to pivot from a test tenant to production Exchange mailboxes. Account-root trust is critical because the blast radius is the entire third-party account's principal population.
+
+**Remediation:** Add an sts:ExternalId condition with a unique per-relationship value to the role trust policy. Alternatively, add aws:SourceAccount scoped to the specific account that should be permitted. Do not use wildcard values — ExternalId set to * provides no protection.
+
+---
+
+### CTL.IAM.TRUST.CONFUSEDDEPUTY.SCOPED.001
+
+**Scoped Third-Party Trust Should Have Confused Deputy Protection**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.312(a)(1); iso_27001_2022: A.8.3; nist_800_53_r5: AC-3, AC-6; owasp_nhi: NHI4; pci_dss_v4.0: 7.2.1; soc2: CC6.1, CC9.2;
+
+IAM roles trusting a specific third-party role ARN (arn:aws:iam::X:role/Name from outside the organization) without sts:ExternalId or aws:SourceAccount conditions are exposed to the confused deputy problem. While narrower than account-root trust (only the named role can assume), the missing protection still means a compromise of that specific role in the vendor's account grants immediate access to your resources. ExternalId binds the trust to a specific customer relationship so that the vendor cannot accidentally (or maliciously) route one customer's requests through another customer's role.
 
 **Remediation:** Add an sts:ExternalId condition with a unique per-relationship value to the role trust policy. Alternatively, add aws:SourceAccount scoped to the specific account that should be permitted. Do not use wildcard values — ExternalId set to * provides no protection.
 
@@ -2927,14 +2942,29 @@ IAM roles must not simultaneously trust a compute service principal (lambda.amaz
 
 ### CTL.IAM.TRUST.EXTERNALID.001
 
-**Cross-Account Trust Must Require External ID**
+**Account-Root Cross-Account Trust Must Require External ID**
 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
 - **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; owasp_nhi: NHI4; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
-IAM roles with cross-account trust policies must include an sts:ExternalId condition. Without an external ID, any principal in the trusted account can assume the role — including compromised service accounts, OAuth applications, or test tenants. The Microsoft Midnight Blizzard 2024 breach exploited a legacy test OAuth app to assume a role with full_access_as_app permissions, pivoting from a test tenant to production Exchange mailboxes.
+IAM roles trusting an account root principal (arn:aws:iam::X:root) without an sts:ExternalId condition allow ANY principal in the trusted account to assume the role. This is the most dangerous cross-account trust pattern — a compromised service account, OAuth app, or test tenant in the trusted account can assume the role. The Microsoft Midnight Blizzard 2024 breach exploited a legacy test OAuth app to assume a role with full_access_as_app permissions, pivoting from a test tenant to production Exchange mailboxes. Account-root trust without ExternalId is critical because the blast radius is the entire trusted account's principal population.
+
+**Remediation:** Add an sts:ExternalId condition to the role trust policy. Generate a unique external ID per trust relationship. Verify the assuming application passes the correct external ID.
+
+---
+
+### CTL.IAM.TRUST.EXTERNALID.SCOPED.001
+
+**Scoped Cross-Account Trust Should Require External ID**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; owasp_nhi: NHI4; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM roles trusting a specific role or user ARN (arn:aws:iam::X:role/Name) without an sts:ExternalId condition still allow that named principal to assume the role without a shared secret. While narrower than account-root trust (only one principal can assume), the missing ExternalId means a compromise of the named role in the trusted account grants immediate lateral movement without any additional credential. ExternalId adds a binding token that limits assumption even if the remote role's credentials are extracted.
 
 **Remediation:** Add an sts:ExternalId condition to the role trust policy. Generate a unique external ID per trust relationship. Verify the assuming application passes the correct external ID.
 

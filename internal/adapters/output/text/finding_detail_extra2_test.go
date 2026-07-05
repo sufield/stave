@@ -73,7 +73,7 @@ func TestWriteFindingDetail_Full(t *testing.T) {
 			},
 			ExpectedEffect: "Public access will be blocked",
 		},
-		NextSteps: []string{"Run stave apply", "Check compliance dashboard"},
+		NextSteps: []string{"Run stave verify", "Check compliance dashboard"},
 	}
 
 	var buf bytes.Buffer
@@ -101,7 +101,7 @@ func TestWriteFindingDetail_Full(t *testing.T) {
 		"Actions:",
 		"Expected effect:",
 		"Next Steps",
-		"Run stave apply",
+		"Run stave verify",
 		"Identity statements:",
 		"Resource grantees:",
 		"Misconfigurations:",

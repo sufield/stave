@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.EXTERNALID.SCOPED.001
+name: Scoped Cross-Account Trust Should Require External ID
+description: >
+  IAM roles trusting a specific role or user ARN
+  (arn:aws:iam::X:role/Name) without an sts:ExternalId condition
+  still allow that named principal to assume the role without a
+  shared secret. While narrower than account-root trust (only one
+  principal can assume), the missing ExternalId means a compromise
+  of the named role in the trusted account grants immediate lateral
+  movement without any additional credential. ExternalId adds a
+  binding token that limits assumption even if the remote role's
+  credentials are extracted.
+domain: identity
+severity: high
+scope: compound
+corpus_reference: MITRE:T1199
+compliance:
+  owasp_nhi: "NHI4"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - compliance-mapping
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    Cross-account IAM role trusts a specific role/user ARN without
+    an external ID condition. A compromise of that specific
+    principal grants immediate assumption.
+  action: >
+    Add an sts:ExternalId condition to the role trust policy.
+    Generate a unique external ID per trust relationship. Verify
+    the assuming application passes the correct external ID.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "role": {
+          "cross_account_trust_without_external_id": false,
+          "principal_is_account_root": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.role.cross_account_trust_without_external_id
+      op: eq
+      value: true
+    - field: properties.identity.role.principal_is_account_root
+      op: eq
+      value: false

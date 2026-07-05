@@ -297,11 +297,11 @@ func TestRuntime_PrintWorkflowHandoff_WithNextCommand(t *testing.T) {
 		Args:        []string{"apply"},
 		ProjectRoot: "/project",
 		NextCommand: func(string) (string, error) {
-			return "stave apply", nil
+			return "stave verify", nil
 		},
 	})
 	out := buf.String()
-	if !strings.Contains(out, "stave apply") {
+	if !strings.Contains(out, "stave verify") {
 		t.Errorf("expected custom next command: %q", out)
 	}
 }
