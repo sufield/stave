@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.AUDITMANAGER.ENABLED.001
+name: AWS Audit Manager Not Enabled
+description: >
+  AWS Audit Manager is not enabled. Without Audit Manager,
+  compliance evidence collection is manual, assessments are not
+  automated, and there is no centralized framework for mapping
+  controls to compliance standards.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CA-7"
+  soc2: "CC4.1"
+  ccm_v4: ["GRC-04"]
+  scs_c02: "8.11"
+scope_tags:
+  - aws
+  - auditmanager
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Audit Manager is not enabled. Compliance evidence collection
+    is not automated.
+  action: >
+    Enable Audit Manager and configure a default assessment
+    reports destination: aws auditmanager register-account.
+  example: |
+    {
+      "governance": {
+        "kind": "audit_manager",
+        "audit_manager": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: audit_manager
+    - field: properties.governance.audit_manager.enabled
+      op: eq
+      value: false
+tests:
+  - name: "Audit Manager not enabled fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:auditmanager:us-east-1:111122223333:account"
+      asset_type: aws_audit_manager
+      vendor: aws
+      properties:
+        governance:
+          kind: audit_manager
+          audit_manager:
+            enabled: false
+  - name: "Audit Manager enabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:auditmanager:us-east-1:111122223333:account"
+      asset_type: aws_audit_manager
+      vendor: aws
+      properties:
+        governance:
+          kind: audit_manager
+          audit_manager:
+            enabled: true

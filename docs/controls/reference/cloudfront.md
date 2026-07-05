@@ -320,6 +320,21 @@ CloudFront response headers policies can attach a CorsConfig block whose AccessC
 
 ---
 
+### CTL.CLOUDFRONT.FLE.001
+
+**CloudFront Distribution Not Using Field-Level Encryption**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-28; scs_c02: 11.6; soc2: CC6.1;
+
+A CloudFront distribution serving sensitive form data does not use field-level encryption (FLE). FLE encrypts specific POST body fields at the edge using a public key, so the origin application receives ciphertext for sensitive fields. Without FLE, sensitive data transits from edge to origin in plaintext within the HTTPS tunnel, accessible to any intermediate processing layer.
+
+**Remediation:** Create an FLE profile and configuration, then associate it with the cache behavior that handles sensitive form submissions.
+
+---
+
 ### CTL.CLOUDFRONT.GEO.001
 
 **CloudFront Distributions Requiring Geo Restriction Must Configure It**

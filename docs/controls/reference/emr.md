@@ -80,3 +80,18 @@ Security groups attached to EMR cluster nodes must not have inbound rules allowi
 
 ---
 
+### CTL.EMR.RELEASE.EOL.001
+
+**EMR Clusters Must Not Use End-of-Life Release Labels**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; pci_dss_v4.0: 6.3.3; soc2: CC7.1;
+
+EMR clusters must not run release labels that have reached end-of-life. AWS publishes support timelines for EMR release series; the emr-5.x series is approaching full EOL, and early emr-6.x releases (6.0-6.3) are past support. EOL release labels include outdated versions of Spark, Hadoop, Hive, and Presto with known CVEs. EMR clusters process data at scale — an unpatched Spark or Hadoop version on the data plane is a direct exposure for any data the cluster reads, transforms, or writes. This is distinct from CTL.EMR.ENCRYPT.001 which checks encryption configuration; an encrypted but unpatched cluster still runs vulnerable processing code.
+
+**Remediation:** Launch new clusters with a supported release label (emr-7.x or latest emr-6.x). Migrate running workflows to the new release. Test Spark/Hive jobs against the new release in a non-production cluster first — major release upgrades may change default configurations, deprecate APIs, or alter SQL behavior.
+
+---
+

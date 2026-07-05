@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFRONT.FLE.001
+name: CloudFront Distribution Not Using Field-Level Encryption
+description: >
+  A CloudFront distribution serving sensitive form data does not
+  use field-level encryption (FLE). FLE encrypts specific POST
+  body fields at the edge using a public key, so the origin
+  application receives ciphertext for sensitive fields. Without
+  FLE, sensitive data transits from edge to origin in plaintext
+  within the HTTPS tunnel, accessible to any intermediate
+  processing layer.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17"]
+  scs_c02: "11.6"
+scope_tags:
+  - aws
+  - cloudfront
+taxonomy:
+  - encryption
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    CloudFront distribution does not use field-level encryption for
+    sensitive form data.
+  action: >
+    Create an FLE profile and configuration, then associate it with
+    the cache behavior that handles sensitive form submissions.
+  example: |
+    {
+      "cdn": {
+        "kind": "distribution",
+        "distribution": {
+          "field_level_encryption_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cdn.kind
+      op: eq
+      value: distribution
+    - field: properties.cdn.distribution.field_level_encryption_configured
+      op: eq
+      value: false
+tests:
+  - name: "Distribution without FLE fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/EABC123"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          distribution:
+            field_level_encryption_configured: false
+  - name: "Distribution with FLE passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudfront::111122223333:distribution/EDEF456"
+      asset_type: aws_cloudfront_distribution
+      vendor: aws
+      properties:
+        cdn:
+          kind: distribution
+          distribution:
+            field_level_encryption_configured: true

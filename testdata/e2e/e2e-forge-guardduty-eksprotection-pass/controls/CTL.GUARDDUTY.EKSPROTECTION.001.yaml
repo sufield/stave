@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.EKSPROTECTION.001
+name: GuardDuty EKS Audit Log Monitoring Must Be Enabled
+description: >
+  GuardDuty EKS Audit Log Monitoring must be enabled to detect
+  suspicious Kubernetes API activity — anonymous access, privilege
+  escalation attempts, pod creation from unusual principals, and
+  access from known malicious IPs. This is a separate feature toggle
+  from the base GuardDuty detector and from EKS Runtime Monitoring
+  (CTL.GUARDDUTY.ECS.RUNTIME.001). An account running EKS clusters
+  with GuardDuty enabled but EKS Protection disabled misses
+  Kubernetes-layer threats entirely. Part of the GuardDuty
+  per-feature protection family discovered through cross-cloud
+  transposition from Azure Defender for Containers.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "TVM-01"]
+scope_tags:
+  - aws
+  - guardduty
+  - eks
+taxonomy:
+  - compliance-mapping
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    GuardDuty EKS Audit Log Monitoring is not enabled. Kubernetes
+    API threats are not detected.
+  action: >
+    Enable EKS Protection on the GuardDuty detector: aws guardduty
+    update-detector --detector-id <id> --features
+    Name=EKS_AUDIT_LOGS,Status=ENABLED.
+  example: |
+    {
+      "threat_detection": {
+        "kind": "detector",
+        "eks_protection": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.threat_detection.kind
+      op: eq
+      value: detector
+    - field: properties.threat_detection.eks_protection.enabled
+      op: eq
+      value: false

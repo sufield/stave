@@ -21,6 +21,12 @@ func Prioritize(gaps []FieldGap) {
 			if a.Remediation.Type == "tag" {
 				return -1
 			}
+			if b.Remediation.Type == "tag" {
+				return 1
+			}
+			if a.Remediation.Type < b.Remediation.Type {
+				return -1
+			}
 			return 1
 		}
 		// 3. Higher max severity wins. Delegate to the canonical

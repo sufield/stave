@@ -529,6 +529,21 @@ SNS topic policy grants sns:Subscribe to overly broad principals — Principal: 
 
 ---
 
+### CTL.SNS.SIGNATURE.SHA1.001
+
+**SNS Topics Must Use SHA256 Message Signing**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-13; pci_dss_v4.0: 4.2; soc2: CC6.1;
+
+SNS topics must use SignatureVersion 2 (SHA256) for message signing, not SignatureVersion 1 (SHA1). SHA1 is cryptographically weakened — practical collision attacks exist since 2017 (SHAttered). SNS message signatures allow subscribers to verify that a message originated from SNS and was not tampered with in transit. A SHA1-signed message can be forged by an attacker who can produce a collision, allowing spoofed notifications to endpoints that verify signatures. AWS defaults new topics to SHA1 (SignatureVersion 1) unless explicitly set to 2, so any topic created without specifying the attribute uses the weaker algorithm. This is a silent unsafe default — the topic appears functional but its message authentication is cryptographically degraded.
+
+**Remediation:** Set the topic's SignatureVersion attribute to 2 (SHA256): aws sns set-topic-attributes --topic-arn <arn> --attribute-name SignatureVersion --attribute-value 2. Verify that all subscribers that check message signatures support SHA256 verification before switching.
+
+---
+
 ### CTL.SNS.SUBSCRIPTION.HTTP.001
 
 **SNS Subscription Uses HTTP (Not HTTPS) for Message Delivery**

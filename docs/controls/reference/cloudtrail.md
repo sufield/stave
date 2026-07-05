@@ -489,6 +489,36 @@ CloudTrail log file validation digest files are stored in the same S3 bucket as 
 
 ---
 
+### CTL.CLOUDTRAIL.LAKE.ENCRYPT.001
+
+**CloudTrail Lake Event Data Store Not Encrypted with CMK**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-28; scs_c02: 4.9; soc2: CC6.1;
+
+A CloudTrail Lake event data store uses the default AWS-managed key instead of a customer-managed KMS key. Without a CMK, the organization cannot control key rotation, revoke access via key policy, or meet compliance requirements that mandate customer- controlled encryption keys for audit data.
+
+**Remediation:** Create a new event data store with a CMK: aws cloudtrail create-event-data-store --name <name> --kms-key-id <key-arn>. Existing data stores cannot change encryption after creation.
+
+---
+
+### CTL.CLOUDTRAIL.LAKE.RETENTION.001
+
+**CloudTrail Lake Event Data Store Has Short Retention**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AU-11; scs_c02: 4.9; soc2: CC7.4;
+
+A CloudTrail Lake event data store has a retention period shorter than 365 days. Short retention limits forensic investigation capability and may violate compliance requirements that mandate audit log retention of one year or more.
+
+**Remediation:** Update the event data store retention: aws cloudtrail update-event-data-store --event-data-store <arn> --retention-period 365.
+
+---
+
 ### CTL.CLOUDTRAIL.LOG.VALIDATION.001
 
 **CloudTrail Log File Validation Must Be Enabled**

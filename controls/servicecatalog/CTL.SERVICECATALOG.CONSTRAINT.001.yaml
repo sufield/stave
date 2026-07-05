@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.SERVICECATALOG.CONSTRAINT.001
+name: Service Catalog Portfolio Has No Launch Constraints
+description: >
+  A Service Catalog portfolio has products without launch
+  constraints. Without a launch constraint, products are launched
+  using the end user's IAM permissions, which may be insufficient
+  or excessive. Launch constraints specify an IAM role that
+  Service Catalog assumes to provision the product, enforcing
+  least privilege and consistent provisioning.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+  scs_c02: "7.4"
+scope_tags:
+  - aws
+  - servicecatalog
+taxonomy:
+  - least-privilege
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Service Catalog portfolio has products without launch constraints.
+    Products launch with end-user permissions.
+  action: >
+    Add a launch constraint to each product in the portfolio
+    specifying a dedicated provisioning role with least-privilege
+    permissions.
+  example: |
+    {
+      "governance": {
+        "kind": "service_catalog_portfolio",
+        "service_catalog": {
+          "has_launch_constraints": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: service_catalog_portfolio
+    - field: properties.governance.service_catalog.has_launch_constraints
+      op: eq
+      value: false
+tests:
+  - name: "Portfolio without launch constraints fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:catalog:us-east-1:111122223333:portfolio/port-abc123"
+      asset_type: aws_service_catalog_portfolio
+      vendor: aws
+      properties:
+        governance:
+          kind: service_catalog_portfolio
+          service_catalog:
+            has_launch_constraints: false
+  - name: "Portfolio with launch constraints passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:catalog:us-east-1:111122223333:portfolio/port-def456"
+      asset_type: aws_service_catalog_portfolio
+      vendor: aws
+      properties:
+        governance:
+          kind: service_catalog_portfolio
+          service_catalog:
+            has_launch_constraints: true

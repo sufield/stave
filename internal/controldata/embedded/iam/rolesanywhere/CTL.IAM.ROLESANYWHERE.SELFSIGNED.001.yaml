@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROLESANYWHERE.SELFSIGNED.001
+name: IAM Roles Anywhere Trust Anchor Uses Self-Signed Certificate
+description: >
+  An IAM Roles Anywhere trust anchor uses a self-signed certificate
+  authority rather than AWS Private CA or an established PKI.
+  Self-signed CAs lack the revocation infrastructure, audit trail,
+  and lifecycle management of a proper PKI. The CA private key is
+  managed outside AWS, increasing the risk of key compromise and
+  making certificate lifecycle tracking difficult.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "IA-5(2)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-11"]
+  scs_c02: "2.8"
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - credential-lifecycle
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Trust anchor uses a self-signed certificate. Certificate
+    lifecycle management is manual and error-prone.
+  action: >
+    Replace with an AWS Private CA trust anchor for integrated
+    revocation, audit logging, and certificate lifecycle
+    management.
+  example: |
+    {
+      "identity": {
+        "kind": "roles_anywhere_trust_anchor",
+        "roles_anywhere": {
+          "source_type": "AWS_ACM_PCA"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: roles_anywhere_trust_anchor
+    - field: properties.identity.roles_anywhere.source_type
+      op: eq
+      value: SELF_SIGNED
+tests:
+  - name: "Self-signed trust anchor fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:rolesanywhere:us-east-1:111122223333:trust-anchor/abc-123"
+      asset_type: aws_iam_roles_anywhere
+      vendor: aws
+      properties:
+        identity:
+          kind: roles_anywhere_trust_anchor
+          roles_anywhere:
+            source_type: SELF_SIGNED
+  - name: "AWS Private CA trust anchor passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:rolesanywhere:us-east-1:111122223333:trust-anchor/def-456"
+      asset_type: aws_iam_roles_anywhere
+      vendor: aws
+      properties:
+        identity:
+          kind: roles_anywhere_trust_anchor
+          roles_anywhere:
+            source_type: AWS_ACM_PCA

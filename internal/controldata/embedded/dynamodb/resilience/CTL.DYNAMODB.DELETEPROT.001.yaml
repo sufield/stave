@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.DELETEPROT.001
+name: DynamoDB Tables Must Have Deletion Protection Enabled
+description: >
+  DynamoDB tables must have deletion protection enabled to prevent
+  accidental or malicious table destruction. Without it, a single
+  DeleteTable API call permanently destroys the table and all its
+  data. AWS added DeletionProtectionEnabled in 2023 but no CIS
+  benchmark or AWS-native framework checks it — the gap was
+  discovered through cross-cloud transposition from Azure Cosmos DB
+  purge protection. The same pattern as CTL.RDS.DELETEPROT.001 and
+  CTL.NEPTUNE.DELETEPROT.001 but for the key-value store layer.
+  Tables storing session state, feature flags, or application
+  metadata are especially vulnerable — their loss causes immediate
+  production impact with no recovery path unless PITR is also
+  enabled.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.1"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - dynamodb
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    DynamoDB table does not have deletion protection enabled.
+  action: >
+    Enable deletion protection: aws dynamodb update-table
+    --table-name <name> --deletion-protection-enabled. Pair with
+    CTL.DYNAMODB.PITR.001 for defense-in-depth — deletion
+    protection prevents table destruction, PITR enables recovery
+    from data corruption.
+  example: |
+    {
+      "database": {
+        "deletion_protection": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.deletion_protection
+      op: eq
+      value: false

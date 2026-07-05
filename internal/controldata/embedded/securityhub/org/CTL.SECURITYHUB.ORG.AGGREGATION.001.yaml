@@ -1,0 +1,79 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYHUB.ORG.AGGREGATION.001
+name: Security Hub Has No Cross-Region Finding Aggregation
+description: >
+  Security Hub does not have a finding aggregation region configured.
+  Without cross-region aggregation, findings from each region are
+  visible only in that region's Security Hub console. Security teams
+  must check every active region individually, making it easy to miss
+  findings from regions with lower operational activity. An attacker
+  operating in a non-primary region may go undetected longer.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+  scs_c02: "4.8"
+scope_tags:
+  - aws
+  - securityhub
+taxonomy:
+  - monitoring
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: organization
+    multiplier: 2.5
+remediation:
+  description: >
+    Security Hub has no cross-region aggregation. Findings are
+    siloed per region.
+  action: >
+    Create a finding aggregator in your primary region: aws
+    securityhub create-finding-aggregator --region-linking-mode
+    ALL_REGIONS.
+  example: |
+    {
+      "security_hub": {
+        "kind": "hub_organization",
+        "hub": {
+          "cross_region_aggregation_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.security_hub.kind
+      op: eq
+      value: hub_organization
+    - field: properties.security_hub.hub.cross_region_aggregation_enabled
+      op: eq
+      value: false
+tests:
+  - name: "No cross-region aggregation fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:securityhub:us-east-1:111122223333:hub/default"
+      asset_type: aws_securityhub_organization
+      vendor: aws
+      properties:
+        security_hub:
+          kind: hub_organization
+          hub:
+            cross_region_aggregation_enabled: false
+  - name: "Cross-region aggregation enabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:securityhub:us-east-1:111122223333:hub/default"
+      asset_type: aws_securityhub_organization
+      vendor: aws
+      properties:
+        security_hub:
+          kind: hub_organization
+          hub:
+            cross_region_aggregation_enabled: true

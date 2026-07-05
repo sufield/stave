@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SEMANTICS.NEGOP.ABSENT.001
+name: Negative Operator on Potentially Absent Key Fires Unconditionally
+description: >
+  A Deny statement uses a negative condition operator (StringNotEquals,
+  ArnNotLike, StringNotLike, NotIpAddress) on a condition key that
+  may be absent from the request context, without an IfExists suffix
+  or companion Null check. When a key is absent, AWS evaluates
+  negative operators as TRUE — "the key's value is not equal to the
+  policy value" is vacuously true when there is no value. The deny
+  fires for ALL requests missing the key, which is far broader than
+  intended. This is the mirror image of ForAllValues vacuous
+  satisfaction (Pitfall 1) — where that pitfall makes an Allow too
+  broad, this makes a Deny too broad. Formally: the deny domain
+  expands from |{r : r.key ≠ v}| to |{r : r.key ≠ v} ∪ {r :
+  r.key ∉ dom(r)}|. The second set can be enormous for service-
+  specific keys that most requests don't include.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - formal-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_policy
+params:
+  attack_stage: detection_evasion
+  base_impact: 7
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    IAM Deny statement uses a negative condition operator on a key
+    that may be absent. The deny fires unconditionally for requests
+    missing the key.
+  action: >
+    Use the IfExists suffix (e.g., StringNotEqualsIfExists) to make
+    the condition pass when the key is absent, or add a companion
+    Null check to explicitly handle key absence. The IfExists suffix
+    evaluates to true when the key is absent, which means the deny
+    still fires — so for deny-unless patterns, use the positive
+    operator instead (StringEquals + IfExists, or rethink the logic).
+  example: |
+    {
+      "identity": {
+        "kind": "policy",
+        "policy": {
+          "semantics": {
+            "has_negop_on_absent_key": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: policy
+    - field: properties.identity.policy.semantics.has_negop_on_absent_key
+      op: eq
+      value: true
+tests:
+  - name: "Deny with StringNotEquals on optional key fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/TagDeny"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_negop_on_absent_key: true
+  - name: "Deny with StringNotEqualsIfExists passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/TagDenySafe"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_negop_on_absent_key: false

@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.LAKE.RETENTION.001
+name: CloudTrail Lake Event Data Store Has Short Retention
+description: >
+  A CloudTrail Lake event data store has a retention period shorter
+  than 365 days. Short retention limits forensic investigation
+  capability and may violate compliance requirements that mandate
+  audit log retention of one year or more.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-11"
+  soc2: "CC7.4"
+  ccm_v4: ["LOG-05"]
+  scs_c02: "4.9"
+scope_tags:
+  - aws
+  - cloudtrail
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    CloudTrail Lake event data store retention is shorter than 365
+    days.
+  action: >
+    Update the event data store retention: aws cloudtrail
+    update-event-data-store --event-data-store <arn>
+    --retention-period 365.
+  example: |
+    {
+      "logging": {
+        "kind": "cloudtrail_lake_eds",
+        "lake": {
+          "retention_days_sufficient": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.logging.kind
+      op: eq
+      value: cloudtrail_lake_eds
+    - field: properties.logging.lake.retention_days_sufficient
+      op: eq
+      value: false
+tests:
+  - name: "Event data store with 90 day retention fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:eventdatastore/abc-123"
+      asset_type: aws_cloudtrail_lake
+      vendor: aws
+      properties:
+        logging:
+          kind: cloudtrail_lake_eds
+          lake:
+            retention_days_sufficient: false
+  - name: "Event data store with 365 day retention passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:eventdatastore/def-456"
+      asset_type: aws_cloudtrail_lake
+      vendor: aws
+      properties:
+        logging:
+          kind: cloudtrail_lake_eds
+          lake:
+            retention_days_sufficient: true

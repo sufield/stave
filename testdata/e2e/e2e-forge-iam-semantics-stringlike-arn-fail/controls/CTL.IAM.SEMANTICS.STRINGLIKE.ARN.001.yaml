@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SEMANTICS.STRINGLIKE.ARN.001
+name: StringLike on ARN-Valued Keys Produces Wrong Matching Semantics
+description: >
+  A policy condition uses StringLike or StringNotLike on an
+  ARN-valued condition key (aws:SourceArn, aws:PrincipalArn,
+  aws:ResourceArn, or any key documented as ARN type). StringLike
+  treats the entire value as one string for pattern matching.
+  ArnLike checks each of the six colon-delimited ARN components
+  separately, with per-component wildcard expansion. The operators
+  produce different match results on the same input. A wildcard
+  in one ARN component can accidentally match characters in an
+  adjacent component under StringLike but not ArnLike. AWS
+  explicitly recommends ARN operators for ARN comparisons. This
+  is distinct from CTL.IAM.POLICY.CONDITION.STRINGLIKE.001 which
+  catches StringLike on identity-valued keys (account IDs) — this
+  control catches operator/type mismatch on ARN-valued keys.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - formal-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_policy
+params:
+  attack_stage: privilege_escalation
+  base_impact: 7
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    IAM policy uses StringLike/StringNotLike on an ARN-valued
+    condition key. The operator treats the ARN as a flat string
+    instead of matching per component.
+  action: >
+    Replace StringLike with ArnLike and StringNotLike with
+    ArnNotLike for all ARN-valued condition keys. ArnLike
+    enforces per-component matching that prevents cross-component
+    wildcard leakage.
+  example: |
+    {
+      "identity": {
+        "kind": "policy",
+        "policy": {
+          "semantics": {
+            "has_stringlike_on_arn_key": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: policy
+    - field: properties.identity.policy.semantics.has_stringlike_on_arn_key
+      op: eq
+      value: true
+tests:
+  - name: "policy with StringLike on aws:SourceArn fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/SQSSNSBridge"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_stringlike_on_arn_key: true
+  - name: "policy with ArnLike on aws:SourceArn passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/SQSSNSBridgeSafe"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_stringlike_on_arn_key: false

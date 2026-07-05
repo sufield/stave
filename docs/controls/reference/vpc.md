@@ -711,6 +711,21 @@ VPCs handling sensitive or production traffic should have AWS Network Firewall d
 
 ---
 
+### CTL.VPC.NETWORKACCESS.ANALYZER.001
+
+**VPC Network Access Analyzer Not Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7(5); scs_c02: 9.14; soc2: CC6.6;
+
+No VPC Network Access Analyzer access scopes are configured. Network Access Analyzer identifies unintended network access paths by analyzing VPC configurations against defined access scopes. Without it, unintended internet access or cross-VPC connectivity may exist undetected.
+
+**Remediation:** Create network access scopes defining intended access patterns, then analyze to find deviations: aws ec2 create-network-insights-access-scope.
+
+---
+
 ### CTL.VPC.PEERING.BIDIRECTIONAL.001
 
 **VPC Peering Routes Allow Bidirectional Traffic When Unidirectional Intended**

@@ -50,6 +50,21 @@ ElastiCache Redis clusters must have at-rest encryption enabled to protect cache
 
 ---
 
+### CTL.ELASTICACHE.ENGINE.EOL.001
+
+**ElastiCache Engine Version Must Not Be End-of-Life**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; pci_dss_v4.0: 6.3.3; soc2: CC7.1;
+
+ElastiCache clusters must not run engine versions that have reached end-of-life. AWS publishes a deprecation calendar per engine major version; clusters on a deprecated version no longer receive security patches and will eventually be force-upgraded during a maintenance window the operator did not choose. Redis 5.x reached EOL in 2024, Redis 6.0 in 2024, and Redis 6.2 is approaching EOL. Memcached 1.5.x is EOL. Unlike RDS, ElastiCache does not have a separate auto-minor-upgrade toggle — the engine version is the sole indicator of patch currency. Running an EOL engine version means known CVEs in the cache layer remain unpatched, and any data transiting the cache (session tokens, API responses, feature flags) is processed by unmaintained code.
+
+**Remediation:** Upgrade the cluster to a supported engine version. For Redis, upgrade to Redis 7.x. For Memcached, upgrade to 1.6.x. Use aws elasticache modify-replication-group --engine-version <ver> with a scheduled maintenance window to minimize impact. Test application compatibility with the new engine version before upgrading production — major version upgrades may change command behavior or remove deprecated commands.
+
+---
+
 ### CTL.ELASTICACHE.INCOMPLETE.001
 
 **Complete Data Required for ElastiCache Assessment**

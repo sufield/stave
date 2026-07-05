@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYLAKE.SOURCES.001
+name: Security Lake Missing Critical Log Sources
+description: >
+  Amazon Security Lake does not have all critical AWS log sources
+  configured. Missing sources (CloudTrail, VPC Flow Logs, Route 53
+  DNS, Security Hub findings, Lambda, EKS audit, S3 data events)
+  create visibility gaps in the centralized security data lake.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-3"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+  scs_c02: "10.8"
+scope_tags:
+  - aws
+  - securitylake
+taxonomy:
+  - monitoring
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Security Lake is missing critical log sources. Cross-service
+    correlation has blind spots.
+  action: >
+    Add missing log sources: aws securitylake
+    create-aws-log-source --sources
+    '[{"sourceName":"CLOUD_TRAIL_MGMT","regions":["us-east-1"]}]'.
+  example: |
+    {
+      "logging": {
+        "kind": "security_lake",
+        "security_lake": {
+          "all_critical_sources_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.logging.kind
+      op: eq
+      value: security_lake
+    - field: properties.logging.security_lake.all_critical_sources_configured
+      op: eq
+      value: false
+tests:
+  - name: "Security Lake missing sources fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:securitylake:us-east-1:111122223333:data-lake"
+      asset_type: aws_security_lake
+      vendor: aws
+      properties:
+        logging:
+          kind: security_lake
+          security_lake:
+            all_critical_sources_configured: false
+  - name: "Security Lake with all sources passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:securitylake:us-east-1:111122223333:data-lake"
+      asset_type: aws_security_lake
+      vendor: aws
+      properties:
+        logging:
+          kind: security_lake
+          security_lake:
+            all_critical_sources_configured: true

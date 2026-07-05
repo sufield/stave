@@ -1,0 +1,22 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:policy/TestPolicy",
+      "properties": {
+        "identity": {
+          "kind": "policy",
+          "policy": {
+            "semantics": {
+              "has_ifexists_on_service_key": false
+            }
+          }
+        }
+      },
+      "type": "aws_iam_policy",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

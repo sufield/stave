@@ -1,0 +1,19 @@
+id: securityhub_aggregation_incomplete
+description: >
+  Security Hub lacks centralized visibility. No delegated admin,
+  no cross-region aggregation, or standards not configured.
+  Findings are fragmented across regions and accounts with no
+  single pane of glass. Each gap independently degrades the
+  security team's ability to detect and respond to cross-account
+  or cross-region attack patterns.
+controls:
+  - CTL.SECURITYHUB.ENABLED.001
+  - CTL.SECURITYHUB.STANDARDS.NONE.001
+  - CTL.SECURITYHUB.ORG.NODELEGATED.001
+  - CTL.SECURITYHUB.ORG.AGGREGATION.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - detection_fragmented

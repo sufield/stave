@@ -1,0 +1,94 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SEMANTICS.DENY.POSITIVE.001
+name: Deny with Positive Condition Narrows Instead of Excepts
+description: >
+  A Deny statement uses a positive condition operator (StringEquals,
+  IpAddress, ArnEquals, Bool) where the author almost certainly
+  intended the negative counterpart. "Deny if aws:SourceIp =
+  10.0.0.0/8" denies ONLY requests from 10.0.0.0/8. The author
+  usually means "deny UNLESS from 10.0.0.0/8" — which requires
+  NotIpAddress. The positive operator narrows the deny to a
+  specific set of requests rather than creating an exception.
+  The deny fires on a SUBSET of requests when the author intended
+  it to fire on the COMPLEMENT. This is formally provable: the
+  deny domain is |D ∩ C| when the intent was |D \ C|. SMT proves
+  the actual deny set ≠ intended deny set. No competitor tool
+  detects this pattern — it requires understanding the interaction
+  between Effect and condition operator polarity.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - formal-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_policy
+params:
+  attack_stage: detection_evasion
+  base_impact: 8
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    IAM Deny statement uses a positive condition operator. The
+    deny fires only when the condition matches — narrowing the
+    deny scope instead of creating an exception.
+  action: >
+    Replace the positive operator with its negative counterpart:
+    StringEquals → StringNotEquals, IpAddress → NotIpAddress,
+    ArnEquals → ArnNotEquals. This inverts the condition so the
+    deny fires for everything EXCEPT the specified values, which
+    matches the typical intent of "deny unless."
+  example: |
+    {
+      "identity": {
+        "kind": "policy",
+        "policy": {
+          "semantics": {
+            "has_deny_with_positive_condition": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: policy
+    - field: properties.identity.policy.semantics.has_deny_with_positive_condition
+      op: eq
+      value: true
+tests:
+  - name: "Deny with IpAddress (positive) fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/IPDeny"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_deny_with_positive_condition: true
+  - name: "Deny with NotIpAddress (negative) passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/IPDenySafe"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_deny_with_positive_condition: false

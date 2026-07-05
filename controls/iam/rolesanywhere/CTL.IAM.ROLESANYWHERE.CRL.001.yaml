@@ -1,0 +1,79 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROLESANYWHERE.CRL.001
+name: IAM Roles Anywhere Trust Anchor Has No CRL Configured
+description: >
+  An IAM Roles Anywhere trust anchor has no Certificate Revocation
+  List (CRL) configured. Without a CRL, revoked client certificates
+  can still assume IAM roles through the trust anchor. If a
+  certificate's private key is compromised, there is no mechanism
+  to prevent the compromised certificate from obtaining temporary
+  credentials.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "IA-5(2)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-11"]
+  scs_c02: "2.8"
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - credential-lifecycle
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+  blast_radius:
+    type: identity
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    IAM Roles Anywhere trust anchor has no CRL. Revoked certificates
+    can still assume roles.
+  action: >
+    Import a CRL for the trust anchor: aws rolesanywhere
+    import-crl --trust-anchor-arn <arn> --crl-data
+    fileb://revoked.crl --name my-crl.
+  example: |
+    {
+      "identity": {
+        "kind": "roles_anywhere_trust_anchor",
+        "roles_anywhere": {
+          "crl_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: roles_anywhere_trust_anchor
+    - field: properties.identity.roles_anywhere.crl_configured
+      op: eq
+      value: false
+tests:
+  - name: "Trust anchor without CRL fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:rolesanywhere:us-east-1:111122223333:trust-anchor/abc-123"
+      asset_type: aws_iam_roles_anywhere
+      vendor: aws
+      properties:
+        identity:
+          kind: roles_anywhere_trust_anchor
+          roles_anywhere:
+            crl_configured: false
+  - name: "Trust anchor with CRL passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:rolesanywhere:us-east-1:111122223333:trust-anchor/def-456"
+      asset_type: aws_iam_roles_anywhere
+      vendor: aws
+      properties:
+        identity:
+          kind: roles_anywhere_trust_anchor
+          roles_anywhere:
+            crl_configured: true

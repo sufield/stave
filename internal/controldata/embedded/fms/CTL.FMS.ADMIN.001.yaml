@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.FMS.ADMIN.001
+name: AWS Firewall Manager Administrator Account Not Configured
+description: >
+  AWS Firewall Manager has no administrator account configured.
+  Without an FMS administrator, WAF rules, Shield Advanced
+  protections, security group policies, and Network Firewall
+  policies cannot be centrally managed across the organization.
+  Each account must independently configure its own firewall
+  rules, leading to inconsistent perimeter security.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1, CC6.6"
+  ccm_v4: ["IVS-06"]
+  scs_c02: "7.5"
+scope_tags:
+  - aws
+  - fms
+taxonomy:
+  - account-governance
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: governance
+    scope: organization
+    multiplier: 3.0
+remediation:
+  description: >
+    No Firewall Manager administrator account configured. Centralized
+    firewall policy management is unavailable.
+  action: >
+    Associate an FMS administrator account: aws fms
+    associate-admin-account --admin-account <security-acct>.
+  example: |
+    {
+      "governance": {
+        "kind": "fms_config",
+        "fms": {
+          "admin_account_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: fms_config
+    - field: properties.governance.fms.admin_account_configured
+      op: eq
+      value: false
+tests:
+  - name: "FMS without admin account fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc"
+      asset_type: aws_fms_config
+      vendor: aws
+      properties:
+        governance:
+          kind: fms_config
+          fms:
+            admin_account_configured: false
+  - name: "FMS with admin account passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc"
+      asset_type: aws_fms_config
+      vendor: aws
+      properties:
+        governance:
+          kind: fms_config
+          fms:
+            admin_account_configured: true

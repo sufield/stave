@@ -1,0 +1,94 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SEMANTICS.FORALLVALUES.001
+name: ForAllValues Without Null Check Permits Vacuous Satisfaction
+description: >
+  An Allow statement using the ForAllValues set operator without a
+  companion Null condition check on the same key is vacuously
+  satisfied when the key is absent from the request. ForAllValues
+  tests whether every value in the request set matches the policy
+  set — but "every value in an empty set matches" is true by
+  definition (vacuous truth in set theory: ∀x∈∅.P(x) ≡ true).
+  A request that omits the condition key entirely satisfies the
+  condition unconditionally. The fix is a companion Null check
+  (Null: {key: "false"}) that fails the condition when the key
+  is absent. AWS documents this hazard but Access Analyzer only
+  warns — it does not block. No competitor tool detects this as
+  a posture property of deployed policies. This is the single
+  strongest example of evaluation-model semantics diverging from
+  author intent, and the headline pitfall for Z3 satisfiability
+  analysis (FM-060).
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - formal-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_policy
+params:
+  attack_stage: initial_access
+  base_impact: 9
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    IAM policy uses ForAllValues condition operator without a
+    companion Null check. Requests that omit the condition key
+    vacuously satisfy the condition.
+  action: >
+    Add a Null condition check for the same key with value "false"
+    alongside the ForAllValues condition. This ensures the
+    condition fails when the key is absent from the request.
+  example: |
+    {
+      "identity": {
+        "kind": "policy",
+        "policy": {
+          "semantics": {
+            "has_forallvalues_without_null": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: policy
+    - field: properties.identity.policy.semantics.has_forallvalues_without_null
+      op: eq
+      value: true
+tests:
+  - name: "policy with ForAllValues and no Null check fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/TagRestrict"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_forallvalues_without_null: true
+  - name: "policy with ForAllValues and companion Null check passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/TagRestrictSafe"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_forallvalues_without_null: false

@@ -1,0 +1,79 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.ORG.AUTOENABLE.001
+name: GuardDuty Auto-Enable Not Configured for New Accounts
+description: >
+  GuardDuty auto-enable is not configured for new member accounts
+  joining the organization. Without auto-enable, new accounts have
+  no threat detection until manually enrolled. An attacker who
+  compromises a newly provisioned account operates without
+  GuardDuty visibility during the enrollment gap.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+  scs_c02: "4.4"
+scope_tags:
+  - aws
+  - guardduty
+taxonomy:
+  - account-governance
+  - monitoring
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: organization
+    multiplier: 2.5
+remediation:
+  description: >
+    GuardDuty does not auto-enable for new member accounts. New
+    accounts lack threat detection until manually enrolled.
+  action: >
+    Enable auto-enable from the delegated admin: aws guardduty
+    update-organization-configuration --detector-id <id>
+    --auto-enable.
+  example: |
+    {
+      "threat_detection": {
+        "kind": "guardduty_organization",
+        "guardduty": {
+          "auto_enable_new_accounts": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.threat_detection.kind
+      op: eq
+      value: guardduty_organization
+    - field: properties.threat_detection.guardduty.auto_enable_new_accounts
+      op: eq
+      value: false
+tests:
+  - name: "GuardDuty without auto-enable fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc"
+      asset_type: aws_guardduty_organization
+      vendor: aws
+      properties:
+        threat_detection:
+          kind: guardduty_organization
+          guardduty:
+            auto_enable_new_accounts: false
+  - name: "GuardDuty with auto-enable passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc"
+      asset_type: aws_guardduty_organization
+      vendor: aws
+      properties:
+        threat_detection:
+          kind: guardduty_organization
+          guardduty:
+            auto_enable_new_accounts: true

@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "j-0123456789ABC",
+      "properties": {"compute": {"kind": "emr_cluster", "release": {"is_eol": true}}},
+      "type": "aws_emr_cluster",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

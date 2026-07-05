@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.CONTROLTOWER.DRIFT.001
+name: Control Tower Landing Zone Has Configuration Drift
+description: >
+  The Control Tower landing zone has detected configuration drift
+  from its baseline. Drift occurs when guardrails, OUs, or
+  account configurations are modified outside Control Tower,
+  creating gaps between intended and actual governance state.
+  Drifted guardrails may not enforce intended restrictions.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3, CM-6"
+  soc2: "CC8.1"
+  ccm_v4: ["GRC-04"]
+  scs_c02: "1.4"
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: organization
+    multiplier: 2.5
+remediation:
+  description: >
+    Control Tower landing zone has drifted from its baseline
+    configuration.
+  action: >
+    Resolve drift by re-registering the affected OU or resetting
+    the landing zone. Review CloudTrail for the change that caused
+    drift.
+  example: |
+    {
+      "governance": {
+        "kind": "control_tower",
+        "control_tower": {
+          "drift_detected": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: control_tower
+    - field: properties.governance.control_tower.drift_detected
+      op: eq
+      value: true
+tests:
+  - name: "Landing zone with drift fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:controltower:us-east-1:111122223333:landingzone"
+      asset_type: aws_control_tower
+      vendor: aws
+      properties:
+        governance:
+          kind: control_tower
+          control_tower:
+            drift_detected: true
+  - name: "Landing zone without drift passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:controltower:us-east-1:111122223333:landingzone"
+      asset_type: aws_control_tower
+      vendor: aws
+      properties:
+        governance:
+          kind: control_tower
+          control_tower:
+            drift_detected: false

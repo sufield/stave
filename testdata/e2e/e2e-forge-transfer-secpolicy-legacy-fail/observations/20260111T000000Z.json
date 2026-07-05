@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "s-0123456789abcdef0",
+      "properties": {"transfer": {"kind": "transfer_server", "tls": {"security_policy_is_current": false}}},
+      "type": "aws_transfer_server",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

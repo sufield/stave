@@ -232,6 +232,21 @@ DAX cluster has only one node — no replica, no failover. If the single node fa
 
 ---
 
+### CTL.DYNAMODB.DELETEPROT.001
+
+**DynamoDB Tables Must Have Deletion Protection Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-9; soc2: A1.1;
+
+DynamoDB tables must have deletion protection enabled to prevent accidental or malicious table destruction. Without it, a single DeleteTable API call permanently destroys the table and all its data. AWS added DeletionProtectionEnabled in 2023 but no CIS benchmark or AWS-native framework checks it — the gap was discovered through cross-cloud transposition from Azure Cosmos DB purge protection. The same pattern as CTL.RDS.DELETEPROT.001 and CTL.NEPTUNE.DELETEPROT.001 but for the key-value store layer. Tables storing session state, feature flags, or application metadata are especially vulnerable — their loss causes immediate production impact with no recovery path unless PITR is also enabled.
+
+**Remediation:** Enable deletion protection: aws dynamodb update-table --table-name <name> --deletion-protection-enabled. Pair with CTL.DYNAMODB.PITR.001 for defense-in-depth — deletion protection prevents table destruction, PITR enables recovery from data corruption.
+
+---
+
 ### CTL.DYNAMODB.ENCRYPT.001
 
 **DynamoDB Must Use Customer-Managed KMS Encryption**

@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.S3PROTECTION.001
+name: GuardDuty S3 Protection Must Be Enabled
+description: >
+  GuardDuty S3 Protection must be enabled to monitor S3 data-plane
+  events for suspicious access patterns — anomalous data retrieval,
+  access from unusual geolocations, and API calls from known
+  malicious IPs. This is a separate feature toggle from the base
+  GuardDuty detector. An account with GuardDuty enabled but S3
+  Protection disabled has a false sense of coverage — the detector
+  analyzes CloudTrail management events and VPC flow logs but
+  ignores S3 data access entirely. This gap was discovered through
+  cross-cloud transposition from Azure Defender for Storage, which
+  has an explicit per-resource-type enable/disable toggle. The same
+  pattern applies to all GuardDuty feature toggles: EKS audit,
+  Lambda network activity, RDS login events.
+domain: detection
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "TVM-01"]
+scope_tags:
+  - aws
+  - guardduty
+  - s3
+taxonomy:
+  - compliance-mapping
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    GuardDuty S3 Protection is not enabled. S3 data-plane events
+    are not monitored for suspicious access patterns.
+  action: >
+    Enable S3 Protection on the GuardDuty detector: aws guardduty
+    update-detector --detector-id <id> --data-sources
+    S3Logs={Enable=true}. This adds S3 data event analysis to the
+    existing detector without requiring additional CloudTrail
+    configuration.
+  example: |
+    {
+      "threat_detection": {
+        "kind": "detector",
+        "s3_protection": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.threat_detection.kind
+      op: eq
+      value: detector
+    - field: properties.threat_detection.s3_protection.enabled
+      op: eq
+      value: false

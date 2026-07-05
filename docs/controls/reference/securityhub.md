@@ -49,6 +49,36 @@ The observation snapshot is missing required Security Hub properties.
 
 ---
 
+### CTL.SECURITYHUB.ORG.AGGREGATION.001
+
+**Security Hub Has No Cross-Region Finding Aggregation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-4; scs_c02: 4.8; soc2: CC7.1;
+
+Security Hub does not have a finding aggregation region configured. Without cross-region aggregation, findings from each region are visible only in that region's Security Hub console. Security teams must check every active region individually, making it easy to miss findings from regions with lower operational activity. An attacker operating in a non-primary region may go undetected longer.
+
+**Remediation:** Create a finding aggregator in your primary region: aws securityhub create-finding-aggregator --region-linking-mode ALL_REGIONS.
+
+---
+
+### CTL.SECURITYHUB.ORG.NODELEGATED.001
+
+**Security Hub Has No Delegated Administrator**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6(5); scs_c02: 4.8; soc2: CC6.1;
+
+Security Hub is managed from the management account because no delegated administrator is registered. Security Hub administration — managing standards, integrations, and member account enrollment — should run from a dedicated security account to separate operational security from organizational management.
+
+**Remediation:** Register a security account as delegated admin: aws securityhub enable-organization-admin-account --admin-account-id <security-acct>.
+
+---
+
 ### CTL.SECURITYHUB.STANDARDS.001
 
 **Security Hub Must Have Relevant Standards Enabled**

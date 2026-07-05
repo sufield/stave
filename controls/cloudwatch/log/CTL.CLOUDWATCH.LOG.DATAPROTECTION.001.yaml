@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.LOG.DATAPROTECTION.001
+name: CloudWatch Log Group Has No Data Protection Policy
+description: >
+  A CloudWatch Logs log group has no data protection policy.
+  Data protection policies detect and mask sensitive data (PII,
+  credentials, financial data) in log events. Without a policy,
+  sensitive data in application logs is stored and displayed
+  unmasked, accessible to anyone with log read permissions.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  ccm_v4: ["DSP-17"]
+  scs_c02: "10.3"
+scope_tags:
+  - aws
+  - cloudwatch
+taxonomy:
+  - data-protection
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    CloudWatch log group has no data protection policy. Sensitive
+    data in logs is unmasked.
+  action: >
+    Create a data protection policy: aws logs
+    put-data-protection-policy --log-group-name <name>
+    --policy-document file://policy.json.
+  example: |
+    {
+      "logging": {
+        "kind": "log_group",
+        "log_group": {
+          "data_protection_policy_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.logging.kind
+      op: eq
+      value: log_group
+    - field: properties.logging.log_group.data_protection_policy_configured
+      op: eq
+      value: false
+tests:
+  - name: "Log group without data protection fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/app/sensitive"
+      asset_type: aws_cloudwatch_log_group
+      vendor: aws
+      properties:
+        logging:
+          kind: log_group
+          log_group:
+            data_protection_policy_configured: false
+  - name: "Log group with data protection passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/app/secure"
+      asset_type: aws_cloudwatch_log_group
+      vendor: aws
+      properties:
+        logging:
+          kind: log_group
+          log_group:
+            data_protection_policy_configured: true

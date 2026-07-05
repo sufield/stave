@@ -1,0 +1,54 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.RUNTIMEMONITORING.001
+name: GuardDuty Runtime Monitoring Must Be Enabled
+description: >
+  GuardDuty Runtime Monitoring must be enabled to detect runtime
+  threats across EC2, ECS, and EKS workloads — process-level
+  events, file system access, and network connections that indicate
+  compromise. This is the umbrella runtime feature that covers all
+  compute types. It is distinct from CTL.GUARDDUTY.ECS.RUNTIME.001
+  which checks ECS-specific runtime monitoring. An account with
+  GuardDuty enabled but Runtime Monitoring disabled misses
+  host-level threats. Part of the GuardDuty per-feature protection
+  family.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "TVM-01"]
+scope_tags:
+  - aws
+  - guardduty
+taxonomy:
+  - compliance-mapping
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    GuardDuty Runtime Monitoring is not enabled. Runtime threats
+    across compute workloads are not detected.
+  action: >
+    Enable Runtime Monitoring on the GuardDuty detector: aws
+    guardduty update-detector --detector-id <id> --features
+    Name=RUNTIME_MONITORING,Status=ENABLED.
+  example: |
+    {
+      "threat_detection": {
+        "kind": "detector",
+        "runtime_monitoring": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.threat_detection.kind
+      op: eq
+      value: detector
+    - field: properties.threat_detection.runtime_monitoring.enabled
+      op: eq
+      value: false

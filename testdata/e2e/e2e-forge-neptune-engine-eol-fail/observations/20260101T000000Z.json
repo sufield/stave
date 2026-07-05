@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:neptune:us-east-1:111122223333:cluster:graph-prod",
+      "properties": {"database": {"kind": "neptune_cluster", "engine_version": {"is_eol": true}}},
+      "type": "aws_neptune_cluster",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

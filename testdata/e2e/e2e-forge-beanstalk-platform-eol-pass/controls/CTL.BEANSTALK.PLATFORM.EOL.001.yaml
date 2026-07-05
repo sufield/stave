@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.BEANSTALK.PLATFORM.EOL.001
+name: Elastic Beanstalk Must Not Use a Retired Platform Version
+description: >
+  Elastic Beanstalk environments must not run on retired platform
+  versions (solution stacks). AWS retires platform versions on a
+  published schedule — retired platforms no longer receive security
+  patches, OS updates, or runtime fixes. This is distinct from
+  CTL.BEANSTALK.UPDATES.001 which checks whether managed updates
+  are enabled; a retired platform receives no updates regardless
+  of the managed-updates toggle. Environments on retired platforms
+  run unpatched OS images and language runtimes, accumulating
+  known CVEs over time. The same lifecycle gap as
+  CTL.LAMBDA.RUNTIME.EOL.001 but for the Beanstalk platform layer.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "CC7.1"
+  pci_dss_v4.0: "6.3.3"
+  ccm_v4: ["TVM-04"]
+scope_tags:
+  - aws
+  - elasticbeanstalk
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Elastic Beanstalk environment runs on a retired platform version
+    that no longer receives security patches.
+  action: >
+    Migrate the environment to a supported platform version. Use
+    aws elasticbeanstalk update-environment --solution-stack-name
+    to target the current platform. Test the application on the new
+    platform in a staging environment first — platform upgrades may
+    change OS packages, language runtime versions, or web server
+    configuration.
+  example: |
+    {
+      "compute": {
+        "kind": "beanstalk_environment",
+        "platform": {
+          "is_retired": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: beanstalk_environment
+    - field: properties.compute.platform.is_retired
+      op: eq
+      value: true

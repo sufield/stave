@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.SNS.DATAPROTECTION.001
+name: SNS Topic Has No Data Protection Policy
+description: >
+  An SNS topic has no data protection policy configured. Data
+  protection policies detect and optionally redact or deny
+  messages containing sensitive data (PII, PHI, financial data).
+  Without a policy, sensitive data published to the topic flows
+  to all subscribers unfiltered.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  ccm_v4: ["DSP-17"]
+  scs_c02: "8.12"
+scope_tags:
+  - aws
+  - sns
+taxonomy:
+  - data-protection
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    SNS topic has no data protection policy. Sensitive data in
+    messages is not detected or redacted.
+  action: >
+    Add a data protection policy: aws sns
+    put-data-protection-policy --resource-arn <topic-arn>
+    --data-protection-policy file://policy.json.
+  example: |
+    {
+      "messaging": {
+        "kind": "sns_topic",
+        "sns": {
+          "data_protection_policy_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: sns_topic
+    - field: properties.messaging.sns.data_protection_policy_configured
+      op: eq
+      value: false
+tests:
+  - name: "Topic without data protection policy fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:sensitive-alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_topic
+          sns:
+            data_protection_policy_configured: false
+  - name: "Topic with data protection policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:secure-alerts"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        messaging:
+          kind: sns_topic
+          sns:
+            data_protection_policy_configured: true

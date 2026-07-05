@@ -1219,6 +1219,21 @@ EC2 instances booted in UEFI mode must enable Secure Boot. Secure Boot creates a
 
 ---
 
+### CTL.EC2.SERIALCONSOLE.001
+
+**EC2 Serial Console Access Must Be Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-17; soc2: CC6.1;
+
+EC2 Serial Console access must be disabled at the account level unless explicitly needed for emergency debugging. Serial console provides direct TTY access to EC2 instances, bypassing SSH, security groups, NACLs, and all network-layer controls. An attacker with ec2-instance-connect:SendSerialConsoleSSHPublicKey permission and instance-level access can use serial console to interact with the instance OS outside the network path that monitoring tools observe. This gap was discovered through cross-cloud transposition — GCP has CTL.GCP.COMPUTE.SERIALPORT.001 in the Stave catalog but no AWS analog existed despite AWS offering the same capability via EnableSerialConsoleAccess. Account-level toggle — same pattern as CTL.EC2.EBS.DEFAULT.001.
+
+**Remediation:** Disable serial console access: aws ec2 disable-serial-console-access. If serial console is needed for emergency debugging, enable it temporarily and disable after use. Use IAM policies to restrict ec2-instance-connect:SendSerialConsoleSSHPublicKey to break-glass roles only.
+
+---
+
 ### CTL.EC2.SG.DEFAULT.RESTRICT.001
 
 **Default Security Group Must Restrict All Inbound and Outbound Traffic**

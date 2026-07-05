@@ -1,6 +1,7 @@
 package observations
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -66,8 +67,14 @@ func normalizeValue(v any) any {
 		out := make(map[string]any, val.Len())
 		iter := val.MapRange()
 		for iter.Next() {
-			k := iter.Key().String()
-			out[k] = normalizeValue(iter.Value().Interface())
+			k := iter.Key()
+			var keyStr string
+			if k.Kind() == reflect.String {
+				keyStr = k.String()
+			} else {
+				keyStr = fmt.Sprintf("%v", k.Interface())
+			}
+			out[keyStr] = normalizeValue(iter.Value().Interface())
 		}
 		return out
 	case reflect.Slice:

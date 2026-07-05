@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.LAKE.ENCRYPT.001
+name: CloudTrail Lake Event Data Store Not Encrypted with CMK
+description: >
+  A CloudTrail Lake event data store uses the default AWS-managed
+  key instead of a customer-managed KMS key. Without a CMK, the
+  organization cannot control key rotation, revoke access via key
+  policy, or meet compliance requirements that mandate customer-
+  controlled encryption keys for audit data.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17"]
+  scs_c02: "4.9"
+scope_tags:
+  - aws
+  - cloudtrail
+taxonomy:
+  - compliance-mapping
+  - encryption
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    CloudTrail Lake event data store is not encrypted with a CMK.
+  action: >
+    Create a new event data store with a CMK: aws cloudtrail
+    create-event-data-store --name <name> --kms-key-id <key-arn>.
+    Existing data stores cannot change encryption after creation.
+  example: |
+    {
+      "logging": {
+        "kind": "cloudtrail_lake_eds",
+        "lake": {
+          "kms_key_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.logging.kind
+      op: eq
+      value: cloudtrail_lake_eds
+    - field: properties.logging.lake.kms_key_configured
+      op: eq
+      value: false
+tests:
+  - name: "Event data store without CMK fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:eventdatastore/abc-123"
+      asset_type: aws_cloudtrail_lake
+      vendor: aws
+      properties:
+        logging:
+          kind: cloudtrail_lake_eds
+          lake:
+            kms_key_configured: false
+  - name: "Event data store with CMK passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:eventdatastore/def-456"
+      asset_type: aws_cloudtrail_lake
+      vendor: aws
+      properties:
+        logging:
+          kind: cloudtrail_lake_eds
+          lake:
+            kms_key_configured: true

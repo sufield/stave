@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SEMANTICS.IFEXISTS.SCOPE.001
+name: IfExists on Service-Specific Key Is Vacuously Satisfied
+description: >
+  A policy condition uses an IfExists operator suffix on a
+  service-specific condition key (any key not prefixed with
+  aws:*). IfExists makes the condition evaluate to true when
+  the key is absent from the request context. For global keys
+  (aws:SourceIp, aws:PrincipalArn), absence is unusual — most
+  requests include them. For service-specific keys (ec2:InstanceType,
+  s3:prefix, rds:DatabaseEngine), the key is absent from most
+  request types because it only applies to that service's API
+  calls. The condition is vacuously satisfied for every request
+  that doesn't involve the specific service action. AWS documents
+  this pitfall with the ec2:RunInstances example: InstanceType
+  IfExists passes for images, key pairs, and security groups
+  checked during the same API call. An Allow with IfExists on a
+  service-specific key provides less restriction than intended.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - formal-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_policy
+params:
+  attack_stage: privilege_escalation
+  base_impact: 7
+remediation:
+  description: >
+    IAM policy uses IfExists on a service-specific condition key.
+    The condition is vacuously satisfied for requests that do not
+    include the key.
+  action: >
+    Split the statement into two: one for actions that produce the
+    condition key (with the standard operator, not IfExists), and
+    one for actions that do not. Alternatively, scope the Resource
+    element to only the resource types that carry the key.
+  example: |
+    {
+      "identity": {
+        "kind": "policy",
+        "policy": {
+          "semantics": {
+            "has_ifexists_on_service_key": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: policy
+    - field: properties.identity.policy.semantics.has_ifexists_on_service_key
+      op: eq
+      value: true
+tests:
+  - name: "policy with IfExists on ec2:InstanceType fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/EC2Launch"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_ifexists_on_service_key: true
+  - name: "policy with IfExists on aws:SourceIp passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/IPRestrict"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_ifexists_on_service_key: false

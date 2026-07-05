@@ -20,6 +20,36 @@ AWS Organizations must operate in ALL_FEATURES mode, not CONSOLIDATED_BILLING. C
 
 ---
 
+### CTL.ORG.CONTROLTOWER.DRIFT.001
+
+**Control Tower Landing Zone Has Configuration Drift**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-3, CM-6; scs_c02: 1.4; soc2: CC8.1;
+
+The Control Tower landing zone has detected configuration drift from its baseline. Drift occurs when guardrails, OUs, or account configurations are modified outside Control Tower, creating gaps between intended and actual governance state. Drifted guardrails may not enforce intended restrictions.
+
+**Remediation:** Resolve drift by re-registering the affected OU or resetting the landing zone. Review CloudTrail for the change that caused drift.
+
+---
+
+### CTL.ORG.CONTROLTOWER.ENABLED.001
+
+**AWS Control Tower Must Be Enabled for Landing Zone Governance**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3, CM-2; scs_c02: 1.4; soc2: CC6.1, CC8.1;
+
+AWS Control Tower is not enabled. Control Tower provides a governed landing zone with preventive and detective guardrails across member accounts. Without it, account provisioning and baseline security configuration must be managed manually, leading to configuration drift and inconsistent security posture across the organization.
+
+**Remediation:** Enable Control Tower from the management account. Select a home region, configure the log archive and audit accounts, and enable the default guardrails.
+
+---
+
 ### CTL.ORG.REGION.SCP.001
 
 **AWS Organizations Must Have an SCP Restricting Resource Creation to Approved Regions**

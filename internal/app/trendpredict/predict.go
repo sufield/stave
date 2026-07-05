@@ -90,10 +90,7 @@ func Predict(in Input) *Prediction {
 
 	// Estimate days to close gap based on MTTR.
 	avgMTTRDays := weightedMTTR(latest.Findings, mttr)
-	controlsToFix := int(math.Ceil(float64(totalFindings) * gap / 100))
-	if controlsToFix > totalFindings {
-		controlsToFix = totalFindings
-	}
+	controlsToFix := min(int(math.Ceil(float64(totalFindings)*gap/100)), totalFindings)
 	projectedDays := int(float64(controlsToFix) * avgMTTRDays)
 
 	projected := in.Now.AddDate(0, 0, projectedDays)

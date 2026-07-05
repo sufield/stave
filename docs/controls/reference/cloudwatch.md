@@ -289,6 +289,21 @@ The observation snapshot is missing required CloudWatch log group properties.
 
 ---
 
+### CTL.CLOUDWATCH.LOG.DATAPROTECTION.001
+
+**CloudWatch Log Group Has No Data Protection Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-28; scs_c02: 10.3; soc2: CC6.7;
+
+A CloudWatch Logs log group has no data protection policy. Data protection policies detect and mask sensitive data (PII, credentials, financial data) in log events. Without a policy, sensitive data in application logs is stored and displayed unmasked, accessible to anyone with log read permissions.
+
+**Remediation:** Create a data protection policy: aws logs put-data-protection-policy --log-group-name <name> --policy-document file://policy.json.
+
+---
+
 ### CTL.CLOUDWATCH.LOG.EXPORT.001
 
 **CloudWatch Log Group Exports Must Be Restricted to Authorized Buckets**

@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SEMANTICS.DENY.ANDNARROW.001
+name: Deny with Multiple Negated Conditions AND-Narrows the Deny Domain
+description: >
+  A Deny statement has two or more negated conditions (StringNotEquals,
+  ArnNotLike, NotIpAddress) on different keys in the same Condition
+  block. IAM evaluates multiple conditions within a block using AND
+  logic — ALL must be true for the statement to apply. With negated
+  operators, this means the deny fires only when NONE of the values
+  match. Example: Deny unless tag env=prod AND team=security.
+  If env=prod but team=engineering, the deny does not fire because
+  the first condition (env ≠ prod) is false. The author intended OR
+  logic (deny unless env=prod OR team=security) which requires
+  SEPARATE Deny statements. This is De Morgan's law in IAM: ¬(A∧B)
+  ≡ ¬A∨¬B but the policy evaluates ¬A∧¬B. The deny domain is the
+  INTERSECTION of exclusion sets, not the UNION.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - formal-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_policy
+params:
+  attack_stage: detection_evasion
+  base_impact: 8
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    IAM Deny statement has multiple negated conditions on different
+    keys in the same Condition block. The deny fires less often than
+    intended due to AND logic on negated operators.
+  action: >
+    Split the Deny into separate statements, one per negated
+    condition. Each statement independently denies when its
+    condition is true. This achieves OR logic across the
+    conditions — the deny fires when ANY condition is met.
+  example: |
+    {
+      "identity": {
+        "kind": "policy",
+        "policy": {
+          "semantics": {
+            "has_deny_multi_negated_conditions": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: policy
+    - field: properties.identity.policy.semantics.has_deny_multi_negated_conditions
+      op: eq
+      value: true
+tests:
+  - name: "Deny with two StringNotEquals in same block fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/MultiTagDeny"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_deny_multi_negated_conditions: true
+  - name: "Deny split into separate statements passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/SplitTagDeny"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_deny_multi_negated_conditions: false

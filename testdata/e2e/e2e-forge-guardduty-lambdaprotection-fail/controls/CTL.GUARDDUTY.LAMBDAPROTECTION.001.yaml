@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.LAMBDAPROTECTION.001
+name: GuardDuty Lambda Protection Must Be Enabled
+description: >
+  GuardDuty Lambda Protection must be enabled to monitor Lambda
+  function network activity for suspicious patterns — connections
+  to known malicious endpoints, DNS queries to crypto-mining pools,
+  and unusual outbound traffic. This is a separate feature toggle
+  from the base GuardDuty detector. An account running Lambda
+  functions with GuardDuty enabled but Lambda Protection disabled
+  misses serverless-layer network threats. Part of the GuardDuty
+  per-feature protection family discovered through cross-cloud
+  transposition from Azure Defender for App Service.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "TVM-01"]
+scope_tags:
+  - aws
+  - guardduty
+  - lambda
+taxonomy:
+  - compliance-mapping
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    GuardDuty Lambda Protection is not enabled. Lambda network
+    threats are not detected.
+  action: >
+    Enable Lambda Protection on the GuardDuty detector: aws
+    guardduty update-detector --detector-id <id> --features
+    Name=LAMBDA_NETWORK_LOGS,Status=ENABLED.
+  example: |
+    {
+      "threat_detection": {
+        "kind": "detector",
+        "lambda_protection": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.threat_detection.kind
+      op: eq
+      value: detector
+    - field: properties.threat_detection.lambda_protection.enabled
+      op: eq
+      value: false

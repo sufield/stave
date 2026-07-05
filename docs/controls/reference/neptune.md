@@ -110,6 +110,21 @@ Neptune clusters must encrypt data at rest with KMS.
 
 ---
 
+### CTL.NEPTUNE.ENGINE.EOL.001
+
+**Neptune Engine Version Must Not Be End-of-Life**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; pci_dss_v4.0: 6.3.3; soc2: CC7.1;
+
+Neptune clusters must not run engine versions that have reached end-of-life. AWS publishes a deprecation calendar per Neptune engine version; clusters on a deprecated version no longer receive security patches and will eventually be force-upgraded during a maintenance window the operator did not choose. This is distinct from CTL.NEPTUNE.UPGRADE.001 which checks the auto-minor-upgrade toggle — auto-upgrade applies patches within a supported major version but does not upgrade between major versions. A cluster with auto-upgrade enabled on an EOL major version receives no further patches. The same lifecycle pattern as CTL.DOCUMENTDB.ENGINE.DEPRECATED.001 and CTL.RDS.ENGINE.EOL.001.
+
+**Remediation:** Upgrade the cluster to a supported engine version using aws neptune modify-db-cluster --engine-version <ver> --apply-immediately. Coordinate the upgrade with application teams — major version upgrades may change Gremlin or SPARQL query behavior.
+
+---
+
 ### CTL.NEPTUNE.LOADER.ROLE.CROSSBUCKET.001
 
 **Neptune Loader Role Must Stay Inside the Bucket Allow-List**

@@ -1,0 +1,61 @@
+dsl_version: ctrl.v1
+id: CTL.ELASTICACHE.ENGINE.EOL.001
+name: ElastiCache Engine Version Must Not Be End-of-Life
+description: >
+  ElastiCache clusters must not run engine versions that have reached
+  end-of-life. AWS publishes a deprecation calendar per engine major
+  version; clusters on a deprecated version no longer receive security
+  patches and will eventually be force-upgraded during a maintenance
+  window the operator did not choose. Redis 5.x reached EOL in 2024,
+  Redis 6.0 in 2024, and Redis 6.2 is approaching EOL. Memcached
+  1.5.x is EOL. Unlike RDS, ElastiCache does not have a separate
+  auto-minor-upgrade toggle — the engine version is the sole
+  indicator of patch currency. Running an EOL engine version means
+  known CVEs in the cache layer remain unpatched, and any data
+  transiting the cache (session tokens, API responses, feature flags)
+  is processed by unmaintained code.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "CC7.1"
+  pci_dss_v4.0: "6.3.3"
+  ccm_v4: ["TVM-04"]
+scope_tags:
+  - aws
+  - elasticache
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    ElastiCache cluster runs an engine version that has reached
+    end-of-life. Security patches are no longer issued.
+  action: >
+    Upgrade the cluster to a supported engine version. For Redis,
+    upgrade to Redis 7.x. For Memcached, upgrade to 1.6.x. Use
+    aws elasticache modify-replication-group --engine-version <ver>
+    with a scheduled maintenance window to minimize impact. Test
+    application compatibility with the new engine version before
+    upgrading production — major version upgrades may change
+    command behavior or remove deprecated commands.
+  example: |
+    {
+      "cache": {
+        "kind": "elasticache_cluster",
+        "engine_version": {
+          "is_eol": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cache.kind
+      op: eq
+      value: elasticache_cluster
+    - field: properties.cache.engine_version.is_eol
+      op: eq
+      value: true

@@ -20,6 +20,21 @@ GuardDuty ECS Runtime Monitoring must be enabled to detect runtime threats in co
 
 ---
 
+### CTL.GUARDDUTY.EKSPROTECTION.001
+
+**GuardDuty EKS Audit Log Monitoring Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+GuardDuty EKS Audit Log Monitoring must be enabled to detect suspicious Kubernetes API activity — anonymous access, privilege escalation attempts, pod creation from unusual principals, and access from known malicious IPs. This is a separate feature toggle from the base GuardDuty detector and from EKS Runtime Monitoring (CTL.GUARDDUTY.ECS.RUNTIME.001). An account running EKS clusters with GuardDuty enabled but EKS Protection disabled misses Kubernetes-layer threats entirely. Part of the GuardDuty per-feature protection family discovered through cross-cloud transposition from Azure Defender for Containers.
+
+**Remediation:** Enable EKS Protection on the GuardDuty detector: aws guardduty update-detector --detector-id <id> --features Name=EKS_AUDIT_LOGS,Status=ENABLED.
+
+---
+
 ### CTL.GUARDDUTY.ENABLED.001
 
 **Amazon GuardDuty Must Be Enabled**
@@ -64,6 +79,21 @@ The observation snapshot is missing required GuardDuty properties.
 
 ---
 
+### CTL.GUARDDUTY.LAMBDAPROTECTION.001
+
+**GuardDuty Lambda Protection Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+GuardDuty Lambda Protection must be enabled to monitor Lambda function network activity for suspicious patterns — connections to known malicious endpoints, DNS queries to crypto-mining pools, and unusual outbound traffic. This is a separate feature toggle from the base GuardDuty detector. An account running Lambda functions with GuardDuty enabled but Lambda Protection disabled misses serverless-layer network threats. Part of the GuardDuty per-feature protection family discovered through cross-cloud transposition from Azure Defender for App Service.
+
+**Remediation:** Enable Lambda Protection on the GuardDuty detector: aws guardduty update-detector --detector-id <id> --features Name=LAMBDA_NETWORK_LOGS,Status=ENABLED.
+
+---
+
 ### CTL.GUARDDUTY.MALWARE.PROTECT.001
 
 **GuardDuty Malware Protection Must Be Enabled for EC2**
@@ -76,6 +106,81 @@ The observation snapshot is missing required GuardDuty properties.
 GuardDuty Malware Protection scans EBS volumes attached to EC2 instances and ECS containers when GuardDuty detects suspicious activity. It identifies crypto-mining malware, ransomware, spyware, and rootkits. Without Malware Protection, GuardDuty detects network-level and API-level threats but cannot detect malicious files already present on instance volumes.
 
 **Remediation:** aws guardduty update-malware-scan-settings --detector-id <id> --scan-resource-criteria Include={ResourceTypes=[EC2]}
+
+---
+
+### CTL.GUARDDUTY.ORG.AUTOENABLE.001
+
+**GuardDuty Auto-Enable Not Configured for New Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-4; scs_c02: 4.4; soc2: CC7.1;
+
+GuardDuty auto-enable is not configured for new member accounts joining the organization. Without auto-enable, new accounts have no threat detection until manually enrolled. An attacker who compromises a newly provisioned account operates without GuardDuty visibility during the enrollment gap.
+
+**Remediation:** Enable auto-enable from the delegated admin: aws guardduty update-organization-configuration --detector-id <id> --auto-enable.
+
+---
+
+### CTL.GUARDDUTY.ORG.NODELEGATED.001
+
+**GuardDuty Has No Delegated Administrator**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6(5); scs_c02: 4.4; soc2: CC6.1;
+
+GuardDuty is managed from the management account because no delegated administrator is registered. Day-to-day GuardDuty administration concentrates operational footprint in the management account, which holds billing, root, and the organization itself. AWS best practice is to delegate GuardDuty administration to a dedicated security account.
+
+**Remediation:** Register a security account as delegated admin: aws guardduty enable-organization-admin-account --admin-account-id <security-acct>.
+
+---
+
+### CTL.GUARDDUTY.RDSPROTECTION.001
+
+**GuardDuty RDS Protection Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+GuardDuty RDS Protection must be enabled to monitor RDS login activity for anomalous access patterns — brute-force login attempts, access from unusual geolocations, and logins from known malicious IPs. This is a separate feature toggle from the base GuardDuty detector. An account running RDS instances with GuardDuty enabled but RDS Protection disabled misses database-layer authentication threats. Part of the GuardDuty per-feature protection family discovered through cross-cloud transposition from Azure Defender for Databases.
+
+**Remediation:** Enable RDS Protection on the GuardDuty detector: aws guardduty update-detector --detector-id <id> --features Name=RDS_LOGIN_EVENTS,Status=ENABLED.
+
+---
+
+### CTL.GUARDDUTY.RUNTIMEMONITORING.001
+
+**GuardDuty Runtime Monitoring Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+GuardDuty Runtime Monitoring must be enabled to detect runtime threats across EC2, ECS, and EKS workloads — process-level events, file system access, and network connections that indicate compromise. This is the umbrella runtime feature that covers all compute types. It is distinct from CTL.GUARDDUTY.ECS.RUNTIME.001 which checks ECS-specific runtime monitoring. An account with GuardDuty enabled but Runtime Monitoring disabled misses host-level threats. Part of the GuardDuty per-feature protection family.
+
+**Remediation:** Enable Runtime Monitoring on the GuardDuty detector: aws guardduty update-detector --detector-id <id> --features Name=RUNTIME_MONITORING,Status=ENABLED.
+
+---
+
+### CTL.GUARDDUTY.S3PROTECTION.001
+
+**GuardDuty S3 Protection Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+GuardDuty S3 Protection must be enabled to monitor S3 data-plane events for suspicious access patterns — anomalous data retrieval, access from unusual geolocations, and API calls from known malicious IPs. This is a separate feature toggle from the base GuardDuty detector. An account with GuardDuty enabled but S3 Protection disabled has a false sense of coverage — the detector analyzes CloudTrail management events and VPC flow logs but ignores S3 data access entirely. This gap was discovered through cross-cloud transposition from Azure Defender for Storage, which has an explicit per-resource-type enable/disable toggle. The same pattern applies to all GuardDuty feature toggles: EKS audit, Lambda network activity, RDS login events.
+
+**Remediation:** Enable S3 Protection on the GuardDuty detector: aws guardduty update-detector --detector-id <id> --data-sources S3Logs={Enable=true}. This adds S3 data event analysis to the existing detector without requiring additional CloudTrail configuration.
 
 ---
 

@@ -50,6 +50,21 @@ SSM inventory data must not be publicly shared or broadly accessible. SSM invent
 
 ---
 
+### CTL.SSM.OPSCENTER.001
+
+**SSM OpsCenter Not Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: IR-5; scs_c02: 12.7; soc2: CC7.3;
+
+AWS Systems Manager OpsCenter is not enabled. OpsCenter aggregates operational issues (OpsItems) from Config, CloudWatch, EventBridge, and other sources into a central dashboard for investigation and remediation tracking. Without it, operational issues are scattered across service consoles with no unified view or remediation workflow.
+
+**Remediation:** Enable OpsCenter in the Systems Manager console and configure EventBridge rules to automatically create OpsItems for Config non-compliant resources and GuardDuty findings.
+
+---
+
 ### CTL.SSM.PARAMETER.COLLECT.001
 
 **SSM Parameter Store Must Restrict Bulk Parameter Listing**

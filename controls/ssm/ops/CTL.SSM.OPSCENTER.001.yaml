@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.SSM.OPSCENTER.001
+name: SSM OpsCenter Not Enabled
+description: >
+  AWS Systems Manager OpsCenter is not enabled. OpsCenter
+  aggregates operational issues (OpsItems) from Config,
+  CloudWatch, EventBridge, and other sources into a central
+  dashboard for investigation and remediation tracking. Without
+  it, operational issues are scattered across service consoles
+  with no unified view or remediation workflow.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "IR-5"
+  soc2: "CC7.3"
+  ccm_v4: ["SEF-04"]
+  scs_c02: "12.7"
+scope_tags:
+  - aws
+  - ssm
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    OpsCenter is not enabled. Operational issues are not centrally
+    tracked.
+  action: >
+    Enable OpsCenter in the Systems Manager console and configure
+    EventBridge rules to automatically create OpsItems for Config
+    non-compliant resources and GuardDuty findings.
+  example: |
+    {
+      "operations": {
+        "kind": "ssm_opscenter",
+        "opscenter": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.operations.kind
+      op: eq
+      value: ssm_opscenter
+    - field: properties.operations.opscenter.enabled
+      op: eq
+      value: false
+tests:
+  - name: "OpsCenter not enabled fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ssm:us-east-1:111122223333:opscenter"
+      asset_type: aws_ssm_opscenter
+      vendor: aws
+      properties:
+        operations:
+          kind: ssm_opscenter
+          opscenter:
+            enabled: false
+  - name: "OpsCenter enabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ssm:us-east-1:111122223333:opscenter"
+      asset_type: aws_ssm_opscenter
+      vendor: aws
+      properties:
+        operations:
+          kind: ssm_opscenter
+          opscenter:
+            enabled: true

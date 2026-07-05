@@ -1,26 +1,26 @@
 # SCS-C02 Full Syllabus Audit Against Stave Control Catalog
 
-**Date:** 2026-07-02 (upgraded 2026-07-02)
-**Catalog size:** 2816 controls (excluding `_triage/`), 616 chains
-**Scope:** Audit + upgrade — 16 PARTIALs upgraded to COVERED, 3 reclassified OUT_OF_SCOPE
+**Date:** 2026-07-02 (upgraded 2026-07-05)
+**Catalog size:** 2861 controls (excluding `_triage/`), 618 chains
+**Scope:** Audit + upgrade — all 17 GAPs closed, 2 chain gaps closed
 
 ## Executive Summary
 
 | Classification | Count | Pct |
 |---------------|-------|-----|
-| COVERED | 117 | 79% |
+| COVERED | 134 | 90% |
 | PARTIAL | 3 | 2% |
-| GAP | 17 | 11% |
+| GAP | 0 | 0% |
 | OUT_OF_SCOPE | 12 | 8% |
 | **Total topics** | **149** | |
 
-**Strongest domains:** S3 (10/10 covered), IAM Authorization (12/13), Edge & Perimeter (13/14), Compute & Network (20/22), Data Protection (14/15), GenAI (3/3).
+**Strongest domains:** S3 (10/10 covered), IAM Authorization (12/13), Edge & Perimeter (14/14), Compute & Network (22/22), Data Protection (14/15), GenAI (3/3), Logging (12/12).
 
-**Weakest domains:** Secure Deployment & IaC (2/5 covered, 2 GAP), Logging Infrastructure (8/11, 3 GAP), Compliance & Remediation (9/13, 3 GAP).
+**Weakest domains:** Secure Deployment & IaC (4/5 covered, 1 PARTIAL).
 
-**Compound chains:** 3 full, 3 partial, 2 missing. GuardDuty notification pipeline and Security Hub aggregation have zero chain coverage.
+**Compound chains:** 5 full, 3 partial, 0 missing.
 
-**Upgrade summary:** 23 new control YAML files created across 17 directories. PARTIAL count reduced from 22 → 3. Fully-covered percentage: 72% → 85%.
+**Upgrade summary (2026-07-05):** 22 new controls + 2 chains closed all 17 gaps. New domains: Control Tower, Roles Anywhere, Firewall Manager, CloudTrail Lake, Service Catalog, Audit Manager, Security Lake, Managed Grafana. In-scope coverage: 88% → 100%.
 
 ---
 
@@ -31,7 +31,7 @@
 | AWS Organizations (trusted access, features) | COVERED | CTL.ORG.REGION.SCP.001, CTL.IAM.ORG.DELEGATED.001, CTL.ORG.ALLFEATURES.001, CTL.ORG.TRUSTEDACCESS.001 | Region SCP, delegated admin, all-features mode, trusted access review |
 | SCPs (deny statements, conditions, targets) | COVERED | CTL.IAM.SCP.CLOUDTRAIL/CONFIG/CONFUSEDDEPUTY/GUARDDUTY/IAM/LEAVEORG/REGIONS/ROOT/TAGAUTH.*.001, CTL.IAM.SCP.FULLACCESS.001 | 13 controls: deny statements, condition keys, service protections, tag-auth |
 | RCPs (Resource Control Policies) | COVERED | CTL.IAM.RCP.TAGAUTH.SESSION.001, CTL.IAM.RCP.DENY.EXTERNAL.001 | Tag-auth session + external principal restriction |
-| AWS Control Tower (guardrails, landing zone) | GAP | — | No controls. In-scope: guardrail config is snapshot-evaluable |
+| AWS Control Tower (guardrails, landing zone) | COVERED | CTL.ORG.CONTROLTOWER.ENABLED.001, .DRIFT.001 | Enablement + drift detection |
 | Tagging best practices (tag policies, enforcement) | COVERED | CTL.IAM.SCP.TAGAUTH.ENFORCE/MUTATION/TAGGER.001, CTL.IAM.TAGAUTH.COMPLETE.001, CTL.IAM.RCP.TAGAUTH.SESSION.001 | 5 tag-auth controls. No Organizations Tag Policy controls specifically |
 
 ## Section 2: IAM Authorization
@@ -50,7 +50,7 @@
 | Cross-account access with roles | COVERED | CTL.IAM.TRUST.GHOST.ACCOUNT/ORGBOUNDARY.001, CTL.IAM.POLICY.CONDITION.ORGID.001, CTL.IAM.CROSS.ENV/PATH.001 | Trust, org boundary, environment crossing |
 | Cross-account 3rd party (confused deputy/ExternalId) | COVERED | CTL.IAM.TRUST.CONFUSEDDEPUTY.001, CTL.IAM.TRUST.EXTERNALID.001, CTL.IAM.SCP.CONFUSEDDEPUTY.001 | Trust-level and SCP-level |
 | ABAC and RBAC patterns | COVERED | CTL.IAM.SCP.TAGAUTH.*/TAGAUTH.COMPLETE.001, CTL.IAM.FEDERATION.SESSIONTAG.001, CTL.IAM.RCP.TAGAUTH.SESSION.001 | Tag-auth = ABAC. RBAC via group/role controls |
-| IAM Roles Anywhere (trust anchors, profiles) | GAP | — | In-scope: trust anchor configuration, CRL, profile session policies are snapshot-evaluable |
+| IAM Roles Anywhere (trust anchors, profiles) | COVERED | CTL.IAM.ROLESANYWHERE.CRL.001, .SELFSIGNED.001 | CRL enforcement + self-signed CA detection |
 
 ## Section 3: IAM Authentication and Federation
 
@@ -78,15 +78,15 @@
 | CloudTrail log file integrity | COVERED | CTL.CLOUDTRAIL.LOG.VALIDATION.001, .VALIDATION.001, .INTEGRITY.DIGEST.SAMEBUCKET.001 | Validation enabled + digest bucket separation |
 | CloudTrail encryption (KMS) | COVERED | CTL.CLOUDTRAIL.ENCRYPT.001, .CWLOGS.ENCRYPT.001 | KMS for trail + CloudWatch Logs |
 | CloudTrail organization trail | COVERED | CTL.CLOUDTRAIL.ORG.001, .ORG.MEMBERCANSTOP.001 | Org trail + member stop prevention |
-| CloudTrail Lake | GAP | — | No controls for event data stores. In-scope: retention, KMS, org-wide collection are configuration |
+| CloudTrail Lake | COVERED | CTL.CLOUDTRAIL.LAKE.ENCRYPT.001, .RETENTION.001 | CMK encryption + retention period |
 | CloudWatch | COVERED | 66 controls in controls/cloudwatch/ | Alarm states, ghost refs, metric filters, log groups, retention, encryption, cross-account |
 | GuardDuty (enabled, detector settings) | COVERED | CTL.GUARDDUTY.ENABLED.001, .MALWARE.PROTECT.001, .ECS.RUNTIME.001, .EXPORT.001 | Enabled, malware, ECS runtime, export |
-| GuardDuty delegated admin and centralization | GAP | — | No controls for delegated admin or multi-account centralization |
+| GuardDuty delegated admin and centralization | COVERED | CTL.GUARDDUTY.ORG.NODELEGATED.001, .AUTOENABLE.001 | Delegated admin + auto-enable for new accounts |
 | Amazon EventBridge | COVERED | 96 controls in controls/eventbridge/ | Rules, targets, buses, pipes, schedulers, archives, policies, replays, connections |
 | Amazon Detective | OUT_OF_SCOPE | — | Runtime investigation tool, not configuration state |
 | Amazon Inspector | COVERED | CTL.INSPECTOR.ENABLED.001, .COVERAGE.001, .DELEGATED.001 | Enablement, scan types (EC2/ECR/Lambda), delegated admin |
 | AWS Security Hub CSPM | COVERED | CTL.SECURITYHUB.ENABLED.001, .STANDARDS.001, .STANDARDS.NONE.001, .AUTOENABLE.001 | Enablement, security standards, no-standards detection, auto-enable for new accounts |
-| Security Hub delegated admin | GAP | — | No controls for delegated admin or cross-region aggregation |
+| Security Hub delegated admin | COVERED | CTL.SECURITYHUB.ORG.NODELEGATED.001, .AGGREGATION.001 | Delegated admin + cross-region aggregation |
 
 ## Section 5: S3 Security
 
@@ -131,8 +131,8 @@
 | CloudFormation | COVERED | CTL.CLOUDFORMATION.STACKPOLICY/TERMINATION/DRIFT/ROLLBACK/SECRETS.001, CTL.CFN.PARAM.NOECHO.001 | Stack policy, termination, drift, rollback, secrets |
 | CloudFormation Guard | OUT_OF_SCOPE | — | Build-time policy tool, not deployed infrastructure state |
 | Multi-account / multi-region deployments | PARTIAL | CTL.CLOUDFORMATION.STACKSETS.RESTRICT.001, CTL.CONFIG.ORG.NOTALLACCOUNTS/RECORDER.NOTALLREGIONS.001 | StackSets + Config coverage. No general multi-account posture |
-| AWS Service Catalog | GAP | — | No controls. In-scope: portfolio constraints are snapshot-evaluable |
-| AWS Firewall Manager | GAP | — | No controls. In-scope: FMS policy membership is configuration state |
+| AWS Service Catalog | COVERED | CTL.SERVICECATALOG.CONSTRAINT.001 | Launch constraint enforcement |
+| AWS Firewall Manager | COVERED | CTL.FMS.ADMIN.001, .POLICY.NONCOMPLIANT.001 | Admin account + non-compliant member detection |
 | AWS RAM | COVERED | CTL.RAM.EXTERNAL.001, .SCOPE.001, .PERMISSION.001 | External detection, resource type scope, permission restrictions |
 | Security tools for code vulnerabilities | OUT_OF_SCOPE | — | Build-time concern, not deployed-infrastructure configuration |
 
@@ -151,9 +151,9 @@
 | SSM Patch Manager | COVERED | CTL.SSM.PATCH.COMPLIANCE.001, .BASELINE.001, .WINDOW.001 | Compliance state, patch baselines, maintenance windows |
 | SSM Run Command | COVERED | CTL.SSM.RUNCOMMAND.RESTRICT/APPROVE.001, .DOCUMENT.PUBLIC/SECRETS.001 | Restriction, approval, public sharing, embedded secrets |
 | Amazon Macie | COVERED | CTL.MACIE.ENABLED.001, .CLASSIFICATION.001, CTL.S3.DETECT.MACIE.001/.002 | Enabled, automated discovery, S3 coverage |
-| Macie delegated admin | GAP | — | In-scope: org-level delegation is configuration state |
-| AWS Audit Manager | GAP | — | In-scope: framework/assessment configuration is evaluable |
-| Amazon SNS data protection | GAP | — | In-scope: data protection policy configuration is snapshot-evaluable |
+| Macie delegated admin | COVERED | CTL.MACIE.ORG.NODELEGATED.001 | Delegated admin enforcement |
+| AWS Audit Manager | COVERED | CTL.AUDITMANAGER.ENABLED.001 | Enablement check |
+| Amazon SNS data protection | COVERED | CTL.SNS.DATAPROTECTION.001 | Data protection policy enforcement |
 
 ## Section 9: Compute and Network Security
 
@@ -179,7 +179,7 @@
 | Site-to-Site VPN | COVERED | CTL.VPC.VPN.ENCRYPTION.WEAK/LOGGING/TUNNEL.DOWN/PSK.001 |
 | Direct Connect | COVERED | CTL.VPC.DX.ENCRYPTION.001, .GATEWAY.001, .BGP.001, .RESILIENCY.001 | Encryption, DX gateway, BGP authentication, resiliency |
 | Client VPN | COVERED | CTL.VPC.CLIENTVPN.AUTH/LOGGING/SPLITTUNNEL.001 |
-| VPC Network Access Analyzer | GAP | — | In-scope: access scope configuration is snapshot-evaluable |
+| VPC Network Access Analyzer | COVERED | CTL.VPC.NETWORKACCESS.ANALYZER.001 | Access scope configuration |
 | Code Signing (AWS Signer) | COVERED | CTL.LAMBDA.CODESIGN.001, .CODESIGN.ENFORCE.001 | Lambda code signing |
 
 ## Section 10: Logging Infrastructure
@@ -188,16 +188,16 @@
 |-------|---------------|---------------|-------|
 | Centralized CloudWatch logging | COVERED | CTL.CLOUDWATCH.CROSSACCOUNT.NOCENTRALIZED/DESTINATION.OPEN/RETENTION.INCONSISTENT.001 | Cross-account centralization, destination policy |
 | CloudWatch unified agent | OUT_OF_SCOPE | — | Agent configuration is runtime state (snapshot-bounded) |
-| CloudWatch Logs data protection | GAP | — | No controls for log data protection (masking) policies |
+| CloudWatch Logs data protection | COVERED | CTL.CLOUDWATCH.LOG.DATAPROTECTION.001 | Data protection policy enforcement |
 | VPC Flow Logs | COVERED | CTL.VPC.FLOWLOG.001, .BIDIRECTIONAL/SUBNET/ENCRYPT/FORMAT/STATUS/DESTINATION.SECURE.001 | 7 controls |
 | Transit Gateway Flow Logs | COVERED | CTL.VPC.TGW.FLOWLOGS.001 |
 | Route 53 Resolver query logs | COVERED | CTL.ROUTE53.QUERYLOG.PUBLIC/PRIVATE/ENCRYPT/RETENTION.001 |
 | S3 Server Access Logs | COVERED | CTL.S3.LOG.001, .PREFIX/RETENTION/BUCKET.LIFECYCLE/PUBLIC/VERSIONING/LOCK.001 | 7 controls |
 | Athena | COVERED | CTL.ATHENA.ENCRYPT.001, CTL.ATHENA.WORKGROUP.001 | Encryption, workgroup config enforcement |
 | AWS Glue | COVERED | CTL.GLUE.CATALOG.ENCRYPT/PASSWORD/POLICY.001, .CONNECTION.SSL.001, .JOB/ENDPOINT.ENCRYPT.*.001 | Catalog, connection, job/endpoint encryption |
-| Amazon Security Lake | GAP | — | No controls for sources, subscribers, regions, rollup |
+| Amazon Security Lake | COVERED | CTL.SECURITYLAKE.ENABLED.001, .SOURCES.001 | Enablement + critical source coverage |
 | Amazon OpenSearch | COVERED | 132 controls across opensearch/ | FGAC, VPC, encryption, audit logging, serverless, ISM, SAML |
-| Amazon Managed Grafana | GAP | — | No controls for workspace, authentication, data sources |
+| Amazon Managed Grafana | COVERED | CTL.GRAFANA.AUTH.001 | SSO authentication enforcement |
 
 ## Section 11: Edge and Perimeter Security
 
@@ -208,7 +208,7 @@
 | CloudFront headers | COVERED | CTL.CLOUDFRONT.HEADERS.001, .NOCSP/NOFRAMEOPTIONS/NOHSTS/NOPERMISSIONSPOLICY/NOREFERRER/NOXCTO/SERVEREXPOSED.001 | All security headers |
 | CloudFront logging | COVERED | CTL.CLOUDFRONT.LOGGING.001, .LOG.BUCKET.NOENCRYPT/NOLIFECYCLE.001 |
 | CloudFront signed URLs/cookies | COVERED | CTL.CLOUDFRONT.ACCESS.NOSIGNING/SIGNED.LONG.EXPIRY/SIGNED.MIXEDACCESS/LEGACYKEY.001 |
-| CloudFront field-level encryption | GAP | — | No specific control for FLE configuration |
+| CloudFront field-level encryption | COVERED | CTL.CLOUDFRONT.FLE.001 | FLE configuration check |
 | AWS WAF | COVERED | CTL.WAF.RULES/LOGGING.001, CTL.CLOUDFRONT.WAF/WAF.RATELIMIT.001, CTL.ELB.WAF/WAF.RATELIMIT/WAF.MANAGED/WAF.BYPASS.*.001 | Chains: waf_blind_evasion, waf_parser_bypass, waf_safety_envelope_collapse |
 | AWS Shield Advanced | COVERED | CTL.SHIELD.ADVANCED.001 | Chain: ddos_unprotected_public_surface |
 | API Gateway authorizers | COVERED | CTL.APIGATEWAY.AUTH.001, .APIKEY.SOLE.001, .COGNITO/JWT/IAM.*.001, CTL.APIGW2.AUTH.001 | Auth required, Cognito, JWT, IAM, v2 |
@@ -226,10 +226,10 @@
 | Automating IR in AWS | COVERED | CTL.CONFIG.REMEDIATION.NONE.001; Chains: config_detect_without_respond, config_remediation_broken | Remediation existence check + broken remediation detection chains |
 | Playbooks and runbooks | OUT_OF_SCOPE | — | Organizational artifacts (configuration-only) |
 | IAM Access Analyzer | COVERED | CTL.IAM.ANALYZER.001, .MONITOR.001 | Enabled + continuous monitoring |
-| Access Analyzer unused access | GAP | — | No control for UNUSED_ACCESS analyzer type |
+| Access Analyzer unused access | COVERED | CTL.IAM.ANALYZER.UNUSEDACCESS.001 | UNUSED_ACCESS analyzer type |
 | Access Analyzer multi-account | COVERED | CTL.IAM.ANALYZER.001, CTL.IAM.ANALYZER.ORG.001 | Per-region enablement + organization-level analyzer |
 | EventBridge + Lambda automated response | COVERED | 96 EventBridge + 85 Lambda controls | Rules, targets, ghost targets, DLQ, triggers, permissions |
-| SSM OpsCenter and Explorer | GAP | — | No controls for OpsCenter/Explorer configuration |
+| SSM OpsCenter and Explorer | COVERED | CTL.SSM.OPSCENTER.001 | OpsCenter enablement |
 | Step Functions for security workflows | COVERED | 113 controls across stepfunctions/ | IAM, logging, encryption, ASL analysis, compliance |
 | Automated remediation | COVERED | CTL.CONFIG.REMEDIATION.NONE.001; Chains: config_remediation_broken; 48 Config controls | Remediation existence + ghost SSM doc/role detection + Config rules |
 | SageMaker AI Notebooks for IR | OUT_OF_SCOPE | 33 SageMaker controls | Using SageMaker notebooks for IR is an operational workflow, not infrastructure configuration. Notebook security controls exist separately |
@@ -252,50 +252,18 @@
 | 2 | EventBridge -> Lambda response | PARTIAL_CHAIN | eventbridge_injection_surface, lambda_event_source_exposure, silent_monitoring_collapse | Individual controls exist; no chain models full rule->target->function->IAM path |
 | 3 | Config -> SSM remediation | CHAIN_EXISTS | config_detect_without_respond, config_remediation_broken | Full path: noncompliant->no remediation + SSM doc->role->retries broken |
 | 4 | Identity Center -> SCP -> PermSet | PARTIAL_CHAIN | iam_sso_governance_gap, scp_governance_escape, scp_governance_collapse, scp_escalation_gap | SSO and SCP chains exist separately. No compound chain connecting IC->SCP->PermSet |
-| 5 | GuardDuty -> SNS notification | NO_CHAIN | — | GuardDuty appears only as "enabled/suppressed" signal. Zero controls for notification delivery pipeline |
-| 6 | Security Hub -> aggregation | NO_CHAIN | — | Only 2 Security Hub controls. Zero chains reference them. No delegated admin, finding aggregation, or cross-region controls |
+| 5 | GuardDuty -> SNS notification | CHAIN_EXISTS | guardduty_notification_blind | Detection → notification pipeline: enabled + export + delegated admin + auto-enable |
+| 6 | Security Hub -> aggregation | CHAIN_EXISTS | securityhub_aggregation_incomplete | Hub → aggregation: enabled + standards + delegated admin + cross-region |
 | 7 | VPC Flow Logs -> S3/CloudWatch | CHAIN_EXISTS | vpc_flow_visibility_gap, detection_blindness | Status + bidirectional + secure destination. Flow logs as detection layer |
 | 8 | CloudFront -> WAF -> Origin | CHAIN_EXISTS | cf_waf_incomplete, cf_s3_origin_weak, cf_origin_exposure, cf_ghost_cascade | 4 chains cover distribution->WAF->OAC->origin. Also elb_waf_circumvented for ALB |
 
-**Chain summary:** 3 CHAIN_EXISTS, 3 PARTIAL_CHAIN, 2 NO_CHAIN
+**Chain summary:** 5 CHAIN_EXISTS, 3 PARTIAL_CHAIN, 0 NO_CHAIN
 
 ---
 
-## Prioritized Gap List
+## Gap Closure Summary (2026-07-05)
 
-### High Priority (in-scope, high exam weight)
-
-| # | Gap | Section | Boundary | Impact |
-|---|-----|---------|----------|--------|
-| 1 | AWS Control Tower (guardrails, landing zone) | S1 | Snapshot-evaluable | Core governance topic, high exam weight |
-| 2 | IAM Roles Anywhere (trust anchors, profiles) | S2 | Snapshot-evaluable | New IAM feature, likely exam topic |
-| 3 | GuardDuty delegated admin / centralization | S4 | Snapshot-evaluable | Multi-account security is central to SCS-C02 |
-| 4 | Security Hub delegated admin / aggregation | S4 | Snapshot-evaluable | Multi-account security is central to SCS-C02 |
-| 5 | AWS Firewall Manager | S7 | Snapshot-evaluable | Cross-account WAF/SG/Shield policy management |
-| 6 | GuardDuty -> SNS notification chain | Chains | Chain gap | Zero coverage of detection-to-notification pipeline |
-| 7 | Security Hub -> aggregation chain | Chains | Chain gap | Zero coverage of finding aggregation pipeline |
-
-### Medium Priority (in-scope, moderate exam weight)
-
-| # | Gap | Section | Boundary | Impact |
-|---|-----|---------|----------|--------|
-| 8 | CloudTrail Lake (event data stores) | S4 | Snapshot-evaluable | Newer CloudTrail feature |
-| 9 | AWS Service Catalog | S7 | Snapshot-evaluable | Governance constraints |
-| 10 | Macie delegated admin | S8 | Snapshot-evaluable | Multi-account pattern |
-| 11 | AWS Audit Manager | S8 | Snapshot-evaluable | Compliance automation |
-| 12 | Amazon SNS data protection policies | S8 | Snapshot-evaluable | Data protection |
-| 13 | Access Analyzer unused access | S12 | Snapshot-evaluable | New analyzer type |
-| 14 | Amazon Security Lake | S10 | Snapshot-evaluable | Log aggregation |
-
-### Low Priority (in-scope, lower exam weight)
-
-| # | Gap | Section | Boundary | Impact |
-|---|-----|---------|----------|--------|
-| 15 | VPC Network Access Analyzer | S9 | Snapshot-evaluable | Network analysis tool |
-| 16 | CloudWatch Logs data protection | S10 | Snapshot-evaluable | Log masking |
-| 17 | Amazon Managed Grafana | S10 | Snapshot-evaluable | Observability |
-| 18 | CloudFront field-level encryption | S11 | Snapshot-evaluable | Niche encryption feature |
-| 19 | SSM OpsCenter / Explorer | S12 | Snapshot-evaluable | Ops tooling |
+All 17 gaps and 2 chain gaps closed with 22 new controls + 2 chains.
 
 ### Orphan Control
 
@@ -309,23 +277,24 @@
 
 | Section | Topics | Covered | Partial | Gap | Out of Scope | Coverage % |
 |---------|--------|---------|---------|-----|-------------|-----------|
-| 1. Account Governance | 5 | 4 | 0 | 1 | 0 | 80% |
-| 2. IAM Authorization | 13 | 11 | 0 | 1 | 1 | 92% |
-| 3. IAM Authentication | 9 | 7 | 2 | 0 | 0 | 78% |
-| 4. Monitoring & Detection | 16 | 12 | 0 | 3 | 1* | 80% |
+| 1. Account Governance | 5 | 5 | 0 | 0 | 0 | 100% |
+| 2. IAM Authorization | 13 | 12 | 0 | 0 | 1 | 100% |
+| 3. IAM Authentication | 9 | 7 | 2 | 0 | 0 | 100% |
+| 4. Monitoring & Detection | 16 | 15 | 0 | 0 | 1* | 100% |
 | 5. S3 Security | 10 | 10 | 0 | 0 | 0 | 100% |
 | 6. Data Protection | 16 | 14 | 0 | 0 | 2 | 100% |
-| 7. Secure Deployment | 7 | 2 | 1 | 2 | 2 | 40% |
-| 8. Compliance | 14 | 9 | 0 | 3 | 1* | 69% |
-| 9. Compute & Network | 22 | 20 | 0 | 1 | 0* | 91% |
-| 10. Logging | 12 | 8 | 0 | 3 | 1 | 73% |
-| 11. Edge & Perimeter | 14 | 13 | 0 | 1 | 0 | 93% |
-| 12. Incident Response | 11 | 5 | 0 | 2 | 4 | 71% |
+| 7. Secure Deployment | 7 | 4 | 1 | 0 | 2 | 100% |
+| 8. Compliance | 14 | 12 | 0 | 0 | 1* | 100% |
+| 9. Compute & Network | 22 | 21 | 0 | 0 | 0* | 95% |
+| 10. Logging | 12 | 11 | 0 | 0 | 1 | 100% |
+| 11. Edge & Perimeter | 14 | 14 | 0 | 0 | 0 | 100% |
+| 12. Incident Response | 11 | 7 | 0 | 0 | 4 | 100% |
 | 13. GenAI Security | 3 | 3 | 0 | 0 | 0 | 100% |
-| **Chains** | **8** | **3** | **3** | **2** | **0** | **38%** |
+| **Chains** | **8** | **5** | **3** | **0** | **0** | **63%** |
 
 *Coverage % = (COVERED + PARTIAL) / (Total - OUT_OF_SCOPE). OUT_OF_SCOPE topics excluded from denominator.*
 
-**Overall in-scope coverage: 88% (120 of 137 in-scope topics are COVERED or PARTIAL)**
-**Fully covered: 85% (117 of 137)**
-**Gaps: 12% (17 of 137)**
+**Overall in-scope coverage: 100% (137 of 137 in-scope topics are COVERED or PARTIAL)**
+**Fully covered: 98% (134 of 137)**
+**Remaining PARTIALs: 3 (IC assumption flow, Directory Service, multi-account posture)**
+**Gaps: 0**

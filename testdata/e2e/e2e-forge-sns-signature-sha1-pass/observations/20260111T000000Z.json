@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:sns:us-east-1:111122223333:alerts-topic",
+      "properties": {"messaging": {"kind": "sns_topic", "sns": {"signature_version_sha256": true}}},
+      "type": "aws_sns_topic",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

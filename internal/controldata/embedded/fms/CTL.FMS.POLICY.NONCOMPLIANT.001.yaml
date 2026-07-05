@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.FMS.POLICY.NONCOMPLIANT.001
+name: Firewall Manager Policy Has Non-Compliant Member Accounts
+description: >
+  A Firewall Manager security policy has member accounts that are
+  not compliant with the policy. Non-compliant accounts lack the
+  firewall rules, security group configurations, or Shield
+  protections that the policy mandates. The perimeter security
+  posture is inconsistent across the organization.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-06"]
+  scs_c02: "7.5"
+scope_tags:
+  - aws
+  - fms
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: organization
+    multiplier: 2.0
+remediation:
+  description: >
+    FMS policy has non-compliant member accounts. Firewall rules
+    are not consistently applied.
+  action: >
+    Enable auto-remediation on the FMS policy or manually apply
+    the policy to non-compliant accounts. Review the compliance
+    report: aws fms get-compliance-detail --policy-id <id>.
+  example: |
+    {
+      "governance": {
+        "kind": "fms_policy",
+        "fms": {
+          "has_noncompliant_accounts": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: fms_policy
+    - field: properties.governance.fms.has_noncompliant_accounts
+      op: eq
+      value: true
+tests:
+  - name: "Policy with non-compliant accounts fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:fms:us-east-1:111122223333:policy/abc-123"
+      asset_type: aws_fms_policy
+      vendor: aws
+      properties:
+        governance:
+          kind: fms_policy
+          fms:
+            has_noncompliant_accounts: true
+  - name: "Fully compliant policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:fms:us-east-1:111122223333:policy/def-456"
+      asset_type: aws_fms_policy
+      vendor: aws
+      properties:
+        governance:
+          kind: fms_policy
+          fms:
+            has_noncompliant_accounts: false

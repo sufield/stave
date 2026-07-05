@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.RDSPROTECTION.001
+name: GuardDuty RDS Protection Must Be Enabled
+description: >
+  GuardDuty RDS Protection must be enabled to monitor RDS login
+  activity for anomalous access patterns — brute-force login
+  attempts, access from unusual geolocations, and logins from
+  known malicious IPs. This is a separate feature toggle from the
+  base GuardDuty detector. An account running RDS instances with
+  GuardDuty enabled but RDS Protection disabled misses
+  database-layer authentication threats. Part of the GuardDuty
+  per-feature protection family discovered through cross-cloud
+  transposition from Azure Defender for Databases.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03", "TVM-01"]
+scope_tags:
+  - aws
+  - guardduty
+  - rds
+taxonomy:
+  - compliance-mapping
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    GuardDuty RDS Protection is not enabled. Database login
+    anomalies are not detected.
+  action: >
+    Enable RDS Protection on the GuardDuty detector: aws guardduty
+    update-detector --detector-id <id> --features
+    Name=RDS_LOGIN_EVENTS,Status=ENABLED.
+  example: |
+    {
+      "threat_detection": {
+        "kind": "detector",
+        "rds_protection": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.threat_detection.kind
+      op: eq
+      value: detector
+    - field: properties.threat_detection.rds_protection.enabled
+      op: eq
+      value: false

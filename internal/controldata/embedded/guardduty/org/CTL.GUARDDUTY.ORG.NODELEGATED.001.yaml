@@ -1,0 +1,79 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.ORG.NODELEGATED.001
+name: GuardDuty Has No Delegated Administrator
+description: >
+  GuardDuty is managed from the management account because no
+  delegated administrator is registered. Day-to-day GuardDuty
+  administration concentrates operational footprint in the
+  management account, which holds billing, root, and the
+  organization itself. AWS best practice is to delegate GuardDuty
+  administration to a dedicated security account.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-09"]
+  scs_c02: "4.4"
+scope_tags:
+  - aws
+  - guardduty
+taxonomy:
+  - account-governance
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: governance
+    scope: organization
+    multiplier: 3.0
+remediation:
+  description: >
+    No delegated administrator registered for GuardDuty. Management
+    account handles all GuardDuty administration.
+  action: >
+    Register a security account as delegated admin: aws guardduty
+    enable-organization-admin-account --admin-account-id
+    <security-acct>.
+  example: |
+    {
+      "threat_detection": {
+        "kind": "guardduty_organization",
+        "guardduty": {
+          "delegated_admin_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.threat_detection.kind
+      op: eq
+      value: guardduty_organization
+    - field: properties.threat_detection.guardduty.delegated_admin_configured
+      op: eq
+      value: false
+tests:
+  - name: "GuardDuty org without delegated admin fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc"
+      asset_type: aws_guardduty_organization
+      vendor: aws
+      properties:
+        threat_detection:
+          kind: guardduty_organization
+          guardduty:
+            delegated_admin_configured: false
+  - name: "GuardDuty org with delegated admin passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc"
+      asset_type: aws_guardduty_organization
+      vendor: aws
+      properties:
+        threat_detection:
+          kind: guardduty_organization
+          guardduty:
+            delegated_admin_configured: true

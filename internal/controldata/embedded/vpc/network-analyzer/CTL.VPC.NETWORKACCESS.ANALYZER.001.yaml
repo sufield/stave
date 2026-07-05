@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.NETWORKACCESS.ANALYZER.001
+name: VPC Network Access Analyzer Not Configured
+description: >
+  No VPC Network Access Analyzer access scopes are configured.
+  Network Access Analyzer identifies unintended network access
+  paths by analyzing VPC configurations against defined access
+  scopes. Without it, unintended internet access or cross-VPC
+  connectivity may exist undetected.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7(5)"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-06"]
+  scs_c02: "9.14"
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    No Network Access Analyzer access scopes configured. Unintended
+    network paths are not identified.
+  action: >
+    Create network access scopes defining intended access patterns,
+    then analyze to find deviations: aws ec2
+    create-network-insights-access-scope.
+  example: |
+    {
+      "network": {
+        "kind": "network_access_analyzer",
+        "analyzer": {
+          "access_scopes_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_access_analyzer
+    - field: properties.network.analyzer.access_scopes_configured
+      op: eq
+      value: false
+tests:
+  - name: "No access scopes configured fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:network-access-analyzer"
+      asset_type: aws_vpc_network_access_analyzer
+      vendor: aws
+      properties:
+        network:
+          kind: network_access_analyzer
+          analyzer:
+            access_scopes_configured: false
+  - name: "Access scopes configured passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:network-access-analyzer"
+      asset_type: aws_vpc_network_access_analyzer
+      vendor: aws
+      properties:
+        network:
+          kind: network_access_analyzer
+          analyzer:
+            access_scopes_configured: true

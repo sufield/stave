@@ -114,6 +114,21 @@ IAM Access Analyzer should include an organization-level analyzer (type ORGANIZA
 
 ---
 
+### CTL.IAM.ANALYZER.UNUSEDACCESS.001
+
+**No IAM Access Analyzer for Unused Access Detection**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(3); scs_c02: 12.5; soc2: CC6.1;
+
+No IAM Access Analyzer of type UNUSED_ACCESS exists. The unused access analyzer identifies IAM roles and users with permissions they have not used within a specified period, plus unused access keys and passwords. Without it, over-privileged identities accumulate permissions that expand the blast radius of credential compromise.
+
+**Remediation:** Create an unused access analyzer: aws accessanalyzer create-analyzer --analyzer-name unused-access --type ACCOUNT_UNUSED_ACCESS --configuration '{"unusedAccess": {"unusedAccessAge": 90}}'.
+
+---
+
 ### CTL.IAM.BOUNDARY.001
 
 **IAM Roles Must Have Permissions Boundary**
@@ -2381,6 +2396,36 @@ IAM role has not been assumed in 90 or more days. The role exists with attached 
 
 ---
 
+### CTL.IAM.ROLESANYWHERE.CRL.001
+
+**IAM Roles Anywhere Trust Anchor Has No CRL Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5(2); scs_c02: 2.8; soc2: CC6.1;
+
+An IAM Roles Anywhere trust anchor has no Certificate Revocation List (CRL) configured. Without a CRL, revoked client certificates can still assume IAM roles through the trust anchor. If a certificate's private key is compromised, there is no mechanism to prevent the compromised certificate from obtaining temporary credentials.
+
+**Remediation:** Import a CRL for the trust anchor: aws rolesanywhere import-crl --trust-anchor-arn <arn> --crl-data fileb://revoked.crl --name my-crl.
+
+---
+
+### CTL.IAM.ROLESANYWHERE.SELFSIGNED.001
+
+**IAM Roles Anywhere Trust Anchor Uses Self-Signed Certificate**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5(2); scs_c02: 2.8; soc2: CC6.1;
+
+An IAM Roles Anywhere trust anchor uses a self-signed certificate authority rather than AWS Private CA or an established PKI. Self-signed CAs lack the revocation infrastructure, audit trail, and lifecycle management of a proper PKI. The CA private key is managed outside AWS, increasing the risk of key compromise and making certificate lifecycle tracking difficult.
+
+**Remediation:** Replace with an AWS Private CA trust anchor for integrated revocation, audit logging, and certificate lifecycle management.
+
+---
+
 ### CTL.IAM.ROOT.ACCESSKEY.001
 
 **Root Account Must Not Have Access Keys**
@@ -2696,6 +2741,111 @@ The collector emits identity.tag_auth.tagger_role_protected = true only when an 
 Service Control Policies must deny cloudtrail:StopLogging, cloudtrail:DeleteTrail, and cloudtrail:UpdateTrail to non- breakglass roles. Without these protective denies, any IAM principal with sufficient permissions can disrupt logging.
 
 **Remediation:** Create an SCP with Effect Deny on cloudtrail:StopLogging, cloudtrail:DeleteTrail, and cloudtrail:UpdateTrail. Add a Condition excluding the breakglass role ARN.
+
+---
+
+### CTL.IAM.SEMANTICS.DENY.ANDNARROW.001
+
+**Deny with Multiple Negated Conditions AND-Narrows the Deny Domain**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+A Deny statement has two or more negated conditions (StringNotEquals, ArnNotLike, NotIpAddress) on different keys in the same Condition block. IAM evaluates multiple conditions within a block using AND logic — ALL must be true for the statement to apply. With negated operators, this means the deny fires only when NONE of the values match. Example: Deny unless tag env=prod AND team=security. If env=prod but team=engineering, the deny does not fire because the first condition (env ≠ prod) is false. The author intended OR logic (deny unless env=prod OR team=security) which requires SEPARATE Deny statements. This is De Morgan's law in IAM: ¬(A∧B) ≡ ¬A∨¬B but the policy evaluates ¬A∧¬B. The deny domain is the INTERSECTION of exclusion sets, not the UNION.
+
+**Remediation:** Split the Deny into separate statements, one per negated condition. Each statement independently denies when its condition is true. This achieves OR logic across the conditions — the deny fires when ANY condition is met.
+
+---
+
+### CTL.IAM.SEMANTICS.DENY.POSITIVE.001
+
+**Deny with Positive Condition Narrows Instead of Excepts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+A Deny statement uses a positive condition operator (StringEquals, IpAddress, ArnEquals, Bool) where the author almost certainly intended the negative counterpart. "Deny if aws:SourceIp = 10.0.0.0/8" denies ONLY requests from 10.0.0.0/8. The author usually means "deny UNLESS from 10.0.0.0/8" — which requires NotIpAddress. The positive operator narrows the deny to a specific set of requests rather than creating an exception. The deny fires on a SUBSET of requests when the author intended it to fire on the COMPLEMENT. This is formally provable: the deny domain is |D ∩ C| when the intent was |D \ C|. SMT proves the actual deny set ≠ intended deny set. No competitor tool detects this pattern — it requires understanding the interaction between Effect and condition operator polarity.
+
+**Remediation:** Replace the positive operator with its negative counterpart: StringEquals → StringNotEquals, IpAddress → NotIpAddress, ArnEquals → ArnNotEquals. This inverts the condition so the deny fires for everything EXCEPT the specified values, which matches the typical intent of "deny unless."
+
+---
+
+### CTL.IAM.SEMANTICS.FORALLVALUES.001
+
+**ForAllValues Without Null Check Permits Vacuous Satisfaction**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+An Allow statement using the ForAllValues set operator without a companion Null condition check on the same key is vacuously satisfied when the key is absent from the request. ForAllValues tests whether every value in the request set matches the policy set — but "every value in an empty set matches" is true by definition (vacuous truth in set theory: ∀x∈∅.P(x) ≡ true). A request that omits the condition key entirely satisfies the condition unconditionally. The fix is a companion Null check (Null: {key: "false"}) that fails the condition when the key is absent. AWS documents this hazard but Access Analyzer only warns — it does not block. No competitor tool detects this as a posture property of deployed policies. This is the single strongest example of evaluation-model semantics diverging from author intent, and the headline pitfall for Z3 satisfiability analysis (FM-060).
+
+**Remediation:** Add a Null condition check for the same key with value "false" alongside the ForAllValues condition. This ensures the condition fails when the key is absent from the request.
+
+---
+
+### CTL.IAM.SEMANTICS.IFEXISTS.SCOPE.001
+
+**IfExists on Service-Specific Key Is Vacuously Satisfied**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+A policy condition uses an IfExists operator suffix on a service-specific condition key (any key not prefixed with aws:*). IfExists makes the condition evaluate to true when the key is absent from the request context. For global keys (aws:SourceIp, aws:PrincipalArn), absence is unusual — most requests include them. For service-specific keys (ec2:InstanceType, s3:prefix, rds:DatabaseEngine), the key is absent from most request types because it only applies to that service's API calls. The condition is vacuously satisfied for every request that doesn't involve the specific service action. AWS documents this pitfall with the ec2:RunInstances example: InstanceType IfExists passes for images, key pairs, and security groups checked during the same API call. An Allow with IfExists on a service-specific key provides less restriction than intended.
+
+**Remediation:** Split the statement into two: one for actions that produce the condition key (with the standard operator, not IfExists), and one for actions that do not. Alternatively, scope the Resource element to only the resource types that carry the key.
+
+---
+
+### CTL.IAM.SEMANTICS.NEGOP.ABSENT.001
+
+**Negative Operator on Potentially Absent Key Fires Unconditionally**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+A Deny statement uses a negative condition operator (StringNotEquals, ArnNotLike, StringNotLike, NotIpAddress) on a condition key that may be absent from the request context, without an IfExists suffix or companion Null check. When a key is absent, AWS evaluates negative operators as TRUE — "the key's value is not equal to the policy value" is vacuously true when there is no value. The deny fires for ALL requests missing the key, which is far broader than intended. This is the mirror image of ForAllValues vacuous satisfaction (Pitfall 1) — where that pitfall makes an Allow too broad, this makes a Deny too broad. Formally: the deny domain expands from |{r : r.key ≠ v}| to |{r : r.key ≠ v} ∪ {r : r.key ∉ dom(r)}|. The second set can be enormous for service- specific keys that most requests don't include.
+
+**Remediation:** Use the IfExists suffix (e.g., StringNotEqualsIfExists) to make the condition pass when the key is absent, or add a companion Null check to explicitly handle key absence. The IfExists suffix evaluates to true when the key is absent, which means the deny still fires — so for deny-unless patterns, use the positive operator instead (StringEquals + IfExists, or rethink the logic).
+
+---
+
+### CTL.IAM.SEMANTICS.NOTPRINCIPAL.001
+
+**NotPrincipal with Deny Breaks Permissions Boundary Principals**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+A resource-based policy uses NotPrincipal in a Deny statement. AWS documents that NotPrincipal with Deny "will always deny any IAM principal that has a permissions boundary policy attached, regardless of the values specified in the NotPrincipal element." The mechanism: NotPrincipal excludes the role ARN, but the assumed-role session ARN is a different string. The Deny matches the session (which is not the role), so the deny fires. Principals with permissions boundaries are always denied, even when explicitly listed in the NotPrincipal exclusion. AWS recommends using ArnNotEquals with aws:PrincipalArn in the Condition block instead. This is an evaluation-model interaction that no syntax-level linter can detect — it requires understanding the relationship between role ARNs and session ARNs in the principal matching function.
+
+**Remediation:** Replace NotPrincipal with a Condition block using ArnNotEquals on aws:PrincipalArn. This correctly excludes both the role ARN and its derived session ARNs.
+
+---
+
+### CTL.IAM.SEMANTICS.STRINGLIKE.ARN.001
+
+**StringLike on ARN-Valued Keys Produces Wrong Matching Semantics**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+A policy condition uses StringLike or StringNotLike on an ARN-valued condition key (aws:SourceArn, aws:PrincipalArn, aws:ResourceArn, or any key documented as ARN type). StringLike treats the entire value as one string for pattern matching. ArnLike checks each of the six colon-delimited ARN components separately, with per-component wildcard expansion. The operators produce different match results on the same input. A wildcard in one ARN component can accidentally match characters in an adjacent component under StringLike but not ArnLike. AWS explicitly recommends ARN operators for ARN comparisons. This is distinct from CTL.IAM.POLICY.CONDITION.STRINGLIKE.001 which catches StringLike on identity-valued keys (account IDs) — this control catches operator/type mismatch on ARN-valued keys.
+
+**Remediation:** Replace StringLike with ArnLike and StringNotLike with ArnNotLike for all ARN-valued condition keys. ArnLike enforces per-component matching that prevents cross-component wildcard leakage.
 
 ---
 

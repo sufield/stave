@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ANALYZER.UNUSEDACCESS.001
+name: No IAM Access Analyzer for Unused Access Detection
+description: >
+  No IAM Access Analyzer of type UNUSED_ACCESS exists. The unused
+  access analyzer identifies IAM roles and users with permissions
+  they have not used within a specified period, plus unused access
+  keys and passwords. Without it, over-privileged identities
+  accumulate permissions that expand the blast radius of
+  credential compromise.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6(3)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-03"]
+  scs_c02: "12.5"
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - least-privilege
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    No UNUSED_ACCESS analyzer exists. Unused permissions are not
+    identified.
+  action: >
+    Create an unused access analyzer: aws accessanalyzer
+    create-analyzer --analyzer-name unused-access
+    --type ACCOUNT_UNUSED_ACCESS
+    --configuration '{"unusedAccess": {"unusedAccessAge": 90}}'.
+  example: |
+    {
+      "identity": {
+        "kind": "access_analyzer_summary",
+        "analyzer": {
+          "has_unused_access_analyzer": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: access_analyzer_summary
+    - field: properties.identity.analyzer.has_unused_access_analyzer
+      op: eq
+      value: false
+tests:
+  - name: "No unused access analyzer fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:access-analyzer:us-east-1:111122223333:analyzer/summary"
+      asset_type: aws_iam_access_analyzer
+      vendor: aws
+      properties:
+        identity:
+          kind: access_analyzer_summary
+          analyzer:
+            has_unused_access_analyzer: false
+  - name: "Unused access analyzer exists passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:access-analyzer:us-east-1:111122223333:analyzer/summary"
+      asset_type: aws_iam_access_analyzer
+      vendor: aws
+      properties:
+        identity:
+          kind: access_analyzer_summary
+          analyzer:
+            has_unused_access_analyzer: true

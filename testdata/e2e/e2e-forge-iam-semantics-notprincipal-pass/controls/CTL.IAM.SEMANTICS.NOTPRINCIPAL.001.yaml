@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SEMANTICS.NOTPRINCIPAL.001
+name: NotPrincipal with Deny Breaks Permissions Boundary Principals
+description: >
+  A resource-based policy uses NotPrincipal in a Deny statement.
+  AWS documents that NotPrincipal with Deny "will always deny any
+  IAM principal that has a permissions boundary policy attached,
+  regardless of the values specified in the NotPrincipal element."
+  The mechanism: NotPrincipal excludes the role ARN, but the
+  assumed-role session ARN is a different string. The Deny matches
+  the session (which is not the role), so the deny fires. Principals
+  with permissions boundaries are always denied, even when explicitly
+  listed in the NotPrincipal exclusion. AWS recommends using
+  ArnNotEquals with aws:PrincipalArn in the Condition block instead.
+  This is an evaluation-model interaction that no syntax-level linter
+  can detect — it requires understanding the relationship between
+  role ARNs and session ARNs in the principal matching function.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - formal-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_policy
+params:
+  attack_stage: detection_evasion
+  base_impact: 7
+  blast_radius:
+    type: prevention
+    scope: resource
+    multiplier: 1.5
+remediation:
+  description: >
+    Resource-based policy uses NotPrincipal in a Deny statement.
+    Principals with permissions boundaries are always denied
+    regardless of the NotPrincipal exclusion list.
+  action: >
+    Replace NotPrincipal with a Condition block using
+    ArnNotEquals on aws:PrincipalArn. This correctly excludes
+    both the role ARN and its derived session ARNs.
+  example: |
+    {
+      "identity": {
+        "kind": "policy",
+        "policy": {
+          "semantics": {
+            "has_deny_notprincipal": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: policy
+    - field: properties.identity.policy.semantics.has_deny_notprincipal
+      op: eq
+      value: true
+tests:
+  - name: "Deny with NotPrincipal fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::amzn-s3-demo-bucket"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_deny_notprincipal: true
+  - name: "Deny with ArnNotEquals condition passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::amzn-s3-demo-bucket-safe"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_deny_notprincipal: false

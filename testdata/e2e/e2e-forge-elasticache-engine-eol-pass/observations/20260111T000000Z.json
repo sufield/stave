@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:elasticache:us-east-1:111122223333:cluster:redis-prod",
+      "properties": {"cache": {"kind": "elasticache_cluster", "engine_version": {"is_eol": false}}},
+      "type": "aws_elasticache_cluster",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

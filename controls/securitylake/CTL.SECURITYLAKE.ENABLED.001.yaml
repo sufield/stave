@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYLAKE.ENABLED.001
+name: Amazon Security Lake Not Enabled
+description: >
+  Amazon Security Lake is not enabled. Security Lake centralizes
+  security data from AWS services, SaaS providers, and custom
+  sources into a purpose-built data lake using the Open
+  Cybersecurity Schema Framework (OCSF). Without it, security
+  data is scattered across services and accounts, making
+  cross-service correlation and long-term retention difficult.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-6, SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+  scs_c02: "10.8"
+scope_tags:
+  - aws
+  - securitylake
+taxonomy:
+  - monitoring
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: organization
+    multiplier: 2.0
+remediation:
+  description: >
+    Amazon Security Lake is not enabled. Security data is not
+    centralized.
+  action: >
+    Enable Security Lake from the delegated admin account and
+    configure log sources and rollup regions.
+  example: |
+    {
+      "logging": {
+        "kind": "security_lake",
+        "security_lake": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.logging.kind
+      op: eq
+      value: security_lake
+    - field: properties.logging.security_lake.enabled
+      op: eq
+      value: false
+tests:
+  - name: "Security Lake not enabled fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:securitylake:us-east-1:111122223333:data-lake"
+      asset_type: aws_security_lake
+      vendor: aws
+      properties:
+        logging:
+          kind: security_lake
+          security_lake:
+            enabled: false
+  - name: "Security Lake enabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:securitylake:us-east-1:111122223333:data-lake"
+      asset_type: aws_security_lake
+      vendor: aws
+      properties:
+        logging:
+          kind: security_lake
+          security_lake:
+            enabled: true
