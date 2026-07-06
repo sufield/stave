@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.ENCRYPT.KMS.POLICY.001
+name: KMS Key Policy for Lambda Environment Encryption Is Overly Broad
+description: >
+  The KMS key used to encrypt Lambda environment variables has an
+  overly broad key policy — kms:Decrypt granted to the account
+  root, a wildcard principal, or a broad IAM pattern. An overly
+  broad key policy undermines encryption: any matching principal
+  can decrypt the function's environment variables, which
+  typically contain database credentials, API keys, and service
+  tokens. Same cross-property invariant as
+  CTL.S3.ENCRYPT.KMS.POLICY.001 applied to Lambda: the function
+  passes the encryption-configured check but the key policy makes
+  the encryption cosmetic. The collector pre-computes
+  kms_key_policy_broad by joining the function's KMSKeyArn to the
+  KMS key's policy analysis.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-13"
+  pci_dss_v4.0: "3.6.1"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-01"]
+scope_tags:
+  - aws
+  - lambda
+taxonomy:
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lambda_function
+params:
+  attack_stage: credential_access
+observation_fields:
+  - compute.kind
+  - compute.function.kms_key_policy_broad
+remediation:
+  description: >
+    KMS key used for Lambda environment variable encryption has an
+    overly broad key policy. Any matching principal can decrypt
+    the function's secrets.
+  action: >
+    Scope the KMS key policy to the specific principals that need
+    access. Use kms:ViaService condition to restrict usage to
+    lambda.amazonaws.com. Remove kms:* grants and limit kms:Decrypt
+    to the function's execution role and authorized operators only.
+  example: |
+    {
+      "compute": {
+        "kind": "lambda_function",
+        "function": {
+          "kms_key_policy_broad": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: lambda_function
+    - field: properties.compute.function.kms_key_policy_broad
+      op: eq
+      value: true
+tests:
+  - name: "Lambda with broad KMS key policy — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:api-handler"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: lambda_function
+          function:
+            kms_key_policy_broad: true
+  - name: "Lambda with scoped KMS key policy — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:api-safe"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: lambda_function
+          function:
+            kms_key_policy_broad: false

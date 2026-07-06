@@ -260,6 +260,21 @@ Bedrock agents should have a minimal set of action groups — each action group 
 
 ---
 
+### CTL.BEDROCK.AGENTCORE.CRED.001
+
+**AgentCore Runtime Must Use Credential Provider Not Embedded Secrets**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: IA-5(7); pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+
+AgentCore runtime tool configuration contains embedded credentials (API keys, tokens, passwords) instead of referencing a Credential Provider. Embedded secrets persist in the runtime configuration, appear in API responses (GetAgentRuntime), and cannot be rotated without redeploying the runtime. AgentCore's Credential Provider integrates with OAuth token vaulting and automatic rotation — embedded secrets bypass these protections. The collector pre-computes whether the tool configuration contains embedded secret patterns.
+
+**Remediation:** Migrate embedded secrets to an AgentCore Credential Provider. Configure OAuth credentials through the Credential Provider API and reference them by ARN in the tool configuration. Delete the embedded secret values after migration.
+
+---
+
 ### CTL.BEDROCK.AGENTCORE.GW.DEBUG.001
 
 **AgentCore Gateway Must Not Expose Debug Exceptions**
@@ -380,6 +395,21 @@ AgentCore gateway authorizer type is set to NONE — the gateway endpoint accept
 
 ---
 
+### CTL.BEDROCK.AGENTCORE.OVERPERM.001
+
+**AgentCore Runtime Execution Role Must Scope Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+AgentCore runtime execution role grants overly broad permissions — the role can reach resources far beyond what the runtime's registered tools require. An attacker who controls the agent's prompt or tool input can leverage the broad role to read, write, or delete resources the agent should never touch. The collector pre-computes whether the role's effective permissions exceed the runtime's declared tool scope. Mirrors CTL.BEDROCK.AGENT.OVERPERM.S3.001 applied to AgentCore runtimes.
+
+**Remediation:** Scope the role's permissions to the specific resources the runtime's tools require. Use resource-based conditions (aws:ResourceTag, StringEquals on prefix) to narrow access. Review the role with IAM Access Analyzer to identify unused permissions.
+
+---
+
 ### CTL.BEDROCK.AGENTCORE.SESSION.001
 
 **AgentCore Runtime Session Lifetime Must Be Bounded**
@@ -392,6 +422,21 @@ AgentCore gateway authorizer type is set to NONE — the gateway endpoint accept
 AgentCore runtime lifecycleConfiguration.maxLifetime exceeds the recommended threshold. Long-lived runtime sessions extend the window during which a compromised agent retains its execution role credentials, memory context, and tool access. The collector pre-computes whether maxLifetime exceeds the threshold (default 28800 seconds / 8 hours). Shorter lifetimes force credential rotation and limit the blast radius of prompt-injection or credential-theft attacks.
 
 **Remediation:** Reduce lifecycleConfiguration.maxLifetime to 28800 seconds (8 hours) or less. For agents handling sensitive data, 3600 seconds (1 hour) is the tighter recommendation. Update via UpdateAgentRuntime.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.STALE.001
+
+**AgentCore Runtime Must Not Be Idle Beyond Threshold**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-2(3); owasp_nhi: NHI1; soc2: CC6.1;
+
+AgentCore runtime has not been invoked within the observation window (default 30 days). A stale runtime retains its execution role credentials, network configuration, and tool registrations — a dormant attack surface with active permissions. The collector pre-computes whether the runtime's last invocation exceeds the staleness threshold. Mirrors CTL.BEDROCK.AGENT.STALE.001 applied to AgentCore runtimes.
+
+**Remediation:** Either delete the runtime and its execution role if the workload is truly abandoned, or document the runtime's expected idle duration with a reviewed_at tag and a scheduled review date. Reduce blast radius by detaching high-privilege managed policies from the role even while the runtime stays.
 
 ---
 

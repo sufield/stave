@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENTCORE.CRED.001
+name: AgentCore Runtime Must Use Credential Provider Not Embedded Secrets
+description: >
+  AgentCore runtime tool configuration contains embedded
+  credentials (API keys, tokens, passwords) instead of referencing
+  a Credential Provider. Embedded secrets persist in the runtime
+  configuration, appear in API responses (GetAgentRuntime), and
+  cannot be rotated without redeploying the runtime. AgentCore's
+  Credential Provider integrates with OAuth token vaulting and
+  automatic rotation — embedded secrets bypass these protections.
+  The collector pre-computes whether the tool configuration
+  contains embedded secret patterns.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "IA-5(7)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "3.4.1"
+  ccm_v4: ["IAM-16", "DSP-17"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agentcore_runtime
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    AgentCore runtime has embedded credentials in tool
+    configuration instead of using a Credential Provider.
+  action: >
+    Migrate embedded secrets to an AgentCore Credential Provider.
+    Configure OAuth credentials through the Credential Provider
+    API and reference them by ARN in the tool configuration.
+    Delete the embedded secret values after migration.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_runtime",
+        "runtime": { "has_embedded_secrets": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agentcore_runtime
+    - field: properties.ai.runtime.has_embedded_secrets
+      op: eq
+      value: true
+observation_fields:
+  - ai.kind
+  - ai.runtime.has_embedded_secrets
+tests:
+  - name: "runtime with embedded secrets — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-EMBSEC"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            has_embedded_secrets: true
+  - name: "runtime using credential provider — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-VAULT"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            has_embedded_secrets: false

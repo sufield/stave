@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2872
-**Pack hash:** `9b013baba6bc832068221deccf6db5264175d5f75a59ddc1933c261d2d0586ce`
+**Total controls:** 2881
+**Pack hash:** `53cc501b73c2f5de2f3e5bddbd0e345c2e1218d99e7864c161898603c8a78bd6`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 293 |
-| high | 1252 |
+| critical | 295 |
+| high | 1256 |
 | info | 16 |
-| low | 213 |
-| medium | 1098 |
+| low | 214 |
+| medium | 1100 |
 
 | Domain | Count |
 |--------|-------|
@@ -26,10 +26,10 @@ GitHub. Pick a service below.
 | capacity | 3 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1257 |
-| governance | 607 |
+| exposure | 1263 |
+| governance | 609 |
 | hygiene | 18 |
-| identity | 506 |
+| identity | 507 |
 | lifecycle | 31 |
 | network | 43 |
 | resilience | 35 |
@@ -52,7 +52,7 @@ GitHub. Pick a service below.
 | [BACKUP](reference/backup.md) | 10 |
 | [BATCH](reference/batch.md) | 3 |
 | [BEANSTALK](reference/beanstalk.md) | 3 |
-| [BEDROCK](reference/bedrock.md) | 43 |
+| [BEDROCK](reference/bedrock.md) | 46 |
 | [CFN](reference/cfn.md) | 1 |
 | [CISCO](reference/cisco.md) | 30 |
 | [CLOUDFLARE](reference/cloudflare.md) | 29 |
@@ -70,9 +70,9 @@ GitHub. Pick a service below.
 | [DNS](reference/dns.md) | 3 |
 | [DOCUMENTDB](reference/documentdb.md) | 18 |
 | [DYNAMODB](reference/dynamodb.md) | 37 |
-| [EC2](reference/ec2.md) | 102 |
+| [EC2](reference/ec2.md) | 103 |
 | [ECR](reference/ecr.md) | 10 |
-| [ECS](reference/ecs.md) | 50 |
+| [ECS](reference/ecs.md) | 51 |
 | [EFS](reference/efs.md) | 13 |
 | [EKS](reference/eks.md) | 115 |
 | [ELASTICACHE](reference/elasticache.md) | 6 |
@@ -94,7 +94,7 @@ GitHub. Pick a service below.
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 3 |
 | [KMS](reference/kms.md) | 46 |
-| [LAMBDA](reference/lambda.md) | 85 |
+| [LAMBDA](reference/lambda.md) | 86 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
 | [LIGHTSAIL](reference/lightsail.md) | 2 |
 | [M365](reference/m365.md) | 73 |
@@ -108,14 +108,14 @@ GitHub. Pick a service below.
 | [OPENSEARCH](reference/opensearch.md) | 132 |
 | [ORG](reference/org.md) | 5 |
 | [RAM](reference/ram.md) | 3 |
-| [RDS](reference/rds.md) | 68 |
+| [RDS](reference/rds.md) | 69 |
 | [REDSHIFT](reference/redshift.md) | 26 |
 | [ROUTE53](reference/route53.md) | 50 |
-| [S3](reference/s3.md) | 130 |
+| [S3](reference/s3.md) | 131 |
 | [SAGEMAKER](reference/sagemaker.md) | 33 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
-| [SECRETSMANAGER](reference/secretsmanager.md) | 4 |
+| [SECRETSMANAGER](reference/secretsmanager.md) | 5 |
 | [SECURITYHUB](reference/securityhub.md) | 7 |
 | [SECURITYLAKE](reference/securitylake.md) | 2 |
 | [SERVICECATALOG](reference/servicecatalog.md) | 1 |

@@ -473,6 +473,21 @@ ECS task definitions must not add dangerous Linux capabilities (SYS_ADMIN, NET_A
 
 ---
 
+### CTL.ECS.SECURITY.ROOTFS.MOUNT.BYPASS.001
+
+**ECS Container Read-Only Root Filesystem Bypassed by Writable Host Mount**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.1;
+
+ECS container has readonlyRootFilesystem set to true but mounts a host volume with readOnly unset or false. The read-only root filesystem is intended to prevent an attacker who gains code execution from writing malware, modifying binaries, or persisting across restarts — but a writable host volume mount bypasses this protection entirely. The attacker writes to the host path instead of the root filesystem, achieving the same persistence. The container appears hardened (passes CTL.ECS.TASKDEF.READONLY.001) but the mount configuration silently defeats the purpose. The collector pre-computes readonly_root_bypassed_by_mount when readonlyRootFilesystem is true and at least one host-sourced mountPoint has readOnly false or unset.
+
+**Remediation:** Set readOnly to true on all host volume mountPoints, or replace host volumes with ephemeral Docker volumes that are scoped to the container lifecycle. If the container needs a writable path, use tmpfs mounts (which are memory-backed and do not persist to the host).
+
+---
+
 ### CTL.ECS.SERVICE.CIRCUITBREAKER.001
 
 **ECS Service Has No Deployment Circuit Breaker**

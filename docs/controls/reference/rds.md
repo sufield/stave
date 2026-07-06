@@ -320,6 +320,21 @@ RDS instances should be encrypted with a customer-managed KMS key (CMK), not the
 
 ---
 
+### CTL.RDS.ENCRYPT.KMS.POLICY.001
+
+**KMS Key Policy for RDS Encryption Is Overly Broad**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-13; pci_dss_v4.0: 3.6.1; soc2: CC6.1;
+
+The KMS key used for RDS storage encryption has an overly broad key policy — kms:Decrypt granted to the account root, a wildcard principal, or a broad IAM pattern. An overly broad key policy undermines encryption: any matching principal can decrypt the database's EBS volumes, automated backups, and snapshots regardless of RDS-level access controls. Same cross-property invariant as CTL.S3.ENCRYPT.KMS.POLICY.001 applied to RDS: the resource passes the encryption-enabled check but the key policy makes the encryption cosmetic. The collector pre-computes kms_key_policy_broad by joining the RDS instance's KmsKeyId to the KMS key's policy analysis.
+
+**Remediation:** Scope the KMS key policy to the specific principals and services that need access. Use kms:ViaService condition to restrict usage to rds.amazonaws.com. Remove kms:* grants and limit kms:Decrypt to authorized principals only.
+
+---
+
 ### CTL.RDS.ENGINE.EOL.001
 
 **RDS Instances Must Not Run End-of-Life Database Engine Versions**

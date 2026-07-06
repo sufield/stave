@@ -470,6 +470,21 @@ EBS volume is encrypted (CTL.EC2.EBS.ENCRYPT.001 passes) but the encryption key 
 
 ---
 
+### CTL.EC2.EBS.ENCRYPT.KMS.POLICY.001
+
+**KMS Key Policy for EBS Encryption Is Overly Broad**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-13; pci_dss_v4.0: 3.6.1; soc2: CC6.1;
+
+The KMS key used for EBS volume encryption has an overly broad key policy — kms:Decrypt granted to the account root, a wildcard principal, or a broad IAM pattern. An overly broad key policy undermines encryption: any matching principal can decrypt the volume data, including snapshots derived from it. Same cross-property invariant as CTL.S3.ENCRYPT.KMS.POLICY.001 applied to EBS: the volume passes the encryption-enabled check but the key policy makes the encryption cosmetic. The collector pre-computes kms_key_policy_broad by joining the volume's KmsKeyId to the KMS key's policy analysis.
+
+**Remediation:** Scope the KMS key policy to the specific principals and services that need access. Use kms:ViaService condition to restrict usage to ec2.amazonaws.com. Remove kms:* grants and limit kms:Decrypt to authorized principals only.
+
+---
+
 ### CTL.EC2.EBS.GHOST.AMI.SNAPSHOT.001
 
 **AMI References Deleted EBS Snapshot**

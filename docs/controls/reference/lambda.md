@@ -185,6 +185,21 @@ Lambda functions with asynchronous triggers (S3, SNS, EventBridge, async invoke)
 
 ---
 
+### CTL.LAMBDA.ENCRYPT.KMS.POLICY.001
+
+**KMS Key Policy for Lambda Environment Encryption Is Overly Broad**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-13; pci_dss_v4.0: 3.6.1; soc2: CC6.1;
+
+The KMS key used to encrypt Lambda environment variables has an overly broad key policy — kms:Decrypt granted to the account root, a wildcard principal, or a broad IAM pattern. An overly broad key policy undermines encryption: any matching principal can decrypt the function's environment variables, which typically contain database credentials, API keys, and service tokens. Same cross-property invariant as CTL.S3.ENCRYPT.KMS.POLICY.001 applied to Lambda: the function passes the encryption-configured check but the key policy makes the encryption cosmetic. The collector pre-computes kms_key_policy_broad by joining the function's KMSKeyArn to the KMS key's policy analysis.
+
+**Remediation:** Scope the KMS key policy to the specific principals that need access. Use kms:ViaService condition to restrict usage to lambda.amazonaws.com. Remove kms:* grants and limit kms:Decrypt to the function's execution role and authorized operators only.
+
+---
+
 ### CTL.LAMBDA.ENV.ENCRYPT.001
 
 **Lambda Environment Variables Must Be Encrypted with CMK**

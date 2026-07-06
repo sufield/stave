@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.EBS.ENCRYPT.KMS.POLICY.001
+name: KMS Key Policy for EBS Encryption Is Overly Broad
+description: >
+  The KMS key used for EBS volume encryption has an overly broad
+  key policy — kms:Decrypt granted to the account root, a wildcard
+  principal, or a broad IAM pattern. An overly broad key policy
+  undermines encryption: any matching principal can decrypt the
+  volume data, including snapshots derived from it. Same
+  cross-property invariant as CTL.S3.ENCRYPT.KMS.POLICY.001
+  applied to EBS: the volume passes the encryption-enabled check
+  but the key policy makes the encryption cosmetic. The collector
+  pre-computes kms_key_policy_broad by joining the volume's
+  KmsKeyId to the KMS key's policy analysis.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-13"
+  pci_dss_v4.0: "3.6.1"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-01"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ebs_volume
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - compute.kind
+  - compute.encryption.kms_key_policy_broad
+remediation:
+  description: >
+    KMS key used for EBS encryption has an overly broad key policy.
+    Any matching principal can decrypt the volume data.
+  action: >
+    Scope the KMS key policy to the specific principals and services
+    that need access. Use kms:ViaService condition to restrict usage
+    to ec2.amazonaws.com. Remove kms:* grants and limit kms:Decrypt
+    to authorized principals only.
+  example: |
+    {
+      "compute": {
+        "kind": "ebs_volume",
+        "encryption": {
+          "kms_key_policy_broad": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ebs_volume
+    - field: properties.compute.encryption.kms_key_policy_broad
+      op: eq
+      value: true
+tests:
+  - name: "EBS with broad KMS key policy — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vol-0123456789abcdef0"
+      asset_type: aws_ebs_volume
+      vendor: aws
+      properties:
+        compute:
+          kind: ebs_volume
+          encryption:
+            kms_key_policy_broad: true
+  - name: "EBS with scoped KMS key policy — passes"
+    verdict: PASS
+    asset:
+      asset_id: "vol-0123456789abcdef1"
+      asset_type: aws_ebs_volume
+      vendor: aws
+      properties:
+        compute:
+          kind: ebs_volume
+          encryption:
+            kms_key_policy_broad: false

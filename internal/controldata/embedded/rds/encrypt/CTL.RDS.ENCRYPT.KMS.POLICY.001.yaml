@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.ENCRYPT.KMS.POLICY.001
+name: KMS Key Policy for RDS Encryption Is Overly Broad
+description: >
+  The KMS key used for RDS storage encryption has an overly broad
+  key policy — kms:Decrypt granted to the account root, a wildcard
+  principal, or a broad IAM pattern. An overly broad key policy
+  undermines encryption: any matching principal can decrypt the
+  database's EBS volumes, automated backups, and snapshots
+  regardless of RDS-level access controls. Same cross-property
+  invariant as CTL.S3.ENCRYPT.KMS.POLICY.001 applied to RDS: the
+  resource passes the encryption-enabled check but the key policy
+  makes the encryption cosmetic. The collector pre-computes
+  kms_key_policy_broad by joining the RDS instance's KmsKeyId to
+  the KMS key's policy analysis.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-13"
+  pci_dss_v4.0: "3.6.1"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-01"]
+scope_tags:
+  - aws
+  - rds
+taxonomy:
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_rds_instance
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - database.kind
+  - database.encryption.kms_key_policy_broad
+remediation:
+  description: >
+    KMS key used for RDS encryption has an overly broad key policy.
+    Any matching principal can decrypt the database storage.
+  action: >
+    Scope the KMS key policy to the specific principals and services
+    that need access. Use kms:ViaService condition to restrict usage
+    to rds.amazonaws.com. Remove kms:* grants and limit kms:Decrypt
+    to authorized principals only.
+  example: |
+    {
+      "database": {
+        "kind": "instance",
+        "encryption": {
+          "kms_key_policy_broad": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: instance
+    - field: properties.database.encryption.kms_key_policy_broad
+      op: eq
+      value: true
+tests:
+  - name: "RDS with broad KMS key policy — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:db:prod-primary"
+      asset_type: aws_rds_instance
+      vendor: aws
+      properties:
+        database:
+          kind: instance
+          encryption:
+            kms_key_policy_broad: true
+  - name: "RDS with scoped KMS key policy — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:db:prod-safe"
+      asset_type: aws_rds_instance
+      vendor: aws
+      properties:
+        database:
+          kind: instance
+          encryption:
+            kms_key_policy_broad: false

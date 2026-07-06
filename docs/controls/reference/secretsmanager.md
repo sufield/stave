@@ -35,6 +35,21 @@ Secrets Manager secrets must be encrypted with a customer-managed KMS key. The d
 
 ---
 
+### CTL.SECRETSMANAGER.ENCRYPT.KMS.POLICY.001
+
+**KMS Key Policy for Secrets Manager Encryption Is Overly Broad**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-13, IA-5(7); pci_dss_v4.0: 3.6.1; soc2: CC6.1;
+
+The KMS key used to encrypt a Secrets Manager secret has an overly broad key policy — kms:Decrypt granted to the account root, a wildcard principal, or a broad IAM pattern. An overly broad key policy undermines encryption: any matching principal can decrypt the secret value, bypassing Secrets Manager's resource policy and IAM controls entirely. Same cross-property invariant as CTL.S3.ENCRYPT.KMS.POLICY.001 applied to Secrets Manager: the secret passes the CMK-encrypted check but the key policy makes the encryption cosmetic. The collector pre-computes kms_key_policy_broad by joining the secret's KmsKeyId to the KMS key's policy analysis.
+
+**Remediation:** Scope the KMS key policy to the specific principals that need access. Use kms:ViaService condition to restrict usage to secretsmanager.amazonaws.com. Remove kms:* grants and limit kms:Decrypt to authorized consumers only.
+
+---
+
 ### CTL.SECRETSMANAGER.INCOMPLETE.001
 
 **Complete Data Required for Secrets Manager Assessment**

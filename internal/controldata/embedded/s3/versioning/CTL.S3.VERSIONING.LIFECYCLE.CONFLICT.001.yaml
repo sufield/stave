@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.S3.VERSIONING.LIFECYCLE.CONFLICT.001
+name: S3 Versioning Undermined by Aggressive Lifecycle Expiration
+description: >
+  S3 bucket has versioning enabled but a lifecycle rule expires
+  noncurrent versions in less than 1 day. Versioning provides
+  protection against accidental deletion and ransomware by
+  preserving prior object versions — but if lifecycle immediately
+  deletes noncurrent versions, the protection window collapses to
+  near-zero. The bucket appears protected (versioning enabled,
+  passes CTL.S3.VERSION.001) but the lifecycle configuration
+  silently defeats the purpose. The collector pre-computes
+  lifecycle_defeats_versioning when versioning is enabled and the
+  shortest NoncurrentVersionExpiration across all lifecycle rules
+  is less than 1 day.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-12"
+  soc2: "C1.2"
+  ccm_v4: ["DSP-16"]
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - trust-decay
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: impact
+observation_fields:
+  - storage.kind
+  - storage.versioning.lifecycle_defeats_versioning
+remediation:
+  description: >
+    S3 bucket versioning is undermined by a lifecycle rule that
+    expires noncurrent versions in less than 1 day. Version
+    history provides near-zero recovery window.
+  action: >
+    Increase NoncurrentVersionExpiration NoncurrentDays to at
+    least 30 days (recommended) or the retention period required
+    by your data classification. For compliance-scoped buckets,
+    align with the mandatory retention window.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "versioning": {
+          "lifecycle_defeats_versioning": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.versioning.lifecycle_defeats_versioning
+      op: eq
+      value: true
+tests:
+  - name: "versioning with aggressive lifecycle — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::data-lake-primary"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          versioning:
+            lifecycle_defeats_versioning: true
+  - name: "versioning with reasonable retention — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::data-lake-safe"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          versioning:
+            lifecycle_defeats_versioning: false

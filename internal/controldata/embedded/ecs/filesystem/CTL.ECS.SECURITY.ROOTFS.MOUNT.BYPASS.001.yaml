@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.SECURITY.ROOTFS.MOUNT.BYPASS.001
+name: ECS Container Read-Only Root Filesystem Bypassed by Writable Host Mount
+description: >
+  ECS container has readonlyRootFilesystem set to true but mounts
+  a host volume with readOnly unset or false. The read-only root
+  filesystem is intended to prevent an attacker who gains code
+  execution from writing malware, modifying binaries, or
+  persisting across restarts — but a writable host volume mount
+  bypasses this protection entirely. The attacker writes to the
+  host path instead of the root filesystem, achieving the same
+  persistence. The container appears hardened (passes
+  CTL.ECS.TASKDEF.READONLY.001) but the mount configuration
+  silently defeats the purpose. The collector pre-computes
+  readonly_root_bypassed_by_mount when readonlyRootFilesystem is
+  true and at least one host-sourced mountPoint has readOnly false
+  or unset.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-05"]
+scope_tags:
+  - aws
+  - ecs
+taxonomy:
+  - compute-hardening
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ecs_container
+params:
+  attack_stage: persistence
+observation_fields:
+  - container.kind
+  - container.filesystem.readonly_root_bypassed_by_mount
+remediation:
+  description: >
+    ECS container read-only root filesystem is bypassed by a
+    writable host volume mount. The filesystem restriction is
+    cosmetic.
+  action: >
+    Set readOnly to true on all host volume mountPoints, or
+    replace host volumes with ephemeral Docker volumes that are
+    scoped to the container lifecycle. If the container needs a
+    writable path, use tmpfs mounts (which are memory-backed and
+    do not persist to the host).
+  example: |
+    {
+      "container": {
+        "kind": "ecs_container",
+        "filesystem": {
+          "readonly_root_bypassed_by_mount": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_container
+    - field: properties.container.filesystem.readonly_root_bypassed_by_mount
+      op: eq
+      value: true
+tests:
+  - name: "readonly root with writable host mount — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:task-definition/app:7/app"
+      asset_type: aws_ecs_container
+      vendor: aws
+      properties:
+        container:
+          kind: ecs_container
+          filesystem:
+            readonly_root_bypassed_by_mount: true
+  - name: "readonly root with no writable host mount — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:task-definition/app:7/worker"
+      asset_type: aws_ecs_container
+      vendor: aws
+      properties:
+        container:
+          kind: ecs_container
+          filesystem:
+            readonly_root_bypassed_by_mount: false
