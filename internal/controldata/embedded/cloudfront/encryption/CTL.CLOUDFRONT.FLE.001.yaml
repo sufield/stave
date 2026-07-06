@@ -20,7 +20,7 @@ scope_tags:
   - aws
   - cloudfront
 taxonomy:
-  - encryption
+  - encryption-in-transit
   - compliance-mapping
 type: unsafe_state
 classification: state_assertion

@@ -19,6 +19,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/diag"
 	"github.com/sufield/stave/internal/core/kernel"
+	_ "github.com/sufield/stave/internal/core/taxonomy" // registers CategoryID vocabulary
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 

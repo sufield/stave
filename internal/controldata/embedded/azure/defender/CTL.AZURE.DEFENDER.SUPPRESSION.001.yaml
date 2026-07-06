@@ -12,6 +12,7 @@ compliance:
 scope_tags: [azure]
 taxonomy:
   - compliance-mapping
+  - detection-evasion
 type: unsafe_state
 classification: state_assertion
 params:

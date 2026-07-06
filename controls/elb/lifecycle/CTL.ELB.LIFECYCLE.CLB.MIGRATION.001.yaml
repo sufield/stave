@@ -25,6 +25,7 @@ scope_tags:
   - elb
 taxonomy:
   - compliance-mapping
+  - deprecation
 type: unsafe_state
 classification: state_assertion
 params:

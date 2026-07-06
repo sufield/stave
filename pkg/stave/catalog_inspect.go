@@ -123,7 +123,7 @@ func controlDetailFrom(c *policy.ControlDefinition, chainIDs []string) ControlDe
 		ApplicableAssetTypes: assets,
 		Compliance:           compliance,
 		ObservationFields:    c.ObservationFields,
-		Taxonomy:             c.Taxonomy,
+		Taxonomy:             categoryIDsToStrings(c.Taxonomy),
 		Chains:               chainIDs,
 		Remediation:          rem,
 	}
@@ -205,4 +205,15 @@ func renderControlDetailText(buf *bytes.Buffer, d ControlDetail) {
 	}
 
 	fmt.Fprintf(buf, "\nDescription:\n  %s\n", d.Description)
+}
+
+func categoryIDsToStrings(ids []kernel.CategoryID) []string {
+	if len(ids) == 0 {
+		return nil
+	}
+	out := make([]string, len(ids))
+	for i, id := range ids {
+		out[i] = string(id)
+	}
+	return out
 }

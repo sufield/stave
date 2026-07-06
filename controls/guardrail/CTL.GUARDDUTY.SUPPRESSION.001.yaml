@@ -18,6 +18,7 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - monitoring
+  - detection-evasion
 type: unsafe_state
 classification: state_assertion
 params:

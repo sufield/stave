@@ -24,6 +24,7 @@ taxonomy:
   - compliance-mapping
   - monitoring
   - trust-decay
+  - deprecation
 type: unsafe_state
 classification: state_assertion
 params:

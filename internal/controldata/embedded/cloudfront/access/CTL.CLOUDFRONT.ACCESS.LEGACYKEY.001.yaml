@@ -29,6 +29,7 @@ taxonomy:
   - compliance-mapping
   - key-management
   - logging
+  - deprecation
 type: unsafe_state
 classification: state_assertion
 params:

@@ -172,6 +172,9 @@ func main() {
 			continue
 		}
 		fixDir := filepath.Join(*rootFlag, name)
+		if !isRunnableFixture(fixDir) {
+			continue
+		}
 		if affected != nil && !fixtureIntersectsAffected(fixDir, affected) {
 			skipped++
 			continue
@@ -228,6 +231,9 @@ func main() {
 				continue
 			}
 			fixDir := filepath.Join(*rootFlag, name)
+			if !isRunnableFixture(fixDir) {
+				continue
+			}
 			if !fixtureIntersectsAffected(fixDir, affected) {
 				reports = append(reports, fixtureReport{Fixture: name, Category: catClean})
 			}
@@ -490,6 +496,23 @@ func joinSorted(set map[string]struct{}) string {
 	return strings.Join(names, ", ")
 }
 
+// isRunnableFixture reports whether the directory matches one of the three
+// invocation shapes that runStave supports: command.txt, profile-style
+// (observations.json + golden.json), or default apply (controls/ + observations/).
+// Directories that don't match any shape (e.g. graph-ontology's experiment
+// subdirs, or incomplete profile stubs) are skipped silently.
+func isRunnableFixture(fixDir string) bool {
+	if exists(filepath.Join(fixDir, "command.txt")) {
+		return true
+	}
+	if exists(filepath.Join(fixDir, "observations.json")) && exists(filepath.Join(fixDir, "golden.json")) {
+		return true
+	}
+	controlsDir := filepath.Join(fixDir, "controls")
+	observationsDir := filepath.Join(fixDir, "observations")
+	return exists(controlsDir) && exists(observationsDir)
+}
+
 // processFixture runs the correct stave invocation for the fixture, diffs
 // the result against the existing goldens, classifies, and (unless
 // dry-run) writes updated goldens.
@@ -641,11 +664,7 @@ func runCmd(args []string) ([]byte, int, error) {
 	} else if err != nil {
 		return nil, 0, fmt.Errorf("exec: %w\nstderr: %s", err, stderr.String())
 	}
-	out := stdout.Bytes()
-	if len(out) == 0 && exitCode != 0 && exitCode != 3 {
-		return nil, 0, fmt.Errorf("stave exited %d with no stdout; stderr: %s", exitCode, stderr.String())
-	}
-	return out, exitCode, nil
+	return stdout.Bytes(), exitCode, nil
 }
 
 // detectGoldens lists golden filenames present in the fixture dir.

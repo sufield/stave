@@ -27,6 +27,7 @@ scope_tags:
 taxonomy:
   - encryption-in-transit
   - trust-decay
+  - deprecation
 type: unsafe_state
 classification: state_assertion
 params:

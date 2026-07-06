@@ -28,6 +28,7 @@ compliance:
 scope_tags: [aws, rds]
 taxonomy:
   - compliance-mapping
+  - deprecation
 type: unsafe_state
 classification: state_assertion
 params:

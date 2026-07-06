@@ -32,6 +32,7 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - network-isolation
+  - deprecation
 type: unsafe_state
 classification: state_assertion
 params:

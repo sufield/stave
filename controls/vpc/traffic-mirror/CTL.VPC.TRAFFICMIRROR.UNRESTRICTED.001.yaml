@@ -30,6 +30,7 @@ taxonomy:
   - account-governance
   - compliance-mapping
   - network-perimeter
+  - detection-evasion
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

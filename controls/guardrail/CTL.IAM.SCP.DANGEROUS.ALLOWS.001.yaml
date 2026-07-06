@@ -25,6 +25,7 @@ scope_tags:
 taxonomy:
   - account-governance
   - compliance-mapping
+  - detection-evasion
 type: unsafe_state
 classification: state_assertion
 params:

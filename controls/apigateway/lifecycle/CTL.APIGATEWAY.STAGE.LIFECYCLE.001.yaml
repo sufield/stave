@@ -29,6 +29,7 @@ taxonomy:
   - compliance-mapping
   - resource-sprawl
   - trust-decay
+  - deprecation
 type: unsafe_state
 classification: state_assertion
 params:

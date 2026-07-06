@@ -138,6 +138,37 @@ categories:
       Missing organizational governance. SCP enforcement, RCP
       enforcement, delegated admin, Control Tower, Organizations.
 
+  - id: formal-semantics
+    name: Policy Evaluation Semantics
+    definition: >
+      IAM policy condition structures where the evaluation model
+      produces results the author didn't intend. ForAllValues vacuous
+      satisfaction, operator/key mismatches, deny narrowing, absent-key
+      interactions, set operator on single-valued keys.
+
+  - id: detection-evasion
+    name: Detection Evasion
+    definition: >
+      Configurations allowing an attacker to blind monitoring or
+      suppress detection. GuardDuty IPSet manipulation, VPC traffic
+      mirroring abuse, CloudTrail tampering, log deletion without
+      protection.
+
+  - id: deprecation
+    name: Deprecation & Lifecycle
+    definition: >
+      Resources referencing artifacts AWS no longer supports or has
+      superseded. Engine versions past EOL, legacy TLS policies with
+      weak ciphers, superseded mechanisms (launch configurations,
+      S3 ACLs, Classic ELBs).
+
+  - id: data-protection
+    name: Data Protection
+    definition: >
+      Data discovery and protection policies. PII detection, data
+      masking, data classification, sensitive data identification
+      in messages and logs.
+
   - id: compliance-mapping
     name: Compliance Mapping
     definition: >

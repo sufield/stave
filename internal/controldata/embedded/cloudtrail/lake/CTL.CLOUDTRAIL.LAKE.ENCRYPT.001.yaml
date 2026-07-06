@@ -19,7 +19,7 @@ scope_tags:
   - cloudtrail
 taxonomy:
   - compliance-mapping
-  - encryption
+  - encryption-at-rest
 type: unsafe_state
 classification: state_assertion
 params:

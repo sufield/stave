@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // Summary holds catalog-wide aggregate counts for the summary-view header.
@@ -165,10 +166,10 @@ func LeafControls(controls []policy.ControlDefinition, service, category, severi
 	return out
 }
 
-func hasTaxonomyMatch(tags, filter []string) bool {
+func hasTaxonomyMatch(tags []kernel.CategoryID, filter []string) bool {
 	for _, f := range filter {
 		for _, t := range tags {
-			if strings.EqualFold(t, f) {
+			if strings.EqualFold(string(t), f) {
 				return true
 			}
 		}

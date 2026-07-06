@@ -32,7 +32,7 @@ func RenderTaxonomy(ctx context.Context, opts TaxonomyOptions) ([]byte, error) {
 	counts := map[string]int{}
 	for i := range controls {
 		for _, t := range controls[i].Taxonomy {
-			counts[t]++
+			counts[string(t)]++
 		}
 	}
 

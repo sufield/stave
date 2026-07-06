@@ -27,7 +27,7 @@ scope_tags:
   - s3
 taxonomy:
   - compliance-mapping
-  - supply-chain
+  - ai-supply-chain
 type: unsafe_state
 classification: state_assertion
 params:

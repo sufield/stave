@@ -21,6 +21,7 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - credential-lifecycle
+  - deprecation
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

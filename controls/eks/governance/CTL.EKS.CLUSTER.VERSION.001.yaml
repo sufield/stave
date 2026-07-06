@@ -23,6 +23,7 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - monitoring
+  - deprecation
 type: unsafe_state
 classification: state_assertion
 params:

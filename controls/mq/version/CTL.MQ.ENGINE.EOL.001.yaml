@@ -24,6 +24,7 @@ scope_tags:
   - mq
 taxonomy:
   - compliance-mapping
+  - deprecation
 type: unsafe_state
 classification: state_assertion
 params:

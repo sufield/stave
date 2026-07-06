@@ -22,6 +22,7 @@ scope_tags:
   - opensearch
 taxonomy:
   - compliance-mapping
+  - deprecation
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

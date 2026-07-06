@@ -29,6 +29,7 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - encryption-at-rest
+  - deprecation
 type: unsafe_state
 classification: state_assertion
 params:

@@ -14,6 +14,7 @@ compliance:
 scope_tags: [gcp]
 taxonomy:
   - compliance-mapping
+  - deprecation
 type: unsafe_state
 classification: state_assertion
 params:

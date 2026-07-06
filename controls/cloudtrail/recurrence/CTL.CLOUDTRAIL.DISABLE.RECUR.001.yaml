@@ -19,6 +19,7 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - logging
+  - detection-evasion
 type: unsafe_recurrence
 classification: aggregate_check
 params:

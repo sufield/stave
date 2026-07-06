@@ -19,6 +19,7 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - credential-lifecycle
+  - deprecation
 type: unsafe_state
 classification: parameterized_check
 params:

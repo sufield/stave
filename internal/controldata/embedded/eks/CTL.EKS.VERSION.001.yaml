@@ -31,6 +31,7 @@ scope_tags:
   - k8s
 taxonomy:
   - compliance-mapping
+  - deprecation
 type: unsafe_state
 classification: state_assertion
 params:

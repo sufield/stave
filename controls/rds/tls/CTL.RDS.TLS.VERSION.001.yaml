@@ -23,6 +23,7 @@ scope_tags: [aws, rds]
 taxonomy:
   - compliance-mapping
   - encryption-in-transit
+  - deprecation
 type: unsafe_state
 classification: state_assertion
 params:

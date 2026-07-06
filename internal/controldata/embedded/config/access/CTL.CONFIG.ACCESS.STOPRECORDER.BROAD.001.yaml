@@ -28,6 +28,7 @@ taxonomy:
   - compliance-mapping
   - least-privilege
   - logging
+  - detection-evasion
 type: unsafe_state
 classification: state_assertion
 params:

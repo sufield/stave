@@ -15,6 +15,7 @@ scope_tags:
   - msk
 taxonomy:
   - compliance-mapping
+  - deprecation
 type: unsafe_state
 classification: state_assertion
 params:
