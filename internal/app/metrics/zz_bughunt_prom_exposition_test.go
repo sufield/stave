@@ -30,7 +30,7 @@ func TestBugHunt_Write_PrometheusExpositionHeadersOnly(t *testing.T) {
 	// Since info is the only SLA-bearing finding, and info is NOT in the loop:
 	// The HELP/TYPE headers for stave_sla_burn_rate will be written, but NO metrics lines will follow.
 	// This violates the Prometheus exposition format where headers must not stand alone.
-	
+
 	hasHeader := strings.Contains(output, "# HELP stave_sla_burn_rate")
 	hasMetric := strings.Contains(output, "stave_sla_burn_rate{")
 

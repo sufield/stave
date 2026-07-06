@@ -436,6 +436,11 @@ check-unsafe-writes:
 ## check: Run all checks (fmt, vet, lint, terminology, deadcode, test)
 check: fmt vet lint stale-terminology-check check-unsafe-writes deadcode-check test
 
+## semantic-diff: Run CEL vs reference differential on S3 controls + iam_condition_bypass chain
+## Use ARGS for additional flags: make semantic-diff ARGS="-symbolic -v"
+semantic-diff: sync-controls
+	$(GOCMD) run ./internal/tools/semantic-diff $(ARGS)
+
 ## ci: CI pipeline (tidy, check, build)
 ci: tidy check build
 

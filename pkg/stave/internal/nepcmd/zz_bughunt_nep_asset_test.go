@@ -54,8 +54,8 @@ func TestBugHunt_ResolvePrincipal_FallbackAssetPolicies(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to marshal snapshots: %v", err)
 	}
-	if err := os.WriteFile(snapFile, data, 0600); err != nil {
-		t.Fatalf("failed to write snapshot file: %v", err)
+	if writeErr := os.WriteFile(snapFile, data, 0600); writeErr != nil {
+		t.Fatalf("failed to write snapshot file: %v", writeErr)
 	}
 
 	// Resolve the principal using our config

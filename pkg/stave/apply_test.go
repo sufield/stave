@@ -22,9 +22,9 @@ var frozenNow = time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
 // TestApply_LordofheavenBuiltinControls runs the library against
 // the lordofheaven snapshot using the embedded builtin catalog
 // (Config.ControlsDir empty). The expected shape is foundational
-// for both prototypes: 38 findings after asset-type gating + the
-// collector's per-FindingID dedup, 14 Issues after consolidation,
-// NON_COMPLIANT status. The numbers dropped:
+// for both prototypes: 50 findings after asset-type gating + the
+// collector's per-FindingID dedup, 26 Issues after consolidation,
+// NON_COMPLIANT status. The numbers changed:
 //
 //   - 62/23 → 54/18 once ExceedsSLA was changed to strict-greater.
 //   - 54 → 42 once the AssessmentCollector started deduplicating by
@@ -32,9 +32,11 @@ var frozenNow = time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
 //   - 42/18 → 38/14 once the prefix-exposure evaluator stopped
 //     treating missing evidence as VIOLATION (now INCONCLUSIVE),
 //     and INCOMPLETE controls gained applicable_asset_types scoping.
+//   - 38/14 → 50/26 after new controls (EC2 account toggles,
+//     expanded S3/SNS/SQS/Lambda policy families).
 func TestApply_LordofheavenBuiltinControls(t *testing.T) {
-	const wantFindings = 38
-	const wantIssues = 14
+	const wantFindings = 50
+	const wantIssues = 26
 
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,
