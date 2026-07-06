@@ -1150,7 +1150,8 @@ SYNC_EXCLUDES = \
 	--exclude='docs/new-readme.md' \
 	--exclude='docs/pending-items.md' \
 	--exclude='docs/sir-pending-discussion.md' \
-	--exclude='/gofixer.md'
+	--exclude='/gofixer.md' \
+	--exclude='.stave-backlog/'
 
 ## sync: Sync to public repo (calls sync-skills automatically so the
 ##       monorepo's external-but-published assets ride along)
