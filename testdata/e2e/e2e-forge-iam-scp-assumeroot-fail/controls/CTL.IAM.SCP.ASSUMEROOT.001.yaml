@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.ASSUMEROOT.001
+name: "SCP Does Not Deny sts:AssumeRoot"
+description: >
+  SCP does not deny sts:AssumeRoot in the organization. A compromised
+  management account principal can call sts:AssumeRoot to obtain root
+  credentials in any member account, bypassing all IAM controls. This
+  grants unrestricted access to every service and resource in the target
+  account. AWS CIRT identifies this as a recurring technique in
+  real-world incidents — a single compromised management account
+  escalates to org-wide root access.
+domain: identity
+severity: critical
+compliance:
+  owasp_nhi: "NHI6"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - account-governance
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_assume_root
+remediation:
+  description: >
+    Organization SCPs do not deny sts:AssumeRoot. A compromised
+    management account principal can call sts:AssumeRoot to get root
+    credentials in any member account, bypassing all IAM controls in
+    the member account.
+  action: >
+    Add an SCP that denies sts:AssumeRoot for all principals except a
+    specific break-glass role. Attach to the organization root OU.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_assume_root": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_assume_root
+      op: eq
+      value: false
+tests:
+  - name: "organization without AssumeRoot denial fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_assume_root: false
+  - name: "organization with AssumeRoot denial passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_assume_root: true

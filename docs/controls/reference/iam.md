@@ -2501,6 +2501,21 @@ The root account must not be used for day-to-day operations. Root activity shoul
 
 ---
 
+### CTL.IAM.SCP.ASSUMEROOT.001
+
+**SCP Does Not Deny sts:AssumeRoot**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+SCP does not deny sts:AssumeRoot in the organization. A compromised management account principal can call sts:AssumeRoot to obtain root credentials in any member account, bypassing all IAM controls. This grants unrestricted access to every service and resource in the target account. AWS CIRT identifies this as a recurring technique in real-world incidents — a single compromised management account escalates to org-wide root access.
+
+**Remediation:** Add an SCP that denies sts:AssumeRoot for all principals except a specific break-glass role. Attach to the organization root OU.
+
+---
+
 ### CTL.IAM.SCP.CLOUDTRAIL.001
 
 **SCP Does Not Protect CloudTrail**
