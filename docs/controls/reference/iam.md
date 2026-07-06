@@ -2744,6 +2744,36 @@ Service Control Policies must deny cloudtrail:StopLogging, cloudtrail:DeleteTrai
 
 ---
 
+### CTL.IAM.SEMANTICS.ACTION.RESOURCE.MISMATCH.001
+
+**Action-Resource Service Mismatch in Policy Statement**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+A policy statement lists actions from one AWS service and resources from a different service. IAM evaluates actions against resources by matching the resource ARN's service namespace to the action's service namespace. When they don't match, the action cannot operate on the resource — the statement is effectively dead code for that action-resource pair. For example, a statement with Action "s3:GetObject" and Resource "arn:aws:ec2:*:*:instance/*" grants nothing: s3:GetObject only operates on S3 resources. The policy author either (1) copied the wrong resource ARN, (2) intended a different action, or (3) has a wildcard Resource ("*") that masks the mismatch. This control fires only on explicit non-wildcard Resource ARNs that don't match the action's service. Detection requires parsing the ARN service field and comparing to the action's service prefix. The iam-dataset provides the canonical action-to-resource-type mapping for validation.
+
+**Remediation:** Align the Resource ARN service with the Action service. If the statement needs to cover multiple services, use separate statements with matching action-resource pairs. Cross-reference the iam-dataset action-to-resource-type mapping to verify which resource types each action supports.
+
+---
+
+### CTL.IAM.SEMANTICS.CONDKEY.INAPPLICABLE.001
+
+**Condition Key Inapplicable to Statement Actions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+A policy statement uses a condition key that is not applicable to any of the statement's actions. IAM condition keys are per-service and per-action — each action only recognizes specific condition keys. When a condition uses a key that none of the statement's actions support, IAM silently ignores the condition: the key is absent from the request context, and the condition evaluates based on its absent-key semantics (true for IfExists/ForAllValues, false for standard operators/ForAnyValue). The policy author intended the condition to restrict the action, but it has no effect. For example, using s3:prefix as a condition key on ec2:RunInstances — s3:prefix is only populated by S3 API calls and is absent from EC2 requests. The condition is dead code that provides a false sense of restriction. Detection requires cross-referencing the policy's Action list against the IAM service authorization reference (iann0036/iam-dataset) to verify each condition key is recognized by at least one listed action.
+
+**Remediation:** Verify the condition key is applicable to the statement's actions using the IAM service authorization reference. Either replace the condition key with one the actions support, or split the statement so each action has conditions it recognizes. Use the iam-dataset action-to-condition-key mapping for programmatic validation.
+
+---
+
 ### CTL.IAM.SEMANTICS.DENY.ANDNARROW.001
 
 **Deny with Multiple Negated Conditions AND-Narrows the Deny Domain**

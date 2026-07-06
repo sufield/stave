@@ -95,6 +95,21 @@ SNS topic has a subscription that delivers messages to an endpoint in an externa
 
 ---
 
+### CTL.SNS.DATAPROTECTION.001
+
+**SNS Topic Has No Data Protection Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-28; scs_c02: 8.12; soc2: CC6.7;
+
+An SNS topic has no data protection policy configured. Data protection policies detect and optionally redact or deny messages containing sensitive data (PII, PHI, financial data). Without a policy, sensitive data published to the topic flows to all subscribers unfiltered.
+
+**Remediation:** Add a data protection policy: aws sns put-data-protection-policy --resource-arn <topic-arn> --data-protection-policy file://policy.json.
+
+---
+
 ### CTL.SNS.DELIVERY.LOG.RETENTION.001
 
 **SNS Delivery Status Log Group Has Insufficient Retention**

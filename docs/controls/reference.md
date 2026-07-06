@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2859
-**Pack hash:** `78a424ba409b5f430e03462797cfd227e0ee3cf83031ea8c46f9150f2eb01a19`
+**Total controls:** 2872
+**Pack hash:** `9b013baba6bc832068221deccf6db5264175d5f75a59ddc1933c261d2d0586ce`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 293 |
-| high | 1248 |
+| high | 1252 |
 | info | 16 |
 | low | 213 |
-| medium | 1089 |
+| medium | 1098 |
 
 | Domain | Count |
 |--------|-------|
@@ -26,10 +26,10 @@ GitHub. Pick a service below.
 | capacity | 3 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1254 |
-| governance | 600 |
+| exposure | 1257 |
+| governance | 607 |
 | hygiene | 18 |
-| identity | 503 |
+| identity | 506 |
 | lifecycle | 31 |
 | network | 43 |
 | resilience | 35 |
@@ -46,6 +46,7 @@ GitHub. Pick a service below.
 | [APIGW2](reference/apigw2.md) | 2 |
 | [APPSTREAM](reference/appstream.md) | 1 |
 | [ATHENA](reference/athena.md) | 2 |
+| [AUDITMANAGER](reference/auditmanager.md) | 1 |
 | [AUTOSCALING](reference/autoscaling.md) | 3 |
 | [AZURE](reference/azure.md) | 141 |
 | [BACKUP](reference/backup.md) | 10 |
@@ -79,14 +80,16 @@ GitHub. Pick a service below.
 | [EMR](reference/emr.md) | 6 |
 | [EVENTBRIDGE](reference/eventbridge.md) | 96 |
 | [EXPOSURE](reference/exposure.md) | 11 |
+| [FMS](reference/fms.md) | 2 |
 | [GCP](reference/gcp.md) | 72 |
 | [GCS](reference/gcs.md) | 7 |
 | [GHOST](reference/ghost.md) | 2 |
 | [GITHUB](reference/github.md) | 22 |
 | [GLUE](reference/glue.md) | 12 |
+| [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 14 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 223 |
+| [IAM](reference/iam.md) | 225 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 3 |
@@ -95,7 +98,7 @@ GitHub. Pick a service below.
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
 | [LIGHTSAIL](reference/lightsail.md) | 2 |
 | [M365](reference/m365.md) | 73 |
-| [MACIE](reference/macie.md) | 2 |
+| [MACIE](reference/macie.md) | 3 |
 | [META](reference/meta.md) | 1 |
 | [MODEL](reference/model.md) | 2 |
 | [MQ](reference/mq.md) | 2 |
@@ -114,11 +117,15 @@ GitHub. Pick a service below.
 | [SECRETS](reference/secrets.md) | 31 |
 | [SECRETSMANAGER](reference/secretsmanager.md) | 4 |
 | [SECURITYHUB](reference/securityhub.md) | 7 |
+| [SECURITYLAKE](reference/securitylake.md) | 2 |
+| [SERVICECATALOG](reference/servicecatalog.md) | 1 |
+| [SES](reference/ses.md) | 1 |
 | [SHIELD](reference/shield.md) | 1 |
-| [SNS](reference/sns.md) | 38 |
+| [SNS](reference/sns.md) | 39 |
 | [SQS](reference/sqs.md) | 37 |
 | [SSM](reference/ssm.md) | 13 |
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
+| [TRANSFER](reference/transfer.md) | 1 |
 | [VPC](reference/vpc.md) | 88 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 8 |

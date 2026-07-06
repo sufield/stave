@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SEMANTICS.ACTION.RESOURCE.MISMATCH.001
+name: Action-Resource Service Mismatch in Policy Statement
+description: >
+  A policy statement lists actions from one AWS service and resources
+  from a different service. IAM evaluates actions against resources
+  by matching the resource ARN's service namespace to the action's
+  service namespace. When they don't match, the action cannot operate
+  on the resource — the statement is effectively dead code for that
+  action-resource pair. For example, a statement with Action
+  "s3:GetObject" and Resource "arn:aws:ec2:*:*:instance/*" grants
+  nothing: s3:GetObject only operates on S3 resources. The policy
+  author either (1) copied the wrong resource ARN, (2) intended a
+  different action, or (3) has a wildcard Resource ("*") that masks
+  the mismatch. This control fires only on explicit non-wildcard
+  Resource ARNs that don't match the action's service. Detection
+  requires parsing the ARN service field and comparing to the
+  action's service prefix. The iam-dataset provides the canonical
+  action-to-resource-type mapping for validation.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - formal-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_policy
+params:
+  attack_stage: initial_access
+  base_impact: 5
+remediation:
+  description: >
+    This policy statement has actions from one AWS service and
+    explicit resource ARNs from a different service. The actions
+    cannot operate on the listed resources.
+  action: >
+    Align the Resource ARN service with the Action service. If the
+    statement needs to cover multiple services, use separate
+    statements with matching action-resource pairs. Cross-reference
+    the iam-dataset action-to-resource-type mapping to verify which
+    resource types each action supports.
+  example: |
+    {
+      "identity": {
+        "kind": "policy",
+        "policy": {
+          "semantics": {
+            "has_action_resource_service_mismatch": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: policy
+    - field: properties.identity.policy.semantics.has_action_resource_service_mismatch
+      op: eq
+      value: true
+tests:
+  - name: "s3:GetObject with ec2 resource ARN fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/WrongResource"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_action_resource_service_mismatch: true
+  - name: "s3:GetObject with s3 resource ARN passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/CorrectResource"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_action_resource_service_mismatch: false

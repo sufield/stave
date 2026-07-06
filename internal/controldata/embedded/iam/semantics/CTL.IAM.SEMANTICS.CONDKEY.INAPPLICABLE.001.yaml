@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SEMANTICS.CONDKEY.INAPPLICABLE.001
+name: Condition Key Inapplicable to Statement Actions
+description: >
+  A policy statement uses a condition key that is not applicable to
+  any of the statement's actions. IAM condition keys are per-service
+  and per-action — each action only recognizes specific condition
+  keys. When a condition uses a key that none of the statement's
+  actions support, IAM silently ignores the condition: the key is
+  absent from the request context, and the condition evaluates based
+  on its absent-key semantics (true for IfExists/ForAllValues, false
+  for standard operators/ForAnyValue). The policy author intended the
+  condition to restrict the action, but it has no effect. For example,
+  using s3:prefix as a condition key on ec2:RunInstances — s3:prefix
+  is only populated by S3 API calls and is absent from EC2 requests.
+  The condition is dead code that provides a false sense of
+  restriction. Detection requires cross-referencing the policy's
+  Action list against the IAM service authorization reference
+  (iann0036/iam-dataset) to verify each condition key is recognized
+  by at least one listed action.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - formal-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_policy
+params:
+  attack_stage: privilege_escalation
+  base_impact: 7
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    This policy uses a condition key that none of the statement's
+    actions recognize. The condition is silently ignored — it provides
+    no restriction.
+  action: >
+    Verify the condition key is applicable to the statement's actions
+    using the IAM service authorization reference. Either replace the
+    condition key with one the actions support, or split the statement
+    so each action has conditions it recognizes. Use the iam-dataset
+    action-to-condition-key mapping for programmatic validation.
+  example: |
+    {
+      "identity": {
+        "kind": "policy",
+        "policy": {
+          "semantics": {
+            "has_condition_key_inapplicable_to_action": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: policy
+    - field: properties.identity.policy.semantics.has_condition_key_inapplicable_to_action
+      op: eq
+      value: true
+tests:
+  - name: "policy with s3:prefix condition on ec2:RunInstances fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/MismatchedCondition"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_condition_key_inapplicable_to_action: true
+  - name: "policy with s3:prefix condition on s3:GetObject passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/CorrectCondition"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_condition_key_inapplicable_to_action: false

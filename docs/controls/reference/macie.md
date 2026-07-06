@@ -35,3 +35,18 @@ Amazon Macie must be enabled for automated sensitive data discovery in S3 bucket
 
 ---
 
+### CTL.MACIE.ORG.NODELEGATED.001
+
+**Macie Has No Delegated Administrator**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6(5); scs_c02: 8.10; soc2: CC6.1;
+
+Amazon Macie has no delegated administrator registered. Macie administration runs from the management account, concentrating data classification operations in the highest-trust account boundary. A dedicated security account should manage Macie across the organization.
+
+**Remediation:** Register a delegated admin: aws macie2 enable-organization-admin-account --admin-account-id <security-acct>.
+
+---
+
