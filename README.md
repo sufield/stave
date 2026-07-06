@@ -2,7 +2,6 @@
 
 Stave finds dangerous **combinations** in your cloud configuration that single-check scanners miss. A correctly-scoped IAM role, a properly-private S3 bucket, and a correctly-configured Cognito identity pool can compose into a path that lets anonymous users reach patient data. Stave detects these compound risks on static configuration snapshots — no cloud credentials required.
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/sufield/stave?v=1)](https://goreportcard.com/report/github.com/sufield/stave)
 [![codecov](https://codecov.io/gh/sufield/stave/graph/badge.svg?token=OQ72PYGVPZ)](https://codecov.io/gh/sufield/stave)
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sufield/stave?quickstart=1)
 
@@ -82,7 +81,7 @@ Static configuration snapshots in, deterministic findings out. No cloud credenti
 
 ## Catalog at a glance
 
-- **2884 built-in controls across 85 domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, EKS, CloudTrail, KMS, OpenSearch, SageMaker, Bedrock, Cognito, and [71 more](docs/controls/reference.md).
+- **2890 built-in controls across 85 domains** — S3, IAM, VPC, EC2, RDS, Lambda, ECS, EKS, CloudTrail, KMS, OpenSearch, SageMaker, Bedrock, Cognito, and [71 more](docs/controls/reference.md).
 - **23 ghost-reference controls** — cross-inventory detection of pointers to deleted resources (IAM → role, agent → Lambda, CNAME → S3 bucket). Single-resource scanners can't see absence.
 - **618 compound chain definitions** — multi-step attack paths across identity, data, audit, and recovery surfaces; 5 of those land on AI agent identity (Bedrock + Lambda + S3 PHI, RAG → PHI, notebook → prod role).
 - **10 compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0.
@@ -229,7 +228,7 @@ Controls are `unsafe_predicate:` match rules (`all:`/`any:` groups of `field`/`o
 
 ## Built-in controls
 
-2884 controls across 85 domains. Largest surfaces today: AWS S3 (131), AWS IAM (218), AWS OpenSearch (132), GCP Cloud Storage (7), DNS (3, vendor-agnostic dangling-reference detection).
+2890 controls across 85 domains. Largest surfaces today: AWS S3 (131), AWS IAM (218), AWS OpenSearch (132), GCP Cloud Storage (7), DNS (3, vendor-agnostic dangling-reference detection).
 
 Full reference and per-domain breakdowns: [`docs/controls/reference.md`](docs/controls/reference.md).
 

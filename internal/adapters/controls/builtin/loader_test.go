@@ -105,6 +105,24 @@ func TestLoadAll_NoDuplicateIDs(t *testing.T) {
 	}
 }
 
+func TestLoadAll_AllControlsHaveTaxonomy(t *testing.T) {
+	t.Parallel()
+	controls, err := testRegistry().All()
+	if err != nil {
+		t.Fatalf("All failed: %v", err)
+	}
+	var missing []kernel.ControlID
+	for _, ctl := range controls {
+		if len(ctl.Taxonomy) == 0 {
+			missing = append(missing, ctl.ID)
+		}
+	}
+	if len(missing) > 0 {
+		t.Errorf("%d/%d controls have no taxonomy (first 5: %v)",
+			len(missing), len(controls), missing[:min(5, len(missing))])
+	}
+}
+
 func TestLoadAll_AliasesAreExpanded(t *testing.T) {
 	t.Parallel()
 	controls, err := testRegistry().All()

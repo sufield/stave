@@ -1,0 +1,52 @@
+dsl_version: ctrl.v1
+id: CTL.KINESIS.MODE.PROVISIONED.001
+name: Kinesis Stream Should Use On-Demand Capacity Mode
+description: >
+  Kinesis data streams using provisioned capacity mode should migrate
+  to on-demand mode. Provisioned mode is the legacy capacity model
+  that requires manual shard management and capacity planning.
+  On-demand mode automatically scales throughput and eliminates
+  the operational burden of shard splitting and merging. Some
+  high-throughput workloads may legitimately use provisioned mode
+  for cost optimization at scale — this finding is informational
+  for those cases.
+domain: config
+severity: low
+compliance:
+  nist_800_53_r5: "SA-8"
+scope_tags:
+  - aws
+  - kinesis
+taxonomy:
+  - compliance-mapping
+  - deprecation
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Kinesis data stream uses provisioned capacity mode, the legacy
+    capacity model.
+  action: >
+    Switch the stream to on-demand mode. Use
+    aws kinesis update-stream-mode --stream-arn <arn>
+    --stream-mode-details StreamMode=ON_DEMAND. On-demand mode
+    automatically scales throughput up to the account limits.
+    Review cost implications — on-demand pricing differs from
+    provisioned shard-hour pricing.
+  example: |
+    {
+      "streaming": {
+        "kind": "kinesis_stream",
+        "stream_mode": "ON_DEMAND"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.streaming.kind
+      op: eq
+      value: kinesis_stream
+    - field: properties.streaming.stream_mode
+      op: eq
+      value: PROVISIONED

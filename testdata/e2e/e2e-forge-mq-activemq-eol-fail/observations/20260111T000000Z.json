@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:mq:us-east-1:111122223333:broker:activemq-prod:b-1234",
+      "properties": {"messaging": {"kind": "mq_broker", "engine_type": "ACTIVEMQ", "engine_version": {"is_eol": true}}},
+      "type": "aws_mq_broker",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

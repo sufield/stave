@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.ELASTICACHE.MEMCACHED.EOL.001
+name: ElastiCache Memcached Version Must Not Be End-of-Life
+description: >
+  ElastiCache Memcached clusters must not run engine versions that have
+  reached end-of-life. Memcached 1.5.x and earlier are EOL and no longer
+  receive security patches from AWS. Unlike Redis, Memcached has no
+  authentication layer — the only protection is network isolation, making
+  patch currency critical. A Memcached cluster on an EOL version processes
+  cached data (session tokens, API responses) with unmaintained code.
+  AWS will eventually force-upgrade clusters on deprecated versions during
+  a maintenance window the operator did not schedule.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "CC7.1"
+  pci_dss_v4.0: "6.3.3"
+  ccm_v4: ["TVM-04"]
+scope_tags:
+  - aws
+  - elasticache
+taxonomy:
+  - compliance-mapping
+  - deprecation
+  - compute-hardening
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    ElastiCache Memcached cluster runs an engine version that has reached
+    end-of-life. Security patches are no longer issued.
+  action: >
+    Upgrade the cluster to Memcached 1.6.x. Use
+    aws elasticache modify-cache-cluster --engine-version 1.6.22
+    with a scheduled maintenance window. Memcached major version
+    upgrades are generally backward compatible — test your
+    application's cache client against 1.6.x before upgrading
+    production.
+  example: |
+    {
+      "cache": {
+        "kind": "elasticache_cluster",
+        "engine": "memcached",
+        "engine_version": {
+          "is_eol": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cache.kind
+      op: eq
+      value: elasticache_cluster
+    - field: properties.cache.engine
+      op: eq
+      value: memcached
+    - field: properties.cache.engine_version.is_eol
+      op: eq
+      value: true

@@ -16,6 +16,7 @@ import (
 	"github.com/sufield/stave/internal/controldata"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/taxonomy"
 )
 
 // embeddedValidator is the JSON-schema validator used to defend
@@ -167,6 +168,8 @@ func (r *ControlStore) load() ([]policy.ControlDefinition, error) {
 		return cmp.Compare(a.ID, b.ID)
 	})
 
+	autoClassify(controls)
+
 	// Triage data is optional. fs.Sub returns ErrNotExist when the
 	// triage directory genuinely doesn't exist in the embedded
 	// filesystem (a binary built without triage data is valid).
@@ -235,6 +238,21 @@ func (r *ControlStore) resolveAlias(ctl *policy.ControlDefinition) error {
 	}
 	ctl.UnsafePredicate = expanded
 	return nil
+}
+
+func autoClassify(controls []policy.ControlDefinition) {
+	cl := taxonomy.NewClassifier()
+	for i := range controls {
+		if len(controls[i].Taxonomy) > 0 {
+			continue
+		}
+		controls[i].Taxonomy = cl.ClassifyFields(
+			string(controls[i].ID),
+			controls[i].Name,
+			controls[i].Description,
+			nil,
+		)
+	}
 }
 
 func (r *ControlStore) isYAML(path string) bool {

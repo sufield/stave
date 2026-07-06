@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:elasticache:us-east-1:111122223333:cluster:memcached-prod",
+      "properties": {"cache": {"kind": "elasticache_cluster", "engine": "memcached", "engine_version": {"is_eol": true}}},
+      "type": "aws_elasticache_cluster",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

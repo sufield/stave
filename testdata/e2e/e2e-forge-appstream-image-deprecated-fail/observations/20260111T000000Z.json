@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:appstream:us-east-1:111122223333:image/windows-2012-r2",
+      "properties": {"compute": {"kind": "appstream_image", "platform": {"is_deprecated": true}}},
+      "type": "aws_appstream_image",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

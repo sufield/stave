@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_158 commands across 7 groups._
+_160 commands across 7 groups._
 
 ## Getting Started
 
@@ -62,6 +62,7 @@ _158 commands across 7 groups._
 | `catalog coverage` | Show per-service control coverage |
 | `catalog gaps` | Compare catalog against an external checklist |
 | `catalog inspect` | Show full metadata for a single control |
+| `catalog matrix` | Show taxonomy × service cross-product with gap cells |
 | `catalog stats` | Print aggregate catalog statistics |
 | `catalog taxonomy` | List taxonomy categories with control counts |
 | `features` | Show what Stave does and deliberately does not do |
@@ -113,6 +114,7 @@ _158 commands across 7 groups._
 | `capabilities catalog coverage` | Show per-service control coverage |
 | `capabilities catalog gaps` | Compare catalog against an external checklist |
 | `capabilities catalog inspect` | Show full metadata for a single control |
+| `capabilities catalog matrix` | Show taxonomy × service cross-product with gap cells |
 | `capabilities catalog stats` | Print aggregate catalog statistics |
 | `capabilities catalog taxonomy` | List taxonomy categories with control counts |
 | `cel` | CEL expression tools |

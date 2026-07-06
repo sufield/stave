@@ -129,6 +129,7 @@ Exit codes:
 	cmd.AddCommand(newCoverageCmd())
 	cmd.AddCommand(newGapsCmd())
 	cmd.AddCommand(newTaxonomyCmd())
+	cmd.AddCommand(newMatrixCmd())
 	return cmd
 }
 

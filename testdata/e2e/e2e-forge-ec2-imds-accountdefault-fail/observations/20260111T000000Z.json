@@ -1,0 +1,22 @@
+{
+  "assets": [
+    {
+      "id": "123456789012",
+      "properties": {
+        "compute": {
+          "instance_metadata_defaults": {
+            "http_tokens": "no-preference",
+            "http_put_response_hop_limit": -1,
+            "http_endpoint": "no-preference",
+            "instance_metadata_tags": "no-preference"
+          }
+        }
+      },
+      "type": "aws_ec2_account_settings",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -1867,7 +1867,7 @@ Verify via test snapshot create + restore.
 
 OpenSearch domain manual-snapshot repository's IAM role's trust policy does not include `es.amazonaws.com` (or `opensearchservice.amazonaws.com` in newer consoles) as a trusted service. Snapshot calls fail with assume-role error; existing snapshots cannot be restored. Common after account-migration / role re-creation when trust list was incomplete.
 
-**Remediation:** Add es.amazonaws.com (or opensearchservice.amazonaws.com) to the role's AssumeRolePolicyDocument with aws:SourceAccount condition matching the domain's account.
+**Remediation:** Add es.amazonaws.com (or opensearchservice.amazonaws.com) to the role's AssumeRolePolicyDocument. Note: OpenSearch manual snapshots ignore aws:SourceArn and aws:SourceAccount conditions — scope the role's permissions policy to the specific domain ARN instead.
 
 ---
 

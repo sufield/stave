@@ -79,6 +79,21 @@ The observation snapshot is missing required ElastiCache properties.
 
 ---
 
+### CTL.ELASTICACHE.MEMCACHED.EOL.001
+
+**ElastiCache Memcached Version Must Not Be End-of-Life**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; pci_dss_v4.0: 6.3.3; soc2: CC7.1;
+
+ElastiCache Memcached clusters must not run engine versions that have reached end-of-life. Memcached 1.5.x and earlier are EOL and no longer receive security patches from AWS. Unlike Redis, Memcached has no authentication layer — the only protection is network isolation, making patch currency critical. A Memcached cluster on an EOL version processes cached data (session tokens, API responses) with unmaintained code. AWS will eventually force-upgrade clusters on deprecated versions during a maintenance window the operator did not schedule.
+
+**Remediation:** Upgrade the cluster to Memcached 1.6.x. Use aws elasticache modify-cache-cluster --engine-version 1.6.22 with a scheduled maintenance window. Memcached major version upgrades are generally backward compatible — test your application's cache client against 1.6.x before upgrading production.
+
+---
+
 ### CTL.ELASTICACHE.TRANSIT.001
 
 **ElastiCache Must Have In-Transit Encryption Enabled**

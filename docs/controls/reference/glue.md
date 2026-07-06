@@ -65,6 +65,21 @@ Glue JDBC connections must enforce TLS/SSL via the JDBC_ENFORCE_SSL connection p
 
 ---
 
+### CTL.GLUE.DEVENDPOINT.DEPRECATED.001
+
+**Glue Dev Endpoint Is Deprecated**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** config
+- **Compliance:** nist_800_53_r5: SA-22;
+
+AWS Glue development endpoints are a deprecated resource type. AWS recommends migrating to Glue Studio notebooks or Glue interactive sessions, which provide better isolation, faster startup, and active feature development. Existing dev endpoints remain operational but receive no new features and may be removed in a future service update. Dev endpoints also carry a broader attack surface — they expose a network-accessible Spark environment that persists between sessions, unlike interactive sessions which are ephemeral.
+
+**Remediation:** Migrate to Glue interactive sessions or Glue Studio notebooks. Delete the dev endpoint after confirming all development workflows have been migrated. Use aws glue delete-dev-endpoint --endpoint-name <name> to remove.
+
+---
+
 ### CTL.GLUE.ENDPOINT.ENCRYPT.BOOKMARKS.001
 
 **Glue Dev Endpoint Must Encrypt Job Bookmarks**

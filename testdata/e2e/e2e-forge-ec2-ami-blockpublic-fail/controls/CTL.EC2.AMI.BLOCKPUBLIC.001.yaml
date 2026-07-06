@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.AMI.BLOCKPUBLIC.001
+name: AMI Block Public Access Must Be Enabled
+description: >
+  AMI block public access must be set to block-new-sharing at the
+  account level. Without it, any IAM principal with
+  ec2:ModifyImageAttribute can make a custom AMI public, exposing
+  the full disk image — including OS configuration, installed
+  software, hard-coded credentials, SSH keys, and application code.
+  The per-AMI control (CTL.EC2.AMI.PUBLIC.001) detects AMIs that are
+  already public; this control prevents the condition from being
+  created. Account-level toggle — same pattern as
+  CTL.EC2.EBS.DEFAULT.001.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-07", "IVS-03"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - account-governance
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    AMI block public access is not enabled. Custom AMIs can be made
+    public, exposing complete disk images with embedded credentials
+    and application code.
+  action: >
+    Enable AMI block public access:
+    aws ec2 enable-image-block-public-access
+    --image-block-public-access-state block-new-sharing
+    --region <region>.
+    Enable in every region where custom AMIs exist.
+  example: |
+    {
+      "compute": {
+        "image_block_public_access": "block-new-sharing"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.image_block_public_access
+      op: ne
+      value: "block-new-sharing"

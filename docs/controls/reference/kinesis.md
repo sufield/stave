@@ -20,6 +20,21 @@ Kinesis Data Streams must use server-side encryption with KMS to protect records
 
 ---
 
+### CTL.KINESIS.MODE.PROVISIONED.001
+
+**Kinesis Stream Should Use On-Demand Capacity Mode**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** config
+- **Compliance:** nist_800_53_r5: SA-8;
+
+Kinesis data streams using provisioned capacity mode should migrate to on-demand mode. Provisioned mode is the legacy capacity model that requires manual shard management and capacity planning. On-demand mode automatically scales throughput and eliminates the operational burden of shard splitting and merging. Some high-throughput workloads may legitimately use provisioned mode for cost optimization at scale — this finding is informational for those cases.
+
+**Remediation:** Switch the stream to on-demand mode. Use aws kinesis update-stream-mode --stream-arn <arn> --stream-mode-details StreamMode=ON_DEMAND. On-demand mode automatically scales throughput up to the account limits. Review cost implications — on-demand pricing differs from provisioned shard-hour pricing.
+
+---
+
 ### CTL.KINESIS.MONITORING.001
 
 **Kinesis Streams Must Have Enhanced Shard-Level Monitoring Enabled**

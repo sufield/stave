@@ -1,0 +1,54 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.IMDS.ACCOUNTDEFAULT.001
+name: Account-Level IMDS Default Must Require IMDSv2
+description: >
+  The account-level instance metadata default must set
+  HttpTokens to required, enforcing IMDSv2 for all new instances
+  that do not specify their own metadata configuration. Without
+  this default, instances launched via auto-scaling, CloudFormation,
+  or manual console/API calls inherit IMDSv1, which is vulnerable
+  to SSRF-based credential theft. The per-instance control
+  (CTL.EC2.IMDSV2.001) catches instances already running without
+  IMDSv2 — this control prevents new instances from being created
+  in the vulnerable state.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  mitre_attack: "T1552.005"
+  ccm_v4: ["IAM-04", "IVS-03"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - account-governance
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Account-level IMDS default does not require IMDSv2. New instances
+    launched without explicit metadata configuration will allow
+    IMDSv1, enabling SSRF-based credential theft.
+  action: >
+    Set the account-level IMDS default:
+    aws ec2 modify-instance-metadata-defaults
+    --http-tokens required --http-put-response-hop-limit 1
+    --region <region>.
+    Enable in every region where EC2 instances run.
+  example: |
+    {
+      "compute": {
+        "instance_metadata_defaults": {
+          "http_tokens": "required"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.instance_metadata_defaults.http_tokens
+      op: ne
+      value: "required"

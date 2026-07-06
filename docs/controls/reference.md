@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2884
-**Pack hash:** `f4abbda6064730c91fa46b9e090d99cd5730fe4a72b0b5a7dc5f3a4ffb06bf5a`
+**Total controls:** 2890
+**Pack hash:** `9878e180a54565150ab0e7831f3e327af4c8c300905c20370e00161eb6b46a27`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -16,17 +16,18 @@ GitHub. Pick a service below.
 | critical | 295 |
 | high | 1259 |
 | info | 16 |
-| low | 214 |
-| medium | 1100 |
+| low | 218 |
+| medium | 1102 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
 | audit | 92 |
 | capacity | 3 |
+| config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1266 |
+| exposure | 1270 |
 | governance | 609 |
 | hygiene | 18 |
 | identity | 507 |
@@ -44,7 +45,7 @@ GitHub. Pick a service below.
 | [AD](reference/ad.md) | 40 |
 | [APIGATEWAY](reference/apigateway.md) | 105 |
 | [APIGW2](reference/apigw2.md) | 2 |
-| [APPSTREAM](reference/appstream.md) | 1 |
+| [APPSTREAM](reference/appstream.md) | 2 |
 | [ATHENA](reference/athena.md) | 2 |
 | [AUDITMANAGER](reference/auditmanager.md) | 1 |
 | [AUTOSCALING](reference/autoscaling.md) | 3 |
@@ -75,7 +76,7 @@ GitHub. Pick a service below.
 | [ECS](reference/ecs.md) | 51 |
 | [EFS](reference/efs.md) | 13 |
 | [EKS](reference/eks.md) | 115 |
-| [ELASTICACHE](reference/elasticache.md) | 6 |
+| [ELASTICACHE](reference/elasticache.md) | 7 |
 | [ELB](reference/elb.md) | 80 |
 | [EMR](reference/emr.md) | 6 |
 | [EVENTBRIDGE](reference/eventbridge.md) | 96 |
@@ -85,23 +86,23 @@ GitHub. Pick a service below.
 | [GCS](reference/gcs.md) | 7 |
 | [GHOST](reference/ghost.md) | 2 |
 | [GITHUB](reference/github.md) | 22 |
-| [GLUE](reference/glue.md) | 12 |
+| [GLUE](reference/glue.md) | 13 |
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 14 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
 | [IAM](reference/iam.md) | 225 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
-| [KINESIS](reference/kinesis.md) | 3 |
+| [KINESIS](reference/kinesis.md) | 4 |
 | [KMS](reference/kms.md) | 46 |
 | [LAMBDA](reference/lambda.md) | 86 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
-| [LIGHTSAIL](reference/lightsail.md) | 2 |
+| [LIGHTSAIL](reference/lightsail.md) | 3 |
 | [M365](reference/m365.md) | 73 |
 | [MACIE](reference/macie.md) | 3 |
 | [META](reference/meta.md) | 1 |
 | [MODEL](reference/model.md) | 2 |
-| [MQ](reference/mq.md) | 2 |
+| [MQ](reference/mq.md) | 3 |
 | [MSK](reference/msk.md) | 9 |
 | [NEPTUNE](reference/neptune.md) | 20 |
 | [NETFIREWALL](reference/netfirewall.md) | 11 |

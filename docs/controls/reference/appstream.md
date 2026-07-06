@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.APPSTREAM.IMAGE.DEPRECATED.001
+
+**AppStream Image Must Not Use Deprecated Platform**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; soc2: CC7.1;
+
+AppStream 2.0 images must not use deprecated OS platforms. Windows Server 2012 R2 reached end-of-life in October 2023 and no longer receives security patches from Microsoft. AppStream images built on deprecated platforms expose streaming sessions to unpatched OS vulnerabilities. Users connect to these sessions with their corporate credentials — a compromised streaming instance is a credential-harvesting opportunity.
+
+**Remediation:** Rebuild the AppStream image on a supported platform (Windows Server 2019 or 2022). Create a new image builder with the updated platform, install your applications, and create a new image. Update your fleet to use the new image.
+
+---
+
 ### CTL.APPSTREAM.INTERNET.001
 
 **AppStream Fleets Must Disable Default Internet Access**

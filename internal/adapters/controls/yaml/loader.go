@@ -19,7 +19,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/diag"
 	"github.com/sufield/stave/internal/core/kernel"
-	_ "github.com/sufield/stave/internal/core/taxonomy" // registers CategoryID vocabulary
+	"github.com/sufield/stave/internal/core/taxonomy"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -116,6 +116,8 @@ func (l *ControlLoader) LoadControls(ctx context.Context, dir string) ([]policy.
 	slices.SortFunc(controls, func(a, b policy.ControlDefinition) int {
 		return cmp.Compare(a.ID, b.ID)
 	})
+
+	autoClassify(controls)
 
 	triageIdx, triageErr := LoadTriageIndex(dir)
 	if triageErr != nil {
@@ -300,6 +302,23 @@ func validateScopeCorpus(ctl *policy.ControlDefinition) error {
 			"for the canonical schema",
 		ctl.ID,
 	)
+}
+
+// autoClassify runs the taxonomy classifier on controls that have no
+// explicit taxonomy tags. Explicit YAML tags take precedence.
+func autoClassify(controls []policy.ControlDefinition) {
+	cl := taxonomy.NewClassifier()
+	for i := range controls {
+		if len(controls[i].Taxonomy) > 0 {
+			continue
+		}
+		controls[i].Taxonomy = cl.ClassifyFields(
+			string(controls[i].ID),
+			controls[i].Name,
+			controls[i].Description,
+			nil,
+		)
+	}
 }
 
 // resolveAlias expands a predicate alias if set on the control definition.

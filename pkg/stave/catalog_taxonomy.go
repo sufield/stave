@@ -8,6 +8,8 @@ import (
 	"slices"
 	"text/tabwriter"
 
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/taxonomy"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
@@ -19,6 +21,7 @@ type TaxonomyOptions struct {
 
 type taxonomyEntry struct {
 	Category string `json:"category"`
+	Name     string `json:"name"`
 	Count    int    `json:"count"`
 }
 
@@ -38,7 +41,11 @@ func RenderTaxonomy(ctx context.Context, opts TaxonomyOptions) ([]byte, error) {
 
 	entries := make([]taxonomyEntry, 0, len(counts))
 	for cat, n := range counts {
-		entries = append(entries, taxonomyEntry{Category: cat, Count: n})
+		entries = append(entries, taxonomyEntry{
+			Category: cat,
+			Name:     taxonomy.CategoryName(kernel.CategoryID(cat)),
+			Count:    n,
+		})
 	}
 	slices.SortFunc(entries, func(a, b taxonomyEntry) int {
 		if a.Count != b.Count {
@@ -55,9 +62,9 @@ func RenderTaxonomy(ctx context.Context, opts TaxonomyOptions) ([]byte, error) {
 	} else {
 		fmt.Fprintf(&buf, "Taxonomy Categories (%d)\n\n", len(entries))
 		tw := tabwriter.NewWriter(&buf, 0, 4, 2, ' ', 0)
-		fmt.Fprintln(tw, "CATEGORY\tCONTROLS")
+		fmt.Fprintln(tw, "CATEGORY\tNAME\tCONTROLS")
 		for i := range entries {
-			fmt.Fprintf(tw, "%s\t%d\n", entries[i].Category, entries[i].Count)
+			fmt.Fprintf(tw, "%s\t%s\t%d\n", entries[i].Category, entries[i].Name, entries[i].Count)
 		}
 		_ = tw.Flush()
 	}

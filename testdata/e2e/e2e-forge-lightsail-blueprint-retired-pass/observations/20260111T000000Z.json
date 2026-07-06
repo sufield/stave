@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:lightsail:us-east-1:111122223333:Instance/web-server-1",
+      "properties": {"compute": {"kind": "lightsail_instance", "blueprint": {"is_retired": false}}},
+      "type": "aws_lightsail_instance",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

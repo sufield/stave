@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:kinesis:us-east-1:111122223333:stream/events-prod",
+      "properties": {"streaming": {"kind": "kinesis_stream", "stream_mode": "PROVISIONED"}},
+      "type": "aws_kinesis_stream",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

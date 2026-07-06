@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.MQ.ACTIVEMQ.EOL.001
+
+**Amazon MQ ActiveMQ Version Must Not Be End-of-Life**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; pci_dss_v4.0: 6.3.3; soc2: CC7.1;
+
+Amazon MQ ActiveMQ brokers must not run engine versions that have reached end-of-life. ActiveMQ 5.15.x is past community support and no longer receives security patches. Message brokers handle authentication credentials, application events, and inter-service communication — an unpatched broker engine is a credential-bearing service running unmaintained code. AWS will eventually force-upgrade brokers on deprecated versions during a maintenance window the operator did not schedule.
+
+**Remediation:** Upgrade the broker to ActiveMQ 5.17.x or later. Use aws mq update-broker --engine-version 5.17.6. Test message consumers and producers against the new version before upgrading production — major version upgrades may change protocol behavior or deprecate features.
+
+---
+
 ### CTL.MQ.ENGINE.EOL.001
 
 **Amazon MQ Engine Version Must Not Be End-of-Life**

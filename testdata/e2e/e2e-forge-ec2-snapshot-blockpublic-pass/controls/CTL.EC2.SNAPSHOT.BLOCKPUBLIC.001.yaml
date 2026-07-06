@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SNAPSHOT.BLOCKPUBLIC.001
+name: EBS Snapshot Block Public Access Must Be Enabled
+description: >
+  EBS snapshot block public access must be set to block-all-sharing
+  at the account level. Without it, any IAM principal with
+  ec2:ModifySnapshotAttribute can make a snapshot public, exposing
+  the full block-level contents of an EBS volume — databases,
+  credentials, application code, and customer data. The account-level
+  toggle is a preventive control that blocks the entire class of
+  public-snapshot exposure regardless of individual IAM permissions.
+  Unlike per-snapshot auditing (CTL.EC2.SNAPSHOT.PUBLIC.001), which
+  detects the symptom after the fact, this control prevents the
+  condition from being created.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-07", "IVS-03"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - account-governance
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    EBS snapshot block public access is not set to block-all-sharing.
+    Snapshots can be made public, exposing block-level volume
+    contents.
+  action: >
+    Enable snapshot block public access:
+    aws ec2 enable-snapshot-block-public-access
+    --state block-all-sharing --region <region>.
+    Enable in every region where EBS volumes exist.
+  example: |
+    {
+      "compute": {
+        "snapshot_block_public_access": "block-all-sharing"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.snapshot_block_public_access
+      op: ne
+      value: "block-all-sharing"
