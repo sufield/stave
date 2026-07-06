@@ -2789,6 +2789,21 @@ An Allow statement using the ForAllValues set operator without a companion Null 
 
 ---
 
+### CTL.IAM.SEMANTICS.FORANYVALUE.DENY.001
+
+**ForAnyValue in Deny Bypassed When Key Is Absent**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+A Deny statement uses ForAnyValue on a condition key that may be absent from the request context. ForAnyValue tests whether ANY value in the request set matches the policy set — but when the key is absent the request set is empty, and the existential quantifier over an empty set is false (∃x∈∅.P(x) ≡ false). A false condition in a Deny statement means the deny does not fire. The deny is completely bypassed for every request that omits the key. This is the dual of Pitfall 1 (ForAllValues vacuous truth): where ForAllValues universally satisfies on empty sets, ForAnyValue universally fails. In an Allow context, ForAnyValue failing is conservative (access denied). In a Deny context, ForAnyValue failing is dangerous — the deny that was supposed to block certain values never fires. Formally: the intended deny domain is |{r : ∃v∈r.key. v∈P}| but the actual domain is |{r : r.key ∈ dom(r) ∧ ∃v∈r.key. v∈P}|, excluding all requests where the key is absent. For service-specific keys absent from most request types, this exclusion can be enormous.
+
+**Remediation:** Replace ForAnyValue with the scalar operator and add explicit handling for key absence. Use a Null condition check (Null: {key: "true"}) in a separate Deny statement to also block requests where the key is absent, or restructure as an Allow-with-ForAnyValue pattern where the conservative failure mode (deny access on empty set) is desirable.
+
+---
+
 ### CTL.IAM.SEMANTICS.IFEXISTS.SCOPE.001
 
 **IfExists on Service-Specific Key Is Vacuously Satisfied**
@@ -2831,6 +2846,36 @@ A Deny statement uses a negative condition operator (StringNotEquals, ArnNotLike
 A resource-based policy uses NotPrincipal in a Deny statement. AWS documents that NotPrincipal with Deny "will always deny any IAM principal that has a permissions boundary policy attached, regardless of the values specified in the NotPrincipal element." The mechanism: NotPrincipal excludes the role ARN, but the assumed-role session ARN is a different string. The Deny matches the session (which is not the role), so the deny fires. Principals with permissions boundaries are always denied, even when explicitly listed in the NotPrincipal exclusion. AWS recommends using ArnNotEquals with aws:PrincipalArn in the Condition block instead. This is an evaluation-model interaction that no syntax-level linter can detect — it requires understanding the relationship between role ARNs and session ARNs in the principal matching function.
 
 **Remediation:** Replace NotPrincipal with a Condition block using ArnNotEquals on aws:PrincipalArn. This correctly excludes both the role ARN and its derived session ARNs.
+
+---
+
+### CTL.IAM.SEMANTICS.SETOP.IFEXISTS.001
+
+**Set Operator With IfExists Produces Counterintuitive Evaluation**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+A policy condition combines a set operator (ForAllValues or ForAnyValue) with an IfExists operator suffix (e.g., ForAnyValue:StringEqualsIfExists). These two modifiers have conflicting absent-key semantics that produce surprising behavior. IfExists alone evaluates to true when the key is absent (the condition is vacuously satisfied). ForAnyValue alone evaluates to false when the key is absent (∃x∈∅.P(x) ≡ false). Combined, the ForAnyValue set qualifier resolves first: missing key yields an empty request set, so ForAnyValue returns false. The IfExists modifier does not override this — it applies to the individual value comparisons, not to the set evaluation. The result: ForAnyValue:*IfExists behaves like ForAnyValue alone (false on absent key), not like *IfExists alone (true on absent key). Policy authors who add IfExists expecting it to handle the absent-key case are wrong — ForAnyValue already decided the result before IfExists applied. ForAllValues:*IfExists is similarly misleading: ForAllValues already returns true on absent keys (vacuous satisfaction), so IfExists is redundant but signals the author is confused about which modifier controls absent-key behavior. In either combination the IfExists suffix is either inert or overridden, indicating confusion about the evaluation model.
+
+**Remediation:** Separate the intent. If you want to check present values: use ForAnyValue:StringEquals (without IfExists). If you want to handle absent keys: add an explicit Null condition check. Don't combine set qualifiers with IfExists — the interaction is not what either modifier alone would suggest.
+
+---
+
+### CTL.IAM.SEMANTICS.SETOP.SINGLEVALUE.001
+
+**Set Operator on Single-Valued Condition Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+A policy condition uses a set operator (ForAllValues or ForAnyValue) on a condition key documented as single-valued (e.g., aws:SourceIp, aws:PrincipalAccount, aws:SourceVpc, ec2:ResourceTag/*). Set operators are designed for multi-valued keys — they iterate over the request-side value set and test each element against the policy value set. On a single-valued key the request set always has exactly one element, so ForAllValues degenerates to the scalar operator and ForAnyValue degenerates identically — neither adds restriction beyond the base operator. The set qualifier carries one critical hidden cost: ForAllValues on a single-valued key still inherits the vacuous satisfaction trap (Pitfall 1) when the key is absent (∀x∈∅.P(x) ≡ true). The set operator masks this risk because the author sees "ForAllValues:StringEquals" and may not realize that absent-key semantics differ from "StringEquals." AWS docs explicitly recommend avoiding set operators on single-valued keys because (1) the semantics are confusing to reviewers, (2) behavior changes silently if AWS later makes the key multi-valued, and (3) the vacuous-truth hazard applies to ForAllValues even though the key currently has exactly one value.
+
+**Remediation:** Replace ForAllValues:StringEquals with StringEquals (or the appropriate base operator). If the intent is to handle absent keys, use StringEqualsIfExists explicitly rather than relying on ForAllValues vacuous behavior.
 
 ---
 

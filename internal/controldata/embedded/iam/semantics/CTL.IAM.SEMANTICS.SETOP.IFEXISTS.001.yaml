@@ -1,0 +1,101 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SEMANTICS.SETOP.IFEXISTS.001
+name: Set Operator With IfExists Produces Counterintuitive Evaluation
+description: >
+  A policy condition combines a set operator (ForAllValues or
+  ForAnyValue) with an IfExists operator suffix (e.g.,
+  ForAnyValue:StringEqualsIfExists). These two modifiers have
+  conflicting absent-key semantics that produce surprising behavior.
+  IfExists alone evaluates to true when the key is absent (the
+  condition is vacuously satisfied). ForAnyValue alone evaluates to
+  false when the key is absent (∃x∈∅.P(x) ≡ false). Combined, the
+  ForAnyValue set qualifier resolves first: missing key yields an
+  empty request set, so ForAnyValue returns false. The IfExists
+  modifier does not override this — it applies to the individual
+  value comparisons, not to the set evaluation. The result:
+  ForAnyValue:*IfExists behaves like ForAnyValue alone (false on
+  absent key), not like *IfExists alone (true on absent key). Policy
+  authors who add IfExists expecting it to handle the absent-key case
+  are wrong — ForAnyValue already decided the result before IfExists
+  applied. ForAllValues:*IfExists is similarly misleading: ForAllValues
+  already returns true on absent keys (vacuous satisfaction), so
+  IfExists is redundant but signals the author is confused about
+  which modifier controls absent-key behavior. In either combination
+  the IfExists suffix is either inert or overridden, indicating
+  confusion about the evaluation model.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - formal-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_policy
+params:
+  attack_stage: privilege_escalation
+  base_impact: 6
+remediation:
+  description: >
+    This policy combines a set operator (ForAllValues/ForAnyValue)
+    with an IfExists modifier. The interaction is counterintuitive:
+    ForAnyValue resolves first, and on an absent key returns FALSE
+    regardless of the IfExists modifier. The combined behavior
+    is NOT "if the key exists, check any value" — it's "ForAnyValue
+    decides first, IfExists has no effect on the absent-key case."
+  action: >
+    Separate the intent. If you want to check present values:
+    use ForAnyValue:StringEquals (without IfExists). If you want
+    to handle absent keys: add an explicit Null condition check.
+    Don't combine set qualifiers with IfExists — the interaction
+    is not what either modifier alone would suggest.
+  example: |
+    {
+      "identity": {
+        "kind": "policy",
+        "policy": {
+          "semantics": {
+            "has_set_operator_ifexists_interaction": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: policy
+    - field: properties.identity.policy.semantics.has_set_operator_ifexists_interaction
+      op: eq
+      value: true
+tests:
+  - name: "ForAnyValue:StringEqualsIfExists combination fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/TagMatchBroad"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_set_operator_ifexists_interaction: true
+  - name: "ForAnyValue with explicit Null check passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/TagMatchSafe"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_set_operator_ifexists_interaction: false

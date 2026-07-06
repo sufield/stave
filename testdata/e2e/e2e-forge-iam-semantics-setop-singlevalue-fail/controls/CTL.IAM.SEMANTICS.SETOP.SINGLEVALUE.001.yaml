@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SEMANTICS.SETOP.SINGLEVALUE.001
+name: Set Operator on Single-Valued Condition Key
+description: >
+  A policy condition uses a set operator (ForAllValues or ForAnyValue)
+  on a condition key documented as single-valued (e.g., aws:SourceIp,
+  aws:PrincipalAccount, aws:SourceVpc, ec2:ResourceTag/*). Set
+  operators are designed for multi-valued keys — they iterate over
+  the request-side value set and test each element against the policy
+  value set. On a single-valued key the request set always has exactly
+  one element, so ForAllValues degenerates to the scalar operator and
+  ForAnyValue degenerates identically — neither adds restriction
+  beyond the base operator. The set qualifier carries one critical
+  hidden cost: ForAllValues on a single-valued key still inherits
+  the vacuous satisfaction trap (Pitfall 1) when the key is absent
+  (∀x∈∅.P(x) ≡ true). The set operator masks this risk because the
+  author sees "ForAllValues:StringEquals" and may not realize that
+  absent-key semantics differ from "StringEquals." AWS docs explicitly
+  recommend avoiding set operators on single-valued keys because
+  (1) the semantics are confusing to reviewers, (2) behavior changes
+  silently if AWS later makes the key multi-valued, and (3) the
+  vacuous-truth hazard applies to ForAllValues even though the key
+  currently has exactly one value.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - formal-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_policy
+params:
+  attack_stage: initial_access
+  base_impact: 5
+remediation:
+  description: >
+    This policy uses a set operator (ForAllValues/ForAnyValue)
+    on a condition key that only ever has a single value.
+    The set operator adds no restriction beyond the base
+    operator and masks the risk of vacuous satisfaction
+    when the key is absent from the request context.
+  action: >
+    Replace ForAllValues:StringEquals with StringEquals
+    (or the appropriate base operator). If the intent is
+    to handle absent keys, use StringEqualsIfExists explicitly
+    rather than relying on ForAllValues vacuous behavior.
+  example: |
+    {
+      "identity": {
+        "kind": "policy",
+        "policy": {
+          "semantics": {
+            "has_set_operator_on_single_valued_key": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: policy
+    - field: properties.identity.policy.semantics.has_set_operator_on_single_valued_key
+      op: eq
+      value: true
+tests:
+  - name: "ForAllValues on aws:SourceIp (single-valued) fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/IPRestrict"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_set_operator_on_single_valued_key: true
+  - name: "ForAllValues on aws:TagKeys (multi-valued) passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/TagKeyRestrict"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_set_operator_on_single_valued_key: false
