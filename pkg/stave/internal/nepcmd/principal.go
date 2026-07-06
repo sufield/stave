@@ -100,9 +100,13 @@ func (r *identityRef) toResolutionInput() iam.ResolutionInput {
 	if r.identity != nil {
 		return iam.BuildResolutionInput(r.identity)
 	}
-	return iam.ResolutionInput{
-		PrincipalARN: string(r.asset.ID),
+	temp := &asset.CloudIdentity{
+		ID:         r.asset.ID,
+		Type:       r.asset.Type,
+		Vendor:     r.asset.Vendor,
+		Properties: r.asset.Properties,
 	}
+	return iam.BuildResolutionInput(temp)
 }
 
 func renderPrincipalJSON(w io.Writer, result iam.ResolvedPermissions) error {

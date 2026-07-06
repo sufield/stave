@@ -35,7 +35,14 @@ func Write(w io.Writer, in Input) {
 
 	// SLA burn rates.
 	slaMetrics := computeSLAMetrics(a.Findings)
-	if len(slaMetrics) > 0 {
+	hasSLAOutput := false
+	for _, sev := range []string{"critical", "high", "medium", "low"} {
+		if _, ok := slaMetrics[sev]; ok {
+			hasSLAOutput = true
+			break
+		}
+	}
+	if hasSLAOutput {
 		writeComment(w, "stave_sla_burn_rate", "SLA burn rate by severity (0-1)")
 		for _, sev := range []string{"critical", "high", "medium", "low"} {
 			if rate, ok := slaMetrics[sev]; ok {

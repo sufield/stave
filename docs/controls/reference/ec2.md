@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.EC2.AMI.BLOCKPUBLIC.001
+
+**AMI Block Public Access Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+AMI block public access must be set to block-new-sharing at the account level. Without it, any IAM principal with ec2:ModifyImageAttribute can make a custom AMI public, exposing the full disk image — including OS configuration, installed software, hard-coded credentials, SSH keys, and application code. The per-AMI control (CTL.EC2.AMI.PUBLIC.001) detects AMIs that are already public; this control prevents the condition from being created. Account-level toggle — same pattern as CTL.EC2.EBS.DEFAULT.001.
+
+**Remediation:** Enable AMI block public access: aws ec2 enable-image-block-public-access --image-block-public-access-state block-new-sharing --region <region>. Enable in every region where custom AMIs exist.
+
+---
+
 ### CTL.EC2.AMI.CURRENCY.001
 
 **EC2 Instances Must Not Run Deprecated or End-of-Life AMIs**
@@ -708,6 +723,21 @@ EC2 instances that access AWS services must use IAM instance profiles (roles) in
 
 ---
 
+### CTL.EC2.IMDS.ACCOUNTDEFAULT.001
+
+**Account-Level IMDS Default Must Require IMDSv2**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** mitre_attack: T1552.005; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+The account-level instance metadata default must set HttpTokens to required, enforcing IMDSv2 for all new instances that do not specify their own metadata configuration. Without this default, instances launched via auto-scaling, CloudFormation, or manual console/API calls inherit IMDSv1, which is vulnerable to SSRF-based credential theft. The per-instance control (CTL.EC2.IMDSV2.001) catches instances already running without IMDSv2 — this control prevents new instances from being created in the vulnerable state.
+
+**Remediation:** Set the account-level IMDS default: aws ec2 modify-instance-metadata-defaults --http-tokens required --http-put-response-hop-limit 1 --region <region>. Enable in every region where EC2 instances run.
+
+---
+
 ### CTL.EC2.IMDS.HOPLIMIT.001
 
 **IMDS Hop Limit Greater Than 1**
@@ -1351,6 +1381,21 @@ Security groups with no attached resources should be removed. Unused SGs with br
 EBS snapshots that were created as the backing store for an AMI must be deleted when the AMI is deregistered. AMI deregistration removes the AMI from the launchable inventory but does not delete the underlying snapshots — they remain in the account, continue to incur cost, and remain readable by anyone with ec2:DescribeSnapshots and ec2:CreateVolume on the snapshot. The snapshots typically contain the OS, application binaries, and whatever data was on the EBS volumes at AMI creation time — including secrets baked into the image, customer data on database volumes that were imaged for backup, and credentials on configuration volumes. After deregistration the snapshots are effectively forgotten by the AMI lifecycle yet remain a complete copy of the historical instance state, recoverable to a fresh volume that the attacker mounts and reads.
 
 **Remediation:** Delete the snapshot or re-register the AMI if it is still needed.
+
+---
+
+### CTL.EC2.SNAPSHOT.BLOCKPUBLIC.001
+
+**EBS Snapshot Block Public Access Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+EBS snapshot block public access must be set to block-all-sharing at the account level. Without it, any IAM principal with ec2:ModifySnapshotAttribute can make a snapshot public, exposing the full block-level contents of an EBS volume — databases, credentials, application code, and customer data. The account-level toggle is a preventive control that blocks the entire class of public-snapshot exposure regardless of individual IAM permissions. Unlike per-snapshot auditing (CTL.EC2.SNAPSHOT.PUBLIC.001), which detects the symptom after the fact, this control prevents the condition from being created.
+
+**Remediation:** Enable snapshot block public access: aws ec2 enable-snapshot-block-public-access --state block-all-sharing --region <region>. Enable in every region where EBS volumes exist.
 
 ---
 

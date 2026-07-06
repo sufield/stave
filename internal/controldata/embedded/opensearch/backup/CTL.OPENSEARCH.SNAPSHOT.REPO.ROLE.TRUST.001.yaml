@@ -38,9 +38,11 @@ remediation:
   action: >
     Add es.amazonaws.com (or
     opensearchservice.amazonaws.com) to the
-    role's AssumeRolePolicyDocument with
-    aws:SourceAccount condition matching the
-    domain's account.
+    role's AssumeRolePolicyDocument. Note:
+    OpenSearch manual snapshots ignore
+    aws:SourceArn and aws:SourceAccount
+    conditions — scope the role's permissions
+    policy to the specific domain ARN instead.
   example: |
     {
       "search_service": {

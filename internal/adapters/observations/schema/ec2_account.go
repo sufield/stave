@@ -2,7 +2,7 @@ package schema
 
 import "github.com/sufield/stave/internal/core/kernel"
 
-// aws_ec2_account — 11 controls. Account-scoped pseudo-asset;
+// aws_ec2_account — 14 controls. Account-scoped pseudo-asset;
 // compute.kind is the discriminator and the ebs.* account-default and
 // broad-grant signals drive the encryption-default and access-scope families.
 var ec2AccountSchema = Schema{
@@ -24,6 +24,12 @@ var ec2AccountSchema = Schema{
 			Doc: "org-membership classification; sparse for standalone accounts"},
 		{Path: "properties.compute.ebs.alarm_snapshot_public", Required: false,
 			Doc: "CloudWatch-alarm-coverage audit; feature-gated on alarm configuration"},
+		{Path: "properties.compute.snapshot_block_public_access", Required: true,
+			Doc: "account-level EBS snapshot public-access block; absent = unblocked"},
+		{Path: "properties.compute.instance_metadata_defaults.http_tokens", Required: true,
+			Doc: "account-level IMDS default; absent = no-preference (IMDSv1 allowed)"},
+		{Path: "properties.compute.image_block_public_access", Required: true,
+			Doc: "account-level AMI public-access block; absent = unblocked"},
 	},
 }
 
