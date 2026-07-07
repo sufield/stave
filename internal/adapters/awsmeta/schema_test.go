@@ -1,9 +1,27 @@
 package awsmeta
 
 import (
+	"context"
+	"os"
+	"os/exec"
 	"slices"
+	"strings"
 	"testing"
+	"time"
 )
+
+func TestMain(m *testing.M) {
+	if os.Getenv("BOTOCORE_DATA") == "" {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		out, err := exec.CommandContext(ctx, "python3", "-c",
+			"import botocore; print(botocore.__path__[0]+'/data')").Output()
+		if err == nil {
+			SetDataDir(strings.TrimSpace(string(out)))
+		}
+	}
+	os.Exit(m.Run())
+}
 
 func TestExtractSchema_KnownService(t *testing.T) {
 	schema, err := ExtractSchema("s3")

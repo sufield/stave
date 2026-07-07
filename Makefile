@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check refactor-scan refactor-scan-check refactor-scan-update triage
+.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check refactor-scan refactor-scan-check refactor-scan-update triage quarterly-audit quarterly-save
 # Binary name
 BINARY=stave
 
@@ -754,6 +754,14 @@ endif
 ## triage: Triage a new AWS feature for control coverage gaps (usage: make triage ARGS="--service acm")
 triage: sync-controls
 	$(GOCMD) run ./internal/tools/triage $(ARGS)
+
+## quarterly-audit: Run all gap discovery engines and produce a consolidated report
+quarterly-audit: sync-controls
+	$(GOCMD) run ./internal/tools/quarterly $(ARGS)
+
+## quarterly-save: Run quarterly audit and save results as this quarter's baseline
+quarterly-save: sync-controls
+	$(GOCMD) run ./internal/tools/quarterly --save $(ARGS)
 
 ## gen-steampipe-mappings: Generate contracts/steampipe/*.yaml from the cached column catalog
 ##                          Skips existing files; new files carry _auto_generated: true and

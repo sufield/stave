@@ -4,16 +4,14 @@
 package awsmeta
 
 import (
-	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"slices"
 	"sort"
 	"strings"
-	"time"
 )
 
 // ServiceSchema holds extracted API metadata for one service.
@@ -55,6 +53,10 @@ type shapeModel struct {
 	Member  *shapeRef            `json:"member"` // list element type
 	Enum    []string             `json:"enum"`
 }
+
+// SetDataDir sets the botocore data directory used by ExtractSchema.
+// Callers must set this before calling ExtractSchema.
+func SetDataDir(dir string) { botocoreDataDir = dir }
 
 // ExtractSchema reads the botocore service model for the given service
 // and returns Describe/Get/List operations with their response fields.
@@ -209,13 +211,5 @@ func getBotocoreDataDir() (string, error) {
 		return botocoreDataDir, nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	out, err := exec.CommandContext(ctx, "python3", "-c",
-		"import botocore; print(botocore.__path__[0]+'/data')").Output()
-	if err != nil {
-		return "", fmt.Errorf("cannot locate botocore: %w (set BOTOCORE_DATA env var)", err)
-	}
-	botocoreDataDir = strings.TrimSpace(string(out))
-	return botocoreDataDir, nil
+	return "", errors.New("botocore data dir not set (call awsmeta.SetDataDir or set BOTOCORE_DATA)")
 }

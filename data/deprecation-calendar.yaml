@@ -1,0 +1,55 @@
+# Deprecation calendar for quarterly audit.
+# Maintained by the developer; consumed by the deprecation engine.
+# Add entries when AWS announces deprecations or EOL dates.
+
+engines:
+  - service: elasticache
+    engine: redis
+    deprecated_versions: ["6.0", "6.2"]
+    eol_date: "2025-04-30"
+  - service: elasticache
+    engine: memcached
+    deprecated_versions: ["1.5"]
+    eol_date: "2024-10-01"
+  - service: rds
+    engine: mysql
+    deprecated_versions: ["5.7"]
+    eol_date: "2024-02-29"
+  - service: rds
+    engine: postgres
+    deprecated_versions: ["11", "12"]
+    eol_date: "2024-11-09"
+  - service: mq
+    engine: rabbitmq
+    deprecated_versions: ["3.10", "3.11"]
+    eol_date: "2024-07-01"
+  - service: opensearch
+    engine: elasticsearch
+    deprecated_versions: ["7.1", "7.4", "7.7", "7.8", "7.9"]
+    eol_date: "2024-01-01"
+  - service: documentdb
+    engine: mongodb
+    deprecated_versions: ["3.6", "4.0"]
+    eol_date: "2024-03-01"
+
+tls_policies:
+  - service: elb
+    deprecated_policies:
+      - "ELBSecurityPolicy-TLS-1-0-2015-04"
+      - "ELBSecurityPolicy-2016-08"
+  - service: transfer
+    deprecated_policies:
+      - "TransferSecurityPolicy-2018-11"
+  - service: cloudfront
+    deprecated_policies:
+      - "SSLv3"
+      - "TLSv1"
+      - "TLSv1_2016"
+
+superseded:
+  - artifact: "EC2 Launch Configuration"
+    replacement: "Launch Template"
+    deprecated_date: "2022-12-31"
+  - artifact: "Classic Load Balancer"
+    replacement: "Application/Network Load Balancer"
+    deprecated_date: "2022-08-15"

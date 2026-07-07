@@ -12,11 +12,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/sufield/stave/internal/adapters/awsmeta"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
@@ -37,6 +40,8 @@ func main() {
 		fmt.Fprintln(os.Stderr, "usage: go run ./internal/tools/triage --service <name>")
 		os.Exit(2)
 	}
+
+	initBotocoreDataDir()
 
 	schema, err := awsmeta.ExtractSchema(*service)
 	if err != nil {
@@ -221,4 +226,19 @@ func writeJSON(v any) {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func initBotocoreDataDir() {
+	if os.Getenv("BOTOCORE_DATA") != "" {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	out, err := exec.CommandContext(ctx, "python3", "-c", //nolint:gosec // fixed command, not user input
+		"import botocore; print(botocore.__path__[0]+'/data')").Output()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: cannot locate botocore: %v (set BOTOCORE_DATA env var)\n", err)
+		os.Exit(1)
+	}
+	awsmeta.SetDataDir(strings.TrimSpace(string(out)))
 }
