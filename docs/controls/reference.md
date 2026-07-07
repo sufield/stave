@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2891
-**Pack hash:** `66b5dee8703c735a2a1b20252ed0446ed285b52e6b1da00a2dd388ba3ec2b0d1`
+**Total controls:** 2894
+**Pack hash:** `d97e0b657cc58afde126849003c15cba2dad4212935849873ad70f54f9deb113`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -16,8 +16,8 @@ GitHub. Pick a service below.
 | critical | 296 |
 | high | 1259 |
 | info | 16 |
-| low | 218 |
-| medium | 1102 |
+| low | 219 |
+| medium | 1104 |
 
 | Domain | Count |
 |--------|-------|
@@ -28,7 +28,7 @@ GitHub. Pick a service below.
 | detection | 140 |
 | encryption | 119 |
 | exposure | 1270 |
-| governance | 609 |
+| governance | 612 |
 | hygiene | 18 |
 | identity | 508 |
 | lifecycle | 31 |
@@ -41,7 +41,7 @@ GitHub. Pick a service below.
 
 | Service | Controls |
 |---------|----------|
-| [ACM](reference/acm.md) | 5 |
+| [ACM](reference/acm.md) | 8 |
 | [AD](reference/ad.md) | 40 |
 | [APIGATEWAY](reference/apigateway.md) | 105 |
 | [APIGW2](reference/apigw2.md) | 2 |

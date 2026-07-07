@@ -5,6 +5,51 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.ACM.ACME.SCOPE.WILDCARD.001
+
+**ACM ACME Endpoint Domain Scope Must Not Use Wildcards**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+ACM ACME endpoint domain scope must not contain wildcard patterns. An ACME endpoint scoped to *.example.com allows any authorized ACME client to request certificates for any subdomain. If the endpoint serves a single application (app.example.com), the wildcard scope is a blast-radius amplifier: a compromised ACME client can issue certificates for domains it should not control. Exact domain names in the scope field limit issuance to the intended services.
+
+**Remediation:** Restrict the ACME endpoint's domain scope to the specific domains that need certificate issuance. Replace *.example.com with the exact domain names (app.example.com, api.example.com). If wildcard scope is operationally required, document the justification and tighten IAM policies on the endpoint to limit which principals can request certificates.
+
+---
+
+### CTL.ACM.ACME.SPRAWL.001
+
+**Account Has Excessive ACM ACME Endpoints**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-8; soc2: CC8.1;
+
+Account has more ACME endpoints than the governance threshold. Each ACME endpoint is an independent certificate issuance point with its own domain scope, wildcard policy, and client access. Without centralized governance, application teams create endpoints ad hoc — each with different policies, different scopes, and different levels of oversight. The resulting sprawl makes certificate issuance unauditable: no single team knows which endpoints exist, what domains they cover, or who has access. Same accumulation pattern as CTL.SQS.POLICY.SPRAWL.001. The threshold is a heuristic; adjust per organization size.
+
+**Remediation:** Audit existing ACME endpoints and consolidate where possible. Establish a naming convention and tagging policy for ACME endpoints. Consider a central platform team that provisions endpoints with approved domain scopes and wildcard policies, rather than allowing each application team to create its own.
+
+---
+
+### CTL.ACM.ACME.WILDCARD.001
+
+**ACM ACME Endpoint Must Not Allow Wildcard Certificate Issuance**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+
+ACM ACME endpoint must not permit wildcard certificate issuance. A wildcard certificate (*.example.com) covers every subdomain under the parent domain. One compromised private key or one leaked certificate exposes every subdomain to impersonation. ACME endpoints can enforce policies on wildcard usage — disabling wildcard issuance forces per-subdomain certificates, limiting blast radius to the single service whose key is compromised.
+
+**Remediation:** Set the endpoint's wildcard policy to DENY. Issue individual certificates for each subdomain instead of wildcard certificates. If wildcard issuance is operationally required (e.g., a CDN serving many subdomains), document the justification, ensure the private key is stored in a hardware security module, and monitor Certificate Transparency logs for unexpected issuance.
+
+---
+
 ### CTL.ACM.CERT.EXPIRY.001
 
 **ACM Imported Certificates Must Not Be Near Expiry**
