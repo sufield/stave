@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2895
-**Pack hash:** `66fde1eed0510fad51fbf0da60e23a7db51c6b9d923b1ddc57062ceae88aba32`
+**Total controls:** 2898
+**Pack hash:** `90b2b60eee89645af6acec0324d4595b856a58df5ecc3fc253dbe51f44197ad6`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 296 |
+| critical | 297 |
 | high | 1260 |
 | info | 16 |
-| low | 219 |
-| medium | 1104 |
+| low | 220 |
+| medium | 1105 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,8 +27,8 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1271 |
-| governance | 612 |
+| exposure | 1273 |
+| governance | 613 |
 | hygiene | 18 |
 | identity | 508 |
 | lifecycle | 31 |
@@ -105,14 +105,14 @@ GitHub. Pick a service below.
 | [MQ](reference/mq.md) | 3 |
 | [MSK](reference/msk.md) | 9 |
 | [NEPTUNE](reference/neptune.md) | 20 |
-| [NETFIREWALL](reference/netfirewall.md) | 11 |
+| [NETFIREWALL](reference/netfirewall.md) | 12 |
 | [OPENSEARCH](reference/opensearch.md) | 132 |
 | [ORG](reference/org.md) | 6 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 69 |
 | [REDSHIFT](reference/redshift.md) | 26 |
 | [ROUTE53](reference/route53.md) | 50 |
-| [S3](reference/s3.md) | 131 |
+| [S3](reference/s3.md) | 133 |
 | [SAGEMAKER](reference/sagemaker.md) | 33 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |

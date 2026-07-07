@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "2026-01-11T00:00:00Z",
+    "eval_time": "0001-01-01T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -14,7 +14,7 @@
       },
       "overall": "1c786462481e7edac6d8e9242adbf26d4b56124668970d1ffde2bad726e9e0d8"
     },
-    "policy_fingerprint": "3875069cb6e55e06b11be184f722121eacc6bbd33c29f434a8c775c9c2546adb",
+    "policy_fingerprint": "ed164302305704edb43fcce573329d3dee96ae76b52e5d6621136a1baa004824",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -946,6 +946,14 @@
           "s3_multi_region_access_point_public_access_block"
         ]
       }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
     }
   }
 }

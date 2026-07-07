@@ -191,14 +191,90 @@ func crossReference(serviceName string, secOps []SecurityOp, catalog *policy.Cat
 }
 
 func isCovered(f awsmeta.Field, controlFields map[string]bool) bool {
-	lower := strings.ToLower(f.Path)
+	apiField := strings.ToLower(f.Path)
+	derived := camelToSnake(f.Path)
+	core := stripSuffixes(derived)
+	apiConcepts := extractConcepts(derived)
+
 	for path := range controlFields {
-		if strings.Contains(strings.ToLower(path), lower) ||
-			strings.Contains(lower, strings.ToLower(lastSegment(path))) {
+		lowerPath := strings.ToLower(path)
+		seg := lastSegment(path)
+		lowerSeg := strings.ToLower(seg)
+		ctlCore := strings.TrimPrefix(lowerSeg, "has_")
+
+		if strings.Contains(lowerPath, apiField) {
+			return true
+		}
+		if strings.Contains(apiField, lowerSeg) {
+			return true
+		}
+		if lowerSeg == derived || lowerSeg == "has_"+derived {
+			return true
+		}
+		if ctlCore == derived || ctlCore == core {
+			return true
+		}
+		if len(core) >= 4 && len(ctlCore) >= 4 {
+			if strings.Contains(ctlCore, core) || strings.Contains(core, ctlCore) {
+				return true
+			}
+		}
+		ctlConcepts := extractConcepts(lowerPath)
+		if conceptOverlap(apiConcepts, ctlConcepts) >= 1 {
 			return true
 		}
 	}
 	return false
+}
+
+func extractConcepts(path string) map[string]bool {
+	concepts := make(map[string]bool)
+	for seg := range strings.SplitSeq(path, ".") {
+		for part := range strings.SplitSeq(seg, "_") {
+			if len(part) >= 6 {
+				concepts[part] = true
+			}
+		}
+	}
+	return concepts
+}
+
+func conceptOverlap(a, b map[string]bool) int {
+	n := 0
+	for k := range a {
+		if b[k] {
+			n++
+		}
+	}
+	return n
+}
+
+func stripSuffixes(s string) string {
+	for _, suf := range []string{"_id", "_arn", "_enabled", "_name"} {
+		s = strings.TrimSuffix(s, suf)
+	}
+	return s
+}
+
+func camelToSnake(s string) string {
+	var b strings.Builder
+	runes := []rune(s)
+	for i, r := range runes {
+		if r >= 'A' && r <= 'Z' {
+			if i > 0 {
+				prev := runes[i-1]
+				isUpper := prev >= 'A' && prev <= 'Z'
+				nextIsLower := i+1 < len(runes) && runes[i+1] >= 'a' && runes[i+1] <= 'z'
+				if !isUpper || nextIsLower {
+					b.WriteByte('_')
+				}
+			}
+			b.WriteByte(byte(r - 'A' + 'a'))
+		} else {
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
 }
 
 func lastSegment(path string) string {

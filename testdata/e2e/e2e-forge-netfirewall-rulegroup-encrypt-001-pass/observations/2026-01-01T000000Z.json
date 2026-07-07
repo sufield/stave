@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:network-firewall:us-east-1:111122223333:stateful-rulegroup/block-malware",
+      "type": "aws_networkfirewall_rule_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "network_firewall_rule_group",
+          "rule_group": {
+            "encryption_configuration": {
+              "type": "CUSTOMER_KMS",
+              "key_id": "arn:aws:kms:us-east-1:111122223333:key/12345678-1234-1234-1234-123456789012"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

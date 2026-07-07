@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.S3.TELEMETRY.ZERO.001
+name: S3 Bucket Has Zero Telemetry Sources
+description: >
+  S3 buckets must have at least one telemetry source enabled — either
+  server access logging or CloudTrail data events. A bucket with neither
+  is a breach-reconstruction blind spot: no evidence of who accessed
+  what data or when. Individual logging controls check each source
+  independently; this control catches the compound failure where both
+  are absent simultaneously.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AU-2"
+  fedramp_moderate: "AU-2"
+  hipaa: "164.312(b)"
+  pci_dss_v4.0: "10.2.1.3"
+  soc2: "CC7.2"
+  gdpr: "Art.30"
+  ccm_v4: ["LOG-12"]
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - attribution
+  - logging
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: detection_evasion
+  base_impact: 9
+  blast_radius:
+    type: detection
+    scope: resource
+    multiplier: 2.5
+remediation:
+  description: >
+    Bucket has no telemetry — neither server access logging nor
+    CloudTrail data events are enabled. Breach reconstruction is
+    impossible.
+  action: >
+    Enable at least one: (1) S3 server access logging to a dedicated
+    log bucket, or (2) CloudTrail data event logging for S3 objects.
+    Both is preferred for defense in depth.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "logging": {
+          "enabled": false
+        },
+        "logging": {
+          "object_level_logging": {
+            "enabled": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.logging.enabled
+      op: eq
+      value: false
+    - field: properties.storage.logging.object_level_logging.enabled
+      op: eq
+      value: false

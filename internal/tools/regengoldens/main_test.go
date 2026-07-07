@@ -47,6 +47,39 @@ func TestIsRunnableFixture(t *testing.T) {
 	})
 }
 
+func TestStripVolatile_EvalTime(t *testing.T) {
+	old := map[string]any{
+		"run": map[string]any{
+			"eval_time":          "2026-01-11T00:00:00Z",
+			"tool_version":       "edge",
+			"policy_fingerprint": "abc123",
+			"sla_threshold":      "7d",
+		},
+		"summary": map[string]any{"violations": float64(1)},
+	}
+	new := map[string]any{
+		"run": map[string]any{
+			"eval_time":          "2026-07-07T14:30:00Z",
+			"tool_version":       "v1.0.0",
+			"policy_fingerprint": "def456",
+			"sla_threshold":      "7d",
+		},
+		"summary": map[string]any{"violations": float64(1)},
+	}
+	stripVolatile(old)
+	stripVolatile(new)
+
+	paths := diffPaths(old, new, "")
+	for _, p := range paths {
+		if p == "run.eval_time" {
+			t.Errorf("run.eval_time should be stripped as volatile, but appeared in diff paths: %v", paths)
+		}
+	}
+	if len(paths) != 0 {
+		t.Errorf("expected no diff paths after stripping volatile fields, got: %v", paths)
+	}
+}
+
 func TestDiffPaths_MarshalError(t *testing.T) {
 	// Under the bug, both math.NaN() and math.Inf(1) fail to marshal,
 	// resulting in aj=nil and bj=nil. bytes.Equal(nil, nil) evaluates

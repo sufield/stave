@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ENCRYPT.TLS.VERSION.001
+name: S3 Bucket Policy Must Enforce TLS 1.2 Minimum
+description: >
+  S3 bucket policies should deny requests using TLS versions below 1.2
+  via the s3:TlsVersion condition key. The aws:SecureTransport condition
+  only distinguishes HTTP from HTTPS but does not enforce a minimum TLS
+  version — a client using TLS 1.0 passes the SecureTransport check.
+  The s3:TlsVersion condition key (available since 2020) provides
+  granular version enforcement.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-8"
+  pci_dss_v4.0: "4.2.1"
+  soc2: "CC6.1"
+  fedramp_moderate: "SC-8"
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - encryption-in-transit
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: data
+    scope: resource
+    multiplier: 1.0
+remediation:
+  description: >
+    Bucket policy does not enforce a minimum TLS version. Clients can
+    connect using deprecated TLS 1.0 or 1.1 which have known
+    cryptographic weaknesses.
+  action: >
+    Add a bucket policy statement that denies all actions when
+    s3:TlsVersion is less than 1.2. This supplements the
+    aws:SecureTransport condition by enforcing a version floor.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "encryption": {
+          "tls_version_enforced": true,
+          "min_tls_version": "1.2"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.encryption.tls_version_enforced
+      op: eq
+      value: false

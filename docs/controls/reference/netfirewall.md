@@ -125,6 +125,21 @@ AWS Network Firewall is deployed but no route tables direct traffic through the 
 
 ---
 
+### CTL.NETFIREWALL.RULEGROUP.ENCRYPT.001
+
+**Network Firewall Rule Group Must Use Customer-Managed KMS Key**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.1;
+
+Network Firewall rule groups should encrypt their configuration at rest with a customer-managed KMS key. Without CMK encryption the rule group data is encrypted with an AWS-managed key, which provides no key-policy control over who can read the rule definitions and no CloudTrail visibility into decrypt operations.
+
+**Remediation:** Recreate the rule group with an EncryptionConfiguration specifying Type CUSTOMER_KMS and the KMS key ARN. Existing rule groups cannot be updated in place — export the rules, delete, and recreate.
+
+---
+
 ### CTL.NETFIREWALL.RULES.PERMISSIVE.001
 
 **Network Firewall Rule Group Contains Allow-All Rule**

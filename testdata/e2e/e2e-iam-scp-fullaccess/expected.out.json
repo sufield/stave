@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "2026-01-11T00:00:00Z",
+    "eval_time": "0001-01-01T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -14,7 +14,7 @@
       },
       "overall": "9315c5b83b5a745e5ca574272c9d06b2ae27e6a6146517f537571828e5c66f14"
     },
-    "policy_fingerprint": "090ba9d234aff234887fd65be8b099d506ca54fc578beff2481f976710b17768",
+    "policy_fingerprint": "cdf0edb58ca4cdd97e4e1d17f133857aac365f5b33b4edf4a3d2adfcdef007ba",
     "evaluated_state": "deployed"
   },
   "summary": {

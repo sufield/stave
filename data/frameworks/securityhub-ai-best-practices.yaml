@@ -1,0 +1,202 @@
+# AWS Security Hub AI Security Best Practices v1.0.0
+# Source: docs.aws.amazon.com/securityhub/latest/userguide/standards-ai-security.html
+# 31 automated controls across Bedrock, Bedrock AgentCore, and SageMaker.
+#
+# Format: stave catalog gaps compatible
+name: AWS Security Hub AI Security Best Practices v1.0.0
+version: "1.0.0"
+source: "arn:aws:securityhub:::standards/ai-security-best-practices/v/1.0.0"
+
+checks:
+
+  # ─── Bedrock ───────────────────────────────────────────────────
+
+  - id: Bedrock.1
+    service: Bedrock
+    property: kms encryption
+    description: "Bedrock data sources should be encrypted with customer managed KMS keys"
+    reference: "Security Hub AI Security Best Practices"
+
+  # ─── Bedrock AgentCore ─────────────────────────────────────────
+
+  - id: BedrockAgentCore.1
+    service: Bedrock
+    property: vpc network mode
+    description: "AgentCore runtimes should be configured with VPC network mode"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: BedrockAgentCore.2
+    service: Bedrock
+    property: authorization
+    description: "AgentCore Gateways should require authorization for inbound requests"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: BedrockAgentCore.3
+    service: Bedrock
+    property: kms encryption
+    description: "AgentCore Memory should be encrypted with customer managed KMS keys"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: BedrockAgentCore.4
+    service: Bedrock
+    property: kms encryption
+    description: "AgentCore Gateway should be encrypted with customer managed KMS keys"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: BedrockAgentCore.5
+    service: Bedrock
+    property: network mode
+    description: "AgentCore custom browsers should not use public network mode"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: BedrockAgentCore.6
+    service: Bedrock
+    property: session recording
+    description: "AgentCore custom browsers should have session recording enabled"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: BedrockAgentCore.7
+    service: Bedrock
+    property: network isolation
+    description: "AgentCore custom code interpreters should use a private network configuration"
+    reference: "Security Hub AI Security Best Practices"
+
+  # ─── SageMaker ─────────────────────────────────────────────────
+
+  - id: SageMaker.1
+    service: SageMaker
+    property: internet access
+    description: "SageMaker notebook instances should not have direct internet access"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.2
+    service: SageMaker
+    property: vpc
+    description: "SageMaker notebook instances should be launched in a custom VPC"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.3
+    service: SageMaker
+    property: root access
+    description: "Users should not have root access to SageMaker notebook instances"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.4
+    service: SageMaker
+    property: instance count
+    description: "SageMaker endpoint production variants should have initial instance count greater than 1"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.5
+    service: SageMaker
+    property: network isolation
+    description: "SageMaker models should have network isolation enabled"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.8
+    service: SageMaker
+    property: platform version
+    description: "SageMaker notebook instances should run on supported platforms"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.9
+    service: SageMaker
+    property: inter-container encryption
+    description: "SageMaker data quality job definitions should have inter-container traffic encryption enabled"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.10
+    service: SageMaker
+    property: inter-container encryption
+    description: "SageMaker model explainability job definitions should have inter-container traffic encryption enabled"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.11
+    service: SageMaker
+    property: network isolation
+    description: "SageMaker data quality job definitions should have network isolation enabled"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.12
+    service: SageMaker
+    property: network isolation
+    description: "SageMaker model bias job definitions should have network isolation enabled"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.13
+    service: SageMaker
+    property: inter-container encryption
+    description: "SageMaker model quality job definitions should have inter-container traffic encryption enabled"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.14
+    service: SageMaker
+    property: network isolation
+    description: "SageMaker monitoring schedules should have network isolation enabled"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.15
+    service: SageMaker
+    property: inter-container encryption
+    description: "SageMaker model bias job definitions should have inter-container traffic encryption enabled"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.16
+    service: SageMaker
+    property: private registry
+    description: "SageMaker models should use private registry in VPC for primary containers"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.17
+    service: SageMaker
+    property: kms encryption
+    description: "SageMaker feature group offline stores should be encrypted with KMS keys"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.18
+    service: SageMaker
+    property: kms encryption
+    description: "SageMaker feature group online stores should be encrypted with KMS keys"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.19
+    service: SageMaker
+    property: private registry
+    description: "SageMaker models should use private registry in VPC for multi-container inference pipelines"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.20
+    service: SageMaker
+    property: network isolation
+    description: "SageMaker model explainability job definitions should have network isolation enabled"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.21
+    service: SageMaker
+    property: kms encryption
+    description: "SageMaker notebook instances should be encrypted with customer managed KMS keys"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.22
+    service: SageMaker
+    property: inter-container encryption
+    description: "SageMaker monitoring schedules should have inter-container traffic encryption enabled"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.23
+    service: SageMaker
+    property: kms encryption
+    description: "SageMaker inference experiments should have instance storage volume encrypted with KMS keys"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.24
+    service: SageMaker
+    property: kms encryption
+    description: "SageMaker inference experiments should have data storage encrypted with KMS keys"
+    reference: "Security Hub AI Security Best Practices"
+
+  - id: SageMaker.25
+    service: SageMaker
+    property: network isolation
+    description: "SageMaker model quality job definitions should have network isolation enabled"
+    reference: "Security Hub AI Security Best Practices"

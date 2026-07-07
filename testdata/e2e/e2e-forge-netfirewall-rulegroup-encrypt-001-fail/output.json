@@ -1,0 +1,335 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "eval_time": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "82d3b856ac0c18f09e4a45aea3802a90a1ae18e948897002e94492fd22423aa1",
+        "2026-01-11T000000Z.json": "57db0441febfb4b535ebc8b0610232b23cb05304ab1bdb1df3b9b3eb6087bc09"
+      },
+      "overall": "10e6005f1738e9c214e5fc3e5c2ac6e574579ec1eedce627f2925def30ad3992"
+    },
+    "policy_fingerprint": "d53a3efca5d6ace8d0f033f1374d9e3c75dbd0c940f91b18e59cade1f516cb15",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.NETFIREWALL.RULEGROUP.ENCRYPT.001",
+      "asset_id": "arn:aws:network-firewall:us-east-1:111122223333:stateful-rulegroup/block-malware",
+      "asset_type": "aws_networkfirewall_rule_group",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:0ddb87b8f858ecdb",
+      "control_id": "CTL.NETFIREWALL.RULEGROUP.ENCRYPT.001",
+      "control_name": "Network Firewall Rule Group Must Use Customer-Managed KMS Key",
+      "control_description": "Network Firewall rule groups should encrypt their configuration at rest with a customer-managed KMS key. Without CMK encryption the rule group data is encrypted with an AWS-managed key, which provides no key-policy control over who can read the rule definitions and no CloudTrail visibility into decrypt operations.\n",
+      "asset_id": "arn:aws:network-firewall:us-east-1:111122223333:stateful-rulegroup/block-malware",
+      "asset_type": "aws_networkfirewall_rule_group",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "misconfigurations": [
+          {
+            "property": "network.kind",
+            "actual_value": "network_firewall_rule_group",
+            "operator": "eq",
+            "unsafe_value": "network_firewall_rule_group"
+          },
+          {
+            "property": "network.rule_group.encryption_configuration.type",
+            "actual_value": "AWS_OWNED_KMS_KEY",
+            "operator": "ne",
+            "unsafe_value": "CUSTOMER_KMS"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "low",
+      "control_compliance": {
+        "nist_800_53_r5": "SC-28",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "CEK-03"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Network Firewall rule group is not encrypted with a customer-managed KMS key.",
+        "action": "Recreate the rule group with an EncryptionConfiguration specifying Type CUSTOMER_KMS and the KMS key ARN. Existing rule groups cannot be updated in place — export the rules, delete, and recreate.",
+        "example": "{\"network\": {\"kind\": \"network_firewall_rule_group\", \"rule_group\": {\"encryption_configuration\": {\"type\": \"CUSTOMER_KMS\"}}}}\n"
+      },
+      "fix_plan": {
+        "id": "fix-4861f421349e9d00",
+        "target": {
+          "asset_id": "arn:aws:network-firewall:us-east-1:111122223333:stateful-rulegroup/block-malware",
+          "asset_type": "aws_networkfirewall_rule_group"
+        },
+        "action": "Recreate the rule group with an EncryptionConfiguration specifying Type CUSTOMER_KMS and the KMS key ARN. Existing rule groups cannot be updated in place — export the rules, delete, and recreate."
+      },
+      "sla_deadline_hours": 4320,
+      "sla_breached": false,
+      "sla_policy_source": "profile:default",
+      "exposure_score": 25.958904109589042,
+      "score_breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0383561643835617,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "network.kind eq \"network_firewall_rule_group\"",
+          "observation_key": "network.kind",
+          "operator": "eq",
+          "expected_value": "network_firewall_rule_group",
+          "observed_value": "network_firewall_rule_group"
+        },
+        {
+          "predicate_expr": "network.rule_group.encryption_configuration.type ne \"CUSTOMER_KMS\"",
+          "observation_key": "network.rule_group.encryption_configuration.type",
+          "operator": "ne",
+          "expected_value": "CUSTOMER_KMS",
+          "observed_value": "AWS_OWNED_KMS_KEY"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:network-firewall:us-east-1:111122223333:stateful-rulegroup/block-malware",
+          "type": "aws_networkfirewall_rule_group",
+          "vendor": "aws",
+          "arn": "arn:aws:network-firewall:us-east-1:111122223333:stateful-rulegroup/block-malware",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.NETFIREWALL.RULEGROUP.ENCRYPT.001",
+          "control_name": "Network Firewall Rule Group Must Use Customer-Managed KMS Key",
+          "severity": "low",
+          "reasoning": [
+            {
+              "clause": "network.kind = \"network_firewall_rule_group\"",
+              "observation_key": "network.kind",
+              "observed_value": "network_firewall_rule_group"
+            },
+            {
+              "clause": "network.rule_group.encryption_configuration.type not equal \"CUSTOMER_KMS\" (observed: \"AWS_OWNED_KMS_KEY\")",
+              "observation_key": "network.rule_group.encryption_configuration.type",
+              "observed_value": "AWS_OWNED_KMS_KEY"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "network.kind",
+            "current_value": "network_firewall_rule_group",
+            "required_value": "any value other than network_firewall_rule_group",
+            "has_safe_default": false,
+            "description": "Change network.kind away from network_firewall_rule_group"
+          },
+          {
+            "path": "network.rule_group.encryption_configuration.type",
+            "current_value": "AWS_OWNED_KMS_KEY",
+            "required_value": "CUSTOMER_KMS",
+            "has_safe_default": false,
+            "description": "Set network.rule_group.encryption_configuration.type to CUSTOMER_KMS"
+          }
+        ],
+        "action": "Recreate the rule group with an EncryptionConfiguration specifying Type CUSTOMER_KMS and the KMS key ARN. Existing rule groups cannot be updated in place — export the rules, delete, and recreate."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "networkfirewall"
+      ],
+      "delta": [
+        {
+          "property_label": "rule group encryption configuration type",
+          "property_path": "network.rule_group.encryption_configuration.type",
+          "current_value": "AWS_OWNED_KMS_KEY",
+          "fix_action": "set to CUSTOMER_KMS"
+        }
+      ],
+      "contributing_fact_ids": [
+        "ff4212653ed1",
+        "c468ad9a0b33",
+        "755003d2f3c9",
+        "dab6dbc28f34",
+        "ae8c7d971dd7",
+        "c07257eddc4d"
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:ed57cbfee1a2a8c4",
+      "asset_id": "arn:aws:network-firewall:us-east-1:111122223333:stateful-rulegroup/block-malware",
+      "shared_keys": [
+        "network.kind",
+        "network.rule_group.encryption_configuration",
+        "network.rule_group.encryption_configuration.type"
+      ],
+      "headline_finding_id": "sha256:0ddb87b8f858ecdb",
+      "member_finding_ids": [
+        "sha256:0ddb87b8f858ecdb"
+      ],
+      "consolidated_score": 25.958904109589042,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:network-firewall:us-east-1:111122223333:stateful-rulegroup/block-malware",
+      "asset_type": "aws_networkfirewall_rule_group",
+      "fix_plan": {
+        "id": "fix-4861f421349e9d00",
+        "target": {
+          "asset_id": "arn:aws:network-firewall:us-east-1:111122223333:stateful-rulegroup/block-malware",
+          "asset_type": "aws_networkfirewall_rule_group"
+        },
+        "action": "Recreate the rule group with an EncryptionConfiguration specifying Type CUSTOMER_KMS and the KMS key ARN. Existing rule groups cannot be updated in place — export the rules, delete, and recreate."
+      },
+      "contributing_controls": [
+        "CTL.NETFIREWALL.RULEGROUP.ENCRYPT.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.NETFIREWALL.RULEGROUP.ENCRYPT.001",
+      "asset_id": "arn:aws:network-firewall:us-east-1:111122223333:stateful-rulegroup/block-malware",
+      "exposure_score": 25.958904109589042,
+      "breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0383561643835617,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
+    }
+  }
+}
