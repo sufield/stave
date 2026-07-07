@@ -752,16 +752,19 @@ endif
 	$(GOCMD) run ./internal/tools/gencontrol --id "$(ID)" --name "$(NAME)" --field "$(FIELD)" --remediation "$(REMEDIATION)" $(if $(DOMAIN),--domain "$(DOMAIN)") $(if $(SEVERITY),--severity "$(SEVERITY)") $(if $(SCOPE_TAGS),--scope-tags "$(SCOPE_TAGS)") $(if $(ASSET_TYPE),--asset-type "$(ASSET_TYPE)") $(if $(OP),--op "$(OP)") $(if $(VALUE),--value "$(VALUE)") $(if $(COMPLIANCE),--compliance "$(COMPLIANCE)") $(if $(OUT),--out "$(OUT)")
 
 ## triage: Triage a new AWS feature for control coverage gaps (usage: make triage ARGS="--service acm")
-triage: sync-controls
-	$(GOCMD) run ./internal/tools/triage $(ARGS)
+triage:
+	@$(MAKE) sync-controls >&2
+	@$(GOCMD) run ./internal/tools/triage $(ARGS)
 
 ## quarterly-audit: Run all gap discovery engines and produce a consolidated report
-quarterly-audit: sync-controls
-	$(GOCMD) run ./internal/tools/quarterly $(ARGS)
+quarterly-audit:
+	@$(MAKE) sync-controls >&2
+	@$(GOCMD) run ./internal/tools/quarterly $(ARGS)
 
 ## quarterly-save: Run quarterly audit and save results as this quarter's baseline
-quarterly-save: sync-controls
-	$(GOCMD) run ./internal/tools/quarterly --save $(ARGS)
+quarterly-save:
+	@$(MAKE) sync-controls >&2
+	@$(GOCMD) run ./internal/tools/quarterly --save $(ARGS)
 
 ## gen-steampipe-mappings: Generate contracts/steampipe/*.yaml from the cached column catalog
 ##                          Skips existing files; new files carry _auto_generated: true and
