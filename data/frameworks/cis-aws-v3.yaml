@@ -1,0 +1,211 @@
+# CIS AWS Foundations Benchmark v3.0
+# Configuration-checkable items only. Excludes checks requiring
+# runtime data (CloudWatch alarms, log monitoring, data classification).
+#
+# Format: stave catalog gaps compatible
+standard: CIS AWS Foundations Benchmark v3.0
+
+checks:
+
+  # ─── 1. Identity and Access Management ──────────────────────
+
+  - id: cis-1.4
+    service: IAM
+    description: "No root account access key exists"
+    reference: "CIS 1.4"
+
+  - id: cis-1.5
+    service: IAM
+    description: "MFA is enabled for the root user account"
+    reference: "CIS 1.5"
+
+  - id: cis-1.6
+    service: IAM
+    description: "Hardware MFA is enabled for the root user account"
+    reference: "CIS 1.6"
+
+  - id: cis-1.8
+    service: IAM
+    description: "IAM password policy requires minimum length of 14 or greater"
+    reference: "CIS 1.8"
+
+  - id: cis-1.9
+    service: IAM
+    description: "IAM password policy prevents password reuse"
+    reference: "CIS 1.9"
+
+  - id: cis-1.10
+    service: IAM
+    description: "MFA is enabled for all IAM users that have a console password"
+    reference: "CIS 1.10"
+
+  - id: cis-1.12
+    service: IAM
+    description: "Credentials unused for 45 days or greater are disabled"
+    reference: "CIS 1.12"
+
+  - id: cis-1.13
+    service: IAM
+    description: "Only one active access key available for any single IAM user"
+    reference: "CIS 1.13"
+
+  - id: cis-1.14
+    service: IAM
+    description: "Access keys are rotated every 90 days or less"
+    reference: "CIS 1.14"
+
+  - id: cis-1.15
+    service: IAM
+    description: "IAM users receive permissions only through groups"
+    reference: "CIS 1.15"
+
+  - id: cis-1.16
+    service: IAM
+    description: "IAM policies that allow full administrative privileges are not attached"
+    reference: "CIS 1.16"
+
+  - id: cis-1.17
+    service: IAM
+    description: "A support role has been created to manage incidents with AWS Support"
+    reference: "CIS 1.17"
+
+  - id: cis-1.19
+    service: IAM
+    description: "All expired SSL/TLS certificates stored in IAM are removed"
+    reference: "CIS 1.19"
+
+  - id: cis-1.20
+    service: IAM
+    description: "IAM Access Analyzer is enabled for all regions"
+    reference: "CIS 1.20"
+
+  - id: cis-1.22
+    service: IAM
+    description: "Access to AWSCloudShellFullAccess is restricted"
+    reference: "CIS 1.22"
+
+  # ─── 2. Storage ─────────────────────────────────────────────
+
+  - id: cis-2.1.1
+    service: S3
+    description: "S3 bucket policy is set to deny HTTP requests"
+    reference: "CIS 2.1.1"
+
+  - id: cis-2.1.2
+    service: S3
+    description: "MFA Delete is enabled on S3 buckets"
+    reference: "CIS 2.1.2"
+
+  - id: cis-2.1.4
+    service: S3
+    description: "S3 buckets are configured with block public access"
+    reference: "CIS 2.1.4"
+
+  - id: cis-2.2.1
+    service: EC2
+    description: "EBS volume encryption is enabled in all regions"
+    reference: "CIS 2.2.1"
+
+  - id: cis-2.3.1
+    service: RDS
+    description: "Encryption is enabled for RDS instances"
+    reference: "CIS 2.3.1"
+
+  - id: cis-2.3.2
+    service: RDS
+    description: "Auto minor version upgrade feature is enabled for RDS instances"
+    reference: "CIS 2.3.2"
+
+  - id: cis-2.3.3
+    service: RDS
+    description: "Public access is not given to RDS instances"
+    reference: "CIS 2.3.3"
+
+  - id: cis-2.4.1
+    service: EFS
+    description: "Encryption is enabled for EFS file systems"
+    reference: "CIS 2.4.1"
+
+  # ─── 3. Logging ─────────────────────────────────────────────
+
+  - id: cis-3.1
+    service: CLOUDTRAIL
+    description: "CloudTrail is enabled in all regions"
+    reference: "CIS 3.1"
+
+  - id: cis-3.2
+    service: CLOUDTRAIL
+    description: "CloudTrail log file validation is enabled"
+    reference: "CIS 3.2"
+
+  - id: cis-3.3
+    service: S3
+    description: "S3 bucket used to store CloudTrail logs is not publicly accessible"
+    reference: "CIS 3.3"
+
+  - id: cis-3.5
+    service: CONFIG
+    description: "AWS Config is enabled in all regions"
+    reference: "CIS 3.5"
+
+  - id: cis-3.6
+    service: S3
+    description: "S3 bucket access logging is enabled on the CloudTrail S3 bucket"
+    reference: "CIS 3.6"
+
+  - id: cis-3.7
+    service: CLOUDTRAIL
+    description: "CloudTrail logs are encrypted at rest using KMS CMKs"
+    reference: "CIS 3.7"
+
+  - id: cis-3.8
+    service: KMS
+    description: "Rotation for customer-created symmetric CMKs is enabled"
+    reference: "CIS 3.8"
+
+  - id: cis-3.9
+    service: VPC
+    description: "VPC flow logging is enabled in all VPCs"
+    reference: "CIS 3.9"
+
+  - id: cis-3.10
+    service: S3
+    description: "Object-level logging for write events is enabled for S3 bucket"
+    reference: "CIS 3.10"
+
+  - id: cis-3.11
+    service: S3
+    description: "Object-level logging for read events is enabled for S3 bucket"
+    reference: "CIS 3.11"
+
+  # ─── 5. Networking ──────────────────────────────────────────
+
+  - id: cis-5.1
+    service: VPC
+    description: "No network ACLs allow ingress from 0.0.0.0/0 to remote server administration ports"
+    reference: "CIS 5.1"
+
+  - id: cis-5.2
+    service: VPC
+    description: "No security groups allow ingress from 0.0.0.0/0 to remote server administration ports"
+    reference: "CIS 5.2"
+
+  - id: cis-5.3
+    service: VPC
+    description: "No security groups allow ingress from ::/0 to remote server administration ports"
+    reference: "CIS 5.3"
+
+  - id: cis-5.4
+    service: VPC
+    description: "Default security group of every VPC restricts all traffic"
+    reference: "CIS 5.4"
+
+  - id: cis-5.5
+    service: VPC
+    description: "Routing tables for VPC peering are least access"
+    reference: "CIS 5.5"
+
+  - id: cis-5.6
+    service: EC2
+    description: "EC2 Metadata Service only allows IMDSv2"
+    reference: "CIS 5.6"

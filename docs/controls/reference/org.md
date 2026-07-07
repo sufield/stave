@@ -65,6 +65,21 @@ AWS Organizations must have a Service Control Policy that restricts resource cre
 
 ---
 
+### CTL.ORG.SCP.DEPUTYPREVENTION.001
+
+**AWS Organizations Must Have an SCP Preventing Confused Deputy Attacks**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.1;
+
+AWS Organizations must have a Service Control Policy that prevents confused deputy attacks by requiring sts:AssumeRole calls to include the aws:SourceAccount condition. Without this SCP, cross-account role assumption can be exploited by confused deputy attacks where a trusted service is tricked into acting on behalf of an unauthorized principal. This is a foundational cross-account trust boundary control.
+
+**Remediation:** Attach an SCP to the organization root that denies sts:AssumeRole when the aws:SourceAccount condition key is not present. This forces all cross-account role assumptions to declare the source account, preventing confused deputy attacks.
+
+---
+
 ### CTL.ORG.TRUSTEDACCESS.001
 
 **AWS Organizations Trusted Access Must Be Reviewed**

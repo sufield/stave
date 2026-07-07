@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2894
-**Pack hash:** `d97e0b657cc58afde126849003c15cba2dad4212935849873ad70f54f9deb113`
+**Total controls:** 2895
+**Pack hash:** `66fde1eed0510fad51fbf0da60e23a7db51c6b9d923b1ddc57062ceae88aba32`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,7 +14,7 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 296 |
-| high | 1259 |
+| high | 1260 |
 | info | 16 |
 | low | 219 |
 | medium | 1104 |
@@ -27,7 +27,7 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1270 |
+| exposure | 1271 |
 | governance | 612 |
 | hygiene | 18 |
 | identity | 508 |
@@ -107,7 +107,7 @@ GitHub. Pick a service below.
 | [NEPTUNE](reference/neptune.md) | 20 |
 | [NETFIREWALL](reference/netfirewall.md) | 11 |
 | [OPENSEARCH](reference/opensearch.md) | 132 |
-| [ORG](reference/org.md) | 5 |
+| [ORG](reference/org.md) | 6 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 69 |
 | [REDSHIFT](reference/redshift.md) | 26 |

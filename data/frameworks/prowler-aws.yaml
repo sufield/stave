@@ -1,0 +1,331 @@
+# Prowler AWS Check Catalog — representative subset
+# Sourced from prowler-cloud/prowler providers/aws/services/
+# Focus: configuration-checkable checks across major services.
+# Not exhaustive — Prowler has 300+ checks; this covers the
+# high-impact subset for gap analysis.
+#
+# Format: stave catalog gaps compatible
+standard: Prowler AWS Checks (v4.x)
+
+checks:
+
+  # ─── IAM ────────────────────────────────────────────────────
+
+  - id: prowler-iam_root_no_access_key
+    service: IAM
+    description: "Root account has no access keys"
+    reference: "Prowler iam_root_no_access_key"
+
+  - id: prowler-iam_root_mfa_enabled
+    service: IAM
+    description: "Root account has MFA enabled"
+    reference: "Prowler iam_root_mfa_enabled"
+
+  - id: prowler-iam_root_hardware_mfa
+    service: IAM
+    description: "Root account has hardware MFA"
+    reference: "Prowler iam_root_hardware_mfa"
+
+  - id: prowler-iam_no_custom_policy_permissive_role_assumption
+    service: IAM
+    description: "No custom policy allows permissive role assumption"
+    reference: "Prowler iam_no_custom_policy_permissive_role_assumption"
+
+  - id: prowler-iam_policy_no_full_access_to_star
+    service: IAM
+    description: "No IAM policy grants full *:* access"
+    reference: "Prowler iam_policy_no_full_access_to_star"
+
+  - id: prowler-iam_user_mfa_enabled
+    service: IAM
+    description: "Console IAM users have MFA enabled"
+    reference: "Prowler iam_user_mfa_enabled_console_access"
+
+  - id: prowler-iam_password_policy_minimum_length
+    service: IAM
+    description: "Password policy minimum length is 14 or greater"
+    reference: "Prowler iam_password_policy_minimum_length_14"
+
+  - id: prowler-iam_user_accesskey_unused
+    service: IAM
+    description: "Access keys unused for 45 days are disabled"
+    reference: "Prowler iam_user_accesskey_unused"
+
+  - id: prowler-iam_access_analyzer_enabled
+    service: IAM
+    description: "IAM Access Analyzer is enabled"
+    reference: "Prowler iam_access_analyzer_enabled"
+
+  - id: prowler-iam_support_role_created
+    service: IAM
+    description: "Support role has been created"
+    reference: "Prowler iam_support_role_created"
+
+  - id: prowler-iam_inline_policy_no_admin_access
+    service: IAM
+    description: "No inline policy grants admin access"
+    reference: "Prowler iam_inline_policy_no_administrative_privileges"
+
+  - id: prowler-iam_user_no_inline_attached_policies
+    service: IAM
+    description: "IAM users have no inline or directly attached policies"
+    reference: "Prowler iam_user_no_inline_attached_policies"
+
+  - id: prowler-iam_server_certificate_not_expired
+    service: IAM
+    description: "No expired server certificates in IAM"
+    reference: "Prowler iam_no_expired_server_certificates"
+
+  # ─── S3 ─────────────────────────────────────────────────────
+
+  - id: prowler-s3_bucket_public_access
+    service: S3
+    description: "S3 bucket does not allow public access"
+    reference: "Prowler s3_bucket_public_access"
+
+  - id: prowler-s3_bucket_default_encryption
+    service: S3
+    description: "S3 bucket has default encryption enabled"
+    reference: "Prowler s3_bucket_default_encryption"
+
+  - id: prowler-s3_bucket_versioning
+    service: S3
+    description: "S3 bucket has versioning enabled"
+    reference: "Prowler s3_bucket_versioning"
+
+  - id: prowler-s3_bucket_logging_enabled
+    service: S3
+    description: "S3 bucket has access logging enabled"
+    reference: "Prowler s3_bucket_logging_enabled"
+
+  - id: prowler-s3_bucket_policy_ssl_only
+    service: S3
+    description: "S3 bucket policy enforces SSL-only access"
+    reference: "Prowler s3_bucket_policy_ssl_requests_only"
+
+  - id: prowler-s3_bucket_acl_prohibited
+    service: S3
+    description: "S3 bucket does not use ACLs for access control"
+    reference: "Prowler s3_bucket_acl_prohibited"
+
+  - id: prowler-s3_account_level_public_access_blocks
+    service: S3
+    description: "Account-level S3 public access block is enabled"
+    reference: "Prowler s3_account_level_public_access_blocks"
+
+  # ─── EC2 ────────────────────────────────────────────────────
+
+  - id: prowler-ec2_instance_imdsv2_enabled
+    service: EC2
+    description: "EC2 instances require IMDSv2"
+    reference: "Prowler ec2_instance_imdsv2_enabled"
+
+  - id: prowler-ec2_ebs_volume_encryption
+    service: EC2
+    description: "EBS volumes are encrypted"
+    reference: "Prowler ec2_ebs_volume_encryption"
+
+  - id: prowler-ec2_ebs_default_encryption
+    service: EC2
+    description: "EBS default encryption is enabled"
+    reference: "Prowler ec2_ebs_default_encryption"
+
+  - id: prowler-ec2_instance_public_ip
+    service: EC2
+    description: "EC2 instances do not have public IPs without justification"
+    reference: "Prowler ec2_instance_public_ip"
+
+  - id: prowler-ec2_securitygroup_allow_ingress_ssh
+    service: EC2
+    description: "Security groups do not allow SSH from 0.0.0.0/0"
+    reference: "Prowler ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_22"
+
+  - id: prowler-ec2_securitygroup_allow_ingress_rdp
+    service: EC2
+    description: "Security groups do not allow RDP from 0.0.0.0/0"
+    reference: "Prowler ec2_securitygroup_allow_ingress_from_internet_to_tcp_port_3389"
+
+  - id: prowler-ec2_securitygroup_default_restrict_traffic
+    service: EC2
+    description: "Default security groups restrict all traffic"
+    reference: "Prowler ec2_securitygroup_default_restrict_traffic"
+
+  # ─── VPC ────────────────────────────────────────────────────
+
+  - id: prowler-vpc_flow_logs_enabled
+    service: VPC
+    description: "VPC flow logs are enabled"
+    reference: "Prowler vpc_flow_logs_enabled"
+
+  - id: prowler-vpc_endpoint_services_allowed_principals_trust_boundaries
+    service: VPC
+    description: "VPC endpoint services restrict allowed principals"
+    reference: "Prowler vpc_endpoint_services_allowed_principals_trust_boundaries"
+
+  # ─── CloudTrail ─────────────────────────────────────────────
+
+  - id: prowler-cloudtrail_multi_region_enabled
+    service: CLOUDTRAIL
+    description: "CloudTrail is enabled in all regions"
+    reference: "Prowler cloudtrail_multi_region_enabled"
+
+  - id: prowler-cloudtrail_log_file_validation_enabled
+    service: CLOUDTRAIL
+    description: "CloudTrail log file validation is enabled"
+    reference: "Prowler cloudtrail_log_file_validation_enabled"
+
+  - id: prowler-cloudtrail_kms_encryption_enabled
+    service: CLOUDTRAIL
+    description: "CloudTrail logs are encrypted with KMS"
+    reference: "Prowler cloudtrail_kms_encryption_enabled"
+
+  - id: prowler-cloudtrail_s3_dataevents_read_enabled
+    service: CLOUDTRAIL
+    description: "CloudTrail S3 data events for read are enabled"
+    reference: "Prowler cloudtrail_s3_dataevents_read_enabled"
+
+  - id: prowler-cloudtrail_s3_dataevents_write_enabled
+    service: CLOUDTRAIL
+    description: "CloudTrail S3 data events for write are enabled"
+    reference: "Prowler cloudtrail_s3_dataevents_write_enabled"
+
+  # ─── KMS ────────────────────────────────────────────────────
+
+  - id: prowler-kms_cmk_rotation_enabled
+    service: KMS
+    description: "KMS customer managed key rotation is enabled"
+    reference: "Prowler kms_cmk_rotation_enabled"
+
+  - id: prowler-kms_key_not_publicly_accessible
+    service: KMS
+    description: "KMS keys are not publicly accessible"
+    reference: "Prowler kms_key_not_publicly_accessible"
+
+  # ─── RDS ────────────────────────────────────────────────────
+
+  - id: prowler-rds_instance_storage_encrypted
+    service: RDS
+    description: "RDS instance storage is encrypted"
+    reference: "Prowler rds_instance_storage_encrypted"
+
+  - id: prowler-rds_instance_no_public_access
+    service: RDS
+    description: "RDS instances are not publicly accessible"
+    reference: "Prowler rds_instance_no_public_access"
+
+  - id: prowler-rds_instance_minor_version_upgrade_enabled
+    service: RDS
+    description: "RDS auto minor version upgrade is enabled"
+    reference: "Prowler rds_instance_minor_version_upgrade_enabled"
+
+  - id: prowler-rds_instance_deletion_protection
+    service: RDS
+    description: "RDS instance has deletion protection enabled"
+    reference: "Prowler rds_instance_deletion_protection"
+
+  - id: prowler-rds_instance_multi_az
+    service: RDS
+    description: "RDS instance has multi-AZ enabled"
+    reference: "Prowler rds_instance_multi_az"
+
+  # ─── Lambda ─────────────────────────────────────────────────
+
+  - id: prowler-lambda_function_not_publicly_accessible
+    service: LAMBDA
+    description: "Lambda function is not publicly accessible"
+    reference: "Prowler awslambda_function_not_publicly_accessible"
+
+  - id: prowler-lambda_function_using_supported_runtimes
+    service: LAMBDA
+    description: "Lambda function uses a supported runtime"
+    reference: "Prowler awslambda_function_using_supported_runtimes"
+
+  - id: prowler-lambda_function_no_secrets_in_variables
+    service: LAMBDA
+    description: "Lambda function environment variables contain no secrets"
+    reference: "Prowler awslambda_function_no_secrets_in_variables"
+
+  - id: prowler-lambda_function_vpc_enabled
+    service: LAMBDA
+    description: "Lambda function runs inside a VPC"
+    reference: "Prowler awslambda_function_in_vpc"
+
+  # ─── ECS/EKS ────────────────────────────────────────────────
+
+  - id: prowler-ecs_task_definitions_no_privileged_containers
+    service: ECS
+    description: "ECS task definitions do not use privileged containers"
+    reference: "Prowler ecs_task_definitions_no_privileged_containers"
+
+  - id: prowler-ecs_task_definitions_no_environment_secrets
+    service: ECS
+    description: "ECS task definitions do not have secrets in environment variables"
+    reference: "Prowler ecs_task_definitions_no_environment_secrets"
+
+  - id: prowler-eks_cluster_endpoint_not_publicly_accessible
+    service: EKS
+    description: "EKS cluster endpoint is not publicly accessible"
+    reference: "Prowler eks_endpoints_not_publicly_accessible"
+
+  - id: prowler-eks_cluster_logging_enabled
+    service: EKS
+    description: "EKS cluster control plane logging is enabled"
+    reference: "Prowler eks_control_plane_logging_all_types_enabled"
+
+  - id: prowler-eks_secrets_encrypted
+    service: EKS
+    description: "EKS cluster secrets are encrypted with KMS"
+    reference: "Prowler eks_cluster_kms_cmk_encryption_in_secrets_enabled"
+
+  # ─── Config ─────────────────────────────────────────────────
+
+  - id: prowler-config_recorder_all_regions_enabled
+    service: CONFIG
+    description: "AWS Config recorder is enabled in all regions"
+    reference: "Prowler awsconfig_recorder_all_regions_enabled"
+
+  # ─── SCP / Organization (Prowler gap — issue #7114) ────────
+
+  - id: prowler-scp_deny_regions
+    service: ORGANIZATIONS
+    description: "SCP restricts API calls to approved regions"
+    reference: "Prowler — NOT IMPLEMENTED (issue #7114)"
+
+  - id: prowler-scp_confused_deputy_prevention
+    service: ORGANIZATIONS
+    description: "SCP prevents confused deputy attacks via SourceAccount condition"
+    reference: "Prowler — NOT IMPLEMENTED (issue #7114)"
+
+  - id: prowler-scp_data_perimeter
+    service: ORGANIZATIONS
+    description: "SCP enforces data perimeter via PrincipalOrgID condition"
+    reference: "Prowler — NOT IMPLEMENTED (issue #7114)"
+
+  # ─── SageMaker ──────────────────────────────────────────────
+
+  - id: prowler-sagemaker_notebook_instance_vpc
+    service: SAGEMAKER
+    description: "SageMaker notebook instance runs inside a VPC"
+    reference: "Prowler sagemaker_notebook_instance_vpc_settings_configured"
+
+  - id: prowler-sagemaker_notebook_instance_encryption
+    service: SAGEMAKER
+    description: "SageMaker notebook instance has KMS encryption"
+    reference: "Prowler sagemaker_notebook_instance_encryption_enabled"
+
+  - id: prowler-sagemaker_endpoint_config_encryption
+    service: SAGEMAKER
+    description: "SageMaker endpoint config uses KMS encryption"
+    reference: "Prowler sagemaker_endpoint_config_kms_key_configured"
+
+  # ─── Bedrock ────────────────────────────────────────────────
+
+  - id: prowler-bedrock_model_invocation_logging
+    service: BEDROCK
+    description: "Bedrock model invocation logging is enabled"
+    reference: "Prowler bedrock_model_invocation_logging_enabled"
+
+  - id: prowler-bedrock_guardrail_configured
+    service: BEDROCK
+    description: "Bedrock guardrail is configured with content filter"
+    reference: "Prowler bedrock_guardrail_prompt_attack_filter_enabled"

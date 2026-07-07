@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.DEPUTYPREVENTION.001
+name: AWS Organizations Must Have an SCP Preventing Confused Deputy Attacks
+description: >
+  AWS Organizations must have a Service Control Policy that prevents
+  confused deputy attacks by requiring sts:AssumeRole calls to include
+  the aws:SourceAccount condition. Without this SCP, cross-account role
+  assumption can be exploited by confused deputy attacks where a trusted
+  service is tricked into acting on behalf of an unauthorized principal.
+  This is a foundational cross-account trust boundary control.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  base_impact: 7
+  blast_radius:
+    type: trust_boundary
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    No SCP prevents confused deputy attacks. Cross-account role
+    assumption is not protected by a SourceAccount condition.
+  action: >
+    Attach an SCP to the organization root that denies sts:AssumeRole
+    when the aws:SourceAccount condition key is not present. This
+    forces all cross-account role assumptions to declare the source
+    account, preventing confused deputy attacks.
+  example: |
+    {
+      "organization": {
+        "kind": "scp_policy_set",
+        "confused_deputy_prevention": {
+          "has_scp": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: scp_policy_set
+    - field: properties.organization.confused_deputy_prevention.has_scp
+      op: eq
+      value: false

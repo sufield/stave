@@ -1,0 +1,473 @@
+# AWS Security Specialty (SCS-C02) Certification Syllabus
+# Configuration-checkable items only. Excludes topics requiring
+# runtime detection, incident response execution, or process controls.
+#
+# Format: stave catalog gaps compatible
+standard: AWS Certified Security - Specialty (SCS-C02)
+
+checks:
+
+  # ─── Domain 4: Identity and Access Management ──────────────
+
+  - id: scs-iam-01
+    service: IAM
+    description: "IAM policy with wildcard action or resource"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-02
+    service: IAM
+    description: "IAM policy with full admin access (AdministratorAccess)"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-03
+    service: IAM
+    description: "IAM user with console access but no MFA"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-04
+    service: IAM
+    description: "IAM user with access keys older than 90 days"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-05
+    service: IAM
+    description: "Root account has access keys"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-06
+    service: IAM
+    description: "Root account without MFA"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-07
+    service: IAM
+    description: "Password policy below CIS thresholds"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-08
+    service: IAM
+    description: "IAM role without permission boundary"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-09
+    service: IAM
+    description: "IAM role trust policy with wildcard principal"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-10
+    service: IAM
+    description: "IAM role trust policy cross-account without ExternalId"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-11
+    service: IAM
+    description: "IAM role trust policy service principal without SourceAccount"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-12
+    service: IAM
+    description: "IAM inline policies attached to users"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-13
+    service: IAM
+    description: "IAM unused credentials or roles"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-14
+    service: IAM
+    description: "IAM Access Analyzer not configured"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-15
+    service: IAM
+    description: "Cross-account access without conditions (OrgID)"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-16
+    service: IAM
+    description: "SCP enforcement for organization guardrails"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-17
+    service: IAM
+    description: "RCP enforcement for resource control policies"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-18
+    service: IAM
+    description: "Identity Center permission set overprivilege"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-19
+    service: IAM
+    description: "Identity Center MFA enforcement"
+    reference: "SCS-C02 Domain 4"
+
+  - id: scs-iam-20
+    service: IAM
+    description: "SAML/OIDC provider configuration"
+    reference: "SCS-C02 Domain 4"
+
+  # ─── Domain 5: Data Protection (S3) ────────────────────────
+
+  - id: scs-s3-01
+    service: S3
+    description: "S3 bucket public access block (all 4 settings)"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-s3-02
+    service: S3
+    description: "S3 bucket policy allows public access"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-s3-03
+    service: S3
+    description: "S3 bucket ACL allows public access"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-s3-04
+    service: S3
+    description: "S3 bucket without default encryption"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-s3-05
+    service: S3
+    description: "S3 bucket without versioning"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-s3-06
+    service: S3
+    description: "S3 bucket without access logging"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-s3-07
+    service: S3
+    description: "S3 bucket without lifecycle policy"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-s3-08
+    service: S3
+    description: "S3 bucket without object lock for compliance"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-s3-09
+    service: S3
+    description: "S3 bucket replication not configured"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-s3-10
+    service: S3
+    description: "S3 bucket policy with wildcard principal"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-s3-11
+    service: S3
+    description: "S3 presigned URL abuse potential"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-s3-12
+    service: S3
+    description: "S3 access points without VPC restriction"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-s3-13
+    service: S3
+    description: "S3 storage class controls (Glacier archival)"
+    reference: "SCS-C02 Domain 5"
+
+  # ─── Domain 5: Data Protection (Encryption/KMS) ────────────
+
+  - id: scs-enc-01
+    service: KMS
+    description: "KMS key without rotation enabled"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-enc-02
+    service: KMS
+    description: "KMS key policy allows public access"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-enc-03
+    service: KMS
+    description: "KMS key policy overly broad"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-enc-04
+    service: EC2
+    description: "EBS volume without encryption"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-enc-05
+    service: RDS
+    description: "RDS instance without encryption at rest"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-enc-06
+    service: RDS
+    description: "RDS instance without encryption in transit"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-enc-07
+    service: EFS
+    description: "EFS without encryption"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-enc-08
+    service: SecretsManager
+    description: "Secrets Manager secret without rotation"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-enc-09
+    service: SecretsManager
+    description: "Secrets Manager secret without KMS CMK"
+    reference: "SCS-C02 Domain 5"
+
+  - id: scs-enc-10
+    service: SSM
+    description: "SSM Parameter Store SecureString without KMS"
+    reference: "SCS-C02 Domain 5"
+
+  # ─── Domain 3: Infrastructure Security (Network) ───────────
+
+  - id: scs-net-01
+    service: VPC
+    description: "Security group allows SSH from 0.0.0.0/0"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-net-02
+    service: VPC
+    description: "Security group allows RDP from 0.0.0.0/0"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-net-03
+    service: VPC
+    description: "Security group allows all traffic from 0.0.0.0/0"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-net-04
+    service: VPC
+    description: "Default security group has open rules"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-net-05
+    service: VPC
+    description: "VPC without flow logs"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-net-06
+    service: VPC
+    description: "Network ACL allows all inbound"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-net-07
+    service: VPC
+    description: "VPC peering with overly broad routes"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-net-08
+    service: VPC
+    description: "VPC endpoint policy overly permissive"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-net-09
+    service: VPC
+    description: "VPC without DNS resolution or hostnames enabled"
+    reference: "SCS-C02 Domain 3"
+
+  # ─── Domain 1: Threat Detection (Security Services) ────────
+
+  - id: scs-svc-01
+    service: GuardDuty
+    property: enabled
+    description: "GuardDuty must be enabled for threat detection in region"
+    reference: "SCS-C02 Domain 1"
+
+  - id: scs-svc-02
+    service: GuardDuty
+    property: enabled
+    description: "GuardDuty must be enabled for threat detection in all regions"
+    reference: "SCS-C02 Domain 1"
+
+  - id: scs-svc-03
+    service: Inspector
+    property: enabled
+    description: "Inspector must be enabled for vulnerability scanning"
+    reference: "SCS-C02 Domain 1"
+
+  - id: scs-svc-04
+    service: Macie
+    property: enabled
+    description: "Macie must be enabled for sensitive data discovery"
+    reference: "SCS-C02 Domain 1"
+
+  - id: scs-svc-05
+    service: SecurityHub
+    description: "Security Hub not enabled"
+    reference: "SCS-C02 Domain 1"
+
+  - id: scs-svc-06
+    service: Config
+    description: "AWS Config not recording all resource types"
+    reference: "SCS-C02 Domain 1"
+
+  - id: scs-svc-07
+    service: Config
+    description: "AWS Config rules not configured"
+    reference: "SCS-C02 Domain 1"
+
+  - id: scs-svc-08
+    service: AuditManager
+    description: "Audit Manager not configured"
+    reference: "SCS-C02 Domain 1"
+
+  - id: scs-svc-09
+    service: FMS
+    description: "Firewall Manager security policies not configured"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-svc-10
+    service: ServiceCatalog
+    description: "Service Catalog launch constraints"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-svc-11
+    service: IAM
+    description: "IAM Access Analyzer not created"
+    reference: "SCS-C02 Domain 1"
+
+  # ─── Domain 2: Logging and Monitoring ──────────────────────
+
+  - id: scs-log-01
+    service: CloudTrail
+    description: "CloudTrail not enabled in all regions"
+    reference: "SCS-C02 Domain 2"
+
+  - id: scs-log-02
+    service: CloudTrail
+    description: "CloudTrail log file validation disabled"
+    reference: "SCS-C02 Domain 2"
+
+  - id: scs-log-03
+    service: CloudTrail
+    description: "CloudTrail not integrated with CloudWatch Logs"
+    reference: "SCS-C02 Domain 2"
+
+  - id: scs-log-04
+    service: CloudTrail
+    description: "CloudTrail S3 bucket publicly accessible"
+    reference: "SCS-C02 Domain 2"
+
+  - id: scs-log-05
+    service: CloudTrail
+    description: "CloudTrail S3 bucket without access logging"
+    reference: "SCS-C02 Domain 2"
+
+  - id: scs-log-06
+    service: CloudTrail
+    description: "CloudTrail not encrypting logs with KMS"
+    reference: "SCS-C02 Domain 2"
+
+  - id: scs-log-07
+    service: CloudWatch
+    description: "CloudWatch log group without retention policy"
+    reference: "SCS-C02 Domain 2"
+
+  - id: scs-log-08
+    service: CloudWatch
+    description: "CloudWatch log group without KMS encryption"
+    reference: "SCS-C02 Domain 2"
+
+  - id: scs-log-09
+    service: SNS
+    description: "SNS topic without encryption"
+    reference: "SCS-C02 Domain 2"
+
+  - id: scs-log-10
+    service: SNS
+    description: "SNS topic policy allows public publish"
+    reference: "SCS-C02 Domain 2"
+
+  - id: scs-log-11
+    service: EventBridge
+    description: "EventBridge rule without target"
+    reference: "SCS-C02 Domain 2"
+
+  # ─── Domain 3: Infrastructure Security (Compute) ───────────
+
+  - id: scs-cmp-01
+    service: EC2
+    description: "EC2 instance requires IMDSv2"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-cmp-02
+    service: EC2
+    description: "EC2 instance with public IP in private subnet"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-cmp-03
+    service: EC2
+    description: "EC2 instance without detailed monitoring"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-cmp-04
+    service: EC2
+    description: "EC2 instance without SSM management"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-cmp-05
+    service: SSM
+    description: "SSM Session Manager without logging"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-cmp-06
+    service: SSM
+    description: "SSM Session Manager without KMS encryption"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-cmp-07
+    service: RDS
+    description: "RDS instance publicly accessible"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-cmp-08
+    service: RDS
+    description: "RDS instance without Multi-AZ"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-cmp-09
+    service: RDS
+    description: "RDS instance without automated backups"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-cmp-10
+    service: RDS
+    description: "RDS instance with default master username"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-cmp-11
+    service: RDS
+    description: "RDS instance without deletion protection"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-cmp-12
+    service: RDS
+    description: "RDS snapshot publicly shared"
+    reference: "SCS-C02 Domain 3"
+
+  # ─── Domain 3: IaC and Deployment ──────────────────────────
+
+  - id: scs-iac-01
+    service: CloudFormation
+    description: "CloudFormation stack without termination protection"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-iac-02
+    service: CloudFormation
+    description: "CloudFormation stack without stack policy"
+    reference: "SCS-C02 Domain 3"
+
+  - id: scs-iac-03
+    service: CloudFormation
+    description: "CloudFormation drift detection"
+    reference: "SCS-C02 Domain 3"

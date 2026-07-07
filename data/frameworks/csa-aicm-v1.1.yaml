@@ -1,0 +1,1241 @@
+name: CSA AI Controls Matrix
+version: 1.1.0
+source: cloudsecurityalliance.org
+checks:
+  - id: A&A-01
+    domain: Audit & Assurance
+    service: N/A
+    scope: process
+    description: Establish, document, approve, communicate, apply, evaluate and maintain audit and assurance policies and procedures
+  - id: A&A-02
+    domain: Audit & Assurance
+    service: N/A
+    scope: process
+    description: Conduct independent audit and assurance assessments according to relevant standards at least annually
+  - id: A&A-03
+    domain: Audit & Assurance
+    service: N/A
+    scope: process
+    description: Perform independent audit and assurance assessments according to risk-based plans and policies
+  - id: A&A-04
+    domain: Audit & Assurance
+    service: N/A
+    scope: process
+    description: Verify compliance with all relevant standards, regulations, legal/contractual, and statutory requirements
+  - id: A&A-05
+    domain: Audit & Assurance
+    service: N/A
+    scope: process
+    description: Define and implement an Audit Management process aligned with relevant auditing standards
+  - id: A&A-06
+    domain: Audit & Assurance
+    service: N/A
+    scope: process
+    description: Establish a risk-based corrective action plan to remediate audit findings
+  - id: AIS-01
+    domain: Application & Interface Security
+    service: N/A
+    scope: process
+    description: Establish policies and procedures for application security
+  - id: AIS-02
+    domain: Application & Interface Security
+    service: N/A
+    scope: process
+    description: Establish baseline requirements for securing applications
+  - id: AIS-03
+    domain: Application & Interface Security
+    service: N/A
+    scope: process
+    description: Define and implement technical and operational metrics for application security
+  - id: AIS-04
+    domain: Application & Interface Security
+    service: N/A
+    scope: process
+    description: Define and implement a secure SDLC process
+  - id: AIS-05
+    domain: Application & Interface Security
+    service: N/A
+    scope: process
+    description: Implement a testing strategy for application security assurance
+  - id: AIS-06
+    domain: Application & Interface Security
+    service: N/A
+    scope: process
+    description: Establish strategies and capabilities for secure, standardized application deployment
+  - id: AIS-07
+    domain: Application & Interface Security
+    service: N/A
+    scope: process
+    description: Define and implement a process to remediate application security vulnerabilities
+  - id: AIS-08
+    domain: Application & Interface Security
+    service: N/A
+    scope: process
+    description: Define and implement processes and technical measures to secure APIs
+  - id: AIS-09
+    domain: Application & Interface Security
+    service: N/A
+    scope: process
+    description: Validate, filter, modify or block input against adversarial patterns
+  - id: AIS-10
+    domain: Application & Interface Security
+    service: N/A
+    scope: process
+    description: Validate, filter, modify or block output against adversarial patterns
+  - id: AIS-11
+    domain: Application & Interface Security
+    service: N/A
+    scope: process
+    description: Establish security boundaries for agents
+  - id: AIS-12
+    domain: Application & Interface Security
+    service: N/A
+    scope: process
+    description: Implement source code management practices including version control and code review
+  - id: AIS-13
+    domain: Application & Interface Security
+    service: N/A
+    scope: ai-model
+    description: Implement sandboxing techniques to execute AI tools in isolated environments
+  - id: AIS-14
+    domain: Application & Interface Security
+    service: N/A
+    scope: ai-model
+    description: Implement security measures to protect caches in GenAI systems
+  - id: AIS-15
+    domain: Application & Interface Security
+    service: N/A
+    scope: ai-model
+    description: Implement mechanisms enabling the model to distinguish user input from system instructions
+  - id: BCR-01
+    domain: Business Continuity Management and Operational Resilience
+    service: N/A
+    scope: process
+    description: Establish business continuity management and operational resilience policies and procedures
+  - id: BCR-02
+    domain: Business Continuity Management and Operational Resilience
+    service: N/A
+    scope: process
+    description: Determine the impact of business disruptions and risks for continuity strategies
+  - id: BCR-03
+    domain: Business Continuity Management and Operational Resilience
+    service: N/A
+    scope: process
+    description: Establish strategies to reduce the impact of business disruptions
+  - id: BCR-04
+    domain: Business Continuity Management and Operational Resilience
+    service: N/A
+    scope: process
+    description: Establish a business continuity plan based on operational resilience strategies
+  - id: BCR-05
+    domain: Business Continuity Management and Operational Resilience
+    service: N/A
+    scope: process
+    description: Develop and acquire documentation relevant to support business continuity plans
+  - id: BCR-06
+    domain: Business Continuity Management and Operational Resilience
+    service: N/A
+    scope: process
+    description: Exercise and test business continuity and operational resilience plans at least annually
+  - id: BCR-07
+    domain: Business Continuity Management and Operational Resilience
+    service: N/A
+    scope: process
+    description: Establish communication channels with all relevant stakeholders for business continuity
+  - id: BCR-08
+    domain: Business Continuity Management and Operational Resilience
+    service: Backup
+    scope: configuration
+    description: Periodically perform backups and verify restoration from backup for resiliency
+  - id: BCR-09
+    domain: Business Continuity Management and Operational Resilience
+    service: N/A
+    scope: process
+    description: Establish a disaster response plan to recover from natural and man-made disasters
+  - id: BCR-10
+    domain: Business Continuity Management and Operational Resilience
+    service: N/A
+    scope: process
+    description: Exercise the disaster response plan annually or upon significant changes
+  - id: BCR-11
+    domain: Business Continuity Management and Operational Resilience
+    service: N/A
+    scope: process
+    description: Supplement business-critical equipment with redundant and geographically dispersed equipment
+  - id: CCC-01
+    domain: Change Control and Configuration Management
+    service: N/A
+    scope: process
+    description: Establish policies and procedures for managing risks associated with applying changes
+  - id: CCC-02
+    domain: Change Control and Configuration Management
+    service: N/A
+    scope: process
+    description: Establish a defined quality change control, approval and testing process
+  - id: CCC-03
+    domain: Change Control and Configuration Management
+    service: N/A
+    scope: process
+    description: Implement a change management procedure to manage risks associated with changes
+  - id: CCC-04
+    domain: Change Control and Configuration Management
+    service: N/A
+    scope: process
+    description: Implement procedure to authorize addition, removal, update of assets
+  - id: CCC-05
+    domain: Change Control and Configuration Management
+    service: IAM
+    scope: configuration
+    description: Include provisions limiting changes directly impacting service customer environments
+  - id: CCC-06
+    domain: Change Control and Configuration Management
+    service: N/A
+    scope: process
+    description: Establish change management and configuration baselines for all authorized changes
+  - id: CCC-07
+    domain: Change Control and Configuration Management
+    service: N/A
+    scope: process
+    description: Implement detection measures with proactive notification for baseline deviations
+  - id: CCC-08
+    domain: Change Control and Configuration Management
+    service: N/A
+    scope: process
+    description: Implement a procedure for exception management including emergencies
+  - id: CCC-09
+    domain: Change Control and Configuration Management
+    service: N/A
+    scope: process
+    description: Define and implement a process to proactively roll back changes
+  - id: CEK-01
+    domain: Cryptography, Encryption & Key Management
+    service: N/A
+    scope: process
+    description: Establish policies and procedures for Cryptography, Encryption and Key Management
+  - id: CEK-02
+    domain: Cryptography, Encryption & Key Management
+    service: KMS
+    scope: configuration
+    description: Define and implement cryptographic, encryption and key management roles and responsibilities
+  - id: CEK-03
+    domain: Cryptography, Encryption & Key Management
+    service: N/A
+    scope: process
+    description: Provide data protection at-rest, in-transit and in-use using certified cryptographic libraries
+  - id: CEK-04
+    domain: Cryptography, Encryption & Key Management
+    service: KMS
+    scope: configuration
+    description: Utilize encryption algorithms following industry standards based on data classification
+  - id: CEK-05
+    domain: Cryptography, Encryption & Key Management
+    service: KMS
+    scope: configuration
+    description: Establish a standard change management procedure for cryptographic and key management changes
+  - id: CEK-06
+    domain: Cryptography, Encryption & Key Management
+    service: KMS
+    scope: configuration
+    description: Manage changes to cryptography and key management systems accounting for downstream effects
+  - id: CEK-07
+    domain: Cryptography, Encryption & Key Management
+    service: KMS
+    scope: configuration
+    description: Establish encryption and key management risk program with risk assessment and monitoring
+  - id: CEK-08
+    domain: Cryptography, Encryption & Key Management
+    service: KMS
+    scope: configuration
+    description: Provide capability for service customers to manage their own data encryption keys
+  - id: CEK-09
+    domain: Cryptography, Encryption & Key Management
+    service: KMS
+    scope: configuration
+    description: Audit encryption and key management systems, policies, and processes
+  - id: CEK-10
+    domain: Cryptography, Encryption & Key Management
+    service: N/A
+    scope: process
+    description: Generate cryptographic keys using industry accepted cryptographic libraries
+  - id: CEK-11
+    domain: Cryptography, Encryption & Key Management
+    service: KMS
+    scope: configuration
+    description: Manage cryptographic secret and private keys provisioned for a unique purpose
+  - id: CEK-12
+    domain: Cryptography, Encryption & Key Management
+    service: KMS
+    scope: configuration
+    description: Rotate cryptographic keys in accordance with the calculated cryptoperiod
+  - id: CEK-13
+    domain: Cryptography, Encryption & Key Management
+    service: KMS
+    scope: configuration
+    description: Revoke and remove cryptographic keys prior to end of cryptoperiod when compromised
+  - id: CEK-14
+    domain: Cryptography, Encryption & Key Management
+    service: KMS
+    scope: configuration
+    description: Securely destroy cryptographic keys when no longer needed
+  - id: CEK-15
+    domain: Cryptography, Encryption & Key Management
+    service: IAM
+    scope: configuration
+    description: Create keys in a pre-activated state when generated but not authorized for use
+  - id: CEK-16
+    domain: Cryptography, Encryption & Key Management
+    service: IAM
+    scope: configuration
+    description: Monitor, review and approve key transitions from any state to/from suspension
+  - id: CEK-17
+    domain: Cryptography, Encryption & Key Management
+    service: IAM
+    scope: configuration
+    description: Deactivate keys at the time of their expiration date
+  - id: CEK-18
+    domain: Cryptography, Encryption & Key Management
+    service: IAM
+    scope: configuration
+    description: Manage archived keys in a secure repository requiring least privilege access
+  - id: CEK-19
+    domain: Cryptography, Encryption & Key Management
+    service: KMS
+    scope: configuration
+    description: Use compromised keys only in controlled circumstances exclusively for decrypting data
+  - id: CEK-20
+    domain: Cryptography, Encryption & Key Management
+    service: IAM
+    scope: configuration
+    description: Assess risk to operational continuity versus risk of keying material exposure
+  - id: CEK-21
+    domain: Cryptography, Encryption & Key Management
+    service: KMS
+    scope: configuration
+    description: Track and report all cryptographic materials and changes in status
+  - id: DCS-01
+    domain: Datacenter Security
+    service: N/A
+    scope: physical
+    description: Establish policies and procedures for physical and environmental security
+  - id: DCS-02
+    domain: Datacenter Security
+    service: N/A
+    scope: physical
+    description: Establish policies for secure disposal of equipment used outside premises
+  - id: DCS-03
+    domain: Datacenter Security
+    service: N/A
+    scope: physical
+    description: Establish policies for relocation or transfer of hardware, software, or data
+  - id: DCS-04
+    domain: Datacenter Security
+    service: N/A
+    scope: physical
+    description: Establish policies for maintaining a safe and secure working environment
+  - id: DCS-05
+    domain: Datacenter Security
+    service: N/A
+    scope: physical
+    description: Establish policies for secure transportation of physical media
+  - id: DCS-06
+    domain: Datacenter Security
+    service: N/A
+    scope: physical
+    description: Classify and document physical and logical assets based on organizational risk
+  - id: DCS-07
+    domain: Datacenter Security
+    service: N/A
+    scope: physical
+    description: Catalogue and track all relevant physical and logical assets
+  - id: DCS-08
+    domain: Datacenter Security
+    service: N/A
+    scope: physical
+    description: Design and implement physical security perimeters
+  - id: DCS-09
+    domain: Datacenter Security
+    service: IAM
+    scope: configuration
+    description: Use equipment identification as a method for connection authentication
+  - id: DCS-10
+    domain: Datacenter Security
+    service: N/A
+    scope: physical
+    description: Allow only authorized personnel access to secure areas with access control mechanisms
+  - id: DCS-11
+    domain: Datacenter Security
+    service: N/A
+    scope: physical
+    description: Implement datacenter surveillance systems at perimeter and ingress/egress points
+  - id: DCS-12
+    domain: Datacenter Security
+    service: N/A
+    scope: physical
+    description: Train datacenter personnel to safely manage adverse events
+  - id: DCS-13
+    domain: Datacenter Security
+    service: N/A
+    scope: physical
+    description: Risk-based protection of power and telecommunication cables
+  - id: DCS-14
+    domain: Datacenter Security
+    service: N/A
+    scope: physical
+    description: Implement data center environmental control systems for temperature and humidity
+  - id: DCS-15
+    domain: Datacenter Security
+    service: CloudWatch
+    scope: configuration
+    description: Secure, monitor, maintain, and test utilities services for continual effectiveness
+  - id: DCS-16
+    domain: Datacenter Security
+    service: N/A
+    scope: physical
+    description: Keep business-critical equipment away from high-risk environmental locations
+  - id: DCS-17
+    domain: Datacenter Security
+    service: N/A
+    scope: physical
+    description: Establish, monitor and report data center security metrics
+  - id: DCS-18
+    domain: Datacenter Security
+    service: N/A
+    scope: physical
+    description: Ensure continuous operations for datacenter resilience
+  - id: DSP-01
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Establish policies for data preparation, classification, protection and handling
+  - id: DSP-02
+    domain: Data Security and Privacy Lifecycle Management
+    service: S3
+    scope: configuration
+    property: lifecycle deletion
+    description: Apply industry accepted methods for secure disposal of data from storage media
+  - id: DSP-03
+    domain: Data Security and Privacy Lifecycle Management
+    service: Macie
+    scope: configuration
+    description: Create and maintain a data inventory for sensitive, regulated and personal data
+  - id: DSP-04
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Classify data according to its type, criticality and sensitivity level
+  - id: DSP-05
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Create data flow documentation to identify what data is processed, stored or transmitted
+  - id: DSP-06
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Document ownership and stewardship of all relevant personal and sensitive data
+  - id: DSP-07
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Develop systems based upon a principle of security by design
+  - id: DSP-08
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Develop systems based upon a principle of privacy by design
+  - id: DSP-09
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Conduct a Data Protection Impact Assessment for personal data processing
+  - id: DSP-10
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Ensure transfer of personal or sensitive data is protected from unauthorized access
+  - id: DSP-11
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Enable data subjects to request access to, modification, or deletion of personal data
+  - id: DSP-12
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Ensure personal data is processed for declared purposes only
+  - id: DSP-13
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Define measures for transfer and sub-processing of personal data in supply chain
+  - id: DSP-14
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Disclose details of personal data access by sub-processors to data owner
+  - id: DSP-15
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Obtain authorization before replicating production data in non-production environments
+  - id: DSP-16
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Manage data retention, archiving and deletion per business and legal requirements
+  - id: DSP-17
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Protect sensitive data throughout its lifecycle
+  - id: DSP-18
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Implement procedure to manage and respond to law enforcement disclosure requests
+  - id: DSP-19
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: physical
+    description: Specify and document physical locations of data including processing and backup
+  - id: DSP-20
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Document and trace data sources and make data source available per legal requirements
+  - id: DSP-21
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: ai-model
+    description: Prevent and detect data poisoning in AI models
+  - id: DSP-22
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Use Privacy Enhancing Technologies for training data
+  - id: DSP-23
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: process
+    description: Regularly validate consistency and conformity of training and fine-tuning data
+  - id: DSP-24
+    domain: Data Security and Privacy Lifecycle Management
+    service: N/A
+    scope: ai-model
+    description: Ensure training-data differentiation and relevance to the intended AI model use
+  - id: GRC-01
+    domain: Governance, Risk and Compliance
+    service: N/A
+    scope: process
+    description: Establish policies and procedures for an information governance program
+  - id: GRC-02
+    domain: Governance, Risk and Compliance
+    service: N/A
+    scope: process
+    description: Establish a formal AI Risk Management program with policies for identification and treatment
+  - id: GRC-03
+    domain: Governance, Risk and Compliance
+    service: N/A
+    scope: process
+    description: Review all relevant organizational policies and procedures at least annually
+  - id: GRC-04
+    domain: Governance, Risk and Compliance
+    service: N/A
+    scope: process
+    description: Establish and follow an approved exception process for policy deviations
+  - id: GRC-05
+    domain: Governance, Risk and Compliance
+    service: N/A
+    scope: process
+    description: Develop and implement an Information Security Program
+  - id: GRC-06
+    domain: Governance, Risk and Compliance
+    service: N/A
+    scope: process
+    description: Define roles and responsibilities for governance programs
+  - id: GRC-07
+    domain: Governance, Risk and Compliance
+    service: N/A
+    scope: process
+    description: Identify and document all relevant standards, regulations, and statutory requirements
+  - id: GRC-08
+    domain: Governance, Risk and Compliance
+    service: N/A
+    scope: process
+    description: Establish contact with related special interest groups and relevant entities
+  - id: GRC-09
+    domain: Governance, Risk and Compliance
+    service: N/A
+    scope: process
+    description: Define and enforce policies on the acceptable use of AI services
+  - id: GRC-10
+    domain: Governance, Risk and Compliance
+    service: N/A
+    scope: process
+    description: Establish an AI Impact Assessment process for ethical, societal, and security impacts
+  - id: GRC-11
+    domain: Governance, Risk and Compliance
+    service: N/A
+    scope: ai-model
+    description: Evaluate AI systems, models, datasets and algorithms for bias and fairness
+  - id: GRC-12
+    domain: Governance, Risk and Compliance
+    service: N/A
+    scope: process
+    description: Establish an ethics committee to review AI applications
+  - id: GRC-13
+    domain: Governance, Risk and Compliance
+    service: N/A
+    scope: ai-model
+    description: Establish the degree of explainability needed for AI Services
+  - id: GRC-14
+    domain: Governance, Risk and Compliance
+    service: N/A
+    scope: ai-model
+    description: Evaluate and document the degree of explainability of AI Services
+  - id: GRC-15
+    domain: Governance, Risk and Compliance
+    service: N/A
+    scope: process
+    description: Ensure human oversight and control of the AI system
+  - id: HRS-01
+    domain: Human Resources
+    service: N/A
+    scope: process
+    description: Establish policies for background verification of all new employees
+  - id: HRS-02
+    domain: Human Resources
+    service: N/A
+    scope: process
+    description: Establish policies for acceptable use of organizationally-owned assets
+  - id: HRS-03
+    domain: Human Resources
+    service: N/A
+    scope: process
+    description: Establish policies requiring unattended workspaces to not have visible confidential data
+  - id: HRS-04
+    domain: Human Resources
+    service: N/A
+    scope: process
+    description: Establish policies to protect information at remote sites and locations
+  - id: HRS-05
+    domain: Human Resources
+    service: N/A
+    scope: process
+    description: Establish procedures for return of organization-owned assets by terminated employees
+  - id: HRS-06
+    domain: Human Resources
+    service: N/A
+    scope: process
+    description: Establish procedures for changes in employment
+  - id: HRS-07
+    domain: Human Resources
+    service: N/A
+    scope: process
+    description: Employees sign employment agreement prior to being granted access
+  - id: HRS-08
+    domain: Human Resources
+    service: IAM
+    scope: configuration
+    description: Include provisions for adherence to information governance and security policies in employment agreements
+  - id: HRS-09
+    domain: Human Resources
+    service: N/A
+    scope: process
+    description: Establish roles and responsibilities related to information asset security and privacy
+  - id: HRS-10
+    domain: Human Resources
+    service: N/A
+    scope: process
+    description: Identify and review requirements for non-disclosure/confidentiality agreements
+  - id: HRS-11
+    domain: Human Resources
+    service: N/A
+    scope: process
+    description: Establish security awareness training program for all employees
+  - id: HRS-12
+    domain: Human Resources
+    service: N/A
+    scope: process
+    description: Provide security awareness training for employees with access to sensitive data
+  - id: HRS-13
+    domain: Human Resources
+    service: N/A
+    scope: process
+    description: Make employees aware of compliance responsibilities
+  - id: HRS-14
+    domain: Human Resources
+    service: N/A
+    scope: process
+    description: Establish AI training program for all relevant personnel
+  - id: HRS-15
+    domain: Human Resources
+    service: N/A
+    scope: process
+    description: Establish policies on acceptable use of AI technologies within the organization
+  - id: IAM-01
+    domain: Identity & Access Management
+    service: N/A
+    scope: process
+    description: Establish policies and procedures for identity and access management
+  - id: IAM-02
+    domain: Identity & Access Management
+    service: N/A
+    scope: process
+    description: Establish policies for management of authentication credentials including passwords
+  - id: IAM-03
+    domain: Identity & Access Management
+    service: IAM
+    scope: configuration
+    description: Manage, store, and regularly review the inventory of identities and monitor access levels
+  - id: IAM-04
+    domain: Identity & Access Management
+    service: N/A
+    scope: process
+    description: Employ the separation of duties principle for information system access
+  - id: IAM-05
+    domain: Identity & Access Management
+    service: IAM
+    scope: configuration
+    description: Employ the least privilege principle for information system access
+  - id: IAM-06
+    domain: Identity & Access Management
+    service: IAM
+    scope: configuration
+    description: Define and implement an identity access provisioning process
+  - id: IAM-07
+    domain: Identity & Access Management
+    service: IAM
+    scope: configuration
+    description: De-provision or modify identity access in a timely manner
+  - id: IAM-08
+    domain: Identity & Access Management
+    service: IAM
+    scope: configuration
+    description: Review and revalidate identity access for least privilege and separation of duties
+  - id: IAM-09
+    domain: Identity & Access Management
+    service: IAM
+    scope: configuration
+    description: Define processes for segregation of privileged access roles
+  - id: IAM-10
+    domain: Identity & Access Management
+    service: IAM
+    scope: configuration
+    description: Ensure privileged access roles are granted for time limited periods
+  - id: IAM-11
+    domain: Identity & Access Management
+    service: IAM
+    scope: configuration
+    description: Allow service customers to participate in granting high risk access
+  - id: IAM-12
+    domain: Identity & Access Management
+    service: IAM
+    scope: configuration
+    description: Ensure identities activities are identifiable through uniquely associated IDs
+  - id: IAM-13
+    domain: Identity & Access Management
+    service: IAM
+    scope: configuration
+    description: Implement multifactor authentication for at least privileged access
+  - id: IAM-14
+    domain: Identity & Access Management
+    service: IAM
+    scope: configuration
+    description: Implement secure management of authentication credentials including passwords
+  - id: IAM-15
+    domain: Identity & Access Management
+    service: N/A
+    scope: process
+    description: Verify access to data and system functions is authorized
+  - id: IAM-16
+    domain: Identity & Access Management
+    service: IAM
+    scope: configuration
+    description: Define need-to-know access policy for knowledge and data within AI system context
+  - id: IAM-17
+    domain: Identity & Access Management
+    service: N/A
+    scope: ai-model
+    description: Establish role for model output modification and allow changes only by authorized identities
+  - id: IAM-18
+    domain: Identity & Access Management
+    service: IAM
+    scope: configuration
+    description: Restrict agents access to tools and plugins necessary for the activity at hand
+  - id: IPY-01
+    domain: Interoperability & Portability
+    service: N/A
+    scope: process
+    description: Establish policies for interoperability and portability
+  - id: IPY-02
+    domain: Interoperability & Portability
+    service: N/A
+    scope: process
+    description: Provide application interfaces for service customers to retrieve their data
+  - id: IPY-03
+    domain: Interoperability & Portability
+    service: KMS
+    scope: configuration
+    description: Implement cryptographically secure network protocols for data management and export
+  - id: IPY-04
+    domain: Interoperability & Portability
+    service: IAM
+    scope: configuration
+    description: Include provisions specifying service customer access to data upon contract termination
+  - id: "I&S-01"
+    domain: Infrastructure Security
+    service: N/A
+    scope: process
+    description: Establish policies for infrastructure and virtualization security
+  - id: "I&S-02"
+    domain: Infrastructure Security
+    service: CloudWatch
+    scope: configuration
+    description: Plan and monitor availability, quality, and adequate capacity of resources
+  - id: "I&S-03"
+    domain: Infrastructure Security
+    service: KMS
+    scope: configuration
+    description: Monitor, encrypt and restrict communications between environments and services
+  - id: "I&S-04"
+    domain: Infrastructure Security
+    service: EC2
+    scope: configuration
+    property: SSM patching, IMDSv2
+    description: Harden host and guest OS, hypervisor or infrastructure control plane
+  - id: "I&S-05"
+    domain: Infrastructure Security
+    service: N/A
+    scope: process
+    description: Separate production and non-production environments
+  - id: "I&S-06"
+    domain: Infrastructure Security
+    service: VPC
+    scope: configuration
+    description: Design and deploy applications with appropriate segmentation and segregation
+  - id: "I&S-07"
+    domain: Infrastructure Security
+    service: KMS
+    scope: configuration
+    description: Use secure and encrypted communication channels when migrating to hosted environments
+  - id: "I&S-08"
+    domain: Infrastructure Security
+    service: VPC
+    scope: configuration
+    description: Identify and document high-risk environments based on data sensitivity and threat exposure
+  - id: "I&S-09"
+    domain: Infrastructure Security
+    service: VPC
+    scope: configuration
+    description: Implement defense-in-depth techniques for network-based attack protection and detection
+  - id: LOG-01
+    domain: Logging and Monitoring
+    service: N/A
+    scope: process
+    description: Establish policies and procedures for logging and monitoring
+  - id: LOG-02
+    domain: Logging and Monitoring
+    service: CloudTrail
+    scope: configuration
+    description: Ensure the security and retention of audit logs
+  - id: LOG-03
+    domain: Logging and Monitoring
+    service: CloudWatch
+    scope: configuration
+    description: Identify and monitor security-related events and generate alerts
+  - id: LOG-04
+    domain: Logging and Monitoring
+    service: CloudTrail
+    scope: configuration
+    description: Restrict audit log access to authorized identities and maintain access records
+  - id: LOG-05
+    domain: Logging and Monitoring
+    service: CloudTrail
+    scope: configuration
+    description: Correlate and monitor security audit logs for suspicious or anomalous activity
+  - id: LOG-06
+    domain: Logging and Monitoring
+    service: CloudWatch
+    scope: configuration
+    description: Use a reliable time source across all relevant information processing systems
+  - id: LOG-07
+    domain: Logging and Monitoring
+    service: CloudTrail
+    scope: configuration
+    description: Establish which information system events should be logged
+  - id: LOG-08
+    domain: Logging and Monitoring
+    service: CloudTrail
+    scope: configuration
+    description: Detect and scrub or tokenize sensitive data from logs
+  - id: LOG-09
+    domain: Logging and Monitoring
+    service: N/A
+    scope: process
+    description: Generate audit records containing relevant security information
+  - id: LOG-10
+    domain: Logging and Monitoring
+    service: N/A
+    scope: process
+    description: Protect audit records from unauthorized access, modification, and deletion
+  - id: LOG-11
+    domain: Logging and Monitoring
+    service: KMS
+    scope: configuration
+    description: Establish monitoring and reporting over cryptographic and key management operations
+  - id: LOG-12
+    domain: Logging and Monitoring
+    service: KMS
+    scope: configuration
+    description: Log and monitor key lifecycle management events for auditing
+  - id: LOG-13
+    domain: Logging and Monitoring
+    service: N/A
+    scope: physical
+    description: Monitor and log physical access using an auditable access control system
+  - id: LOG-14
+    domain: Logging and Monitoring
+    service: CloudWatch
+    scope: configuration
+    description: Report anomalies and failures of the monitoring system with immediate notification
+  - id: LOG-15
+    domain: Logging and Monitoring
+    service: N/A
+    scope: ai-model
+    description: Log and monitor all input events to enable auditing of AI model usage
+  - id: LOG-16
+    domain: Logging and Monitoring
+    service: N/A
+    scope: ai-model
+    description: Log and monitor all output events to enable auditing of AI model usage
+  - id: MDS-01
+    domain: Model Security
+    service: N/A
+    scope: process
+    description: Ensure the security of the Training Pipeline
+  - id: MDS-02
+    domain: Model Security
+    service: N/A
+    scope: ai-model
+    description: Scan model artifacts for vulnerabilities and attacks at each lifecycle step
+  - id: MDS-03
+    domain: Model Security
+    service: N/A
+    scope: ai-model
+    description: Establish processes and procedures for model documentation
+  - id: MDS-04
+    domain: Model Security
+    service: N/A
+    scope: ai-model
+    description: Establish baseline requirements for model documentation
+  - id: MDS-05
+    domain: Model Security
+    service: N/A
+    scope: ai-model
+    description: Validate model documentation alignment with current model
+  - id: MDS-06
+    domain: Model Security
+    service: N/A
+    scope: ai-model
+    description: Assess adversarial threats specific to each AI model
+  - id: MDS-07
+    domain: Model Security
+    service: N/A
+    scope: ai-model
+    description: Implement model hardening to mitigate relevant adversarial attacks
+  - id: MDS-08
+    domain: Model Security
+    service: N/A
+    scope: ai-model
+    description: Regularly calculate and compare cryptographic hashes to detect unauthorized modifications
+  - id: MDS-09
+    domain: Model Security
+    service: KMS
+    scope: configuration
+    description: Sign models cryptographically and verify signatures for model provenance
+  - id: MDS-10
+    domain: Model Security
+    service: CloudWatch
+    scope: configuration
+    description: Continuously monitor model performance metrics for sudden shifts or unexpected changes
+  - id: MDS-11
+    domain: Model Security
+    service: N/A
+    scope: ai-model
+    description: Evaluate model and serving infrastructure for model failure and implement mitigations
+  - id: MDS-12
+    domain: Model Security
+    service: N/A
+    scope: ai-model
+    description: Evaluate risk associated with open models and monitor for vulnerabilities
+  - id: MDS-13
+    domain: Model Security
+    service: N/A
+    scope: process
+    description: Adopt secure model formats for AI model serialization
+  - id: SEF-01
+    domain: Security Incident Management
+    service: N/A
+    scope: process
+    description: Establish policies for Security Incident Management, E-Discovery, and Forensics
+  - id: SEF-02
+    domain: Security Incident Management
+    service: N/A
+    scope: process
+    description: Establish policies for timely management of security incidents
+  - id: SEF-03
+    domain: Security Incident Management
+    service: N/A
+    scope: process
+    description: Establish a security incident response plan with communication strategy
+  - id: SEF-04
+    domain: Security Incident Management
+    service: N/A
+    scope: process
+    description: Exercise incident response plans at planned intervals or upon significant changes
+  - id: SEF-05
+    domain: Security Incident Management
+    service: CloudWatch
+    scope: configuration
+    description: Establish, monitor and report information security incident metrics
+  - id: SEF-06
+    domain: Security Incident Management
+    service: N/A
+    scope: process
+    description: Define processes to triage security-related events
+  - id: SEF-07
+    domain: Security Incident Management
+    service: N/A
+    scope: process
+    description: Define processes for timely and effective response to security incidents
+  - id: SEF-08
+    domain: Security Incident Management
+    service: N/A
+    scope: process
+    description: Define processes for security breach notifications
+  - id: SEF-09
+    domain: Security Incident Management
+    service: N/A
+    scope: process
+    description: Establish a secure repository of security incident records
+  - id: SEF-10
+    domain: Security Incident Management
+    service: N/A
+    scope: process
+    description: Maintain points of contact for regulation authorities and law enforcement
+  - id: STA-01
+    domain: Supply Chain Management
+    service: N/A
+    scope: process
+    description: Establish policies for supply chain risk management
+  - id: STA-02
+    domain: Supply Chain Management
+    service: N/A
+    scope: process
+    description: Establish policies for Shared Security Responsibility Model
+  - id: STA-03
+    domain: Supply Chain Management
+    service: N/A
+    scope: process
+    description: Apply and manage the SSRM throughout the supply chain
+  - id: STA-04
+    domain: Supply Chain Management
+    service: N/A
+    scope: process
+    description: Provide SSRM guidance to service customers
+  - id: STA-05
+    domain: Supply Chain Management
+    service: N/A
+    scope: process
+    description: Delineate shared ownership of all CSA AICM controls according to SSRM
+  - id: STA-06
+    domain: Supply Chain Management
+    service: N/A
+    scope: process
+    description: Review and validate SSRM documentation
+  - id: STA-07
+    domain: Supply Chain Management
+    service: N/A
+    scope: process
+    description: Implement and audit SSRM portions the organization is responsible for
+  - id: STA-08
+    domain: Supply Chain Management
+    service: N/A
+    scope: process
+    description: Develop and maintain an inventory of all supply chain relationships
+  - id: STA-09
+    domain: Supply Chain Management
+    service: N/A
+    scope: process
+    description: Establish a Bill of Material for the service supply chain
+  - id: STA-10
+    domain: Supply Chain Management
+    service: N/A
+    scope: process
+    description: Periodically review risk factors associated with supply chain relationships
+  - id: STA-11
+    domain: Supply Chain Management
+    service: IAM
+    scope: configuration
+    description: Service agreements must incorporate provisions for scope, security, and data handling
+  - id: STA-12
+    domain: Supply Chain Management
+    service: N/A
+    scope: process
+    description: Review supply chain agreements at least annually
+  - id: STA-13
+    domain: Supply Chain Management
+    service: N/A
+    scope: process
+    description: Conduct internal assessments to confirm conformance of supply chain standards
+  - id: STA-14
+    domain: Supply Chain Management
+    service: IAM
+    scope: configuration
+    description: Require all supply chain service providers to comply with security and access control policies
+  - id: STA-15
+    domain: Supply Chain Management
+    service: N/A
+    scope: process
+    description: Review service providers IT governance policies at least annually
+  - id: STA-16
+    domain: Supply Chain Management
+    service: N/A
+    scope: process
+    description: Define process for conducting risk-based security assessments of supply chain
+  - id: TVM-01
+    domain: Threat & Vulnerability Management
+    service: N/A
+    scope: process
+    description: Establish policies to identify, report and prioritize remediation of vulnerabilities
+  - id: TVM-02
+    domain: Threat & Vulnerability Management
+    service: N/A
+    scope: process
+    description: Establish policies to protect against malware and malicious instructions
+  - id: TVM-03
+    domain: Threat & Vulnerability Management
+    service: N/A
+    scope: process
+    description: Define processes for detection of vulnerabilities on managed assets at least monthly
+  - id: TVM-04
+    domain: Threat & Vulnerability Management
+    service: N/A
+    scope: ai-model
+    description: Identify, assess and review threat landscape for Cloud and AI systems
+  - id: TVM-05
+    domain: Threat & Vulnerability Management
+    service: N/A
+    scope: process
+    description: Update detection tools and threat signatures on a weekly or more frequent basis
+  - id: TVM-06
+    domain: Threat & Vulnerability Management
+    service: N/A
+    scope: process
+    description: Identify updates for applications using third party or open source libraries
+  - id: TVM-07
+    domain: Threat & Vulnerability Management
+    service: N/A
+    scope: process
+    description: Perform periodic penetration testing by independent third parties
+  - id: TVM-08
+    domain: Threat & Vulnerability Management
+    service: N/A
+    scope: process
+    description: Implement scheduled and emergency responses to vulnerability identification
+  - id: TVM-09
+    domain: Threat & Vulnerability Management
+    service: N/A
+    scope: process
+    description: Use risk-based method for prioritization of vulnerability remediation
+  - id: TVM-10
+    domain: Threat & Vulnerability Management
+    service: N/A
+    scope: process
+    description: Use risk-based method for prioritization and mitigation of threats
+  - id: TVM-11
+    domain: Threat & Vulnerability Management
+    service: N/A
+    scope: process
+    description: Define process for tracking and reporting vulnerability identification and remediation
+  - id: TVM-12
+    domain: Threat & Vulnerability Management
+    service: CloudWatch
+    scope: configuration
+    description: Establish, monitor and report metrics for vulnerability identification and remediation
+  - id: TVM-13
+    domain: Threat & Vulnerability Management
+    service: N/A
+    scope: ai-model
+    description: Define and implement guardrails for the AI system
+  - id: UEM-01
+    domain: Universal Endpoint Management
+    service: N/A
+    scope: process
+    description: Establish policies and procedures for all endpoints
+  - id: UEM-02
+    domain: Universal Endpoint Management
+    service: EC2
+    scope: configuration
+    description: Define list of approved services and applications acceptable for endpoints
+  - id: UEM-03
+    domain: Universal Endpoint Management
+    service: EC2
+    scope: process
+    description: Validate endpoint device compatibility with operating systems and applications
+  - id: UEM-04
+    domain: Universal Endpoint Management
+    service: EC2
+    scope: configuration
+    description: Maintain an inventory of all endpoints used to store, access and process data
+  - id: UEM-05
+    domain: Universal Endpoint Management
+    service: EC2
+    scope: configuration
+    description: Enforce policies and controls for all endpoints permitted to access systems
+  - id: UEM-06
+    domain: Universal Endpoint Management
+    service: EC2
+    scope: configuration
+    description: Configure interactive-use endpoints to require automatic lock screen
+  - id: UEM-07
+    domain: Universal Endpoint Management
+    service: EC2
+    scope: configuration
+    description: Manage changes to endpoint operating systems and patch levels
+  - id: UEM-08
+    domain: Universal Endpoint Management
+    service: KMS
+    scope: configuration
+    description: Protect information on managed endpoints with storage encryption
+  - id: UEM-09
+    domain: Universal Endpoint Management
+    service: EC2
+    scope: configuration
+    description: Configure managed endpoints with anti-malware detection and prevention
+  - id: UEM-10
+    domain: Universal Endpoint Management
+    service: VPC
+    scope: configuration
+    description: Configure managed endpoints with properly configured software firewalls
+  - id: UEM-11
+    domain: Universal Endpoint Management
+    service: EC2
+    scope: configuration
+    description: Configure managed endpoints with Data Loss Prevention technologies
+  - id: UEM-12
+    domain: Universal Endpoint Management
+    service: EC2
+    scope: configuration
+    description: Enable remote geo-location capabilities for all managed mobile endpoints
+  - id: UEM-13
+    domain: Universal Endpoint Management
+    service: EC2
+    scope: configuration
+    description: Enable deletion of company data remotely on managed endpoint devices
+  - id: UEM-14
+    domain: Universal Endpoint Management
+    service: EC2
+    scope: configuration
+    description: Maintain proper security of third-party endpoints with access to organizational assets

@@ -1,0 +1,308 @@
+# CSA Cloud Controls Matrix v4.0 — AWS-configuration-checkable subset
+# Source: cloudsecurityalliance.org CCM v4.0.10 (197 controls, 17 domains)
+# Only controls where an AWS API response contains the verifiable property.
+# Process/organizational controls excluded (e.g., "establish governance program").
+#
+# Format: stave catalog gaps compatible
+standard: CSA Cloud Controls Matrix v4.0
+
+checks:
+
+  # ─── AIS: Application & Interface Security ─────────────────
+
+  - id: ccm-AIS-01
+    service: APIGATEWAY
+    description: "API endpoints enforce TLS 1.2+ for data in transit"
+    reference: "CCM AIS-01"
+
+  - id: ccm-AIS-02
+    service: WAF
+    description: "Web application firewall rules protect against injection attacks"
+    reference: "CCM AIS-02"
+
+  - id: ccm-AIS-04
+    service: APIGATEWAY
+    description: "API access requires authentication and authorization"
+    reference: "CCM AIS-04"
+
+  # ─── BCR: Business Continuity & Operational Resilience ──────
+
+  - id: ccm-BCR-03
+    service: BACKUP
+    description: "Automated backup configurations exist for critical resources"
+    reference: "CCM BCR-03"
+
+  - id: ccm-BCR-06
+    service: RDS
+    description: "Database instances have multi-AZ failover enabled"
+    reference: "CCM BCR-06"
+
+  - id: ccm-BCR-08
+    service: AUTOSCALING
+    description: "Auto-scaling policies protect against capacity exhaustion"
+    reference: "CCM BCR-08"
+
+  # ─── CCC: Change Control & Configuration Management ────────
+
+  - id: ccm-CCC-01
+    service: CONFIG
+    description: "Configuration recording is enabled across all regions"
+    reference: "CCM CCC-01"
+
+  - id: ccm-CCC-05
+    service: CLOUDFORMATION
+    description: "Infrastructure changes are managed through version-controlled templates"
+    reference: "CCM CCC-05"
+
+  # ─── CEK: Cryptography, Encryption & Key Management ────────
+
+  - id: ccm-CEK-01
+    service: KMS
+    description: "Customer-managed encryption keys are used for data at rest"
+    reference: "CCM CEK-01"
+
+  - id: ccm-CEK-03
+    service: KMS
+    description: "KMS key rotation is enabled for symmetric CMKs"
+    reference: "CCM CEK-03"
+
+  - id: ccm-CEK-04
+    service: ACM
+    description: "TLS certificates use strong key algorithms (RSA 2048+ or EC P-256+)"
+    reference: "CCM CEK-04"
+
+  - id: ccm-CEK-05
+    service: KMS
+    description: "KMS key policies restrict access to authorized principals only"
+    reference: "CCM CEK-05"
+
+  - id: ccm-CEK-07
+    service: S3
+    description: "S3 buckets enforce server-side encryption at rest"
+    reference: "CCM CEK-07"
+
+  - id: ccm-CEK-08
+    service: RDS
+    description: "RDS instance storage encryption is enabled"
+    reference: "CCM CEK-08"
+
+  - id: ccm-CEK-09
+    service: EBS
+    description: "EBS volume encryption is enabled by default"
+    reference: "CCM CEK-09"
+
+  # ─── DSP: Data Security & Privacy Lifecycle Management ──────
+
+  - id: ccm-DSP-01
+    service: S3
+    description: "S3 bucket policies enforce SSL-only access"
+    reference: "CCM DSP-01"
+
+  - id: ccm-DSP-04
+    service: S3
+    description: "S3 buckets block public access at account and bucket level"
+    reference: "CCM DSP-04"
+
+  - id: ccm-DSP-05
+    service: MACIE
+    description: "Data classification and discovery is enabled for sensitive data"
+    reference: "CCM DSP-05"
+
+  - id: ccm-DSP-10
+    service: S3
+    description: "S3 bucket versioning is enabled for data durability"
+    reference: "CCM DSP-10"
+
+  - id: ccm-DSP-17
+    service: S3
+    description: "S3 bucket logging is enabled for access audit trail"
+    reference: "CCM DSP-17"
+
+  # ─── HRS: Human Resources Security ─────────────────────────
+  # (All process/organizational — no AWS-API-checkable controls)
+
+  # ─── IAM: Identity & Access Management ──────────────────────
+
+  - id: ccm-IAM-02
+    service: IAM
+    description: "MFA is enabled for all console users including root"
+    reference: "CCM IAM-02"
+
+  - id: ccm-IAM-04
+    service: IAM
+    description: "IAM password policy enforces minimum length and complexity"
+    reference: "CCM IAM-04"
+
+  - id: ccm-IAM-05
+    service: IAM
+    description: "No IAM policy grants full administrative privileges (*:*)"
+    reference: "CCM IAM-05"
+
+  - id: ccm-IAM-06
+    service: IAM
+    description: "IAM users receive permissions only through groups, not direct attachment"
+    reference: "CCM IAM-06"
+
+  - id: ccm-IAM-07
+    service: IAM
+    description: "Unused credentials (45+ days) are disabled or removed"
+    reference: "CCM IAM-07"
+
+  - id: ccm-IAM-09
+    service: IAM
+    description: "IAM Access Analyzer is enabled for external access detection"
+    reference: "CCM IAM-09"
+
+  - id: ccm-IAM-12
+    service: IAM
+    description: "Service-linked roles follow least-privilege for cross-service access"
+    reference: "CCM IAM-12"
+
+  - id: ccm-IAM-13
+    service: COGNITO
+    description: "Federated identity providers enforce strong authentication"
+    reference: "CCM IAM-13"
+
+  # ─── IPY: Interoperability & Portability ────────────────────
+  # (Process/organizational — no AWS-API-checkable controls)
+
+  # ─── IVS: Infrastructure & Virtualization Security ──────────
+
+  - id: ccm-IVS-01
+    service: VPC
+    description: "VPC security groups restrict ingress to required ports only"
+    reference: "CCM IVS-01"
+
+  - id: ccm-IVS-03
+    service: VPC
+    description: "Default security groups restrict all inbound and outbound traffic"
+    reference: "CCM IVS-03"
+
+  - id: ccm-IVS-04
+    service: VPC
+    description: "VPC flow logs are enabled for network traffic monitoring"
+    reference: "CCM IVS-04"
+
+  - id: ccm-IVS-06
+    service: EC2
+    description: "EC2 instances require IMDSv2 for metadata access"
+    reference: "CCM IVS-06"
+
+  - id: ccm-IVS-07
+    service: VPC
+    description: "Network ACLs restrict administrative port access from internet"
+    reference: "CCM IVS-07"
+
+  - id: ccm-IVS-09
+    service: NETFIREWALL
+    description: "Network firewall rules inspect and filter traffic at VPC boundaries"
+    reference: "CCM IVS-09"
+
+  - id: ccm-IVS-12
+    service: EKS
+    description: "EKS cluster endpoint is not publicly accessible"
+    reference: "CCM IVS-12"
+
+  - id: ccm-IVS-13
+    service: EKS
+    description: "EKS cluster secrets are encrypted with KMS CMK"
+    reference: "CCM IVS-13"
+
+  # ─── LOG: Logging & Monitoring ──────────────────────────────
+
+  - id: ccm-LOG-01
+    service: CLOUDTRAIL
+    description: "CloudTrail is enabled in all regions with multi-region trail"
+    reference: "CCM LOG-01"
+
+  - id: ccm-LOG-03
+    service: CLOUDTRAIL
+    description: "CloudTrail log file validation is enabled"
+    reference: "CCM LOG-03"
+
+  - id: ccm-LOG-05
+    service: CLOUDTRAIL
+    description: "CloudTrail logs are encrypted at rest using KMS CMK"
+    reference: "CCM LOG-05"
+
+  - id: ccm-LOG-06
+    service: GUARDDUTY
+    description: "GuardDuty is enabled for threat detection across accounts"
+    reference: "CCM LOG-06"
+
+  - id: ccm-LOG-08
+    service: SECURITYHUB
+    description: "Security Hub aggregates findings from security services"
+    reference: "CCM LOG-08"
+
+  - id: ccm-LOG-09
+    service: CLOUDWATCH
+    description: "CloudWatch alarms exist for critical security metrics"
+    reference: "CCM LOG-09"
+
+  - id: ccm-LOG-13
+    service: CLOUDTRAIL
+    description: "S3 data events (read and write) are logged via CloudTrail"
+    reference: "CCM LOG-13"
+
+  # ─── SEF: Security Incident Management ─────────────────────
+
+  - id: ccm-SEF-02
+    service: GUARDDUTY
+    description: "Automated threat detection generates actionable findings"
+    reference: "CCM SEF-02"
+
+  - id: ccm-SEF-05
+    service: SNS
+    description: "Security finding notifications are configured for incident response"
+    reference: "CCM SEF-05"
+
+  # ─── STA: Supply Chain, Transparency & Accountability ───────
+
+  - id: ccm-STA-03
+    service: ECR
+    description: "Container images are scanned for vulnerabilities before deployment"
+    reference: "CCM STA-03"
+
+  - id: ccm-STA-07
+    service: LAMBDA
+    description: "Lambda functions use supported runtimes (not deprecated)"
+    reference: "CCM STA-07"
+
+  # ─── TVM: Threat & Vulnerability Management ────────────────
+
+  - id: ccm-TVM-01
+    service: INSPECTOR
+    description: "Automated vulnerability scanning is enabled for compute workloads"
+    reference: "CCM TVM-01"
+
+  - id: ccm-TVM-04
+    service: RDS
+    description: "RDS auto minor version upgrade is enabled for security patches"
+    reference: "CCM TVM-04"
+
+  - id: ccm-TVM-07
+    service: SSM
+    description: "Systems Manager patch compliance is tracked for managed instances"
+    reference: "CCM TVM-07"
+
+  # ─── UEM: Universal Endpoint Management ────────────────────
+
+  - id: ccm-UEM-04
+    service: SSM
+    description: "EC2 instances are managed via Systems Manager for patching and compliance"
+    reference: "CCM UEM-04"
+
+  # ─── A&A: Audit & Assurance ────────────────────────────────
+
+  - id: ccm-A&A-03
+    service: CONFIG
+    description: "AWS Config rules evaluate compliance of resource configurations"
+    reference: "CCM A&A-03"
+
+  # ─── GRC: Governance, Risk & Compliance ────────────────────
+
+  - id: ccm-GRC-04
+    service: Organizations
+    description: "Service control policies restrict permissions at organization level"
+    reference: "CCM GRC-04"
