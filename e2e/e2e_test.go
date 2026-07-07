@@ -422,6 +422,7 @@ func checkFullOutput(t *testing.T, caseDir string, stdout []byte) {
 		if run, ok := m["run"].(map[string]any); ok {
 			delete(run, "tool_version")
 			delete(run, "policy_fingerprint")
+			delete(run, "eval_time")
 			delete(run, "started_at")
 			delete(run, "finished_at")
 			delete(run, "duration_ms")

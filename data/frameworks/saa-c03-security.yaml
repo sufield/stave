@@ -1,0 +1,253 @@
+# AWS Solutions Architect Associate (SAA-C03) — Domain 1: Design Secure Architectures
+# Source: d1.awsstatic.com/training-and-certification/docs-sa-assoc/AWS-Certified-Solutions-Architect-Associate_Exam-Guide.pdf
+# Domain 1 accounts for 30% of scored content.
+# Checks derived from Task Statement knowledge and skills bullets.
+#
+# Format: stave catalog gaps compatible
+name: "SAA-C03 Domain 1: Design Secure Architectures"
+version: "1.1"
+source: "AWS Certified Solutions Architect - Associate (SAA-C03) Exam Guide v1.1"
+
+checks:
+
+  # ─── Task 1.1: Design secure access to AWS resources ──────────
+
+  # Knowledge
+
+  - id: saa-1.1-k01
+    service: Organizations
+    property: trusted access
+    description: "Access controls and management across multiple accounts"
+    scope: configuration
+    reference: "SAA-C03 Task 1.1 Knowledge"
+
+  - id: saa-1.1-k02
+    service: IAM
+    property: federation
+    description: "AWS federated access and identity services (IAM, IAM Identity Center)"
+    scope: configuration
+    reference: "SAA-C03 Task 1.1 Knowledge"
+
+  - id: saa-1.1-k03
+    service: VPC
+    property: availability zones
+    description: "AWS global infrastructure (Availability Zones, Regions)"
+    scope: process
+    reference: "SAA-C03 Task 1.1 Knowledge"
+
+  - id: saa-1.1-k04
+    service: IAM
+    property: least privilege
+    description: "AWS security best practices (principle of least privilege)"
+    scope: configuration
+    reference: "SAA-C03 Task 1.1 Knowledge"
+
+  - id: saa-1.1-k05
+    service: IAM
+    property: shared responsibility
+    description: "The AWS shared responsibility model"
+    scope: process
+    reference: "SAA-C03 Task 1.1 Knowledge"
+
+  # Skills
+
+  - id: saa-1.1-s01
+    service: IAM
+    property: mfa
+    description: "Applying AWS security best practices to IAM users and root users (MFA)"
+    scope: configuration
+    reference: "SAA-C03 Task 1.1 Skills"
+
+  - id: saa-1.1-s02
+    service: IAM
+    property: policy
+    description: "Designing a flexible authorization model (IAM users, groups, roles, policies)"
+    scope: configuration
+    reference: "SAA-C03 Task 1.1 Skills"
+
+  - id: saa-1.1-s03
+    service: IAM
+    property: role assumption
+    description: "Designing a role-based access control strategy (STS, role switching, cross-account access)"
+    scope: configuration
+    reference: "SAA-C03 Task 1.1 Skills"
+
+  - id: saa-1.1-s04
+    service: Organizations
+    property: scp
+    description: "Designing a security strategy for multiple AWS accounts (Control Tower, SCPs)"
+    scope: configuration
+    reference: "SAA-C03 Task 1.1 Skills"
+
+  - id: saa-1.1-s05
+    service: IAM
+    property: resource policy
+    description: "Determining the appropriate use of resource policies for AWS services"
+    scope: configuration
+    reference: "SAA-C03 Task 1.1 Skills"
+
+  - id: saa-1.1-s06
+    service: IAM
+    property: federation
+    description: "Determining when to federate a directory service with IAM roles"
+    scope: configuration
+    reference: "SAA-C03 Task 1.1 Skills"
+
+  # ─── Task 1.2: Design secure workloads and applications ───────
+
+  # Knowledge
+
+  - id: saa-1.2-k01
+    service: SecretsManager
+    property: credentials
+    description: "Application configuration and credentials security"
+    scope: configuration
+    reference: "SAA-C03 Task 1.2 Knowledge"
+
+  - id: saa-1.2-k02
+    service: VPC
+    property: endpoint
+    description: "AWS service endpoints"
+    scope: configuration
+    reference: "SAA-C03 Task 1.2 Knowledge"
+
+  - id: saa-1.2-k03
+    service: VPC
+    property: network traffic
+    description: "Control ports, protocols, and network traffic on AWS"
+    scope: configuration
+    reference: "SAA-C03 Task 1.2 Knowledge"
+
+  - id: saa-1.2-k04
+    service: Cognito
+    property: authentication
+    description: "Secure application access"
+    scope: configuration
+    reference: "SAA-C03 Task 1.2 Knowledge"
+
+  - id: saa-1.2-k05
+    service: GuardDuty
+    property: threat detection
+    description: "Security services with appropriate use cases (Cognito, GuardDuty, Macie)"
+    scope: configuration
+    reference: "SAA-C03 Task 1.2 Knowledge"
+
+  - id: saa-1.2-k06
+    service: WAF
+    property: rules
+    description: "Threat vectors external to AWS (DDoS, SQL injection)"
+    scope: configuration
+    reference: "SAA-C03 Task 1.2 Knowledge"
+
+  # Skills
+
+  - id: saa-1.2-s01
+    service: VPC
+    property: security group
+    description: "Designing VPC architectures with security components (security groups, route tables, NACLs, NAT gateways)"
+    scope: configuration
+    reference: "SAA-C03 Task 1.2 Skills"
+
+  - id: saa-1.2-s02
+    service: VPC
+    property: subnet isolation
+    description: "Determining network segmentation strategies (public and private subnets)"
+    scope: configuration
+    reference: "SAA-C03 Task 1.2 Skills"
+
+  - id: saa-1.2-s03
+    service: WAF
+    property: rules owasp
+    description: "Integrating AWS services to secure applications (Shield, WAF, IAM Identity Center, Secrets Manager)"
+    scope: configuration
+    reference: "SAA-C03 Task 1.2 Skills"
+
+  - id: saa-1.2-s04
+    service: VPC
+    property: vpn
+    description: "Securing external network connections to and from the AWS Cloud (VPN, Direct Connect)"
+    scope: configuration
+    reference: "SAA-C03 Task 1.2 Skills"
+
+  # ─── Task 1.3: Determine appropriate data security controls ───
+
+  # Knowledge
+
+  - id: saa-1.3-k01
+    service: IAM
+    property: data governance
+    description: "Data access and governance"
+    scope: process
+    reference: "SAA-C03 Task 1.3 Knowledge"
+
+  - id: saa-1.3-k02
+    service: S3
+    property: versioning
+    description: "Data recovery"
+    scope: configuration
+    reference: "SAA-C03 Task 1.3 Knowledge"
+
+  - id: saa-1.3-k03
+    service: S3
+    property: data classification
+    description: "Data retention and classification"
+    scope: configuration
+    reference: "SAA-C03 Task 1.3 Knowledge"
+
+  - id: saa-1.3-k04
+    service: KMS
+    property: encryption
+    description: "Encryption and appropriate key management"
+    scope: configuration
+    reference: "SAA-C03 Task 1.3 Knowledge"
+
+  # Skills
+
+  - id: saa-1.3-s01
+    service: IAM
+    property: compliance
+    description: "Aligning AWS technologies to meet compliance requirements"
+    scope: process
+    reference: "SAA-C03 Task 1.3 Skills"
+
+  - id: saa-1.3-s02
+    service: KMS
+    property: encryption at rest
+    description: "Encrypting data at rest (AWS KMS)"
+    scope: configuration
+    reference: "SAA-C03 Task 1.3 Skills"
+
+  - id: saa-1.3-s03
+    service: ACM
+    property: certificate expiry
+    description: "Encrypting data in transit (ACM using TLS)"
+    scope: configuration
+    reference: "SAA-C03 Task 1.3 Skills"
+
+  - id: saa-1.3-s04
+    service: KMS
+    property: key policy
+    description: "Implementing access policies for encryption keys"
+    scope: configuration
+    reference: "SAA-C03 Task 1.3 Skills"
+
+  - id: saa-1.3-s05
+    service: S3
+    property: replication
+    description: "Implementing data backups and replications"
+    scope: configuration
+    reference: "SAA-C03 Task 1.3 Skills"
+
+  - id: saa-1.3-s06
+    service: S3
+    property: lifecycle
+    description: "Implementing policies for data access, lifecycle, and protection"
+    scope: configuration
+    reference: "SAA-C03 Task 1.3 Skills"
+
+  - id: saa-1.3-s07
+    service: KMS
+    property: key rotation
+    description: "Rotating encryption keys and renewing certificates"
+    scope: configuration
+    reference: "SAA-C03 Task 1.3 Skills"
