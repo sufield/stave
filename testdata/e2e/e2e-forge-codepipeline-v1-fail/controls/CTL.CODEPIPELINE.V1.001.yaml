@@ -1,0 +1,46 @@
+dsl_version: ctrl.v1
+id: CTL.CODEPIPELINE.V1.001
+name: CodePipeline Must Use V2 Pipeline Type
+description: >
+  CodePipeline must use the V2 pipeline type. V1 is feature-frozen
+  and lacks V2 improvements: pipeline-level variables, Git tags
+  as triggers, and QUEUED/PARALLEL execution modes. V1 pipelines
+  also lack the full CloudWatch Events integration that V2 uses
+  for change detection, falling back to polling — which is both
+  slower and less auditable.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "SA-22"
+scope_tags:
+  - aws
+  - codepipeline
+taxonomy:
+  - compliance-mapping
+  - deprecation
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: discovery
+remediation:
+  description: CodePipeline uses deprecated V1 pipeline type.
+  action: >
+    Migrate to V2 pipeline type. Create a new V2 pipeline with the
+    same stages and actions, verify execution, then delete the V1
+    pipeline. V2 is backward-compatible with V1 stage/action
+    definitions.
+  example: |
+    {
+      "compute": {
+        "kind": "codepipeline_pipeline",
+        "governance": { "pipeline_type": "V2" }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: codepipeline_pipeline
+    - field: properties.compute.governance.pipeline_type
+      op: eq
+      value: V1

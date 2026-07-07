@@ -1,0 +1,22 @@
+{
+  "assets": [
+    {
+      "id": "test-codepipeline-pipeline",
+      "properties": {
+        "compute": {
+          "identity": {
+            "execution_role": {
+              "is_overprivileged": true
+            }
+          },
+          "kind": "codepipeline_pipeline"
+        }
+      },
+      "type": "aws_codepipeline_pipeline",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

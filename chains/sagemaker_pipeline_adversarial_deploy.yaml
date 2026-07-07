@@ -1,0 +1,24 @@
+id: sagemaker_pipeline_adversarial_deploy
+description: >
+  CodeBuild project service role is overprivileged AND the
+  SageMaker endpoint has no network isolation AND endpoint
+  monitoring is disabled. An attacker who compromises the build
+  pipeline can deploy an adversarial model to a production
+  endpoint. The overprivileged build role provides
+  sagemaker:CreateEndpoint + iam:PassRole to push a model; the
+  missing network isolation means the endpoint accepts traffic
+  from outside the VPC; the missing monitoring means drift or
+  replacement goes undetected. All three conditions must stack:
+  the build role provides the deployment mechanism, the missing
+  isolation provides the attack surface, and the missing
+  monitoring provides the dwell time.
+controls:
+  - CTL.CODEBUILD.ROLE.001
+  - CTL.SAGEMAKER.ENDPOINT.ISOLATION.001
+  - CTL.SAGEMAKER.ENDPOINT.MONITOR.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - supply_chain_compromise
+postconditions:
+  - data_access

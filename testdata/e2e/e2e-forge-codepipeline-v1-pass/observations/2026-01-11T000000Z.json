@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "test-codepipeline-pipeline",
+      "properties": {
+        "compute": {
+          "governance": {
+            "pipeline_type": "V2"
+          },
+          "kind": "codepipeline_pipeline"
+        }
+      },
+      "type": "aws_codepipeline_pipeline",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

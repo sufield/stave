@@ -365,6 +365,36 @@ SageMaker notebook instances must be deployed in a VPC with subnet and security 
 
 ---
 
+### CTL.SAGEMAKER.PIPELINE.ENCRYPT.001
+
+**SageMaker Pipeline Must Use Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; soc2: CC6.1;
+
+SageMaker pipeline must encrypt artifacts and intermediate data with a customer-managed KMS key. Without CMK encryption, pipeline outputs — trained models, processed datasets, evaluation results — are encrypted only with the default AWS-managed key, which the organization cannot rotate, audit, or revoke independently.
+
+**Remediation:** Configure the pipeline's OutputDataConfig and ProcessingOutputConfig to use a customer-managed KMS key ARN. This gives the organization control over key rotation, access policies, and revocation.
+
+---
+
+### CTL.SAGEMAKER.PIPELINE.OVERPERM.001
+
+**SageMaker Pipeline Role Must Follow Least Privilege**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+SageMaker pipeline execution roles must be scoped to the minimum permissions required for the pipeline steps. An overprivileged role lets any pipeline step — including steps that process untrusted input — access resources beyond the pipeline's scope: reading secrets, deploying models to production, or modifying IAM policies.
+
+**Remediation:** Scope the execution role to the minimum permissions: S3 read for training data, SageMaker actions for the specific pipeline steps, and CloudWatch for logging. Remove s3:*, sagemaker:*, and iam:PassRole on * from the role policy.
+
+---
+
 ### CTL.SAGEMAKER.TRAINING.DATA.CROSSACCOUNT.001
 
 **SageMaker Training Data Source Must Not Cross Account Boundary**

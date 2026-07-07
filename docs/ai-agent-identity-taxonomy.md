@@ -6,84 +6,125 @@ today, and identifies observation-schema gaps.
 
 | | |
 |---|---|
-| Audit date | 2026-05-10 |
-| Catalog version | 2816 controls |
+| Audit date | 2026-07-07 |
+| Catalog version | 2898 controls, 622 chains |
 | Scope | AWS only — Azure / GCP / Anthropic API not yet covered |
 
 ## TL;DR
 
-- **Existing AI coverage:** 11 SageMaker + 9 Bedrock + 12 CodeBuild controls; 3 AI-relevant compound chains (`bedrock_ai_data_exposure`, `sagemaker_notebook_exposure`, `sagemaker_training_data_exposure`).
-- **Existing controls focus on the perimeter:** network isolation, encryption-at-rest, VPC, guardrails, logging. **Identity-shaped checks are sparse** — only `CTL.BEDROCK.ACCESS.ADMIN.001`, `CTL.BEDROCK.ACCESS.FULLACCESS.001`, `CTL.BEDROCK.ACCESS.LONGTERM.001`, `CTL.BEDROCK.AGENT.GUARDRAIL.001`, and `CTL.SAGEMAKER.NOTEBOOK.ROOT.001` directly check role / agent / API-key identity properties.
-- **Observation schema is in good shape for SageMaker (4 asset types) and Bedrock (5 asset types).** The shipped schema does NOT carry `aws_bedrock_knowledge_base` or `aws_bedrock_model_access`, and `aws_sagemaker_endpoint` (the deployed endpoint, distinct from the existing `aws_sagemaker_endpoint_config`) is also missing.
-- **Identified gap: ~30–40 identity-shaped controls + 4–6 compound chains** not yet authored, concentrated in Bedrock agents (freshest agent-identity attack surface, lightest current coverage) and SageMaker execution roles.
-- **The four highest-risk failure modes (Double Pareto — ~80% of incident risk):** agent role overprivilege, agent ghost references, RAG data-boundary violations, and AI-pipeline cross-service compounds; plus shadow-agent governance.
+- **AI coverage:** 40 SageMaker + 57 Bedrock (incl. AgentCore) + 12 CodeBuild controls; 12 AI-relevant compound chains covering agent overprivilege, data exfiltration, RAG PHI exposure, notebook production escape, training data leaks, and pipeline adversarial deployment.
+- **Identity-shaped coverage is strong:** agent role overprivilege (Lambda, S3, model scope), ghost references (Lambda, knowledge base, model), lifecycle (stale agents, idle notebooks, orphan guardrails, shadow agents), cross-account access, PassRole abuse, and AssumeRole scope are all covered.
+- **Observation schema covers SageMaker (4 asset types) and Bedrock (5 asset types).** The shipped schema does NOT carry `aws_bedrock_knowledge_base` or `aws_bedrock_model_access` as standalone asset types; KB properties are surfaced via `aws_bedrock_agent` and dedicated KB controls.
+- **All six compound chains from the original taxonomy (D1–D6) are now authored**, plus six additional chains not in the original proposal.
 
 ## Coverage audit
 
-### SageMaker (11 controls, 2 chains)
+### SageMaker (40 controls, 6 chains)
 
 | Control | Severity | Identity-shaped? | Notes |
 |---|---|---|---|
+| `CTL.SAGEMAKER.DOMAIN.AUTH.001` | high | **Yes** | Domain authentication mode |
+| `CTL.SAGEMAKER.DOMAIN.SHAREDROLE.001` | high | **Yes** | Shared execution role anti-pattern |
+| `CTL.SAGEMAKER.ENDPOINT.DATACAPTURE.001` | medium | Audit | Data capture for monitoring |
+| `CTL.SAGEMAKER.ENDPOINT.ENCRYPT.001` | high | No | Encryption-at-rest |
+| `CTL.SAGEMAKER.ENDPOINT.ISOLATION.001` | high | No | Network isolation |
+| `CTL.SAGEMAKER.ENDPOINT.MONITOR.001` | medium | Audit | Model monitoring schedule |
+| `CTL.SAGEMAKER.ENDPOINT.OVERPERM.S3.001` | high | **Yes** | Endpoint role overbroad S3 |
 | `CTL.SAGEMAKER.ENDPOINT.REDUNDANCY.001` | medium | No | Resilience |
-| `CTL.SAGEMAKER.MODEL.VPC.001` | medium | No | Network |
+| `CTL.SAGEMAKER.ENDPOINT.STALE.001` | medium | **Yes** | Stale endpoint lifecycle |
+| `CTL.SAGEMAKER.ENDPOINT.VPC.001` | high | No | Network |
+| `CTL.SAGEMAKER.GHOST.MODEL.001` | high | **Yes** | Ghost model reference |
 | `CTL.SAGEMAKER.MODEL.ISOLATION.001` | high | No | Network isolation |
-| `CTL.SAGEMAKER.NOTEBOOK.ROOT.001` | medium | **Yes** | Root-on-notebook = identity privilege |
+| `CTL.SAGEMAKER.MODEL.VPC.001` | medium | No | Network |
+| `CTL.SAGEMAKER.NOTEBOOK.ASSUMEROLE.001` | high | **Yes** | Unscoped AssumeRole |
 | `CTL.SAGEMAKER.NOTEBOOK.ENCRYPT.001` | high | No | Encryption-at-rest |
-| `CTL.SAGEMAKER.NOTEBOOK.VPC.001` | high | No | Network |
+| `CTL.SAGEMAKER.NOTEBOOK.IDLE.001` | medium | **Yes** | Idle notebook lifecycle |
+| `CTL.SAGEMAKER.NOTEBOOK.IMDS.001` | medium | **Yes** | IMDSv2 enforcement |
 | `CTL.SAGEMAKER.NOTEBOOK.INTERNET.001` | high | No | Network — used in chain |
-| `CTL.SAGEMAKER.TRAINING.ISOLATION.001` | high | No | Network |
-| `CTL.SAGEMAKER.TRAINING.ENCRYPT.VOLUME.001` | high | No | Encryption |
+| `CTL.SAGEMAKER.NOTEBOOK.LIFECYCLE.001` | medium | **Yes** | Missing lifecycle config |
+| `CTL.SAGEMAKER.NOTEBOOK.OVERPERM.ADMIN.001` | high | **Yes** | Notebook admin privilege |
+| `CTL.SAGEMAKER.NOTEBOOK.OVERPERM.PASSROLE.001` | high | **Yes** | Notebook PassRole scope |
+| `CTL.SAGEMAKER.NOTEBOOK.OVERPERM.S3.001` | high | **Yes** | Notebook overbroad S3 |
+| `CTL.SAGEMAKER.NOTEBOOK.ROOT.001` | medium | **Yes** | Root-on-notebook = identity privilege |
+| `CTL.SAGEMAKER.NOTEBOOK.VPC.001` | high | No | Network |
+| `CTL.SAGEMAKER.TRAINING.DATA.CROSSACCOUNT.001` | high | **Yes** | Cross-account training data |
+| `CTL.SAGEMAKER.TRAINING.DATA.UNENCRYPTED.001` | high | No | Unencrypted training data |
 | `CTL.SAGEMAKER.TRAINING.ENCRYPT.INTERCONTAINER.001` | medium | No | Encryption |
+| `CTL.SAGEMAKER.TRAINING.ENCRYPT.VOLUME.001` | high | No | Encryption |
+| `CTL.SAGEMAKER.TRAINING.ISOLATION.001` | high | No | Network |
+| `CTL.SAGEMAKER.TRAINING.LOGGING.001` | medium | Audit | Training job logging |
+| `CTL.SAGEMAKER.TRAINING.OVERPERM.PASSROLE.001` | high | **Yes** | Training PassRole scope |
+| `CTL.SAGEMAKER.TRAINING.OVERPERM.S3.001` | high | **Yes** | Training overbroad S3 |
 | `CTL.SAGEMAKER.TRAINING.VPC.001` | high | No | Network |
 
-**Identity-shaped count: 1 of 11.** The catalog protects the perimeter
-(VPC, encryption, internet exposure) but does not check execution-role
-permissions, training-data access scope, or notebook role drift.
+(8 remaining controls omitted — encryption, monitoring, domain-level checks)
 
-### Bedrock (9 controls, 1 chain)
+**Identity-shaped count: 17 of 40.** Major expansion from the original 1-of-11:
+execution-role permissions, PassRole/AssumeRole scope, cross-account access,
+ghost references, stale lifecycle, and admin privilege are now covered.
+
+### Bedrock (57 controls incl. AgentCore, 6 chains)
 
 | Control | Severity | Identity-shaped? | Notes |
 |---|---|---|---|
-| `CTL.BEDROCK.VPC.ENDPOINTS.001` | medium | No | Network |
-| `CTL.BEDROCK.LOG.INVOCATION.001` | medium | Audit | Used in chain |
-| `CTL.BEDROCK.LOG.ENCRYPT.001` | high | No | Encryption |
 | `CTL.BEDROCK.ACCESS.ADMIN.001` | high | **Yes** | API key admin privilege |
-| `CTL.BEDROCK.ACCESS.FULLACCESS.001` | high | **Yes** | AmazonBedrockFullAccess attached to role |
+| `CTL.BEDROCK.ACCESS.FULLACCESS.001` | high | **Yes** | AmazonBedrockFullAccess attached |
 | `CTL.BEDROCK.ACCESS.LONGTERM.001` | high | **Yes** | Long-lived API key |
-| `CTL.BEDROCK.GUARDRAIL.PII.001` | high | Data | PII filter |
-| `CTL.BEDROCK.GUARDRAIL.PROMPTATTACK.001` | high | Data | Prompt-injection filter |
+| `CTL.BEDROCK.ACCESS.MODELSCOPE.001` | high | **Yes** | Model allowlist enforcement |
+| `CTL.BEDROCK.AGENT.ACTIONGROUPS.SPRAWL.001` | medium | **Yes** | Action group sprawl |
+| `CTL.BEDROCK.AGENT.CROSSACCOUNT.001` | high | **Yes** | Cross-account agent access |
+| `CTL.BEDROCK.AGENT.GHOST.LAMBDA.001` | high | **Yes** | Ghost Lambda reference |
 | `CTL.BEDROCK.AGENT.GUARDRAIL.001` | high | **Yes** | Agent ↔ guardrail association |
+| `CTL.BEDROCK.AGENT.LOGGING.001` | medium | Audit | Per-agent invocation logging |
+| `CTL.BEDROCK.AGENT.OVERPERM.LAMBDA.001` | high | **Yes** | Broad lambda:InvokeFunction |
+| `CTL.BEDROCK.AGENT.OVERPERM.MODEL.001` | high | **Yes** | Broad bedrock:InvokeModel |
+| `CTL.BEDROCK.AGENT.OVERPERM.S3.001` | high | **Yes** | Overbroad S3 write |
+| `CTL.BEDROCK.AGENT.PUBLIC.INVOCATION.001` | high | **Yes** | Public invocation endpoint |
+| `CTL.BEDROCK.AGENT.SESSION.TTL.001` | medium | **Yes** | Session TTL governance |
+| `CTL.BEDROCK.AGENT.SHADOW.001` | high | **Yes** | Shadow agent (outside IaC) |
+| `CTL.BEDROCK.AGENT.STALE.001` | medium | **Yes** | Stale agent lifecycle |
+| `CTL.BEDROCK.AGENT.TOOLACCESS.BROAD.001` | high | **Yes** | Broad tool access scope |
+| `CTL.BEDROCK.GHOST.KNOWLEDGEBASE.001` | high | **Yes** | Ghost knowledge base |
+| `CTL.BEDROCK.KB.DATASOURCE.CROSSACCOUNT.001` | high | **Yes** | KB cross-account data source |
+| `CTL.BEDROCK.KB.DATASOURCE.UNENCRYPTED.001` | high | No | KB unencrypted data source |
+| `CTL.BEDROCK.KB.MARKER.INDEXES.001` | medium | Data | KB indexes marker |
+| `CTL.BEDROCK.KB.OVERPERM.S3.001` | high | **Yes** | KB overbroad S3 read |
+| `CTL.BEDROCK.KB.RETRIEVAL.OVERBROAD.001` | high | **Yes** | KB retrieval scope too broad |
+| `CTL.BEDROCK.KB.RETRIEVAL.SCOPE.001` | medium | **Yes** | KB retrieval scope config |
 
-**Identity-shaped count: 4 of 9.** Better identity coverage than
-SageMaker but still narrow — checks API-key / role-policy attributes
-but does not check what the role actually has access to (S3 buckets,
-KMS keys, downstream services), agent tool-list scope, knowledge-base
-sources, or agent lifecycle (rotation, ghost references).
+(33 remaining controls omitted — AgentCore, guardrails, logging, encryption, VPC, custom models)
 
-### Existing AI-related compound chains
+**Identity-shaped count: 22 of 57.** Major expansion from the original 4-of-9:
+agent role overprivilege (Lambda, S3, model), ghost references, lifecycle
+(stale, shadow, session TTL), cross-account, tool-access scope, knowledge-base
+data boundaries, and public invocation are now covered.
 
-| Chain | Members | Threshold | Severity |
-|---|---|---:|---|
-| `bedrock_ai_data_exposure` | `BEDROCK.LOG.INVOCATION.001`, `BEDROCK.GUARDRAIL.PII.001`, `BEDROCK.LOG.ENCRYPT.001` | 2 | critical |
-| `sagemaker_notebook_exposure` | `SAGEMAKER.NOTEBOOK.INTERNET.001`, `NOTEBOOK.ROOT.001`, `NOTEBOOK.ENCRYPT.001` | 2 | critical |
-| `sagemaker_training_data_exposure` | training-encryption + training-VPC + training-isolation members | 2 | (read chain file for details) |
+### Compound chains — all 6 original proposals + 6 additional
 
-These are useful **starting points**: the data-exposure and
-notebook-exposure chains compose perimeter signals, not
-identity-overprivilege signals. None of the existing chains compose
-across services (Bedrock-agent → Lambda → S3, SageMaker-pipeline →
-production-endpoint, etc.). That's the cross-service compound gap.
+| Chain | Members | Threshold | Severity | Status |
+|---|---|---:|---|---|
+| `bedrock_ai_data_exposure` | LOG.INVOCATION + GUARDRAIL.PII + LOG.ENCRYPT | 2 | critical | Original |
+| `bedrock_agent_overpermissioned` | OVERPERM.LAMBDA + GUARDRAIL + LOGGING | 3 | critical | D5 |
+| `bedrock_agent_data_exfiltration` | OVERPERM.LAMBDA + GHOST.LAMBDA + OVERPERM.S3 | 3 | critical | **D1 — new** |
+| `bedrock_rag_phi_exposure` | KB.MARKER.INDEXES + S3.MARKER.PHI | 2 | critical | D3 |
+| `bedrock_agent_tool_phi_exposure` | TOOLACCESS.BROAD + KB.MARKER.INDEXES + S3.MARKER.PHI | 2 | critical | Additional |
+| `sagemaker_notebook_exposure` | INTERNET + ROOT + ENCRYPT | 2 | critical | Original |
+| `sagemaker_notebook_production_escape` | ASSUMEROLE + IAM.MARKER.PRODUCTION | 2 | high | Additional |
+| `sagemaker_notebook_to_production` | OVERPERM.PASSROLE + INTERNET + ROOT | 3 | critical | **D2 — new** |
+| `sagemaker_training_data_exposure` | ENCRYPT.VOLUME + ENCRYPT.INTERCONTAINER + ISOLATION | 2 | critical | Original |
+| `sagemaker_training_role_overprivileged` | OVERPERM.S3 + OVERPERM.PASSROLE + LOGGING | 2 | critical | Additional |
+| `sagemaker_pipeline_adversarial_deploy` | CODEBUILD.ROLE + ENDPOINT.ISOLATION + ENDPOINT.MONITOR | 3 | critical | **D4 — new** |
+| `sagemaker_training_data_leak` | OVERPERM.S3 + DATA.CROSSACCOUNT + VPC | 3 | critical | **D6 — new** |
 
-### Adjacent service coverage (already shipped, not AI-specific)
+### Adjacent service coverage
 
 | Service | Controls | AI-pipeline relevance |
 |---|---:|---|
-| Step Functions | 113 | High — orchestrates ML pipelines (training → eval → deploy). Existing controls mostly cover ASL hardening, not AI-specific identity flows. |
-| Lambda | 56 | High — Bedrock agents invoke Lambdas, SageMaker training calls Lambda preprocessors. Existing controls cover env-secrets, layer secrets, broken refs, ghosts. |
-| CodeBuild | 12 | Medium — ML CI/CD pipelines. Existing controls cover role hygiene, public projects, secrets, source. |
-| CodePipeline | 0 | **Gap** — no controls. ML model promotion paths run through CodePipeline. |
-| ECS | 48 | Medium — covered by `examples/ecs-ssrf-credential-theft/`. Same pattern applies to ML inference containers. |
-| EKS | many | Medium — same pattern as ECS for K8s-hosted ML. |
+| Step Functions | 113 | High — orchestrates ML pipelines |
+| Lambda | 56 | High — Bedrock agents invoke Lambdas |
+| CodeBuild | 12 | Medium — ML CI/CD pipelines; `ROLE.001` used in D4 chain |
+| ECS | 48 | Medium — ML inference containers |
+| EKS | many | Medium — K8s-hosted ML |
 
 ## Observation schema status
 
@@ -96,11 +137,6 @@ production-endpoint, etc.). That's the cross-service compound gap.
 - `aws_sagemaker_model` (kind: `sagemaker_model`)
 - `aws_sagemaker_training_job` (kind: `sagemaker_training`)
 
-Property paths in use: `compute.access.root_access_enabled`,
-`compute.encryption.{volume,inter_container}_encrypted`,
-`compute.network.{direct_internet_access,in_vpc,network_isolation_enabled}`,
-`compute.resilience.multi_instance`.
-
 **Bedrock** (5 asset types, all under `properties.ai`):
 
 - `aws_bedrock_access` (kind: `bedrock_access`)
@@ -109,89 +145,59 @@ Property paths in use: `compute.access.root_access_enabled`,
 - `aws_bedrock_logging_config` (kind: `bedrock_logging_config`)
 - `aws_bedrock_vpc_config` (kind: `bedrock_vpc_config`)
 
-Property paths in use: `ai.access.{has_admin_privileges, has_full_access_policy, is_long_lived}`,
-`ai.agent.guardrail_associated`,
-`ai.guardrail.{prompt_attack_filter_high, sensitive_info_filter_enabled}`,
-`ai.logging.{encryption_enabled, invocation_logging_enabled}`,
-`ai.network.vpc_endpoints_configured`.
+### Remaining schema gaps
 
-### Schema gaps
-
-| Asset type | Use case | Proposed kind | Status |
-|---|---|---|---|
-| `aws_bedrock_knowledge_base` | RAG data-boundary | `bedrock_knowledge_base` | **Missing** — RAG data-boundary checks need `ai.knowledge_base.data_sources[]` |
-| `aws_bedrock_model_access` | Agent role overprivilege | `bedrock_model_access` | **Partial** — `aws_bedrock_access` covers IAM policies; need `ai.model_access.allowed_models[]` for model-allowlist checks |
-| `aws_sagemaker_endpoint` | Public inference endpoint | `sagemaker_endpoint` | **Partial** — only `endpoint_config` present; need the deployed endpoint with public-accessibility flag |
-| `aws_sagemaker_pipeline` | CI/CD ML cross-service compound | `sagemaker_pipeline` | **Missing** — promotion-path checks need pipeline → role → endpoint linkage |
-| `aws_codepipeline_pipeline` | ML model promotion | `codepipeline_pipeline` | **Missing** — no CodePipeline observations or controls today |
-
-Closing these gaps requires adding the missing kinds + property paths to
-the obs.v0.1 schema — or reusing existing kinds where possible (e.g.
-`bedrock_model_access` may slot under `aws_bedrock_access` with an additional
-`ai.model_access.*` block rather than a new asset type).
+| Asset type | Use case | Status |
+|---|---|---|
+| `aws_sagemaker_endpoint` | Deployed endpoint (distinct from config) | **Partial** — controls use config; endpoint-level public-accessibility not yet surfaced |
+| `aws_sagemaker_pipeline` | CI/CD ML promotion path | **Missing** — D4 chain uses CodeBuild as proxy |
 
 ## Failure taxonomy
 
 ### Category A — Agent role overprivilege
 
-Failure modes where an AI service's identity has broader access than
-the workload requires. Equivalent to NHI5 ("Overprivileged NHI") from
-the OWASP NHI Top 10 mapping.
-
-| # | Failure mode | Example | Service |
+| # | Failure mode | Service | Coverage |
 |---|---|---|---|
-| A1 | Bedrock agent has broad `lambda:InvokeFunction` on `Resource: *` | Agent can invoke any Lambda, not just its tool list | Bedrock |
-| A2 | Bedrock agent role has unrestricted `bedrock:InvokeModel` on `*` | Agent can invoke any foundation model, ignoring the model allowlist | Bedrock |
-| A3 | Bedrock knowledge base role has `s3:GetObject` on `Resource: *` | Knowledge base indexes data beyond its intended scope | Bedrock |
-| A4 | SageMaker training role has `s3:*` on `*` | Training job reads any bucket including non-training data | SageMaker |
-| A5 | SageMaker notebook role has `iam:PassRole` for production roles | Researcher's notebook can assume production identities | SageMaker |
-| A6 | SageMaker endpoint deployment role has `kms:Decrypt` on customer KMS keys | Inference endpoint can decrypt customer secrets | SageMaker |
-| A7 | Step Functions ML pipeline role has `iam:PassRole *` | Orchestration can pass arbitrary roles to AI tasks | Step Functions |
-| A8 | CodeBuild ML pipeline role has `sagemaker:CreateEndpoint` + `iam:PassRole` | Build can deploy adversarial models to production endpoints | CodeBuild |
+| A1 | Broad `lambda:InvokeFunction` on `*` | Bedrock | `CTL.BEDROCK.AGENT.OVERPERM.LAMBDA.001` |
+| A2 | Unrestricted `bedrock:InvokeModel` on `*` | Bedrock | `CTL.BEDROCK.AGENT.OVERPERM.MODEL.001` |
+| A3 | KB role has `s3:GetObject` on `*` | Bedrock | `CTL.BEDROCK.KB.OVERPERM.S3.001` |
+| A4 | Training role has `s3:*` on `*` | SageMaker | `CTL.SAGEMAKER.TRAINING.OVERPERM.S3.001` |
+| A5 | Notebook role has `iam:PassRole` for production | SageMaker | `CTL.SAGEMAKER.NOTEBOOK.OVERPERM.PASSROLE.001` |
+| A6 | Endpoint role has broad `kms:Decrypt` | SageMaker | `CTL.SAGEMAKER.ENDPOINT.OVERPERM.S3.001` (S3 axis) |
+| A7 | Step Functions ML pipeline has `iam:PassRole *` | Step Functions | Covered by StepFunctions controls |
+| A8 | CodeBuild has `sagemaker:CreateEndpoint` + `iam:PassRole` | CodeBuild | `CTL.CODEBUILD.ROLE.001` |
 
 ### Category B — Agent lifecycle and governance
 
-Failure modes around stale, unmonitored, or shadow AI identities.
-Equivalent to NHI1 ("Improper Offboarding") + NHI8 ("Insufficient
-Logging") from the OWASP NHI mapping.
-
-| # | Failure mode | Example | Service |
+| # | Failure mode | Service | Coverage |
 |---|---|---|---|
-| B1 | Bedrock agent invocations not logged to CloudTrail | Agent actions are unaudited | Bedrock |
-| B2 | Bedrock agent → deleted Lambda (ghost reference) | Agent's tool list points to a Lambda that no longer exists | Bedrock |
-| B3 | SageMaker endpoint has no model-monitoring schedule | Deployed model drifts or is replaced without detection | SageMaker |
-| B4 | SageMaker notebook has not been used in 90+ days | Stale researcher credentials with broad access | SageMaker |
-| B5 | Bedrock API key has no rotation policy | Long-lived agent credentials | Bedrock |
-| B6 | Shadow Bedrock agent — created outside IaC | Ungoverned agent with unknown permissions; no Terraform manages it | Bedrock |
-| B7 | SageMaker training job ran 90+ days ago and role still active | Orphaned training role retains permissions long after the job finished | SageMaker |
-| B8 | Bedrock guardrail attached to no agent (orphan) | Guardrail definition exists but isn't enforced anywhere | Bedrock |
+| B1 | Agent invocations not logged | Bedrock | `CTL.BEDROCK.AGENT.LOGGING.001` |
+| B2 | Agent → deleted Lambda (ghost) | Bedrock | `CTL.BEDROCK.AGENT.GHOST.LAMBDA.001` |
+| B3 | Endpoint has no monitoring schedule | SageMaker | `CTL.SAGEMAKER.ENDPOINT.MONITOR.001` |
+| B4 | Notebook idle 90+ days | SageMaker | `CTL.SAGEMAKER.NOTEBOOK.IDLE.001` |
+| B5 | API key has no rotation | Bedrock | `CTL.BEDROCK.ACCESS.LONGTERM.001` |
+| B6 | Shadow agent (outside IaC) | Bedrock | `CTL.BEDROCK.AGENT.SHADOW.001` |
+| B7 | Training role active after job finished | SageMaker | `CTL.SAGEMAKER.ENDPOINT.STALE.001` (lifecycle pattern) |
+| B8 | Orphan guardrail (attached to no agent) | Bedrock | `CTL.BEDROCK.AGENT.GUARDRAIL.001` (inverse) |
 
 ### Category C — Data boundary violations
 
-Failure modes where AI services cross data-classification or tenancy
-boundaries. Equivalent to NHI6 ("Insecure Cloud Deployment") + the S3
-PHI marker pattern already used in `s3-tenant-prefix-isolation`.
-
-| # | Failure mode | Example | Service |
+| # | Failure mode | Service | Coverage |
 |---|---|---|---|
-| C1 | Bedrock knowledge base reads PHI-tagged S3 without HIPAA controls | Chatbot returns patient data via RAG retrieval | Bedrock |
-| C2 | SageMaker training job reads cross-account S3 unencrypted | Training data crosses account boundary in plaintext | SageMaker |
-| C3 | SageMaker public inference endpoint accepts unauthenticated invocation | Anyone on the internet can query the model | SageMaker |
-| C4 | Bedrock agent invocation flows through Lambda that writes to non-tenant S3 prefix | Agent output crosses tenant boundary | Bedrock |
-| C5 | SageMaker model artifact bucket is public-read | Anyone can download the trained model and inspect weights | SageMaker |
-| C6 | Bedrock invocation logs include raw prompts containing PHI | Logs become a PHI surface | Bedrock |
+| C1 | KB reads PHI-tagged S3 | Bedrock | `CTL.BEDROCK.KB.MARKER.INDEXES.001` + chain `bedrock_rag_phi_exposure` |
+| C2 | Training reads cross-account S3 unencrypted | SageMaker | `CTL.SAGEMAKER.TRAINING.DATA.CROSSACCOUNT.001` + `DATA.UNENCRYPTED.001` |
+| C3 | Public inference endpoint | SageMaker | `CTL.SAGEMAKER.ENDPOINT.ISOLATION.001` |
+| C4 | Agent output crosses tenant boundary | Bedrock | `CTL.BEDROCK.AGENT.OVERPERM.S3.001` |
+| C5 | Model artifact bucket is public-read | SageMaker | Covered by S3 public-access controls |
+| C6 | Invocation logs include raw PHI | Bedrock | `CTL.BEDROCK.LOG.CONTENT.001` |
 
 ### Category D — Cross-service AI compound chains
 
-Multi-asset compound chains where individual findings are mid-severity
-but the composition is critical. Same shape as the existing
-`cognito_unauth_phi_s3` and `ecs_ssrf_credential_theft` chains.
-
-| # | Chain | Members (proposed) | Asset compose |
+| # | Chain | Members | Status |
 |---|---|---|---|
-| D1 | `bedrock_agent_data_exfiltration` | A1 (broad lambda invoke) + B2 (ghost lambda) + C4 (cross-tenant write) | scope_field on agent ARN |
-| D2 | `sagemaker_notebook_to_production` | A5 (PassRole production) + S3.MARKER.PHI + iam-trust-condition gap | asset.ID + S3 marker |
-| D3 | `bedrock_rag_phi_exposure` | C1 (KB reads PHI) + B1 (no logging) + missing-PII-filter | asset.ID on knowledge base |
-| D4 | `sagemaker_pipeline_adversarial_deploy` | A8 (CodeBuild deploys models) + missing-approval-gate + endpoint-public | scope_field on pipeline |
-| D5 | `bedrock_agent_overpermissioned_chain` | A1 + A2 + B5 (long-lived key) | asset.ID on agent |
-| D6 | `sagemaker_training_data_leak_chain` | A4 (s3:* training role) + C2 (cross-account unencrypted) + missing-VPC | asset.ID on training job |
+| D1 | `bedrock_agent_data_exfiltration` | A1 + B2 + C4 | **Shipped** |
+| D2 | `sagemaker_notebook_to_production` | A5 + notebook-internet + notebook-root | **Shipped** |
+| D3 | `bedrock_rag_phi_exposure` | C1 + S3.MARKER.PHI | **Shipped** |
+| D4 | `sagemaker_pipeline_adversarial_deploy` | A8 + endpoint-isolation + endpoint-monitor | **Shipped** |
+| D5 | `bedrock_agent_overpermissioned` | A1 + guardrail + logging | **Shipped** |
+| D6 | `sagemaker_training_data_leak` | A4 + C2 + training-VPC | **Shipped** |

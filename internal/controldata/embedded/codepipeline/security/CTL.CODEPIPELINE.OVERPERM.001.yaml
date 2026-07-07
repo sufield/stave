@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.CODEPIPELINE.OVERPERM.001
+name: CodePipeline Role Must Follow Least Privilege
+description: >
+  CodePipeline execution roles must be scoped to the minimum
+  permissions required for each stage. An overprivileged pipeline
+  role lets any stage action — including actions triggered by
+  external source events — access resources beyond the pipeline's
+  scope: deploying to production, modifying IAM policies, or
+  reading secrets the pipeline does not need.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - codepipeline
+taxonomy:
+  - compliance-mapping
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: CodePipeline execution role has overly broad permissions.
+  action: >
+    Scope the execution role to the minimum permissions per stage:
+    source pull, build trigger, artifact read/write, and deploy
+    actions. Use per-action role overrides where possible. Remove
+    iam:PassRole on *, s3:*, and sagemaker:* from the pipeline role.
+  example: |
+    {
+      "compute": {
+        "kind": "codepipeline_pipeline",
+        "identity": {
+          "execution_role": { "is_overprivileged": false }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: codepipeline_pipeline
+    - field: properties.compute.identity.execution_role.is_overprivileged
+      op: eq
+      value: true

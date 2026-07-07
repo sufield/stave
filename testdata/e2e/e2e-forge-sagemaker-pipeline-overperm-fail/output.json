@@ -1,0 +1,335 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "eval_time": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "25c4c3b5487c25b05aaa13d1cc22e442f200aa2697294fcb96363910699aef50",
+        "2026-01-11T000000Z.json": "280336ba58283e2e2cc0126a8b0164fea008bcc07f1c09880827f4205cc90aba"
+      },
+      "overall": "2bdda03c908dbc3b57689a8d530e49f47f1f772a7f74646cdf58e919cbd7cf4f"
+    },
+    "policy_fingerprint": "517b4036eaf342de92db1fb180fd5e0081fc2da734683c90234235c7858f601c",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.SAGEMAKER.PIPELINE.OVERPERM.001",
+      "asset_id": "test-sagemaker-pipeline",
+      "asset_type": "aws_sagemaker_pipeline",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:e425f7bd7d7128d5",
+      "control_id": "CTL.SAGEMAKER.PIPELINE.OVERPERM.001",
+      "control_name": "SageMaker Pipeline Role Must Follow Least Privilege",
+      "control_description": "SageMaker pipeline execution roles must be scoped to the minimum permissions required for the pipeline steps. An overprivileged role lets any pipeline step — including steps that process untrusted input — access resources beyond the pipeline's scope: reading secrets, deploying models to production, or modifying IAM policies.\n",
+      "asset_id": "test-sagemaker-pipeline",
+      "asset_type": "aws_sagemaker_pipeline",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "compute.identity.execution_role.is_overprivileged",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "compute.kind",
+            "actual_value": "sagemaker_pipeline",
+            "operator": "eq",
+            "unsafe_value": "sagemaker_pipeline"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "AC-6",
+        "owasp_nhi": "NHI5",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-04",
+        "IAM-05"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "SageMaker pipeline execution role has overly broad permissions.",
+        "action": "Scope the execution role to the minimum permissions: S3 read for training data, SageMaker actions for the specific pipeline steps, and CloudWatch for logging. Remove s3:*, sagemaker:*, and iam:PassRole on * from the role policy.",
+        "example": "{\n  \"compute\": {\n    \"kind\": \"sagemaker_pipeline\",\n    \"identity\": {\n      \"execution_role\": { \"is_overprivileged\": false }\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-a0d12e00ddb7a560",
+        "target": {
+          "asset_id": "test-sagemaker-pipeline",
+          "asset_type": "aws_sagemaker_pipeline"
+        },
+        "action": "Scope the execution role to the minimum permissions: S3 read for training data, SageMaker actions for the specific pipeline steps, and CloudWatch for logging. Remove s3:*, sagemaker:*, and iam:PassRole on * from the role policy."
+      },
+      "sla_deadline_hours": 336,
+      "sla_breached": false,
+      "sla_policy_source": "profile:default",
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "compute.identity.execution_role.is_overprivileged eq true",
+          "observation_key": "compute.identity.execution_role.is_overprivileged",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "compute.kind eq \"sagemaker_pipeline\"",
+          "observation_key": "compute.kind",
+          "operator": "eq",
+          "expected_value": "sagemaker_pipeline",
+          "observed_value": "sagemaker_pipeline"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "test-sagemaker-pipeline",
+          "type": "aws_sagemaker_pipeline",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.SAGEMAKER.PIPELINE.OVERPERM.001",
+          "control_name": "SageMaker Pipeline Role Must Follow Least Privilege",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "compute.identity.execution_role.is_overprivileged = true",
+              "observation_key": "compute.identity.execution_role.is_overprivileged",
+              "observed_value": true
+            },
+            {
+              "clause": "compute.kind = \"sagemaker_pipeline\"",
+              "observation_key": "compute.kind",
+              "observed_value": "sagemaker_pipeline"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "compute.identity.execution_role.is_overprivileged",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set compute.identity.execution_role.is_overprivileged to false"
+          },
+          {
+            "path": "compute.kind",
+            "current_value": "sagemaker_pipeline",
+            "required_value": "any value other than sagemaker_pipeline",
+            "has_safe_default": false,
+            "description": "Change compute.kind away from sagemaker_pipeline"
+          }
+        ],
+        "action": "Scope the execution role to the minimum permissions: S3 read for training data, SageMaker actions for the specific pipeline steps, and CloudWatch for logging. Remove s3:*, sagemaker:*, and iam:PassRole on * from the role policy."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "sagemaker",
+        "ai"
+      ],
+      "delta": [
+        {
+          "property_label": "identity execution role is overprivileged",
+          "property_path": "compute.identity.execution_role.is_overprivileged",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ],
+      "contributing_fact_ids": [
+        "84b37164e0ef",
+        "8372dae73827",
+        "cc5eb855cc39",
+        "ce62ad81d346",
+        "0a086df2ce80",
+        "e02cd06f7dbb"
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:9cb24157b6314c18",
+      "asset_id": "test-sagemaker-pipeline",
+      "shared_keys": [
+        "compute.identity.execution_role",
+        "compute.identity.execution_role.is_overprivileged"
+      ],
+      "headline_finding_id": "sha256:e425f7bd7d7128d5",
+      "member_finding_ids": [
+        "sha256:e425f7bd7d7128d5"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 2
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "test-sagemaker-pipeline",
+      "asset_type": "aws_sagemaker_pipeline",
+      "fix_plan": {
+        "id": "fix-a0d12e00ddb7a560",
+        "target": {
+          "asset_id": "test-sagemaker-pipeline",
+          "asset_type": "aws_sagemaker_pipeline"
+        },
+        "action": "Scope the execution role to the minimum permissions: S3 read for training data, SageMaker actions for the specific pipeline steps, and CloudWatch for logging. Remove s3:*, sagemaker:*, and iam:PassRole on * from the role policy."
+      },
+      "contributing_controls": [
+        "CTL.SAGEMAKER.PIPELINE.OVERPERM.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.SAGEMAKER.PIPELINE.OVERPERM.001",
+      "asset_id": "test-sagemaker-pipeline",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
+    }
+  }
+}

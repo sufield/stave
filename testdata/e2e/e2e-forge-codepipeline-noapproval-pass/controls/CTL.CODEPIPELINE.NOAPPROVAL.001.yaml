@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.CODEPIPELINE.NOAPPROVAL.001
+name: CodePipeline Must Have Manual Approval Before Production Deploy
+description: >
+  CodePipeline that deploys to production must include a manual
+  approval action. Without a human gate, a compromised source
+  repository or build stage can push adversarial code directly to
+  production — a SageMaker endpoint, ECS service, or Lambda function —
+  with no review step.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3"
+  soc2: "CC8.1"
+  pci_dss_v4.0: "6.5.4"
+  ccm_v4: ["CCC-01", "CCC-02"]
+scope_tags:
+  - aws
+  - codepipeline
+taxonomy:
+  - compliance-mapping
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: execution
+remediation:
+  description: CodePipeline has no manual approval stage before production deploy.
+  action: >
+    Add a Manual Approval action before any stage that deploys to
+    production. Configure an SNS topic for approval notifications
+    so the right team is notified. This creates a human checkpoint
+    between build and deploy.
+  example: |
+    {
+      "compute": {
+        "kind": "codepipeline_pipeline",
+        "governance": { "has_manual_approval": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: codepipeline_pipeline
+    - field: properties.compute.governance.has_manual_approval
+      op: ne
+      value: true

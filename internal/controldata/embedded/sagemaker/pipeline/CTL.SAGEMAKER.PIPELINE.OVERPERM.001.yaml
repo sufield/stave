@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.PIPELINE.OVERPERM.001
+name: SageMaker Pipeline Role Must Follow Least Privilege
+description: >
+  SageMaker pipeline execution roles must be scoped to the minimum
+  permissions required for the pipeline steps. An overprivileged
+  role lets any pipeline step — including steps that process
+  untrusted input — access resources beyond the pipeline's scope:
+  reading secrets, deploying models to production, or modifying
+  IAM policies.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - sagemaker
+  - ai
+taxonomy:
+  - compliance-mapping
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: SageMaker pipeline execution role has overly broad permissions.
+  action: >
+    Scope the execution role to the minimum permissions: S3 read
+    for training data, SageMaker actions for the specific pipeline
+    steps, and CloudWatch for logging. Remove s3:*, sagemaker:*,
+    and iam:PassRole on * from the role policy.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_pipeline",
+        "identity": {
+          "execution_role": { "is_overprivileged": false }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_pipeline
+    - field: properties.compute.identity.execution_role.is_overprivileged
+      op: eq
+      value: true

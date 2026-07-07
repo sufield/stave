@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.PIPELINE.ENCRYPT.001
+name: SageMaker Pipeline Must Use Customer-Managed KMS Key
+description: >
+  SageMaker pipeline must encrypt artifacts and intermediate data
+  with a customer-managed KMS key. Without CMK encryption, pipeline
+  outputs — trained models, processed datasets, evaluation results —
+  are encrypted only with the default AWS-managed key, which the
+  organization cannot rotate, audit, or revoke independently.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["DSP-10", "CEK-01"]
+scope_tags:
+  - aws
+  - sagemaker
+  - ai
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: SageMaker pipeline does not use a customer-managed KMS key.
+  action: >
+    Configure the pipeline's OutputDataConfig and ProcessingOutputConfig
+    to use a customer-managed KMS key ARN. This gives the organization
+    control over key rotation, access policies, and revocation.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_pipeline",
+        "encryption": { "uses_customer_kms": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_pipeline
+    - field: properties.compute.encryption.uses_customer_kms
+      op: ne
+      value: true

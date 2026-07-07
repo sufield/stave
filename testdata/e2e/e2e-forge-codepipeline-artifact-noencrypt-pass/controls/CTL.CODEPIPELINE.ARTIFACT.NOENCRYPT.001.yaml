@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.CODEPIPELINE.ARTIFACT.NOENCRYPT.001
+name: CodePipeline Artifact Store Must Use KMS Encryption
+description: >
+  CodePipeline artifact store must use a customer-managed KMS key.
+  Without encryption, build artifacts — source code archives,
+  compiled binaries, test results, deployment packages — are stored
+  in plaintext in S3. Anyone with read access to the artifact bucket
+  can access every version of every artifact the pipeline produced.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["DSP-10", "CEK-01"]
+scope_tags:
+  - aws
+  - codepipeline
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+remediation:
+  description: CodePipeline artifact store does not use KMS encryption.
+  action: >
+    Configure the pipeline's artifactStore with an encryptionKey
+    pointing to a customer-managed KMS key ARN. This encrypts all
+    artifacts at rest and gives the organization control over key
+    rotation and access policies.
+  example: |
+    {
+      "compute": {
+        "kind": "codepipeline_pipeline",
+        "encryption": { "artifact_store_encrypted": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: codepipeline_pipeline
+    - field: properties.compute.encryption.artifact_store_encrypted
+      op: ne
+      value: true

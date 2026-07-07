@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2898
-**Pack hash:** `90b2b60eee89645af6acec0324d4595b856a58df5ecc3fc253dbe51f44197ad6`
+**Total controls:** 2900
+**Pack hash:** `cfce79e90edb9baa7e44659d1515601df7329e7efff7591574ce03b3e7066f8a`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 297 |
-| high | 1260 |
+| high | 1261 |
 | info | 16 |
 | low | 220 |
-| medium | 1105 |
+| medium | 1106 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,10 +27,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1273 |
+| exposure | 1274 |
 | governance | 613 |
 | hygiene | 18 |
-| identity | 508 |
+| identity | 509 |
 | lifecycle | 31 |
 | network | 43 |
 | resilience | 35 |
@@ -113,7 +113,7 @@ GitHub. Pick a service below.
 | [REDSHIFT](reference/redshift.md) | 26 |
 | [ROUTE53](reference/route53.md) | 50 |
 | [S3](reference/s3.md) | 133 |
-| [SAGEMAKER](reference/sagemaker.md) | 33 |
+| [SAGEMAKER](reference/sagemaker.md) | 35 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
 | [SECRETSMANAGER](reference/secretsmanager.md) | 5 |

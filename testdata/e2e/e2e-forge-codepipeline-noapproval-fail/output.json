@@ -1,0 +1,334 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "eval_time": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "04cef523ac3f79a68997fbfcdedf8da0472afde43af00c0fb049e6a102d453ff",
+        "2026-01-11T000000Z.json": "326dc13c0ff32ea3c8efd86868a100b6b8df24e0d57e76c3228140e3f2b79717"
+      },
+      "overall": "14dcffe3c99c22bb643616134772107ebe8b43182b97597dc6bda9574eab3c79"
+    },
+    "policy_fingerprint": "dfce8837c259d3107875b2f94a719711bc79947e5bf9a44e9c184afbd8c392e4",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.CODEPIPELINE.NOAPPROVAL.001",
+      "asset_id": "test-codepipeline-pipeline",
+      "asset_type": "aws_codepipeline_pipeline",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:1419bd2bffaf662b",
+      "control_id": "CTL.CODEPIPELINE.NOAPPROVAL.001",
+      "control_name": "CodePipeline Must Have Manual Approval Before Production Deploy",
+      "control_description": "CodePipeline that deploys to production must include a manual approval action. Without a human gate, a compromised source repository or build stage can push adversarial code directly to production — a SageMaker endpoint, ECS service, or Lambda function — with no review step.\n",
+      "asset_id": "test-codepipeline-pipeline",
+      "asset_type": "aws_codepipeline_pipeline",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "compute.governance.has_manual_approval",
+            "actual_value": false,
+            "operator": "ne",
+            "unsafe_value": true
+          },
+          {
+            "property": "compute.kind",
+            "actual_value": "codepipeline_pipeline",
+            "operator": "eq",
+            "unsafe_value": "codepipeline_pipeline"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "CM-3",
+        "pci_dss_v4.0": "6.5.4",
+        "soc2": "CC8.1"
+      },
+      "control_compliance_ccm_v4": [
+        "CCC-01",
+        "CCC-02"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "CodePipeline has no manual approval stage before production deploy.",
+        "action": "Add a Manual Approval action before any stage that deploys to production. Configure an SNS topic for approval notifications so the right team is notified. This creates a human checkpoint between build and deploy.",
+        "example": "{\n  \"compute\": {\n    \"kind\": \"codepipeline_pipeline\",\n    \"governance\": { \"has_manual_approval\": true }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-0591f65c4465ebdd",
+        "target": {
+          "asset_id": "test-codepipeline-pipeline",
+          "asset_type": "aws_codepipeline_pipeline"
+        },
+        "action": "Add a Manual Approval action before any stage that deploys to production. Configure an SNS topic for approval notifications so the right team is notified. This creates a human checkpoint between build and deploy."
+      },
+      "sla_deadline_hours": 336,
+      "sla_breached": false,
+      "sla_policy_source": "profile:default",
+      "exposure_score": 77.05479452054796,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "compute.governance.has_manual_approval ne true",
+          "observation_key": "compute.governance.has_manual_approval",
+          "operator": "ne",
+          "expected_value": true,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "compute.kind eq \"codepipeline_pipeline\"",
+          "observation_key": "compute.kind",
+          "operator": "eq",
+          "expected_value": "codepipeline_pipeline",
+          "observed_value": "codepipeline_pipeline"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "test-codepipeline-pipeline",
+          "type": "aws_codepipeline_pipeline",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.CODEPIPELINE.NOAPPROVAL.001",
+          "control_name": "CodePipeline Must Have Manual Approval Before Production Deploy",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "compute.governance.has_manual_approval not equal true (observed: false)",
+              "observation_key": "compute.governance.has_manual_approval",
+              "observed_value": false
+            },
+            {
+              "clause": "compute.kind = \"codepipeline_pipeline\"",
+              "observation_key": "compute.kind",
+              "observed_value": "codepipeline_pipeline"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "compute.governance.has_manual_approval",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": false,
+            "description": "Set compute.governance.has_manual_approval to true"
+          },
+          {
+            "path": "compute.kind",
+            "current_value": "codepipeline_pipeline",
+            "required_value": "any value other than codepipeline_pipeline",
+            "has_safe_default": false,
+            "description": "Change compute.kind away from codepipeline_pipeline"
+          }
+        ],
+        "action": "Add a Manual Approval action before any stage that deploys to production. Configure an SNS topic for approval notifications so the right team is notified. This creates a human checkpoint between build and deploy."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "codepipeline"
+      ],
+      "delta": [
+        {
+          "property_label": "governance has manual approval",
+          "property_path": "compute.governance.has_manual_approval",
+          "current_value": "false",
+          "fix_action": "set to true"
+        }
+      ],
+      "contributing_fact_ids": [
+        "0d2c99a6a13f",
+        "58f09f389188",
+        "321355663e31",
+        "620fc8fdee3d",
+        "19d2e2eb3d97",
+        "f1e1af0dcf26"
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:da513e21917e6b09",
+      "asset_id": "test-codepipeline-pipeline",
+      "shared_keys": [
+        "compute.governance",
+        "compute.governance.has_manual_approval"
+      ],
+      "headline_finding_id": "sha256:1419bd2bffaf662b",
+      "member_finding_ids": [
+        "sha256:1419bd2bffaf662b"
+      ],
+      "consolidated_score": 77.05479452054796,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "test-codepipeline-pipeline",
+      "asset_type": "aws_codepipeline_pipeline",
+      "fix_plan": {
+        "id": "fix-0591f65c4465ebdd",
+        "target": {
+          "asset_id": "test-codepipeline-pipeline",
+          "asset_type": "aws_codepipeline_pipeline"
+        },
+        "action": "Add a Manual Approval action before any stage that deploys to production. Configure an SNS topic for approval notifications so the right team is notified. This creates a human checkpoint between build and deploy."
+      },
+      "contributing_controls": [
+        "CTL.CODEPIPELINE.NOAPPROVAL.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.CODEPIPELINE.NOAPPROVAL.001",
+      "asset_id": "test-codepipeline-pipeline",
+      "exposure_score": 77.05479452054796,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
+    }
+  }
+}

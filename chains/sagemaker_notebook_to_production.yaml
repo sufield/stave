@@ -1,0 +1,22 @@
+id: sagemaker_notebook_to_production
+description: >
+  SageMaker notebook execution role has unscoped iam:PassRole
+  for production roles, the notebook has direct internet access,
+  and the notebook operator has root access. A researcher with
+  root on an internet-connected notebook can pass the production
+  role to a new SageMaker resource (endpoint, training job,
+  processing job) and reach production data — customers, PHI,
+  financial records — without any promotion gate. The internet
+  path provides the exfiltration channel; root provides
+  unrestricted local tooling; PassRole provides the
+  cross-environment bridge.
+controls:
+  - CTL.SAGEMAKER.NOTEBOOK.OVERPERM.PASSROLE.001
+  - CTL.SAGEMAKER.NOTEBOOK.INTERNET.001
+  - CTL.SAGEMAKER.NOTEBOOK.ROOT.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - automation_hijack
+postconditions:
+  - data_access

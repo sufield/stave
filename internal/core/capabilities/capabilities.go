@@ -60,6 +60,7 @@ var builtinNames = []string{
 	"secret_store_access",
 	"service_disruption",
 	"shadow_admin_access",
+	"supply_chain_compromise",
 	"ungoverned_operation",
 	"vpc_instance_compromise",
 }
