@@ -95,7 +95,7 @@ Release signing and attestation require network access:
 
 - Treat observation and output files as sensitive.
 - Use `--sanitize` for shared outputs.
-- Prefer deterministic runs in CI with `--now`.
+- Prefer deterministic runs in CI with `--eval-time`.
 
 ## FAQ
 

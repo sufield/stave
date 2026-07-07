@@ -40,7 +40,7 @@ facts_jsonl=$(mktemp)
 trap 'rm -f "$facts_jsonl"' EXIT
 
 "$stave_bin" export-sir --format jsonl --observations "$obs_dir" \
-    --now 2026-05-09T12:00:00Z > "$facts_jsonl" 2>/dev/null
+    --eval-time 2026-05-09T12:00:00Z > "$facts_jsonl" 2>/dev/null
 
 python3 "$script_dir/format_facts.py" "$facts_jsonl"
 

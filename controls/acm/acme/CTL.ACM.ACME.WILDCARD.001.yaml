@@ -1,0 +1,119 @@
+dsl_version: ctrl.v1
+id: CTL.ACM.ACME.WILDCARD.001
+name: ACM ACME Endpoint Must Not Allow Wildcard Certificate Issuance
+description: >
+  ACM ACME endpoint must not permit wildcard certificate issuance.
+  A wildcard certificate (*.example.com) covers every subdomain under
+  the parent domain. One compromised private key or one leaked
+  certificate exposes every subdomain to impersonation. ACME endpoints
+  can enforce policies on wildcard usage — disabling wildcard issuance
+  forces per-subdomain certificates, limiting blast radius to the
+  single service whose key is compromised.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.7"
+  pci_dss_v4.0: "4.2.1"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - acm
+taxonomy:
+  - least-privilege
+  - encryption-in-transit
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_acm_acme_endpoint
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    ACM ACME endpoint allows wildcard certificate issuance. A single
+    compromised wildcard certificate covers every subdomain.
+  action: >
+    Set the endpoint's wildcard policy to DENY. Issue individual
+    certificates for each subdomain instead of wildcard certificates.
+    If wildcard issuance is operationally required (e.g., a CDN serving
+    many subdomains), document the justification, ensure the private key
+    is stored in a hardware security module, and monitor Certificate
+    Transparency logs for unexpected issuance.
+  example: |
+    {
+      "governance": {
+        "kind": "acm_acme_endpoint",
+        "acme_endpoint": {
+          "wildcard_policy": "DENY"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: acm_acme_endpoint
+    - field: properties.governance.acme_endpoint.wildcard_policy
+      op: eq
+      value: ALLOW
+defect: >
+  ACME endpoint wildcard policy is set to ALLOW.
+infection: >
+  When wildcard issuance is allowed, any authorized ACME client can
+  request a certificate for *.example.com. That single certificate
+  is valid for every subdomain — mail.example.com, admin.example.com,
+  internal.example.com. The certificate's private key becomes the
+  single point of failure for the entire domain namespace. Key
+  compromise, accidental exposure in a container image, or a leaked
+  backup exposes all subdomains simultaneously.
+failure: >
+  Domain-wide impersonation. An attacker with the compromised wildcard
+  certificate private key can impersonate any subdomain, intercepting
+  traffic or serving malicious content on any service under the domain.
+tests:
+  - name: wildcard policy ALLOW fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:acme-endpoint/wildcard-on"
+      asset_type: aws_acm_acme_endpoint
+      vendor: aws
+      properties:
+        governance:
+          kind: acm_acme_endpoint
+          acme_endpoint:
+            status: ACTIVE
+            wildcard_policy: ALLOW
+            domain_scope:
+              - "*.example.com"
+  - name: wildcard policy DENY passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:acme-endpoint/wildcard-off"
+      asset_type: aws_acm_acme_endpoint
+      vendor: aws
+      properties:
+        governance:
+          kind: acm_acme_endpoint
+          acme_endpoint:
+            status: ACTIVE
+            wildcard_policy: DENY
+            domain_scope:
+              - "app.example.com"
+  - name: inactive endpoint with ALLOW still fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:acme-endpoint/inactive-wild"
+      asset_type: aws_acm_acme_endpoint
+      vendor: aws
+      properties:
+        governance:
+          kind: acm_acme_endpoint
+          acme_endpoint:
+            status: INACTIVE
+            wildcard_policy: ALLOW
+            domain_scope:
+              - "example.com"

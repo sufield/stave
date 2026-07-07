@@ -91,7 +91,7 @@ Must pass with 0 errors, 0 warnings. `--semantic` catches always-firing and neve
 ### 8. End-to-end proof
 ```
 ./stave apply --controls ~/my-controls --observations <obs-dir>/ \
-  --now 2026-01-02T00:00:00Z
+  --eval-time 2026-01-02T00:00:00Z
 ```
 Your control fires alongside the built-in catalog.
 

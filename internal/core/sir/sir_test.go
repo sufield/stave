@@ -12,7 +12,7 @@ import (
 	"github.com/sufield/stave/internal/core/predicate"
 )
 
-// fixedTime is the canonical "now" for every test case. Hard-coded
+// fixedTime is the canonical "eval-time" for every test case. Hard-coded
 // so a regressed Builder that consults time.Now() trips the
 // determinism check immediately rather than passing intermittently.
 var fixedTime = time.Date(2026, 5, 1, 12, 0, 0, 0, time.UTC)

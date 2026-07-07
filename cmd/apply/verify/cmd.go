@@ -32,7 +32,7 @@ Inputs:
   --after, -a              Path to after-remediation observations (required)
   --controls, -i           Path to control definitions directory (default: controls)
   --max-unsafe             Maximum allowed unsafe duration
-  --now                    Override current time (RFC3339) for deterministic output
+  --eval-time                    Evaluation reference timestamp (RFC3339) for deterministic output
 
 Outputs:
   stdout                   Verification report JSON showing resolved, remaining,
@@ -48,7 +48,7 @@ Exit Codes:
 
   # Deterministic output for CI
   stave check --before ./obs-before --after ./obs-after --controls ./controls \
-    --now 2026-01-15T00:00:00Z
+    --eval-time 2026-01-15T00:00:00Z
 
   # With a custom unsafe duration threshold
   stave check --before ./obs-before --after ./obs-after --controls ./controls \
@@ -67,7 +67,7 @@ Exit Codes:
 				AfterDir:    opts.AfterDir,
 				ControlsDir: opts.ControlsDir,
 				MaxUnsafe:   opts.MaxUnsafeDuration,
-				Now:         opts.Now,
+				EvalTime:    opts.EvalTime,
 				SanitizeIDs: gf.Sanitize,
 				PathMode:    string(gf.PathMode),
 				Progress:    rt.BeginProgress,

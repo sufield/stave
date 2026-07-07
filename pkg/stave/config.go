@@ -45,8 +45,8 @@ type Config struct {
 
 	// Now overrides the evaluator's current time, which is used
 	// for duration-based controls and timestamps in the output.
-	// Zero uses the real current time. Maps to --now.
-	Now time.Time
+	// Zero uses the real current time. Maps to --eval-time.
+	EvalTime time.Time
 
 	// ChainsDir is the directory containing chain definition YAML
 	// files. Chains declare compound-risk patterns — sets of

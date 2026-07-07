@@ -25,7 +25,7 @@ func TestEvaluateLoaded_DefaultsClockWhenNil(t *testing.T) {
 	if result.Run.StaveVersion != "test-version" {
 		t.Fatalf("tool_version=%q, want %q", result.Run.StaveVersion, "test-version")
 	}
-	if result.Run.Now.IsZero() {
+	if result.Run.EvalTime.IsZero() {
 		t.Fatal("expected run.now to be set when clock is nil")
 	}
 	if result.Run.MaxUnsafeDuration != kernel.Duration(24*time.Hour) {

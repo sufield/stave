@@ -29,7 +29,7 @@ apply_filtered() {
     "$stave_bin" apply \
         --observations "$obs" \
         --controls "$stave_root/controls/ec2" \
-        --now 2026-05-10T12:00:00Z --format json 2>/dev/null \
+        --eval-time 2026-05-10T12:00:00Z --format json 2>/dev/null \
       | jq '{
             controls: ([.findings[] | select(.control_id | test("INCOMPLETE") | not) | .control_id] | sort | unique),
             chains:   ([(.chain_findings // [])[]] | map(.chain // .chain_id) | sort | unique),

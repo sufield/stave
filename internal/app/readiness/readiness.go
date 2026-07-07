@@ -19,7 +19,7 @@ func AssessReadiness(in validation.AssessmentContext) (validation.ReadinessAsses
 		Report:            report,
 		Input:             in,
 		MaxUnsafeDuration: in.SLAThreshold,
-		Now:               in.CurrentTime,
+		EvalTime:          in.CurrentTime,
 	}); err != nil {
 		return validation.ReadinessAssessment{}, err
 	}
@@ -53,7 +53,7 @@ type readinessValidationRequest struct {
 	Report            *validation.ReadinessAssessment
 	Input             validation.AssessmentContext
 	MaxUnsafeDuration time.Duration
-	Now               time.Time
+	EvalTime          time.Time
 }
 
 func recordValidationIssues(req readinessValidationRequest) error {
@@ -61,7 +61,7 @@ func recordValidationIssues(req readinessValidationRequest) error {
 		return nil
 	}
 
-	val, err := req.Input.RunEvaluation(req.MaxUnsafeDuration, req.Now)
+	val, err := req.Input.RunEvaluation(req.MaxUnsafeDuration, req.EvalTime)
 	if err != nil {
 		return fmt.Errorf("operation: %w", err)
 	}

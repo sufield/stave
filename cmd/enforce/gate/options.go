@@ -15,7 +15,7 @@ type Options struct {
 	ControlsDir       string
 	ObservationsDir   string
 	MaxUnsafeDuration string
-	Now               string
+	EvalTime          string
 	Format            string
 	Team              string
 	TeamManifest      string
@@ -58,7 +58,7 @@ func (o *Options) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.ControlsDir, "controls", "i", o.ControlsDir, "Path to control definitions directory (used by fail_on_overdue_upcoming)")
 	f.StringVarP(&o.ObservationsDir, "observations", "o", o.ObservationsDir, "Path to observation snapshots directory (used by fail_on_overdue_upcoming)")
 	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration (used by fail_on_overdue_upcoming)"))
-	f.StringVar(&o.Now, "now", "", "Reference time (RFC3339). If omitted, uses wall clock")
+	f.StringVar(&o.EvalTime, "eval-time", "", "Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.")
 	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format: text or json")
 	f.StringVar(&o.Team, "team", "", "Filter gate to findings owned by this team")
 	f.StringVar(&o.TeamManifest, "team-manifest", "", "Team manifest YAML for ownership routing")

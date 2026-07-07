@@ -40,7 +40,7 @@ func TestApply_LordofheavenBuiltinControls(t *testing.T) {
 
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,
-		Now:          frozenNow,
+		EvalTime:     frozenNow,
 	})
 	if err != nil {
 		t.Fatalf("Apply: %v", err)
@@ -102,7 +102,7 @@ func TestApply_FailsWithoutSnapshotsDir(t *testing.T) {
 func TestApply_FamilyTemplateInheritance(t *testing.T) {
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,
-		Now:          frozenNow,
+		EvalTime:     frozenNow,
 	})
 	if err != nil {
 		t.Fatalf("Apply: %v", err)
@@ -143,7 +143,7 @@ func TestApply_FamilyTemplateInheritance(t *testing.T) {
 func TestApply_ReturnsTypedValues(t *testing.T) {
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,
-		Now:          frozenNow,
+		EvalTime:     frozenNow,
 	})
 	if err != nil {
 		t.Fatalf("Apply: %v", err)

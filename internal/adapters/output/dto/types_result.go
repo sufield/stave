@@ -11,7 +11,7 @@ import (
 type RunInfoDTO struct {
 	StaveVersion      string          `json:"tool_version"`
 	Offline           bool            `json:"offline"`
-	Now               time.Time       `json:"now"`
+	EvalTime          time.Time       `json:"eval_time"`
 	MaxUnsafeDuration kernel.Duration `json:"sla_threshold"`
 	Snapshots         int             `json:"snapshots"`
 	InputHashes       *InputHashesDTO `json:"input_hashes,omitempty"`

@@ -29,7 +29,7 @@ func TestGenerate_FindingMapsToItem(t *testing.T) {
 	poam := Generate(Input{
 		Findings:   findings,
 		SystemUUID: "test-system",
-		Now:        time.Date(2026, 4, 15, 0, 0, 0, 0, time.UTC),
+		EvalTime:   time.Date(2026, 4, 15, 0, 0, 0, 0, time.UTC),
 	})
 
 	if len(poam.Items) != 1 {
@@ -58,8 +58,8 @@ func TestGenerate_DeterministicUUID(t *testing.T) {
 		},
 	}
 
-	p1 := Generate(Input{Findings: findings, SystemUUID: "sys", Now: time.Now()})
-	p2 := Generate(Input{Findings: findings, SystemUUID: "sys", Now: time.Now()})
+	p1 := Generate(Input{Findings: findings, SystemUUID: "sys", EvalTime: time.Now()})
+	p2 := Generate(Input{Findings: findings, SystemUUID: "sys", EvalTime: time.Now()})
 
 	if p1.Items[0].UUID != p2.Items[0].UUID {
 		t.Error("UUID should be deterministic for same inputs")

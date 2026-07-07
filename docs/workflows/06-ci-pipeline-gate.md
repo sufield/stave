@@ -14,7 +14,7 @@ The pattern is two steps: produce an evaluation, then gate on it.
 
 ```bash
 stave apply --observations ./obs/ --format json \
-  --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > evaluation.json
+  --eval-time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > evaluation.json
 stave ci gate --policy fail_on_any_violation --in evaluation.json
 ```
 
@@ -42,7 +42,7 @@ jobs:
       - name: Evaluate security invariants
         run: |
           stave apply --observations ./obs/ --format json \
-            --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > evaluation.json
+            --eval-time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > evaluation.json
       - name: Gate
         run: stave ci gate --policy fail_on_any_violation --in evaluation.json
 ```
@@ -58,7 +58,7 @@ stave-gate:
     - go install github.com/sufield/stave/cmd/stave@latest
     - export PATH="$(go env GOPATH)/bin:$PATH"
     - stave apply --observations ./obs/ --format json
-        --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > evaluation.json
+        --eval-time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > evaluation.json
     - stave ci gate --policy fail_on_any_violation --in evaluation.json
 ```
 

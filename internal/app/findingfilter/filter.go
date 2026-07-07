@@ -82,7 +82,7 @@ type Input struct {
 	// within this duration are considered. Zero means use all history.
 	NewSince time.Duration
 	// Now is the reference time for duration calculations.
-	Now time.Time
+	EvalTime time.Time
 }
 
 // appearance tracks which historical assessments a finding key
@@ -122,7 +122,7 @@ func Classify(in Input) *Result {
 		return classifyAllNew(in)
 	}
 
-	sorted := sortAndFilterHistory(in.History, in.NewSince, in.Now)
+	sorted := sortAndFilterHistory(in.History, in.NewSince, in.EvalTime)
 	if len(sorted) == 0 {
 		// All history is outside the NewSince window: everything is new.
 		return classifyAllNew(in)
@@ -141,7 +141,7 @@ func Classify(in Input) *Result {
 		ResolvedFindings: resolved,
 		SuppressedCount:  suppressedCount,
 		TotalFindings:    len(in.CurrentFindings),
-		SnapshotTime:     in.Now,
+		SnapshotTime:     in.EvalTime,
 	}
 }
 
@@ -159,18 +159,18 @@ func classifyAllNew(in Input) *Result {
 	return &Result{
 		NewFindings:   classified,
 		TotalFindings: len(in.CurrentFindings),
-		SnapshotTime:  in.Now,
+		SnapshotTime:  in.EvalTime,
 	}
 }
 
 // sortAndFilterHistory returns a new slice of assessments sorted by
-// Run.Now ascending, optionally clipped to those within `newSince` of
+// Run.EvalTime ascending, optionally clipped to those within `newSince` of
 // `now`. A newSince of zero retains the full history.
 func sortAndFilterHistory(history []*report.Assessment, newSince time.Duration, now time.Time) []*report.Assessment {
 	sorted := make([]*report.Assessment, len(history))
 	copy(sorted, history)
 	slices.SortFunc(sorted, func(a, b *report.Assessment) int {
-		return a.Run.Now.Compare(b.Run.Now)
+		return a.Run.EvalTime.Compare(b.Run.EvalTime)
 	})
 	if newSince <= 0 {
 		return sorted
@@ -178,7 +178,7 @@ func sortAndFilterHistory(history []*report.Assessment, newSince time.Duration, 
 	cutoff := now.Add(-newSince)
 	filtered := make([]*report.Assessment, 0, len(sorted))
 	for _, a := range sorted {
-		if !a.Run.Now.Before(cutoff) {
+		if !a.Run.EvalTime.Before(cutoff) {
 			filtered = append(filtered, a)
 		}
 	}
@@ -199,10 +199,10 @@ func buildTimeline(sorted []*report.Assessment, latest *report.Assessment) map[f
 			}
 			ap, exists := timeline[k]
 			if !exists {
-				ap = &appearance{firstSeen: a.Run.Now}
+				ap = &appearance{firstSeen: a.Run.EvalTime}
 				timeline[k] = ap
 			}
-			ap.lastSeen = a.Run.Now
+			ap.lastSeen = a.Run.EvalTime
 			ap.count++
 			if isLatest {
 				ap.inLatest = true
@@ -241,7 +241,7 @@ func classifyCurrent(in Input, timeline map[findingKey]*appearance, gapCount map
 			Class:     ClassReturned,
 			FirstSeen: &firstSeen,
 			LastSeen:  &lastSeen,
-			DwellDays: ap.DwellDays(in.Now),
+			DwellDays: ap.DwellDays(in.EvalTime),
 			Cycles:    gapCount[k] + 1,
 		})
 	}
@@ -270,7 +270,7 @@ func buildResolved(in Input, latest *report.Assessment, timeline map[findingKey]
 			continue
 		}
 		ap := timeline[k]
-		dwell := ap.DwellDays(in.Now)
+		dwell := ap.DwellDays(in.EvalTime)
 		resolved = append(resolved, ResolvedFinding{
 			ControlID: k.ControlID,
 			AssetID:   k.AssetID,

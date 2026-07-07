@@ -25,7 +25,7 @@ func computeMTTR(assessments []*report.Assessment) map[string]mttrEntry {
 	severityOf := make(map[string]string) // controlID:assetID → severity
 
 	for _, a := range assessments {
-		capturedAt := a.Run.Now
+		capturedAt := a.Run.EvalTime
 		currentKeys := make(map[string]struct{})
 
 		for i := range a.Findings {

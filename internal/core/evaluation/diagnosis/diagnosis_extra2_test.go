@@ -77,21 +77,21 @@ func TestExtractFieldPath_MultipleFields(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// buildNowSkewIssue
+// buildEvalTimeSkewIssue
 // ---------------------------------------------------------------------------
 
-func TestBuildNowSkewIssue_NoSkew(t *testing.T) {
+func TestBuildEvalTimeSkewIssue_NoSkew(t *testing.T) {
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	maxCaptured := time.Date(2026, 1, 14, 0, 0, 0, 0, time.UTC)
-	if issue := buildNowSkewIssue(now, maxCaptured); issue != nil {
+	if issue := buildEvalTimeSkewIssue(now, maxCaptured); issue != nil {
 		t.Fatal("no skew should return nil")
 	}
 }
 
-func TestBuildNowSkewIssue_WithSkew(t *testing.T) {
+func TestBuildEvalTimeSkewIssue_WithSkew(t *testing.T) {
 	now := time.Date(2026, 1, 14, 0, 0, 0, 0, time.UTC)
 	maxCaptured := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
-	issue := buildNowSkewIssue(now, maxCaptured)
+	issue := buildEvalTimeSkewIssue(now, maxCaptured)
 	if issue == nil {
 		t.Fatal("expected skew issue")
 	}
@@ -100,8 +100,8 @@ func TestBuildNowSkewIssue_WithSkew(t *testing.T) {
 	}
 }
 
-func TestBuildNowSkewIssue_ZeroTimes(t *testing.T) {
-	if issue := buildNowSkewIssue(time.Time{}, time.Time{}); issue != nil {
+func TestBuildEvalTimeSkewIssue_ZeroTimes(t *testing.T) {
+	if issue := buildEvalTimeSkewIssue(time.Time{}, time.Time{}); issue != nil {
 		t.Fatal("zero times should return nil")
 	}
 }

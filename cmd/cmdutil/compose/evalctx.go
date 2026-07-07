@@ -25,7 +25,7 @@ type EvalContextRequest struct {
 
 	// Common flag values (raw strings).
 	MaxUnsafeDuration string
-	NowTime           string
+	EvalTimeRaw       string
 	Format            string
 	FormatChanged     bool
 	IsJSONMode        bool
@@ -35,7 +35,7 @@ type EvalContextRequest struct {
 	SkipControlsValidation     bool // skip controls dir existence check (e.g., packs, stdin)
 	SkipObservationsValidation bool // skip observations dir existence check (e.g., stdin)
 	SkipMaxUnsafe              bool // skip --max-unsafe parsing
-	SkipClock                  bool // skip --now / clock resolution
+	SkipClock                  bool // skip --eval-time / clock resolution
 	SkipFormat                 bool // skip --format parsing
 
 	// AllowBuiltinFallback: when --controls was not set and no controls
@@ -63,7 +63,7 @@ type EvalContext struct {
 	// Parsed common flag values.
 	MaxUnsafe time.Duration
 	Clock     ports.Clock
-	Now       time.Time
+	EvalTime  time.Time
 	Format    appcontracts.OutputFormat
 }
 
@@ -163,17 +163,17 @@ func resolveFlags(ec *EvalContext, req EvalContextRequest) error {
 	}
 
 	if !req.SkipClock {
-		clock, err := ResolveClock(req.NowTime)
+		clock, err := ResolveClock(req.EvalTimeRaw)
 		if err != nil {
 			return err
 		}
 		ec.Clock = clock
 
-		now, err := ResolveNow(req.NowTime)
+		now, err := ResolveEvalTime(req.EvalTimeRaw)
 		if err != nil {
 			return err
 		}
-		ec.Now = now
+		ec.EvalTime = now
 	}
 
 	if !req.SkipFormat {

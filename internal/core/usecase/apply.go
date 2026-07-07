@@ -15,7 +15,7 @@ type ApplyRequest struct {
 	ControlsDir        string   `json:"controls_dir,omitempty"`
 	ObservationsDir    string   `json:"observations_dir,omitempty"`
 	MaxUnsafeDuration  string   `json:"max_unsafe_duration,omitempty"`
-	NowTime            string   `json:"now_time,omitempty"`
+	EvalTimeRaw        string   `json:"eval_time,omitempty"`
 	Format             string   `json:"format,omitempty"`
 	DryRun             bool     `json:"dry_run,omitempty"`
 	ExemptionFile      string   `json:"exemption_file,omitempty"`

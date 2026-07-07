@@ -49,7 +49,7 @@ func TestRun_NoViolations_ThresholdMismatch(t *testing.T) {
 		ViolationsFound:   0,
 		AttackSurface:     0,
 		MaxUnsafeDuration: 168 * time.Hour,
-		Now:               baseTime.Add(48 * time.Hour),
+		EvalTime:          baseTime.Add(48 * time.Hour),
 		PredicateEval:     mustPredicateEval(),
 	})
 
@@ -111,7 +111,7 @@ func TestRun_NoViolations_TimeSpanTooShort(t *testing.T) {
 		ViolationsFound:   0,
 		AttackSurface:     0,
 		MaxUnsafeDuration: 168 * time.Hour,
-		Now:               baseTime.Add(24 * time.Hour),
+		EvalTime:          baseTime.Add(24 * time.Hour),
 		PredicateEval:     mustPredicateEval(),
 	})
 
@@ -168,7 +168,7 @@ func TestRun_NoViolations_PredicateMismatch(t *testing.T) {
 		ViolationsFound:   0,
 		AttackSurface:     0,
 		MaxUnsafeDuration: 168 * time.Hour,
-		Now:               baseTime.Add(200 * time.Hour),
+		EvalTime:          baseTime.Add(200 * time.Hour),
 		PredicateEval:     mustPredicateEval(),
 	})
 
@@ -186,11 +186,11 @@ func TestRun_NoViolations_PredicateMismatch(t *testing.T) {
 	}
 }
 
-// TestRun_UnexpectedViolations_NowSkew tests that diagnostics detect
-// when the evaluation time (--now) is set before the latest snapshot timestamp,
+// TestRun_UnexpectedViolations_EvalTimeSkew tests that diagnostics detect
+// when the evaluation time (--eval-time) is set before the latest snapshot timestamp,
 // which could lead to incomplete or incorrect analysis.
-func TestRun_UnexpectedViolations_NowSkew(t *testing.T) {
-	// Setup: --now is before latest snapshot
+func TestRun_UnexpectedViolations_EvalTimeSkew(t *testing.T) {
+	// Setup: --eval-time is before latest snapshot
 	baseTime := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	latestSnapshot := baseTime.Add(200 * time.Hour)
 
@@ -216,7 +216,7 @@ func TestRun_UnexpectedViolations_NowSkew(t *testing.T) {
 		ViolationsFound:   1,
 		AttackSurface:     0,
 		MaxUnsafeDuration: 168 * time.Hour,
-		Now:               baseTime.Add(100 * time.Hour),
+		EvalTime:          baseTime.Add(100 * time.Hour),
 		PredicateEval:     mustPredicateEval(),
 	})
 
@@ -269,7 +269,7 @@ func TestRun_Summary(t *testing.T) {
 		ViolationsFound:   0,
 		AttackSurface:     0,
 		MaxUnsafeDuration: 168 * time.Hour,
-		Now:               baseTime.Add(240 * time.Hour),
+		EvalTime:          baseTime.Add(240 * time.Hour),
 		PredicateEval:     mustPredicateEval(),
 	})
 

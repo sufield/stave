@@ -33,7 +33,7 @@ apply_filtered() {
     tmp=$(mktemp)
     "$stave_bin" apply \
         --observations "$obs" \
-        --now 2026-05-10T12:00:00Z \
+        --eval-time 2026-05-10T12:00:00Z \
         --max-unsafe 168h --format json > "$tmp" 2>/dev/null || rc=$?
     rc=${rc:-0}
     if [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ]; then

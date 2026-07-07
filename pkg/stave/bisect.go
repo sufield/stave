@@ -30,7 +30,7 @@ type BisectInput struct {
 	ControlID   string
 	Mode        string
 	Format      string
-	Now         string
+	EvalTime    string
 	ResourceARN string
 	Logger      *slog.Logger
 }
@@ -74,10 +74,10 @@ func BisectControl(ctx context.Context, in BisectInput) (BisectOutput, error) {
 	}
 
 	var clock ports.Clock = ports.RealClock{}
-	if in.Now != "" {
-		t, parseErr := time.Parse(time.RFC3339, in.Now)
+	if in.EvalTime != "" {
+		t, parseErr := time.Parse(time.RFC3339, in.EvalTime)
 		if parseErr != nil {
-			return BisectOutput{}, fmt.Errorf("invalid --now: %w", parseErr)
+			return BisectOutput{}, fmt.Errorf("invalid --eval-time: %w", parseErr)
 		}
 		clock = ports.FixedClock(t)
 	}

@@ -38,7 +38,7 @@ type Request struct {
 	ControlsDir     string
 	ObservationsDir string
 	MaxUnsafe       string
-	Now             string
+	EvalTime        string
 	Sanitize        bool
 	Strict          bool
 	FixHints        bool
@@ -153,14 +153,14 @@ func parseParams(req Request) validateParams {
 		p.maxUnsafe = &dur
 	}
 
-	if req.Now != "" {
-		t, perr := time.Parse(time.RFC3339, req.Now)
+	if req.EvalTime != "" {
+		t, perr := time.Parse(time.RFC3339, req.EvalTime)
 		if perr != nil {
 			issue := diag.NewFinding(diag.RuleInvalidNowTime).
 				Error().
 				Remediation("Use RFC3339 format").
-				FixCommand("stave validate --now 2026-01-15T00:00:00Z").
-				Attribute("value", req.Now).
+				FixCommand("stave validate --eval-time 2026-01-15T00:00:00Z").
+				Attribute("value", req.EvalTime).
 				SensitiveAttribute("error", perr.Error()).
 				Build()
 			p.issues = append(p.issues, issue)
@@ -189,7 +189,7 @@ func executeValidateRun(ctx context.Context, req Request, params validateParams)
 	cfg := appvalidation.Config{
 		ControlsDir:     req.ControlsDir,
 		ObservationsDir: req.ObservationsDir,
-		NowTime:         params.nowTime,
+		EvalTimeRaw:     params.nowTime,
 		SanitizePaths:   req.Sanitize,
 		PredicateParser: ctlyaml.ParsePredicate,
 		PredicateEval:   celEval,

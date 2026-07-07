@@ -25,7 +25,7 @@ jobs:
             --controls stave/controls \
             --observations observations/ \
             --format json \
-            --now $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+            --eval-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
             > assessment.json
 
       # Exit code 3 = violations found

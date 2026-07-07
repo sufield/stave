@@ -171,8 +171,8 @@ func loadPeriodAssessments(ctx context.Context, dir string, start, end time.Time
 		if loadErr != nil {
 			continue
 		}
-		if (a.Run.Now.Equal(start) || a.Run.Now.After(start)) &&
-			(a.Run.Now.Equal(end) || a.Run.Now.Before(end)) {
+		if (a.Run.EvalTime.Equal(start) || a.Run.EvalTime.After(start)) &&
+			(a.Run.EvalTime.Equal(end) || a.Run.EvalTime.Before(end)) {
 			assessments = append(assessments, a)
 		}
 	}

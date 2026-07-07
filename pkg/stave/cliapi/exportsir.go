@@ -27,7 +27,7 @@ type ExportSIRConfig struct {
 	ControlsDir     string
 	ObservationsDir string
 	Format          string
-	Now             time.Time
+	EvalTime        time.Time
 	Validate        bool
 	AllowlistMode   string
 	ClosedWorld     bool
@@ -53,7 +53,7 @@ func ExportSIR(ctx context.Context, cfg ExportSIRConfig) (output []byte, validat
 	res, err := Apply(ctx, stave.Config{
 		ControlsDir:  cfg.ControlsDir,
 		SnapshotsDir: cfg.ObservationsDir,
-		Now:          cfg.Now,
+		EvalTime:     cfg.EvalTime,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("evaluate: %w", err)
@@ -76,7 +76,7 @@ func ExportSIR(ctx context.Context, cfg ExportSIRConfig) (output []byte, validat
 		if cfg.AllowlistMode == "full" {
 			facts = append(facts, sirfacts.AutoPropertyFacts(doc.Assets, res.Controls)...)
 		}
-		sirfacts.AnnotateFreshness(facts, cfg.Now)
+		sirfacts.AnnotateFreshness(facts, cfg.EvalTime)
 	}
 
 	if cfg.Validate {

@@ -47,18 +47,18 @@ func checkTimeSpan(input Input) *Insight {
 	return nil
 }
 
-func buildNowSkewIssue(now, maxCapturedAt time.Time) *Insight {
-	if now.IsZero() || maxCapturedAt.IsZero() || !now.Before(maxCapturedAt) {
+func buildEvalTimeSkewIssue(evalTime, maxCapturedAt time.Time) *Insight {
+	if evalTime.IsZero() || maxCapturedAt.IsZero() || !evalTime.Before(maxCapturedAt) {
 		return nil
 	}
 
 	return &Insight{
 		Case:   ScenarioViolationEvidence,
 		Signal: msgSkewedEvaluationTime,
-		Evidence: fmt.Sprintf("--now=%s but latest captured_at=%s",
-			fmtTime(now), fmtTime(maxCapturedAt)),
-		Action:  "Set --now to a time after or equal to latest snapshot",
-		Command: "stave apply --now " + fmtTime(maxCapturedAt),
+		Evidence: fmt.Sprintf("--eval-time=%s but latest captured_at=%s",
+			fmtTime(evalTime), fmtTime(maxCapturedAt)),
+		Action:  "Set --eval-time to a time after or equal to latest snapshot",
+		Command: "stave apply --eval-time " + fmtTime(maxCapturedAt),
 	}
 }
 

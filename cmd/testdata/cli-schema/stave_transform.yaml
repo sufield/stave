@@ -17,7 +17,7 @@ description: |-
 
     Inputs:  --in, -i   directory of raw AWS CLI JSON files (default: raw)
              --account   AWS account ID for filters whose input carries no ARN
-             --now       captured_at timestamp (RFC3339); defaults to now
+             --eval-time       captured_at timestamp (RFC3339); defaults to now
              --format, -f  summary format: text or json
     Outputs: one obs.v0.1 file written to --out (or stdout with --out -); a summary
              on stdout (stderr when --out -).
@@ -32,6 +32,9 @@ options:
     - name: coverage
       default_value: "false"
       usage: list the raw input shapes transform recognizes, then exit
+    - name: eval-time
+      usage: |
+        captured_at timestamp (RFC3339); defaults to the current time
     - name: format
       shorthand: f
       default_value: text
@@ -48,9 +51,6 @@ options:
       default_value: "false"
       usage: |
         lint the embedded jq filters (compile + shape checks), then exit
-    - name: now
-      usage: |
-        captured_at timestamp (RFC3339); defaults to the current time
     - name: out
       shorthand: o
       default_value: observations

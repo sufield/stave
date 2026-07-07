@@ -23,7 +23,7 @@ fmt_section "Findings — Data Governance and Lifecycle"
 # stave apply exits 3 when violations are found (expected here);
 # capture output and continue.
 "$stave_bin" apply --observations "$obs" \
-    --now 2026-01-15T00:00:00Z --max-unsafe 168h \
+    --eval-time 2026-01-15T00:00:00Z --max-unsafe 168h \
     --format json > "$tmp" 2>/dev/null || rc=$?
 rc=${rc:-0}
 if [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ]; then
@@ -34,6 +34,6 @@ jq '{summary, status, controls: ([.findings[].control_id] | sort | unique), find
 
 fmt_section "Encoding — fact projection check"
 "$stave_bin" export-sir --format jsonl --observations "$obs" \
-    --now 2026-01-15T00:00:00Z > "$tmp" 2>/dev/null
+    --eval-time 2026-01-15T00:00:00Z > "$tmp" 2>/dev/null
 python3 "$stave_root/examples/explain/verify_encoding.py" --strict \
     "$tmp" "$obs"

@@ -103,8 +103,8 @@ func TrendReport(ctx context.Context, cfg TrendConfig) (output []byte, warnings 
 	rep := trendReport{
 		GeneratedAt: time.Now().UTC(),
 		Period: period{
-			Start:    assessments[0].Run.Now,
-			End:      assessments[len(assessments)-1].Run.Now,
+			Start:    assessments[0].Run.EvalTime,
+			End:      assessments[len(assessments)-1].Run.EvalTime,
 			RunCount: len(assessments),
 		},
 		Summary: trendSummary{
@@ -174,7 +174,7 @@ func computePostureScore(a *report.Assessment, slaTrend []slaTrendMetric, chainD
 		SLATotal:       slaTotal,
 		HasSLA:         hasSLA,
 		Weights:        appscore.DefaultWeights(),
-		GeneratedAt:    a.Run.Now,
+		GeneratedAt:    a.Run.EvalTime,
 	})
 }
 

@@ -35,7 +35,7 @@ type Input struct {
 	Profile         string
 	TargetReadiness float64
 	Window          time.Duration
-	Now             time.Time
+	EvalTime        time.Time
 }
 
 // Predict computes the readiness timeline.
@@ -50,13 +50,13 @@ func Predict(in Input) *Prediction {
 	sorted := make([]*report.Assessment, len(in.Assessments))
 	copy(sorted, in.Assessments)
 	slices.SortFunc(sorted, func(a, b *report.Assessment) int {
-		return a.Run.Now.Compare(b.Run.Now)
+		return a.Run.EvalTime.Compare(b.Run.EvalTime)
 	})
 
 	latest := sorted[len(sorted)-1]
 
 	// Compute per-severity MTTR from history.
-	mttr := computeMTTR(sorted, in.Window, in.Now)
+	mttr := computeMTTR(sorted, in.Window, in.EvalTime)
 
 	// Count failing controls.
 	totalFindings := len(latest.Findings)
@@ -65,9 +65,9 @@ func Predict(in Input) *Prediction {
 			Profile:          in.Profile,
 			TargetReadiness:  in.TargetReadiness,
 			CurrentReadiness: 100,
-			ProjectedDate:    in.Now,
-			OptimisticDate:   in.Now,
-			PessimisticDate:  in.Now,
+			ProjectedDate:    in.EvalTime,
+			OptimisticDate:   in.EvalTime,
+			PessimisticDate:  in.EvalTime,
 		}
 	}
 
@@ -82,9 +82,9 @@ func Predict(in Input) *Prediction {
 			Profile:          in.Profile,
 			TargetReadiness:  in.TargetReadiness,
 			CurrentReadiness: currentReadiness,
-			ProjectedDate:    in.Now,
-			OptimisticDate:   in.Now,
-			PessimisticDate:  in.Now,
+			ProjectedDate:    in.EvalTime,
+			OptimisticDate:   in.EvalTime,
+			PessimisticDate:  in.EvalTime,
 		}
 	}
 
@@ -93,9 +93,9 @@ func Predict(in Input) *Prediction {
 	controlsToFix := min(int(math.Ceil(float64(totalFindings)*gap/100)), totalFindings)
 	projectedDays := int(float64(controlsToFix) * avgMTTRDays)
 
-	projected := in.Now.AddDate(0, 0, projectedDays)
-	optimistic := in.Now.AddDate(0, 0, int(float64(projectedDays)*0.6))
-	pessimistic := in.Now.AddDate(0, 0, int(float64(projectedDays)*1.4))
+	projected := in.EvalTime.AddDate(0, 0, projectedDays)
+	optimistic := in.EvalTime.AddDate(0, 0, int(float64(projectedDays)*0.6))
+	pessimistic := in.EvalTime.AddDate(0, 0, int(float64(projectedDays)*1.4))
 
 	// Acceleration: top critical findings.
 	var accelerators []Accelerator
@@ -138,7 +138,7 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 	var closed []mttrWindow
 
 	for _, a := range sorted {
-		if a.Run.Now.Before(cutoff) {
+		if a.Run.EvalTime.Before(cutoff) {
 			continue
 		}
 		currentKeys := make(map[fkey]struct{}, len(a.Findings))
@@ -148,13 +148,13 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 			if _, exists := open[k]; !exists {
 				open[k] = &mttrWindow{
 					sev:    a.Findings[i].SeverityLabel(),
-					openAt: a.Run.Now,
+					openAt: a.Run.EvalTime,
 				}
 			}
 		}
 		for k, w := range open {
 			if _, ok := currentKeys[k]; !ok {
-				w.closeAt = a.Run.Now
+				w.closeAt = a.Run.EvalTime
 				closed = append(closed, *w)
 				delete(open, k)
 			}

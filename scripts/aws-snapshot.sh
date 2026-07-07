@@ -170,7 +170,7 @@ done < <(jq -r '.Identities[]' "$RAW_DIR/ses_identities.json" 2>/dev/null)
 # ----- convert (the .jq filters are the single source of truth) ------------
 echo ""
 echo "==> Converting raw snapshots → obs.v0.1 (stave transform)"
-"$STAVE" transform -i "$RAW_DIR" -o "$OBS_DIR" --account "$ACCOUNT" --now "$NOW"
+"$STAVE" transform -i "$RAW_DIR" -o "$OBS_DIR" --account "$ACCOUNT" --eval-time "$NOW"
 
 echo ""
 echo "════════════════════════════════════════════════════════════"

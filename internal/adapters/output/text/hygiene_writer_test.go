@@ -19,7 +19,7 @@ func TestWriteHygieneReport(t *testing.T) {
 
 	req := appcontracts.HygieneAssessment{
 		AuditContext: appcontracts.AuditContext{
-			Now:             now,
+			EvalTime:        now,
 			PreviousAuditAt: previous,
 			LookbackWindow:  7 * 24 * time.Hour,
 			SLAWarning:      24 * time.Hour,

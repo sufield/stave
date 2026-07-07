@@ -37,7 +37,7 @@ type Options struct {
 	ConfigPath         string
 	UserConfigPath     string
 	MaxUnsafeDuration  string
-	NowTime            string
+	EvalTimeRaw        string
 	ObservationsSource ObservationSource
 	IntegrityManifest  string
 	IntegrityPublicKey string
@@ -45,11 +45,11 @@ type Options struct {
 }
 
 // ParsedOptions holds validated, parsed values ready for use.
-// Now is the parsed --now time; a zero value means "use real clock".
+// Now is the parsed --eval-time time; a zero value means "use real clock".
 type ParsedOptions struct {
 	ContextName       string
 	MaxUnsafeDuration time.Duration
-	Now               time.Time
+	EvalTime          time.Time
 	Source            ObservationSource
 }
 
@@ -73,7 +73,7 @@ func (o Options) Validate() (ParsedOptions, error) {
 		return ParsedOptions{}, err
 	}
 
-	now, err := o.parseNowTime()
+	now, err := o.parseEvalTime()
 	if err != nil {
 		return ParsedOptions{}, err
 	}
@@ -81,7 +81,7 @@ func (o Options) Validate() (ParsedOptions, error) {
 	return ParsedOptions{
 		ContextName:       o.resolveContextName(),
 		MaxUnsafeDuration: maxDuration,
-		Now:               now,
+		EvalTime:          now,
 		Source:            o.ObservationsSource,
 	}, nil
 }
@@ -95,7 +95,7 @@ func (o Options) normalize() Options {
 	o.ConfigPath = strings.TrimSpace(o.ConfigPath)
 	o.UserConfigPath = strings.TrimSpace(o.UserConfigPath)
 	o.MaxUnsafeDuration = strings.TrimSpace(o.MaxUnsafeDuration)
-	o.NowTime = strings.TrimSpace(o.NowTime)
+	o.EvalTimeRaw = strings.TrimSpace(o.EvalTimeRaw)
 	o.IntegrityManifest = strings.TrimSpace(o.IntegrityManifest)
 	o.IntegrityPublicKey = strings.TrimSpace(o.IntegrityPublicKey)
 	return o
@@ -146,15 +146,15 @@ func (o Options) parseMaxUnsafeDuration() (time.Duration, error) {
 	return d, nil
 }
 
-// parseNowTime parses the --now flag into a time.Time. A zero value means
+// parseEvalTime parses the --eval-time flag into a time.Time. A zero value means
 // the flag was not set; the caller decides which clock implementation to use.
-func (o Options) parseNowTime() (time.Time, error) {
-	if o.NowTime == "" {
+func (o Options) parseEvalTime() (time.Time, error) {
+	if o.EvalTimeRaw == "" {
 		return time.Time{}, nil
 	}
-	t, err := time.Parse(time.RFC3339, o.NowTime)
+	t, err := time.Parse(time.RFC3339, o.EvalTimeRaw)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("invalid timestamp %q (use RFC3339: 2026-01-15T00:00:00Z)", o.NowTime)
+		return time.Time{}, fmt.Errorf("invalid timestamp %q (use RFC3339: 2026-01-15T00:00:00Z)", o.EvalTimeRaw)
 	}
 	return t.UTC(), nil
 }

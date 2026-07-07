@@ -401,8 +401,8 @@ func TestEvaluator_PerControlThreshold_DaySyntax(t *testing.T) {
 }
 
 // TestEvaluator_DeterministicNow tests that:
-// - When --now is set (FixedClock), the explicit time is used as reference
-// - When --now is not set (RealClock), the last snapshot's CapturedAt is used
+// - When --eval-time is set (FixedClock), the explicit time is used as reference
+// - When --eval-time is not set (RealClock), the last snapshot's CapturedAt is used
 func TestEvaluator_DeterministicNow(t *testing.T) {
 	t.Parallel()
 	controls := []policy.ControlDefinition{
@@ -434,20 +434,20 @@ func TestEvaluator_DeterministicNow(t *testing.T) {
 
 	maxUnsafe := 168 * time.Hour // 7 days
 
-	// FixedClock: --now is honored as the reference time
+	// FixedClock: --eval-time is honored as the reference time
 	fixedTime := mustParseTime("2026-01-15T00:00:00Z")
 	fixedClock := clockadp.FixedClock(fixedTime)
 	evaluator := NewEvaluator(controls, maxUnsafe, fixedClock)
 	result := evaluator.Evaluate(snapshots)
 
-	if !result.Run.Now.Equal(fixedTime) {
-		t.Errorf("FixedClock: expected now=%v, got %v", fixedTime, result.Run.Now)
+	if !result.Run.EvalTime.Equal(fixedTime) {
+		t.Errorf("FixedClock: expected now=%v, got %v", fixedTime, result.Run.EvalTime)
 	}
 
 	// Same FixedClock produces identical results (deterministic)
 	result2 := evaluator.Evaluate(snapshots)
-	if !result.Run.Now.Equal(result2.Run.Now) {
-		t.Errorf("FixedClock: results have different 'now': %v vs %v", result.Run.Now, result2.Run.Now)
+	if !result.Run.EvalTime.Equal(result2.Run.EvalTime) {
+		t.Errorf("FixedClock: results have different 'now': %v vs %v", result.Run.EvalTime, result2.Run.EvalTime)
 	}
 	if result.Summary.Violations != result2.Summary.Violations {
 		t.Errorf("FixedClock: different violations: %d vs %d", result.Summary.Violations, result2.Summary.Violations)

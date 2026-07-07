@@ -16,7 +16,7 @@ The original report describes **object-level** public-read ACLs, not bucket-leve
 ## Engine Behavior Notes
 
 - Stave only reports **currently unsafe** assets. A T1-unsafe / T2-safe pattern produces 0 findings (the engine sees the asset as remediated). Both snapshots must show the unsafe state for the finding to fire.
-- The engine caps `--now` to the latest observation timestamp. With observations in 2017, the effective `now` is 2017-02-09.
+- The engine caps `--eval-time` to the latest observation timestamp. With observations in 2017, the effective `now` is 2017-02-09.
 - The duration threshold is strictly greater than (`>`), not `>=`. A 168h duration (exactly 7 days) does not fire — T2 must be >7 days after T1.
 - Exposure via object-level ACL is represented as `public_read_via_acl=true` at the bucket level.
 

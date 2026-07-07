@@ -20,7 +20,7 @@ func TestWriteFindings_EmptyFindings(t *testing.T) {
 	result := evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "0.1.0",
-			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			EvalTime:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
 			Snapshots:         2,
 			EvaluatedState:    "deployed",
@@ -67,7 +67,7 @@ func TestWriteFindings_SARIFStructure(t *testing.T) {
 	result := evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "0.2.0",
-			Now:               now,
+			EvalTime:          now,
 			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
 			Snapshots:         2,
 			EvaluatedState:    "deployed",
@@ -185,7 +185,7 @@ func TestWriteFindings_RuleDeduplication(t *testing.T) {
 	result := evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "0.1.0",
-			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			EvalTime:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
 			Snapshots:         2,
 			EvaluatedState:    "deployed",
@@ -269,7 +269,7 @@ func TestWriteFindings_ChainMemberProperties(t *testing.T) {
 	result := evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "0.1.0",
-			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			EvalTime:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
 			Snapshots:         2,
 			EvaluatedState:    "deployed",
@@ -358,7 +358,7 @@ func TestWriteFindings_LogicalLocation(t *testing.T) {
 	result := evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "0.1.0",
-			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			EvalTime:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
 			Snapshots:         2,
 			EvaluatedState:    "deployed",

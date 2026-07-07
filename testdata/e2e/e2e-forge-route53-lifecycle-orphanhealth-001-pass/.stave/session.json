@@ -1,4 +1,4 @@
 {
-  "last_command": "apply --controls controls --observations observations --now 2026-01-15T00:00:00Z",
+  "last_command": "apply --controls controls --observations observations --eval-time 2026-01-15T00:00:00Z",
   "when_utc": "2026-04-26T17:39:48.196346182Z"
 }

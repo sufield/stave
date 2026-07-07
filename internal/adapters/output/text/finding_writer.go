@@ -171,7 +171,7 @@ func (w *FindingWriter) writeHeader(d *drawer, result *evaluation.ComplianceRepo
 	d.ln("Evaluation Results")
 	d.ln("==================")
 	d.f("\nRun: %s (max-unsafe: %s, snapshots: %d)\n\n",
-		result.Run.Now.Format("2006-01-02 15:04:05 UTC"),
+		result.Run.EvalTime.Format("2006-01-02 15:04:05 UTC"),
 		result.Run.MaxUnsafeDuration.String(),
 		result.Run.Snapshots)
 	d.ln("Summary")

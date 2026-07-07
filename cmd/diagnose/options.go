@@ -19,7 +19,7 @@ type diagnoseOptions struct {
 	ObservationsDir   string
 	PreviousOutput    string
 	MaxUnsafeDuration string
-	NowTime           string
+	EvalTimeRaw       string
 	Format            string
 	Cases             []string
 	SignalContains    string
@@ -39,7 +39,9 @@ func (o *diagnoseOptions) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory (inferred from project root if omitted)")
 	f.StringVarP(&o.PreviousOutput, "previous-output", "p", "", "Path to existing apply output JSON (optional; if omitted, runs apply internally)")
 	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration (e.g., 24h, 7d)"))
-	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339). Required for deterministic output")
+	f.StringVar(&o.EvalTimeRaw, "eval-time", "", "Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.")
+	f.StringVar(&o.EvalTimeRaw, "now", "", "Alias for --eval-time")
+	_ = f.MarkDeprecated("now", "please use --eval-time instead")
 	f.StringVarP(&o.Format, "format", "f", "text", "Output format: text or json")
 	f.BoolVar(&o.NoPager, "no-pager", false, "never page output, even on a terminal")
 	f.StringSliceVar(&o.Cases, "case", nil, "Filter to one or more diagnostic case values")
@@ -81,7 +83,7 @@ func toConfig(o *diagnoseOptions, flags cliflags.GlobalFlags, stdout, stderr io.
 		ControlsChanged:      o.controlsSet,
 		ObsChanged:           o.obsSet,
 		MaxUnsafeDuration:    o.MaxUnsafeDuration,
-		NowTime:              o.NowTime,
+		EvalTimeRaw:          o.EvalTimeRaw,
 		Format:               o.Format,
 		FormatChanged:        o.formatSet,
 		AllowBuiltinFallback: true,

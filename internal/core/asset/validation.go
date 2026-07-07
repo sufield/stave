@@ -280,13 +280,13 @@ func (s Snapshots) createNowPrecedenceError(now time.Time, lifecycle *snapshotLi
 	latest := lifecycle.FormatLatest()
 	issue := diag.NewFinding(diag.RuleNowBeforeSnapshots).
 		Error().
-		Remediation("Set --now >= latest snapshot timestamp").
+		Remediation("Set --eval-time >= latest snapshot timestamp").
 		Attributes(map[string]string{
 			"now":             now.Format(time.RFC3339),
 			"latest_snapshot": latest,
 		}).
 		Build()
-	issue.FixCommand = "stave validate --now " + latest
+	issue.FixCommand = "stave validate --eval-time " + latest
 	return issue
 }
 

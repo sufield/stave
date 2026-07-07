@@ -101,7 +101,7 @@ EOF
 
 ### 6. Run Stave
 ```
-./stave apply --observations ~/bf-obs/ --now 2026-01-02T00:00:00Z
+./stave apply --observations ~/bf-obs/ --eval-time 2026-01-02T00:00:00Z
 ```
 Expect **1 violation**: `CTL.IAM.ESCALATE.CREATEACCESSKEY.001` on that user.
 

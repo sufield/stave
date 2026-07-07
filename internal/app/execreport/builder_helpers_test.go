@@ -19,7 +19,7 @@ func TestAssessmentClosestTo_PicksWithinWindow(t *testing.T) {
 	target := now.AddDate(0, 0, -30)
 
 	mk := func(d time.Time) *corereport.Assessment {
-		return &corereport.Assessment{Run: evaluation.RunInfo{Now: d}}
+		return &corereport.Assessment{Run: evaluation.RunInfo{EvalTime: d}}
 	}
 
 	assessments := []*corereport.Assessment{
@@ -36,7 +36,7 @@ func TestAssessmentClosestTo_PicksWithinWindow(t *testing.T) {
 	}
 	want := assessments[2]
 	if got != want {
-		t.Errorf("got %v, want %v", got.Run.Now, want.Run.Now)
+		t.Errorf("got %v, want %v", got.Run.EvalTime, want.Run.EvalTime)
 	}
 }
 
@@ -50,7 +50,7 @@ func TestAssessmentClosestTo_FallbackOldest(t *testing.T) {
 	target := now.AddDate(0, 0, -30)
 
 	mk := func(d time.Time) *corereport.Assessment {
-		return &corereport.Assessment{Run: evaluation.RunInfo{Now: d}}
+		return &corereport.Assessment{Run: evaluation.RunInfo{EvalTime: d}}
 	}
 
 	assessments := []*corereport.Assessment{
@@ -63,7 +63,7 @@ func TestAssessmentClosestTo_FallbackOldest(t *testing.T) {
 		t.Fatal("expected an assessment")
 	}
 	if got != assessments[0] {
-		t.Errorf("got %v, want oldest %v", got.Run.Now, assessments[0].Run.Now)
+		t.Errorf("got %v, want oldest %v", got.Run.EvalTime, assessments[0].Run.EvalTime)
 	}
 }
 
@@ -76,7 +76,7 @@ func TestAssessmentClosestTo_SinglePointHistory(t *testing.T) {
 	target := now.AddDate(0, 0, -30)
 
 	assessments := []*corereport.Assessment{
-		{Run: evaluation.RunInfo{Now: now}},
+		{Run: evaluation.RunInfo{EvalTime: now}},
 	}
 
 	if _, ok := assessmentClosestTo(assessments, target); ok {

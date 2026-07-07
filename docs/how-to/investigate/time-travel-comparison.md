@@ -10,7 +10,7 @@ Evaluate security posture at two points in time and see what changed.
 stave apply \
   --snapshot snapshots/2026-01-01.json \
   --controls controls \
-  --now 2026-01-01T00:00:00Z \
+  --eval-time 2026-01-01T00:00:00Z \
   --format json \
   > assessment-jan-01.json
 ```
@@ -21,7 +21,7 @@ stave apply \
 stave apply \
   --snapshot snapshots/2026-03-31.json \
   --controls controls \
-  --now 2026-03-31T00:00:00Z \
+  --eval-time 2026-03-31T00:00:00Z \
   --format json \
   > assessment-mar-31.json
 ```

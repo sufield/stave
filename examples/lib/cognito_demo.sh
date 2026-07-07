@@ -83,7 +83,7 @@ cognito_demo_run() {
         local out
         out=$("$stave_bin" apply \
             --observations "$obs_dir" \
-            --now 2026-05-09T12:00:00Z \
+            --eval-time 2026-05-09T12:00:00Z \
             --format json 2>/dev/null) || true
 
         if [[ "$raw_mode" == "1" ]]; then

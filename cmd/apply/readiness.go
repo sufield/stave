@@ -18,7 +18,7 @@ type ReadinessConfig struct {
 	ControlsDir       string
 	ObservationsDir   string
 	MaxUnsafeDuration time.Duration
-	Now               time.Time
+	EvalTime          time.Time
 	Format            cmdutil.OutputFormat
 	Quiet             bool
 	Sanitize          bool
@@ -38,7 +38,7 @@ func runDryRun(ctx context.Context, cfg ReadinessConfig) error {
 		ControlsDir:            cfg.ControlsDir,
 		ObservationsDir:        cfg.ObservationsDir,
 		MaxUnsafe:              cfg.MaxUnsafeDuration,
-		Now:                    cfg.Now,
+		EvalTime:               cfg.EvalTime,
 		Sanitize:               cfg.Sanitize,
 		Format:                 string(cfg.Format),
 		ControlsFlagSet:        cfg.ControlsFlagSet,

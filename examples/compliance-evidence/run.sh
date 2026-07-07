@@ -50,12 +50,12 @@ run_one() {
     "$stave_bin" apply \
         --controls "$controls" \
         --observations "$obs_dir" \
-        --now 2026-01-09T00:00:00Z \
+        --eval-time 2026-01-09T00:00:00Z \
         --format json > "$findings" 2>/dev/null || true
     "$stave_bin" export-sir \
         --controls "$controls" \
         --observations "$obs_dir" \
-        --now 2026-01-09T00:00:00Z \
+        --eval-time 2026-01-09T00:00:00Z \
         --format jsonl > "$facts" 2>/dev/null
 
     echo "=== $label / $framework ==="
@@ -65,7 +65,7 @@ run_one() {
         --facts "$facts" \
         --catalog "$catalog" \
         --output "$out" \
-        --now 2026-01-09T00:00:00Z
+        --eval-time 2026-01-09T00:00:00Z
     echo
 }
 

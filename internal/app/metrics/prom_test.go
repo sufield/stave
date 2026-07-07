@@ -28,7 +28,7 @@ func TestWrite_ContainsPostureScore(t *testing.T) {
 	var buf bytes.Buffer
 	Write(&buf, Input{
 		Assessment: &report.Assessment{
-			Run:      evaluation.RunInfo{Now: time.Now()},
+			Run:      evaluation.RunInfo{EvalTime: time.Now()},
 			Findings: []remediation.Finding{},
 		},
 		PostureScore: 81.2,

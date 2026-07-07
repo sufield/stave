@@ -155,19 +155,29 @@ func assemble(covered map[toolDomain]map[string]struct{}, inventories []ToolInve
 		store(idx, td.tool, td.domain, dc)
 	}
 
+	// Group and deduplicate checks by tool/domain
+	invChecks := make(map[toolDomain][]string)
+	invSeen := make(map[toolDomain]map[string]struct{})
 	for _, inv := range inventories {
-		dc := lookup(idx, inv.Tool, inv.Domain)
-		uniqueChecks := make([]string, 0, len(inv.Checks))
-		seen := make(map[string]struct{}, len(inv.Checks))
+		td := toolDomain{tool: inv.Tool, domain: inv.Domain}
+		seen, exists := invSeen[td]
+		if !exists {
+			seen = make(map[string]struct{})
+			invSeen[td] = seen
+		}
 		for _, id := range inv.Checks {
 			if _, ok := seen[id]; !ok {
 				seen[id] = struct{}{}
-				uniqueChecks = append(uniqueChecks, id)
+				invChecks[td] = append(invChecks[td], id)
 			}
 		}
+	}
+
+	for td, uniqueChecks := range invChecks {
+		dc := lookup(idx, td.tool, td.domain)
 		dc.Total = len(uniqueChecks)
-		dc.NotCoveredChecks = missingChecks(uniqueChecks, covered[toolDomain{tool: inv.Tool, domain: inv.Domain}])
-		store(idx, inv.Tool, inv.Domain, dc)
+		dc.NotCoveredChecks = missingChecks(uniqueChecks, covered[td])
+		store(idx, td.tool, td.domain, dc)
 	}
 
 	return idx

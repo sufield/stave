@@ -15,7 +15,7 @@ func TestRunInfo_OfflineField(t *testing.T) {
 	info := evaluation.RunInfo{
 		StaveVersion:      "test",
 		Offline:           true,
-		Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+		EvalTime:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 		MaxUnsafeDuration: kernel.Duration(168 * time.Hour),
 		Snapshots:         2,
 		EvaluatedState:    "deployed",

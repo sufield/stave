@@ -22,7 +22,7 @@ func makeAssessment(t time.Time, findings []evaluation.Finding, totalAssets, exp
 	return &report.Assessment{
 		SchemaVersion: "out.v0.1",
 		Kind:          report.KindAssessment,
-		Run:           evaluation.RunInfo{Now: t, EvaluatedState: "deployed"},
+		Run:           evaluation.RunInfo{EvalTime: t, EvaluatedState: "deployed"},
 		Summary:       evaluation.ComplianceSummary{TotalAssets: totalAssets, ExposedResources: exposed, Violations: len(findings)},
 		Findings:      rFindings,
 	}

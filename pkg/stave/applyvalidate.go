@@ -54,7 +54,7 @@ func NewReadinessEvaluator(
 			ControlsDir:       ctlDir,
 			ObservationsDir:   obsDir,
 			MaxUnsafeDuration: maxUnsafeDuration,
-			NowTime:           now,
+			EvalTimeRaw:       now,
 			SanitizePaths:     sanitize,
 			PredicateParser:   ctlyaml.ParsePredicate,
 		})

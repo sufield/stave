@@ -141,7 +141,7 @@ func TestRun_WritesAndCheckDetectsDrift(t *testing.T) {
 		Churn:      writeTemp(t, dir, "churn.txt", sampleChurn),
 		Out:        filepath.Join(dir, "baseline.md"),
 		JSON:       filepath.Join(dir, "baseline.json"),
-		Now:        "2026-06-13",
+		EvalTime:   "2026-06-13",
 		Commit:     "abc1234",
 		Stderr:     os.Stderr,
 	}

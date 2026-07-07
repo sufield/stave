@@ -43,7 +43,7 @@ func ForecastPosture(ctx context.Context, cfg ForecastConfig) ([]byte, []string,
 	}
 
 	slices.SortFunc(assessments, func(a, b *report.Assessment) int {
-		return a.Run.Now.Compare(b.Run.Now)
+		return a.Run.EvalTime.Compare(b.Run.EvalTime)
 	})
 
 	scoreHistory := make([]float64, len(assessments))
@@ -89,7 +89,7 @@ func computeForecastScore(a *report.Assessment) float64 {
 		Findings:      a.Findings,
 		ChainFindings: a.ChainFindings,
 		Weights:       appscore.DefaultWeights(),
-		GeneratedAt:   a.Run.Now,
+		GeneratedAt:   a.Run.EvalTime,
 	}).Score
 }
 
@@ -111,13 +111,13 @@ func buildMTTRHistory(assessments []*report.Assessment) map[string][]float64 {
 			if _, exists := open[k]; !exists {
 				open[k] = &window{
 					sev:    a.Findings[i].SeverityLabel(),
-					openAt: a.Run.Now,
+					openAt: a.Run.EvalTime,
 				}
 			}
 		}
 		for k, w := range open {
 			if _, ok := currentKeys[k]; !ok {
-				hours := a.Run.Now.Sub(w.openAt).Hours()
+				hours := a.Run.EvalTime.Sub(w.openAt).Hours()
 				sevTotals[w.sev] = append(sevTotals[w.sev], hours)
 				delete(open, k)
 			}

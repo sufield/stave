@@ -54,7 +54,7 @@ type GateConfig struct {
 	ControlsDir     string
 	ObservationsDir string
 	MaxUnsafe       time.Duration
-	Now             time.Time
+	EvalTime        time.Time
 	Sanitizer       kernel.Sanitizer
 }
 
@@ -147,7 +147,7 @@ func (r *GateResult) MergeTeamVerdict(teamID string, teamPassed bool, teamReason
 // Wires the same FindingsCounter / BaselineComparer / OverdueCounter
 // adapters the CLI uses, so library and CLI agree on every verdict.
 //
-// Tests that want determinism set GateConfig.Now and pre-place
+// Tests that want determinism set GateConfig.EvalTime and pre-place
 // fixtures at the path inputs.
 func Gate(ctx context.Context, cfg GateConfig) (*GateResult, error) {
 	if cfg.Policy == "" {
@@ -193,9 +193,9 @@ func Gate(ctx context.Context, cfg GateConfig) (*GateResult, error) {
 		ObservationsDir:   cfg.ObservationsDir,
 		MaxUnsafeDuration: cfg.MaxUnsafe,
 	}
-	if !cfg.Now.IsZero() {
-		now := cfg.Now
-		req.Now = &now
+	if !cfg.EvalTime.IsZero() {
+		now := cfg.EvalTime
+		req.EvalTime = &now
 	}
 	deps := usecase.GateDeps{
 		FindingsCounter:  findingsCounter,

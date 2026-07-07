@@ -40,7 +40,7 @@ func TestComputeItems_VendorScopedControlSkipsForeignVendor(t *testing.T) {
 		Controls:                []policy.ControlDefinition{ctl},
 		Snapshots:               snapshots,
 		GlobalMaxUnsafeDuration: 24 * time.Hour,
-		Now:                     now,
+		EvalTime:                now,
 		PredicateEval:           eval,
 	})
 	if len(items) != 0 {
@@ -75,7 +75,7 @@ func TestComputeItems_UniversalControlAppliesToAllVendors(t *testing.T) {
 		Controls:                []policy.ControlDefinition{ctl},
 		Snapshots:               snapshots,
 		GlobalMaxUnsafeDuration: 24 * time.Hour,
-		Now:                     now,
+		EvalTime:                now,
 		PredicateEval:           eval,
 	})
 	if len(items) != 1 {
@@ -115,7 +115,7 @@ func TestComputeItems_ExemptedAssetSkippedFromRisk(t *testing.T) {
 		Controls:                []policy.ControlDefinition{ctl},
 		Snapshots:               snapshots,
 		GlobalMaxUnsafeDuration: 24 * time.Hour,
-		Now:                     now,
+		EvalTime:                now,
 		PredicateEval:           eval,
 		Exemptions:              exemptions,
 	})
@@ -158,7 +158,7 @@ func TestComputeItems_SuppressedFindingExcluded(t *testing.T) {
 		Controls:                []policy.ControlDefinition{ctl},
 		Snapshots:               snapshots,
 		GlobalMaxUnsafeDuration: 24 * time.Hour,
-		Now:                     now,
+		EvalTime:                now,
 		PredicateEval:           eval,
 		SuppressedFindings:      suppressed,
 	})
@@ -199,7 +199,7 @@ func TestComputeItems_DerivedSecurityState_AcksDontTriggerAtRisk(t *testing.T) {
 		Controls:                []policy.ControlDefinition{ctl},
 		Snapshots:               snapshots,
 		GlobalMaxUnsafeDuration: 24 * time.Hour,
-		Now:                     now,
+		EvalTime:                now,
 		PredicateEval:           eval,
 		SuppressedFindings:      suppressed,
 	})

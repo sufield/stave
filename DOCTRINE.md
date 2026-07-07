@@ -59,7 +59,7 @@ surfaces verbatim into output — the *why* travels with the *what*.
 
 ## 4. Determinism Over Probability
 
-Same inputs + same `--now` → byte-identical output. Every run. This
+Same inputs + same `--eval-time` → byte-identical output. Every run. This
 is not a feature; it's the condition that lets the verdict be
 *evidence* instead of a vendor's claim. An auditor can re-run a
 snapshot and get the same result. Two commands can compose because
@@ -68,7 +68,7 @@ one's output is trustworthy as another's input.
 **In the code:** the predicate engine is CEL, deterministic and
 non-Turing-complete. Golden tests pin every fixture's output
 byte-for-byte (`make regenerate-goldens` regenerates, categorizes the
-diff, and refuses BEHAVIORAL drift silently). `--now` lets CI fix the
+diff, and refuses BEHAVIORAL drift silently). `--eval-time` lets CI fix the
 clock. No ML in the evaluation path — a model can *draft* a control;
 the catalog decides.
 

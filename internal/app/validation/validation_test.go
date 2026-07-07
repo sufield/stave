@@ -33,7 +33,7 @@ func TestResult_HasWarnings_NilResult(t *testing.T) {
 
 func TestValidateLoaded_Empty(t *testing.T) {
 	result := ValidateLoaded(Input{
-		NowTime:           time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
+		EvalTimeRaw:       time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 		MaxUnsafeDuration: 24 * time.Hour,
 	})
 	// No controls = warning; ValidateLoaded with no controls adds a warning,
@@ -72,7 +72,7 @@ func TestValidateLoaded_WithControls(t *testing.T) {
 	result := ValidateLoaded(Input{
 		Controls:          []policy.ControlDefinition{ctl},
 		Snapshots:         []asset.Snapshot{snap},
-		NowTime:           time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
+		EvalTimeRaw:       time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 		MaxUnsafeDuration: 24 * time.Hour,
 	})
 
@@ -92,7 +92,7 @@ func TestValidateLoaded_NoControlsWarning(t *testing.T) {
 		Snapshots: []asset.Snapshot{
 			{CapturedAt: time.Date(2026, 1, 14, 0, 0, 0, 0, time.UTC)},
 		},
-		NowTime:           time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
+		EvalTimeRaw:       time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 		MaxUnsafeDuration: 24 * time.Hour,
 	})
 	if !result.HasWarnings() {

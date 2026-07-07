@@ -59,7 +59,7 @@ type POAMRisk struct {
 type Input struct {
 	Findings   []remediation.Finding
 	SystemUUID string
-	Now        time.Time
+	EvalTime   time.Time
 }
 
 // Generate produces an OSCAL POA&M from assessment findings.
@@ -68,7 +68,7 @@ func Generate(in Input) *POAM {
 		UUID: deterministicUUID("poam", in.SystemUUID),
 		Metadata: POAMMetadata{
 			Title:        "Stave POA&M — Plan of Action and Milestones",
-			LastModified: in.Now.UTC().Format(time.RFC3339),
+			LastModified: in.EvalTime.UTC().Format(time.RFC3339),
 			Version:      "1.0",
 			OSCALVersion: "1.1.2",
 		},
@@ -97,7 +97,7 @@ func Generate(in Input) *POAM {
 		}
 
 		if dl, ok := f.SLADeadlineValue(); ok {
-			deadline := in.Now.Add(time.Duration(dl) * time.Hour)
+			deadline := in.EvalTime.Add(time.Duration(dl) * time.Hour)
 			item.ScheduledCompletionDate = deadline.Format("2006-01-02")
 		}
 

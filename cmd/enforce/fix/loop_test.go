@@ -25,7 +25,7 @@ func TestBuildFixLoopReport(t *testing.T) {
 	}
 	v := report.Attestation{
 		Run: report.AttestationRunInfo{
-			Now:             time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
+			EvalTime:        time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
 			BeforeSnapshots: 2,
 			AfterSnapshots:  2,
 		},
@@ -60,7 +60,7 @@ func TestRunFixLoopWritesArtifacts(t *testing.T) {
 		ControlsDir: filepath.Join(fixture, "controls"),
 		OutDir:      outDir,
 		MaxUnsafe:   "168h",
-		Now:         "2026-01-11T00:00:00Z",
+		EvalTime:    "2026-01-11T00:00:00Z",
 		Force:       true,
 	}, &bytes.Buffer{}, &bytes.Buffer{})
 	if loopErr != nil {

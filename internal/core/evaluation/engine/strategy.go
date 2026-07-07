@@ -100,7 +100,7 @@ func emitViolationFinding(
 		ExposureLifecycle: t,
 		Control:           ctl,
 		Threshold:         maxUnsafe,
-		Now:               now,
+		EvalTime:          now,
 		Identities:        ids.At(t.LastObservedAt()),
 		PredicateParser:   deps.PredicateParser(),
 	})

@@ -24,11 +24,11 @@ import (
 // ---------------------------------------------------------------------------
 
 // ReportOpts returns cmp.Options tuned for ComplianceReport comparison:
-// - Ignores non-deterministic fields (Run.Now, timestamps)
+// - Ignores non-deterministic fields (Run.EvalTime, timestamps)
 // - Sorts findings and checks by control+asset ID for order-insensitive comparison
 func ReportOpts() cmp.Options {
 	return cmp.Options{
-		cmpopts.IgnoreFields(evaluation.RunInfo{}, "Now", "StaveVersion"),
+		cmpopts.IgnoreFields(evaluation.RunInfo{}, "EvalTime", "StaveVersion"),
 		cmpopts.IgnoreFields(evaluation.Evidence{}, "FirstUnsafeAt", "LastSeenUnsafeAt"),
 		cmpopts.SortSlices(func(a, b evaluation.Finding) bool {
 			if a.ControlID != b.ControlID {

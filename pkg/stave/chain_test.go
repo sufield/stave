@@ -19,7 +19,7 @@ func TestApply_WithoutChainsDir(t *testing.T) {
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: "../../testdata/e2e/e2e-h1-shopify-1021906/observations",
 		ControlsDir:  "../../testdata/e2e/e2e-h1-shopify-1021906/controls",
-		Now:          time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
+		EvalTime:     time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
 	})
 	if err != nil {
 		t.Fatalf("Apply: %v", err)
@@ -76,7 +76,7 @@ postconditions:
 		SnapshotsDir: "../../testdata/e2e/e2e-h1-shopify-1021906/observations",
 		ControlsDir:  "../../testdata/e2e/e2e-h1-shopify-1021906/controls",
 		ChainsDir:    chainsDir,
-		Now:          time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
+		EvalTime:     time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
 	})
 	if err != nil {
 		t.Fatalf("Apply: %v", err)
@@ -149,7 +149,7 @@ func TestApply_CrossAssetMarkerChainFires(t *testing.T) {
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: "../../examples/cognito-iteration2-unauth/fixtures/cross-resource-config/observations",
 		ChainsDir:    "../../chains",
-		Now:          time.Date(2026, 5, 9, 0, 0, 0, 0, time.UTC),
+		EvalTime:     time.Date(2026, 5, 9, 0, 0, 0, 0, time.UTC),
 	})
 	if err != nil {
 		t.Fatalf("Apply: %v", err)

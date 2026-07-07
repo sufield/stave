@@ -57,7 +57,7 @@ func BuildReport(ctx context.Context, in ReportInput, now time.Time) ([]byte, er
 		TeamManifestPath: in.TeamManifest,
 		Title:            in.Title,
 		Period:           in.Period,
-		Now:              now,
+		EvalTime:         now,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("%w: %w", err, ErrInvalidInput)

@@ -40,7 +40,7 @@ func TestComputeItems_DisappearingAsset(t *testing.T) {
 		Controls:                []policy.ControlDefinition{ctl},
 		Snapshots:               []asset.Snapshot{snap1, snap2},
 		GlobalMaxUnsafeDuration: 24 * time.Hour,
-		Now:                     now,
+		EvalTime:                now,
 		PredicateEval: func(ctl policy.ControlDefinition, a asset.Asset, identities []asset.CloudIdentity) (bool, error) {
 			// Always unsafe for this test
 			return true, nil

@@ -73,7 +73,7 @@ mkdir -p observations
 stave apply \
   --observations observations \
   --max-unsafe 0s \
-  --now $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+  --eval-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
   --format text
 ```
 

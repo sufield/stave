@@ -14,7 +14,7 @@ type Input struct {
 	Controls          []policy.ControlDefinition
 	Snapshots         []asset.Snapshot
 	MaxUnsafeDuration time.Duration
-	NowTime           time.Time
+	EvalTimeRaw       time.Time
 	PredicateParser   policy.PredicateParser
 	PredicateEval     policy.PredicateEval
 }
@@ -101,7 +101,7 @@ func ValidateLoaded(input Input) Report {
 	}
 
 	// 2. Validate snapshots.
-	issues.RecordAll(asset.Snapshots(input.Snapshots).ValidateAll(input.NowTime, input.MaxUnsafeDuration))
+	issues.RecordAll(asset.Snapshots(input.Snapshots).ValidateAll(input.EvalTimeRaw, input.MaxUnsafeDuration))
 
 	// 3. Cross-model consistency checks.
 	if len(input.Controls) > 0 && len(input.Snapshots) > 0 {

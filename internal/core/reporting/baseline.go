@@ -55,8 +55,8 @@ func BaselineSave(ctx context.Context, req BaselineSaveRequest, deps BaselineSav
 	}
 
 	now := deps.Clock.Now()
-	if req.Now != nil {
-		now = *req.Now
+	if req.EvalTime != nil {
+		now = *req.EvalTime
 	}
 	createdAt := now.UTC()
 
@@ -205,7 +205,7 @@ func compareBaselineFindings(a, b BaselineFinding) int {
 type BaselineSaveRequest struct {
 	EvaluationPath string     `json:"evaluation_path"`
 	OutputPath     string     `json:"output_path"`
-	Now            *time.Time `json:"now,omitempty"`
+	EvalTime       *time.Time `json:"eval_time,omitempty"`
 	Sanitize       bool       `json:"sanitize,omitempty"`
 	Force          bool       `json:"force,omitempty"`
 }

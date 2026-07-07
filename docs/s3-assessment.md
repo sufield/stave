@@ -21,7 +21,7 @@ Output:
 ## 2) Evaluate observations against the S3 control pack
 
 ```bash
-stave apply --profile aws-s3 --input observations.json --include-all --now 2026-01-15T00:00:00Z > evaluation.json
+stave apply --profile aws-s3 --input observations.json --include-all --eval-time 2026-01-15T00:00:00Z > evaluation.json
 ```
 
 Input:
@@ -39,7 +39,7 @@ stave check \
   --before ./obs-before \
   --after ./obs-after \
   --controls ./controls/s3 \
-  --now 2026-01-15T00:00:00Z \
+  --eval-time 2026-01-15T00:00:00Z \
   --out ./output
 ```
 
@@ -129,5 +129,5 @@ name every (bucket, principal, reason) triple.
 ## Notes
 
 - Offline by design: reads local files only.
-- Deterministic in CI: always set `--now`.
+- Deterministic in CI: always set `--eval-time`.
 - For troubleshooting unexpected results, run `stave diagnose`.

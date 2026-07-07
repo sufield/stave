@@ -56,7 +56,7 @@ vendor management, and GRC workflows are out of scope.
 | HIPAA.REQ.018 | Baseline tracking to detect violation count changes over time | Done | `stave enforce baseline save/check` |
 | HIPAA.REQ.019 | Policy-based gating for merge blocking | Done | `stave enforce gate --policy any/critical` |
 | HIPAA.REQ.020 | Environment variable configuration for CI | Done | `STAVE_*` variables with injectable Getenv |
-| HIPAA.REQ.021 | Deterministic output for reproducible CI runs | Done | `--now` flag, sorted findings, `stave apply verify` |
+| HIPAA.REQ.021 | Deterministic output for reproducible CI runs | Done | `--eval-time` flag, sorted findings, `stave apply verify` |
 | HIPAA.REQ.022 | Quiet mode for clean CI logs | Done | `--quiet`, NO_COLOR, TTY detection |
 
 ### F. Evidence Source Expansion

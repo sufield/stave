@@ -67,20 +67,20 @@ make build
 # Writeup: pre-sign-up Lambda has been deleted
 ./stave apply \
     --observations examples/cognito-presignup-ghost/fixtures/writeup-config/observations \
-    --now 2026-05-09T12:00:00Z \
+    --eval-time 2026-05-09T12:00:00Z \
     --format json | jq '.findings[] | select(.control_id == "CTL.COGNITO.GHOST.PRESIGNUP.001")'
 
 # Remediated: same pool, but the Lambda asset is in the observation
 ./stave apply \
     --observations examples/cognito-presignup-ghost/fixtures/remediated-config/observations \
-    --now 2026-05-09T12:00:00Z \
+    --eval-time 2026-05-09T12:00:00Z \
     --format json | jq '.findings | map(select(.control_id == "CTL.COGNITO.GHOST.PRESIGNUP.001")) | length'
 # 0
 
 # SMT-LIB surface — feeds Z3 / Datalog
 ./stave export-sir \
     --observations examples/cognito-presignup-ghost/fixtures/writeup-config/observations \
-    --now 2026-05-09T12:00:00Z \
+    --eval-time 2026-05-09T12:00:00Z \
     --format smt2 | grep -E 'has_ghost_trigger|has_trigger_'
 ```
 

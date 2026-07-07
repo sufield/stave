@@ -77,6 +77,6 @@ inherited_options:
       default_value: "false"
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
-example: '  stave alias set ev "apply --controls controls/s3 --now 2026-01-11T00:00:00Z"'
+example: '  stave alias set ev "apply --controls controls/s3 --eval-time 2026-01-11T00:00:00Z"'
 see_also:
     - stave alias - Manage command aliases

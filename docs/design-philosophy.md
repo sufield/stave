@@ -6,7 +6,7 @@ Stave is designed around open standards from the first release so teams can adop
 
 1. Contract-first: data is exchanged through versioned, documented schemas.
 2. Vendor-neutral: extractors can be built in any language and for any platform.
-3. Deterministic by default: same inputs + same `--now` produce the same output.
+3. Deterministic by default: same inputs + same `--eval-time` produce the same output.
 4. Offline-capable: evaluation and validation work without cloud credentials.
 5. Composable CLI: commands fit CI/CD pipelines through stable flags, outputs, and exit codes.
 

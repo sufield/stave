@@ -79,7 +79,7 @@ func PerformAttestation(ctx context.Context, deps WorkflowDeps, req Request) err
 		BaselineSnapshots: baseline.snapshotCount,
 		TargetSnapshots:   target.snapshotCount,
 		SLAThreshold:      req.SLAThreshold,
-		Now:               req.Clock.Now(),
+		EvalTime:          req.Clock.Now(),
 		Sanitizer:         req.Sanitizer,
 	})
 	if err != nil {

@@ -55,7 +55,7 @@ go build -ldflags "-s -w" -o /tmp/stave ./cmd/stave
   --controls testdata/e2e/e2e-h1-omise-1474017-public-cdn/controls \
   --observations testdata/e2e/e2e-h1-omise-1474017-public-cdn/observations \
   --max-unsafe 168h \
-  --now 2026-01-11T00:00:00Z
+  --eval-time 2026-01-11T00:00:00Z
 
 # Run via E2E harness (all cases)
 BIN=/tmp/stave ./scripts/e2e.sh

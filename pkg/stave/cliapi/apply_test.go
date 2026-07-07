@@ -21,9 +21,9 @@ func TestApply_ReturnsBothViews(t *testing.T) {
 		SnapshotsDir: filepath.Join(fixture, "observations"),
 		ControlsDir:  filepath.Join(fixture, "controls"),
 		MaxUnsafe:    168 * time.Hour,
-		// --now matches cmd/apply test convention so evaluations
+		// --eval-time matches cmd/apply test convention so evaluations
 		// are deterministic and don't depend on wall clock.
-		Now: time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
+		EvalTime: time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
 	}
 
 	res, err := cliapi.Apply(context.Background(), cfg)

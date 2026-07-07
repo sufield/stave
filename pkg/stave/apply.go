@@ -56,7 +56,7 @@ func applyInputs(cfg Config) applycore.Inputs {
 		IntegrityManifest:   cfg.IntegrityManifest,
 		IntegrityPublicKey:  cfg.IntegrityPublicKey,
 		MaxUnsafe:           cfg.MaxUnsafe,
-		Now:                 cfg.Now,
+		EvalTime:            cfg.EvalTime,
 		ExemptionRules:      cfg.ExemptionRules,
 		AcknowledgmentRules: cfg.AcknowledgmentRules,
 		SLAConfig:           toEvalSLAConfig(cfg.SLAConfig),
@@ -125,7 +125,7 @@ func BuildAssessment(report *evaluation.ComplianceReport, controls []policy.Cont
 		Status:        Status(report.SecurityState),
 		Run: RunInfo{
 			StaveVersion: report.Run.StaveVersion,
-			Now:          report.Run.Now,
+			EvalTime:     report.Run.EvalTime,
 			MaxUnsafe:    time.Duration(report.Run.MaxUnsafeDuration),
 			Snapshots:    report.Run.Snapshots,
 		},

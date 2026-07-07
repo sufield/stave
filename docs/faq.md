@@ -256,7 +256,7 @@ The schema defines two output kinds:
 
 | Field | Description |
 |-------|-------------|
-| `run` | Reproducibility metadata: tool version, `--now`, `--max-unsafe`, snapshot count, input file hashes |
+| `run` | Reproducibility metadata: tool version, `--eval-time`, `--max-unsafe`, snapshot count, input file hashes |
 | `summary` | Aggregate counts: `assets_evaluated`, `attack_surface` (currently unsafe), `violations` (exceeded threshold) |
 | `findings[]` | Each violation with control ID, asset ID, evidence (timestamps, duration, misconfigurations), and remediation guidance |
 | `exempted_assets[]` | Assets skipped by exemption rules (with matched pattern and reason) |
@@ -368,14 +368,14 @@ How it works:
 
 ## What is the purpose of now flag in apply command?
 
---now overrides the current time used to calculate unsafe durations. Stave computes how long an asset has been in an unsafe state by measuring from when the violation was first observed to "now." Without --now, that's the real wall clock — which means the output changes every second, making it impossible to reproduce results or write golden tests. 
+--eval-time overrides the current time used to calculate unsafe durations. Stave computes how long an asset has been in an unsafe state by measuring from when the violation was first observed to "now." Without --eval-time, that's the real wall clock — which means the output changes every second, making it impossible to reproduce results or write golden tests. 
                     
-With --now 2026-01-15T00:00:00Z, the evaluation is frozen in time: the same inputs always produce the same findings, same durations, same safety status. This is essential for:              
+With --eval-time 2026-01-15T00:00:00Z, the evaluation is frozen in time: the same inputs always produce the same findings, same durations, same safety status. This is essential for:              
                                                                   
   - Golden tests — commit expected output, diff byte-for-byte
   - CI reproducibility — same commit produces same result regardless of when CI runs
-  - Demo scenarios — the Docker demo pins --now so findings are stable
-  - Verification — stave apply verify uses --now to confirm deterministic output
+  - Demo scenarios — the Docker demo pins --eval-time so findings are stable
+  - Verification — stave apply verify uses --eval-time to confirm deterministic output
 
 ## Which ones are validated using JSON schema?
 
@@ -466,7 +466,7 @@ There are 21 scripts covering the full CLI surface:
 | `ci_workflow.txtar` | `ci baseline` and `ci diff` commands |
 | `config_lifecycle.txtar` | `config get/set/show` commands |
 | `controls_packs.txtar` | `controls list` and pack resolution |
-| `determinism.txtar` | Same inputs + `--now` produce identical output |
+| `determinism.txtar` | Same inputs + `--eval-time` produce identical output |
 | `diagnose_trace_explain.txtar` | `diagnose`, `trace`, and `explain` commands |
 | `doctor_bug_report.txtar` | `doctor` and `bug-report` commands |
 | `exit_codes.txtar` | Exit code 0 (success), 3 (violations), 2 (input error) |

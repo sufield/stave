@@ -212,7 +212,7 @@ func TestGate(t *testing.T) {
 	})
 	t.Run("explicit now", func(t *testing.T) {
 		explicit := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
-		resp, err := Gate(context.Background(), GateRequest{Policy: "fail_on_any_violation", Now: &explicit}, GateDeps{FindingsCounter: &mockFindingsCounter{}, Clock: clock})
+		resp, err := Gate(context.Background(), GateRequest{Policy: "fail_on_any_violation", EvalTime: &explicit}, GateDeps{FindingsCounter: &mockFindingsCounter{}, Clock: clock})
 		assertNoErr(t, err)
 		if !resp.CheckedAt.Equal(explicit) {
 			t.Errorf("CheckedAt: got %v, want %v", resp.CheckedAt, explicit)

@@ -59,7 +59,7 @@ func Resolve(o *Options, cs cobraState) (RunConfig, error) {
 		return RunConfig{}, err
 	}
 
-	// --max-unsafe and --now are validated + parsed in the facade
+	// --max-unsafe and --eval-time are validated + parsed in the facade
 	// (stave.EvaluateStandard); the command passes the raw flag strings.
 
 	// Load project config once — shared by validateDirs and the facade.

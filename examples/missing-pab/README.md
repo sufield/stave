@@ -27,13 +27,13 @@ cd stave
  --controls examples/missing-pab/controls \
  --observations examples/missing-pab/observations \
  --max-unsafe 12h \
- --now 2026-01-02T00:00:00Z
+ --eval-time 2026-01-02T00:00:00Z
 
 ./stave apply \
  --controls examples/missing-pab/controls \
  --observations examples/missing-pab/observations \
  --max-unsafe 12h \
- --now 2026-01-02T00:00:00Z
+ --eval-time 2026-01-02T00:00:00Z
 ```
 
 ## Expected Result

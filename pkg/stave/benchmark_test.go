@@ -17,7 +17,7 @@ func init() {
 func BenchmarkApply(b *testing.B) {
 	cfg := stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,
-		Now:          frozenNow,
+		EvalTime:     frozenNow,
 	}
 	ctx := context.Background()
 
@@ -39,7 +39,7 @@ func BenchmarkApply(b *testing.B) {
 func BenchmarkApplyColdStart(b *testing.B) {
 	cfg := stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,
-		Now:          time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
+		EvalTime:     time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
 	}
 	ctx := context.Background()
 

@@ -29,7 +29,7 @@ type VerifyConfig struct {
 	AfterDir    string
 	ControlsDir string
 	MaxUnsafe   string // raw duration, e.g. "168h", "7d", or ""
-	Now         string // RFC3339 override, or "" for wall clock
+	EvalTime    string // RFC3339 override, or "" for wall clock
 	SanitizeIDs bool
 	PathMode    string // "" base, "full"
 
@@ -51,7 +51,7 @@ func VerifyRemediation(ctx context.Context, cfg VerifyConfig) (output []byte, ha
 		return nil, false, fmt.Errorf("parse max-unsafe duration: %w", err)
 	}
 
-	clock, err := resolveVerifyClock(cfg.Now)
+	clock, err := resolveVerifyClock(cfg.EvalTime)
 	if err != nil {
 		return nil, false, err
 	}
@@ -106,7 +106,7 @@ func resolveVerifyClock(raw string) (ports.Clock, error) {
 	}
 	t, err := time.Parse(time.RFC3339, raw)
 	if err != nil {
-		return nil, fmt.Errorf("parse --now: %w", err)
+		return nil, fmt.Errorf("parse --eval-time: %w", err)
 	}
 	return ports.FixedClock(t), nil
 }

@@ -202,7 +202,7 @@ func (a *Assessor) sortSnapshots(snapshots []asset.Snapshot) []asset.Snapshot {
 }
 
 // referenceTime establishes the "audit now" timestamp.
-// If --now was set (FixedClock), the user's explicit time takes precedence.
+// If --eval-time was set (FixedClock), the user's explicit time takes precedence.
 // Otherwise, the latest snapshot's CapturedAt is used for reproducibility.
 //
 // Contract: a.clock MUST be non-nil. Returns ErrClockMissing instead
@@ -594,7 +594,7 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 		Controls:                s.assessor.Controls(),
 		Snapshots:               s.snapshots,
 		GlobalMaxUnsafeDuration: s.assessor.slaThreshold,
-		Now:                     s.auditTime,
+		EvalTime:                s.auditTime,
 		PredicateEval:           s.assessor.predicateEval,
 		Exemptions:              s.assessor.exemptions,
 		SuppressedFindings:      suppressed,
@@ -606,7 +606,7 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 		Run: evaluation.RunInfo{
 			StaveVersion:      s.opts.StaveVersion,
 			Offline:           true,
-			Now:               s.auditTime,
+			EvalTime:          s.auditTime,
 			MaxUnsafeDuration: kernel.Duration(s.assessor.slaThreshold),
 			Snapshots:         len(s.snapshots),
 			InputHashes:       s.opts.InputHashes,

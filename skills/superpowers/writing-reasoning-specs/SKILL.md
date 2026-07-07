@@ -103,7 +103,7 @@ engine: z3                          # one of: z3 | cvc5 | souffle | clingo | pro
 reasoning_kind: reachability        # reachability | enumeration | derivation | probability
 
 input:
-  fact_source: stave export-sir --format smt2 --observations <dir> --now <RFC3339>
+  fact_source: stave export-sir --format smt2 --observations <dir> --eval-time <RFC3339>
   query_file: query.smt2
 
 reasoning:
@@ -148,7 +148,7 @@ shape (expect `sat`), one with the remediated shape (expect `unsat`).
 # requirement.
 stave export-sir --format smt2 \
     --observations fixtures/dangerous/observations \
-    --now 2026-05-17T00:00:00Z > /tmp/dangerous.smt2
+    --eval-time 2026-05-17T00:00:00Z > /tmp/dangerous.smt2
 
 # Append the query
 cat /tmp/dangerous.smt2 query.smt2 | z3 -in
@@ -157,7 +157,7 @@ cat /tmp/dangerous.smt2 query.smt2 | z3 -in
 # Generate facts for the remediated snapshot
 stave export-sir --format smt2 \
     --observations fixtures/remediated/observations \
-    --now 2026-05-17T00:00:00Z > /tmp/remediated.smt2
+    --eval-time 2026-05-17T00:00:00Z > /tmp/remediated.smt2
 
 cat /tmp/remediated.smt2 query.smt2 | z3 -in
 # Expected: unsat

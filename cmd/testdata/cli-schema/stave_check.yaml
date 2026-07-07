@@ -13,7 +13,7 @@ description: |-
       --after, -a              Path to after-remediation observations (required)
       --controls, -i           Path to control definitions directory (default: controls)
       --max-unsafe             Maximum allowed unsafe duration
-      --now                    Override current time (RFC3339) for deterministic output
+      --eval-time                    Evaluation reference timestamp (RFC3339) for deterministic output
 
     Outputs:
       stdout                   Verification report JSON showing resolved, remaining,
@@ -38,6 +38,9 @@ options:
       shorthand: i
       default_value: controls
       usage: Path to control definitions directory
+    - name: eval-time
+      usage: |
+        Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.
     - name: help
       shorthand: h
       default_value: "false"
@@ -45,8 +48,6 @@ options:
     - name: max-unsafe
       usage: |
         Maximum allowed unsafe duration Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
-    - name: now
-      usage: Override current time (RFC3339) for deterministic output
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -112,7 +113,7 @@ example: |4-
 
       # Deterministic output for CI
       stave check --before ./obs-before --after ./obs-after --controls ./controls \
-        --now 2026-01-15T00:00:00Z
+        --eval-time 2026-01-15T00:00:00Z
 
       # With a custom unsafe duration threshold
       stave check --before ./obs-before --after ./obs-after --controls ./controls \

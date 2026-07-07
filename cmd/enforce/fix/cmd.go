@@ -88,10 +88,10 @@ Exit Codes:
   0   - No remaining or introduced violations
   3   - Remaining or introduced violations exist` + metadata.OfflineHelpSuffix,
 		Example: `  # Run a full fix-loop comparing before and after observations
-  stave ci fix-loop --before ./obs-before --after ./obs-after --controls ./controls --out ./output --now 2026-01-11T00:00:00Z
+  stave ci fix-loop --before ./obs-before --after ./obs-after --controls ./controls --out ./output --eval-time 2026-01-11T00:00:00Z
 
   # Run in CI with a strict 72-hour threshold
-  stave ci fix-loop --before ./obs-before --after ./obs-after --controls ./controls --out ./output --max-unsafe 72h --now 2026-01-11T00:00:00Z
+  stave ci fix-loop --before ./obs-before --after ./obs-after --controls ./controls --out ./output --max-unsafe 72h --eval-time 2026-01-11T00:00:00Z
 
   # Inspect the remediation report
   cat ./output/remediation-report.json | jq '.summary'`,
@@ -108,7 +108,7 @@ Exit Codes:
 				ControlsDir:   opts.ControlsDir,
 				OutDir:        opts.OutDir,
 				MaxUnsafe:     opts.MaxUnsafeRaw,
-				Now:           opts.NowRaw,
+				EvalTime:      opts.EvalTimeRaw,
 				Force:         gf.Force,
 				AllowSymlinks: gf.AllowSymlinkOut,
 				SanitizeIDs:   gf.Sanitize,

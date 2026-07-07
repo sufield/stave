@@ -79,7 +79,7 @@ func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio Sta
 		ControlsDir:        cfg.ControlsDir,
 		ObservationsDir:    cfg.ObservationsDir,
 		MaxUnsafe:          opts.MaxUnsafeDuration,
-		Now:                opts.NowTime,
+		EvalTime:           opts.EvalTimeRaw,
 		SanitizeIDs:        cs.GlobalFlags.Sanitize,
 		PathMode:           string(cs.GlobalFlags.PathMode),
 		Format:             reportFormat,

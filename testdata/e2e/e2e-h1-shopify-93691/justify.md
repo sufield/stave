@@ -39,9 +39,9 @@ The top-level `Resource.Type` field is only accessible in identity contexts (via
 - T1: `2015-10-13T00:00:00Z`
 - T2: `2015-10-20T00:00:00Z`
 
-**Problem:** The e2e.sh test harness passes `--now 2026-01-11T00:00:00Z` (hardcoded). Stave clamps `now` to the latest observation timestamp when `--now` exceeds it. With a latest observation at 2015-10-20, `now` becomes 2015-10-20. The unsafe duration from T1 to T2 is exactly 168 hours, which does not exceed the 168h threshold (the comparison is strictly greater than).
+**Problem:** The e2e.sh test harness passes `--eval-time 2026-01-11T00:00:00Z` (hardcoded). Stave clamps `now` to the latest observation timestamp when `--eval-time` exceeds it. With a latest observation at 2015-10-20, `now` becomes 2015-10-20. The unsafe duration from T1 to T2 is exactly 168 hours, which does not exceed the 168h threshold (the comparison is strictly greater than).
 
-**Fix:** Used `2026-01-01T00:00:00Z` and `2026-01-11T00:00:00Z` to match the e2e.sh `--now` value. This gives 240h unsafe duration, exceeding the 168h threshold.
+**Fix:** Used `2026-01-01T00:00:00Z` and `2026-01-11T00:00:00Z` to match the e2e.sh `--eval-time` value. This gives 240h unsafe duration, exceeding the 168h threshold.
 
 ## 3. Both snapshots show unsafe state (no T2 fix)
 

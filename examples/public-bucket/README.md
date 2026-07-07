@@ -27,13 +27,13 @@ cd stave
  --controls examples/public-bucket/controls \
  --observations examples/public-bucket/observations \
  --max-unsafe 12h \
- --now 2026-01-02T00:00:00Z
+ --eval-time 2026-01-02T00:00:00Z
 
 ./stave apply \
  --controls examples/public-bucket/controls \
  --observations examples/public-bucket/observations \
  --max-unsafe 12h \
- --now 2026-01-02T00:00:00Z
+ --eval-time 2026-01-02T00:00:00Z
 ```
 
 ## Expected Result

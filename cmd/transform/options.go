@@ -14,7 +14,7 @@ type options struct {
 	inDir    string
 	outDir   string
 	account  string
-	now      string
+	evalTime string
 	format   string
 	coverage bool
 	lint     bool
@@ -27,7 +27,7 @@ func addFlags(cmd *cobra.Command, o *options) {
 	f.StringVarP(&o.outDir, "out", "o", "observations",
 		"output directory for the observation file (or - for stdout)")
 	f.StringVar(&o.account, "account", "", "AWS account ID for filters whose raw input carries no ARN")
-	f.StringVar(&o.now, "now", "", "captured_at timestamp (RFC3339); defaults to the current time")
+	f.StringVar(&o.evalTime, "eval-time", "", "captured_at timestamp (RFC3339); defaults to the current time")
 	f.StringVarP(&o.format, "format", "f", "text", "summary format: text, json")
 	f.BoolVar(&o.coverage, "coverage", false, "list the raw input shapes transform recognizes, then exit")
 	f.BoolVar(&o.lint, "lint", false, "lint the embedded jq filters (compile + shape checks), then exit")
@@ -39,18 +39,18 @@ func (o *options) Prepare(_ *cobra.Command) error {
 	if _, err := NewRenderer(o.format); err != nil {
 		return &ui.UserError{Err: err}
 	}
-	if o.now != "" {
-		if _, err := time.Parse(time.RFC3339, o.now); err != nil {
-			return &ui.UserError{Err: fmt.Errorf("invalid --now %q: want RFC3339 (e.g. 2026-06-27T12:00:00Z): %w", o.now, err)}
+	if o.evalTime != "" {
+		if _, err := time.Parse(time.RFC3339, o.evalTime); err != nil {
+			return &ui.UserError{Err: fmt.Errorf("invalid --eval-time %q: want RFC3339 (e.g. 2026-06-27T12:00:00Z): %w", o.evalTime, err)}
 		}
 	}
 	return nil
 }
 
-// capturedAt resolves the observation timestamp: --now when set, else now (UTC).
+// capturedAt resolves the observation timestamp: --eval-time when set, else now (UTC).
 func (o *options) capturedAt() string {
-	if o.now != "" {
-		return o.now
+	if o.evalTime != "" {
+		return o.evalTime
 	}
 	return time.Now().UTC().Format(time.RFC3339)
 }

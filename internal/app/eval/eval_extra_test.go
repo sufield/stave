@@ -139,13 +139,13 @@ func TestOptionsValidate_Basic(t *testing.T) {
 func TestOptionsValidate_WithNow(t *testing.T) {
 	opts := Options{
 		MaxUnsafeDuration: "24h",
-		NowTime:           "2026-03-01T00:00:00Z",
+		EvalTimeRaw:       "2026-03-01T00:00:00Z",
 	}
 	parsed, err := opts.Validate()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if parsed.Now.IsZero() {
+	if parsed.EvalTime.IsZero() {
 		t.Fatal("Now should be set")
 	}
 }
@@ -153,11 +153,11 @@ func TestOptionsValidate_WithNow(t *testing.T) {
 func TestOptionsValidate_BadNow(t *testing.T) {
 	opts := Options{
 		MaxUnsafeDuration: "24h",
-		NowTime:           "not-a-time",
+		EvalTimeRaw:       "not-a-time",
 	}
 	_, err := opts.Validate()
 	if err == nil {
-		t.Fatal("expected error for bad --now")
+		t.Fatal("expected error for bad --eval-time")
 	}
 }
 

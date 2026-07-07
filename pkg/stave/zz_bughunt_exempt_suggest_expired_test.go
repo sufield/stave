@@ -32,7 +32,7 @@ func TestBugHunt_SuggestExemptions_ExpiredException(t *testing.T) {
 	assess := &report.Assessment{
 		SchemaVersion: kernel.SchemaOutput,
 		Kind:          report.KindAssessment,
-		Run:           evaluation.RunInfo{Now: t0},
+		Run:           evaluation.RunInfo{EvalTime: t0},
 		Findings: []remediation.Finding{
 			{
 				Finding: evaluation.Finding{
@@ -47,7 +47,7 @@ func TestBugHunt_SuggestExemptions_ExpiredException(t *testing.T) {
 	assessLatest := &report.Assessment{
 		SchemaVersion: kernel.SchemaOutput,
 		Kind:          report.KindAssessment,
-		Run:           evaluation.RunInfo{Now: tLatest},
+		Run:           evaluation.RunInfo{EvalTime: tLatest},
 		Findings: []remediation.Finding{
 			{
 				Finding: evaluation.Finding{

@@ -15,7 +15,7 @@ type Config struct {
 	ControlsDir       string
 	ObservationsDir   string
 	MaxUnsafeDuration time.Duration
-	NowTime           time.Time
+	EvalTimeRaw       time.Time
 	SanitizePaths     bool // When true, directory/file paths in evidence are marked sensitive.
 	PredicateParser   policy.PredicateParser
 	PredicateEval     policy.PredicateEval
@@ -76,7 +76,7 @@ func (v *Run) Execute(ctx context.Context, cfg Config) (*Report, error) {
 		Controls:          controls,
 		Snapshots:         snapshots,
 		MaxUnsafeDuration: cfg.MaxUnsafeDuration,
-		NowTime:           cfg.NowTime,
+		EvalTimeRaw:       cfg.EvalTimeRaw,
 		PredicateParser:   cfg.PredicateParser,
 		PredicateEval:     cfg.PredicateEval,
 	})

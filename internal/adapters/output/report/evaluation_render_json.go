@@ -96,12 +96,12 @@ func buildReportViewModel(eval corereport.Assessment, toolVersion string) report
 }
 
 func newReportOutput(eval corereport.Assessment, toolVersion string) reportOutput {
-	generated := eval.Run.Now.UTC()
+	generated := eval.Run.EvalTime.UTC()
 	return reportOutput{
 		GeneratedAt:  generated.Format(time.RFC3339),
 		StaveVersion: toolVersion,
 		Run: reportRun{
-			EvaluationTime:    eval.Run.Now.Format(time.RFC3339),
+			EvaluationTime:    eval.Run.EvalTime.Format(time.RFC3339),
 			MaxUnsafeDuration: eval.Run.MaxUnsafeDuration.String(),
 			Snapshots:         eval.Run.Snapshots,
 			Offline:           eval.Run.Offline,

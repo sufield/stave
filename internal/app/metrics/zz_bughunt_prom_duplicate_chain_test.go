@@ -20,7 +20,7 @@ func TestBugHunt_Write_DuplicateChainMetrics(t *testing.T) {
 	var buf bytes.Buffer
 	Write(&buf, Input{
 		Assessment: &report.Assessment{
-			Run: evaluation.RunInfo{Now: time.Now()},
+			Run: evaluation.RunInfo{EvalTime: time.Now()},
 			ChainFindings: []findings.CompoundFinding{
 				{
 					ChainID:  "CHAIN.1",

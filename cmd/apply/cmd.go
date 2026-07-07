@@ -22,7 +22,7 @@ func (o *Options) resolveEnvVarDefaults(cmd *cobra.Command) {
 	o.Format = cmdutil.OutputFormat(cliflags.ResolveFormatEnv(cmd, string(o.Format)))
 	o.ControlsDir = cliflags.ResolveControlsEnv(cmd, o.ControlsDir)
 	o.ObservationsDir = cliflags.ResolveObservationsEnv(cmd, o.ObservationsDir)
-	o.NowTime = cliflags.ResolveNowEnv(cmd, o.NowTime)
+	o.EvalTimeRaw = cliflags.ResolveEvalTimeEnv(cmd, o.EvalTimeRaw)
 }
 
 // resolveApplyConfigDefaults fills apply-specific flag values from project
@@ -50,7 +50,7 @@ type SharedOptions struct {
 	ControlsDir       string
 	ObservationsDir   string
 	MaxUnsafeDuration string
-	NowTime           string
+	EvalTimeRaw       string
 	Format            cmdutil.OutputFormat
 	Packs             []string // --pack: scope evaluation to one or more concern packs
 	Services          []string // --services: scope evaluation to controls for these AWS services
@@ -74,7 +74,9 @@ func (o *SharedOptions) bindCommon(cmd *cobra.Command, defaultFormat cmdutil.Out
 	f.StringSliceVar(&o.Services, "services", nil, "Scope evaluation to controls for these AWS services (comma-separated). Example: stave apply --services iam,s3 -o snapshot/")
 	f.BoolVar(&o.AllStaged, "all", false, "Evaluate the full catalog and print findings grouped per service, then compound, then a summary")
 	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
-	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339) for deterministic output")
+	f.StringVar(&o.EvalTimeRaw, "eval-time", "", "Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.")
+	f.StringVar(&o.EvalTimeRaw, "now", "", "Alias for --eval-time")
+	_ = f.MarkDeprecated("now", "please use --eval-time instead")
 	o.Format = defaultFormat
 	f.VarP(&o.Format, "format", "f", "Output format (text, json, or sarif)")
 }
@@ -167,7 +169,7 @@ Inputs:
   --profile, -p             Evaluation profile (e.g., aws-s3)
   --input                   Path to observations bundle file (required with --profile)
   --max-unsafe              Maximum allowed unsafe duration (default: from project config)
-  --now                     Override current time (RFC3339) for deterministic output
+  --eval-time                     Evaluation reference timestamp (RFC3339) for deterministic output
   --format, -f              Output format: text, json, or sarif (default: text)
   --dry-run                 Run readiness checks only
 
@@ -204,7 +206,7 @@ Remediation scope:
   stave apply --dry-run
 
   # Profile-based evaluation with bundled observations
-  stave apply --profile aws-s3 --input observations.json --now 2026-01-15T00:00:00Z`,
+  stave apply --profile aws-s3 --input observations.json --eval-time 2026-01-15T00:00:00Z`,
 		Args: cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			opts.controlsSet = cliflags.ControlsFlagChanged(cmd)

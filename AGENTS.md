@@ -71,7 +71,7 @@ Every CLI command follows this file convention:
 - Keep `RunE` thin — delegate to `app/` or `core/` services.
 - Set `SilenceUsage: true` and `SilenceErrors: true` on every command.
 - Include purpose, inputs, outputs, exit codes, and examples in the `Long` help string.
-- Use stable flag names: `--controls/-i`, `--observations/-o`, `--format/-f`, `--now`, `--quiet`, `--sanitize`.
+- Use stable flag names: `--controls/-i`, `--observations/-o`, `--format/-f`, `--eval-time`, `--quiet`, `--sanitize`.
 
 ### Don't
 
@@ -178,7 +178,7 @@ These terms are final. The renames are done. Use the canonical term.
 - Use `testscript` for behavioral CLI tests in `testdata/script/`.
 - Use golden file pattern: commit expected outputs, diff generated output byte-for-byte.
 - Use `NewTestCatalog()` for test control registries — not `init()` globals.
-- Use `--now` for deterministic time in CLI tests.
+- Use `--eval-time` for deterministic time in CLI tests.
 - Enable the race detector (`-race` flag).
 
 ### Don't
@@ -232,7 +232,7 @@ After adding or modifying controls, golden files must be regenerated. There are
 
 `make regenerate-goldens` regenerates `output.json`, `expected.summary.json`, and
 `expected.findings.count` for all `e2e-*` directories. These use
-`--controls`/`--observations` flags and `--now 2026-01-11T00:00:00Z`.
+`--controls`/`--observations` flags and `--eval-time 2026-01-11T00:00:00Z`.
 
 ### Profile-based golden files (`testdata/e2e/{profile-name}`)
 
@@ -242,14 +242,14 @@ After adding or modifying controls, golden files must be regenerated. There are
 # HIPAA profile (if control added to hipaa pack)
 ./stave apply --profile hipaa \
   --input testdata/e2e/e2e-hipaa-cross-domain/observations.json \
-  --now 2026-01-15T00:00:00Z --include-all \
+  --eval-time 2026-01-15T00:00:00Z --include-all \
   > testdata/e2e/e2e-hipaa-cross-domain/golden.json \
   2> testdata/e2e/e2e-hipaa-cross-domain/err.txt || true
 
 # S3 profile (if control added to s3 pack)
 ./stave apply --profile aws-s3 \
   --input testdata/e2e/aws-s3-obs-public/observations.json \
-  --now 2026-01-15T00:00:00Z \
+  --eval-time 2026-01-15T00:00:00Z \
   > testdata/e2e/aws-s3-obs-public/golden.json 2>/dev/null || true
 # Same pattern for aws-s3-obs-private
 ```

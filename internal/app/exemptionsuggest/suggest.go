@@ -77,7 +77,7 @@ type Input struct {
 	// considered chronic.
 	MinDwell time.Duration
 	// Now is the reference time.
-	Now time.Time
+	EvalTime time.Time
 	// ExemptedKeys is the set of (control@asset) keys that already
 	// have active exemptions — these are excluded from suggestions.
 	ExemptedKeys map[string]struct{}
@@ -96,14 +96,14 @@ func Suggest(in Input) *Result {
 	sorted := make([]*report.Assessment, len(in.History))
 	copy(sorted, in.History)
 	slices.SortFunc(sorted, func(a, b *report.Assessment) int {
-		return a.Run.Now.Compare(b.Run.Now)
+		return a.Run.EvalTime.Compare(b.Run.EvalTime)
 	})
 
 	// Apply window filter.
-	cutoff := in.Now.Add(-in.Window)
+	cutoff := in.EvalTime.Add(-in.Window)
 	filtered := make([]*report.Assessment, 0, len(sorted))
 	for _, a := range sorted {
-		if !a.Run.Now.Before(cutoff) {
+		if !a.Run.EvalTime.Before(cutoff) {
 			filtered = append(filtered, a)
 		}
 	}
@@ -139,12 +139,12 @@ func Suggest(in Input) *Result {
 					assetID:     f.AssetID,
 					severity:    f.SeverityLabel(),
 					ownerTeamID: f.OwnerKey(),
-					firstSeen:   a.Run.Now,
+					firstSeen:   a.Run.EvalTime,
 					appearances: make([]bool, assessmentCount),
 				}
 				meta[k] = m
 			}
-			m.lastSeen = a.Run.Now
+			m.lastSeen = a.Run.EvalTime
 			m.appearances[idx] = true
 			// Owner upgrade: if a later sighting carries an owner key
 			// (where earlier ones did not), promote it. OwnerKey
@@ -172,13 +172,13 @@ func Suggest(in Input) *Result {
 			continue
 		}
 
-		dwellDays := in.Now.Sub(m.firstSeen).Hours() / 24
+		dwellDays := in.EvalTime.Sub(m.firstSeen).Hours() / 24
 
 		// Count oscillation cycles (gaps where finding disappeared then returned).
 		cycles := countCycles(m.appearances)
 
 		cmd := fmt.Sprintf("stave exempt acknowledge --control-id %s --asset-id %s --reason \"<reason>\" --approver \"<approver>\" --expires %s",
-			k.ControlID, k.AssetID, in.Now.AddDate(0, 0, 30).Format("2006-01-02"))
+			k.ControlID, k.AssetID, in.EvalTime.AddDate(0, 0, 30).Format("2006-01-02"))
 
 		if cycles >= 2 {
 			oscillating = append(oscillating, Candidate{

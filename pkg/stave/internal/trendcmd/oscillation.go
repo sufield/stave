@@ -42,7 +42,7 @@ func ClassifyOscillation(ctx context.Context, cfg OscillationConfig) ([]byte, []
 	}
 
 	slices.SortFunc(assessments, func(a, b *report.Assessment) int {
-		return a.Run.Now.Compare(b.Run.Now)
+		return a.Run.EvalTime.Compare(b.Run.EvalTime)
 	})
 
 	vals := make([]report.Assessment, len(assessments))

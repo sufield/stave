@@ -62,19 +62,19 @@ make build
 # Writeup: 14 individual ghost findings + 1 compound (IDCHAIN)
 ./stave apply \
     --observations examples/cognito-iteration1-ghosts/fixtures/writeup-config/observations \
-    --now 2026-05-09T12:00:00Z --format json \
+    --eval-time 2026-05-09T12:00:00Z --format json \
   | jq '{ghosts: ([.findings[] | select(.control_id | startswith("CTL.COGNITO.GHOST."))] | map(.control_id) | sort | unique), compounds: (.chain_findings // [] | map(.chain))}'
 
 # Remediated: zero findings, zero chains
 ./stave apply \
     --observations examples/cognito-iteration1-ghosts/fixtures/remediated-config/observations \
-    --now 2026-05-09T12:00:00Z --format json \
+    --eval-time 2026-05-09T12:00:00Z --format json \
   | jq '{ghost_count: ([.findings[] | select(.control_id | startswith("CTL.COGNITO.GHOST."))] | length), chain_count: (.chain_findings // [] | length)}'
 
 # AUTHFLOW gap demo: same user_pool_id, 4 trigger ghosts, 0 chain firings
 ./stave apply \
     --observations examples/cognito-iteration1-ghosts/fixtures/authflow-gap-config/observations \
-    --now 2026-05-09T12:00:00Z --format json \
+    --eval-time 2026-05-09T12:00:00Z --format json \
   | jq '{ghost_count: ([.findings[] | select(.control_id | startswith("CTL.COGNITO.GHOST."))] | length), chain_count: (.chain_findings // [] | length)}'
 ```
 

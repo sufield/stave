@@ -69,7 +69,7 @@ func TestRunValidate_DirectoryMode_ValidatesBothArtifacts(t *testing.T) {
 		Controls:          filepath.Join(fixture, "controls"),
 		Observations:      filepath.Join(fixture, "observations"),
 		MaxUnsafeDuration: "168h",
-		NowTime:           "2026-01-15T00:00:00Z",
+		EvalTimeRaw:       "2026-01-15T00:00:00Z",
 		Format:            "text",
 	}
 

@@ -18,7 +18,7 @@ type HygieneAssessment struct {
 
 // AuditContext provides the temporal boundaries for the hygiene report.
 type AuditContext struct {
-	Now             time.Time
+	EvalTime        time.Time
 	PreviousAuditAt time.Time
 	LookbackWindow  time.Duration
 	SLAWarning      time.Duration

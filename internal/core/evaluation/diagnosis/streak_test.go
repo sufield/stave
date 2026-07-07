@@ -42,7 +42,7 @@ func TestComputeMaxUnsafeStreakPerControl_ClampsNowToLatestSnapshot(t *testing.T
 		ViolationsFound:   0,
 		AttackSurface:     0,
 		MaxUnsafeDuration: 0,
-		Now:               base.Add(1 * time.Hour),
+		EvalTime:          base.Add(1 * time.Hour),
 		PredicateEval:     mustPredicateEval(),
 	}), 0)
 	maxStreak, ctlID := s.globalMaxStreak()

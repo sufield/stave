@@ -121,14 +121,14 @@ green light.
 
 ```bash
 stave apply --observations ./observations \
-    --now $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+    --eval-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
     --format json
 ```
 
-**Always pass `--now`.** Without it, time-dependent controls (credential
+**Always pass `--eval-time`.** Without it, time-dependent controls (credential
 TTL, observation freshness, unsafe-duration thresholds) read the system
 clock and the same snapshot produces different findings on different
-days. Pin `--now` to the observation's `captured_at` for reproducibility
+days. Pin `--eval-time` to the observation's `captured_at` for reproducibility
 across CI runs and agent iterations.
 
 The loader accepts observations whose `generated_by.source_type` is
@@ -179,7 +179,7 @@ For chains the SIR projects, export facts and run an external solver:
 ```bash
 stave export-sir --format smt2 \
     --observations ./observations \
-    --now $(date -u +%Y-%m-%dT%H:%M:%SZ) > facts.smt2
+    --eval-time $(date -u +%Y-%m-%dT%H:%M:%SZ) > facts.smt2
 ```
 
 The export emits declarations + facts only — no query, no
@@ -233,7 +233,7 @@ increase the solver's resource limits, do not interpret silence as safety.
 - **Every step has a binary assertion.** Exit codes and counts, not
   prose. If you cannot state a check as "exit 0" or "X > Y", you have
   not defined the check.
-- **Determinism requires `--now`.** Same snapshot + same `--now` = same
+- **Determinism requires `--eval-time`.** Same snapshot + same `--eval-time` = same
   findings, every time. CI workflows that omit it will see verdict counts
   drift as time passes.
 - **Gaps are prioritized.** `stave gaps` ranks the missing properties by

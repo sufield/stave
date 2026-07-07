@@ -20,7 +20,7 @@ type ProfileResult = applycmd.ProfileResult
 // enrich, and render to bytes. The facade self-constructs the CEL evaluator,
 // control loader, finding marshaler, sanitizer, and clock from the request.
 //
-// Input errors (bad --input / --now) wrap [ErrInvalidInput] (the command maps
+// Input errors (bad --input / --eval-time) wrap [ErrInvalidInput] (the command maps
 // them to exit 2); evaluation/render errors stay plain (exit 4).
 func EvaluateProfile(ctx context.Context, req ProfileRequest) (ProfileResult, error) {
 	res, err := applycmd.EvaluateProfile(ctx, req)

@@ -60,9 +60,9 @@ EOF
 jq . /tmp/stave-demo/obs/*.json > /dev/null && echo "valid JSON"
 ```
 
-### 3. Run Stave (use --now for deterministic output)
+### 3. Run Stave (use --eval-time for deterministic output)
 ```
-./stave apply --observations /tmp/stave-demo/obs/ --now 2026-01-02T00:00:00Z
+./stave apply --observations /tmp/stave-demo/obs/ --eval-time 2026-01-02T00:00:00Z
 ```
 **Expected: 2 violations** on `demo-user`:
 - `CTL.IAM.POLICY.ADMIN.001` (the user has admin access)
@@ -76,8 +76,8 @@ the root-cause property that triggered it, and remediation guidance.
 
 ### 5. Try the machine-readable formats
 ```
-./stave apply --observations /tmp/stave-demo/obs/ --now 2026-01-02T00:00:00Z --format json
-./stave apply --observations /tmp/stave-demo/obs/ --now 2026-01-02T00:00:00Z --format sarif
+./stave apply --observations /tmp/stave-demo/obs/ --eval-time 2026-01-02T00:00:00Z --format json
+./stave apply --observations /tmp/stave-demo/obs/ --eval-time 2026-01-02T00:00:00Z --format sarif
 ```
 JSON follows the stable `out.v0.1` schema; SARIF carries a `runs` array for
 code-scanning tools.

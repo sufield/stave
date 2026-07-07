@@ -94,7 +94,7 @@ type Inputs struct {
 	IntegrityManifest   string
 	IntegrityPublicKey  string
 	MaxUnsafe           time.Duration
-	Now                 time.Time
+	EvalTime            time.Time
 	ExemptionRules      *policy.ExemptionConfig
 	AcknowledgmentRules *policy.AcknowledgmentConfig
 	SLAConfig           *evaluation.SLAConfig
@@ -215,7 +215,7 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 	if maxUnsafe == 0 {
 		maxUnsafe = DefaultMaxUnsafe
 	}
-	clock := buildClock(in.Now)
+	clock := buildClock(in.EvalTime)
 
 	// Stave-apply is the only hot path that runs the full control
 	// catalog repeatedly; wire it through the persistent on-disk

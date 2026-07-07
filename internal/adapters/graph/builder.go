@@ -140,7 +140,7 @@ func (e *Edge) DebugLabel() string {
 type BuildInput struct {
 	Findings      []remediation.Finding
 	ChainFindings []findings.CompoundFinding
-	Now           time.Time
+	EvalTime      time.Time
 	SourcePath    string
 }
 
@@ -194,7 +194,7 @@ func Build(input BuildInput) *GraphData {
 	g := &GraphData{
 		SchemaVersion:   "1",
 		OntologyVersion: metadata.OntologyVersion,
-		GeneratedAt:     input.Now,
+		GeneratedAt:     input.EvalTime,
 		Source: GraphSource{
 			AssessmentOutput: input.SourcePath,
 		},

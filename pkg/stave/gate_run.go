@@ -27,7 +27,7 @@ type GateRunConfig struct {
 	ControlsDir     string
 	ObservationsDir string
 	MaxUnsafe       string // raw duration
-	Now             string // RFC3339 (validated but not applied — see note)
+	EvalTime        string // RFC3339 (validated but not applied — see note)
 	Format          string // text | json
 	Quiet           bool
 	Team            string
@@ -46,7 +46,7 @@ func EnforcementGatePolicies() []string { return appconfig.AllEnforcementGates()
 // failure stays plain (exit 4). It is the library entry point behind
 // `stave ci gate`.
 //
-// Note: --now is validated for format but not applied to the verdict, and
+// Note: --eval-time is validated for format but not applied to the verdict, and
 // --sanitize does not affect the verdict — preserving the pre-facade command
 // behavior exactly (both were resolved into a config the runner never read).
 func RunGate(ctx context.Context, cfg GateRunConfig) (output []byte, warnings []string, passed bool, err error) {
@@ -63,11 +63,11 @@ func RunGate(ctx context.Context, cfg GateRunConfig) (output []byte, warnings []
 		}
 	}
 
-	// --now is validated (a bad value is an input error) but intentionally
+	// --eval-time is validated (a bad value is an input error) but intentionally
 	// not applied to the gate verdict — see the function note.
-	if cfg.Now != "" {
-		if _, perr := time.Parse(time.RFC3339, cfg.Now); perr != nil {
-			return nil, nil, false, fmt.Errorf("parse --now %q: %w: %w", cfg.Now, perr, ErrInvalidInput)
+	if cfg.EvalTime != "" {
+		if _, perr := time.Parse(time.RFC3339, cfg.EvalTime); perr != nil {
+			return nil, nil, false, fmt.Errorf("parse --eval-time %q: %w: %w", cfg.EvalTime, perr, ErrInvalidInput)
 		}
 	}
 

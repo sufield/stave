@@ -48,7 +48,7 @@ func evaluateNewOnly(ctx context.Context, req StandardRequest, report *evaluatio
 		CurrentFindings: current,
 		History:         history,
 		NewSince:        newSince,
-		Now:             now,
+		EvalTime:        now,
 	})
 
 	var buf bytes.Buffer

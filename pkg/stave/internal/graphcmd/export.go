@@ -92,7 +92,7 @@ func ExportGraph(assessmentData []byte, format, sourcePath string, now time.Time
 	g := graphpkg.Build(graphpkg.BuildInput{
 		Findings:      assessment.Findings,
 		ChainFindings: assessment.ChainFindings,
-		Now:           now,
+		EvalTime:      now,
 		SourcePath:    sourcePath,
 	})
 

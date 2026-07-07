@@ -55,7 +55,7 @@ jq . <your-obs-dir>/*.json > /dev/null && echo "valid JSON"
 
 ### 4. Evaluate
 ```
-./stave apply --observations <your-obs-dir>/ --now <RFC3339-now>
+./stave apply --observations <your-obs-dir>/ --eval-time <RFC3339-now>
 ```
 
 ### 5. Review findings
@@ -65,7 +65,7 @@ Triage by severity; the remediation field says what to change.
 ## Important
 - Stave evaluates a LOCAL snapshot — it never calls AWS. Capture is the only AWS step, and it's read-only.
 - A snapshot is point-in-time: findings reflect the captured moment, not live state.
-- Deterministic: same snapshot + same `--now` → identical findings, always.
+- Deterministic: same snapshot + same `--eval-time` → identical findings, always.
 
 ## Success
 You've evaluated your real environment. Findings are specific to your

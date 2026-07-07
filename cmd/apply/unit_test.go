@@ -43,7 +43,7 @@ func TestResolveApplyOptions(t *testing.T) {
 		GlobalFlags: cliflags.GetGlobalFlags(cmd),
 	}
 
-	// --max-unsafe / --now parsing moved to the facade; Resolve now only
+	// --max-unsafe / --eval-time parsing moved to the facade; Resolve now only
 	// resolves paths + project config, so these assert the resolved dirs.
 	t.Run("valid flags with defaults", func(t *testing.T) {
 		opts := &Options{
@@ -65,13 +65,13 @@ func TestResolveApplyOptions(t *testing.T) {
 		}
 	})
 
-	t.Run("valid flags with --now", func(t *testing.T) {
+	t.Run("valid flags with --eval-time", func(t *testing.T) {
 		opts := &Options{
 			SharedOptions: SharedOptions{
 				ControlsDir:       filepath.Join(fixture, "controls"),
 				ObservationsDir:   filepath.Join(fixture, "observations"),
 				MaxUnsafeDuration: "7d",
-				NowTime:           "2026-01-15T00:00:00Z",
+				EvalTimeRaw:       "2026-01-15T00:00:00Z",
 			},
 		}
 		if _, err := Resolve(opts, cs); err != nil {
@@ -155,7 +155,7 @@ func TestResolveApplyOptions(t *testing.T) {
 			},
 			wantContain: "integrity-manifest cannot be used with observations - (stdin mode)",
 		},
-		// --max-unsafe and --now are parsed in the facade (stave.EvaluateStandard),
+		// --max-unsafe and --eval-time are parsed in the facade (stave.EvaluateStandard),
 		// not in Resolve, so bad values no longer surface here. Their validation
 		// is covered by the facade's tests.
 	}

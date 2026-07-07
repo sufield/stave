@@ -47,7 +47,7 @@ func FromReportAssessment(r *report.Assessment) *Assessment {
 		Status:        Status(r.Status),
 		Run: RunInfo{
 			StaveVersion: r.Run.StaveVersion,
-			Now:          r.Run.Now,
+			EvalTime:     r.Run.EvalTime,
 			// Mirror the SLA threshold the engine ran against so
 			// downstream consumers see the same field BuildAssessment
 			// sets in pkg/stave/apply.go — the previous shape dropped

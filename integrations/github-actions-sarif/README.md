@@ -42,7 +42,7 @@ jobs:
             --controls controls \
             --observations observations \
             --max-unsafe 7d \
-            --now $(date -u +%Y-%m-%dT%H:%M:%SZ) \
+            --eval-time $(date -u +%Y-%m-%dT%H:%M:%SZ) \
             --format sarif > results.sarif || true
 
       - name: Upload SARIF

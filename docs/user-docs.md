@@ -109,7 +109,7 @@ Use this table when you know your goal but want the fastest path to the right co
 
 | I want to... | Run this command | Read this doc |
 |--------------|------------------|---------------|
-| Get my first finding in 60 seconds | `stave apply --observations examples/public-bucket/observations/ --max-unsafe 168h --now 2026-01-11T00:00:00Z` | [`time-to-first-finding.md`](time-to-first-finding.md) |
+| Get my first finding in 60 seconds | `stave apply --observations examples/public-bucket/observations/ --max-unsafe 168h --eval-time 2026-01-11T00:00:00Z` | [`time-to-first-finding.md`](time-to-first-finding.md) |
 | Evaluate my own snapshots instantly | `stave validate && stave apply` | [`time-to-first-finding.md`](time-to-first-finding.md) |
 | See where I am and what to do next | `stave status` | [`README.md`](../README.md) |
 | Start a new project with sane defaults | `stave config context create` | [`README.md`](../README.md) |
@@ -324,7 +324,7 @@ stave validate [flags]
 | `--controls` | `controls/s3` | Path to control definitions directory |
 | `--observations` | `observations` | Path to observation snapshots directory |
 | `--max-unsafe` | `168h` | Maximum allowed unsafe duration |
-| `--now` | (current time) | Override evaluation time (RFC3339 format) |
+| `--eval-time` | (current time) | Override evaluation time (RFC3339 format) |
 | `--format` | `text` | Output format: `text` or `json` |
 | `--strict` | `false` | Treat warnings as errors (exit 2) |
 | `--fix-hints` | `false` | Print command-level remediation hints |
@@ -338,7 +338,7 @@ stave validate [flags]
 |----------|--------|
 | Controls | Schema validation, required fields (id, name, description), ID format |
 | Observations | Schema validation, timestamps, asset IDs |
-| Time sanity | Snapshots sorted, unique timestamps, --now >= latest snapshot |
+| Time sanity | Snapshots sorted, unique timestamps, --eval-time >= latest snapshot |
 | Consistency | Predicate references valid params, duration feasibility |
 
 **Exit Codes:**
@@ -411,7 +411,7 @@ Checked: 2 controls, 2 snapshots, 3 assets
 |------|--------|---------|
 | `CONTROL_MISSING_ID` | error | Control missing required `id` field |
 | `CONTROL_MISSING_NAME` | error | Control missing required `name` field |
-| `NOW_BEFORE_SNAPSHOTS` | error | `--now` must be at or after the latest snapshot |
+| `NOW_BEFORE_SNAPSHOTS` | error | `--eval-time` must be at or after the latest snapshot |
 | `SINGLE_SNAPSHOT` | warning | Only 1 snapshot (need 2+ for duration tracking) |
 | `SPAN_LESS_THAN_MAX_UNSAFE` | warning | Snapshot span shorter than threshold |
 | `CONTROL_NEVER_MATCHES` | warning | No assets match unsafe_predicate |
@@ -431,7 +431,7 @@ stave apply [flags]
 | `--controls` | `controls/s3` | Path to control definitions directory |
 | `--observations` | `observations` | Path to observation snapshots directory |
 | `--max-unsafe` | `168h` | Maximum allowed unsafe duration |
-| `--now` | (current time) | Override evaluation time (RFC3339 format) |
+| `--eval-time` | (current time) | Override evaluation time (RFC3339 format) |
 | `--integrity-manifest` | (none) | Verify loaded observation files against expected SHA-256 hashes in a manifest JSON |
 | `--integrity-public-key` | (none) | Verify signed manifest with Ed25519 public key (requires `--integrity-manifest`) |
 | `--min-severity` | (none) | Only evaluate controls at or above this severity level |
@@ -468,7 +468,7 @@ stave apply \
 stave apply --max-unsafe 7d
 
 # Deterministic evaluation (for CI/testing)
-stave apply --now 2026-01-15T00:00:00Z
+stave apply --eval-time 2026-01-15T00:00:00Z
 
 # Integrity-checked evaluation (unsigned manifest)
 stave apply \
@@ -607,7 +607,7 @@ stave diagnose [flags]
 | `--observations` | `observations` | Path to observation snapshots directory |
 | `--previous-output` | (none) | Path to existing apply output JSON |
 | `--max-unsafe` | `168h` | Maximum allowed unsafe duration |
-| `--now` | (current time) | Override evaluation time (RFC3339 format) |
+| `--eval-time` | (current time) | Override evaluation time (RFC3339 format) |
 | `--format` | `text` | Output format: `text` or `json` |
 | `--quiet` | `false` | Suppress output (exit code only) |
 | `--case` | (none) | Filter diagnostics to one or more case values |
@@ -637,7 +637,7 @@ stave diagnose --max-unsafe 7d
 stave diagnose --previous-output previous-run.json
 
 # Deterministic diagnosis (for CI)
-stave diagnose --now 2026-01-15T00:00:00Z
+stave diagnose --eval-time 2026-01-15T00:00:00Z
 
 # JSON output for scripting
 stave diagnose --format json
@@ -672,7 +672,7 @@ Command:  stave apply --max-unsafe 48h
 | Threshold exceeds observed unsafe duration | Resources are unsafe but not long enough | Lower `--max-unsafe` |
 | Time span shorter than threshold | Snapshot coverage window is shorter than the configured threshold | Collect more snapshots |
 | No assets matched unsafe_predicate | Predicate doesn't match any assets | Check extractor or predicate |
-| Evaluation time before latest snapshot | `--now` is set incorrectly | Fix `--now` timestamp |
+| Evaluation time before latest snapshot | `--eval-time` is set incorrectly | Fix `--eval-time` timestamp |
 | Streak reset detected | Resource became safe briefly | Expected behavior |
 
 ### graph coverage
@@ -810,7 +810,7 @@ Alias names must match `[a-zA-Z0-9_-]+` and must not collide with existing comma
 stave alias set ev "apply --controls controls/s3 --observations observations --max-unsafe 24h"
 
 # Use the alias (appends extra flags)
-stave ev --now 2026-01-15T00:00:00Z
+stave ev --eval-time 2026-01-15T00:00:00Z
 
 # List all aliases
 stave alias list
@@ -1452,7 +1452,7 @@ make build
   --controls controls/s3 \
   --observations examples/public-bucket/observations/ \
   --max-unsafe 7d \
-  --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  --eval-time "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 # Exit code 3 = violations found (fail the build)
 ```
@@ -1506,7 +1506,7 @@ echo "Generated: $OUTPUT"
 
 ## Best Practices
 
-1. **Use deterministic timestamps** for CI: Always pass `--now` in automated pipelines for reproducible results.
+1. **Use deterministic timestamps** for CI: Always pass `--eval-time` in automated pipelines for reproducible results.
 
 2. **Name snapshots with timestamps**: Use RFC3339 format (`2026-01-01T000000Z.json`) for automatic ordering.
 
@@ -1529,7 +1529,7 @@ echo "Generated: $OUTPUT"
 ### Unexpected violations
 
 1. Check if asset was briefly safe (resets the window)
-2. Verify `--now` time if using deterministic mode
+2. Verify `--eval-time` time if using deterministic mode
 3. Review `evidence.first_unsafe_at` in output
 
 ### Empty findings array
@@ -1575,7 +1575,7 @@ stave apply --profile aws-s3 --input observations.json
 | `--bucket-allowlist` | (none) | Bucket names/ARNs to include |
 | `--include-all` | `false` | Disable health scope filtering |
 | `--format` | `json` | Output format: `json` or `text` |
-| `--now` | (current time) | Override current time (RFC3339) |
+| `--eval-time` | (current time) | Override current time (RFC3339) |
 | `--quiet` | `false` | Suppress output (exit code only) |
 
 ### S3 Control Catalogue

@@ -46,12 +46,12 @@ make build
 
 ./stave apply \
     --observations examples/cognito-iteration2-unauth/fixtures/writeup-config/observations \
-    --now 2026-05-09T12:00:00Z --format json \
+    --eval-time 2026-05-09T12:00:00Z --format json \
   | jq '{controls: ([.findings[] | select(.control_id | test("CTL.COGNITO.(IDENTITY.GUEST|IDPOOL.UNAUTH)"))] | map(.control_id) | sort), chains: (.chain_findings // [] | map(.chain) | sort)}'
 
 ./stave apply \
     --observations examples/cognito-iteration2-unauth/fixtures/remediated-config/observations \
-    --now 2026-05-09T12:00:00Z --format json \
+    --eval-time 2026-05-09T12:00:00Z --format json \
   | jq '{count: ([.findings[] | select(.control_id | test("CTL.COGNITO.(IDENTITY.GUEST|IDPOOL.UNAUTH)"))] | length), chains: (.chain_findings // [] | length)}'
 ```
 
@@ -147,7 +147,7 @@ Run the cross-resource fixture to see it end-to-end:
 ```bash
 ./stave apply \
     --observations examples/cognito-iteration2-unauth/fixtures/cross-resource-config/observations \
-    --now 2026-05-09T12:00:00Z --format json \
+    --eval-time 2026-05-09T12:00:00Z --format json \
   | jq '{violations: [.findings[] | select(.control_id | startswith("CTL.COGNITO."))] | map(.control_id) | sort | unique, markers: (.marker_findings // [] | map(.control_id)), chains: (.chain_findings // [] | map(.chain) | sort)}'
 ```
 

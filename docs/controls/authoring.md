@@ -429,13 +429,13 @@ stave validate --in controls/s3/example/CTL.S3.EXAMPLE.001.yaml
 stave apply \
   --controls controls/s3/example/ \
   --observations test-observations/ \
-  --now 2026-01-02T00:00:00Z
+  --eval-time 2026-01-02T00:00:00Z
 
 # Trace evaluation logic step by step
 stave apply \
   --controls controls/s3/example/ \
   --observations test-observations/ \
-  --now 2026-01-02T00:00:00Z \
+  --eval-time 2026-01-02T00:00:00Z \
   --trace trace.json
 ```
 

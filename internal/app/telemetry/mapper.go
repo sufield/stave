@@ -28,7 +28,7 @@ func MapAssessment(a *report.Assessment, filter Filter, controlFPs ControlFinger
 		}
 		e := Event{
 			SchemaVersion:     schemaVersion,
-			CapturedAt:        a.Run.Now,
+			CapturedAt:        a.Run.EvalTime,
 			FindingID:         string(f.FindingID),
 			ControlID:         string(f.ControlID),
 			ControlName:       f.ControlName,

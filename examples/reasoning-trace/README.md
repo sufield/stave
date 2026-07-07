@@ -80,7 +80,7 @@ After: one `jq '.findings[0]'` returns:
 ```
 
 The `fixture`, `generated_at`, and per-engine block names are stable
-across runs when `--now` is pinned (which `run.sh` does, mirroring
+across runs when `--eval-time` is pinned (which `run.sh` does, mirroring
 the demo's pin).
 
 ## Running
@@ -135,7 +135,7 @@ Output lands in `examples/reasoning-trace/results/capital-one/reasoning-trace.js
 `expected/capital-one/reasoning-trace.json` is the trace the
 linker emits today against the current demo output. Re-running
 `bash run.sh` after a clean demo run produces a byte-stable
-result when `--now` is pinned. To refresh after an intentional
+result when `--eval-time` is pinned. To refresh after an intentional
 change:
 
 ```bash

@@ -147,7 +147,7 @@ func NewBuilder(opts ...Option) *Builder {
 
 // Build produces the SIR Document for the given inputs. now is the
 // caller-supplied evaluation time — typically the resolved value of
-// the `--now` flag — and is recorded directly as Document.EvaluatedAt.
+// the `--eval-time` flag — and is recorded directly as Document.EvaluatedAt.
 // Build never reads the process wall clock; determinism for the same inputs
 // is guaranteed.
 //

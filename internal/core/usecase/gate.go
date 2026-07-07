@@ -18,7 +18,7 @@ type GateRequest struct {
 	ControlsDir       string        `json:"controls_dir,omitempty"`
 	ObservationsDir   string        `json:"observations_dir,omitempty"`
 	MaxUnsafeDuration time.Duration `json:"max_unsafe_duration,omitempty"`
-	Now               *time.Time    `json:"now,omitempty"`
+	EvalTime          *time.Time    `json:"eval_time,omitempty"`
 }
 
 // GateResponse is the output of the CI gate use case.
@@ -71,14 +71,14 @@ func Gate(ctx context.Context, req GateRequest, deps GateDeps) (GateResponse, er
 		return GateResponse{}, fmt.Errorf("gate: %w", err)
 	}
 
-	// req.Now overrides everything (tests and reproducible runs);
+	// req.EvalTime overrides everything (tests and reproducible runs);
 	// otherwise use the injected Clock; if neither is supplied, fall
 	// back to ports.RealClock so a nil Clock dependency doesn't panic
 	// while keeping wall-clock access behind the ports interface.
 	var now time.Time
 	switch {
-	case req.Now != nil:
-		now = req.Now.UTC()
+	case req.EvalTime != nil:
+		now = req.EvalTime.UTC()
 	case deps.Clock != nil:
 		now = deps.Clock.Now().UTC()
 	default:

@@ -49,7 +49,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	now, err := time.Parse(time.RFC3339, fixedNow)
+	evalTime, err := time.Parse(time.RFC3339, fixedNow)
 	if err != nil {
 		log.Fatalf("parse fixed now: %v", err)
 	}
@@ -67,9 +67,9 @@ func main() {
 	// where the iteration's verdicts live.
 	if phase == "writeup" || phase == "both" {
 		runScenario(ctx, scenario{
-			label: "writeup-config (account-root principal, s3:Get*/s3:List* wildcards)",
-			dir:   filepath.Join(root, "fixtures/writeup-config/observations"),
-			now:   now,
+			label:    "writeup-config (account-root principal, s3:Get*/s3:List* wildcards)",
+			dir:      filepath.Join(root, "fixtures/writeup-config/observations"),
+			evalTime: evalTime,
 		})
 	}
 	if phase == "both" {
@@ -77,9 +77,9 @@ func main() {
 	}
 	if phase == "remediated" || phase == "both" {
 		runScenario(ctx, scenario{
-			label: "remediated-config (scoped Principal, AllowRead removed)",
-			dir:   filepath.Join(root, "fixtures/remediated-config/observations"),
-			now:   now,
+			label:    "remediated-config (scoped Principal, AllowRead removed)",
+			dir:      filepath.Join(root, "fixtures/remediated-config/observations"),
+			evalTime: evalTime,
 		})
 	}
 	fmt.Println()
@@ -89,9 +89,9 @@ func main() {
 }
 
 type scenario struct {
-	label string
-	dir   string
-	now   time.Time
+	label    string
+	dir      string
+	evalTime time.Time
 }
 
 func runScenario(ctx context.Context, s scenario) {
@@ -100,7 +100,7 @@ func runScenario(ctx context.Context, s scenario) {
 		SnapshotsDir: s.dir,
 		ControlsDir:  filepath.Join(root, "controls"),
 		MaxUnsafe:    maxUnsafe,
-		Now:          s.now,
+		EvalTime:     s.evalTime,
 	}
 	a, err := stave.Apply(ctx, cfg)
 	if err != nil {

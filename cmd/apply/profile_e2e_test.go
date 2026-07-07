@@ -137,7 +137,7 @@ func TestApplyProfileE2E(t *testing.T) {
 				"apply",
 				"--profile", tc.profile,
 				"--input", inputFile,
-				"--now", "2026-01-15T00:00:00Z",
+				"--eval-time", "2026-01-15T00:00:00Z",
 				// --format json is required here because this test
 				// parses the stdout as JSON. The CLI default flipped
 				// to text for first-time human users, so any test

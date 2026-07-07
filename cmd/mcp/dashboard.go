@@ -105,7 +105,7 @@ func buildDashboardView(a *stave.Assessment, score int) dashboardView {
 		Findings:      a.Summary.Violations,
 		Assets:        a.Summary.TotalAssets,
 		Snapshots:     a.Run.Snapshots,
-		EvaluatedAt:   a.Run.Now.Format("2006-01-02 15:04:05 MST"),
+		EvaluatedAt:   a.Run.EvalTime.Format("2006-01-02 15:04:05 MST"),
 		SLABreaches:   a.SLABreaches,
 		TopN:          20,
 	}

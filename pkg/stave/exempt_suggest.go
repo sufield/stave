@@ -53,7 +53,7 @@ func SuggestExemptions(ctx context.Context, cfg SuggestConfig) ([]byte, error) {
 			History:      history,
 			Window:       window,
 			MinDwell:     minDwell,
-			Now:          time.Now().UTC(),
+			EvalTime:     time.Now().UTC(),
 			ExemptedKeys: exemptedKeys,
 		})
 	}

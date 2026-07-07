@@ -44,7 +44,7 @@ func buildFixtureGraph(t *testing.T) *GraphData {
 			fixtureFinding(policy.SeverityHigh, "CTL.S3.ACL.FULLCONTROL.001",
 				"arn:aws:s3:::123456789012-bucket", "aws_s3_bucket", "aws"),
 		},
-		Now:        now,
+		EvalTime:   now,
 		SourcePath: "test/assessment.json",
 	})
 	return g
@@ -264,7 +264,7 @@ func largeFixtureGraph(findingCount int) *GraphData {
 	}
 	return Build(BuildInput{
 		Findings:   findings,
-		Now:        now,
+		EvalTime:   now,
 		SourcePath: "bench/large.json",
 	})
 }

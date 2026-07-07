@@ -38,13 +38,13 @@ it in agent workflows; the looser default exists for hand-debugging.
 
 | Command | Purpose | Exit codes |
 |---|---|---|
-| `stave apply --observations <dir> --now <RFC3339> --format json` | Evaluate controls + chains, emit findings | 0 no findings, 3 findings present, 2 input error, 4 internal |
+| `stave apply --observations <dir> --eval-time <RFC3339> --format json` | Evaluate controls + chains, emit findings | 0 no findings, 3 findings present, 2 input error, 4 internal |
 | `stave gaps --observations <dir> --format json` | Missing properties, typed by remediation class | 0 always |
 | `stave readiness --observations <dir> --format json` | Three-bucket coverage report | 0 always |
 
 ### Critical flags
 
-- `--now <RFC3339>` — **always pass** for deterministic output. Match the
+- `--eval-time <RFC3339>` — **always pass** for deterministic output. Match the
   observation's `captured_at` for reproducibility across CI runs and
   agent iterations.
 - `--max-unsafe <duration>` — override the SLA threshold (default 7 days).
@@ -53,7 +53,7 @@ it in agent workflows; the looser default exists for hand-debugging.
 ### Reading the output
 
 ```bash
-stave apply --observations ./obs --format json --now $(date -u +%Y-%m-%dT%H:%M:%SZ) | jq '{
+stave apply --observations ./obs --format json --eval-time $(date -u +%Y-%m-%dT%H:%M:%SZ) | jq '{
   total: (.findings | length),
   by_severity: (.findings | group_by(.control_severity) | map({(.[0].control_severity): length}) | add),
   chains: (.chain_findings // [] | length)
@@ -74,7 +74,7 @@ individual findings; they're the high-leverage signal.
 | `stave export-sir --format smt2 --observations <dir>` | SMT-LIB v2 declarations + assertions — Z3 / cvc5 / Yices | 0 always |
 | `stave export-sir --format json --observations <dir>` | Full nested SIR document for inspection | 0 always |
 
-Always pass `--now` for byte-stable output. The export covers the SIR's
+Always pass `--eval-time` for byte-stable output. The export covers the SIR's
 projected scope (13 top-level domains today); see `--help` for the
 domain list.
 

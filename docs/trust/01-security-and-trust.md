@@ -67,13 +67,13 @@ A false negative occurs when Stave reports no violation but an unsafe condition 
 
 **4. Control coverage gaps.** Stave evaluates only the controls in the directory you specify. If no control checks for a specific misconfiguration, Stave will not detect it. The control catalog is published and version-controlled; review it to understand coverage boundaries.
 
-**5. Open episodes at observation boundaries.** If a resource becomes unsafe in the final snapshot, the duration calculation depends on the `--now` parameter. An incorrect `--now` value can undercount duration. **Mitigation:** Always set `--now` to the current time in production or the latest snapshot time in CI.
+**5. Open episodes at observation boundaries.** If a resource becomes unsafe in the final snapshot, the duration calculation depends on the `--eval-time` parameter. An incorrect `--eval-time` value can undercount duration. **Mitigation:** Always set `--eval-time` to the current time in production or the latest snapshot time in CI.
 
 ## False Positive Risk
 
 A false positive occurs when Stave reports a violation but the resource is actually safe. Known causes:
 
-**1. Clock skew via `--now`.** If `--now` is set significantly after the latest snapshot, duration calculations may overcount. The `diagnose` command detects this condition.
+**1. Clock skew via `--eval-time`.** If `--eval-time` is set significantly after the latest snapshot, duration calculations may overcount. The `diagnose` command detects this condition.
 
 **2. Stale observations.** If observation data is outdated and the resource was remediated after the last export, Stave evaluates the stale state. **Mitigation:** Re-export observations before evaluation.
 

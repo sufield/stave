@@ -5,9 +5,9 @@ import "time"
 // Clock provides an abstraction for the system clock,
 // allowing for deterministic time in tests.
 //
-// IsUserProvided distinguishes user-supplied clocks (--now,
+// IsUserProvided distinguishes user-supplied clocks (--eval-time,
 // FixedClock) from the system wall-clock. The assessor branches on
-// this to honour `--now` overrides as the audit timestamp instead of
+// this to honour `--eval-time` overrides as the audit timestamp instead of
 // reaching for the latest snapshot's CapturedAt; the previous shape
 // type-asserted to ports.FixedClock at the call site, which broke
 // when callers wrapped the clock in their own type that still
@@ -40,5 +40,5 @@ func (f FixedClock) Now() time.Time {
 }
 
 // IsUserProvided returns true: a FixedClock represents an explicit
-// caller-supplied time (--now or test-fixture clock).
+// caller-supplied time (--eval-time or test-fixture clock).
 func (FixedClock) IsUserProvided() bool { return true }

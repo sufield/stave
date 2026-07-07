@@ -20,7 +20,7 @@ type options struct {
 	ControlID   string
 	Mode        string
 	Format      string
-	Now         string
+	EvalTime    string
 	ResourceARN string
 }
 
@@ -47,7 +47,7 @@ Inputs:
   --control-id        ID of the single control to bisect (required)
   --mode              Search strategy: bisect or scan (default: bisect)
   --format, -f        Output format: text or json (default: text)
-  --now               Override current time (RFC3339) for deterministic evaluation
+  --eval-time               Evaluation reference timestamp (RFC3339) for deterministic evaluation
   --resource          Scope to a specific resource ARN (optional)
 
 Output:
@@ -81,7 +81,7 @@ Exit Codes:
 				ControlID:   opts.ControlID,
 				Mode:        opts.Mode,
 				Format:      opts.Format,
-				Now:         opts.Now,
+				EvalTime:    opts.EvalTime,
 				ResourceARN: opts.ResourceARN,
 				Logger:      cmdctx.LoggerFromCmd(cmd),
 			})
@@ -114,7 +114,7 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.ControlID, "control-id", "", "Control ID to bisect (required)")
 	cmd.Flags().StringVar(&opts.Mode, "mode", "bisect", "Search strategy: bisect or scan")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "Output format: text or json")
-	cmd.Flags().StringVar(&opts.Now, "now", "", "Override current time (RFC3339)")
+	cmd.Flags().StringVar(&opts.EvalTime, "eval-time", "", "Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.")
 	cmd.Flags().StringVar(&opts.ResourceARN, "resource", "", "Scope to a specific resource ARN")
 	cliflags.MustMarkRequired(cmd, "control-id")
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed("text", "json"))

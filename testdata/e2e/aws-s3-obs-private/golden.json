@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "now": "2026-01-15T00:00:00Z",
+    "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "policy_fingerprint": "ffbeef503f25a73763eac15e11301db16ec3bb44839a132fa1df682edca42144",

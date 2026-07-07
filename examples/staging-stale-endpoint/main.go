@@ -58,7 +58,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	now, err := time.Parse(time.RFC3339, fixedNow)
+	evalTime, err := time.Parse(time.RFC3339, fixedNow)
 	if err != nil {
 		log.Fatalf("parse fixed now: %v", err)
 	}
@@ -97,7 +97,7 @@ func main() {
 		if i > 0 {
 			fmt.Println()
 		}
-		allOK = runScenario(ctx, controlsDir, now, s) && allOK
+		allOK = runScenario(ctx, controlsDir, evalTime, s) && allOK
 	}
 
 	if !allOK {
@@ -105,12 +105,12 @@ func main() {
 	}
 }
 
-func runScenario(ctx context.Context, controlsDir string, now time.Time, s scenario) bool {
+func runScenario(ctx context.Context, controlsDir string, evalTime time.Time, s scenario) bool {
 	cfg := stave.Config{
 		SnapshotsDir: s.dir,
 		ControlsDir:  controlsDir,
 		MaxUnsafe:    maxUnsafe,
-		Now:          now,
+		EvalTime:     evalTime,
 	}
 	a, err := stave.Apply(ctx, cfg)
 	if err != nil {

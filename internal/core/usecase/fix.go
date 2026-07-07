@@ -72,7 +72,7 @@ type FixLoopRequest struct {
 	ControlsDir       string `json:"controls_dir,omitempty"`
 	OutDir            string `json:"out_dir,omitempty"`
 	MaxUnsafeDuration string `json:"max_unsafe_duration,omitempty"`
-	NowTime           string `json:"now_time,omitempty"`
+	EvalTimeRaw       string `json:"eval_time,omitempty"`
 }
 
 // FixLoopResponse is the output of the fix-loop use case.

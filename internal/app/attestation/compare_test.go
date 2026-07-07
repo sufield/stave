@@ -11,7 +11,7 @@ import (
 
 func TestCompare_NoFindings(t *testing.T) {
 	result, err := Compare(CompareRequest{
-		Now:          time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
+		EvalTime:     time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
 		SLAThreshold: 24 * time.Hour,
 	})
 	if err != nil {
@@ -34,7 +34,7 @@ func TestCompare_AllRemediated(t *testing.T) {
 		TargetFindings:    nil,
 		BaselineSnapshots: 2,
 		TargetSnapshots:   2,
-		Now:               time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
+		EvalTime:          time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
 		SLAThreshold:      24 * time.Hour,
 	})
 	if err != nil {
@@ -64,7 +64,7 @@ func TestCompare_WithOpen(t *testing.T) {
 		TargetFindings:    []evaluation.Finding{finding},
 		BaselineSnapshots: 2,
 		TargetSnapshots:   2,
-		Now:               time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
+		EvalTime:          time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
 		SLAThreshold:      24 * time.Hour,
 	})
 	if err != nil {
@@ -83,7 +83,7 @@ func TestCompare_WithRegressions(t *testing.T) {
 		},
 		BaselineSnapshots: 2,
 		TargetSnapshots:   2,
-		Now:               time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
+		EvalTime:          time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
 		SLAThreshold:      24 * time.Hour,
 	})
 	if err != nil {
@@ -101,7 +101,7 @@ func TestCompare_WithSanitizer(t *testing.T) {
 	result, err := Compare(CompareRequest{
 		BaselineFindings: before,
 		TargetFindings:   nil,
-		Now:              time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
+		EvalTime:         time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC),
 		SLAThreshold:     24 * time.Hour,
 		Sanitizer:        testSanitizer{},
 	})

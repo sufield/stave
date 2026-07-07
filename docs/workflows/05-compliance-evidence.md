@@ -45,11 +45,11 @@ The scorecard is for humans; the JSON is for the record:
 ```bash
 mkdir -p evidence
 stave apply --observations ./obs/ --format json \
-  --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  --eval-time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   > evidence/$(date +%Y%m%d).json
 ```
 
-Pin `--now` so the output is byte-stable. This JSON is deterministic
+Pin `--eval-time` so the output is byte-stable. This JSON is deterministic
 evidence: same input, same output, every time. Hand it to the auditor
 alongside the scorecard. For a sealed, signed evidence package for
 air-gapped GRC, see `stave bundle` and `stave attest`.

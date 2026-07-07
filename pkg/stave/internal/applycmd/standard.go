@@ -54,7 +54,7 @@ type StandardRequest struct {
 	ControlsDir        string
 	ObservationsDir    string
 	MaxUnsafe          string // raw --max-unsafe (e.g. "168h", "7d"); parsed by the engine
-	Now                string // raw --now (RFC3339) or ""; parsed by the engine
+	EvalTime           string // raw --eval-time (RFC3339) or ""; parsed by the engine
 	SanitizeIDs        bool
 	PathMode           string
 	Format             string
@@ -132,7 +132,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 		return StandardResult{}, fmt.Errorf("load SLA policy: %w", err)
 	}
 
-	maxUnsafe, now, err := parseStandardTimes(req.MaxUnsafe, req.Now)
+	maxUnsafe, now, err := parseStandardTimes(req.MaxUnsafe, req.EvalTime)
 	if err != nil {
 		return StandardResult{}, err
 	}
@@ -179,7 +179,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 		IntegrityManifest:   req.IntegrityManifest,
 		IntegrityPublicKey:  req.IntegrityPublicKey,
 		MaxUnsafe:           maxUnsafe,
-		Now:                 now,
+		EvalTime:            now,
 		ExemptionRules:      exemptionCfg,
 		AcknowledgmentRules: ackCfg,
 		SLAConfig:           slaCfg,
@@ -224,7 +224,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 
 	lapsed := exemptlapse.Detect(exemptlapse.Input{
 		AcknowledgedFindings: report.AcknowledgedFindings,
-		Now:                  now,
+		EvalTime:             now,
 	})
 
 	outcome := evaluation.EnforcementPolicy{}.Evaluate(report.SecurityState)
@@ -240,19 +240,19 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 	}, nil
 }
 
-// parseStandardTimes parses the raw --max-unsafe and --now flag strings into
+// parseStandardTimes parses the raw --max-unsafe and --eval-time flag strings into
 // the engine's reference duration and time. Bad values wrap ErrInvalidInput
 // (exit 2).
 //
-// When --now is empty it materializes the wall clock as time.Now().UTC(),
+// When --eval-time is empty it materializes the wall clock as time.Now().UTC(),
 // matching the pre-facade command which passed params.clock.Now()
 // (ports.RealClock{}.Now() == time.Now().UTC()) as a concrete time. The engine
 // then builds a FixedClock (IsUserProvided=true) and uses that wall clock as
 // the audit reference. Returning the zero time instead would make the engine
 // fall back to the latest snapshot's CapturedAt (RealClock, IsUserProvided=
 // false), silently changing durations, security_state, gating, and the exit
-// code on every no---now run. --now is normalized to UTC to match the
-// pre-facade parseNowTime, so non-UTC offsets render byte-identically.
+// code on every no---eval-time run. --eval-time is normalized to UTC to match the
+// pre-facade parseEvalTime, so non-UTC offsets render byte-identically.
 func parseStandardTimes(maxUnsafeStr, nowStr string) (time.Duration, time.Time, error) {
 	// Parse unconditionally: the pre-facade appeval.parseMaxUnsafeDuration
 	// rejected an empty value (kernel.ParseDuration → ErrEmptyDuration → exit
@@ -267,7 +267,7 @@ func parseStandardTimes(maxUnsafeStr, nowStr string) (time.Duration, time.Time, 
 	}
 	t, err := time.Parse(time.RFC3339, nowStr)
 	if err != nil {
-		return 0, time.Time{}, fmt.Errorf("parse --now %q: %w: %w", nowStr, err, ErrInvalidInput)
+		return 0, time.Time{}, fmt.Errorf("parse --eval-time %q: %w: %w", nowStr, err, ErrInvalidInput)
 	}
 	return maxUnsafe, t.UTC(), nil
 }

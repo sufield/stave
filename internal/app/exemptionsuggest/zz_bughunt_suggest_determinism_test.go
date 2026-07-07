@@ -22,7 +22,7 @@ func TestBugHunt_Suggest_Determinism(t *testing.T) {
 		History:  history,
 		Window:   90 * day,
 		MinDwell: 0, // 0 dwell so they are chronic immediately
-		Now:      tNow,
+		EvalTime: tNow,
 	})
 
 	if len(result.Chronic) != 2 {

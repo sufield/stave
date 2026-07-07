@@ -25,7 +25,7 @@ type ReadinessRequest struct {
 	ControlsDir            string
 	ObservationsDir        string
 	MaxUnsafe              time.Duration
-	Now                    time.Time
+	EvalTime               time.Time
 	Sanitize               bool
 	Format                 string // "text" | "json"
 	ControlsFlagSet        bool
@@ -54,7 +54,7 @@ func AssessReadiness(req ReadinessRequest, runEval func(time.Duration, time.Time
 		ControlSource:          req.ControlsDir,
 		ObservationSource:      req.ObservationsDir,
 		SLAThreshold:           req.MaxUnsafe,
-		CurrentTime:            req.Now,
+		CurrentTime:            req.EvalTime,
 		ControlFlagsSet:        req.ControlsFlagSet,
 		HasEnabledControlPacks: req.HasEnabledControlPacks,
 		PreflightChecks:        prereqs,

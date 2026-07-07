@@ -1,0 +1,125 @@
+dsl_version: ctrl.v1
+id: CTL.ACM.ACME.SCOPE.WILDCARD.001
+name: ACM ACME Endpoint Domain Scope Must Not Use Wildcards
+description: >
+  ACM ACME endpoint domain scope must not contain wildcard patterns.
+  An ACME endpoint scoped to *.example.com allows any authorized ACME
+  client to request certificates for any subdomain. If the endpoint
+  serves a single application (app.example.com), the wildcard scope
+  is a blast-radius amplifier: a compromised ACME client can issue
+  certificates for domains it should not control. Exact domain names
+  in the scope field limit issuance to the intended services.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-16"]
+scope_tags:
+  - aws
+  - acm
+taxonomy:
+  - least-privilege
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_acm_acme_endpoint
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    ACM ACME endpoint has a wildcard domain scope, allowing any
+    authorized ACME client to issue certificates for any subdomain
+    under the wildcard.
+  action: >
+    Restrict the ACME endpoint's domain scope to the specific domains
+    that need certificate issuance. Replace *.example.com with the
+    exact domain names (app.example.com, api.example.com). If wildcard
+    scope is operationally required, document the justification and
+    tighten IAM policies on the endpoint to limit which principals
+    can request certificates.
+  example: |
+    {
+      "governance": {
+        "kind": "acm_acme_endpoint",
+        "acme_endpoint": {
+          "domain_scope_has_wildcard": false,
+          "domain_scope": ["app.example.com", "api.example.com"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: acm_acme_endpoint
+    - field: properties.governance.acme_endpoint.domain_scope_has_wildcard
+      op: eq
+      value: true
+defect: >
+  ACME endpoint domain scope includes a wildcard pattern.
+infection: >
+  An ACME endpoint with wildcard scope allows certificate issuance for
+  any subdomain matching the pattern. If the endpoint was created for a
+  specific application but scoped broadly for convenience, the attack
+  surface includes every subdomain under the wildcard. A compromised
+  ACME client — or an attacker who obtains the client credentials —
+  can issue valid certificates for domains they should not control.
+failure: >
+  Unauthorized certificate issuance for subdomains outside the
+  intended scope. Valid certificates issued for arbitrary subdomains
+  enable phishing, man-in-the-middle attacks, or domain impersonation
+  within the organization's namespace.
+tests:
+  - name: wildcard domain scope fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:acme-endpoint/broad-scope"
+      asset_type: aws_acm_acme_endpoint
+      vendor: aws
+      properties:
+        governance:
+          kind: acm_acme_endpoint
+          acme_endpoint:
+            status: ACTIVE
+            domain_scope_has_wildcard: true
+            domain_scope:
+              - "*.example.com"
+            wildcard_policy: ALLOW
+  - name: exact domain scope passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:acme-endpoint/app-scope"
+      asset_type: aws_acm_acme_endpoint
+      vendor: aws
+      properties:
+        governance:
+          kind: acm_acme_endpoint
+          acme_endpoint:
+            status: ACTIVE
+            domain_scope_has_wildcard: false
+            domain_scope:
+              - "app.example.com"
+              - "api.example.com"
+            wildcard_policy: DENY
+  - name: multiple wildcards fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:acme-endpoint/multi-wild"
+      asset_type: aws_acm_acme_endpoint
+      vendor: aws
+      properties:
+        governance:
+          kind: acm_acme_endpoint
+          acme_endpoint:
+            status: ACTIVE
+            domain_scope_has_wildcard: true
+            domain_scope:
+              - "*.example.com"
+              - "*.internal.example.com"
+            wildcard_policy: ALLOW

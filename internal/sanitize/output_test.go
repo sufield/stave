@@ -34,7 +34,7 @@ func makeTestResult() *evaluation.ComplianceReport {
 	t2 := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	return &evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
-			Now:               t2,
+			EvalTime:          t2,
 			Offline:           true,
 			MaxUnsafeDuration: 0,
 			Snapshots:         2,

@@ -223,4 +223,4 @@ an AWS account.
 | `--controls` | Directory containing YAML control definitions |
 | `--observations` | Directory containing JSON observation snapshots |
 | `--max-unsafe` | Maximum time a resource may remain unsafe before violation |
-| `--now` | Fixed timestamp for deterministic output |
+| `--eval-time` | Fixed timestamp for deterministic output |

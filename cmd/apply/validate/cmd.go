@@ -31,7 +31,7 @@ Inputs:
   --kind               Contract kind: control|observation|finding (requires --in)
   --schema-version     Contract schema version override
   --max-unsafe         Maximum allowed unsafe duration
-  --now                Override current time (RFC3339) for deterministic output
+  --eval-time                Evaluation reference timestamp (RFC3339) for deterministic output
   --format, -f         Output format: text or json (default: text)
   --strict             Treat warnings as errors (exit 2)
   --fix-hints          Print remediation hints after issues

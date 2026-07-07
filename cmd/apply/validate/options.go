@@ -33,7 +33,7 @@ type options struct {
 
 	// Configuration
 	MaxUnsafeDuration string
-	NowTime           string
+	EvalTimeRaw       string
 	Strict            bool
 
 	// Metadata Overrides
@@ -68,7 +68,9 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.Controls, "controls", "i", o.Controls, "Path to control definitions (inferred if omitted)")
 	f.StringVarP(&o.Observations, "observations", "o", o.Observations, "Path to observation snapshots (inferred if omitted)")
 	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
-	f.StringVar(&o.NowTime, "now", "", "Override current time (RFC3339) for deterministic output")
+	f.StringVar(&o.EvalTimeRaw, "eval-time", "", "Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.")
+	f.StringVar(&o.EvalTimeRaw, "now", "", "Alias for --eval-time")
+	_ = f.MarkDeprecated("now", "please use --eval-time instead")
 	f.StringVarP(&o.Format, "format", "f", o.Format, "Output format: text or json")
 	f.BoolVar(&o.Strict, "strict", false, "Treat warnings as errors (exit 2)")
 	f.BoolVar(&o.FixHints, "fix-hints", false, "Print remediation hints after issues")

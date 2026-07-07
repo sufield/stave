@@ -16,7 +16,7 @@ type ThresholdRequest struct {
 	Controls                []policy.ControlDefinition
 	Snapshots               []asset.Snapshot
 	GlobalMaxUnsafeDuration time.Duration
-	Now                     time.Time
+	EvalTime                time.Time
 	PredicateEval           policy.PredicateEval
 	// Exemptions is optional; when set, exempted assets are skipped
 	// from risk computation just as they are skipped from the main
@@ -94,8 +94,8 @@ func ComputeItems(req ThresholdRequest) findingsdata.ThresholdItems {
 			dueAt := st.FirstUnsafeAt.Add(threshold).UTC()
 			items = append(items, findingsdata.ThresholdItem{
 				DueAt:          dueAt,
-				Status:         classifyStatus(req.Now, dueAt),
-				Remaining:      dueAt.Sub(req.Now),
+				Status:         classifyStatus(req.EvalTime, dueAt),
+				Remaining:      dueAt.Sub(req.EvalTime),
 				ControlID:      ctl.ID,
 				AssetID:        id,
 				AssetType:      st.AssetType,
@@ -195,11 +195,11 @@ func computeAssetStates(
 	return states
 }
 
-func classifyStatus(now, dueAt time.Time) findingsdata.ThresholdStatus {
-	if now.After(dueAt) {
+func classifyStatus(evalTime, dueAt time.Time) findingsdata.ThresholdStatus {
+	if evalTime.After(dueAt) {
 		return findingsdata.StatusOverdue
 	}
-	if now.Equal(dueAt) {
+	if evalTime.Equal(dueAt) {
 		return findingsdata.StatusDueNow
 	}
 	return findingsdata.StatusUpcoming

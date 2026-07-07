@@ -25,7 +25,7 @@ func TestFindingWriter_OmitsCoveragePosture(t *testing.T) {
 		Run: evaluation.RunInfo{
 			StaveVersion:   "test",
 			Offline:        true,
-			Now:            time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC),
+			EvalTime:       time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC),
 			Snapshots:      1,
 			EvaluatedState: "deployed",
 		},

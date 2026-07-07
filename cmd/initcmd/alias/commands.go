@@ -179,7 +179,7 @@ Exit Codes:
   0    Success
   2    Input error
   4    Internal error` + metadata.OfflineHelpSuffix,
-		Example: `  stave alias set ev "apply --controls controls/s3 --now 2026-01-11T00:00:00Z"`,
+		Example: `  stave alias set ev "apply --controls controls/s3 --eval-time 2026-01-11T00:00:00Z"`,
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			res, err := projconfig.NewResolver()

@@ -13,7 +13,7 @@
   "run": {
     "after_snapshots": 2,
     "before_snapshots": 2,
-    "now": "2026-01-11T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "offline": true,
     "sla_threshold": "168h0m0s",
     "tool_version": "edge"

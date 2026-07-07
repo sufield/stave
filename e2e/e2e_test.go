@@ -182,7 +182,7 @@ func runE2ECase(t *testing.T, bin, caseDir string) {
 			"--controls", relCtlDir,
 			"--observations", relObsDir,
 			"--max-unsafe", "168h",
-			"--now", now,
+			"--eval-time", now,
 		}
 		// The apply command's default --format flipped from json to
 		// text in commit 028ecab58 for human-readable first-run UX.

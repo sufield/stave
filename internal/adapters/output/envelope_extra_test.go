@@ -13,7 +13,7 @@ import (
 func TestBuildAssessmentFromEnriched_NilFindings(t *testing.T) {
 	enriched := appcontracts.EnrichedResult{
 		Run: evaluation.RunInfo{
-			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			EvalTime:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			EvaluatedState:    "deployed",
 		},
@@ -35,7 +35,7 @@ func TestBuildAssessmentFromEnriched_NilFindings(t *testing.T) {
 func TestBuildAssessmentFromEnriched_WithFindings(t *testing.T) {
 	enriched := appcontracts.EnrichedResult{
 		Run: evaluation.RunInfo{
-			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			EvalTime:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			EvaluatedState:    "deployed",
 		},

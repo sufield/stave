@@ -18,7 +18,7 @@ type CompareRequest struct {
 	BaselineSnapshots int
 	TargetSnapshots   int
 	SLAThreshold      time.Duration
-	Now               time.Time
+	EvalTime          time.Time
 	Sanitizer         kernel.Sanitizer
 }
 
@@ -43,7 +43,7 @@ func Compare(req CompareRequest) (CompareResult, error) {
 		Run: report.AttestationRunInfo{
 			ToolVersion:     staveversion.String,
 			Offline:         true,
-			Now:             req.Now,
+			EvalTime:        req.EvalTime,
 			SLAThreshold:    req.SLAThreshold,
 			BeforeSnapshots: req.BaselineSnapshots,
 			AfterSnapshots:  req.TargetSnapshots,

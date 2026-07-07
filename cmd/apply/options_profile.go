@@ -52,7 +52,7 @@ func resolveProfileMode(o *Options, cs cobraState) (RunConfig, error) {
 		Quiet:             quiet,
 		Stdout:            compose.ResolveStdout(cs.Stdout, quiet, format),
 		Stderr:            cs.Stderr,
-		NowTime:           o.NowTime,
+		EvalTimeRaw:       o.EvalTimeRaw,
 	}
 	return RunConfig{Mode: runModeProfile, Profile: cfg}, nil
 }

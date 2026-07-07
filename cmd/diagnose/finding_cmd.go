@@ -20,7 +20,7 @@ func NewFindingCmd(newObsRepo compose.ObsRepoFactory, newCtlRepo compose.CtlRepo
 		observationsDir string
 		previousOutput  string
 		maxUnsafe       string
-		nowTime         string
+		evalTimeRaw     string
 		format          string
 		template        string
 		controlID       string
@@ -104,7 +104,7 @@ Examples:
 				ControlsChanged:   controlsChanged,
 				ObsChanged:        obsChanged,
 				MaxUnsafeDuration: maxUnsafe,
-				NowTime:           nowTime,
+				EvalTimeRaw:       evalTimeRaw,
 				Format:            format,
 				FormatChanged:     formatChanged,
 			})
@@ -150,7 +150,9 @@ Examples:
 	f.StringVarP(&observationsDir, "observations", "o", "observations", "Path to observation snapshots directory")
 	f.StringVarP(&previousOutput, "previous-output", "p", "", "Path to existing apply output JSON")
 	f.StringVar(&maxUnsafe, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
-	f.StringVar(&nowTime, "now", "", "Override current time (RFC3339)")
+	f.StringVar(&evalTimeRaw, "eval-time", "", "Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.")
+	f.StringVar(&evalTimeRaw, "now", "", "Alias for --eval-time")
+	_ = f.MarkDeprecated("now", "please use --eval-time instead")
 	f.StringVarP(&format, "format", "f", "text", "Output format: text or json")
 	f.StringVar(&template, "template", "", "Template string for custom output formatting")
 	_ = cmd.MarkFlagRequired("control-id")

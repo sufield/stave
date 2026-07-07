@@ -67,7 +67,7 @@ func LoadAssessments(ctx context.Context, dir string) ([]*Assessment, error) {
 	return out, nil
 }
 
-// SortAssessmentsByTime stable-sorts assessments by Run.Now ascending,
+// SortAssessmentsByTime stable-sorts assessments by Run.EvalTime ascending,
 // preserving directory-load order when two assessments share an
 // identical timestamp. The stable sort matters for sequential
 // assessments produced inside the same wall-clock second: an
@@ -75,9 +75,9 @@ func LoadAssessments(ctx context.Context, dir string) ([]*Assessment, error) {
 func SortAssessmentsByTime(assessments []*Assessment) {
 	slices.SortStableFunc(assessments, func(a, b *Assessment) int {
 		switch {
-		case a.Run.Now.Before(b.Run.Now):
+		case a.Run.EvalTime.Before(b.Run.EvalTime):
 			return -1
-		case b.Run.Now.Before(a.Run.Now):
+		case b.Run.EvalTime.Before(a.Run.EvalTime):
 			return 1
 		default:
 			return 0
@@ -87,13 +87,13 @@ func SortAssessmentsByTime(assessments []*Assessment) {
 
 // SnapshotID returns the deterministic snapshot identifier callers
 // (cmd/score's trend builder) attach to per-assessment rows:
-// "snap-YYYYMMDD" derived from Run.Now, or "" when the assessment
+// "snap-YYYYMMDD" derived from Run.EvalTime, or "" when the assessment
 // carries no timestamp.
 func (a *Assessment) SnapshotID() string {
-	if a == nil || a.Run.Now.IsZero() {
+	if a == nil || a.Run.EvalTime.IsZero() {
 		return ""
 	}
-	return "snap-" + a.Run.Now.Format("20060102")
+	return "snap-" + a.Run.EvalTime.Format("20060102")
 }
 
 // HasFindings reports whether the assessment carries at least one

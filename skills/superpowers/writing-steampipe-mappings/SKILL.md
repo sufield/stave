@@ -177,7 +177,7 @@ stave validate --in observations/*.obs.json --kind observation --strict
 ```bash
 NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 stave apply --observations ./observations \
-    --now $NOW --format json \
+    --eval-time $NOW --format json \
     | jq '.findings | length'
 ```
 

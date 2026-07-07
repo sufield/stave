@@ -29,7 +29,7 @@ with --coverage to list the recognized shapes.
 
 Inputs:  --in, -i   directory of raw AWS CLI JSON files (default: raw)
          --account   AWS account ID for filters whose input carries no ARN
-         --now       captured_at timestamp (RFC3339); defaults to now
+         --eval-time       captured_at timestamp (RFC3339); defaults to now
          --format, -f  summary format: text or json
 Outputs: one obs.v0.1 file written to --out (or stdout with --out -); a summary
          on stdout (stderr when --out -).

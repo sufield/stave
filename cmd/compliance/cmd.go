@@ -44,7 +44,7 @@ Inputs:
   --snapshot        observation snapshot directory, or - for stdin
   --controls        control directory (default: built-in catalog)
   --format          text | json | markdown (default: text)
-  --now             override current time (RFC3339) for deterministic output
+  --eval-time             Evaluation reference timestamp (RFC3339) for deterministic output
   --verify-mapping  check the mapping against the catalog and exit (no snapshot)
   --strict          fail (exit 2) on mapping-integrity errors
 
@@ -83,7 +83,7 @@ Examples:
 	f.StringVar(&opts.snapshot, "snapshot", "", "observation snapshot directory (or - for stdin)")
 	f.StringVarP(&opts.controls, "controls", "i", "controls", "control definitions directory (default: built-in catalog)")
 	f.StringVarP(&opts.format, "format", "f", "text", "output format: text, json, markdown")
-	f.StringVar(&opts.now, "now", "", "override current time (RFC3339) for deterministic output")
+	f.StringVar(&opts.evalTime, "eval-time", "", "Evaluation reference timestamp (RFC3339) for deterministic output")
 	f.BoolVar(&opts.verifyMapping, "verify-mapping", false, "check the framework mapping against the catalog and exit (no snapshot needed)")
 	f.BoolVar(&opts.strict, "strict", false, "fail (exit 2) on mapping-integrity errors (dangling refs, duplicate IDs, invalid confidence)")
 

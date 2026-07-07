@@ -67,7 +67,7 @@ func loadLatestAssessment(ctx context.Context, dir string) (*report.Assessment, 
 		if loadErr != nil {
 			continue
 		}
-		if latest == nil || a.Run.Now.After(latest.Run.Now) {
+		if latest == nil || a.Run.EvalTime.After(latest.Run.EvalTime) {
 			latest = a
 		}
 	}

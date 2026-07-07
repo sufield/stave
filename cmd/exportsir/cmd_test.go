@@ -22,16 +22,16 @@ func TestRun_RejectsUnknownFormat(t *testing.T) {
 }
 
 // TestRun_RejectsMalformedNow asserts the early validation of
-// --now: a non-RFC3339 string fails fast with an actionable
-// message instead of producing nonsense output. Pinning --now is
+// --eval-time: a non-RFC3339 string fails fast with an actionable
+// message instead of producing nonsense output. Pinning --eval-time is
 // the determinism gate; rejecting a bad value here protects every
 // downstream consumer.
 func TestRun_RejectsMalformedNow(t *testing.T) {
 	t.Parallel()
 	var buf bytes.Buffer
-	err := run(t.Context(), &buf, &bytes.Buffer{}, &options{Format: "json", Now: "not-a-time"})
+	err := run(t.Context(), &buf, &bytes.Buffer{}, &options{Format: "json", EvalTime: "not-a-time"})
 	if err == nil {
-		t.Fatalf("expected error for malformed --now")
+		t.Fatalf("expected error for malformed --eval-time")
 	}
 	if !strings.Contains(err.Error(), "RFC3339") {
 		t.Errorf("error should mention RFC3339: got %q", err.Error())

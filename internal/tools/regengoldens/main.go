@@ -604,7 +604,7 @@ func runStave(fixDir string) ([]byte, int, error) {
 			"apply",
 			"--profile", profile,
 			"--input", obsFile,
-			"--now", profileNow,
+			"--eval-time", profileNow,
 			"--format", "json",
 		}
 		if profile == "hipaa" {
@@ -622,7 +622,7 @@ func runStave(fixDir string) ([]byte, int, error) {
 			"--controls", filepath.Join(fixDir, "controls"),
 			"--observations", filepath.Join(fixDir, "observations"),
 			"--max-unsafe", maxUnsafe,
-			"--now", nowFlag,
+			"--eval-time", nowFlag,
 			"--format", "json",
 		}
 		if argsData, err := os.ReadFile(filepath.Join(fixDir, "args.txt")); err == nil {

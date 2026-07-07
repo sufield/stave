@@ -14,7 +14,7 @@ func NewRunInfoDTO(r evaluation.RunInfo) RunInfoDTO {
 	dto := RunInfoDTO{
 		StaveVersion:      r.StaveVersion,
 		Offline:           r.Offline,
-		Now:               r.Now,
+		EvalTime:          r.EvalTime,
 		MaxUnsafeDuration: r.MaxUnsafeDuration,
 		Snapshots:         r.Snapshots,
 		PolicyFingerprint: r.PolicyFingerprint,

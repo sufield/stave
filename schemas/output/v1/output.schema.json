@@ -33,7 +33,7 @@
           "required": [
             "tool_version",
             "offline",
-            "now",
+            "eval_time",
             "sla_threshold",
             "snapshots"
           ],
@@ -48,7 +48,7 @@
               "title": "Offline Mode Flag",
               "description": "Whether this evaluation was run in offline mode (no network access)."
             },
-            "now": {
+            "eval_time": {
               "type": "string",
               "format": "date-time",
               "title": "Evaluation Timestamp",
@@ -562,7 +562,7 @@
           "required": [
             "tool_version",
             "offline",
-            "now",
+            "eval_time",
             "sla_threshold",
             "before_snapshots",
             "after_snapshots"
@@ -578,7 +578,7 @@
               "title": "Offline Mode Flag",
               "description": "Whether this attestation was run in offline mode."
             },
-            "now": {
+            "eval_time": {
               "type": "string",
               "format": "date-time",
               "title": "Evaluation Timestamp",

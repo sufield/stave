@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.ACM.ACME.SPRAWL.001
+name: Account Has Excessive ACM ACME Endpoints
+description: >
+  Account has more ACME endpoints than the governance threshold.
+  Each ACME endpoint is an independent certificate issuance point with
+  its own domain scope, wildcard policy, and client access. Without
+  centralized governance, application teams create endpoints ad hoc —
+  each with different policies, different scopes, and different levels
+  of oversight. The resulting sprawl makes certificate issuance
+  unauditable: no single team knows which endpoints exist, what domains
+  they cover, or who has access. Same accumulation pattern as
+  CTL.SQS.POLICY.SPRAWL.001. The threshold is a heuristic; adjust per
+  organization size.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-8"
+  soc2: "CC8.1"
+  ccm_v4: ["DSP-16"]
+scope_tags:
+  - aws
+  - acm
+taxonomy:
+  - resource-sprawl
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_acm_acme_endpoint
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Account has more ACME endpoints than the governance threshold.
+    Decentralized certificate issuance reduces visibility into what
+    certificates are being issued and for which domains.
+  action: >
+    Audit existing ACME endpoints and consolidate where possible.
+    Establish a naming convention and tagging policy for ACME
+    endpoints. Consider a central platform team that provisions
+    endpoints with approved domain scopes and wildcard policies,
+    rather than allowing each application team to create its own.
+  example: |
+    {
+      "governance": {
+        "kind": "acm_acme_endpoint",
+        "acme_endpoint": {
+          "endpoint_count_excessive": false,
+          "endpoint_count": 3
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: acm_acme_endpoint
+    - field: properties.governance.acme_endpoint.endpoint_count_excessive
+      op: eq
+      value: true
+defect: >
+  Account has more ACME endpoints than the configured threshold.
+infection: >
+  Application teams create ACME endpoints independently. Each endpoint
+  carries its own domain scope, wildcard policy, and IAM permissions.
+  Over time the account accumulates endpoints that overlap in scope,
+  have inconsistent policies, or serve decommissioned applications.
+  The certificate issuance surface becomes unauditable — too many
+  independent issuance points to review with confidence.
+failure: >
+  Unauditable certificate issuance surface. The organization cannot
+  enumerate which ACME endpoints exist, what domains they cover, or
+  which clients have issuance access. Shadow endpoints issue
+  certificates for domains outside their intended scope.
+tests:
+  - name: excessive endpoint count fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:acme-endpoint/team-alpha"
+      asset_type: aws_acm_acme_endpoint
+      vendor: aws
+      properties:
+        governance:
+          kind: acm_acme_endpoint
+          acme_endpoint:
+            status: ACTIVE
+            endpoint_count_excessive: true
+            endpoint_count: 12
+  - name: normal endpoint count passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:acme-endpoint/platform"
+      asset_type: aws_acm_acme_endpoint
+      vendor: aws
+      properties:
+        governance:
+          kind: acm_acme_endpoint
+          acme_endpoint:
+            status: ACTIVE
+            endpoint_count_excessive: false
+            endpoint_count: 3

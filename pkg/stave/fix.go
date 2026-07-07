@@ -61,7 +61,7 @@ type FixLoopConfig struct {
 	ControlsDir   string
 	OutDir        string
 	MaxUnsafe     string
-	Now           string
+	EvalTime      string
 	Force         bool
 	AllowSymlinks bool
 	SanitizeIDs   bool
@@ -81,7 +81,7 @@ func RunFixLoop(ctx context.Context, cfg FixLoopConfig, stdout, stderr io.Writer
 	if err != nil {
 		return false, fmt.Errorf("resolve max-unsafe duration: %w", err)
 	}
-	clock, err := resolveVerifyClock(cfg.Now)
+	clock, err := resolveVerifyClock(cfg.EvalTime)
 	if err != nil {
 		return false, fmt.Errorf("resolve clock: %w", err)
 	}

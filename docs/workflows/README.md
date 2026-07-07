@@ -25,4 +25,4 @@ BEFORE          CORE               AFTER
 ```
 
 All evaluation is offline and deterministic: same snapshot + same
-`--now` → byte-identical output, every time.
+`--eval-time` → byte-identical output, every time.

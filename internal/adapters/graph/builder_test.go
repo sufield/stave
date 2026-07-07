@@ -40,7 +40,7 @@ func TestBuild_FindingsProduceCorrectNodes(t *testing.T) {
 
 	g := Build(BuildInput{
 		Findings:   findings,
-		Now:        time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
+		EvalTime:   time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 		SourcePath: "assessment.json",
 	})
 
@@ -113,7 +113,7 @@ func TestBuild_ChainsProduceCorrectNodes(t *testing.T) {
 	g := Build(BuildInput{
 		Findings:      findings,
 		ChainFindings: chains,
-		Now:           time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
+		EvalTime:      time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 	})
 
 	// Check chain-related nodes exist.
@@ -165,7 +165,7 @@ func TestBuild_EdgeDeduplication(t *testing.T) {
 		},
 	}
 
-	g := Build(BuildInput{Findings: findings, Now: time.Now()})
+	g := Build(BuildInput{Findings: findings, EvalTime: time.Now()})
 
 	scopeEdges := 0
 	for _, e := range g.Edges {
@@ -180,7 +180,7 @@ func TestBuild_EdgeDeduplication(t *testing.T) {
 
 func TestBuild_Empty(t *testing.T) {
 	t.Parallel()
-	g := Build(BuildInput{Now: time.Now()})
+	g := Build(BuildInput{EvalTime: time.Now()})
 	if g.Metadata.NodeCount != 0 {
 		t.Errorf("NodeCount = %d, want 0", g.Metadata.NodeCount)
 	}
@@ -188,7 +188,7 @@ func TestBuild_Empty(t *testing.T) {
 
 func TestBuild_SchemaVersion(t *testing.T) {
 	t.Parallel()
-	g := Build(BuildInput{Now: time.Now()})
+	g := Build(BuildInput{EvalTime: time.Now()})
 	if g.SchemaVersion != "1" {
 		t.Errorf("SchemaVersion = %q, want 1", g.SchemaVersion)
 	}

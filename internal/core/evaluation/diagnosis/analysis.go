@@ -137,7 +137,7 @@ func (s *session) diagnoseExistingFindings(maxCapturedAt time.Time) []Insight {
 
 	var issues []Insight
 
-	if skew := buildNowSkewIssue(s.input.Now, maxCapturedAt); skew != nil {
+	if skew := buildEvalTimeSkewIssue(s.input.EvalTime, maxCapturedAt); skew != nil {
 		issues = append(issues, *skew)
 	}
 
@@ -154,7 +154,7 @@ func computeStats(input Input) map[kernel.ControlID]controlStat {
 	}
 
 	snaps := sortedSnapshots(input.Snapshots)
-	endTime := resolveFinalizationTime(input.Now, snaps[len(snaps)-1].CapturedAt)
+	endTime := resolveFinalizationTime(input.EvalTime, snaps[len(snaps)-1].CapturedAt)
 
 	// Phase 1: Pivot data to Asset-Major order O(Snapshots * Assets)
 	assetHistories := make(map[asset.ID][]observation)

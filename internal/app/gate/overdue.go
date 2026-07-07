@@ -20,7 +20,7 @@ type OverdueRequest struct {
 	Controls                []policy.ControlDefinition
 	Snapshots               []asset.Snapshot
 	GlobalMaxUnsafeDuration time.Duration
-	Now                     time.Time
+	EvalTime                time.Time
 	PredicateEval           policy.PredicateEval
 }
 
@@ -33,7 +33,7 @@ func CountOverdue(req OverdueRequest) int {
 		Controls:                req.Controls,
 		Snapshots:               req.Snapshots,
 		GlobalMaxUnsafeDuration: req.GlobalMaxUnsafeDuration,
-		Now:                     req.Now,
+		EvalTime:                req.EvalTime,
 		PredicateEval:           req.PredicateEval,
 	})
 	return items.CountOverdue()

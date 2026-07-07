@@ -17,12 +17,12 @@ Given the same:
 - control files
 - observation files
 - CLI flags (including `--max-unsafe`)
-- `--now` value
+- `--eval-time` value
 
 Stave produces identical output.
 
-`--now` controls evaluation time for duration-based logic. For reproducible
-CI runs, always set `--now` explicitly.
+`--eval-time` controls evaluation time for duration-based logic. For reproducible
+CI runs, always set `--eval-time` explicitly.
 
 ## Snapshot Ordering
 
@@ -34,7 +34,7 @@ Observation snapshots are evaluated in ascending `captured_at` order.
 ### Determinism details
 
 - `now` defaults to the last snapshot's `captured_at`; the wall clock is used
-  only in the zero-snapshot edge case (so always pass `--now` in CI).
+  only in the zero-snapshot edge case (so always pass `--eval-time` in CI).
 - Findings are sorted by control ID then asset ID.
 - Output contains no floating-point fields (durations are emitted as integer
   hours), avoiding cross-platform float formatting differences.

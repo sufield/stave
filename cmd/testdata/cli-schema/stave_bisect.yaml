@@ -17,7 +17,7 @@ description: |-
       --control-id        ID of the single control to bisect (required)
       --mode              Search strategy: bisect or scan (default: bisect)
       --format, -f        Output format: text or json (default: text)
-      --now               Override current time (RFC3339) for deterministic evaluation
+      --eval-time               Evaluation reference timestamp (RFC3339) for deterministic evaluation
       --resource          Scope to a specific resource ARN (optional)
 
     Output:
@@ -41,6 +41,9 @@ options:
       shorthand: i
       default_value: controls
       usage: Path to control definitions directory
+    - name: eval-time
+      usage: |
+        Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.
     - name: format
       shorthand: f
       default_value: text
@@ -52,8 +55,6 @@ options:
     - name: mode
       default_value: bisect
       usage: 'Search strategy: bisect or scan'
-    - name: now
-      usage: Override current time (RFC3339)
     - name: observations
       shorthand: o
       default_value: observations

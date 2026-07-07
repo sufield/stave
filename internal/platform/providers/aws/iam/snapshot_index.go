@@ -100,6 +100,37 @@ func ResolveAllPrincipals(snap *asset.Snapshot) (
 			}
 		}
 	}
+	for i := range snap.Assets {
+		a := &snap.Assets[i]
+		if !a.IsIdentityAsset() {
+			continue
+		}
+		if _, exists := resolved[string(a.ID)]; exists {
+			continue
+		}
+
+		temp := &asset.CloudIdentity{
+			ID:         a.ID,
+			Type:       a.Type,
+			Vendor:     a.Vendor,
+			Properties: a.Properties,
+		}
+		input := BuildResolutionInput(temp)
+		result := Resolve(input)
+		resolved[string(a.ID)] = &result
+
+		trustJSON := stringProperty(a.Properties, "identity", "trust_policy_json")
+		if trustJSON != "" {
+			if doc, err := ParsePolicyDocument(trustJSON); err == nil {
+				trusts[string(a.ID)] = &doc
+			} else {
+				result.Incomplete = true
+				result.IncompleteReasons = append(result.IncompleteReasons,
+					"trust policy present but unparseable")
+			}
+		}
+	}
+
 	return resolved, trusts
 }
 

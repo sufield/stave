@@ -86,8 +86,8 @@ The before/after evaluation outputs **are** your remediation evidence —
 deterministic and reproducible:
 
 ```bash
-stave apply --observations ./obs-before --format json --now 2026-01-15T00:00:00Z > evidence/before.json
-stave apply --observations ./obs-after  --format json --now 2026-01-20T00:00:00Z > evidence/after.json
+stave apply --observations ./obs-before --format json --eval-time 2026-01-15T00:00:00Z > evidence/before.json
+stave apply --observations ./obs-after  --format json --eval-time 2026-01-20T00:00:00Z > evidence/after.json
 ```
 
 Same inputs always produce the same output, so these files are a

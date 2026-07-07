@@ -27,7 +27,7 @@ import "time"
 // that ground duration-based and recurrence-based reasoning.
 //
 // EvaluatedAt is the caller-supplied "now" — equal to the
-// `--now` flag value or to the engine's clock — never the
+// `--eval-time` flag value or to the engine's clock — never the
 // process wall clock.
 //
 // Iter L0: ResourceGroups REPLACES the deprecated

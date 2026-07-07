@@ -83,11 +83,11 @@ timestamp_schema:
 
   now_interaction:
     description: >
-      `--now` overrides the evaluation-side timestamp. Freshness
+      `--eval-time` overrides the evaluation-side timestamp. Freshness
       is computed as: age = now - captured_at.
 
-      With `--now`: age uses the override value. Deterministic.
-      Without `--now`: age uses system clock at eval start.
+      With `--eval-time`: age uses the override value. Deterministic.
+      Without `--eval-time`: age uses system clock at eval start.
 
       For multi-file snapshots (directory of observation files),
       each file has its own `captured_at`. The freshness check
@@ -96,9 +96,9 @@ timestamp_schema:
       finding evaluates.
 
     determinism_guarantee: >
-      Given the same snapshot file and the same `--now` value,
+      Given the same snapshot file and the same `--eval-time` value,
       `stave apply` produces identical freshness qualifications.
-      The freshness check never reads the system clock if `--now`
+      The freshness check never reads the system clock if `--eval-time`
       is provided.
 
 # =========================================================================
@@ -134,7 +134,7 @@ freshness_model:
 
     This satisfies both use cases:
 
-    - **Breach reconstruction**: `--now` set near `captured_at`
+    - **Breach reconstruction**: `--eval-time` set near `captured_at`
       → age is small → confidence stays HIGH. No override needed.
     - **Stale pipeline**: age exceeds threshold → confidence drops
       to LOW. The user sees all their PASS/VIOLATION verdicts with
@@ -189,7 +189,7 @@ freshness_model:
 
       2. **One threshold is tunable enough.** The default covers
          the common case (24h for continuous governance). Breach
-         reconstruction overrides via `--now` or
+         reconstruction overrides via `--eval-time` or
          `--freshness-threshold`. Per-service-group thresholds
          add complexity that only helps edge cases where IAM is
          fresh but EC2 is stale within the same snapshot — but
@@ -213,7 +213,7 @@ freshness_model:
       - M&A diligence: snapshots are typically days to weeks old;
         24h will trigger LOW confidence, which is correct — the
         evaluator should request fresh snapshots.
-      - Breach reconstruction: `--now` is set near the capture
+      - Breach reconstruction: `--eval-time` is set near the capture
         time, so the threshold rarely applies.
 
       24h is also the natural "one collection cycle" for most
@@ -253,7 +253,7 @@ cel_integration:
   evaluation_order:
     description: >
       1. Load snapshot(s), read `captured_at` from each.
-      2. Determine evaluation time (`--now` or system clock).
+      2. Determine evaluation time (`--eval-time` or system clock).
       3. Evaluate all CEL controls normally → PASS/VIOLATION.
       4. For each finding, compute the snapshot age of the asset's
          source snapshot.
@@ -612,7 +612,7 @@ worked_examples:
       Collection pipeline failed on 06/27 and 06/28. The most
       recent snapshot was collected on 2025-06-26T10:00:00Z.
 
-    command: "stave apply -o observations/ -i controls/ --now=2025-06-28T02:00:00Z"
+    command: "stave apply -o observations/ -i controls/ --eval-time=2025-06-28T02:00:00Z"
 
     computation:
       evaluation_time: "2025-06-28T02:00:00Z"
@@ -650,7 +650,7 @@ worked_examples:
       Breach occurred approximately 2025-01-15T14:00:00Z.
 
     option_1_now_override:
-      command: "stave apply -o observations/ -i controls/ --now=2025-01-15T14:00:00Z"
+      command: "stave apply -o observations/ -i controls/ --eval-time=2025-01-15T14:00:00Z"
       computation:
         evaluation_time: "2025-01-15T14:00:00Z"
         captured_at: "2025-01-10T08:00:00Z"
@@ -663,7 +663,7 @@ worked_examples:
         team can either widen the threshold or skip freshness.
 
     option_2_widen_threshold:
-      command: "stave apply -o observations/ -i controls/ --now=2025-01-15T14:00:00Z --freshness-threshold=168h"
+      command: "stave apply -o observations/ -i controls/ --eval-time=2025-01-15T14:00:00Z --freshness-threshold=168h"
       computation:
         age: "5d6h"
         threshold: "168h (7 days)"
@@ -675,7 +675,7 @@ worked_examples:
         use case: the snapshot is close enough to the breach time.
 
     option_3_skip_freshness:
-      command: "stave apply -o observations/ -i controls/ --now=2025-01-15T14:00:00Z --skip-freshness"
+      command: "stave apply -o observations/ -i controls/ --eval-time=2025-01-15T14:00:00Z --skip-freshness"
       computation:
         freshness_disabled: true
         confidence: HIGH
@@ -698,7 +698,7 @@ worked_examples:
           captured_at: "2025-06-20T10:00:00Z"
           contents: "S3 buckets, DynamoDB tables"
 
-    command: "stave apply -o observations/ -i controls/ --now=2025-06-28T02:00:00Z"
+    command: "stave apply -o observations/ -i controls/ --eval-time=2025-06-28T02:00:00Z"
 
     per_file_freshness:
       identity:
@@ -791,13 +791,13 @@ implementation_scope:
       - "qualifyFreshness with stale snapshot → confidence LOW, reason set"
       - "qualifyFreshness with --skip-freshness → all HIGH"
       - "qualifyFreshness with --freshness-threshold=0 → all HIGH"
-      - "qualifyFreshness with --now override → uses override, not clock"
+      - "qualifyFreshness with --eval-time override → uses override, not clock"
       - "Multi-snapshot directory: per-file freshness applied correctly"
       - "Compound finding confidence = min(member confidences)"
 
     e2e_tests:
       - >
-        Stale pipeline scenario: snapshot 40h old, --now set,
+        Stale pipeline scenario: snapshot 40h old, --eval-time set,
         all findings LOW confidence, summary line present.
       - >
         Fresh snapshot scenario: snapshot 1h old, all findings
@@ -814,18 +814,18 @@ implementation_scope:
   trap_triplet:
     vulnerable:
       description: "Snapshot captured 72h ago, threshold 24h"
-      command: "stave apply --now=2025-06-28T02:00:00Z --freshness-threshold=24h"
+      command: "stave apply --eval-time=2025-06-28T02:00:00Z --freshness-threshold=24h"
       snapshot_captured_at: "2025-06-25T02:00:00Z"
       expected: "All findings confidence = LOW"
 
     fp_trap:
       description: "Fresh snapshot, must NOT trigger low confidence"
-      command: "stave apply --now=2025-06-28T02:00:00Z --freshness-threshold=24h"
+      command: "stave apply --eval-time=2025-06-28T02:00:00Z --freshness-threshold=24h"
       snapshot_captured_at: "2025-06-28T00:00:00Z"
       expected: "All findings confidence = HIGH (must not fire)"
 
     fn_trap:
       description: "Snapshot 25h old (just over threshold), must trigger"
-      command: "stave apply --now=2025-06-28T02:00:00Z --freshness-threshold=24h"
+      command: "stave apply --eval-time=2025-06-28T02:00:00Z --freshness-threshold=24h"
       snapshot_captured_at: "2025-06-27T01:00:00Z"
       expected: "All findings confidence = LOW (must fire)"

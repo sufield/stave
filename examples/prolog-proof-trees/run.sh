@@ -43,7 +43,7 @@ run_one() {
     "$stave_bin" export-sir \
         --controls "$controls" \
         --observations "$obs_dir" \
-        --now 2026-01-09T00:00:00Z \
+        --eval-time 2026-01-09T00:00:00Z \
         --format jsonl > "$jsonl" 2>/dev/null
 
     bash "$transform" "$jsonl" "$facts"

@@ -24,7 +24,7 @@ func finding(ctl string, ast string, sev policy.Severity) remediation.Finding {
 
 func assessment(t time.Time, findings ...remediation.Finding) *report.Assessment {
 	return &report.Assessment{
-		Run:      evaluation.RunInfo{Now: t},
+		Run:      evaluation.RunInfo{EvalTime: t},
 		Findings: findings,
 	}
 }
@@ -54,7 +54,7 @@ func TestSuggest_OscillatingDetected(t *testing.T) {
 		History:  history,
 		Window:   90 * day,
 		MinDwell: 14 * day,
-		Now:      t5,
+		EvalTime: t5,
 	})
 
 	if len(result.Oscillating) != 1 {
@@ -86,7 +86,7 @@ func TestSuggest_ChronicThresholdRespected(t *testing.T) {
 		History:  history,
 		Window:   90 * day,
 		MinDwell: 14 * day,
-		Now:      tNow,
+		EvalTime: tNow,
 	})
 
 	if len(result.Chronic) != 1 {
@@ -98,7 +98,7 @@ func TestSuggest_ChronicThresholdRespected(t *testing.T) {
 		History:  history,
 		Window:   90 * day,
 		MinDwell: 45 * day,
-		Now:      tNow,
+		EvalTime: tNow,
 	})
 
 	if len(result2.Chronic) != 0 {
@@ -116,7 +116,7 @@ func TestSuggest_ExemptedFindingsExcluded(t *testing.T) {
 		History:      history,
 		Window:       90 * day,
 		MinDwell:     14 * day,
-		Now:          tNow,
+		EvalTime:     tNow,
 		ExemptedKeys: map[string]struct{}{"CTL.A.001@asset1": {}},
 	})
 
@@ -132,7 +132,7 @@ func TestSuggest_NoHistory_EmptyResult(t *testing.T) {
 	result := Suggest(Input{
 		Window:   30 * day,
 		MinDwell: 14 * day,
-		Now:      tNow,
+		EvalTime: tNow,
 	})
 
 	if len(result.Oscillating) != 0 || len(result.Chronic) != 0 {
@@ -152,7 +152,7 @@ func TestSuggest_ResolvedFindingsNotSuggested(t *testing.T) {
 		History:  history,
 		Window:   90 * day,
 		MinDwell: 7 * day,
-		Now:      tNow,
+		EvalTime: tNow,
 	})
 
 	if len(result.Chronic) != 0 {

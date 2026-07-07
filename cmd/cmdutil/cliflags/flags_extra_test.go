@@ -7,7 +7,7 @@ import (
 )
 
 func TestParseRFC3339_Valid(t *testing.T) {
-	got, err := ParseRFC3339("2026-01-15T00:00:00Z", "--now")
+	got, err := ParseRFC3339("2026-01-15T00:00:00Z", "--eval-time")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -18,7 +18,7 @@ func TestParseRFC3339_Valid(t *testing.T) {
 }
 
 func TestParseRFC3339_ValidWithOffset(t *testing.T) {
-	got, err := ParseRFC3339("2026-01-15T12:00:00+05:00", "--now")
+	got, err := ParseRFC3339("2026-01-15T12:00:00+05:00", "--eval-time")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -29,12 +29,12 @@ func TestParseRFC3339_ValidWithOffset(t *testing.T) {
 }
 
 func TestParseRFC3339_Invalid(t *testing.T) {
-	_, err := ParseRFC3339("bad-time", "--now")
+	_, err := ParseRFC3339("bad-time", "--eval-time")
 	if err == nil {
 		t.Fatal("expected error for invalid time")
 	}
-	if !strings.Contains(err.Error(), "--now") {
-		t.Fatalf("error should mention --now, got: %v", err)
+	if !strings.Contains(err.Error(), "--eval-time") {
+		t.Fatalf("error should mention --eval-time, got: %v", err)
 	}
 	if !strings.Contains(err.Error(), "bad-time") {
 		t.Fatalf("error should contain the invalid value, got: %v", err)

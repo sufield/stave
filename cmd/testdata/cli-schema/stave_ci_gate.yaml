@@ -15,7 +15,7 @@ description: |-
       --controls, -i    Path to control definitions directory (used by fail_on_overdue_upcoming)
       --observations, -o Path to observation snapshots directory (used by fail_on_overdue_upcoming)
       --max-unsafe      Maximum allowed unsafe duration (used by fail_on_overdue_upcoming)
-      --now             Reference time (RFC3339). If omitted, uses wall clock
+      --eval-time             Reference time (RFC3339). If omitted, uses wall clock
       --format, -f      Output format: text or json (default: text)
 
     Outputs:
@@ -39,6 +39,9 @@ options:
       default_value: controls
       usage: |
         Path to control definitions directory (used by fail_on_overdue_upcoming)
+    - name: eval-time
+      usage: |
+        Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.
     - name: format
       shorthand: f
       default_value: text
@@ -54,8 +57,6 @@ options:
     - name: max-unsafe
       usage: |
         Maximum allowed unsafe duration (used by fail_on_overdue_upcoming) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
-    - name: now
-      usage: Reference time (RFC3339). If omitted, uses wall clock
     - name: observations
       shorthand: o
       default_value: observations

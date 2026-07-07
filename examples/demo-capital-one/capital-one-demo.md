@@ -36,7 +36,7 @@ cd stave
   -o examples/demo-capital-one/fixtures/observations \
   -i controls \
   --max-unsafe 168h \
-  --now 2019-07-20T00:00:00Z
+  --eval-time 2019-07-20T00:00:00Z
 ```
 
 Add `--format json` for machine-readable output (`out.v0.1`).

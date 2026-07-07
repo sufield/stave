@@ -35,7 +35,7 @@ names them and tells you where the trust attaches.
 |---|---|---|
 | Observation **value** correctness | Schema validates types, not whether values match real cloud state | The collector |
 | Cross-inventory **ghost references** at evaluation time | The collector pre-computes `has_ghost_*` booleans by walking the inventory | The collector |
-| **Time-dependent** verdicts without `--now` | System wall clock drives duration / TTL / freshness checks | The caller of `stave apply` |
+| **Time-dependent** verdicts without `--eval-time` | System wall clock drives duration / TTL / freshness checks | The caller of `stave apply` |
 
 The rest of this document explains each boundary, the mitigation
 discipline, and what an UNSAT verdict from a solver actually says.
@@ -108,14 +108,14 @@ the chain of custody visible.
 
 ### What is deterministic
 
-Same observation + same control + same `--now` value → byte-
+Same observation + same control + same `--eval-time` value → byte-
 identical output, every time. This is the standard CI/CD-grade
 determinism Stave's evaluation engine provides.
 
-### What is NOT deterministic without `--now`
+### What is NOT deterministic without `--eval-time`
 
 Time-dependent controls (credential TTL, observation freshness,
-unsafe duration thresholds) use `time.Now()` when `--now` is
+unsafe duration thresholds) use `time.Now()` when `--eval-time` is
 absent. Same fixture run a year apart yields different verdicts
 because the clock-relative answer is correct, not because the
 engine is non-deterministic.
@@ -123,7 +123,7 @@ engine is non-deterministic.
 The audit measured this on
 `examples/cognito-iteration2-unauth/fixtures/cross-resource-config`:
 
-| `--now` | Findings | md5 of JSON output |
+| `--eval-time` | Findings | md5 of JSON output |
 |---|---|---|
 | 2026-01-01 | 2 | c9f1ed7de1dce8b074165b3e503d19cd |
 | 2027-06-01 | 9 | 825c013af47f58b51d096c0b31277979 |
@@ -141,18 +141,18 @@ This is correct temporal evaluation, not non-determinism.
 
 ### Recommendations by context
 
-- **CI/CD pipelines:** pass `--now` (typically the build-trigger
+- **CI/CD pipelines:** pass `--eval-time` (typically the build-trigger
   commit time or the observation's `captured_at`). Locks the
   verdict to a reproducible reference point.
-- **Interactive use without `--now`:** correct default. You want
+- **Interactive use without `--eval-time`:** correct default. You want
   today's answer about today's credentials.
-- **Agent OODA loops:** pass `--now` derived from the observation,
+- **Agent OODA loops:** pass `--eval-time` derived from the observation,
   not the agent's clock — prevents the assertion target from
   moving while the agent iterates.
 
   ```bash
   stave apply --observations ./snapshots \
-      --now "$(jq -r '.captured_at' snapshots/*.obs.json | sort | head -1)"
+      --eval-time "$(jq -r '.captured_at' snapshots/*.obs.json | sort | head -1)"
   ```
 
 ### Which controls are time-dependent
@@ -161,7 +161,7 @@ Any control whose predicate references duration, age, or freshness.
 The catalog tag is `domain: identity` (for credential TTL) plus
 the `attack_stage: credential_access` family; `stave search
 "duration"` enumerates them. The cross-cutting category is
-"requires `--now` for determinism."
+"requires `--eval-time` for determinism."
 
 ## Boundary 3 — Ghost reference detection
 
@@ -236,8 +236,8 @@ scope is verified.
 |---|---|---|
 | Z3 / cvc5 / Yices UNSAT verdict | Logic is sound | Collector produced correct values; observation captured the right time |
 | Ghost-finding counts | Lower bound | Collector covered the referenced resource types |
-| CI/CD pass/fail | Reproducible per `--now` | Pipeline always passes `--now` |
-| Agent self-correction loop | Verdict converges per fixed `--now` | Agent passes `--now` and uses the observation's `captured_at` |
+| CI/CD pass/fail | Reproducible per `--eval-time` | Pipeline always passes `--eval-time` |
+| Agent self-correction loop | Verdict converges per fixed `--eval-time` | Agent passes `--eval-time` and uses the observation's `captured_at` |
 
 ## Where to read next
 

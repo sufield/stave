@@ -186,7 +186,7 @@ func TestExtractTemplateMetadata_WithContext(t *testing.T) {
 func TestRenderJSON_Quiet(t *testing.T) {
 	eval := corereport.Assessment{
 		Run: evaluation.RunInfo{
-			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			EvalTime:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			EvaluatedState:    "deployed",
 		},
@@ -201,7 +201,7 @@ func TestRenderJSON_Quiet(t *testing.T) {
 func TestRenderJSON_NotQuiet(t *testing.T) {
 	eval := corereport.Assessment{
 		Run: evaluation.RunInfo{
-			Now:               time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			EvalTime:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			EvaluatedState:    "deployed",
 		},

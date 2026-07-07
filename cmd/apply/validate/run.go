@@ -47,7 +47,7 @@ func runValidateProject(ctx context.Context, in Input) error {
 		ControlsDir:     in.Opts.Controls,
 		ObservationsDir: in.Opts.Observations,
 		MaxUnsafe:       in.Opts.MaxUnsafeDuration,
-		Now:             in.Opts.NowTime,
+		EvalTime:        in.Opts.EvalTimeRaw,
 		Sanitize:        in.Sanitize,
 		Strict:          in.Opts.Strict,
 		FixHints:        in.Opts.FixHints,

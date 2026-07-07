@@ -159,7 +159,7 @@ func runAssessment(ctx context.Context, binary string, opts *options) ([]byte, e
 		"--controls", opts.ControlsDir,
 		"--observations", opts.ObservationsDir,
 		"--max-unsafe", opts.MaxUnsafe,
-		"--now", time.Now().UTC().Format(time.RFC3339),
+		"--eval-time", time.Now().UTC().Format(time.RFC3339),
 		"--format", "json",
 	}
 

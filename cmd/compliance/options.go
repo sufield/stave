@@ -16,7 +16,7 @@ type options struct {
 	controls      string
 	controlsSet   bool
 	format        string
-	now           string
+	evalTime      string
 	strict        bool
 	verifyMapping bool
 }

@@ -38,7 +38,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	now, err := time.Parse(time.RFC3339, fixedNow)
+	evalTime, err := time.Parse(time.RFC3339, fixedNow)
 	if err != nil {
 		log.Fatalf("parse fixed now: %v", err)
 	}
@@ -54,7 +54,7 @@ func main() {
 			label:       "before (prefix-mode)",
 			dir:         filepath.Join(root, "fixtures/before/observations"),
 			controlsDir: filepath.Join(root, "controls"),
-			now:         now,
+			evalTime:    evalTime,
 			expectFires: true,
 		})
 		allOK = allOK && ok
@@ -67,7 +67,7 @@ func main() {
 			label:       "after  (exact-mode)",
 			dir:         filepath.Join(root, "fixtures/after/observations"),
 			controlsDir: filepath.Join(root, "controls"),
-			now:         now,
+			evalTime:    evalTime,
 			expectFires: false,
 		})
 		allOK = allOK && ok
@@ -82,7 +82,7 @@ type scenario struct {
 	label       string
 	dir         string
 	controlsDir string
-	now         time.Time
+	evalTime    time.Time
 	expectFires bool
 }
 
@@ -91,7 +91,7 @@ func runScenario(ctx context.Context, s scenario) bool {
 		SnapshotsDir: s.dir,
 		ControlsDir:  s.controlsDir,
 		MaxUnsafe:    maxUnsafe,
-		Now:          s.now,
+		EvalTime:     s.evalTime,
 	}
 	a, err := stave.Apply(ctx, cfg)
 	if err != nil {

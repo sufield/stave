@@ -33,7 +33,7 @@ run_one() {
     local label=$1 obs_dir=$2 expected=$3
     local facts="$work_dir/$label.smt2"
     "$stave_bin" export-sir --controls "$control_dir" --observations "$obs_dir" \
-        --now 2026-01-09T00:00:00Z --format smt2 > "$facts" 2>/dev/null
+        --eval-time 2026-01-09T00:00:00Z --format smt2 > "$facts" 2>/dev/null
     local z3_v cvc5_v="(skipped)"
     z3_v=$(cat "$facts" "$query" | solve_z3)
     if (( have_cvc5 )); then

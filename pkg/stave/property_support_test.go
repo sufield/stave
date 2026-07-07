@@ -120,7 +120,7 @@ func writePropFixture(t *testing.T, snaps []asset.Snapshot) (stave.Config, func(
 			t.Fatalf("write snapshot %d: %v", i, err)
 		}
 	}
-	cfg := stave.Config{ControlsDir: ctlDir, SnapshotsDir: obsDir, Now: fixedNow}
+	cfg := stave.Config{ControlsDir: ctlDir, SnapshotsDir: obsDir, EvalTime: fixedNow}
 	return cfg, func() { _ = os.RemoveAll(root) }
 }
 

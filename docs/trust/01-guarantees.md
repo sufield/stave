@@ -53,12 +53,12 @@ Users export configuration snapshots using their own tools (AWS CLI, Terraform) 
 
 ## 3. Determinism
 
-Stave output is deterministic when `--now` is set. The same inputs and flags always produce byte-identical output.
+Stave output is deterministic when `--eval-time` is set. The same inputs and flags always produce byte-identical output.
 
-- The evaluator caps `--now` to the last snapshot's `captured_at` timestamp (you cannot evaluate into the future beyond your data).
-- Without `--now`, the evaluation timestamp is derived from the last snapshot's `captured_at` — wall-clock fallback only applies when there are zero snapshots.
+- The evaluator caps `--eval-time` to the last snapshot's `captured_at` timestamp (you cannot evaluate into the future beyond your data).
+- Without `--eval-time`, the evaluation timestamp is derived from the last snapshot's `captured_at` — wall-clock fallback only applies when there are zero snapshots.
 
-Use `--now` in CI and golden-file tests for reproducible results.
+Use `--eval-time` in CI and golden-file tests for reproducible results.
 
 ## 4. No Code Execution
 
@@ -152,7 +152,7 @@ Stave requires no elevated privileges at any stage:
 |-----------|------------|
 | Offline | Banned-import CI test, strace verification, `urn:` schema IDs |
 | No credentials | No credential env vars or files read; only `NO_COLOR` |
-| Determinism | `--now` flag; capped to last snapshot timestamp |
+| Determinism | `--eval-time` flag; capped to last snapshot timestamp |
 | No code execution | 8 banned imports enforced by CI; closed DSL |
 | File safety | No-overwrite, no-symlink, path traversal guards, `0700`/`0600` perms |
 | Sanitization | `--sanitize`, `--path-mode`, `--scrub` |

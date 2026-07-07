@@ -83,8 +83,8 @@ type RunInfo struct {
 	StaveVersion string
 
 	// Now is the evaluator's effective current time (either the
-	// caller-supplied Config.Now or the real clock at run time).
-	Now time.Time
+	// caller-supplied Config.EvalTime or the real clock at run time).
+	EvalTime time.Time
 
 	// MaxUnsafe is the maximum-unsafe-duration threshold used
 	// during evaluation.

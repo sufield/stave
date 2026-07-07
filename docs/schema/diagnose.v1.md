@@ -52,7 +52,7 @@ Each diagnostic explains one likely cause for unexpected evaluation outcomes.
 | `time_span` | integer | Yes | Observation span (nanoseconds duration) |
 | `min_captured_at` | string (RFC3339) | Yes | Earliest snapshot time |
 | `max_captured_at` | string (RFC3339) | Yes | Latest snapshot time |
-| `evaluation_time` | string (RFC3339) | Yes | Effective evaluation time (`--now` or runtime clock) |
+| `evaluation_time` | string (RFC3339) | Yes | Effective evaluation time (`--eval-time` or runtime clock) |
 | `max_unsafe_threshold` | integer | Yes | Max unsafe threshold (nanoseconds duration) |
 | `violations_found` | integer | Yes | Violations count in evaluated result |
 | `attack_surface` | integer | Yes | Attack surface assets count |

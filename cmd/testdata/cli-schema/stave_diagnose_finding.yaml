@@ -52,6 +52,9 @@ options:
       shorthand: i
       default_value: controls
       usage: Path to control definitions directory
+    - name: eval-time
+      usage: |
+        Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.
     - name: format
       shorthand: f
       default_value: text
@@ -64,7 +67,7 @@ options:
       usage: |
         Maximum allowed unsafe duration Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
     - name: now
-      usage: Override current time (RFC3339)
+      usage: Alias for --eval-time
     - name: observations
       shorthand: o
       default_value: observations

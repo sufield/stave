@@ -66,7 +66,7 @@ func ExportOSCAL(assessmentData []byte, docType, systemUUID string, now time.Tim
 		result = oscalpoam.Generate(oscalpoam.Input{
 			Findings:   findings,
 			SystemUUID: systemUUID,
-			Now:        now,
+			EvalTime:   now,
 		})
 	case "ssp":
 		return nil, fmt.Errorf("OSCAL SSP export is not yet implemented: %w", ErrInvalidInput)

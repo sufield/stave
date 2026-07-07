@@ -60,19 +60,19 @@ make build
 # Writeup: every flag set unsafely → all 15 controls + both compounds
 ./stave apply \
     --observations examples/cognito-iteration4-clientconfig/fixtures/writeup-config/observations \
-    --now 2026-05-09T12:00:00Z --format json \
+    --eval-time 2026-05-09T12:00:00Z --format json \
   | jq '{ctls: ([.findings[] | select(.control_id | startswith("CTL.COGNITO.CLIENT."))] | map(.control_id) | sort | unique), chains: (.chain_findings // [] | map(.chain) | sort)}'
 
 # Focused open-redirect: implicit + wildcard only → 2 controls + openredirect chain
 ./stave apply \
     --observations examples/cognito-iteration4-clientconfig/fixtures/open-redirect-config/observations \
-    --now 2026-05-09T12:00:00Z --format json \
+    --eval-time 2026-05-09T12:00:00Z --format json \
   | jq '{ctls: ([.findings[] | select(.control_id | startswith("CTL.COGNITO.CLIENT."))] | map(.control_id) | sort | unique), chains: (.chain_findings // [] | map(.chain) | sort)}'
 
 # Remediated: 0 / 0
 ./stave apply \
     --observations examples/cognito-iteration4-clientconfig/fixtures/remediated-config/observations \
-    --now 2026-05-09T12:00:00Z --format json \
+    --eval-time 2026-05-09T12:00:00Z --format json \
   | jq '{ctls: ([.findings[] | select(.control_id | startswith("CTL.COGNITO.CLIENT."))] | length), chains: (.chain_findings // [] | length)}'
 ```
 

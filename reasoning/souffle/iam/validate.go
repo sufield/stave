@@ -87,7 +87,7 @@ func parseFlags() *options {
 	flag.StringVar(&opts.out, "out", "/tmp/g2-validation",
 		"Output directory for intermediate files + final report.")
 	flag.StringVar(&opts.now, "now", "2026-01-15T00:00:00Z",
-		"--now value passed to stave apply for deterministic output.")
+		"--eval-time value passed to stave apply for deterministic output.")
 	flag.Parse()
 
 	if opts.fixture != "" {
@@ -197,7 +197,7 @@ func runStaveApply(opts *options) ([]finding, error) {
 		"apply",
 		"--controls", opts.controls,
 		"--observations", opts.observations,
-		"--now", opts.now,
+		"--eval-time", opts.now,
 		"--format", "json",
 	}
 	cmd := exec.Command(opts.staveBinary, args...)

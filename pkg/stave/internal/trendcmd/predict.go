@@ -46,7 +46,7 @@ func PredictReadiness(ctx context.Context, cfg PredictConfig) ([]byte, []string,
 		Profile:         cfg.Profile,
 		TargetReadiness: cfg.TargetReadiness,
 		Window:          window,
-		Now:             now,
+		EvalTime:        now,
 	})
 
 	var buf bytes.Buffer

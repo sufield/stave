@@ -59,7 +59,7 @@ func formatVerify(a *stave.Assessment, score *stave.ScoreResult, detailed bool) 
 	}
 
 	fmt.Fprintf(&b, "\nEvaluated: %s | Snapshots: %d | Assets: %d\n",
-		a.Run.Now.Format("2006-01-02T15:04:05Z07:00"), a.Run.Snapshots, a.Summary.TotalAssets)
+		a.Run.EvalTime.Format("2006-01-02T15:04:05Z07:00"), a.Run.Snapshots, a.Summary.TotalAssets)
 
 	if !detailed {
 		return b.String()

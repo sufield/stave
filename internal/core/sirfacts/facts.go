@@ -117,8 +117,8 @@ type Fact struct {
 //	jq -s 'sort_by(.freshness.age_seconds) | .[]' facts.jsonl
 //
 // AgeSeconds is computed against an export-time `now` supplied
-// by the caller (export-sir's --now flag, falling back to the
-// system clock). Pinning --now produces byte-stable freshness
+// by the caller (export-sir's --eval-time flag, falling back to the
+// system clock). Pinning --eval-time produces byte-stable freshness
 // fields across runs — required for golden tests and CI diffs.
 //
 // Negative ages (captured_at after now — clock skew between the
@@ -235,8 +235,8 @@ func ExtractFacts(doc *sir.Document) []Fact {
 // don't pay the parse cost. The export-sir command runs both;
 // applycore runs only ExtractFacts.
 //
-// Determinism: when --now is pinned, all facts produce
-// byte-stable AgeSeconds across runs. Without --now the
+// Determinism: when --eval-time is pinned, all facts produce
+// byte-stable AgeSeconds across runs. Without --eval-time the
 // system clock supplies `now` and AgeSeconds drifts by the
 // elapsed wall-clock time between exports, but CapturedAt
 // stays stable.

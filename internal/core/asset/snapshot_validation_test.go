@@ -119,7 +119,7 @@ func TestSnapshotsCheckTimeSanity_ReportsNowBeforeLatest(t *testing.T) {
 			continue
 		}
 		nowIssueFound = true
-		if issue.FixCommand != "stave validate --now 2026-01-12T00:00:00Z" {
+		if issue.FixCommand != "stave validate --eval-time 2026-01-12T00:00:00Z" {
 			t.Fatalf("command=%q", issue.FixCommand)
 		}
 		latest, _ := issue.Resource.Get("latest_snapshot")

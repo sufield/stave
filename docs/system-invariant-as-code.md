@@ -113,7 +113,7 @@ This workflow is for contributors and product engineers using Stave without chan
 
 - Define control intent in YAML (IDs, predicate logic, thresholds).
 - Produce valid observation snapshots from approved sources.
-- Choose runtime options (`--max-unsafe`, `--now`).
+- Choose runtime options (`--max-unsafe`, `--eval-time`).
 - Review and act on violations/diagnostics.
 - Version-control control definitions and snapshots as evidence artifacts.
 

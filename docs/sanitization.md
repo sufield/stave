@@ -17,7 +17,7 @@ Use it on commands that emit findings, diagnostics, or coverage graphs:
 
 ```bash
 stave apply --controls ./controls --observations ./obs --sanitize
-stave apply --controls ./controls --observations ./obs --sanitize --now 2026-01-15T00:00:00Z
+stave apply --controls ./controls --observations ./obs --sanitize --eval-time 2026-01-15T00:00:00Z
 stave diagnose --controls ./controls --observations ./obs --sanitize
 stave graph coverage --controls ./controls --observations ./obs --sanitize
 ```

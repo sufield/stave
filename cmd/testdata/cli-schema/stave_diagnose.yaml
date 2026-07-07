@@ -42,6 +42,9 @@ options:
       default_value: controls
       usage: |
         Path to control definitions directory (inferred from project root if omitted)
+    - name: eval-time
+      usage: |
+        Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.
     - name: format
       shorthand: f
       default_value: text
@@ -57,8 +60,7 @@ options:
       default_value: "false"
       usage: never page output, even on a terminal
     - name: now
-      usage: |
-        Override current time (RFC3339). Required for deterministic output
+      usage: Alias for --eval-time
     - name: observations
       shorthand: o
       default_value: observations

@@ -24,7 +24,7 @@ func TestFindingWriter_NoViolations(t *testing.T) {
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
 			Offline:           true,
-			Now:               time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC),
+			EvalTime:          time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         2,
 			EvaluatedState:    "deployed",
@@ -66,7 +66,7 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
 			Offline:           true,
-			Now:               now,
+			EvalTime:          now,
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         3,
 			EvaluatedState:    "deployed",
@@ -158,7 +158,7 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
 			Offline:           true,
-			Now:               now,
+			EvalTime:          now,
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         2,
 			EvaluatedState:    "deployed",

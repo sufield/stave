@@ -42,7 +42,7 @@ type BuilderInput struct {
 	TeamManifestPath string
 	Title            string
 	Period           string
-	Now              time.Time
+	EvalTime         time.Time
 }
 
 // Builder assembles the full executive report by orchestrating the
@@ -54,7 +54,7 @@ type Builder struct {
 
 // Build runs the full report pipeline:
 //
-//  1. Load history assessments (sorted ascending by Run.Now).
+//  1. Load history assessments (sorted ascending by Run.EvalTime).
 //  2. Load chain definitions for ATT&CK stages.
 //  3. Load the snapshot to count assets.
 //  4. Compute the posture score and 30-day trajectory delta.
@@ -65,15 +65,15 @@ type Builder struct {
 // optional inputs (SLA, teams) only error when the operator passed an
 // explicit path that fails to load.
 func (b *Builder) Build(ctx context.Context, in BuilderInput) (*Report, error) {
-	// in.Now must be supplied by the caller — Builder is in the app
+	// in.EvalTime must be supplied by the caller — Builder is in the app
 	// layer and the architecture rules forbid wall-clock reads here.
-	// Empty in.Now is a CLI-side configuration error; surface
+	// Empty in.EvalTime is a CLI-side configuration error; surface
 	// explicitly so a caller running through Clock-port wiring
 	// catches a missing Now() at startup, not in the report.
-	if in.Now.IsZero() {
-		return nil, errors.New("execreport.Builder: BuilderInput.Now is required (use a Clock port at the cmd boundary)")
+	if in.EvalTime.IsZero() {
+		return nil, errors.New("execreport.Builder: BuilderInput.EvalTime is required (use a Clock port at the cmd boundary)")
 	}
-	now := in.Now
+	now := in.EvalTime
 
 	assessments, err := loadHistory(ctx, b.Deps.ArtifactLoader, in.HistoryDir)
 	if err != nil {
@@ -83,10 +83,10 @@ func (b *Builder) Build(ctx context.Context, in BuilderInput) (*Report, error) {
 		return nil, fmt.Errorf("no assessments in %s", in.HistoryDir)
 	}
 	slices.SortFunc(assessments, func(a, b *corereport.Assessment) int {
-		if a.Run.Now.Before(b.Run.Now) {
+		if a.Run.EvalTime.Before(b.Run.EvalTime) {
 			return -1
 		}
-		if a.Run.Now.After(b.Run.Now) {
+		if a.Run.EvalTime.After(b.Run.EvalTime) {
 			return 1
 		}
 		return 0
@@ -267,7 +267,7 @@ func computeScore(a *corereport.Assessment, chainDefs int, maxChainWeight float6
 		TotalCheckWeight: totalCheckWeight,
 		HasSLA:           hasSLA,
 		Weights:          appscore.DefaultWeights(),
-		GeneratedAt:      a.Run.Now,
+		GeneratedAt:      a.Run.EvalTime,
 	})
 }
 
@@ -283,7 +283,7 @@ func assessmentClosestTo(assessments []*corereport.Assessment, target time.Time)
 	var bestDelta time.Duration
 	for i := range assessments[:len(assessments)-1] {
 		a := assessments[i]
-		d := a.Run.Now.Sub(target)
+		d := a.Run.EvalTime.Sub(target)
 		if d < 0 {
 			d = -d
 		}

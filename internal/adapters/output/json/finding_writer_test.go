@@ -20,7 +20,7 @@ func TestWriteFindings_BareJSON(t *testing.T) {
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
 			Offline:           true,
-			Now:               time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC),
+			EvalTime:          time.Date(2026, 2, 1, 12, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         0,
 			EvaluatedState:    "deployed",

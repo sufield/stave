@@ -151,7 +151,7 @@ func (l *Loader) parseResult(data []byte, source string) (*evaluation.Compliance
 	// ComplianceReport doesn't carry an explicit Kind field (that's
 	// on report.Assessment, validated in LoadEnvelopeFromFile), so
 	// strict callers (gating, enforcement-config generation) require
-	// both Run.StaveVersion and Run.Now to be set — either alone is
+	// both Run.StaveVersion and Run.EvalTime to be set — either alone is
 	// insufficient provenance to drive a trust-boundary decision.
 	// The previous AND check accepted a half-populated Run block
 	// (e.g. version present but timestamp missing) as valid, which

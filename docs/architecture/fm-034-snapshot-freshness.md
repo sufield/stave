@@ -17,8 +17,8 @@ Before designing, audit what the codebase already has:
 | Component | Location | Status |
 |-----------|----------|--------|
 | `captured_at` in obs.v0.1 | Snapshot envelope, `internal/core/asset` | Done |
-| `--now` flag | All eval commands, wired through `params.nowTime` | Done |
-| `staleness.Check()` | `internal/app/staleness/staleness.go` | Done — binary check, threshold, `--now` aware |
+| `--eval-time` flag | All eval commands, wired through `params.nowTime` | Done |
+| `staleness.Check()` | `internal/app/staleness/staleness.go` | Done — binary check, threshold, `--eval-time` aware |
 | `--assert-recent` flag | `validate`, `apply` | Done — stale = warn/fail, but doesn't affect verdicts |
 | `ConfidenceLevel` enum | `internal/core/evaluation/audit.go` | Done — HIGH/MEDIUM/LOW/INCONCLUSIVE |
 | `Verdict` enum | Same file | Done — VIOLATION/PASS/INCONCLUSIVE/NOT_APPLICABLE/SKIPPED |
@@ -62,12 +62,12 @@ Then check the snapshot's age. If stale, downgrade `Confidence` to
 verdict itself (PASS/VIOLATION) is preserved.
 
 Why: the underlying verdict is always useful. For breach
-reconstruction (`--now` set to breach time), the user wants the
+reconstruction (`--eval-time` set to breach time), the user wants the
 finding regardless. For continuous governance, the user wants to know
 "this was VIOLATION when captured, but data is old." Post-eval serves
 both.
 
-`--now` set close to `captured_at` naturally produces `age ≈ 0`,
+`--eval-time` set close to `captured_at` naturally produces `age ≈ 0`,
 so freshness passes. `--skip-freshness` is the escape hatch for
 users who don't want the qualifier at all (legacy behavior).
 
@@ -161,7 +161,7 @@ alone.
    `input_freshness` section in the report)
 5. Update text/JSON renderers to show the confidence summary line
 6. Tests: stale snapshot → findings have LOW confidence; fresh →
-   HIGH; `--skip-freshness` → always HIGH; `--now` close to
+   HIGH; `--skip-freshness` → always HIGH; `--eval-time` close to
    `captured_at` → HIGH
 
 Estimated scope: ~200 lines of production code (the infrastructure
@@ -172,7 +172,7 @@ is already built), ~150 lines of tests.
 ### A. Continuous governance — stale pipeline
 
 ```
-$ stave apply --observations obs/ --now 2026-06-28T02:00:00Z
+$ stave apply --observations obs/ --eval-time 2026-06-28T02:00:00Z
 
 ⚠ 83 findings have LOW confidence: snapshot captured 2026-06-26T10:00:00Z
   (40 hours ago, threshold 24h). Re-collect for current results.
@@ -188,7 +188,7 @@ their pipeline is broken — the finding count is unreliable.
 ### B. Breach reconstruction — intentional old data
 
 ```
-$ stave apply --observations obs/ --now 2025-01-15T14:00:00Z --skip-freshness
+$ stave apply --observations obs/ --eval-time 2025-01-15T14:00:00Z --skip-freshness
 
 security_state: NON_COMPLIANT
 violations: 47
@@ -196,7 +196,7 @@ findings: 203 (confidence: 203 HIGH)
 ```
 
 `--skip-freshness` disables the check. All findings report HIGH
-confidence relative to the `--now` time. The IR team gets the full
+confidence relative to the `--eval-time` time. The IR team gets the full
 finding set without qualification.
 
 ### C. Mixed-freshness compound

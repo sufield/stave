@@ -14,7 +14,7 @@ type Request struct {
 	AfterDir          string `json:"after_dir"`
 	ControlsDir       string `json:"controls_dir,omitempty"`
 	MaxUnsafeDuration string `json:"max_unsafe_duration,omitempty"`
-	NowTime           string `json:"now_time,omitempty"`
+	EvalTimeRaw       string `json:"eval_time,omitempty"`
 }
 
 // VerifyResponse is the output of the verify use case.

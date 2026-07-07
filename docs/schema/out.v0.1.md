@@ -43,7 +43,7 @@ The output contract is defined by Go struct types in `internal/core/evaluation/`
 |-------|------|----------|-------------|
 | `tool_version` | string | Yes | Stave binary version |
 | `offline` | boolean | Yes | Always `true` (Stave is architecturally offline) |
-| `now` | string (RFC 3339) | Yes | Evaluation timestamp (from `--now` or derived from last snapshot) |
+| `now` | string (RFC 3339) | Yes | Evaluation timestamp (from `--eval-time` or derived from last snapshot) |
 | `sla_threshold` | string | Yes | Maximum unsafe duration threshold (e.g., `"168h0m0s"`) |
 | `snapshots` | integer | Yes | Number of observation snapshots loaded |
 | `input_hashes` | [input_hashes](#input_hashes) | No | SHA-256 hashes of input files (for auditability) |

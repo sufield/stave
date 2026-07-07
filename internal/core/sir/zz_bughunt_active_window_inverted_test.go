@@ -15,7 +15,7 @@ import (
 // exposureWindowsFromLifecycles emits one ExposureWindow per still-active
 // lifecycle as {Start: lc.FirstExposedAt(), End: now}. It did so
 // unconditionally, with no check that now is at or after the window start.
-// When the evaluation instant (`now` / --now) precedes the observation that
+// When the evaluation instant (`now` / --eval-time) precedes the observation that
 // opened the active window — e.g. an audit replayed at an earlier `now`, or
 // a snapshot captured after the requested evaluation time — End (now) lands
 // BEFORE Start, producing a negative-duration window.

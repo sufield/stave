@@ -2,7 +2,7 @@
 // which materializes the Stave Intermediate Representation (SIR)
 // for the configured controls + observations and emits it as
 // JSON to stdout. The command is read-only and deterministic:
-// the same controls, snapshots, and --now value produce
+// the same controls, snapshots, and --eval-time value produce
 // byte-identical output.
 //
 // The SIR is the canonical, vendor-neutral fact set the future
@@ -31,14 +31,14 @@ import (
 
 const (
 	flagObservations = "observations"
-	flagNow          = "now"
+	flagEvalTime     = "eval-time"
 )
 
 type options struct {
 	ControlsDir     string
 	ObservationsDir string
 	Format          string
-	Now             string
+	EvalTime        string
 	Validate        bool
 	AllowlistMode   string
 	ClosedWorld     bool
@@ -98,7 +98,7 @@ Inputs:
   --controls, -i      Control definitions directory (default: controls)
   --observations, -o  Observation snapshots directory (default: observations)
   --format, -f        Output format: json | jsonl | smt2 (default: json)
-  --now               RFC3339 timestamp for deterministic output
+  --eval-time               RFC3339 timestamp for deterministic output
 
 Outputs:
   stdout: SIR document in the requested format.
@@ -106,15 +106,15 @@ Outputs:
 
 Exit codes:
   0   success
-  2   input error (bad flag, malformed --now)
+  2   input error (bad flag, malformed --eval-time)
   4   internal error (load failure, builder error)
   130 SIGINT
 `,
 		Example: `  # Export SIR for the project's default controls + observations
   stave export-sir > sir.json
 
-  # Pin --now for byte-identical reproduction
-  stave export-sir --now 2026-05-01T12:00:00Z > sir.json
+  # Pin --eval-time for byte-identical reproduction
+  stave export-sir --eval-time 2026-05-01T12:00:00Z > sir.json
 
   # Pretty-print for inspection
   stave export-sir | jq .
@@ -137,7 +137,7 @@ Exit codes:
 	flags.StringVarP(&opts.ControlsDir, cliflags.FlagControls, cliflags.FlagControlsShort, "controls", "control definitions directory")
 	flags.StringVarP(&opts.ObservationsDir, flagObservations, "o", "observations", "observation snapshots directory")
 	flags.StringVarP(&opts.Format, cliflags.FlagFormat, "f", "json", "output format: json | jsonl | smt2")
-	flags.StringVar(&opts.Now, flagNow, "", "override current time (RFC3339) for deterministic output")
+	flags.StringVar(&opts.EvalTime, flagEvalTime, "", "Evaluation reference timestamp (RFC3339) for deterministic output")
 	flags.BoolVar(&opts.Validate, "validate", false,
 		"check SIR coverage against CEL controls and warn on stderr about projection gaps "+
 			"(controls that fire in CEL but evaluate properties not projected as SIR facts)")
@@ -177,7 +177,7 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error 
 		return &ui.UserError{Err: fmt.Errorf("--allowlist-mode must be curated | full (got %q)", opts.AllowlistMode)}
 	}
 
-	now, err := resolveNow(opts.Now)
+	now, err := resolveEvalTime(opts.EvalTime)
 	if err != nil {
 		return &ui.UserError{Err: err}
 	}
@@ -200,7 +200,7 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error 
 			}
 			return strings.ToLower(fmtTrimmed)
 		}(),
-		Now:           now,
+		EvalTime:      now,
 		Validate:      opts.Validate,
 		AllowlistMode: allowlistMode,
 		ClosedWorld:   opts.ClosedWorld,
@@ -228,18 +228,18 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error 
 // the loaded controls and snapshots to discover which controls
 // fired, then compares each finding's predicate field paths
 // against the SIR fact provenance for the same asset. The
-// resolveNow returns the parsed --now value or, when --now is
+// resolveEvalTime returns the parsed --eval-time value or, when --eval-time is
 // empty, the current wall-clock time. The empty case is the
 // only place export-sir reads the wall clock; downstream
-// determinism for fixture tests requires --now to be supplied.
-func resolveNow(raw string) (time.Time, error) {
+// determinism for fixture tests requires --eval-time to be supplied.
+func resolveEvalTime(raw string) (time.Time, error) {
 	trimmed := strings.TrimSpace(raw)
 	if trimmed == "" {
 		return time.Now().UTC(), nil
 	}
 	t, err := time.Parse(time.RFC3339, trimmed)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("--now must be RFC3339 (got %q): %w", raw, err)
+		return time.Time{}, fmt.Errorf("--eval-time must be RFC3339 (got %q): %w", raw, err)
 	}
 	return t.UTC(), nil
 }

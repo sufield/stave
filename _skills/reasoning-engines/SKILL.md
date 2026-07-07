@@ -26,7 +26,7 @@ specific ARN edges — not by control co-occurrence.
 
 ### 1. Export facts to JSONL (triples)
 ```
-./stave export-sir --observations <your-obs-dir> --format jsonl --now 2026-01-02T00:00:00Z > facts.jsonl
+./stave export-sir --observations <your-obs-dir> --format jsonl --eval-time 2026-01-02T00:00:00Z > facts.jsonl
 grep -c '"source":"observation"' facts.jsonl    # raw observation primitives
 ```
 Each line is `{subject, predicate, object, source}`; `predicate` is the
@@ -34,7 +34,7 @@ dot-joined property path (e.g. `identity.escalation.create_access_key.target_use
 
 ### 2. Export SMT-LIB and check it's well-formed
 ```
-./stave export-sir --observations <your-obs-dir> --format smt2 --now 2026-01-02T00:00:00Z > check.smt2
+./stave export-sir --observations <your-obs-dir> --format smt2 --eval-time 2026-01-02T00:00:00Z > check.smt2
 o=$(grep -o '(' check.smt2 | wc -l); c=$(grep -o ')' check.smt2 | wc -l)
 [ "$o" = "$c" ] && echo "balanced ($o)" || echo "UNBALANCED"
 ```

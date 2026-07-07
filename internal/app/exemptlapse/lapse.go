@@ -36,7 +36,7 @@ type LapsedFinding struct {
 // Input configures the lapse detection.
 type Input struct {
 	AcknowledgedFindings []policy.AcknowledgedFinding
-	Now                  time.Time
+	EvalTime             time.Time
 }
 
 // Detect scans acknowledged findings for expired exemptions and
@@ -62,7 +62,7 @@ func Detect(in Input) []LapsedFinding {
 
 		daysSince := 0
 		if !expiry.IsZero() {
-			daysSince = max(0, int(in.Now.Sub(expiry).Hours()/24))
+			daysSince = max(0, int(in.EvalTime.Sub(expiry).Hours()/24))
 		}
 
 		// Findings without a recorded severity (zero value) are treated

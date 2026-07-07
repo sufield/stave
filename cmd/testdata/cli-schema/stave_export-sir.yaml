@@ -37,7 +37,7 @@ description: |
       --controls, -i      Control definitions directory (default: controls)
       --observations, -o  Observation snapshots directory (default: observations)
       --format, -f        Output format: json | jsonl | smt2 (default: json)
-      --now               RFC3339 timestamp for deterministic output
+      --eval-time               RFC3339 timestamp for deterministic output
 
     Outputs:
       stdout: SIR document in the requested format.
@@ -45,7 +45,7 @@ description: |
 
     Exit codes:
       0   success
-      2   input error (bad flag, malformed --now)
+      2   input error (bad flag, malformed --eval-time)
       4   internal error (load failure, builder error)
       130 SIGINT
 usage: stave export-sir [flags]
@@ -62,6 +62,9 @@ options:
       shorthand: i
       default_value: controls
       usage: control definitions directory
+    - name: eval-time
+      usage: |
+        Evaluation reference timestamp (RFC3339) for deterministic output
     - name: format
       shorthand: f
       default_value: json
@@ -70,8 +73,6 @@ options:
       shorthand: h
       default_value: "false"
       usage: help for export-sir
-    - name: now
-      usage: override current time (RFC3339) for deterministic output
     - name: observations
       shorthand: o
       default_value: observations
@@ -147,8 +148,8 @@ example: |4-
       # Export SIR for the project's default controls + observations
       stave export-sir > sir.json
 
-      # Pin --now for byte-identical reproduction
-      stave export-sir --now 2026-05-01T12:00:00Z > sir.json
+      # Pin --eval-time for byte-identical reproduction
+      stave export-sir --eval-time 2026-05-01T12:00:00Z > sir.json
 
       # Pretty-print for inspection
       stave export-sir | jq .

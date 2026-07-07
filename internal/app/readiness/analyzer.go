@@ -52,19 +52,18 @@ func observed(snapshots []asset.Snapshot) (map[kernel.AssetType]int, int) {
 	if len(snapshots) == 0 {
 		return out, 0
 	}
-	// Per-asset-type unique-ID set keeps the count honest: if
-	// the same bucket appears in three snapshots, it counts once.
+	// Per-asset-type unique-ID set keeps the count honest: we only walk the
+	// latest snapshot.
+	latest := &snapshots[len(snapshots)-1]
 	perTypeIDs := map[kernel.AssetType]map[asset.ID]struct{}{}
-	for i := range snapshots {
-		for j := range snapshots[i].Assets {
-			a := &snapshots[i].Assets[j]
-			ids, ok := perTypeIDs[a.Type]
-			if !ok {
-				ids = map[asset.ID]struct{}{}
-				perTypeIDs[a.Type] = ids
-			}
-			ids[a.ID] = struct{}{}
+	for j := range latest.Assets {
+		a := &latest.Assets[j]
+		ids, ok := perTypeIDs[a.Type]
+		if !ok {
+			ids = map[asset.ID]struct{}{}
+			perTypeIDs[a.Type] = ids
 		}
+		ids[a.ID] = struct{}{}
 	}
 	total := 0
 	for t, ids := range perTypeIDs {

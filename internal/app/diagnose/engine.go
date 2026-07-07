@@ -79,7 +79,7 @@ func (e *DiagnosticEngine) Analyze(ctx context.Context, req AuditRequest) (*diag
 		ViolationsFound:   len(assessment.Findings),
 		AttackSurface:     assessment.Summary.ExposedResources,
 		MaxUnsafeDuration: req.SLAThreshold,
-		Now:               req.Clock.Now(),
+		EvalTime:          req.Clock.Now(),
 		PredicateEval:     req.PredicateEval,
 	})
 

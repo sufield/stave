@@ -56,7 +56,7 @@ Run all 43 built-in S3 controls against your observations. This is where finding
 
 ```bash
 stave apply --controls controls/s3 --observations ./observations \
-  --max-unsafe 168h --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --format text
+  --max-unsafe 168h --eval-time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --format text
 ```
 
 Example output:
@@ -105,7 +105,7 @@ aws s3api get-public-access-block --bucket staging-uploads > snapshot-raw/stagin
 # Re-run your extractor and re-evaluate
 ./my-s3-extractor.sh ./snapshot-raw ./observations
 stave apply --controls controls/s3 --observations ./observations \
-  --max-unsafe 168h --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --format text
+  --max-unsafe 168h --eval-time "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --format text
 ```
 
 If the fix worked, the finding disappears from the output. To formally verify:

@@ -15,7 +15,7 @@
 //	  -lint audit-lint.json -goroutines goroutines.json -churn churn.txt \
 //	  -out docs/audits/go-best-practices-baseline.md \
 //	  -json docs/audits/go-best-practices-baseline.json \
-//	  -now <RFC3339> -commit <sha>
+//	  -eval-time <RFC3339> -commit <sha>
 package main
 
 import (
@@ -97,7 +97,7 @@ type config struct {
 	Churn      string
 	Out        string
 	JSON       string
-	Now        string
+	EvalTime   string
 	Commit     string
 	Check      bool
 	Stderr     io.Writer
@@ -110,7 +110,7 @@ func main() {
 	flag.StringVar(&cfg.Churn, "churn", "", "path to churn counts (`<n> <path>` per line)")
 	flag.StringVar(&cfg.Out, "out", "docs/audits/go-best-practices-baseline.md", "markdown output path")
 	flag.StringVar(&cfg.JSON, "json", "docs/audits/go-best-practices-baseline.json", "JSON sidecar output path")
-	flag.StringVar(&cfg.Now, "now", "", "date for the header (deterministic; e.g. HEAD committer date)")
+	flag.StringVar(&cfg.EvalTime, "eval-time", "", "date for the header (deterministic; e.g. HEAD committer date)")
 	flag.StringVar(&cfg.Commit, "commit", "", "commit SHA for the header")
 	flag.BoolVar(&cfg.Check, "check", false, "verify the on-disk baseline matches current inputs; non-zero exit on drift")
 	flag.Parse()
@@ -134,7 +134,7 @@ func run(cfg config) error {
 		return err
 	}
 
-	rep := buildReport(findings, grs, churn, cfg.Now, cfg.Commit)
+	rep := buildReport(findings, grs, churn, cfg.EvalTime, cfg.Commit)
 	md := renderMarkdown(rep)
 	js, err := renderJSON(rep)
 	if err != nil {

@@ -40,7 +40,7 @@ func Test_RedGate_StartLineZero(t *testing.T) {
 	result := evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "0.2.0",
-			Now:               now,
+			EvalTime:          now,
 			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
 			Snapshots:         2,
 			EvaluatedState:    "deployed",

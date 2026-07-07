@@ -43,37 +43,37 @@ func TestResolveClock_Invalid(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for invalid time")
 	}
-	if !strings.Contains(err.Error(), "--now") {
-		t.Fatalf("error should mention --now, got: %v", err)
+	if !strings.Contains(err.Error(), "--eval-time") {
+		t.Fatalf("error should mention --eval-time, got: %v", err)
 	}
 }
 
-// --- ResolveNow ---
+// --- ResolveEvalTime ---
 
 func TestResolveNow_Empty(t *testing.T) {
-	now, err := ResolveNow("")
+	now, err := ResolveEvalTime("")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	// Should be approximately now
 	if time.Since(now) > 5*time.Second {
-		t.Fatalf("ResolveNow('') returned %v, expected approximately now", now)
+		t.Fatalf("ResolveEvalTime('') returned %v, expected approximately now", now)
 	}
 }
 
 func TestResolveNow_Valid(t *testing.T) {
-	now, err := ResolveNow("2026-06-15T12:00:00Z")
+	now, err := ResolveEvalTime("2026-06-15T12:00:00Z")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	want := time.Date(2026, 6, 15, 12, 0, 0, 0, time.UTC)
 	if !now.Equal(want) {
-		t.Fatalf("ResolveNow = %v, want %v", now, want)
+		t.Fatalf("ResolveEvalTime = %v, want %v", now, want)
 	}
 }
 
 func TestResolveNow_Invalid(t *testing.T) {
-	_, err := ResolveNow("bad-format")
+	_, err := ResolveEvalTime("bad-format")
 	if err == nil {
 		t.Fatal("expected error for invalid time format")
 	}
@@ -294,7 +294,7 @@ func TestPrepareEvaluationContext_FlagParsing(t *testing.T) {
 		ControlsDir:                "/tmp/ctl",
 		ObservationsDir:            "/tmp/obs",
 		MaxUnsafeDuration:          "7d",
-		NowTime:                    "2026-01-15T00:00:00Z",
+		EvalTimeRaw:                "2026-01-15T00:00:00Z",
 		Format:                     "json",
 		FormatChanged:              true,
 		SkipPathInference:          true,
@@ -311,8 +311,8 @@ func TestPrepareEvaluationContext_FlagParsing(t *testing.T) {
 		t.Fatalf("Format = %q, want json", ec.Format)
 	}
 	want := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
-	if !ec.Now.Equal(want) {
-		t.Fatalf("Now = %v, want %v", ec.Now, want)
+	if !ec.EvalTime.Equal(want) {
+		t.Fatalf("Now = %v, want %v", ec.EvalTime, want)
 	}
 	if ec.Clock == nil {
 		t.Fatal("Clock should not be nil")
@@ -339,7 +339,7 @@ func TestPrepareEvaluationContext_BadClock(t *testing.T) {
 	_, err := PrepareEvaluationContext(EvalContextRequest{
 		ControlsDir:                "/tmp/ctl",
 		ObservationsDir:            "/tmp/obs",
-		NowTime:                    "bad",
+		EvalTimeRaw:                "bad",
 		SkipPathInference:          true,
 		SkipControlsValidation:     true,
 		SkipObservationsValidation: true,

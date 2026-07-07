@@ -17,7 +17,7 @@ type DurationFindingInput struct {
 	ExposureLifecycle *asset.ExposureLifecycle
 	Control           *policy.ControlDefinition
 	Threshold         time.Duration
-	Now               time.Time
+	EvalTime          time.Time
 	Identities        []asset.CloudIdentity
 	PredicateParser   policy.PredicateParser
 }
@@ -53,7 +53,7 @@ func CreateDurationFinding(in DurationFindingInput) (*evaluation.Finding, error)
 		return nil, errors.New("createDurationFinding: Control is required")
 	}
 	a := in.ExposureLifecycle.Asset()
-	duration, durationErr := in.ExposureLifecycle.ExposureDuration(in.Now)
+	duration, durationErr := in.ExposureLifecycle.ExposureDuration(in.EvalTime)
 	if durationErr != nil {
 		// Sentinel: -1 hour. Plain `-1` is a Duration of -1 nanosecond,
 		// and -1ns.Hours() ≈ -2.78e-13, which downstream renderers
@@ -84,7 +84,7 @@ func CreateDurationFinding(in DurationFindingInput) (*evaluation.Finding, error)
 		Misconfigurations:   misconfigs,
 		RootCauses:          causes,
 		SourceEvidence:      ExtractSourceEvidence(a, causes),
-		TemporalRisk:        in.ExposureLifecycle.FormatExposureSummary(in.Threshold, in.Now),
+		TemporalRisk:        in.ExposureLifecycle.FormatExposureSummary(in.Threshold, in.EvalTime),
 	}
 	f.ReasoningTrace = evaluation.ReasoningTraceFromMisconfigurations(misconfigs)
 	f.Delta = policy.DeriveDeltas(misconfigs)

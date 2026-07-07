@@ -35,7 +35,7 @@ func TestVerifyOutputByteIdentical(t *testing.T) {
 		"--before", beforeDir,
 		"--after", afterDir,
 		"--controls", ctlDir,
-		"--now", "2026-01-11T00:00:00Z",
+		"--eval-time", "2026-01-11T00:00:00Z",
 	}
 
 	run := func() []byte {

@@ -46,12 +46,12 @@ make build
 
 ./stave apply \
     --observations examples/cognito-iteration5-authrole/fixtures/writeup-config/observations \
-    --now 2026-05-09T12:00:00Z --format json \
+    --eval-time 2026-05-09T12:00:00Z --format json \
   | jq '{ctls: ([.findings[] | select(.control_id | test("CTL.COGNITO.IDPOOL.(AUTHROLE|ROLEMAPPING|CLASSICFLOW|PROVIDER)"))] | map(.control_id) | sort | unique), chains: (.chain_findings // [] | map(.chain) | sort | unique)}'
 
 ./stave apply \
     --observations examples/cognito-iteration5-authrole/fixtures/remediated-config/observations \
-    --now 2026-05-09T12:00:00Z --format json \
+    --eval-time 2026-05-09T12:00:00Z --format json \
   | jq '{ctls: ([.findings[] | select(.control_id | test("CTL.COGNITO.IDPOOL.(AUTHROLE|ROLEMAPPING|CLASSICFLOW|PROVIDER)"))] | length), chains: (.chain_findings // [] | length)}'
 ```
 

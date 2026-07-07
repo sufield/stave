@@ -27,14 +27,14 @@ func finding(ctl string, sev policy.Severity) remediation.Finding {
 func TestPredict_ProjectionDateComputed(t *testing.T) {
 	assessments := []*report.Assessment{
 		{
-			Run:     evaluation.RunInfo{Now: now.Add(-30 * 24 * time.Hour)},
+			Run:     evaluation.RunInfo{EvalTime: now.Add(-30 * 24 * time.Hour)},
 			Summary: evaluation.ComplianceSummary{TotalAssets: 100, Violations: 20},
 			Findings: []remediation.Finding{
 				finding("CTL.A.001", policy.SeverityCritical),
 			},
 		},
 		{
-			Run:     evaluation.RunInfo{Now: now},
+			Run:     evaluation.RunInfo{EvalTime: now},
 			Summary: evaluation.ComplianceSummary{TotalAssets: 100, Violations: 15},
 			Findings: []remediation.Finding{
 				finding("CTL.A.001", policy.SeverityCritical),
@@ -47,7 +47,7 @@ func TestPredict_ProjectionDateComputed(t *testing.T) {
 		Profile:         "hipaa",
 		TargetReadiness: 95,
 		Window:          90 * 24 * time.Hour,
-		Now:             now,
+		EvalTime:        now,
 	})
 
 	if p.ProjectedDate.Before(now) {
@@ -61,7 +61,7 @@ func TestPredict_ProjectionDateComputed(t *testing.T) {
 func TestPredict_AlreadyMeetsTarget(t *testing.T) {
 	assessments := []*report.Assessment{
 		{
-			Run:     evaluation.RunInfo{Now: now},
+			Run:     evaluation.RunInfo{EvalTime: now},
 			Summary: evaluation.ComplianceSummary{TotalAssets: 100, Violations: 2},
 			Findings: []remediation.Finding{
 				finding("CTL.A.001", policy.SeverityLow),
@@ -74,7 +74,7 @@ func TestPredict_AlreadyMeetsTarget(t *testing.T) {
 		Profile:         "hipaa",
 		TargetReadiness: 95,
 		Window:          90 * 24 * time.Hour,
-		Now:             now,
+		EvalTime:        now,
 	})
 
 	if !p.ProjectedDate.Equal(now) {

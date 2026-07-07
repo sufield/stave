@@ -72,7 +72,7 @@ run_one() {
     "$stave_bin" export-sir \
         --controls "$control_dir" \
         --observations "$obs_dir" \
-        --now 2026-01-09T00:00:00Z \
+        --eval-time 2026-01-09T00:00:00Z \
         --format smt2 > "$facts" 2>/dev/null
 
     local z3_verdict cvc5_verdict

@@ -40,7 +40,7 @@ func TestExperiment01_MinimalFinding(t *testing.T) {
 
 	g := Build(BuildInput{
 		Findings:   findings,
-		Now:        time.Date(2025, 11, 15, 10, 0, 0, 0, time.UTC),
+		EvalTime:   time.Date(2025, 11, 15, 10, 0, 0, 0, time.UTC),
 		SourcePath: "assessment.json",
 	})
 
@@ -165,7 +165,7 @@ func TestExperiment02_ActiveChain(t *testing.T) {
 
 	g := Build(BuildInput{
 		Findings: findings, ChainFindings: chains,
-		Now: time.Date(2025, 11, 15, 10, 0, 0, 0, time.UTC),
+		EvalTime: time.Date(2025, 11, 15, 10, 0, 0, 0, time.UTC),
 	})
 
 	// ThreatChain node exists.
@@ -271,7 +271,7 @@ func TestExperiment03_ComplianceMapping(t *testing.T) {
 		},
 	}
 
-	g := Build(BuildInput{Findings: findings, Now: time.Now()})
+	g := Build(BuildInput{Findings: findings, EvalTime: time.Now()})
 
 	// 3 ComplianceRequirement nodes.
 	reqs := filterNodes(g.Nodes, "ComplianceRequirement")
@@ -335,7 +335,7 @@ func TestExperiment04_NoChain(t *testing.T) {
 		}
 	}
 
-	g := Build(BuildInput{Findings: findings, Now: time.Now()})
+	g := Build(BuildInput{Findings: findings, EvalTime: time.Now()})
 
 	// No ThreatChain or AttackerCapability nodes.
 	if len(filterNodes(g.Nodes, "ThreatChain")) != 0 {
@@ -379,7 +379,7 @@ func TestExperiment09_JSONRoundTrip(t *testing.T) {
 			},
 		},
 	}
-	g := Build(BuildInput{Findings: findings, Now: time.Date(2025, 11, 15, 0, 0, 0, 0, time.UTC)})
+	g := Build(BuildInput{Findings: findings, EvalTime: time.Date(2025, 11, 15, 0, 0, 0, 0, time.UTC)})
 
 	// Marshal to JSON and back.
 	data, err := json.Marshal(g)

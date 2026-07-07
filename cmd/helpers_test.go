@@ -78,29 +78,29 @@ func (a *App) testAttachRunIDFromPlan(plan *appeval.EvaluationPlan) {
 
 func TestResolveNow_Empty(t *testing.T) {
 	before := time.Now().UTC()
-	got, err := compose.ResolveNow("")
+	got, err := compose.ResolveEvalTime("")
 	after := time.Now().UTC()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if got.Before(before) || got.After(after) {
-		t.Fatalf("resolveNow(\"\") = %v, want between %v and %v", got, before, after)
+		t.Fatalf("resolveEvalTime(\"\") = %v, want between %v and %v", got, before, after)
 	}
 }
 
 func TestResolveNow_ValidRFC3339(t *testing.T) {
-	got, err := compose.ResolveNow("2026-01-15T12:00:00Z")
+	got, err := compose.ResolveEvalTime("2026-01-15T12:00:00Z")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	want := time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC)
 	if !got.Equal(want) {
-		t.Fatalf("resolveNow = %v, want %v", got, want)
+		t.Fatalf("resolveEvalTime = %v, want %v", got, want)
 	}
 }
 
 func TestResolveNow_NonUTC(t *testing.T) {
-	got, err := compose.ResolveNow("2026-01-15T12:00:00+05:00")
+	got, err := compose.ResolveEvalTime("2026-01-15T12:00:00+05:00")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -109,12 +109,12 @@ func TestResolveNow_NonUTC(t *testing.T) {
 	}
 	want := time.Date(2026, 1, 15, 7, 0, 0, 0, time.UTC)
 	if !got.Equal(want) {
-		t.Fatalf("resolveNow = %v, want %v", got, want)
+		t.Fatalf("resolveEvalTime = %v, want %v", got, want)
 	}
 }
 
 func TestResolveNow_Invalid(t *testing.T) {
-	_, err := compose.ResolveNow("not-a-timestamp")
+	_, err := compose.ResolveEvalTime("not-a-timestamp")
 	if err == nil {
 		t.Fatal("expected error for invalid timestamp")
 	}

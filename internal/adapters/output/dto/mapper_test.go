@@ -21,7 +21,7 @@ func TestFromEvaluation_MinimalEnvelope(t *testing.T) {
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
 			Offline:           true,
-			Now:               time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
+			EvalTime:          time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         2,
 			EvaluatedState:    "deployed",
@@ -418,7 +418,7 @@ func TestFromRunInfo_WithInputHashes(t *testing.T) {
 	ri := evaluation.RunInfo{
 		StaveVersion:      "v1",
 		Offline:           false,
-		Now:               time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
+		EvalTime:          time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 		MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 		Snapshots:         3,
 		InputHashes: &evaluation.InputHashes{

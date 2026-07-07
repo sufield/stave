@@ -69,7 +69,7 @@ type Input struct {
 	ViolationsFound   int
 	AttackSurface     int
 	MaxUnsafeDuration time.Duration
-	Now               time.Time
+	EvalTime          time.Time
 	PredicateEval     policy.PredicateEval
 
 	// cached summary computed at creation
@@ -96,7 +96,7 @@ func (i *Input) buildSummary() Summary {
 		TotalSnapshots:     len(i.Snapshots),
 		TotalControls:      len(i.Controls),
 		MaxUnsafeThreshold: kernel.Duration(i.MaxUnsafeDuration),
-		EvaluationTime:     i.Now,
+		EvaluationTime:     i.EvalTime,
 	}
 
 	if len(i.Snapshots) == 0 {

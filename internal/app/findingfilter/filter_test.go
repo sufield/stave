@@ -24,7 +24,7 @@ func finding(ctl string, ast string) remediation.Finding {
 
 func assessment(t time.Time, findings ...remediation.Finding) *report.Assessment {
 	return &report.Assessment{
-		Run:      evaluation.RunInfo{Now: t},
+		Run:      evaluation.RunInfo{EvalTime: t},
 		Findings: findings,
 	}
 }
@@ -42,7 +42,7 @@ func TestClassify_NoHistory_AllNew(t *testing.T) {
 			finding("CTL.A.001", "asset1"),
 			finding("CTL.B.001", "asset2"),
 		},
-		Now: t1,
+		EvalTime: t1,
 	})
 
 	if len(result.NewFindings) != 2 {
@@ -74,8 +74,8 @@ func TestClassify_ChronicFindingSuppressed(t *testing.T) {
 			finding("CTL.B.001", "asset2"),
 			finding("CTL.C.001", "asset3"),
 		},
-		History: history,
-		Now:     t2,
+		History:  history,
+		EvalTime: t2,
 	})
 
 	if len(result.NewFindings) != 1 {
@@ -99,8 +99,8 @@ func TestClassify_NewFindingNotSuppressed(t *testing.T) {
 			finding("CTL.A.001", "asset1"),
 			finding("CTL.NEW.001", "asset-new"),
 		},
-		History: history,
-		Now:     t1,
+		History:  history,
+		EvalTime: t1,
 	})
 
 	if len(result.NewFindings) != 1 {
@@ -122,8 +122,8 @@ func TestClassify_ReturnedAfterAbsence(t *testing.T) {
 		CurrentFindings: []remediation.Finding{
 			finding("CTL.A.001", "asset1"), // returned
 		},
-		History: history,
-		Now:     t3,
+		History:  history,
+		EvalTime: t3,
 	})
 
 	if len(result.ReturnedFindings) != 1 {
@@ -155,8 +155,8 @@ func TestClassify_ResolvedSinceLastRun(t *testing.T) {
 		CurrentFindings: []remediation.Finding{
 			finding("CTL.A.001", "asset1"),
 		},
-		History: history,
-		Now:     t2,
+		History:  history,
+		EvalTime: t2,
 	})
 
 	if len(result.ResolvedFindings) != 1 {
@@ -181,7 +181,7 @@ func TestClassify_NewSince_FiltersByWindow(t *testing.T) {
 		},
 		History:  history,
 		NewSince: 10 * 24 * time.Hour,
-		Now:      t3,
+		EvalTime: t3,
 	})
 
 	if len(result.NewFindings) != 1 {
@@ -207,7 +207,7 @@ func TestClassify_NewSince_OutsideWindow_AllNew(t *testing.T) {
 		},
 		History:  history,
 		NewSince: 5 * 24 * time.Hour,
-		Now:      t3,
+		EvalTime: t3,
 	})
 
 	if len(result.NewFindings) != 1 {

@@ -186,7 +186,7 @@ func operationalCaps() []Capability {
 			Title:       "Measure how long misconfigurations have persisted",
 			Description: "Track unsafe duration across snapshots — the same finding at 6 hours vs 6 months tells different stories.",
 			UseWhen:     "You need SLA urgency data or compliance exposure-duration evidence.",
-			ExampleCmd:  "stave apply --observations ./snapshots/ --max-unsafe 168h --now <RFC3339>",
+			ExampleCmd:  "stave apply --observations ./snapshots/ --max-unsafe 168h --eval-time <RFC3339>",
 			Keywords:    []string{"duration", "time", "how-long", "sla", "persistence", "age", "exposure-window"},
 		},
 		{

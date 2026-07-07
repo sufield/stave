@@ -17,7 +17,7 @@ func TestCompoundRegression_RhinoAttachUserPolicy(t *testing.T) {
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: "../../testdata/e2e/e2e-disclosure-rhino-attachuserpolicy/observations",
 		ChainsDir:    chainsDir,
-		Now:          compoundNow,
+		EvalTime:     compoundNow,
 	})
 	if err != nil {
 		t.Fatalf("Apply: %v", err)
@@ -62,7 +62,7 @@ func TestCompoundRegression_RhinoPassRoleCreateFunction(t *testing.T) {
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: "../../testdata/e2e/e2e-disclosure-rhino-passrole-createfunction/observations",
 		ChainsDir:    chainsDir,
-		Now:          compoundNow,
+		EvalTime:     compoundNow,
 	})
 	if err != nil {
 		t.Fatalf("Apply: %v", err)
@@ -90,7 +90,7 @@ func TestCompoundRegression_IAMEscalateChainFires(t *testing.T) {
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: "../../testdata/e2e/e2e-forge-iam-escalate-chain-fail/observations",
 		ControlsDir:  "../../testdata/e2e/e2e-forge-iam-escalate-chain-fail/controls",
-		Now:          compoundNow,
+		EvalTime:     compoundNow,
 	})
 	if err != nil {
 		t.Fatalf("Apply: %v", err)
@@ -105,7 +105,7 @@ func TestCompoundRegression_IAMEscalateChainSafe(t *testing.T) {
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: "../../testdata/e2e/e2e-forge-iam-escalate-chain-pass/observations",
 		ControlsDir:  "../../testdata/e2e/e2e-forge-iam-escalate-chain-pass/controls",
-		Now:          compoundNow,
+		EvalTime:     compoundNow,
 	})
 	if err != nil {
 		t.Fatalf("Apply: %v", err)
@@ -120,7 +120,7 @@ func TestCompoundRegression_ChainMembershipOnFinding(t *testing.T) {
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: "../../testdata/e2e/e2e-disclosure-rhino-attachuserpolicy/observations",
 		ChainsDir:    chainsDir,
-		Now:          compoundNow,
+		EvalTime:     compoundNow,
 	})
 	if err != nil {
 		t.Fatalf("Apply: %v", err)
@@ -149,7 +149,7 @@ func TestCompoundRegression_ChainMembershipOnFinding(t *testing.T) {
 func TestCompoundRegression_SilentRiskControlNotInChain(t *testing.T) {
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,
-		Now:          compoundNow,
+		EvalTime:     compoundNow,
 	})
 	if err != nil {
 		t.Fatalf("Apply: %v", err)

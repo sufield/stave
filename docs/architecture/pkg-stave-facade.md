@@ -78,7 +78,7 @@ helper to `pkg/stave` first):
       (`pkg/stave/internal/applycmd/standard.go` + `newonly.go`). The facade
       self-constructs the engine via `applycore.Run` (an `ObservationRepo`
       override on `applycore.Inputs` carries stdin observations without the
-      command holding a repo type). `--max-unsafe`/`--now` parse in the
+      command holding a repo type). `--max-unsafe`/`--eval-time` parse in the
       facade; the command passes raw flag strings. Project config crosses as
       a path (`ProjectConfigPath`); the facade loads the `WorkspacePolicy`.
       cli/ui crossings became return values: warnings (`[]string`), the gate

@@ -34,7 +34,7 @@ func TestRun_ControlIDAllowlist_DirPath(t *testing.T) {
 	full, err := Run(context.Background(), Inputs{
 		ControlsDir:  fixtureGhostref + "/controls",
 		SnapshotsDir: fixtureGhostref + "/observations",
-		Now:          now,
+		EvalTime:     now,
 	})
 	if err != nil {
 		t.Fatalf("baseline Run: %v", err)
@@ -49,7 +49,7 @@ func TestRun_ControlIDAllowlist_DirPath(t *testing.T) {
 	scoped, err := Run(context.Background(), Inputs{
 		ControlsDir:        fixtureGhostref + "/controls",
 		SnapshotsDir:       fixtureGhostref + "/observations",
-		Now:                now,
+		EvalTime:           now,
 		ControlIDAllowlist: []string{want},
 	})
 	if err != nil {

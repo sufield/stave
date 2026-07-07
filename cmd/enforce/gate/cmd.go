@@ -33,7 +33,7 @@ Inputs:
   --controls, -i    Path to control definitions directory (used by fail_on_overdue_upcoming)
   --observations, -o Path to observation snapshots directory (used by fail_on_overdue_upcoming)
   --max-unsafe      Maximum allowed unsafe duration (used by fail_on_overdue_upcoming)
-  --now             Reference time (RFC3339). If omitted, uses wall clock
+  --eval-time             Reference time (RFC3339). If omitted, uses wall clock
   --format, -f      Output format: text or json (default: text)
 
 Outputs:
@@ -67,7 +67,7 @@ Exit Codes:
 				ControlsDir:     opts.ControlsDir,
 				ObservationsDir: opts.ObservationsDir,
 				MaxUnsafe:       opts.MaxUnsafeDuration,
-				Now:             opts.Now,
+				EvalTime:        opts.EvalTime,
 				Format:          opts.Format,
 				Quiet:           gf.Quiet,
 				Team:            opts.Team,

@@ -315,7 +315,7 @@ func computeRunMetrics(a *report.Assessment, prev *runMetrics) runMetrics {
 	}
 
 	m := runMetrics{
-		CapturedAt:     a.Run.Now,
+		CapturedAt:     a.Run.EvalTime,
 		TotalAssets:    total,
 		ViolationCount: violations,
 		PassCount:      passCount,
@@ -482,7 +482,7 @@ func computeSLATrend(assessments []*report.Assessment) []slaTrendMetric {
 		withinSLA := stats.TotalWithSLA - stats.BreachedCount
 		pct := float64(withinSLA) / float64(stats.TotalWithSLA) * 100
 		metrics = append(metrics, slaTrendMetric{
-			CapturedAt:        a.Run.Now,
+			CapturedAt:        a.Run.EvalTime,
 			TotalWithSLA:      stats.TotalWithSLA,
 			BreachedCount:     stats.BreachedCount,
 			CompliancePercent: pct,

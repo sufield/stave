@@ -8,7 +8,7 @@ import (
 
 func TestRenderUpcomingMarkdown_NoItems(t *testing.T) {
 	opts := UpcomingRenderOptions{
-		Now:              time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
+		EvalTime:         time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 		DueSoonThreshold: 24 * time.Hour,
 	}
 	summary := UpcomingSummary{}
@@ -24,7 +24,7 @@ func TestRenderUpcomingMarkdown_NoItems(t *testing.T) {
 func TestRenderUpcomingMarkdown_WithItems(t *testing.T) {
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	opts := UpcomingRenderOptions{
-		Now:              now,
+		EvalTime:         now,
 		DueSoonThreshold: 24 * time.Hour,
 	}
 	items := []UpcomingItem{

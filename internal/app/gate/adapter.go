@@ -150,7 +150,7 @@ func (o *OverdueCounter) CountOverdue(ctx context.Context, controlsDir, observat
 		Controls:                loaded.Controls,
 		Snapshots:               loaded.Snapshots,
 		GlobalMaxUnsafeDuration: maxUnsafe,
-		Now:                     now,
+		EvalTime:                now,
 		PredicateEval:           celEval,
 	}), nil
 }

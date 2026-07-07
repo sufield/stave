@@ -23,7 +23,7 @@ type loopOptions struct {
 	AfterDir     string
 	ControlsDir  string
 	MaxUnsafeRaw string
-	NowRaw       string
+	EvalTimeRaw  string
 	OutDir       string
 }
 
@@ -34,7 +34,9 @@ func (o *loopOptions) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.AfterDir, "after", "a", "", "Path to after-remediation observations (required)")
 	f.StringVarP(&o.ControlsDir, "controls", "i", o.ControlsDir, "Path to control definitions directory")
 	f.StringVar(&o.MaxUnsafeRaw, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
-	f.StringVar(&o.NowRaw, "now", "", "Override current time (RFC3339). Required for deterministic output")
+	f.StringVar(&o.EvalTimeRaw, "eval-time", "", "Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.")
+	f.StringVar(&o.EvalTimeRaw, "now", "", "Alias for --eval-time")
+	_ = f.MarkDeprecated("now", "please use --eval-time instead")
 	f.StringVar(&o.OutDir, "out", "", "Write remediation artifacts to this directory")
 	_ = cmd.MarkFlagRequired("before")
 	_ = cmd.MarkFlagRequired("after")

@@ -68,7 +68,7 @@ func TestLoader_LoadEnvelopeFromFile_ValidEnvelope(t *testing.T) {
 	env := report.NewAssessment(report.AssessmentRequest{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
-			Now:               time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
+			EvalTime:          time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			Snapshots:         2,
 			EvaluatedState:    "deployed",
@@ -147,7 +147,7 @@ func strictPartialEnvelope(toolVersion string, now string) string {
         "run": {
             "tool_version": "` + toolVersion + `",
             "offline": false,
-            "now": "` + now + `",
+            "eval_time": "` + now + `",
             "sla_threshold": "24h",
             "snapshots": 0
         },

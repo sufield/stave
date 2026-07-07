@@ -36,13 +36,13 @@ cd stave
  --controls examples/duration/controls \
  --observations examples/duration/observations \
  --max-unsafe 12h \
- --now 2026-01-10T00:00:00Z
+ --eval-time 2026-01-10T00:00:00Z
 
 ./stave apply \
  --controls examples/duration/controls \
  --observations examples/duration/observations \
  --max-unsafe 12h \
- --now 2026-01-10T00:00:00Z
+ --eval-time 2026-01-10T00:00:00Z
 ```
 
 ## Expected Result
@@ -56,4 +56,4 @@ cd stave
 - Duration is calculated from the first snapshot where the predicate matches to the last consecutive match.
 - When an asset transitions from unsafe to safe, the episode closes and the streak resets.
 - The threshold comparison is strict: duration must **exceed** `--max-unsafe`, not merely equal it.
-- Use `--now` for deterministic output. Stave caps `--now` to the last snapshot's `captured_at`.
+- Use `--eval-time` for deterministic output. Stave caps `--eval-time` to the last snapshot's `captured_at`.

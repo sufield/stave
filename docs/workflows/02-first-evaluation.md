@@ -58,7 +58,7 @@ stave apply --observations /path/to/your/obs/ --format json   # machine-readable
 ```
 
 Exit codes: `0` = no violations · `2` = input error · `3` = violations
-found · `4` = internal error. Use `--now 2026-01-15T00:00:00Z` to pin
+found · `4` = internal error. Use `--eval-time 2026-01-15T00:00:00Z` to pin
 the clock for byte-identical, reproducible output.
 
 Don't have snapshots yet? If you already run Steampipe, see

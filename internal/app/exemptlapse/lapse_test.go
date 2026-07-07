@@ -25,7 +25,7 @@ func TestDetect_ExpiredExemptionProducesLapsed(t *testing.T) {
 
 	result := Detect(Input{
 		AcknowledgedFindings: acknowledged,
-		Now:                  now,
+		EvalTime:             now,
 	})
 
 	if len(result) != 1 {
@@ -52,7 +52,7 @@ func TestDetect_SeverityBumpAfter30Days(t *testing.T) {
 
 	result := Detect(Input{
 		AcknowledgedFindings: acknowledged,
-		Now:                  now,
+		EvalTime:             now,
 	})
 
 	if len(result) != 1 {
@@ -79,7 +79,7 @@ func TestDetect_CompensatingControlFailureSurfaces(t *testing.T) {
 
 	result := Detect(Input{
 		AcknowledgedFindings: acknowledged,
-		Now:                  now,
+		EvalTime:             now,
 	})
 
 	if len(result) != 1 {
@@ -103,7 +103,7 @@ func TestDetect_ActiveExemptionStillSuppresses(t *testing.T) {
 
 	result := Detect(Input{
 		AcknowledgedFindings: acknowledged,
-		Now:                  now,
+		EvalTime:             now,
 	})
 
 	if len(result) != 0 {

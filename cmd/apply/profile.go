@@ -95,7 +95,7 @@ type Config struct {
 	Quiet             bool
 	Stdout            io.Writer
 	Stderr            io.Writer
-	NowTime           string // RFC3339 or "" — the facade builds the clock
+	EvalTimeRaw       string // RFC3339 or "" — the facade builds the clock
 }
 
 // runProfile drives profile-based evaluation through the pkg/stave facade.
@@ -119,7 +119,7 @@ func runProfile(ctx context.Context, cs cobraState, cfg RunConfig) error {
 		IncludeAll:      p.IncludeAll,
 		MaxUnsafe:       p.MaxUnsafeDuration,
 		Format:          string(p.OutputFormat),
-		Now:             p.NowTime,
+		EvalTime:        p.EvalTimeRaw,
 		SanitizeIDs:     cs.GlobalFlags.Sanitize,
 		PathMode:        string(cs.GlobalFlags.PathMode),
 	})

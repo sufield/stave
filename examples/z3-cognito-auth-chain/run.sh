@@ -55,7 +55,7 @@ write_facts() {
     "$stave_bin" export-sir \
         --controls "$control_dir" \
         --observations "$fixture_root/fixtures/$fixture/observations" \
-        --now 2026-01-09T00:00:00Z \
+        --eval-time 2026-01-09T00:00:00Z \
         --format smt2 > "$out_file" 2>/dev/null
 }
 

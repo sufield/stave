@@ -40,7 +40,7 @@ func TestObservationSource_Path(t *testing.T) {
 func TestOptions_Validate_ValidOptions(t *testing.T) {
 	parsed, err := Options{
 		MaxUnsafeDuration: "24h",
-		NowTime:           "2026-01-15T00:00:00Z",
+		EvalTimeRaw:       "2026-01-15T00:00:00Z",
 		ContextName:       "test",
 	}.Validate()
 	if err != nil {
@@ -49,7 +49,7 @@ func TestOptions_Validate_ValidOptions(t *testing.T) {
 	if parsed.MaxUnsafeDuration != 24*time.Hour {
 		t.Errorf("MaxUnsafeDuration = %v", parsed.MaxUnsafeDuration)
 	}
-	if parsed.Now.IsZero() {
+	if parsed.EvalTime.IsZero() {
 		t.Error("Now should be set")
 	}
 	if parsed.ContextName != "test" {
@@ -67,7 +67,7 @@ func TestOptions_Validate_InvalidDuration(t *testing.T) {
 func TestOptions_Validate_InvalidNowTime(t *testing.T) {
 	_, err := Options{
 		MaxUnsafeDuration: "24h",
-		NowTime:           "not-a-time",
+		EvalTimeRaw:       "not-a-time",
 	}.Validate()
 	if err == nil || !strings.Contains(err.Error(), "invalid timestamp") {
 		t.Fatalf("expected timestamp error, got: %v", err)
@@ -79,8 +79,8 @@ func TestOptions_Validate_NoNowTime(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Validate() error = %v", err)
 	}
-	if !parsed.Now.IsZero() {
-		t.Error("Now should be zero when --now not set")
+	if !parsed.EvalTime.IsZero() {
+		t.Error("Now should be zero when --eval-time not set")
 	}
 }
 
@@ -253,7 +253,7 @@ func TestEnrich_NilSanitizer(t *testing.T) {
 	result := evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
 			StaveVersion:      "test",
-			Now:               time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
+			EvalTime:          time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
 			MaxUnsafeDuration: kernel.Duration(24 * time.Hour),
 			EvaluatedState:    "deployed",
 		},

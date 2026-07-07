@@ -73,21 +73,21 @@ func (a *Assessment) EnsureFindings() []remediation.Finding {
 }
 
 // HasTimestamp reports whether the assessment's Run carries a
-// non-zero capture time. Replaces (a.Run.Now.IsZero()) probes at
+// non-zero capture time. Replaces (a.Run.EvalTime.IsZero()) probes at
 // snapshotID / sort sites so callers ask the type directly.
 func (a *Assessment) HasTimestamp() bool {
-	return a != nil && !a.Run.Now.IsZero()
+	return a != nil && !a.Run.EvalTime.IsZero()
 }
 
 // Before reports whether this assessment was captured before other.
-// Replaces (a.Run.Now.Compare(b.Run.Now)) inline comparators at the
+// Replaces (a.Run.EvalTime.Compare(b.Run.EvalTime)) inline comparators at the
 // score-trend sort site with a named accessor; uses standard
 // time.Before semantics so the comparator follows Go conventions.
 func (a *Assessment) Before(other *Assessment) bool {
 	if a == nil || other == nil {
 		return false
 	}
-	return a.Run.Now.Before(other.Run.Now)
+	return a.Run.EvalTime.Before(other.Run.EvalTime)
 }
 
 // SLASummary returns the (total, breached) pair that summarises the
@@ -118,14 +118,14 @@ func (a *Assessment) SLASummary() (total, breached int) {
 
 // SnapshotID returns the deterministic snapshot identifier
 // callers (cmd/score's trend builder) attach to per-assessment
-// rows: "snap-YYYYMMDD" derived from Run.Now, or "" when the
+// rows: "snap-YYYYMMDD" derived from Run.EvalTime, or "" when the
 // assessment carries no timestamp. Centralised here so the
-// formatting rule lives on the type that owns Run.Now.
+// formatting rule lives on the type that owns Run.EvalTime.
 func (a *Assessment) SnapshotID() string {
 	if a == nil || !a.HasTimestamp() {
 		return ""
 	}
-	return "snap-" + a.Run.Now.Format("20060102")
+	return "snap-" + a.Run.EvalTime.Format("20060102")
 }
 
 // CountBySeverity tallies the assessment's findings into the four
@@ -297,7 +297,7 @@ type Attestation struct {
 type AttestationRunInfo struct {
 	ToolVersion     string        `json:"tool_version"`
 	Offline         bool          `json:"offline"`
-	Now             time.Time     `json:"now"`
+	EvalTime        time.Time     `json:"eval_time"`
 	SLAThreshold    time.Duration `json:"-"`
 	BeforeSnapshots int           `json:"before_snapshots"`
 	AfterSnapshots  int           `json:"after_snapshots"`

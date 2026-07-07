@@ -28,7 +28,7 @@ func WriteHygieneReport(w io.Writer, req appcontracts.HygieneAssessment) error {
 	h := &hygieneWriter{w: w}
 
 	h.f("# Snapshot Hygiene Report\n\n")
-	h.f("- **Generated At:** %s\n", ctx.Now.Format(time.RFC3339))
+	h.f("- **Generated At:** %s\n", ctx.EvalTime.Format(time.RFC3339))
 	h.f("- **Lookback Period:** %s (since %s)\n", ctx.LookbackWindow, ctx.PreviousAuditAt.Format(time.RFC3339))
 	h.f("- **Due Soon Threshold:** %s\n\n", ctx.SLAWarning)
 

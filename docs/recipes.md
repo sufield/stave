@@ -30,7 +30,7 @@ Reusable multi-command workflows. Each recipe shows the exact commands, expected
      --controls controls/s3 \
      --observations observations/ \
      --max-unsafe 168h \
-     --now 2026-02-22T00:00:00Z
+     --eval-time 2026-02-22T00:00:00Z
    ```
 
    Exit 0 = no violations. Exit 3 = violations found (review stdout JSON).
@@ -67,7 +67,7 @@ Reusable multi-command workflows. Each recipe shows the exact commands, expected
      --controls controls/s3 \
      --observations ./observations/ \
      --max-unsafe 168h \
-     --now 2026-02-22T00:00:00Z
+     --eval-time 2026-02-22T00:00:00Z
    ```
 
    Remember: you need at least 2 observation snapshots (two points in time) for duration-based controls to detect violations.
@@ -92,7 +92,7 @@ Reusable multi-command workflows. Each recipe shows the exact commands, expected
      --after ./obs-after \
      --controls controls/s3 \
      --out ./ci-output \
-     --now 2026-02-22T00:00:00Z
+     --eval-time 2026-02-22T00:00:00Z
    ```
 
    Exit 0 = all violations resolved, none introduced. Exit 3 = remaining or new violations exist.
@@ -192,7 +192,7 @@ stave apply \
   --controls controls/s3 \
   --observations observations/ \
   --max-unsafe 168h \
-  --now 2026-02-22T00:00:00Z \
+  --eval-time 2026-02-22T00:00:00Z \
 | jq -r '.findings[].control_id'
 ```
 
@@ -203,7 +203,7 @@ stave apply \
   --controls controls/s3 \
   --observations observations/ \
   --max-unsafe 168h \
-  --now 2026-02-22T00:00:00Z \
+  --eval-time 2026-02-22T00:00:00Z \
 | jq '.findings | group_by(.severity) | map({severity: .[0].severity, count: length})'
 ```
 
@@ -214,7 +214,7 @@ stave apply \
   --controls controls/s3 \
   --observations observations/ \
   --max-unsafe 168h \
-  --now 2026-02-22T00:00:00Z \
+  --eval-time 2026-02-22T00:00:00Z \
 | jq '[.findings[] | select(.unsafe_duration_hours > 24) | {asset: .asset_id, hours: .unsafe_duration_hours}]'
 ```
 
@@ -231,7 +231,7 @@ stave apply \
      --controls controls/s3 \
      --observations observations/ \
      --max-unsafe 168h \
-     --now 2026-02-22T00:00:00Z \
+     --eval-time 2026-02-22T00:00:00Z \
      --out output
    ```
 
@@ -291,7 +291,7 @@ stave alias set val "validate --controls controls/s3 --observations observations
 stave alias set diag "diagnose --controls controls/s3 --observations observations"
 
 # Use them (extra flags are appended)
-stave ev --now 2026-02-22T00:00:00Z
+stave ev --eval-time 2026-02-22T00:00:00Z
 stave val --strict
 stave diag --format json
 
@@ -315,7 +315,7 @@ stave alias delete ev
      --controls controls/s3 \
      --observations observations/ \
      --max-unsafe 168h \
-     --now 2026-02-22T00:00:00Z \
+     --eval-time 2026-02-22T00:00:00Z \
    | jq -r '.findings[].control_id'
    ```
 
@@ -326,7 +326,7 @@ stave alias delete ev
      --controls controls/s3 \
      --observations observations/ \
      --max-unsafe 168h \
-     --now 2026-02-22T00:00:00Z \
+     --eval-time 2026-02-22T00:00:00Z \
    | stave diagnose \
      --previous-output - \
      --controls controls/s3 \

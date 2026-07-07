@@ -335,11 +335,11 @@ func ResolveObservationsEnv(cmd *cobra.Command, current string) string {
 	return current
 }
 
-// ResolveNowEnv returns the env-var override for --now if the flag was not
+// ResolveEvalTimeEnv returns the env-var override for --eval-time if the flag was not
 // explicitly set by the user. Returns the original value if no override applies.
-func ResolveNowEnv(cmd *cobra.Command, current string) string {
-	if !cmd.Flags().Changed("now") {
-		if v := env.Now.Value(); v != "" {
+func ResolveEvalTimeEnv(cmd *cobra.Command, current string) string {
+	if !cmd.Flags().Changed("eval-time") {
+		if v := env.EvalTime.Value(); v != "" {
 			return v
 		}
 	}

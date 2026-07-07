@@ -39,7 +39,7 @@ func TestComputeItems_DeterministicOrder(t *testing.T) {
 			Controls:                controls,
 			Snapshots:               snapshots,
 			GlobalMaxUnsafeDuration: 4 * time.Hour,
-			Now:                     base.Add(time.Hour),
+			EvalTime:                base.Add(time.Hour),
 			PredicateEval:           celEval,
 		})
 		if len(items) != 2 {
@@ -76,7 +76,7 @@ func TestComputeItems_ResetsOnSafeTransition(t *testing.T) {
 		Controls:                controls,
 		Snapshots:               snapshots,
 		GlobalMaxUnsafeDuration: 6 * time.Hour,
-		Now:                     base.Add(2 * time.Hour),
+		EvalTime:                base.Add(2 * time.Hour),
 		PredicateEval:           mustPredicateEval(),
 	})
 	if len(items) != 1 {
@@ -105,7 +105,7 @@ func TestComputeItems_UsesFallbackThresholdRules(t *testing.T) {
 		Controls:                invalid,
 		Snapshots:               snapshots,
 		GlobalMaxUnsafeDuration: 5 * time.Hour,
-		Now:                     base.Add(time.Hour),
+		EvalTime:                base.Add(time.Hour),
 		PredicateEval:           celEval,
 	})
 	if len(items) != 1 {
@@ -120,7 +120,7 @@ func TestComputeItems_UsesFallbackThresholdRules(t *testing.T) {
 		Controls:                zero,
 		Snapshots:               snapshots,
 		GlobalMaxUnsafeDuration: 5 * time.Hour,
-		Now:                     base.Add(time.Hour),
+		EvalTime:                base.Add(time.Hour),
 		PredicateEval:           celEval,
 	})
 	if len(items) != 1 {

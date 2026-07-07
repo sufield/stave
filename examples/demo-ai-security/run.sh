@@ -39,7 +39,7 @@ divider() {
 apply_json() {
     local out rc
     out=$("$STAVE" apply --observations "$1" \
-        --now "$NOW" --max-unsafe 168h \
+        --eval-time "$NOW" --max-unsafe 168h \
         --format json 2>/dev/null) || rc=$?
     rc=${rc:-0}
     if [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ]; then
@@ -98,7 +98,7 @@ divider
 printf '%sACT 3: Engines independently confirm the encoding.%s\n' "$BOLD" "$NC"
 divider
 
-"$STAVE" export-sir --format jsonl --observations "$WRITEUP" --now "$NOW" 2>/dev/null > /tmp/demo-ai-facts.jsonl
+"$STAVE" export-sir --format jsonl --observations "$WRITEUP" --eval-time "$NOW" 2>/dev/null > /tmp/demo-ai-facts.jsonl
 FACT_COUNT=$(wc -l < /tmp/demo-ai-facts.jsonl | tr -d ' ')
 printf 'Facts exported: %s\n\n' "$FACT_COUNT"
 

@@ -124,9 +124,9 @@ var (
 		Description: "Suppress output (exit code only) when --quiet is not set",
 		Category:    "config",
 	}
-	Now = Entry{
-		Name:        "STAVE_NOW",
-		Description: "Override current time (RFC3339) when --now is not set",
+	EvalTime = Entry{
+		Name:        "STAVE_EVAL_TIME",
+		Description: "Override evaluation time (RFC3339) when --eval-time is not set",
 		Category:    "config",
 	}
 )
@@ -159,7 +159,7 @@ var all = []Entry{
 	Format,
 	IssuesURL,
 	MaxUnsafe,
-	Now,
+	EvalTime,
 	Observations,
 	ProjectRoot,
 	Quiet,

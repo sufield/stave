@@ -25,7 +25,7 @@ type InputHashes struct {
 type RunInfo struct {
 	StaveVersion      string          `json:"tool_version"`
 	Offline           bool            `json:"offline"`
-	Now               time.Time       `json:"now"`
+	EvalTime          time.Time       `json:"eval_time"`
 	MaxUnsafeDuration kernel.Duration `json:"sla_threshold"`
 	Snapshots         int             `json:"snapshots"`
 	InputHashes       *InputHashes    `json:"input_hashes,omitempty"`
@@ -45,5 +45,5 @@ type RunInfo struct {
 // the strict-mode contract definition out of the loader and prevents
 // future field probing from drifting away from it.
 func (r RunInfo) IsValid() bool {
-	return r.StaveVersion != "" && !r.Now.IsZero()
+	return r.StaveVersion != "" && !r.EvalTime.IsZero()
 }

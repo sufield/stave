@@ -4,7 +4,7 @@ const rootLongHelp = `Stave is a deterministic, traceable risk reasoning engine 
 It evaluates configuration snapshots against safety controls, detects compound
 risk through co-failing control chains, and scores findings against asset
 sensitivity and exposure context. No cloud credentials required.
-Output is deterministic when --now is set (required for reproducible CI/CD runs).
+Output is deterministic when --eval-time is set (required for reproducible CI/CD runs).
 
 Getting Started:
   Run a demo against a bundled snapshot (no AWS credentials needed):

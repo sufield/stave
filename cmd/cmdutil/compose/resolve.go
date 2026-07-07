@@ -20,14 +20,14 @@ func CommandContext(cmd *cobra.Command) context.Context {
 	return cmd.Context()
 }
 
-// ResolveNow parses a --now flag value. Returns wall clock UTC when raw is empty.
-func ResolveNow(raw string) (time.Time, error) {
+// ResolveEvalTime parses a --eval-time flag value. Returns wall clock UTC when raw is empty.
+func ResolveEvalTime(raw string) (time.Time, error) {
 	if raw == "" {
 		return time.Now().UTC(), nil
 	}
-	t, err := cliflags.ParseRFC3339(raw, "--now")
+	t, err := cliflags.ParseRFC3339(raw, "--eval-time")
 	if err != nil {
-		return time.Time{}, fmt.Errorf("parse --now: %w", err)
+		return time.Time{}, fmt.Errorf("parse --eval-time: %w", err)
 	}
 	return t, nil
 }
@@ -37,9 +37,9 @@ func ResolveClock(raw string) (ports.Clock, error) {
 	if raw == "" {
 		return ports.RealClock{}, nil
 	}
-	t, err := cliflags.ParseRFC3339(raw, "--now")
+	t, err := cliflags.ParseRFC3339(raw, "--eval-time")
 	if err != nil {
-		return nil, fmt.Errorf("parse --now: %w", err)
+		return nil, fmt.Errorf("parse --eval-time: %w", err)
 	}
 	return ports.FixedClock(t), nil
 }

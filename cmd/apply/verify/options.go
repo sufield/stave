@@ -17,7 +17,7 @@ type options struct {
 	AfterDir          string
 	ControlsDir       string
 	MaxUnsafeDuration string
-	Now               string
+	EvalTime          string
 }
 
 // newOptions initializes options with zero values for config-derived fields.
@@ -45,7 +45,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringVarP(&o.ControlsDir, "controls", "i", o.ControlsDir, "Path to control definitions directory")
 
 	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
-	f.StringVar(&o.Now, "now", "", "Override current time (RFC3339) for deterministic output")
+	f.StringVar(&o.EvalTime, "eval-time", "", "Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.")
 
 	_ = cmd.MarkFlagRequired("before")
 	_ = cmd.MarkFlagRequired("after")

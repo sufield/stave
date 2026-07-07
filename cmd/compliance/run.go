@@ -81,7 +81,7 @@ func run(cmd *cobra.Command, opts *options) error {
 		ControlsFlagSet: opts.controlsSet,
 		UseBuiltin:      !opts.controlsSet, // default: verify against the built-in catalog
 		Format:          "json",
-		Now:             opts.now,
+		EvalTime:        opts.evalTime,
 		// ponytail: the engine requires a duration; SLA breaches are risk_signals,
 		// not control findings, so they don't affect compliance buckets.
 		MaxUnsafe: "168h",

@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "now": "2026-01-11T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "1d",
     "snapshots": 2,
     "input_hashes": {

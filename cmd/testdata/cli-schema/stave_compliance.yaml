@@ -25,7 +25,7 @@ description: |-
       --snapshot        observation snapshot directory, or - for stdin
       --controls        control directory (default: built-in catalog)
       --format          text | json | markdown (default: text)
-      --now             override current time (RFC3339) for deterministic output
+      --eval-time             Evaluation reference timestamp (RFC3339) for deterministic output
       --verify-mapping  check the mapping against the catalog and exit (no snapshot)
       --strict          fail (exit 2) on mapping-integrity errors
 
@@ -49,6 +49,9 @@ options:
       shorthand: i
       default_value: controls
       usage: 'control definitions directory (default: built-in catalog)'
+    - name: eval-time
+      usage: |
+        Evaluation reference timestamp (RFC3339) for deterministic output
     - name: format
       shorthand: f
       default_value: text
@@ -60,8 +63,6 @@ options:
       shorthand: h
       default_value: "false"
       usage: help for compliance
-    - name: now
-      usage: override current time (RFC3339) for deterministic output
     - name: snapshot
       usage: observation snapshot directory (or - for stdin)
     - name: strict

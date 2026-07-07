@@ -21,7 +21,7 @@ reasoning_kind: TODO
 # Phase 4: input artefacts.
 input:
   # Exact command line that produces the facts this spec consumes.
-  fact_source: stave export-sir --format smt2 --observations TODO --now TODO_RFC3339
+  fact_source: stave export-sir --format smt2 --observations TODO --eval-time TODO_RFC3339
   # Path to the query file the engine appends/loads.
   query_file: TODO_query.smt2
 

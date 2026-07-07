@@ -50,7 +50,7 @@ run_one() {
         --quantify "$demo_results/quantify-summary.json" \
         --contrast "$demo_results/contrast-summary.json" \
         --fixture "capital-one/$fixture" \
-        --now "2026-01-09T00:00:00Z" \
+        --eval-time "2026-01-09T00:00:00Z" \
         --output "$out"
     echo
 }

@@ -123,7 +123,7 @@ func Score(_ context.Context, cfg ScoreConfig) (*ScoreResult, error) {
 		HasSLA:           hasSLA,
 		HasCoverage:      hasCoverage,
 		Weights:          weights,
-		GeneratedAt:      cfg.Assessment.Run.Now,
+		GeneratedAt:      cfg.Assessment.Run.EvalTime,
 		SnapshotID:       cfg.SnapshotID,
 	}
 	result := appscore.Compute(in)

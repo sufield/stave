@@ -43,10 +43,10 @@ if [[ "$FMT_RAW" != "1" ]]; then
 fi
 
 "$stave_bin" export-sir --format jsonl \
-    --observations "$fixtures/writeup-config/observations" --now "$now" \
+    --observations "$fixtures/writeup-config/observations" --eval-time "$now" \
     > "$work_dir/before.jsonl" 2>/dev/null
 "$stave_bin" export-sir --format jsonl \
-    --observations "$fixtures/remediated-config/observations" --now "$now" \
+    --observations "$fixtures/remediated-config/observations" --eval-time "$now" \
     > "$work_dir/after.jsonl" 2>/dev/null
 
 python3 "$script_dir/diff.py" "$work_dir/before.jsonl" "$work_dir/after.jsonl" "$work_dir/delta.json" >/dev/null 2>&1

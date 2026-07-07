@@ -124,7 +124,7 @@ if [ -n "$PROFILE" ]; then
     stave apply \
         --profile "$PROFILE" \
         --input "$BUNDLE" \
-        --now "$NOW" \
+        --eval-time "$NOW" \
         --format text \
         2>/dev/null || RC=$?
 else
@@ -138,7 +138,7 @@ else
         ${CONTROLS_ARGS[@]+"${CONTROLS_ARGS[@]}"} \
         --observations "$WORKDIR/observations" \
         --max-unsafe "$MAX_UNSAFE" \
-        --now "$NOW" \
+        --eval-time "$NOW" \
         --format text \
         2>/dev/null || RC=$?
 fi

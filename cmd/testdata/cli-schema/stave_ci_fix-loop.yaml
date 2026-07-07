@@ -32,6 +32,9 @@ options:
       shorthand: i
       default_value: controls
       usage: Path to control definitions directory
+    - name: eval-time
+      usage: |
+        Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.
     - name: help
       shorthand: h
       default_value: "false"
@@ -40,8 +43,7 @@ options:
       usage: |
         Maximum allowed unsafe duration Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
     - name: now
-      usage: |
-        Override current time (RFC3339). Required for deterministic output
+      usage: Alias for --eval-time
     - name: out
       usage: Write remediation artifacts to this directory
 inherited_options:
@@ -105,10 +107,10 @@ inherited_options:
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
 example: |4-
       # Run a full fix-loop comparing before and after observations
-      stave ci fix-loop --before ./obs-before --after ./obs-after --controls ./controls --out ./output --now 2026-01-11T00:00:00Z
+      stave ci fix-loop --before ./obs-before --after ./obs-after --controls ./controls --out ./output --eval-time 2026-01-11T00:00:00Z
 
       # Run in CI with a strict 72-hour threshold
-      stave ci fix-loop --before ./obs-before --after ./obs-after --controls ./controls --out ./output --max-unsafe 72h --now 2026-01-11T00:00:00Z
+      stave ci fix-loop --before ./obs-before --after ./obs-after --controls ./controls --out ./output --max-unsafe 72h --eval-time 2026-01-11T00:00:00Z
 
       # Inspect the remediation report
       cat ./output/remediation-report.json | jq '.summary'

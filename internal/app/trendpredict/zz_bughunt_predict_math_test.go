@@ -20,7 +20,7 @@ func TestBugHunt_Predict_NegativeReadinessAndCeilLimit(t *testing.T) {
 	// This is mathematically invalid (we cannot fix more findings than we have).
 	assessments := []*report.Assessment{
 		{
-			Run: evaluation.RunInfo{Now: now.Add(-30 * 24 * time.Hour)},
+			Run: evaluation.RunInfo{EvalTime: now.Add(-30 * 24 * time.Hour)},
 			Summary: evaluation.ComplianceSummary{
 				TotalAssets: 5,
 				Violations:  8,
@@ -37,7 +37,7 @@ func TestBugHunt_Predict_NegativeReadinessAndCeilLimit(t *testing.T) {
 			},
 		},
 		{
-			Run: evaluation.RunInfo{Now: now},
+			Run: evaluation.RunInfo{EvalTime: now},
 			Summary: evaluation.ComplianceSummary{
 				TotalAssets: 5,
 				Violations:  8,
@@ -60,7 +60,7 @@ func TestBugHunt_Predict_NegativeReadinessAndCeilLimit(t *testing.T) {
 		Profile:         "hipaa",
 		TargetReadiness: 90,
 		Window:          90 * 24 * time.Hour,
-		Now:             now,
+		EvalTime:        now,
 	})
 
 	if p.CurrentReadiness < 0 {

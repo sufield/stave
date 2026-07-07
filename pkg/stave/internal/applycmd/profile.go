@@ -45,7 +45,7 @@ type ProfileRequest struct {
 	IncludeAll      bool
 	MaxUnsafe       string // duration string (e.g. "168h", "7d"); "" → 0
 	Format          string // "text" | "json" | "sarif"
-	Now             string // RFC3339 or "" for wall clock
+	EvalTime        string // RFC3339 or "" for wall clock
 	SanitizeIDs     bool
 	PathMode        string
 }
@@ -86,7 +86,7 @@ func EvaluateProfile(ctx context.Context, req ProfileRequest) (ProfileResult, er
 		return ProfileResult{}, err
 	}
 
-	clock, err := buildClock(req.Now)
+	clock, err := buildClock(req.EvalTime)
 	if err != nil {
 		return ProfileResult{}, err
 	}
@@ -217,7 +217,7 @@ func buildClock(now string) (ports.Clock, error) {
 	}
 	t, err := time.Parse(time.RFC3339, now)
 	if err != nil {
-		return nil, fmt.Errorf("parse --now %q: %w: %w", now, err, ErrInvalidProfileInput)
+		return nil, fmt.Errorf("parse --eval-time %q: %w: %w", now, err, ErrInvalidProfileInput)
 	}
 	return ports.FixedClock(t), nil
 }

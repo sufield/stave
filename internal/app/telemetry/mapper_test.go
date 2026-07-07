@@ -15,7 +15,7 @@ import (
 func makeAssessment(findings []remediation.Finding) *report.Assessment {
 	return &report.Assessment{
 		Run: evaluation.RunInfo{
-			Now:               time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
+			EvalTime:          time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC),
 			PolicyFingerprint: kernel.Digest("sha256:abcd1234"),
 			EvaluatedState:    "deployed",
 		},

@@ -52,7 +52,7 @@ func TestBuildReport_Pass(t *testing.T) {
 			Regressions: 0,
 		},
 		Run: report.AttestationRunInfo{
-			Now:             now,
+			EvalTime:        now,
 			BeforeSnapshots: 2,
 			AfterSnapshots:  2,
 		},
@@ -78,7 +78,7 @@ func TestBuildReport_Fail(t *testing.T) {
 			Open:        3,
 			Regressions: 1,
 		},
-		Run: report.AttestationRunInfo{Now: now},
+		Run: report.AttestationRunInfo{EvalTime: now},
 	}
 	req := LoopRequest{
 		BeforeDir:         "/before",
@@ -122,7 +122,7 @@ func TestErrViolationsRemaining(t *testing.T) {
 func TestLoopReportSchemaVersion(t *testing.T) {
 	now := time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC)
 	rpt := BuildReport(LoopRequest{MaxUnsafeDuration: time.Hour}, fixedClock{now}, &report.Attestation{
-		Run: report.AttestationRunInfo{Now: now},
+		Run: report.AttestationRunInfo{EvalTime: now},
 	}, LoopArtifacts{})
 	if rpt.SchemaVersion != kernel.SchemaFixLoop {
 		t.Fatalf("schema = %v, want %v", rpt.SchemaVersion, kernel.SchemaFixLoop)

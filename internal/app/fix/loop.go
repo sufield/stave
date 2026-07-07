@@ -98,7 +98,7 @@ func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *
 		BaselineSnapshots: before.Snapshots,
 		TargetSnapshots:   after.Snapshots,
 		SLAThreshold:      req.MaxUnsafeDuration,
-		Now:               s.Clock.Now().UTC(),
+		EvalTime:          s.Clock.Now().UTC(),
 		Sanitizer:         s.Sanitizer,
 	})
 	if err != nil {
@@ -197,7 +197,7 @@ func BuildReport(req LoopRequest, _ interface{ Now() time.Time }, v *report.Atte
 	return LoopReport{
 		SchemaVersion:     kernel.SchemaFixLoop,
 		Kind:              kernel.KindRemediationReport,
-		CheckedAt:         v.Run.Now,
+		CheckedAt:         v.Run.EvalTime,
 		Passed:            pass,
 		Reason:            reason,
 		MaxUnsafeDuration: req.MaxUnsafeDuration.String(),

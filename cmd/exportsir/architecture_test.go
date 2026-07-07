@@ -18,7 +18,7 @@ import (
 // The SIR projection, the json/jsonl/smt2 renderers, and the
 // projection-coverage validator moved into cliapi.ExportSIR
 // (pkg/stave/cliapi/exportsir.go); the command keeps only flag wiring,
-// --now / --allowlist-mode validation, and the stdout/stderr writes. See
+// --eval-time / --allowlist-mode validation, and the stdout/stderr writes. See
 // docs/architecture/pkg-stave-facade.md.
 func TestArchitecture_FacadeOnly(t *testing.T) {
 	exempt := []string{
