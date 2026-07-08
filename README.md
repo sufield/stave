@@ -7,9 +7,9 @@ and formally verify policy semantics — offline, credential-free.
 [![codecov](https://codecov.io/gh/sufield/stave/graph/badge.svg?token=OQ72PYGVPZ)](https://codecov.io/gh/sufield/stave)
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sufield/stave?quickstart=1)
 
-[Documentation](https://systeminvariant.dev/docs) ·
-[Tutorial](https://systeminvariant.dev/docs/getting-started) ·
-[Blog](https://systeminvariant.dev/blog) ·
+[Documentation](https://www.systeminvariant.dev/docs/reference) ·
+[Tutorial](https://www.systeminvariant.dev/docs/tutorials) ·
+[Blog](https://www.systeminvariant.dev/blog) ·
 [Metrics](docs/metrics.yaml)
 
 ## Install

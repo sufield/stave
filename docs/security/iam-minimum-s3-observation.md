@@ -50,4 +50,4 @@ access is required.
 
 After collecting the AWS CLI output, use `jq` or a custom script to
 transform it into observation files conforming to the `obs.v0.1` schema.
-See [S3 Assessment Workflow](../https://systeminvariant.dev/docs/how-to/s3-assessment) for the end-to-end process.
+See [S3 Assessment Workflow](../https://www.systeminvariant.dev/docs/how-to/s3-assessment) for the end-to-end process.

@@ -109,8 +109,8 @@ Use this table when you know your goal but want the fastest path to the right co
 
 | I want to... | Run this command | Read this doc |
 |--------------|------------------|---------------|
-| Get my first finding in 60 seconds | `stave apply --observations examples/public-bucket/observations/ --max-unsafe 168h --eval-time 2026-01-11T00:00:00Z` | [`https://systeminvariant.dev/docs/tutorials/04-first-finding`](https://systeminvariant.dev/docs/tutorials/04-first-finding) |
-| Evaluate my own snapshots instantly | `stave validate && stave apply` | [`https://systeminvariant.dev/docs/tutorials/04-first-finding`](https://systeminvariant.dev/docs/tutorials/04-first-finding) |
+| Get my first finding in 60 seconds | `stave apply --observations examples/public-bucket/observations/ --max-unsafe 168h --eval-time 2026-01-11T00:00:00Z` | [`https://www.systeminvariant.dev/docs/tutorials/first-finding`](https://www.systeminvariant.dev/docs/tutorials/first-finding) |
+| Evaluate my own snapshots instantly | `stave validate && stave apply` | [`https://www.systeminvariant.dev/docs/tutorials/first-finding`](https://www.systeminvariant.dev/docs/tutorials/first-finding) |
 | See where I am and what to do next | `stave status` | [`README.md`](../README.md) |
 | Start a new project with sane defaults | `stave config context create` | [`README.md`](../README.md) |
 | Validate controls and observations before evaluating | `stave validate --controls ./controls --observations ./observations` | [`README.md`](../README.md) |

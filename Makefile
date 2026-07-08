@@ -742,13 +742,13 @@ help:
 e2e-s3: build
 	go test ./e2e/ -run E2E/e2e-s3 -count=1 -timeout 5m
 
-## readme: Render README.md from README.md.tmpl (fills in control counts, version)
-readme: sync-controls
-	$(GOCMD) run ./internal/tools/genreadme
+## readme: No-op — README.md is now hand-edited (counts live in docs/metrics.yaml)
+readme:
+	@true
 
-## readme-check: Verify README.md matches template output
-readme-check: sync-controls
-	$(GOCMD) run ./internal/tools/genreadme -check
+## readme-check: No-op — README.md is now hand-edited
+readme-check:
+	@true
 
 ## gencontrol: Scaffold a new control with E2E test fixtures (usage: make gencontrol ID=CTL.S3.NEW.001 NAME="..." FIELD=... REMEDIATION="...")
 gencontrol:
@@ -1105,7 +1105,6 @@ metrics:
 ## chain map.
 .PHONY: consistency-check
 consistency-check: sync-schemas sync-controls sync-alternatives
-	@$(GOCMD) run ./internal/tools/genreadme
 	@$(GOCMD) run ./internal/tools/gencontroldocs
 	@$(GOCMD) run ./internal/tools/genmethodologycoverage
 	@$(GOCMD) run ./internal/tools/gencommanddocs
@@ -1124,7 +1123,6 @@ consistency-check: sync-schemas sync-controls sync-alternatives
 		internal/contracts/schema/embedded \
 		internal/controldata/embedded \
 		internal/adapters/coverage/embedded \
-		README.md \
 		docs/controls/reference.md \
 		docs/command-reference.md \
 		docs/reference/datalog-relations.md \

@@ -30,7 +30,7 @@ distribution channel** with its own release cadence and supply chain.
 It is never bundled into the Stave Go binary, the Docker image, or
 any of the OS packages listed below. Operators that want the Z3
 backend install it independently — see [Enable the Z3
-Solver](https://systeminvariant.dev/docs/how-to/enable-z3-solver) for the install steps and
+Solver](https://www.systeminvariant.dev/docs/how-to/enable-z3-solver) for the install steps and
 the [Z3 Solver explainer](../../../docs-content/explanation/z3-solver.md) for what each backend does.
 
 This split is intentional:
