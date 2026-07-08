@@ -363,7 +363,7 @@ How it works:
   Stave itself never stores snapshots. It reads from a directory, evaluates, and writes findings to stdout. Where the
   snapshots live is the user's choice — repo, artifact store, S3, local disk.
 
-  The CI workflow in stave-guide/how-to/ci-cd-integration.md documents all the patterns: GitHub Actions (build from
+  The CI workflow in projects/stave-guide/how-to/ci-cd-integration.md documents all the patterns: GitHub Actions (build from
   source or Docker), GitLab CI, baseline tracking, SARIF upload, and gating.
 
 ## What is the purpose of now flag in apply command?

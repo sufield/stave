@@ -144,15 +144,15 @@ func BuildTrace(
 	snapshot *asset.Snapshot,
 ) (*TraceResult, error) {
 	if ctl == nil {
-		return nil, errors.New("BuildTrace: control is nil")
+		return nil, errors.New("build trace: control is nil")
 	}
 	if a == nil {
-		return nil, errors.New("BuildTrace: asset is nil")
+		return nil, errors.New("build trace: asset is nil")
 	}
 
 	compiler, err := getTraceCompiler()
 	if err != nil {
-		return nil, fmt.Errorf("BuildTrace: CEL compiler init: %w", err)
+		return nil, fmt.Errorf("build trace: cel compiler init: %w", err)
 	}
 
 	cp, err := compiler.Compile(ctl.UnsafePredicate)

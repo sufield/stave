@@ -442,7 +442,7 @@ When adding controls that detect NHI risks:
 1. Add `owasp_nhi: "NHIx"` (or comma-separated list) to the
    control's `compliance:` block in YAML.
 2. List the control in the relevant section above.
-3. Re-run `make sync-controls` and `make readme` so embedded
+3. Re-run `make sync-controls` and `make docs-controls` so embedded
    metadata and downstream docs stay in sync.
 
 The annotation is the source of truth — `grep -r 'owasp_nhi'

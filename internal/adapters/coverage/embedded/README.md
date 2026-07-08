@@ -24,4 +24,4 @@ Why they're required:
 
 When to update them: the file headers say it explicitly — "Update this list when Prowler adds, removes, or renames an IAM check." Source for both files is prowler-cloud/prowler/prowler/providers/aws/services/{iam,s3}/ on the upstream master branch. Adding more tools (Trivy, Checkov, cloudsploit) or more domains is a "add a new YAML following the same shape" exercise — the aggregator picks up new files automatically.
 
-The orthogonal stave-coverage repo (separate Go project at stave-coverage/, per the CLAUDE.md note) is what consumes the embedded inventory at runtime — stave-coverage check --report report.json --format table produces the "X of Y Prowler checks covered" view per domain.
+The orthogonal projects/stave-coverage repo (separate Go project at projects/stave-coverage/, per the CLAUDE.md note) is what consumes the embedded inventory at runtime — projects/stave-coverage check --report report.json --format table produces the "X of Y Prowler checks covered" view per domain.

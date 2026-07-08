@@ -392,7 +392,7 @@ func renderReport(proposals []proposal) (string, error) {
 	fmt.Fprintln(&b, "### Canonical counts (excludes `_triage/` and other loader-filtered dirs)")
 	fmt.Fprintln(&b)
 	fmt.Fprintln(&b, "This is the denominator the strategic positioning math should")
-	fmt.Fprintln(&b, "use — `make readme` reports the same canonical control count")
+	fmt.Fprintln(&b, "use — `make metrics` reports the same canonical control count")
 	fmt.Fprintln(&b, "(2,658 at audit time).")
 	fmt.Fprintln(&b)
 	fmt.Fprintf(&b, "- Canonical controls classified:   **%d**\n", canonicalTotal)

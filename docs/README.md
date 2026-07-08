@@ -2,16 +2,16 @@
 
 This directory holds the **stave CLI sub-repo's own documentation**. Some of it
 is **generated** and **CI-gated**; the rest is hand-authored but still lives with
-the code on purpose. The public Diátaxis learning site (`stave-guide/`) **symlinks**
+the code on purpose. The public Diátaxis learning site (`projects/stave-guide/`) **symlinks**
 selected files from here as a *view* — that is the intended pattern, not a workaround.
 
 ## Hard rule: do not `git mv` files out of `stave/docs/`
 
-`stave-guide/` symlinks into this tree. The generated files below are also
+`projects/stave-guide/` symlinks into this tree. The generated files below are also
 **regenerated in place** by build tooling and **verified by CI**. Moving any of
 them breaks the generators (they write back to these exact paths) and the
 consistency gate. To surface a page in the guide, add a **symlink** from
-`stave-guide/<quadrant>/` — never relocate the source.
+`projects/stave-guide/<quadrant>/` — never relocate the source.
 
 ## Generated, CI-gated files — never hand-edit, never move
 
@@ -33,6 +33,6 @@ command tree, `catalog_meta.go`), not the markdown.
 
 Hand-authored, but sub-repo-owned and frequently cross-referenced by stave code,
 tests, and `sync-audit`. Treat as movable only with a deliberate sync-audit update.
-The doc-consolidation migration toward `stave-guide/` deliberately **does not move
+The doc-consolidation migration toward `projects/stave-guide/` deliberately **does not move
 anything under `stave/docs/`** — it folds in `docs-content/` content and keeps
 `stave/docs/` symlinked.

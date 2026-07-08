@@ -17,7 +17,7 @@ top of `main.go`.
 ### Canonical counts (excludes `_triage/` and other loader-filtered dirs)
 
 This is the denominator the strategic positioning math should
-use — `make readme` reports the same canonical control count
+use — `make metrics` reports the same canonical control count
 (2,658 at audit time).
 
 - Canonical controls classified:   **2658**

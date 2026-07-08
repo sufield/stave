@@ -73,7 +73,7 @@ formats.
 These skills route the agent at Stave's CLI commands and published
 contracts. They do NOT duplicate Stave's documentation:
 
-- Authoritative scope of the SIR export → `stave-guide/reference/fact-export.md`
+- Authoritative scope of the SIR export → `projects/stave-guide/reference/fact-export.md`
 - Architectural boundaries → `stave/docs/architecture/boundaries.md`
 - Per-asset contracts → `stave contract show --asset-type <T>`
 - Command details → `stave <cmd> --help`

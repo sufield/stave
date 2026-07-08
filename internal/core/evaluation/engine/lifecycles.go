@@ -342,7 +342,7 @@ func checkUnsafe(
 	}
 	result, err := celEval(*ctl, a, snap.Identities)
 	if err != nil {
-		return false, fmt.Errorf("CEL evaluation failed for control %s on asset %s: %w", ctl.ID, a.ID, err)
+		return false, fmt.Errorf("cel evaluation failed for control %s on asset %s: %w", ctl.ID, a.ID, err)
 	}
 	return result, nil
 }

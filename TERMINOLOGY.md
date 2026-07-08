@@ -85,7 +85,7 @@ mechanical rename.
 
 A user-facing terminology check runs in CI (see the docs-drift
 workflow). It scans `cmd/`, `docs/` (excluding `explanation/` and
-`audits/`), `examples/*/README.md`, and `README.md`/`README.md.tmpl`
+`audits/`), `examples/*/README.md`, and `README.md`
 for the deprecated terms, and fails the build on hits outside the
 exceptions above.
 

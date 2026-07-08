@@ -278,7 +278,7 @@ func main() {
 //   - chains/<word>_*.yaml                               → affects word
 //
 // Generated artifacts derived from the embedded controls are ignored:
-//   - README.md, README.tmpl.md, docs/controls/reference.md
+//   - README.md, docs/controls/reference.md
 //
 // Paths outside this tool's working subtree (i.e. that did NOT have the
 // expected git prefix) are silently ignored — they cannot affect this
@@ -396,13 +396,13 @@ func gitPrefix() (string, error) {
 // isGoldenSafe reports whether a changed path is a generated artifact
 // or development-only tool that cannot affect e2e goldens. The README
 // and control reference are produced from the embedded controls by
-// `make readme` / `make docs-controls`. Files under internal/tools/
+// `make docs-controls`. Files under internal/tools/
 // are dev-time scripts; their build artifacts (this regen tool itself,
-// genreadme, gencontroldocs) are rebuilt by the Makefile target before
+// gencontroldocs) are rebuilt by the Makefile target before
 // regen runs, so source-level edits don't change golden behavior.
 func isGoldenSafe(path string) bool {
 	switch path {
-	case "README.md", "README.tmpl.md", "docs/controls/reference.md":
+	case "README.md", "docs/controls/reference.md":
 		return true
 	}
 	// Per-service control-reference pages (docs/controls/reference/<svc>.md)

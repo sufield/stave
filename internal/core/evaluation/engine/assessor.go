@@ -151,7 +151,7 @@ var (
 
 // ErrClockMissing is returned by referenceTime when the clock is nil.
 // Mirrors the precondition error returned by Assess at its boundary.
-var ErrClockMissing = errors.New("Assessor: clock is nil; supply WithClock to NewAssessor")
+var ErrClockMissing = errors.New("assessor: clock is nil; supply WithClock to NewAssessor")
 
 func (a *Assessor) currentSpan() ports.AssessmentSpan { return nopSpan{} }
 

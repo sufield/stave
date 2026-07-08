@@ -265,7 +265,7 @@ make sync-controls        # controls/ → internal/controldata/embedded/
 make regenerate-goldens               # regenerate e2e fixture golden files
 # Regenerate profile goldens (hipaa, s3, etc.) manually per above
 make docs-controls        # regenerate docs/controls/reference.md
-make readme               # regenerate README.md with control counts
+make metrics              # regenerate docs/metrics.yaml with catalog counts
 ```
 
 ### Why so many output.json changes

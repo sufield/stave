@@ -73,13 +73,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   G6 triaged the first round of novel violations and added
   Shape-B fixtures (Capital One pattern + Cognito-anon
   pattern). Closeout D shipped Powerpipe CIA rendering at
-  `powerpipe-mod-stave/benchmarks/cia_findings.pp`. Full
+  `projects/powerpipe-mod-stave/benchmarks/cia_findings.pp`. Full
   rationale + structural finding ("~95% of catalog fires on
   Shape-A escalation booleans, not access-graph edges") in
   `docs/coverage/cia-novel-violations.md` +
   `aws-compound-authoring.md` status marker. Phase 7 is the
   structural defensibility tier the substrate framing
-  (stave-guide/explanation/reasoning-contract.md) points at —
+  (projects/stave-guide/explanation/reasoning-contract.md) points at —
   the CIA intensional layer is what no framework-coverage
   mod can replicate.
 

@@ -94,7 +94,7 @@ What happened over 2 months, what's left, and what to never repeat.
 
 - **Refactoring strategies must be named and documented.** Commit messages like "refactor(validate): add domain types and use case (strangler fig)" made the history navigable. Unnamed refactors were impossible to understand a week later.
 
-- **Regenerate derived files after adding controls.** The README template and control reference docs are generated from the control directory. Adding IAM/GCS/DNS controls without running `make readme` and `make docs-controls` breaks CI checks (`readme-check`, `docs-controls-check`). The genreadme tool was also hardcoded to `controls/s3` and had to be updated to walk `controls/` root. Always run `make readme && make docs-controls` after adding a new domain.
+- **Regenerate derived files after adding controls.** The control reference docs are generated from the control directory. Adding controls without running `make docs-controls` breaks CI checks (`docs-controls-check`). Always run `make consistency-check` after adding a new domain.
 
 ## Key Interfaces (Quick Reference)
 

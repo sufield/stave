@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check refactor-scan refactor-scan-check refactor-scan-update triage quarterly-audit quarterly-save compliance-diff
+.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check refactor-scan refactor-scan-check refactor-scan-update triage quarterly-audit quarterly-save compliance-diff
 # Binary name
 BINARY=stave
 
@@ -609,15 +609,11 @@ ifndef V
 endif
 	@echo "==> Preparing release v$(V)..."
 	@echo "$(V)" > VERSION
-	$(MAKE) readme
 	@echo "==> VERSION file: $$(cat VERSION)"
-	@echo "==> README version: $$(grep -o 'v[0-9]*\.[0-9]*\.[0-9]*' README.md | head -1)"
 	@echo "==> Running tests..."
 	$(MAKE) test
 	@echo "==> Running e2e..."
 	$(MAKE) e2e
-	@echo "==> Checking README freshness..."
-	$(MAKE) readme-check
 	@echo "==> Validating goreleaser config..."
 	$(MAKE) release-check
 	@echo "==> All checks passed. Committing..."
@@ -742,13 +738,6 @@ help:
 e2e-s3: build
 	go test ./e2e/ -run E2E/e2e-s3 -count=1 -timeout 5m
 
-## readme: No-op — README.md is now hand-edited (counts live in docs/metrics.yaml)
-readme:
-	@true
-
-## readme-check: No-op — README.md is now hand-edited
-readme-check:
-	@true
 
 ## gencontrol: Scaffold a new control with E2E test fixtures (usage: make gencontrol ID=CTL.S3.NEW.001 NAME="..." FIELD=... REMEDIATION="...")
 gencontrol:
@@ -818,7 +807,7 @@ docs-datalog:
 docs-datalog-check:
 	$(GOCMD) run ./internal/tools/gendatalogdocs -check
 
-SITE_CLI_REF ?= ../stave-guide/reference/cli-reference
+SITE_CLI_REF ?= ../projects/stave-guide/reference/cli-reference
 
 ## docs-site: Generate Docusaurus CLI reference pages from the cobra tree
 docs-site:
@@ -832,10 +821,10 @@ docs-site-check:
 	  echo "skip: $(SITE_CLI_REF) not present in this checkout"; \
 	fi
 
-## sync-guide: Refresh stave-guide/ real-file copies of generated + sub-repo docs.
-## stave-guide/ is the Docusaurus SSG source (real files, not symlinks — SSG can't
+## sync-guide: Refresh projects/stave-guide/ real-file copies of generated + sub-repo docs.
+## projects/stave-guide/ is the Docusaurus SSG source (real files, not symlinks — SSG can't
 ## render symlinked content). Regenerates the generated docs, then copies per
-## stave-guide/.sync-manifest.tsv. Commit the result.
+## projects/stave-guide/.sync-manifest.tsv. Commit the result.
 .PHONY: sync-guide
 sync-guide: docs-controls docs-commands
 	@cd .. && bash scripts/sync-guide.sh
@@ -1140,7 +1129,7 @@ consistency-check: sync-schemas sync-controls sync-alternatives
 		echo ""; \
 		echo "Or run individual targets — see docs/audits/sync-audit.md for the chain map:"; \
 		echo "  make sync-controls sync-schemas sync-alternatives"; \
-		echo "  make readme docs-controls docs-coverage"; \
+		echo "  make docs-controls docs-coverage"; \
 		exit 1; \
 	else \
 		echo "OK: all derived artifacts in sync"; \

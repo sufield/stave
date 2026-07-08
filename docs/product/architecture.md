@@ -432,7 +432,7 @@ to route through `pkg/stave/` over time.
 
 ### stave-explorer (scaffolding, not a Stave app)
 
-`stave-explorer/` is a minimal bubbletea-based TUI living at
+`projects/stave-explorer/` is a minimal bubbletea-based TUI living at
 the monorepo level (sibling to `stave/`). It probes Stave's
 output against the five pain-point metrics validated by the
 Aikido 2026 and Thales 2026 surveys: triage time, false-
@@ -446,7 +446,7 @@ Its primary affordance is structured logging: every
 computation step (JSON field reads, intermediate structs,
 classification decisions, final answers) is logged via
 `log/slog`'s JSONHandler to
-`stave-explorer/logs/session-{timestamp}.log`. The TUI is the
+`projects/stave-explorer/logs/session-{timestamp}.log`. The TUI is the
 interaction surface; the logs are the evidence. Per-question
 log volume serves as a shape-quality signal — a question that
 takes 280 log lines to compute a number indicates the
@@ -456,8 +456,8 @@ the metric.
 
 The prototype's purpose is to surface measurement gaps in
 Stave's output that drive future core iterations. Gap
-observations land in `stave-explorer/gaps.yaml` (per-question,
-with session-log line references) and `stave-explorer/findings.md`
+observations land in `projects/stave-explorer/gaps.yaml` (per-question,
+with session-log line references) and `projects/stave-explorer/findings.md`
 (top-three gap candidates plus clean observations). Future
 core iterations may consume these as evidence-grounded inputs
 to prioritization, in the same shape that `docs/audits/`
@@ -472,8 +472,8 @@ adequacy visible.
 
 ### bucket-intent (scaffolding, not a Stave app)
 
-`bucket-intent/` is a hello-world prototype living at the
-monorepo level (sibling to `stave/` and `stave-explorer/`). It
+`projects/bucket-intent/` is a hello-world prototype living at the
+monorepo level (sibling to `stave/` and `projects/stave-explorer/`). It
 answers one question — "is this S3 bucket public when the
 intent is private?" — for one bucket at a time, declared via
 `--bucket` and `--intent` flags. The prototype's value is
@@ -484,8 +484,8 @@ larger intent-checking surface.
 Same scaffolding pattern as stave-explorer: invokes
 `stave.Apply` from `pkg/stave`, consumes the typed result,
 logs every step via `log/slog` to
-`bucket-intent/logs/session-{timestamp}.log`. Observations
-land in `bucket-intent/observations.md`, including specific
+`projects/bucket-intent/logs/session-{timestamp}.log`. Observations
+land in `projects/bucket-intent/observations.md`, including specific
 calls to Stave-output shape gaps surfaced by writing the
 prototype (e.g., `Finding.classification` let consumers
 distinguish state-assertion controls from parameterized

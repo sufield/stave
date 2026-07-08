@@ -9,14 +9,11 @@ make release V=0.0.3
 This single command:
 
 1. Updates `VERSION` file to the new version.
-2. Regenerates `README.md` from `README.md.tmpl` (updates version, control counts).
-3. Runs `make test` (unit tests).
-4. Runs `make e2e` (end-to-end golden file tests).
-5. Verifies CLI docs are up to date (`make docs-check`).
-6. Verifies README matches template output (`make readme-check`).
-7. Validates GoReleaser configuration (`goreleaser check`).
-8. Commits the version bump.
-9. Creates the git tag `v0.0.3`.
+2. Runs `make test` (unit tests).
+3. Runs `make e2e` (end-to-end golden file tests).
+4. Validates GoReleaser configuration (`goreleaser check`).
+5. Commits the version bump.
+6. Creates the git tag `v0.0.3`.
 
 After it completes, push to trigger the release workflow:
 
@@ -33,40 +30,10 @@ The push uses the `github.com-sufield` SSH host alias (configured in `~/.ssh/con
 |-------|------|-----------------|
 | `make test` | Before commit | Broken code |
 | `make e2e` | Before commit | Golden file regressions |
-| `make readme-check` | Before commit + CI | README control counts or version stale |
-| `make docs-check` | Before commit (publisher) | CLI reference docs out of sync |
 | `goreleaser check` | Before commit | Invalid release config |
 | `VERSION` ↔ tag match | CI release workflow | Version file forgotten |
 
 Golden file comparisons (`scripts/e2e.sh`, `cmd/apply/verify/determinism_test.go`, `cmd/apply/profile_e2e_test.go`) strip `run.tool_version` before comparing, so version bumps do not require regenerating golden files.
-
-## Generated Artifacts
-
-Several files are generated from templates or live data. CI enforces they stay fresh; `make release` regenerates them automatically.
-
-| Artifact | Source of truth | Generate | Verify |
-|----------|----------------|----------|--------|
-| `README.md` | `README.md.tmpl` + `VERSION` + `controls/s3/` | `make readme` | `make readme-check` |
-| CLI reference docs | `stave --help` output | `make -C ../publisher docs-gen` | `make docs-check` |
-
-### README template
-
-`README.md` is generated from `README.md.tmpl` by `internal/tools/genreadme/` (a build-time tool, not part of the shipped binary). The template uses these placeholders:
-
-| Placeholder | Value source |
-|-------------|-------------|
-| `{{.Version}}` | `VERSION` file |
-| `{{.TotalControls}}` | Count of `*.yaml` files in `controls/s3/*/` |
-| `{{.CategoryCount}}` | Count of subdirectories in `controls/s3/` |
-| `{{ctrl "name"}}` | Count of `*.yaml` files in `controls/s3/<name>/` |
-
-**When to regenerate:**
-
-- Adding or removing a control YAML file → `make readme`
-- Bumping the version → handled automatically by `make release`
-- Changing prose → edit `README.md.tmpl`, then `make readme`
-
-Never edit `README.md` directly — edits will be overwritten by the next `make readme`.
 
 ### Version propagation
 
