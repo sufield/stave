@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2900
-**Pack hash:** `cfce79e90edb9baa7e44659d1515601df7329e7efff7591574ce03b3e7066f8a`
+**Total controls:** 2907
+**Pack hash:** `443e34f1b7e950111eacc500cf0efaf1f99e1ae95e1882cade470ee4eb699665`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 297 |
-| high | 1261 |
+| high | 1265 |
 | info | 16 |
-| low | 220 |
-| medium | 1106 |
+| low | 221 |
+| medium | 1108 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,10 +27,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1274 |
-| governance | 613 |
+| exposure | 1276 |
+| governance | 615 |
 | hygiene | 18 |
-| identity | 509 |
+| identity | 512 |
 | lifecycle | 31 |
 | network | 43 |
 | resilience | 35 |
@@ -63,6 +63,7 @@ GitHub. Pick a service below.
 | [CLOUDWATCH](reference/cloudwatch.md) | 67 |
 | [CODEBUILD](reference/codebuild.md) | 12 |
 | [CODECOMMIT](reference/codecommit.md) | 2 |
+| [CODEPIPELINE](reference/codepipeline.md) | 4 |
 | [COGNITO](reference/cognito.md) | 113 |
 | [COMPLIANCE](reference/compliance.md) | 1 |
 | [CONFIG](reference/config.md) | 51 |
@@ -90,7 +91,7 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 14 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 226 |
+| [IAM](reference/iam.md) | 229 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |

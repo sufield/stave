@@ -1,0 +1,310 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "eval_time": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "76d0cf79c285357fede8dd028627cc325ff25c4c0df2da5ea9497ed116477879",
+        "2026-01-11T000000Z.json": "314f36d7c4165c33f2679b079fd3227c2075345746f2e968b2b33ff8d08a2694"
+      },
+      "overall": "2860d409eac55f17fd85d1c12b89872a1ad850d477a82894b526062e08bd1161"
+    },
+    "policy_fingerprint": "9781b5d9c914d21d7a9c3988eb79816572d8ce4d2b469611b7ecf672213eacc8",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.S3.WILDCARD.001",
+      "asset_id": "test-iam-role",
+      "asset_type": "aws_iam_role",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:ab00927f3dce4725",
+      "control_id": "CTL.IAM.S3.WILDCARD.001",
+      "control_name": "Roles Must Not Grant Wildcard S3 Resource Access",
+      "control_description": "IAM role's S3 actions (s3:*, s3:GetObject, s3:PutObject, etc.) use Resource: * — the role can access every S3 bucket in the account. A compromised principal or compute resource using this role can read or write any object in any bucket: customer data, backups, audit logs, CloudTrail archives, Terraform state. This is distinct from CTL.IAM.POLICY.RESOURCE.WILDCARD.001 which checks all sensitive actions; this control focuses specifically on S3 wildcard scope because S3 is the primary data exfiltration vector and training-data source for ML workloads.\n",
+      "asset_id": "test-iam-role",
+      "asset_type": "aws_iam_role",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "identity.policies.has_wildcard_s3_resource",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "hipaa": "164.312(a)(1)",
+        "nist_800_53_r5": "AC-6",
+        "owasp_nhi": "NHI5",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-04",
+        "DSP-07"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "IAM role grants S3 actions with Resource: *, allowing access to every bucket in the account.",
+        "action": "Scope the S3 actions to specific bucket ARNs. Use arn:aws:s3:::my-bucket and arn:aws:s3:::my-bucket/* to restrict object-level access to specific buckets. For training roles, restrict to the training data bucket only.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"role\",\n    \"policies\": {\n      \"has_wildcard_s3_resource\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-e67f18908ff03c71",
+        "target": {
+          "asset_id": "test-iam-role",
+          "asset_type": "aws_iam_role"
+        },
+        "action": "Scope the S3 actions to specific bucket ARNs. Use arn:aws:s3:::my-bucket and arn:aws:s3:::my-bucket/* to restrict object-level access to specific buckets. For training roles, restrict to the training data bucket only."
+      },
+      "sla_deadline_hours": 336,
+      "sla_breached": false,
+      "sla_policy_source": "profile:default",
+      "exposure_score": 77.05479452054796,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "identity.policies.has_wildcard_s3_resource eq true",
+          "observation_key": "identity.policies.has_wildcard_s3_resource",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "test-iam-role",
+          "type": "aws_iam_role",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.IAM.S3.WILDCARD.001",
+          "control_name": "Roles Must Not Grant Wildcard S3 Resource Access",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "identity.policies.has_wildcard_s3_resource = true",
+              "observation_key": "identity.policies.has_wildcard_s3_resource",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "identity.policies.has_wildcard_s3_resource",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set identity.policies.has_wildcard_s3_resource to false"
+          }
+        ],
+        "action": "Scope the S3 actions to specific bucket ARNs. Use arn:aws:s3:::my-bucket and arn:aws:s3:::my-bucket/* to restrict object-level access to specific buckets. For training roles, restrict to the training data bucket only."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "iam"
+      ],
+      "delta": [
+        {
+          "property_label": "policies has wildcard S3 resource",
+          "property_path": "identity.policies.has_wildcard_s3_resource",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ],
+      "contributing_fact_ids": [
+        "da337edb45b8",
+        "b6ea1c0608b2",
+        "f60f65fc6123",
+        "f389d8928be1",
+        "68b6e833a668",
+        "028b0146e047"
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:b875e28e078e06b1",
+      "asset_id": "test-iam-role",
+      "shared_keys": [
+        "identity.policies",
+        "identity.policies.has_wildcard_s3_resource"
+      ],
+      "headline_finding_id": "sha256:ab00927f3dce4725",
+      "member_finding_ids": [
+        "sha256:ab00927f3dce4725"
+      ],
+      "consolidated_score": 77.05479452054796,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "test-iam-role",
+      "asset_type": "aws_iam_role",
+      "fix_plan": {
+        "id": "fix-e67f18908ff03c71",
+        "target": {
+          "asset_id": "test-iam-role",
+          "asset_type": "aws_iam_role"
+        },
+        "action": "Scope the S3 actions to specific bucket ARNs. Use arn:aws:s3:::my-bucket and arn:aws:s3:::my-bucket/* to restrict object-level access to specific buckets. For training roles, restrict to the training data bucket only."
+      },
+      "contributing_controls": [
+        "CTL.IAM.S3.WILDCARD.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.S3.WILDCARD.001",
+      "asset_id": "test-iam-role",
+      "exposure_score": 77.05479452054796,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
+    }
+  }
+}

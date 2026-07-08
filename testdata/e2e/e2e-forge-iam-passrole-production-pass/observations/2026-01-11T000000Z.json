@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "id": "test-iam-role",
+      "properties": {
+        "identity": {
+          "policies": {
+            "passrole_targets_production": false
+          },
+          "kind": "role"
+        }
+      },
+      "type": "aws_iam_role",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

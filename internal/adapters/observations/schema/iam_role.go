@@ -18,6 +18,12 @@ var iamRoleSchema = Schema{
 			Doc: "access-advisor data availability signal"},
 		{Path: "properties.identity.tags.role-type", Required: false,
 			Doc: "role-type tag; sparse when not tagged"},
+		{Path: "properties.identity.policies.has_wildcard_s3_resource", Required: false,
+			Doc: "s3 actions on Resource:*; sparse when role has no S3 grants"},
+		{Path: "properties.identity.policies.passrole_targets_production", Required: false,
+			Doc: "PassRole targets a production role ARN; sparse when no PassRole"},
+		{Path: "properties.identity.policies.has_cross_account_resource", Required: false,
+			Doc: "any Resource ARN with a different account ID; sparse for same-account roles"},
 	},
 }
 

@@ -1,0 +1,55 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.S3.WILDCARD.001
+name: Roles Must Not Grant Wildcard S3 Resource Access
+description: >
+  IAM role's S3 actions (s3:*, s3:GetObject, s3:PutObject, etc.)
+  use Resource: * — the role can access every S3 bucket in the
+  account. A compromised principal or compute resource using this
+  role can read or write any object in any bucket: customer data,
+  backups, audit logs, CloudTrail archives, Terraform state. This
+  is distinct from CTL.IAM.POLICY.RESOURCE.WILDCARD.001 which
+  checks all sensitive actions; this control focuses specifically
+  on S3 wildcard scope because S3 is the primary data exfiltration
+  vector and training-data source for ML workloads.
+domain: exposure
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["IAM-04", "DSP-07"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - compliance-mapping
+  - least-privilege
+  - data-perimeter
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    IAM role grants S3 actions with Resource: *, allowing access
+    to every bucket in the account.
+  action: >
+    Scope the S3 actions to specific bucket ARNs. Use
+    arn:aws:s3:::my-bucket and arn:aws:s3:::my-bucket/* to
+    restrict object-level access to specific buckets. For
+    training roles, restrict to the training data bucket only.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "policies": {
+          "has_wildcard_s3_resource": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.policies.has_wildcard_s3_resource
+      op: eq
+      value: true

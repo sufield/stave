@@ -1706,6 +1706,21 @@ A delegated administrator account for an AWS service has permissions beyond what
 
 ---
 
+### CTL.IAM.PASSROLE.PRODUCTION.001
+
+**PassRole Must Not Target Production Execution Roles**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM role's iam:PassRole Resource element targets a production execution role. A principal with this permission can deploy compute resources (Lambda, SageMaker, ECS, CodeBuild) using production credentials — reaching production data, secrets, and infrastructure without any promotion gate. This is the bridge between a development notebook and a production data breach: the principal passes the production role to a new resource and operates with full production authority.
+
+**Remediation:** Restrict the iam:PassRole Resource element to non-production role ARNs. Use separate roles for development and production, and gate production PassRole behind an approval workflow or break-glass procedure. Add an iam:PassedToService condition to further restrict which service can receive the role.
+
+---
+
 ### CTL.IAM.PASSWORD.COMPLEXITY.001
 
 **Password Policy Must Require All Character Types**
@@ -2262,6 +2277,21 @@ It must be TWO SEPARATE statements (OR logic), not one (AND logic): (1) Deny sts
 
 ---
 
+### CTL.IAM.RESOURCE.CROSSACCOUNT.001
+
+**Role Must Not Grant Access to External Account Resources**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.3;
+
+IAM role's policy grants access to resources in a different AWS account via a cross-account Resource ARN. The role can read from or write to S3 buckets, DynamoDB tables, or other resources in an external account. This creates a data boundary violation: data can flow between accounts without the receiving account's resource-based policy being the sole gating control. Combined with a compromised principal, cross-account resource grants become exfiltration channels.
+
+**Remediation:** Remove cross-account resource ARNs from identity-based policies. If cross-account access is required, use a resource-based policy on the target resource or an explicit cross-account role assumption via sts:AssumeRole with ExternalId conditions.
+
+---
+
 ### CTL.IAM.ROLE.BREAKGLASS.001
 
 **Break-Glass Elevated Roles Must Not Persist**
@@ -2498,6 +2528,21 @@ Root account API activity has occurred more than once in 30 days. A single root 
 The root account must not be used for day-to-day operations. Root activity should be limited to account setup tasks. Recent root usage indicates operational reliance on root credentials.
 
 **Remediation:** Create IAM admin users or roles for daily operations. Lock root credentials and use them only for account-level tasks.
+
+---
+
+### CTL.IAM.S3.WILDCARD.001
+
+**Roles Must Not Grant Wildcard S3 Resource Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+IAM role's S3 actions (s3:*, s3:GetObject, s3:PutObject, etc.) use Resource: * — the role can access every S3 bucket in the account. A compromised principal or compute resource using this role can read or write any object in any bucket: customer data, backups, audit logs, CloudTrail archives, Terraform state. This is distinct from CTL.IAM.POLICY.RESOURCE.WILDCARD.001 which checks all sensitive actions; this control focuses specifically on S3 wildcard scope because S3 is the primary data exfiltration vector and training-data source for ML workloads.
+
+**Remediation:** Scope the S3 actions to specific bucket ARNs. Use arn:aws:s3:::my-bucket and arn:aws:s3:::my-bucket/* to restrict object-level access to specific buckets. For training roles, restrict to the training data bucket only.
 
 ---
 

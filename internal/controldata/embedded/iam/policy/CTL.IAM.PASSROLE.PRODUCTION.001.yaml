@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.PASSROLE.PRODUCTION.001
+name: PassRole Must Not Target Production Execution Roles
+description: >
+  IAM role's iam:PassRole Resource element targets a production
+  execution role. A principal with this permission can deploy
+  compute resources (Lambda, SageMaker, ECS, CodeBuild) using
+  production credentials — reaching production data, secrets,
+  and infrastructure without any promotion gate. This is the
+  bridge between a development notebook and a production data
+  breach: the principal passes the production role to a new
+  resource and operates with full production authority.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  fedramp_moderate: "AC-6(5)"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - compliance-mapping
+  - least-privilege
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    IAM role can pass a production execution role to compute
+    services.
+  action: >
+    Restrict the iam:PassRole Resource element to non-production
+    role ARNs. Use separate roles for development and production,
+    and gate production PassRole behind an approval workflow or
+    break-glass procedure. Add an iam:PassedToService condition
+    to further restrict which service can receive the role.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "policies": {
+          "passrole_targets_production": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.policies.passrole_targets_production
+      op: eq
+      value: true

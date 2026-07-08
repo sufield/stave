@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.RESOURCE.CROSSACCOUNT.001
+name: Role Must Not Grant Access to External Account Resources
+description: >
+  IAM role's policy grants access to resources in a different
+  AWS account via a cross-account Resource ARN. The role can
+  read from or write to S3 buckets, DynamoDB tables, or other
+  resources in an external account. This creates a data boundary
+  violation: data can flow between accounts without the receiving
+  account's resource-based policy being the sole gating control.
+  Combined with a compromised principal, cross-account resource
+  grants become exfiltration channels.
+domain: identity
+severity: medium
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.3"
+  ccm_v4: ["IAM-04", "DSP-17"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - compliance-mapping
+  - data-perimeter
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    IAM role grants access to resources in an external AWS account.
+  action: >
+    Remove cross-account resource ARNs from identity-based
+    policies. If cross-account access is required, use a
+    resource-based policy on the target resource or an explicit
+    cross-account role assumption via sts:AssumeRole with
+    ExternalId conditions.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "policies": {
+          "has_cross_account_resource": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.policies.has_cross_account_resource
+      op: eq
+      value: true
