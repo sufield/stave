@@ -29,7 +29,7 @@ expects distinct moments per file. Do not split one collection event across
 multiple files — that is not the pattern the engine supports. To grow
 observation history, add new files from new collection runs.
 
-See [obs.v0.1 § File Layout](../schema/obs.v0.1.md#file-layout) for the
+See [obs.v0.1 § File Layout](https://systeminvariant.dev/docs/reference/schema-obs#file-layout) for the
 filename convention and an example directory.
 
 ## Versioning policy

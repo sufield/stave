@@ -263,6 +263,6 @@ field.
 
 See:
 
-- [Output Schema](schema/out.v0.1.md)
+- [Output Schema](https://systeminvariant.dev/docs/reference/schema-out)
 - [Observation Contract](contract/README.md)
-- [Control Schema](schema/ctrl.v1.md)
+- [Control Schema](https://systeminvariant.dev/docs/reference/schema-ctrl)

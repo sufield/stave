@@ -36,10 +36,10 @@ Please report security vulnerabilities through [GitHub Security Advisories](http
 Stave is designed with a minimal attack surface:
 
 - **No network access** — Stave makes zero network connections. It does not import `net/http`, open sockets, or make DNS lookups. It reads local files and writes to stdout/stderr.
-- **No subprocess execution** — The runtime `stave` binary does not import `os/exec` or spawn subprocesses. See [Execution Safety](docs/trust/execution-safety.md) for the full guarantee.
+- **No subprocess execution** — The runtime `stave` binary does not import `os/exec` or spawn subprocesses. See [Execution Safety](https://systeminvariant.dev/docs/explanation/execution-safety) for the full guarantee.
 - **No persistent state** — No databases, caches, or config files are created.
 - **Read-only inputs** — Observation and control files are never modified.
-- **Air-gapped, offline-only, network-isolated** — The Stave runtime binary contains no networking code and operates entirely on local files. It is safe to run in air-gapped, network-isolated, and offline-only environments. No conditional flags or environment variables can enable network access. Build and release processes (CI, signing, SBOM generation) require network access; see [Offline & Air-Gapped Operation](docs/offline-airgapped.md) for the full inventory.
+- **Air-gapped, offline-only, network-isolated** — The Stave runtime binary contains no networking code and operates entirely on local files. It is safe to run in air-gapped, network-isolated, and offline-only environments. No conditional flags or environment variables can enable network access. Build and release processes (CI, signing, SBOM generation) require network access; see [Offline & Air-Gapped Operation](https://systeminvariant.dev/docs/explanation/offline-airgapped) for the full inventory.
 - **No `--strict-offline` flag** — Stave does not provide a `--strict-offline` flag because the binary is **architecturally incapable** of networking. The `net/http`, `crypto/tls`, and `os/exec` packages are not imported (enforced by CI tests). A runtime flag would misleadingly imply that a non-strict mode with network capability exists. Verification is instead provided through `strace` (see below), `docker --network=none`, and the compile-time import guards in `TestNoBannedImportsInRuntime`.
 - **`--require-offline` environment guard** — The `--require-offline` flag performs a best-effort runtime self-check that refuses to run if proxy environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`) are set. This is an operational convenience for environments that want to assert no proxy misconfiguration, not a security boundary — Stave is architecturally offline regardless.
 - **Runtime offline confirmation** — All JSON output includes `"offline": true` in the `run` metadata, and `stave capabilities` includes `"offline": true` at the top level. These are constant values confirming the architectural guarantee.
@@ -67,9 +67,9 @@ Stave enforces strict filesystem safety properties:
 
 **Shared-system guidance:** On multi-user systems, verify your umask is restrictive (`umask 077`) and write outputs into a private directory (e.g., `~/stave-output/`) to prevent other users from reading evaluation results.
 
-See [Data Flow and I/O](docs/trust/data-flow-and-io.md) for the per-command I/O model.
+See [Data Flow and I/O](https://systeminvariant.dev/docs/explanation/data-flow) for the per-command I/O model.
 
-For a detailed security assessment, see [Security and Trust](docs/trust/01-security-and-trust.md), [Execution Safety](docs/trust/execution-safety.md), and [Data Flow and I/O](docs/trust/data-flow-and-io.md).
+For a detailed security assessment, see [Security and Trust](https://systeminvariant.dev/docs/explanation/trust-and-security), [Execution Safety](https://systeminvariant.dev/docs/explanation/execution-safety), and [Data Flow and I/O](https://systeminvariant.dev/docs/explanation/data-flow).
 
 ## How to Verify No Network at Runtime
 
@@ -104,7 +104,7 @@ docker run --rm --network=none -v "$(pwd):/work" -w /work golang:1.26 \
 
 **Runtime:** Stave requires zero outbound network connections. Corporate firewalls, egress policies, and NSGs can deny all outbound traffic and Stave will operate normally. No proxy configuration, DNS resolution, or TLS certificates are needed.
 
-**Build/CI/Release:** Building from source and release signing require network access for Go module downloads, CI runners, Sigstore signing, and artifact uploads. See [Offline & Air-Gapped Operation](docs/offline-airgapped.md) and [Release Security](docs/trust/02-release-security.md) for the full inventory.
+**Build/CI/Release:** Building from source and release signing require network access for Go module downloads, CI runners, Sigstore signing, and artifact uploads. See [Offline & Air-Gapped Operation](https://systeminvariant.dev/docs/explanation/offline-airgapped) and [Release Security](docs/trust/02-release-security.md) for the full inventory.
 
 ## Privileges
 
@@ -128,7 +128,7 @@ Stave is architecturally credential-free. It never requires, reads, or processes
 
 The `internal/platform/logging/sanitize.go` file contains a list of sensitive key patterns (`token`, `secret`, `password`, etc.) used to sanitize values from log output. This is **defensive log hygiene** — it prevents accidental logging of secrets that users might pass as CLI arguments. Stave does not consume or process these values.
 
-See [docs/s3-assessment.md](docs/s3-assessment.md) for the recommended workflow showing the credential boundary between user tools and Stave.
+See [https://systeminvariant.dev/docs/how-to/s3-assessment](https://systeminvariant.dev/docs/how-to/s3-assessment) for the recommended workflow showing the credential boundary between user tools and Stave.
 
 ### Snapshot sensitivity
 
@@ -139,7 +139,7 @@ Terraform plan/state exports and AWS CLI snapshots may contain embedded credenti
 - Use `--sanitize` when sharing evaluation output to replace infrastructure identifiers with deterministic tokens.
 - Treat all snapshot files as sensitive data and apply your organization's data handling policies.
 
-See [Sharing Outputs Safely](docs/sanitization.md) for details on sanitization and scrubbing.
+See [Sharing Outputs Safely](https://systeminvariant.dev/docs/how-to/sanitization) for details on sanitization and scrubbing.
 
 ## Synthetic Test Data
 
@@ -147,7 +147,7 @@ All AWS account IDs (e.g., `123456789012`, `777666555444`), ARNs, and bucket nam
 
 ## Sharing Outputs Safely
 
-When sharing Stave outputs for review, use `--sanitize` to replace infrastructure identifiers with deterministic tokens. See [Sharing Outputs Safely](docs/sanitization.md) for details.
+When sharing Stave outputs for review, use `--sanitize` to replace infrastructure identifiers with deterministic tokens. See [Sharing Outputs Safely](https://systeminvariant.dev/docs/how-to/sanitization) for details.
 
 ## Output Sanitization Reference
 

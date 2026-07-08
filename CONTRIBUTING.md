@@ -383,7 +383,7 @@ All AWS account IDs, ARNs, and bucket names under `testdata/` and `case-studies/
 
 ## Reporting Bugs
 
-When filing a bug report, include a minimal, deterministic reproduction. See the [Bug Reproduction Guide](docs/contrib/bug-repro-guide.md) for how to write one, and the [Bug Reproduction Template](docs/contrib/bug-repro-template.md) for a copy-paste starting point.
+When filing a bug report, include a minimal, deterministic reproduction. See the [Bug Reproduction Guide](https://systeminvariant.dev/docs/how-to/bug-reports) for how to write one, and the [Bug Reproduction Template](docs/contrib/bug-repro-template.md) for a copy-paste starting point.
 
 ## Getting Help
 

@@ -102,5 +102,5 @@ in Stave.
 
 ## Advanced: adding to the built-in catalog
 Drop the YAML under `controls/<domain>/<aspect>/` and run `make build` to sync it into
-the embedded catalog. See `docs/controls/authoring.md` for the full convention
+the embedded catalog. See `docs/https://systeminvariant.dev/docs/how-to/control-authoring` for the full convention
 (ID format, compliance mappings, evidence citations, the forge-to-PR pipeline).

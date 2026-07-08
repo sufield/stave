@@ -42,7 +42,7 @@ This is different from:
 - **Infrastructure-as-Code scanning** (tfsec, Checkov) — checks templates before deployment. Stave checks actual observed configurations after deployment.
 - **CSPM** (Wiz, Prisma, AWS Config) — continuously monitors live cloud APIs. Stave evaluates offline, with no credentials.
 
-See [System Invariant as Code](system-invariant-as-code.md) for the formal model.
+See [System Invariant as Code](https://systeminvariant.dev/docs/explanation/system-invariant-as-code) for the formal model.
 
 ## How does System Invariant as Code differ from OPA Rego and other policy engines?
 
@@ -284,7 +284,7 @@ stave apply --observations observations --format json | jq '[.findings[].control
 stave apply --observations observations --format json | jq '.summary.violations'
 ```
 
-Full field-by-field reference: [Output Schema (out.v0.1)](schema/out.v0.1.md)
+Full field-by-field reference: [Output Schema (out.v0.1)](https://systeminvariant.dev/docs/reference/schema-out)
 
 JSON Schema source: `schemas/output/v1/output.schema.json`
 

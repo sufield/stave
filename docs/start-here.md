@@ -14,16 +14,16 @@ This page provides a recommended reading order for understanding Stave. Start wi
 | Order | Document | What You'll Learn |
 |-------|----------|-------------------|
 | 1 | [README](../README.md) | What Stave does, quickstart, CLI commands |
-| 2 | [Security Guarantees](trust/01-guarantees.md) | Every guarantee: offline, no-creds, determinism, no-exec, filesystem safety |
-| 3 | [Scope and Limits](project/limits.md) | What Stave does and does not do |
+| 2 | [Security Guarantees](https://systeminvariant.dev/docs/explanation/guarantees) | Every guarantee: offline, no-creds, determinism, no-exec, filesystem safety |
+| 3 | [Scope and Limits](https://systeminvariant.dev/docs/reference/limits) | What Stave does and does not do |
 
 ## For Security Reviewers
 
 | Order | Document | What You'll Learn |
 |-------|----------|-------------------|
-| 4 | [Threat Model](security/threat-model.md) | Assets, trust boundaries, attacker profiles, controls, residual risks |
-| 5 | [Execution Safety](trust/execution-safety.md) | No-exec guarantees: banned imports, closed DSL, no plugins |
-| 6 | [Data Flow and I/O](trust/data-flow-and-io.md) | Per-command I/O model, permission policy, overwrite protection |
+| 4 | [Threat Model](https://systeminvariant.dev/docs/explanation/threat-model) | Assets, trust boundaries, attacker profiles, controls, residual risks |
+| 5 | [Execution Safety](https://systeminvariant.dev/docs/explanation/execution-safety) | No-exec guarantees: banned imports, closed DSL, no plugins |
+| 6 | [Data Flow and I/O](https://systeminvariant.dev/docs/explanation/data-flow) | Per-command I/O model, permission policy, overwrite protection |
 | 7 | [Release Security](trust/02-release-security.md) | How releases are built, signed, and verified |
 | 8 | [Verify a Release](trust/verify-release.md) | Step-by-step verification commands |
 
@@ -32,19 +32,19 @@ This page provides a recommended reading order for understanding Stave. Start wi
 | Order | Document | What You'll Learn |
 |-------|----------|-------------------|
 | 9 | [Architecture Overview](architecture/overview.md) | Pipeline, package map, trust boundaries, command routing |
-| 10 | [Stability and Versioning](project/stability.md) | Schema stability, exit codes, dependency pinning |
+| 10 | [Stability and Versioning](https://systeminvariant.dev/docs/reference/stability) | Schema stability, exit codes, dependency pinning |
 | 11 | [Docs-As-Code](project/docs-as-code.md) | Docs source of truth, generation, CI validation, publishing workflow |
-| 12 | [Observation Schema](schema/obs.v0.1.md) | obs.v0.1 field reference |
-| 13 | [Output Schema](schema/out.v0.1.md) | out.v0.1 evaluation output contract |
-| 14 | [Control Schema](schema/ctrl.v1.md) | ctrl.v1 field reference, operator table |
-| 15 | [Authoring Controls](controls/authoring.md) | How to write, test, and review custom controls |
+| 12 | [Observation Schema](https://systeminvariant.dev/docs/reference/schema-obs) | obs.v0.1 field reference |
+| 13 | [Output Schema](https://systeminvariant.dev/docs/reference/schema-out) | out.v0.1 evaluation output contract |
+| 14 | [Control Schema](https://systeminvariant.dev/docs/reference/schema-ctrl) | ctrl.v1 field reference, operator table |
+| 15 | [Authoring Controls](https://systeminvariant.dev/docs/how-to/control-authoring) | How to write, test, and review custom controls |
 | 16 | [CONTRIBUTING.md](../CONTRIBUTING.md) | Dev setup, testing, PR process |
 
 ## For Bug Reporters
 
 | Order | Document | What You'll Learn |
 |-------|----------|-------------------|
-| 17 | [Bug Reproduction Guide](contrib/bug-repro-guide.md) | How to write a minimal, deterministic repro |
+| 17 | [Bug Reproduction Guide](https://systeminvariant.dev/docs/how-to/bug-reports) | How to write a minimal, deterministic repro |
 | 18 | [Bug Reproduction Template](contrib/bug-repro-template.md) | Copy-paste template for reproductions |
 
 ## Examples
@@ -61,9 +61,9 @@ Self-contained scenarios you can run immediately after building Stave:
 
 | Document | Covers |
 |----------|--------|
-| [Security and Trust](trust/01-security-and-trust.md) | Trust document index |
+| [Security and Trust](https://systeminvariant.dev/docs/explanation/trust-and-security) | Trust document index |
 | [Scope and Support](scope-and-support.md) | Supported commands and surfaces |
-| [Evaluation Engine Capabilities](evaluation-engine-capabilities.md) | Operator and type coverage map |
+| [Evaluation Engine Capabilities](https://systeminvariant.dev/docs/reference/evaluation-engine-capabilities) | Operator and type coverage map |
 | [SECURITY.md](../SECURITY.md) | Vulnerability reporting policy |
 
 ## Docs Feedback
