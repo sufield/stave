@@ -191,7 +191,7 @@ does O(chains × failures) map operations. An inverted index from
 control IDs to the chains that mention them gives
 O(failures × avg_chain_fan_out).
 
-At current scale (597 chains today), this is not measurably hot.
+At current scale (622 chains today), this is not measurably hot.
 **Trigger:** chain catalog crosses 1,000 OR profiling shows
 `DetectChains` in the top CPU frames.
 

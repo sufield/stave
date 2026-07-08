@@ -1,8 +1,8 @@
 # Scope and support
 
 ## In scope
-- 2816 controls across 78 AWS/GCP/K8s/Azure service domains
-- 616 compound chain definitions — multi-step attack paths
+- 2907 controls across 86 AWS/GCP/K8s/Azure service domains
+- 622 compound chain definitions — multi-step attack paths
 - Offline analysis of local configuration snapshots (obs.v0.1)
 - Built-in snapshot→observation conversion (`stave transform`, jq filters) for common AWS resources; external extractors (Steampipe, CloudQuery, custom) still supported for broader coverage
 - Deterministic findings and reports

@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-03
 **Fixture:** lordofheaven (2 snapshots, 2 assets)
-**Catalog:** 2816 controls, 616 chains
+**Catalog:** 2907 controls, 622 chains
 
 ## CPU Scaling
 

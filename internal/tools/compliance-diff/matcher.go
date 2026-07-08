@@ -10,7 +10,7 @@ import (
 )
 
 type matcher struct {
-	catalog  *policy.Catalog
+	catalog   *policy.Catalog
 	byService map[string][]controlEntry
 }
 
@@ -45,7 +45,7 @@ func (m *matcher) diff(fw *compliance.Framework) DiffReport {
 	report := DiffReport{
 		Framework: fw.DisplayName(),
 		Version:   fw.Version,
-		Source:     fw.Source,
+		Source:    fw.Source,
 	}
 
 	for _, check := range fw.Checks {

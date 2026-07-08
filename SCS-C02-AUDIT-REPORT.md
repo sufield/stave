@@ -1,7 +1,7 @@
 # SCS-C02 Full Syllabus Audit Against Stave Control Catalog
 
 **Date:** 2026-07-02 (upgraded 2026-07-05)
-**Catalog size:** 2861 controls (excluding `_triage/`), 618 chains
+**Catalog size:** 2907 controls (excluding `_triage/`), 622 chains
 **Scope:** Audit + upgrade — all 17 GAPs closed, 2 chain gaps closed
 
 ## Executive Summary

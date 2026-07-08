@@ -164,9 +164,14 @@ func Run(ctx context.Context, cfg Config) (*Result, error) {
 		return nil, fmt.Errorf("policyexport: load snapshots: %w", err)
 	}
 
+	sortedSnaps := slices.Clone(loaded.Snapshots)
+	slices.SortFunc(sortedSnaps, func(a, b asset.Snapshot) int {
+		return a.CapturedAt.Compare(b.CapturedAt)
+	})
+
 	r := newResultBuilder()
-	for i := range loaded.Snapshots {
-		snap := &loaded.Snapshots[i]
+	for i := range sortedSnaps {
+		snap := &sortedSnaps[i]
 		if r.latestAt.IsZero() || snap.CapturedAt.After(r.latestAt) {
 			r.latestAt = snap.CapturedAt
 		}

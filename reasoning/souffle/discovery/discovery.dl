@@ -1,0 +1,160 @@
+// discovery.dl — chain discovery via path-tracking reachability.
+//
+// Extends reasoning/souffle/iam/{schema,rules}.dl with:
+//   1. Path-tracking: emit the full hop sequence, not just (source, target).
+//   2. Security classification: tag each path as escalation/exfil/external/confused-deputy.
+//   3. Edge conditions: surface condition facts per hop for Z3 input.
+//
+// Pipeline:
+//   stave export-sir --format jsonl → extract.go → .facts
+//   souffle -F facts/ -D out/ -I reasoning/souffle/iam/ discovery.dl
+//
+// The -I flag tells Soufflé where to find schema.dl (included by rules.dl).
+
+#include "rules.dl"
+
+// =====================================================
+// Path-tracking transitive assumption.
+//
+// privesc_path emits the full chain as a fixed-width tuple.
+// Soufflé doesn't have lists; we use positional columns
+// (hop1..hop5) and pad unused hops with "—". Bounded to
+// depth 5 to match AWS's practical role-chain limit.
+// =====================================================
+
+.decl privesc_path(start: symbol, end: symbol, hops: number,
+                   hop1: symbol, hop2: symbol, hop3: symbol,
+                   hop4: symbol, hop5: symbol)
+.output privesc_path
+
+// 1-hop: direct assumption.
+privesc_path(A, B, 1, A, B, "—", "—", "—") :- can_assume(A, B).
+
+// 2-hop.
+privesc_path(A, C, 2, A, B, C, "—", "—") :-
+    can_assume(A, B), can_assume(B, C), A != C.
+
+// 3-hop.
+privesc_path(A, D, 3, A, B, C, D, "—") :-
+    can_assume(A, B), can_assume(B, C), can_assume(C, D),
+    A != D, A != C, B != D.
+
+// 4-hop.
+privesc_path(A, E, 4, A, B, C, D, E) :-
+    can_assume(A, B), can_assume(B, C), can_assume(C, D), can_assume(D, E),
+    A != E, A != C, A != D, B != D, B != E, C != E.
+
+// =====================================================
+// Access paths — principal reaches resource via assume chain.
+//
+// access_path tracks: who, what resource, what action, how
+// many hops, and the final role that holds the permission.
+// =====================================================
+
+.decl access_path(principal: symbol, resource: symbol, action: symbol,
+                  via_role: symbol, hops: number)
+.output access_path
+
+// Direct: principal holds the permission.
+access_path(P, R, A, P, 0) :-
+    effective_permission(P, A, Rpat),
+    arn_matches(Rpat, R),
+    resource(R, _).
+
+// Via assume chain: principal assumes a role that holds the permission.
+access_path(P, R, A, Final, N) :-
+    privesc_path(P, Final, N, _, _, _, _, _),
+    effective_permission(Final, A, Rpat),
+    arn_matches(Rpat, R),
+    resource(R, _),
+    P != Final.
+
+// Via identity pool (unauth).
+access_path(Pool, R, A, Role, 1) :-
+    maps_unauth_to(Pool, Role),
+    allows_unauthenticated(Pool, "true"),
+    effective_permission(Role, A, Rpat),
+    arn_matches(Rpat, R),
+    resource(R, _).
+
+// Via identity pool (auth, self-register).
+access_path(Pool, R, A, Role, 1) :-
+    maps_auth_to(Pool, Role),
+    self_registration_unrestricted(_, "true"),
+    effective_permission(Role, A, Rpat),
+    arn_matches(Rpat, R),
+    resource(R, _).
+
+// =====================================================
+// Security classification of discovered paths.
+// =====================================================
+
+// escalation_path: assume chain leads to a role with admin-equivalent actions.
+.decl escalation_path(principal: symbol, admin_role: symbol, hops: number,
+                      hop1: symbol, hop2: symbol, hop3: symbol)
+.output escalation_path
+
+escalation_path(P, End, N, H1, H2, H3) :-
+    privesc_path(P, End, N, H1, H2, H3, _, _),
+    (has_action(End, "iam:*") ; has_action(End, "*")),
+    P != End.
+
+// exfil_path: principal can write to a resource via cross-account or wildcard S3.
+.decl exfil_path(principal: symbol, resource: symbol, via_role: symbol, hops: number)
+.output exfil_path
+
+exfil_path(P, R, Via, N) :-
+    access_path(P, R, A, Via, N),
+    (A = "s3:PutObject" ; A = "s3:*" ; A = "s3:PutObjectAcl"),
+    has_type(R, "aws_s3_bucket").
+
+// external_reach: access from a cross-account principal.
+.decl external_reach(principal: symbol, resource: symbol, action: symbol,
+                     via_role: symbol, hops: number)
+.output external_reach
+
+external_reach(P, R, A, Via, N) :-
+    access_path(P, R, A, Via, N),
+    cross_account_assumes(P, _).
+
+// confused_deputy: service-trusted role reaches sensitive resource.
+.decl confused_deputy_path(role: symbol, service: symbol, resource: symbol, action: symbol)
+.output confused_deputy_path
+
+confused_deputy_path(Role, Svc, R, A) :-
+    trusts_service(Role, Svc),
+    effective_permission(Role, A, Rpat),
+    arn_matches(Rpat, R),
+    sensitivity(R, "high"),
+    resource(R, _).
+
+// =====================================================
+// Condition edges — surface per-hop conditions for Z3.
+//
+// For each assume edge in a discovered path, emit the
+// condition keys and values attached to the principal.
+// The Go harness reads these to build Z3 constraints.
+// =====================================================
+
+.decl path_condition(principal: symbol, target: symbol, cond_key: symbol, cond_value: symbol)
+.output path_condition
+
+path_condition(P, T, K, V) :-
+    can_assume(P, T),
+    has_condition(P, K),
+    has_condition_value(P, V).
+
+// =====================================================
+// Summary counts for the report header.
+// =====================================================
+
+.decl _discovery_count(relation: symbol, n: number)
+.output _discovery_count
+
+_discovery_count("privesc_path",       n) :- n = count : { privesc_path(_, _, _, _, _, _, _, _) }.
+_discovery_count("access_path",        n) :- n = count : { access_path(_, _, _, _, _) }.
+_discovery_count("escalation_path",    n) :- n = count : { escalation_path(_, _, _, _, _, _) }.
+_discovery_count("exfil_path",         n) :- n = count : { exfil_path(_, _, _, _) }.
+_discovery_count("external_reach",     n) :- n = count : { external_reach(_, _, _, _, _) }.
+_discovery_count("confused_deputy_path", n) :- n = count : { confused_deputy_path(_, _, _, _) }.
+_discovery_count("path_condition",     n) :- n = count : { path_condition(_, _, _, _) }.

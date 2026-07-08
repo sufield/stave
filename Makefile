@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check refactor-scan refactor-scan-check refactor-scan-update triage quarterly-audit quarterly-save compliance-diff
+.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict readme readme-check regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check metrics docs-check docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check refactor-scan refactor-scan-check refactor-scan-update triage quarterly-audit quarterly-save compliance-diff
 # Binary name
 BINARY=stave
 
@@ -441,6 +441,12 @@ check: fmt vet lint stale-terminology-check check-unsafe-writes deadcode-check t
 semantic-diff: sync-controls
 	$(GOCMD) run ./internal/tools/semantic-diff $(ARGS)
 
+## chain-discover: Datalog reachability + Z3 chain discovery
+## Discovers attack chains not covered by existing chain YAMLs.
+## Use ARGS for flags: make chain-discover ARGS="-snapshot observations/ -query escalation"
+chain-discover: build
+	$(GOCMD) run ./reasoning/souffle/discovery/main.go ./reasoning/souffle/discovery/dedup.go ./reasoning/souffle/discovery/report.go $(ARGS)
+
 ## ci: CI pipeline (tidy, check, build)
 ci: tidy check build
 
@@ -804,6 +810,14 @@ docs-commands:
 docs-commands-check:
 	$(GOCMD) run ./internal/tools/gencommanddocs -check
 
+## docs-datalog: Generate Datalog relations reference from .dl source files
+docs-datalog:
+	$(GOCMD) run ./internal/tools/gendatalogdocs
+
+## docs-datalog-check: Verify Datalog reference is up to date
+docs-datalog-check:
+	$(GOCMD) run ./internal/tools/gendatalogdocs -check
+
 SITE_CLI_REF ?= ../stave-guide/reference/cli-reference
 
 ## docs-site: Generate Docusaurus CLI reference pages from the cobra tree
@@ -1060,6 +1074,28 @@ verify-encoding-e2e: build
 regenerate-goldens-strict: regenerate-goldens verify-encoding-e2e
 	@echo "Goldens regenerated AND encoding verified."
 
+## metrics: Generate docs/metrics.yaml from live codebase counts
+metrics:
+	@echo "# Stave Metrics — GENERATED, do not edit" > docs/metrics.yaml
+	@echo "# Run: make metrics" >> docs/metrics.yaml
+	@echo "" >> docs/metrics.yaml
+	@echo "catalog:" >> docs/metrics.yaml
+	@echo "  controls: $$(find controls/ -name '*.yaml' -not -path '*/_triage/*' | wc -l | tr -d ' ')" >> docs/metrics.yaml
+	@echo "  services: $$(find controls/ -mindepth 1 -maxdepth 1 -type d -not -name '_triage' | wc -l | tr -d ' ')" >> docs/metrics.yaml
+	@echo "" >> docs/metrics.yaml
+	@echo "chains:" >> docs/metrics.yaml
+	@echo "  authored: $$(find chains/ -name '*.yaml' 2>/dev/null | wc -l | tr -d ' ')" >> docs/metrics.yaml
+	@echo "" >> docs/metrics.yaml
+	@echo "frameworks:" >> docs/metrics.yaml
+	@echo "  count: $$(find data/frameworks/ -name '*.yaml' 2>/dev/null | wc -l | tr -d ' ')" >> docs/metrics.yaml
+	@echo "" >> docs/metrics.yaml
+	@echo "updated: $$(date +%Y-%m-%d)" >> docs/metrics.yaml
+	@echo "Generated docs/metrics.yaml"
+
+## docs-check: Detect stale hardcoded counts, deprecated flags, phantom make targets
+docs-check:
+	@bash scripts/docs-check.sh
+
 ## consistency-check: Verify every derived artifact matches its canonical source
 ##
 ## Runs each non-golden regen target then asserts the working tree is clean.
@@ -1077,6 +1113,7 @@ consistency-check: sync-schemas sync-controls sync-alternatives
 	@$(GOCMD) run ./internal/tools/gencontroldocs
 	@$(GOCMD) run ./internal/tools/genmethodologycoverage
 	@$(GOCMD) run ./internal/tools/gencommanddocs
+	@$(GOCMD) run ./internal/tools/gendatalogdocs
 	@# Verify the curated root catalog matches its annotations + the binary
 	@# (phantom / missing-leaf / stale prose). Skips cleanly if the root
 	@# doc isn't in this checkout. Runs before the git-clean drift check.
@@ -1094,6 +1131,7 @@ consistency-check: sync-schemas sync-controls sync-alternatives
 		README.md \
 		docs/controls/reference.md \
 		docs/command-reference.md \
+		docs/reference/datalog-relations.md \
 		'docs/methodology-coverage-*.md' \
 	); \
 	if [ -n "$$drift" ]; then \

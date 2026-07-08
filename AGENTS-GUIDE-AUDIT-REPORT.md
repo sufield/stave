@@ -1,7 +1,7 @@
 # Infrastructure Agents Guide — Stave Control Catalog Audit
 
 **Source**: [Cloudgeni Infrastructure Agents Guide](https://github.com/cloudgeni/infrastructure-agents-guide) (13 chapters)
-**Catalog**: Stave control catalog (4116 controls, 616 chains)
+**Catalog**: Stave control catalog (2907 controls, 622 chains)
 **Date**: 2026-07-02
 
 ## Methodology

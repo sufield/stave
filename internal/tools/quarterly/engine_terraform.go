@@ -67,9 +67,9 @@ func (e *terraformEngine) Run(ctx context.Context) (*EngineResult, error) {
 }
 
 type tfDiffOutput struct {
-	Total    int `json:"total_security_args"`
+	Total   int `json:"total_security_args"`
 	Covered int `json:"covered"`
-	Gaps     []struct {
+	Gaps    []struct {
 		Resource string `json:"resource"`
 		Arg      string `json:"argument"`
 		Type     string `json:"type"`

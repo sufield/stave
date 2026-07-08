@@ -7,8 +7,8 @@ type DiffReport struct {
 	Framework string        `json:"framework"`
 	Version   string        `json:"version,omitempty"`
 	Source    string        `json:"source,omitempty"`
-	Results  []MatchResult `json:"results"`
-	Summary  Summary       `json:"summary"`
+	Results   []MatchResult `json:"results"`
+	Summary   Summary       `json:"summary"`
 }
 
 // MatchResult holds the match outcome for one check.

@@ -135,7 +135,7 @@ that the gate then enforces forever, against every snapshot, in
 every account, in every CI run, with no ML drift and no vendor
 roadmap.
 
-**In the code:** 2,658 controls + 585 chains today, growing with
+**In the code:** 2,907 controls + 622 chains today, growing with
 every incident. The engine in [`pkg/stave/`](./pkg/stave/) exposes
 ~16 public functions ([`pkg/stave/doc.go`](./pkg/stave/doc.go)) —
 small enough to fit in your head. The catalog growth is the value

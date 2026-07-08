@@ -46,10 +46,6 @@ func (e *semanticDiffEngine) Run(ctx context.Context) (*EngineResult, error) {
 	}, nil
 }
 
-func countDivergences(output string) int {
-	return strings.Count(output, "DIVERGENCE")
-}
-
 func countControls(output string) int {
 	n := 0
 	for line := range strings.SplitSeq(output, "\n") {

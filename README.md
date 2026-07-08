@@ -232,6 +232,58 @@ Controls are `unsafe_predicate:` match rules (`all:`/`any:` groups of `field`/`o
 
 Full reference and per-domain breakdowns: [`docs/controls/reference.md`](docs/controls/reference.md).
 
+### Chain Discovery
+
+Static controls evaluate individual resources. Chain discovery evaluates the relationships between them. Stave computes every privilege escalation, data exfiltration, and lateral movement path in your account — not just the ones someone thought to check for.
+
+The engine uses three formal reasoning systems:
+
+- **Soufflé/Datalog** computes transitive reachability across trust policies, IAM permissions, Lambda invocations, and resource policies. Every path through the relationship graph is enumerated — exhaustively, not by sampling.
+- **Z3** verifies each discovered path is semantically viable. A path that exists structurally but is blocked by IAM conditions (source IP, org ID, MFA) is filtered out. Only paths where all conditions are simultaneously satisfiable are reported.
+- **cvc5** confirms Z3's results. Zero disagreement between engines is the acceptance bar.
+
+```bash
+# Discover all attack chains in a snapshot
+make chain-discover ARGS="-snapshot observations/"
+
+# Discover only novel chains (not in the 622 known patterns)
+make chain-discover ARGS="-snapshot observations/ -novel-only"
+
+# Focus on escalation paths
+make chain-discover ARGS="-snapshot observations/ -query escalation"
+```
+
+Example output:
+
+```
+CHAIN DISCOVERY
+
+DATALOG EVALUATION:
+  privesc_path:              42
+  access_path:               387
+  escalation_path:           8
+  exfil_path:                2
+  external_reach:            3
+  confused_deputy_path:      1
+
+CLASSIFICATION:  14 total paths
+  escalation:                8
+  exfiltration:              2
+  external-reach:            3
+  confused-deputy:           1
+
+DEDUPLICATION:  3 novel, 11 confirmed
+
+NOVEL CHAINS (not covered by existing YAMLs):
+
+CHAIN 1: escalation (3 hops)
+  Source:   DevRole
+  Target:   ProdAdminRole
+  Path:     DevRole → DataSciRole → ProdAdminRole
+```
+
+The 622 manually authored chain definitions cover known attack patterns. Chain discovery finds every pattern the relationship graph contains — including ones nobody imagined. See [`docs/chain-discovery-architecture.md`](docs/chain-discovery-architecture.md) for the three-engine pipeline design.
+
 ## Documentation
 
 | | |

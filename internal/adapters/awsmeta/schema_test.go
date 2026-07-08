@@ -23,7 +23,18 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
+func skipIfNoBotocore(t *testing.T) {
+	dir, err := getBotocoreDataDir()
+	if err != nil {
+		t.Skip("Skipping test: botocore data directory not set")
+	}
+	if _, err := os.Stat(dir); err != nil {
+		t.Skipf("Skipping test: botocore data directory %q does not exist: %v", dir, err)
+	}
+}
+
 func TestExtractSchema_KnownService(t *testing.T) {
+	skipIfNoBotocore(t)
 	schema, err := ExtractSchema("s3")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -44,6 +55,7 @@ func TestExtractSchema_KnownService(t *testing.T) {
 }
 
 func TestExtractSchema_UnknownService(t *testing.T) {
+	skipIfNoBotocore(t)
 	schema, err := ExtractSchema("nonexistent-service-xyz-9999")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -54,6 +66,7 @@ func TestExtractSchema_UnknownService(t *testing.T) {
 }
 
 func TestExtractSchema_S3_HasEncryptionFields(t *testing.T) {
+	skipIfNoBotocore(t)
 	schema, err := ExtractSchema("s3")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -78,6 +91,7 @@ func TestExtractSchema_S3_HasEncryptionFields(t *testing.T) {
 }
 
 func TestExtractSchema_ACM_HasCertificateFields(t *testing.T) {
+	skipIfNoBotocore(t)
 	schema, err := ExtractSchema("acm")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

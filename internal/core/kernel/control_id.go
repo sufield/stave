@@ -51,19 +51,34 @@ func (id ControlID) Provider() string {
 // For "CTL.S3.PUBLIC.READ.001", it returns "PUBLIC.READ".
 func (id ControlID) Category() string {
 	s := id.String()
-	_, rest, ok := strings.Cut(s, ".")
-	if !ok {
+	parts := strings.Split(s, ".")
+	if len(parts) <= 2 {
 		return ""
 	}
-	_, rest, ok = strings.Cut(rest, ".")
-	if !ok {
+
+	// Check if the last part is a sequence number (all digits)
+	last := parts[len(parts)-1]
+	hasSequence := true
+	if last == "" {
+		hasSequence = false
+	} else {
+		for i := 0; i < len(last); i++ {
+			if last[i] < '0' || last[i] > '9' {
+				hasSequence = false
+				break
+			}
+		}
+	}
+
+	endIdx := len(parts)
+	if hasSequence {
+		endIdx--
+	}
+
+	if endIdx <= 2 {
 		return ""
 	}
-	idx := strings.LastIndexByte(rest, '.')
-	if idx < 0 {
-		return rest
-	}
-	return rest[:idx]
+	return strings.Join(parts[2:endIdx], ".")
 }
 
 // Sequence extracts the trailing numeric identifier.

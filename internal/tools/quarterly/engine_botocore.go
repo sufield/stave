@@ -65,7 +65,7 @@ func (e *botocoreEngine) Run(ctx context.Context) (*EngineResult, error) {
 					Property:   fmt.Sprintf("%s.%s", op.Name, f.Path),
 					Severity:   "Medium",
 					Taxonomy:   catStrs,
-					Source:      "botocore",
+					Source:     "botocore",
 					Confidence: "Medium",
 				})
 			}
@@ -184,29 +184,3 @@ var securityKeywords = []string{
 	"audit", "trail", "guardduty", "inspector",
 	"private", "endpoint",
 }
-
-// discoverBotocoreServices returns AWS services that have botocore models.
-// Used as fallback when control directory scanning finds nothing.
-func discoverBotocoreServices() []string {
-	out, err := awsmeta.ExtractSchema("s3")
-	if err != nil || !out.Available {
-		return nil
-	}
-	// Walk the botocore data directory
-	dir := os.Getenv("BOTOCORE_DATA")
-	if dir == "" {
-		return nil
-	}
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil
-	}
-	var services []string
-	for _, e := range entries {
-		if e.IsDir() {
-			services = append(services, e.Name())
-		}
-	}
-	return services
-}
-

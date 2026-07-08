@@ -183,16 +183,22 @@ var gapStopWords = map[string]bool{
 	"when": true, "each": true, "which": true, "their": true, "they": true,
 }
 
+func cleanWord(w string) string {
+	return strings.Trim(w, ".,;:!?\"'()[]{} ")
+}
+
 func keywordOverlap(a, b string) int {
 	wordsA := strings.Fields(a)
 	setB := map[string]struct{}{}
 	for w := range strings.FieldsSeq(b) {
+		w = cleanWord(w)
 		if len(w) >= 3 && !gapStopWords[w] {
 			setB[w] = struct{}{}
 		}
 	}
 	count := 0
 	for _, w := range wordsA {
+		w = cleanWord(w)
 		if len(w) < 3 || gapStopWords[w] {
 			continue
 		}

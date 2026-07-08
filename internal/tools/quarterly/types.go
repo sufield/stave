@@ -26,14 +26,14 @@ type EngineResult struct {
 
 // AuditReport is the full quarterly audit output.
 type AuditReport struct {
-	Quarter       string          `json:"quarter"`
-	Timestamp     string          `json:"timestamp"`
-	Engines       []EngineResult  `json:"engines"`
-	MultiEngine   []Gap           `json:"multi_engine_gaps"`
-	SingleEngine  []Gap           `json:"single_engine_gaps"`
-	TotalRaw      int             `json:"total_raw_gaps"`
-	TotalDeduped  int             `json:"total_deduped_gaps"`
-	Diff          *QuarterDiff    `json:"diff,omitempty"`
+	Quarter      string         `json:"quarter"`
+	Timestamp    string         `json:"timestamp"`
+	Engines      []EngineResult `json:"engines"`
+	MultiEngine  []Gap          `json:"multi_engine_gaps"`
+	SingleEngine []Gap          `json:"single_engine_gaps"`
+	TotalRaw     int            `json:"total_raw_gaps"`
+	TotalDeduped int            `json:"total_deduped_gaps"`
+	Diff         *QuarterDiff   `json:"diff,omitempty"`
 }
 
 // QuarterDiff shows changes from the previous quarter.

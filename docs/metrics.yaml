@@ -1,0 +1,14 @@
+# Stave Metrics — GENERATED, do not edit
+# Run: make metrics
+
+catalog:
+  controls: 2908
+  services: 86
+
+chains:
+  authored: 622
+
+frameworks:
+  count: 8
+
+updated: 2026-07-08

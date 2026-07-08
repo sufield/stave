@@ -190,7 +190,7 @@ stave apply -o observations/ --format json > stave-findings.json
   to see the mapping.
 - Stave finds compound risks Steampipe cannot: privilege escalation
   chains, cross-service blast radius, data perimeter completeness,
-  temporal configuration drift. These come from 615 compound chains
+  temporal configuration drift. These come from 622 compound chains
   that reason across resource relationships.
 
 ## Stave + AWS Config

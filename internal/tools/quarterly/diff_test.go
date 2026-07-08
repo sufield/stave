@@ -4,13 +4,13 @@ import "testing"
 
 func TestComputeDiff_FindsNewGaps(t *testing.T) {
 	previous := &AuditReport{
-		Quarter:     "2026-Q2",
+		Quarter: "2026-Q2",
 		SingleEngine: []Gap{
 			{Service: "s3", Property: "OldGap", Severity: "Medium"},
 		},
 	}
 	current := &AuditReport{
-		Quarter:     "2026-Q3",
+		Quarter: "2026-Q3",
 		SingleEngine: []Gap{
 			{Service: "s3", Property: "OldGap", Severity: "Medium"},
 			{Service: "iam", Property: "NewGap", Severity: "High"},
@@ -32,14 +32,14 @@ func TestComputeDiff_FindsNewGaps(t *testing.T) {
 
 func TestComputeDiff_FindsFixedGaps(t *testing.T) {
 	previous := &AuditReport{
-		Quarter:     "2026-Q2",
+		Quarter: "2026-Q2",
 		SingleEngine: []Gap{
 			{Service: "s3", Property: "FixedGap", Severity: "Medium"},
 			{Service: "ec2", Property: "StillOpen", Severity: "High"},
 		},
 	}
 	current := &AuditReport{
-		Quarter:     "2026-Q3",
+		Quarter: "2026-Q3",
 		SingleEngine: []Gap{
 			{Service: "ec2", Property: "StillOpen", Severity: "High"},
 		},

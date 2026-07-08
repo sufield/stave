@@ -1,6 +1,6 @@
 # reasoning-trace
 
-Unified linker. Reads what `make demo-no-graph` left in `results/`
+Unified linker. Reads what the demo pipeline left in `results/`
 and emits one JSON document that connects each CEL finding to its
 contributing SIR facts (with provenance + freshness) and surfaces
 every engine's verdict against the same fact base. The narrative

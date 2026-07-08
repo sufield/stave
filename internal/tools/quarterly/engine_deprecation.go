@@ -103,9 +103,9 @@ func (e *deprecationEngine) Run(ctx context.Context) (*EngineResult, error) {
 }
 
 type deprecationCalendar struct {
-	Engines    []engineEntry    `yaml:"engines"`
-	TLSPolicies []tlsPolicyEntry `yaml:"tls_policies"`
-	Superseded []supersededEntry `yaml:"superseded"`
+	Engines     []engineEntry     `yaml:"engines"`
+	TLSPolicies []tlsPolicyEntry  `yaml:"tls_policies"`
+	Superseded  []supersededEntry `yaml:"superseded"`
 }
 
 type engineEntry struct {
