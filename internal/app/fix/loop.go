@@ -10,6 +10,7 @@ import (
 	appattest "github.com/sufield/stave/internal/app/attestation"
 	"github.com/sufield/stave/internal/app/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
+	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -115,10 +116,10 @@ func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *
 	if err != nil {
 		return fmt.Errorf("build after evaluation: %w", err)
 	}
-	if err = report.ValidateAssessment(beforeEnv); err != nil {
+	if err = contractvalidator.ValidateAssessment(beforeEnv); err != nil {
 		return fmt.Errorf("before envelope invalid: %w", err)
 	}
-	if err = report.ValidateAssessment(afterEnv); err != nil {
+	if err = contractvalidator.ValidateAssessment(afterEnv); err != nil {
 		return fmt.Errorf("after envelope invalid: %w", err)
 	}
 

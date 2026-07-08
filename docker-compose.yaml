@@ -18,7 +18,7 @@ services:
       context: ..
       dockerfile: docs-content/demo/Dockerfile
       args:
-        GO_VERSION: "1.26.4"
+        GO_VERSION: "1.26.5"
     image: stave-demo
     tty: false
     stdin_open: false

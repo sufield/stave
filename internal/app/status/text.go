@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io"
 	"time"
-
-	"github.com/sufield/stave/internal/cli/ui"
 )
 
 // FormatText writes a human-readable status summary to w.
@@ -27,7 +25,6 @@ func FormatText(w io.Writer, result Result) error {
 	fmt.Fprintf(w, "  - observations: %d\n", s.Observations.Count)
 	fmt.Fprintf(w, "  - output/evaluation.json: %v\n", s.HasEval)
 
-	label := ui.SeverityLabel("info", "Next: "+result.NextCommand, w)
-	fmt.Fprintf(w, "\n%s\n", label)
+	fmt.Fprintf(w, "\nNext: %s\n", result.NextCommand)
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -60,7 +61,7 @@ func Compare(req CompareRequest) (CompareResult, error) {
 		Regressions: regressions,
 	})
 
-	if err := report.ValidateAttestation(v); err != nil {
+	if err := contractvalidator.ValidateAttestation(v); err != nil {
 		return CompareResult{}, fmt.Errorf("validate attestation: %w", err)
 	}
 

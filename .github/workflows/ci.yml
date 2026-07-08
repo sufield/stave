@@ -100,7 +100,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
-          go-version: '1.26.4'
+          go-version: '1.26.5'
           check-latest: true
           cache: true
       - name: Regenerate goldens and sync
@@ -140,7 +140,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
-          go-version: '1.26.4'
+          go-version: '1.26.5'
           check-latest: true
           cache: true
       - name: Sync embeds
@@ -184,7 +184,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
-          go-version: '1.26.4'
+          go-version: '1.26.5'
           check-latest: true
           cache: true
 
@@ -243,7 +243,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
-          go-version: '1.26.4'
+          go-version: '1.26.5'
           check-latest: true
           cache: true
       - name: Download regenerated goldens
@@ -276,7 +276,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
-          go-version: '1.26.4'
+          go-version: '1.26.5'
           check-latest: true
           cache: true
       - name: Install golangci-lint from source
@@ -298,23 +298,23 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
-          go-version: '1.26.4'
+          go-version: '1.26.5'
           check-latest: true
           cache: true
       - name: Verify Go version
         # Positive assertion: setup-go must install exactly the
         # patch release `go.mod`'s toolchain directive specifies
-        # (currently go1.26.4, which patches net/textproto and
-        # crypto/x509 vulnerabilities). A negative-only check
+        # (currently go1.26.5, which patches crypto/tls
+        # vulnerability). A negative-only check
         # would silently pass on any other patch — including an
         # older vulnerable one — so we assert intent here.
         run: |
           go version
-          go version | grep -q 'go1.26.4'
+          go version | grep -q 'go1.26.5'
       - name: Install govulncheck
         # Run govulncheck directly instead of golang/govulncheck-action
         # so we use the Go installed by the explicit setup-go above
-        # (1.26.4). The wrapper action invokes its own internal
+        # (1.26.5). The wrapper action invokes its own internal
         # setup-go with `go-version: stable` and silently overrides
         # any `go-version-file` we pass — that's how 1.26.2 was being
         # reinstalled into this job and re-flagging GO-2026-4971.
@@ -331,7 +331,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
-          go-version: '1.26.4'
+          go-version: '1.26.5'
           check-latest: true
           cache: true
       - name: Install go-licenses
@@ -379,7 +379,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
-          go-version: '1.26.4'
+          go-version: '1.26.5'
           check-latest: true
           cache: true
       - name: Build and run E2E tests
@@ -430,7 +430,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
-          go-version: '1.26.4'
+          go-version: '1.26.5'
           check-latest: true
           cache: true
       - name: Run consistency check

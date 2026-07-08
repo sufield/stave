@@ -1,13 +1,15 @@
-package report
+package validator
 
 import (
 	"testing"
 	"time"
+
+	"github.com/sufield/stave/internal/core/report"
 )
 
-func TestBugHunt_ValidateAttestation_PassesSchemaValidation(t *testing.T) {
-	v := NewAttestation(AttestationRequest{
-		Run: AttestationRunInfo{
+func TestValidateAttestation_PassesSchemaValidation(t *testing.T) {
+	v := report.NewAttestation(report.AttestationRequest{
+		Run: report.AttestationRunInfo{
 			ToolVersion:     "0.1.0",
 			Offline:         true,
 			EvalTime:        time.Now(),
@@ -15,7 +17,7 @@ func TestBugHunt_ValidateAttestation_PassesSchemaValidation(t *testing.T) {
 			BeforeSnapshots: 1,
 			AfterSnapshots:  1,
 		},
-		Summary: AttestationSummary{
+		Summary: report.AttestationSummary{
 			PreviousViolations: 1,
 			CurrentViolations:  0,
 			Remediated:         1,

@@ -72,7 +72,7 @@ func validateEvaluationEnvelope(output *report.Assessment, validateContract bool
 	if output == nil {
 		return errors.New("json: nil evaluation envelope")
 	}
-	if err := report.ValidateAssessment(output); err != nil {
+	if err := contractvalidator.ValidateAssessment(output); err != nil {
 		return fmt.Errorf("failed to validate output schema: %w", err)
 	}
 	if validateContract {

@@ -1,7 +1,6 @@
 package evaluation
 
 import (
-	"encoding/json"
 	"slices"
 
 	"github.com/sufield/stave/internal/core/kernel"
@@ -43,25 +42,4 @@ func (m Metadata) ToExtensions() *Extensions {
 	}
 
 	return ext
-}
-
-// ToMap converts the typed metadata into the flattened map required by the
-// legacy out.v0.1 JSON wire format.
-func (m Metadata) ToMap() map[string]any {
-	ext := m.ToExtensions()
-	if ext == nil {
-		return make(map[string]any)
-	}
-
-	data, err := json.Marshal(ext)
-	if err != nil {
-		return make(map[string]any)
-	}
-
-	var flat map[string]any
-	if err := json.Unmarshal(data, &flat); err != nil {
-		return make(map[string]any)
-	}
-
-	return flat
 }

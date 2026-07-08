@@ -8,66 +8,6 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// Metadata.ToMap — pack source with git info
-// ---------------------------------------------------------------------------
-
-func TestMetadataToMap_PacksSource(t *testing.T) {
-	m := Metadata{
-		ContextName: "test-project",
-		ControlSource: ControlSourceInfo{
-			Source:             ControlSourcePacks,
-			EnabledPacks:       []kernel.PackName{"s3"},
-			ResolvedControlIDs: []kernel.ControlID{"CTL.A.001"},
-			RegistryVersion:    "v1.0.0",
-			RegistryHash:       "sha256:abc",
-		},
-		ResolvedPaths: ResolvedPaths{
-			Controls:     "/repo/controls",
-			Observations: "/repo/observations",
-		},
-	}
-
-	result := m.ToMap()
-	if result == nil {
-		t.Fatal("expected non-nil map")
-	}
-	if result["context_name"] != "test-project" {
-		t.Fatalf("context_name = %v", result["context_name"])
-	}
-	if result["selected_controls_source"] != "packs" {
-		t.Fatalf("selected_controls_source = %v", result["selected_controls_source"])
-	}
-}
-
-func TestMetadataToMap_EmptySource(t *testing.T) {
-	m := Metadata{}
-	result := m.ToMap()
-	if len(result) != 0 {
-		t.Fatalf("empty metadata should return empty map, got %d keys", len(result))
-	}
-}
-
-func TestMetadataToMap_DirSource(t *testing.T) {
-	m := Metadata{
-		ControlSource: ControlSourceInfo{
-			Source: ControlSourceDir,
-		},
-		ResolvedPaths: ResolvedPaths{
-			Controls:     "/repo/controls",
-			Observations: "/repo/observations",
-		},
-	}
-	result := m.ToMap()
-	if result["selected_controls_source"] != "dir" {
-		t.Fatalf("selected_controls_source = %v", result["selected_controls_source"])
-	}
-	// Dir source should NOT have enabled_packs
-	if _, ok := result["enabled_control_packs"]; ok {
-		t.Fatal("dir source should not have enabled_control_packs")
-	}
-}
-
-// ---------------------------------------------------------------------------
 // ToExtensions — with packs
 // ---------------------------------------------------------------------------
 

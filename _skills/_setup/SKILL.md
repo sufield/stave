@@ -31,8 +31,8 @@ go version
 - Go >= 1.26 → proceed.
 - Missing or older → install Go 1.26.x:
   ```
-  wget https://go.dev/dl/go1.26.4.linux-amd64.tar.gz
-  sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.26.4.linux-amd64.tar.gz
+  wget https://go.dev/dl/go1.26.5.linux-amd64.tar.gz
+  sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.26.5.linux-amd64.tar.gz
   export PATH=$PATH:/usr/local/go/bin
   go version   # → go1.26.x
   ```

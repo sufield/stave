@@ -69,7 +69,7 @@ ls ~/guides/
 | | Version |
 |---|---|
 | Ubuntu | 24.04 LTS (DO base image) |
-| Go | 1.26.4 |
+| Go | 1.26.5 |
 | Steampipe | 1.0.0 |
 | AWS plugin | latest at build time |
 | Stave | tagged release (see image notes) |

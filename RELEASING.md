@@ -40,7 +40,7 @@ Golden file comparisons (`scripts/e2e.sh`, `cmd/apply/verify/determinism_test.go
 The Go version is pinned once in `go.mod` (`toolchain` directive) and read everywhere else:
 
 ```
-go.mod (toolchain go1.26.4)
+go.mod (toolchain go1.26.5)
   ├── CI workflows:    go-version-file: 'go.mod'
   ├── Dockerfile:      ARG GO_VERSION  ← Makefile reads from go.mod
   └── versions.md:     rationale only

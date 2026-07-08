@@ -5,9 +5,9 @@ import (
 	"math"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
+	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -158,6 +158,6 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 				"requested", n, "max", MaxConfigurableValidationErrors)
 			n = MaxConfigurableValidationErrors
 		}
-		report.SetMaxValidationErrors(n)
+		contractvalidator.SetMaxValidationErrors(n)
 	}
 }
