@@ -1,0 +1,25 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:wafv2:us-east-1:111122223333:regional/rulegroup/custom-rules/abc",
+      "properties": {
+        "waf": {
+          "kind": "rule_group",
+          "metrics": {
+            "cloudwatch_enabled": true
+          }
+        }
+      },
+      "type": "aws_waf_rule_group",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

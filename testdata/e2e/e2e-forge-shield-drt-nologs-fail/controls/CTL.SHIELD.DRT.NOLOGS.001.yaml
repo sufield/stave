@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.SHIELD.DRT.NOLOGS.001
+name: Shield DRT Has No Access to WAF or Flow Logs
+description: >
+  The DRT has IAM role access but no S3 log bucket access configured.
+  During a DDoS incident, the DRT cannot analyze WAF logs, VPC flow
+  logs, or CloudFront access logs to characterize attack traffic
+  patterns. Without log access, the DRT must request it manually during
+  the incident, delaying traffic analysis and targeted mitigation rule
+  creation.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  soc2: "A1.1"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - shield
+taxonomy:
+  - monitoring
+  - logging
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  base_impact: 4
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    DRT has IAM access but no log bucket access. During an incident,
+    the DRT cannot analyze traffic patterns without manual provisioning.
+  action: >
+    Grant DRT access to log buckets via
+    aws shield associate-drt-log-bucket --log-bucket <bucket-name>
+    for each bucket containing WAF logs, VPC flow logs, or CloudFront
+    access logs.
+  example: |
+    {
+      "account": {
+        "kind": "shield_subscription",
+        "shield_advanced": {
+          "drt_log_access_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.account.kind
+      op: eq
+      value: shield_subscription
+    - field: properties.account.shield_advanced.drt_log_access_configured
+      op: eq
+      value: false

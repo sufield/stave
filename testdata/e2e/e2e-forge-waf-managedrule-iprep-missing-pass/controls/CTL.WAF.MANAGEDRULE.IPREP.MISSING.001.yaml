@@ -1,0 +1,53 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.MANAGEDRULE.IPREP.MISSING.001
+name: WAF Web ACL Missing IP Reputation Managed Rule Group
+description: >
+  The Web ACL does not include the Amazon IP Reputation List or
+  Anonymous IP List managed rule group. Traffic from known-bad
+  sources — botnets, Tor exit nodes, hosting providers used for
+  attacks — is not automatically blocked. This control differs
+  from CTL.WAF.RULES.001 (any managed rules) and
+  CTL.WAF.RULES.OWASP.001 (OWASP core coverage) by checking
+  specifically for IP reputation intelligence.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-3"
+  fedramp_moderate: "SI-3"
+  pci_dss_v4.0: "6.4.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - waf
+taxonomy:
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    WAF Web ACL does not include IP reputation managed rule groups.
+    Known-bad IP sources are not filtered.
+  action: >
+    Add the AWSManagedRulesAmazonIpReputationList managed rule group
+    to the Web ACL. Consider also adding
+    AWSManagedRulesAnonymousIpList for Tor and VPN traffic.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "rules": {
+          "has_ip_reputation": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.rules.has_ip_reputation
+      op: eq
+      value: false

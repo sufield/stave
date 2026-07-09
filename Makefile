@@ -1188,7 +1188,6 @@ SYNC_EXCLUDES = \
 	--exclude='docs/fixture-drift-cleanup-*.md' \
 	--exclude='docs/go-idioms.md' \
 	--exclude='docs/graph-experiments.md' \
-	--exclude='docs/new-readme.md' \
 	--exclude='docs/pending-items.md' \
 	--exclude='docs/sir-pending-discussion.md' \
 	--exclude='/gofixer.md' \

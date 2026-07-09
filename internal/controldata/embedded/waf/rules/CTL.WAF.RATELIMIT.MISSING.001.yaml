@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.RATELIMIT.MISSING.001
+name: WAF Web ACL Has No Rate-Based Rule
+description: >
+  The Web ACL has rules but none are rate-based. HTTP flood attacks
+  pass through because no rule limits request volume per source IP.
+  Rate-based rules are the primary WAF defense against volumetric
+  application-layer DDoS. Without them, an attacker can exhaust
+  backend capacity with high request rates that each individually
+  pass rule evaluation.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  pci_dss_v4.0: "6.4.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - waf
+taxonomy:
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    WAF Web ACL has no rate-based rule. HTTP flood attacks are not
+    throttled.
+  action: >
+    Add a rate-based rule with an appropriate threshold (e.g. 2000
+    requests per 5-minute window per IP). Use
+    aws wafv2 update-web-acl with a RateBasedStatement.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "rules": {
+          "has_rate_based_rule": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.rules.has_rate_based_rule
+      op: eq
+      value: false

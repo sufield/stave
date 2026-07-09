@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.IPSET.EMPTY.001
+name: WAF IP Set Has No Addresses
+description: >
+  A WAF IP set exists but contains no IP addresses. Any rule
+  referencing this IP set matches nothing. If used in an allow rule,
+  no traffic is allowed through that path. If used in a block rule,
+  no traffic is blocked. Either case indicates a misconfiguration or
+  stale resource.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - waf
+taxonomy:
+  - network-perimeter
+  - trust-decay
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    WAF IP set has no addresses. Rules referencing it match nothing.
+  action: >
+    Add IP addresses to the IP set or delete the unused IP set.
+    Use aws wafv2 update-ip-set to add addresses.
+  example: |
+    {
+      "waf": {
+        "kind": "ip_set",
+        "ip_set": {
+          "address_count": 5
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: ip_set
+    - field: properties.waf.ip_set.address_count
+      op: eq
+      value: 0

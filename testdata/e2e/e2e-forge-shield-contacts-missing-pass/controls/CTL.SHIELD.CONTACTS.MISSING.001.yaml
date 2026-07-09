@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.SHIELD.CONTACTS.MISSING.001
+name: Shield Advanced Emergency Contacts Not Configured
+description: >
+  Shield Advanced has no emergency contacts configured. Proactive
+  engagement cannot function — during a detected DDoS event, the DRT
+  has no phone number or email to reach. The DRT detects the attack
+  via internal telemetry but cannot notify anyone or coordinate
+  mitigation. Without contacts, proactive engagement is effectively
+  disabled even if Shield Advanced is subscribed and the DRT has IAM
+  access.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  soc2: "A1.1"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - shield
+taxonomy:
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  base_impact: 4
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    Shield Advanced has no emergency contacts. The DRT cannot notify
+    anyone during a detected DDoS event.
+  action: >
+    Configure emergency contacts via
+    aws shield update-emergency-contact-settings --emergency-contact-list
+    with at least one phone number and email for the on-call team.
+  example: |
+    {
+      "account": {
+        "kind": "shield_subscription",
+        "shield_advanced": {
+          "emergency_contacts_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.account.kind
+      op: eq
+      value: shield_subscription
+    - field: properties.account.shield_advanced.emergency_contacts_configured
+      op: eq
+      value: false

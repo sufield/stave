@@ -1,0 +1,54 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.WEBACL.DEFAULTALLOW.001
+name: WAF Web ACL Default Action is ALLOW
+description: >
+  The Web ACL default action allows requests that do not match any
+  rule. Requests not explicitly blocked or rate-limited pass through.
+  Default should be BLOCK with explicit ALLOW rules for known-good
+  patterns. A default-allow ACL with managed rules only blocks known
+  bad patterns — novel attacks, zero-days, and uncovered attack
+  categories pass through silently.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-3"
+  fedramp_moderate: "SI-3"
+  pci_dss_v4.0: "6.4.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - waf
+taxonomy:
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    WAF Web ACL default action is ALLOW. Unmatched requests pass
+    through without filtering.
+  action: >
+    Change the Web ACL default action to Block. Add explicit Allow
+    rules for known-good request patterns. Use aws wafv2
+    update-web-acl to change the DefaultAction to Block.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "default_action": "block"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.default_action
+      op: eq
+      value: allow

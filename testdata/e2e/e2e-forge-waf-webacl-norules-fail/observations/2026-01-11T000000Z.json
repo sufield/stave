@@ -1,0 +1,26 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/empty-acl/abc",
+      "properties": {
+        "waf": {
+          "kind": "web_acl",
+          "rules": {
+            "rule_count": 0,
+            "has_managed_rules": false
+          }
+        }
+      },
+      "type": "aws_waf_web_acl",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

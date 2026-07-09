@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.RULEGROUP.NOMETRICS.001
+name: WAF Rule Group Has No CloudWatch Metrics
+description: >
+  A custom rule group does not enable CloudWatch metrics. Individual
+  rule match counts within the group are not tracked. Rule
+  effectiveness cannot be measured and attack patterns targeting
+  specific rules cannot be detected via alarms.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-12"]
+scope_tags:
+  - aws
+  - waf
+taxonomy:
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    WAF rule group does not enable CloudWatch metrics. Rule match
+    counts are not tracked.
+  action: >
+    Enable CloudWatchMetricsEnabled in the rule group
+    VisibilityConfig. Use aws wafv2 update-rule-group.
+  example: |
+    {
+      "waf": {
+        "kind": "rule_group",
+        "metrics": {
+          "cloudwatch_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: rule_group
+    - field: properties.waf.metrics.cloudwatch_enabled
+      op: eq
+      value: false

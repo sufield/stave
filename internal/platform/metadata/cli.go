@@ -58,11 +58,7 @@ func DocsRef(topic string) string {
 	return defaultDocsURL + "#" + netutil.EscapeFragment(topic)
 }
 
-// defaultDocsURL is the GitHub-hosted docs entry point shown in error
-// "Help:" lines when STAVE_DOCS_URL is unset. start-here.md exists as
-// the reading-order index and is the right landing page for an
-// operator who just hit an error.
-const defaultDocsURL = "https://github.com/sufield/stave/blob/main/docs/start-here.md"
+const defaultDocsURL = "https://www.systeminvariant.dev/docs"
 
 // Command returns the fully-qualified CLI command string.
 func Command(command string) string {

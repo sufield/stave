@@ -34,6 +34,21 @@ WAF assessment data is incomplete. The extractor must populate waf.rules.has_man
 
 ---
 
+### CTL.WAF.IPSET.EMPTY.001
+
+**WAF IP Set Has No Addresses**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2; soc2: CC6.1;
+
+A WAF IP set exists but contains no IP addresses. Any rule referencing this IP set matches nothing. If used in an allow rule, no traffic is allowed through that path. If used in a block rule, no traffic is blocked. Either case indicates a misconfiguration or stale resource.
+
+**Remediation:** Add IP addresses to the IP set or delete the unused IP set. Use aws wafv2 update-ip-set to add addresses.
+
+---
+
 ### CTL.WAF.LOGGING.001
 
 **WAF Logging Must Be Enabled**
@@ -46,6 +61,51 @@ WAF assessment data is incomplete. The extractor must populate waf.rules.has_man
 WAF web ACLs must have logging enabled to record blocked and allowed requests. Without logging, attacks cannot be detected, investigated, or correlated with other security events. This control is the **visibility** check in the seven-control WAF safety envelope: presence (CTL.WAF.RULES.001), enforcement (CTL.WAF.RULES.BLOCKMODE.001), coverage (CTL.WAF.RULES.OWASP.001), visibility (CTL.WAF.LOGGING.001), architectural prerequisite (CTL.WAF.ORIGIN.LOCKDOWN.001), parser overflow protection (CTL.WAF.PARSERLIMIT.PROTECT.001), and evasion observability (CTL.WAF.EVASION.OBSERVE.001). All seven may fire on the same Web ACL simultaneously; each addresses a distinct failure mode.
 
 **Remediation:** Enable WAF logging to S3, CloudWatch Logs, or Kinesis Data Firehose via aws wafv2 put-logging-configuration.
+
+---
+
+### CTL.WAF.LOGGING.OVERREDACTED.001
+
+**WAF Logging Redacts All Request Fields**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-3; soc2: CC7.1;
+
+The WAF logging configuration redacts all request fields. Logs contain rule match results but no request details. Incident investigation cannot determine what triggered a rule or what the attacker was targeting. Redaction is appropriate for sensitive fields (authorization headers, cookies) but redacting everything eliminates forensic value.
+
+**Remediation:** Reduce the redaction scope to only sensitive fields (authorization headers, cookies). Use aws wafv2 put-logging-configuration to update RedactedFields.
+
+---
+
+### CTL.WAF.MANAGEDRULE.IPREP.MISSING.001
+
+**WAF Web ACL Missing IP Reputation Managed Rule Group**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-3; nist_800_53_r5: SI-3; pci_dss_v4.0: 6.4.1; soc2: CC6.6;
+
+The Web ACL does not include the Amazon IP Reputation List or Anonymous IP List managed rule group. Traffic from known-bad sources — botnets, Tor exit nodes, hosting providers used for attacks — is not automatically blocked. This control differs from CTL.WAF.RULES.001 (any managed rules) and CTL.WAF.RULES.OWASP.001 (OWASP core coverage) by checking specifically for IP reputation intelligence.
+
+**Remediation:** Add the AWSManagedRulesAmazonIpReputationList managed rule group to the Web ACL. Consider also adding AWSManagedRulesAnonymousIpList for Tor and VPN traffic.
+
+---
+
+### CTL.WAF.METRICS.DISABLED.001
+
+**WAF Web ACL CloudWatch Metrics Not Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; soc2: CC7.1;
+
+The Web ACL VisibilityConfig does not enable CloudWatch metrics. Rule match counts and default action counts are not tracked. Attack detection alarms and rule effectiveness measurement are not possible without metrics. This control fires independently of logging — metrics track aggregate counts while logging captures per-request details.
+
+**Remediation:** Enable CloudWatchMetricsEnabled and SampledRequestsEnabled in the Web ACL VisibilityConfig. Set a meaningful MetricName.
 
 ---
 
@@ -76,6 +136,36 @@ When a WAF Web ACL is associated with an origin server (ALB, API Gateway, EC2 in
 WAF Web ACLs must contain a highest-priority rule that detects when the WAF's internal parser limits have been exceeded and blocks the request. Every WAF has parser limits — maximum header count, maximum header size, maximum body size, maximum cookie count. When a request exceeds these limits, rule evaluation silently stops at the truncation point. Rules configured to inspect content beyond the limit never fire. The request passes through as if clean. A Cloudflare HackerOne report (High severity, $1,250 bounty, 2025-11-18) documented this: 94+ HTTP headers caused all WAF rules, cache key evaluation, and cache rules to bypass simultaneously. Cloudflare's mitigation: a rule checking http.request.headers.truncated at highest priority in BLOCK mode. This vulnerability class applies to every WAF vendor — the invariant is vendor-neutral. The parser limit protection rule must execute before all other rules. A rule at lower priority allows other rules to evaluate truncated content before the overflow is detected, creating a race condition attackers can exploit. This control is the prerequisite for all other WAF rule controls — if the parser can be overflowed, managed rules, OWASP coverage, and custom rules are irrelevant for any request designed to exceed the limit. This control is the **parser overflow protection** check in the seven-control WAF safety envelope: presence (CTL.WAF.RULES.001), enforcement (CTL.WAF.RULES.BLOCKMODE.001), coverage (CTL.WAF.RULES.OWASP.001), visibility (CTL.WAF.LOGGING.001), architectural prerequisite (CTL.WAF.ORIGIN.LOCKDOWN.001), parser overflow protection (CTL.WAF.PARSERLIMIT.PROTECT.001), and evasion observability (CTL.WAF.EVASION.OBSERVE.001). All seven may fire on the same Web ACL simultaneously; each addresses a distinct failure mode.
 
 **Remediation:** Add a rule at the highest priority position (priority 0 or the lowest numeric value) that detects parser overflow and blocks the request. For Cloudflare, check http.request.headers.truncated == true. For AWS WAF, use a size constraint rule checking header count or total header size against the documented parser limit. The rule must be in BLOCK mode — COUNT mode detects but does not prevent the bypass. Verify the rule has higher priority than all managed rule groups and custom rules in the Web ACL.
+
+---
+
+### CTL.WAF.RATELIMIT.MISSING.001
+
+**WAF Web ACL Has No Rate-Based Rule**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-5; nist_800_53_r5: SC-5; pci_dss_v4.0: 6.4.1; soc2: CC6.6;
+
+The Web ACL has rules but none are rate-based. HTTP flood attacks pass through because no rule limits request volume per source IP. Rate-based rules are the primary WAF defense against volumetric application-layer DDoS. Without them, an attacker can exhaust backend capacity with high request rates that each individually pass rule evaluation.
+
+**Remediation:** Add a rate-based rule with an appropriate threshold (e.g. 2000 requests per 5-minute window per IP). Use aws wafv2 update-web-acl with a RateBasedStatement.
+
+---
+
+### CTL.WAF.RULEGROUP.NOMETRICS.001
+
+**WAF Rule Group Has No CloudWatch Metrics**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+A custom rule group does not enable CloudWatch metrics. Individual rule match counts within the group are not tracked. Rule effectiveness cannot be measured and attack patterns targeting specific rules cannot be detected via alarms.
+
+**Remediation:** Enable CloudWatchMetricsEnabled in the rule group VisibilityConfig. Use aws wafv2 update-rule-group.
 
 ---
 
@@ -121,6 +211,36 @@ All WAF rules and rule groups must have their effective action set to BLOCK. A r
 WAF web ACLs must include the three core AWS managed rule groups that cover OWASP Top 10 attack categories: AWSManagedRulesCommonRuleSet (XSS, path traversal, HTTP violations), AWSManagedRulesSQLiRuleSet (SQL injection), and AWSManagedRulesKnownBadInputsRuleSet (Log4Shell, deserialization, known CVE payloads). All three groups must be attached and enforcing in BLOCK mode. A WAF with custom rules only, or with managed rule groups that cover IP reputation or bot management but not OWASP attack categories, provides incomplete coverage. This control differs from CTL.WAF.RULES.001 (which checks for any managed rules) by requiring the specific groups needed for baseline OWASP coverage. HackerOne report #382625 documents a stored XSS bypass against a production WAF that was active and blocking with custom rules but lacked AWSManagedRulesCommonRuleSet — the payload used a marquee element with an inline event handler, a known vector covered by the CrossSiteScripting_BODY rule in the common rule set. This control is the **coverage** check in the seven-control WAF safety envelope: presence (CTL.WAF.RULES.001), enforcement (CTL.WAF.RULES.BLOCKMODE.001), coverage (CTL.WAF.RULES.OWASP.001), visibility (CTL.WAF.LOGGING.001), architectural prerequisite (CTL.WAF.ORIGIN.LOCKDOWN.001), parser overflow protection (CTL.WAF.PARSERLIMIT.PROTECT.001), and evasion observability (CTL.WAF.EVASION.OBSERVE.001). All seven may fire on the same Web ACL simultaneously; each addresses a distinct failure mode.
 
 **Remediation:** Add the following AWS managed rule groups to the web ACL and ensure each is in BLOCK mode with no COUNT override at the group level or rule action override level: (1) AWSManagedRulesCommonRuleSet — covers XSS, path traversal, common exploits, (2) AWSManagedRulesSQLiRuleSet — covers SQL injection attack patterns, (3) AWSManagedRulesKnownBad InputsRuleSet — covers known CVE exploits including Log4j and Spring4Shell.
+
+---
+
+### CTL.WAF.WEBACL.DEFAULTALLOW.001
+
+**WAF Web ACL Default Action is ALLOW**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-3; nist_800_53_r5: SI-3; pci_dss_v4.0: 6.4.1; soc2: CC6.6;
+
+The Web ACL default action allows requests that do not match any rule. Requests not explicitly blocked or rate-limited pass through. Default should be BLOCK with explicit ALLOW rules for known-good patterns. A default-allow ACL with managed rules only blocks known bad patterns — novel attacks, zero-days, and uncovered attack categories pass through silently.
+
+**Remediation:** Change the Web ACL default action to Block. Add explicit Allow rules for known-good request patterns. Use aws wafv2 update-web-acl to change the DefaultAction to Block.
+
+---
+
+### CTL.WAF.WEBACL.NORULES.001
+
+**WAF Web ACL Has No Rules**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-3; nist_800_53_r5: SI-3; pci_dss_v4.0: 6.4.1; soc2: CC6.6;
+
+A Web ACL exists but has zero rules — no managed rule groups, no custom rules, no rate-based rules. Every request matches the default action. The WAF provides no filtering regardless of the default action setting. An auditor checking "is WAF configured?" sees the ACL and marks it compliant while the WAF evaluates nothing.
+
+**Remediation:** Add at minimum the AWS managed core rule set (AWSManagedRulesCommonRuleSet), the SQL injection rule set (AWSManagedRulesSQLiRuleSet), and a rate-based rule for IP-level throttling.
 
 ---
 

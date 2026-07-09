@@ -1,0 +1,25 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:shield::123456789012:subscription",
+      "properties": {
+        "account": {
+          "kind": "shield_subscription",
+          "shield_advanced": {
+            "emergency_contacts_configured": false
+          }
+        }
+      },
+      "type": "aws_shield_subscription",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

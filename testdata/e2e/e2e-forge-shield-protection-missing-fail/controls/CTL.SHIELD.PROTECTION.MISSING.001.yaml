@@ -1,0 +1,56 @@
+dsl_version: ctrl.v1
+id: CTL.SHIELD.PROTECTION.MISSING.001
+name: Public Resource Not Associated with Shield Advanced Protection
+description: >
+  A public-facing resource exists but has no Shield Advanced protection
+  association. The resource relies on Shield Standard only, which provides
+  basic Layer 3/4 DDoS mitigation but no enhanced detection, no DRT
+  support, no cost protection, and no Layer 7 mitigation for the resource.
+  Shield Advanced protections must be explicitly associated per resource —
+  subscribing to Shield Advanced alone does not protect any resource.
+  Applicable to CloudFront distributions, ALBs, NLBs, Elastic IPs,
+  Global Accelerators, and Route 53 hosted zones.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  soc2: "A1.1"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - shield
+taxonomy:
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  base_impact: 7
+  blast_radius:
+    type: detection
+    scope: resource
+    multiplier: 1.0
+remediation:
+  description: >
+    Public-facing resource has no Shield Advanced protection association.
+    Only Shield Standard basic protection applies.
+  action: >
+    Associate the resource with Shield Advanced protection via
+    aws shield create-protection --name <name> --resource-arn <arn>.
+    Configure a Route 53 health check for the resource to enable
+    proactive engagement.
+  example: |
+    {
+      "network": {
+        "shield": {
+          "protected": true,
+          "protection_id": "abc123"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.shield.protected
+      op: eq
+      value: false

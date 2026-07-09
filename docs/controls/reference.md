@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2923
-**Pack hash:** `6754d8321f5a2b10f90ea2d071ab02594c871e9ff833fdec3019eafd91b5ebb2`
+**Total controls:** 2936
+**Pack hash:** `e50efdf03a856b38880bf338e749a3d4123210d254525e01cdb0be3ef356cfeb`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 299 |
-| high | 1269 |
+| high | 1271 |
 | info | 16 |
-| low | 222 |
-| medium | 1117 |
+| low | 228 |
+| medium | 1122 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,8 +27,8 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1282 |
-| governance | 620 |
+| exposure | 1293 |
+| governance | 622 |
 | hygiene | 18 |
 | identity | 516 |
 | lifecycle | 31 |
@@ -123,7 +123,7 @@ GitHub. Pick a service below.
 | [SECURITYLAKE](reference/securitylake.md) | 2 |
 | [SERVICECATALOG](reference/servicecatalog.md) | 1 |
 | [SES](reference/ses.md) | 1 |
-| [SHIELD](reference/shield.md) | 1 |
+| [SHIELD](reference/shield.md) | 6 |
 | [SNS](reference/sns.md) | 39 |
 | [SQS](reference/sqs.md) | 37 |
 | [SSM](reference/ssm.md) | 13 |
@@ -131,5 +131,5 @@ GitHub. Pick a service below.
 | [TRANSFER](reference/transfer.md) | 1 |
 | [VPC](reference/vpc.md) | 89 |
 | [VSPHERE](reference/vsphere.md) | 35 |
-| [WAF](reference/waf.md) | 8 |
+| [WAF](reference/waf.md) | 16 |
 | [WORKSPACES](reference/workspaces.md) | 1 |

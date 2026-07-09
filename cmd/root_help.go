@@ -76,4 +76,4 @@ Examples:
   # Sanitize identifiers for safe sharing
   stave apply --controls ./controls --observations ./obs --sanitize
 
-Documentation: See docs/user-docs.md for detailed usage.`
+Documentation: https://www.systeminvariant.dev/docs`

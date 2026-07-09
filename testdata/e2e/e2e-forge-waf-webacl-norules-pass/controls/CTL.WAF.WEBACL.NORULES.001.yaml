@@ -1,0 +1,58 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.WEBACL.NORULES.001
+name: WAF Web ACL Has No Rules
+description: >
+  A Web ACL exists but has zero rules — no managed rule groups, no
+  custom rules, no rate-based rules. Every request matches the
+  default action. The WAF provides no filtering regardless of the
+  default action setting. An auditor checking "is WAF configured?"
+  sees the ACL and marks it compliant while the WAF evaluates
+  nothing.
+domain: governance
+severity: high
+archetype: false-protection
+compliance:
+  nist_800_53_r5: "SI-3"
+  fedramp_moderate: "SI-3"
+  pci_dss_v4.0: "6.4.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - waf
+taxonomy:
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    WAF Web ACL has zero rules. The WAF performs no filtering.
+  action: >
+    Add at minimum the AWS managed core rule set
+    (AWSManagedRulesCommonRuleSet), the SQL injection rule set
+    (AWSManagedRulesSQLiRuleSet), and a rate-based rule for
+    IP-level throttling.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "rules": {
+          "rule_count": 5,
+          "has_managed_rules": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.rules.rule_count
+      op: eq
+      value: 0

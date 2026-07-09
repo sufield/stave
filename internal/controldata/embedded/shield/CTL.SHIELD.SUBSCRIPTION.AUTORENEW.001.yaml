@@ -1,0 +1,57 @@
+dsl_version: ctrl.v1
+id: CTL.SHIELD.SUBSCRIPTION.AUTORENEW.001
+name: Shield Advanced Subscription Auto-Renew Disabled
+description: >
+  Shield Advanced subscription auto-renew is disabled. When the
+  subscription expires, all advanced protections are silently removed —
+  DRT access, cost protection, enhanced detection, and Layer 7
+  mitigation revert to Shield Standard only. The subscription lapses
+  without notice unless CloudWatch billing alarms catch the change.
+  Re-subscribing requires a new 12-month commitment and re-registration
+  of all protected resources.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5"
+  fedramp_moderate: "SC-5"
+  soc2: "A1.1"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - shield
+taxonomy:
+  - network-perimeter
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: resilience
+  base_impact: 6
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    Shield Advanced subscription will not auto-renew. All advanced DDoS
+    protections will be removed when the subscription expires.
+  action: >
+    Enable auto-renew via the Shield console or
+    aws shield update-subscription --auto-renew ENABLED.
+  example: |
+    {
+      "account": {
+        "kind": "shield_subscription",
+        "shield_advanced": {
+          "auto_renew": "ENABLED"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.account.kind
+      op: eq
+      value: shield_subscription
+    - field: properties.account.shield_advanced.auto_renew
+      op: ne
+      value: "ENABLED"

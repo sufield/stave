@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.LOGGING.OVERREDACTED.001
+name: WAF Logging Redacts All Request Fields
+description: >
+  The WAF logging configuration redacts all request fields. Logs
+  contain rule match results but no request details. Incident
+  investigation cannot determine what triggered a rule or what the
+  attacker was targeting. Redaction is appropriate for sensitive
+  fields (authorization headers, cookies) but redacting everything
+  eliminates forensic value.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "AU-3"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-12"]
+scope_tags:
+  - aws
+  - waf
+taxonomy:
+  - logging
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    WAF logging redacts all request fields. Logs have no forensic
+    value.
+  action: >
+    Reduce the redaction scope to only sensitive fields
+    (authorization headers, cookies). Use aws wafv2
+    put-logging-configuration to update RedactedFields.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "logging": {
+          "enabled": true,
+          "all_fields_redacted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.logging.all_fields_redacted
+      op: eq
+      value: true

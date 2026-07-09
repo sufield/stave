@@ -1,0 +1,26 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:wafv2:us-east-1:111122223333:regional/ipset/blocklist/abc",
+      "properties": {
+        "waf": {
+          "kind": "ip_set",
+          "ip_set": {
+            "address_count": 12,
+            "ip_address_version": "IPV4"
+          }
+        }
+      },
+      "type": "aws_waf_ip_set",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

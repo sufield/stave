@@ -1,0 +1,25 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/prod-alb/abc",
+      "properties": {
+        "network": {
+          "shield": {
+            "protected": true,
+            "protection_id": "shield-prot-abc123"
+          }
+        }
+      },
+      "type": "aws_load_balancer",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

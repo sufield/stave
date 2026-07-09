@@ -19,7 +19,7 @@ func TestEvaluateErrorWithHint_MissingObservations(t *testing.T) {
 	// "run 'stave docs search …'" hint pointed at a stave subcommand
 	// that never existed). When STAVE_DOCS_URL is unset, the More info
 	// line should be the public docs URL.
-	if !strings.Contains(err.Error(), "More info: https://github.com/sufield/stave/blob/main/docs/start-here.md") {
+	if !strings.Contains(err.Error(), "More info: https://www.systeminvariant.dev/docs") {
 		t.Fatalf("expected GitHub docs URL, got: %v", err)
 	}
 }

@@ -2,13 +2,13 @@
 # Run: make metrics
 
 catalog:
-  controls: 2924
+  controls: 2937
   services: 86
 
 chains:
   authored: 625
 
 frameworks:
-  count: 8
+  count: 9
 
 updated: 2026-07-09

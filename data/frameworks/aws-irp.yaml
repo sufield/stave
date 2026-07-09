@@ -1,0 +1,754 @@
+name: AWS Incident Response Playbooks
+version: '2026'
+source: docs.aws.amazon.com/whitepapers/latest/aws-security-incident-response-guide
+total_controls: 99
+checks:
+- id: IRP-001
+  scenario: IRP-CredCompromise
+  service: Detective
+  property: Amazon Detective enabled
+  description: Amazon Detective enabled — provides graph-based investigation of credential usage patterns, reducing time to
+    scope an incident
+  scope: configuration
+  severity: P3
+- id: IRP-002
+  scenario: IRP-CredCompromise
+  service: GuardDuty
+  property: Amazon GuardDuty enabled in all regions with findings exported to Security Hub
+  description: Amazon GuardDuty enabled in all regions with findings exported to Security Hub — provides continuous threat
+    detection for IAM anomalies, credential exfiltration, and reconnaissance patterns
+  scope: configuration
+  severity: P2
+- id: IRP-003
+  scenario: IRP-CredCompromise
+  service: CloudTrail
+  property: AWS CloudTrail enabled with multi-region trail, management events, and integrity validation
+  description: AWS CloudTrail enabled with multi-region trail, management events, and integrity validation — the primary audit
+    log for all API activity; without it, investigation is severely limited
+  scope: configuration
+  severity: P3
+- id: IRP-004
+  scenario: IRP-CredCompromise
+  service: Config
+  property: AWS Config enabled with IAM-related rules (e.g., `iam-user-mfa-enabled`, `access-keys-rotated`)
+  description: AWS Config enabled with IAM-related rules (e.g., `iam-user-mfa-enabled`, `access-keys-rotated`) — provides
+    continuous compliance assessment of IAM configuration
+  scope: configuration
+  severity: P3
+- id: IRP-005
+  scenario: IRP-CredCompromise
+  service: SecurityHub
+  property: AWS Security Hub enabled with AWS Foundational Security Best Practices standard
+  description: AWS Security Hub enabled with AWS Foundational Security Best Practices standard — aggregates and prioritizes
+    findings across services into a single pane
+  scope: configuration
+  severity: P3
+- id: IRP-006
+  scenario: IRP-CredCompromise
+  service: CloudTrail
+  property: CloudTrail Insights enabled
+  description: CloudTrail Insights enabled — detects unusual API call volume that may indicate automated credential abuse
+  scope: configuration
+  severity: P3
+- id: IRP-007
+  scenario: IRP-CredCompromise
+  service: CloudWatch
+  property: CloudWatch alarms configured for root account usage and console login failures
+  description: CloudWatch alarms configured for root account usage and console login failures — provides immediate alerting
+    on high-risk authentication events
+  scope: configuration
+  severity: P1
+- id: IRP-008
+  scenario: IRP-CredCompromise
+  service: IAM
+  property: IAM Access Analyzer enabled (both external access and unused access analyzers)
+  description: IAM Access Analyzer enabled (both external access and unused access analyzers) — identifies overly permissive
+    or unused access that increases the scope of impact if a credential is compromised
+  scope: configuration
+  severity: P3
+- id: IRP-009
+  scenario: IRP-CredCompromise
+  service: CloudTrail
+  property: S3 bucket for CloudTrail logs has Object Lock or versioning enabled
+  description: S3 bucket for CloudTrail logs has Object Lock or versioning enabled — protects audit trail from tampering by
+    a threat actor who gains administrative access
+  scope: configuration
+  severity: P2
+- id: IRP-010
+  scenario: IRP-CredCompromise
+  service: Lambda
+  property: AddPermission
+  description: AddPermission
+  scope: configuration
+  severity: P2
+- id: IRP-011
+  scenario: IRP-CredCompromise
+  service: IAM
+  property: AttachRolePolicy
+  description: AttachRolePolicy
+  scope: configuration
+  severity: P2
+- id: IRP-012
+  scenario: IRP-CredCompromise
+  service: IAM
+  property: AttachUserPolicy
+  description: AttachUserPolicy
+  scope: configuration
+  severity: P2
+- id: IRP-013
+  scenario: IRP-CredCompromise
+  service: IAM
+  property: CreateAccessKey
+  description: CreateAccessKey
+  scope: configuration
+  severity: P2
+- id: IRP-014
+  scenario: IRP-CredCompromise
+  service: Lambda
+  property: CreateEventSourceMapping
+  description: CreateEventSourceMapping
+  scope: configuration
+  severity: P2
+- id: IRP-015
+  scenario: IRP-CredCompromise
+  service: Lambda
+  property: CreateFunction
+  description: CreateFunction
+  scope: configuration
+  severity: P2
+- id: IRP-016
+  scenario: IRP-CredCompromise
+  service: CloudWatch
+  property: CreateLoginProfile
+  description: CreateLoginProfile
+  scope: configuration
+  severity: P2
+- id: IRP-017
+  scenario: IRP-CredCompromise
+  service: IAM
+  property: CreateRole
+  description: CreateRole
+  scope: configuration
+  severity: P2
+- id: IRP-018
+  scenario: IRP-CredCompromise
+  service: CloudTrail
+  property: CreateTrail
+  description: CreateTrail
+  scope: configuration
+  severity: P2
+- id: IRP-019
+  scenario: IRP-CredCompromise
+  service: IAM
+  property: CreateUser
+  description: CreateUser
+  scope: configuration
+  severity: P2
+- id: IRP-020
+  scenario: IRP-CredCompromise
+  service: CloudTrail
+  property: DeleteTrail
+  description: DeleteTrail
+  scope: configuration
+  severity: P2
+- id: IRP-021
+  scenario: IRP-CredCompromise
+  service: S3
+  property: PutBucketPolicy
+  description: PutBucketPolicy
+  scope: configuration
+  severity: P2
+- id: IRP-022
+  scenario: IRP-CredCompromise
+  service: IAM
+  property: PutRolePolicy
+  description: PutRolePolicy
+  scope: configuration
+  severity: P2
+- id: IRP-023
+  scenario: IRP-CredCompromise
+  service: IAM
+  property: PutUserPolicy
+  description: PutUserPolicy
+  scope: configuration
+  severity: P2
+- id: IRP-024
+  scenario: IRP-CredCompromise
+  service: CloudWatch
+  property: StopLogging
+  description: StopLogging
+  scope: configuration
+  severity: P2
+- id: IRP-025
+  scenario: IRP-CredCompromise
+  service: IAM
+  property: UpdateAssumeRolePolicy
+  description: UpdateAssumeRolePolicy
+  scope: configuration
+  severity: P2
+- id: IRP-026
+  scenario: IRP-CredCompromise
+  service: Lambda
+  property: UpdateFunctionCode
+  description: UpdateFunctionCode
+  scope: configuration
+  severity: P2
+- id: IRP-027
+  scenario: IRP-DataAccess
+  service: GuardDuty
+  property: Amazon GuardDuty enabled with S3 protection activated
+  description: Amazon GuardDuty enabled with S3 protection activated — provides continuous threat detection for S3 exfiltration
+    patterns, anomalous access, and malicious IP callers
+  scope: configuration
+  severity: P2
+- id: IRP-028
+  scenario: IRP-DataAccess
+  service: Macie
+  property: Amazon Macie enabled with automated sensitive data discovery on critical buckets
+  description: Amazon Macie enabled with automated sensitive data discovery on critical buckets — identifies where sensitive
+    data lives and alerts on policy violations or unexpected access patterns
+  scope: configuration
+  severity: P3
+- id: IRP-029
+  scenario: IRP-DataAccess
+  service: CloudTrail
+  property: AWS CloudTrail enabled with DynamoDB data events for sensitive tables (if applicable)
+  description: AWS CloudTrail enabled with DynamoDB data events for sensitive tables (if applicable) — captures individual
+    item-level reads and writes
+  scope: configuration
+  severity: P3
+- id: IRP-030
+  scenario: IRP-DataAccess
+  service: CloudTrail
+  property: AWS CloudTrail enabled with S3 data events for sensitive buckets (GetObject, PutObject, DeleteObject)
+  description: AWS CloudTrail enabled with S3 data events for sensitive buckets (GetObject, PutObject, DeleteObject) — without
+    data events, individual object-level access is invisible to investigation
+  scope: configuration
+  severity: P3
+- id: IRP-031
+  scenario: IRP-DataAccess
+  service: Config
+  property: AWS Config enabled with S3-related rules (`s3-bucket-public-read-prohibited`, `s3-bucket-ssl-requests-only`, `s3-bucket-
+  description: AWS Config enabled with S3-related rules (`s3-bucket-public-read-prohibited`, `s3-bucket-ssl-requests-only`,
+    `s3-bucket-logging-enabled`) — provides continuous compliance assessment and drift detectio
+  scope: configuration
+  severity: P2
+- id: IRP-032
+  scenario: IRP-DataAccess
+  service: SecurityLake
+  property: AWS Security Lake enabled
+  description: AWS Security Lake enabled — centralizes security data across services for cross-service correlation and analysis
+  scope: configuration
+  severity: P3
+- id: IRP-033
+  scenario: IRP-DataAccess
+  service: S3
+  property: S3 Block Public Access enabled at the account level
+  description: S3 Block Public Access enabled at the account level — prevents accidental public exposure of any bucket in
+    the account
+  scope: configuration
+  severity: P2
+- id: IRP-034
+  scenario: IRP-DataAccess
+  service: S3
+  property: S3 server access logging enabled on all sensitive buckets
+  description: S3 server access logging enabled on all sensitive buckets — captures access details (including presigned URL
+    usage) that CloudTrail data events may not cover
+  scope: configuration
+  severity: P3
+- id: IRP-035
+  scenario: IRP-DataAccess
+  service: VPC
+  property: VPC Flow Logs enabled
+  description: VPC Flow Logs enabled — detects large outbound data transfers that may indicate exfiltration
+  scope: configuration
+  severity: P2
+- id: IRP-036
+  scenario: IRP-DataAccess
+  service: S3
+  property: s3-bucket-public-read-prohibited, s3-bucket-public-write-prohibited
+  description: '| AWS Config | `s3-bucket-public-read-prohibited`, `s3-bucket-public-write-prohibited` | HIGH |'
+  scope: configuration
+  severity: P2
+- id: IRP-037
+  scenario: IRP-DataAccess
+  service: S3
+  property: DeleteBucketPolicy
+  description: DeleteBucketPolicy
+  scope: configuration
+  severity: P2
+- id: IRP-038
+  scenario: IRP-DataAccess
+  service: S3
+  property: DeleteBucketPublicAccessBlock
+  description: DeleteBucketPublicAccessBlock
+  scope: configuration
+  severity: P2
+- id: IRP-039
+  scenario: IRP-DataAccess
+  service: S3
+  property: PutBucketAcl
+  description: PutBucketAcl
+  scope: configuration
+  severity: P2
+- id: IRP-040
+  scenario: IRP-DataAccess
+  service: S3
+  property: PutBucketPublicAccessBlock
+  description: PutBucketPublicAccessBlock
+  scope: configuration
+  severity: P2
+- id: IRP-041
+  scenario: IRP-DataAccess
+  service: S3
+  property: PutObjectAcl
+  description: PutObjectAcl
+  scope: configuration
+  severity: P2
+- id: IRP-042
+  scenario: IRP-DoS
+  service: AutoScaling
+  property: Auto Scaling groups configured with appropriate minimum, maximum, and scaling policies
+  description: Auto Scaling groups configured with appropriate minimum, maximum, and scaling policies — absorbs traffic spikes
+    while capping cost exposure
+  scope: configuration
+  severity: P3
+- id: IRP-043
+  scenario: IRP-DoS
+  service: Shield
+  property: AWS Shield Advanced automatic application-layer DDoS mitigation enabled
+  description: AWS Shield Advanced automatic application-layer DDoS mitigation enabled — allows Shield to create WAF rules
+    automatically based on observed attack patterns
+  scope: configuration
+  severity: P3
+- id: IRP-044
+  scenario: IRP-DoS
+  service: Shield
+  property: AWS Shield Advanced enabled on critical resources (CloudFront, ALB, NLB, Elastic IP, Global Accelerator, Route
+    53 hosted
+  description: 'AWS Shield Advanced enabled on critical resources (CloudFront, ALB, NLB, Elastic IP, Global Accelerator, Route
+    53 hosted zones) — adds enhanced detection, real-time attack visibility, SRT access, and '
+  scope: configuration
+  severity: P2
+- id: IRP-045
+  scenario: IRP-DoS
+  service: Shield
+  property: AWS Shield Standard enabled (automatic for all AWS accounts)
+  description: AWS Shield Standard enabled (automatic for all AWS accounts) — provides always-on network-layer protection
+    for resources behind CloudFront, Route 53, and Global Accelerator
+  scope: configuration
+  severity: P2
+- id: IRP-046
+  scenario: IRP-DoS
+  service: WAF
+  property: AWS WAF deployed on CloudFront distributions, ALBs, and API Gateway stages
+  description: AWS WAF deployed on CloudFront distributions, ALBs, and API Gateway stages — required for application-layer
+    (Layer 7) protection
+  scope: configuration
+  severity: P3
+- id: IRP-047
+  scenario: IRP-DoS
+  service: CloudFront
+  property: CloudFront access logging enabled and delivered to S3
+  description: CloudFront access logging enabled and delivered to S3 — required for post-incident analysis of request patterns
+  scope: configuration
+  severity: P3
+- id: IRP-048
+  scenario: IRP-DoS
+  service: CloudFront
+  property: CloudFront configured with origin access control (OAC) to protect origins from direct access
+  description: CloudFront configured with origin access control (OAC) to protect origins from direct access — prevents threat
+    actors from bypassing edge protections
+  scope: configuration
+  severity: P2
+- id: IRP-049
+  scenario: IRP-DoS
+  service: CloudFront
+  property: 'CloudWatch alarms configured for: ALB 5xx rate, target response time, request count, CloudFront error rate'
+  description: 'CloudWatch alarms configured for: ALB 5xx rate, target response time, request count, CloudFront error rate
+    — ensures rapid detection when attacks impact availability'
+  scope: configuration
+  severity: P3
+- id: IRP-050
+  scenario: IRP-DoS
+  service: Route53
+  property: Route 53 health checks configured for all critical endpoints
+  description: Route 53 health checks configured for all critical endpoints — enables Shield Advanced proactive engagement
+    and CloudFront failover
+  scope: configuration
+  severity: P3
+- id: IRP-051
+  scenario: IRP-DoS
+  service: Shield
+  property: Shield Advanced proactive engagement configured (requires Route 53 health checks)
+  description: Shield Advanced proactive engagement configured (requires Route 53 health checks) — SRT contacts you automatically
+    when health checks fail during detected events
+  scope: configuration
+  severity: P3
+- id: IRP-052
+  scenario: IRP-DoS
+  service: S3
+  property: VPC Flow Logs enabled for all production VPCs (sent to S3 for Athena analysis)
+  description: VPC Flow Logs enabled for all production VPCs (sent to S3 for Athena analysis) — provides network-layer visibility
+    for volumetric attack analysis
+  scope: configuration
+  severity: P3
+- id: IRP-053
+  scenario: IRP-DoS
+  service: WAF
+  property: WAF Bot Control managed rule group enabled (targeted or common level)
+  description: WAF Bot Control managed rule group enabled (targeted or common level) — detects and blocks automated traffic
+    from known bot frameworks
+  scope: configuration
+  severity: P3
+- id: IRP-054
+  scenario: IRP-DoS
+  service: WAF
+  property: WAF logging enabled and delivered to S3 or CloudWatch Logs
+  description: WAF logging enabled and delivered to S3 or CloudWatch Logs — required to assess rule effectiveness during and
+    after attacks
+  scope: configuration
+  severity: P3
+- id: IRP-055
+  scenario: IRP-DoS
+  service: WAF
+  property: WAF managed rule groups enabled (Amazon IP Reputation List, Anonymous IP List)
+  description: WAF managed rule groups enabled (Amazon IP Reputation List, Anonymous IP List) — blocks traffic from known-bad
+    sources without manual rule management
+  scope: configuration
+  severity: P2
+- id: IRP-056
+  scenario: IRP-DoS
+  service: WAF
+  property: WAF rate-based rules configured with appropriate thresholds per endpoint
+  description: WAF rate-based rules configured with appropriate thresholds per endpoint — the first line of defense against
+    HTTP floods
+  scope: configuration
+  severity: P3
+- id: IRP-057
+  scenario: IRP-PersonalDataBreach
+  service: Detective
+  property: Amazon Detective enabled for graph-based investigation of access patterns
+  description: Amazon Detective enabled for graph-based investigation of access patterns — reduces time to determine breach
+    scope
+  scope: configuration
+  severity: P3
+- id: IRP-058
+  scenario: IRP-PersonalDataBreach
+  service: GuardDuty
+  property: Amazon GuardDuty enabled with S3 protection in all regions
+  description: Amazon GuardDuty enabled with S3 protection in all regions — detects exfiltration patterns and unauthorized
+    access to data stores
+  scope: configuration
+  severity: P2
+- id: IRP-059
+  scenario: IRP-PersonalDataBreach
+  service: Macie
+  property: Amazon Macie enabled with automated sensitive data discovery running across all S3 buckets
+  description: Amazon Macie enabled with automated sensitive data discovery running across all S3 buckets — provides continuous
+    identification of where personal data resides and what categories it contains
+  scope: configuration
+  severity: P3
+- id: IRP-060
+  scenario: IRP-PersonalDataBreach
+  service: CloudTrail
+  property: AWS CloudTrail enabled with S3 data events on all buckets containing personal data
+  description: AWS CloudTrail enabled with S3 data events on all buckets containing personal data — the primary evidence source
+    for determining what personal data was accessed and by whom
+  scope: configuration
+  severity: P3
+- id: IRP-061
+  scenario: IRP-PersonalDataBreach
+  service: Config
+  property: AWS Config enabled with S3-related rules (`s3-bucket-public-read-prohibited`, `s3-bucket-server-side-encryption-enabled`
+  description: AWS Config enabled with S3-related rules (`s3-bucket-public-read-prohibited`, `s3-bucket-server-side-encryption-enabled`,
+    `s3-bucket-logging-enabled`) — detects misconfigurations that could expose per
+  scope: configuration
+  severity: P2
+- id: IRP-062
+  scenario: IRP-PersonalDataBreach
+  service: CloudTrail
+  property: CloudTrail management events enabled with multi-region trail and integrity validation
+  description: CloudTrail management events enabled with multi-region trail and integrity validation — captures configuration
+    changes to data stores
+  scope: configuration
+  severity: P2
+- id: IRP-063
+  scenario: IRP-PersonalDataBreach
+  service: Organizations
+  property: 'Data classification tags applied to all data stores (e.g., `DataClassification: PII`, `DataClassification: PHI`,
+    `DataCl'
+  description: 'Data classification tags applied to all data stores (e.g., `DataClassification: PII`, `DataClassification:
+    PHI`, `DataClassification: PCI`) — enables rapid identification of affected data categories d'
+  scope: configuration
+  severity: P2
+- id: IRP-064
+  scenario: IRP-PersonalDataBreach
+  service: Macie
+  property: Macie custom data identifiers configured for organization-specific PII patterns (employee IDs, customer numbers,
+    etc.)
+  description: Macie custom data identifiers configured for organization-specific PII patterns (employee IDs, customer numbers,
+    etc.) — extends Macie's detection to organization-specific personal data formats
+  scope: configuration
+  severity: P3
+- id: IRP-065
+  scenario: IRP-PersonalDataBreach
+  service: S3
+  property: S3 access logging enabled on all buckets classified as containing personal data
+  description: S3 access logging enabled on all buckets classified as containing personal data — provides granular access
+    records for scope determination
+  scope: configuration
+  severity: P3
+- id: IRP-066
+  scenario: IRP-PersonalDataBreach
+  service: S3
+  property: S3 Object Lock or versioning enabled on buckets containing personal data (prevents silent deletion)
+  description: S3 Object Lock or versioning enabled on buckets containing personal data (prevents silent deletion) — protects
+    evidence from tampering
+  scope: configuration
+  severity: P3
+- id: IRP-067
+  scenario: IRP-PersonalDataBreach
+  service: GuardDuty
+  property: Security Hub enabled with findings aggregation from Macie and GuardDuty
+  description: Security Hub enabled with findings aggregation from Macie and GuardDuty — provides unified view of personal
+    data exposure risks
+  scope: configuration
+  severity: P3
+- id: IRP-068
+  scenario: IRP-PersonalDataBreach
+  service: S3
+  property: PutBucketReplication
+  description: PutBucketReplication
+  scope: configuration
+  severity: P2
+- id: IRP-069
+  scenario: IRP-Ransomware
+  service: Detective
+  property: Amazon Detective enabled for graph-based investigation of API activity chains
+  description: Amazon Detective enabled for graph-based investigation of API activity chains — reduces time to scope the extent
+    of destructive operations
+  scope: configuration
+  severity: P3
+- id: IRP-070
+  scenario: IRP-Ransomware
+  service: GuardDuty
+  property: Amazon GuardDuty enabled in all regions with Malware Protection for EC2 and S3 enabled
+  description: Amazon GuardDuty enabled in all regions with Malware Protection for EC2 and S3 enabled — provides continuous
+    threat detection for malware execution, anomalous deletion patterns, and KMS abuse
+  scope: configuration
+  severity: P3
+- id: IRP-071
+  scenario: IRP-Ransomware
+  service: Backup
+  property: AWS Backup configured with Backup Vault Lock (compliance mode) on critical backup vaults
+  description: AWS Backup configured with Backup Vault Lock (compliance mode) on critical backup vaults — the single most
+    important ransomware defense; compliance-mode locks cannot be removed, even by account admini
+  scope: configuration
+  severity: P1
+- id: IRP-072
+  scenario: IRP-Ransomware
+  service: CloudTrail
+  property: AWS CloudTrail enabled with multi-region trail, management + data events for S3 and KMS
+  description: AWS CloudTrail enabled with multi-region trail, management + data events for S3 and KMS — the primary audit
+    log for all API activity; without S3 and KMS data events, ransomware investigation is severe
+  scope: configuration
+  severity: P1
+- id: IRP-073
+  scenario: IRP-Ransomware
+  service: Config
+  property: AWS Config enabled with rules for backup compliance (`backup-plan-min-frequency-and-min-retention-check`, `backup-recove
+  description: AWS Config enabled with rules for backup compliance (`backup-plan-min-frequency-and-min-retention-check`, `backup-recovery-point-encrypted`)
+    — continuous validation that backup posture meets requireme
+  scope: configuration
+  severity: P3
+- id: IRP-074
+  scenario: IRP-Ransomware
+  service: DRS
+  property: AWS Elastic Disaster Recovery configured for critical workloads (RPO/RTO validated)
+  description: AWS Elastic Disaster Recovery configured for critical workloads (RPO/RTO validated) — provides fastest recovery
+    path for full-instance restoration
+  scope: configuration
+  severity: P2
+- id: IRP-075
+  scenario: IRP-Ransomware
+  service: EC2
+  property: EBS Snapshots Lock enabled on critical snapshots (lock in compliance mode for immutability)
+  description: EBS Snapshots Lock enabled on critical snapshots (lock in compliance mode for immutability) — prevents snapshot
+    deletion during an attack
+  scope: configuration
+  severity: P3
+- id: IRP-076
+  scenario: IRP-Ransomware
+  service: KMS
+  property: KMS key policies restrict `CreateKey`, `CreateGrant`, and `ScheduleKeyDeletion` to authorized principals only
+  description: KMS key policies restrict `CreateKey`, `CreateGrant`, and `ScheduleKeyDeletion` to authorized principals only
+    — limits threat actor ability to create encryption keys
+  scope: configuration
+  severity: P1
+- id: IRP-077
+  scenario: IRP-Ransomware
+  service: S3
+  property: S3 Object Lock enabled on buckets containing critical data (Governance or Compliance mode)
+  description: S3 Object Lock enabled on buckets containing critical data (Governance or Compliance mode) — prevents deletion
+    or overwriting of object versions
+  scope: configuration
+  severity: P3
+- id: IRP-078
+  scenario: IRP-Ransomware
+  service: S3
+  property: S3 Versioning enabled on all production buckets (cannot be disabled once Object Lock is set)
+  description: S3 Versioning enabled on all production buckets (cannot be disabled once Object Lock is set) — allows recovery
+    of deleted or overwritten objects
+  scope: configuration
+  severity: P3
+- id: IRP-079
+  scenario: IRP-Ransomware
+  service: KMS
+  property: SCPs in place to prevent disabling of versioning, deletion of backup vaults, or KMS key deletion in production
+    OUs
+  description: SCPs in place to prevent disabling of versioning, deletion of backup vaults, or KMS key deletion in production
+    OUs — organizational guardrails that even compromised admin credentials cannot override
+  scope: configuration
+  severity: P1
+- id: IRP-080
+  scenario: IRP-Ransomware
+  service: SecurityHub
+  property: Security Hub enabled with AWS Foundational Security Best Practices standard
+  description: Security Hub enabled with AWS Foundational Security Best Practices standard — aggregates backup, S3, and KMS
+    findings into a single view
+  scope: configuration
+  severity: P3
+- id: IRP-081
+  scenario: IRP-Ransomware
+  service: VPC
+  property: VPC Flow Logs enabled for all production VPCs
+  description: VPC Flow Logs enabled for all production VPCs — supports investigation of lateral movement and C2 communication
+  scope: configuration
+  severity: P2
+- id: IRP-082
+  scenario: IRP-Ransomware
+  service: Backup
+  property: DeleteBackupVault
+  description: DeleteBackupVault
+  scope: configuration
+  severity: P1
+- id: IRP-083
+  scenario: IRP-Ransomware
+  service: RDS
+  property: DeleteDBClusterSnapshot
+  description: DeleteDBClusterSnapshot
+  scope: configuration
+  severity: P2
+- id: IRP-084
+  scenario: IRP-Ransomware
+  service: RDS
+  property: DeleteDBSnapshot
+  description: DeleteDBSnapshot
+  scope: configuration
+  severity: P2
+- id: IRP-085
+  scenario: IRP-Ransomware
+  service: S3
+  property: DeleteObject
+  description: DeleteObject
+  scope: configuration
+  severity: P2
+- id: IRP-086
+  scenario: IRP-Ransomware
+  service: S3
+  property: DeleteObjects
+  description: DeleteObjects
+  scope: configuration
+  severity: P2
+- id: IRP-087
+  scenario: IRP-Ransomware
+  service: Backup
+  property: DeleteRecoveryPoint
+  description: DeleteRecoveryPoint
+  scope: configuration
+  severity: P1
+- id: IRP-088
+  scenario: IRP-Ransomware
+  service: EC2
+  property: DeleteSnapshot
+  description: DeleteSnapshot
+  scope: configuration
+  severity: P2
+- id: IRP-089
+  scenario: IRP-Ransomware
+  service: KMS
+  property: CreateGrant
+  description: CreateGrant
+  scope: configuration
+  severity: P2
+- id: IRP-090
+  scenario: IRP-Ransomware
+  service: KMS
+  property: CreateKey
+  description: CreateKey
+  scope: configuration
+  severity: P2
+- id: IRP-091
+  scenario: IRP-Ransomware
+  service: KMS
+  property: DisableKey
+  description: DisableKey
+  scope: configuration
+  severity: P2
+- id: IRP-092
+  scenario: IRP-Ransomware
+  service: RDS
+  property: ModifyDBClusterSnapshotAttribute
+  description: ModifyDBClusterSnapshotAttribute
+  scope: configuration
+  severity: P2
+- id: IRP-093
+  scenario: IRP-Ransomware
+  service: RDS
+  property: ModifyDBSnapshotAttribute
+  description: ModifyDBSnapshotAttribute
+  scope: configuration
+  severity: P2
+- id: IRP-094
+  scenario: IRP-Ransomware
+  service: EC2
+  property: ModifySnapshotAttribute
+  description: ModifySnapshotAttribute
+  scope: configuration
+  severity: P2
+- id: IRP-095
+  scenario: IRP-Ransomware
+  service: S3
+  property: PutBucketLifecycleConfiguration
+  description: PutBucketLifecycleConfiguration
+  scope: configuration
+  severity: P2
+- id: IRP-096
+  scenario: IRP-Ransomware
+  service: S3
+  property: PutBucketVersioning
+  description: PutBucketVersioning
+  scope: configuration
+  severity: P2
+- id: IRP-097
+  scenario: IRP-Ransomware
+  service: KMS
+  property: PutKeyPolicy
+  description: PutKeyPolicy
+  scope: configuration
+  severity: P2
+- id: IRP-098
+  scenario: IRP-Ransomware
+  service: S3
+  property: PutObjectLockConfiguration
+  description: PutObjectLockConfiguration
+  scope: configuration
+  severity: P2
+- id: IRP-099
+  scenario: IRP-Ransomware
+  service: KMS
+  property: ScheduleKeyDeletion
+  description: ScheduleKeyDeletion
+  scope: configuration
+  severity: P1

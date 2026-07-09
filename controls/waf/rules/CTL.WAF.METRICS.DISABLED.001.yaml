@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.METRICS.DISABLED.001
+name: WAF Web ACL CloudWatch Metrics Not Enabled
+description: >
+  The Web ACL VisibilityConfig does not enable CloudWatch metrics.
+  Rule match counts and default action counts are not tracked.
+  Attack detection alarms and rule effectiveness measurement are
+  not possible without metrics. This control fires independently
+  of logging — metrics track aggregate counts while logging captures
+  per-request details.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  fedramp_moderate: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["IVS-09", "LOG-12"]
+scope_tags:
+  - aws
+  - waf
+taxonomy:
+  - monitoring
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    WAF Web ACL CloudWatch metrics are not enabled. Attack volume
+    and rule match rates are not tracked.
+  action: >
+    Enable CloudWatchMetricsEnabled and SampledRequestsEnabled in
+    the Web ACL VisibilityConfig. Set a meaningful MetricName.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "metrics": {
+          "cloudwatch_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.metrics.cloudwatch_enabled
+      op: eq
+      value: false
