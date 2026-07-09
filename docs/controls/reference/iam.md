@@ -2576,6 +2576,21 @@ IAM role's S3 actions (s3:*, s3:GetObject, s3:PutObject, etc.) use Resource: * â
 
 ---
 
+### CTL.IAM.SCP.ACTION.INVALID.001
+
+**SCP References Invalid IAM Actions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+SCP contains action names that do not exist in the IAM authorization reference. Invalid actions silently fail to match â€” the SCP appears to deny or allow behavior but the misspelled or non-existent action never evaluates. A typo in a deny statement (e.g. s3:Getobject instead of s3:GetObject) leaves the intended restriction unenforced. The IAM authorization reference is the canonical source of valid per-service actions.
+
+**Remediation:** Validate all action names in SCP statements against the IAM authorization reference (servicereference.us-east-1.amazonaws.com). Fix typos, update deprecated action names, and verify service prefixes. Run geniamdata to refresh the local registry, then re-evaluate.
+
+---
+
 ### CTL.IAM.SCP.ASSUMEROOT.001
 
 **SCP Does Not Deny sts:AssumeRoot**

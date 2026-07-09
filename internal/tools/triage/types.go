@@ -12,6 +12,17 @@ type TriageReport struct {
 	CoveredFields    []CoveredField    `json:"covered_fields,omitempty"`
 	UncoveredFields  []UncoveredField  `json:"uncovered_fields,omitempty"`
 	CoveragePct      float64           `json:"coverage_pct"`
+	IAMAuth          *IAMAuthInfo      `json:"iam_auth,omitempty"`
+}
+
+// IAMAuthInfo holds IAM authorization reference data for the service.
+type IAMAuthInfo struct {
+	ServicePrefix string   `json:"service_prefix"`
+	DisplayName   string   `json:"display_name"`
+	TotalActions  int      `json:"total_actions"`
+	ARNFormat     string   `json:"arn_format,omitempty"`
+	ConditionKeys []string `json:"condition_keys,omitempty"`
+	HasResource   bool     `json:"has_resource"`
 }
 
 // ExistingControl is a control that matches the target service.

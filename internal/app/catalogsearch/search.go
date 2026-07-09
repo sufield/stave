@@ -41,7 +41,7 @@ func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 		if query != "" && !matchesQuery(ctl, query) {
 			continue
 		}
-		if domainFilter != "" && !containsFold(string(ctl.ID), domainFilter) {
+		if domainFilter != "" && extractDomain(string(ctl.ID)) != domainFilter {
 			continue
 		}
 		if f.Severity != "" && !ctl.Severity.Matches(f.Severity) {

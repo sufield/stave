@@ -119,6 +119,7 @@ func resolveRuleValue(r policy.PredicateRule, params policy.ControlParams) (valu
 	literalValue := r.Value.Raw()
 	value = literalValue
 
+	var isResolved bool
 	if !r.ValueFromParam.IsZero() && !params.IsZero() {
 		paramName := r.ValueFromParam.String()
 		resolved, paramFound := params.Get(paramName)
@@ -127,10 +128,15 @@ func resolveRuleValue(r policy.PredicateRule, params policy.ControlParams) (valu
 				"param", paramName)
 		} else {
 			value = resolved
+			isResolved = true
 		}
 	}
 	if !r.ValueFromParam.IsZero() {
-		comment = "value resolved from params." + r.ValueFromParam.String()
+		if isResolved {
+			comment = "value resolved from params." + r.ValueFromParam.String()
+		} else {
+			comment = "fallback to literal; param " + r.ValueFromParam.String() + " not present in control"
+		}
 	}
 	return value, comment
 }

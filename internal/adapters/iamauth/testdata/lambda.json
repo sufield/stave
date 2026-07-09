@@ -1,0 +1,3426 @@
+{
+  "Name" : "lambda",
+  "Actions" : [ {
+    "Name" : "AddLayerVersionPermission",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "layerVersion"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "AddPermission",
+    "ActionConditionKeys" : [ "lambda:FunctionUrlAuthType", "lambda:Principal" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CheckpointDurableExecution",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "durable execution"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ConnectMicrovm",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "CreateAlias",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateCapacityProvider",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys", "lambda:SecurityGroupIds", "lambda:SubnetIds" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "capacityProvider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "CreateCodeSigningConfig",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateEventSourceMapping",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys", "lambda:FunctionArn" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateFunction",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys", "lambda:CodeSigningConfigArn", "lambda:Layer", "lambda:SecurityGroupIds", "lambda:SubnetIds", "lambda:VpcIds" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateFunctionUrlConfig",
+    "ActionConditionKeys" : [ "lambda:FunctionArn", "lambda:FunctionUrlAuthType" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateMicrovmAuthToken",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "CreateMicrovmImage",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "CreateMicrovmShellAuthToken",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "CreateNetworkConnector",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys", "lambda:SecurityGroupIds", "lambda:SubnetIds" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "networkConnector"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "DeleteAlias",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteCapacityProvider",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "capacityProvider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteCodeSigningConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "code signing config"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteEventSourceMapping",
+    "ActionConditionKeys" : [ "lambda:FunctionArn" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "eventSourceMapping"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteFunction",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteFunctionCodeSigningConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteFunctionConcurrency",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteFunctionEventInvokeConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteFunctionUrlConfig",
+    "ActionConditionKeys" : [ "lambda:FunctionArn", "lambda:FunctionUrlAuthType" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteLayerVersion",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "layerVersion"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteMicrovmImage",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "DeleteMicrovmImageVersion",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "DeleteNetworkConnector",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "networkConnector"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "DeleteProvisionedConcurrencyConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function alias"
+    }, {
+      "Name" : "function version"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DisableReplication",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "EnableReplication",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "GetAccountSettings",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetAlias",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetCapacityProvider",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "capacityProvider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetCodeSigningConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "code signing config"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetDurableExecution",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "durable execution"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "GetDurableExecutionHistory",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "durable execution"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "GetDurableExecutionState",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "durable execution"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "GetEventSourceMapping",
+    "ActionConditionKeys" : [ "lambda:FunctionArn" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "eventSourceMapping"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetFunction",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetFunctionCodeSigningConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetFunctionConcurrency",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetFunctionConfiguration",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetFunctionEventInvokeConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetFunctionRecursionConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetFunctionScalingConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetFunctionUrlConfig",
+    "ActionConditionKeys" : [ "lambda:FunctionArn", "lambda:FunctionUrlAuthType" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetLayerVersion",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "layerVersion"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetLayerVersionPolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "layerVersion"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetMicrovm",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "GetMicrovmImage",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "GetMicrovmImageBuild",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "GetMicrovmImageVersion",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "GetNetworkConnector",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "networkConnector"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "GetPolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetProvisionedConcurrencyConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function alias"
+    }, {
+      "Name" : "function version"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetRuntimeManagementConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "InvokeAsync",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "InvokeFunction",
+    "ActionConditionKeys" : [ "lambda:EventSourceToken", "lambda:InvokedViaFunctionUrl" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "InvokeFunctionUrl",
+    "ActionConditionKeys" : [ "lambda:EventSourceToken", "lambda:FunctionArn", "lambda:FunctionUrlAuthType" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListAliases",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListCapacityProviders",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListCodeSigningConfigs",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListDurableExecutionsByFunction",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListEventSourceMappings",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListFunctionEventInvokeConfigs",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListFunctionUrlConfigs",
+    "ActionConditionKeys" : [ "lambda:FunctionUrlAuthType" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListFunctionVersionsByCapacityProvider",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "capacityProvider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListFunctions",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListFunctionsByCodeSigningConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "code signing config"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListLayerVersions",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListLayers",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListManagedMicrovmImageVersions",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListManagedMicrovmImages",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListMicrovmImageBuilds",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListMicrovmImageVersions",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListMicrovmImages",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListMicrovms",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListNetworkConnectors",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListProvisionedConcurrencyConfigs",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListTags",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "capacityProvider"
+    }, {
+      "Name" : "code signing config"
+    }, {
+      "Name" : "eventSourceMapping"
+    }, {
+      "Name" : "function"
+    }, {
+      "Name" : "microvmImage"
+    }, {
+      "Name" : "networkConnector"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListVersionsByFunction",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "PassCapacityProvider",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "capacityProvider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "PassNetworkConnector",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "PublishLayerVersion",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "layer"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "PublishVersion",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "PutFunctionCodeSigningConfig",
+    "ActionConditionKeys" : [ "lambda:CodeSigningConfigArn" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "code signing config"
+    }, {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "PutFunctionConcurrency",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "PutFunctionEventInvokeConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "PutFunctionRecursionConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "PutFunctionScalingConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "PutProvisionedConcurrencyConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function alias"
+    }, {
+      "Name" : "function version"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "PutRuntimeManagementConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "RemoveLayerVersionPermission",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "layerVersion"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "RemovePermission",
+    "ActionConditionKeys" : [ "lambda:FunctionUrlAuthType", "lambda:Principal" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ResumeMicrovm",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "RunMicrovm",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "SendDurableExecutionCallbackFailure",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "durable execution"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "SendDurableExecutionCallbackHeartbeat",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "durable execution"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "SendDurableExecutionCallbackSuccess",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "durable execution"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "StopDurableExecution",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "durable execution"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "SuspendMicrovm",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "TagResource",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "capacityProvider"
+    }, {
+      "Name" : "code signing config"
+    }, {
+      "Name" : "eventSourceMapping"
+    }, {
+      "Name" : "function"
+    }, {
+      "Name" : "microvmImage"
+    }, {
+      "Name" : "networkConnector"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "TerminateMicrovm",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "UntagResource",
+    "ActionConditionKeys" : [ "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "capacityProvider"
+    }, {
+      "Name" : "code signing config"
+    }, {
+      "Name" : "eventSourceMapping"
+    }, {
+      "Name" : "function"
+    }, {
+      "Name" : "microvmImage"
+    }, {
+      "Name" : "networkConnector"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "UpdateAlias",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateCapacityProvider",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "capacityProvider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateCodeSigningConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "code signing config"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateEventSourceMapping",
+    "ActionConditionKeys" : [ "lambda:FunctionArn" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "eventSourceMapping"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateFunctionCode",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateFunctionCodeSigningConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "code signing config"
+    }, {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "UpdateFunctionConfiguration",
+    "ActionConditionKeys" : [ "lambda:Layer", "lambda:SecurityGroupIds", "lambda:SubnetIds", "lambda:VpcIds" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateFunctionEventInvokeConfig",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateFunctionUrlConfig",
+    "ActionConditionKeys" : [ "lambda:FunctionArn", "lambda:FunctionUrlAuthType" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "function"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateMicrovmImage",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "UpdateMicrovmImageVersion",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "microvmImage"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "UpdateNetworkConnector",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "networkConnector"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  } ],
+  "ConditionKeys" : [ {
+    "Name" : "aws:RequestTag/${TagKey}",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "aws:ResourceTag/${TagKey}",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "aws:TagKeys",
+    "Types" : [ "ArrayOfString" ]
+  }, {
+    "Name" : "lambda:CodeSigningConfigArn",
+    "Types" : [ "ARN" ]
+  }, {
+    "Name" : "lambda:EventSourceToken",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "lambda:FunctionArn",
+    "Types" : [ "ARN" ]
+  }, {
+    "Name" : "lambda:FunctionUrlAuthType",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "lambda:InvokedViaFunctionUrl",
+    "Types" : [ "Bool" ]
+  }, {
+    "Name" : "lambda:Layer",
+    "Types" : [ "ArrayOfString" ]
+  }, {
+    "Name" : "lambda:Principal",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "lambda:SecurityGroupIds",
+    "Types" : [ "ArrayOfString" ]
+  }, {
+    "Name" : "lambda:SourceFunctionArn",
+    "Types" : [ "ARN" ]
+  }, {
+    "Name" : "lambda:SubnetIds",
+    "Types" : [ "ArrayOfString" ]
+  }, {
+    "Name" : "lambda:VpcIds",
+    "Types" : [ "String" ]
+  } ],
+  "Operations" : [ {
+    "Name" : "AddEventSource",
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "add_event_source",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "AddLayerVersionPermission",
+    "AuthorizedActions" : [ {
+      "Name" : "AddLayerVersionPermission",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "add_layer_version_permission",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "AddPermission",
+    "AuthorizedActions" : [ {
+      "Name" : "AddPermission",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "add_permission",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CheckpointDurableExecution",
+    "AuthorizedActions" : [ {
+      "Name" : "CheckpointDurableExecution",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "checkpoint_durable_execution",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateAlias",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateAlias",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "create_alias",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateCapacityProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateCapacityProvider",
+      "Service" : "lambda"
+    }, {
+      "Name" : "PassRole",
+      "Context" : {
+        "iam:PassedToService" : [ "lambda.amazonaws.com" ]
+      },
+      "Service" : "iam"
+    }, {
+      "Name" : "TagResource",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "create_capacity_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateCodeSigningConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateCodeSigningConfig",
+      "Service" : "lambda"
+    }, {
+      "Name" : "TagResource",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "create_code_signing_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateEventSourceMapping",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateEventSourceMapping",
+      "Service" : "lambda"
+    }, {
+      "Name" : "TagResource",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "create_event_source_mapping",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateFunction",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateFunction",
+      "Service" : "lambda"
+    }, {
+      "Name" : "GetLayerVersion",
+      "Service" : "lambda"
+    }, {
+      "Name" : "PassCapacityProvider",
+      "Service" : "lambda"
+    }, {
+      "Name" : "PassRole",
+      "Context" : {
+        "iam:PassedToService" : [ "lambda.amazonaws.com" ]
+      },
+      "Service" : "iam"
+    }, {
+      "Name" : "TagResource",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "create_function",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateFunctionUrlConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateFunctionUrlConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "create_function_url_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateMicrovmAuthToken",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateMicrovmAuthToken",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "create_microvm_auth_token",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateMicrovmImage",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateMicrovmImage",
+      "Service" : "lambda"
+    }, {
+      "Name" : "PassNetworkConnector",
+      "Service" : "lambda"
+    }, {
+      "Name" : "PassRole",
+      "Service" : "iam"
+    }, {
+      "Name" : "TagResource",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "create_microvm_image",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateMicrovmShellAuthToken",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateMicrovmShellAuthToken",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "create_microvm_shell_auth_token",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateNetworkConnector",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateNetworkConnector",
+      "Service" : "lambda"
+    }, {
+      "Name" : "PassRole",
+      "Context" : {
+        "iam:PassedToService" : [ "lambda.amazonaws.com" ]
+      },
+      "Service" : "iam"
+    }, {
+      "Name" : "TagResource",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-core",
+      "Method" : "create_network_connector",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteAlias",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteAlias",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "delete_alias",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteCapacityProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteCapacityProvider",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "delete_capacity_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteCodeSigningConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteCodeSigningConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "delete_code_signing_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteEventSourceMapping",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteEventSourceMapping",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "delete_event_source_mapping",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteFunction",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteFunction",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "delete_function",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteFunctionCodeSigningConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteFunctionCodeSigningConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "delete_function_code_signing_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteFunctionConcurrency",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteFunctionConcurrency",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "delete_function_concurrency",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteFunctionEventInvokeConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteFunctionEventInvokeConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "delete_function_event_invoke_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteFunctionUrlConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteFunctionUrlConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "delete_function_url_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteLayerVersion",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteLayerVersion",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "delete_layer_version",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteMicrovmImage",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteMicrovmImage",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "delete_microvm_image",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteMicrovmImageVersion",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteMicrovmImageVersion",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "delete_microvm_image_version",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteNetworkConnector",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteNetworkConnector",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-core",
+      "Method" : "delete_network_connector",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteProvisionedConcurrencyConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteProvisionedConcurrencyConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "delete_provisioned_concurrency_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetAccountSettings",
+    "AuthorizedActions" : [ {
+      "Name" : "GetAccountSettings",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_account_settings",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetAlias",
+    "AuthorizedActions" : [ {
+      "Name" : "GetAlias",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_alias",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetCapacityProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "GetCapacityProvider",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_capacity_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetCodeSigningConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "GetCodeSigningConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_code_signing_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetDurableExecution",
+    "AuthorizedActions" : [ {
+      "Name" : "GetDurableExecution",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_durable_execution",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetDurableExecutionHistory",
+    "AuthorizedActions" : [ {
+      "Name" : "GetDurableExecutionHistory",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_durable_execution_history",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetDurableExecutionState",
+    "AuthorizedActions" : [ {
+      "Name" : "GetDurableExecutionState",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_durable_execution_state",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetEventSource",
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_event_source",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetEventSourceMapping",
+    "AuthorizedActions" : [ {
+      "Name" : "GetEventSourceMapping",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_event_source_mapping",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetFunction",
+    "AuthorizedActions" : [ {
+      "Name" : "GetFunction",
+      "Service" : "lambda"
+    }, {
+      "Name" : "ListTags",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_function",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetFunctionCodeSigningConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "GetFunctionCodeSigningConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_function_code_signing_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetFunctionConcurrency",
+    "AuthorizedActions" : [ {
+      "Name" : "GetFunctionConcurrency",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_function_concurrency",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetFunctionConfiguration",
+    "AuthorizedActions" : [ {
+      "Name" : "GetFunctionConfiguration",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_function_configuration",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetFunctionEventInvokeConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "GetFunctionEventInvokeConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_function_event_invoke_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetFunctionRecursionConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "GetFunctionRecursionConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_function_recursion_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetFunctionScalingConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "GetFunctionScalingConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_function_scaling_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetFunctionUrlConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "GetFunctionUrlConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_function_url_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetLayerVersion",
+    "AuthorizedActions" : [ {
+      "Name" : "GetLayerVersion",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_layer_version",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetLayerVersionByArn",
+    "AuthorizedActions" : [ {
+      "Name" : "GetLayerVersion",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_layer_version_by_arn",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetLayerVersionPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "GetLayerVersionPolicy",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_layer_version_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetMicrovm",
+    "AuthorizedActions" : [ {
+      "Name" : "GetMicrovm",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "get_microvm",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetMicrovmImage",
+    "AuthorizedActions" : [ {
+      "Name" : "GetMicrovmImage",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "get_microvm_image",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetMicrovmImageBuild",
+    "AuthorizedActions" : [ {
+      "Name" : "GetMicrovmImageBuild",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "get_microvm_image_build",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetMicrovmImageVersion",
+    "AuthorizedActions" : [ {
+      "Name" : "GetMicrovmImageVersion",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "get_microvm_image_version",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetNetworkConnector",
+    "AuthorizedActions" : [ {
+      "Name" : "GetNetworkConnector",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-core",
+      "Method" : "get_network_connector",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "GetPolicy",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetProvisionedConcurrencyConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "GetProvisionedConcurrencyConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_provisioned_concurrency_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetRuntimeManagementConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "GetRuntimeManagementConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "get_runtime_management_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "Invoke",
+    "AuthorizedActions" : [ {
+      "Name" : "InvokeFunction",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "invoke",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "InvokeAsync",
+    "AuthorizedActions" : [ {
+      "Name" : "InvokeAsync",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "invoke_async",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "InvokeWithResponseStream",
+    "AuthorizedActions" : [ {
+      "Name" : "InvokeFunction",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "invoke_with_response_stream",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListAliases",
+    "AuthorizedActions" : [ {
+      "Name" : "ListAliases",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "list_aliases",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListCapacityProviders",
+    "AuthorizedActions" : [ {
+      "Name" : "ListCapacityProviders",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "list_capacity_providers",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListCodeSigningConfigs",
+    "AuthorizedActions" : [ {
+      "Name" : "ListCodeSigningConfigs",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "list_code_signing_configs",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListDurableExecutionsByFunction",
+    "AuthorizedActions" : [ {
+      "Name" : "ListDurableExecutionsByFunction",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "list_durable_executions_by_function",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListEventSourceMappings",
+    "AuthorizedActions" : [ {
+      "Name" : "ListEventSourceMappings",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "list_event_source_mappings",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListEventSources",
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "list_event_sources",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListFunctionEventInvokeConfigs",
+    "AuthorizedActions" : [ {
+      "Name" : "ListFunctionEventInvokeConfigs",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "list_function_event_invoke_configs",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListFunctionUrlConfigs",
+    "AuthorizedActions" : [ {
+      "Name" : "ListFunctionUrlConfigs",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "list_function_url_configs",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListFunctionVersionsByCapacityProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "ListFunctionVersionsByCapacityProvider",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "list_function_versions_by_capacity_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListFunctions",
+    "AuthorizedActions" : [ {
+      "Name" : "ListFunctions",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "list_functions",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListFunctionsByCodeSigningConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "ListFunctionsByCodeSigningConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "list_functions_by_code_signing_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListLayerVersions",
+    "AuthorizedActions" : [ {
+      "Name" : "ListLayerVersions",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "list_layer_versions",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListLayers",
+    "AuthorizedActions" : [ {
+      "Name" : "ListLayers",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "list_layers",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListManagedMicrovmImageVersions",
+    "AuthorizedActions" : [ {
+      "Name" : "ListManagedMicrovmImageVersions",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "list_managed_microvm_image_versions",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListManagedMicrovmImages",
+    "AuthorizedActions" : [ {
+      "Name" : "ListManagedMicrovmImages",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "list_managed_microvm_images",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListMicrovmImageBuilds",
+    "AuthorizedActions" : [ {
+      "Name" : "ListMicrovmImageBuilds",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "list_microvm_image_builds",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListMicrovmImageVersions",
+    "AuthorizedActions" : [ {
+      "Name" : "ListMicrovmImageVersions",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "list_microvm_image_versions",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListMicrovmImages",
+    "AuthorizedActions" : [ {
+      "Name" : "ListMicrovmImages",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "list_microvm_images",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListMicrovms",
+    "AuthorizedActions" : [ {
+      "Name" : "ListMicrovms",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "list_microvms",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListNetworkConnectors",
+    "AuthorizedActions" : [ {
+      "Name" : "ListNetworkConnectors",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-core",
+      "Method" : "list_network_connectors",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListProvisionedConcurrencyConfigs",
+    "AuthorizedActions" : [ {
+      "Name" : "ListProvisionedConcurrencyConfigs",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "list_provisioned_concurrency_configs",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListTags",
+    "AuthorizedActions" : [ {
+      "Name" : "ListTags",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "list_tags",
+      "Package" : "Boto3"
+    }, {
+      "Name" : "lambda-microvms",
+      "Method" : "list_tags",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListVersionsByFunction",
+    "AuthorizedActions" : [ {
+      "Name" : "ListVersionsByFunction",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "list_versions_by_function",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "PublishLayerVersion",
+    "AuthorizedActions" : [ {
+      "Name" : "PublishLayerVersion",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "publish_layer_version",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "PublishVersion",
+    "AuthorizedActions" : [ {
+      "Name" : "PublishVersion",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "publish_version",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "PutFunctionCodeSigningConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "PutFunctionCodeSigningConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "put_function_code_signing_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "PutFunctionConcurrency",
+    "AuthorizedActions" : [ {
+      "Name" : "PutFunctionConcurrency",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "put_function_concurrency",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "PutFunctionEventInvokeConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "PutFunctionEventInvokeConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "put_function_event_invoke_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "PutFunctionRecursionConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "PutFunctionRecursionConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "put_function_recursion_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "PutFunctionScalingConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "PutFunctionScalingConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "put_function_scaling_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "PutProvisionedConcurrencyConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "PutProvisionedConcurrencyConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "put_provisioned_concurrency_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "PutRuntimeManagementConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "PutRuntimeManagementConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "put_runtime_management_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "RemoveEventSource",
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "remove_event_source",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "RemoveLayerVersionPermission",
+    "AuthorizedActions" : [ {
+      "Name" : "RemoveLayerVersionPermission",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "remove_layer_version_permission",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "RemovePermission",
+    "AuthorizedActions" : [ {
+      "Name" : "RemovePermission",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "remove_permission",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ResumeMicrovm",
+    "AuthorizedActions" : [ {
+      "Name" : "ResumeMicrovm",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "resume_microvm",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "RunMicrovm",
+    "AuthorizedActions" : [ {
+      "Name" : "PassNetworkConnector",
+      "Service" : "lambda"
+    }, {
+      "Name" : "PassRole",
+      "Service" : "iam"
+    }, {
+      "Name" : "RunMicrovm",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "run_microvm",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "SendDurableExecutionCallbackFailure",
+    "AuthorizedActions" : [ {
+      "Name" : "SendDurableExecutionCallbackFailure",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "send_durable_execution_callback_failure",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "SendDurableExecutionCallbackHeartbeat",
+    "AuthorizedActions" : [ {
+      "Name" : "SendDurableExecutionCallbackHeartbeat",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "send_durable_execution_callback_heartbeat",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "SendDurableExecutionCallbackSuccess",
+    "AuthorizedActions" : [ {
+      "Name" : "SendDurableExecutionCallbackSuccess",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "send_durable_execution_callback_success",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "StopDurableExecution",
+    "AuthorizedActions" : [ {
+      "Name" : "StopDurableExecution",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "stop_durable_execution",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "SuspendMicrovm",
+    "AuthorizedActions" : [ {
+      "Name" : "SuspendMicrovm",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "suspend_microvm",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "TagResource",
+    "AuthorizedActions" : [ {
+      "Name" : "TagResource",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "tag_resource",
+      "Package" : "Boto3"
+    }, {
+      "Name" : "lambda-microvms",
+      "Method" : "tag_resource",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "TerminateMicrovm",
+    "AuthorizedActions" : [ {
+      "Name" : "TerminateMicrovm",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "terminate_microvm",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UntagResource",
+    "AuthorizedActions" : [ {
+      "Name" : "UntagResource",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "untag_resource",
+      "Package" : "Boto3"
+    }, {
+      "Name" : "lambda-microvms",
+      "Method" : "untag_resource",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateAlias",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateAlias",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "update_alias",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateCapacityProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateCapacityProvider",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "update_capacity_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateCodeSigningConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateCodeSigningConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "update_code_signing_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateEventSourceMapping",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateEventSourceMapping",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "update_event_source_mapping",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateFunctionCode",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateFunctionCode",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "update_function_code",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateFunctionConfiguration",
+    "AuthorizedActions" : [ {
+      "Name" : "GetLayerVersion",
+      "Service" : "lambda"
+    }, {
+      "Name" : "PassCapacityProvider",
+      "Service" : "lambda"
+    }, {
+      "Name" : "PassRole",
+      "Context" : {
+        "iam:PassedToService" : [ "lambda.amazonaws.com" ]
+      },
+      "Service" : "iam"
+    }, {
+      "Name" : "UpdateFunctionConfiguration",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "update_function_configuration",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateFunctionEventInvokeConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateFunctionEventInvokeConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "update_function_event_invoke_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateFunctionUrlConfig",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateFunctionUrlConfig",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "update_function_url_config",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateMicrovmImage",
+    "AuthorizedActions" : [ {
+      "Name" : "PassNetworkConnector",
+      "Service" : "lambda"
+    }, {
+      "Name" : "PassRole",
+      "Service" : "iam"
+    }, {
+      "Name" : "UpdateMicrovmImage",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "update_microvm_image",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateMicrovmImageVersion",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateMicrovmImageVersion",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-microvms",
+      "Method" : "update_microvm_image_version",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateNetworkConnector",
+    "AuthorizedActions" : [ {
+      "Name" : "PassRole",
+      "Context" : {
+        "iam:PassedToService" : [ "lambda.amazonaws.com" ]
+      },
+      "Service" : "iam"
+    }, {
+      "Name" : "UpdateNetworkConnector",
+      "Service" : "lambda"
+    } ],
+    "SDK" : [ {
+      "Name" : "lambda-core",
+      "Method" : "update_network_connector",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UploadFunction",
+    "SDK" : [ {
+      "Name" : "lambda",
+      "Method" : "upload_function",
+      "Package" : "Boto3"
+    } ]
+  } ],
+  "Resources" : [ {
+    "Name" : "capacityProvider",
+    "ARNFormats" : [ "arn:${Partition}:lambda:${Region}:${Account}:capacity-provider:${CapacityProviderName}" ],
+    "ConditionKeys" : [ "aws:ResourceTag/${TagKey}" ]
+  }, {
+    "Name" : "code signing config",
+    "ARNFormats" : [ "arn:${Partition}:lambda:${Region}:${Account}:code-signing-config:${CodeSigningConfigId}" ],
+    "ConditionKeys" : [ "aws:ResourceTag/${TagKey}" ]
+  }, {
+    "Name" : "durable execution",
+    "ARNFormats" : [ "arn:${Partition}:lambda:${Region}:${Account}:function:${FunctionName}:${Version}/durable-execution/${ExecutionName}/${ExecutionId}" ]
+  }, {
+    "Name" : "eventSourceMapping",
+    "ARNFormats" : [ "arn:${Partition}:lambda:${Region}:${Account}:event-source-mapping:${UUID}" ],
+    "ConditionKeys" : [ "aws:ResourceTag/${TagKey}" ]
+  }, {
+    "Name" : "function",
+    "ARNFormats" : [ "arn:${Partition}:lambda:${Region}:${Account}:function:${FunctionName}" ],
+    "ConditionKeys" : [ "aws:ResourceTag/${TagKey}" ]
+  }, {
+    "Name" : "function alias",
+    "ARNFormats" : [ "arn:${Partition}:lambda:${Region}:${Account}:function:${FunctionName}:${Alias}" ],
+    "ConditionKeys" : [ "aws:ResourceTag/${TagKey}" ]
+  }, {
+    "Name" : "function version",
+    "ARNFormats" : [ "arn:${Partition}:lambda:${Region}:${Account}:function:${FunctionName}:${Version}" ],
+    "ConditionKeys" : [ "aws:ResourceTag/${TagKey}" ]
+  }, {
+    "Name" : "layer",
+    "ARNFormats" : [ "arn:${Partition}:lambda:${Region}:${Account}:layer:${LayerName}" ]
+  }, {
+    "Name" : "layerVersion",
+    "ARNFormats" : [ "arn:${Partition}:lambda:${Region}:${Account}:layer:${LayerName}:${LayerVersion}" ]
+  }, {
+    "Name" : "microvmImage",
+    "ARNFormats" : [ "arn:${Partition}:lambda:${Region}:${Account}:microvm-image:${MicrovmImageName}" ],
+    "ConditionKeys" : [ "aws:ResourceTag/${TagKey}" ]
+  }, {
+    "Name" : "networkConnector",
+    "ARNFormats" : [ "arn:${Partition}:lambda:${Region}:${Account}:network-connector:${NetworkConnectorId}" ],
+    "ConditionKeys" : [ "aws:ResourceTag/${TagKey}" ]
+  } ],
+  "Version" : "v1.4"
+}

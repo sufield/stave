@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.ACTION.INVALID.001
+name: "SCP References Invalid IAM Actions"
+description: >
+  SCP contains action names that do not exist in the IAM authorization
+  reference. Invalid actions silently fail to match — the SCP appears
+  to deny or allow behavior but the misspelled or non-existent action
+  never evaluates. A typo in a deny statement (e.g. s3:Getobject
+  instead of s3:GetObject) leaves the intended restriction unenforced.
+  The IAM authorization reference is the canonical source of valid
+  per-service actions.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - account-governance
+  - credential-lifecycle
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.kind
+  - identity.scp.has_invalid_actions
+remediation:
+  description: >
+    One or more SCP statements reference IAM actions that do not exist
+    in the service authorization reference. These actions silently fail
+    to match, leaving the intended restriction unenforced.
+  action: >
+    Validate all action names in SCP statements against the IAM
+    authorization reference (servicereference.us-east-1.amazonaws.com).
+    Fix typos, update deprecated action names, and verify service
+    prefixes. Run geniamdata to refresh the local registry, then
+    re-evaluate.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "has_invalid_actions": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.has_invalid_actions
+      op: eq
+      value: true
+tests:
+  - name: "SCP with invalid actions fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            has_invalid_actions: true
+  - name: "SCP with all valid actions passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            has_invalid_actions: false

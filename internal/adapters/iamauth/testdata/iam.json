@@ -1,0 +1,5181 @@
+{
+  "Name" : "iam",
+  "Actions" : [ {
+    "Name" : "AcceptDelegationRequest",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "delegation-request"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "AddClientIDToOpenIDConnectProvider",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "oidc-provider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "AddRoleToInstanceProfile",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "instance-profile"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "AddUserToGroup",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "AssociateDelegationRequest",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "delegation-request"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "AttachGroupPolicy",
+    "ActionConditionKeys" : [ "iam:PolicyARN" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "AttachRolePolicy",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary", "iam:PolicyARN" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "AttachUserPolicy",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary", "iam:PolicyARN" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ChangePassword",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateAccessKey",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateAccountAlias",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateDelegationRequest",
+    "ActionConditionKeys" : [ "iam:DelegationDuration", "iam:NotificationChannel", "iam:TemplateArn" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "delegation-request"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "CreateGroup",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateInstanceProfile",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "instance-profile"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateLoginProfile",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateOpenIDConnectProvider",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "oidc-provider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreatePolicy",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "policy"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreatePolicyVersion",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "policy"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateRole",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys", "iam:PermissionsBoundary" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateSAMLProvider",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "saml-provider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateServiceLinkedRole",
+    "ActionConditionKeys" : [ "iam:AWSServiceName" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateServiceSpecificCredential",
+    "ActionConditionKeys" : [ "iam:ServiceSpecificCredentialAgeDays", "iam:ServiceSpecificCredentialServiceName" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateUser",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys", "iam:PermissionsBoundary" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "CreateVirtualMFADevice",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "mfa"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeactivateMFADevice",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteAccessKey",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteAccountAlias",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteAccountPasswordPolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteCloudFrontPublicKey",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteGroup",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteGroupPolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteInstanceProfile",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "instance-profile"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteLoginProfile",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteOpenIDConnectProvider",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "oidc-provider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeletePolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "policy"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeletePolicyVersion",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "policy"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteRole",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteRolePermissionsBoundary",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteRolePolicy",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteSAMLProvider",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "saml-provider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteSSHPublicKey",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteServerCertificate",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "server-certificate"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteServiceLinkedRole",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteServiceSpecificCredential",
+    "ActionConditionKeys" : [ "iam:ServiceSpecificCredentialServiceName" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteSigningCertificate",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteUser",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteUserPermissionsBoundary",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteUserPolicy",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DeleteVirtualMFADevice",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "mfa"
+    }, {
+      "Name" : "sms-mfa"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DetachGroupPolicy",
+    "ActionConditionKeys" : [ "iam:PolicyARN" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DetachRolePolicy",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary", "iam:PolicyARN" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DetachUserPolicy",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary", "iam:PolicyARN" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DisableOrganizationsRootCredentialsManagement",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DisableOrganizationsRootSessions",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "DisableOutboundWebIdentityFederation",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "EnableMFADevice",
+    "ActionConditionKeys" : [ "iam:FIDO-FIPS-140-2-certification", "iam:FIDO-FIPS-140-3-certification", "iam:FIDO-certification", "iam:RegisterSecurityKey" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "EnableOrganizationsRootCredentialsManagement",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "EnableOrganizationsRootSessions",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "EnableOutboundWebIdentityFederation",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GenerateCredentialReport",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GenerateOrganizationsAccessReport",
+    "ActionConditionKeys" : [ "iam:OrganizationsPolicyId" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "access-report"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GenerateServiceLastAccessedDetails",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    }, {
+      "Name" : "policy"
+    }, {
+      "Name" : "role"
+    }, {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetAccessKeyLastUsed",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetAccountAuthorizationDetails",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetAccountEmailAddress",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetAccountName",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetAccountPasswordPolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetAccountSummary",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetCloudFrontPublicKey",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetContextKeysForCustomPolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetContextKeysForPrincipalPolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    }, {
+      "Name" : "role"
+    }, {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetCredentialReport",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetDelegationRequest",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "delegation-request"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "GetGroup",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetGroupPolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetHumanReadableSummary",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "delegation-request"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "GetInstanceProfile",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "instance-profile"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetLoginProfile",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetMFADevice",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetOpenIDConnectProvider",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "oidc-provider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetOrganizationsAccessReport",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetOutboundWebIdentityFederationInfo",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetPolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "policy"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetPolicyVersion",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "policy"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetRole",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetRolePolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetSAMLProvider",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "saml-provider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetSSHPublicKey",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetServerCertificate",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "server-certificate"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetServiceLastAccessedDetails",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetServiceLastAccessedDetailsWithEntities",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetServiceLinkedRoleDeletionStatus",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetUser",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "GetUserPolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListAccessKeys",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListAccountAliases",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListAttachedGroupPolicies",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListAttachedRolePolicies",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListAttachedUserPolicies",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListCloudFrontPublicKeys",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListDelegationRequests",
+    "ActionConditionKeys" : [ "iam:DelegationRequestOwner" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListEntitiesForPolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "policy"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListGroupPolicies",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListGroups",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListGroupsForUser",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListInstanceProfileTags",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "instance-profile"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListInstanceProfiles",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListInstanceProfilesForRole",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListMFADeviceTags",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "mfa"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListMFADevices",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListOpenIDConnectProviderTags",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "oidc-provider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListOpenIDConnectProviders",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListOrganizationsFeatures",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListPolicies",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListPoliciesGrantingServiceAccess",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    }, {
+      "Name" : "role"
+    }, {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListPolicyTags",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "policy"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListPolicyVersions",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "policy"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListRolePolicies",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListRoleTags",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListRoles",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListSAMLProviderTags",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "saml-provider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListSAMLProviders",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListSSHPublicKeys",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListSTSRegionalEndpointsStatus",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListServerCertificateTags",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "server-certificate"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListServerCertificates",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListServiceSpecificCredentials",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListSigningCertificates",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListUserPolicies",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListUserTags",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "ListUsers",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ListVirtualMFADevices",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : true,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "PassRole",
+    "ActionConditionKeys" : [ "iam:AssociatedResourceArn", "iam:PassedToService" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "PutGroupPolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "PutRolePermissionsBoundary",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "PutRolePolicy",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "PutUserPermissionsBoundary",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "PutUserPolicy",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "RejectDelegationRequest",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "delegation-request"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "RemoveClientIDFromOpenIDConnectProvider",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "oidc-provider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "RemoveRoleFromInstanceProfile",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "instance-profile"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "RemoveUserFromGroup",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ResetServiceSpecificCredential",
+    "ActionConditionKeys" : [ "iam:ServiceSpecificCredentialServiceName" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "ResyncMFADevice",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "SendDelegationToken",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "delegation-request"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : false,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "SetDefaultPolicyVersion",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "policy"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "SetSTSRegionalEndpointStatus",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "SetSecurityTokenServicePreferences",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "SimulateCustomPolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "SimulatePrincipalPolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : false
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    }, {
+      "Name" : "role"
+    }, {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "TagInstanceProfile",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "instance-profile"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "TagMFADevice",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "mfa"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "TagOpenIDConnectProvider",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "oidc-provider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "TagPolicy",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "policy"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "TagRole",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "TagSAMLProvider",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "saml-provider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "TagServerCertificate",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "server-certificate"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "TagUser",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "UntagInstanceProfile",
+    "ActionConditionKeys" : [ "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "instance-profile"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "UntagMFADevice",
+    "ActionConditionKeys" : [ "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "mfa"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "UntagOpenIDConnectProvider",
+    "ActionConditionKeys" : [ "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "oidc-provider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "UntagPolicy",
+    "ActionConditionKeys" : [ "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "policy"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "UntagRole",
+    "ActionConditionKeys" : [ "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "UntagSAMLProvider",
+    "ActionConditionKeys" : [ "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "saml-provider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "UntagServerCertificate",
+    "ActionConditionKeys" : [ "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "server-certificate"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "UntagUser",
+    "ActionConditionKeys" : [ "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : true,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : false
+    }
+  }, {
+    "Name" : "UpdateAccessKey",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateAccountEmailAddress",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateAccountName",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateAccountPasswordPolicy",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateAssumeRolePolicy",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : true,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateCloudFrontPublicKey",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateGroup",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "group"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateLoginProfile",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateOpenIDConnectProviderThumbprint",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "oidc-provider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateRole",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateRoleDescription",
+    "ActionConditionKeys" : [ "iam:PermissionsBoundary" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "role"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateSAMLProvider",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "saml-provider"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateSSHPublicKey",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateServerCertificate",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "server-certificate"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateServiceSpecificCredential",
+    "ActionConditionKeys" : [ "iam:ServiceSpecificCredentialServiceName" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateSigningCertificate",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UpdateUser",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UploadCloudFrontPublicKey",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UploadSSHPublicKey",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UploadServerCertificate",
+    "ActionConditionKeys" : [ "aws:RequestTag/${TagKey}", "aws:TagKeys" ],
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "server-certificate"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  }, {
+    "Name" : "UploadSigningCertificate",
+    "Annotations" : {
+      "Properties" : {
+        "IsList" : false,
+        "IsPermissionManagement" : false,
+        "IsTaggingOnly" : false,
+        "IsWrite" : true
+      }
+    },
+    "Resources" : [ {
+      "Name" : "user"
+    } ],
+    "SupportedBy" : {
+      "IAM Access Analyzer Policy Generation" : true,
+      "IAM Action Last Accessed" : true
+    }
+  } ],
+  "ConditionKeys" : [ {
+    "Name" : "aws:RequestTag/${TagKey}",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "aws:ResourceTag/${TagKey}",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "aws:TagKeys",
+    "Types" : [ "ArrayOfString" ]
+  }, {
+    "Name" : "iam:AWSServiceName",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "iam:AssociatedResourceArn",
+    "Types" : [ "ARN" ]
+  }, {
+    "Name" : "iam:DelegationDuration",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "iam:DelegationRequestOwner",
+    "Types" : [ "ARN" ]
+  }, {
+    "Name" : "iam:FIDO-FIPS-140-2-certification",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "iam:FIDO-FIPS-140-3-certification",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "iam:FIDO-certification",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "iam:NotificationChannel",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "iam:OrganizationsPolicyId",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "iam:PassedToService",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "iam:PermissionsBoundary",
+    "Types" : [ "ARN" ]
+  }, {
+    "Name" : "iam:PolicyARN",
+    "Types" : [ "ARN" ]
+  }, {
+    "Name" : "iam:RegisterSecurityKey",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "iam:ResourceTag/${TagKey}",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "iam:ServiceSpecificCredentialAgeDays",
+    "Types" : [ "Numeric" ]
+  }, {
+    "Name" : "iam:ServiceSpecificCredentialServiceName",
+    "Types" : [ "String" ]
+  }, {
+    "Name" : "iam:TemplateArn",
+    "Types" : [ "ARN" ]
+  } ],
+  "Operations" : [ {
+    "Name" : "AcceptDelegationRequest",
+    "AuthorizedActions" : [ {
+      "Name" : "AcceptDelegationRequest",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "accept_delegation_request",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "AddClientIDToOpenIDConnectProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "AddClientIDToOpenIDConnectProvider",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "add_client_id_to_open_id_connect_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "AddRoleToInstanceProfile",
+    "AuthorizedActions" : [ {
+      "Name" : "AddRoleToInstanceProfile",
+      "Service" : "iam"
+    }, {
+      "Name" : "PassRole",
+      "Context" : {
+        "iam:PassedToService" : [ "ec2.amazonaws.com" ]
+      },
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "add_role_to_instance_profile",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "AddUserToGroup",
+    "AuthorizedActions" : [ {
+      "Name" : "AddUserToGroup",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "add_user_to_group",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "AssociateDelegationRequest",
+    "AuthorizedActions" : [ {
+      "Name" : "AssociateDelegationRequest",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "associate_delegation_request",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "AttachGroupPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "AttachGroupPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "attach_group_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "AttachRolePolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "AttachRolePolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "attach_role_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "AttachUserPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "AttachUserPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "attach_user_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ChangePassword",
+    "AuthorizedActions" : [ {
+      "Name" : "ChangePassword",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "change_password",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateAccessKey",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateAccessKey",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "create_access_key",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateAccountAlias",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateAccountAlias",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "create_account_alias",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateDelegationRequest",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateDelegationRequest",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "create_delegation_request",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateGroup",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateGroup",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "create_group",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateInstanceProfile",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateInstanceProfile",
+      "Service" : "iam"
+    }, {
+      "Name" : "TagInstanceProfile",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "create_instance_profile",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateLoginProfile",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateLoginProfile",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "create_login_profile",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateOpenIDConnectProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateOpenIDConnectProvider",
+      "Service" : "iam"
+    }, {
+      "Name" : "TagOpenIDConnectProvider",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "create_open_id_connect_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreatePolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "CreatePolicy",
+      "Service" : "iam"
+    }, {
+      "Name" : "TagPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "create_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreatePolicyVersion",
+    "AuthorizedActions" : [ {
+      "Name" : "CreatePolicyVersion",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "create_policy_version",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateRole",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateRole",
+      "Service" : "iam"
+    }, {
+      "Name" : "TagRole",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "create_role",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateSAMLProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateSAMLProvider",
+      "Service" : "iam"
+    }, {
+      "Name" : "TagSAMLProvider",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "create_saml_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateServiceLinkedRole",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateServiceLinkedRole",
+      "Service" : "iam"
+    }, {
+      "Name" : "PutRolePolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "create_service_linked_role",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateServiceSpecificCredential",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateServiceSpecificCredential",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "create_service_specific_credential",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateUser",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateUser",
+      "Service" : "iam"
+    }, {
+      "Name" : "TagUser",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "create_user",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "CreateVirtualMFADevice",
+    "AuthorizedActions" : [ {
+      "Name" : "CreateVirtualMFADevice",
+      "Service" : "iam"
+    }, {
+      "Name" : "TagMFADevice",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "create_virtual_mfa_device",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeactivateMFADevice",
+    "AuthorizedActions" : [ {
+      "Name" : "DeactivateMFADevice",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "deactivate_mfa_device",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteAccessKey",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteAccessKey",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_access_key",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteAccountAlias",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteAccountAlias",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_account_alias",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteAccountPasswordPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteAccountPasswordPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_account_password_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteGroup",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteGroup",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_group",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteGroupPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteGroupPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_group_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteInstanceProfile",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteInstanceProfile",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_instance_profile",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteLoginProfile",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteLoginProfile",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_login_profile",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteOpenIDConnectProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteOpenIDConnectProvider",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_open_id_connect_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeletePolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "DeletePolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeletePolicyVersion",
+    "AuthorizedActions" : [ {
+      "Name" : "DeletePolicyVersion",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_policy_version",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteRole",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteRole",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_role",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteRolePermissionsBoundary",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteRolePermissionsBoundary",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_role_permissions_boundary",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteRolePolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteRolePolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_role_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteSAMLProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteSAMLProvider",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_saml_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteSSHPublicKey",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteSSHPublicKey",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_ssh_public_key",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteServerCertificate",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteServerCertificate",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_server_certificate",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteServiceLinkedRole",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteServiceLinkedRole",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_service_linked_role",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteServiceSpecificCredential",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteServiceSpecificCredential",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_service_specific_credential",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteSigningCertificate",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteSigningCertificate",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_signing_certificate",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteUser",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteUser",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_user",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteUserPermissionsBoundary",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteUserPermissionsBoundary",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_user_permissions_boundary",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteUserPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteUserPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_user_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DeleteVirtualMFADevice",
+    "AuthorizedActions" : [ {
+      "Name" : "DeleteVirtualMFADevice",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "delete_virtual_mfa_device",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DetachGroupPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "DetachGroupPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "detach_group_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DetachRolePolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "DetachRolePolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "detach_role_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DetachUserPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "DetachUserPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "detach_user_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DisableOrganizationsRootCredentialsManagement",
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "disable_organizations_root_credentials_management",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DisableOrganizationsRootSessions",
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "disable_organizations_root_sessions",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "DisableOutboundWebIdentityFederation",
+    "AuthorizedActions" : [ {
+      "Name" : "DisableOutboundWebIdentityFederation",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "disable_outbound_web_identity_federation",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "EnableMFADevice",
+    "AuthorizedActions" : [ {
+      "Name" : "EnableMFADevice",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "enable_mfa_device",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "EnableOrganizationsRootCredentialsManagement",
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "enable_organizations_root_credentials_management",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "EnableOrganizationsRootSessions",
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "enable_organizations_root_sessions",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "EnableOutboundWebIdentityFederation",
+    "AuthorizedActions" : [ {
+      "Name" : "EnableOutboundWebIdentityFederation",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "enable_outbound_web_identity_federation",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GenerateCredentialReport",
+    "AuthorizedActions" : [ {
+      "Name" : "GenerateCredentialReport",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "generate_credential_report",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GenerateOrganizationsAccessReport",
+    "AuthorizedActions" : [ {
+      "Name" : "GenerateOrganizationsAccessReport",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "generate_organizations_access_report",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GenerateServiceLastAccessedDetails",
+    "AuthorizedActions" : [ {
+      "Name" : "GenerateServiceLastAccessedDetails",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "generate_service_last_accessed_details",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetAccessKeyLastUsed",
+    "AuthorizedActions" : [ {
+      "Name" : "GetAccessKeyLastUsed",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_access_key_last_used",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetAccountAuthorizationDetails",
+    "AuthorizedActions" : [ {
+      "Name" : "GetAccountAuthorizationDetails",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_account_authorization_details",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetAccountPasswordPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "GetAccountPasswordPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_account_password_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetAccountSummary",
+    "AuthorizedActions" : [ {
+      "Name" : "GetAccountSummary",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_account_summary",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetContextKeysForCustomPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "GetContextKeysForCustomPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_context_keys_for_custom_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetContextKeysForPrincipalPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "GetContextKeysForPrincipalPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_context_keys_for_principal_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetCredentialReport",
+    "AuthorizedActions" : [ {
+      "Name" : "GetCredentialReport",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_credential_report",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetDelegationRequest",
+    "AuthorizedActions" : [ {
+      "Name" : "GetDelegationRequest",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_delegation_request",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetGroup",
+    "AuthorizedActions" : [ {
+      "Name" : "GetGroup",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_group",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetGroupPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "GetGroupPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_group_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetHumanReadableSummary",
+    "AuthorizedActions" : [ {
+      "Name" : "GetHumanReadableSummary",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_human_readable_summary",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetInstanceProfile",
+    "AuthorizedActions" : [ {
+      "Name" : "GetInstanceProfile",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_instance_profile",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetLoginProfile",
+    "AuthorizedActions" : [ {
+      "Name" : "GetLoginProfile",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_login_profile",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetMFADevice",
+    "AuthorizedActions" : [ {
+      "Name" : "GetMFADevice",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_mfa_device",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetOpenIDConnectProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "GetOpenIDConnectProvider",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_open_id_connect_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetOrganizationsAccessReport",
+    "AuthorizedActions" : [ {
+      "Name" : "GetOrganizationsAccessReport",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_organizations_access_report",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetOutboundWebIdentityFederationInfo",
+    "AuthorizedActions" : [ {
+      "Name" : "GetOutboundWebIdentityFederationInfo",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_outbound_web_identity_federation_info",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "GetPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetPolicyVersion",
+    "AuthorizedActions" : [ {
+      "Name" : "GetPolicyVersion",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_policy_version",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetRole",
+    "AuthorizedActions" : [ {
+      "Name" : "GetRole",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_role",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetRolePolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "GetRolePolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_role_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetSAMLProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "GetSAMLProvider",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_saml_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetSSHPublicKey",
+    "AuthorizedActions" : [ {
+      "Name" : "GetSSHPublicKey",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_ssh_public_key",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetServerCertificate",
+    "AuthorizedActions" : [ {
+      "Name" : "GetServerCertificate",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_server_certificate",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetServiceLastAccessedDetails",
+    "AuthorizedActions" : [ {
+      "Name" : "GetServiceLastAccessedDetails",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_service_last_accessed_details",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetServiceLastAccessedDetailsWithEntities",
+    "AuthorizedActions" : [ {
+      "Name" : "GetServiceLastAccessedDetailsWithEntities",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_service_last_accessed_details_with_entities",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetServiceLinkedRoleDeletionStatus",
+    "AuthorizedActions" : [ {
+      "Name" : "GetServiceLinkedRoleDeletionStatus",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_service_linked_role_deletion_status",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetUser",
+    "AuthorizedActions" : [ {
+      "Name" : "GetUser",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_user",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "GetUserPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "GetUserPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "get_user_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListAccessKeys",
+    "AuthorizedActions" : [ {
+      "Name" : "ListAccessKeys",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_access_keys",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListAccountAliases",
+    "AuthorizedActions" : [ {
+      "Name" : "ListAccountAliases",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_account_aliases",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListAttachedGroupPolicies",
+    "AuthorizedActions" : [ {
+      "Name" : "ListAttachedGroupPolicies",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_attached_group_policies",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListAttachedRolePolicies",
+    "AuthorizedActions" : [ {
+      "Name" : "ListAttachedRolePolicies",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_attached_role_policies",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListAttachedUserPolicies",
+    "AuthorizedActions" : [ {
+      "Name" : "ListAttachedUserPolicies",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_attached_user_policies",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListDelegationRequests",
+    "AuthorizedActions" : [ {
+      "Name" : "ListDelegationRequests",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_delegation_requests",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListEntitiesForPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "ListEntitiesForPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_entities_for_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListGroupPolicies",
+    "AuthorizedActions" : [ {
+      "Name" : "ListGroupPolicies",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_group_policies",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListGroups",
+    "AuthorizedActions" : [ {
+      "Name" : "ListGroups",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_groups",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListGroupsForUser",
+    "AuthorizedActions" : [ {
+      "Name" : "ListGroupsForUser",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_groups_for_user",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListInstanceProfileTags",
+    "AuthorizedActions" : [ {
+      "Name" : "ListInstanceProfileTags",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_instance_profile_tags",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListInstanceProfiles",
+    "AuthorizedActions" : [ {
+      "Name" : "ListInstanceProfiles",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_instance_profiles",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListInstanceProfilesForRole",
+    "AuthorizedActions" : [ {
+      "Name" : "ListInstanceProfilesForRole",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_instance_profiles_for_role",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListMFADeviceTags",
+    "AuthorizedActions" : [ {
+      "Name" : "ListMFADeviceTags",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_mfa_device_tags",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListMFADevices",
+    "AuthorizedActions" : [ {
+      "Name" : "ListMFADevices",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_mfa_devices",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListOpenIDConnectProviderTags",
+    "AuthorizedActions" : [ {
+      "Name" : "ListOpenIDConnectProviderTags",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_open_id_connect_provider_tags",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListOpenIDConnectProviders",
+    "AuthorizedActions" : [ {
+      "Name" : "ListOpenIDConnectProviders",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_open_id_connect_providers",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListOrganizationsFeatures",
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_organizations_features",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListPolicies",
+    "AuthorizedActions" : [ {
+      "Name" : "ListPolicies",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_policies",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListPoliciesGrantingServiceAccess",
+    "AuthorizedActions" : [ {
+      "Name" : "ListPoliciesGrantingServiceAccess",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_policies_granting_service_access",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListPolicyTags",
+    "AuthorizedActions" : [ {
+      "Name" : "ListPolicyTags",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_policy_tags",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListPolicyVersions",
+    "AuthorizedActions" : [ {
+      "Name" : "ListPolicyVersions",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_policy_versions",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListRolePolicies",
+    "AuthorizedActions" : [ {
+      "Name" : "ListRolePolicies",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_role_policies",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListRoleTags",
+    "AuthorizedActions" : [ {
+      "Name" : "ListRoleTags",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_role_tags",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListRoles",
+    "AuthorizedActions" : [ {
+      "Name" : "ListRoles",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_roles",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListSAMLProviderTags",
+    "AuthorizedActions" : [ {
+      "Name" : "ListSAMLProviderTags",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_saml_provider_tags",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListSAMLProviders",
+    "AuthorizedActions" : [ {
+      "Name" : "ListSAMLProviders",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_saml_providers",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListSSHPublicKeys",
+    "AuthorizedActions" : [ {
+      "Name" : "ListSSHPublicKeys",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_ssh_public_keys",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListServerCertificateTags",
+    "AuthorizedActions" : [ {
+      "Name" : "ListServerCertificateTags",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_server_certificate_tags",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListServerCertificates",
+    "AuthorizedActions" : [ {
+      "Name" : "ListServerCertificates",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_server_certificates",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListServiceSpecificCredentials",
+    "AuthorizedActions" : [ {
+      "Name" : "ListServiceSpecificCredentials",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_service_specific_credentials",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListSigningCertificates",
+    "AuthorizedActions" : [ {
+      "Name" : "ListSigningCertificates",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_signing_certificates",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListUserPolicies",
+    "AuthorizedActions" : [ {
+      "Name" : "ListUserPolicies",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_user_policies",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListUserTags",
+    "AuthorizedActions" : [ {
+      "Name" : "ListUserTags",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_user_tags",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListUsers",
+    "AuthorizedActions" : [ {
+      "Name" : "ListUsers",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_users",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ListVirtualMFADevices",
+    "AuthorizedActions" : [ {
+      "Name" : "ListVirtualMFADevices",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "list_virtual_mfa_devices",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "PutGroupPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "PutGroupPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "put_group_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "PutRolePermissionsBoundary",
+    "AuthorizedActions" : [ {
+      "Name" : "PutRolePermissionsBoundary",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "put_role_permissions_boundary",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "PutRolePolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "PutRolePolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "put_role_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "PutUserPermissionsBoundary",
+    "AuthorizedActions" : [ {
+      "Name" : "PutUserPermissionsBoundary",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "put_user_permissions_boundary",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "PutUserPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "PutUserPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "put_user_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "RejectDelegationRequest",
+    "AuthorizedActions" : [ {
+      "Name" : "RejectDelegationRequest",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "reject_delegation_request",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "RemoveClientIDFromOpenIDConnectProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "RemoveClientIDFromOpenIDConnectProvider",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "remove_client_id_from_open_id_connect_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "RemoveRoleFromInstanceProfile",
+    "AuthorizedActions" : [ {
+      "Name" : "RemoveRoleFromInstanceProfile",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "remove_role_from_instance_profile",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "RemoveUserFromGroup",
+    "AuthorizedActions" : [ {
+      "Name" : "RemoveUserFromGroup",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "remove_user_from_group",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ResetServiceSpecificCredential",
+    "AuthorizedActions" : [ {
+      "Name" : "ResetServiceSpecificCredential",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "reset_service_specific_credential",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "ResyncMFADevice",
+    "AuthorizedActions" : [ {
+      "Name" : "ResyncMFADevice",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "resync_mfa_device",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "SendDelegationToken",
+    "AuthorizedActions" : [ {
+      "Name" : "SendDelegationToken",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "send_delegation_token",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "SetDefaultPolicyVersion",
+    "AuthorizedActions" : [ {
+      "Name" : "SetDefaultPolicyVersion",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "set_default_policy_version",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "SetSecurityTokenServicePreferences",
+    "AuthorizedActions" : [ {
+      "Name" : "SetSecurityTokenServicePreferences",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "set_security_token_service_preferences",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "SimulateCustomPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "SimulateCustomPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "simulate_custom_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "SimulatePrincipalPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "SimulatePrincipalPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "simulate_principal_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "TagInstanceProfile",
+    "AuthorizedActions" : [ {
+      "Name" : "TagInstanceProfile",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "tag_instance_profile",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "TagMFADevice",
+    "AuthorizedActions" : [ {
+      "Name" : "TagMFADevice",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "tag_mfa_device",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "TagOpenIDConnectProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "TagOpenIDConnectProvider",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "tag_open_id_connect_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "TagPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "TagPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "tag_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "TagRole",
+    "AuthorizedActions" : [ {
+      "Name" : "TagRole",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "tag_role",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "TagSAMLProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "TagSAMLProvider",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "tag_saml_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "TagServerCertificate",
+    "AuthorizedActions" : [ {
+      "Name" : "TagServerCertificate",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "tag_server_certificate",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "TagUser",
+    "AuthorizedActions" : [ {
+      "Name" : "TagUser",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "tag_user",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UntagInstanceProfile",
+    "AuthorizedActions" : [ {
+      "Name" : "UntagInstanceProfile",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "untag_instance_profile",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UntagMFADevice",
+    "AuthorizedActions" : [ {
+      "Name" : "UntagMFADevice",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "untag_mfa_device",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UntagOpenIDConnectProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "UntagOpenIDConnectProvider",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "untag_open_id_connect_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UntagPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "UntagPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "untag_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UntagRole",
+    "AuthorizedActions" : [ {
+      "Name" : "UntagRole",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "untag_role",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UntagSAMLProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "UntagSAMLProvider",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "untag_saml_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UntagServerCertificate",
+    "AuthorizedActions" : [ {
+      "Name" : "UntagServerCertificate",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "untag_server_certificate",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UntagUser",
+    "AuthorizedActions" : [ {
+      "Name" : "UntagUser",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "untag_user",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateAccessKey",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateAccessKey",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "update_access_key",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateAccountPasswordPolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateAccountPasswordPolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "update_account_password_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateAssumeRolePolicy",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateAssumeRolePolicy",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "update_assume_role_policy",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateDelegationRequest",
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "update_delegation_request",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateGroup",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateGroup",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "update_group",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateLoginProfile",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateLoginProfile",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "update_login_profile",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateOpenIDConnectProviderThumbprint",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateOpenIDConnectProviderThumbprint",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "update_open_id_connect_provider_thumbprint",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateRole",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateRole",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "update_role",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateRoleDescription",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateRoleDescription",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "update_role_description",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateSAMLProvider",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateSAMLProvider",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "update_saml_provider",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateSSHPublicKey",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateSSHPublicKey",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "update_ssh_public_key",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateServerCertificate",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateServerCertificate",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "update_server_certificate",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateServiceSpecificCredential",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateServiceSpecificCredential",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "update_service_specific_credential",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateSigningCertificate",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateSigningCertificate",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "update_signing_certificate",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UpdateUser",
+    "AuthorizedActions" : [ {
+      "Name" : "UpdateUser",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "update_user",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UploadSSHPublicKey",
+    "AuthorizedActions" : [ {
+      "Name" : "UploadSSHPublicKey",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "upload_ssh_public_key",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UploadServerCertificate",
+    "AuthorizedActions" : [ {
+      "Name" : "TagServerCertificate",
+      "Service" : "iam"
+    }, {
+      "Name" : "UploadServerCertificate",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "upload_server_certificate",
+      "Package" : "Boto3"
+    } ]
+  }, {
+    "Name" : "UploadSigningCertificate",
+    "AuthorizedActions" : [ {
+      "Name" : "UploadSigningCertificate",
+      "Service" : "iam"
+    } ],
+    "SDK" : [ {
+      "Name" : "iam",
+      "Method" : "upload_signing_certificate",
+      "Package" : "Boto3"
+    } ]
+  } ],
+  "Resources" : [ {
+    "Name" : "access-report",
+    "ARNFormats" : [ "arn:${Partition}:iam::${Account}:access-report/${EntityPath}" ]
+  }, {
+    "Name" : "assumed-role",
+    "ARNFormats" : [ "arn:${Partition}:iam::${Account}:assumed-role/${RoleName}/${RoleSessionName}" ]
+  }, {
+    "Name" : "delegation-request",
+    "ARNFormats" : [ "arn:${Partition}:iam::${Account}:delegation-request/${DelegationRequestId}" ],
+    "ConditionKeys" : [ "iam:DelegationRequestOwner" ]
+  }, {
+    "Name" : "federated-user",
+    "ARNFormats" : [ "arn:${Partition}:iam::${Account}:federated-user/${UserName}" ]
+  }, {
+    "Name" : "group",
+    "ARNFormats" : [ "arn:${Partition}:iam::${Account}:group/${GroupNameWithPath}" ]
+  }, {
+    "Name" : "instance-profile",
+    "ARNFormats" : [ "arn:${Partition}:iam::${Account}:instance-profile/${InstanceProfileNameWithPath}" ],
+    "ConditionKeys" : [ "aws:ResourceTag/${TagKey}" ]
+  }, {
+    "Name" : "mfa",
+    "ARNFormats" : [ "arn:${Partition}:iam::${Account}:mfa/${MfaTokenIdWithPath}" ],
+    "ConditionKeys" : [ "aws:ResourceTag/${TagKey}" ]
+  }, {
+    "Name" : "oidc-provider",
+    "ARNFormats" : [ "arn:${Partition}:iam::${Account}:oidc-provider/${OidcProviderName}" ],
+    "ConditionKeys" : [ "aws:ResourceTag/${TagKey}" ]
+  }, {
+    "Name" : "policy",
+    "ARNFormats" : [ "arn:${Partition}:iam::${Account}:policy/${PolicyNameWithPath}" ],
+    "ConditionKeys" : [ "aws:ResourceTag/${TagKey}" ]
+  }, {
+    "Name" : "role",
+    "ARNFormats" : [ "arn:${Partition}:iam::${Account}:role/${RoleNameWithPath}" ],
+    "ConditionKeys" : [ "aws:ResourceTag/${TagKey}", "iam:ResourceTag/${TagKey}" ]
+  }, {
+    "Name" : "saml-provider",
+    "ARNFormats" : [ "arn:${Partition}:iam::${Account}:saml-provider/${SamlProviderName}" ],
+    "ConditionKeys" : [ "aws:ResourceTag/${TagKey}" ]
+  }, {
+    "Name" : "server-certificate",
+    "ARNFormats" : [ "arn:${Partition}:iam::${Account}:server-certificate/${CertificateNameWithPath}" ],
+    "ConditionKeys" : [ "aws:ResourceTag/${TagKey}" ]
+  }, {
+    "Name" : "sms-mfa",
+    "ARNFormats" : [ "arn:${Partition}:iam::${Account}:sms-mfa/${MfaTokenIdWithPath}" ]
+  }, {
+    "Name" : "user",
+    "ARNFormats" : [ "arn:${Partition}:iam::${Account}:user/${UserNameWithPath}" ],
+    "ConditionKeys" : [ "aws:ResourceTag/${TagKey}", "iam:ResourceTag/${TagKey}" ]
+  } ],
+  "Version" : "v1.4"
+}

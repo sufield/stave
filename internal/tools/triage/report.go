@@ -7,7 +7,17 @@ import (
 
 func writeReport(r TriageReport) {
 	fmt.Printf("SERVICE: %s\n", r.ServiceName)
-	fmt.Printf("SDK STATUS: %s\n\n", boolStr(r.Available, "available", "not available"))
+	fmt.Printf("SDK STATUS: %s\n", boolStr(r.Available, "available", "not available"))
+
+	if r.IAMAuth != nil {
+		fmt.Printf("IAM PREFIX: %s (%s)\n", r.IAMAuth.ServicePrefix, r.IAMAuth.DisplayName)
+		fmt.Printf("IAM ACTIONS: %d\n", r.IAMAuth.TotalActions)
+		if r.IAMAuth.ARNFormat != "" {
+			fmt.Printf("ARN FORMAT: %s\n", r.IAMAuth.ARNFormat)
+		}
+		fmt.Printf("CONDITION KEYS: %d\n", len(r.IAMAuth.ConditionKeys))
+	}
+	fmt.Println()
 
 	totalFields := 0
 	for _, op := range r.Operations {

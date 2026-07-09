@@ -23,6 +23,8 @@ var organizationSchema = Schema{
 			Doc: "GuardDuty-disable SCP deny; per-service deny, only when policy present"},
 		{Path: "properties.identity.scp.denies_iam_escalation", Required: false,
 			Doc: "IAM-escalation SCP deny; per-service deny, only when policy present"},
+		{Path: "properties.identity.scp.has_invalid_actions", Required: false,
+			Doc: "SCP references non-existent IAM actions (validated against iamauth registry)"},
 	},
 }
 

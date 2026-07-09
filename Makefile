@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check refactor-scan refactor-scan-check refactor-scan-update triage quarterly-audit quarterly-save compliance-diff ttc-validate
+.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check refactor-scan refactor-scan-check refactor-scan-update sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate
 # Binary name
 BINARY=stave
 
@@ -746,10 +746,18 @@ ifndef ID
 endif
 	$(GOCMD) run ./internal/tools/gencontrol --id "$(ID)" --name "$(NAME)" --field "$(FIELD)" --remediation "$(REMEDIATION)" $(if $(DOMAIN),--domain "$(DOMAIN)") $(if $(SEVERITY),--severity "$(SEVERITY)") $(if $(SCOPE_TAGS),--scope-tags "$(SCOPE_TAGS)") $(if $(ASSET_TYPE),--asset-type "$(ASSET_TYPE)") $(if $(OP),--op "$(OP)") $(if $(VALUE),--value "$(VALUE)") $(if $(COMPLIANCE),--compliance "$(COMPLIANCE)") $(if $(OUT),--out "$(OUT)")
 
+## sync-iamauth: Fetch IAM authorization reference data from the AWS service reference API
+sync-iamauth:
+	@$(GOCMD) run ./internal/tools/geniamdata -out data/iamauth
+
+## sync-iamauth-diff: Show services modified since last fetch
+sync-iamauth-diff:
+	@$(GOCMD) run ./internal/tools/geniamdata -out data/iamauth -diff
+
 ## triage: Triage a new AWS feature for control coverage gaps (usage: make triage ARGS="--service acm")
 triage:
 	@$(MAKE) sync-controls >&2
-	@$(GOCMD) run ./internal/tools/triage $(ARGS)
+	@IAMAUTH_DATA=data/iamauth $(GOCMD) run ./internal/tools/triage $(ARGS)
 
 ## quarterly-audit: Run all gap discovery engines and produce a consolidated report
 quarterly-audit:

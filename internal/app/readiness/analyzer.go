@@ -52,9 +52,15 @@ func observed(snapshots []asset.Snapshot) (map[kernel.AssetType]int, int) {
 	if len(snapshots) == 0 {
 		return out, 0
 	}
+	// Sort snapshots chronologically by CapturedAt so that the last element
+	// is guaranteed to be the latest snapshot.
+	sorted := slices.Clone(snapshots)
+	slices.SortFunc(sorted, func(a, b asset.Snapshot) int {
+		return a.CapturedAt.Compare(b.CapturedAt)
+	})
 	// Per-asset-type unique-ID set keeps the count honest: we only walk the
 	// latest snapshot.
-	latest := &snapshots[len(snapshots)-1]
+	latest := &sorted[len(sorted)-1]
 	perTypeIDs := map[kernel.AssetType]map[asset.ID]struct{}{}
 	for j := range latest.Assets {
 		a := &latest.Assets[j]

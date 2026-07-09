@@ -388,6 +388,7 @@ var pathOverrides = map[string]string{ //nolint:gosec // property labels, not cr
 	"scp.has_dangerous_allows":                                     "SCP dangerous allow statements",
 	"scp.only_full_access":                                         "SCP-only-FullAWSAccess reliance",
 	"scp.missing_create_restriction":                               "SCP identity creation restriction",
+	"identity.scp.has_invalid_actions":                             "SCP invalid action references",
 }
 
 var arrayIndexRegex = regexp.MustCompile(`\[\d*\]`)

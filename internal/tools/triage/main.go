@@ -23,6 +23,7 @@ import (
 
 	"github.com/sufield/stave/internal/adapters/awsmeta"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
+	"github.com/sufield/stave/internal/adapters/iamauth"
 	"github.com/sufield/stave/internal/adapters/predicate"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -75,6 +76,7 @@ func main() {
 
 	catalog := loadCatalog()
 	report := crossReference(schema.ServiceName, secFields, catalog)
+	report.IAMAuth = loadIAMAuth(normalizeServiceTag(schema.ServiceName))
 
 	if *jsonOut {
 		writeJSON(report)
@@ -301,6 +303,37 @@ func writeJSON(v any) {
 	if err := enc.Encode(v); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
+	}
+}
+
+func loadIAMAuth(servicePrefix string) *IAMAuthInfo {
+	ref, err := iamauth.Load(servicePrefix)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "warning: iamauth: %v\n", err)
+		return nil
+	}
+	if ref == nil {
+		return nil
+	}
+
+	ar := iamauth.NewActionRegistry(ref)
+	ckr := iamauth.NewConditionKeyRegistry(ref)
+	rtr := iamauth.NewResourceTypeRegistry(ref)
+
+	var arnFormat string
+	if arns := rtr.All(); len(arns) > 0 {
+		if formats := rtr.ARNFormats(arns[0]); len(formats) > 0 {
+			arnFormat = formats[0]
+		}
+	}
+
+	return &IAMAuthInfo{
+		ServicePrefix: servicePrefix,
+		DisplayName:   ref.Name,
+		TotalActions:  len(ar.All()),
+		ARNFormat:     arnFormat,
+		ConditionKeys: ckr.All(),
+		HasResource:   len(rtr.All()) > 0,
 	}
 }
 

@@ -1,8 +1,8 @@
 # Stave
 
-Open-source static analysis for AWS configuration security.
-Evaluate snapshots against controls, discover attack chains,
-and formally verify policy semantics — offline, credential-free.
+Open-source risk reasoner for AWS configuration security,
+with formal verification. Proves your configuration is correct
+instead of searching for what's wrong — offline, credential-free.
 
 [![codecov](https://codecov.io/gh/sufield/stave/graph/badge.svg?token=OQ72PYGVPZ)](https://codecov.io/gh/sufield/stave)
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sufield/stave?quickstart=1)
@@ -53,7 +53,11 @@ Six executable skills guide you from install to real-environment evaluation. Eac
 | 5 | [reasoning-engines](./_skills/reasoning-engines/SKILL.md) | 30 min | No |
 | 6 | [snapshot-your-account](./_skills/snapshot-your-account/SKILL.md) | 30 min | Yes (read-only) |
 
-## What it finds
+## Why not a scanner?
+
+Stave is a risk reasoner with formal verification — it proves
+your AWS configuration is correct instead of searching for
+what's wrong.
 
 Your AI agent has admin access. Your scanner says you're compliant.
 
@@ -63,12 +67,13 @@ Your AI agent has admin access. Your scanner says you're compliant.
 bash examples/demo-ai-security/run.sh
 ```
 
-| | Checklist scanners | Stave |
+| | Scanners | Stave |
 |---|---|---|
-| **Checks** | Individual settings on individual resources | Compositions across multiple resources |
-| **Finds** | "Bucket not encrypted" (attribute) | "This bucket is reachable through an unauthenticated identity pool" (path) |
-| **Proof** | Scan result (point-in-time opinion) | Deterministic, traceable evidence chain |
-| **Credentials** | Requires cloud API access | Runs on static snapshots — air-gapped, no credentials |
+| **Approach** | Search for known-bad patterns | Prove properties hold for all inputs |
+| **Scope** | Check individual resources | Compute all paths through the relationship graph |
+| **Method** | Sample and alert | Evaluate deterministically with a witness |
+| **Access** | Require credentials + runtime access | Operate on an artifact, offline, credential-free |
+| **Trust** | Findings you trust on faith | Findings you can independently re-derive |
 
 ## Current State
 
