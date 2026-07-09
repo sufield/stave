@@ -46,6 +46,7 @@ import (
 	stavepath "github.com/sufield/stave/cmd/path"
 	staveplan "github.com/sufield/stave/cmd/plan"
 	staveprofile "github.com/sufield/stave/cmd/profile"
+	staveprove "github.com/sufield/stave/cmd/prove"
 	stavereadiness "github.com/sufield/stave/cmd/readiness"
 	stavereport "github.com/sufield/stave/cmd/report"
 	stavesanitize "github.com/sufield/stave/cmd/sanitize"
@@ -168,6 +169,9 @@ func WireCommands(app *App) error {
 
 	// Introspection
 	root.AddCommand(inspect.NewInspectCmd())
+
+	// Z3 SMT formal verification
+	root.AddCommand(staveprove.NewCmd())
 
 	// Net Effective Permissions (CIEM)
 	root.AddCommand(stavenep.NewCmd())

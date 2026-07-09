@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.NOTIFICATION.001
+name: GuardDuty Findings Have No Notification Routing
+description: >
+  GuardDuty is enabled and generating findings but no notification
+  destination is configured — no SNS topic subscription, no
+  EventBridge rule forwarding findings, no integration with an
+  incident response platform. Findings accumulate in the GuardDuty
+  console where no one is watching. The detector runs, detects
+  threats, and the security team is never notified. This is the
+  MORE failure mode: more detection without routing creates alert
+  fatigue by design — findings exist but have no consumer.
+domain: audit
+severity: low
+scope: atomic
+compliance:
+  nist_800_53_r5: "IR-6"
+  soc2: "CC7.3"
+  ccm_v4: ["SEF-03", "SEF-04"]
+scope_tags:
+  - aws
+  - guardduty
+taxonomy:
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_guardduty_detector
+params:
+  attack_stage: detection_evasion
+  base_impact: 4
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - threat_detection.notification.has_routing
+remediation:
+  description: >
+    GuardDuty is enabled but findings are not routed to any
+    notification destination. Threats are detected and ignored.
+  action: >
+    Create an EventBridge rule that matches GuardDuty finding
+    events and routes to an SNS topic subscribed by the security
+    team. Filter by severity (HIGH and CRITICAL at minimum) to
+    avoid alert fatigue from informational findings.
+  example: |
+    {
+      "threat_detection": {
+        "kind": "detector",
+        "notification": {
+          "has_routing": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.threat_detection.kind
+      op: eq
+      value: detector
+    - field: properties.threat_detection.enabled
+      op: eq
+      value: true
+    - field: properties.threat_detection.notification.has_routing
+      op: eq
+      value: false
+defect: >
+  GuardDuty generates findings but no notification routing exists.
+  Threats are detected into a void.
+infection: >
+  Security teams believe GuardDuty is protecting the account
+  because the detector is enabled. No one checks the console for
+  findings. High-severity detections age out after 90 days unseen.
+failure: >
+  An active intrusion generates GuardDuty findings for days or
+  weeks. The security team learns about the breach from the
+  attacker's ransom note, not from GuardDuty.
+tests:
+  - name: "enabled detector with no notification routing fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:guardduty:us-east-1:111122223333:detector/abc"
+      asset_type: aws_guardduty_detector
+      vendor: aws
+      properties:
+        threat_detection:
+          kind: detector
+          enabled: true
+          notification:
+            has_routing: false
+  - name: "enabled detector with notification routing passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:guardduty:us-east-1:111122223333:detector/def"
+      asset_type: aws_guardduty_detector
+      vendor: aws
+      properties:
+        threat_detection:
+          kind: detector
+          enabled: true
+          notification:
+            has_routing: true
+  - name: "disabled detector passes (separate control)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:guardduty:us-east-1:111122223333:detector/ghi"
+      asset_type: aws_guardduty_detector
+      vendor: aws
+      properties:
+        threat_detection:
+          kind: detector
+          enabled: false
+          notification:
+            has_routing: false

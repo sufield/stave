@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"time"
 
@@ -33,10 +34,6 @@ type LoopRequest struct {
 type LoopDeps struct {
 	ObservationRepo contracts.ObservationRepository
 	ControlRepo     contracts.ControlRepository
-
-	// Remediator controls user interaction during the loop.
-	// When nil, NopRemediator is used (auto-approve, discard progress).
-	Remediator Remediator
 }
 
 // evaluationState holds the result and snapshot count from one evaluation run.
@@ -57,25 +54,20 @@ type EvaluationParams struct {
 
 // Loop executes the apply-before, apply-after, and verify sequence.
 func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *ArtifactWriter, eb *EnvelopeBuilder) error {
-	rem := deps.Remediator
-	if rem == nil {
-		rem = NopRemediator{}
-	}
-
 	// 1. Validate directories
 	if err := ValidateLoopDirs(req); err != nil {
 		return err
 	}
 
 	// 2. Load controls once for both runs
-	rem.LogProgress("loading controls from " + req.ControlsDir)
+	slog.Debug("loading controls", "dir", req.ControlsDir)
 	controls, err := loadControls(ctx, deps, req.ControlsDir)
 	if err != nil {
 		return err
 	}
 
 	// 3. Evaluate "before" state
-	rem.LogProgress("evaluating before state from " + req.BeforeDir)
+	slog.Debug("evaluating before state", "dir", req.BeforeDir)
 	before, err := s.evaluateState(ctx, EvaluationParams{
 		Deps: deps, Req: req, Controls: controls, Dir: req.BeforeDir, Label: "before",
 	})
@@ -84,7 +76,7 @@ func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *
 	}
 
 	// 4. Evaluate "after" state
-	rem.LogProgress("evaluating after state from " + req.AfterDir)
+	slog.Debug("evaluating after state", "dir", req.AfterDir)
 	after, err := s.evaluateState(ctx, EvaluationParams{
 		Deps: deps, Req: req, Controls: controls, Dir: req.AfterDir, Label: "after",
 	})

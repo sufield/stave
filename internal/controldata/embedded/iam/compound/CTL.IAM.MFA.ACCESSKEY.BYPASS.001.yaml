@@ -1,0 +1,154 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.MFA.ACCESSKEY.BYPASS.001
+name: MFA Enabled but Access Keys Bypass MFA Enforcement
+description: >
+  An IAM user has MFA enabled for console login and also has active
+  access keys, but the user's policies do not enforce
+  aws:MultiFactorAuthPresent for API/CLI access. MFA protects the
+  console session but API calls via the access key bypass MFA
+  entirely — the credential alone is sufficient. The user appears
+  MFA-protected in audit output, but an attacker who obtains the
+  access key has full API access without a second factor. The
+  compound failure: MFA is console-only, and the access key is an
+  unprotected backdoor to the same permissions.
+domain: identity
+severity: high
+scope: atomic
+compliance:
+  owasp_nhi: "NHI4"
+  nist_800_53_r5: "IA-2(1)"
+  cis_aws_v3.0: "1.4"
+  pci_dss_v4.0: "8.4.1"
+  soc2: "CC6.1"
+  hipaa: "164.312(d)"
+  ccm_v4: ["IAM-05", "IAM-14"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - credential-lifecycle
+  - formal-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_user
+params:
+  attack_stage: credential_access
+  base_impact: 8
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.console_access.mfa_enabled
+  - identity.access_keys.active_count
+  - identity.policy.mfa_required_on_destructive_actions
+remediation:
+  description: >
+    IAM user has MFA for console but active access keys with no
+    policy-level MFA condition. API access bypasses MFA entirely.
+  action: >
+    Add an aws:MultiFactorAuthPresent condition to the user's IAM
+    policies for destructive actions, or remove access keys if
+    the user only needs console access. For programmatic access,
+    use temporary credentials via IAM Identity Center or AssumeRole
+    with MFA.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "console_access": {
+          "mfa_enabled": true
+        },
+        "access_keys": {
+          "active_count": 0
+        },
+        "policy": {
+          "mfa_required_on_destructive_actions": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.console_access.mfa_enabled
+      op: eq
+      value: true
+    - field: properties.identity.access_keys.active_count
+      op: gt
+      value: 0
+    - field: properties.identity.policy.mfa_required_on_destructive_actions
+      op: eq
+      value: false
+defect: >
+  IAM user has MFA enabled for console but access keys bypass MFA.
+  The access key is an MFA-free backdoor to the same permissions.
+infection: >
+  Audit reports show the user as MFA-protected. Security teams skip
+  the user during credential reviews because MFA appears enabled.
+failure: >
+  Attacker obtains the access key (leaked in code, logs, or config).
+  Full API access without second factor — MFA never challenged.
+tests:
+  - name: "MFA on + active keys + no MFA policy fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/dev-user"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          console_access:
+            mfa_enabled: true
+          access_keys:
+            active_count: 1
+          policy:
+            mfa_required_on_destructive_actions: false
+  - name: "MFA on + active keys + MFA policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/secure-user"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          console_access:
+            mfa_enabled: true
+          access_keys:
+            active_count: 1
+          policy:
+            mfa_required_on_destructive_actions: true
+  - name: "MFA on + no active keys passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/console-only"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          console_access:
+            mfa_enabled: true
+          access_keys:
+            active_count: 0
+          policy:
+            mfa_required_on_destructive_actions: false
+  - name: "no MFA + active keys passes (separate control)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/no-mfa"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          console_access:
+            mfa_enabled: false
+          access_keys:
+            active_count: 1
+          policy:
+            mfa_required_on_destructive_actions: false

@@ -65,6 +65,21 @@ AWS account's Bedrock model access configuration enables all available foundatio
 
 ---
 
+### CTL.BEDROCK.ACCESS.POLICY.INVERTED.001
+
+**Bedrock Model Access Policy Has Inverted Effect**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+A Bedrock model invocation policy uses Effect:Allow where the surrounding context (condition keys, resource scope, principal scope) indicates the author intended Effect:Deny, or vice versa. The policy looks restrictive on inspection — conditions reference specific models or principals — but the Effect is semantically inverted: an Allow with narrow conditions permits exactly the access it appears to restrict, or a Deny with broad conditions blocks access it appears to preserve. This is a semantic inversion: the policy structure reads as access control, but the Effect polarity means it does the opposite.
+
+**Remediation:** Review the model access policy. Verify that Allow and Deny statements match the intended access pattern. A Deny that should block specific models must cover the correct resource ARNs; an Allow that should permit specific models must not inadvertently open broader access via its conditions.
+
+---
+
 ### CTL.BEDROCK.AGENT.ACTIONGROUPS.SPRAWL.001
 
 **Bedrock Agent Action-Group Count Must Be Bounded**

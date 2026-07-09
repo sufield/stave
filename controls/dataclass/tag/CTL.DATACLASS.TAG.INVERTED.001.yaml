@@ -1,0 +1,126 @@
+dsl_version: ctrl.v1
+id: CTL.DATACLASS.TAG.INVERTED.001
+name: Data Classification Tag Contradicts Resource Access Posture
+description: >
+  A resource carries a high-sensitivity classification tag
+  (confidential, restricted, pii, phi, pci) but its access
+  configuration is publicly accessible. The classification
+  declares the data is sensitive; the access posture exposes it.
+  This is a cross-property semantic inversion: the tag and the
+  configuration contradict each other. Either the classification
+  is wrong (the data is actually public) or the access posture
+  is wrong (the resource should not be publicly accessible).
+  Both states are dangerous — a wrong tag means controls scoped
+  to that classification fire incorrectly; a wrong posture means
+  sensitive data is exposed.
+domain: governance
+severity: medium
+scope: atomic
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-4"
+  pci_dss_v4.0: "3.4.1"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["DSP-03", "DSP-04", "DSP-10"]
+scope_tags:
+  - aws
+  - governance
+  - dataclass
+taxonomy:
+  - data-perimeter
+  - attribution
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+  - aws_rds_instance
+  - aws_redshift_cluster
+  - aws_opensearch_domain
+observation_fields:
+  - governance.data_classification
+  - governance.publicly_accessible
+remediation:
+  description: >
+    A resource tagged as sensitive (confidential, restricted, PII,
+    PHI, PCI) is publicly accessible. The classification and
+    access posture contradict each other.
+  action: >
+    Either remove public access (disable PubliclyAccessible,
+    enable BlockPublicAccess, remove wildcard principals from
+    resource policies) or reclassify the resource as public if
+    the data is genuinely non-sensitive.
+  example: |
+    {
+      "governance": {
+        "data_classification": "confidential",
+        "publicly_accessible": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.data_classification
+      op: in
+      value: [confidential, restricted, pii, phi, pci]
+    - field: properties.governance.publicly_accessible
+      op: eq
+      value: true
+defect: >
+  A resource classified as sensitive is publicly accessible.
+infection: >
+  Sensitive data is exposed to the internet. Classification-based
+  access controls trust the tag and may not independently verify
+  the access posture.
+failure: >
+  Data breach: sensitive records (PII, PHI, PCI) are accessed by
+  unauthorized parties through the public endpoint.
+tests:
+  - name: "confidential + publicly accessible fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::sensitive-public-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        governance:
+          data_classification: confidential
+          publicly_accessible: true
+  - name: "confidential + private passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::sensitive-private-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        governance:
+          data_classification: confidential
+          publicly_accessible: false
+  - name: "public classification + publicly accessible passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::public-website-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        governance:
+          data_classification: public
+          publicly_accessible: true
+  - name: "pii + publicly accessible fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:db:pii-public"
+      asset_type: aws_rds_instance
+      vendor: aws
+      properties:
+        governance:
+          data_classification: pii
+          publicly_accessible: true
+  - name: "restricted + private passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:redshift:us-east-1:111122223333:cluster:restricted"
+      asset_type: aws_redshift_cluster
+      vendor: aws
+      properties:
+        governance:
+          data_classification: restricted
+          publicly_accessible: false

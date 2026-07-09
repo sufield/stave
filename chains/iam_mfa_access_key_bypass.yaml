@@ -1,0 +1,17 @@
+id: iam_mfa_access_key_bypass
+description: >
+  IAM user has MFA enabled for console login but active access
+  keys with no policy-level MFA condition on destructive actions.
+  The user appears MFA-protected in audit output but API/CLI
+  access via the access key bypasses MFA entirely. A compromised
+  access key grants full API access without a second factor.
+controls:
+  - CTL.IAM.CONSOLE.MFA.001
+  - CTL.IAM.MFA.ACCESSKEY.BYPASS.001
+  - CTL.IAM.POLICY.MFA.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - shadow_admin_access

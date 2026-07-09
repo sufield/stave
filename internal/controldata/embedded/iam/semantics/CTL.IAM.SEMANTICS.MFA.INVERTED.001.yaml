@@ -1,0 +1,120 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SEMANTICS.MFA.INVERTED.001
+name: Allow with MFA-False Condition Grants Access Without MFA
+description: >
+  An IAM Allow statement includes a condition on
+  aws:MultiFactorAuthPresent set to "false". This grants access
+  specifically when MFA is NOT used — the semantic opposite of
+  requiring MFA. The policy reads as if it enforces MFA but actually
+  permits access to any caller who has NOT authenticated with a second
+  factor. When the condition operator is BoolIfExists, the inversion
+  is compounded: programmatic callers whose requests carry no MFA
+  context key at all also satisfy the condition. This is formally
+  provable: Z3 shows the policy permits access for the exact set of
+  requests that lack MFA, which is the complement of the intended
+  set. No competitor tool detects this — it requires correlating
+  Effect polarity, condition key semantics, and condition value.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "IA-2(1)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "8.4.1"
+  fedramp_moderate: "IA-2(1)"
+  hipaa: "164.312(d)"
+  ccm_v4: ["IAM-05", "IAM-14"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - formal-semantics
+  - credential-lifecycle
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_policy
+params:
+  base_impact: 9
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+remediation:
+  description: >
+    IAM Allow statement permits access when MFA is absent. The
+    condition checks for MFA=false with Effect:Allow, granting
+    access to any caller without a second factor.
+  action: >
+    Either change the condition value to "true" (Allow only with
+    MFA), or restructure as a Deny statement: Deny + MFA=false
+    is the standard MFA enforcement pattern that blocks all
+    non-MFA requests.
+  example: |
+    {
+      "identity": {
+        "kind": "policy",
+        "policy": {
+          "semantics": {
+            "has_allow_mfa_false": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: policy
+    - field: properties.identity.policy.semantics.has_allow_mfa_false
+      op: eq
+      value: true
+defect: >
+  An Allow statement conditions on aws:MultiFactorAuthPresent=false,
+  granting access when MFA is absent.
+infection: >
+  Any principal attached to this policy gains access without MFA.
+  Compromised long-term credentials (access keys) bypass the
+  apparent MFA requirement because the condition specifically
+  permits non-MFA requests.
+failure: >
+  Attacker with stolen access keys accesses protected resources
+  without MFA. The audit trail shows the MFA condition existed,
+  obscuring the root cause during incident response.
+tests:
+  - name: "Allow with MFA=false fires (vulnerable)"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/MFAInverted"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_allow_mfa_false: true
+  - name: "Deny with MFA=false passes (correct pattern)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/MFACorrect"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_allow_mfa_false: false
+  - name: "No MFA condition at all passes (separate control)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:policy/NoMFA"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            semantics:
+              has_allow_mfa_false: false

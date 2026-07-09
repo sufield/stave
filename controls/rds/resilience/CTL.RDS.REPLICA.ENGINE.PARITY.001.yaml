@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.REPLICA.ENGINE.PARITY.001
+name: RDS Read Replica Must Run Same Engine Version as Primary
+description: >
+  An RDS read replica is running a different engine version than
+  its source instance. Version divergence means the replica has
+  different vulnerability exposure, different feature behavior,
+  and potentially deprecated-engine status compared to the
+  primary. AWS allows replicas to lag behind during a rolling
+  upgrade, but a persistent version difference — especially where
+  the replica is on an older, unpatched version — means the
+  replica is a softer target than the primary for any
+  engine-version-specific CVE. This is a PART OF gap: the
+  primary was upgraded but the replica was not, creating a false
+  sense that the entire database tier is on the patched version.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-6"
+  soc2: "CC6.1"
+  ccm_v4: ["CCC-04"]
+scope_tags:
+  - aws
+  - rds
+taxonomy:
+  - deprecation
+  - redundancy
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_rds_instance
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    RDS read replica is on a different engine version than its
+    source instance. The replica may have different vulnerability
+    exposure.
+  action: >
+    Upgrade the replica to match the primary's engine version:
+    aws rds modify-db-instance --db-instance-identifier <replica-id>
+    --engine-version <primary-version> --apply-immediately
+  example: |
+    {
+      "database": {
+        "kind": "rds_instance",
+        "replica": {
+          "is_read_replica": true,
+          "engine_version_drift": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.replica.is_read_replica
+      op: eq
+      value: true
+    - field: properties.database.replica.engine_version_drift
+      op: eq
+      value: true
+defect: >
+  RDS read replica runs a different engine version than its
+  source instance.
+infection: >
+  The replica has a different vulnerability surface. A CVE
+  patched in the primary's version may still be exploitable on
+  the replica.
+failure: >
+  Attacker exploits an engine-version-specific vulnerability on
+  the replica to access the same production data the primary
+  serves.
+tests:
+  - name: "replica with engine version drift fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:db:replica-old-engine"
+      asset_type: aws_rds_instance
+      vendor: aws
+      properties:
+        database:
+          kind: rds_instance
+          replica:
+            is_read_replica: true
+            engine_version_drift: true
+  - name: "replica with matching engine version passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:db:replica-current-engine"
+      asset_type: aws_rds_instance
+      vendor: aws
+      properties:
+        database:
+          kind: rds_instance
+          replica:
+            is_read_replica: true
+            engine_version_drift: false
+  - name: "primary instance does not fire"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:db:primary"
+      asset_type: aws_rds_instance
+      vendor: aws
+      properties:
+        database:
+          kind: rds_instance
+          replica:
+            is_read_replica: false
+            engine_version_drift: false

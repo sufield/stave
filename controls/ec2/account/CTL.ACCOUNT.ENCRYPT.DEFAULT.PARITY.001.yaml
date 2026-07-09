@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.ACCOUNT.ENCRYPT.DEFAULT.PARITY.001
+name: Account Encryption Defaults Must Be Enabled Consistently
+description: >
+  Account-level default encryption is enabled for some storage
+  services but not all. EBS default encryption may be on
+  (CTL.EC2.EBS.DEFAULT.001) while RDS and EFS storage created
+  in the same account is not encrypted by default. This is a
+  PART OF gap: the account enforces encryption-at-rest defaults
+  for one storage type but not others, so new resources created
+  in unprotected services are unencrypted unless the creator
+  explicitly enables encryption. The fix is to enable default
+  encryption for all storage services at the account level so
+  no new resource can be created without encryption.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "3.4.1"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - account-governance
+  - encryption-at-rest
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - account.encryption_defaults.ebs
+  - account.encryption_defaults.rds
+  - account.encryption_defaults.efs
+  - account.encryption_defaults.all_enabled
+remediation:
+  description: >
+    Account-level default encryption is not consistently enabled
+    across all storage services. Some services default to
+    unencrypted storage.
+  action: >
+    Enable default encryption for all storage services:
+    - EBS: aws ec2 enable-ebs-encryption-by-default
+    - RDS: aws rds modify-certificates (ensure new instances default to encryption)
+    - EFS: enforce encryption via SCP or IaC policy
+    Verify with aws ec2 get-ebs-encryption-by-default for EBS.
+  example: |
+    {
+      "account": {
+        "encryption_defaults": {
+          "all_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.account.encryption_defaults.all_enabled
+      op: eq
+      value: false
+defect: >
+  Account-level encryption defaults are enabled for some storage
+  services but not all.
+infection: >
+  New resources created in unprotected services are unencrypted
+  by default. A developer or automation that omits the encryption
+  flag creates an unencrypted resource without warning.
+failure: >
+  Unencrypted storage contains sensitive data. An attacker with
+  access to the underlying storage (snapshot theft, volume
+  detach, backup exfiltration) reads data in plaintext.
+tests:
+  - name: "partial encryption defaults fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "111122223333"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          encryption_defaults:
+            all_enabled: false
+            ebs: true
+            rds: false
+            efs: false
+  - name: "all encryption defaults enabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "111122223333"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          encryption_defaults:
+            all_enabled: true
+            ebs: true
+            rds: true
+            efs: true
+  - name: "no encryption defaults fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "444455556666"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          encryption_defaults:
+            all_enabled: false
+            ebs: false
+            rds: false
+            efs: false

@@ -32,30 +32,6 @@ func Report(ctx context.Context, req ReportRequest, deps ReportDeps) (ReportResp
 	return ReportResponse{EvaluationData: data}, nil
 }
 
-// --- Enforce ---
-
-// EnforceTemplateGeneratorPort generates enforcement templates from evaluation output.
-type EnforceTemplateGeneratorPort interface {
-	GenerateTemplate(ctx context.Context, req EnforceRequest) (EnforceResponse, error)
-}
-
-// EnforceDeps represents a enforcedeps value.
-type EnforceDeps struct {
-	Generator EnforceTemplateGeneratorPort
-}
-
-// Enforce generates enforcement templates from evaluation output.
-func Enforce(ctx context.Context, req EnforceRequest, deps EnforceDeps) (EnforceResponse, error) {
-	if err := ctx.Err(); err != nil {
-		return EnforceResponse{}, fmt.Errorf("enforce: %w", err)
-	}
-	resp, err := deps.Generator.GenerateTemplate(ctx, req)
-	if err != nil {
-		return EnforceResponse{}, fmt.Errorf("enforce: %w", err)
-	}
-	return resp, nil
-}
-
 // --- Report Types ---
 
 // ReportRequest represents a reportrequest value.
@@ -98,21 +74,4 @@ type CIDiffSummary struct {
 	CurrentFindings  int `json:"current_findings"`
 	NewFindings      int `json:"new_findings"`
 	ResolvedFindings int `json:"resolved_findings"`
-}
-
-// --- Enforce Types ---
-
-// EnforceRequest represents a enforcerequest value.
-type EnforceRequest struct {
-	InputPath string `json:"input_path"`
-	OutDir    string `json:"out_dir,omitempty"`
-	Mode      string `json:"mode"`
-	DryRun    bool   `json:"dry_run,omitempty"`
-}
-
-// EnforceResponse represents a enforceresponse value.
-type EnforceResponse struct {
-	OutputFile string   `json:"output_file"`
-	Targets    []string `json:"targets"`
-	DryRun     bool     `json:"dry_run,omitempty"`
 }

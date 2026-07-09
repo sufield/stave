@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.REPLICA.DELETEPROT.001
+name: RDS Read Replica Must Have Deletion Protection Enabled
+description: >
+  An RDS read replica does not have deletion protection enabled
+  while it serves as a copy of production data. Read replicas
+  are independently deletable — deleting a replica does not
+  require deleting the primary. Without deletion protection, a
+  compromised credential or misconfigured automation can destroy
+  the replica with a single API call. The primary's deletion
+  protection does not extend to its replicas; each must be
+  protected independently. This is a PART OF gap: the primary
+  is protected but the replica is not, creating a false sense
+  that all copies of the data are safe from deletion.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - rds
+taxonomy:
+  - compliance-mapping
+  - redundancy
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_rds_instance
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    RDS read replica does not have deletion protection enabled.
+    The replica can be deleted independently of the primary.
+  action: >
+    Enable deletion protection on the replica:
+    aws rds modify-db-instance --db-instance-identifier <replica-id>
+    --deletion-protection --apply-immediately
+  example: |
+    {
+      "database": {
+        "kind": "rds_instance",
+        "replica": {
+          "is_read_replica": true
+        },
+        "deletion_protection": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_instance
+    - field: properties.database.replica.is_read_replica
+      op: eq
+      value: true
+    - field: properties.database.deletion_protection
+      op: eq
+      value: false
+defect: >
+  RDS read replica lacks deletion protection while the primary
+  instance has it enabled.
+infection: >
+  The replica is deletable by any principal with rds:DeleteDBInstance
+  permission, without the additional safeguard the primary has.
+failure: >
+  Attacker or misconfigured automation deletes the replica,
+  destroying a copy of production data and reducing availability.
+tests:
+  - name: "replica without deletion protection fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:db:my-db-replica"
+      asset_type: aws_rds_instance
+      vendor: aws
+      properties:
+        database:
+          kind: rds_instance
+          replica:
+            is_read_replica: true
+          deletion_protection: false
+  - name: "replica with deletion protection passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:db:my-db-replica-protected"
+      asset_type: aws_rds_instance
+      vendor: aws
+      properties:
+        database:
+          kind: rds_instance
+          replica:
+            is_read_replica: true
+          deletion_protection: true
+  - name: "primary without replica flag does not fire (separate control)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:db:my-db-primary"
+      asset_type: aws_rds_instance
+      vendor: aws
+      properties:
+        database:
+          kind: rds_instance
+          deletion_protection: false

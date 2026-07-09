@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.DATACLASS.TAG.SENSITIVE.UNTAGGED.001
+name: Sensitive-Service Resource Missing Classification Tag
+description: >
+  A resource in a high-sensitivity service category (S3,
+  DynamoDB, RDS, Secrets Manager, Lambda, SageMaker, OpenSearch,
+  Redshift) has no data-classification tag. Unlike the generic
+  CTL.DATACLASS.TAG.MISSING.001 which flags all data-bearing
+  resources, this control targets resources in services that
+  routinely handle sensitive data and are common participants
+  in data flows. An untagged resource in these services is a
+  PART OF gap: other resources in the same data flow may be
+  tagged, but this one is not, creating a hole in
+  classification-driven governance. Controls scoped to
+  "confidential" or "pii" data cannot evaluate an untagged
+  resource — it is invisible to every classification-based
+  invariant.
+domain: governance
+severity: medium
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-4"
+  ccm_v4: ["DSP-03", "DSP-04"]
+scope_tags:
+  - aws
+  - governance
+  - dataclass
+taxonomy:
+  - data-perimeter
+  - attribution
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+  - aws_dynamodb_table
+  - aws_rds_instance
+  - aws_secretsmanager_secret
+  - aws_lambda_function
+  - aws_sagemaker_notebook
+  - aws_opensearch_domain
+  - aws_redshift_cluster
+observation_fields:
+  - governance.is_sensitive_service
+  - governance.data_classification
+remediation:
+  description: >
+    A resource in a sensitive service category has no
+    data-classification tag. It cannot be evaluated by
+    classification-driven controls.
+  action: >
+    Apply a data-classification tag from the approved taxonomy
+    (public, internal, confidential, restricted, pii, phi, pci).
+    Wire tagging into the resource's IaC module so new resources
+    are classified at creation.
+  example: |
+    {
+      "governance": {
+        "is_sensitive_service": true,
+        "data_classification": "confidential"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.is_sensitive_service
+      op: eq
+      value: true
+    - field: properties.governance.data_classification
+      op: missing
+defect: >
+  A resource in a sensitive service category has no classification
+  tag.
+infection: >
+  Classification-driven controls (encryption posture for PHI,
+  retention floors, public-exposure checks) cannot evaluate this
+  resource — it is a gap in every classification-scoped invariant.
+failure: >
+  Sensitive data sits in an unclassified resource; a leak is
+  discovered only after the fact because no control knew the data
+  was sensitive.
+tests:
+  - name: "sensitive service resource with no classification fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:data-processor"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        governance:
+          is_sensitive_service: true
+  - name: "sensitive service resource with classification passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::classified-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        governance:
+          is_sensitive_service: true
+          data_classification: confidential
+  - name: "non-sensitive service resource without classification passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudwatch:us-east-1:111122223333:alarm:cpu-high"
+      asset_type: aws_cloudwatch_alarm
+      vendor: aws
+      properties:
+        governance:
+          is_sensitive_service: false

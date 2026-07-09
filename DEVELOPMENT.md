@@ -57,11 +57,29 @@ internal/
     readiness/          Pre-flight assessment
     ...
   adapters/             Infrastructure — implements ports (25+ packages)
+    acknowledgment/     Acknowledgment config loader (YAML)
+    artifacts/          Build artifact persistence
+    aws/                AWS SDK adapters
+    awsmeta/            Botocore service model metadata reader
+    baseline/           Baseline comparison
     cel/                CEL predicate compiler + evaluator
+    compliance/         Compliance framework YAML parser
     controls/           Control YAML parser + builtin loader
+    coverage/           Coverage analysis (embedded alternative inventories)
+    doctor/             Environment readiness checks
+    evaluation/         Evaluation artifact JSON loader
+    evidence/           Portable evidence bundle (tar.gz for air-gap GRC)
+    exemption/          Exemption management
+    govulncheck/        Vulnerability scanner (os/exec wrapper)
+    graph/              Control/asset graph builder
+    integrity/          Snapshot integrity verification
     observations/       Observation JSON loader + integrity
-    output/             Output rendering (JSON, text, SARIF)
-    ...
+    output/             Output rendering (JSON, text, SARIF, reports)
+    predicate/          Predicate evaluation adapters
+    report/             Report generation adapters
+    sirbridge/          Platform-specific SIR adapter wiring
+    sla/                SLA policy loader (embedded YAML)
+    telemetry/          Audit trail writer (audit_trace.json)
   contracts/            Schema validation, security contracts
     schema/             JSON schema validators (embedded)
     validator/          Report validators
@@ -462,6 +480,49 @@ make gencontrol \
   COMPLIANCE="cis-aws-v3:2.1.1" \
   OUT=controls/s3/access/
 ```
+
+---
+
+## Recurring Tasks
+
+Gap discovery engines run on a quarterly cadence. Each engine
+has a make target and discovers controls the catalog is missing.
+
+| Engine | Make Target | What It Discovers |
+|--------|-------------|-------------------|
+| AWS feature triage | `make triage ARGS="--service X"` | Controls needed for a new/changed AWS service |
+| Compliance diff | `make compliance-diff` | Framework requirements not mapped to controls |
+| Quarterly audit | `make quarterly-audit` | Consolidated gap report across all engines |
+| Semantic diff | `make semantic-diff` | Predicate equivalence regressions |
+| Chain discovery | `make chain-discover` | Attack chains not covered by existing chain YAMLs |
+
+```bash
+# Run all engines and save as this quarter's baseline
+make quarterly-save
+
+# Triage a single service
+make triage ARGS="--service lambda"
+
+# Diff a framework
+make compliance-diff ARGS="--framework cis-aws-v3"
+```
+
+---
+
+## Task System
+
+Task prompts live in `.stave-backlog/`. The directory contains
+per-task prompt files used by Claude Code sessions.
+
+```
+.stave-backlog/
+  audit/              Audit reports and baselines
+```
+
+Task prompts are standalone markdown files with metadata (id,
+workstream, title, priority, status, depends_on) and phased
+instructions. A new task is a new `.md` file in the appropriate
+subdirectory.
 
 ---
 

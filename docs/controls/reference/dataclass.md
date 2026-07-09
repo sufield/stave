@@ -21,6 +21,21 @@ The collector emits governance.environment (the resolved environment, e.g. produ
 
 ---
 
+### CTL.DATACLASS.TAG.INVERTED.001
+
+**Data Classification Tag Contradicts Resource Access Posture**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-4; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+
+A resource carries a high-sensitivity classification tag (confidential, restricted, pii, phi, pci) but its access configuration is publicly accessible. The classification declares the data is sensitive; the access posture exposes it. This is a cross-property semantic inversion: the tag and the configuration contradict each other. Either the classification is wrong (the data is actually public) or the access posture is wrong (the resource should not be publicly accessible). Both states are dangerous — a wrong tag means controls scoped to that classification fire incorrectly; a wrong posture means sensitive data is exposed.
+
+**Remediation:** Either remove public access (disable PubliclyAccessible, enable BlockPublicAccess, remove wildcard principals from resource policies) or reclassify the resource as public if the data is genuinely non-sensitive.
+
+---
+
 ### CTL.DATACLASS.TAG.MISSING.001
 
 **Data-Bearing Resource Must Carry a Classification Tag**
@@ -35,6 +50,21 @@ The collector normalizes whichever tag key the organization uses (data_classific
 Fail-loud: an in-scope resource with no classification is a governance gap, not "unclassified data is fine." Tag it, then the value-level controls (taxonomy, PHI markers, retention) can reason about it.
 
 **Remediation:** Apply a data-classification tag drawn from the approved taxonomy (public, internal, confidential, restricted, pii, phi, pci). Wire tagging into the resource's IaC module so new resources are classified at creation.
+
+---
+
+### CTL.DATACLASS.TAG.SENSITIVE.UNTAGGED.001
+
+**Sensitive-Service Resource Missing Classification Tag**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.1;
+
+A resource in a high-sensitivity service category (S3, DynamoDB, RDS, Secrets Manager, Lambda, SageMaker, OpenSearch, Redshift) has no data-classification tag. Unlike the generic CTL.DATACLASS.TAG.MISSING.001 which flags all data-bearing resources, this control targets resources in services that routinely handle sensitive data and are common participants in data flows. An untagged resource in these services is a PART OF gap: other resources in the same data flow may be tagged, but this one is not, creating a hole in classification-driven governance. Controls scoped to "confidential" or "pii" data cannot evaluate an untagged resource — it is invisible to every classification-based invariant.
+
+**Remediation:** Apply a data-classification tag from the approved taxonomy (public, internal, confidential, restricted, pii, phi, pci). Wire tagging into the resource's IaC module so new resources are classified at creation.
 
 ---
 

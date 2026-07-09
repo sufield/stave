@@ -45,15 +45,6 @@ func (m *mockReportLoader) LoadEvaluation(_ context.Context, _ string) (*report.
 	return m.data, m.err
 }
 
-type mockEnforceGen struct {
-	resp EnforceResponse
-	err  error
-}
-
-func (m *mockEnforceGen) GenerateTemplate(_ context.Context, _ EnforceRequest) (EnforceResponse, error) {
-	return m.resp, m.err
-}
-
 type mockDiagnoseRunner struct {
 	data any
 	err  error
@@ -165,23 +156,6 @@ func TestReport(t *testing.T) {
 	})
 	t.Run("ctx", func(t *testing.T) {
 		_, err := Report(canceled(), ReportRequest{}, ReportDeps{Loader: &mockReportLoader{}})
-		assertCanceled(t, err)
-	})
-}
-
-// --- Enforce ---
-
-func TestEnforce(t *testing.T) {
-	t.Run("happy", func(t *testing.T) {
-		_, err := Enforce(context.Background(), EnforceRequest{InputPath: "e.json", Mode: "pab"}, EnforceDeps{Generator: &mockEnforceGen{}})
-		assertNoErr(t, err)
-	})
-	t.Run("error", func(t *testing.T) {
-		_, err := Enforce(context.Background(), EnforceRequest{}, EnforceDeps{Generator: &mockEnforceGen{err: errors.New("fail")}})
-		assertErr(t, err)
-	})
-	t.Run("ctx", func(t *testing.T) {
-		_, err := Enforce(canceled(), EnforceRequest{}, EnforceDeps{Generator: &mockEnforceGen{}})
 		assertCanceled(t, err)
 	})
 }

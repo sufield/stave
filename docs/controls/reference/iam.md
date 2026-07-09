@@ -1616,6 +1616,21 @@ Fact-recording marker for IAM roles tagged environment=production (or equivalent
 
 ---
 
+### CTL.IAM.MFA.ACCESSKEY.BYPASS.001
+
+**MFA Enabled but Access Keys Bypass MFA Enforcement**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.4; hipaa: 164.312(d); nist_800_53_r5: IA-2(1); owasp_nhi: NHI4; pci_dss_v4.0: 8.4.1; soc2: CC6.1;
+
+An IAM user has MFA enabled for console login and also has active access keys, but the user's policies do not enforce aws:MultiFactorAuthPresent for API/CLI access. MFA protects the console session but API calls via the access key bypass MFA entirely — the credential alone is sufficient. The user appears MFA-protected in audit output, but an attacker who obtains the access key has full API access without a second factor. The compound failure: MFA is console-only, and the access key is an unprotected backdoor to the same permissions.
+
+**Remediation:** Add an aws:MultiFactorAuthPresent condition to the user's IAM policies for destructive actions, or remove access keys if the user only needs console access. For programmatic access, use temporary credentials via IAM Identity Center or AssumeRole with MFA.
+
+---
+
 ### CTL.IAM.MFA.HWKEY.001
 
 **Privileged Accounts Must Use Hardware MFA**
@@ -1703,6 +1718,21 @@ For each resource tagged data-classification: phi, the complete set of principal
 A delegated administrator account for an AWS service has permissions beyond what the delegated service requires. Delegated administrators manage AWS services across the organization. If the delegated admin account has excessive permissions, compromising the account gives the attacker organizational control beyond the intended delegation scope.
 
 **Remediation:** Scope the delegated administrator account permissions to only the actions required by the delegated service. Remove AdministratorAccess or broad cross-account role assumption permissions.
+
+---
+
+### CTL.IAM.ORG.MGMT.PRINCIPALS.001
+
+**Management Account Has Workload IAM Principals**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+The AWS management account has IAM users or roles beyond the minimum break-glass set. The management account is exempt from all SCPs by AWS design — every principal in this account has unrestricted access to organization-wide actions that SCPs deny for member accounts. When the management account runs workloads or has non-administrative principals, the SCP security perimeter has an unprotected hole: any compromised principal in the management account bypasses every SCP guardrail. The management account should contain only break-glass roles and organization management automation, with no human users or workload roles.
+
+**Remediation:** Move all workloads and non-administrative IAM users/roles out of the management account into dedicated member accounts. Keep only break-glass roles and organization management automation in the management account.
 
 ---
 
@@ -2849,6 +2879,21 @@ A Deny statement has two or more negated conditions (StringNotEquals, ArnNotLike
 
 ---
 
+### CTL.IAM.SEMANTICS.DENY.CONTRADICTED.001
+
+**Resource Policy Deny Is Contradicted by Allow in Same Policy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A resource policy contains a Deny statement, but another statement in the same policy document has an Allow that matches the same principal, action, and resource scope. In AWS policy evaluation, an explicit Deny always wins over an Allow — but only for the EXACT principal/action/resource triple. When the Allow uses a broader wildcard than the Deny, requests outside the Deny's narrow scope are still permitted. The author likely intended the Deny to block all matching access, but the accompanying Allow re-opens a path that the Deny does not cover. This extends the S3-specific shadow-allow detection to all resource policy types: KMS, SNS, SQS, Lambda, Secrets Manager, OpenSearch, ECR.
+
+**Remediation:** Review the policy document for overlapping Deny and Allow statements. Either narrow the Allow to exclude the Deny's scope, or broaden the Deny to cover all principals, actions, and resources matched by the Allow.
+
+---
+
 ### CTL.IAM.SEMANTICS.DENY.POSITIVE.001
 
 **Deny with Positive Condition Narrows Instead of Excepts**
@@ -2906,6 +2951,21 @@ A Deny statement uses ForAnyValue on a condition key that may be absent from the
 A policy condition uses an IfExists operator suffix on a service-specific condition key (any key not prefixed with aws:*). IfExists makes the condition evaluate to true when the key is absent from the request context. For global keys (aws:SourceIp, aws:PrincipalArn), absence is unusual — most requests include them. For service-specific keys (ec2:InstanceType, s3:prefix, rds:DatabaseEngine), the key is absent from most request types because it only applies to that service's API calls. The condition is vacuously satisfied for every request that doesn't involve the specific service action. AWS documents this pitfall with the ec2:RunInstances example: InstanceType IfExists passes for images, key pairs, and security groups checked during the same API call. An Allow with IfExists on a service-specific key provides less restriction than intended.
 
 **Remediation:** Split the statement into two: one for actions that produce the condition key (with the standard operator, not IfExists), and one for actions that do not. Alternatively, scope the Resource element to only the resource types that carry the key.
+
+---
+
+### CTL.IAM.SEMANTICS.MFA.INVERTED.001
+
+**Allow with MFA-False Condition Grants Access Without MFA**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: IA-2(1); hipaa: 164.312(d); nist_800_53_r5: IA-2(1); pci_dss_v4.0: 8.4.1; soc2: CC6.1;
+
+An IAM Allow statement includes a condition on aws:MultiFactorAuthPresent set to "false". This grants access specifically when MFA is NOT used — the semantic opposite of requiring MFA. The policy reads as if it enforces MFA but actually permits access to any caller who has NOT authenticated with a second factor. When the condition operator is BoolIfExists, the inversion is compounded: programmatic callers whose requests carry no MFA context key at all also satisfy the condition. This is formally provable: Z3 shows the policy permits access for the exact set of requests that lack MFA, which is the complement of the intended set. No competitor tool detects this — it requires correlating Effect polarity, condition key semantics, and condition value.
+
+**Remediation:** Either change the condition value to "true" (Allow only with MFA), or restructure as a Deny statement: Deny + MFA=false is the standard MFA enforcement pattern that blocks all non-MFA requests.
 
 ---
 

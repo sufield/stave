@@ -1,0 +1,149 @@
+name: stave prove
+synopsis: Run Z3 SMT queries against a Stave assessment
+description: |-
+    Prove loads observation snapshots, compiles them into a Z3 SMT model, and
+    runs a formal verification query. The model covers IAM policies (identity,
+    resource, KMS key, trust), asset relationships, and control invariants.
+
+    Queries:
+      compatibility   Can principal X perform action Y on resource Z?
+      reachability    Can principal X reach resource Y through any chain of
+                      role assumptions and policy grants?
+      conflict        Do the loaded policies contradict each other?
+      choke-point     What is the minimum set of statements whose removal
+                      breaks a reachability path?
+      invariant       Is a control's unsafe condition reachable for ANY input?
+
+    Inputs:
+      --observations, -o  Observation snapshots directory (required)
+      --query             Query to run (required)
+      --controls, -i      Control definitions directory (default: built-in catalog)
+      --principal         Principal ARN (compatibility, reachability, choke-point)
+      --action            Action (compatibility)
+      --resource          Resource ARN (compatibility, reachability, choke-point)
+      --invariant         Control ID (invariant query)
+      --format, -f        Output format: json (default), text
+
+    Outputs:
+      stdout: query result as JSON (or text with --format text)
+
+    Exit codes:
+      0   Query completed successfully
+      2   Input error (bad flags, missing observations)
+      4   Internal error (Z3 not available, load failure)
+      130 Interrupted (SIGINT)
+
+    Requires: binary built with -tags 'cgo z3' and libz3 installed.
+
+    Offline-only: reads local files; makes zero network connections; no cloud credentials.
+usage: stave prove [flags]
+options:
+    - name: action
+      usage: action (compatibility)
+    - name: controls
+      shorthand: i
+      usage: control definitions directory (empty = built-in catalog)
+    - name: format
+      shorthand: f
+      default_value: json
+      usage: 'output format: json, text'
+    - name: help
+      shorthand: h
+      default_value: "false"
+      usage: help for prove
+    - name: invariant
+      usage: invariant control ID (invariant query)
+    - name: observations
+      shorthand: o
+      usage: path to observations directory (required)
+    - name: principal
+      usage: principal ARN (compatibility, reachability, choke-point)
+    - name: query
+      usage: |
+        query to run: compatibility, reachability, conflict, choke-point, invariant (required)
+    - name: resource
+      usage: resource ARN (compatibility, reachability, choke-point)
+inherited_options:
+    - name: allow-symlink-output
+      default_value: "false"
+      usage: 'Allow writing output through symlinks (default: refuse)'
+    - name: cpu-profile
+      usage: Write CPU profile to file
+    - name: force
+      default_value: "false"
+      usage: Allow overwriting existing output files
+    - name: log-file
+      usage: 'Write logs to file (default: stderr)'
+    - name: log-format
+      default_value: text
+      usage: 'Log format: text|json'
+    - name: log-level
+      usage: 'Log level: debug|info|warn|error (overrides -v)'
+    - name: log-timestamps
+      default_value: "false"
+      usage: Include timestamps in logs (breaks determinism)
+    - name: log-timings
+      default_value: "false"
+      usage: Include timing information (breaks determinism)
+    - name: mem-profile
+      usage: Write heap profile to file
+    - name: no-color
+      default_value: "false"
+      usage: Disable ANSI colors in output
+    - name: path-mode
+      usage: |
+        Path rendering in errors/logs: base (basename only) or full (absolute paths) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: quiet
+      default_value: "false"
+      usage: |
+        Suppress output (exit code only) Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: require-offline
+      default_value: "false"
+      usage: |
+        Assert offline operation: fail if proxy env vars (HTTP_PROXY, HTTPS_PROXY, ALL_PROXY) are set
+    - name: sanitize
+      default_value: "false"
+      usage: |
+        Sanitize infrastructure identifiers (bucket names, ARNs, policies) from output Resolved default may come from STAVE_* env vars, stave.yaml, user config, or built-in.
+    - name: show-dev
+      default_value: "false"
+      usage: |
+        In --help, list only development-only commands (default: hide them from the listing)
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
+    - name: verbose
+      shorthand: v
+      default_value: "0"
+      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
+    - name: "yes"
+      shorthand: "y"
+      default_value: "false"
+      usage: |
+        Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: |4-
+      # Can this role read from this bucket?
+      stave prove -o observations --query compatibility \
+        --principal arn:aws:iam::123456789012:role/MyRole \
+        --action s3:GetObject \
+        --resource arn:aws:s3:::my-bucket
+
+      # Is there any attack path from user to bucket?
+      stave prove -o observations --query reachability \
+        --principal arn:aws:iam::123456789012:user/attacker \
+        --resource arn:aws:s3:::sensitive-data
+
+      # Do any policies contradict each other?
+      stave prove -o observations --query conflict
+
+      # Verify a control holds for ALL possible inputs
+      stave prove -o observations --query invariant \
+        --invariant CTL.S3.PUBLIC.001
+
+      # Find the minimum fix to break an attack path
+      stave prove -o observations --query choke-point \
+        --principal arn:aws:iam::123456789012:user/attacker \
+        --resource arn:aws:s3:::sensitive-data
+see_also:
+    - stave - Configuration safety evaluator

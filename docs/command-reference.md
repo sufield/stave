@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_160 commands across 7 groups._
+_161 commands across 7 groups._
 
 ## Getting Started
 
@@ -189,6 +189,7 @@ _160 commands across 7 groups._
 | `profile create` | Generate a starter profile YAML |
 | `profile list` | List available compliance profiles |
 | `profile validate` | Validate a profile file |
+| `prove` | Run Z3 SMT queries against a Stave assessment |
 | `readiness` | Report what Stave can/can't evaluate given the supplied observations |
 | `sanitize` | Sanitize a snapshot for cross-boundary sharing |
 | `schemas` | List all contract schemas |

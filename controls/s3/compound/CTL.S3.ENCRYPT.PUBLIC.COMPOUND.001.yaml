@@ -1,0 +1,130 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001
+name: Encrypted Bucket With Public Access — Encryption Is Cosmetic
+description: >
+  An S3 bucket has server-side encryption enabled but also allows
+  public read access. Encryption protects data at rest on disk,
+  but any principal who can read the object via GetObject receives
+  the plaintext — S3 decrypts transparently on read. When the
+  bucket is publicly readable, encryption provides zero
+  confidentiality benefit: the data is served unencrypted over
+  HTTPS to anyone who requests it. The encryption creates a false
+  sense of data protection in audit output. Individually, the
+  encryption control passes and the public-access control fails —
+  the compound finding is that the passing encryption control is
+  meaningless because the data is publicly readable.
+domain: exposure
+severity: critical
+scope: atomic
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "3.4.1"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03", "DSP-17"]
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - encryption-at-rest
+  - network-perimeter
+  - formal-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: exfiltration
+  base_impact: 9
+  blast_radius:
+    type: detection
+    scope: resource
+    multiplier: 2.0
+observation_fields:
+  - storage.encryption.at_rest_enabled
+  - storage.access.public_read
+remediation:
+  description: >
+    Bucket is encrypted at rest but publicly readable. The encryption
+    is cosmetic — S3 decrypts transparently on read, so anyone with
+    GetObject access receives plaintext.
+  action: >
+    Enable Block Public Access on the bucket (all 4 sub-flags) to
+    make the encryption meaningful. If public access is intentional,
+    remove encryption from the bucket's security posture description —
+    it is not providing confidentiality.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "encryption": {
+          "at_rest_enabled": true
+        },
+        "access": {
+          "public_read": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.encryption.at_rest_enabled
+      op: eq
+      value: true
+    - field: properties.storage.access.public_read
+      op: eq
+      value: true
+defect: >
+  S3 bucket is encrypted at rest but publicly readable. The encryption
+  is cosmetic — it provides no confidentiality when anyone can read
+  the object.
+infection: >
+  Audit reports show the bucket as "encrypted" which creates false
+  confidence. Compliance controls scoped to encryption-at-rest pass,
+  masking the public exposure.
+failure: >
+  An attacker reads all objects via public GetObject. The encryption
+  that was supposed to protect the data decrypts transparently on
+  their behalf.
+tests:
+  - name: "encrypted + public read fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::encrypted-public-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            at_rest_enabled: true
+          access:
+            public_read: true
+  - name: "encrypted + private passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::encrypted-private-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            at_rest_enabled: true
+          access:
+            public_read: false
+  - name: "unencrypted + public passes (separate control)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::unencrypted-public-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            at_rest_enabled: false
+          access:
+            public_read: true

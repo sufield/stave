@@ -7,18 +7,28 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "ffbeef503f25a73763eac15e11301db16ec3bb44839a132fa1df682edca42144",
+    "policy_fingerprint": "4ca8d66adb992d99920ccc81550fc5fdacd106df3733fc1aee7f0bda1727ec7b",
     "evaluated_state": "deployed"
   },
   "summary": {
     "total_assets": 1,
     "exposed_resources": 1,
-    "violations": 9
+    "violations": 10
   },
   "status": "NON_COMPLIANT",
   "risk_signals": [
     {
       "control_id": "CTL.S3.ACCOUNT.PAB.001",
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 168
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
       "asset_id": "public-test-bucket",
       "asset_type": "aws_s3_bucket",
       "status": "UPCOMING",
@@ -110,6 +120,219 @@
   ],
   "findings": [
     {
+      "finding_id": "sha256:c7eaa76ebb5859b2",
+      "control_id": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
+      "control_name": "Encrypted Bucket With Public Access — Encryption Is Cosmetic",
+      "control_description": "An S3 bucket has server-side encryption enabled but also allows public read access. Encryption protects data at rest on disk, but any principal who can read the object via GetObject receives the plaintext — S3 decrypts transparently on read. When the bucket is publicly readable, encryption provides zero confidentiality benefit: the data is served unencrypted over HTTPS to anyone who requests it. The encryption creates a false sense of data protection in audit output. Individually, the encryption control passes and the public-access control fails — the compound finding is that the passing encryption control is meaningless because the data is publicly readable.\n",
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "storage.access.public_read",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.encryption.at_rest_enabled",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "hipaa": "164.312(a)(2)(iv)",
+        "nist_800_53_r5": "SC-28",
+        "pci_dss_v4.0": "3.4.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "CEK-03",
+        "DSP-17"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket is encrypted at rest but publicly readable. The encryption is cosmetic — S3 decrypts transparently on read, so anyone with GetObject access receives plaintext.",
+        "action": "Enable Block Public Access on the bucket (all 4 sub-flags) to make the encryption meaningful. If public access is intentional, remove encryption from the bucket's security posture description — it is not providing confidentiality.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"encryption\": {\n      \"at_rest_enabled\": true\n    },\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-335a4ba9a0319bd8",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Enable Block Public Access on the bucket (all 4 sub-flags) to make the encryption meaningful. If public access is intentional, remove encryption from the bucket's security posture description — it is not providing confidentiality."
+      },
+      "chain_membership": [
+        {
+          "chain_id": "classified_data_unprotected_storage",
+          "chain_severity": "high",
+          "stage_span": [
+            "initial_access",
+            "exfiltration"
+          ],
+          "narrative": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n"
+        }
+      ],
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.public_read eq true",
+          "observation_key": "storage.access.public_read",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "storage.encryption.at_rest_enabled eq true",
+          "observation_key": "storage.encryption.at_rest_enabled",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
+          "control_name": "Encrypted Bucket With Public Access — Encryption Is Cosmetic",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket allows anonymous read = true",
+              "observation_key": "storage.access.public_read",
+              "observed_value": true
+            },
+            {
+              "clause": "server-side encryption at rest is enabled = true",
+              "observation_key": "storage.encryption.at_rest_enabled",
+              "observed_value": true
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.public_read",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set storage.access.public_read to false"
+          },
+          {
+            "path": "storage.encryption.at_rest_enabled",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set storage.encryption.at_rest_enabled to false"
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          }
+        ],
+        "action": "Enable Block Public Access on the bucket (all 4 sub-flags) to make the encryption meaningful. If public access is intentional, remove encryption from the bucket's security posture description — it is not providing confidentiality."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "defect": "S3 bucket is encrypted at rest but publicly readable. The encryption is cosmetic — it provides no confidentiality when anyone can read the object.\n",
+      "infection": "Audit reports show the bucket as \"encrypted\" which creates false confidence. Compliance controls scoped to encryption-at-rest pass, masking the public exposure.\n",
+      "failure": "An attacker reads all objects via public GetObject. The encryption that was supposed to protect the data decrypts transparently on their behalf.\n",
+      "control_scope": "atomic",
+      "delta": [
+        {
+          "property_label": "public read access",
+          "property_path": "storage.access.public_read",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        },
+        {
+          "property_label": "encryption at rest",
+          "property_path": "storage.encryption.at_rest_enabled",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ]
+    },
+    {
       "finding_id": "sha256:a43a2ae5ed908e4d",
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public S3 Bucket Read",
@@ -199,13 +422,24 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
+      "chain_membership": [
+        {
+          "chain_id": "classified_data_unprotected_storage",
+          "chain_severity": "high",
+          "stage_span": [
+            "initial_access",
+            "exfiltration"
+          ],
+          "narrative": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n"
+        }
+      ],
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
@@ -1562,23 +1796,48 @@
       ]
     }
   ],
+  "chain_findings": [
+    {
+      "chain": "classified_data_unprotected_storage",
+      "asset_id": "public-test-bucket",
+      "description": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n",
+      "controls_failing": [
+        "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
+        "CTL.S3.PUBLIC.001"
+      ],
+      "missing_safeguards": [
+        "CTL.DATACLASS.TAG.INVERTED.001",
+        "CTL.S3.ENCRYPT.001"
+      ],
+      "compound_score": 100,
+      "severity": "high",
+      "narrative": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n Failing: CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001, CTL.S3.PUBLIC.001.",
+      "attack_stages": [
+        "exfiltration",
+        "initial_access"
+      ]
+    }
+  ],
   "issues": [
     {
-      "issue_id": "sha256:93934249f4b5e78a",
+      "issue_id": "sha256:20a6d92361c00793",
       "asset_id": "public-test-bucket",
       "shared_keys": [
         "storage.access",
         "storage.access.has_ip_condition",
         "storage.access.has_vpc_condition",
-        "storage.access.public_read"
+        "storage.access.public_read",
+        "storage.encryption",
+        "storage.encryption.at_rest_enabled"
       ],
       "headline_finding_id": "sha256:a43a2ae5ed908e4d",
       "member_finding_ids": [
         "sha256:4deaa2ba101afbc5",
-        "sha256:a43a2ae5ed908e4d"
+        "sha256:a43a2ae5ed908e4d",
+        "sha256:c7eaa76ebb5859b2"
       ],
       "consolidated_score": 100,
-      "consolidated_blast_radius": 1
+      "consolidated_blast_radius": 2
     },
     {
       "issue_id": "sha256:262cfd9371f56a08",
@@ -1681,12 +1940,13 @@
           }
         ],
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
+        "action": "Enable Block Public Access on the bucket (all 4 sub-flags) to make the encryption meaningful. If public access is intentional, remove encryption from the bucket's security posture description — it is not providing confidentiality."
       },
       "contributing_controls": [
+        "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
         "CTL.S3.PUBLIC.001"
       ],
-      "finding_count": 1
+      "finding_count": 2
     },
     {
       "asset_id": "public-test-bucket",
@@ -1819,7 +2079,23 @@
   ],
   "top_exposures": [
     {
-      "finding_index": 8,
+      "finding_index": 1,
+      "control_id": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
+      "asset_id": "public-test-bucket",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "blind_multiplier": 1.0136986301369864,
+        "days_blind": 5
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 9,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 100,
@@ -1828,7 +2104,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
@@ -1851,7 +2127,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 1,
+      "finding_index": 2,
       "control_id": "CTL.S3.MFADELETE.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 76.02739726027397,
@@ -1867,7 +2143,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 2,
+      "finding_index": 3,
       "control_id": "CTL.S3.NETWORK.VPC.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 76.02739726027397,
@@ -1883,7 +2159,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 3,
+      "finding_index": 4,
       "control_id": "CTL.S3.OWNERSHIP.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 76.02739726027397,
@@ -1899,7 +2175,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 4,
+      "finding_index": 5,
       "control_id": "CTL.S3.PAB.BLOCKPUBLICACLS.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 76.02739726027397,
@@ -1915,7 +2191,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 5,
+      "finding_index": 6,
       "control_id": "CTL.S3.PAB.BLOCKPUBLICPOLICY.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 76.02739726027397,
@@ -1931,7 +2207,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 6,
+      "finding_index": 7,
       "control_id": "CTL.S3.PAB.IGNOREPUBLICACLS.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 76.02739726027397,
@@ -1947,7 +2223,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 7,
+      "finding_index": 8,
       "control_id": "CTL.S3.PAB.RESTRICTPUBLICBUCKETS.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 76.02739726027397,

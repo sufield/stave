@@ -187,6 +187,7 @@ see_also:
     - stave permissions - Query net effective permissions from a snapshot
     - stave plan - Preview which controls will evaluate, by service and severity
     - stave profile - Manage compliance profiles
+    - stave prove - Run Z3 SMT queries against a Stave assessment
     - stave readiness - Report what Stave can/can't evaluate given the supplied observations
     - stave report - Generate executive security posture report
     - stave sanitize - Sanitize a snapshot for cross-boundary sharing

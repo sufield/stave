@@ -1,0 +1,122 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SEMANTICS.DENY.CONTRADICTED.001
+name: Resource Policy Deny Is Contradicted by Allow in Same Policy
+description: >
+  A resource policy contains a Deny statement, but another statement
+  in the same policy document has an Allow that matches the same
+  principal, action, and resource scope. In AWS policy evaluation,
+  an explicit Deny always wins over an Allow — but only for the
+  EXACT principal/action/resource triple. When the Allow uses a
+  broader wildcard than the Deny, requests outside the Deny's
+  narrow scope are still permitted. The author likely intended the
+  Deny to block all matching access, but the accompanying Allow
+  re-opens a path that the Deny does not cover. This extends the
+  S3-specific shadow-allow detection to all resource policy types:
+  KMS, SNS, SQS, Lambda, Secrets Manager, OpenSearch, ECR.
+domain: exposure
+severity: high
+scope: atomic
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["DSP-10", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - formal-semantics
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kms_key
+  - aws_sns_topic
+  - aws_sqs_queue
+  - aws_lambda_function
+  - aws_secretsmanager_secret
+  - aws_opensearch_domain
+  - aws_ecr_repository
+params:
+  attack_stage: detection_evasion
+  base_impact: 7
+  blast_radius:
+    type: prevention
+    scope: resource
+    multiplier: 1.5
+remediation:
+  description: >
+    A resource policy Deny statement is contradicted by a broader
+    Allow in the same policy document. The Deny appears protective
+    but does not cover the full scope of the Allow.
+  action: >
+    Review the policy document for overlapping Deny and Allow
+    statements. Either narrow the Allow to exclude the Deny's
+    scope, or broaden the Deny to cover all principals, actions,
+    and resources matched by the Allow.
+  example: |
+    {
+      "identity": {
+        "kind": "resource_policy",
+        "policy": {
+          "semantics": {
+            "has_deny_contradicted_by_allow": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: resource_policy
+    - field: properties.identity.policy.semantics.has_deny_contradicted_by_allow
+      op: eq
+      value: true
+defect: >
+  A resource policy Deny is paired with a broader Allow that
+  re-opens access the Deny was intended to block.
+infection: >
+  Principals matched by the Allow but not the Deny gain access.
+  The Deny creates a false sense of restriction in audit output.
+failure: >
+  An attacker bypasses the Deny by matching the Allow's broader
+  scope. Incident responders see the Deny and assume access was
+  blocked.
+tests:
+  - name: "resource policy with contradicted Deny fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/abc"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        identity:
+          kind: resource_policy
+          policy:
+            semantics:
+              has_deny_contradicted_by_allow: true
+  - name: "resource policy with non-contradicted Deny passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sqs:us-east-1:111122223333:secure-queue"
+      asset_type: aws_sqs_queue
+      vendor: aws
+      properties:
+        identity:
+          kind: resource_policy
+          policy:
+            semantics:
+              has_deny_contradicted_by_allow: false
+  - name: "resource policy with Deny only passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sns:us-east-1:111122223333:deny-only-topic"
+      asset_type: aws_sns_topic
+      vendor: aws
+      properties:
+        identity:
+          kind: resource_policy
+          policy:
+            semantics:
+              has_deny_contradicted_by_allow: false

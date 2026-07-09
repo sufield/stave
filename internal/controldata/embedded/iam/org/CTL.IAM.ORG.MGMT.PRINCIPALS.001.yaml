@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ORG.MGMT.PRINCIPALS.001
+name: Management Account Has Workload IAM Principals
+description: >
+  The AWS management account has IAM users or roles beyond the
+  minimum break-glass set. The management account is exempt from
+  all SCPs by AWS design — every principal in this account has
+  unrestricted access to organization-wide actions that SCPs deny
+  for member accounts. When the management account runs workloads
+  or has non-administrative principals, the SCP security perimeter
+  has an unprotected hole: any compromised principal in the
+  management account bypasses every SCP guardrail. The management
+  account should contain only break-glass roles and organization
+  management automation, with no human users or workload roles.
+domain: identity
+severity: high
+scope: atomic
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-05", "IAM-02"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - account-governance
+  - trust-boundary
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: privilege_escalation
+  base_impact: 8
+  blast_radius:
+    type: prevention
+    scope: organization
+    multiplier: 3.0
+observation_fields:
+  - identity.management_account.has_workload_principals
+remediation:
+  description: >
+    Management account has IAM principals beyond the break-glass
+    minimum. These principals bypass all SCPs.
+  action: >
+    Move all workloads and non-administrative IAM users/roles out
+    of the management account into dedicated member accounts. Keep
+    only break-glass roles and organization management automation
+    in the management account.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "management_account": {
+          "has_workload_principals": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.management_account.has_workload_principals
+      op: eq
+      value: true
+defect: >
+  Management account has workload IAM principals. These principals
+  are exempt from all SCPs by AWS design.
+infection: >
+  SCP guardrails create a false security perimeter. Audit reports
+  show SCPs as effective organization-wide, when in reality the
+  management account is unprotected.
+failure: >
+  Attacker compromises a management account principal. All SCP
+  guardrails are bypassed. Org-wide actions (AssumeRoot, LeaveOrg,
+  CloudTrail disable) are available without restriction.
+tests:
+  - name: "management account with workload principals fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          management_account:
+            has_workload_principals: true
+  - name: "management account with only break-glass passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-def"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          management_account:
+            has_workload_principals: false

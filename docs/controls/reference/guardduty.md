@@ -124,6 +124,21 @@ GuardDuty Malware Protection scans EBS volumes attached to EC2 instances and ECS
 
 ---
 
+### CTL.GUARDDUTY.NOTIFICATION.001
+
+**GuardDuty Findings Have No Notification Routing**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** nist_800_53_r5: IR-6; soc2: CC7.3;
+
+GuardDuty is enabled and generating findings but no notification destination is configured — no SNS topic subscription, no EventBridge rule forwarding findings, no integration with an incident response platform. Findings accumulate in the GuardDuty console where no one is watching. The detector runs, detects threats, and the security team is never notified. This is the MORE failure mode: more detection without routing creates alert fatigue by design — findings exist but have no consumer.
+
+**Remediation:** Create an EventBridge rule that matches GuardDuty finding events and routes to an SNS topic subscribed by the security team. Filter by severity (HIGH and CRITICAL at minimum) to avoid alert fatigue from informational findings.
+
+---
+
 ### CTL.GUARDDUTY.ORG.AUTOENABLE.001
 
 **GuardDuty Auto-Enable Not Configured for New Accounts**

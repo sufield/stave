@@ -170,4 +170,5 @@ var catalogAnnotations = []catalogAnnotation{
 	{Path: "alias delete", Group: "Settings", When: "Removing a stale shortcut"},
 	{Path: "completion", Group: "Settings", When: "Tab-completion setup for bash/zsh/fish/ps"},
 	{Path: "fingerprint explain", Group: "Introspection", When: "Diagnosing or auditing the policy fingerprint"},
+	{Path: "prove", Group: "Introspection", When: "Formal verification of IAM policies and control invariants via Z3 SMT"},
 }

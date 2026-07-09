@@ -307,6 +307,21 @@ KMS grant grants cryptographic operations to a principal (IAM role or user) that
 
 ---
 
+### CTL.KMS.GRANT.STALE.001
+
+**KMS Key Has Grants Older Than Last Rotation**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6; pci_dss_v4.0: 3.7.5; soc2: CC6.1;
+
+A KMS key has rotation enabled and active grants that were created before the most recent key material rotation. These grants were authorized against the previous key material and may authorize principals that should no longer have access. Key rotation changes the cryptographic material but does not invalidate or review existing grants — the old grants carry forward automatically. When a grant was created for a time-bounded purpose (short-lived workload, temporary access) and the key has since rotated, the grant's continued existence represents stale authorization that rotation was meant to address. The compound failure: rotation happens but the access surface does not contract.
+
+**Remediation:** Review all active grants on the key. Retire grants that were created for time-bounded purposes and are no longer needed. Use aws kms list-grants and aws kms retire-grant to audit and clean up stale grants after each rotation.
+
+---
+
 ### CTL.KMS.IMPORTED.EXPIRY.001
 
 **Imported KMS Key Material Without Expiration**

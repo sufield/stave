@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.CONTAINER.SECCOMP.UNCONFINED.001
+name: ECS Container Must Not Use Unconfined Seccomp Profile
+description: >
+  An ECS task definition sets the seccomp profile to Unconfined,
+  explicitly disabling syscall filtering. Unlike omitting the
+  profile (which uses the runtime default on Fargate), setting
+  Unconfined is a deliberate opt-out that removes all kernel-level
+  syscall restrictions. The container can make any kernel syscall,
+  including those used in container-escape exploits (unshare,
+  ptrace, mount). This is a semantic inversion: the presence of a
+  seccomp configuration looks like hardening, but the Unconfined
+  value does the opposite — it weakens the security posture below
+  even the default.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.6"
+  pci_dss_v4.0: "2.2.1"
+  cis_aws_v3.0: "7.27"
+  ccm_v4: ["IVS-06"]
+scope_tags:
+  - aws
+  - ecs
+taxonomy:
+  - compute-hardening
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ecs_task_definition
+params:
+  attack_stage: privilege_escalation
+  base_impact: 7
+remediation:
+  description: >
+    ECS container seccomp profile is set to Unconfined. Syscall
+    filtering is disabled — the container can make any kernel
+    syscall.
+  action: >
+    Set the seccomp profile type to RuntimeDefault (uses the
+    container runtime's default profile) or a custom restrictive
+    profile. On Fargate, omitting the profile entirely also
+    applies the default.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "security": {
+          "seccomp_unconfined": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.security.seccomp_unconfined
+      op: eq
+      value: true
+defect: >
+  ECS task definition sets seccomp profile to Unconfined.
+infection: >
+  Containers under this task definition run with no syscall
+  restrictions, increasing the kernel attack surface.
+failure: >
+  Attacker exploits an unrestricted syscall (ptrace, unshare) to
+  escape the container and access the underlying host or other
+  containers.
+tests:
+  - name: "seccomp Unconfined fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:task-definition/unconfined:1"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: task_definition
+          security:
+            seccomp_unconfined: true
+  - name: "seccomp RuntimeDefault passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:task-definition/hardened:1"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: task_definition
+          security:
+            seccomp_unconfined: false
+  - name: "no seccomp config passes (separate control)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:task-definition/default:1"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: task_definition
+          security:
+            seccomp_unconfined: false

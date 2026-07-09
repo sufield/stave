@@ -50,6 +50,21 @@ ECS cluster's EC2 launch type configuration permits tasks to mount the Docker so
 
 ---
 
+### CTL.ECS.CONTAINER.SECCOMP.UNCONFINED.001
+
+**ECS Container Must Not Use Unconfined Seccomp Profile**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 7.27; nist_800_53_r5: CM-7; pci_dss_v4.0: 2.2.1; soc2: CC6.6;
+
+An ECS task definition sets the seccomp profile to Unconfined, explicitly disabling syscall filtering. Unlike omitting the profile (which uses the runtime default on Fargate), setting Unconfined is a deliberate opt-out that removes all kernel-level syscall restrictions. The container can make any kernel syscall, including those used in container-escape exploits (unshare, ptrace, mount). This is a semantic inversion: the presence of a seccomp configuration looks like hardening, but the Unconfined value does the opposite — it weakens the security posture below even the default.
+
+**Remediation:** Set the seccomp profile type to RuntimeDefault (uses the container runtime's default profile) or a custom restrictive profile. On Fargate, omitting the profile entirely also applies the default.
+
+---
+
 ### CTL.ECS.ESCALATION.CHAIN.001
 
 **ECS EC2-Launch Task Enables Task-to-Instance-Role Escalation**

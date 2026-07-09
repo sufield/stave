@@ -91,6 +91,7 @@ var facadeCleanBaseline = map[string]struct{}{
 	"nep":                {},
 	"path":               {},
 	"profile":            {},
+	"prove":              {},
 	"readiness":          {},
 	"report":             {},
 	"sanitize":           {},

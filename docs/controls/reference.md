@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2907
-**Pack hash:** `443e34f1b7e950111eacc500cf0efaf1f99e1ae95e1882cade470ee4eb699665`
+**Total controls:** 2923
+**Pack hash:** `6754d8321f5a2b10f90ea2d071ab02594c871e9ff833fdec3019eafd91b5ebb2`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,24 +13,24 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 297 |
-| high | 1265 |
+| critical | 299 |
+| high | 1269 |
 | info | 16 |
-| low | 221 |
-| medium | 1108 |
+| low | 222 |
+| medium | 1117 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 92 |
+| audit | 93 |
 | capacity | 3 |
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1276 |
-| governance | 615 |
+| exposure | 1282 |
+| governance | 620 |
 | hygiene | 18 |
-| identity | 512 |
+| identity | 516 |
 | lifecycle | 31 |
 | network | 43 |
 | resilience | 35 |
@@ -41,6 +41,7 @@ GitHub. Pick a service below.
 
 | Service | Controls |
 |---------|----------|
+| [ACCOUNT](reference/account.md) | 1 |
 | [ACM](reference/acm.md) | 8 |
 | [AD](reference/ad.md) | 40 |
 | [APIGATEWAY](reference/apigateway.md) | 105 |
@@ -53,7 +54,7 @@ GitHub. Pick a service below.
 | [BACKUP](reference/backup.md) | 10 |
 | [BATCH](reference/batch.md) | 3 |
 | [BEANSTALK](reference/beanstalk.md) | 3 |
-| [BEDROCK](reference/bedrock.md) | 46 |
+| [BEDROCK](reference/bedrock.md) | 47 |
 | [CFN](reference/cfn.md) | 1 |
 | [CISCO](reference/cisco.md) | 30 |
 | [CLOUDFLARE](reference/cloudflare.md) | 29 |
@@ -67,14 +68,14 @@ GitHub. Pick a service below.
 | [COGNITO](reference/cognito.md) | 113 |
 | [COMPLIANCE](reference/compliance.md) | 1 |
 | [CONFIG](reference/config.md) | 51 |
-| [DATACLASS](reference/dataclass.md) | 3 |
+| [DATACLASS](reference/dataclass.md) | 5 |
 | [DMS](reference/dms.md) | 6 |
 | [DNS](reference/dns.md) | 3 |
 | [DOCUMENTDB](reference/documentdb.md) | 18 |
 | [DYNAMODB](reference/dynamodb.md) | 37 |
 | [EC2](reference/ec2.md) | 106 |
 | [ECR](reference/ecr.md) | 10 |
-| [ECS](reference/ecs.md) | 51 |
+| [ECS](reference/ecs.md) | 52 |
 | [EFS](reference/efs.md) | 13 |
 | [EKS](reference/eks.md) | 115 |
 | [ELASTICACHE](reference/elasticache.md) | 7 |
@@ -89,13 +90,13 @@ GitHub. Pick a service below.
 | [GITHUB](reference/github.md) | 22 |
 | [GLUE](reference/glue.md) | 13 |
 | [GRAFANA](reference/grafana.md) | 1 |
-| [GUARDDUTY](reference/guardduty.md) | 14 |
+| [GUARDDUTY](reference/guardduty.md) | 15 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 229 |
+| [IAM](reference/iam.md) | 233 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |
-| [KMS](reference/kms.md) | 46 |
+| [KMS](reference/kms.md) | 47 |
 | [LAMBDA](reference/lambda.md) | 86 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
 | [LIGHTSAIL](reference/lightsail.md) | 3 |
@@ -110,10 +111,10 @@ GitHub. Pick a service below.
 | [OPENSEARCH](reference/opensearch.md) | 132 |
 | [ORG](reference/org.md) | 6 |
 | [RAM](reference/ram.md) | 3 |
-| [RDS](reference/rds.md) | 69 |
+| [RDS](reference/rds.md) | 72 |
 | [REDSHIFT](reference/redshift.md) | 26 |
 | [ROUTE53](reference/route53.md) | 50 |
-| [S3](reference/s3.md) | 133 |
+| [S3](reference/s3.md) | 134 |
 | [SAGEMAKER](reference/sagemaker.md) | 35 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
@@ -128,7 +129,7 @@ GitHub. Pick a service below.
 | [SSM](reference/ssm.md) | 13 |
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
 | [TRANSFER](reference/transfer.md) | 1 |
-| [VPC](reference/vpc.md) | 88 |
+| [VPC](reference/vpc.md) | 89 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 8 |
 | [WORKSPACES](reference/workspaces.md) | 1 |

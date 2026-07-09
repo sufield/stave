@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.ACCESS.POLICY.INVERTED.001
+name: Bedrock Model Access Policy Has Inverted Effect
+description: >
+  A Bedrock model invocation policy uses Effect:Allow where the
+  surrounding context (condition keys, resource scope, principal
+  scope) indicates the author intended Effect:Deny, or vice versa.
+  The policy looks restrictive on inspection — conditions reference
+  specific models or principals — but the Effect is semantically
+  inverted: an Allow with narrow conditions permits exactly the
+  access it appears to restrict, or a Deny with broad conditions
+  blocks access it appears to preserve. This is a semantic
+  inversion: the policy structure reads as access control, but the
+  Effect polarity means it does the opposite.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - formal-semantics
+  - ai-guardrails
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_access
+params:
+  attack_stage: collection
+  base_impact: 6
+remediation:
+  description: >
+    Bedrock model access policy has an inverted Effect. The policy
+    structure suggests restriction but the Effect polarity permits
+    the access it appears to block.
+  action: >
+    Review the model access policy. Verify that Allow and Deny
+    statements match the intended access pattern. A Deny that
+    should block specific models must cover the correct resource
+    ARNs; an Allow that should permit specific models must not
+    inadvertently open broader access via its conditions.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_access",
+        "access": {
+          "has_inverted_effect": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_access
+    - field: properties.ai.access.has_inverted_effect
+      op: eq
+      value: true
+defect: >
+  Bedrock model access policy Effect is semantically inverted —
+  Allow where Deny was intended or vice versa.
+infection: >
+  Model invocations that should be blocked are permitted, or
+  invocations that should be permitted are blocked. The policy
+  gives false confidence during review.
+failure: >
+  Unauthorized model invocation at scale (prompt injection,
+  data exfiltration via model output) or denial of service to
+  legitimate model consumers.
+tests:
+  - name: "inverted effect fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:model-access/inverted"
+      asset_type: aws_bedrock_access
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_access
+          access:
+            has_inverted_effect: true
+  - name: "correct effect passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:model-access/correct"
+      asset_type: aws_bedrock_access
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_access
+          access:
+            has_inverted_effect: false

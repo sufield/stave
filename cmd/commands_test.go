@@ -24,7 +24,8 @@ func TestWireCommands_CommandCount(t *testing.T) {
 	// 63 after adding `services` (AWS service registry).
 	// 64 after adding `scan` (service-grouped evaluation pipeline).
 	// 63 after removing `scan` — its logic moved to `apply --auto`.
-	const want = 63
+	// 64 after adding `prove` (Z3 SMT formal verification).
+	const want = 64
 	if got != want {
 		t.Errorf("root command count = %d, want %d; update this constant if a command was added/removed", got, want)
 	}

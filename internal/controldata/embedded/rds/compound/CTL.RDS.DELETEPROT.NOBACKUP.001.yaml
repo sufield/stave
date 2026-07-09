@@ -1,0 +1,121 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.DELETEPROT.NOBACKUP.001
+name: Deletion Protection Enabled but Automated Backups Disabled
+description: >
+  An RDS instance has deletion protection enabled but automated
+  backups are disabled (retention period is zero). Deletion
+  protection prevents accidental instance termination but does
+  not prevent data loss from corruption, application-level bugs,
+  ransomware encryption, or accidental data overwrites. Without
+  backups, deletion protection is a false safety net: the instance
+  survives but the data inside it may not. The combination creates
+  a dangerous confidence gap — operators see "deletion protection:
+  on" and assume the database is protected, when in reality only
+  the container is protected, not the contents.
+domain: exposure
+severity: medium
+scope: atomic
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.1"
+  hipaa: "164.308(a)(7)"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - rds
+taxonomy:
+  - redundancy
+  - formal-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_rds_instance
+params:
+  attack_stage: resilience
+  base_impact: 6
+  blast_radius:
+    type: prevention
+    scope: resource
+    multiplier: 1.5
+observation_fields:
+  - database.deletion_protection
+  - database.backup.enabled
+remediation:
+  description: >
+    RDS instance has deletion protection but no automated backups.
+    The instance is protected from deletion but not from data loss.
+  action: >
+    Enable automated backups with at least 7 days retention:
+    aws rds modify-db-instance --db-instance-identifier <id>
+    --backup-retention-period 7 --apply-immediately
+  example: |
+    {
+      "database": {
+        "kind": "instance",
+        "deletion_protection": true,
+        "backup": {
+          "enabled": true,
+          "retention_days": 7
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: instance
+    - field: properties.database.deletion_protection
+      op: eq
+      value: true
+    - field: properties.database.backup.enabled
+      op: eq
+      value: false
+defect: >
+  RDS instance has deletion protection but automated backups are
+  disabled. The container is protected; the contents are not.
+infection: >
+  Operators see deletion protection as a safety indicator and
+  skip backup verification. Compliance reports show the instance
+  as "protected" without distinguishing container from data.
+failure: >
+  Data corruption, ransomware, or application bug destroys data
+  inside the instance. Deletion protection keeps the empty or
+  corrupted instance running. No backup exists to restore from.
+tests:
+  - name: "deletion protection on + backup off fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:db:protected-no-backup"
+      asset_type: aws_rds_instance
+      vendor: aws
+      properties:
+        database:
+          kind: instance
+          deletion_protection: true
+          backup:
+            enabled: false
+  - name: "deletion protection on + backup on passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:db:protected-with-backup"
+      asset_type: aws_rds_instance
+      vendor: aws
+      properties:
+        database:
+          kind: instance
+          deletion_protection: true
+          backup:
+            enabled: true
+            retention_days: 7
+  - name: "deletion protection off + backup off passes (separate control)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:db:no-protection-no-backup"
+      asset_type: aws_rds_instance
+      vendor: aws
+      properties:
+        database:
+          kind: instance
+          deletion_protection: false
+          backup:
+            enabled: false

@@ -275,6 +275,21 @@ RDS instances must have deletion protection enabled to prevent accidental or mal
 
 ---
 
+### CTL.RDS.DELETEPROT.NOBACKUP.001
+
+**Deletion Protection Enabled but Automated Backups Disabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.308(a)(7); nist_800_53_r5: CP-9; soc2: A1.1;
+
+An RDS instance has deletion protection enabled but automated backups are disabled (retention period is zero). Deletion protection prevents accidental instance termination but does not prevent data loss from corruption, application-level bugs, ransomware encryption, or accidental data overwrites. Without backups, deletion protection is a false safety net: the instance survives but the data inside it may not. The combination creates a dangerous confidence gap — operators see "deletion protection: on" and assume the database is protected, when in reality only the container is protected, not the contents.
+
+**Remediation:** Enable automated backups with at least 7 days retention: aws rds modify-db-instance --db-instance-identifier <id> --backup-retention-period 7 --apply-immediately
+
+---
+
 ### CTL.RDS.ENCRYPT.001
 
 **RDS Storage Encryption Must Be Enabled**
@@ -839,6 +854,36 @@ RDS Proxies must require TLS for the backend connection from Proxy to RDS instan
 RDS instances must not have public accessibility enabled. A publicly accessible database is reachable from the internet, exposing it to brute force attacks, SQL injection, and unauthorized data access.
 
 **Remediation:** Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately
+
+---
+
+### CTL.RDS.REPLICA.DELETEPROT.001
+
+**RDS Read Replica Must Have Deletion Protection Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-9; soc2: A1.2;
+
+An RDS read replica does not have deletion protection enabled while it serves as a copy of production data. Read replicas are independently deletable — deleting a replica does not require deleting the primary. Without deletion protection, a compromised credential or misconfigured automation can destroy the replica with a single API call. The primary's deletion protection does not extend to its replicas; each must be protected independently. This is a PART OF gap: the primary is protected but the replica is not, creating a false sense that all copies of the data are safe from deletion.
+
+**Remediation:** Enable deletion protection on the replica: aws rds modify-db-instance --db-instance-identifier <replica-id> --deletion-protection --apply-immediately
+
+---
+
+### CTL.RDS.REPLICA.ENGINE.PARITY.001
+
+**RDS Read Replica Must Run Same Engine Version as Primary**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-6; soc2: CC6.1;
+
+An RDS read replica is running a different engine version than its source instance. Version divergence means the replica has different vulnerability exposure, different feature behavior, and potentially deprecated-engine status compared to the primary. AWS allows replicas to lag behind during a rolling upgrade, but a persistent version difference — especially where the replica is on an older, unpatched version — means the replica is a softer target than the primary for any engine-version-specific CVE. This is a PART OF gap: the primary was upgraded but the replica was not, creating a false sense that the entire database tier is on the patched version.
+
+**Remediation:** Upgrade the replica to match the primary's engine version: aws rds modify-db-instance --db-instance-identifier <replica-id> --engine-version <primary-version> --apply-immediately
 
 ---
 

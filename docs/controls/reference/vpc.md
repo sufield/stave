@@ -232,6 +232,21 @@ AWS Direct Connect should have at least two connections for resiliency. A single
 
 ---
 
+### CTL.VPC.EGRESS.UNRESTRICTED.001
+
+**Private Subnet With Unrestricted Egress via NAT**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
+
+A private subnet has no internet gateway route (correctly designated as private) but routes all outbound traffic through a NAT gateway to 0.0.0.0/0 with no egress filtering. No Network Firewall inspects egress traffic and no VPC endpoint policy restricts outbound destinations. Resources in the subnet can reach any internet endpoint, enabling data exfiltration despite the "private" designation. The subnet is private in name only — the NAT gateway provides unrestricted outbound connectivity that negates the isolation benefit.
+
+**Remediation:** Add AWS Network Firewall on the NAT gateway subnet to inspect and filter egress traffic. Alternatively, use VPC endpoint policies to restrict outbound destinations to known-good services, or replace the NAT gateway with VPC endpoints for the specific AWS services the subnet needs.
+
+---
+
 ### CTL.VPC.EIP.EXCESSIVE.001
 
 **Instance Has Multiple Elastic IPs**

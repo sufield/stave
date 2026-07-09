@@ -1,0 +1,129 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.GRANT.STALE.001
+name: KMS Key Has Grants Older Than Last Rotation
+description: >
+  A KMS key has rotation enabled and active grants that were
+  created before the most recent key material rotation. These
+  grants were authorized against the previous key material and
+  may authorize principals that should no longer have access.
+  Key rotation changes the cryptographic material but does not
+  invalidate or review existing grants — the old grants carry
+  forward automatically. When a grant was created for a
+  time-bounded purpose (short-lived workload, temporary access)
+  and the key has since rotated, the grant's continued existence
+  represents stale authorization that rotation was meant to
+  address. The compound failure: rotation happens but the access
+  surface does not contract.
+domain: governance
+severity: medium
+scope: atomic
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "3.7.5"
+  ccm_v4: ["CEK-03", "CEK-05"]
+scope_tags:
+  - aws
+  - kms
+taxonomy:
+  - key-management
+  - trust-decay
+  - formal-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kms_key
+params:
+  attack_stage: persistence
+  base_impact: 5
+  blast_radius:
+    type: prevention
+    scope: resource
+    multiplier: 1.5
+observation_fields:
+  - cryptography.rotation.enabled
+  - cryptography.grants.has_pre_rotation_grants
+remediation:
+  description: >
+    KMS key has grants created before the last key rotation. These
+    grants may authorize stale access that rotation was meant to
+    address.
+  action: >
+    Review all active grants on the key. Retire grants that were
+    created for time-bounded purposes and are no longer needed.
+    Use aws kms list-grants and aws kms retire-grant to audit
+    and clean up stale grants after each rotation.
+  example: |
+    {
+      "cryptography": {
+        "kind": "kms_key",
+        "rotation": {
+          "enabled": true
+        },
+        "grants": {
+          "has_pre_rotation_grants": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: kms_key
+    - field: properties.cryptography.rotation.enabled
+      op: eq
+      value: true
+    - field: properties.cryptography.grants.has_pre_rotation_grants
+      op: eq
+      value: true
+defect: >
+  KMS key has active grants from before the last rotation. The
+  access surface did not contract when the key material changed.
+infection: >
+  Operators assume rotation addresses stale access. Grant reviews
+  are skipped because rotation is seen as sufficient. Old grants
+  accumulate silently across rotation cycles.
+failure: >
+  A principal authorized by a pre-rotation grant retains access
+  to data encrypted under the current key material. The rotation
+  that was supposed to limit exposure did not.
+tests:
+  - name: "rotation enabled + pre-rotation grants fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/abc-rotated"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: kms_key
+          rotation:
+            enabled: true
+          grants:
+            has_pre_rotation_grants: true
+  - name: "rotation enabled + no stale grants passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/abc-clean"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: kms_key
+          rotation:
+            enabled: true
+          grants:
+            has_pre_rotation_grants: false
+  - name: "no rotation + grants passes (different control)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/abc-norot"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: kms_key
+          rotation:
+            enabled: false
+          grants:
+            has_pre_rotation_grants: true
