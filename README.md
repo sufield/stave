@@ -40,6 +40,36 @@ make chain-discover ARGS="-snapshot observations/"
 bash examples/demo-ai-security/run.sh
 ```
 
+### Onboarding skills (`_skills/`)
+
+Six executable skills guide you from install to real-environment evaluation. Each skill is a markdown file your AI coding agent (Claude Code, Cursor) can read and execute — or you can follow manually.
+
+| # | Skill | Time | AWS needed? |
+|---|-------|------|-------------|
+| 1 | [_setup](./_skills/_setup/SKILL.md) | 5 min | No |
+| 2 | [first-evaluation](./_skills/first-evaluation/SKILL.md) | 10 min | No |
+| 3 | [lab-validation](./_skills/lab-validation/SKILL.md) | 30 min | Sandbox ($0) |
+| 4 | [write-your-first-control](./_skills/write-your-first-control/SKILL.md) | 20 min | No |
+| 5 | [reasoning-engines](./_skills/reasoning-engines/SKILL.md) | 30 min | No |
+| 6 | [snapshot-your-account](./_skills/snapshot-your-account/SKILL.md) | 30 min | Yes (read-only) |
+
+## What it finds
+
+Your AI agent has admin access. Your scanner says you're compliant.
+
+![AI Security Demo](docs/talks/ai-security-2026/demo-ai-security.gif)
+
+```bash
+bash examples/demo-ai-security/run.sh
+```
+
+| | Checklist scanners | Stave |
+|---|---|---|
+| **Checks** | Individual settings on individual resources | Compositions across multiple resources |
+| **Finds** | "Bucket not encrypted" (attribute) | "This bucket is reachable through an unauthenticated identity pool" (path) |
+| **Proof** | Scan result (point-in-time opinion) | Deterministic, traceable evidence chain |
+| **Credentials** | Requires cloud API access | Runs on static snapshots — air-gapped, no credentials |
+
 ## Current State
 
 See [`docs/metrics.yaml`](docs/metrics.yaml) for catalog counts,
