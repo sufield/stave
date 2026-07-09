@@ -1,27 +1,27 @@
 //go:build ignore
 
-// Command discovery — Datalog reachability + Z3 verification chain discovery.
+// Command discovery — Datalog reachability + condition verification chain discovery.
 //
 // Discovers attack chains in a Stave snapshot that aren't covered
-// by the 622 manually authored chain YAMLs. The pipeline:
+// by the existing manually authored chain YAMLs. The pipeline:
 //
 //	stave export-sir --format jsonl  →  JSONL facts
 //	extract.go                       →  per-predicate .facts TSVs
 //	souffle discovery.dl             →  path-tracking reachability
-//	Go harness                       →  Z3 condition verification
+//	verify (--verify)                →  per-chain condition satisfiability
 //	dedup against chains/*.yaml      →  novel vs confirmed
 //	report
 //
 // Usage:
 //
-//	go run ./reasoning/souffle/discovery/main.go \
+//	go run ./reasoning/souffle/discovery/*.go \
 //	    -snapshot observations/ -controls controls/
 //
-//	go run ./reasoning/souffle/discovery/main.go \
-//	    -jsonl /tmp/facts.jsonl -novel-only
+//	go run ./reasoning/souffle/discovery/*.go \
+//	    -jsonl /tmp/facts.jsonl -novel-only -verify
 //
-//	go run ./reasoning/souffle/discovery/main.go \
-//	    -snapshot observations/ -query escalation -json
+//	go run ./reasoning/souffle/discovery/*.go \
+//	    -snapshot observations/ -query escalation -json -verify
 //
 // Run from the stave/ directory so relative paths resolve.
 package main
@@ -53,6 +53,7 @@ type options struct {
 	query      string
 	novelOnly  bool
 	jsonOutput bool
+	verify     bool
 	maxHops    int
 }
 
@@ -69,6 +70,7 @@ func parseFlags() *options {
 	flag.StringVar(&opts.query, "query", "all", "Security queries: all|escalation|exfil|external|confused-deputy.")
 	flag.BoolVar(&opts.novelOnly, "novel-only", false, "Only show paths not covered by existing chains.")
 	flag.BoolVar(&opts.jsonOutput, "json", false, "Output as JSON.")
+	flag.BoolVar(&opts.verify, "verify", false, "Verify path conditions are satisfiable.")
 	flag.IntVar(&opts.maxHops, "max-hops", 5, "Maximum path depth (1-5).")
 	flag.Parse()
 
@@ -148,8 +150,15 @@ func main() {
 		fail("parse results: %v", err)
 	}
 
-	// 5. Load known chains for dedup.
-	fmt.Fprintln(os.Stderr, "── Step 5: dedup against known chains ──")
+	// 5. Verify path conditions (optional).
+	var verification map[int]verifyStatus
+	if opts.verify {
+		fmt.Fprintln(os.Stderr, "── Step 5: verify path conditions ──")
+		verification = verifyAll(results, souffleOut)
+	}
+
+	// 6. Load known chains for dedup.
+	fmt.Fprintln(os.Stderr, "── Step 6: dedup against known chains ──")
 	knownChains, err := loadChains(opts.chains)
 	if err != nil {
 		fail("load chains: %v", err)
@@ -158,16 +167,16 @@ func main() {
 	novel, confirmed := dedup(results, knownChains)
 	fmt.Fprintf(os.Stderr, "  %d novel, %d confirmed\n", len(novel), len(confirmed))
 
-	// 6. Report.
+	// 7. Report.
 	if opts.novelOnly {
 		confirmed = nil
 	}
 
 	counts := parseCounts(souffleOut)
 	if opts.jsonOutput {
-		reportJSON(results, novel, confirmed, counts)
+		reportJSONVerified(results, novel, confirmed, counts, verification)
 	} else {
-		reportText(results, novel, confirmed, counts, opts)
+		reportTextVerified(results, novel, confirmed, counts, opts, verification)
 	}
 }
 
@@ -449,13 +458,18 @@ func fail(format string, args ...any) {
 // ── JSON output ──
 
 type jsonReport struct {
-	Counts    map[string]int   `json:"counts"`
-	Novel     []discoveredPath `json:"novel"`
-	Confirmed []discoveredPath `json:"confirmed,omitempty"`
-	Total     int              `json:"total"`
+	Counts       map[string]int          `json:"counts"`
+	Novel        []discoveredPath        `json:"novel"`
+	Confirmed    []discoveredPath        `json:"confirmed,omitempty"`
+	Verification map[string]verifyStatus `json:"verification,omitempty"`
+	Total        int                     `json:"total"`
 }
 
 func reportJSON(all []discoveredPath, novel, confirmed []discoveredPath, counts map[string]int) {
+	reportJSONVerified(all, novel, confirmed, counts, nil)
+}
+
+func reportJSONVerified(all []discoveredPath, novel, confirmed []discoveredPath, counts map[string]int, verification map[int]verifyStatus) {
 	r := jsonReport{
 		Counts:    counts,
 		Novel:     novel,
@@ -464,6 +478,12 @@ func reportJSON(all []discoveredPath, novel, confirmed []discoveredPath, counts 
 	}
 	if r.Novel == nil {
 		r.Novel = []discoveredPath{}
+	}
+	if verification != nil {
+		r.Verification = make(map[string]verifyStatus, len(verification))
+		for i, v := range verification {
+			r.Verification[fmt.Sprintf("%d", i)] = v
+		}
 	}
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")

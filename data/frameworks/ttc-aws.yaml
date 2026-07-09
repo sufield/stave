@@ -1,0 +1,322 @@
+name: Time-to-Compromise Coverage (AWS)
+version: '1.0'
+source: internal — validates kill-chain stage coverage across AWS services
+total_controls: 47
+checks:
+# IAM — full kill chain
+- id: TTC-IAM-001
+  service: IAM
+  property: initial access via credential exposure or misconfigured trust
+  description: Detect initial access paths through IAM — overpermissive trust policies, exposed credentials, weak authentication
+  scope: configuration
+  severity: P1
+- id: TTC-IAM-002
+  service: IAM
+  property: persistence via backdoor users or roles
+  description: Detect persistence through IAM — backdoor users, extra access keys, assume-role trust manipulation
+  scope: configuration
+  severity: P1
+- id: TTC-IAM-003
+  service: IAM
+  property: privilege escalation via policy attachment or role chaining
+  description: Detect privilege escalation via IAM — admin policy attachment, wildcard permissions, role chaining
+  scope: configuration
+  severity: P1
+- id: TTC-IAM-004
+  service: IAM
+  property: credential access via unused keys or no rotation
+  description: Detect credential access risk — stale access keys, no key rotation, console password without MFA
+  scope: configuration
+  severity: P1
+- id: TTC-IAM-005
+  service: IAM
+  property: detection evasion via logging gaps
+  description: Detect detection evasion — CloudTrail disabled, missing multi-region trails, no log integrity
+  scope: configuration
+  severity: P2
+
+# S3 — data exfiltration chain
+- id: TTC-S3-001
+  service: S3
+  property: initial access via public bucket or open ACL
+  description: Detect initial access through S3 — public buckets, open ACLs, missing block public access
+  scope: configuration
+  severity: P1
+- id: TTC-S3-002
+  service: S3
+  property: exfiltration via missing encryption or replication
+  description: Detect exfiltration risk — missing encryption, cross-region replication to uncontrolled accounts
+  scope: configuration
+  severity: P1
+- id: TTC-S3-003
+  service: S3
+  property: detection evasion via disabled logging
+  description: Detect detection evasion — server access logging disabled, no CloudTrail data events
+  scope: configuration
+  severity: P2
+- id: TTC-S3-004
+  service: S3
+  property: persistence via lifecycle or versioning gaps
+  description: Detect persistence enablers — versioning disabled, no lifecycle policy, no object lock
+  scope: configuration
+  severity: P2
+
+# EC2 — compute compromise chain
+- id: TTC-EC2-001
+  service: EC2
+  property: initial access via public IP or open security group
+  description: Detect initial access through EC2 — instances with public IPs, security groups open to 0.0.0.0/0
+  scope: configuration
+  severity: P1
+- id: TTC-EC2-002
+  service: EC2
+  property: credential access via IMDSv1
+  description: Detect credential theft risk — IMDSv1 enabled, SSRF to metadata endpoint
+  scope: configuration
+  severity: P1
+- id: TTC-EC2-003
+  service: EC2
+  property: lateral movement via overpermissive instance role
+  description: Detect lateral movement — instance profiles with broad permissions, missing session tags
+  scope: configuration
+  severity: P1
+- id: TTC-EC2-004
+  service: EC2
+  property: detection evasion via missing flow logs or monitoring
+  description: Detect detection evasion — VPC flow logs disabled, no detailed monitoring
+  scope: configuration
+  severity: P2
+
+# Lambda — serverless chain
+- id: TTC-LAMBDA-001
+  service: Lambda
+  property: initial access via public function URL or open resource policy
+  description: Detect initial access through Lambda — public function URLs, open resource-based policies
+  scope: configuration
+  severity: P1
+- id: TTC-LAMBDA-002
+  service: Lambda
+  property: privilege escalation via overpermissive execution role
+  description: Detect privilege escalation — execution roles with admin or wildcard permissions
+  scope: configuration
+  severity: P1
+- id: TTC-LAMBDA-003
+  service: Lambda
+  property: persistence via environment variable secrets or layers
+  description: Detect persistence risk — secrets in environment variables, unvetted layers
+  scope: configuration
+  severity: P2
+- id: TTC-LAMBDA-004
+  service: Lambda
+  property: detection evasion via missing tracing or logging
+  description: Detect detection evasion — X-Ray tracing disabled, CloudWatch logging removed
+  scope: configuration
+  severity: P2
+
+# EKS — container chain
+- id: TTC-EKS-001
+  service: EKS
+  property: initial access via public API endpoint
+  description: Detect initial access through EKS — public API server endpoint, no CIDR restriction
+  scope: configuration
+  severity: P1
+- id: TTC-EKS-002
+  service: EKS
+  property: privilege escalation via cluster admin binding or IRSA gaps
+  description: Detect privilege escalation — cluster-admin RBAC, missing IRSA, pod service account tokens
+  scope: configuration
+  severity: P1
+- id: TTC-EKS-003
+  service: EKS
+  property: lateral movement via pod networking or namespace isolation
+  description: Detect lateral movement — no network policies, missing namespace isolation, host networking
+  scope: configuration
+  severity: P1
+- id: TTC-EKS-004
+  service: EKS
+  property: detection evasion via disabled control plane logging
+  description: Detect detection evasion — control plane logging disabled, missing audit logs
+  scope: configuration
+  severity: P2
+
+# RDS — database chain
+- id: TTC-RDS-001
+  service: RDS
+  property: initial access via public database endpoint
+  description: Detect initial access through RDS — publicly accessible instances, open security groups
+  scope: configuration
+  severity: P1
+- id: TTC-RDS-002
+  service: RDS
+  property: exfiltration via missing encryption or snapshots
+  description: Detect exfiltration risk — unencrypted storage, public snapshots, missing SSL enforcement
+  scope: configuration
+  severity: P1
+- id: TTC-RDS-003
+  service: RDS
+  property: detection evasion via disabled audit logging
+  description: Detect detection evasion — no enhanced monitoring, audit logging disabled
+  scope: configuration
+  severity: P2
+
+# KMS — cryptographic chain
+- id: TTC-KMS-001
+  service: KMS
+  property: credential access via key policy exposure
+  description: Detect credential compromise — key policies granting access to external principals, wildcard grants
+  scope: configuration
+  severity: P1
+- id: TTC-KMS-002
+  service: KMS
+  property: persistence via disabled key rotation
+  description: Detect persistence enabler — automatic key rotation disabled
+  scope: configuration
+  severity: P2
+- id: TTC-KMS-003
+  service: KMS
+  property: detection evasion via missing CloudTrail key usage logging
+  description: Detect detection evasion — key usage not logged, no CloudWatch alarms for key deletion
+  scope: configuration
+  severity: P2
+
+# CloudTrail — detection backbone
+- id: TTC-CT-001
+  service: CloudTrail
+  property: detection evasion via trail disabled or single region
+  description: Detect detection evasion — trail not enabled, single-region trail, missing management events
+  scope: configuration
+  severity: P1
+- id: TTC-CT-002
+  service: CloudTrail
+  property: detection evasion via log integrity validation disabled
+  description: Detect log tampering risk — integrity validation disabled, logs in unprotected bucket
+  scope: configuration
+  severity: P1
+
+# GuardDuty — threat detection
+- id: TTC-GD-001
+  service: GuardDuty
+  property: detection evasion via GuardDuty disabled
+  description: Detect detection evasion — GuardDuty not enabled, missing protection plans
+  scope: configuration
+  severity: P1
+- id: TTC-GD-002
+  service: GuardDuty
+  property: detection evasion via findings not exported
+  description: Detect alert gap — findings not exported to Security Hub, no SNS notification
+  scope: configuration
+  severity: P2
+
+# SecurityHub — aggregation
+- id: TTC-SH-001
+  service: SecurityHub
+  property: detection evasion via Security Hub disabled
+  description: Detect aggregation gap — Security Hub not enabled, findings not centralized
+  scope: configuration
+  severity: P1
+
+# Config — compliance baseline
+- id: TTC-CFG-001
+  service: Config
+  property: detection evasion via Config recorder disabled
+  description: Detect drift detection gap — Config recorder stopped, no delivery channel
+  scope: configuration
+  severity: P1
+- id: TTC-CFG-002
+  service: Config
+  property: detection evasion via missing conformance packs
+  description: Detect compliance gap — no conformance packs, no organization-level aggregation
+  scope: configuration
+  severity: P2
+
+# VPC — network chain
+- id: TTC-VPC-001
+  service: VPC
+  property: initial access via open security group or NACL
+  description: Detect initial access through VPC — unrestricted ingress on security groups, permissive NACLs
+  scope: configuration
+  severity: P1
+- id: TTC-VPC-002
+  service: VPC
+  property: lateral movement via peering or transit gateway misconfiguration
+  description: Detect lateral movement — overly permissive VPC peering, transit gateway route propagation
+  scope: configuration
+  severity: P1
+- id: TTC-VPC-003
+  service: VPC
+  property: detection evasion via flow logs disabled
+  description: Detect detection evasion — VPC flow logs not enabled, missing reject-traffic logging
+  scope: configuration
+  severity: P2
+
+# WAF — perimeter chain
+- id: TTC-WAF-001
+  service: WAF
+  property: initial access via missing WAF rules or default allow
+  description: Detect perimeter gap — Web ACL with no rules, default action set to allow
+  scope: configuration
+  severity: P1
+- id: TTC-WAF-002
+  service: WAF
+  property: detection evasion via WAF logging disabled
+  description: Detect detection evasion — WAF logging disabled, over-redacted log fields
+  scope: configuration
+  severity: P2
+
+# Shield — DDoS chain
+- id: TTC-SHIELD-001
+  service: Shield
+  property: resilience via Shield Advanced missing
+  description: Detect DDoS resilience gap — Shield Advanced not subscribed, auto-renew disabled
+  scope: configuration
+  severity: P2
+- id: TTC-SHIELD-002
+  service: Shield
+  property: detection evasion via missing DRT access or contacts
+  description: Detect response gap — DRT access not configured, emergency contacts missing
+  scope: configuration
+  severity: P3
+
+# SecretsManager — credential chain
+- id: TTC-SM-001
+  service: SecretsManager
+  property: credential access via unrotated secrets
+  description: Detect credential access — secrets without rotation configured, rotation period exceeded
+  scope: configuration
+  severity: P1
+- id: TTC-SM-002
+  service: SecretsManager
+  property: exfiltration via missing encryption or resource policy
+  description: Detect exfiltration risk — secrets not encrypted with CMK, overpermissive resource policy
+  scope: configuration
+  severity: P2
+
+# EventBridge — event chain
+- id: TTC-EB-001
+  service: EventBridge
+  property: detection evasion via missing event rules
+  description: Detect event monitoring gap — no rules for security-relevant events, dead-letter queue missing
+  scope: configuration
+  severity: P2
+- id: TTC-EB-002
+  service: EventBridge
+  property: lateral movement via cross-account event bus access
+  description: Detect lateral movement — event bus policy allows cross-account puts from untrusted principals
+  scope: configuration
+  severity: P2
+
+# SNS — notification chain
+- id: TTC-SNS-001
+  service: SNS
+  property: detection evasion via unencrypted or unsubscribed topics
+  description: Detect alert delivery gap — topics without subscriptions, missing encryption, open publish policy
+  scope: configuration
+  severity: P2
+
+# SQS — message chain
+- id: TTC-SQS-001
+  service: SQS
+  property: exfiltration via open queue policy or missing encryption
+  description: Detect exfiltration risk — queues with wildcard send/receive policies, missing encryption
+  scope: configuration
+  severity: P2

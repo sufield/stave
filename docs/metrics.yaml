@@ -9,6 +9,10 @@ chains:
   authored: 625
 
 frameworks:
-  count: 9
+  count: 10
+
+proof_class:
+  trivial: 2259
+  compound: 677
 
 updated: 2026-07-09

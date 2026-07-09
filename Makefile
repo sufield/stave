@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check refactor-scan refactor-scan-check refactor-scan-update triage quarterly-audit quarterly-save compliance-diff
+.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check refactor-scan refactor-scan-check refactor-scan-update triage quarterly-audit quarterly-save compliance-diff ttc-validate
 # Binary name
 BINARY=stave
 
@@ -445,7 +445,7 @@ semantic-diff: sync-controls
 ## Discovers attack chains not covered by existing chain YAMLs.
 ## Use ARGS for flags: make chain-discover ARGS="-snapshot observations/ -query escalation"
 chain-discover: build
-	$(GOCMD) run ./reasoning/souffle/discovery/main.go ./reasoning/souffle/discovery/dedup.go ./reasoning/souffle/discovery/report.go $(ARGS)
+	$(GOCMD) run ./reasoning/souffle/discovery/main.go ./reasoning/souffle/discovery/dedup.go ./reasoning/souffle/discovery/report.go ./reasoning/souffle/discovery/verify.go $(ARGS)
 
 ## ci: CI pipeline (tidy, check, build)
 ci: tidy check build
@@ -766,6 +766,11 @@ compliance-diff:
 	@$(MAKE) sync-controls >&2
 	@$(GOCMD) run ./internal/tools/compliance-diff $(ARGS)
 
+## ttc-validate: Validate kill-chain (time-to-compromise) coverage across AWS services
+ttc-validate:
+	@$(MAKE) sync-controls >&2
+	@$(GOCMD) run ./internal/tools/compliance-diff --framework data/frameworks/ttc-aws.yaml $(ARGS)
+
 ## gen-steampipe-mappings: Generate contracts/steampipe/*.yaml from the cached column catalog
 ##                          Skips existing files; new files carry _auto_generated: true and
 ##                          _review_required: N markers for human review.
@@ -1077,6 +1082,8 @@ metrics:
 	@echo "" >> docs/metrics.yaml
 	@echo "frameworks:" >> docs/metrics.yaml
 	@echo "  count: $$(find data/frameworks/ -name '*.yaml' 2>/dev/null | wc -l | tr -d ' ')" >> docs/metrics.yaml
+	@echo "" >> docs/metrics.yaml
+	@$(GOCMD) run ./internal/tools/proofclass >> docs/metrics.yaml
 	@echo "" >> docs/metrics.yaml
 	@echo "updated: $$(date +%Y-%m-%d)" >> docs/metrics.yaml
 	@echo "Generated docs/metrics.yaml"

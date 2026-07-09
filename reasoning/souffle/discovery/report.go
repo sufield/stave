@@ -9,6 +9,10 @@ import (
 )
 
 func reportText(all []discoveredPath, novel, confirmed []discoveredPath, counts map[string]int, opts *options) {
+	reportTextVerified(all, novel, confirmed, counts, opts, nil)
+}
+
+func reportTextVerified(all []discoveredPath, novel, confirmed []discoveredPath, counts map[string]int, opts *options, verification map[int]verifyStatus) {
 	w := os.Stdout
 
 	fmt.Fprintln(w, "═══════════════════════════════════════════════")
@@ -35,6 +39,32 @@ func reportText(all []discoveredPath, novel, confirmed []discoveredPath, counts 
 	}
 	fmt.Fprintln(w)
 
+	if verification != nil {
+		engine := "contradiction"
+		for _, v := range verification {
+			if v.Engine != "" && v.Engine != "none" {
+				engine = v.Engine
+				break
+			}
+		}
+		fmt.Fprintf(w, "CONDITION VERIFICATION (engine: %s):\n", engine)
+		var sat, unsat, uncon int
+		for _, v := range verification {
+			switch v.Status {
+			case "satisfiable":
+				sat++
+			case "unsatisfiable":
+				unsat++
+			case "unconstrained":
+				uncon++
+			}
+		}
+		fmt.Fprintf(w, "  %-26s %d\n", "satisfiable:", sat)
+		fmt.Fprintf(w, "  %-26s %d\n", "unsatisfiable:", unsat)
+		fmt.Fprintf(w, "  %-26s %d\n", "unconstrained:", uncon)
+		fmt.Fprintln(w)
+	}
+
 	fmt.Fprintf(w, "DEDUPLICATION:  %d novel, %d confirmed\n", len(novel), len(confirmed))
 	fmt.Fprintln(w)
 
@@ -56,6 +86,7 @@ func reportText(all []discoveredPath, novel, confirmed []discoveredPath, counts 
 				fmt.Fprintf(w, "  Service:  %s\n", p.Service)
 			}
 			fmt.Fprintf(w, "  Path:     %s\n", formatPath(p.Path))
+			printVerification(w, i, verification)
 		}
 		fmt.Fprintln(w)
 	}
@@ -76,6 +107,24 @@ func reportText(all []discoveredPath, novel, confirmed []discoveredPath, counts 
 
 	if len(novel) == 0 && len(confirmed) == 0 {
 		fmt.Fprintln(w, "No security-relevant paths discovered.")
+	}
+}
+
+func printVerification(w *os.File, idx int, verification map[int]verifyStatus) {
+	if verification == nil {
+		return
+	}
+	v, ok := verification[idx]
+	if !ok {
+		return
+	}
+	fmt.Fprintf(w, "  Verify:   %s", v.Status)
+	if v.Conditions > 0 {
+		fmt.Fprintf(w, " (%d conditions, %s)", v.Conditions, v.Engine)
+	}
+	fmt.Fprintln(w)
+	for _, c := range v.Conflicts {
+		fmt.Fprintf(w, "            conflict: %s\n", c)
 	}
 }
 
