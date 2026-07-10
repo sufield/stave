@@ -14,11 +14,11 @@ require (
 
 require (
 	github.com/aclements/go-z3 v0.0.0-20220809013456-4675d5f90ca5
-	github.com/google/cel-go v0.29.0
+	github.com/google/cel-go v0.29.2
 	github.com/google/go-cmp v0.7.0
 	github.com/itchyny/gojq v0.12.19
 	github.com/rogpeppe/go-internal v1.15.0
-	golang.org/x/sync v0.21.0
+	golang.org/x/sync v0.22.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240826202546-f6391c0de4c7
 	google.golang.org/protobuf v1.36.11
 	pgregory.net/rapid v1.3.0
