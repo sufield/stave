@@ -532,6 +532,37 @@ func processFixture(name, fixDir string, dryRun bool) fixtureReport {
 		return r
 	}
 
+	// Validate stdout as JSON before deriving any golden. Derived
+	// goldens (summary, count, source_evidence) call json.Unmarshal
+	// on stdout — if it's empty or truncated, that fails with
+	// "unexpected end of JSON input" with no fixture-level context.
+	// Catch it here with a preview so the developer can see what
+	// stave actually produced.
+	needsJSONStdout := false
+	for _, g := range goldens {
+		if g != "expected.exit" {
+			needsJSONStdout = true
+			break
+		}
+	}
+	if needsJSONStdout {
+		trimmed := bytes.TrimSpace(stdout)
+		if len(trimmed) == 0 {
+			r.Category = catError
+			r.Err = fmt.Errorf("stave produced empty stdout (exit %d); cannot derive JSON goldens", exitCode)
+			return r
+		}
+		if !json.Valid(trimmed) {
+			preview := string(trimmed)
+			if len(preview) > 300 {
+				preview = preview[:300] + "..."
+			}
+			r.Category = catError
+			r.Err = fmt.Errorf("stave produced invalid JSON (exit %d, len=%d): %q", exitCode, len(trimmed), preview)
+			return r
+		}
+	}
+
 	cat := catClean
 	for _, g := range goldens {
 		newContent, derivErr := deriveGolden(g, stdout, exitCode)

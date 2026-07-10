@@ -1,0 +1,132 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.OAUTH.WILDCARDGRANT.001
+name: OAuth Permissions Must Not Come From Wildcard Action
+description: >
+  An IAM identity has OAuth MCP Server permissions via a wildcard
+  action (signin:* or *). This is likely an unintentional grant — the
+  signin:AuthorizeOAuth2Access and signin:CreateOAuth2Token actions were
+  introduced on July 9, 2026. Any policy with signin:* or * in the
+  Action field now implicitly grants OAuth agent authorization.
+
+  The wildcard grant is dangerous because the identity owner may not
+  know they have OAuth permissions. Unlike explicit grants, wildcards
+  are not reviewed when new actions are added to a namespace.
+domain: identity
+severity: high
+scope: compound
+corpus_reference: MITRE:T1550.001
+compliance:
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-02", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - oauth
+taxonomy:
+  - compliance-mapping
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_user
+  - aws_iam_role
+observation_fields:
+  - identity.oauth.authorize_access.present
+  - identity.oauth.authorize_access.via_wildcard
+  - identity.oauth.create_token.present
+  - identity.oauth.create_token.via_wildcard
+remediation:
+  description: >
+    Identity has OAuth MCP Server permissions via wildcard action
+    (signin:* or *). This is likely unintentional — review whether
+    this identity requires OAuth agent access.
+  action: >
+    Replace the wildcard action with explicit action grants. If OAuth
+    access is intended, grant signin:AuthorizeOAuth2Access and
+    signin:CreateOAuth2Token explicitly with appropriate condition
+    keys. If not intended, narrow the Action field to exclude the
+    signin: namespace.
+  example: |
+    {
+      "identity": {
+        "oauth": {
+          "authorize_access": {
+            "present": true,
+            "via_wildcard": false
+          },
+          "create_token": {
+            "present": true,
+            "via_wildcard": false
+          }
+        }
+      }
+    }
+mitre_attack:
+  - id: T1550.001
+    name: "Use Alternate Authentication Material: Application Access Token"
+    tactic: credential-access
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: in
+      value: ["user", "role"]
+    - any:
+        - field: properties.identity.oauth.authorize_access.via_wildcard
+          op: eq
+          value: true
+        - field: properties.identity.oauth.create_token.via_wildcard
+          op: eq
+          value: true
+tests:
+  - name: Role with OAuth permissions via signin wildcard
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/broad-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          oauth:
+            authorize_access:
+              present: true
+              via_wildcard: true
+            create_token:
+              present: true
+              via_wildcard: true
+  - name: Role with explicit OAuth permissions
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/explicit-oauth"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          oauth:
+            authorize_access:
+              present: true
+              via_wildcard: false
+            create_token:
+              present: true
+              via_wildcard: false
+  - name: Role with star-star wildcard
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/admin-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          oauth:
+            authorize_access:
+              present: true
+              via_wildcard: true
+            create_token:
+              present: true
+              via_wildcard: true

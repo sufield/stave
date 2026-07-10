@@ -58,6 +58,7 @@ params:
     - cloudtrail
     - kms
     - aws-marketplace
+    - signin
 remediation:
   description: >
     An IAM principal (user or role) has an attached policy that grants

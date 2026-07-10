@@ -102,6 +102,16 @@ var declaredInputs = []string{
 	// already wrote them).
 	"authorized",
 	"sensitivity",
+	// G4 — bucket hijack chain inputs, emitted by
+	// emitBucketHijackFacts below.
+	"is_stream_destination",
+	"bucket_in_snapshot",
+	"references_bucket",
+	"security_telemetry_router",
+	"router_update_permission",
+	"has_data_perimeter_scp",
+	"bucket_account",
+	"router_account",
 }
 
 // G3 default config — mirrors stave-authorization.yaml at the
@@ -209,6 +219,21 @@ func main() {
 	}
 	stats["authorized"] = g3stats["authorized"]
 	stats["sensitivity"] = g3stats["sensitivity"]
+
+	// G4 — bucket hijack chain fact extraction. Reads split
+	// observation facts (bucket names, ghost booleans, asset
+	// types) and writes the 8 input relations bucket_hijack.dl
+	// consumes. Two static seed tables (security_telemetry_router,
+	// router_update_permission) are written unconditionally;
+	// six snapshot-derived relations populate from the observation
+	// property paths each router type's ghost controls reference.
+	g4stats, err := emitBucketHijackFacts(opts.out)
+	if err != nil {
+		fail("emit bucket hijack facts: %v", err)
+	}
+	for k, v := range g4stats {
+		stats[k] = v
+	}
 
 	if err := preCreateEmpty(opts.out); err != nil {
 		fail("pre-create empty facts: %v", err)
@@ -406,6 +431,242 @@ func readFactPairs(path string) ([]factPair, error) {
 		out = append(out, factPair{Subject: fields[0], Object: fields[1]})
 	}
 	return out, nil
+}
+
+// ── G4: Bucket hijack fact extraction ──────────────────
+//
+// Derives the 8 input relations bucket_hijack.dl consumes
+// from the observation facts the JSONL split produced.
+//
+//   Snapshot-derived (6): bucket_in_snapshot, references_bucket,
+//     is_stream_destination, bucket_account, router_account,
+//     has_data_perimeter_scp.
+//
+//   Static seed (2): security_telemetry_router,
+//     router_update_permission.
+
+type routerEntry struct {
+	routerType    string
+	bucketPred    string
+	extractBucket func(string) string // nil = use value as-is; return "" to skip
+	isTelemetry   bool
+	updatePerm    string
+}
+
+// routerRegistry maps each service's observation property path
+// for the destination bucket name to a router type key. The key
+// must match between is_stream_destination, references_bucket,
+// security_telemetry_router, and router_update_permission so the
+// Datalog joins connect.
+var routerRegistry = []routerEntry{
+	// Security telemetry routers.
+	{"cloudtrail", "audit.cloudtrail.s3_bucket_name", nil, true, "cloudtrail:UpdateTrail"},
+	{"config", "compliance.config.delivery_s3_bucket", nil, true, "config:PutDeliveryChannel"},
+	{"guardduty", "threat_detection.findings_export.destination_bucket", nil, true, "guardduty:CreatePublishingDestination"},
+	{"vpc_flow_log", "network.flow_log.destination_bucket", nil, true, "ec2:CreateFlowLogs"},
+	{"macie", "governance.export.s3_bucket", nil, true, "macie2:PutClassificationExportConfiguration"},
+	// Data pipeline routers.
+	{"firehose", "streaming.firehose.destination_bucket", nil, false, "firehose:UpdateDestination"},
+	{"s3_replication", "data.s3.replication.destination_bucket", nil, false, "s3:PutReplicationConfiguration"},
+	{"athena", "analytics.athena.output.s3_bucket", nil, false, "athena:UpdateWorkGroup"},
+	{"sagemaker", "compute.sagemaker.output.s3_bucket", nil, false, "sagemaker:CreateTrainingJob"},
+	{"codepipeline", "compute.codepipeline.artifact_store.s3_bucket", nil, false, "codepipeline:UpdatePipeline"},
+	{"backup", "resilience.backup.export.s3_bucket", nil, false, "backup:UpdateRecoveryPointLifecycle"},
+	{"lambda", "compute.lambda.destination.s3_bucket", nil, false, "lambda:PutFunctionEventInvokeConfig"},
+	{"dms", "database.dms.target.s3_bucket", nil, false, "dms:ModifyEndpoint"},
+	// Special extraction — bucket name embedded in ARN or hostname.
+	{"eventbridge_s3", "governance.events.target_arn", bucketFromS3ARN, false, "events:PutTargets"},
+	{"cloudfront_log", "cdn.cloudfront.logging_bucket", bucketFromCFHostname, false, "cloudfront:UpdateDistribution"},
+	{"elb_access_log", "network.elb.access_log_bucket", nil, false, "elasticloadbalancing:ModifyLoadBalancerAttributes"},
+}
+
+func bucketFromS3ARN(val string) string {
+	parts := strings.Split(val, ":")
+	if len(parts) >= 6 && parts[2] == "s3" {
+		return parts[len(parts)-1]
+	}
+	return ""
+}
+
+func bucketFromCFHostname(val string) string {
+	return strings.TrimSuffix(val, ".s3.amazonaws.com")
+}
+
+func accountFromARN(arn string) string {
+	parts := strings.Split(arn, ":")
+	if len(parts) >= 5 && parts[4] != "" {
+		return parts[4]
+	}
+	return ""
+}
+
+func bucketNameFromARN(arn string) string {
+	parts := strings.Split(arn, ":")
+	if len(parts) >= 6 && parts[2] == "s3" {
+		return parts[len(parts)-1]
+	}
+	return ""
+}
+
+// emitBucketHijackFacts reads split observation facts and writes
+// the 8 .facts files bucket_hijack.dl declares as .input.
+func emitBucketHijackFacts(outDir string) (map[string]int, error) {
+	counts := map[string]int{}
+
+	// Read has_type.facts to find S3 buckets and collect account IDs.
+	types, err := readFactPairs(filepath.Join(outDir, "has_type.facts"))
+	if err != nil {
+		return nil, fmt.Errorf("read has_type.facts: %w", err)
+	}
+
+	bucketNames := map[string]struct{}{}
+	bucketARNs := map[string]struct{}{}
+	allAccounts := map[string]struct{}{}
+
+	for _, t := range types {
+		if acct := accountFromARN(t.Subject); acct != "" {
+			allAccounts[acct] = struct{}{}
+		}
+		if t.Object == "aws_s3_bucket" {
+			if name := bucketNameFromARN(t.Subject); name != "" {
+				bucketNames[name] = struct{}{}
+				bucketARNs[t.Subject] = struct{}{}
+			}
+		}
+	}
+
+	// bucket_in_snapshot — 1-col: every S3 bucket name in the snapshot.
+	if err := writeLines(filepath.Join(outDir, "bucket_in_snapshot.facts"), sortedKeys(bucketNames), counts, "bucket_in_snapshot"); err != nil {
+		return nil, err
+	}
+
+	// Scan each router type's observation facts for bucket references.
+	var refRows, isdRows []string
+	routerAccts := map[string]string{}
+
+	for _, r := range routerRegistry {
+		pairs, readErr := readFactPairs(filepath.Join(outDir, r.bucketPred+".facts"))
+		if readErr != nil || len(pairs) == 0 {
+			continue
+		}
+		for _, p := range pairs {
+			name := p.Object
+			if r.extractBucket != nil {
+				name = r.extractBucket(name)
+			}
+			if name == "" {
+				continue
+			}
+			routerARN := p.Subject
+			refRows = append(refRows, fmt.Sprintf("%s\t%s\t%s", routerARN, name, r.routerType))
+			isdRows = append(isdRows, fmt.Sprintf("arn:aws:s3:::%s\t%s\t%s", name, routerARN, r.routerType))
+
+			if acct := accountFromARN(routerARN); acct != "" {
+				routerAccts[routerARN] = acct
+			}
+		}
+	}
+
+	// references_bucket — 3-col: router, bucket_name, router_type.
+	slices.Sort(refRows)
+	if err := writeLines(filepath.Join(outDir, "references_bucket.facts"), refRows, counts, "references_bucket"); err != nil {
+		return nil, err
+	}
+
+	// is_stream_destination — 3-col: bucket_arn, router, router_type.
+	slices.Sort(isdRows)
+	if err := writeLines(filepath.Join(outDir, "is_stream_destination.facts"), isdRows, counts, "is_stream_destination"); err != nil {
+		return nil, err
+	}
+
+	// security_telemetry_router — 1-col static seed.
+	var telemetryRows []string
+	for _, r := range routerRegistry {
+		if r.isTelemetry {
+			telemetryRows = append(telemetryRows, r.routerType)
+		}
+	}
+	if err := writeLines(filepath.Join(outDir, "security_telemetry_router.facts"), telemetryRows, counts, "security_telemetry_router"); err != nil {
+		return nil, err
+	}
+
+	// router_update_permission — 2-col static seed.
+	var permRows []string
+	for _, r := range routerRegistry {
+		permRows = append(permRows, fmt.Sprintf("%s\t%s", r.routerType, r.updatePerm))
+	}
+	if err := writeLines(filepath.Join(outDir, "router_update_permission.facts"), permRows, counts, "router_update_permission"); err != nil {
+		return nil, err
+	}
+
+	// bucket_account — 2-col. S3 ARNs lack account IDs; infer from
+	// the snapshot context when exactly one account is present.
+	var baRows []string
+	if len(allAccounts) == 1 {
+		var acct string
+		for a := range allAccounts {
+			acct = a
+		}
+		for _, arn := range sortedKeys(bucketARNs) {
+			baRows = append(baRows, fmt.Sprintf("%s\t%s", arn, acct))
+		}
+	}
+	if err := writeLines(filepath.Join(outDir, "bucket_account.facts"), baRows, counts, "bucket_account"); err != nil {
+		return nil, err
+	}
+
+	// router_account — 2-col: parsed from router ARNs.
+	raKeys := sortedKeys(func() map[string]struct{} {
+		m := make(map[string]struct{}, len(routerAccts))
+		for k := range routerAccts {
+			m[k] = struct{}{}
+		}
+		return m
+	}())
+	var raRows []string
+	for _, router := range raKeys {
+		raRows = append(raRows, fmt.Sprintf("%s\t%s", router, routerAccts[router]))
+	}
+	if err := writeLines(filepath.Join(outDir, "router_account.facts"), raRows, counts, "router_account"); err != nil {
+		return nil, err
+	}
+
+	// has_data_perimeter_scp — 1-col. If any organization asset has
+	// identity.scp.has_data_perimeter_s3 = true, emit for all
+	// accounts in the snapshot (SCP covers the whole org).
+	dpPairs, _ := readFactPairs(filepath.Join(outDir, "identity.scp.has_data_perimeter_s3.facts"))
+	hasPerimeter := false
+	for _, p := range dpPairs {
+		if p.Object == "true" {
+			hasPerimeter = true
+			break
+		}
+	}
+	var dpRows []string
+	if hasPerimeter {
+		for _, acct := range sortedKeys(allAccounts) {
+			dpRows = append(dpRows, acct)
+		}
+	}
+	if err := writeLines(filepath.Join(outDir, "has_data_perimeter_scp.facts"), dpRows, counts, "has_data_perimeter_scp"); err != nil {
+		return nil, err
+	}
+
+	return counts, nil
+}
+
+// writeLines writes rows to a .facts file and updates counts.
+func writeLines(path string, rows []string, counts map[string]int, key string) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("create %s: %w", path, err)
+	}
+	defer f.Close()
+	for _, row := range rows {
+		fmt.Fprintln(f, row)
+	}
+	counts[key] = len(rows)
+	return nil
 }
 
 func sortedKeys(m map[string]struct{}) []string {

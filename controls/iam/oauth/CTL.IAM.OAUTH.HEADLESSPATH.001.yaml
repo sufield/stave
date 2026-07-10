@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.OAUTH.HEADLESSPATH.001
+name: OAuth Headless Path Must Be Closed
+description: >
+  An IAM identity has signin:CreateOAuth2Token permission and the
+  client_credentials grant type is not excluded. This means any holder
+  of this role's AWS credentials can obtain OAuth tokens for the AWS
+  MCP Server without interactive authorization — the headless path is
+  open.
+
+  This control fires even when a signin:OAuthGrantType condition exists,
+  if that condition still includes client_credentials. The sibling
+  control CTL.IAM.OAUTH.UNCONSTRAINEDTOKEN.001 fires when no
+  constraint exists at all. Both should exist because remediation
+  guidance differs: this control says "remove client_credentials from
+  the allowed list," the sibling says "add a constraint."
+
+  Note: this evaluation does not credit SCP-based OAuth restrictions
+  that use condition keys. If your organization uses SCPs with
+  signin:OAuthGrantType conditions, this finding may not apply.
+domain: identity
+severity: critical
+scope: compound
+corpus_reference: MITRE:T1550.001
+compliance:
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-02", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - oauth
+taxonomy:
+  - compliance-mapping
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_user
+  - aws_iam_role
+observation_fields:
+  - identity.oauth.create_token.present
+  - identity.oauth.grant_type_excludes_client_creds
+remediation:
+  description: >
+    Identity has the headless OAuth path open to the AWS MCP Server.
+    The client_credentials grant type is not excluded, allowing headless
+    token acquisition without interactive authorization.
+  action: >
+    Restrict the signin:OAuthGrantType condition to exclude
+    client_credentials. Use only authorization_code and refresh_token
+    to require interactive browser-based approval.
+  example: |
+    {
+      "identity": {
+        "oauth": {
+          "create_token": { "present": true },
+          "grant_type_excludes_client_creds": true
+        }
+      }
+    }
+mitre_attack:
+  - id: T1550.001
+    name: "Use Alternate Authentication Material: Application Access Token"
+    tactic: credential-access
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: in
+      value: ["user", "role"]
+    - field: properties.identity.oauth.create_token.present
+      op: eq
+      value: true
+    - field: properties.identity.oauth.grant_type_excludes_client_creds
+      op: eq
+      value: false
+tests:
+  - name: Role with OAuth token and client_credentials not excluded
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/mcp-agent"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          oauth:
+            create_token:
+              present: true
+            grant_type_excludes_client_creds: false
+  - name: Role with OAuth token and client_credentials excluded
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/mcp-agent-scoped"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          oauth:
+            create_token:
+              present: true
+            grant_type_excludes_client_creds: true

@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.OAUTH.MANAGEDPOLICY.001
+name: AWSMCPSignInOAuthAccessPolicy Attachment Must Be Reviewed
+description: >
+  An IAM identity has the AWSMCPSignInOAuthAccessPolicy managed policy
+  attached. This AWS-managed policy grants OAuth access to the AWS MCP
+  Server. Review whether this identity requires OAuth agent
+  authorization — the policy was introduced on July 9, 2026, and
+  attachment may be unintentional or overly broad.
+
+  This is an awareness control. The finding is informational — it
+  surfaces which identities have the policy so defenders can review
+  intentionality and verify that condition-key constraints are
+  applied elsewhere (via SCP or inline policy conditions).
+domain: identity
+severity: info
+scope: compound
+compliance:
+  nist_800_53_r5: "CM-8(3)"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - iam
+  - oauth
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_user
+  - aws_iam_role
+observation_fields:
+  - identity.oauth.mcp_managed_policy_attached
+remediation:
+  description: >
+    Identity has the AWSMCPSignInOAuthAccessPolicy managed policy
+    attached. Review whether OAuth agent access is intended.
+  action: >
+    Verify that this identity requires OAuth access to the AWS MCP
+    Server. If not, detach the policy. If access is intended, ensure
+    condition-key constraints (signin:OAuthRedirectUri,
+    signin:OAuthGrantType) are applied via SCP or supplementary
+    inline policy.
+  example: |
+    {
+      "identity": {
+        "oauth": {
+          "mcp_managed_policy_attached": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: in
+      value: ["user", "role"]
+    - field: properties.identity.oauth.mcp_managed_policy_attached
+      op: eq
+      value: true
+tests:
+  - name: Role with MCP managed policy attached
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/mcp-agent"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          oauth:
+            mcp_managed_policy_attached: true
+  - name: Role without MCP managed policy
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/no-mcp"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          oauth:
+            mcp_managed_policy_attached: false

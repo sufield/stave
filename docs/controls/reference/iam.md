@@ -1706,6 +1706,133 @@ For each resource tagged data-classification: phi, the complete set of principal
 
 ---
 
+### CTL.IAM.OAUTH.HEADLESSPATH.001
+
+**OAuth Headless Path Must Be Closed**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+An IAM identity has signin:CreateOAuth2Token permission and the client_credentials grant type is not excluded. This means any holder of this role's AWS credentials can obtain OAuth tokens for the AWS MCP Server without interactive authorization — the headless path is open.
+This control fires even when a signin:OAuthGrantType condition exists, if that condition still includes client_credentials. The sibling control CTL.IAM.OAUTH.UNCONSTRAINEDTOKEN.001 fires when no constraint exists at all. Both should exist because remediation guidance differs: this control says "remove client_credentials from the allowed list," the sibling says "add a constraint."
+Note: this evaluation does not credit SCP-based OAuth restrictions that use condition keys. If your organization uses SCPs with signin:OAuthGrantType conditions, this finding may not apply.
+
+**Remediation:** Restrict the signin:OAuthGrantType condition to exclude client_credentials. Use only authorization_code and refresh_token to require interactive browser-based approval.
+
+---
+
+### CTL.IAM.OAUTH.MANAGEDPOLICY.001
+
+**AWSMCPSignInOAuthAccessPolicy Attachment Must Be Reviewed**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: CM-8(3); soc2: CC6.1;
+
+An IAM identity has the AWSMCPSignInOAuthAccessPolicy managed policy attached. This AWS-managed policy grants OAuth access to the AWS MCP Server. Review whether this identity requires OAuth agent authorization — the policy was introduced on July 9, 2026, and attachment may be unintentional or overly broad.
+This is an awareness control. The finding is informational — it surfaces which identities have the policy so defenders can review intentionality and verify that condition-key constraints are applied elsewhere (via SCP or inline policy conditions).
+
+**Remediation:** Verify that this identity requires OAuth access to the AWS MCP Server. If not, detach the policy. If access is intended, ensure condition-key constraints (signin:OAuthRedirectUri, signin:OAuthGrantType) are applied via SCP or supplementary inline policy.
+
+---
+
+### CTL.IAM.OAUTH.NOINTROSPECTION.001
+
+**Account Must Have OAuth Token Introspection Capability**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2(1); soc2: CC6.1;
+
+No identity in this account has signin:IntrospectOAuth2Token permission, but at least one identity has OAuth grant permissions (signin:AuthorizeOAuth2Access or signin:CreateOAuth2Token). Token status cannot be validated during incident response — defenders cannot determine whether a token is active, what scopes it has, or when it expires.
+
+**Remediation:** Grant signin:IntrospectOAuth2Token permission to at least one security or incident response role. Consider pairing with signin:RevokeOAuth2Token for a complete token lifecycle management capability.
+
+---
+
+### CTL.IAM.OAUTH.NOREVOCATION.001
+
+**Account Must Have OAuth Token Revocation Capability**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-2(1); nist_800_53_r5: AC-2(1); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+No identity in this account has signin:RevokeOAuth2Token permission, but at least one identity has OAuth grant permissions (signin:AuthorizeOAuth2Access or signin:CreateOAuth2Token). If an OAuth token is compromised, no one can revoke it. This is analogous to having IAM credentials without the ability to deactivate access keys.
+This control evaluates at the account level — it fires on the account asset when the account has OAuth-capable identities but no revocation-capable identity.
+
+**Remediation:** Grant signin:RevokeOAuth2Token permission to at least one security or break-glass role. Consider granting both signin:RevokeOAuth2Token and signin:IntrospectOAuth2Token to an incident response role.
+
+---
+
+### CTL.IAM.OAUTH.UNCONSTRAINEDAUTHORIZE.001
+
+**OAuth Authorize Access Must Have Redirect URI Constraint**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+An IAM identity has signin:AuthorizeOAuth2Access permission without a signin:OAuthRedirectUri condition. Without this condition, OAuth tokens can be delivered to arbitrary endpoints — an attacker who compromises the role's credentials can redirect authorization tokens to infrastructure they control. The signin:OAuthRedirectUri condition restricts delivery to http://localhost:* for local development or to specific hosted provider URIs.
+Note: this evaluation does not credit SCP-based OAuth restrictions that use condition keys. If your organization uses SCPs with signin:OAuthRedirectUri conditions, this finding may not apply.
+
+**Remediation:** Add a signin:OAuthRedirectUri condition to the policy statement granting signin:AuthorizeOAuth2Access. For local development, constrain to http://localhost:* or http://127.0.0.1:*. For hosted MCP providers, constrain to the specific provider callback URI.
+
+---
+
+### CTL.IAM.OAUTH.UNCONSTRAINEDTOKEN.001
+
+**OAuth Token Creation Must Have Grant Type Constraint**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+An IAM identity has signin:CreateOAuth2Token permission without a signin:OAuthGrantType condition. Without this condition, all OAuth grant types are available — including client_credentials, which enables headless token acquisition without browser-based authorization. Any holder of this role's AWS credentials can obtain OAuth tokens for the AWS MCP Server without interactive approval.
+Note: this evaluation does not credit SCP-based OAuth restrictions that use condition keys. If your organization uses SCPs with signin:OAuthGrantType conditions, this finding may not apply.
+
+**Remediation:** Add a signin:OAuthGrantType condition restricting grant types to authorization_code and refresh_token. This forces interactive browser-based authorization and prevents headless token acquisition via client_credentials.
+
+---
+
+### CTL.IAM.OAUTH.UNSCOPEDRESOURCE.001
+
+**OAuth Authorize Must Be Scoped to MCP Service Principal**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+An IAM identity has signin:AuthorizeOAuth2Access with Resource: * rather than scoped to the MCP service principal ARN (arn:aws:signin:*:*:service-principal/aws-mcp.amazonaws.com). An unscoped resource permits authorization against any service principal registered in the signin namespace — current and future.
+
+**Remediation:** Scope the Resource field to arn:aws:signin:*:*:service-principal/aws-mcp.amazonaws.com to limit authorization to the intended service.
+
+---
+
+### CTL.IAM.OAUTH.WILDCARDGRANT.001
+
+**OAuth Permissions Must Not Come From Wildcard Action**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+An IAM identity has OAuth MCP Server permissions via a wildcard action (signin:* or *). This is likely an unintentional grant — the signin:AuthorizeOAuth2Access and signin:CreateOAuth2Token actions were introduced on July 9, 2026. Any policy with signin:* or * in the Action field now implicitly grants OAuth agent authorization.
+The wildcard grant is dangerous because the identity owner may not know they have OAuth permissions. Unlike explicit grants, wildcards are not reviewed when new actions are added to a namespace.
+
+**Remediation:** Replace the wildcard action with explicit action grants. If OAuth access is intended, grant signin:AuthorizeOAuth2Access and signin:CreateOAuth2Token explicitly with appropriate condition keys. If not intended, narrow the Action field to exclude the signin: namespace.
+
+---
+
 ### CTL.IAM.ORG.DELEGATED.001
 
 **Delegated Administrator Has Excessive Permissions**
