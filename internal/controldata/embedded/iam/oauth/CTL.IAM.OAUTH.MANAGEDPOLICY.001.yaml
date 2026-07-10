@@ -15,6 +15,7 @@ description: >
 domain: identity
 severity: info
 scope: compound
+corpus_reference: MITRE:T1550.001
 compliance:
   nist_800_53_r5: "CM-8(3)"
   soc2: "CC6.1"

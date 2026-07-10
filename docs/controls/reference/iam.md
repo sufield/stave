@@ -1706,20 +1706,35 @@ For each resource tagged data-classification: phi, the complete set of principal
 
 ---
 
-### CTL.IAM.OAUTH.HEADLESSPATH.001
+### CTL.IAM.OAUTH.DELEGATIONBLAST.001
 
-**OAuth Headless Path Must Be Closed**
+**Elevated Identity Must Not Delegate Permissions via OAuth**
 
-- **Severity:** critical
+- **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
 - **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
 
-An IAM identity has signin:CreateOAuth2Token permission and the client_credentials grant type is not excluded. This means any holder of this role's AWS credentials can obtain OAuth tokens for the AWS MCP Server without interactive authorization — the headless path is open.
-This control fires even when a signin:OAuthGrantType condition exists, if that condition still includes client_credentials. The sibling control CTL.IAM.OAUTH.UNCONSTRAINEDTOKEN.001 fires when no constraint exists at all. Both should exist because remediation guidance differs: this control says "remove client_credentials from the allowed list," the sibling says "add a constraint."
+An IAM identity has signin:CreateOAuth2Token permission AND elevated or admin effective permissions. Any agent operating under an OAuth token issued by this identity inherits the full permission scope. The risk is the blast radius of delegation — an identity with AdministratorAccess or service-wildcard grants that can also issue OAuth tokens creates a path where a compromised or misconfigured agent operates with privileges far beyond what the agent task requires.
+This fires regardless of grant type (authorization_code or client_credentials) because the risk is the same whether a human clicked a browser button or a machine exchanged SigV4 credentials.
 Note: this evaluation does not credit SCP-based OAuth restrictions that use condition keys. If your organization uses SCPs with signin:OAuthGrantType conditions, this finding may not apply.
 
-**Remediation:** Restrict the signin:OAuthGrantType condition to exclude client_credentials. Use only authorization_code and refresh_token to require interactive browser-based approval.
+**Remediation:** Create a dedicated role with minimum permissions required for the agent's task and grant signin:CreateOAuth2Token only to that role. Do not grant OAuth token creation to identities with admin or elevated permissions. If this identity must retain broad permissions, remove its ability to issue OAuth tokens.
+
+---
+
+### CTL.IAM.OAUTH.INVENTORY.001
+
+**Identity Has OAuth MCP Server Capability**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: CM-8(3); soc2: CC6.1;
+
+An IAM identity has one or more of the four signin: OAuth actions (AuthorizeOAuth2Access, CreateOAuth2Token, IntrospectOAuth2Token, RevokeOAuth2Token). This is an inventory control — it surfaces which identities participate in OAuth delegation so defenders can review the set. The signin: action namespace was introduced on July 9, 2026; identities may have acquired these permissions via wildcard grants (signin:* or *) without explicit intent.
+
+**Remediation:** Verify that this identity requires OAuth access to the AWS MCP Server. If not, remove the signin: actions. If access was granted via a wildcard (signin:* or *), consider narrowing to explicit actions with appropriate condition keys.
 
 ---
 
@@ -1783,22 +1798,6 @@ An IAM identity has signin:AuthorizeOAuth2Access permission without a signin:OAu
 Note: this evaluation does not credit SCP-based OAuth restrictions that use condition keys. If your organization uses SCPs with signin:OAuthRedirectUri conditions, this finding may not apply.
 
 **Remediation:** Add a signin:OAuthRedirectUri condition to the policy statement granting signin:AuthorizeOAuth2Access. For local development, constrain to http://localhost:* or http://127.0.0.1:*. For hosted MCP providers, constrain to the specific provider callback URI.
-
----
-
-### CTL.IAM.OAUTH.UNCONSTRAINEDTOKEN.001
-
-**OAuth Token Creation Must Have Grant Type Constraint**
-
-- **Severity:** critical
-- **Type:** unsafe_state
-- **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
-
-An IAM identity has signin:CreateOAuth2Token permission without a signin:OAuthGrantType condition. Without this condition, all OAuth grant types are available — including client_credentials, which enables headless token acquisition without browser-based authorization. Any holder of this role's AWS credentials can obtain OAuth tokens for the AWS MCP Server without interactive approval.
-Note: this evaluation does not credit SCP-based OAuth restrictions that use condition keys. If your organization uses SCPs with signin:OAuthGrantType conditions, this finding may not apply.
-
-**Remediation:** Add a signin:OAuthGrantType condition restricting grant types to authorization_code and refresh_token. This forces interactive browser-based authorization and prevents headless token acquisition via client_credentials.
 
 ---
 

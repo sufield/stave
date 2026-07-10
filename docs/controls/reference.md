@@ -4,7 +4,7 @@
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
 **Total controls:** 2958
-**Pack hash:** `2c6595fc70f174f41ef8eb66f5eb1a1d477204d26ebca9bec618cd5f7da66335`
+**Pack hash:** `b51b84544a7cdf8c90cce8c479f62111f081fa8ba6b3718b7b300a265c6f0eb4`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,9 +13,9 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 307 |
-| high | 1281 |
-| info | 17 |
+| critical | 305 |
+| high | 1282 |
+| info | 18 |
 | low | 228 |
 | medium | 1125 |
 

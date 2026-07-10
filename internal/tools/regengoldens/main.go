@@ -75,7 +75,7 @@ type fixtureReport struct {
 // fixtureTimeout caps a single stave invocation. Long enough that
 // healthy fixtures finish comfortably, short enough that a stuck
 // or runaway invocation doesn't wedge the whole regen.
-const fixtureTimeout = 30 * time.Second
+const fixtureTimeout = 60 * time.Second
 
 // maxWorkers caps -workers regardless of what the operator asked
 // for. The cost models exec.Command + JSON parse + golden diff,

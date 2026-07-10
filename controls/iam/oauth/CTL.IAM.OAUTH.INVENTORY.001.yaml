@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.OAUTH.INVENTORY.001
+name: Identity Has OAuth MCP Server Capability
+description: >
+  An IAM identity has one or more of the four signin: OAuth actions
+  (AuthorizeOAuth2Access, CreateOAuth2Token, IntrospectOAuth2Token,
+  RevokeOAuth2Token). This is an inventory control — it surfaces
+  which identities participate in OAuth delegation so defenders can
+  review the set. The signin: action namespace was introduced on
+  July 9, 2026; identities may have acquired these permissions via
+  wildcard grants (signin:* or *) without explicit intent.
+domain: identity
+severity: info
+scope: compound
+corpus_reference: MITRE:T1550.001
+compliance:
+  nist_800_53_r5: "CM-8(3)"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - iam
+  - oauth
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_user
+  - aws_iam_role
+observation_fields:
+  - identity.oauth.any_action.present
+remediation:
+  description: >
+    Identity has OAuth MCP Server capability via one or more signin:
+    actions. Review whether this access is intended.
+  action: >
+    Verify that this identity requires OAuth access to the AWS MCP
+    Server. If not, remove the signin: actions. If access was granted
+    via a wildcard (signin:* or *), consider narrowing to explicit
+    actions with appropriate condition keys.
+  example: |
+    {
+      "identity": {
+        "oauth": {
+          "any_action": { "present": false }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: in
+      value: ["user", "role"]
+    - field: properties.identity.oauth.any_action.present
+      op: eq
+      value: true
+tests:
+  - name: Role with OAuth capability
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/mcp-agent"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          oauth:
+            any_action:
+              present: true
+  - name: Role without OAuth capability
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/no-oauth"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          oauth:
+            any_action:
+              present: false

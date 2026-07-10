@@ -15,6 +15,7 @@ description: >
 domain: identity
 severity: high
 scope: compound
+corpus_reference: MITRE:T1550.001
 compliance:
   nist_800_53_r5: "AC-2(1)"
   fedramp_moderate: "AC-2(1)"

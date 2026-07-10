@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.OAUTH.DELEGATIONBLAST.001
+name: Elevated Identity Must Not Delegate Permissions via OAuth
+description: >
+  An IAM identity has signin:CreateOAuth2Token permission AND elevated
+  or admin effective permissions. Any agent operating under an OAuth
+  token issued by this identity inherits the full permission scope.
+  The risk is the blast radius of delegation — an identity with
+  AdministratorAccess or service-wildcard grants that can also issue
+  OAuth tokens creates a path where a compromised or misconfigured
+  agent operates with privileges far beyond what the agent task
+  requires.
+
+  This fires regardless of grant type (authorization_code or
+  client_credentials) because the risk is the same whether a human
+  clicked a browser button or a machine exchanged SigV4 credentials.
+
+  Note: this evaluation does not credit SCP-based OAuth restrictions
+  that use condition keys. If your organization uses SCPs with
+  signin:OAuthGrantType conditions, this finding may not apply.
+domain: identity
+severity: high
+scope: compound
+corpus_reference: MITRE:T1550.001
+compliance:
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-02", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - oauth
+taxonomy:
+  - compliance-mapping
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_user
+  - aws_iam_role
+observation_fields:
+  - identity.oauth.create_token.present
+  - identity.policies.has_admin_access
+  - identity.oauth.has_elevated_permissions
+remediation:
+  description: >
+    Identity can delegate elevated permissions via OAuth to the AWS
+    MCP Server. Any agent operating under the issued OAuth token
+    inherits the full permission scope of this identity.
+  action: >
+    Create a dedicated role with minimum permissions required for the
+    agent's task and grant signin:CreateOAuth2Token only to that role.
+    Do not grant OAuth token creation to identities with admin or
+    elevated permissions. If this identity must retain broad
+    permissions, remove its ability to issue OAuth tokens.
+  example: |
+    {
+      "identity": {
+        "oauth": {
+          "create_token": { "present": true },
+          "has_elevated_permissions": false
+        },
+        "policies": {
+          "has_admin_access": false
+        }
+      }
+    }
+mitre_attack:
+  - id: T1550.001
+    name: "Use Alternate Authentication Material: Application Access Token"
+    tactic: credential-access
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: in
+      value: ["user", "role"]
+    - field: properties.identity.oauth.create_token.present
+      op: eq
+      value: true
+    - any:
+        - field: properties.identity.policies.has_admin_access
+          op: eq
+          value: true
+        - field: properties.identity.oauth.has_elevated_permissions
+          op: eq
+          value: true
+tests:
+  - name: Admin role with OAuth token creation
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/admin-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          oauth:
+            create_token:
+              present: true
+            has_elevated_permissions: true
+          policies:
+            has_admin_access: true
+  - name: Scoped role with OAuth token creation
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/mcp-agent"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          oauth:
+            create_token:
+              present: true
+            has_elevated_permissions: false
+          policies:
+            has_admin_access: false
+  - name: Admin role without OAuth token creation
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/admin-no-oauth"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          oauth:
+            create_token:
+              present: false
+            has_elevated_permissions: false
+          policies:
+            has_admin_access: true
