@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.DATAPERIMETER.S3.001
+name: "SCP Does Not Enforce S3 Data Perimeter"
+description: >
+  Organization SCPs do not restrict S3 write operations to buckets
+  within the organization. Without an SCP condition on
+  aws:ResourceOrgID for s3:PutObject, s3:ReplicateObject, and
+  s3:PutObjectAcl, any principal in the organization can write to
+  S3 buckets in any AWS account — including attacker-controlled
+  accounts. This is the enabling condition for bucket hijacking:
+  when a destination bucket is deleted and re-registered under a
+  different account, data streams continue writing because no
+  organizational boundary prevents the cross-account write. A data
+  perimeter SCP is the primary defense against the global namespace
+  bucket hijacking technique documented by Unit 42.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, SC-7"
+  soc2: "CC6.1, CC6.6"
+  ccm_v4: ["DSP-04", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - account-governance
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.kind
+  - identity.scp.has_data_perimeter_s3
+remediation:
+  description: >
+    Organization SCPs do not enforce an S3 data perimeter. Principals
+    can write to S3 buckets outside the organization.
+  action: >
+    Add an SCP that denies s3:PutObject, s3:ReplicateObject, and
+    s3:PutObjectAcl unless aws:ResourceOrgID matches the
+    organization ID. Exempt service-linked roles and specific
+    cross-organization integrations with a condition key allowlist.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "has_data_perimeter_s3": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.has_data_perimeter_s3
+      op: eq
+      value: false
+tests:
+  - name: "organization without S3 data perimeter fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            has_data_perimeter_s3: false
+  - name: "organization with S3 data perimeter passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            has_data_perimeter_s3: true

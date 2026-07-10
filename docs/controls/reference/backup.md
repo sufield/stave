@@ -35,6 +35,21 @@ Resources tagged as critical or containing PHI must have at least one backup con
 
 ---
 
+### CTL.BACKUP.GHOST.VAULT.S3.001
+
+**AWS Backup Copy Target S3 Bucket Deleted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-9, SC-28; soc2: CC6.1, A1.2;
+
+AWS Backup copy job is configured to export recovery points to an S3 bucket that has been deleted. Backup exports fail silently. If the bucket is re-registered, recovery point data — database snapshots, EBS volumes, file system backups — is written to attacker storage.
+
+**Remediation:** Update the backup plan copy action to target an existing S3 bucket or vault. Verify backup export jobs complete successfully after the change.
+
+---
+
 ### CTL.BACKUP.INCOMPLETE.001
 
 **Complete Data Required for Backup Assessment**

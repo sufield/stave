@@ -1,0 +1,133 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.FLOWLOG.GHOST.S3.001
+name: VPC Flow Log S3 Destination Bucket Deleted
+description: >
+  VPC Flow Log is configured to deliver flow records to
+  an S3 bucket that has been deleted. The flow log
+  appears active — status shows ACTIVE — but no flow
+  records are persisted. Network traffic visibility for
+  the VPC is lost. Every connection, every denied packet,
+  every traffic pattern goes unrecorded. If the bucket
+  name is re-registered under a different account, flow
+  records may resume delivery to attacker-controlled
+  storage — a bucket hijacking vector that simultaneously
+  exfiltrates network telemetry and blinds the defender.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+scope: compound
+compliance:
+  cis_aws_v3.0: "3.9"
+  soc2: "CC6.6, CC7.1, CC7.2"
+  nist_800_53_r5: "AU-2, AU-3, AU-12, SI-4"
+  pci_dss_v4.0: "10.1, 10.4"
+  fedramp_moderate: "AU-2, AU-12"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.8.15, A.8.16"
+  ccm_v4: ["LOG-02", "LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - compliance-mapping
+  - logging
+  - trust-decay
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: vpc
+    multiplier: 4.0
+remediation:
+  description: >
+    VPC Flow Log destination S3 bucket has been deleted.
+    Network traffic records are not being captured.
+  action: >
+    Recreate the S3 bucket with the original name and
+    restore the bucket policy granting
+    delivery.logs.amazonaws.com PutObject access, or
+    create a new flow log pointing to an existing
+    bucket: aws ec2 create-flow-logs --resource-ids
+    <vpc-id> --resource-type VPC
+    --log-destination-type s3
+    --log-destination arn:aws:s3:::<bucket>. Delete the
+    orphaned flow log configuration referencing the
+    missing bucket.
+  example: |
+    {
+      "network": {
+        "kind": "flow_log",
+        "flow_log": {
+          "destination_type": "s3",
+          "destination_bucket": "vpc-flowlogs-111122223333",
+          "destination_bucket_exists": true,
+          "has_ghost_s3_destination": false,
+          "status": "ACTIVE"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: flow_log
+    - field: properties.network.flow_log.has_ghost_s3_destination
+      op: eq
+      value: true
+defect: >
+  VPC Flow Log delivers records to an S3 bucket that
+  has been deleted.
+infection: >
+  VPC Flow Logs capture metadata for every network
+  flow — source/destination IP, port, protocol,
+  accept/reject, bytes transferred. When the S3
+  destination bucket is deleted, no flow records are
+  persisted. The flow log status may still show ACTIVE
+  because the VPC-level configuration is intact.
+  Network forensics during an incident — lateral
+  movement tracing, exfiltration volume estimation,
+  port-scan detection, connection-graph
+  reconstruction — requires flow log data. Without
+  it, the defender has no visibility into what
+  communicated with what, when, or how much data
+  moved. The flow log configuration shows the bucket
+  ARN; the bucket does not exist.
+failure: >
+  Network visibility lost. VPC Flow Log records are
+  not captured because the destination S3 bucket was
+  deleted.
+tests:
+  - name: flow log to deleted S3 bucket fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:vpc-flow-log/fl-0abc123def456"
+      asset_type: aws_vpc_flow_log
+      vendor: aws
+      properties:
+        network:
+          kind: flow_log
+          flow_log:
+            flow_log_id: "fl-0abc123def456"
+            destination_type: "s3"
+            destination_bucket: "vpc-flowlogs-deleted"
+            destination_bucket_exists: false
+            has_ghost_s3_destination: true
+            status: "ACTIVE"
+  - name: flow log to live S3 bucket passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:vpc-flow-log/fl-0abc123def456"
+      asset_type: aws_vpc_flow_log
+      vendor: aws
+      properties:
+        network:
+          kind: flow_log
+          flow_log:
+            flow_log_id: "fl-0abc123def456"
+            destination_type: "s3"
+            destination_bucket: "vpc-flowlogs-111122223333"
+            destination_bucket_exists: true
+            has_ghost_s3_destination: false
+            status: "ACTIVE"

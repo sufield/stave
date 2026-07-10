@@ -20,6 +20,21 @@ Athena workgroups must encrypt query results at rest. Unencrypted query results 
 
 ---
 
+### CTL.ATHENA.GHOST.OUTPUT.S3.001
+
+**Athena Query Results S3 Bucket Deleted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3, SC-28; soc2: CC6.1;
+
+Athena workgroup is configured to write query results to an S3 bucket that has been deleted. Queries fail or, if the bucket name is re-registered under a different account, query results — which may contain sensitive data from the queried tables — are written to attacker- controlled storage.
+
+**Remediation:** Update the workgroup output location to an existing bucket: aws athena update-work-group --work-group <name> --configuration-updates ResultConfigurationUpdates={OutputLocation=s3://<bucket>/}.
+
+---
+
 ### CTL.ATHENA.WORKGROUP.001
 
 **Athena Workgroups Must Enforce Query Result Location**

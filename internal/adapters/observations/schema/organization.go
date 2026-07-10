@@ -25,6 +25,8 @@ var organizationSchema = Schema{
 			Doc: "IAM-escalation SCP deny; per-service deny, only when policy present"},
 		{Path: "properties.identity.scp.has_invalid_actions", Required: false,
 			Doc: "SCP references non-existent IAM actions (validated against iamauth registry)"},
+		{Path: "properties.identity.scp.has_data_perimeter_s3", Required: false,
+			Doc: "SCP enforces S3 data perimeter via aws:ResourceOrgID on write operations"},
 	},
 }
 

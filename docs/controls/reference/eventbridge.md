@@ -590,6 +590,21 @@ An EventBridge rule's target is a CloudWatch Log Group ARN that no longer exists
 
 ---
 
+### CTL.EVENTBRIDGE.GHOST.TARGET.S3.001
+
+**EventBridge Rule Targets Deleted S3 Bucket**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AU-2, SI-4; soc2: CC6.1, CC7.1;
+
+An EventBridge rule's target is an S3 bucket ARN that no longer exists. Events matching the rule pattern are routed but delivery fails silently. If the bucket name is re-registered under a different account, events resume delivery to attacker-controlled storage — a bucket-hijacking vector.
+
+**Remediation:** Update the rule target to an existing S3 bucket: aws events put-targets --rule <rule> --targets Id=<id>,Arn=arn:aws:s3:::<bucket>. Verify event delivery by triggering a matching event.
+
+---
+
 ### CTL.EVENTBRIDGE.GHOST.TARGET.SAGEMAKER.001
 
 **EventBridge Rule Targets Deleted SageMaker Pipeline**

@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.GHOST.OUTPUT.S3.001
+name: SageMaker Training Output S3 Bucket Deleted
+description: >
+  SageMaker training job output is configured to write to
+  an S3 bucket that has been deleted. Training output —
+  model weights, evaluation metrics, training data samples
+  — is lost or, if the bucket is re-registered,
+  exfiltrated to attacker-controlled storage.
+domain: exposure
+severity: high
+archetype: ghost-reference
+scope: compound
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3, SC-28"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - sagemaker
+taxonomy:
+  - trust-decay
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: data
+    scope: service
+    multiplier: 2.0
+remediation:
+  description: >
+    SageMaker output location references a deleted S3
+    bucket. Model artifacts cannot be persisted.
+  action: >
+    Update the training job or model configuration to
+    use an existing S3 output path. For new jobs:
+    --output-data-config S3OutputPath=s3://<bucket>/.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_training",
+        "sagemaker": {
+          "output": {
+            "s3_bucket": "ml-artifacts-bucket",
+            "s3_exists": true,
+            "has_ghost_s3": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_training
+    - field: properties.compute.sagemaker.output.has_ghost_s3
+      op: eq
+      value: true
+defect: >
+  SageMaker training writes output to an S3 bucket that
+  has been deleted.
+infection: >
+  SageMaker training jobs write model artifacts,
+  checkpoints, and evaluation outputs to a configured S3
+  path. When the output bucket is deleted, training
+  output is lost. If the bucket name is re-registered
+  under a different account, artifacts — potentially
+  including proprietary model weights and training data
+  samples — are written to attacker storage.
+failure: >
+  ML artifacts lost or exfiltrated via bucket hijacking.
+tests:
+  - name: training output to deleted S3 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:training-job/model-v2"
+      asset_type: aws_sagemaker_training_job
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_training
+          sagemaker:
+            job_name: "model-v2"
+            output:
+              s3_bucket: "ml-artifacts-deleted"
+              s3_exists: false
+              has_ghost_s3: true
+  - name: training output to live S3 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:training-job/model-v2"
+      asset_type: aws_sagemaker_training_job
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_training
+          sagemaker:
+            job_name: "model-v2"
+            output:
+              s3_bucket: "ml-artifacts-bucket"
+              s3_exists: true
+              has_ghost_s3: false

@@ -1,8 +1,8 @@
 # Stave
 
-Open-source risk reasoner for AWS configuration security,
-with formal verification. Proves your configuration is correct
-instead of searching for what's wrong — offline, credential-free.
+Open-source cloud configuration verifier. Proves your AWS
+configuration is correct instead of searching for what's wrong —
+offline, credential-free.
 
 [![codecov](https://codecov.io/gh/sufield/stave/graph/badge.svg?token=OQ72PYGVPZ)](https://codecov.io/gh/sufield/stave)
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sufield/stave?quickstart=1)
@@ -55,11 +55,11 @@ Six executable skills guide you from install to real-environment evaluation. Eac
 
 ## Why not a scanner?
 
-Stave is a risk reasoner with formal verification — it proves
-your AWS configuration is correct instead of searching for
-what's wrong.
+CSPM tools scan for known-bad patterns. Stave verifies that
+invariants hold — deterministic, reproducible, mathematically
+grounded. The word is *verifier*, not scanner: proof, not heuristics.
 
-Your AI agent has admin access. Your scanner says you're compliant.
+Your AI agent has admin access. Your CSPM tool says you're compliant.
 
 ![AI Security Demo](docs/talks/ai-security-2026/demo-ai-security.gif)
 
@@ -67,7 +67,7 @@ Your AI agent has admin access. Your scanner says you're compliant.
 bash examples/demo-ai-security/run.sh
 ```
 
-| | Scanners | Stave |
+| | CSPM tools | Cloud configuration verifier |
 |---|---|---|
 | **Approach** | Search for known-bad patterns | Prove properties hold for all inputs |
 | **Scope** | Check individual resources | Compute all paths through the relationship graph |

@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.DMS.GHOST.TARGET.S3.001
+
+**DMS Replication Target S3 Bucket Deleted**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3, SC-28, SI-4; soc2: CC6.1, CC7.1;
+
+DMS replication task is configured to replicate data to an S3 target endpoint whose bucket has been deleted. Replication fails or, if the bucket is re-registered, database records — potentially entire table contents — are written to attacker-controlled storage.
+
+**Remediation:** Update the DMS S3 target endpoint to reference an existing bucket: aws dms modify-endpoint --endpoint-arn <arn> --s3-settings BucketName=<bucket>. Verify replication resumes.
+
+---
+
 ### CTL.DMS.LOG.SOURCE.001
 
 **DMS Replication Tasks Must Enable Source Logging**

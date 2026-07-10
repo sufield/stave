@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.BACKUP.GHOST.VAULT.S3.001
+name: AWS Backup Copy Target S3 Bucket Deleted
+description: >
+  AWS Backup copy job is configured to export recovery
+  points to an S3 bucket that has been deleted. Backup
+  exports fail silently. If the bucket is re-registered,
+  recovery point data — database snapshots, EBS volumes,
+  file system backups — is written to attacker storage.
+domain: exposure
+severity: high
+archetype: ghost-reference
+scope: compound
+compliance:
+  soc2: "CC6.1, A1.2"
+  nist_800_53_r5: "CP-9, SC-28"
+  ccm_v4: ["DSP-04", "BCR-11"]
+scope_tags:
+  - aws
+  - backup
+taxonomy:
+  - trust-decay
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: data
+    scope: service
+    multiplier: 3.0
+remediation:
+  description: >
+    AWS Backup export target S3 bucket has been deleted.
+    Backup copies cannot be written to the export
+    destination.
+  action: >
+    Update the backup plan copy action to target an
+    existing S3 bucket or vault. Verify backup export
+    jobs complete successfully after the change.
+  example: |
+    {
+      "resilience": {
+        "kind": "backup_plan",
+        "backup": {
+          "export": {
+            "s3_bucket": "backup-exports-bucket",
+            "s3_exists": true,
+            "has_ghost_s3": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.resilience.kind
+      op: eq
+      value: backup_plan
+    - field: properties.resilience.backup.export.has_ghost_s3
+      op: eq
+      value: true
+defect: >
+  AWS Backup exports recovery points to an S3 bucket
+  that has been deleted.
+infection: >
+  AWS Backup can export recovery points to S3 for
+  cross-region or long-term storage. When the export
+  bucket is deleted, copy jobs fail. If the bucket is
+  re-registered under a different account, backup data
+  — potentially full database snapshots, EBS volumes,
+  or filesystem backups — is exported to attacker
+  storage.
+failure: >
+  Backup data lost or exfiltrated via bucket hijacking.
+tests:
+  - name: backup export to deleted S3 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:backup:us-east-1:111122223333:backup-plan:abc123"
+      asset_type: aws_backup_plan
+      vendor: aws
+      properties:
+        resilience:
+          kind: backup_plan
+          backup:
+            plan_name: "daily-backup"
+            export:
+              s3_bucket: "backup-exports-deleted"
+              s3_exists: false
+              has_ghost_s3: true
+  - name: backup export to live S3 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:backup:us-east-1:111122223333:backup-plan:def456"
+      asset_type: aws_backup_plan
+      vendor: aws
+      properties:
+        resilience:
+          kind: backup_plan
+          backup:
+            plan_name: "daily-backup"
+            export:
+              s3_bucket: "backup-exports-bucket"
+              s3_exists: true
+              has_ghost_s3: false

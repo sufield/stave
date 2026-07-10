@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.CODEPIPELINE.GHOST.ARTIFACT.S3.001
+name: CodePipeline Artifact Store S3 Bucket Deleted
+description: >
+  CodePipeline artifact store references an S3 bucket
+  that has been deleted. Pipeline executions fail because
+  artifacts cannot be stored or retrieved. If the bucket
+  is re-registered under a different account, build
+  artifacts — source code, compiled binaries, deployment
+  packages — are written to attacker storage.
+domain: exposure
+severity: high
+archetype: ghost-reference
+scope: compound
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "SA-10, SC-28"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - codepipeline
+taxonomy:
+  - trust-decay
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: service
+    multiplier: 3.0
+remediation:
+  description: >
+    CodePipeline artifact store S3 bucket has been deleted.
+    Pipeline cannot store or retrieve build artifacts.
+  action: >
+    Update the pipeline artifact store to an existing
+    bucket: aws codepipeline update-pipeline --pipeline
+    file://pipeline.json (set artifactStore.location to
+    a valid bucket).
+  example: |
+    {
+      "compute": {
+        "kind": "pipeline",
+        "codepipeline": {
+          "artifact_store": {
+            "s3_bucket": "pipeline-artifacts-bucket",
+            "s3_exists": true,
+            "has_ghost_s3": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: pipeline
+    - field: properties.compute.codepipeline.artifact_store.has_ghost_s3
+      op: eq
+      value: true
+defect: >
+  CodePipeline artifact store references an S3 bucket
+  that has been deleted.
+infection: >
+  CodePipeline stores build artifacts — source archives,
+  compiled binaries, deployment packages — in a
+  configured S3 bucket between pipeline stages. When the
+  artifact bucket is deleted, all pipeline executions
+  fail. If the bucket is re-registered, artifacts flow
+  to attacker storage. This is a supply chain attack
+  vector: the attacker receives source code and can
+  substitute poisoned artifacts for downstream stages.
+failure: >
+  Pipeline broken or supply chain compromised via bucket
+  hijacking of the artifact store.
+tests:
+  - name: artifact store targeting deleted S3 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:codepipeline:us-east-1:111122223333:deploy-pipeline"
+      asset_type: aws_codepipeline_pipeline
+      vendor: aws
+      properties:
+        compute:
+          kind: pipeline
+          codepipeline:
+            pipeline_name: "deploy-pipeline"
+            artifact_store:
+              s3_bucket: "pipeline-artifacts-deleted"
+              s3_exists: false
+              has_ghost_s3: true
+  - name: artifact store targeting live S3 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:codepipeline:us-east-1:111122223333:deploy-pipeline"
+      asset_type: aws_codepipeline_pipeline
+      vendor: aws
+      properties:
+        compute:
+          kind: pipeline
+          codepipeline:
+            pipeline_name: "deploy-pipeline"
+            artifact_store:
+              s3_bucket: "pipeline-artifacts-bucket"
+              s3_exists: true
+              has_ghost_s3: false

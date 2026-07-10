@@ -305,6 +305,21 @@ Lambda event source mappings (Kinesis, DynamoDB Streams, SQS) must have an on-fa
 
 ---
 
+### CTL.LAMBDA.GHOST.DEST.S3.001
+
+**Lambda Destination S3 Bucket Deleted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3, SC-28; soc2: CC6.1;
+
+Lambda function has an asynchronous invocation destination configured to write to an S3 bucket that has been deleted. Invocation results are dropped. If the bucket is re-registered under a different account, function payloads and results are delivered to attacker storage.
+
+**Remediation:** Update the Lambda destination configuration to an existing S3 bucket or remove the destination if no longer needed: aws lambda put-function-event-invoke-config --function-name <name> --destination-config OnSuccess={Destination=arn:aws:s3:::<bucket>}.
+
+---
+
 ### CTL.LAMBDA.GHOST.DLQ.001
 
 **Lambda Function DLQ Must Not Reference Deleted Targets**

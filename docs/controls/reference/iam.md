@@ -2681,6 +2681,21 @@ SCPs must not contain Allow statements for actions that undermine the organizati
 
 ---
 
+### CTL.IAM.SCP.DATAPERIMETER.S3.001
+
+**SCP Does Not Enforce S3 Data Perimeter**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3, SC-7; soc2: CC6.1, CC6.6;
+
+Organization SCPs do not restrict S3 write operations to buckets within the organization. Without an SCP condition on aws:ResourceOrgID for s3:PutObject, s3:ReplicateObject, and s3:PutObjectAcl, any principal in the organization can write to S3 buckets in any AWS account — including attacker-controlled accounts. This is the enabling condition for bucket hijacking: when a destination bucket is deleted and re-registered under a different account, data streams continue writing because no organizational boundary prevents the cross-account write. A data perimeter SCP is the primary defense against the global namespace bucket hijacking technique documented by Unit 42.
+
+**Remediation:** Add an SCP that denies s3:PutObject, s3:ReplicateObject, and s3:PutObjectAcl unless aws:ResourceOrgID matches the organization ID. Exempt service-linked roles and specific cross-organization integrations with a condition key allowlist.
+
+---
+
 ### CTL.IAM.SCP.FULLACCESS.001
 
 **Organizations Must Not Rely Solely on FullAWSAccess SCP**

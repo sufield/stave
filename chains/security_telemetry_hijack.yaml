@@ -1,0 +1,20 @@
+id: security_telemetry_hijack
+description: >
+  Security telemetry destination bucket (CloudTrail, Config, GuardDuty,
+  VPC Flow Logs) can be hijacked. This is the "blinding the watchmen"
+  scenario — the attacker simultaneously exfiltrates security telemetry
+  AND removes defender visibility. Ghost destination plus missing data
+  perimeter SCP.
+controls:
+  - CTL.CLOUDTRAIL.GHOST.S3BUCKET.001
+  - CTL.CONFIG.GHOST.DELIVERY.S3.001
+  - CTL.GUARDDUTY.GHOST.EXPORT.S3.001
+  - CTL.VPC.FLOWLOG.GHOST.S3.001
+  - CTL.IAM.SCP.DATAPERIMETER.S3.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - s3_delete_bucket_permission
+postconditions:
+  - security_telemetry_exfiltration
+  - detection_blindness

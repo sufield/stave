@@ -517,6 +517,21 @@ Flow log uses the default log format, which omits several fields useful for secu
 
 ---
 
+### CTL.VPC.FLOWLOG.GHOST.S3.001
+
+**VPC Flow Log S3 Destination Bucket Deleted**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.9; fedramp_moderate: AU-2, AU-12; hipaa: 164.312(b); iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-2, AU-3, AU-12, SI-4; pci_dss_v4.0: 10.1, 10.4; soc2: CC6.6, CC7.1, CC7.2;
+
+VPC Flow Log is configured to deliver flow records to an S3 bucket that has been deleted. The flow log appears active — status shows ACTIVE — but no flow records are persisted. Network traffic visibility for the VPC is lost. Every connection, every denied packet, every traffic pattern goes unrecorded. If the bucket name is re-registered under a different account, flow records may resume delivery to attacker-controlled storage — a bucket hijacking vector that simultaneously exfiltrates network telemetry and blinds the defender.
+
+**Remediation:** Recreate the S3 bucket with the original name and restore the bucket policy granting delivery.logs.amazonaws.com PutObject access, or create a new flow log pointing to an existing bucket: aws ec2 create-flow-logs --resource-ids <vpc-id> --resource-type VPC --log-destination-type s3 --log-destination arn:aws:s3:::<bucket>. Delete the orphaned flow log configuration referencing the missing bucket.
+
+---
+
 ### CTL.VPC.FLOWLOG.STATUS.001
 
 **Flow Log Configured but Not Active**

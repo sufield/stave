@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.GHOST.DEST.S3.001
+name: Lambda Destination S3 Bucket Deleted
+description: >
+  Lambda function has an asynchronous invocation
+  destination configured to write to an S3 bucket that
+  has been deleted. Invocation results are dropped. If
+  the bucket is re-registered under a different account,
+  function payloads and results are delivered to attacker
+  storage.
+domain: exposure
+severity: high
+archetype: ghost-reference
+scope: compound
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3, SC-28"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - lambda
+taxonomy:
+  - trust-decay
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: data
+    scope: service
+    multiplier: 2.0
+remediation:
+  description: >
+    Lambda asynchronous destination references a deleted
+    S3 bucket. Invocation results are not persisted.
+  action: >
+    Update the Lambda destination configuration to an
+    existing S3 bucket or remove the destination if no
+    longer needed: aws lambda put-function-event-invoke-config
+    --function-name <name> --destination-config
+    OnSuccess={Destination=arn:aws:s3:::<bucket>}.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "lambda": {
+          "destination": {
+            "s3_bucket": "lambda-results-bucket",
+            "s3_exists": true,
+            "has_ghost_s3": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.lambda.destination.has_ghost_s3
+      op: eq
+      value: true
+defect: >
+  Lambda asynchronous destination writes to an S3 bucket
+  that has been deleted.
+infection: >
+  Lambda asynchronous invocation destinations route
+  function results — including request payloads and
+  return values — to configured targets. When the S3
+  destination is deleted, results are dropped silently.
+  If the bucket is re-registered, function payloads
+  and results flow to attacker storage. The Lambda
+  configuration still shows the original bucket ARN.
+failure: >
+  Function results lost or exfiltrated via bucket
+  hijacking.
+tests:
+  - name: destination to deleted S3 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:process-orders"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: function
+          lambda:
+            function_name: "process-orders"
+            destination:
+              s3_bucket: "lambda-results-deleted"
+              s3_exists: false
+              has_ghost_s3: true
+  - name: destination to live S3 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:process-orders"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: function
+          lambda:
+            function_name: "process-orders"
+            destination:
+              s3_bucket: "lambda-results-bucket"
+              s3_exists: true
+              has_ghost_s3: false

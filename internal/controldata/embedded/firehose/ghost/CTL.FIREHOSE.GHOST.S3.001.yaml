@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.FIREHOSE.GHOST.S3.001
+name: Firehose Delivery Stream S3 Destination Bucket Deleted
+description: >
+  Amazon Data Firehose delivery stream is configured to
+  deliver records to an S3 bucket that has been deleted.
+  Firehose buffers records and attempts delivery, but
+  every delivery attempt fails. If the bucket name is
+  re-registered under a different account, Firehose may
+  resume delivery to attacker-controlled storage — the
+  bucket hijacking vector documented by Unit 42. The
+  delivery stream configuration appears valid; the
+  destination ARN shows the bucket name; the bucket no
+  longer exists or has been re-registered.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+scope: compound
+compliance:
+  soc2: "CC6.1, CC7.1, CC8.1"
+  nist_800_53_r5: "AU-2, AU-9, SC-8, SI-4"
+  pci_dss_v4.0: "10.1, 10.5"
+  fedramp_moderate: "AU-2, SC-8"
+  hipaa: "164.312(b), 164.312(e)(1)"
+  iso_27001_2022: "A.5.16, A.8.15, A.8.24"
+  ccm_v4: ["DSP-04", "LOG-08"]
+scope_tags:
+  - aws
+  - firehose
+taxonomy:
+  - compliance-mapping
+  - trust-decay
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: data
+    scope: service
+    multiplier: 3.0
+remediation:
+  description: >
+    Firehose delivery stream destination S3 bucket has
+    been deleted. Records are buffered but cannot be
+    delivered — and the dangling name is a hijacking
+    target.
+  action: >
+    Recreate the S3 bucket with the original name and
+    restore the bucket policy granting
+    firehose.amazonaws.com PutObject access, or
+    update the delivery stream destination: aws
+    firehose update-destination --delivery-stream-name
+    <name> --current-delivery-stream-version-id <ver>
+    --extended-s3-destination-update
+    BucketARN=arn:aws:s3:::<new-bucket>,RoleARN=<role>.
+    Investigate whether the bucket was re-registered
+    under a different account during the gap period.
+  example: |
+    {
+      "streaming": {
+        "kind": "delivery_stream",
+        "firehose": {
+          "delivery_stream_name": "analytics-stream",
+          "destination_type": "ExtendedS3",
+          "destination_bucket": "analytics-delivery-111122223333",
+          "destination_bucket_exists": true,
+          "has_ghost_s3_destination": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.streaming.kind
+      op: eq
+      value: delivery_stream
+    - field: properties.streaming.firehose.has_ghost_s3_destination
+      op: eq
+      value: true
+defect: >
+  Firehose delivery stream delivers records to an S3
+  bucket that has been deleted or re-registered.
+infection: >
+  Firehose continuously ingests records from
+  producers — CloudWatch Logs, application streams,
+  IoT telemetry, security event pipelines — and
+  delivers them to an S3 bucket at configurable
+  intervals. When the S3 bucket is deleted, Firehose
+  buffers records and retries delivery for up to 24
+  hours. After 24 hours, records are dropped. If the
+  bucket name is re-registered under a different
+  account before Firehose gives up, delivery resumes
+  to attacker-controlled storage. No credential theft
+  is required. The delivery stream configuration
+  still shows the original bucket ARN. An operator
+  inspecting the stream sees "Destination:
+  s3://analytics-delivery-bucket" and has no signal
+  that ownership has changed. Every record ingested
+  after the hijack — logs, metrics, events,
+  application data — flows to the attacker.
+failure: >
+  Data stream hijackable. Firehose delivery stream
+  references a deleted S3 bucket that can be
+  re-registered to capture the data stream.
+tests:
+  - name: delivery to deleted S3 bucket fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:firehose:us-east-1:111122223333:deliverystream/analytics-stream"
+      asset_type: aws_kinesis_firehose
+      vendor: aws
+      properties:
+        streaming:
+          kind: delivery_stream
+          firehose:
+            delivery_stream_name: "analytics-stream"
+            destination_type: "ExtendedS3"
+            destination_bucket: "analytics-delivery-deleted"
+            destination_bucket_exists: false
+            has_ghost_s3_destination: true
+  - name: delivery to live S3 bucket passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:firehose:us-east-1:111122223333:deliverystream/analytics-stream"
+      asset_type: aws_kinesis_firehose
+      vendor: aws
+      properties:
+        streaming:
+          kind: delivery_stream
+          firehose:
+            delivery_stream_name: "analytics-stream"
+            destination_type: "ExtendedS3"
+            destination_bucket: "analytics-delivery-111122223333"
+            destination_bucket_exists: true
+            has_ghost_s3_destination: false

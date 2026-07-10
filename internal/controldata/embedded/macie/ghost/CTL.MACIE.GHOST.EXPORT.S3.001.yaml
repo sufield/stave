@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.MACIE.GHOST.EXPORT.S3.001
+name: Macie Findings Export S3 Bucket Deleted
+description: >
+  Macie classification export is configured to deliver sensitive-data
+  findings to an S3 bucket that has been deleted. Findings are
+  generated but silently dropped. If the bucket name is re-registered
+  under a different account, Macie may resume delivery to
+  attacker-controlled storage — exfiltrating a catalog of where
+  sensitive data lives across the account.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+scope: compound
+compliance:
+  soc2: "CC7.1, CC8.1"
+  nist_800_53_r5: "AU-6, SI-4"
+  hipaa: "164.312(b)"
+  ccm_v4: ["LOG-08", "DSP-04"]
+scope_tags:
+  - aws
+  - macie
+taxonomy:
+  - trust-decay
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_macie_config
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 3.0
+remediation:
+  description: >
+    Macie findings export references a deleted S3 bucket. Sensitive-data
+    discovery results are not being persisted.
+  action: >
+    Recreate the S3 bucket or update the Macie export configuration
+    to point at an existing bucket:
+    aws macie2 put-classification-export-configuration
+    --configuration s3Destination={bucketName=<bucket>,kmsKeyArn=<key>}.
+  example: |
+    {
+      "governance": {
+        "kind": "macie_config",
+        "export": {
+          "s3_bucket": "macie-findings-bucket",
+          "s3_exists": true,
+          "has_ghost_s3": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: macie_config
+    - field: properties.governance.export.has_ghost_s3
+      op: eq
+      value: true
+defect: >
+  Macie findings export delivers to an S3 bucket that has been deleted.
+infection: >
+  Macie scans S3 buckets for sensitive data (PII, PHI, credentials,
+  financial data) and exports findings to a configured S3 destination.
+  When the destination bucket is deleted, findings are generated but
+  cannot be persisted. The export configuration still references the
+  bucket name. If the name is re-registered under a different account,
+  findings resume delivery — effectively handing an attacker a map of
+  where every piece of sensitive data lives in the account.
+failure: >
+  Sensitive-data findings lost or exfiltrated. Macie cannot persist
+  discovery results because the export bucket was deleted.
+tests:
+  - name: export to deleted bucket fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:macie2:us-east-1:111122223333:config"
+      asset_type: aws_macie_config
+      vendor: aws
+      properties:
+        governance:
+          kind: macie_config
+          export:
+            s3_bucket: "macie-findings-deleted"
+            s3_exists: false
+            has_ghost_s3: true
+  - name: export to live bucket passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:macie2:us-east-1:111122223333:config"
+      asset_type: aws_macie_config
+      vendor: aws
+      properties:
+        governance:
+          kind: macie_config
+          export:
+            s3_bucket: "macie-findings-bucket"
+            s3_exists: true
+            has_ghost_s3: false

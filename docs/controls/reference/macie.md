@@ -35,6 +35,21 @@ Amazon Macie must be enabled for automated sensitive data discovery in S3 bucket
 
 ---
 
+### CTL.MACIE.GHOST.EXPORT.S3.001
+
+**Macie Findings Export S3 Bucket Deleted**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(b); nist_800_53_r5: AU-6, SI-4; soc2: CC7.1, CC8.1;
+
+Macie classification export is configured to deliver sensitive-data findings to an S3 bucket that has been deleted. Findings are generated but silently dropped. If the bucket name is re-registered under a different account, Macie may resume delivery to attacker-controlled storage — exfiltrating a catalog of where sensitive data lives across the account.
+
+**Remediation:** Recreate the S3 bucket or update the Macie export configuration to point at an existing bucket: aws macie2 put-classification-export-configuration --configuration s3Destination={bucketName=<bucket>,kmsKeyArn=<key>}.
+
+---
+
 ### CTL.MACIE.ORG.NODELEGATED.001
 
 **Macie Has No Delegated Administrator**

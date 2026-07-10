@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2937
-**Pack hash:** `289c9c868ff31bc22726f34d051ab8b8eac4324eebd2d3554fc0a5a568c851b6`
+**Total controls:** 2949
+**Pack hash:** `1bbca75413700f4c3c69a3e3758c032f447ee254dc377fcb6bc113746280f8ad`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 299 |
-| high | 1272 |
+| critical | 304 |
+| high | 1278 |
 | info | 16 |
 | low | 228 |
-| medium | 1122 |
+| medium | 1123 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,10 +27,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1293 |
-| governance | 622 |
+| exposure | 1303 |
+| governance | 623 |
 | hygiene | 18 |
-| identity | 517 |
+| identity | 518 |
 | lifecycle | 31 |
 | network | 43 |
 | resilience | 35 |
@@ -47,11 +47,11 @@ GitHub. Pick a service below.
 | [APIGATEWAY](reference/apigateway.md) | 105 |
 | [APIGW2](reference/apigw2.md) | 2 |
 | [APPSTREAM](reference/appstream.md) | 2 |
-| [ATHENA](reference/athena.md) | 2 |
+| [ATHENA](reference/athena.md) | 3 |
 | [AUDITMANAGER](reference/auditmanager.md) | 1 |
 | [AUTOSCALING](reference/autoscaling.md) | 3 |
 | [AZURE](reference/azure.md) | 141 |
-| [BACKUP](reference/backup.md) | 10 |
+| [BACKUP](reference/backup.md) | 11 |
 | [BATCH](reference/batch.md) | 3 |
 | [BEANSTALK](reference/beanstalk.md) | 3 |
 | [BEDROCK](reference/bedrock.md) | 47 |
@@ -64,12 +64,12 @@ GitHub. Pick a service below.
 | [CLOUDWATCH](reference/cloudwatch.md) | 67 |
 | [CODEBUILD](reference/codebuild.md) | 12 |
 | [CODECOMMIT](reference/codecommit.md) | 2 |
-| [CODEPIPELINE](reference/codepipeline.md) | 4 |
+| [CODEPIPELINE](reference/codepipeline.md) | 5 |
 | [COGNITO](reference/cognito.md) | 113 |
 | [COMPLIANCE](reference/compliance.md) | 1 |
 | [CONFIG](reference/config.md) | 51 |
 | [DATACLASS](reference/dataclass.md) | 5 |
-| [DMS](reference/dms.md) | 6 |
+| [DMS](reference/dms.md) | 7 |
 | [DNS](reference/dns.md) | 3 |
 | [DOCUMENTDB](reference/documentdb.md) | 18 |
 | [DYNAMODB](reference/dynamodb.md) | 37 |
@@ -81,7 +81,7 @@ GitHub. Pick a service below.
 | [ELASTICACHE](reference/elasticache.md) | 7 |
 | [ELB](reference/elb.md) | 80 |
 | [EMR](reference/emr.md) | 6 |
-| [EVENTBRIDGE](reference/eventbridge.md) | 96 |
+| [EVENTBRIDGE](reference/eventbridge.md) | 97 |
 | [EXPOSURE](reference/exposure.md) | 11 |
 | [FMS](reference/fms.md) | 2 |
 | [GCP](reference/gcp.md) | 72 |
@@ -90,18 +90,18 @@ GitHub. Pick a service below.
 | [GITHUB](reference/github.md) | 22 |
 | [GLUE](reference/glue.md) | 13 |
 | [GRAFANA](reference/grafana.md) | 1 |
-| [GUARDDUTY](reference/guardduty.md) | 15 |
+| [GUARDDUTY](reference/guardduty.md) | 16 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 234 |
+| [IAM](reference/iam.md) | 235 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |
 | [KMS](reference/kms.md) | 47 |
-| [LAMBDA](reference/lambda.md) | 86 |
+| [LAMBDA](reference/lambda.md) | 87 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
 | [LIGHTSAIL](reference/lightsail.md) | 3 |
 | [M365](reference/m365.md) | 73 |
-| [MACIE](reference/macie.md) | 3 |
+| [MACIE](reference/macie.md) | 4 |
 | [META](reference/meta.md) | 1 |
 | [MODEL](reference/model.md) | 2 |
 | [MQ](reference/mq.md) | 3 |
@@ -114,8 +114,8 @@ GitHub. Pick a service below.
 | [RDS](reference/rds.md) | 72 |
 | [REDSHIFT](reference/redshift.md) | 26 |
 | [ROUTE53](reference/route53.md) | 50 |
-| [S3](reference/s3.md) | 134 |
-| [SAGEMAKER](reference/sagemaker.md) | 35 |
+| [S3](reference/s3.md) | 135 |
+| [SAGEMAKER](reference/sagemaker.md) | 36 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
 | [SECRETSMANAGER](reference/secretsmanager.md) | 5 |
@@ -129,7 +129,7 @@ GitHub. Pick a service below.
 | [SSM](reference/ssm.md) | 13 |
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
 | [TRANSFER](reference/transfer.md) | 1 |
-| [VPC](reference/vpc.md) | 89 |
+| [VPC](reference/vpc.md) | 90 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 16 |
 | [WORKSPACES](reference/workspaces.md) | 1 |

@@ -20,6 +20,21 @@ CodePipeline artifact store must use a customer-managed KMS key. Without encrypt
 
 ---
 
+### CTL.CODEPIPELINE.GHOST.ARTIFACT.S3.001
+
+**CodePipeline Artifact Store S3 Bucket Deleted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SA-10, SC-28; soc2: CC6.1, CC8.1;
+
+CodePipeline artifact store references an S3 bucket that has been deleted. Pipeline executions fail because artifacts cannot be stored or retrieved. If the bucket is re-registered under a different account, build artifacts — source code, compiled binaries, deployment packages — are written to attacker storage.
+
+**Remediation:** Update the pipeline artifact store to an existing bucket: aws codepipeline update-pipeline --pipeline file://pipeline.json (set artifactStore.location to a valid bucket).
+
+---
+
 ### CTL.CODEPIPELINE.NOAPPROVAL.001
 
 **CodePipeline Must Have Manual Approval Before Production Deploy**

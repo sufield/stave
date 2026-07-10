@@ -1,0 +1,132 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.GHOST.EXPORT.S3.001
+name: GuardDuty Export Destination S3 Bucket Deleted
+description: >
+  GuardDuty findings export is configured to deliver to an
+  S3 bucket that has been deleted. Findings are generated
+  but cannot be persisted beyond the 90-day retention
+  window. Long-term threat investigation data is lost. The
+  export configuration appears valid — the destination ARN
+  shows the bucket name — but the bucket no longer exists.
+  If the bucket name is re-registered under a different
+  account, GuardDuty may resume delivery to
+  attacker-controlled storage without any configuration
+  change or alert.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+scope: compound
+compliance:
+  cis_aws_v3.0: "4.1"
+  soc2: "CC7.1, CC7.2, CC8.1"
+  nist_800_53_r5: "AU-2, AU-6, AU-11, SI-4"
+  pci_dss_v4.0: "10.1, 10.5"
+  fedramp_moderate: "AU-2, AU-6"
+  hipaa: "164.312(b)"
+  iso_27001_2022: "A.5.16, A.8.15"
+  ccm_v4: ["LOG-02", "LOG-08", "LOG-12"]
+scope_tags:
+  - aws
+  - guardduty
+taxonomy:
+  - compliance-mapping
+  - logging
+  - trust-decay
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    GuardDuty export destination S3 bucket has been
+    deleted. Findings older than 90 days will be
+    permanently lost, and the dangling reference is a
+    bucket hijacking target.
+  action: >
+    Recreate the S3 bucket with the original name and
+    restore the KMS key policy granting GuardDuty
+    encrypt access, or repoint the export to an existing
+    bucket: aws guardduty update-publishing-destination
+    --detector-id <id> --destination-id <dest-id>
+    --destination-properties
+    DestinationArn=arn:aws:s3:::<new-bucket>,KmsKeyArn=<key>.
+    Enable Object Lock on the destination bucket to
+    prevent tampering.
+  example: |
+    {
+      "threat_detection": {
+        "kind": "detector",
+        "findings_export": {
+          "enabled": true,
+          "destination_bucket": "guardduty-findings-111122223333",
+          "destination_bucket_exists": true,
+          "has_ghost_s3": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.threat_detection.kind
+      op: eq
+      value: detector
+    - field: properties.threat_detection.findings_export.has_ghost_s3
+      op: eq
+      value: true
+defect: >
+  GuardDuty export delivers findings to an S3 bucket
+  that has been deleted.
+infection: >
+  GuardDuty generates findings for every detected
+  threat — reconnaissance, credential compromise,
+  cryptocurrency mining, data exfiltration, malware.
+  The export pipeline serializes findings to JSON and
+  delivers them to the configured S3 bucket every five
+  minutes. When the bucket is deleted, every delivery
+  attempt fails. GuardDuty retains findings internally
+  for 90 days, then deletes them permanently. Without
+  export, findings older than 90 days cannot be
+  retrieved. The export configuration still shows the
+  bucket ARN. An auditor sees "Export: enabled,
+  Destination: s3://guardduty-findings-bucket." The
+  bucket does not exist. No findings are persisted.
+  Long-running investigations that need historical
+  threat data — lateral movement timelines, slow
+  credential exfiltration, persistent backdoors — lose
+  their evidence trail.
+failure: >
+  Threat detection findings not persisted. GuardDuty
+  findings older than 90 days are permanently lost
+  because the export S3 bucket was deleted.
+tests:
+  - name: export to deleted bucket fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:guardduty:us-east-1:111122223333:detector/abc123def456"
+      asset_type: aws_guardduty_detector
+      vendor: aws
+      properties:
+        threat_detection:
+          kind: detector
+          findings_export:
+            enabled: true
+            destination_bucket: "guardduty-findings-deleted"
+            destination_bucket_exists: false
+            has_ghost_s3: true
+  - name: export to live bucket passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:guardduty:us-east-1:111122223333:detector/abc123def456"
+      asset_type: aws_guardduty_detector
+      vendor: aws
+      properties:
+        threat_detection:
+          kind: detector
+          findings_export:
+            enabled: true
+            destination_bucket: "guardduty-findings-111122223333"
+            destination_bucket_exists: true
+            has_ghost_s3: false

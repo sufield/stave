@@ -1,0 +1,20 @@
+id: permission_asymmetry_hijack
+description: >
+  Identity has s3:DeleteBucket permission on a bucket that is a data
+  stream destination, but lacks the corresponding router-update
+  permission (cloudtrail:UpdateTrail, firehose:UpdateDestination, etc.).
+  Bucket deletion is an indirect way to reroute data without the
+  permissions normally required to change routing — the permission
+  boundary is bypassed.
+controls:
+  - CTL.CLOUDTRAIL.GHOST.S3BUCKET.001
+  - CTL.FIREHOSE.GHOST.S3.001
+  - CTL.S3.REPLICATION.GHOST.DEST.001
+  - CTL.IAM.SCP.DATAPERIMETER.S3.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - s3_delete_bucket_permission
+  - no_router_update_permission
+postconditions:
+  - indirect_data_rerouting

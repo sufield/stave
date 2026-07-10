@@ -389,6 +389,22 @@ var pathOverrides = map[string]string{ //nolint:gosec // property labels, not cr
 	"scp.only_full_access":                                         "SCP-only-FullAWSAccess reliance",
 	"scp.missing_create_restriction":                               "SCP identity creation restriction",
 	"identity.scp.has_invalid_actions":                             "SCP invalid action references",
+	"threat_detection.findings_export.has_ghost_s3":                "GuardDuty export ghost S3 destination",
+	"network.flow_log.has_ghost_s3_destination":                    "flow log ghost S3 destination",
+	"streaming.firehose.has_ghost_s3_destination":                  "Firehose ghost S3 destination",
+	"data.s3.replication.has_ghost_destination":                    "replication ghost destination",
+	"identity.scp.has_data_perimeter_s3":                           "SCP S3 data perimeter",
+	"data_security.macie.export.has_ghost_s3":                      "Macie export ghost S3 destination",
+	"governance.events.has_ghost_target":                           "EventBridge target ghost reference",
+	"governance.events.has_ghost_dlq":                              "EventBridge DLQ ghost reference",
+	"governance.events.has_ghost_invocation_role":                  "EventBridge invocation role ghost reference",
+	"governance.events.target_type":                                "EventBridge target type",
+	"analytics.athena.output.has_ghost_s3":                         "Athena output ghost S3 destination",
+	"compute.sagemaker.output.has_ghost_s3":                        "SageMaker output ghost S3 destination",
+	"compute.codepipeline.artifact_store.has_ghost_s3":             "CodePipeline artifact store ghost S3 destination",
+	"resilience.backup.export.has_ghost_s3":                        "Backup export ghost S3 destination",
+	"compute.lambda.destination.has_ghost_s3":                      "Lambda destination ghost S3",
+	"database.dms.target.has_ghost_s3":                             "DMS target ghost S3 destination",
 }
 
 var arrayIndexRegex = regexp.MustCompile(`\[\d*\]`)

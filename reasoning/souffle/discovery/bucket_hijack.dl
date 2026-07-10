@@ -1,0 +1,146 @@
+// bucket_hijack.dl — bucket hijacking chain discovery.
+//
+// Extends discovery.dl with stream-destination awareness:
+//   1. Dangling destination: router references a non-existent bucket.
+//   2. Delete-to-exfiltrate: identity can delete a stream destination bucket.
+//   3. Security telemetry hijack: severity amplifier for security routers.
+//   4. Permission asymmetry: bucket-delete without router-update.
+//   5. Cross-account destination: destination in a different account.
+//
+// New input facts (extracted by the Go harness):
+//   is_stream_destination(bucket, router, router_type)
+//   bucket_in_snapshot(bucket_name)
+//   references_bucket(router, bucket_name, router_type)
+//   security_telemetry_router(router_type)
+//   router_update_permission(router_type, permission)
+//   has_data_perimeter_scp(account_id)
+//   bucket_account(bucket_arn, account_id)
+//   router_account(router, account_id)
+//
+// Pipeline:
+//   stave export-sir --format jsonl → extract.go → .facts
+//   souffle -F facts/ -D out/ -I reasoning/souffle/iam/ bucket_hijack.dl
+
+#include "discovery.dl"
+
+// =====================================================
+// Input relations — populated by the Go fact extractor.
+// =====================================================
+
+.decl is_stream_destination(bucket: symbol, router: symbol, router_type: symbol)
+.input is_stream_destination
+
+.decl bucket_in_snapshot(bucket_name: symbol)
+.input bucket_in_snapshot
+
+.decl references_bucket(router: symbol, bucket_name: symbol, router_type: symbol)
+.input references_bucket
+
+.decl security_telemetry_router(router_type: symbol)
+.input security_telemetry_router
+
+.decl router_update_permission(router_type: symbol, permission: symbol)
+.input router_update_permission
+
+.decl has_data_perimeter_scp(account_id: symbol)
+.input has_data_perimeter_scp
+
+.decl bucket_account(bucket_arn: symbol, account_id: symbol)
+.input bucket_account
+
+.decl router_account(router: symbol, account_id: symbol)
+.input router_account
+
+// =====================================================
+// Chain C — Dangling Destination.
+//
+// Router references a bucket name that does not appear
+// in the snapshot. Simplest chain: pure existence check.
+// =====================================================
+
+.decl dangling_destination(router: symbol, bucket_name: symbol, router_type: symbol)
+.output dangling_destination
+
+dangling_destination(Router, BucketName, RouterType) :-
+    references_bucket(Router, BucketName, RouterType),
+    !bucket_in_snapshot(BucketName).
+
+// =====================================================
+// Chain A — Delete-to-Exfiltrate.
+//
+// Identity can delete a bucket that is an active stream
+// destination, and no data perimeter SCP blocks external
+// writes. The bucket hijack path exists.
+// =====================================================
+
+.decl bucket_hijack_path(identity: symbol, bucket: symbol, router: symbol, router_type: symbol)
+.output bucket_hijack_path
+
+bucket_hijack_path(Identity, Bucket, Router, RouterType) :-
+    access_path(Identity, Bucket, "s3:DeleteBucket", _, _),
+    is_stream_destination(Bucket, Router, RouterType),
+    bucket_account(Bucket, AccountId),
+    !has_data_perimeter_scp(AccountId).
+
+// =====================================================
+// Chain B — Security Telemetry Hijack.
+//
+// Severity amplifier: bucket_hijack_path where the
+// router is a security telemetry service. Simultaneous
+// exfiltration of security data + defender blindness.
+// =====================================================
+
+.decl telemetry_hijack_path(identity: symbol, bucket: symbol, router: symbol, router_type: symbol)
+.output telemetry_hijack_path
+
+telemetry_hijack_path(Identity, Bucket, Router, RouterType) :-
+    bucket_hijack_path(Identity, Bucket, Router, RouterType),
+    security_telemetry_router(RouterType).
+
+// =====================================================
+// Chain E — Permission Asymmetry.
+//
+// Identity can delete a stream destination bucket but
+// lacks the router-update permission for that router
+// type. Bucket deletion is an indirect data reroute
+// that bypasses the intended permission boundary.
+// =====================================================
+
+.decl permission_asymmetry(identity: symbol, bucket: symbol, router: symbol, router_type: symbol, update_perm: symbol)
+.output permission_asymmetry
+
+permission_asymmetry(Identity, Bucket, Router, RouterType, UpdatePerm) :-
+    access_path(Identity, Bucket, "s3:DeleteBucket", _, _),
+    is_stream_destination(Bucket, Router, RouterType),
+    router_update_permission(RouterType, UpdatePerm),
+    !access_path(Identity, Router, UpdatePerm, _, _).
+
+// =====================================================
+// Chain D — Cross-Account Destination.
+//
+// Router sends data to a bucket in a different account.
+// Limited to cases where destination account is
+// resolvable from the snapshot.
+// =====================================================
+
+.decl cross_account_destination(router: symbol, bucket: symbol, router_type: symbol, source_account: symbol, dest_account: symbol)
+.output cross_account_destination
+
+cross_account_destination(Router, Bucket, RouterType, SourceAccount, DestAccount) :-
+    is_stream_destination(Bucket, Router, RouterType),
+    bucket_account(Bucket, DestAccount),
+    router_account(Router, SourceAccount),
+    SourceAccount != DestAccount.
+
+// =====================================================
+// Summary counts.
+// =====================================================
+
+.decl _hijack_count(relation: symbol, n: number)
+.output _hijack_count
+
+_hijack_count("dangling_destination",      n) :- n = count : { dangling_destination(_, _, _) }.
+_hijack_count("bucket_hijack_path",        n) :- n = count : { bucket_hijack_path(_, _, _, _) }.
+_hijack_count("telemetry_hijack_path",     n) :- n = count : { telemetry_hijack_path(_, _, _, _) }.
+_hijack_count("permission_asymmetry",      n) :- n = count : { permission_asymmetry(_, _, _, _, _) }.
+_hijack_count("cross_account_destination", n) :- n = count : { cross_account_destination(_, _, _, _, _) }.

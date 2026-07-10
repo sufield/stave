@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.EVENTBRIDGE.GHOST.TARGET.S3.001
+name: EventBridge Rule Targets Deleted S3 Bucket
+description: >
+  An EventBridge rule's target is an S3 bucket ARN that no longer
+  exists. Events matching the rule pattern are routed but delivery
+  fails silently. If the bucket name is re-registered under a
+  different account, events resume delivery to attacker-controlled
+  storage — a bucket-hijacking vector.
+domain: governance
+severity: critical
+archetype: ghost-reference
+scope: compound
+compliance:
+  soc2: "CC6.1, CC7.1"
+  nist_800_53_r5: "AU-2, SI-4"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - eventbridge
+taxonomy:
+  - trust-decay
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eventbridge_rule_target
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: data
+    scope: service
+    multiplier: 2.0
+remediation:
+  description: >
+    EventBridge rule target is an S3 bucket that has been deleted.
+    Matched events are dropped or, if the bucket name is re-registered,
+    delivered to an external party.
+  action: >
+    Update the rule target to an existing S3 bucket:
+    aws events put-targets --rule <rule> --targets
+    Id=<id>,Arn=arn:aws:s3:::<bucket>. Verify event delivery by
+    triggering a matching event.
+  example: |
+    {
+      "governance": {
+        "kind": "eventbridge_rule_target",
+        "events": {
+          "target_type": "s3_bucket",
+          "target_arn": "arn:aws:s3:::event-archive-bucket",
+          "target_exists": true,
+          "has_ghost_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: eventbridge_rule_target
+    - field: properties.governance.events.target_type
+      op: eq
+      value: s3_bucket
+    - field: properties.governance.events.has_ghost_target
+      op: eq
+      value: true
+defect: >
+  EventBridge rule target ARN names an S3 bucket that has been deleted.
+infection: >
+  The rule pattern continues to match events; each match attempts to
+  deliver to the named S3 bucket. PutObject returns NoSuchBucket. After
+  retries the event is sent to the rule DLQ if configured, or discarded.
+  Because S3 bucket names are globally unique and re-registerable, an
+  attacker who registers the deleted bucket name under their own account
+  silently captures all delivered events. Unlike other ghost-target types
+  (Lambda, ECS, Firehose) where the resource cannot be trivially
+  re-created by an outsider, the S3 global namespace makes this an
+  active exfiltration vector.
+failure: >
+  Event data exfiltrated via bucket hijacking, or silently lost.
+tests:
+  - name: rule target to deleted S3 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/audit/target-s3"
+      asset_type: aws_eventbridge_rule_target
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule_target
+          events:
+            target_id: "target-s3"
+            target_type: "s3_bucket"
+            target_arn: "arn:aws:s3:::event-archive-deleted"
+            target_exists: false
+            has_ghost_target: true
+  - name: rule target to live S3 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:events:us-east-1:111122223333:rule/audit/target-s3"
+      asset_type: aws_eventbridge_rule_target
+      vendor: aws
+      properties:
+        governance:
+          kind: eventbridge_rule_target
+          events:
+            target_id: "target-s3"
+            target_type: "s3_bucket"
+            target_arn: "arn:aws:s3:::event-archive-bucket"
+            target_exists: true
+            has_ghost_target: false

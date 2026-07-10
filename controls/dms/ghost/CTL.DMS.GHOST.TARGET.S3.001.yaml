@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.DMS.GHOST.TARGET.S3.001
+name: DMS Replication Target S3 Bucket Deleted
+description: >
+  DMS replication task is configured to replicate data
+  to an S3 target endpoint whose bucket has been deleted.
+  Replication fails or, if the bucket is re-registered,
+  database records — potentially entire table contents
+  — are written to attacker-controlled storage.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+scope: compound
+compliance:
+  soc2: "CC6.1, CC7.1"
+  nist_800_53_r5: "AC-3, SC-28, SI-4"
+  ccm_v4: ["DSP-04", "LOG-08"]
+scope_tags:
+  - aws
+  - dms
+taxonomy:
+  - trust-decay
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: data
+    scope: service
+    multiplier: 4.0
+remediation:
+  description: >
+    DMS replication target S3 bucket has been deleted.
+    Replicated data cannot be written to the destination.
+  action: >
+    Update the DMS S3 target endpoint to reference an
+    existing bucket: aws dms modify-endpoint
+    --endpoint-arn <arn> --s3-settings
+    BucketName=<bucket>. Verify replication resumes.
+  example: |
+    {
+      "database": {
+        "kind": "dms_replication_task",
+        "dms": {
+          "target": {
+            "s3_bucket": "dms-target-bucket",
+            "s3_exists": true,
+            "has_ghost_s3": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: dms_replication_task
+    - field: properties.database.dms.target.has_ghost_s3
+      op: eq
+      value: true
+defect: >
+  DMS replication task writes to an S3 target bucket
+  that has been deleted.
+infection: >
+  DMS continuously replicates database records from
+  source to target endpoints. When the S3 target bucket
+  is deleted, replication stalls. If the bucket is
+  re-registered under a different account, DMS resumes
+  writing — delivering full database table contents,
+  change data capture events, and potentially entire
+  database dumps to attacker storage. DMS tasks often
+  run unattended for months; the hijack may not be
+  detected until a compliance audit.
+failure: >
+  Database records exfiltrated via bucket hijacking of
+  the DMS replication target.
+tests:
+  - name: replication to deleted S3 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:dms:us-east-1:111122223333:task:prod-migration"
+      asset_type: aws_dms_replication_task
+      vendor: aws
+      properties:
+        database:
+          kind: dms_replication_task
+          dms:
+            task_id: "prod-migration"
+            target:
+              s3_bucket: "dms-target-deleted"
+              s3_exists: false
+              has_ghost_s3: true
+  - name: replication to live S3 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:dms:us-east-1:111122223333:task:prod-migration"
+      asset_type: aws_dms_replication_task
+      vendor: aws
+      properties:
+        database:
+          kind: dms_replication_task
+          dms:
+            task_id: "prod-migration"
+            target:
+              s3_bucket: "dms-target-bucket"
+              s3_exists: true
+              has_ghost_s3: false

@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.ATHENA.GHOST.OUTPUT.S3.001
+name: Athena Query Results S3 Bucket Deleted
+description: >
+  Athena workgroup is configured to write query results to
+  an S3 bucket that has been deleted. Queries fail or, if
+  the bucket name is re-registered under a different
+  account, query results — which may contain sensitive data
+  from the queried tables — are written to attacker-
+  controlled storage.
+domain: exposure
+severity: medium
+archetype: ghost-reference
+scope: compound
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3, SC-28"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - athena
+taxonomy:
+  - trust-decay
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: data
+    scope: service
+    multiplier: 2.0
+remediation:
+  description: >
+    Athena workgroup output location references a deleted S3
+    bucket. Query results cannot be written.
+  action: >
+    Update the workgroup output location to an existing
+    bucket: aws athena update-work-group --work-group
+    <name> --configuration-updates
+    ResultConfigurationUpdates={OutputLocation=s3://<bucket>/}.
+  example: |
+    {
+      "analytics": {
+        "kind": "athena_workgroup",
+        "athena": {
+          "output": {
+            "s3_bucket": "query-results-bucket",
+            "s3_exists": true,
+            "has_ghost_s3": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.analytics.kind
+      op: eq
+      value: athena_workgroup
+    - field: properties.analytics.athena.output.has_ghost_s3
+      op: eq
+      value: true
+defect: >
+  Athena workgroup writes query results to an S3 bucket
+  that has been deleted.
+infection: >
+  Athena executes SQL queries against data sources and
+  writes results to a configured S3 output location.
+  When the output bucket is deleted, queries fail. If
+  the bucket name is re-registered under a different
+  account, query results resume writing to attacker
+  storage. Results may contain sensitive data from the
+  queried tables — PII, financial records, credentials
+  — exfiltrated without any credential theft.
+failure: >
+  Query results lost or exfiltrated via bucket hijacking.
+tests:
+  - name: workgroup targeting deleted S3 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:athena:us-east-1:111122223333:workgroup/primary"
+      asset_type: aws_athena_workgroup
+      vendor: aws
+      properties:
+        analytics:
+          kind: athena_workgroup
+          athena:
+            workgroup_name: "primary"
+            output:
+              s3_bucket: "query-results-deleted"
+              s3_exists: false
+              has_ghost_s3: true
+  - name: workgroup targeting live S3 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:athena:us-east-1:111122223333:workgroup/primary"
+      asset_type: aws_athena_workgroup
+      vendor: aws
+      properties:
+        analytics:
+          kind: athena_workgroup
+          athena:
+            workgroup_name: "primary"
+            output:
+              s3_bucket: "query-results-bucket"
+              s3_exists: true
+              has_ghost_s3: false

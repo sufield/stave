@@ -65,6 +65,21 @@ GuardDuty retains findings for 90 days by default. Without export to S3, finding
 
 ---
 
+### CTL.GUARDDUTY.GHOST.EXPORT.S3.001
+
+**GuardDuty Export Destination S3 Bucket Deleted**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 4.1; fedramp_moderate: AU-2, AU-6; hipaa: 164.312(b); iso_27001_2022: A.5.16, A.8.15; nist_800_53_r5: AU-2, AU-6, AU-11, SI-4; pci_dss_v4.0: 10.1, 10.5; soc2: CC7.1, CC7.2, CC8.1;
+
+GuardDuty findings export is configured to deliver to an S3 bucket that has been deleted. Findings are generated but cannot be persisted beyond the 90-day retention window. Long-term threat investigation data is lost. The export configuration appears valid — the destination ARN shows the bucket name — but the bucket no longer exists. If the bucket name is re-registered under a different account, GuardDuty may resume delivery to attacker-controlled storage without any configuration change or alert.
+
+**Remediation:** Recreate the S3 bucket with the original name and restore the KMS key policy granting GuardDuty encrypt access, or repoint the export to an existing bucket: aws guardduty update-publishing-destination --detector-id <id> --destination-id <dest-id> --destination-properties DestinationArn=arn:aws:s3:::<new-bucket>,KmsKeyArn=<key>. Enable Object Lock on the destination bucket to prevent tampering.
+
+---
+
 ### CTL.GUARDDUTY.INCOMPLETE.001
 
 **Complete Data Required for GuardDuty Assessment**

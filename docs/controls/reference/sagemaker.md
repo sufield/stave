@@ -170,6 +170,21 @@ SageMaker endpoint's model configuration references an S3 model-artifact path (M
 
 ---
 
+### CTL.SAGEMAKER.GHOST.OUTPUT.S3.001
+
+**SageMaker Training Output S3 Bucket Deleted**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3, SC-28; soc2: CC6.1;
+
+SageMaker training job output is configured to write to an S3 bucket that has been deleted. Training output — model weights, evaluation metrics, training data samples — is lost or, if the bucket is re-registered, exfiltrated to attacker-controlled storage.
+
+**Remediation:** Update the training job or model configuration to use an existing S3 output path. For new jobs: --output-data-config S3OutputPath=s3://<bucket>/.
+
+---
+
 ### CTL.SAGEMAKER.MODEL.ISOLATION.001
 
 **SageMaker Models Must Enable Network Isolation**
