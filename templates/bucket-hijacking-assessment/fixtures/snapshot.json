@@ -1,0 +1,66 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-15T00:00:00Z",
+  "generated_by": {
+    "source_type": "manual",
+    "tool": "template-fixture"
+  },
+  "assets": [
+    {
+      "id": "res:aws:s3:bucket:prod-cloudtrail-logs",
+      "type": "storage_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "prod-cloudtrail-logs",
+          "visibility": { "public_read": false }
+        },
+        "account_id": "123456789012",
+        "region": "us-east-1"
+      }
+    },
+    {
+      "id": "res:aws:cloudtrail:trail:prod-trail",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "trail": {
+          "name": "prod-trail",
+          "s3_bucket_name": "prod-cloudtrail-logs",
+          "is_logging": true
+        },
+        "account_id": "123456789012",
+        "region": "us-east-1"
+      }
+    },
+    {
+      "id": "res:aws:s3:bucket:firehose-delivery",
+      "type": "storage_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "firehose-delivery",
+          "visibility": { "public_read": false }
+        },
+        "account_id": "123456789012",
+        "region": "us-east-1"
+      }
+    },
+    {
+      "id": "res:aws:firehose:stream:metrics-stream",
+      "type": "aws_firehose_delivery_stream",
+      "vendor": "aws",
+      "properties": {
+        "firehose": {
+          "name": "metrics-stream",
+          "destination_type": "s3",
+          "s3_bucket_arn": "arn:aws:s3:::firehose-delivery"
+        },
+        "account_id": "123456789012",
+        "region": "us-east-1"
+      }
+    }
+  ]
+}

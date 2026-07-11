@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-15T00:00:00Z",
+  "generated_by": {"source_type": "manual", "tool": "template-fixture"},
+  "assets": [
+    {
+      "id": "res:aws:s3:bucket:data-lake",
+      "type": "storage_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {"kind": "bucket", "name": "data-lake", "visibility": {"public_read": false}},
+        "account_id": "123456789012",
+        "region": "us-east-1"
+      }
+    },
+    {
+      "id": "res:aws:iam:role:LakeAdmin",
+      "type": "iam_role",
+      "vendor": "aws",
+      "properties": {"account_id": "123456789012", "region": "us-east-1"}
+    }
+  ]
+}

@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_161 commands across 7 groups._
+_167 commands across 7 groups._
 
 ## Getting Started
 
@@ -191,12 +191,18 @@ _161 commands across 7 groups._
 | `profile validate` | Validate a profile file |
 | `prove` | Run Z3 SMT queries against a Stave assessment |
 | `readiness` | Report what Stave can/can't evaluate given the supplied observations |
+| `recommend` | Recommend templates for a snapshot |
 | `sanitize` | Sanitize a snapshot for cross-boundary sharing |
 | `schemas` | List all contract schemas |
 | `score` | Compute security posture score (0-100) |
 | `scorecard` | Multi-framework compliance scorecard |
 | `search` | Find catalog entries matching a free-form intent |
 | `telemetry` | Emit structured NDJSON telemetry from assessment output |
+| `template` | Manage assessment templates |
+| `template eject` | Fork a template for local customization |
+| `template init` | Instantiate a template with parameters |
+| `template new` | Scaffold a new custom template |
+| `template verify` | Verify a template's fixture produces expected findings |
 | `test` | Run embedded control test cases |
 | `transform` | Convert raw AWS CLI snapshots into obs.v0.1 observations (built-in jq) |
 | `trend` | Analyze compliance posture trends across assessment runs |

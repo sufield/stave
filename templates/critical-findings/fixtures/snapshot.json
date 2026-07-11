@@ -1,0 +1,50 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-15T00:00:00Z",
+  "generated_by": {
+    "source_type": "manual",
+    "tool": "template-fixture"
+  },
+  "assets": [
+    {
+      "id": "res:aws:s3:bucket:public-data-dump",
+      "type": "storage_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "public-data-dump",
+          "visibility": { "public_read": true },
+          "versioning": { "enabled": false },
+          "encryption": { "enabled": false },
+          "logging": { "enabled": false }
+        },
+        "account_id": "123456789012",
+        "region": "us-east-1"
+      }
+    },
+    {
+      "id": "res:aws:iam:role:overprivileged-admin",
+      "type": "iam_role",
+      "vendor": "aws",
+      "properties": {
+        "iam": {
+          "role_name": "overprivileged-admin",
+          "policies": [
+            {
+              "policy_name": "AdminAccess",
+              "effect": "Allow",
+              "actions": ["*"],
+              "resources": ["*"]
+            }
+          ],
+          "trust_policy": {
+            "principals": ["*"]
+          }
+        },
+        "account_id": "123456789012",
+        "region": "us-east-1"
+      }
+    }
+  ]
+}

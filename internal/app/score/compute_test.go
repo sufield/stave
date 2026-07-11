@@ -225,9 +225,9 @@ func TestCompute_DetailFields(t *testing.T) {
 	if r.Severity.Detail.FailingFindings != 3 {
 		t.Errorf("failing_findings = %d, want 3", r.Severity.Detail.FailingFindings)
 	}
-	// MaxRiskExposure = NormalizedWeight(critical+high+low) = 4 + 3 + 1 = 8
-	if r.Severity.Detail.MaxRiskExposure != 8 {
-		t.Errorf("max_risk_exposure = %f, want 8", r.Severity.Detail.MaxRiskExposure)
+	// MaxRiskExposure = failingCount * SeverityCritical.NormalizedWeight() = 3 * 4 = 12
+	if r.Severity.Detail.MaxRiskExposure != 12 {
+		t.Errorf("max_risk_exposure = %f, want 12", r.Severity.Detail.MaxRiskExposure)
 	}
 	if r.Severity.Detail.ActualExposure != 8 {
 		t.Errorf("actual_exposure = %f, want 8 (all failing)", r.Severity.Detail.ActualExposure)

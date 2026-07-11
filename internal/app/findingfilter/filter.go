@@ -322,7 +322,7 @@ func computeGapCounts(sorted []*report.Assessment) map[findingKey]int {
 		// Add new keys.
 		for k := range currentKeys {
 			if _, exists := tracker[k]; !exists {
-				tracker[k] = &state{wasPresentCurr: true}
+				tracker[k] = &state{wasPresentCurr: true, wasPresentPrev: true}
 			}
 		}
 

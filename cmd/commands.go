@@ -48,6 +48,7 @@ import (
 	staveprofile "github.com/sufield/stave/cmd/profile"
 	staveprove "github.com/sufield/stave/cmd/prove"
 	stavereadiness "github.com/sufield/stave/cmd/readiness"
+	staverecommend "github.com/sufield/stave/cmd/recommend"
 	stavereport "github.com/sufield/stave/cmd/report"
 	stavesanitize "github.com/sufield/stave/cmd/sanitize"
 	stavescore "github.com/sufield/stave/cmd/score"
@@ -56,6 +57,11 @@ import (
 	staveservices "github.com/sufield/stave/cmd/services"
 	stavesnapshotdiff "github.com/sufield/stave/cmd/snapshotdiff"
 	stavetelemetry "github.com/sufield/stave/cmd/telemetry"
+	"github.com/sufield/stave/cmd/templatecmd"
+	templateeject "github.com/sufield/stave/cmd/templatecmd/ejectcmd"
+	templateinit "github.com/sufield/stave/cmd/templatecmd/initcmd"
+	templatenew "github.com/sufield/stave/cmd/templatecmd/newcmd"
+	templateverify "github.com/sufield/stave/cmd/templatecmd/verifycmd"
 	stavetest "github.com/sufield/stave/cmd/test"
 	stavetransform "github.com/sufield/stave/cmd/transform"
 	stavetrend "github.com/sufield/stave/cmd/trend"
@@ -275,6 +281,15 @@ func WireCommands(app *App) error {
 
 	// Posture score
 	root.AddCommand(stavescore.NewCmd())
+
+	// Assessment templates
+	root.AddCommand(staverecommend.NewCmd())
+	templateCmd := templatecmd.NewCmd()
+	templateCmd.AddCommand(templateinit.NewCmd())
+	templateCmd.AddCommand(templatenew.NewCmd())
+	templateCmd.AddCommand(templateverify.NewCmd())
+	templateCmd.AddCommand(templateeject.NewCmd())
+	root.AddCommand(templateCmd)
 
 	// Telemetry bridge
 	root.AddCommand(stavetelemetry.NewCmd())

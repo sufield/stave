@@ -1,0 +1,81 @@
+apiVersion: stave/v1
+kind: Template
+metadata:
+  name: m-and-a-diligence
+  description: "Credential-free cloud security assessment for M&A due diligence"
+  job: "Evaluate acquisition target's cloud security posture without credentials"
+  version: "1.0.0"
+
+recommend_when:
+  predicate: >
+    summary.services.contains("organizations") &&
+    summary.account_count > 1
+  priority: 50
+
+parameters:
+  - name: target_accounts
+    description: "AWS account IDs in scope for diligence"
+    type: list
+    required: true
+  - name: regions
+    description: "AWS regions to evaluate"
+    type: list
+    default: ["us-east-1", "us-west-2", "eu-west-1"]
+  - name: compliance_frameworks
+    description: "Compliance frameworks to map findings against"
+    type: list
+    default: ["CIS-v3.0", "SCS-C03"]
+  - name: severity_threshold
+    description: "Minimum severity to include in report"
+    type: string
+    default: "medium"
+
+scope:
+  services:
+    - iam
+    - s3
+    - cloudtrail
+    - config
+    - organizations
+    - guardduty
+    - kms
+    - ec2
+
+controls:
+  include:
+    - "CTL.IAM.*"
+    - "CTL.S3.*"
+    - "CTL.CLOUDTRAIL.*"
+    - "CTL.KMS.*"
+    - "CTL.ORG.*"
+  exclude:
+    - "CTL.IAM.OAUTH.*"
+
+chains:
+  include:
+    - "bucket_hijack"
+    - "privilege_escalation"
+    - "cross_account"
+
+runbook:
+  steps:
+    - action: eval
+      description: "Evaluate all selected controls"
+      args:
+        snapshot: "{{ .SnapshotPath }}"
+        controls: "{{ .ControlSelection }}"
+    - action: chain
+      description: "Run compound chain discovery"
+      args:
+        snapshot: "{{ .SnapshotPath }}"
+        rules: "{{ .ChainSelection }}"
+    - action: report
+      description: "Export findings"
+      args:
+        format: jsonl
+        output: "{{ .OutputPath }}"
+
+fixture:
+  snapshot: "fixtures/snapshot.json"
+  expected_findings: "fixtures/expected.jsonl"
+  match_keys: ["control_id", "resource_id"]

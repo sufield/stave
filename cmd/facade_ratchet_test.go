@@ -103,6 +103,8 @@ var facadeCleanBaseline = map[string]struct{}{
 	"stave":              {},
 	"stave-dev":          {},
 	"telemetry":          {},
+	"templatecmd":        {},
+	"templatecmd/newcmd": {},
 	"test":               {},
 	"trend":              {},
 	"validatemapping":    {},

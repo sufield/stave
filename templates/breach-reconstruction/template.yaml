@@ -1,0 +1,82 @@
+apiVersion: stave/v1
+kind: Template
+metadata:
+  name: breach-reconstruction
+  description: "Determine security posture at moment of incident"
+  job: "Reconstruct what an attacker could reach at a specific point in time"
+  version: "1.0.0"
+
+recommend_when:
+  predicate: >
+    summary.has_cloudtrail &&
+    summary.eval_time_set
+  priority: 60
+
+parameters:
+  - name: target_accounts
+    description: "AWS account IDs involved in the incident"
+    type: list
+    required: true
+  - name: incident_time
+    description: "Timestamp of the incident (RFC3339)"
+    type: string
+    required: true
+  - name: regions
+    description: "AWS regions to evaluate"
+    type: list
+    default: ["us-east-1", "us-west-2"]
+  - name: severity_threshold
+    description: "Minimum severity to include"
+    type: string
+    default: "low"
+
+scope:
+  services:
+    - iam
+    - s3
+    - cloudtrail
+    - guardduty
+    - vpc
+    - kms
+
+controls:
+  include:
+    - "CTL.IAM.ESCALATION.*"
+    - "CTL.IAM.POLICY.*"
+    - "CTL.S3.LOG.*"
+    - "CTL.CLOUDTRAIL.*"
+    - "CTL.GHOST.*"
+    - "CTL.*.DESTINATION.*"
+  exclude: []
+
+chains:
+  include:
+    - "bucket_hijack"
+    - "security_telemetry_hijack"
+    - "cloudtrail_blind_spot"
+    - "privilege_escalation"
+    - "log_pipeline_compromise"
+
+runbook:
+  steps:
+    - action: eval
+      description: "Evaluate posture at incident time"
+      args:
+        snapshot: "{{ .SnapshotPath }}"
+        controls: "{{ .ControlSelection }}"
+        eval_time: "{{ .Parameters.incident_time }}"
+    - action: chain
+      description: "Run attacker-path chains"
+      args:
+        snapshot: "{{ .SnapshotPath }}"
+        rules: "{{ .ChainSelection }}"
+    - action: report
+      description: "Export incident findings"
+      args:
+        format: jsonl
+        output: "{{ .OutputPath }}"
+
+fixture:
+  snapshot: "fixtures/snapshot.json"
+  expected_findings: "fixtures/expected.jsonl"
+  match_keys: ["control_id", "resource_id"]

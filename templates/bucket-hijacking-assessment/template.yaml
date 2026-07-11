@@ -1,0 +1,78 @@
+apiVersion: stave/v1
+kind: Template
+metadata:
+  name: bucket-hijacking-assessment
+  description: "Evaluate all router-to-S3 destination bindings for namespace hijacking risk"
+  job: "Assess bucket hijacking exposure across all 42 router types"
+  version: "1.0.0"
+
+recommend_when:
+  predicate: >
+    summary.s3_bucket_count > 0 &&
+    (summary.has_cloudtrail || summary.has_firehose || summary.has_replication)
+  priority: 70
+
+parameters:
+  - name: target_accounts
+    description: "AWS account IDs in scope"
+    type: list
+    required: true
+  - name: regions
+    description: "AWS regions to evaluate"
+    type: list
+    default: ["us-east-1", "us-west-2", "eu-west-1"]
+  - name: severity_threshold
+    description: "Minimum severity to include"
+    type: string
+    default: "medium"
+
+scope:
+  services:
+    - s3
+    - cloudtrail
+    - firehose
+    - config
+    - cloudfront
+    - elb
+    - vpc
+
+controls:
+  include:
+    - "CTL.S3.BUCKET.TAKEOVER.*"
+    - "CTL.S3.DANGLING.*"
+    - "CTL.CLOUDTRAIL.GHOST.*"
+    - "CTL.CLOUDFRONT.GHOST.*"
+    - "CTL.GHOST.TEMPORAL.*"
+    - "CTL.*.DESTINATION.*"
+  exclude: []
+
+chains:
+  include:
+    - "bucket_hijack"
+    - "dangling_destination_hijack"
+    - "security_telemetry_hijack"
+    - "cloudtrail_blind_spot"
+    - "log_pipeline_compromise"
+
+runbook:
+  steps:
+    - action: eval
+      description: "Evaluate ghost-reference and destination controls"
+      args:
+        snapshot: "{{ .SnapshotPath }}"
+        controls: "{{ .ControlSelection }}"
+    - action: chain
+      description: "Run bucket hijacking compound chains"
+      args:
+        snapshot: "{{ .SnapshotPath }}"
+        rules: "{{ .ChainSelection }}"
+    - action: report
+      description: "Export findings"
+      args:
+        format: jsonl
+        output: "{{ .OutputPath }}"
+
+fixture:
+  snapshot: "fixtures/snapshot.json"
+  expected_findings: "fixtures/expected.jsonl"
+  match_keys: ["control_id", "resource_id"]

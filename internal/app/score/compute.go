@@ -588,7 +588,7 @@ func computeSeverityScore(input Input) severityResult {
 	// actually used in the score calc — including the fallback.
 	reportedMax := maxExposure
 	if reportedMax <= 0 {
-		reportedMax = actualExposure
+		reportedMax = float64(failingCount) * policy.SeverityCritical.NormalizedWeight()
 	}
 	return severityResult{
 		subScore:       subScore,

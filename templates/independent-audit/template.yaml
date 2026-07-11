@@ -1,0 +1,76 @@
+apiVersion: stave/v1
+kind: Template
+metadata:
+  name: independent-audit
+  description: "Re-derivable findings with full evidence chain for third-party audit"
+  job: "Produce audit-grade evidence package with deterministic reproduction"
+  version: "1.0.0"
+
+recommend_when:
+  predicate: >
+    summary.service_count >= 5
+  priority: 30
+
+parameters:
+  - name: target_accounts
+    description: "AWS account IDs in audit scope"
+    type: list
+    required: true
+  - name: compliance_frameworks
+    description: "Compliance frameworks to map findings against"
+    type: list
+    default: ["CIS-v3.0", "SCS-C03", "HIPAA"]
+  - name: regions
+    description: "AWS regions to evaluate"
+    type: list
+    default: ["us-east-1", "us-west-2", "eu-west-1"]
+  - name: severity_threshold
+    description: "Minimum severity to include"
+    type: string
+    default: "low"
+
+scope:
+  services:
+    - iam
+    - s3
+    - cloudtrail
+    - config
+    - organizations
+    - guardduty
+    - kms
+    - ec2
+    - vpc
+    - lambda
+    - rds
+
+controls:
+  include:
+    - "CTL.*"
+  exclude: []
+
+chains:
+  include:
+    - "*"
+
+runbook:
+  steps:
+    - action: eval
+      description: "Full catalog evaluation"
+      args:
+        snapshot: "{{ .SnapshotPath }}"
+        controls: "{{ .ControlSelection }}"
+    - action: chain
+      description: "Run all compound chains"
+      args:
+        snapshot: "{{ .SnapshotPath }}"
+        rules: "{{ .ChainSelection }}"
+    - action: report
+      description: "Export full evidence package"
+      args:
+        format: jsonl
+        output: "{{ .OutputPath }}"
+
+fixture:
+  snapshot: "fixtures/snapshot.json"
+  expected_findings: "fixtures/expected.jsonl"
+  match_keys: ["control_id", "resource_id"]

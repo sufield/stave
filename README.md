@@ -53,6 +53,76 @@ Six executable skills guide you from install to real-environment evaluation. Eac
 | 5 | [reasoning-engines](./_skills/reasoning-engines/SKILL.md) | 30 min | No |
 | 6 | [snapshot-your-account](./_skills/snapshot-your-account/SKILL.md) | 30 min | Yes (read-only) |
 
+## Assessment Templates
+
+Templates are JTBD bundles — everything needed to run a specific
+security assessment job. Instead of assembling controls, chains,
+and parameters manually, pick a template and go.
+
+```bash
+# See which template fits your snapshot
+stave recommend --snapshot ./observations/
+
+# Initialize with parameters
+stave template init critical-findings --param severity_threshold=high
+
+# Run the assessment
+stave apply --values ./stave-values.yaml --snapshot ./observations/
+```
+
+### Built-in templates
+
+| Template | Job | Priority |
+|----------|-----|----------|
+| `critical-findings` | Surface critical/high findings for whatever services are in the snapshot | 10 (default) |
+| `independent-audit` | Broad-scope audit across all services | 30 |
+| `m-and-a-diligence` | Due-diligence posture snapshot for acquisitions | 50 |
+| `breach-reconstruction` | Timeline reconstruction after a security incident | 60 |
+| `bucket-hijacking-assessment` | Evaluate router-to-S3 destination bindings for namespace hijacking | 70 |
+
+`critical-findings` is the front door — it always matches and
+dynamically selects controls based on which services appear in your
+snapshot. No configuration needed; if the catalog has IAM controls
+and your snapshot has IAM resources, those controls run. Adding a
+new service to the catalog automatically expands coverage.
+
+### Filtered output
+
+When a severity threshold hides findings, eval reports what was
+hidden:
+
+```
+23 findings at high/critical severity
+41 additional findings at medium/low/info severity (hidden)
+
+To include all: set severity_threshold to info in stave-values.yaml
+```
+
+### Parameter validation
+
+`stave template init` validates parameter values against allowed
+options at init time. Invalid values are rejected immediately:
+
+```
+Error: invalid value "super-critical" for parameter severity_threshold
+  Allowed values: critical, high, medium, low, info
+```
+
+### Custom templates
+
+```bash
+# Scaffold a new template
+stave template new my-org-assessment
+
+# Edit template.yaml — set controls, chains, recommend_when predicate
+# Run and verify
+stave template verify my-org-assessment
+```
+
+Custom templates in `./stave-templates/` are discovered automatically
+alongside built-in templates. `stave template eject` forks a built-in
+template for local customization.
+
 ## Why not a scanner?
 
 CSPM tools scan for known-bad patterns. Stave verifies that

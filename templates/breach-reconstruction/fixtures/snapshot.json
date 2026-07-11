@@ -1,0 +1,27 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-15T00:00:00Z",
+  "generated_by": {"source_type": "manual", "tool": "template-fixture"},
+  "assets": [
+    {
+      "id": "res:aws:cloudtrail:trail:main-trail",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "trail": {"name": "main-trail", "s3_bucket_name": "audit-logs", "is_logging": true},
+        "account_id": "123456789012",
+        "region": "us-east-1"
+      }
+    },
+    {
+      "id": "res:aws:s3:bucket:audit-logs",
+      "type": "storage_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {"kind": "bucket", "name": "audit-logs"},
+        "account_id": "123456789012",
+        "region": "us-east-1"
+      }
+    }
+  ]
+}

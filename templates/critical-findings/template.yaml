@@ -1,0 +1,62 @@
+apiVersion: stave/v1
+kind: Template
+metadata:
+  name: critical-findings
+  description: "Find the most critical security issues across your AWS services"
+  job: "Surface critical and high severity findings for whatever services are in the snapshot"
+  version: "1.0.0"
+
+recommend_when:
+  predicate: "true"
+  priority: 10
+
+parameters:
+  - name: severity_threshold
+    description: "Minimum severity to include in findings"
+    type: string
+    default: "high"
+    options: ["critical", "high", "medium", "low", "info"]
+  - name: include_chains
+    description: "Run compound chain discovery"
+    type: bool
+    default: true
+  - name: output_format
+    description: "Findings export format"
+    type: string
+    default: "jsonl"
+    options: ["jsonl", "json", "table"]
+
+scope:
+  services: ["auto"]
+
+controls:
+  include: ["auto"]
+  exclude: []
+
+chains:
+  include: ["auto"]
+
+runbook:
+  steps:
+    - action: eval
+      description: "Evaluate controls matched to snapshot services"
+      args:
+        snapshot: "{{ .SnapshotPath }}"
+        controls: "{{ .ControlSelection }}"
+        severity: "{{ .Parameters.severity_threshold }}"
+    - action: chain
+      description: "Run compound chain discovery"
+      args:
+        snapshot: "{{ .SnapshotPath }}"
+        rules: "{{ .ChainSelection }}"
+      when: "{{ .Parameters.include_chains }}"
+    - action: report
+      description: "Export findings"
+      args:
+        format: "{{ .Parameters.output_format }}"
+        output: "{{ .OutputPath }}"
+
+fixture:
+  snapshot: "fixtures/snapshot.json"
+  expected_findings: "fixtures/expected.jsonl"
+  match_keys: ["control_id", "resource_id"]

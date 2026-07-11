@@ -171,4 +171,9 @@ var catalogAnnotations = []catalogAnnotation{
 	{Path: "completion", Group: "Settings", When: "Tab-completion setup for bash/zsh/fish/ps"},
 	{Path: "fingerprint explain", Group: "Introspection", When: "Diagnosing or auditing the policy fingerprint"},
 	{Path: "prove", Group: "Introspection", When: "Formal verification of IAM policies and control invariants via Z3 SMT"},
+	{Path: "recommend", Group: "Workflow", When: "Discovering which assessment template fits a snapshot"},
+	{Path: "template init", Group: "Workflow", When: "Instantiating an assessment template with parameters"},
+	{Path: "template new", Group: "Workflow", When: "Scaffolding a custom template for authoring"},
+	{Path: "template verify", Group: "Workflow", When: "Verifying a template's fixture produces expected findings"},
+	{Path: "template eject", Group: "Workflow", When: "Forking a template for local customization"},
 }

@@ -1,0 +1,2 @@
+{"control_id":"CTL.CLOUDTRAIL.GHOST.DESTINATION.001","resource_id":"res:aws:cloudtrail:trail:prod-trail"}
+{"control_id":"CTL.S3.BUCKET.TAKEOVER.001","resource_id":"res:aws:s3:bucket:prod-cloudtrail-logs"}

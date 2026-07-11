@@ -202,6 +202,14 @@ func sanitizeFinding(f *remediation.Finding, s kernel.Sanitizer) remediation.Fin
 	if f.RemediationPlan != nil {
 		plan := *f.RemediationPlan
 		plan.Target.AssetID = asset.ID(s.ID(string(plan.Target.AssetID)))
+		if out.RemediationSpec.Action != "" {
+			syntheticAsset := asset.Asset{
+				ID:     out.AssetID,
+				Type:   out.AssetType,
+				Vendor: out.AssetVendor,
+			}
+			plan.Command = remediation.FormatRemediationAction(out.RemediationSpec.Action, syntheticAsset)
+		}
 		out.RemediationPlan = &plan
 	}
 

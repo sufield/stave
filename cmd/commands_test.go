@@ -25,7 +25,9 @@ func TestWireCommands_CommandCount(t *testing.T) {
 	// 64 after adding `scan` (service-grouped evaluation pipeline).
 	// 63 after removing `scan` — its logic moved to `apply --auto`.
 	// 64 after adding `prove` (Z3 SMT formal verification).
-	const want = 64
+	// 65 after adding `recommend` (template recommendation engine).
+	// 66 after adding `template` (init/new/verify/eject subcommands).
+	const want = 66
 	if got != want {
 		t.Errorf("root command count = %d, want %d; update this constant if a command was added/removed", got, want)
 	}

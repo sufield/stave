@@ -1,0 +1,2 @@
+{"control_id":"CTL.S3.BUCKET.PUBLIC.READ.001","resource_id":"res:aws:s3:bucket:public-data-dump"}
+{"control_id":"CTL.IAM.POLICY.WILDCARD.001","resource_id":"res:aws:iam:role:overprivileged-admin"}
