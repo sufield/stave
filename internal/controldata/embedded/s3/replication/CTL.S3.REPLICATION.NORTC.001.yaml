@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.S3.REPLICATION.NORTC.001
+name: Replication Without Replication Time Control
+description: >
+  S3 replication rule does not have Replication Time Control (RTC)
+  enabled. Without RTC, AWS provides no SLA on replication latency —
+  objects may take hours to replicate during high load, creating an
+  unbounded RPO gap. RTC guarantees 99.99% of objects replicate
+  within 15 minutes and provides CloudWatch metrics to monitor
+  replication lag.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-11"]
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: resilience
+observation_fields:
+  - storage.kind
+  - storage.replication.enabled
+  - storage.replication.replication_time_control
+remediation:
+  description: >
+    S3 replication rule does not have Replication Time Control (RTC)
+    enabled. Replication latency is unbounded — RPO could be hours.
+  action: >
+    Enable Replication Time Control on the replication rule. RTC adds
+    cost but provides a 15-minute RPO SLA and CloudWatch metrics for
+    replication lag monitoring.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "replication": {
+          "enabled": true,
+          "replication_time_control": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.replication.enabled
+      op: eq
+      value: true
+    - field: properties.storage.replication.replication_time_control
+      op: eq
+      value: false
+tests:
+  - name: "replication without RTC — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::prod-data-primary"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          replication:
+            enabled: true
+            replication_time_control: false
+  - name: "replication with RTC — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::prod-data-rtc"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          replication:
+            enabled: true
+            replication_time_control: true
+  - name: "no replication — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::static-assets"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          replication:
+            enabled: false
+            replication_time_control: false

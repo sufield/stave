@@ -169,3 +169,18 @@ AWS Backup vaults must have vault lock enabled to prevent deletion of recovery p
 
 ---
 
+### CTL.BACKUP.VAULT.POLICY.CROSSACCOUNT.001
+
+**Backup Vault Access Policy Grants Cross-Account Access Without Organizational Boundary**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-9; soc2: CC6.1;
+
+AWS Backup vault access policy grants actions to principals in external AWS accounts without an aws:PrincipalOrgID condition. Backup vaults contain recovery points — the last line of defense against ransomware. Cross-account access without an org boundary means the external account can delete recovery points (backup:DeleteRecoveryPoint), copy them out (backup:StartCopyJob), or read metadata (backup:GetRecoveryPointRestoreMetadata). This is the ransomware endgame — if backup vaults are accessible to a compromised cross-account role, the attacker can destroy both production data and backups.
+
+**Remediation:** Add an aws:PrincipalOrgID condition to the vault access policy. For backup vaults, prefer using AWS Backup Vault Lock to prevent any modification of recovery points during the retention period.
+
+---
+

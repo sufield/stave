@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.STRATEGY.001
+name: SCPs Use Deny-List Strategy Instead of Allow-List
+description: >
+  Organization SCPs use individual Deny statements for specific
+  services (deny-list strategy) rather than a Deny with NotAction
+  listing permitted services (allow-list strategy). An allow-list
+  strategy is structurally stronger — new AWS services are denied
+  by default until explicitly permitted, preventing exposure from
+  newly launched services that bypass existing guardrails. A
+  deny-list must be updated every time AWS launches a service that
+  could be abused.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["GRC-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - account-governance
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.kind
+  - identity.scp.uses_allowlist_strategy
+remediation:
+  description: >
+    Organization SCPs use a deny-list strategy. New AWS services
+    are allowed by default until explicitly denied.
+  action: >
+    Consider migrating to an allow-list SCP strategy using Deny
+    with NotAction. List only the services your organization uses;
+    everything else is denied by default. This prevents exposure
+    from newly launched AWS services.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "uses_allowlist_strategy": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.uses_allowlist_strategy
+      op: eq
+      value: false
+tests:
+  - name: "deny-list strategy fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            uses_allowlist_strategy: false
+  - name: "allow-list strategy passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            uses_allowlist_strategy: true

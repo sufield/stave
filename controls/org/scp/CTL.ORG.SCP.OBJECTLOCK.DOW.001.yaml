@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.OBJECTLOCK.DOW.001
+name: SCP Must Restrict S3 Object Lock Retention Duration
+description: >
+  AWS Organizations must have a Service Control Policy that restricts
+  S3 Object Lock retention duration. Without this SCP, any identity
+  with s3:PutObjectRetention can lock objects for up to 100 years —
+  locked objects cannot be deleted even by AWS, creating an
+  irrecoverable denial-of-wallet condition. The SCP should deny
+  s3:PutObjectRetention when s3:object-lock-remaining-retention-days
+  exceeds the organization's maximum (e.g. 2555 days / 7 years).
+  External principals invited via bucket policy bypass SCPs entirely,
+  making this a necessary-but-not-sufficient control.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["CCC-04", "GRC-05"]
+scope_tags:
+  - aws
+  - organizations
+  - s3
+taxonomy:
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organizations_scp
+params:
+  attack_stage: impact
+  base_impact: 8
+  blast_radius:
+    type: financial
+    scope: organization
+    multiplier: 2.0
+observation_fields:
+  - organization.kind
+  - organization.object_lock_retention_cap.has_scp
+remediation:
+  description: >
+    No SCP restricts S3 Object Lock retention duration. An identity
+    with s3:PutObjectRetention can lock objects for up to 100 years,
+    creating an irrecoverable denial-of-wallet condition.
+  action: >
+    Attach an SCP to the organization root that denies
+    s3:PutObjectRetention when the condition key
+    s3:object-lock-remaining-retention-days exceeds your maximum
+    retention period. Also consider denying
+    s3:PutBucketObjectLockConfiguration to prevent new Object
+    Lock-enabled buckets without approval.
+  example: |
+    {
+      "organization": {
+        "kind": "scp_policy_set",
+        "object_lock_retention_cap": {
+          "has_scp": true,
+          "max_retention_days": 2555
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: scp_policy_set
+    - field: properties.organization.object_lock_retention_cap.has_scp
+      op: eq
+      value: false
+tests:
+  - name: "no SCP restricting Object Lock retention — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123/scp-set"
+      asset_type: aws_organizations_scp
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          object_lock_retention_cap:
+            has_scp: false
+  - name: "SCP caps Object Lock retention — passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123/scp-set"
+      asset_type: aws_organizations_scp
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          object_lock_retention_cap:
+            has_scp: true
+            max_retention_days: 2555

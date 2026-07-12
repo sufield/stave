@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.S3.POLICY.ORGID.BROAD.001
+name: Bucket Policy Grants s3:* via PrincipalOrgID Condition
+description: >
+  S3 bucket policy grants s3:* (or an equivalently broad action set)
+  to Principal:* conditioned only on aws:PrincipalOrgID. This grants
+  full S3 access to every identity in the AWS Organization — including
+  vendor audit roles, CI/CD service accounts, and any compromised
+  credential. PrincipalOrgID is a useful scoping condition for
+  read-only access but it is not a substitute for least-privilege
+  action grants. The collector pre-computes
+  policy_orgid_broad_action when the bucket policy has a statement
+  with Principal:* plus PrincipalOrgID whose effective action set
+  includes s3:* or covers both read and write families.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17", "IAM-16"]
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - identity-perimeter
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: initial_access
+  base_impact: 7
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - storage.kind
+  - storage.access.policy_orgid_broad_action
+remediation:
+  description: >
+    Bucket policy grants s3:* (or broad S3 actions) to all
+    principals in the AWS Organization via aws:PrincipalOrgID. Every
+    identity in the organization — including vendor audit roles and
+    CI/CD runners — has full access to this bucket.
+  action: >
+    Replace s3:* with the minimum action set required. For shared
+    data buckets, grant s3:GetObject and s3:ListBucket. For backup
+    destinations, grant only the replication actions
+    (s3:ReplicateObject, s3:ReplicateDelete). If write access is
+    required, scope it to specific principals via aws:PrincipalArn
+    rather than PrincipalOrgID.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "access": {
+          "policy_orgid_broad_action": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.policy_orgid_broad_action
+      op: eq
+      value: true
+tests:
+  - name: "Principal:* + PrincipalOrgID + s3:* — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::shared-data-lake"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            policy_orgid_broad_action: true
+  - name: "Principal:* + PrincipalOrgID + s3:GetObject only — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::shared-readonly"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            policy_orgid_broad_action: false

@@ -46,6 +46,15 @@ func (idx *ResourceAccessIndex) AddEntry(resourceID string, entry ResourceAccess
 	idx.entries[resourceID] = append(idx.entries[resourceID], entry)
 }
 
+// Range calls fn for every (resourceID, entry) pair in the index.
+func (idx *ResourceAccessIndex) Range(fn func(resourceID string, entry ResourceAccessEntry)) {
+	for rid, entries := range idx.entries {
+		for _, e := range entries {
+			fn(rid, e)
+		}
+	}
+}
+
 // HasNonDesignatedPHIAccess checks if a PHI resource has any
 // accessor that is not in the designated principal set. Public
 // access is never considered designated.

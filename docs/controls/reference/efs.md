@@ -169,6 +169,21 @@ EFS file system policies must prevent anonymous (unauthenticated) access. Withou
 
 ---
 
+### CTL.EFS.POLICY.CROSSACCOUNT.001
+
+**EFS File System Policy Grants Cross-Account Access Without Organizational Boundary**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+EFS file system policy grants actions to principals in external AWS accounts without an aws:PrincipalOrgID condition. Cross-account EFS access enables mounting the file system from EC2 instances or containers in the external account. If the external account is compromised, the attacker can read, modify, or delete all files on the shared file system.
+
+**Remediation:** Add an aws:PrincipalOrgID condition to restrict cross-account access to principals within the organization. Also consider using VPC peering or Transit Gateway conditions to restrict network-level access.
+
+---
+
 ### CTL.EFS.POLICY.DENYROOT.001
 
 **EFS File System Policy Must Deny Root Access**

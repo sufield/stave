@@ -131,6 +131,12 @@ func ResolveAllPrincipals(snap *asset.Snapshot) (
 		}
 	}
 
+	// Populate ResourcePolicyGrants with cross-account ∧ rule.
+	idx := BuildResourceAccessIndex(snap)
+	if idx != nil {
+		applyResourcePolicyGrants(resolved, idx)
+	}
+
 	return resolved, trusts
 }
 

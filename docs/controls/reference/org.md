@@ -95,6 +95,21 @@ Organization SCPs do not deny Lightsail service usage in member accounts. Lights
 
 ---
 
+### CTL.ORG.SCP.OBJECTLOCK.DOW.001
+
+**SCP Must Restrict S3 Object Lock Retention Duration**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+AWS Organizations must have a Service Control Policy that restricts S3 Object Lock retention duration. Without this SCP, any identity with s3:PutObjectRetention can lock objects for up to 100 years — locked objects cannot be deleted even by AWS, creating an irrecoverable denial-of-wallet condition. The SCP should deny s3:PutObjectRetention when s3:object-lock-remaining-retention-days exceeds the organization's maximum (e.g. 2555 days / 7 years). External principals invited via bucket policy bypass SCPs entirely, making this a necessary-but-not-sufficient control.
+
+**Remediation:** Attach an SCP to the organization root that denies s3:PutObjectRetention when the condition key s3:object-lock-remaining-retention-days exceeds your maximum retention period. Also consider denying s3:PutBucketObjectLockConfiguration to prevent new Object Lock-enabled buckets without approval.
+
+---
+
 ### CTL.ORG.TRUSTEDACCESS.001
 
 **AWS Organizations Trusted Access Must Be Reviewed**

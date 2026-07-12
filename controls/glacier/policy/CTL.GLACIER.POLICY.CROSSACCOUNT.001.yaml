@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.GLACIER.POLICY.CROSSACCOUNT.001
+name: Glacier Vault Policy Grants Cross-Account Access Without Organizational Boundary
+description: >
+  Glacier vault access policy grants actions to principals in
+  external AWS accounts without an aws:PrincipalOrgID condition.
+  Glacier vaults store long-term archival data — backups, compliance
+  records, and audit logs. Cross-account access without an org
+  boundary means the external account can initiate retrieval jobs
+  (glacier:InitiateJob), read archive contents
+  (glacier:GetJobOutput), or delete archives
+  (glacier:DeleteArchive). If the external account leaves the
+  organization, access persists.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17", "IAM-16"]
+scope_tags:
+  - aws
+  - glacier
+taxonomy:
+  - identity-perimeter
+  - trust-boundary
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_glacier_vault
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - archive.kind
+  - archive.glacier.policy_cross_account
+  - archive.glacier.policy_has_org_condition
+remediation:
+  description: >
+    Glacier vault access policy grants cross-account access without
+    an aws:PrincipalOrgID condition.
+  action: >
+    Add an aws:PrincipalOrgID condition to restrict access to
+    principals within the organization. For legitimate cross-org
+    access, use explicit account ARNs and document the trust
+    relationship.
+  example: |
+    {
+      "archive": {
+        "kind": "vault",
+        "glacier": {
+          "policy_cross_account": true,
+          "policy_has_org_condition": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.archive.kind
+      op: eq
+      value: vault
+    - field: properties.archive.glacier.policy_cross_account
+      op: eq
+      value: true
+    - field: properties.archive.glacier.policy_has_org_condition
+      op: eq
+      value: false
+tests:
+  - name: "cross-account without org condition fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:glacier:us-east-1:111122223333:vaults/compliance-archive"
+      asset_type: aws_glacier_vault
+      vendor: aws
+      properties:
+        archive:
+          kind: vault
+          glacier:
+            policy_cross_account: true
+            policy_has_org_condition: false
+  - name: "cross-account with org condition passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:glacier:us-east-1:111122223333:vaults/compliance-archive"
+      asset_type: aws_glacier_vault
+      vendor: aws
+      properties:
+        archive:
+          kind: vault
+          glacier:
+            policy_cross_account: true
+            policy_has_org_condition: true
+  - name: "no cross-account access passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:glacier:us-east-1:111122223333:vaults/internal-archive"
+      asset_type: aws_glacier_vault
+      vendor: aws
+      properties:
+        archive:
+          kind: vault
+          glacier:
+            policy_cross_account: false

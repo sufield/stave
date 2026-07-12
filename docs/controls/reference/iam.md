@@ -2747,6 +2747,21 @@ SCP does not deny sts:AssumeRoot in the organization. A compromised management a
 
 ---
 
+### CTL.IAM.SCP.CLOSEACCOUNT.001
+
+**SCP Does Not Deny account:CloseAccount**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+No SCP in the hierarchy denies account:CloseAccount. An attacker who compromises a member account admin can close the AWS account, permanently destroying all resources — EC2 instances, S3 data, RDS databases, IAM configuration, and audit trails. Account closure is irreversible after a 90-day grace period. Unlike resource deletion, closing the account eliminates the entire control plane in one API call.
+
+**Remediation:** Add an SCP that denies account:CloseAccount for all principals in member accounts. Apply it to the organization root.
+
+---
+
 ### CTL.IAM.SCP.CLOUDTRAIL.001
 
 **SCP Does Not Protect CloudTrail**
@@ -2939,6 +2954,21 @@ SCP does not restrict which AWS regions member accounts can use. Resources can b
 SCP does not deny iam:CreateAccessKey for root users in member accounts. Root access keys provide unrestricted API access to the entire AWS account — every service, every resource, every action. They bypass IAM policies and permission boundaries. Once created, root access keys persist until explicitly deleted.
 
 **Remediation:** Add an SCP that denies iam:CreateAccessKey when the principal is root. Apply via condition aws:PrincipalArn matching the root ARN pattern.
+
+---
+
+### CTL.IAM.SCP.STRATEGY.001
+
+**SCPs Use Deny-List Strategy Instead of Allow-List**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Organization SCPs use individual Deny statements for specific services (deny-list strategy) rather than a Deny with NotAction listing permitted services (allow-list strategy). An allow-list strategy is structurally stronger — new AWS services are denied by default until explicitly permitted, preventing exposure from newly launched services that bypass existing guardrails. A deny-list must be updated every time AWS launches a service that could be abused.
+
+**Remediation:** Consider migrating to an allow-list SCP strategy using Deny with NotAction. List only the services your organization uses; everything else is denied by default. This prevents exposure from newly launched AWS services.
 
 ---
 

@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.S3.REPLICATION.DEST.KMS.DELETION.001
+name: Replication Destination KMS Key Allows Unrestricted Deletion
+description: >
+  S3 replication destination bucket is encrypted with a KMS key
+  that does not restrict kms:ScheduleKeyDeletion. If an attacker
+  schedules the key for deletion (minimum 7-day waiting period),
+  all encrypted backup objects become permanently undecryptable
+  after the waiting period expires. The key should be in a separate
+  backup account with key policy restricting ScheduleKeyDeletion
+  to a break-glass role.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+  ccm_v4: ["BCR-08", "CEK-03"]
+scope_tags:
+  - aws
+  - s3
+  - kms
+taxonomy:
+  - data-protection
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: impact
+  base_impact: 9
+  blast_radius:
+    type: recovery
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - storage.kind
+  - storage.replication.enabled
+  - storage.replication.destination_kms_deletion_unrestricted
+remediation:
+  description: >
+    Replication destination bucket KMS key does not restrict
+    kms:ScheduleKeyDeletion. An attacker can schedule the key for
+    deletion, rendering all encrypted backup data permanently
+    undecryptable.
+  action: >
+    Update the KMS key policy to deny kms:ScheduleKeyDeletion
+    except for a dedicated break-glass role. Ideally, the backup
+    encryption key should reside in a separate backup account that
+    the source account cannot administer.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "replication": {
+          "enabled": true,
+          "destination_kms_deletion_unrestricted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.replication.enabled
+      op: eq
+      value: true
+    - field: properties.storage.replication.destination_kms_deletion_unrestricted
+      op: eq
+      value: true
+tests:
+  - name: "destination KMS key allows unrestricted deletion — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::prod-backup-dest"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          replication:
+            enabled: true
+            destination_kms_deletion_unrestricted: true
+  - name: "destination KMS key restricts deletion — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::prod-backup-dest-safe"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          replication:
+            enabled: true
+            destination_kms_deletion_unrestricted: false

@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.S3.VERSIONING.NOEXPIRY.001
+name: Versioned Bucket Without Noncurrent Version Expiration
+description: >
+  S3 bucket has versioning enabled but no NoncurrentVersionExpiration
+  lifecycle rule. Every overwrite and delete creates a noncurrent
+  version that persists indefinitely — storage costs grow without
+  bound and incident recovery must sift through an unbounded version
+  history. The companion control CTL.S3.VERSIONING.LIFECYCLE.CONFLICT.001
+  catches the inverse (lifecycle too aggressive); this control catches
+  the absence of any lifecycle management for noncurrent versions.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-12"
+  soc2: "C1.2"
+  ccm_v4: ["DSP-16"]
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - trust-decay
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: impact
+observation_fields:
+  - storage.kind
+  - storage.versioning.enabled
+  - storage.lifecycle.has_noncurrent_expiration
+remediation:
+  description: >
+    S3 bucket has versioning enabled but no lifecycle rule expires
+    noncurrent versions. Old versions accumulate indefinitely,
+    increasing storage costs and complicating incident recovery.
+  action: >
+    Add a lifecycle rule with NoncurrentVersionExpiration set to a
+    retention period appropriate for your data classification —
+    30 days for non-sensitive data, longer for compliance-scoped
+    buckets. This bounds storage costs while preserving a recovery
+    window.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "versioning": {
+          "enabled": true
+        },
+        "lifecycle": {
+          "has_noncurrent_expiration": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.versioning.enabled
+      op: eq
+      value: true
+    - field: properties.storage.lifecycle.has_noncurrent_expiration
+      op: eq
+      value: false
+tests:
+  - name: "versioned bucket without noncurrent expiration — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::data-lake-primary"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          versioning:
+            enabled: true
+          lifecycle:
+            has_noncurrent_expiration: false
+  - name: "versioned bucket with noncurrent expiration — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::data-lake-managed"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          versioning:
+            enabled: true
+          lifecycle:
+            has_noncurrent_expiration: true
+  - name: "unversioned bucket — passes (versioning not enabled)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::static-assets"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          versioning:
+            enabled: false
+          lifecycle:
+            has_noncurrent_expiration: false

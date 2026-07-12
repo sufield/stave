@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.BACKUP.VAULT.POLICY.CROSSACCOUNT.001
+name: Backup Vault Access Policy Grants Cross-Account Access Without Organizational Boundary
+description: >
+  AWS Backup vault access policy grants actions to principals in
+  external AWS accounts without an aws:PrincipalOrgID condition.
+  Backup vaults contain recovery points — the last line of defense
+  against ransomware. Cross-account access without an org boundary
+  means the external account can delete recovery points
+  (backup:DeleteRecoveryPoint), copy them out
+  (backup:StartCopyJob), or read metadata
+  (backup:GetRecoveryPointRestoreMetadata). This is the ransomware
+  endgame — if backup vaults are accessible to a compromised
+  cross-account role, the attacker can destroy both production data
+  and backups.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "CC6.1"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - backup
+taxonomy:
+  - identity-perimeter
+  - trust-boundary
+  - data-protection
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_backup_vault
+params:
+  attack_stage: impact
+  base_impact: 9
+  blast_radius:
+    type: recovery
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - backup.kind
+  - backup.vault_policy.cross_account
+  - backup.vault_policy.has_org_condition
+remediation:
+  description: >
+    Backup vault access policy grants cross-account access without
+    an aws:PrincipalOrgID condition. External accounts can delete
+    or exfiltrate recovery points.
+  action: >
+    Add an aws:PrincipalOrgID condition to the vault access policy.
+    For backup vaults, prefer using AWS Backup Vault Lock to prevent
+    any modification of recovery points during the retention period.
+  example: |
+    {
+      "backup": {
+        "kind": "vault",
+        "vault_policy": {
+          "cross_account": true,
+          "has_org_condition": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.backup.kind
+      op: eq
+      value: vault
+    - field: properties.backup.vault_policy.cross_account
+      op: eq
+      value: true
+    - field: properties.backup.vault_policy.has_org_condition
+      op: eq
+      value: false
+tests:
+  - name: "cross-account vault access without org condition fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:backup:us-east-1:111122223333:backup-vault:prod-backups"
+      asset_type: aws_backup_vault
+      vendor: aws
+      properties:
+        backup:
+          kind: vault
+          vault_policy:
+            cross_account: true
+            has_org_condition: false
+  - name: "cross-account vault access with org condition passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:backup:us-east-1:111122223333:backup-vault:prod-backups"
+      asset_type: aws_backup_vault
+      vendor: aws
+      properties:
+        backup:
+          kind: vault
+          vault_policy:
+            cross_account: true
+            has_org_condition: true
+  - name: "no cross-account vault access passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:backup:us-east-1:111122223333:backup-vault:internal-backups"
+      asset_type: aws_backup_vault
+      vendor: aws
+      properties:
+        backup:
+          kind: vault
+          vault_policy:
+            cross_account: false
