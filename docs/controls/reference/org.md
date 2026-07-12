@@ -80,6 +80,21 @@ AWS Organizations must have a Service Control Policy that prevents confused depu
 
 ---
 
+### CTL.ORG.SCP.LIGHTSAIL.DENY.001
+
+**SCP Does Not Deny Lightsail Usage**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.6;
+
+Organization SCPs do not deny Lightsail service usage in member accounts. Lightsail operates outside the standard AWS governance boundary — it runs in an AWS-managed VPC, creates its own credential namespace, and is not recorded by AWS Config. Without an SCP denying lightsail:*, any IAM principal can provision shadow infrastructure invisible to the organization's CSPM, SIEM, and credential inventory.
+
+**Remediation:** Add an SCP denying lightsail:* for all principals. Exclude specific accounts if Lightsail is intentionally used.
+
+---
+
 ### CTL.ORG.TRUSTEDACCESS.001
 
 **AWS Organizations Trusted Access Must Be Reviewed**

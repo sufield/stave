@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2958
-**Pack hash:** `b51b84544a7cdf8c90cce8c479f62111f081fa8ba6b3718b7b300a265c6f0eb4`
+**Total controls:** 2963
+**Pack hash:** `862d4325130b18ce044e9d0f727667a6e6ed56b9757e12265a309b0181324e2b`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 305 |
-| high | 1282 |
+| high | 1286 |
 | info | 18 |
 | low | 228 |
-| medium | 1125 |
+| medium | 1126 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,10 +27,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1304 |
+| exposure | 1307 |
 | governance | 623 |
 | hygiene | 18 |
-| identity | 526 |
+| identity | 528 |
 | lifecycle | 31 |
 | network | 43 |
 | resilience | 35 |
@@ -60,7 +60,7 @@ GitHub. Pick a service below.
 | [CLOUDFLARE](reference/cloudflare.md) | 29 |
 | [CLOUDFORMATION](reference/cloudformation.md) | 9 |
 | [CLOUDFRONT](reference/cloudfront.md) | 72 |
-| [CLOUDTRAIL](reference/cloudtrail.md) | 51 |
+| [CLOUDTRAIL](reference/cloudtrail.md) | 52 |
 | [CLOUDWATCH](reference/cloudwatch.md) | 67 |
 | [CODEBUILD](reference/codebuild.md) | 12 |
 | [CODECOMMIT](reference/codecommit.md) | 2 |
@@ -93,14 +93,14 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 16 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 243 |
+| [IAM](reference/iam.md) | 244 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |
 | [KMS](reference/kms.md) | 47 |
 | [LAMBDA](reference/lambda.md) | 87 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
-| [LIGHTSAIL](reference/lightsail.md) | 3 |
+| [LIGHTSAIL](reference/lightsail.md) | 5 |
 | [M365](reference/m365.md) | 73 |
 | [MACIE](reference/macie.md) | 4 |
 | [META](reference/meta.md) | 1 |
@@ -110,7 +110,7 @@ GitHub. Pick a service below.
 | [NEPTUNE](reference/neptune.md) | 20 |
 | [NETFIREWALL](reference/netfirewall.md) | 12 |
 | [OPENSEARCH](reference/opensearch.md) | 132 |
-| [ORG](reference/org.md) | 6 |
+| [ORG](reference/org.md) | 7 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 72 |
 | [REDSHIFT](reference/redshift.md) | 26 |

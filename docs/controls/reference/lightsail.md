@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.LIGHTSAIL.ACCESS.KEY.001
+
+**Lightsail Bucket Has Active Access Keys**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5; owasp_nhi: NHI1; soc2: CC6.1;
+
+A Lightsail bucket has active access keys created via lightsail:CreateBucketAccessKey — outside the IAM credential lifecycle. Not in credential reports, not subject to rotation.
+
+**Remediation:** Delete with aws lightsail delete-bucket-access-key; migrate to IAM.
+
+---
+
 ### CTL.LIGHTSAIL.BLUEPRINT.RETIRED.001
 
 **Lightsail Instance Must Not Use Retired Blueprint**
@@ -47,6 +62,21 @@ Lightsail managed databases must not be publicly accessible.
 Lightsail instances with public IPs must not have firewall rules allowing broad public access to service ports.
 
 **Remediation:** Restrict firewall rules to specific CIDR ranges.
+
+---
+
+### CTL.LIGHTSAIL.SERVICE.ACTIVE.001
+
+**Lightsail Service Is Active in Account**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-8; soc2: CC6.1;
+
+The account has active Lightsail resources. Lightsail operates in an AWS-managed VPC outside the customer's governance boundary: not in AWS Config, not in VPC Flow Logs, own credential namespace.
+
+**Remediation:** Evaluate intent; if unwanted, decommission and SCP deny lightsail:*.
 
 ---
 

@@ -1586,6 +1586,21 @@ IAM account safety cannot be proven when root account MFA status or access key d
 
 ---
 
+### CTL.IAM.LIGHTSAIL.CREDENTIAL.CREATE.001
+
+**IAM Policy Grants Lightsail Credential Creation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI1; soc2: CC6.3;
+
+An IAM principal has a policy granting lightsail:CreateBucketAccessKey. This allows creating S3-compatible access keys outside the IAM credential lifecycle — invisible to credential reports, rotation policies, and inventory tools. This is a privilege escalation vector: the attacker converts IAM-governed access into a shadow credential that survives key rotation and even IAM user deletion.
+
+**Remediation:** Remove lightsail:CreateBucketAccessKey from the principal's policies.
+
+---
+
 ### CTL.IAM.LIST.RESTRICT.001
 
 **IAM Policies Must Not Grant Broad iam:List* Without Scope**

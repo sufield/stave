@@ -519,6 +519,21 @@ A CloudTrail Lake event data store has a retention period shorter than 365 days.
 
 ---
 
+### CTL.CLOUDTRAIL.LIGHTSAIL.BLIND.001
+
+**CloudTrail Does Not Log Lightsail Management Events**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+CloudTrail is not configured to log Lightsail management events. If Lightsail management events are not logged, an attacker can create instances, open ports, create bucket access keys, and exfiltrate data through Lightsail without leaving an audit trail. Lightsail operates outside AWS Config — CloudTrail is the only detection surface for Lightsail API activity.
+
+**Remediation:** Ensure event selectors include Lightsail management events. With advanced selectors, add eventSource = lightsail.amazonaws.com.
+
+---
+
 ### CTL.CLOUDTRAIL.LOG.VALIDATION.001
 
 **CloudTrail Log File Validation Must Be Enabled**

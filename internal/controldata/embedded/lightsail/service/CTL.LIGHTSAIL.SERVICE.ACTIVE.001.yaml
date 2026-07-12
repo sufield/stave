@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.LIGHTSAIL.SERVICE.ACTIVE.001
+name: Lightsail Service Is Active in Account
+description: >
+  The account has active Lightsail resources. Lightsail operates in an
+  AWS-managed VPC outside the customer's governance boundary: not in
+  AWS Config, not in VPC Flow Logs, own credential namespace.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-8"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-04"]
+scope_tags: [aws, lightsail]
+taxonomy: [resource-sprawl]
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_account]
+params:
+  attack_stage: discovery
+observation_fields: [account.lightsail.has_active_resources]
+remediation:
+  description: Lightsail resources active outside normal governance.
+  action: Evaluate intent; if unwanted, decommission and SCP deny lightsail:*.
+  example: |
+    {"account": {"lightsail": {"has_active_resources": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.account.lightsail.has_active_resources
+      op: eq
+      value: true
+tests:
+  - name: "active lightsail fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:root"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account: {lightsail: {has_active_resources: true}}
+  - name: "no lightsail passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::444455556666:root"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account: {lightsail: {has_active_resources: false}}

@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.LIGHTSAIL.BLIND.001
+name: CloudTrail Does Not Log Lightsail Management Events
+description: >
+  CloudTrail is not configured to log Lightsail management events.
+  If Lightsail management events are not logged, an attacker can
+  create instances, open ports, create bucket access keys, and
+  exfiltrate data through Lightsail without leaving an audit trail.
+  Lightsail operates outside AWS Config — CloudTrail is the only
+  detection surface for Lightsail API activity.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-01"]
+scope_tags:
+  - aws
+  - cloudtrail
+taxonomy:
+  - logging
+  - detection-evasion
+  - resource-sprawl
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cloudtrail_trail
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - audit_trail.kind
+  - audit_trail.lightsail_events.logged
+remediation:
+  description: >
+    CloudTrail trail does not log Lightsail management events.
+  action: >
+    Ensure event selectors include Lightsail management events.
+    With advanced selectors, add eventSource = lightsail.amazonaws.com.
+  example: |
+    {
+      "audit_trail": {
+        "kind": "trail",
+        "lightsail_events": {
+          "logged": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit_trail.kind
+      op: eq
+      value: trail
+    - field: properties.audit_trail.lightsail_events.logged
+      op: eq
+      value: false
+tests:
+  - name: "trail not logging Lightsail events fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/main-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit_trail:
+          kind: trail
+          lightsail_events:
+            logged: false
+  - name: "trail logging Lightsail events passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:444455556666:trail/full-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit_trail:
+          kind: trail
+          lightsail_events:
+            logged: true
