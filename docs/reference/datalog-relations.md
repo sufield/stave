@@ -27,6 +27,7 @@ Run: `go run ./internal/tools/gendatalogdocs`
 | [`has_delegation_scope_exceeded_for`](#has_delegation_scope_exceeded_for) | `role: symbol, scope: symbol` | input |  |
 | [`resource_policy_principal`](#resource_policy_principal) | `resource: symbol, principal: symbol` | input |  |
 | [`resource_policy_action`](#resource_policy_action) | `resource: symbol, action: symbol` | input |  |
+| [`grants_cross_account_access`](#grants_cross_account_access) | `resource: symbol, external_principal: symbol, action: symbol, grant_type: symbol` | input |  |
 | [`maps_unauth_to`](#maps_unauth_to) | `pool: symbol, role: symbol` | input |  |
 | [`maps_auth_to`](#maps_auth_to) | `pool: symbol, role: symbol` | input |  |
 | [`allows_unauthenticated`](#allows_unauthenticated) | `pool: symbol, flag: symbol` | input |  |
@@ -289,6 +290,16 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ```datalog
 .decl resource_policy_action(resource: symbol, action: symbol)
+```
+
+### grants_cross_account_access
+
+**Source:** `reasoning/souffle/iam/schema.dl`
+
+**Kind:** input
+
+```datalog
+.decl grants_cross_account_access(resource: symbol, external_principal: symbol, action: symbol, grant_type: symbol)
 ```
 
 ### maps_unauth_to

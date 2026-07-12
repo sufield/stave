@@ -62,6 +62,10 @@ type Config struct {
 	// behavior.
 	ChainsDir string
 
+	// GraphFindingsDir points to pre-computed Soufflé .csv output.
+	// When set, graph-based chain findings are appended to the report.
+	GraphFindingsDir string
+
 	// ExemptionRules carries asset-level exemptions evaluated
 	// before the engine fires. Assets matching any rule are
 	// excluded from evaluation entirely and surfaced under

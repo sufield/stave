@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "ffbeef503f25a73763eac15e11301db16ec3bb44839a132fa1df682edca42144",
+    "policy_fingerprint": "ea9f5ba504ccbcbcb23f745a62e4a9f2cbb14d15860be56a365a9cd42fe4525c",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -95,6 +95,7 @@
         },
         "action": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set."
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,

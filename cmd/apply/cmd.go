@@ -113,6 +113,7 @@ type Options struct {
 	NewSince           string
 	SARIFBaseline      string
 	AssertRecent       string
+	GraphFindingsDir   string
 	Verbose            bool
 	Auto               bool // --auto: print severity plan, then evaluate
 }
@@ -273,6 +274,7 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.StringVar(&o.NewSince, "new-since", "", "Show only findings not present in assessments within this window (e.g. 7d)")
 	f.StringVar(&o.SARIFBaseline, "baseline", "", "SARIF baseline file for baseline state comparison")
 	f.StringVar(&o.AssertRecent, "assert-recent", "", "Fail if no snapshot newer than this duration (e.g. 48h)")
+	f.StringVar(&o.GraphFindingsDir, "graph-findings", "", "Directory of pre-computed Soufflé .csv output for graph-based chain detection")
 	f.BoolVarP(&o.Verbose, "verbose", "v", false, "Show full evidence, reasoning, and remediation for each finding")
 	f.BoolVar(&o.Auto, "auto", false, "Run discover→plan→evaluate: resolve services, show severity plan, evaluate in weighted order")
 }

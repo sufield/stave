@@ -53,6 +53,7 @@ func applyInputs(cfg Config) applycore.Inputs {
 		SnapshotsDir:        cfg.SnapshotsDir,
 		ControlsDir:         cfg.ControlsDir,
 		ChainsDir:           cfg.ChainsDir,
+		GraphFindingsDir:    cfg.GraphFindingsDir,
 		IntegrityManifest:   cfg.IntegrityManifest,
 		IntegrityPublicKey:  cfg.IntegrityPublicKey,
 		MaxUnsafe:           cfg.MaxUnsafe,

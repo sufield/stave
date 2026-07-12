@@ -118,6 +118,11 @@ type Inputs struct {
 	// after load, so the report, summary, and fingerprint reflect only the
 	// scoped set.
 	ControlIDAllowlist []string
+
+	// GraphFindingsDir points to a directory of pre-computed Soufflé .csv
+	// output. When set, graph-based chain findings are ingested and appended
+	// to the report's ChainFindings alongside threshold-based chains.
+	GraphFindingsDir string
 }
 
 // Result is the engine's output: the full ComplianceReport plus the
@@ -279,6 +284,7 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 		appeval.WithCELEvaluator(celEval),
 		appeval.WithTracer(in.Tracer),
 		appeval.WithChainDefs(chainDefs),
+		appeval.WithGraphFindingsDir(in.GraphFindingsDir),
 		appeval.WithSLAConfig(in.SLAConfig),
 	}
 	assessmentCfg := appeval.NewConfig(plan, opts...)

@@ -45,6 +45,7 @@ type AssessmentConfig struct {
 	PredicateEval       policy.PredicateEval
 	Tracer              ports.Tracer
 	ChainDefs           []policy.ChainDefinition // Optional chain definitions for risk reasoning
+	GraphFindingsDir    string                   // Optional pre-computed Soufflé output directory
 	SLAConfig           *evaluation.SLAConfig    // Optional SLA policy for deadline enforcement
 }
 
@@ -257,7 +258,7 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 
 		// Run the risk reasoning engine: detect chain-based compound findings
 		// and build an attack stage summary from the evaluation results.
-		w.enrichWithRiskReasoning(&report, auditData.Controls, cfg.ChainDefs, auditData.Snapshots)
+		w.enrichWithRiskReasoning(&report, auditData.Controls, cfg.ChainDefs, cfg.GraphFindingsDir, auditData.Snapshots)
 
 		// Persist BEFORE the SLA pass so the cached report stays
 		// clock-independent. Best-effort: a persist failure is a
@@ -364,6 +365,7 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	report *evaluation.ComplianceReport,
 	controls []policy.ControlDefinition,
 	chainDefs []policy.ChainDefinition,
+	graphFindingsDir string,
 	snapshots []asset.Snapshot,
 ) {
 	if len(report.Findings) == 0 && len(report.MarkerFindings) == 0 {
@@ -399,6 +401,15 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 		report.NearMissChains = risk.DetectNearMisses(failures, chainDefs, scopeResolver)
 		annotateChainMembership(report)
 		annotateExploitability(report)
+	}
+
+	// Ingest pre-computed graph-based chain findings from Soufflé output.
+	if graphFindingsDir != "" {
+		graphFindings, err := ingestGraphFindings(graphFindingsDir)
+		if err != nil && w.Logger != nil {
+			w.Logger.Warn("graph findings ingestion failed", "dir", graphFindingsDir, "err", err)
+		}
+		report.ChainFindings = append(report.ChainFindings, graphFindings...)
 	}
 
 	annotateDecidingLayer(report)
@@ -615,5 +626,5 @@ func hasAnyPrefix(s string, prefixes ...string) bool {
 // != nil` but a future reader would silently drop diagnostic output.
 func EnrichReport(report *evaluation.ComplianceReport, controls []policy.ControlDefinition, chainDefs []policy.ChainDefinition, snapshots []asset.Snapshot) {
 	w := &AuditWorkflow{Logger: slog.Default()}
-	w.enrichWithRiskReasoning(report, controls, chainDefs, snapshots)
+	w.enrichWithRiskReasoning(report, controls, chainDefs, "", snapshots)
 }

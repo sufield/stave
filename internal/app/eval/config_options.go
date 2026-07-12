@@ -78,6 +78,14 @@ func WithChainDefs(defs []policy.ChainDefinition) Option {
 	}
 }
 
+// WithGraphFindingsDir sets the directory containing pre-computed Soufflé
+// output (.csv files) for graph-based chain detection.
+func WithGraphFindingsDir(dir string) Option {
+	return func(cfg *AssessmentConfig) {
+		cfg.GraphFindingsDir = dir
+	}
+}
+
 // WithPredicateParser constructs the withpredicateparser component.
 func WithPredicateParser(fn func(any) (*policy.UnsafePredicate, error)) Option {
 	return func(cfg *AssessmentConfig) {

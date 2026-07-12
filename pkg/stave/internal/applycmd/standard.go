@@ -87,6 +87,10 @@ type StandardRequest struct {
 	// ControlIDAllowlist scopes evaluation to only these control IDs
 	// (`apply --pack`). Empty = whole catalog.
 	ControlIDAllowlist []string
+
+	// GraphFindingsDir points to pre-computed Soufflé .csv output.
+	// When set, graph-based chain findings are appended to the report.
+	GraphFindingsDir string
 }
 
 // StandardResult is the rendered outcome of a standard evaluation. Everything
@@ -188,6 +192,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 		ContextName:         req.ContextName,
 		ObservationRepo:     obsRepo,
 		ControlIDAllowlist:  req.ControlIDAllowlist,
+		GraphFindingsDir:    req.GraphFindingsDir,
 	})
 	if err != nil {
 		return StandardResult{}, fmt.Errorf("evaluate: %w", err)

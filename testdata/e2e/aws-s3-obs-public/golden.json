@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "4ca8d66adb992d99920ccc81550fc5fdacd106df3733fc1aee7f0bda1727ec7b",
+    "policy_fingerprint": "ea9f5ba504ccbcbcb23f745a62e4a9f2cbb14d15860be56a365a9cd42fe4525c",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -222,6 +222,7 @@
           "narrative": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n"
         }
       ],
+      "exploitability": "exploitable",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -433,6 +434,7 @@
           "narrative": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n"
         }
       ],
+      "exploitability": "exploitable",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -564,6 +566,7 @@
         },
         "action": "Enable all four S3 Block Public Access settings at the account level using aws s3control put-public-access-block with the --account-id parameter. This blocks public access for all current and future buckets in the account. If specific buckets require public access, use CloudFront with Origin Access Control instead of making buckets directly public."
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -716,6 +719,7 @@
         },
         "action": "Enable MFA Delete (requires root credentials): aws s3api put-bucket-versioning --bucket public-test-bucket --versioning-configuration Status=Enabled,MFADelete=Enabled --mfa \"arn:aws:iam::\u003caccount\u003e:mfa/root-account-mfa-device \u003ccode\u003e\""
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -893,6 +897,7 @@
         },
         "action": "Add a VPC gateway endpoint for S3 and route bucket traffic through it, or add an IP condition (aws:SourceIp) to the bucket policy to restrict access to known CIDR ranges."
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -1065,6 +1070,7 @@
         },
         "action": "Set Object Ownership to BucketOwnerEnforced using aws s3api put-bucket-ownership-controls. This disables all ACLs on the bucket. Before enabling, audit existing ACL grants and migrate any legitimate access to bucket policies or IAM policies. All existing ACL-based access will stop working once BucketOwnerEnforced is set."
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -1241,6 +1247,7 @@
         },
         "action": "Enable the `BlockPublicAcls` flag on the bucket's Public Access Block configuration. From the CLI:\n\n    aws s3api put-public-access-block \\\n      --bucket public-test-bucket \\\n      --public-access-block-configuration \\\n      'BlockPublicAcls=true,IgnorePublicAcls=\u003ccurrent\u003e,BlockPublicPolicy=\u003ccurrent\u003e,RestrictPublicBuckets=\u003ccurrent\u003e'\n\nPreserve the other three flag values so enabling this one doesn't silently disable the others."
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -1396,6 +1403,7 @@
         },
         "action": "Enable the `BlockPublicPolicy` flag on the bucket's Public Access Block configuration. Preserve the other three flag values so enabling this one doesn't silently disable the others."
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -1551,6 +1559,7 @@
         },
         "action": "Enable the `IgnorePublicAcls` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicAcls` for full ACL-path coverage — the pair prevents new public ACL grants and neutralizes existing ones."
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -1706,6 +1715,7 @@
         },
         "action": "Enable the `RestrictPublicBuckets` flag on the bucket's Public Access Block configuration. Pair it with `BlockPublicPolicy` for full policy-path coverage — the pair prevents new public policy writes and limits the effect of any historical public grants to service principals."
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,

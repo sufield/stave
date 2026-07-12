@@ -102,6 +102,7 @@ func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio Sta
 		NewOnly:            opts.IsNewOnlyMode(),
 		NewSince:           opts.NewSince,
 		HistoryDir:         opts.HistoryDir,
+		GraphFindingsDir:   opts.GraphFindingsDir,
 	})
 	done()
 

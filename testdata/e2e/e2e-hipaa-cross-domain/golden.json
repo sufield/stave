@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "689501adba1894a5939e4a06768c89e140abfbe4165a80dd74e44094df3694a7",
+    "policy_fingerprint": "bb677c3d6128bd0b1b097cdd60011fc392c0f9f90b4445e806bddd5cb9bccbc8",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -385,6 +385,51 @@
         },
         "action": "Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail"
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "confused_deputy_path",
+          "chain_severity": "high",
+          "missing_control": "CTL.IAM.TRUST.EXTERNALID.001",
+          "description": "Cross-account IAM role lacks ExternalId condition on its trust policy, the role has overprivileged permissions, and CloudTrail is not capturing STS AssumeRole events. An attacker who compromises any trusted third-party can assume the victim's role without knowing the account ID, operate with broad permissions, and leave no audit trail in the victim's account.\n"
+        },
+        {
+          "chain_id": "confused_deputy_path",
+          "chain_severity": "high",
+          "missing_control": "CTL.IAM.TRUST.CONFUSEDDEPUTY.001",
+          "description": "Cross-account IAM role lacks ExternalId condition on its trust policy, the role has overprivileged permissions, and CloudTrail is not capturing STS AssumeRole events. An attacker who compromises any trusted third-party can assume the victim's role without knowing the account ID, operate with broad permissions, and leave no audit trail in the victim's account.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.GUARDDUTY.ENABLED.001",
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CONFIG.ENABLED.001",
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.VPC.FLOWLOG.001",
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "waf_blind_evasion",
+          "chain_severity": "critical",
+          "missing_control": "CTL.WAF.EVASION.OBSERVE.001",
+          "description": "WAF evasion observability is absent and detection layers are also failing. Evasion attempts using encoding or parser confusion succeed without generating any observable signal across any detection layer. The attack is invisible from detection through investigation.\n"
+        },
+        {
+          "chain_id": "waf_blind_evasion",
+          "chain_severity": "critical",
+          "missing_control": "CTL.WAF.RULES.OWASP.001",
+          "description": "WAF evasion observability is absent and detection layers are also failing. Evasion attempts using encoding or parser confusion succeed without generating any observable signal across any detection layer. The attack is invisible from detection through investigation.\n"
+        }
+      ],
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -546,6 +591,7 @@
           "narrative": "Any foundational Config failure: recorder stopped, recorder role deleted, or no delivery channel configured. Each independently means Config is non-functional — the configuration compliance system provides zero value. Threshold of 1 because each member represents complete or near-complete Config failure on its own.\n"
         }
       ],
+      "exploitability": "exploitable",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
@@ -704,6 +750,7 @@
           "narrative": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
         }
       ],
+      "exploitability": "exploitable",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -794,7 +841,8 @@
           "current_value": "true",
           "fix_action": "set to false (disable)"
         }
-      ]
+      ],
+      "deciding_layer": "identity_policy"
     },
     {
       "finding_id": "sha256:d1659912ae8d6344",
@@ -873,6 +921,7 @@
           "narrative": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
         }
       ],
+      "exploitability": "exploitable",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -963,7 +1012,8 @@
           "current_value": "false",
           "fix_action": "set to true (enable)"
         }
-      ]
+      ],
+      "deciding_layer": "identity_policy"
     },
     {
       "finding_id": "sha256:9ac53f47bd4f1f1b",
@@ -1041,6 +1091,7 @@
           "narrative": "RDS instance is running an EOL database engine with no security patches available. The instance is either unencrypted, publicly accessible, or both. An unpatched database engine with known CVEs is exposed through the public network or unencrypted storage. For PHI workloads this constitutes a direct compliance failure across multiple requirements.\n"
         }
       ],
+      "exploitability": "exploitable",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
@@ -1236,6 +1287,7 @@
           "narrative": "Either a subnet containing database resources has an Internet Gateway route or an RDS instance is configured as publicly accessible. The two controls check different layers — network routing vs the RDS `PubliclyAccessible` flag — but either condition alone creates a direct internet exposure path to the database. Firing on a single failure avoids the database-exposure false negative that would result from requiring both layers to fail simultaneously.\n"
         }
       ],
+      "exploitability": "exploitable",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
@@ -1381,6 +1433,81 @@
         },
         "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "data_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.EXPOSURE.EXFIL.001",
+          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
+        },
+        {
+          "chain_id": "data_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.EXPOSURE.EXFIL.002",
+          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
+        },
+        {
+          "chain_id": "data_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.ENABLED.001",
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.GUARDDUTY.ENABLED.001",
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CONFIG.ENABLED.001",
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "vpc_dns_exfiltration",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.DNSFIREWALL.ENABLED.001",
+          "description": "VPC has no DNS Firewall AND either DNS egress is unrestricted (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS resolution is unfiltered at the resolver AND either the network permits DNS to arbitrary upstream resolvers or the network traffic is unrecorded. DNS tunneling — encoding exfiltrated data in query names to an attacker-controlled authoritative server — succeeds and leaves no forensic evidence that can be correlated to the originating workload.\n"
+        },
+        {
+          "chain_id": "vpc_dns_exfiltration",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.SG.EGRESS.DNS.001",
+          "description": "VPC has no DNS Firewall AND either DNS egress is unrestricted (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS resolution is unfiltered at the resolver AND either the network permits DNS to arbitrary upstream resolvers or the network traffic is unrecorded. DNS tunneling — encoding exfiltrated data in query names to an attacker-controlled authoritative server — succeeds and leaves no forensic evidence that can be correlated to the originating workload.\n"
+        },
+        {
+          "chain_id": "vpc_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.VPC.SG.EGRESS.001",
+          "description": "Unrestricted egress plus either DNS tunneling possible or no flow logs. Data can leave via any protocol to any destination AND either DNS tunneling is available as a covert channel or the egress traffic is not logged.\n"
+        },
+        {
+          "chain_id": "vpc_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.VPC.SG.EGRESS.DNS.001",
+          "description": "Unrestricted egress plus either DNS tunneling possible or no flow logs. Data can leave via any protocol to any destination AND either DNS tunneling is available as a covert channel or the egress traffic is not logged.\n"
+        },
+        {
+          "chain_id": "vpc_no_inspection",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.NETWORK.FIREWALL.001",
+          "description": "VPC has no Network Firewall AND either flow logs are disabled or a security group permits unrestricted egress. There is no network inspection layer AND either no traffic visibility or no egress constraint. Traffic crosses the VPC boundary without being inspected, recorded, or restricted across multiple layers of control.\n"
+        },
+        {
+          "chain_id": "vpc_no_inspection",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.SG.EGRESS.001",
+          "description": "VPC has no Network Firewall AND either flow logs are disabled or a security group permits unrestricted egress. There is no network inspection layer AND either no traffic visibility or no egress constraint. Traffic crosses the VPC boundary without being inspected, recorded, or restricted across multiple layers of control.\n"
+        }
+      ],
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 75,
@@ -1527,6 +1654,7 @@
         },
         "action": "Set the minimum TLS version on the custom domain or API stage. For REST APIs, configure a security policy of TLS_1_2 on the custom domain name."
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -1670,6 +1798,27 @@
         },
         "action": "Configure automated backups via AWS Backup, RDS automated snapshots, or S3 cross-region replication depending on the resource type."
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "recovery_integrity_failure",
+          "chain_severity": "high",
+          "missing_control": "CTL.BACKUP.RECOVERY.ISOLATION.001",
+          "description": "Backup exists but recovery is structurally tied to the same fate as the source data. KMS key and backup reside in the same account as the source — a single account compromise (or ransomware attack) can destroy live data, delete the encryption key, and render backups unrecoverable. This is the \"Ransomware Path\" SPoF.\n"
+        },
+        {
+          "chain_id": "recovery_integrity_failure",
+          "chain_severity": "high",
+          "missing_control": "CTL.BACKUP.RECOVERY.ISOLATION.002",
+          "description": "Backup exists but recovery is structurally tied to the same fate as the source data. KMS key and backup reside in the same account as the source — a single account compromise (or ransomware attack) can destroy live data, delete the encryption key, and render backups unrecoverable. This is the \"Ransomware Path\" SPoF.\n"
+        },
+        {
+          "chain_id": "recovery_integrity_failure",
+          "chain_severity": "high",
+          "missing_control": "CTL.BACKUP.ENCRYPT.001",
+          "description": "Backup exists but recovery is structurally tied to the same fate as the source data. KMS key and backup reside in the same account as the source — a single account compromise (or ransomware attack) can destroy live data, delete the encryption key, and render backups unrecoverable. This is the \"Ransomware Path\" SPoF.\n"
+        }
+      ],
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -1816,6 +1965,7 @@
         },
         "action": "Configure the trail to use a KMS key for log encryption. Run: aws cloudtrail update-trail --name xxx --kms-key-id arn:aws:kms:..."
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -1965,6 +2115,7 @@
         },
         "action": "Enable log file validation on the trail. Run: aws cloudtrail update-trail --name xxx --enable-log-file-validation"
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -2106,6 +2257,21 @@
         },
         "action": "Set a retention policy on the log group. Run: aws logs put-retention-policy --log-group-name xxx --retention-in-days 365"
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "cloudwatch_log_ungoverned",
+          "chain_severity": "high",
+          "missing_control": "CTL.CLOUDWATCH.LOGGROUP.ENCRYPT.CMK.001",
+          "description": "Log group governance failures stack: no retention policy plus either no CMK encryption or a public resource policy. Logs accumulate indefinitely while either the data is not encrypted with a controlled key or anyone can inject log entries. Any one of these in isolation is a governance gap; two together is a log group nobody owns the integrity of. Threshold of 2 because a log group missing every governance setting indicates the controls were never applied, not that one slipped.\n"
+        },
+        {
+          "chain_id": "cloudwatch_log_ungoverned",
+          "chain_severity": "high",
+          "missing_control": "CTL.CLOUDWATCH.LOGGROUP.POLICY.PUBLIC.001",
+          "description": "Log group governance failures stack: no retention policy plus either no CMK encryption or a public resource policy. Logs accumulate indefinitely while either the data is not encrypted with a controlled key or anyone can inject log entries. Any one of these in isolation is a governance gap; two together is a log group nobody owns the integrity of. Threshold of 2 because a log group missing every governance setting indicates the controls were never applied, not that one slipped.\n"
+        }
+      ],
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 50,
@@ -2251,6 +2417,45 @@
         },
         "action": "Set MfaConfiguration to ON (required) on the user pool. Run: aws cognito-idp set-user-pool-mfa-config --user-pool-id xxx --mfa-configuration ON --software-token-mfa-configuration Enabled=true"
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "cognito_account_takeover",
+          "chain_severity": "critical",
+          "missing_control": "CTL.COGNITO.COMPROMISED.CREDS.001",
+          "description": "Cognito user pool without MFA enforcement, missing compromised credentials detection, and no WAF protection. The authentication endpoint is vulnerable to credential stuffing — attackers use leaked credentials from other breaches without MFA blocking, compromised credential checks, or rate limiting.\n"
+        },
+        {
+          "chain_id": "cognito_account_takeover",
+          "chain_severity": "critical",
+          "missing_control": "CTL.COGNITO.WAF.001",
+          "description": "Cognito user pool without MFA enforcement, missing compromised credentials detection, and no WAF protection. The authentication endpoint is vulnerable to credential stuffing — attackers use leaked credentials from other breaches without MFA blocking, compromised credential checks, or rate limiting.\n"
+        },
+        {
+          "chain_id": "cognito_recoverybypass",
+          "chain_severity": "high",
+          "missing_control": "CTL.COGNITO.RECOVERY.NOMFA.001",
+          "description": "MFA is enforced on the happy-path login AND the recovery flow doesn't require MFA AND the only second factor available is SMS. The MFA enforcement is theatre — an attacker uses the recovery path (email or SMS-driven) to bypass MFA entirely, and even if they faced MFA, SMS alone is defeatable via SIM swap. Threshold of 2 because the dangerous compound is when the recovery escape route stacks with a weak channel.\n"
+        },
+        {
+          "chain_id": "cognito_recoverybypass",
+          "chain_severity": "high",
+          "missing_control": "CTL.COGNITO.MFA.SMSONLY.001",
+          "description": "MFA is enforced on the happy-path login AND the recovery flow doesn't require MFA AND the only second factor available is SMS. The MFA enforcement is theatre — an attacker uses the recovery path (email or SMS-driven) to bypass MFA entirely, and even if they faced MFA, SMS alone is defeatable via SIM swap. Threshold of 2 because the dangerous compound is when the recovery escape route stacks with a weak channel.\n"
+        },
+        {
+          "chain_id": "cognito_weakauth",
+          "chain_severity": "critical",
+          "missing_control": "CTL.COGNITO.PASSWORD.001",
+          "description": "Authentication is brute-forceable in combination: the existing weak-password- policy detection plus the existing MFA- off detection plus the new lockout-absent detection. Each individually is a known weakness; together they describe a pool where credential-stuffing has no meaningful resistance — weak passwords, no second factor, no throttling. Threshold of 2 because the dangerous shape is when at least two layers are missing simultaneously.\n"
+        },
+        {
+          "chain_id": "cognito_weakauth",
+          "chain_severity": "critical",
+          "missing_control": "CTL.COGNITO.LOCKOUT.NONE.001",
+          "description": "Authentication is brute-forceable in combination: the existing weak-password- policy detection plus the existing MFA- off detection plus the new lockout-absent detection. Each individually is a known weakness; together they describe a pool where credential-stuffing has no meaningful resistance — weak passwords, no second factor, no throttling. Threshold of 2 because the dangerous shape is when at least two layers are missing simultaneously.\n"
+        }
+      ],
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -2333,7 +2538,8 @@
           "current_value": "false",
           "fix_action": "set to true (enable)"
         }
-      ]
+      ],
+      "deciding_layer": "identity_policy"
     },
     {
       "finding_id": "sha256:c2ed914d02c8ae20",
@@ -2406,6 +2612,7 @@
           "narrative": "Any evaluation failure: no rules at all (the catalog's existing CTL.CONFIG.RULES.001), rule disabled, or rule's custom Lambda deleted. Each independently means compliance evaluation is non-functional. Config records configuration but doesn't judge it. Threshold of 1 because each member represents a complete evaluation failure on its own.\n"
         }
       ],
+      "exploitability": "exploitable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 50,
@@ -2550,6 +2757,21 @@
         },
         "action": "Update the table encryption to use a customer-managed KMS key. Run: aws dynamodb update-table --table-name xxx --sse-specification Enabled=true,SSEType=KMS,KMSMasterKeyId=arn:..."
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "ddb_encryption_inconsistent",
+          "chain_severity": "high",
+          "missing_control": "CTL.DYNAMODB.DAX.ENCRYPT.REST.001",
+          "description": "Multiple encryption failures across the data and cache layers. The table is not encrypted with a customer-managed KMS key (CTL.DYNAMODB.ENCRYPT.001) AND either the DAX cluster is unencrypted at rest (CTL.DYNAMODB.DAX.ENCRYPT.REST.001) or the table and its DAX cluster have inconsistent encryption posture (CTL.DYNAMODB.ENCRYPT.DAX.MISMATCH.001). Threshold of 2 reflects that one encryption miss alone is a known posture concern; two together describe a workload whose data layer encryption story is broken at multiple points — the table doesn't have key-policy control and the cache layer doesn't have or doesn't match the table's protection.\n"
+        },
+        {
+          "chain_id": "ddb_encryption_inconsistent",
+          "chain_severity": "high",
+          "missing_control": "CTL.DYNAMODB.ENCRYPT.DAX.MISMATCH.001",
+          "description": "Multiple encryption failures across the data and cache layers. The table is not encrypted with a customer-managed KMS key (CTL.DYNAMODB.ENCRYPT.001) AND either the DAX cluster is unencrypted at rest (CTL.DYNAMODB.DAX.ENCRYPT.REST.001) or the table and its DAX cluster have inconsistent encryption posture (CTL.DYNAMODB.ENCRYPT.DAX.MISMATCH.001). Threshold of 2 reflects that one encryption miss alone is a known posture concern; two together describe a workload whose data layer encryption story is broken at multiple points — the table doesn't have key-policy control and the cache layer doesn't have or doesn't match the table's protection.\n"
+        }
+      ],
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -2695,6 +2917,7 @@
         },
         "action": "In-transit encryption can only be enabled at cluster creation. Create a new replication group with TransitEncryptionEnabled=true and migrate data from the existing cluster."
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -2834,6 +3057,7 @@
         },
         "action": "Add a listener rule on port 80 that redirects to HTTPS (443) with status code 301."
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -2955,6 +3179,7 @@
         },
         "action": "Update the HTTPS listener to use an ELBSecurityPolicy that enforces TLS 1.2 minimum (e.g., ELBSecurityPolicy-TLS-1-2-2017-01)."
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -3084,6 +3309,7 @@
         },
         "action": "Update the key policy to restrict Principal to specific IAM roles or accounts. Remove any statements with Principal \"*\"."
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -3224,6 +3450,7 @@
         },
         "action": "Enable automated backups with at least 7 days retention. Run: aws rds modify-db-instance --db-instance-identifier xxx --backup-retention-period 7 --apply-immediately"
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -3368,6 +3595,7 @@
         },
         "action": "Recreate the secret with a customer-managed KMS key specified. Secrets Manager does not allow changing the encryption key after creation."
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -3509,6 +3737,7 @@
         },
         "action": "Enable SSE-KMS on the topic. Run: aws sns set-topic-attributes --topic-arn xxx --attribute-name KmsMasterKeyId --attribute-value arn:aws:kms:..."
       },
+      "exploitability": "reachable",
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -3649,6 +3878,21 @@
         },
         "action": "Enable SSE-KMS on the queue. Run: aws sqs set-queue-attributes --queue-url xxx --attributes KmsMasterKeyId=arn:aws:kms:..."
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "sqs_encryption_incomplete",
+          "chain_severity": "high",
+          "missing_control": "CTL.SQS.ENCRYPT.CMK.001",
+          "description": "No CMK encryption plus either no transport enforcement or no encryption at all. Messages are either unencrypted at rest AND in transit, or encrypted with a key the organization cannot control AND transportable over plaintext HTTP. Threshold of 2 fires when at least two of the three SQS encryption gaps coexist on the same queue.\n"
+        },
+        {
+          "chain_id": "sqs_encryption_incomplete",
+          "chain_severity": "high",
+          "missing_control": "CTL.SQS.ENCRYPT.TRANSPORT.001",
+          "description": "No CMK encryption plus either no transport enforcement or no encryption at all. Messages are either unencrypted at rest AND in transit, or encrypted with a key the organization cannot control AND transportable over plaintext HTTP. Threshold of 2 fires when at least two of the three SQS encryption gaps coexist on the same queue.\n"
+        }
+      ],
       "exposure_score": 76.02739726027397,
       "score_breakdown": {
         "base_score": 75,
@@ -3790,6 +4034,7 @@
         },
         "action": "Enable Multi-AZ deployment or configure cross-AZ replication depending on the resource type (RDS Multi-AZ, S3 cross-region replication, ELB multi-AZ targets)."
       },
+      "exploitability": "reachable",
       "exposure_score": 50.68493150684932,
       "score_breakdown": {
         "base_score": 50,
@@ -3931,6 +4176,7 @@
         },
         "action": "Configure cross-region replication: S3 CRR, RDS cross-region read replica, or AWS Backup cross-region copy rule."
       },
+      "exploitability": "reachable",
       "exposure_score": 50.68493150684932,
       "score_breakdown": {
         "base_score": 50,
@@ -4067,6 +4313,7 @@
         },
         "action": "Enable cross-zone load balancing. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=load_balancing.cross_zone.enabled,Value=true"
       },
+      "exploitability": "reachable",
       "exposure_score": 50.68493150684932,
       "score_breakdown": {
         "base_score": 50,
@@ -4182,6 +4429,7 @@
         },
         "action": "Enable access logging to an S3 bucket. Run: aws elbv2 modify-load-balancer-attributes --load-balancer-arn xxx --attributes Key=access_logs.s3.enabled,Value=true Key=access_logs.s3.bucket,Value=my-elb-logs"
       },
+      "exploitability": "reachable",
       "exposure_score": 50.68493150684932,
       "score_breakdown": {
         "base_score": 50,
@@ -4303,6 +4551,21 @@
         },
         "action": "Enable CloudWatch log exports for the database engine. Run: aws rds modify-db-instance --db-instance-identifier xxx --cloudwatch-logs-export-configuration '{\"EnableLogTypes\":[\"audit\",\"error\",\"slowquery\"]}'"
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "rds_audit_blind",
+          "chain_severity": "high",
+          "missing_control": "CTL.RDS.PARAM.LOGEXPORT.001",
+          "description": "Database audit logging is not enabled AND either logs are not exported to CloudWatch OR the instance is on the default parameter group. The data-access audit trail is missing in two reinforcing ways: the database itself is not recording statements (no log_statement, no general_log, no audit plugin), AND either the records that would have been generated are not reaching the centralized logging pipeline, or every parameter is at the AWS default and customizing security parameters requires creating a custom group first. Post-compromise investigation has no record of what data was accessed or modified.\n"
+        },
+        {
+          "chain_id": "rds_audit_blind",
+          "chain_severity": "high",
+          "missing_control": "CTL.RDS.PARAM.GROUP.001",
+          "description": "Database audit logging is not enabled AND either logs are not exported to CloudWatch OR the instance is on the default parameter group. The data-access audit trail is missing in two reinforcing ways: the database itself is not recording statements (no log_statement, no general_log, no audit plugin), AND either the records that would have been generated are not reaching the centralized logging pipeline, or every parameter is at the AWS default and customizing security parameters requires creating a custom group first. Post-compromise investigation has no record of what data was accessed or modified.\n"
+        }
+      ],
       "exposure_score": 50.68493150684932,
       "score_breakdown": {
         "base_score": 50,
@@ -4444,6 +4707,39 @@
         },
         "action": "Modify the instance to enable Multi-AZ. Run: aws rds modify-db-instance --db-instance-identifier xxx --multi-az --apply-immediately"
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "redundancy_single_point",
+          "chain_severity": "critical",
+          "missing_control": "CTL.ELB.TARGET.SINGLEAZ.001",
+          "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
+        },
+        {
+          "chain_id": "redundancy_single_point",
+          "chain_severity": "critical",
+          "missing_control": "CTL.ELB.NETWORK.SINGLEAZ.001",
+          "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
+        },
+        {
+          "chain_id": "redundancy_single_point",
+          "chain_severity": "critical",
+          "missing_control": "CTL.VPC.NAT.SINGLEAZ.001",
+          "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
+        },
+        {
+          "chain_id": "redundancy_single_point",
+          "chain_severity": "critical",
+          "missing_control": "CTL.AUTOSCALING.MULTIAZ.001",
+          "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
+        },
+        {
+          "chain_id": "redundancy_single_point",
+          "chain_severity": "critical",
+          "missing_control": "CTL.EFS.MULTIAZ.001",
+          "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
+        }
+      ],
       "exposure_score": 50.68493150684932,
       "score_breakdown": {
         "base_score": 50,
@@ -4586,6 +4882,21 @@
         },
         "action": "Configure automatic rotation with a Lambda function. Run: aws secretsmanager rotate-secret --secret-id xxx --rotation-lambda-arn arn:aws:lambda:... --rotation-rules AutomaticallyAfterDays=90"
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "compromised_secret_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.SECRET.BLAST.001",
+          "description": "Secret with wide read access provides credentials to sensitive data. Multiple principals can read the secret, the secret targets a PHI or PII resource, and rotation may be stale. Compromising any reader provides a direct path to the sensitive data, bypassing IAM least privilege on the data resource itself.\n"
+        },
+        {
+          "chain_id": "compromised_secret_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.SECRET.BLAST.002",
+          "description": "Secret with wide read access provides credentials to sensitive data. Multiple principals can read the secret, the secret targets a PHI or PII resource, and rotation may be stale. Compromising any reader provides a direct path to the sensitive data, bypassing IAM least privilege on the data resource itself.\n"
+        }
+      ],
       "exposure_score": 50.68493150684932,
       "score_breakdown": {
         "base_score": 50,
