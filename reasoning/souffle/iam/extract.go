@@ -112,6 +112,9 @@ var declaredInputs = []string{
 	"has_data_perimeter_scp",
 	"bucket_account",
 	"router_account",
+	// G9 — cross-account resource policy grants, emitted by
+	// emitCrossAccountAccessFacts below.
+	"grants_cross_account_access",
 }
 
 // G3 default config — mirrors stave-authorization.yaml at the
@@ -232,6 +235,17 @@ func main() {
 		fail("emit bucket hijack facts: %v", err)
 	}
 	for k, v := range g4stats {
+		stats[k] = v
+	}
+
+	// G9 — cross-account resource policy grants. Joins
+	// resource_policy_principal + resource_policy_action per
+	// resource, filtering for external principals.
+	g9stats, err := emitCrossAccountAccessFacts(opts.out)
+	if err != nil {
+		fail("emit cross-account access facts: %v", err)
+	}
+	for k, v := range g9stats {
 		stats[k] = v
 	}
 
@@ -653,6 +667,106 @@ func emitBucketHijackFacts(outDir string) (map[string]int, error) {
 	}
 
 	return counts, nil
+}
+
+// ── G9: Cross-account resource policy grants ─────────────
+//
+// Joins resource_policy_principal × resource_policy_action per
+// resource, filtering for external principals. Emits a 4-column
+// relation: (resource, external_principal, action, grant_type).
+//
+// ponytail: over-approximates — products principal×action per
+// resource, not per policy statement. Acceptable: same detection
+// model as Prowler/ScoutSuite. Tighten with statement-indexed
+// facts if false positives surface in practice.
+
+func emitCrossAccountAccessFacts(outDir string) (map[string]int, error) {
+	counts := map[string]int{}
+
+	principals, err := readFactPairs(filepath.Join(outDir, "resource_policy_principal.facts"))
+	if err != nil {
+		return nil, fmt.Errorf("read resource_policy_principal.facts: %w", err)
+	}
+	actions, err := readFactPairs(filepath.Join(outDir, "resource_policy_action.facts"))
+	if err != nil {
+		return nil, fmt.Errorf("read resource_policy_action.facts: %w", err)
+	}
+
+	// Group by resource.
+	principalsByRes := map[string][]string{}
+	for _, p := range principals {
+		principalsByRes[p.Subject] = append(principalsByRes[p.Subject], p.Object)
+	}
+	actionsByRes := map[string][]string{}
+	for _, a := range actions {
+		actionsByRes[a.Subject] = append(actionsByRes[a.Subject], a.Object)
+	}
+
+	// Read bucket_account for S3 resources (ARN lacks account).
+	bucketAccts := map[string]string{}
+	baPairs, _ := readFactPairs(filepath.Join(outDir, "bucket_account.facts"))
+	for _, p := range baPairs {
+		bucketAccts[p.Subject] = p.Object
+	}
+
+	seen := map[string]struct{}{}
+	var rows []string
+	for resource, resPrincipals := range principalsByRes {
+		resActions := actionsByRes[resource]
+		if len(resActions) == 0 {
+			continue
+		}
+		resAcct := accountFromARN(resource)
+		if resAcct == "" {
+			resAcct = bucketAccts[resource]
+		}
+
+		for _, principal := range resPrincipals {
+			gt := classifyGrantType(principal, resAcct)
+			if gt == "" {
+				continue
+			}
+			for _, action := range resActions {
+				row := fmt.Sprintf("%s\t%s\t%s\t%s", resource, principal, action, gt)
+				if _, dup := seen[row]; dup {
+					continue
+				}
+				seen[row] = struct{}{}
+				rows = append(rows, row)
+			}
+		}
+	}
+	slices.Sort(rows)
+	if err := writeLines(filepath.Join(outDir, "grants_cross_account_access.facts"), rows, counts, "grants_cross_account_access"); err != nil {
+		return nil, err
+	}
+	return counts, nil
+}
+
+// classifyGrantType determines the grant type for a principal on a
+// resource owned by resAcct. Returns "" if same-account (not external).
+func classifyGrantType(principal, resAcct string) string {
+	if principal == "*" {
+		return "public"
+	}
+	// Service principals are not cross-account grants.
+	if strings.HasSuffix(principal, ".amazonaws.com") {
+		return ""
+	}
+	prinAcct := accountFromARN(principal)
+	if prinAcct == "" {
+		// Can't determine account — conservative: skip.
+		return ""
+	}
+	if resAcct == "" {
+		// Can't determine resource owner — emit as explicit
+		// (let downstream rules decide).
+		return "explicit"
+	}
+	if prinAcct == resAcct {
+		return ""
+	}
+	return "explicit"
 }
 
 // writeLines writes rows to a .facts file and updates counts.

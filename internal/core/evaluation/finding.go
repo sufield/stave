@@ -52,6 +52,10 @@ type Finding struct {
 	// chains that are exactly one control short of firing.
 	NearMissChains []NearMissEntry `json:"near_miss_chains,omitempty"`
 
+	// DecidingLayer identifies which policy layer caused this finding.
+	// Derived from the reasoning trace property paths.
+	DecidingLayer DecidingLayer `json:"deciding_layer,omitempty"`
+
 	// SLA fields — populated when an SLA deadline applies to this
 	// finding. Private: only AnnotateSLA mutates them. External
 	// readers go through the accessor methods (HasSLA, IsOverdue,
@@ -1234,6 +1238,20 @@ const (
 	// ExploitabilityReachable means the finding is true but not
 	// connected to a complete or near-complete attack path.
 	ExploitabilityReachable Exploitability = "reachable"
+)
+
+// DecidingLayer identifies which policy layer is responsible for a
+// finding — i.e. which layer the operator should change to remediate.
+type DecidingLayer string
+
+const (
+	LayerIdentityPolicy       DecidingLayer = "identity_policy"
+	LayerTrustPolicy          DecidingLayer = "trust_policy"
+	LayerSCPCeiling           DecidingLayer = "scp_ceiling"
+	LayerPermissionBoundary   DecidingLayer = "permission_boundary"
+	LayerResourcePolicy       DecidingLayer = "resource_control_policy"
+	LayerCredentialManagement DecidingLayer = "credential_management" //nolint:gosec // domain enum, not a credential
+	LayerFederation           DecidingLayer = "federation"
 )
 
 // NearMissEntry records that a finding is one control away from

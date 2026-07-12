@@ -133,6 +133,40 @@ cross_account_destination(Router, Bucket, RouterType, SourceAccount, DestAccount
     SourceAccount != DestAccount.
 
 // =====================================================
+// Chain F — Cross-Account Data Destruction.
+//
+// External principal granted destructive S3 action via
+// bucket policy on a stream destination bucket, and no
+// data perimeter SCP blocks the grant.
+// =====================================================
+
+.decl cross_account_data_destruction(external_principal: symbol, bucket: symbol, router: symbol, router_type: symbol, action: symbol)
+.output cross_account_data_destruction
+
+cross_account_data_destruction(ExtPrincipal, Bucket, Router, RouterType, Action) :-
+    grants_cross_account_access(Bucket, ExtPrincipal, Action, _),
+    is_stream_destination(Bucket, Router, RouterType),
+    bucket_account(Bucket, AccountId),
+    !has_data_perimeter_scp(AccountId),
+    (Action = "s3:DeleteObject" ; Action = "s3:DeleteObjectVersion" ;
+     Action = "s3:PutBucketPolicy" ; Action = "s3:*" ; Action = "*").
+
+// =====================================================
+// Chain G — Cross-Account Bucket Policy Rewrite.
+//
+// External principal can rewrite a bucket policy (via
+// direct resource policy grant or via an assumable role),
+// granting itself arbitrary further access.
+// =====================================================
+
+.decl cross_account_policy_rewrite(principal: symbol, bucket: symbol, grant_type: symbol)
+.output cross_account_policy_rewrite
+
+cross_account_policy_rewrite(ExtPrincipal, Bucket, GrantType) :-
+    grants_cross_account_access(Bucket, ExtPrincipal, Action, GrantType),
+    (Action = "s3:PutBucketPolicy" ; Action = "s3:*" ; Action = "*").
+
+// =====================================================
 // Summary counts.
 // =====================================================
 
@@ -144,3 +178,5 @@ _hijack_count("bucket_hijack_path",        n) :- n = count : { bucket_hijack_pat
 _hijack_count("telemetry_hijack_path",     n) :- n = count : { telemetry_hijack_path(_, _, _, _) }.
 _hijack_count("permission_asymmetry",      n) :- n = count : { permission_asymmetry(_, _, _, _, _) }.
 _hijack_count("cross_account_destination", n) :- n = count : { cross_account_destination(_, _, _, _, _) }.
+_hijack_count("cross_account_data_destruction", n) :- n = count : { cross_account_data_destruction(_, _, _, _, _) }.
+_hijack_count("cross_account_policy_rewrite",   n) :- n = count : { cross_account_policy_rewrite(_, _, _) }.

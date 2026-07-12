@@ -48,6 +48,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 		CorpusReference:     f.CorpusReference,
 		Delta:               fromDeltaPaths(f.Delta),
 		ContributingFactIDs: f.ContributingFactIDs,
+		DecidingLayer:       string(f.DecidingLayer),
 	}
 
 	if f.HasSource() {

@@ -252,6 +252,12 @@
         "type": "string"
       }
     },
+    "deciding_layer": {
+      "type": "string",
+      "enum": ["identity_policy", "trust_policy", "scp_ceiling", "permission_boundary", "resource_control_policy", "credential_management", "federation"],
+      "title": "Deciding Policy Layer",
+      "description": "Which policy layer the operator should change to remediate this finding. Derived from the reasoning trace property paths."
+    },
     "exploitability": {
       "type": "string",
       "enum": ["exploitable", "one_away", "reachable"],

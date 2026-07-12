@@ -62,6 +62,7 @@ type FindingDTO struct {
 	// post-evaluation; empty (omitted from JSON) when SIR build
 	// failed or the field was never stamped on the source finding.
 	ContributingFactIDs []string `json:"contributing_fact_ids,omitempty"`
+	DecidingLayer       string   `json:"deciding_layer,omitempty"`
 }
 
 // DeltaPathDTO represents one independent fix path in JSON output.

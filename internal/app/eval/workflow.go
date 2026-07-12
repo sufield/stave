@@ -401,6 +401,8 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 		annotateExploitability(report)
 	}
 
+	annotateDecidingLayer(report)
+
 	// Build attack stage summary from violation failures only —
 	// marker findings carry no attack-stage semantics on their own.
 	report.AttackStageSummary = risk.BuildAttackStageSummary(failures[:violationCount], controlLookup)
@@ -545,6 +547,56 @@ func annotateExploitability(report *evaluation.ComplianceReport) {
 		}
 		f.Exploitability = evaluation.ExploitabilityReachable
 	}
+}
+
+// annotateDecidingLayer derives the responsible policy layer for each
+// finding from its reasoning trace property paths. The mapping uses
+// property path prefixes to determine which IAM policy layer the
+// operator should change to remediate the finding.
+func annotateDecidingLayer(report *evaluation.ComplianceReport) {
+	for i := range report.Findings {
+		f := &report.Findings[i]
+		if len(f.ReasoningTrace) == 0 {
+			continue
+		}
+		f.DecidingLayer = inferDecidingLayer(f.ReasoningTrace)
+	}
+}
+
+func inferDecidingLayer(trace []evaluation.MatchedClause) evaluation.DecidingLayer {
+	for _, mc := range trace {
+		key := string(mc.ObservationKey)
+		switch {
+		case hasAnyPrefix(key, "identity.scp."):
+			return evaluation.LayerSCPCeiling
+		case hasAnyPrefix(key, "identity.role.boundary", "identity.nep.boundary",
+			"identity.escalation.delete_boundary"):
+			return evaluation.LayerPermissionBoundary
+		case hasAnyPrefix(key, "identity.trust", "identity.role.cross_account_trust",
+			"identity.vendor_trust"):
+			return evaluation.LayerTrustPolicy
+		case hasAnyPrefix(key, "organization.rcp"):
+			return evaluation.LayerResourcePolicy
+		case hasAnyPrefix(key, "identity.federation", "identity.sso", "identity.roles_anywhere"):
+			return evaluation.LayerFederation
+		case hasAnyPrefix(key, "identity.credentials", "identity.access_keys",
+			"identity.mfa", "identity.password", "identity.console_access",
+			"identity.console_password", "identity.root"):
+			return evaluation.LayerCredentialManagement
+		case hasAnyPrefix(key, "identity."):
+			return evaluation.LayerIdentityPolicy
+		}
+	}
+	return ""
+}
+
+func hasAnyPrefix(s string, prefixes ...string) bool {
+	for _, p := range prefixes {
+		if len(s) >= len(p) && s[:len(p)] == p {
+			return true
+		}
+	}
+	return false
 }
 
 // EnrichReport applies risk reasoning (chains, attack stages, exposure
