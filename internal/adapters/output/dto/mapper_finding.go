@@ -72,6 +72,12 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 	if f.IsChainMember() {
 		dto.ChainMembership = mapSlice(f.ChainMembershipEntries(), fromChainMembershipEntry)
 	}
+	if f.Exploitability != "" {
+		dto.Exploitability = string(f.Exploitability)
+	}
+	if len(f.NearMissChains) > 0 {
+		dto.NearMissChains = mapSlice(f.NearMissChains, fromNearMissEntry)
+	}
 
 	dto.SLADeadlineHours = f.SLADeadlinePtr()
 	if f.HasSLA() {
@@ -301,6 +307,15 @@ func fromChainMembershipEntry(e evaluation.ChainMembershipEntry) ChainMembership
 		ChainSeverity: e.ChainSeverity.String(),
 		StageSpan:     stages,
 		Narrative:     e.Narrative,
+	}
+}
+
+func fromNearMissEntry(e evaluation.NearMissEntry) NearMissEntryDTO {
+	return NearMissEntryDTO{
+		ChainID:        string(e.ChainID),
+		ChainSeverity:  e.ChainSeverity.String(),
+		MissingControl: string(e.MissingControl),
+		Description:    e.Description,
 	}
 }
 

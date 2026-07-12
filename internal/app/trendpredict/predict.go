@@ -138,9 +138,6 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 	var closed []mttrWindow
 
 	for _, a := range sorted {
-		if a.Run.EvalTime.Before(cutoff) {
-			continue
-		}
 		currentKeys := make(map[fkey]struct{}, len(a.Findings))
 		for i := range a.Findings {
 			k := fkey{string(a.Findings[i].ControlID), string(a.Findings[i].AssetID)}
@@ -155,7 +152,9 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 		for k, w := range open {
 			if _, ok := currentKeys[k]; !ok {
 				w.closeAt = a.Run.EvalTime
-				closed = append(closed, *w)
+				if !w.closeAt.Before(cutoff) {
+					closed = append(closed, *w)
+				}
 				delete(open, k)
 			}
 		}

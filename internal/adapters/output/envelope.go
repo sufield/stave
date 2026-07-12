@@ -34,6 +34,7 @@ func BuildAssessmentFromEnriched(enriched *appcontracts.EnrichedResult) *report.
 		ExceptedFindings:     enriched.Result.ExceptedFindings,
 		AcknowledgedFindings: enriched.Result.AcknowledgedFindings,
 		ChainFindings:        enriched.Result.ChainFindings,
+		NearMissChains:       enriched.Result.NearMissChains,
 		AttackStageSummary:   enriched.Result.AttackStageSummary,
 		TopExposures:         enriched.Result.TopExposures,
 		Issues:               enriched.Result.Issues,

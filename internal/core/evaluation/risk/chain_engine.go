@@ -341,6 +341,88 @@ func scopeAdjustedBlast(ctl *policy.ControlDefinition) float64 {
 	}
 }
 
+// DetectNearMisses finds chains that are exactly one control short of
+// firing. Uses the same bucket-building algorithm as DetectChains.
+func DetectNearMisses(
+	failures []FailingControl,
+	chains []policy.ChainDefinition,
+	scopeResolver ScopeResolver,
+) []findingsdata.NearMissChain {
+	controlToChains := make(map[kernel.ControlID][]int, len(chains))
+	for i := range chains {
+		for _, cid := range chains[i].ControlIDs {
+			controlToChains[cid] = append(controlToChains[cid], i)
+		}
+	}
+
+	buckets := make([]*chainBuckets, len(chains))
+	for j := range failures {
+		f := &failures[j]
+		for _, ci := range controlToChains[f.ControlID] {
+			chain := &chains[ci]
+			b := buckets[ci]
+			if b == nil {
+				b = &chainBuckets{
+					byScope:         make(map[string]map[kernel.ControlID]struct{}),
+					assetsByScope:   make(map[string]map[asset.ID]struct{}),
+					resolvedByScope: make(map[string]struct{}),
+				}
+				buckets[ci] = b
+			}
+			scope, resolved := groupingKey(chain, f.AssetID, scopeResolver)
+			if b.byScope[scope] == nil {
+				b.byScope[scope] = make(map[kernel.ControlID]struct{})
+				b.assetsByScope[scope] = make(map[asset.ID]struct{})
+			}
+			b.byScope[scope][f.ControlID] = struct{}{}
+			b.assetsByScope[scope][f.AssetID] = struct{}{}
+			if resolved {
+				b.resolvedByScope[scope] = struct{}{}
+			}
+		}
+	}
+
+	var nearMisses []findingsdata.NearMissChain
+	for i := range chains {
+		b := buckets[i]
+		if b == nil {
+			continue
+		}
+		chain := &chains[i]
+		for scope, scopeFailing := range b.byScope {
+			var failing, holding []kernel.ControlID
+			for _, cid := range chain.ControlIDs {
+				if _, ok := scopeFailing[cid]; ok {
+					failing = append(failing, cid)
+				} else {
+					holding = append(holding, cid)
+				}
+			}
+			// Near miss: exactly one control short of threshold.
+			if len(failing) == chain.EscalationThreshold-1 && len(failing) > 0 {
+				for _, missing := range holding {
+					nearMisses = append(nearMisses, findingsdata.NearMissChain{
+						ChainID:         chain.ID,
+						Description:     chain.Description,
+						ControlsFailing: failing,
+						MissingControl:  missing,
+						Severity:        chain.CompoundSeverity,
+						ScopeID:         scope,
+					})
+				}
+			}
+		}
+	}
+
+	slices.SortFunc(nearMisses, func(a, b findingsdata.NearMissChain) int {
+		if c := cmp.Compare(string(a.ChainID), string(b.ChainID)); c != 0 {
+			return c
+		}
+		return cmp.Compare(a.ScopeID, b.ScopeID)
+	})
+	return nearMisses
+}
+
 func buildNarrative(chain *policy.ChainDefinition, failing []kernel.ControlID) string {
 	ids := make([]string, len(failing))
 	for i, id := range failing {

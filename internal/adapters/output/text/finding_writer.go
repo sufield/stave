@@ -105,6 +105,13 @@ func (w *FindingWriter) marshalConcise(enriched *appcontracts.EnrichedResult) ([
 			d.f("  [%s] %s\n", result.ChainFindings[i].Severity, result.ChainFindings[i].ChainID)
 		}
 	}
+	if len(result.NearMissChains) > 0 {
+		d.f("\nNear-Miss Chains: %d\n", len(result.NearMissChains))
+		for i := range result.NearMissChains {
+			nm := &result.NearMissChains[i]
+			d.f("  [%s] %s — missing: %s\n", nm.Severity, nm.ChainID, nm.MissingControl)
+		}
+	}
 
 	if !env.Demo.IsTrue() {
 		d.f("\nRun with --verbose for full evidence, reasoning, and remediation.\n")
@@ -203,34 +210,45 @@ func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result *evaluatio
 		return
 	}
 
-	// Partition into chain-member and isolated findings via the
-	// finding's own predicate so the renderer stops asking about
-	// the slice length and asks the type instead.
-	var chainFindings, isolatedFindings []remediation.Finding
+	// Partition findings by exploitability tier.
+	var exploitableFindings, oneAwayFindings, reachableFindings []remediation.Finding
 	for i := range enriched {
-		if enriched[i].IsChainMember() {
-			chainFindings = append(chainFindings, enriched[i])
-		} else {
-			isolatedFindings = append(isolatedFindings, enriched[i])
+		switch enriched[i].Exploitability {
+		case evaluation.ExploitabilityExploitable:
+			exploitableFindings = append(exploitableFindings, enriched[i])
+		case evaluation.ExploitabilityOneAway:
+			oneAwayFindings = append(oneAwayFindings, enriched[i])
+		default:
+			reachableFindings = append(reachableFindings, enriched[i])
 		}
 	}
 
 	num := 1
-	if len(chainFindings) > 0 {
-		for i := range chainFindings {
-			f := &chainFindings[i]
-			w.writeChainMemberFinding(d, num, f)
-			num++
-		}
-		if len(isolatedFindings) > 0 {
+	for i := range exploitableFindings {
+		f := &exploitableFindings[i]
+		w.writeChainMemberFinding(d, num, f)
+		num++
+	}
+	if len(oneAwayFindings) > 0 {
+		if len(exploitableFindings) > 0 {
 			d.f("\n%s\n", strings.Repeat("\u2500", 60))
 		}
+		for i := range oneAwayFindings {
+			f := &oneAwayFindings[i]
+			w.writeOneAwayFinding(d, num, f)
+			num++
+		}
 	}
-	showIsolatedLabel := len(chainFindings) > 0
-	for i := range isolatedFindings {
-		f := &isolatedFindings[i]
-		w.writeIsolatedFinding(d, num, f, showIsolatedLabel)
-		num++
+	if len(reachableFindings) > 0 {
+		if len(exploitableFindings) > 0 || len(oneAwayFindings) > 0 {
+			d.f("\n%s\n", strings.Repeat("\u2500", 60))
+		}
+		showLabel := len(exploitableFindings) > 0 || len(oneAwayFindings) > 0
+		for i := range reachableFindings {
+			f := &reachableFindings[i]
+			w.writeIsolatedFinding(d, num, f, showLabel)
+			num++
+		}
 	}
 }
 
@@ -328,6 +346,16 @@ func (w *FindingWriter) writeChainMemberFinding(d *drawer, num int, f *remediati
 	narrative := strings.TrimSpace(f.PrimaryChainNarrative())
 	if narrative != "" {
 		d.f("   Chain: %s\n", narrative)
+	}
+}
+
+// writeOneAwayFinding writes a finding that is one control short of completing a chain.
+func (w *FindingWriter) writeOneAwayFinding(d *drawer, num int, f *remediation.Finding) {
+	d.f("\n%d. [ONE AWAY] %s  %s\n", num, f.ControlSeverity, f.ControlID)
+	d.f("   %s\n", f.ControlName)
+	d.f("   Asset: %s (%s/%s)\n", f.AssetID, f.AssetVendor, f.AssetType)
+	for _, nm := range f.NearMissChains {
+		d.f("   Chain %s — missing: %s\n", nm.ChainID, nm.MissingControl)
 	}
 }
 

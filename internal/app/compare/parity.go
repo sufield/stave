@@ -141,6 +141,7 @@ func AnalyzeParity(input ParityInput) *ParityResult {
 	sortBySev(consistentFail)
 	sortBySev(prodRegression)
 	sortBySev(envHardening)
+	sortBySev(mixed)
 
 	return &ParityResult{
 		GeneratedAt:    input.GeneratedAt,

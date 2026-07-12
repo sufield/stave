@@ -128,13 +128,12 @@ func Suggest(in Input) *Result {
 	meta := make(map[findingKey]*findingMeta)
 	assessmentCount := len(filtered)
 
-	for idx, a := range filtered {
+	for _, a := range sorted {
 		for i := range a.Findings {
 			f := &a.Findings[i]
 			k := findingKey{ControlID: f.ControlID, AssetID: f.AssetID}
-			m, exists := meta[k]
-			if !exists {
-				m = &findingMeta{
+			if _, exists := meta[k]; !exists {
+				meta[k] = &findingMeta{
 					controlID:   f.ControlID,
 					assetID:     f.AssetID,
 					severity:    f.SeverityLabel(),
@@ -142,15 +141,17 @@ func Suggest(in Input) *Result {
 					firstSeen:   a.Run.EvalTime,
 					appearances: make([]bool, assessmentCount),
 				}
-				meta[k] = m
 			}
+		}
+	}
+
+	for idx, a := range filtered {
+		for i := range a.Findings {
+			f := &a.Findings[i]
+			k := findingKey{ControlID: f.ControlID, AssetID: f.AssetID}
+			m := meta[k]
 			m.lastSeen = a.Run.EvalTime
 			m.appearances[idx] = true
-			// Owner upgrade: if a later sighting carries an owner key
-			// (where earlier ones did not), promote it. OwnerKey
-			// returns "" when no owner is set, so the empty check
-			// preserves an earlier-recorded owner against a later
-			// owner-less finding.
 			if k := f.OwnerKey(); k != "" {
 				m.ownerTeamID = k
 			}

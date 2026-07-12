@@ -28,6 +28,8 @@ type FindingDTO struct {
 	Remediation        RemediationSpecDTO        `json:"remediation"`
 	RemediationPlan    *RemediationPlanDTO       `json:"fix_plan,omitempty"`
 	ChainMembership    []ChainMembershipEntryDTO `json:"chain_membership,omitempty"`
+	Exploitability     string                    `json:"exploitability,omitempty"`
+	NearMissChains     []NearMissEntryDTO        `json:"near_miss_chains,omitempty"`
 	SLADeadlineHours   *float64                  `json:"sla_deadline_hours,omitempty"`
 	// SLABreached is a *bool so an SLA-bearing finding that is within
 	// its deadline serialises an explicit "sla_breached": false, while
@@ -151,6 +153,14 @@ type ChainMembershipEntryDTO struct {
 	ChainSeverity string   `json:"chain_severity"`
 	StageSpan     []string `json:"stage_span"`
 	Narrative     string   `json:"narrative"`
+}
+
+// NearMissEntryDTO mirrors evaluation.NearMissEntry.
+type NearMissEntryDTO struct {
+	ChainID        string `json:"chain_id"`
+	ChainSeverity  string `json:"chain_severity"`
+	MissingControl string `json:"missing_control"`
+	Description    string `json:"description,omitempty"`
 }
 
 // SourceRefDTO mirrors asset.SourceRef.

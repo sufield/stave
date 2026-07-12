@@ -341,6 +341,7 @@ type ComplianceReport struct {
 	MarkerFindings       []Finding                     `json:"marker_findings,omitempty"`
 	Issues               []Issue                       `json:"issues,omitempty"`
 	ChainFindings        []findings.CompoundFinding    `json:"chain_findings,omitempty"`
+	NearMissChains       []findings.NearMissChain      `json:"near_miss_chains,omitempty"`
 	AttackStageSummary   map[kernel.AttackStage]string `json:"attack_stage_summary,omitempty"`
 	TopExposures         []findings.ExposureRank       `json:"top_exposures,omitempty"`
 	ExceptedFindings     []ExceptedFinding             `json:"excepted_findings,omitempty"`

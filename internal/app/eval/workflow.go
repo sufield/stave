@@ -396,7 +396,9 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	if len(chainDefs) > 0 {
 		scopeResolver := risk.NewScopeResolverFromSnapshots(snapshots)
 		report.ChainFindings = risk.DetectChains(failures, chainDefs, controlLookup, scopeResolver)
+		report.NearMissChains = risk.DetectNearMisses(failures, chainDefs, scopeResolver)
 		annotateChainMembership(report)
+		annotateExploitability(report)
 	}
 
 	// Build attack stage summary from violation failures only —
@@ -499,6 +501,49 @@ func annotateChainMembership(report *evaluation.ComplianceReport) {
 				f.AddChainMembership(ce.membership)
 			}
 		}
+	}
+}
+
+// annotateExploitability classifies each finding as exploitable, one_away,
+// or reachable based on its position in the attack graph.
+func annotateExploitability(report *evaluation.ComplianceReport) {
+	// Build near-miss lookup: controlID → near-miss entries.
+	type nmEntry struct {
+		controlIDs sets.Set[kernel.ControlID]
+		nearMiss   evaluation.NearMissEntry
+	}
+	var nmEntries []nmEntry
+	for i := range report.NearMissChains {
+		nm := &report.NearMissChains[i]
+		cidSet := sets.New[kernel.ControlID](nm.ControlsFailing...)
+		nmEntries = append(nmEntries, nmEntry{
+			controlIDs: cidSet,
+			nearMiss: evaluation.NearMissEntry{
+				ChainID:        nm.ChainID,
+				ChainSeverity:  nm.Severity,
+				MissingControl: nm.MissingControl,
+				Description:    nm.Description,
+			},
+		})
+	}
+
+	for i := range report.Findings {
+		f := &report.Findings[i]
+		if f.IsChainMember() {
+			f.Exploitability = evaluation.ExploitabilityExploitable
+			continue
+		}
+		// Check near-miss chains.
+		for _, ne := range nmEntries {
+			if ne.controlIDs.Contains(f.ControlID) {
+				f.NearMissChains = append(f.NearMissChains, ne.nearMiss)
+			}
+		}
+		if len(f.NearMissChains) > 0 {
+			f.Exploitability = evaluation.ExploitabilityOneAway
+			continue
+		}
+		f.Exploitability = evaluation.ExploitabilityReachable
 	}
 }
 

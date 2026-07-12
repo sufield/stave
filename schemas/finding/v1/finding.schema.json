@@ -251,6 +251,20 @@
       "items": {
         "type": "string"
       }
+    },
+    "exploitability": {
+      "type": "string",
+      "enum": ["exploitable", "one_away", "reachable"],
+      "title": "Exploitability Classification",
+      "description": "Chain-derived exploitability: exploitable (participates in a fired chain), one_away (one control short of firing a chain), reachable (not connected to any attack path)."
+    },
+    "near_miss_chains": {
+      "type": "array",
+      "title": "Near-Miss Chains",
+      "description": "Chains this finding is one control short of completing. Present only when exploitability is one_away.",
+      "items": {
+        "$ref": "#/$defs/nearMissEntry"
+      }
     }
   },
   "$defs": {
@@ -627,6 +641,34 @@
           "type": "string"
         },
         "fix_action": {
+          "type": "string"
+        }
+      }
+    },
+    "nearMissEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "title": "Near-Miss Chain Entry",
+      "description": "One chain this finding is one control short of completing.",
+      "required": [
+        "chain_id",
+        "chain_severity",
+        "missing_control"
+      ],
+      "properties": {
+        "chain_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "chain_severity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "missing_control": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
           "type": "string"
         }
       }

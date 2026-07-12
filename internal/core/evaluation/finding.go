@@ -43,6 +43,15 @@ type Finding struct {
 	// of one or more chains that are currently firing.
 	ChainMembership []ChainMembershipEntry `json:"chain_membership,omitempty"`
 
+	// Exploitability classifies this finding's position in the attack
+	// graph: exploitable (chain firing), one_away (one control short),
+	// or reachable (no chain participation).
+	Exploitability Exploitability `json:"exploitability,omitempty"`
+
+	// NearMissChains is non-empty when this finding participates in
+	// chains that are exactly one control short of firing.
+	NearMissChains []NearMissEntry `json:"near_miss_chains,omitempty"`
+
 	// SLA fields — populated when an SLA deadline applies to this
 	// finding. Private: only AnnotateSLA mutates them. External
 	// readers go through the accessor methods (HasSLA, IsOverdue,
@@ -1208,6 +1217,32 @@ type ReachabilityContext struct {
 	HighestPrivilegePrincipal  kernel.PrincipalRef `json:"highest_privilege_principal,omitempty"`
 	ExternalPrincipalReachable bool                `json:"external_principal_reachable,omitempty"`
 	BlastRadiusScore           kernel.BlastRadius  `json:"blast_radius_score"`
+}
+
+// Exploitability classifies a finding's position in the attack graph.
+type Exploitability string
+
+const (
+	// ExploitabilityExploitable means this finding participates in a
+	// compound chain where all preconditions are present.
+	ExploitabilityExploitable Exploitability = "exploitable"
+
+	// ExploitabilityOneAway means this finding participates in a chain
+	// that would fire if one currently-absent precondition appeared.
+	ExploitabilityOneAway Exploitability = "one_away"
+
+	// ExploitabilityReachable means the finding is true but not
+	// connected to a complete or near-complete attack path.
+	ExploitabilityReachable Exploitability = "reachable"
+)
+
+// NearMissEntry records that a finding is one control away from
+// completing a compound chain.
+type NearMissEntry struct {
+	ChainID        kernel.ChainID   `json:"chain_id"`
+	ChainSeverity  policy.Severity  `json:"chain_severity"`
+	MissingControl kernel.ControlID `json:"missing_control"`
+	Description    string           `json:"description"`
 }
 
 // ChainMembershipEntry records that a finding contributed to a fired chain.

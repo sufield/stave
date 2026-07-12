@@ -36,6 +36,7 @@ type AssessmentRequest struct {
 	Findings             []remediation.Finding
 	MarkerFindings       []remediation.Finding
 	ChainFindings        []findings.CompoundFinding
+	NearMissChains       []findings.NearMissChain
 	AttackStageSummary   map[kernel.AttackStage]string
 	TopExposures         []findings.ExposureRank
 	Issues               []evaluation.Issue
@@ -245,6 +246,7 @@ type Assessment struct {
 	Findings             []remediation.Finding         `json:"findings"`
 	MarkerFindings       []remediation.Finding         `json:"marker_findings,omitempty"`
 	ChainFindings        []findings.CompoundFinding    `json:"chain_findings,omitempty"`
+	NearMissChains       []findings.NearMissChain      `json:"near_miss_chains,omitempty"`
 	AttackStageSummary   map[kernel.AttackStage]string `json:"attack_stage_summary,omitempty"`
 	TopExposures         []findings.ExposureRank       `json:"top_exposures,omitempty"`
 	Issues               []evaluation.Issue            `json:"issues,omitempty"`
@@ -270,6 +272,7 @@ func NewAssessment(req AssessmentRequest) *Assessment {
 		Findings:             emptyIfNil(req.Findings),
 		MarkerFindings:       req.MarkerFindings,
 		ChainFindings:        req.ChainFindings,
+		NearMissChains:       req.NearMissChains,
 		AttackStageSummary:   req.AttackStageSummary,
 		TopExposures:         req.TopExposures,
 		Issues:               req.Issues,

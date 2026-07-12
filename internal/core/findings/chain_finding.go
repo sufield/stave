@@ -61,3 +61,15 @@ func (c *CompoundFinding) SeverityLabel() string {
 	}
 	return c.Severity.String()
 }
+
+// NearMissChain represents a chain that is exactly one control short
+// of firing. The controls that ARE failing are tracked alongside the
+// single missing control that would complete the chain.
+type NearMissChain struct {
+	ChainID         kernel.ChainID     `json:"chain"`
+	Description     string             `json:"description,omitempty"`
+	ControlsFailing []kernel.ControlID `json:"controls_failing"`
+	MissingControl  kernel.ControlID   `json:"missing_control"`
+	Severity        policy.Severity    `json:"severity"`
+	ScopeID         string             `json:"scope_id,omitempty"`
+}
