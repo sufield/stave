@@ -145,6 +145,47 @@ path_condition(P, T, K, V) :-
     has_condition_value(P, V).
 
 // =====================================================
+// Cross-type lateral movement: role assumption → resource policy grant.
+//
+// Composes can_assume (trust chain) with grants_cross_account_access
+// (resource policy). Flags paths where identity assumes into account B,
+// and B's role has resource policy grants into account C's resources.
+// =====================================================
+
+.decl lateral_via_resource_policy(start: symbol, assumed_role: symbol,
+                                  target_resource: symbol, action: symbol,
+                                  grant_type: symbol)
+.output lateral_via_resource_policy
+
+lateral_via_resource_policy(P, Role, Resource, Action, GType) :-
+    access_path(P, Resource, Action, Role, _),
+    grants_cross_account_access(Resource, Role, Action, GType),
+    P != Role.
+
+// =====================================================
+// Trust cycle detection.
+//
+// A cycle exists when the transitive closure of can_assume returns
+// to the starting identity (or a role in the same account). This
+// indicates a misconfigured trust topology that enables privilege
+// laundering — assume out, then assume back with different perms.
+// =====================================================
+
+.decl assume_cycle(start: symbol, mid: symbol, hops: number)
+.output assume_cycle
+
+assume_cycle(A, B, 2) :-
+    can_assume(A, B),
+    can_assume(B, A),
+    A != B.
+
+assume_cycle(A, B, 3) :-
+    can_assume(A, B),
+    can_assume(B, C),
+    can_assume(C, A),
+    A != B, B != C, A != C.
+
+// =====================================================
 // Summary counts for the report header.
 // =====================================================
 
@@ -157,4 +198,6 @@ _discovery_count("escalation_path",    n) :- n = count : { escalation_path(_, _,
 _discovery_count("exfil_path",         n) :- n = count : { exfil_path(_, _, _, _) }.
 _discovery_count("external_reach",     n) :- n = count : { external_reach(_, _, _, _, _) }.
 _discovery_count("confused_deputy_path", n) :- n = count : { confused_deputy_path(_, _, _, _) }.
+_discovery_count("lateral_via_resource_policy", n) :- n = count : { lateral_via_resource_policy(_, _, _, _, _) }.
+_discovery_count("assume_cycle",       n) :- n = count : { assume_cycle(_, _, _) }.
 _discovery_count("path_condition",     n) :- n = count : { path_condition(_, _, _, _) }.

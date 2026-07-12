@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.IGW.001
+name: "SCP Does Not Deny Internet Gateway Creation"
+description: >
+  SCP does not deny internet gateway creation in member accounts.
+  Without this SCP, any identity in the organization can attach an
+  internet gateway to a VPC, enabling direct internet access from
+  accounts intended to be private (dev, sandbox, internal workloads).
+  The SCP must deny ec2:AttachInternetGateway,
+  ec2:CreateInternetGateway, and ec2:CreateEgressOnlyInternetGateway
+  to enforce the "private-by-default" network posture.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - iam
+  - vpc
+taxonomy:
+  - account-governance
+  - network-isolation
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_igw_creation
+remediation:
+  description: >
+    Organization SCPs do not prevent internet gateway creation.
+  action: >
+    Add an SCP that denies ec2:AttachInternetGateway,
+    ec2:CreateInternetGateway, and ec2:CreateEgressOnlyInternetGateway
+    for accounts that should be private. Apply to OUs containing dev,
+    sandbox, or internal-workload accounts. All three actions must be
+    denied — CreateInternetGateway without Attach is partial, and
+    CreateEgressOnlyInternetGateway is a separate path often missed.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_igw_creation": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_igw_creation
+      op: eq
+      value: false
+tests:
+  - name: "organization without IGW SCP fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_igw_creation: false
+  - name: "organization with IGW SCP passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_igw_creation: true

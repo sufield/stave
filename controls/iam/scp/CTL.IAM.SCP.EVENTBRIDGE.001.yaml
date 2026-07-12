@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.EVENTBRIDGE.001
+name: "SCP Does Not Protect EventBridge Rules"
+description: >
+  SCP does not deny EventBridge security rule modification in member
+  accounts. GuardDuty findings, Config compliance changes, and other
+  security events are routed through EventBridge rules. If these rules
+  are deleted, disabled, or have their targets removed, security alerts
+  stop flowing even though detection services are still running. This
+  is the alerting-pipeline variant of the "blinding the watchmen"
+  pattern — CloudTrail destination hijacking blinds log collection,
+  EventBridge rule deletion blinds alert delivery.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI6"
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["TVM-01"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - account-governance
+  - detection-evasion
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_eventbridge_rule_modify
+remediation:
+  description: >
+    Organization SCPs do not protect EventBridge security alert rules
+    from modification.
+  action: >
+    Add an SCP that denies events:DeleteRule, events:DisableRule, and
+    events:RemoveTargets on security-critical rule resources. All three
+    actions must be denied — an attacker who can delete the rule OR
+    disable it OR remove its targets achieves the same result: alerts
+    stop flowing.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_eventbridge_rule_modify": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_eventbridge_rule_modify
+      op: eq
+      value: false
+tests:
+  - name: "organization without EventBridge protection fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_eventbridge_rule_modify: false
+  - name: "organization with EventBridge protection passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_eventbridge_rule_modify: true

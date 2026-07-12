@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.ACCESSANALYZER.001
+name: "SCP Does Not Protect Access Analyzer"
+description: >
+  SCP does not deny IAM Access Analyzer deletion in member accounts.
+  Access Analyzer continuously monitors for resources that grant access
+  to external principals. If the analyzer is deleted, external-access
+  detection stops silently — no alarm fires, no finding is generated,
+  the organization simply loses visibility into cross-account grants.
+  This is the same "blinding" pattern as CloudTrail and EventBridge
+  disruption: the attacker disables the detection system before
+  performing the attack.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI6"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - account-governance
+  - detection-evasion
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_access_analyzer_delete
+remediation:
+  description: >
+    Organization SCPs do not protect IAM Access Analyzer from deletion.
+  action: >
+    Add an SCP that denies access-analyzer:DeleteAnalyzer for all
+    principals in member accounts. Use a condition to exempt the
+    designated break-glass role.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_access_analyzer_delete": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_access_analyzer_delete
+      op: eq
+      value: false
+tests:
+  - name: "organization without Access Analyzer protection fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_access_analyzer_delete: false
+  - name: "organization with Access Analyzer protection passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_access_analyzer_delete: true

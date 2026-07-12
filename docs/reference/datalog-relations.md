@@ -85,6 +85,8 @@ Run: `go run ./internal/tools/gendatalogdocs`
 | [`external_reach`](#external_reach) | `principal: symbol, resource: symbol, action: symbol, via_role: symbol, hops: number` | output | external_reach: access from a cross-account principal |
 | [`confused_deputy_path`](#confused_deputy_path) | `role: symbol, service: symbol, resource: symbol, action: symbol` | output | confused_deputy: service-trusted role reaches sensitive resource |
 | [`path_condition`](#path_condition) | `principal: symbol, target: symbol, cond_key: symbol, cond_value: symbol` | output | surface per-hop conditions for Z3 |
+| [`lateral_via_resource_policy`](#lateral_via_resource_policy) | `start: symbol, assumed_role: symbol, target_resource: symbol, action: symbol, grant_type: symbol` | output | Cross-type lateral movement: role assumption → resource policy grant |
+| [`assume_cycle`](#assume_cycle) | `start: symbol, mid: symbol, hops: number` | output | Trust cycle detection |
 
 ---
 
@@ -939,4 +941,37 @@ Condition edges — surface per-hop conditions for Z3.
 For each assume edge in a discovered path, emit the
 condition keys and values attached to the principal.
 The Go harness reads these to build Z3 constraints.
+
+### lateral_via_resource_policy
+
+**Source:** `reasoning/souffle/discovery/discovery.dl`
+
+**Kind:** output
+
+```datalog
+.decl lateral_via_resource_policy(start: symbol, assumed_role: symbol, target_resource: symbol, action: symbol, grant_type: symbol)
+```
+
+Cross-type lateral movement: role assumption → resource policy grant.
+
+Composes can_assume (trust chain) with grants_cross_account_access
+(resource policy). Flags paths where identity assumes into account B,
+and B's role has resource policy grants into account C's resources.
+
+### assume_cycle
+
+**Source:** `reasoning/souffle/discovery/discovery.dl`
+
+**Kind:** output
+
+```datalog
+.decl assume_cycle(start: symbol, mid: symbol, hops: number)
+```
+
+Trust cycle detection.
+
+A cycle exists when the transitive closure of can_assume returns
+to the starting identity (or a role in the same account). This
+indicates a misconfigured trust topology that enables privilege
+laundering — assume out, then assume back with different perms.
 

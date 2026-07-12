@@ -86,6 +86,9 @@ options:
       shorthand: f
       default_value: text
       usage: Output format (text, json, or sarif)
+    - name: graph-findings
+      usage: |
+        Directory of pre-computed Soufflé .csv output for graph-based chain detection
     - name: help
       shorthand: h
       default_value: "false"

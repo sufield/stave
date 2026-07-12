@@ -38,7 +38,7 @@ var graphChainRegistry = map[string]graphChainSpec{
 	"telemetry_hijack_path": {
 		ChainID:  "CHAIN.BUCKET.TELEMETRY_HIJACK.001",
 		Severity: policy.SeverityCritical,
-		Stages:   []kernel.AttackStage{"initial_access", "defense_evasion", "impact"},
+		Stages:   []kernel.AttackStage{"initial_access", "detection_evasion", "impact"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Identity %q has s3:DeleteBucket on security telemetry bucket %q (destination for %s %q). Bucket deletion blinds the telemetry pipeline.",
 				col(cols, 0), col(cols, 1), col(cols, 3), col(cols, 2))
@@ -94,6 +94,26 @@ var graphChainRegistry = map[string]graphChainSpec{
 				col(cols, 0), col(cols, 2), col(cols, 1), col(cols, 4), col(cols, 3))
 		},
 		Resource: func(cols []string) asset.ID { return asset.ID(col(cols, 1)) },
+	},
+	"lateral_via_resource_policy": {
+		ChainID:  "CHAIN.LATERAL.RESOURCE_POLICY.001",
+		Severity: policy.SeverityHigh,
+		Stages:   []kernel.AttackStage{"lateral_movement", "collection"},
+		Narrative: func(cols []string) string {
+			return fmt.Sprintf("Identity %q assumes role %q, which has resource-policy grant (%s, type %s) to %q. Cross-type lateral movement: role trust chain into resource policy grant.",
+				col(cols, 0), col(cols, 1), col(cols, 3), col(cols, 4), col(cols, 2))
+		},
+		Resource: func(cols []string) asset.ID { return asset.ID(col(cols, 2)) },
+	},
+	"assume_cycle": {
+		ChainID:  "CHAIN.TRUST.CYCLE.001",
+		Severity: policy.SeverityHigh,
+		Stages:   []kernel.AttackStage{"privilege_escalation", "lateral_movement"},
+		Narrative: func(cols []string) string {
+			return fmt.Sprintf("Trust cycle detected: %q ↔ %q (%s hops). A cycle in the role assumption graph enables privilege laundering — assume out, then assume back with different permissions.",
+				col(cols, 0), col(cols, 1), col(cols, 2))
+		},
+		Resource: func(cols []string) asset.ID { return asset.ID(col(cols, 0)) },
 	},
 }
 

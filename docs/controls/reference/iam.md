@@ -2717,6 +2717,21 @@ IAM role's S3 actions (s3:*, s3:GetObject, s3:PutObject, etc.) use Resource: * �
 
 ---
 
+### CTL.IAM.SCP.ACCESSANALYZER.001
+
+**SCP Does Not Protect Access Analyzer**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI6; soc2: CC6.1;
+
+SCP does not deny IAM Access Analyzer deletion in member accounts. Access Analyzer continuously monitors for resources that grant access to external principals. If the analyzer is deleted, external-access detection stops silently — no alarm fires, no finding is generated, the organization simply loses visibility into cross-account grants. This is the same "blinding" pattern as CloudTrail and EventBridge disruption: the attacker disables the detection system before performing the attack.
+
+**Remediation:** Add an SCP that denies access-analyzer:DeleteAnalyzer for all principals in member accounts. Use a condition to exempt the designated break-glass role.
+
+---
+
 ### CTL.IAM.SCP.ACTION.INVALID.001
 
 **SCP References Invalid IAM Actions**
@@ -2852,6 +2867,36 @@ Organization SCPs do not restrict S3 write operations to buckets within the orga
 
 ---
 
+### CTL.IAM.SCP.EBSENCRYPT.001
+
+**SCP Does Not Protect EBS Default Encryption**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SC-28; soc2: CC6.1;
+
+SCP does not deny disabling EBS default encryption. If EBS default encryption is enabled at the account level, any identity with ec2:DisableEbsEncryptionByDefault can turn it off, allowing new volumes to be created without encryption. The SCP prevents this setting from being toggled off, maintaining encryption-by-default as an organizational invariant.
+
+**Remediation:** Add an SCP that denies ec2:DisableEbsEncryptionByDefault for all principals in member accounts. This ensures that once EBS default encryption is enabled, it cannot be turned off.
+
+---
+
+### CTL.IAM.SCP.EVENTBRIDGE.001
+
+**SCP Does Not Protect EventBridge Rules**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SI-4; owasp_nhi: NHI6; soc2: CC7.2;
+
+SCP does not deny EventBridge security rule modification in member accounts. GuardDuty findings, Config compliance changes, and other security events are routed through EventBridge rules. If these rules are deleted, disabled, or have their targets removed, security alerts stop flowing even though detection services are still running. This is the alerting-pipeline variant of the "blinding the watchmen" pattern — CloudTrail destination hijacking blinds log collection, EventBridge rule deletion blinds alert delivery.
+
+**Remediation:** Add an SCP that denies events:DeleteRule, events:DisableRule, and events:RemoveTargets on security-critical rule resources. All three actions must be denied — an attacker who can delete the rule OR disable it OR remove its targets achieves the same result: alerts stop flowing.
+
+---
+
 ### CTL.IAM.SCP.FULLACCESS.001
 
 **Organizations Must Not Rely Solely on FullAWSAccess SCP**
@@ -2894,6 +2939,36 @@ SCP does not deny GuardDuty disablement in member accounts. A compromised accoun
 SCP does not deny known privilege escalation actions in member accounts. Actions like iam:CreatePolicyVersion, iam:AttachRolePolicy, iam:PutRolePolicy, and iam:UpdateAssumeRolePolicy are the core escalation primitives. SCPs are the only control that prevents an account admin from self-escalating — IAM policies can be modified by anyone with iam:*, and permission boundaries can be removed.
 
 **Remediation:** Add an SCP that denies iam:CreatePolicyVersion, iam:AttachRolePolicy, iam:PutRolePolicy, and iam:UpdateAssumeRolePolicy for non-admin principals in member accounts. Use condition keys to exempt designated break-glass roles.
+
+---
+
+### CTL.IAM.SCP.IGW.001
+
+**SCP Does Not Deny Internet Gateway Creation**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+SCP does not deny internet gateway creation in member accounts. Without this SCP, any identity in the organization can attach an internet gateway to a VPC, enabling direct internet access from accounts intended to be private (dev, sandbox, internal workloads). The SCP must deny ec2:AttachInternetGateway, ec2:CreateInternetGateway, and ec2:CreateEgressOnlyInternetGateway to enforce the "private-by-default" network posture.
+
+**Remediation:** Add an SCP that denies ec2:AttachInternetGateway, ec2:CreateInternetGateway, and ec2:CreateEgressOnlyInternetGateway for accounts that should be private. Apply to OUs containing dev, sandbox, or internal-workload accounts. All three actions must be denied — CreateInternetGateway without Attach is partial, and CreateEgressOnlyInternetGateway is a separate path often missed.
+
+---
+
+### CTL.IAM.SCP.IMDSV2.001
+
+**SCP Does Not Enforce IMDSv2**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SC-7; owasp_nhi: NHI9; soc2: CC6.1;
+
+SCP does not deny EC2 instance launches without IMDSv2 required. Without this SCP, any identity in the organization can launch instances with IMDSv1 enabled. IMDSv1 is the primary credential-theft vector via SSRF — an attacker who compromises a web application on an EC2 instance can query the metadata service at 169.254.169.254 to steal IAM role credentials. The SCP denies ec2:RunInstances when ec2:MetadataHttpTokens is not "required", preventing IMDSv1 instances at the organizational boundary.
+
+**Remediation:** Add an SCP that denies ec2:RunInstances with condition ec2:MetadataHttpTokens != "required". This prevents any identity from launching instances without IMDSv2 enforced. Optionally also deny ec2:ModifyInstanceMetadataOptions to prevent downgrade of existing instances, and deny all actions when ec2:RoleDelivery < 2.0 for defense in depth.
 
 ---
 
