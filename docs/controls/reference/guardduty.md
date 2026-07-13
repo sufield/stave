@@ -169,6 +169,21 @@ GuardDuty auto-enable is not configured for new member accounts joining the orga
 
 ---
 
+### CTL.GUARDDUTY.ORG.MEMBERS.001
+
+**Not All Organization Members Enrolled in GuardDuty**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 4.1; nist_800_53_r5: SI-4, CA-7; soc2: CC7.1, CC7.2;
+
+Not all organization member accounts are enrolled as GuardDuty members under the delegated admin detector. Accounts without GuardDuty membership are invisible to threat detection — no findings are generated for API anomalies, credential compromise, or cryptocurrency mining in those accounts. This is the same class of blind spot as missing CloudTrail or Config recorders: the attacker operates in an unmonitored account and is never detected.
+
+**Remediation:** Enable auto-enrollment (CTL.GUARDDUTY.ORG.AUTOENABLE.001) to cover future accounts, then add existing unenrolled accounts as members via guardduty:CreateMembers. For organizations using delegated admin, the delegated admin account runs CreateMembers for each missing account.
+
+---
+
 ### CTL.GUARDDUTY.ORG.NODELEGATED.001
 
 **GuardDuty Has No Delegated Administrator**
@@ -196,6 +211,21 @@ GuardDuty is managed from the management account because no delegated administra
 GuardDuty RDS Protection must be enabled to monitor RDS login activity for anomalous access patterns — brute-force login attempts, access from unusual geolocations, and logins from known malicious IPs. This is a separate feature toggle from the base GuardDuty detector. An account running RDS instances with GuardDuty enabled but RDS Protection disabled misses database-layer authentication threats. Part of the GuardDuty per-feature protection family discovered through cross-cloud transposition from Azure Defender for Databases.
 
 **Remediation:** Enable RDS Protection on the GuardDuty detector: aws guardduty update-detector --detector-id <id> --features Name=RDS_LOGIN_EVENTS,Status=ENABLED.
+
+---
+
+### CTL.GUARDDUTY.REGION.COVERAGE.001
+
+**GuardDuty Not Enabled in All Active Regions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 4.1; nist_800_53_r5: SI-4, CA-7; soc2: CC7.1, CC7.2;
+
+GuardDuty is not enabled in all active regions for the account. GuardDuty is regional — each region runs its own detector independently. An attacker who operates in a region without an enabled detector is invisible: no API anomaly detection, no credential compromise alerts, no cryptocurrency mining findings. Unlike CloudTrail (which has an organization trail covering all regions), GuardDuty requires an enabled detector per region. Most accounts should enable GuardDuty in every region regardless of resource count — the cost is zero when no findings are generated, and the alternative is a regional blind spot.
+
+**Remediation:** Enable a GuardDuty detector in every active region. For organizations with delegated admin, use the delegated admin account to enable detectors org-wide across all regions. Alternatively, restrict resource creation to monitored regions via SCP (deny ec2:RunInstances etc. in unmonitored regions).
 
 ---
 

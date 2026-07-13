@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.ORG.MEMBERS.001
+name: Not All Organization Members Enrolled in GuardDuty
+description: >
+  Not all organization member accounts are enrolled as GuardDuty
+  members under the delegated admin detector. Accounts without
+  GuardDuty membership are invisible to threat detection — no
+  findings are generated for API anomalies, credential compromise,
+  or cryptocurrency mining in those accounts. This is the same
+  class of blind spot as missing CloudTrail or Config recorders:
+  the attacker operates in an unmonitored account and is never
+  detected.
+domain: audit
+severity: high
+compliance:
+  cis_aws_v3.0: "4.1"
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "SI-4, CA-7"
+  ccm_v4: ["TVM-01", "LOG-08"]
+scope_tags:
+  - aws
+  - guardduty
+taxonomy:
+  - account-governance
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - guardduty.org.all_members_enrolled
+  - guardduty.org.member_count
+  - guardduty.org.org_account_count
+remediation:
+  description: >
+    Organization member accounts exist that are not enrolled as
+    GuardDuty members. Those accounts have no threat detection.
+  action: >
+    Enable auto-enrollment (CTL.GUARDDUTY.ORG.AUTOENABLE.001) to
+    cover future accounts, then add existing unenrolled accounts
+    as members via guardduty:CreateMembers. For organizations
+    using delegated admin, the delegated admin account runs
+    CreateMembers for each missing account.
+  example: |
+    {
+      "guardduty": {
+        "org": {
+          "all_members_enrolled": true,
+          "member_count": 10,
+          "org_account_count": 10
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.guardduty.org.all_members_enrolled
+      op: eq
+      value: false
+tests:
+  - name: "all members enrolled passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-full"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        guardduty:
+          org:
+            all_members_enrolled: true
+            member_count: 10
+            org_account_count: 10
+  - name: "missing members fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-partial"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        guardduty:
+          org:
+            all_members_enrolled: false
+            member_count: 7
+            org_account_count: 10
+  - name: "single account org with no members fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-single"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        guardduty:
+          org:
+            all_members_enrolled: false
+            member_count: 0
+            org_account_count: 1

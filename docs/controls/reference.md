@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2984
-**Pack hash:** `0c3aab996691e45d3f534b37e258b537de5f4bb845df988a30579d43c4d0bc9a`
+**Total controls:** 2986
+**Pack hash:** `bc3480b5184d65ae8f0539260ff2641be4b996c3b40768d56695f905e39ac57a`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,7 +14,7 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 307 |
-| high | 1298 |
+| high | 1300 |
 | info | 18 |
 | low | 229 |
 | medium | 1132 |
@@ -22,7 +22,7 @@ GitHub. Pick a service below.
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 93 |
+| audit | 95 |
 | capacity | 3 |
 | config | 2 |
 | detection | 140 |
@@ -92,7 +92,7 @@ GitHub. Pick a service below.
 | [GLACIER](reference/glacier.md) | 1 |
 | [GLUE](reference/glue.md) | 13 |
 | [GRAFANA](reference/grafana.md) | 1 |
-| [GUARDDUTY](reference/guardduty.md) | 16 |
+| [GUARDDUTY](reference/guardduty.md) | 18 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
 | [IAM](reference/iam.md) | 253 |
 | [INSPECTOR](reference/inspector.md) | 3 |

@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.REGION.COVERAGE.001
+name: GuardDuty Not Enabled in All Active Regions
+description: >
+  GuardDuty is not enabled in all active regions for the account.
+  GuardDuty is regional — each region runs its own detector
+  independently. An attacker who operates in a region without an
+  enabled detector is invisible: no API anomaly detection, no
+  credential compromise alerts, no cryptocurrency mining findings.
+  Unlike CloudTrail (which has an organization trail covering all
+  regions), GuardDuty requires an enabled detector per region.
+  Most accounts should enable GuardDuty in every region regardless
+  of resource count — the cost is zero when no findings are
+  generated, and the alternative is a regional blind spot.
+domain: audit
+severity: high
+compliance:
+  cis_aws_v3.0: "4.1"
+  soc2: "CC7.1, CC7.2"
+  nist_800_53_r5: "SI-4, CA-7"
+  ccm_v4: ["TVM-01", "LOG-08"]
+scope_tags:
+  - aws
+  - guardduty
+taxonomy:
+  - account-governance
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - guardduty.enabled_all_active_regions
+  - guardduty.active_regions
+  - guardduty.detector_regions
+  - guardduty.regions_without_detector
+remediation:
+  description: >
+    Active regions exist without an enabled GuardDuty detector.
+    Those regions have no threat detection.
+  action: >
+    Enable a GuardDuty detector in every active region. For
+    organizations with delegated admin, use the delegated admin
+    account to enable detectors org-wide across all regions.
+    Alternatively, restrict resource creation to monitored regions
+    via SCP (deny ec2:RunInstances etc. in unmonitored regions).
+  example: |
+    {
+      "guardduty": {
+        "active_regions": ["us-east-1", "us-west-2", "eu-west-1"],
+        "detector_regions": ["us-east-1", "us-west-2", "eu-west-1"],
+        "regions_without_detector": [],
+        "enabled_all_active_regions": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.guardduty.enabled_all_active_regions
+      op: eq
+      value: false
+tests:
+  - name: "detector in all active regions passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:guardduty:us-east-1:111122223333:account"
+      asset_type: aws_guardduty_account
+      vendor: aws
+      properties:
+        guardduty:
+          active_regions: ["us-east-1", "us-west-2", "eu-west-1"]
+          detector_regions: ["us-east-1", "us-west-2", "eu-west-1"]
+          regions_without_detector: []
+          enabled_all_active_regions: true
+  - name: "missing regions fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:guardduty:us-east-1:111122223333:account"
+      asset_type: aws_guardduty_account
+      vendor: aws
+      properties:
+        guardduty:
+          active_regions: ["us-east-1", "us-west-2", "eu-west-1", "ap-southeast-1"]
+          detector_regions: ["us-east-1", "us-west-2"]
+          regions_without_detector: ["eu-west-1", "ap-southeast-1"]
+          enabled_all_active_regions: false
+  - name: "no detector anywhere fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:guardduty:us-east-1:111122223333:account"
+      asset_type: aws_guardduty_account
+      vendor: aws
+      properties:
+        guardduty:
+          active_regions: ["us-east-1", "us-west-2"]
+          detector_regions: []
+          regions_without_detector: ["us-east-1", "us-west-2"]
+          enabled_all_active_regions: false

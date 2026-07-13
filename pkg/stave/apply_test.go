@@ -34,9 +34,11 @@ var frozenNow = time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
 //     and INCOMPLETE controls gained applicable_asset_types scoping.
 //   - 38/14 → 50/26 after new controls (EC2 account toggles,
 //     expanded S3/SNS/SQS/Lambda policy families).
+//   - 50/26 → 54/30 after GuardDuty coverage controls
+//     (CTL.GUARDDUTY.ORG.MEMBERS.001, CTL.GUARDDUTY.REGION.COVERAGE.001).
 func TestApply_LordofheavenBuiltinControls(t *testing.T) {
-	const wantFindings = 50
-	const wantIssues = 26
+	const wantFindings = 54
+	const wantIssues = 30
 
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,
