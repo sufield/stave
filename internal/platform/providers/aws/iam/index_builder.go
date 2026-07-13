@@ -48,6 +48,27 @@ func BuildResourceAccessIndexFromSnapshots(snaps []asset.Snapshot) *access.Resou
 	if len(snaps) == 0 {
 		return nil
 	}
+
+	// S3 bucket ARNs (arn:aws:s3:::bucket-name) lack account IDs.
+	// Collect account IDs from non-S3 assets first; when the snapshot
+	// contains exactly one account, use it for S3 resources. Same
+	// heuristic as the Soufflé bucket_account fact extractor.
+	accounts := make(map[string]struct{})
+	for s := range snaps {
+		snap := &snaps[s]
+		for i := range snap.Assets {
+			if acct := ExtractAccountID(string(snap.Assets[i].ID)); acct != "" {
+				accounts[acct] = struct{}{}
+			}
+		}
+	}
+	var inferredAccount string
+	if len(accounts) == 1 {
+		for a := range accounts {
+			inferredAccount = a
+		}
+	}
+
 	idx := access.NewResourceAccessIndex()
 	found := false
 	for s := range snaps {
@@ -58,6 +79,9 @@ func BuildResourceAccessIndexFromSnapshots(snaps []asset.Snapshot) *access.Resou
 		for i := range snap.Assets {
 			a := &snap.Assets[i]
 			accountID := ExtractAccountID(string(a.ID))
+			if accountID == "" && inferredAccount != "" {
+				accountID = inferredAccount
+			}
 			for _, path := range resourcePolicyPaths {
 				policyJSON := props.GetString(a.Properties, path)
 				if policyJSON == "" {

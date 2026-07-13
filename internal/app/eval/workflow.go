@@ -258,6 +258,9 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 
 		// Run the risk reasoning engine: detect chain-based compound findings
 		// and build an attack stage summary from the evaluation results.
+		// NOTE: CompoundFindings are not counted in Summary.Violations or
+		// exit code. Correct while every chain composes existing CEL
+		// findings; update when Soufflé emits independent findings.
 		w.enrichWithRiskReasoning(&report, auditData.Controls, cfg.ChainDefs, cfg.GraphFindingsDir, auditData.Snapshots)
 
 		// Persist BEFORE the SLA pass so the cached report stays

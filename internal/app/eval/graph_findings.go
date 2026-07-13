@@ -3,6 +3,7 @@ package eval
 import (
 	"bufio"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -151,6 +152,21 @@ func ingestGraphFindings(dir string) ([]findings.CompoundFinding, error) {
 			result = append(result, cf)
 		}
 	}
+
+	// Warn about .csv files that have no registry entry — a new
+	// Soufflé rule without a matching spec produces invisible findings.
+	entries, _ := os.ReadDir(dir)
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".csv") {
+			continue
+		}
+		relation := strings.TrimSuffix(e.Name(), ".csv")
+		if _, ok := graphChainRegistry[relation]; !ok {
+			slog.Warn("graph-findings: unregistered Soufflé relation — findings will not appear in output",
+				"relation", relation, "file", e.Name())
+		}
+	}
+
 	return result, nil
 }
 

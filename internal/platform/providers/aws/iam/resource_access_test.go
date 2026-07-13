@@ -2,6 +2,8 @@ package iam
 
 import (
 	"testing"
+
+	"github.com/sufield/stave/internal/core/asset"
 )
 
 func TestResourceAccessIndex_PublicPolicy(t *testing.T) {
@@ -96,6 +98,74 @@ func TestResourceAccessIndex_DenySkipped(t *testing.T) {
 	entries := idx.EntriesFor("arn:aws:s3:::deny-bucket")
 	if len(entries) != 0 {
 		t.Fatal("expected no entries for deny-only policy")
+	}
+}
+
+func TestBuildResourceAccessIndex_S3BucketInfersAccount(t *testing.T) {
+	snap := asset.Snapshot{
+		Assets: []asset.Asset{
+			{
+				ID:   "arn:aws:iam::111122223333:role/app",
+				Type: "aws_iam_role",
+				Properties: map[string]any{},
+			},
+			{
+				ID:   "arn:aws:s3:::cross-account-bucket",
+				Type: "aws_s3_bucket",
+				Properties: map[string]any{
+					"storage": map[string]any{
+						"policy_json": `{"Statement":[{"Effect":"Allow","Action":"s3:GetObject","Resource":"arn:aws:iam::999888777666:role/external"}]}`,
+					},
+				},
+			},
+		},
+	}
+
+	idx := BuildResourceAccessIndexFromSnapshots([]asset.Snapshot{snap})
+	if idx == nil {
+		t.Fatal("expected non-nil index")
+	}
+
+	entries := idx.EntriesFor("arn:aws:s3:::cross-account-bucket")
+	if len(entries) == 0 {
+		t.Fatal("expected entries for cross-account bucket")
+	}
+	if !entries[0].IsCrossAccount {
+		t.Fatal("expected cross-account flag — S3 bucket account inferred from IAM asset in same snapshot")
+	}
+}
+
+func TestBuildResourceAccessIndex_S3BucketSameAccount(t *testing.T) {
+	snap := asset.Snapshot{
+		Assets: []asset.Asset{
+			{
+				ID:   "arn:aws:iam::111122223333:role/app",
+				Type: "aws_iam_role",
+				Properties: map[string]any{},
+			},
+			{
+				ID:   "arn:aws:s3:::same-account-bucket",
+				Type: "aws_s3_bucket",
+				Properties: map[string]any{
+					"storage": map[string]any{
+						"policy_json": `{"Statement":[{"Effect":"Allow","Action":"s3:GetObject","Resource":"arn:aws:iam::111122223333:role/internal"}]}`,
+					},
+				},
+			},
+		},
+	}
+
+	idx := BuildResourceAccessIndexFromSnapshots([]asset.Snapshot{snap})
+	if idx == nil {
+		t.Fatal("expected non-nil index")
+	}
+
+	entries := idx.EntriesFor("arn:aws:s3:::same-account-bucket")
+	if len(entries) == 0 {
+		t.Fatal("expected entries")
+	}
+	if entries[0].IsCrossAccount {
+		t.Fatal("expected same-account — both principal and bucket belong to 111122223333")
 	}
 }
 
