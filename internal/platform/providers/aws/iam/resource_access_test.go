@@ -105,8 +105,8 @@ func TestBuildResourceAccessIndex_S3BucketInfersAccount(t *testing.T) {
 	snap := asset.Snapshot{
 		Assets: []asset.Asset{
 			{
-				ID:   "arn:aws:iam::111122223333:role/app",
-				Type: "aws_iam_role",
+				ID:         "arn:aws:iam::111122223333:role/app",
+				Type:       "aws_iam_role",
 				Properties: map[string]any{},
 			},
 			{
@@ -139,8 +139,8 @@ func TestBuildResourceAccessIndex_S3BucketSameAccount(t *testing.T) {
 	snap := asset.Snapshot{
 		Assets: []asset.Asset{
 			{
-				ID:   "arn:aws:iam::111122223333:role/app",
-				Type: "aws_iam_role",
+				ID:         "arn:aws:iam::111122223333:role/app",
+				Type:       "aws_iam_role",
 				Properties: map[string]any{},
 			},
 			{
