@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.S3.LIFECYCLE.MULTIPART.001
+name: S3 Bucket Must Abort Incomplete Multipart Uploads
+description: >
+  S3 bucket has no lifecycle rule that aborts incomplete multipart
+  uploads. An attacker who can initiate uploads (s3:PutObject) can
+  start millions of multipart uploads and never complete them. The
+  incomplete parts accumulate storage costs indefinitely — there is
+  no automatic cleanup. This is a denial-of-wallet vector: the
+  attacker pays nothing (no completed objects), the bucket owner
+  pays for every stored part. A lifecycle rule with
+  AbortIncompleteMultipartUpload and a short DaysAfterInitiation
+  threshold (e.g. 7 days) limits exposure.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-10"]
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: impact
+observation_fields:
+  - storage.kind
+  - storage.lifecycle.aborts_incomplete_multipart
+remediation:
+  description: >
+    Bucket has no lifecycle rule to abort incomplete multipart uploads.
+    Incomplete parts accumulate indefinitely and incur storage costs.
+  action: >
+    Add a lifecycle rule with AbortIncompleteMultipartUpload set to a
+    short DaysAfterInitiation threshold (7 days is typical). Apply to
+    the entire bucket (no prefix filter) to ensure all incomplete
+    uploads are cleaned up.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "lifecycle": {
+          "aborts_incomplete_multipart": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.lifecycle.aborts_incomplete_multipart
+      op: ne
+      value: true
+tests:
+  - name: "bucket without multipart abort lifecycle rule fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::no-multipart-cleanup"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          lifecycle:
+            aborts_incomplete_multipart: false
+  - name: "bucket with multipart abort lifecycle rule passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::clean-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          lifecycle:
+            aborts_incomplete_multipart: true
+  - name: "bucket with no lifecycle config at all fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::no-lifecycle"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          lifecycle:
+            aborts_incomplete_multipart: false
