@@ -430,6 +430,21 @@ CloudTrail trails should use advanced event selectors instead of basic event sel
 
 ---
 
+### CTL.CLOUDTRAIL.EVS.BLIND.001
+
+**CloudTrail Does Not Log EVS Management Events**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+CloudTrail is not configured to log EVS management events. If EVS management events are not logged, an attacker can create VMware SDDC environments, provision clusters, and operate an entire VMware management plane without leaving an audit trail. EVS is not inventoried by AWS Config — CloudTrail is the only detection surface for EVS API activity.
+
+**Remediation:** Ensure event selectors include EVS management events. With advanced selectors, add eventSource = evs.amazonaws.com.
+
+---
+
 ### CTL.CLOUDTRAIL.GHOST.CWLOGS.001
 
 **CloudTrail Trail CloudWatch Logs Group Does Not Exist**

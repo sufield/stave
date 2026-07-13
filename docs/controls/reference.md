@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3014
-**Pack hash:** `c40108576848b7eb297e658e0e9949252cde1da5784cdfba97a185118651bf25`
+**Total controls:** 3018
+**Pack hash:** `85d32a02f0c6f6a0c63d894239f0ef1fe28d57a8aaeda8548f71509aa17a12a0`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 307 |
-| high | 1313 |
+| high | 1316 |
 | info | 18 |
 | low | 232 |
-| medium | 1144 |
+| medium | 1145 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,10 +27,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1338 |
+| exposure | 1341 |
 | governance | 626 |
 | hygiene | 18 |
-| identity | 543 |
+| identity | 544 |
 | lifecycle | 31 |
 | network | 43 |
 | resilience | 35 |
@@ -63,7 +63,7 @@ GitHub. Pick a service below.
 | [CLOUDFLARE](reference/cloudflare.md) | 29 |
 | [CLOUDFORMATION](reference/cloudformation.md) | 9 |
 | [CLOUDFRONT](reference/cloudfront.md) | 72 |
-| [CLOUDTRAIL](reference/cloudtrail.md) | 56 |
+| [CLOUDTRAIL](reference/cloudtrail.md) | 57 |
 | [CLOUDWATCH](reference/cloudwatch.md) | 67 |
 | [CODEBUILD](reference/codebuild.md) | 12 |
 | [CODECOMMIT](reference/codecommit.md) | 2 |
@@ -85,6 +85,7 @@ GitHub. Pick a service below.
 | [ELB](reference/elb.md) | 80 |
 | [EMR](reference/emr.md) | 6 |
 | [EVENTBRIDGE](reference/eventbridge.md) | 97 |
+| [EVS](reference/evs.md) | 1 |
 | [EXPOSURE](reference/exposure.md) | 11 |
 | [FIREHOSE](reference/firehose.md) | 1 |
 | [FMS](reference/fms.md) | 2 |
@@ -97,7 +98,7 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 18 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 260 |
+| [IAM](reference/iam.md) | 261 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |
@@ -115,7 +116,7 @@ GitHub. Pick a service below.
 | [NEPTUNE](reference/neptune.md) | 20 |
 | [NETFIREWALL](reference/netfirewall.md) | 12 |
 | [OPENSEARCH](reference/opensearch.md) | 132 |
-| [ORG](reference/org.md) | 17 |
+| [ORG](reference/org.md) | 18 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 72 |
 | [REDSHIFT](reference/redshift.md) | 26 |

@@ -170,6 +170,21 @@ Organization SCPs do not deny EMR service usage in member accounts. EMR provisio
 
 ---
 
+### CTL.ORG.SCP.EVS.DENY.001
+
+**SCP Does Not Deny EVS Usage**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.6;
+
+Organization SCPs do not deny Elastic VMware Service (EVS) usage in member accounts. EVS provisions a full VMware SDDC in an AWS-managed account — the customer sees an ENI but the compute, storage, and management plane run in infrastructure outside the customer's VPC. Without an SCP denying evs:*, any IAM principal can provision shadow VMware infrastructure invisible to the organization's CSPM, SIEM, and network monitoring.
+
+**Remediation:** Add an SCP denying evs:* for all principals. Exclude specific accounts if EVS is intentionally used.
+
+---
+
 ### CTL.ORG.SCP.LIGHTSAIL.DENY.001
 
 **SCP Does Not Deny Lightsail Usage**

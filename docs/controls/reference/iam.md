@@ -1390,6 +1390,21 @@ A principal with `iam:UpdateAssumeRolePolicy` reaching a role whose attached per
 
 ---
 
+### CTL.IAM.EVS.CREATE.001
+
+**IAM Policy Grants EVS Environment Creation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.3;
+
+An IAM principal has a policy granting evs:CreateEnvironment. This allows provisioning a full VMware SDDC in an AWS-managed account — the resulting infrastructure runs outside the customer's VPC, is not inventoried by AWS Config, and creates a VMware management plane invisible to CloudWatch, GuardDuty, and Security Hub. This is both a resource-sprawl and a detection-evasion vector.
+
+**Remediation:** Remove evs:CreateEnvironment from the principal's policies.
+
+---
+
 ### CTL.IAM.FEDERATION.001
 
 **IAM Console Users Should Use Identity Federation**
