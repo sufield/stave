@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3008
-**Pack hash:** `1735d4658abb28869fafcd0c9e6514a42c4e2e75ea249309b5e7399e852e0b75`
+**Total controls:** 3014
+**Pack hash:** `c40108576848b7eb297e658e0e9949252cde1da5784cdfba97a185118651bf25`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 307 |
-| high | 1311 |
+| high | 1313 |
 | info | 18 |
-| low | 231 |
-| medium | 1141 |
+| low | 232 |
+| medium | 1144 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,7 +27,7 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1332 |
+| exposure | 1338 |
 | governance | 626 |
 | hygiene | 18 |
 | identity | 543 |
@@ -44,8 +44,10 @@ GitHub. Pick a service below.
 | [ACCOUNT](reference/account.md) | 1 |
 | [ACM](reference/acm.md) | 8 |
 | [AD](reference/ad.md) | 40 |
+| [AMPLIFY](reference/amplify.md) | 1 |
 | [APIGATEWAY](reference/apigateway.md) | 105 |
 | [APIGW2](reference/apigw2.md) | 2 |
+| [APPRUNNER](reference/apprunner.md) | 1 |
 | [APPSTREAM](reference/appstream.md) | 2 |
 | [ATHENA](reference/athena.md) | 3 |
 | [AUDITMANAGER](reference/auditmanager.md) | 1 |
@@ -57,6 +59,7 @@ GitHub. Pick a service below.
 | [BEDROCK](reference/bedrock.md) | 47 |
 | [CFN](reference/cfn.md) | 1 |
 | [CISCO](reference/cisco.md) | 30 |
+| [CLOUD9](reference/cloud9.md) | 2 |
 | [CLOUDFLARE](reference/cloudflare.md) | 29 |
 | [CLOUDFORMATION](reference/cloudformation.md) | 9 |
 | [CLOUDFRONT](reference/cloudfront.md) | 72 |
@@ -108,6 +111,7 @@ GitHub. Pick a service below.
 | [MODEL](reference/model.md) | 2 |
 | [MQ](reference/mq.md) | 3 |
 | [MSK](reference/msk.md) | 9 |
+| [MWAA](reference/mwaa.md) | 2 |
 | [NEPTUNE](reference/neptune.md) | 20 |
 | [NETFIREWALL](reference/netfirewall.md) | 12 |
 | [OPENSEARCH](reference/opensearch.md) | 132 |
