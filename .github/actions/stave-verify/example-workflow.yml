@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: sufield/stave/.github/actions/stave-verify@main
+      - uses: sufield/stave/.github/actions/stave-verify@v0.1.0
         with:
           snapshot-path: security/snapshots
           # pack: quick          # optional: scope to a pack (default = full catalog)

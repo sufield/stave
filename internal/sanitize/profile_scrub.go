@@ -9,32 +9,11 @@
 package sanitize
 
 import (
-	"regexp"
 	"strings"
 )
 
 // SanitizedValue is the canonical placeholder for redacted values.
 const SanitizedValue = "[SANITIZED]"
-
-// --- Credential patterns (used by bug-report log scrubbing) ---
-
-// AKIAPattern matches every AWS access-key-ID prefix the IAM
-// vocabulary defines: AKIA (long-term root/user), ASIA (STS
-// session), AROA (assumed-role), AGPA (group), AIDA (user),
-// ANPA (managed policy), ANVA (managed policy version), APKA
-// (public key). The 4-char prefix (A + three uppercase letters)
-// followed by 16 base32-style characters captures all of them
-// without an explicit alternation list — additions to AWS's
-// prefix table land for free.
-var AKIAPattern = regexp.MustCompile(`A[A-Z]{3}[0-9A-Z]{16}`)
-
-// URLCredPattern matches credentials embedded in URLs (user:pass@host).
-// Covers https?, ftp, sftp, ssh, and git (including git+https). The
-// earlier https-only shape let `git://user:pass@example.com/repo`
-// and `ssh://user:pass@host` slip through bug-report scrubbing,
-// even though both are common shapes for embedded credentials in
-// CI logs and `git remote -v` output.
-var URLCredPattern = regexp.MustCompile(`(?i)((?:https?|ftp|s?ftp|ssh|git(?:\+https)?)://[^/\s:@]+:)[^@/\s]+@`)
 
 // --- Sensitive flag/key detection (used by logging argument sanitization) ---
 

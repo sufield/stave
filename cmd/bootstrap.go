@@ -93,7 +93,8 @@ func (a *App) phaseConfig(cmd *cobra.Command) error {
 	return nil
 }
 
-// phaseValidate checks the offline guarantee, dev/prod guard, and config health.
+// phaseValidate checks the offline guarantee, dev/prod guard, config health,
+// and rejects --sanitize on commands that don't implement it.
 func (a *App) phaseValidate(cmd *cobra.Command) error {
 	if err := a.checkRequireOffline(); err != nil {
 		return err
@@ -101,7 +102,22 @@ func (a *App) phaseValidate(cmd *cobra.Command) error {
 	if err := a.checkDevProductionGuard(cmd); err != nil {
 		return err
 	}
+	if err := a.checkSanitizeSupported(cmd); err != nil {
+		return err
+	}
 	return a.checkConfigHealth(cmd, a.configResult.Err)
+}
+
+func (a *App) checkSanitizeSupported(cmd *cobra.Command) error {
+	if !a.Flags.Sanitize {
+		return nil
+	}
+	if hasAnnotation(cmd, cmdutil.AnnotationSanitizeAware) {
+		return nil
+	}
+	return &ui.UserError{
+		Err: fmt.Errorf("--sanitize is not supported by %q", cmd.Name()),
+	}
 }
 
 // phaseLogging initializes the sanitizer, structured logger, and replays config warnings.

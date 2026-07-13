@@ -35,13 +35,16 @@ jobs:
         uses: actions/cache@v6
         with:
           path: /tmp/gosentry
-          key: gosentry-${{ hashFiles('.github/workflows/fuzz.yml') }}
+          key: gosentry-026ca954d7
 
       - name: Install gosentry
+        env:
+          GOSENTRY_REF: "026ca954d79ebda318f4198b4115c9626f26a728"
         run: |
           if [ ! -f /tmp/gosentry/bin/go ]; then
             [ -d /tmp/gosentry/.git ] || git clone https://github.com/trailofbits/gosentry.git /tmp/gosentry
-            cd /tmp/gosentry/src && ./make.bash
+            cd /tmp/gosentry && git checkout "$GOSENTRY_REF"
+            cd src && ./make.bash
           fi
 
       - name: Cache fuzz corpus

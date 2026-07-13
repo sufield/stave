@@ -3,6 +3,7 @@ package graph
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/platform/metadata"
 )
@@ -63,6 +64,7 @@ Exit Codes:
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			return runCoverage(cmd.Context(), opts, cliflags.GetGlobalFlags(cmd), cmd.OutOrStdout())
 		},
+		Annotations:   map[string]string{cmdutil.AnnotationSanitizeAware: "true"},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}

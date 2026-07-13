@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -48,6 +49,12 @@ import (
 // shape; the trailing-slash test cases below pin that the
 // observable output is what operators expect.
 var messagePathRe = regexp.MustCompile(`([a-zA-Z][a-zA-Z0-9+.\-]*://[^\s]+)|/(?:[^\s:]+/)*([^\s:/]+)/?`)
+
+var messageARNRe = regexp.MustCompile(`arn:aws:[a-z0-9-]+:[a-z0-9-]*:\d{0,12}:(?:[^\s"'<>:]+:)*[^\s"'<>:]+`)
+
+var messageAccountIDRe = regexp.MustCompile(`\b\d{12}\b`)
+
+var messageIPv4Re = regexp.MustCompile(`(\bv?)(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(\.\d+)?`)
 
 // Compile-time check that Sanitizer implements kernel.Sanitizer.
 var _ kernel.Sanitizer = (*Sanitizer)(nil)
@@ -157,6 +164,9 @@ func (s *Sanitizer) ScrubMessage(msg string) string {
 	if msg == "" {
 		return msg
 	}
+	msg = scrubIPv4(msg)
+	msg = messageARNRe.ReplaceAllString(msg, "[REDACTED]")
+	msg = messageAccountIDRe.ReplaceAllString(msg, "[REDACTED]")
 	return messagePathRe.ReplaceAllStringFunc(msg, func(match string) string {
 		// Re-match to recover capture groups: ReplaceAllStringFunc
 		// gives only the full match, so we have to ask the regex
@@ -591,4 +601,23 @@ func safeReflectZero(rv reflect.Value) (out any) {
 		}
 	}()
 	return reflect.Zero(rv.Type()).Interface()
+}
+
+func scrubIPv4(s string) string {
+	return messageIPv4Re.ReplaceAllStringFunc(s, func(m string) string {
+		groups := messageIPv4Re.FindStringSubmatch(m)
+		if len(groups) < 4 {
+			return m
+		}
+		if groups[1] == "v" || groups[3] != "" {
+			return m
+		}
+		for octet := range strings.SplitSeq(groups[2], ".") {
+			n, err := strconv.Atoi(octet)
+			if err != nil || n > 255 {
+				return m
+			}
+		}
+		return groups[1] + "[REDACTED]" + groups[3]
+	})
 }

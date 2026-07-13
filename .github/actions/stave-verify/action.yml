@@ -68,19 +68,24 @@ runs:
     - name: Resolve stave binary
       id: resolve
       shell: bash
+      env:
+        INPUT_STAVE_BINARY: ${{ inputs.stave-binary }}
+        INPUT_STAVE_VERSION: ${{ inputs.stave-version }}
       run: |
         set -euo pipefail
-        if [ -n "${{ inputs.stave-binary }}" ]; then
-          echo "bin=${{ inputs.stave-binary }}" >> "$GITHUB_OUTPUT"
+        if [ -n "$INPUT_STAVE_BINARY" ]; then
+          echo "bin=$INPUT_STAVE_BINARY" >> "$GITHUB_OUTPUT"
         else
           os=$(uname -s | tr '[:upper:]' '[:lower:]'); arch=$(uname -m)
           [ "$arch" = "x86_64" ] && arch=amd64; [ "$arch" = "aarch64" ] && arch=arm64
-          tag="${{ inputs.stave-version }}"
+          tag="$INPUT_STAVE_VERSION"
           if [ "$tag" = "latest" ]; then
             tag=$(curl -fsSL https://api.github.com/repos/sufield/stave/releases/latest | jq -r .tag_name)
           fi
           asset="stave_${os}_${arch}"
           curl -fsSL -o /tmp/stave "https://github.com/sufield/stave/releases/download/${tag}/${asset}"
+          curl -fsSL -o /tmp/stave.sha256 "https://github.com/sufield/stave/releases/download/${tag}/${asset}.sha256"
+          (cd /tmp && sha256sum -c stave.sha256)
           chmod +x /tmp/stave
           echo "bin=/tmp/stave" >> "$GITHUB_OUTPUT"
         fi
@@ -90,23 +95,29 @@ runs:
       shell: bash
       env:
         STAVE: ${{ steps.resolve.outputs.bin }}
+        INPUT_SNAPSHOT_PATH: ${{ inputs.snapshot-path }}
+        INPUT_PACK: ${{ inputs.pack }}
+        INPUT_CONTROLS: ${{ inputs.controls }}
+        INPUT_NOW: ${{ inputs.now }}
+        INPUT_SARIF: ${{ inputs.sarif }}
+        ACTION_PATH: ${{ github.action_path }}
       run: |
         set -euo pipefail
-        args=( apply -o "${{ inputs.snapshot-path }}" )
-        [ -n "${{ inputs.pack }}" ]     && args+=( --pack "${{ inputs.pack }}" )
-        [ -n "${{ inputs.controls }}" ] && args+=( --controls "${{ inputs.controls }}" )
-        [ -n "${{ inputs.now }}" ]      && args+=( --now "${{ inputs.now }}" )
+        args=( apply -o "$INPUT_SNAPSHOT_PATH" )
+        [ -n "$INPUT_PACK" ]     && args+=( --pack "$INPUT_PACK" )
+        [ -n "$INPUT_CONTROLS" ] && args+=( --controls "$INPUT_CONTROLS" )
+        [ -n "$INPUT_NOW" ]      && args+=( --now "$INPUT_NOW" )
 
         # JSON (for the comment + gate). Exit 3 = violations found; treat as success here.
         "$STAVE" "${args[@]}" --format json > "${RUNNER_TEMP:-/tmp}/stave.json" 2>/tmp/stave.err || rc=$?; rc=${rc:-0}
         if [ "$rc" != "0" ] && [ "$rc" != "3" ]; then
           echo "stave apply failed (exit $rc):"; cat /tmp/stave.err; exit "$rc"
         fi
-        if [ "${{ inputs.sarif }}" = "true" ]; then
+        if [ "$INPUT_SARIF" = "true" ]; then
           "$STAVE" "${args[@]}" --format sarif > "${RUNNER_TEMP:-/tmp}/stave.sarif" 2>/dev/null || true
         fi
 
-        n=$(python3 "${{ github.action_path }}/stave_pr_report.py" \
+        n=$(python3 "$ACTION_PATH/stave_pr_report.py" \
               --findings "${RUNNER_TEMP:-/tmp}/stave.json" \
               --out "${RUNNER_TEMP:-/tmp}/stave-comment.md")
         echo "finding-count=$n" >> "$GITHUB_OUTPUT"
@@ -125,17 +136,20 @@ runs:
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.github-token }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
       run: |
-        gh pr comment "${{ github.event.pull_request.number }}" \
+        gh pr comment "$PR_NUMBER" \
           --body-file "${RUNNER_TEMP:-/tmp}/stave-comment.md" --edit-last 2>/dev/null \
-          || gh pr comment "${{ github.event.pull_request.number }}" \
+          || gh pr comment "$PR_NUMBER" \
                --body-file "${RUNNER_TEMP:-/tmp}/stave-comment.md"
 
     - name: Enforce gate
       if: ${{ inputs.strict == 'true' }}
       shell: bash
+      env:
+        FINDING_COUNT: ${{ steps.evaluate.outputs.finding-count }}
       run: |
-        if [ "${{ steps.evaluate.outputs.finding-count }}" != "0" ]; then
-          echo "::error::Stave found ${{ steps.evaluate.outputs.finding-count }} violation(s) — failing the check (strict mode)."
+        if [ "$FINDING_COUNT" != "0" ]; then
+          echo "::error::Stave found $FINDING_COUNT violation(s) — failing the check (strict mode)."
           exit 1
         fi

@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/stave"
@@ -44,6 +45,7 @@ Exit Codes:
   2   Invalid input`,
 		Example: `  stave sanitize --snapshot snapshot.json > sanitized.json
   stave sanitize --snapshot snapshot.json --rules rules.yaml > sanitized.json`,
+		Annotations:   map[string]string{cmdutil.AnnotationSanitizeAware: "true"},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(_ *cobra.Command, _ []string) error {

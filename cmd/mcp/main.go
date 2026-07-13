@@ -51,9 +51,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/sufield/stave/pkg/stave"
 )
@@ -962,9 +960,17 @@ func writeScorecard(reports []*stave.ComplianceReport) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	path := filepath.Join(os.TempDir(), fmt.Sprintf("stave-scorecard-%d.html", time.Now().UnixNano()))
-	if err := os.WriteFile(path, []byte(htmlDoc), 0o600); err != nil {
+	f, err := os.CreateTemp("", "stave-scorecard-*.html")
+	if err != nil {
+		return "", fmt.Errorf("create scorecard file: %w", err)
+	}
+	path := f.Name()
+	if _, err := f.WriteString(htmlDoc); err != nil {
+		_ = f.Close()
 		return "", fmt.Errorf("write scorecard file: %w", err)
+	}
+	if err := f.Close(); err != nil {
+		return "", fmt.Errorf("close scorecard file: %w", err)
 	}
 	return path, nil
 }
@@ -1078,9 +1084,17 @@ func writeChains(a *stave.Assessment) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	path := filepath.Join(os.TempDir(), fmt.Sprintf("stave-chains-%d.html", time.Now().UnixNano()))
-	if err := os.WriteFile(path, []byte(htmlDoc), 0o600); err != nil {
+	f, err := os.CreateTemp("", "stave-chains-*.html")
+	if err != nil {
+		return "", fmt.Errorf("create chains file: %w", err)
+	}
+	path := f.Name()
+	if _, err := f.WriteString(htmlDoc); err != nil {
+		_ = f.Close()
 		return "", fmt.Errorf("write chains file: %w", err)
+	}
+	if err := f.Close(); err != nil {
+		return "", fmt.Errorf("close chains file: %w", err)
 	}
 	return path, nil
 }
@@ -1149,9 +1163,17 @@ func writeDashboard(a *stave.Assessment) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	path := filepath.Join(os.TempDir(), fmt.Sprintf("stave-dashboard-%d.html", time.Now().UnixNano()))
-	if err := os.WriteFile(path, []byte(htmlDoc), 0o600); err != nil {
+	f, err := os.CreateTemp("", "stave-dashboard-*.html")
+	if err != nil {
+		return "", fmt.Errorf("create dashboard file: %w", err)
+	}
+	path := f.Name()
+	if _, err := f.WriteString(htmlDoc); err != nil {
+		_ = f.Close()
 		return "", fmt.Errorf("write dashboard file: %w", err)
+	}
+	if err := f.Close(); err != nil {
+		return "", fmt.Errorf("close dashboard file: %w", err)
 	}
 	return path, nil
 }

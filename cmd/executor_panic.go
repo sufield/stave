@@ -62,15 +62,7 @@ func (a *App) buildPanicErrorInfo(sanitized string) *ui.ErrorInfo {
 		userMsg = "internal error: " + sanitized
 	}
 
-	// Edition-specific remediation. Production users see the
-	// support-bundle pathway (stave bug-report) because they cannot
-	// run `stave-dev` subcommands; dev-edition users see the local
-	// doctor that ships only with the dev binary. The earlier shape
-	// had these inverted, so production logs pointed operators at a
-	// command they couldn't run and dev users were nudged toward
-	// the bundle path even though they have the diagnostic tool
-	// already installed.
-	action := "Rerun with -vv, then run `stave bug-report` and attach the bundle if this error persists, or contact support."
+	action := "Rerun with -vv and report the error at " + metadata.IssuesRef() + " if it persists."
 	if a.Edition == EditionDev {
 		action = "Rerun with -vv, then run `stave-dev doctor` to diagnose if this error persists."
 	}

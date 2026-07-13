@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -72,6 +73,7 @@ Exit Codes:
   stave diagnose finding --control-id CTL.S3.PUBLIC.001 --asset-id my-bucket \
     --controls ./controls --observations ./obs`,
 		Args:          cobra.NoArgs,
+		Annotations:   map[string]string{cmdutil.AnnotationSanitizeAware: "true"},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {

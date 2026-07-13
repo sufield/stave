@@ -136,3 +136,48 @@ func TestSanitizer_ScrubMessage_TrailingSlashPath(t *testing.T) {
 		}
 	}
 }
+
+func TestSanitizer_ScrubMessage_ARN(t *testing.T) {
+	s := Policy{SanitizeIDs: true}.NewSanitizer()
+	cases := []struct {
+		in   string
+		want string
+	}{
+		{"load asset arn:aws:s3:::acme-customer-pii denied", "load asset [REDACTED] denied"},
+		{"role arn:aws:iam::111122223333:role/admin not found", "role [REDACTED] not found"},
+	}
+	for _, tc := range cases {
+		got := s.ScrubMessage(tc.in)
+		if got != tc.want {
+			t.Errorf("ScrubMessage(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}
+
+func TestSanitizer_ScrubMessage_AccountID(t *testing.T) {
+	s := Policy{SanitizeIDs: true}.NewSanitizer()
+	got := s.ScrubMessage("account 111122223333 not in org")
+	want := "account [REDACTED] not in org"
+	if got != want {
+		t.Errorf("ScrubMessage account ID = %q, want %q", got, want)
+	}
+}
+
+func TestSanitizer_ScrubMessage_IPv4(t *testing.T) {
+	s := Policy{SanitizeIDs: true}.NewSanitizer()
+	cases := []struct {
+		in   string
+		want string
+	}{
+		{"connect to 10.0.1.42:8080 failed", "connect to [REDACTED]:8080 failed"},
+		{"version v1.2.3.4 ok", "version v1.2.3.4 ok"},
+		{"build 1.12.3.4.5 ok", "build 1.12.3.4.5 ok"},
+		{"invalid 999.0.0.1 stays", "invalid 999.0.0.1 stays"},
+	}
+	for _, tc := range cases {
+		got := s.ScrubMessage(tc.in)
+		if got != tc.want {
+			t.Errorf("ScrubMessage(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}
