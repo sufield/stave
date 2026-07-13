@@ -21,6 +21,10 @@ description: >
       with direct billing impact — upstream checks
       `iam_inline_policy_no_wildcard_marketplace_subscribe` and
       `iam_policy_no_wildcard_marketplace_subscribe`.
+    - sts: enables assumption of any role in the account
+      (AssumeRole, AssumeRoleWithSAML, AssumeRoleWithWebIdentity)
+      — equivalent to lateral movement across the entire account's
+      role graph.
 
   Operators extend the denied list via `params.denied_service_wildcards`
   as new service-wildcard abuse patterns emerge. The control does not
@@ -59,6 +63,7 @@ params:
     - kms
     - aws-marketplace
     - signin
+    - sts
 remediation:
   description: >
     An IAM principal (user or role) has an attached policy that grants

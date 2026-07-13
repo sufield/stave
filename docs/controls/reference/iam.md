@@ -2350,6 +2350,10 @@ IAM users and roles must not have any attached policy (inline or customer-manage
     with direct billing impact — upstream checks
     `iam_inline_policy_no_wildcard_marketplace_subscribe` and
     `iam_policy_no_wildcard_marketplace_subscribe`.
+  - sts: enables assumption of any role in the account
+    (AssumeRole, AssumeRoleWithSAML, AssumeRoleWithWebIdentity)
+    — equivalent to lateral movement across the entire account's
+    role graph.
 
 Operators extend the denied list via `params.denied_service_wildcards` as new service-wildcard abuse patterns emerge. The control does not fire on principals with no attached policies — the field `identity.policies.service_wildcards_granted` is `null` in that case and the `present` gate keeps the check silent.
 
