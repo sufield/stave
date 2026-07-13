@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "0001-01-01T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -100,6 +100,7 @@
           "narrative": "IAM privilege escalation via Lambda function creation with a privileged execution role. A principal with sts:AssumeRole reaches a role that has iam:PassRole + lambda:CreateFunction + an invocation vector. The principal assumes the intermediary role, creates a Lambda function passing a high-privilege execution role, and invokes it — the function runs with the execution role's full authority. This is a two-hop path: AssumeRole → PassRole+CreateFunction → admin. Documented in Rhino Security's CloudGoat (lambda_privesc) and Bishop Fox's IAM Vulnerable. Threshold 1: detection of either hop alone is sufficient to flag the path.\n"
         }
       ],
+      "exploitability": "exploitable",
       "sla_deadline_hours": 336,
       "sla_breached": true,
       "sla_overdue_hours": 67152,
@@ -189,7 +190,8 @@
         "9cd57a893619",
         "bcc68d65d019",
         "598b2c025a85"
-      ]
+      ],
+      "deciding_layer": "identity_policy"
     }
   ],
   "chain_findings": [

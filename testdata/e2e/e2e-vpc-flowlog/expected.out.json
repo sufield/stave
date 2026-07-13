@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "0001-01-01T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -97,6 +97,81 @@
         },
         "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "data_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.EXPOSURE.EXFIL.001",
+          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
+        },
+        {
+          "chain_id": "data_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.EXPOSURE.EXFIL.002",
+          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
+        },
+        {
+          "chain_id": "data_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.ENABLED.001",
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.GUARDDUTY.ENABLED.001",
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CONFIG.ENABLED.001",
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "vpc_dns_exfiltration",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.DNSFIREWALL.ENABLED.001",
+          "description": "VPC has no DNS Firewall AND either DNS egress is unrestricted (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS resolution is unfiltered at the resolver AND either the network permits DNS to arbitrary upstream resolvers or the network traffic is unrecorded. DNS tunneling — encoding exfiltrated data in query names to an attacker-controlled authoritative server — succeeds and leaves no forensic evidence that can be correlated to the originating workload.\n"
+        },
+        {
+          "chain_id": "vpc_dns_exfiltration",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.SG.EGRESS.DNS.001",
+          "description": "VPC has no DNS Firewall AND either DNS egress is unrestricted (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS resolution is unfiltered at the resolver AND either the network permits DNS to arbitrary upstream resolvers or the network traffic is unrecorded. DNS tunneling — encoding exfiltrated data in query names to an attacker-controlled authoritative server — succeeds and leaves no forensic evidence that can be correlated to the originating workload.\n"
+        },
+        {
+          "chain_id": "vpc_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.VPC.SG.EGRESS.001",
+          "description": "Unrestricted egress plus either DNS tunneling possible or no flow logs. Data can leave via any protocol to any destination AND either DNS tunneling is available as a covert channel or the egress traffic is not logged.\n"
+        },
+        {
+          "chain_id": "vpc_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.VPC.SG.EGRESS.DNS.001",
+          "description": "Unrestricted egress plus either DNS tunneling possible or no flow logs. Data can leave via any protocol to any destination AND either DNS tunneling is available as a covert channel or the egress traffic is not logged.\n"
+        },
+        {
+          "chain_id": "vpc_no_inspection",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.NETWORK.FIREWALL.001",
+          "description": "VPC has no Network Firewall AND either flow logs are disabled or a security group permits unrestricted egress. There is no network inspection layer AND either no traffic visibility or no egress constraint. Traffic crosses the VPC boundary without being inspected, recorded, or restricted across multiple layers of control.\n"
+        },
+        {
+          "chain_id": "vpc_no_inspection",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.SG.EGRESS.001",
+          "description": "VPC has no Network Firewall AND either flow logs are disabled or a security group permits unrestricted egress. There is no network inspection layer AND either no traffic visibility or no egress constraint. Traffic crosses the VPC boundary without being inspected, recorded, or restricted across multiple layers of control.\n"
+        }
+      ],
       "sla_deadline_hours": 336,
       "sla_breached": false,
       "sla_policy_source": "profile:default",

@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "0001-01-01T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -99,6 +99,21 @@
         },
         "action": "Set the rds.force_ssl parameter to 1 in the parameter group (PostgreSQL) or require_secure_transport to ON (MySQL). For Aurora, use the cluster parameter group."
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "rds_plaintext_database",
+          "chain_severity": "high",
+          "missing_control": "CTL.RDS.ENCRYPT.001",
+          "description": "TLS is not enforced for client connections AND either the instance is not encrypted at rest OR the automated backup chain is unencrypted. Encryption fails at multiple layers simultaneously: in transit (an attacker on any segment between the application and the database reads credentials and queries), AND either at rest (the instance storage is plaintext) or in the backup service (a recoverable plaintext copy of the database exists). The intersection is a database whose data is reachable in cleartext through more than one channel; closing any one layer alone leaves the others.\n"
+        },
+        {
+          "chain_id": "rds_plaintext_database",
+          "chain_severity": "high",
+          "missing_control": "CTL.RDS.ENCRYPT.BACKUP.001",
+          "description": "TLS is not enforced for client connections AND either the instance is not encrypted at rest OR the automated backup chain is unencrypted. Encryption fails at multiple layers simultaneously: in transit (an attacker on any segment between the application and the database reads credentials and queries), AND either at rest (the instance storage is plaintext) or in the backup service (a recoverable plaintext copy of the database exists). The intersection is a database whose data is reachable in cleartext through more than one channel; closing any one layer alone leaves the others.\n"
+        }
+      ],
       "sla_deadline_hours": 336,
       "sla_breached": false,
       "sla_policy_source": "profile:default",

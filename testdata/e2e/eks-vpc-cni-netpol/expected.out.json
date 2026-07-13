@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "0001-01-01T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 3,
     "input_hashes": {
@@ -98,6 +98,15 @@
         },
         "action": "Option 1: Enable the TTLAfterFinished feature gate at cluster level. Option 2: Set ttlSecondsAfterFinished on all Job specs. Option 3: Update VPC CNI to a version with pod completion handling. Verify VPC CNI version:\n  kubectl describe daemonset aws-node -n kube-system | grep Image"
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "eks_stale_netpol_ip_reuse_path",
+          "chain_severity": "high",
+          "missing_control": "CTL.K8S.JOB.TTL.001",
+          "description": "VPC CNI NetworkPolicy enforcement is active but completed pod firewall rules are not flushed, AND Jobs in NetworkPolicy namespaces have no TTL configured. Completed pods accumulate with stale firewall rules. Their IPs are recycled and new pods silently inherit the original pod's network access — a reliable lateral movement path.\n"
+        }
+      ],
       "sla_deadline_hours": 336,
       "sla_breached": false,
       "sla_policy_source": "profile:default",

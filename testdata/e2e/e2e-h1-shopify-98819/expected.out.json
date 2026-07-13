@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "0001-01-01T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -97,6 +97,7 @@
         },
         "action": "Remove the ACL grant to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with IgnorePublicAcls set to true."
       },
+      "exploitability": "reachable",
       "sla_deadline_hours": 336,
       "sla_breached": true,
       "sla_overdue_hours": 88704,
@@ -259,6 +260,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove or constrain the policy statement granting write actions to Principal \"*\" or AWS: \"*\". If broad write access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public write."
       },
+      "exploitability": "reachable",
       "sla_deadline_hours": 72,
       "sla_breached": true,
       "sla_overdue_hours": 88968,

@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "0001-01-01T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 3,
     "input_hashes": {
@@ -231,6 +231,7 @@
           "narrative": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
         }
       ],
+      "exploitability": "exploitable",
       "sla_deadline_hours": 72,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -399,6 +400,7 @@
           "narrative": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
         }
       ],
+      "exploitability": "exploitable",
       "sla_deadline_hours": 72,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -570,6 +572,7 @@
           "narrative": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
         }
       ],
+      "exploitability": "exploitable",
       "sla_deadline_hours": 336,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -739,6 +742,7 @@
           "narrative": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
         }
       ],
+      "exploitability": "exploitable",
       "sla_deadline_hours": 336,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -895,6 +899,7 @@
         },
         "action": "Set --authorization-mode=RBAC,Node on the API server. Remove AlwaysAllow from the mode list."
       },
+      "exploitability": "reachable",
       "sla_deadline_hours": 72,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -1094,6 +1099,7 @@
           "narrative": "etcd exposed without TLS and without client certificate authentication. Entire cluster state (secrets, configs) readable by any actor with network access to the etcd port.\n"
         }
       ],
+      "exploitability": "exploitable",
       "sla_deadline_hours": 72,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -1291,6 +1297,7 @@
           "narrative": "etcd exposed without TLS and without client certificate authentication. Entire cluster state (secrets, configs) readable by any actor with network access to the etcd port.\n"
         }
       ],
+      "exploitability": "exploitable",
       "sla_deadline_hours": 72,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -1482,6 +1489,7 @@
           "narrative": "etcd exposed without TLS and without client certificate authentication. Entire cluster state (secrets, configs) readable by any actor with network access to the etcd port.\n"
         }
       ],
+      "exploitability": "exploitable",
       "sla_deadline_hours": 72,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -1648,6 +1656,7 @@
           "narrative": "etcd exposed without TLS and without client certificate authentication. Entire cluster state (secrets, configs) readable by any actor with network access to the etcd port.\n"
         }
       ],
+      "exploitability": "exploitable",
       "sla_deadline_hours": 72,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -1796,6 +1805,33 @@
         },
         "action": "Set authentication.anonymous.enabled=false in the kubelet config or pass --anonymous-auth=false."
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "k8s_anonymous_access_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.K8S.APISERVER.ANON.001",
+          "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
+        },
+        {
+          "chain_id": "k8s_anonymous_access_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.K8S.APISERVER.AUDIT.001",
+          "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
+        },
+        {
+          "chain_id": "k8s_anonymous_access_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.K8S.APISERVER.ANON.001",
+          "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
+        },
+        {
+          "chain_id": "k8s_anonymous_access_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.K8S.APISERVER.AUDIT.001",
+          "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
+        }
+      ],
       "sla_deadline_hours": 72,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -1942,6 +1978,33 @@
         },
         "action": "Set authentication.anonymous.enabled=false in the kubelet config or pass --anonymous-auth=false."
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "k8s_anonymous_access_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.K8S.APISERVER.ANON.001",
+          "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
+        },
+        {
+          "chain_id": "k8s_anonymous_access_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.K8S.APISERVER.AUDIT.001",
+          "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
+        },
+        {
+          "chain_id": "k8s_anonymous_access_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.K8S.APISERVER.ANON.001",
+          "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
+        },
+        {
+          "chain_id": "k8s_anonymous_access_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.K8S.APISERVER.AUDIT.001",
+          "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
+        }
+      ],
       "sla_deadline_hours": 72,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -2092,6 +2155,7 @@
         },
         "action": "Set authorization.mode=Webhook in the kubelet config or pass --authorization-mode=Webhook."
       },
+      "exploitability": "reachable",
       "sla_deadline_hours": 72,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -2242,6 +2306,7 @@
         },
         "action": "Set readOnlyPort=0 in the kubelet config or pass --read-only-port=0."
       },
+      "exploitability": "reachable",
       "sla_deadline_hours": 336,
       "sla_breached": false,
       "sla_policy_source": "profile:default",

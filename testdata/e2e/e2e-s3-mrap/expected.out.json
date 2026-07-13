@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "0001-01-01T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -109,6 +109,7 @@
         },
         "action": "Enable all four PAB flags on the MRAP."
       },
+      "exploitability": "reachable",
       "sla_deadline_hours": 72,
       "sla_breached": true,
       "sla_overdue_hours": 168,
@@ -263,6 +264,7 @@
         },
         "action": "Remove public access from the MRAP policy."
       },
+      "exploitability": "reachable",
       "sla_deadline_hours": 72,
       "sla_breached": true,
       "sla_overdue_hours": 168,

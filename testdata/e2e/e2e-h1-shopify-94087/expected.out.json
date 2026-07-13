@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "0001-01-01T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -116,6 +116,7 @@
         },
         "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
       },
+      "exploitability": "reachable",
       "sla_deadline_hours": 336,
       "sla_breached": true,
       "sla_overdue_hours": 89448,
@@ -387,6 +388,7 @@
         },
         "action": "Update the app-signer configuration to enforce tenant prefix restrictions (enforce_prefix=true) and block path traversal (allow_traversal=false) on all presigned URL signers."
       },
+      "exploitability": "reachable",
       "sla_deadline_hours": 336,
       "sla_breached": true,
       "sla_overdue_hours": 89448,

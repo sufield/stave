@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "0001-01-01T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -92,6 +92,21 @@
         },
         "action": "Enable IAM authentication on the instance. Run: aws rds modify-db-instance --db-instance-identifier xxx --enable-iam-database-authentication --apply-immediately"
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "rds_auth_weakness",
+          "chain_severity": "high",
+          "missing_control": "CTL.RDS.AUTH.MASTERUSER.001",
+          "description": "IAM authentication is not enabled on the RDS instance AND either the master username matches a well-known default or a Secrets Manager secret on the account has a public resource policy. The authentication path falls back to password-only AND either the username half is free for the attacker (well-known default) or the password half is publicly retrievable (any AWS principal can call GetSecretValue). One condition alone is medium severity; the combination is the database operating with a guessable username and / or a publicly-fetchable password against static-credential authentication.\n"
+        },
+        {
+          "chain_id": "rds_auth_weakness",
+          "chain_severity": "high",
+          "missing_control": "CTL.SECRETSMANAGER.POLICY.PUBLIC.001",
+          "description": "IAM authentication is not enabled on the RDS instance AND either the master username matches a well-known default or a Secrets Manager secret on the account has a public resource policy. The authentication path falls back to password-only AND either the username half is free for the attacker (well-known default) or the password half is publicly retrievable (any AWS principal can call GetSecretValue). One condition alone is medium severity; the combination is the database operating with a guessable username and / or a publicly-fetchable password against static-credential authentication.\n"
+        }
+      ],
       "sla_deadline_hours": 1440,
       "sla_breached": false,
       "sla_policy_source": "profile:default",

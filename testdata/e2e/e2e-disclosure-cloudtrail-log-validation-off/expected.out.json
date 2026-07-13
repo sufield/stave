@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "0001-01-01T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -86,6 +86,7 @@
         },
         "action": "aws cloudtrail update-trail --name org-audit-trail --enable-log-file-validation"
       },
+      "exploitability": "reachable",
       "sla_deadline_hours": 336,
       "sla_breached": true,
       "sla_overdue_hours": 12336,

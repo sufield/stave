@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "0001-01-01T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -120,6 +120,15 @@
         },
         "action": "Enable S3 Object Lock on the bucket. Note: Object Lock can only be enabled at bucket creation. If the bucket already exists, create a new bucket with Object Lock enabled and migrate objects. Set a default retention period appropriate for your compliance framework."
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "s3_versioning_unmanaged",
+          "chain_severity": "high",
+          "missing_control": "CTL.S3.VERSIONING.NOEXPIRY.001",
+          "description": "S3 bucket has versioning enabled but neither version lifecycle management nor object lock — the worst of both worlds. Versioning without NoncurrentVersionExpiration means unbounded version accumulation (storage cost grows without ceiling). Versioning without Object Lock means any identity with s3:DeleteObjectVersion can permanently delete all versions (versioning provides no protection against a deliberate attacker). Together: the bucket pays the cost of versioning but gets neither the cost control of lifecycle management nor the deletion protection of object lock.\n"
+        }
+      ],
       "sla_deadline_hours": 1440,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -300,6 +309,15 @@
         },
         "action": "Change the Object Lock default retention mode from GOVERNANCE to COMPLIANCE. In COMPLIANCE mode, no user (including root) can delete or modify protected objects during the retention period."
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "s3_phi_retention_vulnerable",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.LIFECYCLE.002",
+          "description": "PHI bucket has a retention-vulnerable composition: object lock is not in COMPLIANCE mode (CTL.S3.LOCK.002 — GOVERNANCE mode or no lock at all permits administrator-side deletion) AND the bucket's lifecycle rules permit expiration before the minimum retention period (CTL.S3.LIFECYCLE.002). Either failure individually is a PHI-retention concern; their co-presence is the canonical \"write- once intent vs effective deletion paths\" shape that the AWS compound authoring plan's sub-family 6 names. Compliance frameworks (HIPAA, PCI-DSS retention requirements, SOX, FedRAMP audit retention) require the WORM intent the LOCK control enforces; the LIFECYCLE rules are the cheapest path to lose data that was supposed to be locked. Threshold of 2 because each leg is a configuration concern on its own but the conjunction describes a bucket where the audit/compliance retention story is structurally broken — the bucket carries the PHI tag (the catalog's intent signal) but neither defense holds.\n"
+        }
+      ],
       "sla_deadline_hours": 1440,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -487,6 +505,7 @@
         },
         "action": "Increase the Object Lock default retention period to at least 2190 days. Use aws s3api put-object-lock-configuration to update the default retention settings."
       },
+      "exploitability": "reachable",
       "sla_deadline_hours": 1440,
       "sla_breached": false,
       "sla_policy_source": "profile:default",

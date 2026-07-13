@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "0001-01-01T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -103,6 +103,27 @@
         },
         "action": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA."
       },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "root_compromise_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.IAM.ROOT.ACCESSKEY.001",
+          "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
+        },
+        {
+          "chain_id": "root_compromise_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.IAM.POLICY.ADMIN.001",
+          "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
+        },
+        {
+          "chain_id": "root_compromise_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.IAM.ROOT.HWMFA.001",
+          "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
+        }
+      ],
       "sla_deadline_hours": 72,
       "sla_breached": true,
       "sla_overdue_hours": 168,
@@ -194,7 +215,8 @@
         "ef9005b6ab44",
         "388f0ebf5470",
         "7d8c16616d67"
-      ]
+      ],
+      "deciding_layer": "identity_policy"
     }
   ],
   "issues": [

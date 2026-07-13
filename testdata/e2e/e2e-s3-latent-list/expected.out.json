@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "0001-01-01T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -120,6 +120,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove the underlying policy statement or ACL entry that grants s3:ListBucket to Principal \"*\" or AllUsers. Do not rely solely on PAB to prevent directory enumeration."
       },
+      "exploitability": "reachable",
       "sla_deadline_hours": 72,
       "sla_breached": true,
       "sla_overdue_hours": 168,

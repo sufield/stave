@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "0001-01-01T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -103,6 +103,7 @@
           "narrative": "Any audit blindness — trail S3 bucket deleted, CW Logs group deleted, or trail stopped. Each independently means the audit trail is non-functional. No API calls are recorded (S3 ghost or stopped) or no real-time detection works (CW Logs ghost). The detection infrastructure for every service is blind. Threshold of 1 fires whenever any single audit-layer failure is present.\n"
         }
       ],
+      "exploitability": "exploitable",
       "sla_deadline_hours": 72,
       "sla_breached": true,
       "sla_overdue_hours": 12600,
