@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.SAVINGSPLAN.001
+name: "SCP Does Not Deny Savings Plan Creation"
+description: >
+  SCP does not deny savingsplans:CreateSavingsPlan in member accounts.
+  A single API call can commit up to $26M in irrecoverable spend over
+  a 1-year or 3-year term. Like Reserved Instance purchases, Savings
+  Plan commitments cannot be cancelled or refunded — the spend is
+  locked the moment the API call succeeds. Combined with RI purchases,
+  these two API calls represent the highest-value denial-of-wallet
+  attack surface in AWS.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: impact
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_savings_plan_create
+remediation:
+  description: >
+    Organization SCPs do not prevent Savings Plan creation.
+  action: >
+    Add an SCP that denies savingsplans:CreateSavingsPlan for all
+    principals in member accounts. Exempt only the billing break-glass
+    role via a condition on aws:PrincipalArn.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_savings_plan_create": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_savings_plan_create
+      op: eq
+      value: false
+tests:
+  - name: "organization without Savings Plan protection fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_savings_plan_create: false
+  - name: "organization with Savings Plan protection passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_savings_plan_create: true

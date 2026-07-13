@@ -3021,6 +3021,21 @@ SCP does not restrict which AWS regions member accounts can use. Resources can b
 
 ---
 
+### CTL.IAM.SCP.RESERVEDINSTANCE.001
+
+**SCP Does Not Deny Reserved Instance Purchases**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+SCP does not deny ec2:PurchaseReservedInstancesOffering in member accounts. This is the most expensive single API call in AWS — one call can commit up to $3M per instance, and with the default limit of 20 instances, a single compromised credential can commit $62M in irrecoverable spend. Unlike most API actions, Reserved Instance purchases cannot be reversed, cancelled, or refunded. The SCP is the only preventive control; IAM policies are insufficient because any admin can grant themselves the permission.
+
+**Remediation:** Add an SCP that denies ec2:PurchaseReservedInstancesOffering for all principals in member accounts. Exempt only the billing break-glass role via a condition on aws:PrincipalArn.
+
+---
+
 ### CTL.IAM.SCP.ROOT.001
 
 **SCP Does Not Deny Root Access Key Creation**
@@ -3033,6 +3048,21 @@ SCP does not restrict which AWS regions member accounts can use. Resources can b
 SCP does not deny iam:CreateAccessKey for root users in member accounts. Root access keys provide unrestricted API access to the entire AWS account — every service, every resource, every action. They bypass IAM policies and permission boundaries. Once created, root access keys persist until explicitly deleted.
 
 **Remediation:** Add an SCP that denies iam:CreateAccessKey when the principal is root. Apply via condition aws:PrincipalArn matching the root ARN pattern.
+
+---
+
+### CTL.IAM.SCP.SAVINGSPLAN.001
+
+**SCP Does Not Deny Savings Plan Creation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+SCP does not deny savingsplans:CreateSavingsPlan in member accounts. A single API call can commit up to $26M in irrecoverable spend over a 1-year or 3-year term. Like Reserved Instance purchases, Savings Plan commitments cannot be cancelled or refunded — the spend is locked the moment the API call succeeds. Combined with RI purchases, these two API calls represent the highest-value denial-of-wallet attack surface in AWS.
+
+**Remediation:** Add an SCP that denies savingsplans:CreateSavingsPlan for all principals in member accounts. Exempt only the billing break-glass role via a condition on aws:PrincipalArn.
 
 ---
 

@@ -625,7 +625,11 @@ func classifyPrivilege(effective []ActionGrant) PrivilegeLevel {
 		// Elevated indicators
 		if action == "iam:passrole" || action == "iam:createrole" ||
 			action == "ec2:*" || action == "s3:*" ||
-			action == "lambda:*" || action == "kms:*" {
+			action == "lambda:*" || action == "kms:*" ||
+			action == "ec2:purchasereservedinstancesoffering" ||
+			action == "savingsplans:createsavingsplan" ||
+			action == "ec2:modifyreservedinstances" ||
+			action == "aws-marketplace:subscribe" {
 			hasElevated = true
 		}
 

@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2981
-**Pack hash:** `686dda0e7028ee14057739b56bb3aadd1c1192922714fad5c96b306d782b708d`
+**Total controls:** 2983
+**Pack hash:** `bbfb5fa64b7c51e631798fb9cee8b2d111998ed0b88a86f0c6a5ba3c2f73b641`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,7 +14,7 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 307 |
-| high | 1296 |
+| high | 1298 |
 | info | 18 |
 | low | 229 |
 | medium | 1131 |
@@ -30,7 +30,7 @@ GitHub. Pick a service below.
 | exposure | 1316 |
 | governance | 626 |
 | hygiene | 18 |
-| identity | 534 |
+| identity | 536 |
 | lifecycle | 31 |
 | network | 43 |
 | resilience | 35 |
@@ -94,7 +94,7 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 16 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 251 |
+| [IAM](reference/iam.md) | 253 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |
