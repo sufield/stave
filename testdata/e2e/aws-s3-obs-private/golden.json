@@ -7,16 +7,26 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "ea9f5ba504ccbcbcb23f745a62e4a9f2cbb14d15860be56a365a9cd42fe4525c",
+    "policy_fingerprint": "1a8807c7a247bbd73acc5bd819498220849e51592662f8abbf11fd4f6dd6be03",
     "evaluated_state": "deployed"
   },
   "summary": {
     "total_assets": 1,
     "exposed_resources": 1,
-    "violations": 1
+    "violations": 2
   },
   "status": "NON_COMPLIANT",
   "risk_signals": [
+    {
+      "control_id": "CTL.S3.LIFECYCLE.MULTIPART.001",
+      "asset_id": "private-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 168
+    },
     {
       "control_id": "CTL.S3.OWNERSHIP.001",
       "asset_id": "private-test-bucket",
@@ -205,6 +215,142 @@
           "fix_action": "set to BucketOwnerEnforced"
         }
       ]
+    },
+    {
+      "finding_id": "sha256:b936b79fdeb08edf",
+      "control_id": "CTL.S3.LIFECYCLE.MULTIPART.001",
+      "control_name": "S3 Bucket Must Abort Incomplete Multipart Uploads",
+      "control_description": "S3 bucket has no lifecycle rule that aborts incomplete multipart uploads. An attacker who can initiate uploads (s3:PutObject) can start millions of multipart uploads and never complete them. The incomplete parts accumulate storage costs indefinitely — there is no automatic cleanup. This is a denial-of-wallet vector: the attacker pays nothing (no completed objects), the bucket owner pays for every stored part. A lifecycle rule with AbortIncompleteMultipartUpload and a short DaysAfterInitiation threshold (e.g. 7 days) limits exposure.\n",
+      "asset_id": "private-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.lifecycle.aborts_incomplete_multipart",
+            "actual_value": null,
+            "operator": "ne",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "nist_800_53_r5": "SC-5",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-10"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket has no lifecycle rule to abort incomplete multipart uploads. Incomplete parts accumulate indefinitely and incur storage costs.",
+        "action": "Add a lifecycle rule with AbortIncompleteMultipartUpload set to a short DaysAfterInitiation threshold (7 days is typical). Apply to the entire bucket (no prefix filter) to ensure all incomplete uploads are cleaned up.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"lifecycle\": {\n      \"aborts_incomplete_multipart\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-dd2d4de0f87b8e47",
+        "target": {
+          "asset_id": "private-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Add a lifecycle rule with AbortIncompleteMultipartUpload set to a short DaysAfterInitiation threshold (7 days is typical). Apply to the entire bucket (no prefix filter) to ensure all incomplete uploads are cleaned up."
+      },
+      "exploitability": "reachable",
+      "exposure_score": 50.68493150684932,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        },
+        {
+          "predicate_expr": "storage.lifecycle.aborts_incomplete_multipart ne true",
+          "observation_key": "storage.lifecycle.aborts_incomplete_multipart",
+          "operator": "ne",
+          "expected_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "private-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.LIFECYCLE.MULTIPART.001",
+          "control_name": "S3 Bucket Must Abort Incomplete Multipart Uploads",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "storage.lifecycle.aborts_incomplete_multipart not equal true (observed: not set)",
+              "observation_key": "storage.lifecycle.aborts_incomplete_multipart"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          },
+          {
+            "path": "storage.lifecycle.aborts_incomplete_multipart",
+            "current_value": "",
+            "required_value": "true",
+            "has_safe_default": false,
+            "description": "Set storage.lifecycle.aborts_incomplete_multipart to true"
+          }
+        ],
+        "action": "Add a lifecycle rule with AbortIncompleteMultipartUpload set to a short DaysAfterInitiation threshold (7 days is typical). Apply to the entire bucket (no prefix filter) to ensure all incomplete uploads are cleaned up."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "lifecycle aborts incomplete multipart",
+          "property_path": "storage.lifecycle.aborts_incomplete_multipart",
+          "current_value": "",
+          "fix_action": "set to true"
+        }
+      ]
     }
   ],
   "marker_findings": [
@@ -346,6 +492,20 @@
       ],
       "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:7586177b9850fd20",
+      "asset_id": "private-test-bucket",
+      "shared_keys": [
+        "storage.lifecycle",
+        "storage.lifecycle.aborts_incomplete_multipart"
+      ],
+      "headline_finding_id": "sha256:b936b79fdeb08edf",
+      "member_finding_ids": [
+        "sha256:b936b79fdeb08edf"
+      ],
+      "consolidated_score": 50.68493150684932,
+      "consolidated_blast_radius": 1
     }
   ],
   "remediation_groups": [
@@ -364,16 +524,48 @@
         "CTL.S3.OWNERSHIP.001"
       ],
       "finding_count": 1
+    },
+    {
+      "asset_id": "private-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-dd2d4de0f87b8e47",
+        "target": {
+          "asset_id": "private-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Add a lifecycle rule with AbortIncompleteMultipartUpload set to a short DaysAfterInitiation threshold (7 days is typical). Apply to the entire bucket (no prefix filter) to ensure all incomplete uploads are cleaned up."
+      },
+      "contributing_controls": [
+        "CTL.S3.LIFECYCLE.MULTIPART.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
     {
-      "finding_index": 0,
+      "finding_index": 1,
       "control_id": "CTL.S3.OWNERSHIP.001",
       "asset_id": "private-test-bucket",
       "exposure_score": 76.02739726027397,
       "breakdown": {
         "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
+        "days_blind": 5
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 0,
+      "control_id": "CTL.S3.LIFECYCLE.MULTIPART.001",
+      "asset_id": "private-test-bucket",
+      "exposure_score": 50.68493150684932,
+      "breakdown": {
+        "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
