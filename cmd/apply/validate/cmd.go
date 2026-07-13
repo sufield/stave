@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -100,6 +102,7 @@ func NewCmd(rt *ui.Runtime) *cobra.Command {
 				Opts:     opts,
 			})
 		},
+		Annotations:   map[string]string{cmdutil.AnnotationSanitizeAware: "true"},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}

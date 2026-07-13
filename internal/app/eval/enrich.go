@@ -116,6 +116,15 @@ func sanitizeResultSidecars(s kernel.Sanitizer, r *evaluation.ComplianceReport) 
 		}
 		r.ChainFindings = chains
 	}
+	if len(r.Issues) > 0 {
+		issues := make([]evaluation.Issue, len(r.Issues))
+		for i := range r.Issues {
+			issue := r.Issues[i]
+			issue.AssetID = asset.ID(s.ID(string(issue.AssetID)))
+			issues[i] = issue
+		}
+		r.Issues = issues
+	}
 	if r.Metadata.ResolvedPaths.Controls != "" {
 		r.Metadata.ResolvedPaths.Controls = s.Path(r.Metadata.ResolvedPaths.Controls)
 	}

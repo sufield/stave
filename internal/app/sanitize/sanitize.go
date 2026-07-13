@@ -72,11 +72,33 @@ func Sanitize(snapshots []asset.Snapshot, cfg Config) Result {
 				applyRule(a, rule)
 				r.RulesApplied++
 			}
-			// Always hash account IDs in string property values.
 			r.AccountIDHashes += sanitizeAccountIDs(a.Properties)
+		}
+		for j := range snap.Identities {
+			id := &snap.Identities[j]
+			r.AssetsTouched++
+			for _, rule := range cfg.Rules {
+				applyIdentityRule(id, rule)
+				r.RulesApplied++
+			}
+			r.AccountIDHashes += sanitizeAccountIDs(id.Properties)
 		}
 	}
 	return r
+}
+
+func applyIdentityRule(id *asset.CloudIdentity, rule Rule) {
+	switch rule.Field {
+	case "asset_id":
+		switch rule.Method {
+		case MethodHash:
+			id.ID = asset.ID(hashToken(string(id.ID)))
+		case MethodPlaceholder:
+			id.ID = asset.ID(rule.Placeholder)
+		}
+	default:
+		applyPropertyRule(id.Properties, rule.Field, rule)
+	}
 }
 
 func applyRule(a *asset.Asset, rule Rule) {

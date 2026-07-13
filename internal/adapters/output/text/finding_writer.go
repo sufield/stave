@@ -166,12 +166,25 @@ func shortControlID(id string) string {
 
 func shortAssetID(id string) string {
 	if idx := strings.LastIndex(id, "/"); idx >= 0 {
-		return id[idx+1:]
+		id = id[idx+1:]
+	} else if idx := strings.LastIndex(id, ":"); idx >= 0 {
+		id = id[idx+1:]
 	}
-	if idx := strings.LastIndex(id, ":"); idx >= 0 {
-		return id[idx+1:]
+	return stripControlChars(id)
+}
+
+func stripControlChars(s string) string {
+	clean := make([]byte, 0, len(s))
+	for i := range len(s) {
+		b := s[i]
+		if b >= 0x20 && b != 0x7f {
+			clean = append(clean, b)
+		}
 	}
-	return id
+	if len(clean) == len(s) {
+		return s
+	}
+	return string(clean)
 }
 
 func (w *FindingWriter) writeHeader(d *drawer, result *evaluation.ComplianceReport) {

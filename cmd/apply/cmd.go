@@ -228,6 +228,7 @@ Remediation scope:
 			}
 			return runApply(cmd.Context(), opts, cs)
 		},
+		Annotations:   map[string]string{cmdutil.AnnotationSanitizeAware: "true"},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}

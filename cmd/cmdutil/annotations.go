@@ -17,3 +17,8 @@ const AnnotationConfigOptional = "stave:config-optional"
 //
 //	Annotations: map[string]string{cmdutil.AnnotationDevOnly: "true"}
 const AnnotationDevOnly = "stave:dev-only"
+
+// AnnotationSanitizeAware marks a command that actually implements
+// --sanitize behavior. Commands without this annotation reject the
+// flag with exit 2 so operators don't get a false sense of redaction.
+const AnnotationSanitizeAware = "stave:sanitize-aware"

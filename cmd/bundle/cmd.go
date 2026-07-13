@@ -15,6 +15,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/stave"
@@ -65,6 +66,7 @@ Exit Codes:
   stave bundle -i ./controls -o ./observations --sign-key audit-private.pem
   stave bundle -i ./controls -o ./observations --include-asff --output evidence.stave-bundle`,
 		Args:          cobra.NoArgs,
+		Annotations:   map[string]string{cmdutil.AnnotationSanitizeAware: "true"},
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
