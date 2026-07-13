@@ -60,6 +60,7 @@ params:
   # Resource: "*" by any attached policy. Extend per methodology.
   denied_service_wildcards:
     - cloudtrail
+    - evs
     - kms
     - aws-marketplace
     - signin

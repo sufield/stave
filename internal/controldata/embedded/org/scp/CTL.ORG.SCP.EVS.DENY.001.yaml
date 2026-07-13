@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.EVS.DENY.001
+name: SCP Does Not Deny EVS Usage
+description: >
+  Organization SCPs do not deny Elastic VMware Service (EVS) usage in
+  member accounts. EVS provisions a full VMware SDDC in an AWS-managed
+  account — the customer sees an ENI but the compute, storage, and
+  management plane run in infrastructure outside the customer's VPC.
+  Without an SCP denying evs:*, any IAM principal can provision shadow
+  VMware infrastructure invisible to the organization's CSPM, SIEM,
+  and network monitoring.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IAM-10"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - resource-sprawl
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - organization.kind
+  - organization.scp.denies_evs
+remediation:
+  description: >
+    Organization SCPs do not deny EVS usage in member accounts.
+  action: >
+    Add an SCP denying evs:* for all principals. Exclude specific
+    accounts if EVS is intentionally used.
+  example: |
+    {
+      "organization": {
+        "kind": "scp_policy_set",
+        "scp": {
+          "denies_evs": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: scp_policy_set
+    - field: properties.organization.scp.denies_evs
+      op: eq
+      value: false
+tests:
+  - name: "organization without EVS deny fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp:
+            denies_evs: false
+  - name: "organization with EVS deny passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp:
+            denies_evs: true

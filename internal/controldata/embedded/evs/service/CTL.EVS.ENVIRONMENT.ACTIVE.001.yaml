@@ -1,0 +1,50 @@
+dsl_version: ctrl.v1
+id: CTL.EVS.ENVIRONMENT.ACTIVE.001
+name: EVS Environment Is Active in Account
+description: >
+  The account has active Elastic VMware Service environments. EVS
+  provisions a full VMware SDDC in an AWS-managed account — compute,
+  storage, and the vCenter/NSX management plane run outside the
+  customer's VPC. Not inventoried by AWS Config, not visible to VPC
+  Flow Logs, not monitored by GuardDuty.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-8"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-04"]
+scope_tags: [aws, evs]
+taxonomy: [resource-sprawl]
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_account]
+params:
+  attack_stage: discovery
+observation_fields: [account.evs.has_active_environments]
+remediation:
+  description: EVS environments active outside normal governance.
+  action: Evaluate intent; if unwanted, decommission and SCP deny evs:*.
+  example: |
+    {"account": {"evs": {"has_active_environments": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.account.evs.has_active_environments
+      op: eq
+      value: true
+tests:
+  - name: "active EVS environment fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:root"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account: {evs: {has_active_environments: true}}
+  - name: "no EVS environments passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::444455556666:root"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account: {evs: {has_active_environments: false}}
