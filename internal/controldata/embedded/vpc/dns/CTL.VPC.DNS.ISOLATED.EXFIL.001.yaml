@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.DNS.ISOLATED.EXFIL.001
+name: Isolated VPC Has DNS Exfiltration Path
+description: >
+  VPC has no Internet Gateway and no NAT Gateway but DNS resolution is
+  enabled. The VPC-provided DNS server at 169.254.169.253 cannot be
+  blocked by Security Groups or NACLs and is invisible to VPC Flow
+  Logs. An attacker with code execution on any instance in this VPC
+  can exfiltrate data via DNS tunneling — the one network path that
+  survives full Security Group and NACL lockdown. For VPCs intended to
+  be network-isolated, disable DNS resolution and configure a private
+  DNS resolver, or enable Route 53 Resolver query logging to gain
+  visibility into DNS traffic.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-isolation
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc
+params:
+  attack_stage: exfiltration
+  exploitability: reachable
+observation_fields:
+  - network.kind
+  - network.dns.resolution_enabled
+  - network.vpc.has_igw
+  - network.vpc.has_nat_gateway
+remediation:
+  description: >
+    VPC is configured for network isolation (no Internet Gateway, no
+    NAT Gateway) but DNS resolution is enabled. The AWS-provided DNS
+    server at 169.254.169.253 bypasses all Security Group and NACL
+    rules and does not appear in VPC Flow Logs.
+  action: >
+    Disable DNS resolution on the VPC and configure a private Route 53
+    Resolver endpoint for internal name resolution. If DNS resolution
+    must remain enabled, enable Route 53 Resolver query logging and
+    DNS Firewall to detect and block DNS tunneling. Monitor for
+    unusually large or high-frequency DNS queries.
+  example: |
+    {
+      "network": {
+        "kind": "vpc",
+        "dns": {"resolution_enabled": false},
+        "vpc": {"has_igw": false, "has_nat_gateway": false}
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc
+    - field: properties.network.dns.resolution_enabled
+      op: eq
+      value: true
+    - field: properties.network.vpc.has_igw
+      op: eq
+      value: false
+    - field: properties.network.vpc.has_nat_gateway
+      op: eq
+      value: false
+tests:
+  - name: "isolated VPC with DNS enabled fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpc-isolated-dns-on"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          dns: {resolution_enabled: true}
+          vpc: {has_igw: false, has_nat_gateway: false}
+  - name: "isolated VPC with DNS disabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpc-isolated-dns-off"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          dns: {resolution_enabled: false}
+          vpc: {has_igw: false, has_nat_gateway: false}
+  - name: "VPC with IGW and DNS enabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpc-with-igw"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          dns: {resolution_enabled: true}
+          vpc: {has_igw: true, has_nat_gateway: false}
+  - name: "VPC with NAT and DNS enabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpc-with-nat"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          dns: {resolution_enabled: true}
+          vpc: {has_igw: false, has_nat_gateway: true}

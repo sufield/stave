@@ -1,0 +1,50 @@
+dsl_version: ctrl.v1
+id: CTL.AMPLIFY.APP.ACTIVE.001
+name: Amplify Apps Are Active in Account
+description: >
+  The account has active Amplify apps. Amplify provisions CloudFront
+  distributions, S3 buckets, Lambda@Edge functions, and IAM roles
+  behind a separate API surface — invisible to the standard
+  CloudFront, S3, and Lambda management APIs and outside the
+  organization's network security monitoring.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-8"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-04"]
+scope_tags: [aws, amplify]
+taxonomy: [resource-sprawl]
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_account]
+params:
+  attack_stage: discovery
+observation_fields: [account.amplify.has_active_apps]
+remediation:
+  description: Amplify apps active outside normal governance.
+  action: Evaluate intent; if unwanted, delete apps and SCP deny amplify:*.
+  example: |
+    {"account": {"amplify": {"has_active_apps": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.account.amplify.has_active_apps
+      op: eq
+      value: true
+tests:
+  - name: "active Amplify fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:root"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account: {amplify: {has_active_apps: true}}
+  - name: "no Amplify passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::444455556666:root"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account: {amplify: {has_active_apps: false}}

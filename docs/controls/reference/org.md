@@ -65,6 +65,81 @@ AWS Organizations must have a Service Control Policy that restricts resource cre
 
 ---
 
+### CTL.ORG.SCP.AMPLIFY.DENY.001
+
+**SCP Does Not Deny Amplify Usage**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.6;
+
+Organization SCPs do not deny Amplify service usage in member accounts. Amplify provisions CloudFront distributions, S3 buckets, Lambda@Edge functions, and IAM roles behind a separate API surface. These resources are invisible to the standard CloudFront, S3, and Lambda management APIs and run outside the organization's network security monitoring. Without an SCP denying amplify:*, any IAM principal can deploy internet-facing web applications with their own CDN, storage, and compute layer.
+
+**Remediation:** Add an SCP denying amplify:* for all principals. Exclude specific accounts if Amplify is intentionally used.
+
+---
+
+### CTL.ORG.SCP.APPRUNNER.DENY.001
+
+**SCP Does Not Deny App Runner Usage**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.6;
+
+Organization SCPs do not deny App Runner service usage in member accounts. App Runner creates fully managed container compute with public HTTPS endpoints and IAM execution roles outside the standard EC2/ECS API surface. Resources are invisible to ec2:DescribeInstances, not recorded by AWS Config resource types for EC2, and run in an AWS-managed VPC. Without an SCP denying apprunner:*, any IAM principal can provision internet-facing compute invisible to the organization's network security monitoring.
+
+**Remediation:** Add an SCP denying apprunner:* for all principals. Exclude specific accounts if App Runner is intentionally used.
+
+---
+
+### CTL.ORG.SCP.BATCH.DENY.001
+
+**SCP Does Not Deny AWS Batch Usage**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.6;
+
+Organization SCPs do not deny AWS Batch service usage in member accounts. Batch provisions EC2 instances or Fargate compute with IAM execution roles behind the Batch API surface. Batch jobs can run arbitrary container images with the job role's permissions, and compute environments may use IMDSv1 by default. Without an SCP denying batch:*, any IAM principal can provision compute with broad permissions outside standard EC2/ECS governance.
+
+**Remediation:** Add an SCP denying batch:* for all principals. Exclude specific accounts if Batch is intentionally used.
+
+---
+
+### CTL.ORG.SCP.BEANSTALK.DENY.001
+
+**SCP Does Not Deny Elastic Beanstalk Usage**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.6;
+
+Organization SCPs do not deny Elastic Beanstalk service usage in member accounts. Beanstalk provisions EC2 instances, Auto Scaling groups, Elastic Load Balancers, security groups, S3 buckets, and optionally RDS databases behind the Beanstalk API surface. These resources are created with Beanstalk-managed defaults that may not match organizational security baselines — including overpermissioned security groups and public-facing load balancers. Without an SCP denying elasticbeanstalk:*, any IAM principal can provision internet-facing infrastructure outside the standard IaC governance pipeline.
+
+**Remediation:** Add an SCP denying elasticbeanstalk:* for all principals. Exclude specific accounts if Beanstalk is intentionally used.
+
+---
+
+### CTL.ORG.SCP.CLOUD9.DENY.001
+
+**SCP Does Not Deny Cloud9 Usage**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.6;
+
+Organization SCPs do not deny Cloud9 service usage in member accounts. Cloud9 creates EC2 instances with security groups and IAM credentials behind the Cloud9 API surface. Environments can have direct SSH access from the internet and run with the credentials of the creating IAM principal. Without an SCP denying cloud9:*, any IAM principal can provision compute with network exposure and credential access outside normal EC2 governance.
+
+**Remediation:** Add an SCP denying cloud9:* for all principals. Exclude specific accounts if Cloud9 is intentionally used.
+
+---
+
 ### CTL.ORG.SCP.DEPUTYPREVENTION.001
 
 **AWS Organizations Must Have an SCP Preventing Confused Deputy Attacks**
@@ -77,6 +152,21 @@ AWS Organizations must have a Service Control Policy that restricts resource cre
 AWS Organizations must have a Service Control Policy that prevents confused deputy attacks by requiring sts:AssumeRole calls to include the aws:SourceAccount condition. Without this SCP, cross-account role assumption can be exploited by confused deputy attacks where a trusted service is tricked into acting on behalf of an unauthorized principal. This is a foundational cross-account trust boundary control.
 
 **Remediation:** Attach an SCP to the organization root that denies sts:AssumeRole when the aws:SourceAccount condition key is not present. This forces all cross-account role assumptions to declare the source account, preventing confused deputy attacks.
+
+---
+
+### CTL.ORG.SCP.EMR.DENY.001
+
+**SCP Does Not Deny EMR Usage**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.6;
+
+Organization SCPs do not deny EMR service usage in member accounts. EMR provisions EC2 instances with overpermissioned default security groups (ElasticMapReduce-master and ElasticMapReduce-slave) that allow broad inbound access. EMR clusters run with IAM roles that may have S3 and KMS access, and the default security groups are created automatically if none are specified. Without an SCP denying elasticmapreduce:*, any IAM principal can provision compute clusters with network exposure and broad data access.
+
+**Remediation:** Add an SCP denying elasticmapreduce:* for all principals. Exclude specific accounts if EMR is intentionally used.
 
 ---
 
@@ -95,6 +185,21 @@ Organization SCPs do not deny Lightsail service usage in member accounts. Lights
 
 ---
 
+### CTL.ORG.SCP.MWAA.DENY.001
+
+**SCP Does Not Deny MWAA Usage**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.6;
+
+Organization SCPs do not deny MWAA (Managed Workflows for Apache Airflow) service usage in member accounts. MWAA provisions Fargate compute, S3 buckets for DAG storage, and CloudWatch log groups behind the Airflow API surface. The web server can be configured for public access, and DAGs execute arbitrary Python code with the MWAA execution role's permissions. Without an SCP denying airflow:*, any IAM principal can provision workflow orchestration compute with potentially broad permissions.
+
+**Remediation:** Add an SCP denying airflow:* for all principals. Exclude specific accounts if MWAA is intentionally used.
+
+---
+
 ### CTL.ORG.SCP.OBJECTLOCK.DOW.001
 
 **SCP Must Restrict S3 Object Lock Retention Duration**
@@ -107,6 +212,36 @@ Organization SCPs do not deny Lightsail service usage in member accounts. Lights
 AWS Organizations must have a Service Control Policy that restricts S3 Object Lock retention duration. Without this SCP, any identity with s3:PutObjectRetention can lock objects for up to 100 years — locked objects cannot be deleted even by AWS, creating an irrecoverable denial-of-wallet condition. The SCP should deny s3:PutObjectRetention when s3:object-lock-remaining-retention-days exceeds the organization's maximum (e.g. 2555 days / 7 years). External principals invited via bucket policy bypass SCPs entirely, making this a necessary-but-not-sufficient control.
 
 **Remediation:** Attach an SCP to the organization root that denies s3:PutObjectRetention when the condition key s3:object-lock-remaining-retention-days exceeds your maximum retention period. Also consider denying s3:PutBucketObjectLockConfiguration to prevent new Object Lock-enabled buckets without approval.
+
+---
+
+### CTL.ORG.SCP.S3NAMESPACE.001
+
+**SCP Does Not Enforce S3 Account-Regional Namespace**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.6;
+
+Organization SCPs do not enforce the S3 account-regional namespace for new bucket creation. Without this enforcement, services that auto-create buckets with predictable names (Glue, SageMaker, CDK, Athena, Beanstalk, EMR Studio, CodeStar) use the global namespace, where an attacker who knows the account ID can pre-create the bucket in an unused region. The account-regional namespace (buckets in the format {prefix}-{account-id}-{region}-an) prevents cross-account name squatting by construction. An SCP requiring the s3:x-amz-bucket-namespace condition on s3:CreateBucket is the structural fix for the entire Bucket Monopoly attack class.
+
+**Remediation:** Add an SCP denying s3:CreateBucket unless s3:x-amz-bucket-namespace matches the account-regional format. This prevents all future buckets from using the global namespace, eliminating the Bucket Monopoly attack surface for Glue, SageMaker, CDK, Athena, Beanstalk, and other services that auto-create predictable-name buckets.
+
+---
+
+### CTL.ORG.SCP.SAGEMAKER.DENY.001
+
+**SCP Does Not Deny SageMaker Usage**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.6;
+
+Organization SCPs do not deny SageMaker service usage in member accounts. SageMaker provisions EC2 instances, EBS volumes, EFS file systems, and IAM execution roles behind the SageMaker API surface. Notebook instances can have direct internet access, and execution roles may have broad S3 and KMS permissions for training data access. Without an SCP denying sagemaker:*, any IAM principal can provision compute with data access and potential internet exposure outside the standard EC2 governance pipeline.
+
+**Remediation:** Add an SCP denying sagemaker:* for all principals. Exclude specific accounts if SageMaker is intentionally used.
 
 ---
 

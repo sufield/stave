@@ -69,6 +69,21 @@ Complements the Bedrock-agent permission-scope controls (CTL.BEDROCK.AGENT.OVERP
 
 ---
 
+### CTL.IAM.AMPLIFY.ADMIN.001
+
+**IAM Policy Grants Amplify App Creation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.3;
+
+An IAM principal has a policy granting amplify:CreateApp. Amplify apps provision CloudFront distributions, S3 buckets, Lambda@Edge functions, and IAM roles — internet-facing infrastructure invisible to the standard CloudFront, S3, and Lambda management APIs.
+
+**Remediation:** Remove amplify:CreateApp from the principal's policies.
+
+---
+
 ### CTL.IAM.ANALYZER.001
 
 **IAM Access Analyzer Must Be Enabled**
@@ -126,6 +141,36 @@ IAM Access Analyzer should include an organization-level analyzer (type ORGANIZA
 No IAM Access Analyzer of type UNUSED_ACCESS exists. The unused access analyzer identifies IAM roles and users with permissions they have not used within a specified period, plus unused access keys and passwords. Without it, over-privileged identities accumulate permissions that expand the blast radius of credential compromise.
 
 **Remediation:** Create an unused access analyzer: aws accessanalyzer create-analyzer --analyzer-name unused-access --type ACCOUNT_UNUSED_ACCESS --configuration '{"unusedAccess": {"unusedAccessAge": 90}}'.
+
+---
+
+### CTL.IAM.APPRUNNER.ADMIN.001
+
+**IAM Policy Grants App Runner Service Creation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.3;
+
+An IAM principal has a policy granting apprunner:CreateService. App Runner services have public HTTPS endpoints by default and execute with an IAM role. The created compute is invisible to ec2:DescribeInstances and runs in an AWS-managed VPC outside standard network security monitoring.
+
+**Remediation:** Remove apprunner:CreateService from the principal's policies unless App Runner usage is explicitly governed.
+
+---
+
+### CTL.IAM.BEANSTALK.ADMIN.001
+
+**IAM Policy Grants Elastic Beanstalk Environment Creation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.3;
+
+An IAM principal has a policy granting elasticbeanstalk:CreateEnvironment. Beanstalk environments provision EC2 instances, Auto Scaling groups, Elastic Load Balancers, security groups, and optionally RDS databases — internet-facing infrastructure with Beanstalk-managed defaults that may not match organizational security baselines.
+
+**Remediation:** Remove elasticbeanstalk:CreateEnvironment from the principal's policies.
 
 ---
 
@@ -216,6 +261,21 @@ Expired SSL/TLS server certificates must be removed from IAM. Expired certificat
 A principal has a transitive role-assumption chain whose target is scheduled for deletion at a known future time. The chain is reachable now, but every consumer caching the reachability decision is stale once the deletion completes — the time-of-check / time-of-use pattern. After the deletion window closes, the chain has a future-ghost reference: any policy that re-evaluated against the cached chain would assume permissions that no longer exist (or — worse — that another team has recreated under the same ARN with different intent). Same ghost-reference primitive as CTL.SECRETS.GHOST.DELETION.REFERENCED.001, lifted from per-asset to multi-hop chain analysis. The .present boolean is folded upstream from Stave's chain walker, which stamps each emitted RoleChainFact with `scheduled_deletion_at` whenever the chain crosses an identity scheduled for future deletion (the earliest such timestamp wins per chain).
 
 **Remediation:** Decide intent: (a) if the deletion is unintended, cancel it and restore the role; (b) if intentional, remove the intermediate hops that lead to this role BEFORE the deletion window closes — typically by tightening sts:AssumeRole on the trust policies of the upstream roles, or by removing iam:PassRole grants that aim at the doomed role. After the deletion completes, audit any IaC / Terraform state that references the role's ARN; recreating the role under the same name is the foundational TOCTOU step the attacker would race for.
+
+---
+
+### CTL.IAM.CLOUD9.ADMIN.001
+
+**IAM Policy Grants Cloud9 Environment Creation**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.3;
+
+An IAM principal has a policy granting cloud9:CreateEnvironmentEC2. Cloud9 environments create EC2 instances with security groups and inherit the creating principal's credentials. Environments can have direct SSH access from the internet.
+
+**Remediation:** Remove cloud9:CreateEnvironmentEC2 from the principal's policies.
 
 ---
 
@@ -478,6 +538,21 @@ No IAM policy on any cloud provider should grant unrestricted administrative acc
 All privileged accounts across all cloud providers must have MFA enforced. This control extends AWS MFA controls to Azure AD (Conditional Access requiring MFA) and GCP (2-Step Verification enforcement). A single cloud account without MFA is a breach vector regardless of how well other clouds are protected.
 
 **Remediation:** Enforce MFA at the identity provider level. AWS: IAM MFA policy conditions. Azure: Conditional Access policies. GCP: 2-Step Verification enforcement in Workspace/Cloud Identity.
+
+---
+
+### CTL.IAM.EMR.ADMIN.001
+
+**IAM Policy Grants EMR Job Flow Creation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.3;
+
+An IAM principal has a policy granting elasticmapreduce:RunJobFlow. EMR clusters provision EC2 instances with overpermissioned default security groups (ElasticMapReduce-master and ElasticMapReduce-slave) and IAM roles with S3 and KMS access for data processing.
+
+**Remediation:** Remove elasticmapreduce:RunJobFlow from the principal's policies.
 
 ---
 
@@ -1661,6 +1736,21 @@ IAM users with admin access must use a hardware MFA device (FIDO2, YubiKey, Gema
 
 ---
 
+### CTL.IAM.MWAA.ADMIN.001
+
+**IAM Policy Grants MWAA Environment Creation**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.3;
+
+An IAM principal has a policy granting airflow:CreateEnvironment. MWAA environments provision Fargate compute, S3 buckets for DAG storage, and CloudWatch log groups. DAGs execute arbitrary Python code with the MWAA execution role's permissions, and the web server can be configured for public internet access.
+
+**Remediation:** Remove airflow:CreateEnvironment from the principal's policies.
+
+---
+
 ### CTL.IAM.NEP.ADMIN.001
 
 **Net Effective Permissions Must Not Include Admin-Equivalent Actions**
@@ -2718,6 +2808,21 @@ The root account must not be used for day-to-day operations. Root activity shoul
 IAM role's S3 actions (s3:*, s3:GetObject, s3:PutObject, etc.) use Resource: * — the role can access every S3 bucket in the account. A compromised principal or compute resource using this role can read or write any object in any bucket: customer data, backups, audit logs, CloudTrail archives, Terraform state. This is distinct from CTL.IAM.POLICY.RESOURCE.WILDCARD.001 which checks all sensitive actions; this control focuses specifically on S3 wildcard scope because S3 is the primary data exfiltration vector and training-data source for ML workloads.
 
 **Remediation:** Scope the S3 actions to specific bucket ARNs. Use arn:aws:s3:::my-bucket and arn:aws:s3:::my-bucket/* to restrict object-level access to specific buckets. For training roles, restrict to the training data bucket only.
+
+---
+
+### CTL.IAM.SAGEMAKER.ADMIN.001
+
+**IAM Policy Grants SageMaker Notebook and Domain Creation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.3;
+
+An IAM principal has a policy granting sagemaker:CreateNotebookInstance or sagemaker:CreateDomain. SageMaker notebook instances and Studio domains provision EC2 compute with EBS storage, optional internet access, and IAM execution roles that typically have broad S3 and KMS permissions for training data access.
+
+**Remediation:** Remove sagemaker:CreateNotebookInstance and sagemaker:CreateDomain from the principal's policies.
 
 ---
 

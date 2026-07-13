@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2986
-**Pack hash:** `bc3480b5184d65ae8f0539260ff2641be4b996c3b40768d56695f905e39ac57a`
+**Total controls:** 3008
+**Pack hash:** `1735d4658abb28869fafcd0c9e6514a42c4e2e75ea249309b5e7399e852e0b75`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 307 |
-| high | 1300 |
+| high | 1311 |
 | info | 18 |
-| low | 229 |
-| medium | 1132 |
+| low | 231 |
+| medium | 1141 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,10 +27,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1317 |
+| exposure | 1332 |
 | governance | 626 |
 | hygiene | 18 |
-| identity | 536 |
+| identity | 543 |
 | lifecycle | 31 |
 | network | 43 |
 | resilience | 35 |
@@ -60,7 +60,7 @@ GitHub. Pick a service below.
 | [CLOUDFLARE](reference/cloudflare.md) | 29 |
 | [CLOUDFORMATION](reference/cloudformation.md) | 9 |
 | [CLOUDFRONT](reference/cloudfront.md) | 72 |
-| [CLOUDTRAIL](reference/cloudtrail.md) | 52 |
+| [CLOUDTRAIL](reference/cloudtrail.md) | 56 |
 | [CLOUDWATCH](reference/cloudwatch.md) | 67 |
 | [CODEBUILD](reference/codebuild.md) | 12 |
 | [CODECOMMIT](reference/codecommit.md) | 2 |
@@ -94,7 +94,7 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 18 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 253 |
+| [IAM](reference/iam.md) | 260 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |
@@ -111,12 +111,12 @@ GitHub. Pick a service below.
 | [NEPTUNE](reference/neptune.md) | 20 |
 | [NETFIREWALL](reference/netfirewall.md) | 12 |
 | [OPENSEARCH](reference/opensearch.md) | 132 |
-| [ORG](reference/org.md) | 8 |
+| [ORG](reference/org.md) | 17 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 72 |
 | [REDSHIFT](reference/redshift.md) | 26 |
 | [ROUTE53](reference/route53.md) | 50 |
-| [S3](reference/s3.md) | 142 |
+| [S3](reference/s3.md) | 143 |
 | [SAGEMAKER](reference/sagemaker.md) | 36 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
@@ -131,7 +131,7 @@ GitHub. Pick a service below.
 | [SSM](reference/ssm.md) | 13 |
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
 | [TRANSFER](reference/transfer.md) | 1 |
-| [VPC](reference/vpc.md) | 90 |
+| [VPC](reference/vpc.md) | 91 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 16 |
 | [WORKSPACES](reference/workspaces.md) | 1 |

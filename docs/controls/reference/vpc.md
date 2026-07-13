@@ -127,6 +127,21 @@ VPC does not have DNS hostnames (EnableDnsHostnames) enabled. Without DNS hostna
 
 ---
 
+### CTL.VPC.DNS.ISOLATED.EXFIL.001
+
+**Isolated VPC Has DNS Exfiltration Path**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+VPC has no Internet Gateway and no NAT Gateway but DNS resolution is enabled. The VPC-provided DNS server at 169.254.169.253 cannot be blocked by Security Groups or NACLs and is invisible to VPC Flow Logs. An attacker with code execution on any instance in this VPC can exfiltrate data via DNS tunneling — the one network path that survives full Security Group and NACL lockdown. For VPCs intended to be network-isolated, disable DNS resolution and configure a private DNS resolver, or enable Route 53 Resolver query logging to gain visibility into DNS traffic.
+
+**Remediation:** Disable DNS resolution on the VPC and configure a private Route 53 Resolver endpoint for internal name resolution. If DNS resolution must remain enabled, enable Route 53 Resolver query logging and DNS Firewall to detect and block DNS tunneling. Monitor for unusually large or high-frequency DNS queries.
+
+---
+
 ### CTL.VPC.DNS.RESOLUTION.001
 
 **VPC Must Have DNS Resolution Enabled**

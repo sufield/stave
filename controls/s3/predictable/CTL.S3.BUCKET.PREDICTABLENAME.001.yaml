@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.S3.BUCKET.PREDICTABLENAME.001
+name: S3 Bucket Uses Predictable Service-Generated Name
+description: >
+  S3 bucket name matches a known predictable pattern used by AWS
+  services that auto-create storage (Glue, SageMaker, CDK, Athena,
+  Beanstalk, EMR Studio, CodeStar, CloudFormation). Buckets in the
+  global namespace with predictable names are vulnerable to the Bucket
+  Monopoly attack: an attacker who knows the account ID can pre-create
+  the bucket name in a region the account has not used yet, hijacking
+  the service's auto-created storage. The structural fix is enforcing
+  the S3 account-regional namespace via SCP
+  (CTL.ORG.SCP.S3NAMESPACE.001); this control identifies existing
+  buckets that remain in the global namespace.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - resource-sprawl
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: initial_access
+observation_fields:
+  - storage.kind
+  - storage.bucket.name_pattern_service
+  - storage.bucket.uses_account_regional_namespace
+remediation:
+  description: >
+    Bucket name matches a predictable AWS service pattern and uses the
+    global S3 namespace.
+  action: >
+    Migrate to the S3 account-regional namespace
+    (s3:x-amz-bucket-namespace) or verify bucket ownership in all
+    active regions. Apply CTL.ORG.SCP.S3NAMESPACE.001 to prevent
+    future predictable-name buckets in the global namespace.
+  example: |
+    {
+      "storage": {
+        "kind": "s3_bucket",
+        "bucket": {
+          "name_pattern_service": "none",
+          "uses_account_regional_namespace": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: s3_bucket
+    - field: properties.storage.bucket.name_pattern_service
+      op: ne
+      value: "none"
+    - field: properties.storage.bucket.uses_account_regional_namespace
+      op: eq
+      value: false
+tests:
+  - name: "Glue bucket in global namespace fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::aws-glue-assets-111122223333-us-east-1"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: s3_bucket
+          bucket:
+            name_pattern_service: "Glue"
+            uses_account_regional_namespace: false
+  - name: "bucket in account-regional namespace passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::aws-glue-assets-111122223333-us-east-1-an"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: s3_bucket
+          bucket:
+            name_pattern_service: "Glue"
+            uses_account_regional_namespace: true
+  - name: "non-predictable bucket passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::my-custom-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: s3_bucket
+          bucket:
+            name_pattern_service: "none"
+            uses_account_regional_namespace: false

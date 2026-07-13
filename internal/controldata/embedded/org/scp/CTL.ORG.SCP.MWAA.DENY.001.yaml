@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.MWAA.DENY.001
+name: SCP Does Not Deny MWAA Usage
+description: >
+  Organization SCPs do not deny MWAA (Managed Workflows for Apache
+  Airflow) service usage in member accounts. MWAA provisions Fargate
+  compute, S3 buckets for DAG storage, and CloudWatch log groups
+  behind the Airflow API surface. The web server can be configured
+  for public access, and DAGs execute arbitrary Python code with the
+  MWAA execution role's permissions. Without an SCP denying
+  airflow:*, any IAM principal can provision workflow orchestration
+  compute with potentially broad permissions.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IAM-10"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - resource-sprawl
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - organization.kind
+  - organization.scp.denies_airflow
+remediation:
+  description: >
+    Organization SCPs do not deny MWAA usage in member accounts.
+  action: >
+    Add an SCP denying airflow:* for all principals. Exclude specific
+    accounts if MWAA is intentionally used.
+  example: |
+    {
+      "organization": {
+        "kind": "scp_policy_set",
+        "scp": {
+          "denies_airflow": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: scp_policy_set
+    - field: properties.organization.scp.denies_airflow
+      op: eq
+      value: false
+tests:
+  - name: "no MWAA deny fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp: {denies_airflow: false}
+  - name: "MWAA deny passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp: {denies_airflow: true}

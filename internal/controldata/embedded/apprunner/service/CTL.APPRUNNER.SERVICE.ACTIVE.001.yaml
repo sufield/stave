@@ -1,0 +1,51 @@
+dsl_version: ctrl.v1
+id: CTL.APPRUNNER.SERVICE.ACTIVE.001
+name: App Runner Services Are Active in Account
+description: >
+  The account has active App Runner services. App Runner provisions
+  fully managed container compute with public HTTPS endpoints in an
+  AWS-managed VPC outside the customer's governance boundary. Services
+  are not visible through ec2:DescribeInstances or standard network
+  security monitoring and run with IAM execution roles that may have
+  broad permissions.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-8"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-04"]
+scope_tags: [aws, apprunner]
+taxonomy: [resource-sprawl]
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_account]
+params:
+  attack_stage: discovery
+observation_fields: [account.apprunner.has_active_services]
+remediation:
+  description: App Runner services active outside normal governance.
+  action: Evaluate intent; if unwanted, delete services and SCP deny apprunner:*.
+  example: |
+    {"account": {"apprunner": {"has_active_services": false}}}
+unsafe_predicate:
+  all:
+    - field: properties.account.apprunner.has_active_services
+      op: eq
+      value: true
+tests:
+  - name: "active App Runner fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:root"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account: {apprunner: {has_active_services: true}}
+  - name: "no App Runner passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::444455556666:root"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account: {apprunner: {has_active_services: false}}

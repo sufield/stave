@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.AMPLIFY.BLIND.001
+name: CloudTrail Does Not Log Amplify Data Events
+description: >
+  CloudTrail data events do not cover Amplify-managed CloudFront
+  distributions and Lambda@Edge functions. Amplify provisions these
+  resources in an AWS-managed context — request-level activity on
+  Amplify-hosted applications is not visible in the customer's
+  CloudTrail data event logs. Management events (CreateApp,
+  DeleteApp) are logged, but CDN request traffic and edge function
+  invocations are invisible.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-01"]
+scope_tags: [aws, cloudtrail]
+taxonomy:
+  - logging
+  - detection-evasion
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_cloudtrail_trail]
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - audit_trail.kind
+  - audit_trail.amplify_data_events.logged
+remediation:
+  description: CloudTrail does not capture Amplify data-plane events.
+  action: >
+    Enable CloudFront access logging and Lambda@Edge CloudWatch Logs
+    for Amplify-managed distributions. Amplify data-plane events
+    cannot be captured via CloudTrail event selectors.
+  example: |
+    {"audit_trail": {"kind": "trail", "amplify_data_events": {"logged": true}}}
+unsafe_predicate:
+  all:
+    - field: properties.audit_trail.kind
+      op: eq
+      value: trail
+    - field: properties.audit_trail.amplify_data_events.logged
+      op: eq
+      value: false
+tests:
+  - name: "trail not logging Amplify data events fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/main-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit_trail:
+          kind: trail
+          amplify_data_events: {logged: false}
+  - name: "trail logging Amplify data events passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:444455556666:trail/full-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit_trail:
+          kind: trail
+          amplify_data_events: {logged: true}

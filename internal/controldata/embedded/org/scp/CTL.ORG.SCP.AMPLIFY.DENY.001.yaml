@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.AMPLIFY.DENY.001
+name: SCP Does Not Deny Amplify Usage
+description: >
+  Organization SCPs do not deny Amplify service usage in member
+  accounts. Amplify provisions CloudFront distributions, S3 buckets,
+  Lambda@Edge functions, and IAM roles behind a separate API surface.
+  These resources are invisible to the standard CloudFront, S3, and
+  Lambda management APIs and run outside the organization's network
+  security monitoring. Without an SCP denying amplify:*, any IAM
+  principal can deploy internet-facing web applications with their
+  own CDN, storage, and compute layer.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IAM-10"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - resource-sprawl
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - organization.kind
+  - organization.scp.denies_amplify
+remediation:
+  description: >
+    Organization SCPs do not deny Amplify usage in member accounts.
+  action: >
+    Add an SCP denying amplify:* for all principals. Exclude specific
+    accounts if Amplify is intentionally used.
+  example: |
+    {
+      "organization": {
+        "kind": "scp_policy_set",
+        "scp": {
+          "denies_amplify": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: scp_policy_set
+    - field: properties.organization.scp.denies_amplify
+      op: eq
+      value: false
+tests:
+  - name: "no Amplify deny fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp: {denies_amplify: false}
+  - name: "Amplify deny passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp: {denies_amplify: true}

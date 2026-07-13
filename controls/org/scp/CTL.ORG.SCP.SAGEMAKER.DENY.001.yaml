@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.SAGEMAKER.DENY.001
+name: SCP Does Not Deny SageMaker Usage
+description: >
+  Organization SCPs do not deny SageMaker service usage in member
+  accounts. SageMaker provisions EC2 instances, EBS volumes, EFS
+  file systems, and IAM execution roles behind the SageMaker API
+  surface. Notebook instances can have direct internet access, and
+  execution roles may have broad S3 and KMS permissions for training
+  data access. Without an SCP denying sagemaker:*, any IAM principal
+  can provision compute with data access and potential internet
+  exposure outside the standard EC2 governance pipeline.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IAM-10"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - resource-sprawl
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - organization.kind
+  - organization.scp.denies_sagemaker
+remediation:
+  description: >
+    Organization SCPs do not deny SageMaker usage in member accounts.
+  action: >
+    Add an SCP denying sagemaker:* for all principals. Exclude
+    specific accounts if SageMaker is intentionally used.
+  example: |
+    {
+      "organization": {
+        "kind": "scp_policy_set",
+        "scp": {
+          "denies_sagemaker": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: scp_policy_set
+    - field: properties.organization.scp.denies_sagemaker
+      op: eq
+      value: false
+tests:
+  - name: "no SageMaker deny fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp: {denies_sagemaker: false}
+  - name: "SageMaker deny passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp: {denies_sagemaker: true}

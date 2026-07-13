@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.CLOUD9.DENY.001
+name: SCP Does Not Deny Cloud9 Usage
+description: >
+  Organization SCPs do not deny Cloud9 service usage in member
+  accounts. Cloud9 creates EC2 instances with security groups and
+  IAM credentials behind the Cloud9 API surface. Environments can
+  have direct SSH access from the internet and run with the
+  credentials of the creating IAM principal. Without an SCP denying
+  cloud9:*, any IAM principal can provision compute with network
+  exposure and credential access outside normal EC2 governance.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IAM-10"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - resource-sprawl
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - organization.kind
+  - organization.scp.denies_cloud9
+remediation:
+  description: >
+    Organization SCPs do not deny Cloud9 usage in member accounts.
+  action: >
+    Add an SCP denying cloud9:* for all principals. Exclude specific
+    accounts if Cloud9 is intentionally used.
+  example: |
+    {
+      "organization": {
+        "kind": "scp_policy_set",
+        "scp": {
+          "denies_cloud9": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: scp_policy_set
+    - field: properties.organization.scp.denies_cloud9
+      op: eq
+      value: false
+tests:
+  - name: "no Cloud9 deny fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp: {denies_cloud9: false}
+  - name: "Cloud9 deny passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp: {denies_cloud9: true}

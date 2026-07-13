@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.APPRUNNER.DENY.001
+name: SCP Does Not Deny App Runner Usage
+description: >
+  Organization SCPs do not deny App Runner service usage in member
+  accounts. App Runner creates fully managed container compute with
+  public HTTPS endpoints and IAM execution roles outside the standard
+  EC2/ECS API surface. Resources are invisible to ec2:DescribeInstances,
+  not recorded by AWS Config resource types for EC2, and run in an
+  AWS-managed VPC. Without an SCP denying apprunner:*, any IAM
+  principal can provision internet-facing compute invisible to the
+  organization's network security monitoring.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IAM-10"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - resource-sprawl
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - organization.kind
+  - organization.scp.denies_apprunner
+remediation:
+  description: >
+    Organization SCPs do not deny App Runner usage in member accounts.
+  action: >
+    Add an SCP denying apprunner:* for all principals. Exclude specific
+    accounts if App Runner is intentionally used.
+  example: |
+    {
+      "organization": {
+        "kind": "scp_policy_set",
+        "scp": {
+          "denies_apprunner": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: scp_policy_set
+    - field: properties.organization.scp.denies_apprunner
+      op: eq
+      value: false
+tests:
+  - name: "no App Runner deny fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp: {denies_apprunner: false}
+  - name: "App Runner deny passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp: {denies_apprunner: true}
