@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 2980
-**Pack hash:** `f41bc9312d28beab5b67751d25d48f49c23b647af926776c829bbacf6962a707`
+**Total controls:** 2981
+**Pack hash:** `686dda0e7028ee14057739b56bb3aadd1c1192922714fad5c96b306d782b708d`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -17,7 +17,7 @@ GitHub. Pick a service below.
 | high | 1296 |
 | info | 18 |
 | low | 229 |
-| medium | 1130 |
+| medium | 1131 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,7 +27,7 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1315 |
+| exposure | 1316 |
 | governance | 626 |
 | hygiene | 18 |
 | identity | 534 |
@@ -116,7 +116,7 @@ GitHub. Pick a service below.
 | [RDS](reference/rds.md) | 72 |
 | [REDSHIFT](reference/redshift.md) | 26 |
 | [ROUTE53](reference/route53.md) | 50 |
-| [S3](reference/s3.md) | 140 |
+| [S3](reference/s3.md) | 141 |
 | [SAGEMAKER](reference/sagemaker.md) | 36 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
