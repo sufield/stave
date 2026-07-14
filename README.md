@@ -7,10 +7,8 @@ offline, credential-free.
 [![codecov](https://codecov.io/gh/sufield/stave/graph/badge.svg?token=OQ72PYGVPZ)](https://codecov.io/gh/sufield/stave)
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sufield/stave?quickstart=1)
 
-[Documentation](https://www.systeminvariant.dev/docs) ·
-[Tutorial](https://www.systeminvariant.dev/docs/tutorials) ·
-[Blog](https://www.systeminvariant.dev/blog) ·
-[Metrics](docs/metrics.yaml)
+[Control Reference](docs/controls/reference.md) ·
+[Command Reference](docs/command-reference.md)
 
 ## Install
 

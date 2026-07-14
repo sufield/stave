@@ -122,19 +122,6 @@ When a package's serial test cost starts dominating CI wall time,
 add `t.Parallel()` to every Test function in the package. The
 mechanical edit is scripted:
 
-```bash
-make parallelize PKG=./internal/core/enginetest
-```
-
-The script (`scripts/add-parallel.sh`) inserts `t.Parallel()` as
-the first line of every `Test*` function and skips files that
-mutate process-wide state (`t.Setenv`, `os.Setenv`, `os.Chdir`)
-to avoid races. The original 6-package rollout (commit `4c7170cf0`)
-took enginetest from 349s → 33s standalone (10.6×).
-
-After running, verify with `go test -race ./<package>` to confirm
-no races surfaced.
-
 ### Test Prerequisites
 
 E2E tests (`make e2e`, which drives `go test ./e2e/...`) require:

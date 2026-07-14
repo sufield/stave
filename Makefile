@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check refactor-scan refactor-scan-check refactor-scan-update sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate
+.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate
 # Binary name
 BINARY=stave
 
@@ -251,18 +251,6 @@ script-test: sync-schemas sync-controls sync-alternatives
 clig-check:
 	$(GOTEST) ./cmd/ -run "TestCligCompliance|TestCligGlobalFlags" -count=1
 
-## parallelize: Insert t.Parallel() into every Test* in PKG=<dir>
-## (skips files that touch t.Setenv / os.Setenv / os.Chdir).
-## Used to roll out parallelism to a new hot package; see commit
-## 4c7170cf0 for the original 6-package rollout (10.6× speedup
-## on enginetest).
-parallelize:
-	@if [ -z "$(PKG)" ]; then \
-		echo "usage: make parallelize PKG=<directory>"; \
-		exit 2; \
-	fi
-	bash scripts/add-parallel.sh $(PKG)
-
 ## lint: Run golangci-lint (v2.8.0)
 lint:
 	$(GOLINT) run ./...
@@ -303,22 +291,6 @@ lint-debt:
 	else \
 		echo "No change. Debt holds at the baseline ceiling."; \
 	fi
-
-## refactor-scan: list remaining Go modernization candidates per category.
-## Ratcheted categories (genuine targets) show full file:line lists; wide nets
-## show counts only. See scripts/refactor-scan.sh + docs/audits/refactor-scan-plan.md.
-refactor-scan:
-	@bash scripts/refactor-scan.sh list
-
-## refactor-scan-check: burn-down gate — fail if any ratcheted candidate count
-## grew above docs/audits/refactor-scan-baseline. Pairs with refactor-scan-update.
-refactor-scan-check:
-	@bash scripts/refactor-scan.sh check
-
-## refactor-scan-update: rewrite the ratcheted baseline to current counts; commit
-## it to tighten the ratchet when candidates drop (mirrors the lint-debt floor).
-refactor-scan-update:
-	@bash scripts/refactor-scan.sh update-baseline
 
 ## audit: Generate the report-only Go best-practices baseline (docs/audits/go-best-practices-baseline.{md,json}).
 ## audit-check: Verify the committed baseline matches current source (manual; NOT in CI — churn is per-commit volatile).
