@@ -51,5 +51,7 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.policies.has_wildcard_s3_resource
+      op: present
+    - field: properties.identity.policies.has_wildcard_s3_resource
       op: eq
       value: true

@@ -28,5 +28,5 @@ unsafe_predicate:
       op: eq
       value: tenant_policy
     - field: properties.azure.identity.sspr_enabled
-      op: eq
-      value: false
+      op: ne
+      value: true

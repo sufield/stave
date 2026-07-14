@@ -57,6 +57,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.create_service_linked_role.present
+      op: present
+    - field: properties.identity.escalation.create_service_linked_role.present
       op: eq
       value: true
 tests:

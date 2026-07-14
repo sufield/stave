@@ -86,6 +86,8 @@ validated_against:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.passrole_sendcommand.present
+      op: present
+    - field: properties.identity.escalation.passrole_sendcommand.present
       op: eq
       value: true
 alternatives:

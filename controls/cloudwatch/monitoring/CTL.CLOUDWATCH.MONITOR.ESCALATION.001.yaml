@@ -67,5 +67,5 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.monitoring.metric_filters.iam_escalation_events.exists
-      op: eq
-      value: false
+      op: ne
+      value: true

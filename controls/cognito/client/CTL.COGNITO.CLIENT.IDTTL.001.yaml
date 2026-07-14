@@ -64,6 +64,8 @@ unsafe_predicate:
       op: eq
       value: cognito_app_client
     - field: properties.identity.cognito.id_token_too_long
+      op: present
+    - field: properties.identity.cognito.id_token_too_long
       op: eq
       value: true
 defect: >

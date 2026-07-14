@@ -30,5 +30,5 @@ unsafe_predicate:
       op: eq
       value: risk_policy
     - field: properties.azure.identity.user_risk_policy_configured
-      op: eq
-      value: false
+      op: ne
+      value: true

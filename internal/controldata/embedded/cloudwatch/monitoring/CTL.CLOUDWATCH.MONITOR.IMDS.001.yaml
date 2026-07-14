@@ -33,5 +33,5 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.monitoring.metric_filters.imds_config_changes.exists
-      op: eq
-      value: false
+      op: ne
+      value: true

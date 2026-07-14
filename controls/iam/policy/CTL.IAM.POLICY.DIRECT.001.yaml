@@ -54,6 +54,8 @@ unsafe_predicate:
       op: eq
       value: user
     - field: properties.identity.policies.has_direct_policies
+      op: present
+    - field: properties.identity.policies.has_direct_policies
       op: eq
       value: true
 alternatives:

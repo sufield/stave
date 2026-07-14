@@ -74,6 +74,8 @@ unsafe_predicate:
       op: eq
       value: alarm
     - field: properties.monitoring.cloudwatch.is_decommissioned_alarm
+      op: present
+    - field: properties.monitoring.cloudwatch.is_decommissioned_alarm
       op: eq
       value: true
 defect: >

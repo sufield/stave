@@ -39,5 +39,5 @@ unsafe_predicate:
       op: eq
       value: cognito_app_client
     - field: properties.identity.security.prevent_user_existence_errors
-      op: eq
-      value: false
+      op: ne
+      value: true

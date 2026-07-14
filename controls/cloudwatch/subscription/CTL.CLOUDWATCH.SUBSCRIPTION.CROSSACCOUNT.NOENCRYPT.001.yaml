@@ -74,11 +74,13 @@ unsafe_predicate:
       op: eq
       value: subscription_filter
     - field: properties.monitoring.cloudwatch.subscription_cross_account
+      op: present
+    - field: properties.monitoring.cloudwatch.subscription_cross_account
       op: eq
       value: true
     - field: properties.monitoring.cloudwatch.subscription_encrypted
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   Subscription filter delivers to a cross-account
   destination without encryption.

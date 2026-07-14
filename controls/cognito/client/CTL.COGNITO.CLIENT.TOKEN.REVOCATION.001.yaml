@@ -39,5 +39,5 @@ unsafe_predicate:
       op: eq
       value: cognito_app_client
     - field: properties.identity.auth.token_revocation_enabled
-      op: eq
-      value: false
+      op: ne
+      value: true

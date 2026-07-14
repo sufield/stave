@@ -62,11 +62,13 @@ unsafe_predicate:
       op: eq
       value: state_machine
     - field: properties.compute.deployment.uses_waitfortoken
+      op: present
+    - field: properties.compute.deployment.uses_waitfortoken
       op: eq
       value: true
     - field: properties.compute.deployment.worker_validates_token
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   Worker doesn't validate token identity.
 infection: >

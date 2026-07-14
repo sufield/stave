@@ -55,6 +55,8 @@ unsafe_predicate:
       op: eq
       value: federated_role
     - field: properties.identity.federation.session_exceeds_threshold
+      op: present
+    - field: properties.identity.federation.session_exceeds_threshold
       op: eq
       value: true
 tests:

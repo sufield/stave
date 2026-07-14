@@ -44,5 +44,5 @@ unsafe_predicate:
       op: eq
       value: rds_instance
     - field: properties.database.monitoring.alarm_storage_configured
-      op: eq
-      value: false
+      op: ne
+      value: true

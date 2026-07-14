@@ -54,6 +54,8 @@ unsafe_predicate:
       op: eq
       value: user
     - field: properties.identity.policy.has_temporal_without_expiry
+      op: present
+    - field: properties.identity.policy.has_temporal_without_expiry
       op: eq
       value: true
 tests:

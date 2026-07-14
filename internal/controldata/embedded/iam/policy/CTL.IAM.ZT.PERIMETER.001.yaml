@@ -51,5 +51,7 @@ unsafe_predicate:
       op: eq
       value: resource_access
     - field: properties.identity.access.perimeter_only
+      op: present
+    - field: properties.identity.access.perimeter_only
       op: eq
       value: true

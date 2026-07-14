@@ -58,6 +58,8 @@ unsafe_predicate:
       op: eq
       value: user
     - field: properties.identity.policy.iam_admin_missing_sourceip
+      op: present
+    - field: properties.identity.policy.iam_admin_missing_sourceip
       op: eq
       value: true
 tests:

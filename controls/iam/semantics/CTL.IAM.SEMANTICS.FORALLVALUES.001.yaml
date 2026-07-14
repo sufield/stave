@@ -65,6 +65,8 @@ unsafe_predicate:
       op: eq
       value: policy
     - field: properties.identity.policy.semantics.has_forallvalues_without_null
+      op: present
+    - field: properties.identity.policy.semantics.has_forallvalues_without_null
       op: eq
       value: true
 tests:

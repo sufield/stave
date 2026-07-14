@@ -66,6 +66,8 @@ unsafe_predicate:
       op: eq
       value: cognito_user_pool
     - field: properties.identity.cognito.ghost_identity_chain_present
+      op: present
+    - field: properties.identity.cognito.ghost_identity_chain_present
       op: eq
       value: true
 tests:

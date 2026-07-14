@@ -68,6 +68,8 @@ unsafe_predicate:
       op: eq
       value: policy
     - field: properties.identity.policy.semantics.has_condition_key_inapplicable_to_action
+      op: present
+    - field: properties.identity.policy.semantics.has_condition_key_inapplicable_to_action
       op: eq
       value: true
 tests:

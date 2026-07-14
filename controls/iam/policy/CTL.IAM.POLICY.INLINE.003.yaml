@@ -60,6 +60,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.group.has_inline_policies
+      op: present
+    - field: properties.identity.group.has_inline_policies
       op: eq
       value: true
 defect: >

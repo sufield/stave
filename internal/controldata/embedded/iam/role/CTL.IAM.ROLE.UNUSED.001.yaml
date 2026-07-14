@@ -64,6 +64,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.role.is_unused
+      op: present
+    - field: properties.identity.role.is_unused
       op: eq
       value: true
 tests:

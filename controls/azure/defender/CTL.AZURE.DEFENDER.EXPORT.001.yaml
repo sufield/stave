@@ -29,5 +29,5 @@ unsafe_predicate:
       op: eq
       value: defender_setting
     - field: properties.azure.monitoring.defender.continuous_export_enabled
-      op: eq
-      value: false
+      op: ne
+      value: true

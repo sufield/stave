@@ -54,11 +54,13 @@ unsafe_predicate:
       op: eq
       value: account
     - field: properties.identity.root.mfa_enabled
+      op: present
+    - field: properties.identity.root.mfa_enabled
       op: eq
       value: true
     - field: properties.identity.root.hardware_mfa
-      op: eq
-      value: false
+      op: ne
+      value: true
 alternatives:
   - tool: prowler
     check_id: iam_root_hardware_mfa_enabled

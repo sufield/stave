@@ -65,6 +65,8 @@ unsafe_predicate:
       op: eq
       value: cognito_app_client
     - field: properties.identity.cognito.allows_implicit_flow
+      op: present
+    - field: properties.identity.cognito.allows_implicit_flow
       op: eq
       value: true
 defect: >

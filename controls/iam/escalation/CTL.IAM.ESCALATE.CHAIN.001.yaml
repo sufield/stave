@@ -57,6 +57,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.can_escalate_to_admin
+      op: present
+    - field: properties.identity.escalation.can_escalate_to_admin
       op: eq
       value: true
 alternatives:

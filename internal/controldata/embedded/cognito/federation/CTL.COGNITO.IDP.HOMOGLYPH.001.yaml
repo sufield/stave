@@ -64,6 +64,8 @@ unsafe_predicate:
       op: eq
       value: cognito_user_pool
     - field: properties.identity.cognito.homoglyph_collision_present
+      op: present
+    - field: properties.identity.cognito.homoglyph_collision_present
       op: eq
       value: true
 tests:

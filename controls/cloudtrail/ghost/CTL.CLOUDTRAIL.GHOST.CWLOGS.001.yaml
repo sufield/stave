@@ -76,6 +76,8 @@ unsafe_predicate:
       op: eq
       value: trail
     - field: properties.audit.cloudtrail.has_ghost_cw_logs
+      op: present
+    - field: properties.audit.cloudtrail.has_ghost_cw_logs
       op: eq
       value: true
 defect: >

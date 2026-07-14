@@ -30,5 +30,5 @@ unsafe_predicate:
       op: eq
       value: activity_log
     - field: properties.azure.monitoring.activitylog.exported
-      op: eq
-      value: false
+      op: ne
+      value: true

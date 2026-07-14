@@ -55,5 +55,7 @@ unsafe_predicate:
       op: eq
       value: role
     - field: properties.identity.role.has_data_and_iam_access
+      op: present
+    - field: properties.identity.role.has_data_and_iam_access
       op: eq
       value: true

@@ -51,6 +51,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.group.has_policies_no_members
+      op: present
+    - field: properties.identity.group.has_policies_no_members
       op: eq
       value: true
 defect: >

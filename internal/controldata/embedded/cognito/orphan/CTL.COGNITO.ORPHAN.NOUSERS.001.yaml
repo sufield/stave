@@ -62,6 +62,8 @@ unsafe_predicate:
       op: eq
       value: user_pool
     - field: properties.identity.cognito.is_user_pool_dormant
+      op: present
+    - field: properties.identity.cognito.is_user_pool_dormant
       op: eq
       value: true
 defect: >

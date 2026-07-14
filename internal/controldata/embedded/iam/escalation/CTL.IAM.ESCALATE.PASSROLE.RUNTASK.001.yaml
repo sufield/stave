@@ -71,6 +71,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.passrole_runtask.present
+      op: present
+    - field: properties.identity.escalation.passrole_runtask.present
       op: eq
       value: true
 tests:

@@ -70,8 +70,12 @@ unsafe_predicate:
       op: gt
       value: 90
     - field: properties.identity.access_advisor.available
+      op: present
+    - field: properties.identity.access_advisor.available
       op: eq
       value: true
+    - field: properties.identity.permission_drift.threshold_exceeded
+      op: present
     - field: properties.identity.permission_drift.threshold_exceeded
       op: eq
       value: true

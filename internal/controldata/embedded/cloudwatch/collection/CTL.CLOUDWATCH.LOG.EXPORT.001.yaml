@@ -45,5 +45,5 @@ unsafe_predicate:
       op: eq
       value: log_group
     - field: properties.monitoring.export_restricted
-      op: eq
-      value: false
+      op: ne
+      value: true

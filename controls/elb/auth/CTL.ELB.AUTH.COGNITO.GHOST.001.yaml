@@ -71,6 +71,8 @@ unsafe_predicate:
       op: eq
       value: cognito
     - field: properties.network.elb.has_ghost_cognito
+      op: present
+    - field: properties.network.elb.has_ghost_cognito
       op: eq
       value: true
 defect: >

@@ -60,6 +60,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.k8s.pod_identity.has_ghost_service_account
+      op: present
+    - field: properties.k8s.pod_identity.has_ghost_service_account
       op: eq
       value: true
 defect: >

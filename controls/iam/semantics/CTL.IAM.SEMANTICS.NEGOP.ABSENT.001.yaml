@@ -66,6 +66,8 @@ unsafe_predicate:
       op: eq
       value: policy
     - field: properties.identity.policy.semantics.has_negop_on_absent_key
+      op: present
+    - field: properties.identity.policy.semantics.has_negop_on_absent_key
       op: eq
       value: true
 tests:

@@ -61,6 +61,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.delete_boundary.present
+      op: present
+    - field: properties.identity.escalation.delete_boundary.present
       op: eq
       value: true
 tests:

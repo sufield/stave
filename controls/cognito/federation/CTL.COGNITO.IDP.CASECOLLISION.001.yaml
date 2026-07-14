@@ -54,6 +54,8 @@ unsafe_predicate:
       op: eq
       value: cognito_user_pool
     - field: properties.identity.cognito.case_only_collision
+      op: present
+    - field: properties.identity.cognito.case_only_collision
       op: eq
       value: true
 tests:

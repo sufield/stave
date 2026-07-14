@@ -69,6 +69,8 @@ unsafe_predicate:
       op: eq
       value: composite_alarm
     - field: properties.monitoring.cloudwatch.has_ghost_child
+      op: present
+    - field: properties.monitoring.cloudwatch.has_ghost_child
       op: eq
       value: true
 defect: >

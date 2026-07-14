@@ -69,6 +69,8 @@ unsafe_predicate:
       op: eq
       value: user_pool
     - field: properties.identity.cognito.mfa_sms_only
+      op: present
+    - field: properties.identity.cognito.mfa_sms_only
       op: eq
       value: true
 defect: >

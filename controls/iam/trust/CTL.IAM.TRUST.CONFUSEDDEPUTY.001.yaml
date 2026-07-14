@@ -67,11 +67,15 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.trust_policy.has_third_party_principal
+      op: present
+    - field: properties.identity.trust_policy.has_third_party_principal
       op: eq
       value: true
     - field: properties.identity.trust_policy.confused_deputy_protected
-      op: eq
-      value: false
+      op: ne
+      value: true
+    - field: properties.identity.trust_policy.principal_is_account_root
+      op: present
     - field: properties.identity.trust_policy.principal_is_account_root
       op: eq
       value: true

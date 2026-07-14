@@ -70,6 +70,8 @@ validated_against:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.ssm_startsession.present
+      op: present
+    - field: properties.identity.escalation.ssm_startsession.present
       op: eq
       value: true
 tests:

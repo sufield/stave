@@ -27,5 +27,5 @@ unsafe_predicate:
       op: eq
       value: conditional_access_policy
     - field: properties.m365.identity.ca.blocks_o365_insider_risk
-      op: eq
-      value: false
+      op: ne
+      value: true

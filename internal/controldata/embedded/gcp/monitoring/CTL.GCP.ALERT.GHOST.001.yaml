@@ -29,5 +29,7 @@ unsafe_predicate:
       op: eq
       value: alert_policy
     - field: properties.gcp.monitoring.alert.has_ghost_channel
+      op: present
+    - field: properties.gcp.monitoring.alert.has_ghost_channel
       op: eq
       value: true

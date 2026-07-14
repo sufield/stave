@@ -58,6 +58,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.sns_addpermission.present
+      op: present
+    - field: properties.identity.escalation.sns_addpermission.present
       op: eq
       value: true
 tests:

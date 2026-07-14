@@ -31,5 +31,5 @@ unsafe_predicate:
       op: eq
       value: entra_tenant
     - field: properties.azure.identity.break_glass_configured
-      op: eq
-      value: false
+      op: ne
+      value: true

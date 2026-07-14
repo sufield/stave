@@ -74,8 +74,12 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.internet_facing
+      op: present
+    - field: properties.identity.internet_facing
       op: eq
       value: true
+    - field: properties.identity.reaches_sensitive
+      op: present
     - field: properties.identity.reaches_sensitive
       op: eq
       value: true

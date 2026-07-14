@@ -50,5 +50,7 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.policies.has_resource_wildcard_on_sensitive
+      op: present
+    - field: properties.identity.policies.has_resource_wildcard_on_sensitive
       op: eq
       value: true

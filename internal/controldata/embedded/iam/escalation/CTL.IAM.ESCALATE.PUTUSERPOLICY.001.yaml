@@ -85,6 +85,8 @@ unsafe_predicate:
       op: eq
       value: user
     - field: properties.identity.escalation.put_user_policy_self.present
+      op: present
+    - field: properties.identity.escalation.put_user_policy_self.present
       op: eq
       value: true
 alternatives:

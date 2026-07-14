@@ -57,6 +57,8 @@ unsafe_predicate:
       op: eq
       value: role
     - field: properties.identity.role.session_duration_excessive
+      op: present
+    - field: properties.identity.role.session_duration_excessive
       op: eq
       value: true
 defect: >

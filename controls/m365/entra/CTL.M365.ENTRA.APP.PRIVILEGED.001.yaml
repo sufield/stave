@@ -29,5 +29,7 @@ unsafe_predicate:
       op: eq
       value: entra_config
     - field: properties.m365.identity.app.unused_privileged_permissions
+      op: present
+    - field: properties.m365.identity.app.unused_privileged_permissions
       op: eq
       value: true

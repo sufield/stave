@@ -63,8 +63,8 @@ unsafe_predicate:
       op: eq
       value: cognito_app_client
     - field: properties.identity.cognito.refresh_token_rotation_enabled
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   Cognito app client doesn't rotate refresh
   tokens.

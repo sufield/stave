@@ -31,5 +31,7 @@ unsafe_predicate:
       op: eq
       value: service_principal
     - field: properties.azure.identity.credential_expiring_soon
+      op: present
+    - field: properties.azure.identity.credential_expiring_soon
       op: eq
       value: true

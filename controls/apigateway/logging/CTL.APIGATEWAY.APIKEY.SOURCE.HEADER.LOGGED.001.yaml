@@ -66,5 +66,7 @@ unsafe_predicate:
       op: eq
       value: HEADER
     - field: properties.api.apikey.captured_in_access_log
+      op: present
+    - field: properties.api.apikey.captured_in_access_log
       op: eq
       value: true

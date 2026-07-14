@@ -75,6 +75,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.passrole_createendpoint.present
+      op: present
+    - field: properties.identity.escalation.passrole_createendpoint.present
       op: eq
       value: true
 tests:

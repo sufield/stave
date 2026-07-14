@@ -31,5 +31,7 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.policy.has_write_ghost_refs
+      op: present
+    - field: properties.identity.policy.has_write_ghost_refs
       op: eq
       value: true

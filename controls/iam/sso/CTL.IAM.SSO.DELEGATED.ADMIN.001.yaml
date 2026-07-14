@@ -51,5 +51,5 @@ unsafe_predicate:
       op: eq
       value: sso_instance
     - field: properties.identity.sso.delegated_admin_configured
-      op: eq
-      value: false
+      op: ne
+      value: true

@@ -65,6 +65,8 @@ unsafe_predicate:
       op: eq
       value: policy
     - field: properties.identity.policy.semantics.has_deny_with_positive_condition
+      op: present
+    - field: properties.identity.policy.semantics.has_deny_with_positive_condition
       op: eq
       value: true
 tests:

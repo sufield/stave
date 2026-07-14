@@ -67,11 +67,13 @@ unsafe_predicate:
       op: eq
       value: org_logging
     - field: properties.monitoring.cloudwatch.is_org_account
+      op: present
+    - field: properties.monitoring.cloudwatch.is_org_account
       op: eq
       value: true
     - field: properties.monitoring.cloudwatch.has_centralized_logging
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   AWS Organizations with member accounts has no
   centralized CloudWatch Logs aggregation.

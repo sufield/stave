@@ -39,5 +39,5 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.nep.boundary_effective
-      op: eq
-      value: false
+      op: ne
+      value: true

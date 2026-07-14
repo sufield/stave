@@ -70,8 +70,8 @@ unsafe_predicate:
       op: eq
       value: user_pool
     - field: properties.identity.cognito.email_auto_verified
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   Cognito user pool does not auto-verify
   email.

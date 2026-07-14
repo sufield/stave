@@ -71,11 +71,13 @@ unsafe_predicate:
       op: eq
       value: user_pool
     - field: properties.identity.cognito.mfa_sms_enabled
+      op: present
+    - field: properties.identity.cognito.mfa_sms_enabled
       op: eq
       value: true
     - field: properties.identity.cognito.phone_auto_verified
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   Cognito user pool uses SMS MFA without
   verifying phone numbers.

@@ -61,6 +61,8 @@ unsafe_predicate:
       op: eq
       value: policy
     - field: properties.identity.policy.semantics.has_ifexists_on_service_key
+      op: present
+    - field: properties.identity.policy.semantics.has_ifexists_on_service_key
       op: eq
       value: true
 tests:

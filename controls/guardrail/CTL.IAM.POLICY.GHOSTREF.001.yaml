@@ -29,5 +29,7 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.policy.has_ghost_resource_refs
+      op: present
+    - field: properties.identity.policy.has_ghost_resource_refs
       op: eq
       value: true

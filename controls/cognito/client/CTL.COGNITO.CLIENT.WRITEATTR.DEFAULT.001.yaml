@@ -65,6 +65,8 @@ unsafe_predicate:
       op: eq
       value: cognito_app_client
     - field: properties.identity.cognito.client_write_attributes_unset
+      op: present
+    - field: properties.identity.cognito.client_write_attributes_unset
       op: eq
       value: true
 tests:

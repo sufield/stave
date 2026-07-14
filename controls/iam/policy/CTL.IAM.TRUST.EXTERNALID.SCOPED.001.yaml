@@ -55,8 +55,10 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.role.cross_account_trust_without_external_id
+      op: present
+    - field: properties.identity.role.cross_account_trust_without_external_id
       op: eq
       value: true
     - field: properties.identity.role.principal_is_account_root
-      op: eq
-      value: false
+      op: ne
+      value: true

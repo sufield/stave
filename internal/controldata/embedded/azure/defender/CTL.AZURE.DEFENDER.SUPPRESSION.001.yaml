@@ -28,5 +28,7 @@ unsafe_predicate:
       op: eq
       value: defender_setting
     - field: properties.azure.monitoring.defender.has_broad_suppression_rules
+      op: present
+    - field: properties.azure.monitoring.defender.has_broad_suppression_rules
       op: eq
       value: true

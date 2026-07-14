@@ -84,6 +84,8 @@ validated_against:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.passrole_createnotebook.present
+      op: present
+    - field: properties.identity.escalation.passrole_createnotebook.present
       op: eq
       value: true
 tests:

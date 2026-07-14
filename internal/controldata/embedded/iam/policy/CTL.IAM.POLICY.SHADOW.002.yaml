@@ -59,5 +59,7 @@ unsafe_predicate:
       op: eq
       value: policy
     - field: properties.identity.policy.shadow_logic.permits_iam_write_via_negative
+      op: present
+    - field: properties.identity.policy.shadow_logic.permits_iam_write_via_negative
       op: eq
       value: true

@@ -30,5 +30,5 @@ unsafe_predicate:
       op: eq
       value: api_key
     - field: properties.gcp.identity.apikey.has_api_restriction
-      op: eq
-      value: false
+      op: ne
+      value: true

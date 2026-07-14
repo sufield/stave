@@ -68,6 +68,8 @@ unsafe_predicate:
       op: eq
       value: user
     - field: properties.identity.policies.has_admin_access
+      op: present
+    - field: properties.identity.policies.has_admin_access
       op: eq
       value: true
 alternatives:

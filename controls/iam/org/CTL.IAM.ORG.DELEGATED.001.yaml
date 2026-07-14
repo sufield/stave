@@ -50,6 +50,8 @@ unsafe_predicate:
       op: eq
       value: delegated_admin
     - field: properties.identity.delegated.account_permissions_excessive
+      op: present
+    - field: properties.identity.delegated.account_permissions_excessive
       op: eq
       value: true
 tests:

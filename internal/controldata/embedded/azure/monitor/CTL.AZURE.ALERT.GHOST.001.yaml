@@ -30,5 +30,7 @@ unsafe_predicate:
       op: eq
       value: alert_rule
     - field: properties.azure.monitoring.alert.has_ghost_action_group
+      op: present
+    - field: properties.azure.monitoring.alert.has_ghost_action_group
       op: eq
       value: true

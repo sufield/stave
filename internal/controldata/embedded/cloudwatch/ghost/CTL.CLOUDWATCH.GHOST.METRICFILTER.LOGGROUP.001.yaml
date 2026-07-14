@@ -72,6 +72,8 @@ unsafe_predicate:
       op: eq
       value: metric_filter
     - field: properties.monitoring.cloudwatch.has_ghost_log_group
+      op: present
+    - field: properties.monitoring.cloudwatch.has_ghost_log_group
       op: eq
       value: true
 defect: >

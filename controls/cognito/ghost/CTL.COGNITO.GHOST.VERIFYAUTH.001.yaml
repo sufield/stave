@@ -67,6 +67,8 @@ unsafe_predicate:
       op: eq
       value: verify_auth_challenge_response
     - field: properties.identity.cognito.has_ghost_trigger
+      op: present
+    - field: properties.identity.cognito.has_ghost_trigger
       op: eq
       value: true
 defect: >

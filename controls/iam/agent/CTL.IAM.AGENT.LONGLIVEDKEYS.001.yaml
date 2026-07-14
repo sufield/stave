@@ -66,6 +66,8 @@ unsafe_predicate:
       op: eq
       value: agent
     - field: properties.identity.role.long_lived_keys_present
+      op: present
+    - field: properties.identity.role.long_lived_keys_present
       op: eq
       value: true
 defect: >

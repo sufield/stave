@@ -70,6 +70,8 @@ unsafe_predicate:
       op: eq
       value: alarm
     - field: properties.monitoring.cloudwatch.is_stale_insufficient
+      op: present
+    - field: properties.monitoring.cloudwatch.is_stale_insufficient
       op: eq
       value: true
 defect: >

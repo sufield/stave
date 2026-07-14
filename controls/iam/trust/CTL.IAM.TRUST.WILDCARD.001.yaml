@@ -60,5 +60,7 @@ unsafe_predicate:
       op: eq
       value: role
     - field: properties.identity.trust_policy.has_wildcard_principal
+      op: present
+    - field: properties.identity.trust_policy.has_wildcard_principal
       op: eq
       value: true

@@ -67,6 +67,8 @@ unsafe_predicate:
       op: eq
       value: policy
     - field: properties.identity.policy.semantics.has_allow_mfa_false
+      op: present
+    - field: properties.identity.policy.semantics.has_allow_mfa_false
       op: eq
       value: true
 defect: >

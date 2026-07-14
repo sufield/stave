@@ -71,6 +71,8 @@ unsafe_predicate:
       op: eq
       value: cognito_identity_pool
     - field: properties.identity.cognito.auth_role_has_cross_account
+      op: present
+    - field: properties.identity.cognito.auth_role_has_cross_account
       op: eq
       value: true
 defect: >

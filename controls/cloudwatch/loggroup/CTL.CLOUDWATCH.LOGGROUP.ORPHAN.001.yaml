@@ -70,6 +70,8 @@ unsafe_predicate:
       op: eq
       value: log_group
     - field: properties.monitoring.cloudwatch.is_dormant
+      op: present
+    - field: properties.monitoring.cloudwatch.is_dormant
       op: eq
       value: true
 defect: >

@@ -55,5 +55,7 @@ unsafe_predicate:
       op: eq
       value: sagemaker_notebook
     - field: properties.compute.identity.execution_role.has_broad_s3_access
+      op: present
+    - field: properties.compute.identity.execution_role.has_broad_s3_access
       op: eq
       value: true

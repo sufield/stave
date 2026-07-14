@@ -51,8 +51,8 @@ unsafe_predicate:
       op: eq
       value: scp_policy_set
     - field: properties.organization.scp.denies_cloud9
-      op: eq
-      value: false
+      op: ne
+      value: true
 tests:
   - name: "no Cloud9 deny fires"
     verdict: VIOLATION

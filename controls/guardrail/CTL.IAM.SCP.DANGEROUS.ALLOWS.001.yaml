@@ -43,5 +43,7 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.scp.has_dangerous_allows
+      op: present
+    - field: properties.scp.has_dangerous_allows
       op: eq
       value: true

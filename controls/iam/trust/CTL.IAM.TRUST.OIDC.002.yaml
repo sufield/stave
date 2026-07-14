@@ -52,8 +52,12 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.trust.oidc.has_oidc_trust
+      op: present
+    - field: properties.identity.trust.oidc.has_oidc_trust
       op: eq
       value: true
+    - field: properties.identity.trust.oidc.has_wildcard_sub
+      op: present
     - field: properties.identity.trust.oidc.has_wildcard_sub
       op: eq
       value: true

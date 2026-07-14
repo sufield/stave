@@ -71,6 +71,8 @@ unsafe_predicate:
       op: eq
       value: alarm
     - field: properties.monitoring.cloudwatch.is_security_alarm
+      op: present
+    - field: properties.monitoring.cloudwatch.is_security_alarm
       op: eq
       value: true
     - field: properties.monitoring.cloudwatch.treat_missing_data

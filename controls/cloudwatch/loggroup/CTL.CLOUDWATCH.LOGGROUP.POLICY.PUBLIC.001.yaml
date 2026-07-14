@@ -72,6 +72,8 @@ unsafe_predicate:
       op: eq
       value: log_group
     - field: properties.monitoring.cloudwatch.resource_policy_public
+      op: present
+    - field: properties.monitoring.cloudwatch.resource_policy_public
       op: eq
       value: true
 defect: >

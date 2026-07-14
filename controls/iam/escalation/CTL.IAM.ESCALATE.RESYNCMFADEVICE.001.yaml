@@ -79,6 +79,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.resync_mfa_device.present
+      op: present
+    - field: properties.identity.escalation.resync_mfa_device.present
       op: eq
       value: true
 alternatives:

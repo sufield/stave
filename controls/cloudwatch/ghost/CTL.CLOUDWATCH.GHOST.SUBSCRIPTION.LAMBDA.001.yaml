@@ -68,6 +68,8 @@ unsafe_predicate:
       op: eq
       value: lambda
     - field: properties.monitoring.cloudwatch.has_ghost_subscription_dest
+      op: present
+    - field: properties.monitoring.cloudwatch.has_ghost_subscription_dest
       op: eq
       value: true
 defect: >

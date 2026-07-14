@@ -34,5 +34,7 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.guardduty.has_broad_suppression
+      op: present
+    - field: properties.guardduty.has_broad_suppression
       op: eq
       value: true

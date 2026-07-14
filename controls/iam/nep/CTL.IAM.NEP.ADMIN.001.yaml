@@ -43,5 +43,7 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.nep.is_admin
+      op: present
+    - field: properties.identity.nep.is_admin
       op: eq
       value: true

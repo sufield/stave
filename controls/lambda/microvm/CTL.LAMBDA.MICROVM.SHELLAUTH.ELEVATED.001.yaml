@@ -71,6 +71,8 @@ unsafe_predicate:
       op: eq
       value: iam_role
     - field: properties.role.microvm_shell_auth
+      op: present
+    - field: properties.role.microvm_shell_auth
       op: eq
       value: true
     - field: properties.role.is_break_glass

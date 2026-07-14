@@ -65,8 +65,8 @@ unsafe_predicate:
       op: eq
       value: cognito_identity_pool
     - field: properties.identity.cognito.provider_validates_audience
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   Cognito identity pool provider doesn't
   validate token audience.

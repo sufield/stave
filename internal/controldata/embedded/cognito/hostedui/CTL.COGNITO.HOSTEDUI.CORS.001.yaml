@@ -65,6 +65,8 @@ unsafe_predicate:
       op: eq
       value: cognito_user_pool
     - field: properties.identity.cognito.oauth_cors_wildcard
+      op: present
+    - field: properties.identity.cognito.oauth_cors_wildcard
       op: eq
       value: true
 defect: >

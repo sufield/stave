@@ -53,6 +53,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.k8s.pod_identity.is_default_namespace
+      op: present
+    - field: properties.k8s.pod_identity.is_default_namespace
       op: eq
       value: true
 defect: >

@@ -69,6 +69,8 @@ unsafe_predicate:
       op: eq
       value: user_pool
     - field: properties.identity.cognito.has_orphan_triggers
+      op: present
+    - field: properties.identity.cognito.has_orphan_triggers
       op: eq
       value: true
 defect: >

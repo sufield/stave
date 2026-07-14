@@ -27,5 +27,5 @@ unsafe_predicate:
       op: eq
       value: app_insights
     - field: properties.azure.monitoring.appinsights.configured
-      op: eq
-      value: false
+      op: ne
+      value: true

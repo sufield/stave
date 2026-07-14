@@ -447,6 +447,10 @@ func ruleFieldConditionToExpr(r *policy.PredicateRule, scopeVar string, depth in
 		// "we don't know" state and produces no false-positive
 		// violation. Pair with OpPresent if you need to also fail
 		// on the absence itself.
+		if isEnumConstant(val) {
+			// ponytail: case-insensitive for enum constants (PUBLIC_ONLY, CONNECT_SSH, etc.)
+			return resolveAndFormatBinary("op eq", "(%s && string(%s).upperAscii() == %s)", val, hf, fa, resolveValueExpr)
+		}
 		return resolveAndFormatBinary("op eq", "(%s && %s == %s)", val, hf, fa, resolveValueExpr)
 	case predicate.OpNe:
 		// Fail-CLOSED semantics for OpNe (asymmetric vs OpEq): a
@@ -462,6 +466,9 @@ func ruleFieldConditionToExpr(r *policy.PredicateRule, scopeVar string, depth in
 		// specific value" (absent field = no match), OpNe says
 		// "this value must not be set" (absent field is suspicious
 		// because the producer should have emitted it).
+		if isEnumConstant(val) {
+			return resolveAndFormatBinary("op ne", "(!(%s) || string(%s).upperAscii() != %s)", val, hf, fa, resolveValueExpr)
+		}
 		return resolveAndFormatBinary("op ne", "(!(%s) || %s != %s)", val, hf, fa, resolveValueExpr)
 	case predicate.OpGt:
 		return resolveAndFormatBinary("op gt", "(%s && %s > %s)", val, hf, fa, resolveValueExpr)
@@ -851,4 +858,22 @@ func parseRuleList(v any, breadcrumb string) ([]policy.PredicateRule, error) {
 		rules = append(rules, rule)
 	}
 	return rules, nil
+}
+
+// isEnumConstant returns true if v is a string of uppercase ASCII letters,
+// digits, and underscores — the convention for cloud API enum values
+// (PUBLIC_ONLY, CONNECT_SSH, COGNITO_USER_POOLS). Controls match these;
+// collectors emit whatever the API returns. The compiler normalizes at the
+// boundary via upperAscii() so neither side needs to know the other's case.
+func isEnumConstant(v any) bool {
+	s, ok := v.(string)
+	if !ok || len(s) < 2 {
+		return false
+	}
+	for _, c := range s {
+		if !((c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_') {
+			return false
+		}
+	}
+	return true
 }

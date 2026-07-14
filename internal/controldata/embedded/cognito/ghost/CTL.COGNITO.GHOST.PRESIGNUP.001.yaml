@@ -70,6 +70,8 @@ unsafe_predicate:
       op: eq
       value: pre_sign_up
     - field: properties.identity.cognito.has_ghost_trigger
+      op: present
+    - field: properties.identity.cognito.has_ghost_trigger
       op: eq
       value: true
 defect: >

@@ -57,5 +57,7 @@ unsafe_predicate:
       op: eq
       value: sagemaker_notebook
     - field: properties.compute.identity.execution_role.has_admin_policy
+      op: present
+    - field: properties.compute.identity.execution_role.has_admin_policy
       op: eq
       value: true

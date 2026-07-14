@@ -75,11 +75,13 @@ unsafe_predicate:
       op: eq
       value: bucket
     - field: properties.storage.access.has_service_principal_grant
+      op: present
+    - field: properties.storage.access.has_service_principal_grant
       op: eq
       value: true
     - field: properties.storage.perimeter.confused_deputy_enforced
-      op: eq
-      value: false
+      op: ne
+      value: true
 tests:
   - name: "service principal grant without SourceOrgID — fires"
     verdict: VIOLATION

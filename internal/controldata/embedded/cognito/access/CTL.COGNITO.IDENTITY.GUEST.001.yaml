@@ -43,5 +43,7 @@ unsafe_predicate:
       op: eq
       value: cognito_identity_pool
     - field: properties.identity.access.allow_unauthenticated
+      op: present
+    - field: properties.identity.access.allow_unauthenticated
       op: eq
       value: true

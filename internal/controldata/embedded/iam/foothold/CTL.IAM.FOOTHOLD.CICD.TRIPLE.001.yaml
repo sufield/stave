@@ -62,14 +62,22 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.cicd_role
+      op: present
+    - field: properties.identity.cicd_role
       op: eq
       value: true
+    - field: properties.identity.effective_access.cloudformation
+      op: present
     - field: properties.identity.effective_access.cloudformation
       op: eq
       value: true
     - field: properties.identity.effective_access.iam
+      op: present
+    - field: properties.identity.effective_access.iam
       op: eq
       value: true
+    - field: properties.identity.effective_access.secretsmanager
+      op: present
     - field: properties.identity.effective_access.secretsmanager
       op: eq
       value: true

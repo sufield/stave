@@ -56,8 +56,10 @@ unsafe_predicate:
       op: eq
       value: alarm
     - field: properties.monitoring.cloudwatch.has_alarm_action
-      op: eq
-      value: false
+      op: ne
+      value: true
+    - field: properties.monitoring.cloudwatch.has_any_action
+      op: present
     - field: properties.monitoring.cloudwatch.has_any_action
       op: eq
       value: true

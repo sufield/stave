@@ -90,6 +90,8 @@ validated_against:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.assume_role.present
+      op: present
+    - field: properties.identity.escalation.assume_role.present
       op: eq
       value: true
 alternatives:

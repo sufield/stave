@@ -81,6 +81,8 @@ validated_against:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.updatedevendpoint.present
+      op: present
+    - field: properties.identity.escalation.updatedevendpoint.present
       op: eq
       value: true
 tests:

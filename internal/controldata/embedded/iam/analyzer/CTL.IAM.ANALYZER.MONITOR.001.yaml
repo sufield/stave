@@ -57,5 +57,5 @@ unsafe_predicate:
       op: eq
       value: access_analyzer
     - field: properties.identity.analyzer.is_actively_monitored
-      op: eq
-      value: false
+      op: ne
+      value: true

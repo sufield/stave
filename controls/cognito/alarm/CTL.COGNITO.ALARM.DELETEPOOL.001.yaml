@@ -66,8 +66,8 @@ unsafe_predicate:
       op: eq
       value: cognito_account
     - field: properties.identity.cognito.alarm_delete_user_pool
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   No CloudWatch alarm monitors DeleteUserPool
   API calls.

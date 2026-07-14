@@ -72,5 +72,7 @@ unsafe_predicate:
       op: eq
       value: sso_application
     - field: properties.identity.sso.app.has_account_access_scope
+      op: present
+    - field: properties.identity.sso.app.has_account_access_scope
       op: eq
       value: true

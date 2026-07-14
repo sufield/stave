@@ -56,6 +56,10 @@ unsafe_predicate:
       op: eq
       value: organization
     - field: properties.identity.scp.has_invalid_actions
+      op: present
+    - field: properties.identity.scp.has_invalid_actions
+      op: present
+    - field: properties.identity.scp.has_invalid_actions
       op: eq
       value: true
 tests:

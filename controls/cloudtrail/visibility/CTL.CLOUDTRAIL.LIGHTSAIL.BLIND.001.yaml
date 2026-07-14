@@ -51,8 +51,8 @@ unsafe_predicate:
       op: eq
       value: trail
     - field: properties.audit_trail.lightsail_events.logged
-      op: eq
-      value: false
+      op: ne
+      value: true
 tests:
   - name: "trail not logging Lightsail events fires"
     verdict: VIOLATION

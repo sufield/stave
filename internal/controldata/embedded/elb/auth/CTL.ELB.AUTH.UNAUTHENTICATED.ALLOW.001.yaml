@@ -68,6 +68,8 @@ unsafe_predicate:
       op: eq
       value: listener_rule
     - field: properties.network.elb.auth_allows_unauthenticated
+      op: present
+    - field: properties.network.elb.auth_allows_unauthenticated
       op: eq
       value: true
 defect: >

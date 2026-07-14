@@ -29,6 +29,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.account.amplify.has_active_apps
+      op: present
+    - field: properties.account.amplify.has_active_apps
       op: eq
       value: true
 tests:

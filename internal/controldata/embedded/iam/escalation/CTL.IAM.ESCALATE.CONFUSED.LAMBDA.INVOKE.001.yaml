@@ -81,5 +81,7 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.confused_lambda_invoke.present
+      op: present
+    - field: properties.identity.escalation.confused_lambda_invoke.present
       op: eq
       value: true

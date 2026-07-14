@@ -86,6 +86,8 @@ validated_against:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.sagemaker_presigned_url.present
+      op: present
+    - field: properties.identity.escalation.sagemaker_presigned_url.present
       op: eq
       value: true
 tests:

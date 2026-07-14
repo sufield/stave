@@ -74,11 +74,17 @@ unsafe_predicate:
       op: eq
       value: role
     - field: properties.identity.trust_policy.has_compute_trust
+      op: present
+    - field: properties.identity.trust_policy.has_compute_trust
       op: eq
       value: true
     - field: properties.identity.trust_policy.has_identity_federation_trust
+      op: present
+    - field: properties.identity.trust_policy.has_identity_federation_trust
       op: eq
       value: true
+    - field: properties.identity.trust_policy.identity_federation_trust_unscoped
+      op: present
     - field: properties.identity.trust_policy.identity_federation_trust_unscoped
       op: eq
       value: true

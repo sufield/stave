@@ -72,8 +72,8 @@ unsafe_predicate:
       op: eq
       value: user_pool
     - field: properties.identity.cognito.has_brute_force_protection
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   Cognito user pool has no lockout or adaptive
   authentication.

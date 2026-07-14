@@ -70,11 +70,13 @@ unsafe_predicate:
       op: eq
       value: log_group
     - field: properties.monitoring.cloudwatch.has_retention_policy
+      op: present
+    - field: properties.monitoring.cloudwatch.has_retention_policy
       op: eq
       value: true
     - field: properties.monitoring.cloudwatch.retention_compliant
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   CloudWatch log group retention is shorter than the
   applicable compliance retention requirement.

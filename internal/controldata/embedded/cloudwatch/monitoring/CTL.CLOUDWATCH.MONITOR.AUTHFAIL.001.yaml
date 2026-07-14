@@ -51,5 +51,5 @@ unsafe_predicate:
       op: eq
       value: account
     - field: properties.monitoring.metric_filters.console_auth_failures.exists
-      op: eq
-      value: false
+      op: ne
+      value: true

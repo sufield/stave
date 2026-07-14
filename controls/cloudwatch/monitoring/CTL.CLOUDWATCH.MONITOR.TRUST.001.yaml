@@ -65,5 +65,5 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.monitoring.metric_filters.trust_policy_change.exists
-      op: eq
-      value: false
+      op: ne
+      value: true

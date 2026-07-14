@@ -47,6 +47,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.policies.has_self_modify
+      op: present
+    - field: properties.identity.policies.has_self_modify
       op: eq
       value: true
 alternatives:

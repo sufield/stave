@@ -81,6 +81,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.passrole_autoscaling.present
+      op: present
+    - field: properties.identity.escalation.passrole_autoscaling.present
       op: eq
       value: true
 tests:

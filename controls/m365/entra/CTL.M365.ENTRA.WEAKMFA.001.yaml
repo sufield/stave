@@ -28,5 +28,5 @@ unsafe_predicate:
       op: eq
       value: entra_config
     - field: properties.m365.identity.sms_voice_auth_disabled
-      op: eq
-      value: false
+      op: ne
+      value: true

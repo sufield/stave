@@ -69,6 +69,8 @@ unsafe_predicate:
       op: eq
       value: agent
     - field: properties.identity.agent_reaches_sensitive
+      op: present
+    - field: properties.identity.agent_reaches_sensitive
       op: eq
       value: true
 defect: >

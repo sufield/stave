@@ -52,5 +52,7 @@ unsafe_predicate:
       op: eq
       value: sagemaker_pipeline
     - field: properties.compute.identity.execution_role.is_overprivileged
+      op: present
+    - field: properties.compute.identity.execution_role.is_overprivileged
       op: eq
       value: true

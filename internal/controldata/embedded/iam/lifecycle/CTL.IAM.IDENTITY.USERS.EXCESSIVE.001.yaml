@@ -61,6 +61,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.user_count_excessive
+      op: present
+    - field: properties.identity.user_count_excessive
       op: eq
       value: true
 tests:

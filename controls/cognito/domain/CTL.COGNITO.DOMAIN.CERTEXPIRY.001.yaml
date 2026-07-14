@@ -69,6 +69,8 @@ unsafe_predicate:
       op: eq
       value: cognito_user_pool
     - field: properties.identity.cognito.custom_domain_cert_expired
+      op: present
+    - field: properties.identity.cognito.custom_domain_cert_expired
       op: eq
       value: true
 defect: >

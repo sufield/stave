@@ -60,8 +60,8 @@ unsafe_predicate:
       op: eq
       value: cognito_user_pool
     - field: properties.identity.cognito.attr_verification_before_update
-      op: eq
-      value: false
+      op: ne
+      value: true
 tests:
   - name: pool not requiring verification before email update fires (vulnerable)
     verdict: VIOLATION

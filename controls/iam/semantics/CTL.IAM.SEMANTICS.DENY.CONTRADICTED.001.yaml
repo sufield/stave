@@ -71,6 +71,8 @@ unsafe_predicate:
       op: eq
       value: resource_policy
     - field: properties.identity.policy.semantics.has_deny_contradicted_by_allow
+      op: present
+    - field: properties.identity.policy.semantics.has_deny_contradicted_by_allow
       op: eq
       value: true
 defect: >

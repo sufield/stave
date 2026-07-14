@@ -85,6 +85,8 @@ validated_against:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.create_policy_version.present
+      op: present
+    - field: properties.identity.escalation.create_policy_version.present
       op: eq
       value: true
 alternatives:

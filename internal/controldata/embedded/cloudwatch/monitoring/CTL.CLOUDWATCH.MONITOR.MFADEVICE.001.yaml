@@ -55,5 +55,5 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.monitoring.metric_filters.mfa_device_changes.exists
-      op: eq
-      value: false
+      op: ne
+      value: true

@@ -64,6 +64,8 @@ unsafe_predicate:
       op: eq
       value: cognito_resource_server
     - field: properties.identity.cognito.is_resource_server_orphan
+      op: present
+    - field: properties.identity.cognito.is_resource_server_orphan
       op: eq
       value: true
 defect: >

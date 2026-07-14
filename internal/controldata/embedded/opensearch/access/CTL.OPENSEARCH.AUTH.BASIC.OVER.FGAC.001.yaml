@@ -62,8 +62,12 @@ unsafe_predicate:
       op: eq
       value: domain
     - field: properties.search_service.access.fgac_enabled
+      op: present
+    - field: properties.search_service.access.fgac_enabled
       op: eq
       value: true
+    - field: properties.search_service.access.auth_basic_in_front_of_fgac
+      op: present
     - field: properties.search_service.access.auth_basic_in_front_of_fgac
       op: eq
       value: true

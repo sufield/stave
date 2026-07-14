@@ -12,6 +12,7 @@ import (
 	"github.com/google/cel-go/common/types"
 	"github.com/google/cel-go/common/types/ref"
 	"github.com/google/cel-go/common/types/traits"
+	"github.com/google/cel-go/ext"
 )
 
 // NewEnv creates a CEL environment configured for Stave predicate evaluation.
@@ -28,6 +29,9 @@ func NewEnv() (*cel.Env, error) {
 		cel.Variable("params", cel.MapType(cel.StringType, cel.DynType)),
 		cel.Variable("identities", cel.ListType(cel.DynType)),
 		cel.Variable("identity", cel.MapType(cel.StringType, cel.DynType)),
+
+		// String extensions: upperAscii() for case-insensitive enum matching.
+		ext.Strings(),
 
 		// missing(value) — returns true if value is null, empty string,
 		// empty list, or empty map. Matches Stave's IsEmptyValue semantics.

@@ -53,5 +53,7 @@ unsafe_predicate:
       op: eq
       value: role
     - field: properties.identity.policies.has_inline_policies
+      op: present
+    - field: properties.identity.policies.has_inline_policies
       op: eq
       value: true

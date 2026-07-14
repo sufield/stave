@@ -49,8 +49,8 @@ unsafe_predicate:
       op: eq
       value: access_analyzer_summary
     - field: properties.identity.analyzer.has_unused_access_analyzer
-      op: eq
-      value: false
+      op: ne
+      value: true
 tests:
   - name: "No unused access analyzer fails"
     verdict: VIOLATION

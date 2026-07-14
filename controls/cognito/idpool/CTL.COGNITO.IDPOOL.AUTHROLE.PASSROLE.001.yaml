@@ -70,6 +70,8 @@ unsafe_predicate:
       op: eq
       value: cognito_identity_pool
     - field: properties.identity.cognito.auth_role_has_passrole
+      op: present
+    - field: properties.identity.cognito.auth_role_has_passrole
       op: eq
       value: true
 defect: >

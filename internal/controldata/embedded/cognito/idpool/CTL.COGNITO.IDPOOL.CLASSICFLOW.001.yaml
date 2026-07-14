@@ -63,6 +63,8 @@ unsafe_predicate:
       op: eq
       value: cognito_identity_pool
     - field: properties.identity.cognito.allow_classic_flow
+      op: present
+    - field: properties.identity.cognito.allow_classic_flow
       op: eq
       value: true
 defect: >

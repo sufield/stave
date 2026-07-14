@@ -66,8 +66,8 @@ unsafe_predicate:
       op: eq
       value: cognito_app_client
     - field: properties.identity.cognito.has_logout_url
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   Cognito app client has no logout URL.
 infection: >

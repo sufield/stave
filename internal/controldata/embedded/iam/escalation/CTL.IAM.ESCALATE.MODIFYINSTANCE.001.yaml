@@ -61,6 +61,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.ec2_modifyinstance.present
+      op: present
+    - field: properties.identity.escalation.ec2_modifyinstance.present
       op: eq
       value: true
 tests:

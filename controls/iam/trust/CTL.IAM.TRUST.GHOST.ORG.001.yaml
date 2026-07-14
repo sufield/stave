@@ -37,5 +37,7 @@ unsafe_predicate:
       op: eq
       value: role
     - field: properties.identity.trust_policy.has_ghost_ou_reference
+      op: present
+    - field: properties.identity.trust_policy.has_ghost_ou_reference
       op: eq
       value: true

@@ -29,5 +29,5 @@ unsafe_predicate:
       op: eq
       value: log_bucket
     - field: properties.gcp.monitoring.bucket.retention_locked
-      op: eq
-      value: false
+      op: ne
+      value: true

@@ -67,6 +67,8 @@ unsafe_predicate:
       op: eq
       value: cognito_user_pool
     - field: properties.identity.cognito.has_ghost_domain_cert
+      op: present
+    - field: properties.identity.cognito.has_ghost_domain_cert
       op: eq
       value: true
 defect: >

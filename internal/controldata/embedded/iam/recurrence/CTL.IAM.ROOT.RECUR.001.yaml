@@ -39,6 +39,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.root.recent_api_activity
+      op: present
+    - field: properties.identity.root.recent_api_activity
       op: eq
       value: true
 alternatives:

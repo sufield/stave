@@ -65,6 +65,8 @@ unsafe_predicate:
       op: eq
       value: cognito_user_pool
     - field: properties.identity.cognito.social_uses_test_credentials
+      op: present
+    - field: properties.identity.cognito.social_uses_test_credentials
       op: eq
       value: true
 defect: >

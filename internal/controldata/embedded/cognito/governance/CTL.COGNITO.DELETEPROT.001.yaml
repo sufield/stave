@@ -38,5 +38,5 @@ unsafe_predicate:
       op: eq
       value: user_pool
     - field: properties.identity.governance.deletion_protection_enabled
-      op: eq
-      value: false
+      op: ne
+      value: true

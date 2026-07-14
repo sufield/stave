@@ -71,6 +71,8 @@ unsafe_predicate:
       op: eq
       value: cognito_user_pool
     - field: properties.identity.cognito.sensitive_attribute_mapped
+      op: present
+    - field: properties.identity.cognito.sensitive_attribute_mapped
       op: eq
       value: true
 tests:

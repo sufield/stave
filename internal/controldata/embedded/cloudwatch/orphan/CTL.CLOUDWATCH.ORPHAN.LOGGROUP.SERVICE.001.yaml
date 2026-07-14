@@ -73,6 +73,8 @@ unsafe_predicate:
       op: eq
       value: log_group
     - field: properties.monitoring.cloudwatch.has_orphan_service
+      op: present
+    - field: properties.monitoring.cloudwatch.has_orphan_service
       op: eq
       value: true
 defect: >

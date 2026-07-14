@@ -52,6 +52,8 @@ unsafe_predicate:
       op: eq
       value: org_trusted_access
     - field: properties.organization.trusted_access.has_unreviewed_services
+      op: present
+    - field: properties.organization.trusted_access.has_unreviewed_services
       op: eq
       value: true
 tests:

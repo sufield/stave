@@ -57,5 +57,7 @@ unsafe_predicate:
       op: eq
       value: policy
     - field: properties.identity.policy.shadow_logic.has_not_action
+      op: present
+    - field: properties.identity.policy.shadow_logic.has_not_action
       op: eq
       value: true

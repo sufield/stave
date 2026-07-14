@@ -28,5 +28,5 @@ unsafe_predicate:
       op: eq
       value: entra_config
     - field: properties.m365.identity.admin_portal_restricted
-      op: eq
-      value: false
+      op: ne
+      value: true

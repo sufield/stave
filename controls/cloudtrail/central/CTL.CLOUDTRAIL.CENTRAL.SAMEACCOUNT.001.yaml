@@ -69,6 +69,8 @@ unsafe_predicate:
       op: eq
       value: trail
     - field: properties.audit.cloudtrail.log_bucket_same_account
+      op: present
+    - field: properties.audit.cloudtrail.log_bucket_same_account
       op: eq
       value: true
 defect: >

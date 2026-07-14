@@ -64,6 +64,8 @@ unsafe_predicate:
       op: eq
       value: cognito_app_client
     - field: properties.identity.cognito.callback_has_localhost
+      op: present
+    - field: properties.identity.cognito.callback_has_localhost
       op: eq
       value: true
 defect: >

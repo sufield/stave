@@ -30,5 +30,7 @@ unsafe_predicate:
       op: eq
       value: entra_user
     - field: properties.azure.identity.guest_has_privileged_role
+      op: present
+    - field: properties.azure.identity.guest_has_privileged_role
       op: eq
       value: true

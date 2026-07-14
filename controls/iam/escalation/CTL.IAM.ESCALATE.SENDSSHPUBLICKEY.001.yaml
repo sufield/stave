@@ -90,6 +90,8 @@ validated_against:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.send_ssh_public_key.present
+      op: present
+    - field: properties.identity.escalation.send_ssh_public_key.present
       op: eq
       value: true
 tests:

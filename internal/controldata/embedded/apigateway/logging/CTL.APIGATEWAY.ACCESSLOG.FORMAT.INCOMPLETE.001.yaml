@@ -79,8 +79,8 @@ unsafe_predicate:
       op: eq
       value: apigateway_stage
     - field: properties.api.access_log.format_complete
-      op: eq
-      value: false
+      op: ne
+      value: true
 tests:
   - name: access log format omitting the request timestamp fires (vulnerable — time-integrity gap)
     verdict: VIOLATION

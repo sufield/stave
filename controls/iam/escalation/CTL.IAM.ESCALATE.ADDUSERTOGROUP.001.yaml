@@ -86,6 +86,8 @@ unsafe_predicate:
       op: eq
       value: user
     - field: properties.identity.escalation.add_user_to_group.present
+      op: present
+    - field: properties.identity.escalation.add_user_to_group.present
       op: eq
       value: true
 alternatives:

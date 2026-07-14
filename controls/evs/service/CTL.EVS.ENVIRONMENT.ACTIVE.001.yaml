@@ -29,6 +29,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.account.evs.has_active_environments
+      op: present
+    - field: properties.account.evs.has_active_environments
       op: eq
       value: true
 tests:

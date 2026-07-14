@@ -34,5 +34,7 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.scp.production_ou_missing_restrictive_scp
+      op: present
+    - field: properties.scp.production_ou_missing_restrictive_scp
       op: eq
       value: true

@@ -66,8 +66,12 @@ unsafe_predicate:
       op: eq
       value: trail
     - field: properties.audit.cloudtrail.sns_configured
+      op: present
+    - field: properties.audit.cloudtrail.sns_configured
       op: eq
       value: true
+    - field: properties.audit.cloudtrail.has_ghost_sns_topic
+      op: present
     - field: properties.audit.cloudtrail.has_ghost_sns_topic
       op: eq
       value: true

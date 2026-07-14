@@ -48,11 +48,15 @@ unsafe_predicate:
       value: rds_instance
     - any:
         - field: properties.database.monitoring.has_read_replicas
+          op: present
+        - field: properties.database.monitoring.has_read_replicas
           op: eq
           value: true
+        - field: properties.database.monitoring.is_read_replica
+          op: present
         - field: properties.database.monitoring.is_read_replica
           op: eq
           value: true
     - field: properties.database.monitoring.alarm_replication_configured
-      op: eq
-      value: false
+      op: ne
+      value: true

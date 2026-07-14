@@ -83,6 +83,8 @@ validated_against:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.startbuild_source_write.present
+      op: present
+    - field: properties.identity.escalation.startbuild_source_write.present
       op: eq
       value: true
 tests:

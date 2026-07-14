@@ -46,5 +46,5 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.role.has_permissions_boundary
-      op: eq
-      value: false
+      op: ne
+      value: true

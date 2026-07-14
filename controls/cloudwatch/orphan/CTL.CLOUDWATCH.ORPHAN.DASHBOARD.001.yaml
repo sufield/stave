@@ -66,6 +66,8 @@ unsafe_predicate:
       op: eq
       value: dashboard
     - field: properties.monitoring.cloudwatch.is_dormant_dashboard
+      op: present
+    - field: properties.monitoring.cloudwatch.is_dormant_dashboard
       op: eq
       value: true
 defect: >

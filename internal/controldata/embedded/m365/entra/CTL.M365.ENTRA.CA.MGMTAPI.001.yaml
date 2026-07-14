@@ -28,5 +28,5 @@ unsafe_predicate:
       op: eq
       value: conditional_access_policy
     - field: properties.m365.identity.ca.requires_mfa_for_management_api
-      op: eq
-      value: false
+      op: ne
+      value: true

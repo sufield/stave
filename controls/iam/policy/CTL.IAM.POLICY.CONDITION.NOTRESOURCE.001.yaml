@@ -55,6 +55,8 @@ unsafe_predicate:
       op: eq
       value: user
     - field: properties.identity.policy.has_notresource
+      op: present
+    - field: properties.identity.policy.has_notresource
       op: eq
       value: true
 tests:

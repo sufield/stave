@@ -91,5 +91,7 @@ validated_against:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.confused_cfn_update.present
+      op: present
+    - field: properties.identity.escalation.confused_cfn_update.present
       op: eq
       value: true

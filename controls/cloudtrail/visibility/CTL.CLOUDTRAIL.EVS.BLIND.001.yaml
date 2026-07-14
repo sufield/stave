@@ -51,8 +51,8 @@ unsafe_predicate:
       op: eq
       value: trail
     - field: properties.audit_trail.evs_events.logged
-      op: eq
-      value: false
+      op: ne
+      value: true
 tests:
   - name: "trail not logging EVS events fires"
     verdict: VIOLATION
@@ -76,3 +76,12 @@ tests:
           kind: trail
           evs_events:
             logged: true
+  - name: "trail missing EVS logging field fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:777788889999:trail/partial-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit_trail:
+          kind: trail

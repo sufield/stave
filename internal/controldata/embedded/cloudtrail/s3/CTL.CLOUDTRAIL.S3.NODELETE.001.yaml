@@ -71,8 +71,8 @@ unsafe_predicate:
       op: eq
       value: trail
     - field: properties.audit.cloudtrail.s3_policy_denies_delete
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   CloudTrail trail S3 bucket policy lacks a Deny for
   s3:DeleteObject.

@@ -65,6 +65,8 @@ unsafe_predicate:
       op: eq
       value: iam_role
     - field: properties.identity.permission_categories.has_incompatible_categories
+      op: present
+    - field: properties.identity.permission_categories.has_incompatible_categories
       op: eq
       value: true
 tests:

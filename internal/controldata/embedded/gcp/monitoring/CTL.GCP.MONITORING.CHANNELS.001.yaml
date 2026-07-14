@@ -28,5 +28,5 @@ unsafe_predicate:
       op: eq
       value: alert_policy
     - field: properties.gcp.monitoring.alert.has_notification_channel
-      op: eq
-      value: false
+      op: ne
+      value: true

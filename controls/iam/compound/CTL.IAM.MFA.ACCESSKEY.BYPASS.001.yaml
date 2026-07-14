@@ -74,14 +74,16 @@ unsafe_predicate:
       op: eq
       value: user
     - field: properties.identity.console_access.mfa_enabled
+      op: present
+    - field: properties.identity.console_access.mfa_enabled
       op: eq
       value: true
     - field: properties.identity.access_keys.active_count
       op: gt
       value: 0
     - field: properties.identity.policy.mfa_required_on_destructive_actions
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   IAM user has MFA enabled for console but access keys bypass MFA.
   The access key is an MFA-free backdoor to the same permissions.

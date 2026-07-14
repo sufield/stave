@@ -48,6 +48,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.nep.has_escalation_path
+      op: present
+    - field: properties.identity.nep.has_escalation_path
       op: eq
       value: true
 alternatives:

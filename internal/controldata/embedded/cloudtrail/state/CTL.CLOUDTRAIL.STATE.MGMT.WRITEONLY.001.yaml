@@ -67,8 +67,8 @@ unsafe_predicate:
       op: eq
       value: trail
     - field: properties.audit.cloudtrail.mgmt_logs_reads
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   CloudTrail trail logs only WriteOnly management events.
   Read operations are not recorded.

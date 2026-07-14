@@ -62,6 +62,8 @@ unsafe_predicate:
       op: eq
       value: cognito_app_client
     - field: properties.identity.cognito.allows_all_scopes
+      op: present
+    - field: properties.identity.cognito.allows_all_scopes
       op: eq
       value: true
 defect: >

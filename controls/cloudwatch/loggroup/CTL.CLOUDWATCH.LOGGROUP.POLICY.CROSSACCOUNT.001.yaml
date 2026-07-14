@@ -68,11 +68,13 @@ unsafe_predicate:
       op: eq
       value: log_group
     - field: properties.monitoring.cloudwatch.resource_policy_cross_account
+      op: present
+    - field: properties.monitoring.cloudwatch.resource_policy_cross_account
       op: eq
       value: true
     - field: properties.monitoring.cloudwatch.resource_policy_has_org
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   Log group resource policy grants cross-account
   access without aws:PrincipalOrgID.

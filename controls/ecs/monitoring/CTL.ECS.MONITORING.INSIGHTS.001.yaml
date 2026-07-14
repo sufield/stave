@@ -61,5 +61,5 @@ unsafe_predicate:
       op: eq
       value: ecs_cluster
     - field: properties.container.monitoring.container_insights_enabled
-      op: eq
-      value: false
+      op: ne
+      value: true

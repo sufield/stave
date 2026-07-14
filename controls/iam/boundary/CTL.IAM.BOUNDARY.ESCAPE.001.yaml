@@ -67,6 +67,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.role.can_modify_own_boundary
+      op: present
+    - field: properties.identity.role.can_modify_own_boundary
       op: eq
       value: true
 tests:

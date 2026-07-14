@@ -85,6 +85,8 @@ validated_against:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.passrole_runinstances.present
+      op: present
+    - field: properties.identity.escalation.passrole_runinstances.present
       op: eq
       value: true
 tests:

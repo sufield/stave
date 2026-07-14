@@ -44,5 +44,7 @@ unsafe_predicate:
       op: eq
       value: efs
     - field: properties.filesystem.access_points.has_missing_posix
+      op: present
+    - field: properties.filesystem.access_points.has_missing_posix
       op: eq
       value: true

@@ -56,8 +56,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.guardduty.enabled_all_active_regions
-      op: eq
-      value: false
+      op: ne
+      value: true
 tests:
   - name: "detector in all active regions passes"
     verdict: PASS

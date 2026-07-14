@@ -49,5 +49,5 @@ unsafe_predicate:
       op: eq
       value: instance
     - field: properties.compute.monitoring.detailed_enabled
-      op: eq
-      value: false
+      op: ne
+      value: true

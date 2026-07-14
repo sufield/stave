@@ -29,8 +29,10 @@ unsafe_predicate:
       op: eq
       value: service_account
     - field: properties.gcp.identity.sa.has_user_managed_keys
+      op: present
+    - field: properties.gcp.identity.sa.has_user_managed_keys
       op: eq
       value: true
     - field: properties.gcp.identity.sa.keys_rotated
-      op: eq
-      value: false
+      op: ne
+      value: true

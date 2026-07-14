@@ -31,8 +31,8 @@ unsafe_predicate:
       value: defender_setting
     - any:
         - field: properties.azure.monitoring.defender.enabled
-          op: eq
-          value: false
+          op: ne
+          value: true
         - field: properties.azure.monitoring.defender.pricing_tier
           op: eq
           value: Free

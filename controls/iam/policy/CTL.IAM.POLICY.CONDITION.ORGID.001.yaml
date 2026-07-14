@@ -58,6 +58,8 @@ unsafe_predicate:
       op: eq
       value: user
     - field: properties.identity.policy.cross_account_missing_org_id
+      op: present
+    - field: properties.identity.policy.cross_account_missing_org_id
       op: eq
       value: true
 tests:

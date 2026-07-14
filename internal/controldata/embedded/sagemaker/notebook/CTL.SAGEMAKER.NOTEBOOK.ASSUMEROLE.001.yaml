@@ -62,5 +62,7 @@ unsafe_predicate:
       op: eq
       value: sagemaker_notebook
     - field: properties.compute.identity.execution_role.has_assume_role_unscoped
+      op: present
+    - field: properties.compute.identity.execution_role.has_assume_role_unscoped
       op: eq
       value: true

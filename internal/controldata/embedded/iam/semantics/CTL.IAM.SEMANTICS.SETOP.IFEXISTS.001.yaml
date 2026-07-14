@@ -72,6 +72,8 @@ unsafe_predicate:
       op: eq
       value: policy
     - field: properties.identity.policy.semantics.has_set_operator_ifexists_interaction
+      op: present
+    - field: properties.identity.policy.semantics.has_set_operator_ifexists_interaction
       op: eq
       value: true
 tests:

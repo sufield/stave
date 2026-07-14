@@ -63,8 +63,8 @@ unsafe_predicate:
       op: eq
       value: trail
     - field: properties.audit.cloudtrail.alarm_delete_trail
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   No CloudWatch alarm monitors DeleteTrail API calls.
 infection: >

@@ -64,11 +64,13 @@ unsafe_predicate:
       op: eq
       value: trail
     - field: properties.audit.cloudtrail.cw_logs_delivery_configured
+      op: present
+    - field: properties.audit.cloudtrail.cw_logs_delivery_configured
       op: eq
       value: true
     - field: properties.audit.cloudtrail.cw_logs_encrypted_cmk
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   CloudTrail CloudWatch Logs group is not encrypted with a
   customer-managed KMS key.

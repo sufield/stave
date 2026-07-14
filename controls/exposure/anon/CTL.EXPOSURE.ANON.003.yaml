@@ -60,8 +60,10 @@ unsafe_predicate:
       op: eq
       value: anonymous_path
     - field: properties.reachability.anonymous_path.reachable
+      op: present
+    - field: properties.reachability.anonymous_path.reachable
       op: eq
       value: true
     - field: properties.reachability.anonymous_path.has_auth_boundary
-      op: eq
-      value: false
+      op: ne
+      value: true

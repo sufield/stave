@@ -38,5 +38,7 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.console_password.disabled
+      op: present
+    - field: properties.identity.console_password.disabled
       op: eq
       value: true

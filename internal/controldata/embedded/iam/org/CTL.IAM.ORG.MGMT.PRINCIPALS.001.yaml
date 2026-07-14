@@ -64,6 +64,8 @@ unsafe_predicate:
       op: eq
       value: organization
     - field: properties.identity.management_account.has_workload_principals
+      op: present
+    - field: properties.identity.management_account.has_workload_principals
       op: eq
       value: true
 defect: >

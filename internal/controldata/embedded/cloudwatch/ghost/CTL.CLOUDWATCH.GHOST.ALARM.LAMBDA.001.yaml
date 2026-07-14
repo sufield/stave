@@ -70,6 +70,8 @@ unsafe_predicate:
       op: eq
       value: lambda
     - field: properties.monitoring.cloudwatch.has_ghost_alarm_action
+      op: present
+    - field: properties.monitoring.cloudwatch.has_ghost_alarm_action
       op: eq
       value: true
 defect: >

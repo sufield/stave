@@ -74,5 +74,7 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.sso_oauth_create_token.present
+      op: present
+    - field: properties.identity.escalation.sso_oauth_create_token.present
       op: eq
       value: true

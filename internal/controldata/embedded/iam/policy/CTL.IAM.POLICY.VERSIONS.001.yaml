@@ -57,6 +57,8 @@ unsafe_predicate:
       op: eq
       value: user
     - field: properties.identity.policy.has_broader_inactive_version
+      op: present
+    - field: properties.identity.policy.has_broader_inactive_version
       op: eq
       value: true
 tests:

@@ -143,11 +143,15 @@ unsafe_predicate:
             - prototype
     - any:
         - field: properties.api.lifecycle.appears_unused
+          op: present
+        - field: properties.api.lifecycle.appears_unused
           op: eq
           value: true
         - field: properties.api.lifecycle.last_deployment_days
           op: gt
           value: 30
+        - field: properties.cdn.cloudfront.is_dormant
+          op: present
         - field: properties.cdn.cloudfront.is_dormant
           op: eq
           value: true
@@ -155,11 +159,15 @@ unsafe_predicate:
           op: gt
           value: 30
         - field: properties.storage.lifecycle.appears_unused
+          op: present
+        - field: properties.storage.lifecycle.appears_unused
           op: eq
           value: true
         - field: properties.storage.lifecycle.last_request_days
           op: gt
           value: 30
+        - field: properties.compute.lifecycle.is_dormant
+          op: present
         - field: properties.compute.lifecycle.is_dormant
           op: eq
           value: true

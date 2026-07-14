@@ -31,5 +31,7 @@ unsafe_predicate:
       op: eq
       value: iam_binding
     - field: properties.gcp.identity.binding.is_primitive_role
+      op: present
+    - field: properties.gcp.identity.binding.is_primitive_role
       op: eq
       value: true

@@ -85,5 +85,7 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.chain.ghost_deletion.present
+      op: present
+    - field: properties.identity.chain.ghost_deletion.present
       op: eq
       value: true

@@ -54,6 +54,8 @@ unsafe_predicate:
       op: eq
       value: sso_permission_set
     - field: properties.identity.sso.has_admin_policy
+      op: present
+    - field: properties.identity.sso.has_admin_policy
       op: eq
       value: true
 tests:

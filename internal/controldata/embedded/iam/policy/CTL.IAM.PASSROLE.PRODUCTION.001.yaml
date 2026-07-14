@@ -52,5 +52,7 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.policies.passrole_targets_production
+      op: present
+    - field: properties.identity.policies.passrole_targets_production
       op: eq
       value: true

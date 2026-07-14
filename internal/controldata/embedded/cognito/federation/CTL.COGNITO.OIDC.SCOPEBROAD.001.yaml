@@ -64,6 +64,8 @@ unsafe_predicate:
       op: eq
       value: cognito_user_pool
     - field: properties.identity.cognito.oidc_scopes_broad
+      op: present
+    - field: properties.identity.cognito.oidc_scopes_broad
       op: eq
       value: true
 defect: >

@@ -64,6 +64,8 @@ unsafe_predicate:
       op: eq
       value: cognito_resource_server
     - field: properties.identity.cognito.resource_server_broad_scope
+      op: present
+    - field: properties.identity.cognito.resource_server_broad_scope
       op: eq
       value: true
 defect: >

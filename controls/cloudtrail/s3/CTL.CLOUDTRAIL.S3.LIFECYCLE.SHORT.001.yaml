@@ -73,6 +73,8 @@ unsafe_predicate:
       op: eq
       value: trail
     - field: properties.audit.cloudtrail.s3_lifecycle_too_short
+      op: present
+    - field: properties.audit.cloudtrail.s3_lifecycle_too_short
       op: eq
       value: true
 defect: >

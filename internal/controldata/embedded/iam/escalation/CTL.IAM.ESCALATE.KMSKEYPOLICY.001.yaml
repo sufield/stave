@@ -59,6 +59,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.kms_putkeypolicy.present
+      op: present
+    - field: properties.identity.escalation.kms_putkeypolicy.present
       op: eq
       value: true
 tests:

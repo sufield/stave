@@ -56,5 +56,7 @@ unsafe_predicate:
       op: eq
       value: sagemaker_domain
     - field: properties.compute.identity.domain_role.is_shared
+      op: present
+    - field: properties.compute.identity.domain_role.is_shared
       op: eq
       value: true

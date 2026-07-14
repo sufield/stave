@@ -51,8 +51,8 @@ unsafe_predicate:
       op: eq
       value: scp_policy_set
     - field: properties.organization.scp.denies_evs
-      op: eq
-      value: false
+      op: ne
+      value: true
 tests:
   - name: "organization without EVS deny fires"
     verdict: VIOLATION
@@ -76,3 +76,13 @@ tests:
           kind: scp_policy_set
           scp:
             denies_evs: true
+  - name: "organization missing SCP deny field fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::777788889999:organization/o-ghi789"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp: {}

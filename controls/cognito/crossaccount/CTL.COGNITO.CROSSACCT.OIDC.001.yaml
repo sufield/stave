@@ -65,6 +65,8 @@ unsafe_predicate:
       op: eq
       value: user_pool
     - field: properties.identity.cognito.oidc_issuer_cross_account
+      op: present
+    - field: properties.identity.cognito.oidc_issuer_cross_account
       op: eq
       value: true
 defect: >

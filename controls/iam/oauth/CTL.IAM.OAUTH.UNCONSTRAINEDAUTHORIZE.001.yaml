@@ -68,11 +68,13 @@ unsafe_predicate:
       op: in
       value: ["user", "role"]
     - field: properties.identity.oauth.authorize_access.present
+      op: present
+    - field: properties.identity.oauth.authorize_access.present
       op: eq
       value: true
     - field: properties.identity.oauth.redirect_uri_constrained
-      op: eq
-      value: false
+      op: ne
+      value: true
 tests:
   - name: Role with OAuth authorize and no redirect constraint
     verdict: VIOLATION

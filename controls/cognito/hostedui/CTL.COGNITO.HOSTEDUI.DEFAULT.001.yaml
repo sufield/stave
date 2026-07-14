@@ -62,6 +62,8 @@ unsafe_predicate:
       op: eq
       value: user_pool
     - field: properties.identity.cognito.uses_default_domain
+      op: present
+    - field: properties.identity.cognito.uses_default_domain
       op: eq
       value: true
 defect: >

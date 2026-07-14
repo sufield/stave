@@ -61,8 +61,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.k8s.cluster.oidc_url_unique_in_account
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   EKS cluster's OIDC issuer URL is shared with at
   least one other cluster in the account.

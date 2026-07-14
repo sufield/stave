@@ -31,5 +31,5 @@ unsafe_predicate:
       op: eq
       value: audit_log_config
     - field: properties.gcp.monitoring.audit.all_services_enabled
-      op: eq
-      value: false
+      op: ne
+      value: true

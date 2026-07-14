@@ -60,8 +60,8 @@ unsafe_predicate:
       op: eq
       value: trail
     - field: properties.audit.cloudtrail.alarm_natgw
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   No CloudWatch alarm monitors NAT gateway create/delete
   events.

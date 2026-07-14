@@ -31,5 +31,7 @@ unsafe_predicate:
       op: eq
       value: entra_user
     - field: properties.azure.identity.stale_with_active_roles
+      op: present
+    - field: properties.azure.identity.stale_with_active_roles
       op: eq
       value: true

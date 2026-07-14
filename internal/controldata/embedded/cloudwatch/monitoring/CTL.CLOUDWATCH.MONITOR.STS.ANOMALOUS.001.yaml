@@ -32,5 +32,5 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.monitoring.metric_filters.sts_anomalous_usage.exists
-      op: eq
-      value: false
+      op: ne
+      value: true

@@ -57,6 +57,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.sqs_addpermission.present
+      op: present
+    - field: properties.identity.escalation.sqs_addpermission.present
       op: eq
       value: true
 tests:

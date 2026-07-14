@@ -63,8 +63,8 @@ unsafe_predicate:
       op: eq
       value: user_pool
     - field: properties.identity.cognito.in_approved_region
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   Cognito user pool is in a non-compliant
   region.

@@ -68,6 +68,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.create_instance_profile.present
+      op: present
+    - field: properties.identity.escalation.create_instance_profile.present
       op: eq
       value: true
 alternatives:

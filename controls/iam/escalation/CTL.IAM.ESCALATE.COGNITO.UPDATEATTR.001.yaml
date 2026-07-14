@@ -73,6 +73,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.cognito_updateattr_unscoped.present
+      op: present
+    - field: properties.identity.escalation.cognito_updateattr_unscoped.present
       op: eq
       value: true
 tests:

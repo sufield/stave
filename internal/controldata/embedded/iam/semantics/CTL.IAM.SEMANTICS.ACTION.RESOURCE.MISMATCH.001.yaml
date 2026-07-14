@@ -63,6 +63,8 @@ unsafe_predicate:
       op: eq
       value: policy
     - field: properties.identity.policy.semantics.has_action_resource_service_mismatch
+      op: present
+    - field: properties.identity.policy.semantics.has_action_resource_service_mismatch
       op: eq
       value: true
 tests:

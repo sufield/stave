@@ -30,5 +30,7 @@ unsafe_predicate:
       op: eq
       value: iam_binding
     - field: properties.gcp.identity.binding.has_deleted_member
+      op: present
+    - field: properties.gcp.identity.binding.has_deleted_member
       op: eq
       value: true

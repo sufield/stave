@@ -72,6 +72,8 @@ unsafe_predicate:
       op: eq
       value: alarm_topic_aggregate
     - field: properties.monitoring.cloudwatch.has_single_topic_blast
+      op: present
+    - field: properties.monitoring.cloudwatch.has_single_topic_blast
       op: eq
       value: true
 defect: >

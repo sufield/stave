@@ -47,6 +47,8 @@ unsafe_predicate:
       op: eq
       value: account
     - field: properties.identity.policies.cloudshell_unrestricted
+      op: present
+    - field: properties.identity.policies.cloudshell_unrestricted
       op: eq
       value: true
 alternatives:

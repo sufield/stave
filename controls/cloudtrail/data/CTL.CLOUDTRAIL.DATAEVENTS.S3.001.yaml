@@ -72,6 +72,8 @@ unsafe_predicate:
       op: eq
       value: trail
     - field: properties.audit.cloudtrail.has_s3_data_event_gap
+      op: present
+    - field: properties.audit.cloudtrail.has_s3_data_event_gap
       op: eq
       value: true
 defect: >

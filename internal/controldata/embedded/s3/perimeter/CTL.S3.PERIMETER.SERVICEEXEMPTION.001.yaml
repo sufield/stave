@@ -76,11 +76,13 @@ unsafe_predicate:
       op: eq
       value: bucket
     - field: properties.storage.perimeter.service_exemption_present
+      op: present
+    - field: properties.storage.perimeter.service_exemption_present
       op: eq
       value: true
     - field: properties.storage.perimeter.service_exemption_restricted
-      op: eq
-      value: false
+      op: ne
+      value: true
 tests:
   - name: "broad service exemption without restrictions — fires"
     verdict: VIOLATION

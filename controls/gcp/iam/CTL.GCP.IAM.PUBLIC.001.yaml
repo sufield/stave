@@ -32,5 +32,7 @@ unsafe_predicate:
       op: eq
       value: iam_binding
     - field: properties.gcp.identity.binding.is_public
+      op: present
+    - field: properties.gcp.identity.binding.is_public
       op: eq
       value: true

@@ -64,6 +64,8 @@ mitre_attack:
 unsafe_predicate:
   all:
     - field: properties.identity.group.has_admin_policy
+      op: present
+    - field: properties.identity.group.has_admin_policy
       op: eq
       value: true
 defect: >

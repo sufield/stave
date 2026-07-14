@@ -71,6 +71,8 @@ unsafe_predicate:
       op: eq
       value: log_destination
     - field: properties.monitoring.cloudwatch.destination_policy_public
+      op: present
+    - field: properties.monitoring.cloudwatch.destination_policy_public
       op: eq
       value: true
 defect: >

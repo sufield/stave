@@ -58,6 +58,8 @@ unsafe_predicate:
       op: eq
       value: role
     - field: properties.identity.vendor_trust.is_external_vendor
+      op: present
+    - field: properties.identity.vendor_trust.is_external_vendor
       op: eq
       value: true
     - field: properties.identity.vendor_trust.reachable_sensitive_count

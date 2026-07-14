@@ -66,5 +66,5 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.monitoring.metric_filters.passrole_invocations.exists
-      op: eq
-      value: false
+      op: ne
+      value: true

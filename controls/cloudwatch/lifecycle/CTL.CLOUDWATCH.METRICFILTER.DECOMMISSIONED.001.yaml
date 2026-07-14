@@ -65,6 +65,8 @@ unsafe_predicate:
       op: eq
       value: metric_filter
     - field: properties.monitoring.cloudwatch.is_decommissioned_filter
+      op: present
+    - field: properties.monitoring.cloudwatch.is_decommissioned_filter
       op: eq
       value: true
 defect: >

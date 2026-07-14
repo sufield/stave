@@ -49,5 +49,7 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.policies.has_cross_account_resource
+      op: present
+    - field: properties.identity.policies.has_cross_account_resource
       op: eq
       value: true

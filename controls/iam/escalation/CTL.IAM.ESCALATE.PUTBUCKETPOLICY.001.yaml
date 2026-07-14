@@ -60,6 +60,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.s3_putbucketpolicy.present
+      op: present
+    - field: properties.identity.escalation.s3_putbucketpolicy.present
       op: eq
       value: true
 tests:

@@ -43,6 +43,8 @@ unsafe_predicate:
       op: eq
       value: account
     - field: properties.identity.certificates.has_expired
+      op: present
+    - field: properties.identity.certificates.has_expired
       op: eq
       value: true
 alternatives:

@@ -51,8 +51,8 @@ unsafe_predicate:
       op: eq
       value: organization
     - field: properties.identity.scp.denies_savings_plan_create
-      op: eq
-      value: false
+      op: ne
+      value: true
 tests:
   - name: "organization without Savings Plan protection fails"
     verdict: VIOLATION

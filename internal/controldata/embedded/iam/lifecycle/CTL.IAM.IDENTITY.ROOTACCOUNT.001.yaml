@@ -65,6 +65,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.account.has_iam_users_in_management
+      op: present
+    - field: properties.identity.account.has_iam_users_in_management
       op: eq
       value: true
 tests:

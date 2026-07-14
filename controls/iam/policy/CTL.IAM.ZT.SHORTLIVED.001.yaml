@@ -50,8 +50,8 @@ unsafe_predicate:
       op: eq
       value: service_identity
     - field: properties.identity.credentials.uses_short_lived
-      op: eq
-      value: false
+      op: ne
+      value: true
 alternatives:
   - tool: prowler
     check_id: iam_user_with_temporary_credentials

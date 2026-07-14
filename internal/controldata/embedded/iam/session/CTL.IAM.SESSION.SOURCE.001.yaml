@@ -57,8 +57,8 @@ unsafe_predicate:
       op: eq
       value: role
     - field: properties.identity.trust_policy.requires_source_identity
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   IAM role trust policy does not require sts:SourceIdentity.
 infection: >

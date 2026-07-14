@@ -39,5 +39,7 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.federation.has_stale_provider
+      op: present
+    - field: properties.identity.federation.has_stale_provider
       op: eq
       value: true

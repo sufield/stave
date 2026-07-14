@@ -76,8 +76,12 @@ unsafe_predicate:
       op: eq
       value: trail
     - field: properties.audit.cloudtrail.log_validation_enabled
+      op: present
+    - field: properties.audit.cloudtrail.log_validation_enabled
       op: eq
       value: true
+    - field: properties.audit.cloudtrail.digest_same_bucket
+      op: present
     - field: properties.audit.cloudtrail.digest_same_bucket
       op: eq
       value: true

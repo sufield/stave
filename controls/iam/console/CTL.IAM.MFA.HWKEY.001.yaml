@@ -56,11 +56,13 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.policies.has_admin_access
+      op: present
+    - field: properties.identity.policies.has_admin_access
       op: eq
       value: true
     - field: properties.identity.mfa.hardware_mfa
-      op: eq
-      value: false
+      op: ne
+      value: true
 alternatives:
   - tool: prowler
     check_id: iam_administrator_access_with_mfa

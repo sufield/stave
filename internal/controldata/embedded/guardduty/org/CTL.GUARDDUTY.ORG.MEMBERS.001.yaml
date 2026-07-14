@@ -56,8 +56,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.guardduty.org.all_members_enrolled
-      op: eq
-      value: false
+      op: ne
+      value: true
 tests:
   - name: "all members enrolled passes"
     verdict: PASS

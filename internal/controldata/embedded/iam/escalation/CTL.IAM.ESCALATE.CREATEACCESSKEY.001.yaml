@@ -97,6 +97,8 @@ validated_against:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.create_access_key.present
+      op: present
+    - field: properties.identity.escalation.create_access_key.present
       op: eq
       value: true
 alternatives:

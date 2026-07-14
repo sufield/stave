@@ -52,8 +52,8 @@ unsafe_predicate:
       op: eq
       value: scp_policy_set
     - field: properties.organization.scp.denies_sagemaker
-      op: eq
-      value: false
+      op: ne
+      value: true
 tests:
   - name: "no SageMaker deny fires"
     verdict: VIOLATION

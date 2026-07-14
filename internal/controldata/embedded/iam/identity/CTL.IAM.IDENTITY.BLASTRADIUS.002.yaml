@@ -64,5 +64,7 @@ unsafe_predicate:
       op: eq
       value: cross_account
     - field: properties.identity.role.cross_account_trust_without_external_id
+      op: present
+    - field: properties.identity.role.cross_account_trust_without_external_id
       op: eq
       value: true

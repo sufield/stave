@@ -52,5 +52,5 @@ unsafe_predicate:
       op: eq
       value: account
     - field: properties.monitoring.metric_filters.console_signin_no_mfa.exists
-      op: eq
-      value: false
+      op: ne
+      value: true

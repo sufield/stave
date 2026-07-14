@@ -73,8 +73,8 @@ unsafe_predicate:
       op: gt
       value: 0
     - field: properties.identity.cognito.has_presignup_trigger
-      op: eq
-      value: false
+      op: ne
+      value: true
 tests:
   - name: pool with two external IdPs and no PreSignUp fires (vulnerable)
     verdict: VIOLATION

@@ -57,6 +57,8 @@ unsafe_predicate:
       op: eq
       value: user
     - field: properties.identity.policy.create_actions_missing_region
+      op: present
+    - field: properties.identity.policy.create_actions_missing_region
       op: eq
       value: true
 tests:

@@ -68,8 +68,8 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.identity.role.boundary_requires_boundary_on_created
-      op: eq
-      value: false
+      op: ne
+      value: true
 tests:
   - name: delegated admin without boundary requirement fires
     verdict: VIOLATION

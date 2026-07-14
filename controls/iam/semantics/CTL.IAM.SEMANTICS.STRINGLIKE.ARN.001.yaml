@@ -64,6 +64,8 @@ unsafe_predicate:
       op: eq
       value: policy
     - field: properties.identity.policy.semantics.has_stringlike_on_arn_key
+      op: present
+    - field: properties.identity.policy.semantics.has_stringlike_on_arn_key
       op: eq
       value: true
 tests:

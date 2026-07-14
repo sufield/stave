@@ -29,5 +29,7 @@ unsafe_predicate:
       op: eq
       value: managed_identity
     - field: properties.azure.identity.is_shared
+      op: present
+    - field: properties.azure.identity.is_shared
       op: eq
       value: true

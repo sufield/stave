@@ -67,5 +67,5 @@ remediation:
 unsafe_predicate:
   all:
     - field: properties.monitoring.metric_filters.cross_account_assume.exists
-      op: eq
-      value: false
+      op: ne
+      value: true

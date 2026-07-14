@@ -57,6 +57,8 @@ unsafe_predicate:
       op: eq
       value: user
     - field: properties.identity.policy.has_stringlike_on_identity
+      op: present
+    - field: properties.identity.policy.has_stringlike_on_identity
       op: eq
       value: true
 tests:

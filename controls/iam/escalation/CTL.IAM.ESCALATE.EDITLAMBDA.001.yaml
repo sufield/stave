@@ -88,6 +88,8 @@ validated_against:
 unsafe_predicate:
   all:
     - field: properties.identity.escalation.editlambda.present
+      op: present
+    - field: properties.identity.escalation.editlambda.present
       op: eq
       value: true
 tests:

@@ -65,8 +65,8 @@ unsafe_predicate:
       op: eq
       value: cognito_user_pool
     - field: properties.identity.cognito.saml_assertion_signed
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   Cognito SAML provider does not require
   signed assertions.

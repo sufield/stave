@@ -56,6 +56,8 @@ unsafe_predicate:
       op: eq
       value: user
     - field: properties.identity.policy.kms_missing_viaservice
+      op: present
+    - field: properties.identity.policy.kms_missing_viaservice
       op: eq
       value: true
 tests:

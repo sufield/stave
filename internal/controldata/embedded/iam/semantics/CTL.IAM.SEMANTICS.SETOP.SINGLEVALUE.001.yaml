@@ -68,6 +68,8 @@ unsafe_predicate:
       op: eq
       value: policy
     - field: properties.identity.policy.semantics.has_set_operator_on_single_valued_key
+      op: present
+    - field: properties.identity.policy.semantics.has_set_operator_on_single_valued_key
       op: eq
       value: true
 tests:

@@ -58,6 +58,8 @@ unsafe_predicate:
       op: eq
       value: domain
     - field: properties.search_service.access.role_mapping_allaccess_broad
+      op: present
+    - field: properties.search_service.access.role_mapping_allaccess_broad
       op: eq
       value: true
 defect: >

@@ -61,8 +61,8 @@ unsafe_predicate:
       op: eq
       value: cognito_account
     - field: properties.identity.cognito.metrics_logins_tracked
-      op: eq
-      value: false
+      op: ne
+      value: true
 defect: >
   No CloudWatch metrics for Cognito login
   success or failure.
