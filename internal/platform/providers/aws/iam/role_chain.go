@@ -683,25 +683,18 @@ func trustPolicyAllows(trustPolicy *PolicyDocument, principalARN string) bool {
 	if trustPolicy == nil {
 		return false
 	}
-	for _, stmt := range trustPolicy.Allows() {
-		// Check if any action admits an assumer. Use the shared
-		// isAssumeRoleAction predicate (case-insensitive, and inclusive
-		// of the federated sts:AssumeRoleWith* verbs) so the trust side
-		// agrees with the grant side in resolveChainRecursive.
-		if !slices.ContainsFunc(stmt.Action, isAssumeRoleAction) {
+	allows := trustPolicy.Allows()
+	for i := range allows {
+		if !slices.ContainsFunc(allows[i].Action, isAssumeRoleAction) {
 			continue
 		}
-
-		// Check if principal is in the Resource list (trust policies use
-		// Principal field, but our simplified model normalizes to Resource).
-		for _, r := range stmt.Resource {
+		for _, r := range allows[i].Resource {
 			if r == "*" {
 				return true
 			}
 			if r == principalARN {
 				return true
 			}
-			// Account-level trust: arn:aws:iam::<account>:root
 			if actionMatches(r, principalARN) {
 				return true
 			}
@@ -894,8 +887,9 @@ func trustPolicyHasTagCondition(policy *PolicyDocument) bool {
 	if policy == nil {
 		return false
 	}
-	for _, stmt := range policy.Allows() {
-		if conditionReferencesTag(stmt.Condition) {
+	allows := policy.Allows()
+	for i := range allows {
+		if conditionReferencesTag(allows[i].Condition) {
 			return true
 		}
 	}

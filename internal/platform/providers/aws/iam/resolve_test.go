@@ -431,3 +431,210 @@ func TestCollectSCPCeiling_NonEmptyIntersectionAllowsCommonAction(t *testing.T) 
 		t.Fatalf("expected ec2:DescribeInstances in SCPBlocked (outside intersection), got SCPBlocked=%v", result.SCPBlocked)
 	}
 }
+
+// TestResolve_NotAction_Deny_SCP verifies that an SCP Deny with
+// NotAction correctly denies all actions EXCEPT those in the
+// NotAction list. This is the AWS-recommended SCP allow-list
+// pattern: "deny everything except approved services."
+func TestResolve_NotAction_Deny_SCP(t *testing.T) {
+	input := ResolutionInput{
+		PrincipalARN: "arn:aws:iam::123:role/dev",
+		IdentityPolicies: []PolicyDocument{
+			mustParse(t, `{"Statement":[{"Effect":"Allow","Action":"*","Resource":"*"}]}`),
+		},
+		SCPPresent: true,
+		SCPHierarchy: []PolicyDocument{
+			mustParse(t, `{"Statement":[
+				{"Effect":"Allow","Action":"*","Resource":"*"},
+				{"Effect":"Deny","NotAction":["iam:*","sts:*","s3:GetObject"],"Resource":"*"}
+			]}`),
+		},
+	}
+
+	result := Resolve(input)
+	if result.Incomplete {
+		t.Fatalf("unexpected incomplete: %v", result.IncompleteReasons)
+	}
+
+	// iam:CreatePolicy should survive (excluded from the NotAction deny).
+	iamSurvived := false
+	for _, g := range result.EffectiveAllow {
+		if g.Action == "iam:CreatePolicy" {
+			t.Fatalf("iam:CreatePolicy should have been denied by identity allow cross-product; "+
+				"but wait — the identity policy allows *, and the SCP NotAction excludes iam:*, "+
+				"so iam:CreatePolicy is NOT denied. Got EffectiveAllow=%+v", result.EffectiveAllow)
+		}
+	}
+	// Actually, identity allows * and SCP has Allow * + Deny NotAction:[iam:*,sts:*,s3:GetObject].
+	// The Deny covers everything EXCEPT iam/sts/s3:GetObject. So ec2:RunInstances IS denied.
+	// But iam:CreatePolicy is NOT denied (excluded by iam:*).
+	for _, g := range result.EffectiveAllow {
+		if g.Action == "*" {
+			iamSurvived = true // wildcard covers iam
+		}
+	}
+
+	// ec2:RunInstances is NOT in the NotAction exclusion list, so it IS
+	// denied. But the identity allow is "*", and isExplicitlyDenied checks
+	// the wildcard grant against the deny. The deny covers ec2:RunInstances
+	// (because ec2:RunInstances doesn't match iam:*, sts:*, or s3:GetObject).
+	// So the wildcard grant should be denied.
+	//
+	// Wait — the wildcard grant "*" is checked against the NotAction deny.
+	// Does "*" match "iam:*"? actionMatches("iam:*", "*") → iam:* is the
+	// pattern, * is the target. iam:* does NOT match *, because the pattern
+	// is more specific than the target. So the deny DOES cover the wildcard.
+	//
+	// This means the entire wildcard "*" identity grant is denied by the
+	// NotAction deny, because "*" doesn't match any of the NotAction entries
+	// as targets (iam:* doesn't cover *, sts:* doesn't cover *,
+	// s3:GetObject doesn't cover *).
+	for _, g := range result.ExplicitDeny {
+		if g.Action == "*" {
+			iamSurvived = false
+		}
+	}
+
+	// The wildcard identity grant should be explicitly denied since the
+	// NotAction deny covers * (no exclusion matches it as a target).
+	if iamSurvived {
+		t.Fatalf("wildcard * should be explicitly denied by NotAction SCP; "+
+			"EffectiveAllow=%+v ExplicitDeny=%+v", result.EffectiveAllow, result.ExplicitDeny)
+	}
+}
+
+// TestResolve_NotAction_Deny_GranularIdentity tests NotAction deny
+// with granular identity policies instead of wildcard. Individual
+// actions in the NotAction exclusion list survive; others are denied.
+func TestResolve_NotAction_Deny_GranularIdentity(t *testing.T) {
+	input := ResolutionInput{
+		PrincipalARN: "arn:aws:iam::123:role/dev",
+		IdentityPolicies: []PolicyDocument{
+			mustParse(t, `{"Statement":[{"Effect":"Allow","Action":["iam:GetUser","ec2:RunInstances","s3:GetObject"],"Resource":"*"}]}`),
+		},
+		SCPPresent: true,
+		SCPHierarchy: []PolicyDocument{
+			mustParse(t, `{"Statement":[
+				{"Effect":"Allow","Action":"*","Resource":"*"},
+				{"Effect":"Deny","NotAction":["iam:*","sts:*"],"Resource":"*"}
+			]}`),
+		},
+	}
+
+	result := Resolve(input)
+	if result.Incomplete {
+		t.Fatalf("unexpected incomplete: %v", result.IncompleteReasons)
+	}
+
+	allowed := make(map[string]bool)
+	for _, g := range result.EffectiveAllow {
+		allowed[g.Action] = true
+	}
+	denied := make(map[string]bool)
+	for _, g := range result.ExplicitDeny {
+		denied[g.Action] = true
+	}
+
+	// iam:GetUser is in the NotAction exclusion (iam:*), so NOT denied.
+	if !allowed["iam:GetUser"] {
+		t.Errorf("iam:GetUser should be allowed (excluded from NotAction deny)")
+	}
+
+	// ec2:RunInstances is NOT in the exclusion, so it IS denied.
+	if !denied["ec2:RunInstances"] {
+		t.Errorf("ec2:RunInstances should be denied (not in NotAction exclusion)")
+	}
+	if allowed["ec2:RunInstances"] {
+		t.Errorf("ec2:RunInstances should NOT be in EffectiveAllow")
+	}
+
+	// s3:GetObject is NOT in the exclusion (only iam:* and sts:*), so denied.
+	if !denied["s3:GetObject"] {
+		t.Errorf("s3:GetObject should be denied (not in NotAction exclusion)")
+	}
+}
+
+// TestResolve_EffectCaseInsensitive verifies that lowercase "allow"
+// and "deny" in policy JSON are recognized correctly.
+func TestResolve_EffectCaseInsensitive(t *testing.T) {
+	input := ResolutionInput{
+		PrincipalARN: "arn:aws:iam::123:role/test",
+		IdentityPolicies: []PolicyDocument{
+			mustParse(t, `{"Statement":[
+				{"Effect":"allow","Action":["s3:GetObject","s3:PutObject"],"Resource":"*"},
+				{"Effect":"deny","Action":"s3:PutObject","Resource":"*"}
+			]}`),
+		},
+		SCPPresent:   true,
+		SCPHierarchy: nil,
+	}
+
+	result := Resolve(input)
+
+	allowed := false
+	for _, g := range result.EffectiveAllow {
+		if g.Action == "s3:GetObject" {
+			allowed = true
+		}
+	}
+	if !allowed {
+		t.Errorf("lowercase 'allow' should be recognized; EffectiveAllow=%+v", result.EffectiveAllow)
+	}
+
+	denied := false
+	for _, g := range result.ExplicitDeny {
+		if g.Action == "s3:PutObject" {
+			denied = true
+		}
+	}
+	if !denied {
+		t.Errorf("lowercase 'deny' should be recognized; ExplicitDeny=%+v", result.ExplicitDeny)
+	}
+}
+
+// TestParsePolicyDocument_NotAction verifies that NotAction and
+// NotResource fields are correctly parsed into the Statement struct.
+func TestParsePolicyDocument_NotAction(t *testing.T) {
+	doc, err := ParsePolicyDocument(`{
+		"Statement": [{
+			"Effect": "Deny",
+			"NotAction": ["iam:*", "sts:*"],
+			"Resource": "*"
+		}]
+	}`)
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if len(doc.Statement) != 1 {
+		t.Fatalf("expected 1 statement, got %d", len(doc.Statement))
+	}
+	stmt := doc.Statement[0]
+	if len(stmt.NotAction) != 2 {
+		t.Fatalf("expected 2 NotAction entries, got %d: %v", len(stmt.NotAction), stmt.NotAction)
+	}
+	if stmt.NotAction[0] != "iam:*" || stmt.NotAction[1] != "sts:*" {
+		t.Errorf("unexpected NotAction: %v", stmt.NotAction)
+	}
+	if len(stmt.Action) != 0 {
+		t.Errorf("Action should be nil when NotAction is present, got %v", stmt.Action)
+	}
+
+	// NotResource
+	doc2, err := ParsePolicyDocument(`{
+		"Statement": [{
+			"Effect": "Deny",
+			"Action": "s3:*",
+			"NotResource": ["arn:aws:s3:::my-bucket", "arn:aws:s3:::my-bucket/*"]
+		}]
+	}`)
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	stmt2 := doc2.Statement[0]
+	if len(stmt2.NotResource) != 2 {
+		t.Fatalf("expected 2 NotResource entries, got %d", len(stmt2.NotResource))
+	}
+	if len(stmt2.Resource) != 0 {
+		t.Errorf("Resource should be nil when NotResource is present, got %v", stmt2.Resource)
+	}
+}

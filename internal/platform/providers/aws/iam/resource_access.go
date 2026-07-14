@@ -42,15 +42,16 @@ func AddResourcePolicy(idx *ResourceAccessIndex, resourceARN, policyJSON, accoun
 		return err
 	}
 
-	for _, stmt := range doc.Allows() {
-		principals := extractPrincipals(stmt)
+	allows := doc.Allows()
+	for i := range allows {
+		principals := extractPrincipals(allows[i])
 		for _, principal := range principals {
 			isPublic := principal == "*"
 			isCrossAccount := !isPublic && !principalInAccount(principal, accountID)
 
 			idx.AddEntry(resourceARN, access.ResourceAccessEntry{
 				PrincipalARN:   principal,
-				Actions:        stmt.Action,
+				Actions:        allows[i].Action,
 				IsCrossAccount: isCrossAccount,
 				IsPublic:       isPublic,
 				GrantSource:    resourceARN,

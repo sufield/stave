@@ -29,10 +29,12 @@ const (
 // the correct fallback for unconditioned grants and identical to
 // pre-Iter-7 behavior.
 type ActionGrant struct {
-	Action     string
-	Resource   string
-	Source     string // policy ARN or description
-	Conditions any    // raw Condition block from the Statement; nil = unconditioned.
+	Action       string
+	NotActions   []string // inverse of Action; mutually exclusive with Action
+	Resource     string
+	NotResources []string // inverse of Resource; mutually exclusive with Resource
+	Source       string   // policy ARN or description
+	Conditions   any      // raw Condition block from the Statement; nil = unconditioned.
 }
 
 // ResolvedPermissions is the output of the policy resolution algorithm.
@@ -134,16 +136,9 @@ func Resolve(input ResolutionInput) ResolvedPermissions {
 	// Layer 4: collect all identity-based allows.
 	var identityAllows []ActionGrant
 	for _, doc := range input.IdentityPolicies {
-		for _, stmt := range doc.Allows() {
-			for _, action := range stmt.Action {
-				for _, resource := range stmt.Resource {
-					identityAllows = append(identityAllows, ActionGrant{
-						Action:   action,
-						Resource: resource,
-						Source:   "identity-based",
-					})
-				}
-			}
+		allows := doc.Allows()
+		for i := range allows {
+			identityAllows = append(identityAllows, expandGrants(allows[i], "identity-based")...)
 		}
 	}
 
@@ -242,16 +237,10 @@ func emptyCeiling() []ActionGrant {
 // scpAllowGrants flattens an SCP's Allow statements into the
 // (action, resource) grant pairs collectSCPCeiling intersects.
 func scpAllowGrants(doc PolicyDocument) []ActionGrant {
+	allows := doc.Allows()
 	var out []ActionGrant
-	for _, stmt := range doc.Allows() {
-		for _, action := range stmt.Action {
-			for _, resource := range stmt.Resource {
-				out = append(out, ActionGrant{
-					Action:   action,
-					Resource: resource,
-				})
-			}
-		}
+	for i := range allows {
+		out = append(out, expandGrants(allows[i], "scp allow")...)
 	}
 	return out
 }
@@ -269,20 +258,24 @@ func intersectGrants(a, b []ActionGrant) []ActionGrant {
 	if len(a) == 0 || len(b) == 0 {
 		return nil
 	}
+	type grantKey struct {
+		Action   string
+		Resource string
+	}
 	var out []ActionGrant
-	seen := make(map[ActionGrant]struct{})
+	seen := make(map[grantKey]struct{})
 	for _, ga := range a {
 		for _, gb := range b {
 			act, actOk := intersectAction(ga.Action, gb.Action)
 			res, resOk := intersectResource(ga.Resource, gb.Resource)
 			if actOk && resOk {
-				g := ActionGrant{
-					Action:   act,
-					Resource: res,
-				}
-				if _, ok := seen[g]; !ok {
-					seen[g] = struct{}{}
-					out = append(out, g)
+				k := grantKey{act, res}
+				if _, ok := seen[k]; !ok {
+					seen[k] = struct{}{}
+					out = append(out, ActionGrant{
+						Action:   act,
+						Resource: res,
+					})
 				}
 			}
 		}
@@ -378,16 +371,10 @@ func collectBoundaryCeiling(boundary *PolicyDocument) []ActionGrant {
 	if boundary == nil {
 		return nil // nil means no ceiling
 	}
+	allows := boundary.Allows()
 	var ceiling []ActionGrant
-	for _, stmt := range boundary.Allows() {
-		for _, action := range stmt.Action {
-			for _, resource := range stmt.Resource {
-				ceiling = append(ceiling, ActionGrant{
-					Action:   action,
-					Resource: resource,
-				})
-			}
-		}
+	for i := range allows {
+		ceiling = append(ceiling, expandGrants(allows[i], "boundary allow")...)
 	}
 	if len(ceiling) == 0 {
 		return emptyCeiling()
@@ -410,51 +397,24 @@ func collectBoundaryCeiling(boundary *PolicyDocument) []ActionGrant {
 func collectExplicitDenies(input ResolutionInput) []ActionGrant {
 	var denies []ActionGrant
 
-	// Denies from identity policies.
 	for _, doc := range input.IdentityPolicies {
-		for _, stmt := range doc.Denies() {
-			for _, action := range stmt.Action {
-				for _, resource := range stmt.Resource {
-					denies = append(denies, ActionGrant{
-						Action:     action,
-						Resource:   resource,
-						Source:     "identity-based deny",
-						Conditions: stmt.Condition,
-					})
-				}
-			}
+		stmts := doc.Denies()
+		for i := range stmts {
+			denies = append(denies, expandDenyGrants(stmts[i], "identity-based deny")...)
 		}
 	}
 
-	// Denies from SCPs.
 	for _, doc := range input.SCPHierarchy {
-		for _, stmt := range doc.Denies() {
-			for _, action := range stmt.Action {
-				for _, resource := range stmt.Resource {
-					denies = append(denies, ActionGrant{
-						Action:     action,
-						Resource:   resource,
-						Source:     "scp deny",
-						Conditions: stmt.Condition,
-					})
-				}
-			}
+		stmts := doc.Denies()
+		for i := range stmts {
+			denies = append(denies, expandDenyGrants(stmts[i], "scp deny")...)
 		}
 	}
 
-	// Denies from boundary.
 	if input.BoundaryPolicy != nil {
-		for _, stmt := range input.BoundaryPolicy.Denies() {
-			for _, action := range stmt.Action {
-				for _, resource := range stmt.Resource {
-					denies = append(denies, ActionGrant{
-						Action:     action,
-						Resource:   resource,
-						Source:     "boundary deny",
-						Conditions: stmt.Condition,
-					})
-				}
-			}
+		stmts := input.BoundaryPolicy.Denies()
+		for i := range stmts {
+			denies = append(denies, expandDenyGrants(stmts[i], "boundary deny")...)
 		}
 	}
 
@@ -488,15 +448,11 @@ func collectExplicitDenies(input ResolutionInput) []ActionGrant {
 // those Denies as still protective. Out of scope for v1.
 func isExplicitlyDenied(grant ActionGrant, denies []ActionGrant) bool {
 	for _, deny := range denies {
-		if !actionMatches(deny.Action, grant.Action) ||
-			!resourceMatches(deny.Resource, grant.Resource) {
+		if !grantCoversAction(deny, grant.Action) ||
+			!grantCoversResource(deny, grant.Resource) {
 			continue
 		}
 		if denyHasNarrowingConditions(deny.Conditions) {
-			// Scope-narrowed Deny: we cannot prove it covers
-			// this grant's principal context. Skip and keep
-			// looking; another Deny in the list might match
-			// unconditionally.
 			continue
 		}
 		return true
@@ -533,8 +489,8 @@ func matchesCeiling(grant ActionGrant, ceiling []ActionGrant) bool {
 		return true // no ceiling = everything passes
 	}
 	for _, allowed := range ceiling {
-		if actionMatches(allowed.Action, grant.Action) &&
-			resourceMatches(allowed.Resource, grant.Resource) {
+		if grantCoversAction(allowed, grant.Action) &&
+			grantCoversResource(allowed, grant.Resource) {
 			return true
 		}
 	}
@@ -578,15 +534,124 @@ func resourceMatches(pattern, target string) bool {
 	return false
 }
 
+// grantCoversAction reports whether a grant (allow or deny) covers a
+// target action. For positive grants (Action set), delegates to
+// actionMatches. For negative grants (NotActions set), the grant covers
+// every action NOT matched by any NotAction entry.
+func grantCoversAction(g ActionGrant, target string) bool {
+	if len(g.NotActions) > 0 {
+		for _, na := range g.NotActions {
+			if actionMatches(na, target) {
+				return false
+			}
+		}
+		return true
+	}
+	return actionMatches(g.Action, target)
+}
+
+// grantCoversResource reports whether a grant covers a target resource.
+func grantCoversResource(g ActionGrant, target string) bool {
+	if len(g.NotResources) > 0 {
+		for _, nr := range g.NotResources {
+			if resourceMatches(nr, target) {
+				return false
+			}
+		}
+		return true
+	}
+	return resourceMatches(g.Resource, target)
+}
+
+// expandGrants converts a statement's Action/NotAction × Resource/NotResource
+// into ActionGrant entries. Used for both Allow and Deny statements on the
+// allow side (identity, SCP ceiling, boundary ceiling).
+func expandGrants(stmt Statement, source string) []ActionGrant {
+	actions := stmt.Action
+	notActions := stmt.NotAction
+	resources := stmt.Resource
+	notResources := stmt.NotResource
+
+	switch {
+	case len(notActions) > 0 && len(notResources) > 0:
+		return []ActionGrant{{
+			NotActions:   notActions,
+			NotResources: notResources,
+			Source:       source,
+		}}
+	case len(notActions) > 0:
+		out := make([]ActionGrant, 0, len(resources))
+		for _, r := range resources {
+			out = append(out, ActionGrant{NotActions: notActions, Resource: r, Source: source})
+		}
+		return out
+	case len(notResources) > 0:
+		out := make([]ActionGrant, 0, len(actions))
+		for _, a := range actions {
+			out = append(out, ActionGrant{Action: a, NotResources: notResources, Source: source})
+		}
+		return out
+	default:
+		out := make([]ActionGrant, 0, len(actions)*max(len(resources), 1))
+		for _, a := range actions {
+			for _, r := range resources {
+				out = append(out, ActionGrant{Action: a, Resource: r, Source: source})
+			}
+		}
+		return out
+	}
+}
+
+// expandDenyGrants is like expandGrants but preserves the Condition
+// block, which isExplicitlyDenied uses to detect scope-narrowed Denies.
+func expandDenyGrants(stmt Statement, source string) []ActionGrant {
+	actions := stmt.Action
+	notActions := stmt.NotAction
+	resources := stmt.Resource
+	notResources := stmt.NotResource
+	cond := stmt.Condition
+
+	switch {
+	case len(notActions) > 0 && len(notResources) > 0:
+		return []ActionGrant{{
+			NotActions:   notActions,
+			NotResources: notResources,
+			Source:       source,
+			Conditions:   cond,
+		}}
+	case len(notActions) > 0:
+		out := make([]ActionGrant, 0, len(resources))
+		for _, r := range resources {
+			out = append(out, ActionGrant{NotActions: notActions, Resource: r, Source: source, Conditions: cond})
+		}
+		return out
+	case len(notResources) > 0:
+		out := make([]ActionGrant, 0, len(actions))
+		for _, a := range actions {
+			out = append(out, ActionGrant{Action: a, NotResources: notResources, Source: source, Conditions: cond})
+		}
+		return out
+	default:
+		out := make([]ActionGrant, 0, len(actions)*max(len(resources), 1))
+		for _, a := range actions {
+			for _, r := range resources {
+				out = append(out, ActionGrant{Action: a, Resource: r, Source: source, Conditions: cond})
+			}
+		}
+		return out
+	}
+}
+
 // isTriviallyBroadBoundary checks if a boundary allows everything
 // (iam:* or *:* on Resource: *).
 func isTriviallyBroadBoundary(boundary *PolicyDocument) bool {
 	if boundary == nil {
 		return false
 	}
-	for _, stmt := range boundary.Allows() {
-		for _, action := range stmt.Action {
-			for _, resource := range stmt.Resource {
+	allows := boundary.Allows()
+	for i := range allows {
+		for _, action := range allows[i].Action {
+			for _, resource := range allows[i].Resource {
 				if resource == "*" && (action == "*" || action == "iam:*") {
 					return true
 				}

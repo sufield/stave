@@ -18,20 +18,23 @@ const (
 
 // Statement is a single statement from an IAM policy document.
 //
-// Action and Resource carry the AWS "string or []string" wire shape
-// after normalization — UnmarshalJSON handles both forms. Condition
-// is left as `any` because no IAM-side consumer reads it today; see
-// docs/sir-pending-discussion.md (Q2) for the typed-condition
-// follow-up. The earlier shape decoded each field through an
-// intermediate raw-bytes round trip inside ParsePolicyDocument; the
-// custom Unmarshal here removes that hop so the parse boundary is
-// the only decode point.
+// Action/NotAction and Resource/NotResource carry the AWS "string or
+// []string" wire shape after normalization — UnmarshalJSON handles
+// both forms. Within a single statement, Action and NotAction are
+// mutually exclusive (as are Resource and NotResource); AWS rejects
+// policies that specify both, so the parser does not enforce this.
+//
+// NotPrincipal and Condition are left as `any` because no IAM-side
+// consumer reads them structurally today.
 type Statement struct {
-	Sid       string   `json:"Sid"`
-	Effect    Effect   `json:"Effect"`
-	Action    []string // normalized from string or []string by UnmarshalJSON
-	Resource  []string // normalized from string or []string by UnmarshalJSON
-	Condition any      `json:"Condition"`
+	Sid          string   `json:"Sid"`
+	Effect       Effect   `json:"Effect"`
+	Action       []string // normalized from string or []string by UnmarshalJSON
+	NotAction    []string // normalized; inverse of Action
+	Resource     []string // normalized from string or []string by UnmarshalJSON
+	NotResource  []string // normalized; inverse of Resource
+	NotPrincipal any      `json:"NotPrincipal"`
+	Condition    any      `json:"Condition"`
 }
 
 // UnmarshalJSON decodes a statement, normalizing Action and Resource
@@ -41,17 +44,15 @@ type Statement struct {
 // gets a precise diagnostic instead of a cryptic top-level decode
 // failure.
 func (s *Statement) UnmarshalJSON(data []byte) error {
-	// Use an alias type to avoid recursion into this UnmarshalJSON.
-	// Action and Resource are decoded into a tolerant `any` then
-	// passed through normalizeStringOrAny, which mirrors the AWS
-	// "string or []string" tolerance the legacy normalizeStringOrList
-	// implemented for the raw-bytes form.
 	type aux struct {
-		Sid       string `json:"Sid"`
-		Effect    Effect `json:"Effect"`
-		Action    any    `json:"Action"`
-		Resource  any    `json:"Resource"`
-		Condition any    `json:"Condition"`
+		Sid          string `json:"Sid"`
+		Effect       Effect `json:"Effect"`
+		Action       any    `json:"Action"`
+		NotAction    any    `json:"NotAction"`
+		Resource     any    `json:"Resource"`
+		NotResource  any    `json:"NotResource"`
+		NotPrincipal any    `json:"NotPrincipal"`
+		Condition    any    `json:"Condition"`
 	}
 	var a aux
 	if err := json.Unmarshal(data, &a); err != nil {
@@ -61,14 +62,25 @@ func (s *Statement) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return fmt.Errorf("decode Action field: %w", err)
 	}
+	notActions, err := normalizeStringOrAny(a.NotAction)
+	if err != nil {
+		return fmt.Errorf("decode NotAction field: %w", err)
+	}
 	resources, err := normalizeStringOrAny(a.Resource)
 	if err != nil {
 		return fmt.Errorf("decode Resource field: %w", err)
 	}
+	notResources, err := normalizeStringOrAny(a.NotResource)
+	if err != nil {
+		return fmt.Errorf("decode NotResource field: %w", err)
+	}
 	s.Sid = a.Sid
 	s.Effect = a.Effect
 	s.Action = actions
+	s.NotAction = notActions
 	s.Resource = resources
+	s.NotResource = notResources
+	s.NotPrincipal = a.NotPrincipal
 	s.Condition = a.Condition
 	return nil
 }
@@ -104,9 +116,9 @@ func ParsePolicyDocument(raw string) (PolicyDocument, error) {
 // Allows returns all Allow statements in the document.
 func (d PolicyDocument) Allows() []Statement {
 	var out []Statement
-	for _, s := range d.Statement {
-		if s.Effect == EffectAllow {
-			out = append(out, s)
+	for i := range d.Statement {
+		if strings.EqualFold(string(d.Statement[i].Effect), string(EffectAllow)) {
+			out = append(out, d.Statement[i])
 		}
 	}
 	return out
@@ -115,9 +127,9 @@ func (d PolicyDocument) Allows() []Statement {
 // Denies returns all Deny statements in the document.
 func (d PolicyDocument) Denies() []Statement {
 	var out []Statement
-	for _, s := range d.Statement {
-		if s.Effect == EffectDeny {
-			out = append(out, s)
+	for i := range d.Statement {
+		if strings.EqualFold(string(d.Statement[i].Effect), string(EffectDeny)) {
+			out = append(out, d.Statement[i])
 		}
 	}
 	return out
