@@ -418,7 +418,10 @@ func DetectNearMisses(
 		if c := cmp.Compare(string(a.ChainID), string(b.ChainID)); c != 0 {
 			return c
 		}
-		return cmp.Compare(a.ScopeID, b.ScopeID)
+		if c := cmp.Compare(a.ScopeID, b.ScopeID); c != 0 {
+			return c
+		}
+		return cmp.Compare(string(a.MissingControl), string(b.MissingControl))
 	})
 	return nearMisses
 }

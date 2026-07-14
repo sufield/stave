@@ -390,25 +390,25 @@
         {
           "chain_id": "confused_deputy_path",
           "chain_severity": "high",
-          "missing_control": "CTL.IAM.TRUST.EXTERNALID.001",
+          "missing_control": "CTL.IAM.TRUST.CONFUSEDDEPUTY.001",
           "description": "Cross-account IAM role lacks ExternalId condition on its trust policy, the role has overprivileged permissions, and CloudTrail is not capturing STS AssumeRole events. An attacker who compromises any trusted third-party can assume the victim's role without knowing the account ID, operate with broad permissions, and leave no audit trail in the victim's account.\n"
         },
         {
           "chain_id": "confused_deputy_path",
           "chain_severity": "high",
-          "missing_control": "CTL.IAM.TRUST.CONFUSEDDEPUTY.001",
+          "missing_control": "CTL.IAM.TRUST.EXTERNALID.001",
           "description": "Cross-account IAM role lacks ExternalId condition on its trust policy, the role has overprivileged permissions, and CloudTrail is not capturing STS AssumeRole events. An attacker who compromises any trusted third-party can assume the victim's role without knowing the account ID, operate with broad permissions, and leave no audit trail in the victim's account.\n"
         },
         {
           "chain_id": "detection_blindness",
           "chain_severity": "critical",
-          "missing_control": "CTL.GUARDDUTY.ENABLED.001",
+          "missing_control": "CTL.CONFIG.ENABLED.001",
           "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
         },
         {
           "chain_id": "detection_blindness",
           "chain_severity": "critical",
-          "missing_control": "CTL.CONFIG.ENABLED.001",
+          "missing_control": "CTL.GUARDDUTY.ENABLED.001",
           "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
         },
         {
@@ -1438,6 +1438,12 @@
         {
           "chain_id": "data_exfiltration_path",
           "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
+        },
+        {
+          "chain_id": "data_exfiltration_path",
+          "chain_severity": "critical",
           "missing_control": "CTL.EXPOSURE.EXFIL.001",
           "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
         },
@@ -1445,12 +1451,6 @@
           "chain_id": "data_exfiltration_path",
           "chain_severity": "critical",
           "missing_control": "CTL.EXPOSURE.EXFIL.002",
-          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
-        },
-        {
-          "chain_id": "data_exfiltration_path",
-          "chain_severity": "critical",
-          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
           "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
         },
         {
@@ -1462,13 +1462,13 @@
         {
           "chain_id": "detection_blindness",
           "chain_severity": "critical",
-          "missing_control": "CTL.GUARDDUTY.ENABLED.001",
+          "missing_control": "CTL.CONFIG.ENABLED.001",
           "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
         },
         {
           "chain_id": "detection_blindness",
           "chain_severity": "critical",
-          "missing_control": "CTL.CONFIG.ENABLED.001",
+          "missing_control": "CTL.GUARDDUTY.ENABLED.001",
           "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
         },
         {
@@ -1803,6 +1803,12 @@
         {
           "chain_id": "recovery_integrity_failure",
           "chain_severity": "high",
+          "missing_control": "CTL.BACKUP.ENCRYPT.001",
+          "description": "Backup exists but recovery is structurally tied to the same fate as the source data. KMS key and backup reside in the same account as the source — a single account compromise (or ransomware attack) can destroy live data, delete the encryption key, and render backups unrecoverable. This is the \"Ransomware Path\" SPoF.\n"
+        },
+        {
+          "chain_id": "recovery_integrity_failure",
+          "chain_severity": "high",
           "missing_control": "CTL.BACKUP.RECOVERY.ISOLATION.001",
           "description": "Backup exists but recovery is structurally tied to the same fate as the source data. KMS key and backup reside in the same account as the source — a single account compromise (or ransomware attack) can destroy live data, delete the encryption key, and render backups unrecoverable. This is the \"Ransomware Path\" SPoF.\n"
         },
@@ -1810,12 +1816,6 @@
           "chain_id": "recovery_integrity_failure",
           "chain_severity": "high",
           "missing_control": "CTL.BACKUP.RECOVERY.ISOLATION.002",
-          "description": "Backup exists but recovery is structurally tied to the same fate as the source data. KMS key and backup reside in the same account as the source — a single account compromise (or ransomware attack) can destroy live data, delete the encryption key, and render backups unrecoverable. This is the \"Ransomware Path\" SPoF.\n"
-        },
-        {
-          "chain_id": "recovery_integrity_failure",
-          "chain_severity": "high",
-          "missing_control": "CTL.BACKUP.ENCRYPT.001",
           "description": "Backup exists but recovery is structurally tied to the same fate as the source data. KMS key and backup reside in the same account as the source — a single account compromise (or ransomware attack) can destroy live data, delete the encryption key, and render backups unrecoverable. This is the \"Ransomware Path\" SPoF.\n"
         }
       ],
@@ -2434,25 +2434,25 @@
         {
           "chain_id": "cognito_recoverybypass",
           "chain_severity": "high",
-          "missing_control": "CTL.COGNITO.RECOVERY.NOMFA.001",
+          "missing_control": "CTL.COGNITO.MFA.SMSONLY.001",
           "description": "MFA is enforced on the happy-path login AND the recovery flow doesn't require MFA AND the only second factor available is SMS. The MFA enforcement is theatre — an attacker uses the recovery path (email or SMS-driven) to bypass MFA entirely, and even if they faced MFA, SMS alone is defeatable via SIM swap. Threshold of 2 because the dangerous compound is when the recovery escape route stacks with a weak channel.\n"
         },
         {
           "chain_id": "cognito_recoverybypass",
           "chain_severity": "high",
-          "missing_control": "CTL.COGNITO.MFA.SMSONLY.001",
+          "missing_control": "CTL.COGNITO.RECOVERY.NOMFA.001",
           "description": "MFA is enforced on the happy-path login AND the recovery flow doesn't require MFA AND the only second factor available is SMS. The MFA enforcement is theatre — an attacker uses the recovery path (email or SMS-driven) to bypass MFA entirely, and even if they faced MFA, SMS alone is defeatable via SIM swap. Threshold of 2 because the dangerous compound is when the recovery escape route stacks with a weak channel.\n"
         },
         {
           "chain_id": "cognito_weakauth",
           "chain_severity": "critical",
-          "missing_control": "CTL.COGNITO.PASSWORD.001",
+          "missing_control": "CTL.COGNITO.LOCKOUT.NONE.001",
           "description": "Authentication is brute-forceable in combination: the existing weak-password- policy detection plus the existing MFA- off detection plus the new lockout-absent detection. Each individually is a known weakness; together they describe a pool where credential-stuffing has no meaningful resistance — weak passwords, no second factor, no throttling. Threshold of 2 because the dangerous shape is when at least two layers are missing simultaneously.\n"
         },
         {
           "chain_id": "cognito_weakauth",
           "chain_severity": "critical",
-          "missing_control": "CTL.COGNITO.LOCKOUT.NONE.001",
+          "missing_control": "CTL.COGNITO.PASSWORD.001",
           "description": "Authentication is brute-forceable in combination: the existing weak-password- policy detection plus the existing MFA- off detection plus the new lockout-absent detection. Each individually is a known weakness; together they describe a pool where credential-stuffing has no meaningful resistance — weak passwords, no second factor, no throttling. Threshold of 2 because the dangerous shape is when at least two layers are missing simultaneously.\n"
         }
       ],
@@ -4556,13 +4556,13 @@
         {
           "chain_id": "rds_audit_blind",
           "chain_severity": "high",
-          "missing_control": "CTL.RDS.PARAM.LOGEXPORT.001",
+          "missing_control": "CTL.RDS.PARAM.GROUP.001",
           "description": "Database audit logging is not enabled AND either logs are not exported to CloudWatch OR the instance is on the default parameter group. The data-access audit trail is missing in two reinforcing ways: the database itself is not recording statements (no log_statement, no general_log, no audit plugin), AND either the records that would have been generated are not reaching the centralized logging pipeline, or every parameter is at the AWS default and customizing security parameters requires creating a custom group first. Post-compromise investigation has no record of what data was accessed or modified.\n"
         },
         {
           "chain_id": "rds_audit_blind",
           "chain_severity": "high",
-          "missing_control": "CTL.RDS.PARAM.GROUP.001",
+          "missing_control": "CTL.RDS.PARAM.LOGEXPORT.001",
           "description": "Database audit logging is not enabled AND either logs are not exported to CloudWatch OR the instance is on the default parameter group. The data-access audit trail is missing in two reinforcing ways: the database itself is not recording statements (no log_statement, no general_log, no audit plugin), AND either the records that would have been generated are not reaching the centralized logging pipeline, or every parameter is at the AWS default and customizing security parameters requires creating a custom group first. Post-compromise investigation has no record of what data was accessed or modified.\n"
         }
       ],
@@ -4712,7 +4712,13 @@
         {
           "chain_id": "redundancy_single_point",
           "chain_severity": "critical",
-          "missing_control": "CTL.ELB.TARGET.SINGLEAZ.001",
+          "missing_control": "CTL.AUTOSCALING.MULTIAZ.001",
+          "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
+        },
+        {
+          "chain_id": "redundancy_single_point",
+          "chain_severity": "critical",
+          "missing_control": "CTL.EFS.MULTIAZ.001",
           "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
         },
         {
@@ -4724,19 +4730,13 @@
         {
           "chain_id": "redundancy_single_point",
           "chain_severity": "critical",
+          "missing_control": "CTL.ELB.TARGET.SINGLEAZ.001",
+          "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
+        },
+        {
+          "chain_id": "redundancy_single_point",
+          "chain_severity": "critical",
           "missing_control": "CTL.VPC.NAT.SINGLEAZ.001",
-          "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
-        },
-        {
-          "chain_id": "redundancy_single_point",
-          "chain_severity": "critical",
-          "missing_control": "CTL.AUTOSCALING.MULTIAZ.001",
-          "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
-        },
-        {
-          "chain_id": "redundancy_single_point",
-          "chain_severity": "critical",
-          "missing_control": "CTL.EFS.MULTIAZ.001",
           "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
         }
       ],
