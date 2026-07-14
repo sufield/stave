@@ -227,6 +227,68 @@
       ]
     }
   ],
+  "near_miss_chains": [
+    {
+      "chain": "cloudtrail_defense_bypassable",
+      "description": "Broad StopLogging access plus either no StopLogging alarm or trail already stopped. Many IAM principals CAN stop the trail AND either stopping goes undetected or the trail is already inactive. Multiple layers of audit-trail defense are weak — too many can stop it, stopping may not be detected, and the trail may already be off. Threshold of 2 fires when the broad StopLogging surface compounds with either the detection gap or the stopped state.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.STOP.DETECT.001"
+      ],
+      "missing_control": "CTL.CLOUDTRAIL.ACCESS.STOPLOGGING.IAM.001",
+      "severity": "critical",
+      "scope_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail"
+    },
+    {
+      "chain": "cloudtrail_defense_bypassable",
+      "description": "Broad StopLogging access plus either no StopLogging alarm or trail already stopped. Many IAM principals CAN stop the trail AND either stopping goes undetected or the trail is already inactive. Multiple layers of audit-trail defense are weak — too many can stop it, stopping may not be detected, and the trail may already be off. Threshold of 2 fires when the broad StopLogging surface compounds with either the detection gap or the stopped state.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.STOP.DETECT.001"
+      ],
+      "missing_control": "CTL.CLOUDTRAIL.ALARM.STOPLOGGING.001",
+      "severity": "critical",
+      "scope_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail"
+    },
+    {
+      "chain": "cloudtrail_defense_stripped",
+      "description": "Trail stopped plus either no Object Lock or no StopLogging alarm. The trail is actively stopped AND either existing logs can be tampered (no Object Lock) or the trail disablement went undetected (no alarm). The attacker has both stopped the trail AND either can erase evidence or did so without notification. Threshold of 2 fires when the trail-stopped state compounds with a missing protection layer.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.STOP.DETECT.001"
+      ],
+      "missing_control": "CTL.CLOUDTRAIL.ALARM.STOPLOGGING.001",
+      "severity": "critical",
+      "scope_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail"
+    },
+    {
+      "chain": "cloudtrail_defense_stripped",
+      "description": "Trail stopped plus either no Object Lock or no StopLogging alarm. The trail is actively stopped AND either existing logs can be tampered (no Object Lock) or the trail disablement went undetected (no alarm). The attacker has both stopped the trail AND either can erase evidence or did so without notification. Threshold of 2 fires when the trail-stopped state compounds with a missing protection layer.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.STOP.DETECT.001"
+      ],
+      "missing_control": "CTL.CLOUDTRAIL.S3.OBJECTLOCK.001",
+      "severity": "critical",
+      "scope_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail"
+    },
+    {
+      "chain": "cloudwatch_silence_as_safety",
+      "description": "Detection that interprets data-source silence as the resource being safe. A security alarm with TreatMissingData = notBreaching stays in OK when its metric stops publishing; a CloudTrail trail in stopped state means the audit log stream that feeds many security alarms has gone silent; a metric filter parsing a deleted log group has nothing to filter. When two or more of these compound, the detection plane is structurally biased toward silence — the attacker's first move (stop the trail, delete the log group, kill the Lambda that publishes the metric) silences the alarm rather than triggering it. Threshold of 2 because the dangerous pattern is the compounding, not any single instance.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.STOP.DETECT.001"
+      ],
+      "missing_control": "CTL.CLOUDWATCH.ALARM.MISSINGDATA.NOTBREACHING.001",
+      "severity": "critical",
+      "scope_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail"
+    },
+    {
+      "chain": "cloudwatch_silence_as_safety",
+      "description": "Detection that interprets data-source silence as the resource being safe. A security alarm with TreatMissingData = notBreaching stays in OK when its metric stops publishing; a CloudTrail trail in stopped state means the audit log stream that feeds many security alarms has gone silent; a metric filter parsing a deleted log group has nothing to filter. When two or more of these compound, the detection plane is structurally biased toward silence — the attacker's first move (stop the trail, delete the log group, kill the Lambda that publishes the metric) silences the alarm rather than triggering it. Threshold of 2 because the dangerous pattern is the compounding, not any single instance.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.STOP.DETECT.001"
+      ],
+      "missing_control": "CTL.CLOUDWATCH.GHOST.METRICFILTER.LOGGROUP.001",
+      "severity": "critical",
+      "scope_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail"
+    }
+  ],
   "issues": [
     {
       "issue_id": "sha256:bb75a38f55c94c57",
