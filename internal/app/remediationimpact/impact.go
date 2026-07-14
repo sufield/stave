@@ -28,6 +28,8 @@ type ClosedFinding struct {
 type DeactivatedChain struct {
 	ChainID          string `json:"chain_id"`
 	PreviousSeverity string `json:"previous_severity"`
+	AssetID          string `json:"asset_id,omitempty"`
+	ScopeID          string `json:"scope_id,omitempty"`
 }
 
 // EfficiencyVerdict classifies the remediation outcome.
@@ -109,23 +111,39 @@ func Analyze(in Input) (*Report, error) {
 	// Iterates Before first to build the set, then deletes any
 	// chain still active in After, matching the original semantics
 	// of two-map set difference.
-	beforeSev := make(map[kernel.ChainID]string, len(in.Before.ChainFindings))
+	type chainKey struct {
+		chainID kernel.ChainID
+		assetID asset.ID
+		scopeID string
+	}
+	beforeSev := make(map[chainKey]string, len(in.Before.ChainFindings))
 	for i := range in.Before.ChainFindings {
 		c := &in.Before.ChainFindings[i]
-		beforeSev[c.ChainID] = c.Severity.String()
+		k := chainKey{chainID: c.ChainID, assetID: c.AssetID, scopeID: c.ScopeID}
+		beforeSev[k] = c.Severity.String()
 	}
 	for i := range in.After.ChainFindings {
-		delete(beforeSev, in.After.ChainFindings[i].ChainID)
+		c := &in.After.ChainFindings[i]
+		k := chainKey{chainID: c.ChainID, assetID: c.AssetID, scopeID: c.ScopeID}
+		delete(beforeSev, k)
 	}
 	var deactivated []DeactivatedChain
-	for id, sev := range beforeSev {
+	for k, sev := range beforeSev {
 		deactivated = append(deactivated, DeactivatedChain{
-			ChainID:          string(id),
+			ChainID:          string(k.chainID),
 			PreviousSeverity: sev,
+			AssetID:          string(k.assetID),
+			ScopeID:          k.scopeID,
 		})
 	}
 	slices.SortFunc(deactivated, func(a, b DeactivatedChain) int {
-		return cmp.Compare(a.ChainID, b.ChainID)
+		if n := cmp.Compare(a.ChainID, b.ChainID); n != 0 {
+			return n
+		}
+		if n := cmp.Compare(a.AssetID, b.AssetID); n != 0 {
+			return n
+		}
+		return cmp.Compare(a.ScopeID, b.ScopeID)
 	})
 
 	// Score delta.

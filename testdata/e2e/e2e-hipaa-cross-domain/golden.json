@@ -2,7 +2,7 @@
   "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
   "run": {
-    "tool_version": "edge",
+    "tool_version": "dev",
     "offline": true,
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",

@@ -196,8 +196,9 @@ func globMatch(pattern, value string) bool {
 		return true
 	}
 	if before, ok := strings.CutSuffix(pattern, "*"); ok {
-		prefix := before
-		return strings.HasPrefix(value, prefix)
+		if !strings.ContainsAny(before, "*?[") {
+			return strings.HasPrefix(value, before)
+		}
 	}
 	// filepath.Match for more complex patterns. A bad pattern
 	// (filepath.ErrBadPattern) returns false here so the resolver

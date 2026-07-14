@@ -109,6 +109,9 @@ func (r *GovernanceResolver) mergeLayers(
 	defaultValue string,
 	normalize func(string) string,
 ) PolicyValue[string] {
+	if r == nil {
+		return PolicyValue[string]{Value: defaultValue, Source: "default", Layer: LayerDefault}
+	}
 	if v := strings.TrimSpace(r.Getenv(entry.Name)); v != "" {
 		return PolicyValue[string]{Value: normalize(v), Source: "env:" + entry.Name, Layer: LayerEnvironment}
 	}
@@ -147,7 +150,7 @@ func (r *GovernanceResolver) ResolveCIFailurePolicy() PolicyValue[string] {
 
 // ResolveCLIOutput returns the CLI output format with provenance.
 func (r *GovernanceResolver) ResolveCLIOutput() PolicyValue[string] {
-	if r.Settings != nil {
+	if r != nil && r.Settings != nil {
 		raw := r.Settings.CLIDefaults.Output
 		trimmed := strings.TrimSpace(raw)
 		var v string
@@ -175,7 +178,7 @@ func (r *GovernanceResolver) ResolveCLIOutput() PolicyValue[string] {
 
 // ResolveCLIQuiet returns the CLI quiet value with provenance.
 func (r *GovernanceResolver) ResolveCLIQuiet() PolicyValue[bool] {
-	if r.Settings != nil && r.Settings.CLIDefaults.Quiet != nil {
+	if r != nil && r.Settings != nil && r.Settings.CLIDefaults.Quiet != nil {
 		return PolicyValue[bool]{Value: *r.Settings.CLIDefaults.Quiet, Source: r.SettingsPath + ":cli_defaults.quiet", Layer: LayerUserConfig}
 	}
 	return PolicyValue[bool]{Value: false, Source: "default", Layer: LayerDefault}
@@ -183,7 +186,7 @@ func (r *GovernanceResolver) ResolveCLIQuiet() PolicyValue[bool] {
 
 // ResolveCLISanitize returns the CLI sanitize value with provenance.
 func (r *GovernanceResolver) ResolveCLISanitize() PolicyValue[bool] {
-	if r.Settings != nil && r.Settings.CLIDefaults.Sanitize != nil {
+	if r != nil && r.Settings != nil && r.Settings.CLIDefaults.Sanitize != nil {
 		return PolicyValue[bool]{Value: *r.Settings.CLIDefaults.Sanitize, Source: r.SettingsPath + ":cli_defaults.sanitize", Layer: LayerUserConfig}
 	}
 	return PolicyValue[bool]{Value: false, Source: "default", Layer: LayerDefault}
@@ -191,7 +194,7 @@ func (r *GovernanceResolver) ResolveCLISanitize() PolicyValue[bool] {
 
 // ResolveCLIPathMode returns the CLI path mode with provenance.
 func (r *GovernanceResolver) ResolveCLIPathMode() PolicyValue[string] {
-	if r.Settings != nil {
+	if r != nil && r.Settings != nil {
 		raw := r.Settings.CLIDefaults.PathMode
 		trimmed := strings.TrimSpace(raw)
 		var v string
