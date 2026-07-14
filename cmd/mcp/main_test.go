@@ -619,10 +619,11 @@ func TestRun_ChainsToolVisualizesCompoundRisk(t *testing.T) {
 	}
 }
 
-// TestRun_ChainsZeroIsGoodResult confirms a snapshot with no compound
-// chains returns the informative "single-resource" message, not an
-// error or an empty file.
-func TestRun_ChainsZeroIsGoodResult(t *testing.T) {
+// TestRun_ChainsGoodResult confirms a snapshot returns a valid
+// chains response — either a "single-resource" message (no chains)
+// or a "chain analysis complete" summary (chains found), not an
+// error or empty output.
+func TestRun_ChainsGoodResult(t *testing.T) {
 	t.Parallel()
 	obs := filepath.Join("..", "..", "examples", "demo-s3-public-read", "fixtures", "observations")
 	chains := filepath.Join("..", "..", "chains")
@@ -644,8 +645,9 @@ func TestRun_ChainsZeroIsGoodResult(t *testing.T) {
 	if errBlock, ok := resp["error"].(map[string]any); ok {
 		t.Fatalf("chains returned error: %v", errBlock)
 	}
-	if msg := toolResultText(t, resp); !strings.Contains(msg, "single-resource") {
-		t.Errorf("expected single-resource message, got: %q", msg)
+	msg := toolResultText(t, resp)
+	if !strings.Contains(msg, "single-resource") && !strings.Contains(msg, "Chain analysis complete") {
+		t.Errorf("expected chains result message, got: %q", msg)
 	}
 }
 

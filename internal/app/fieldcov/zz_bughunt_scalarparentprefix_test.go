@@ -64,7 +64,7 @@ func TestBugHunt_ScalarParentPrefix(t *testing.T) {
 		},
 	}
 
-	result := classifyControl(&ctl, presentFields)
+	result := classifyControl(&ctl, presentFields, nil)
 
 	// Correct behavior: the leaf field is MISSING, so the control is a silent
 	// risk (an unguarded eq on an absent field may yield a false PASS).

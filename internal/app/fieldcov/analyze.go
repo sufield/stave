@@ -88,11 +88,12 @@ type AnalyzeInput struct {
 func Analyze(input AnalyzeInput) *Report {
 	// Build a set of all property paths present across all assets.
 	presentFields := collectPresentFields(input.Snapshots)
+	presentAssetTypes := collectPresentAssetTypes(input.Snapshots)
 
 	var results []ControlResult
 	for i := range input.Controls {
 		ctl := &input.Controls[i]
-		result := classifyControl(ctl, presentFields)
+		result := classifyControl(ctl, presentFields, presentAssetTypes)
 		results = append(results, result)
 	}
 
@@ -111,6 +112,18 @@ func collectPresentFields(snapshots []asset.Snapshot) map[string]struct{} {
 	return fields
 }
 
+// collectPresentAssetTypes walks all assets in all snapshots and returns
+// the set of asset types that exist.
+func collectPresentAssetTypes(snapshots []asset.Snapshot) map[string]struct{} {
+	types := make(map[string]struct{})
+	for _, snap := range snapshots {
+		for _, a := range snap.Assets {
+			types[string(a.Type)] = struct{}{}
+		}
+	}
+	return types
+}
+
 // walkProperties recursively walks a nested map and collects all leaf paths.
 func walkProperties(prefix string, m map[string]any, out map[string]struct{}) {
 	for k, v := range m {
@@ -123,12 +136,28 @@ func walkProperties(prefix string, m map[string]any, out map[string]struct{}) {
 }
 
 // classifyControl determines coverage classification for a single control.
-func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]struct{}) ControlResult {
+func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]struct{}, presentAssetTypes map[string]struct{}) ControlResult {
 	result := ControlResult{
 		ControlID:  string(ctl.ID),
 		Severity:   ctl.Severity.String(),
 		Frameworks: extractFrameworks(ctl),
 	}
+
+	if presentAssetTypes != nil && len(ctl.ApplicableAssetTypes) > 0 {
+		hasAsset := false
+		for _, at := range ctl.ApplicableAssetTypes {
+			if _, ok := presentAssetTypes[string(at)]; ok {
+				hasAsset = true
+				break
+			}
+		}
+		if !hasAsset {
+			result.Classification = NoAssets
+			result.AssetType = string(ctl.ApplicableAssetTypes[0])
+			return result
+		}
+	}
+
 
 	pred := &ctl.UnsafePredicate
 	if len(pred.Any) == 0 && len(pred.All) == 0 {

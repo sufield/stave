@@ -19,7 +19,7 @@ func TestClassify_Evaluable(t *testing.T) {
 		},
 	}
 	fields := map[string]struct{}{"properties.storage.kind": {}}
-	result := classifyControl(&ctl, fields)
+	result := classifyControl(&ctl, fields, nil)
 	if result.Classification != Evaluable {
 		t.Errorf("classification = %q, want EVALUABLE", result.Classification)
 	}
@@ -37,7 +37,7 @@ func TestClassify_SilentRisk_UnguardedField(t *testing.T) {
 	}
 	// Field is NOT present in snapshot.
 	fields := map[string]struct{}{"properties.storage.kind": {}}
-	result := classifyControl(&ctl, fields)
+	result := classifyControl(&ctl, fields, nil)
 	if result.Classification != SilentRisk {
 		t.Errorf("classification = %q, want SILENT_RISK", result.Classification)
 	}
@@ -62,7 +62,7 @@ func TestClassify_Incomplete_MissingOperator(t *testing.T) {
 		},
 	}
 	fields := map[string]struct{}{"properties.storage.kind": {}}
-	result := classifyControl(&ctl, fields)
+	result := classifyControl(&ctl, fields, nil)
 	if result.Classification != Incomplete {
 		t.Errorf("classification = %q, want INCOMPLETE (missing op is not silent-risk)", result.Classification)
 	}
@@ -74,7 +74,7 @@ func TestClassify_NoPredicate(t *testing.T) {
 		Severity: policy.SeverityLow,
 	}
 	fields := map[string]struct{}{}
-	result := classifyControl(&ctl, fields)
+	result := classifyControl(&ctl, fields, nil)
 	if result.Classification != Evaluable {
 		t.Errorf("classification = %q, want EVALUABLE (no predicate)", result.Classification)
 	}

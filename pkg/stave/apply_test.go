@@ -36,9 +36,14 @@ var frozenNow = time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
 //     expanded S3/SNS/SQS/Lambda policy families).
 //   - 50/26 → 54/30 after GuardDuty coverage controls
 //     (CTL.GUARDDUTY.ORG.MEMBERS.001, CTL.GUARDDUTY.REGION.COVERAGE.001).
+//   - 54/30 → 142/114 after IAM resolver fixes: PrivilegeLevelUnknown
+//     for incomplete resolutions, case-insensitive action matching,
+//     empty permission boundary = deny-all (AWS semantics). These
+//     surface chains/violations that were previously invisible due
+//     to case mismatch and silent privilege-level defaults.
 func TestApply_LordofheavenBuiltinControls(t *testing.T) {
-	const wantFindings = 54
-	const wantIssues = 30
+	const wantFindings = 142
+	const wantIssues = 114
 
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,

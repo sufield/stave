@@ -262,10 +262,14 @@ func buildSummary(gaps []FieldGap, indet int, topN int) Summary {
 	}
 	s.ChainsBlockedTotal = len(chainSet)
 
-	if topN > 0 && topN <= len(gaps) {
+	if topN > 0 && len(gaps) > 0 {
+		n := topN
+		if n > len(gaps) {
+			n = len(gaps)
+		}
 		top := map[kernel.ChainID]struct{}{}
 		tagN := 0
-		for i := range topN {
+		for i := range n {
 			for _, c := range gaps[i].ChainsBlocked {
 				top[c] = struct{}{}
 			}
@@ -274,7 +278,7 @@ func buildSummary(gaps []FieldGap, indet int, topN int) Summary {
 			}
 		}
 		s.ChainsUnblockedByTopN = len(top)
-		s.TopN = topN
+		s.TopN = n
 		// Crude effort sum: 30 sec * (tag gaps in top N) +
 		// generic "per-asset" multiplier. For collector gaps
 		// estimates are too organisation-specific to predict.

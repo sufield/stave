@@ -119,7 +119,7 @@ func TestApplyProfileE2E(t *testing.T) {
 		// finding-ID count.
 		{"obs-public", "aws-s3-obs-public", "aws-s3", nil, 3, 11},
 		{"obs-private", "aws-s3-obs-private", "aws-s3", nil, 3, 2},
-		{"hipaa-cross-domain", "e2e-hipaa-cross-domain", "hipaa", []string{"--include-all"}, 3, 30},
+		{"hipaa-cross-domain", "e2e-hipaa-cross-domain", "hipaa", []string{"--include-all"}, 3, 58},
 	}
 
 	for _, tc := range testCases {

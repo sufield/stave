@@ -157,7 +157,7 @@ func Analyze(input Input) *Result {
 	// Readiness: controls in target that are not failing.
 	// Since we only see failures, we can't know passing count precisely.
 	// Readiness = 1 - (target_only_violations / target_total_estimated).
-	readinessPct := 0.0
+	readinessPct := 100.0
 	if targetTotal > 0 {
 		readinessPct = (1.0 - float64(len(targetOnly))/float64(targetTotal)) * 100
 	}
