@@ -281,7 +281,7 @@ func finalizeProfileEvaluation(results *evaluation.ComplianceReport, snapshots [
 		out.Warnings = append(out.Warnings, fmt.Sprintf("\nWarning: %d bucket(s) have missing inputs - safety cannot be proven", unprovable))
 	}
 
-	if len(results.Findings) > 0 {
+	if len(results.Findings) > 0 || len(results.ChainFindings) > 0 {
 		out.DiagnoseHint = fmt.Sprintf("stave diagnose --controls %s --observations %s", ctlDir, inputFile)
 		out.HasViolations = true
 		return out

@@ -75,13 +75,13 @@ func TestMarshalASFF_ChainFindings(t *testing.T) {
 		byID[f.ID] = f
 	}
 
-	// Narrative-preferred branch.
-	cap1 := byID["stave/chain/chain.capital-one"]
+	// Narrative-preferred branch (ID now includes asset).
+	cap1 := byID["stave/chain/chain.capital-one/arn:aws:s3:::data-bucket"]
 	if !strings.Contains(cap1.Description, "Public bucket policy") {
 		t.Errorf("capital-one Description = %q, want Narrative text", cap1.Description)
 	}
-	if cap1.Severity.Label != "critical" || cap1.Severity.Normalized != 90 {
-		t.Errorf("capital-one severity = %+v, want critical/90", cap1.Severity)
+	if cap1.Severity.Label != "CRITICAL" || cap1.Severity.Normalized != 90 {
+		t.Errorf("capital-one severity = %+v, want CRITICAL/90", cap1.Severity)
 	}
 	if cap1.ProductFields["ChainId"] != "chain.capital-one" {
 		t.Errorf("capital-one ChainId field = %q", cap1.ProductFields["ChainId"])
@@ -91,11 +91,11 @@ func TestMarshalASFF_ChainFindings(t *testing.T) {
 	}
 
 	// Description-fallback branch.
-	fb := byID["stave/chain/chain.fallback"]
+	fb := byID["stave/chain/chain.fallback/arn:aws:s3:::other-bucket"]
 	if fb.Description != "Static chain definition text" {
 		t.Errorf("fallback Description = %q, want Description-text fallback", fb.Description)
 	}
-	if fb.Severity.Label != "high" || fb.Severity.Normalized != 70 {
-		t.Errorf("fallback severity = %+v, want high/70", fb.Severity)
+	if fb.Severity.Label != "HIGH" || fb.Severity.Normalized != 70 {
+		t.Errorf("fallback severity = %+v, want HIGH/70", fb.Severity)
 	}
 }

@@ -26,6 +26,19 @@ type ChainFindingDTO struct {
 	AttackStages       []kernel.AttackStage `json:"attack_stages,omitempty"`
 }
 
+// NearMissChainDTO mirrors findings.NearMissChain for wire output.
+// A near-miss chain is one control short of firing — the "one
+// misconfiguration away from an exploitable compound attack path"
+// signal.
+type NearMissChainDTO struct {
+	ChainID         kernel.ChainID     `json:"chain"`
+	Description     string             `json:"description,omitempty"`
+	ControlsFailing []kernel.ControlID `json:"controls_failing"`
+	MissingControl  kernel.ControlID   `json:"missing_control"`
+	Severity        string             `json:"severity"`
+	ScopeID         string             `json:"scope_id,omitempty"`
+}
+
 // ExposureRankDTO mirrors findings.ExposureRank for wire output.
 type ExposureRankDTO struct {
 	FindingIndex  int                  `json:"finding_index"`

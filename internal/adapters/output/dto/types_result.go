@@ -65,6 +65,7 @@ type ResultDTO struct {
 	Findings          []FindingDTO             `json:"findings"`
 	MarkerFindings    []FindingDTO             `json:"marker_findings,omitempty"`
 	ChainFindings     []ChainFindingDTO        `json:"chain_findings,omitempty"`
+	NearMissChains    []NearMissChainDTO       `json:"near_miss_chains,omitempty"`
 	Issues            []IssueDTO               `json:"issues,omitempty"`
 	ExceptedFindings  []ExceptedFindingDTO     `json:"excepted_findings,omitempty"`
 	RemediationGroups []RemediationGroupDTO    `json:"remediation_groups,omitempty"`

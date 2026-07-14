@@ -145,10 +145,10 @@ func mapChainFindings(assessment *report.Assessment, timestamp string) []ASFFind
 		if desc == "" {
 			desc = strings.TrimSpace(cf.Description)
 		}
-		sev := cf.Severity.String()
+		sev := asffSeverityLabel(cf.Severity.String())
 		findings = append(findings, ASFFinding{
 			SchemaVersion: "2018-10-08",
-			ID:            "stave/chain/" + string(cf.ChainID),
+			ID:            fmt.Sprintf("stave/chain/%s/%s", cf.ChainID, cf.AssetID),
 			ProductARN:    "arn:aws:securityhub:local:stave:product/stave/safety-engine",
 			GeneratorID:   "stave-logic-engine",
 			AWSAccountID:  extractAWSAccountID(string(cf.AssetID)),
@@ -202,24 +202,45 @@ func buildProductFields(f *remediation.Finding) map[string]string {
 }
 
 func mapSeverity(sev string) ASFFSeverity {
+	label := asffSeverityLabel(sev)
 	return ASFFSeverity{
-		Label:      sev,
-		Normalized: severityToNormalized(sev),
+		Label:      label,
+		Normalized: severityToNormalized(label),
 	}
 }
 
-func severityToNormalized(sev string) int {
-	// Compare the input case-insensitively using strings.EqualFold to
-	// avoid lowercasing string allocations.
+// asffSeverityLabel maps a Stave severity string to the ASFF-required
+// uppercase label. ASFF v2018-10-08 requires one of: CRITICAL, HIGH,
+// MEDIUM, LOW, INFORMATIONAL. Stave's "info" maps to INFORMATIONAL.
+func asffSeverityLabel(sev string) string {
 	trimmed := strings.TrimSpace(sev)
-	if strings.EqualFold(trimmed, "critical") {
-		return 90
-	} else if strings.EqualFold(trimmed, "high") {
-		return 70
-	} else if strings.EqualFold(trimmed, "medium") {
-		return 40
-	} else if strings.EqualFold(trimmed, "low") {
-		return 10
+	switch {
+	case strings.EqualFold(trimmed, "critical"):
+		return "CRITICAL"
+	case strings.EqualFold(trimmed, "high"):
+		return "HIGH"
+	case strings.EqualFold(trimmed, "medium"):
+		return "MEDIUM"
+	case strings.EqualFold(trimmed, "low"):
+		return "LOW"
+	case strings.EqualFold(trimmed, "info"):
+		return "INFORMATIONAL"
+	default:
+		return "INFORMATIONAL"
 	}
-	return 0
+}
+
+func severityToNormalized(label string) int {
+	switch label {
+	case "CRITICAL":
+		return 90
+	case "HIGH":
+		return 70
+	case "MEDIUM":
+		return 40
+	case "LOW":
+		return 10
+	default:
+		return 1
+	}
 }

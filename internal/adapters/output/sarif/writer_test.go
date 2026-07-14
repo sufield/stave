@@ -11,6 +11,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -348,6 +349,144 @@ func TestWriteFindings_ChainMemberProperties(t *testing.T) {
 	r1 := results[1].(map[string]any)
 	if _, hasProps := r1["properties"]; hasProps {
 		t.Error("isolated finding should not have chain properties")
+	}
+}
+
+func TestWriteFindings_ChainFindingsInSARIF(t *testing.T) {
+	w := NewFindingWriter()
+	enricher := remediation.NewPlanner()
+
+	result := evaluation.ComplianceReport{
+		Run: evaluation.RunInfo{
+			StaveVersion:      "0.1.0",
+			EvalTime:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
+			Snapshots:         2,
+			EvaluatedState:    "deployed",
+		},
+		ChainFindings: []findings.CompoundFinding{
+			{
+				ChainID:           kernel.ChainID("CHAIN.BUCKET.HIJACK.001"),
+				AssetID:           "arn:aws:s3:::target-bucket",
+				Severity:          policy.SeverityCritical,
+				Narrative:         "Identity X can delete bucket Y",
+				Description:       "Bucket hijack via delete",
+				ControlsFailing:   []kernel.ControlID{"CTL.S3.001", "CTL.IAM.002"},
+				MissingSafeguards: []kernel.ControlID{"CTL.SCP.001"},
+				AttackStages:      []kernel.AttackStage{"initial_access", "impact"},
+				CompoundScore:     95.0,
+			},
+			{
+				ChainID:       kernel.ChainID("CHAIN.TRUST.CYCLE.001"),
+				AssetID:       "arn:aws:iam::123:role/admin",
+				Severity:      policy.SeverityHigh,
+				Narrative:     "Trust cycle: A ↔ B (2 hops)",
+				Description:   "Trust cycle detected",
+				AttackStages:  []kernel.AttackStage{"lateral_movement"},
+				CompoundScore: 70.0,
+			},
+		},
+	}
+
+	enriched, err := appeval.Enrich(enricher, nil, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := w.MarshalFindings(&enriched)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var sarifDoc map[string]any
+	if err := json.Unmarshal(data, &sarifDoc); err != nil {
+		t.Fatalf("invalid JSON: %v\n%s", err, string(data))
+	}
+
+	runs := sarifDoc["runs"].([]any)
+	run := runs[0].(map[string]any)
+	results := run["results"].([]any)
+
+	if len(results) != 2 {
+		t.Fatalf("results = %d, want 2 (chain findings)", len(results))
+	}
+
+	r0 := results[0].(map[string]any)
+	if r0["ruleId"] != "CHAIN.BUCKET.HIJACK.001" {
+		t.Errorf("ruleId = %v, want CHAIN.BUCKET.HIJACK.001", r0["ruleId"])
+	}
+	if r0["level"] != "error" {
+		t.Errorf("level = %v, want error (critical)", r0["level"])
+	}
+	msg := r0["message"].(map[string]any)["text"].(string)
+	if !strings.Contains(msg, "Identity X can delete bucket Y") {
+		t.Errorf("message should contain narrative, got: %s", msg)
+	}
+	props := r0["properties"].(map[string]any)
+	if props["stave/severity"] != "critical" {
+		t.Errorf("severity property = %v, want critical", props["stave/severity"])
+	}
+
+	// Verify rules include chain rules.
+	driver := run["tool"].(map[string]any)["driver"].(map[string]any)
+	rules := driver["rules"].([]any)
+	if len(rules) != 2 {
+		t.Fatalf("rules = %d, want 2", len(rules))
+	}
+}
+
+func TestWriteFindings_ExploitabilityInProperties(t *testing.T) {
+	w := NewFindingWriter()
+	enricher := remediation.NewPlanner()
+
+	result := evaluation.ComplianceReport{
+		Run: evaluation.RunInfo{
+			StaveVersion:      "0.1.0",
+			EvalTime:          time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			MaxUnsafeDuration: kernel.Duration(12 * time.Hour),
+			Snapshots:         2,
+			EvaluatedState:    "deployed",
+		},
+		Findings: []evaluation.Finding{
+			{
+				ControlID:          "CTL.S3.001",
+				ControlName:        "S3 Public",
+				ControlDescription: "Bucket is public",
+				AssetID:            "arn:aws:s3:::bucket",
+				AssetType:          "aws_s3_bucket",
+				AssetVendor:        "aws",
+				Exploitability:     evaluation.ExploitabilityExploitable,
+				DecidingLayer:      evaluation.LayerResourcePolicy,
+			},
+		},
+	}
+
+	enriched, err := appeval.Enrich(enricher, nil, &result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := w.MarshalFindings(&enriched)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var sarifDoc map[string]any
+	if err := json.Unmarshal(data, &sarifDoc); err != nil {
+		t.Fatalf("invalid JSON: %v", err)
+	}
+
+	runs := sarifDoc["runs"].([]any)
+	run := runs[0].(map[string]any)
+	results := run["results"].([]any)
+	r0 := results[0].(map[string]any)
+	props, ok := r0["properties"].(map[string]any)
+	if !ok {
+		t.Fatal("finding with exploitability should have properties")
+	}
+	if props["stave/exploitability"] != "exploitable" {
+		t.Errorf("exploitability = %v, want exploitable", props["stave/exploitability"])
+	}
+	if props["stave/deciding_layer"] != "resource_control_policy" {
+		t.Errorf("deciding_layer = %v, want resource_control_policy", props["stave/deciding_layer"])
 	}
 }
 

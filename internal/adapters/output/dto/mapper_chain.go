@@ -38,6 +38,25 @@ func fromCompoundFinding(c *findings.CompoundFinding) ChainFindingDTO {
 	}
 }
 
+// fromNearMissChains projects core near-miss chains into wire DTOs.
+func fromNearMissChains(in []findings.NearMissChain) []NearMissChainDTO {
+	if len(in) == 0 {
+		return nil
+	}
+	out := make([]NearMissChainDTO, len(in))
+	for i := range in {
+		out[i] = NearMissChainDTO{
+			ChainID:         in[i].ChainID,
+			Description:     in[i].Description,
+			ControlsFailing: in[i].ControlsFailing,
+			MissingControl:  in[i].MissingControl,
+			Severity:        in[i].Severity.String(),
+			ScopeID:         in[i].ScopeID,
+		}
+	}
+	return out
+}
+
 // fromExposureRanks projects core exposure ranks into wire DTOs.
 func fromExposureRanks(in []findings.ExposureRank) []ExposureRankDTO {
 	if len(in) == 0 {

@@ -20,6 +20,7 @@ import (
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -86,6 +87,13 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 			}
 		}
 	}
+
+	// Append compound chain findings as separate SARIF results.
+	// Graph-based chains (from Soufflé) have no constituent individual
+	// findings, so without this they are invisible in SARIF output.
+	chainResults, chainRules := buildChainResults(enriched.Result.ChainFindings, ruleIndex)
+	rules = append(rules, chainRules...)
+	results = append(results, chainResults...)
 
 	report := sarifReport{
 		Version: "2.1.0",
@@ -228,52 +236,11 @@ func buildResults(findings []remediation.Finding, ruleIndex map[kernel.ControlID
 			}
 		}
 
-		// Add chain context, reasoning trace, alternative-tool
-		// coverage, and semantic classification to properties bag.
-		// SARIF codeFlows is designed for source-code flow graphs;
-		// Stave's compact predicate trace, per-finding alternatives,
-		// and semantic classification use the properties bag per
-		// SARIF extension conventions.
+		// Build properties bag with all enrichment context.
 		alts := alternativesAsProperties(f.Alternatives)
-		// HasEnrichedContext folds the
-		// (chain | trace | alts | class | scope_tags)
-		// disjunction into one predicate on Finding so a future
-		// enrichment field is one edit on the type — see
-		// internal/core/evaluation/finding.go.
-		if f.HasEnrichedContext() {
-			result.Properties = map[string]any{}
-			if f.HasClassification() {
-				result.Properties["stave/classification"] = string(f.Classification)
-			}
-			if f.HasScopeTags() {
-				tags := make([]string, len(f.ScopeTags))
-				for i, t := range f.ScopeTags {
-					tags[i] = string(t)
-				}
-				result.Properties["stave/scope_tags"] = tags
-			}
-			if f.IsChainMember() {
-				result.Properties["chain_id"] = f.PrimaryChainID()
-				result.Properties["chain_severity"] = f.PrimaryChainSeverity()
-				result.Properties["stage_span"] = f.PrimaryChainStageSpan()
-				result.Properties["finding_id"] = f.FindingID
-			}
-			if f.HasReasoningTrace() {
-				trace := make([]map[string]any, len(f.ReasoningTrace))
-				for i, mc := range f.ReasoningTrace {
-					trace[i] = map[string]any{
-						"predicate_expr":  mc.PredicateExpr,
-						"observation_key": mc.ObservationKey,
-						"operator":        mc.Operator,
-						"expected_value":  mc.ExpectedValue,
-						"observed_value":  mc.ObservedValue,
-					}
-				}
-				result.Properties["reasoning_trace"] = trace
-			}
-			if len(alts) > 0 {
-				result.Properties["alternatives"] = alts
-			}
+		props := buildFindingProperties(f, alts)
+		if len(props) > 0 {
+			result.Properties = props
 		}
 
 		results = append(results, result)
@@ -349,6 +316,175 @@ func alternativesAsProperties(alts []policy.Alternative) []map[string]any {
 		out[i] = entry
 	}
 	return out
+}
+
+// buildFindingProperties assembles the SARIF properties bag for an
+// individual finding, including enrichment fields that were previously
+// missing (exploitability, deciding_layer, near_miss_chains, delta,
+// exposure_score).
+func buildFindingProperties(f *remediation.Finding, alts []map[string]any) map[string]any {
+	props := map[string]any{}
+
+	if sev := f.SeverityLabel(); sev != "" {
+		props["stave/severity"] = sev
+	}
+	if f.Exploitability != "" {
+		props["stave/exploitability"] = string(f.Exploitability)
+	}
+	if f.DecidingLayer != "" {
+		props["stave/deciding_layer"] = string(f.DecidingLayer)
+	}
+	if f.ExposureScore > 0 {
+		props["stave/exposure_score"] = float64(f.ExposureScore)
+	}
+	if f.HasClassification() {
+		props["stave/classification"] = string(f.Classification)
+	}
+	if f.HasScopeTags() {
+		tags := make([]string, len(f.ScopeTags))
+		for i, t := range f.ScopeTags {
+			tags[i] = string(t)
+		}
+		props["stave/scope_tags"] = tags
+	}
+	if f.IsChainMember() {
+		props["chain_id"] = f.PrimaryChainID()
+		props["chain_severity"] = f.PrimaryChainSeverity()
+		props["stage_span"] = f.PrimaryChainStageSpan()
+		props["finding_id"] = f.FindingID
+	}
+	if len(f.NearMissChains) > 0 {
+		nm := make([]map[string]any, len(f.NearMissChains))
+		for i, n := range f.NearMissChains {
+			nm[i] = map[string]any{
+				"chain_id":        string(n.ChainID),
+				"chain_severity":  n.ChainSeverity.String(),
+				"missing_control": string(n.MissingControl),
+			}
+		}
+		props["stave/near_miss_chains"] = nm
+	}
+	if f.HasReasoningTrace() {
+		trace := make([]map[string]any, len(f.ReasoningTrace))
+		for i, mc := range f.ReasoningTrace {
+			trace[i] = map[string]any{
+				"predicate_expr":  mc.PredicateExpr,
+				"observation_key": mc.ObservationKey,
+				"operator":        mc.Operator,
+				"expected_value":  mc.ExpectedValue,
+				"observed_value":  mc.ObservedValue,
+			}
+		}
+		props["reasoning_trace"] = trace
+	}
+	if len(alts) > 0 {
+		props["alternatives"] = alts
+	}
+	if f.HasDelta() {
+		deltas := make([]map[string]any, len(f.Delta))
+		for i, d := range f.Delta {
+			deltas[i] = map[string]any{
+				"property":      d.PropertyPath,
+				"label":         d.PropertyLabel,
+				"current_value": d.CurrentValue,
+				"fix_action":    d.FixAction,
+			}
+		}
+		props["stave/delta"] = deltas
+	}
+
+	if len(props) == 0 {
+		return nil
+	}
+	return props
+}
+
+// buildChainResults converts compound chain findings to SARIF results
+// and rules. Returns the results and any new rules (keyed by ChainID)
+// that don't already exist in the rule index.
+func buildChainResults(chainFindings []findings.CompoundFinding, existingRules map[kernel.ControlID]int) ([]sarifResult, []sarifRule) {
+	if len(chainFindings) == 0 {
+		return nil, nil
+	}
+
+	var results []sarifResult
+	var newRules []sarifRule
+	chainRuleIndex := make(map[kernel.ChainID]int)
+
+	for i := range chainFindings {
+		cf := &chainFindings[i]
+
+		ruleID := kernel.ControlID(cf.ChainID)
+		ruleIdx, ruleExists := existingRules[ruleID]
+		if !ruleExists {
+			if idx, seen := chainRuleIndex[cf.ChainID]; seen {
+				ruleIdx = idx
+			} else {
+				ruleIdx = len(existingRules) + len(newRules)
+				chainRuleIndex[cf.ChainID] = ruleIdx
+				newRules = append(newRules, sarifRule{
+					ID:   ruleID,
+					Name: "Compound Chain: " + string(cf.ChainID),
+					ShortDescription: sarifMessage{
+						Text: cf.Description,
+					},
+					Properties: map[string]any{
+						"tags": []string{"severity:" + cf.Severity.String(), "compound-chain"},
+					},
+				})
+			}
+		}
+
+		props := map[string]any{
+			"stave/severity":       cf.Severity.String(),
+			"stave/compound_score": cf.CompoundScore,
+		}
+		if len(cf.ControlsFailing) > 0 {
+			ids := make([]string, len(cf.ControlsFailing))
+			for j, cid := range cf.ControlsFailing {
+				ids[j] = string(cid)
+			}
+			props["stave/controls_failing"] = ids
+		}
+		if len(cf.MissingSafeguards) > 0 {
+			ids := make([]string, len(cf.MissingSafeguards))
+			for j, cid := range cf.MissingSafeguards {
+				ids[j] = string(cid)
+			}
+			props["stave/missing_safeguards"] = ids
+		}
+		if len(cf.AttackStages) > 0 {
+			stages := make([]string, len(cf.AttackStages))
+			for j, s := range cf.AttackStages {
+				stages[j] = string(s)
+			}
+			props["stave/attack_stages"] = stages
+		}
+
+		result := sarifResult{
+			RuleID:    ruleID,
+			RuleIndex: ruleIdx,
+			Level:     cf.Severity.SARIFLevel(),
+			Message: sarifMessage{
+				Text: cf.Narrative,
+			},
+			Locations: []sarifLocation{
+				{
+					LogicalLocations: []sarifLogicalLocation{
+						{
+							Name:               string(cf.AssetID),
+							FullyQualifiedName: string(cf.AssetID),
+							Kind:               "resource",
+						},
+					},
+				},
+			},
+			Properties: props,
+		}
+		results = append(results, result)
+	}
+
+	return results, newRules
 }
 
 // buildRuleTags creates the tags array for a SARIF rule's properties.

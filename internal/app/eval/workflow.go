@@ -412,6 +412,14 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 		report.ChainFindings = append(report.ChainFindings, graphFindings...)
 	}
 
+	// Recompute SecurityState after graph findings are appended.
+	// The assessor derives state from CEL findings only; graph chains
+	// from Soufflé can fire without any individual CEL violation.
+	if len(report.ChainFindings) > 0 && report.SecurityState != evaluation.StateNonCompliant {
+		report.SecurityState = evaluation.StateNonCompliant
+		report.Summary.Violations = max(report.Summary.Violations, len(report.ChainFindings))
+	}
+
 	annotateChainMembership(report)
 	annotateExploitability(report)
 	annotateDecidingLayer(report)
