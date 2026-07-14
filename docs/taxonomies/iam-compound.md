@@ -1,8 +1,7 @@
 # IAM compound risk taxonomy
 
 This document is the source-of-truth catalog of real-world IAM
-compound attack patterns Stave authoring iterations I2–I7 will
-draw from. Every pattern below is grounded in published incident
+compound attack patterns. Every pattern below is grounded in published incident
 reports, MITRE ATT&CK techniques, Stratus Red Team scenarios,
 Rhino Security Labs research, or CSA Top Threats — no theoretical
 shapes.
@@ -24,10 +23,8 @@ The taxonomy spans six sub-families. Each pattern lists:
 - **Trigger** — English description of the condition that should fire the control
 - **Counter-example** — configuration that LOOKS similar but isn't risky
 
-Where a pattern is "covered" (an existing Stave control detects
-it) is left to the coverage map at `docs/coverage/iam-compound.md`
-(produced by I1, not yet authored). The taxonomy itself is
-agnostic to current Stave coverage — it names what should exist.
+The taxonomy is agnostic to current Stave coverage — it names
+what should exist.
 
 ---
 
@@ -465,13 +462,11 @@ overpromises.
 the current observation contract may not collect (e.g., effective
 permission set as a joined view, OIDC subject claim patterns,
 SCP effective intersection). Where a pattern requires a new asset
-type or new observation field, the coverage map at
-`docs/coverage/iam-compound.md` (I1, pending) will note that as a
-gap that routes through a separate observation-contract iteration
-— not through authoring iterations I2–I7.
+type or new observation field, that gap routes through a separate
+observation-contract change — not through control authoring.
 
 **On the canonical corpus.** The citation prefix schema in this
-doc is enforced as a CI rule in I0. The actual reference
+doc is enforced as a CI rule. The actual reference
 materials (Stratus Red Team techniques, Rhino Security Labs
 methodology pages, CSA Top Threats reports, MITRE ATT&CK pages,
 H1 reports) are external and assembling a searchable local

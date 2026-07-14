@@ -97,6 +97,8 @@ func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio Sta
 		ContextName:        pc.ContextName,
 		ControlsFlagSet:    opts.controlsSet,
 		AssertRecent:       opts.AssertRecent,
+		FreshnessThreshold: opts.FreshnessThreshold,
+		SkipFreshness:      opts.SkipFreshness,
 		Stdin:              cs.Stdin,
 		ProjectConfigPath:  cfg.projectConfigPath,
 		NewOnly:            opts.IsNewOnlyMode(),

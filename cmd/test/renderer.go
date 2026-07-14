@@ -50,9 +50,7 @@ func (r TableRenderer) Render(w io.Writer, results []stave.TestResult, summary s
 }
 
 // NewRenderer maps a format string to its concrete Renderer.
-// Returns an error for unknown formats; the previous default branch
-// silently rendered as a table. The explicit error matches the
-// documented unification from renderer-pattern-debt.md.
+// Returns an error for unknown formats.
 func NewRenderer(format string, verbose bool) (Renderer, error) {
 	switch format {
 	case "json":

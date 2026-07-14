@@ -6,9 +6,7 @@ fixture is a hand-authored set of (subject, predicate, object)
 triples in the same shape `stave export-sir --format jsonl`
 produces.
 
-Use these to drive the G6 triage report with real-distribution
-data — see `stave/docs/coverage/cia-novel-violations.md` for the
-classification framework.
+Use these to drive the triage report with real-distribution data.
 
 ## Running a fixture end-to-end
 

@@ -314,6 +314,17 @@ func computeNearbyFrameworks(failingIDs sets.Set[kernel.ControlID], allControlID
 	return nearby
 }
 
+// InputFreshness summarises the age of the input snapshots relative to
+// a staleness threshold. Populated by the post-eval freshness pass
+// (FM-034). Nil when --skip-freshness is active or no threshold applies.
+type InputFreshness struct {
+	MostRecent     string  `json:"most_recent"`
+	AgeHours       float64 `json:"age_hours"`
+	ThresholdHours float64 `json:"threshold_hours"`
+	Stale          bool    `json:"stale"`
+	StaleFindings  int     `json:"stale_findings"`
+}
+
 // SkippedControl identifies a control that was ignored during the run.
 type SkippedControl struct {
 	ControlID   kernel.ControlID `json:"control_id"`
@@ -344,6 +355,7 @@ type ComplianceReport struct {
 	NearMissChains       []findings.NearMissChain      `json:"near_miss_chains,omitempty"`
 	AttackStageSummary   map[kernel.AttackStage]string `json:"attack_stage_summary,omitempty"`
 	TopExposures         []findings.ExposureRank       `json:"top_exposures,omitempty"`
+	InputFreshness       *InputFreshness               `json:"input_freshness,omitempty"`
 	ExceptedFindings     []ExceptedFinding             `json:"excepted_findings,omitempty"`
 	AcknowledgedFindings []policy.AcknowledgedFinding  `json:"acknowledged_findings,omitempty"`
 	SkippedControls      []SkippedControl              `json:"skipped_controls,omitempty"`

@@ -9,7 +9,7 @@ per-resource scanners can't see by construction. Run both.
 
 ---
 
-## What the AWS Compliance Mod is
+## What the AWS Compliance Mod Does
 
 [`turbot/steampipe-mod-aws-compliance`](https://hub.powerpipe.io/mods/turbot/aws_compliance)
 is the canonical per-resource framework-coverage tool for AWS.
@@ -22,7 +22,7 @@ AWS APIs. The mod is mature, well-maintained, widely adopted, and
 the right tool for "am I CIS-compliant?" or "do my IAM users
 have MFA?"
 
-Strengths the AWS Compliance Mod is genuinely good at:
+Strengths the AWS Compliance Mod excels at:
 
 - **Framework-cited evidence for auditors.** Every control maps
   to a specific framework citation; benchmarks render
@@ -40,7 +40,7 @@ AWS Compliance Mod is the answer.
 
 ---
 
-## What Stave is
+## What Stave Does
 
 [Stave](https://github.com/sufield/stave) is a deterministic
 cloud-security evaluation engine for compound risk reasoning. It
@@ -99,13 +99,9 @@ this axis are tactical, not strategic:
 - AWS Compliance Mod has broader framework coverage today.
 
 **Stave doesn't compete on framework coverage of atomic controls.**
-For the atomic set, install AWS Compliance Mod. The current
-baseline is honest: 95.5% of Stave's catalog is atomic
-([control-classification-baseline](../control-classification-baseline.md)
-once populated; `docs/control-classification-proposal.md` has the
-proposal pass numbers). The catalog will grow more compound
-controls; it won't try to match the AWS Compliance Mod's
-framework breadth.
+For the atomic set, install AWS Compliance Mod. The catalog will
+grow more compound controls; it won't try to match the AWS
+Compliance Mod's framework breadth.
 
 ---
 
@@ -289,47 +285,9 @@ A typical operator workflow:
    answers the composition question.
 
 The two surfaces are intentionally orthogonal — Stave's
-Powerpipe mod deliberately does not render severity-count cards
-([P2 retroactive cleanup](../../../powerpipe-mod-stave/dashboards/posture.pp)
-removed those after the AWS Compliance Mod gap was clear), and
-the AWS Compliance Mod does not render compound-risk chains
-(by design — its job is per-resource framework coverage).
+Powerpipe mod focuses on compound-risk chains and ghost
+references, while the AWS Compliance Mod focuses on
+per-resource framework coverage.
 
 ---
 
-## Footnotes
-
-- This doc is the **single source of truth** for the comparison.
-  The Stave landing page, the Powerpipe mod README, the dev.to
-  positioning article, and any whitepaper section that
-  references the comparison all link here and reuse the
-  Capital One wedge phrasing verbatim. Don't paraphrase across
-  surfaces.
-- Numbers cited (95.5% atomic, 4.5% compound, 104
-  ghost-reference controls; 3,962 total controls; 597 compound
-  chains; 109 asset-type schemas) verified 2026-05-26 against
-  the live catalog. The classifier-output is still a
-  conservative lower-bound; the
-  [`docs/coverage/iam-compound.md`](../coverage/iam-compound.md)
-  map documents the larger semantic-compound surface (~25
-  additional IAM controls that reason cross-asset via
-  observation extractors that the classifier doesn't count).
-  The "growing" framing references the AWS compound authoring
-  plan ([`aws-compound-control-authoring-plan.md`](../../../aws-compound-control-authoring-plan.md))
-  whose Phase 1 (IAM) + Phase 7 (CIA-derived intensional
-  detection) have shipped; the headline compound-share target
-  (~8.6%) wasn't met because catalog growth outpaced compound
-  authoring (catalog went from 2,658 → 3,962, compound from
-  101 → 178). The
-  [`may8.md`](../../../may8.md)
-  status marker carries the honest accounting. The
-  substrate-vs-implementation positioning that landed in
-  parallel ([`channels/devto/stave-as-reasoning-substrate.md`](../../../channels/devto/stave-as-reasoning-substrate.md))
-  reduces the foundational weight on the share-percentage
-  framing as the top-of-funnel argument — the CIA intensional
-  tier is now the structural defensibility claim.
-- This doc reads charitably about the AWS Compliance Mod by
-  design. A Turbot security engineer reading it should find the
-  characterization fair. If any phrasing slips into competitive
-  framing, file a PR to soften — the strategic frame is
-  complementarity, not displacement.

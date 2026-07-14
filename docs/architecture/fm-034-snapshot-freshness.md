@@ -1,6 +1,6 @@
 # FM-034: Snapshot Freshness — UNCERTAIN Verdict on Stale Data
 
-Status: DESIGN (not yet implemented)
+Status: IMPLEMENTED
 
 ## Problem
 

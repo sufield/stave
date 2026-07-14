@@ -6,11 +6,7 @@
 // `switch { case f.IsJSON(): }`, an `if opts.Format == "json" { …encode… }`,
 // and the typed `if f.IsJSON() { …encode… }`.
 //
-// This test is the enforcement the renderer-pattern-debt.md retrospective
-// asked for. That inventory drifted: cmd/fingerprint re-introduced an
-// inline `switch opts.Format` ~3 weeks after the manual closure because
-// item 7 was a human review gate with nothing behind it. A failing test
-// is the gate that doesn't blink.
+// A failing test is the gate that doesn't blink.
 //
 //	go test ./cmd -run TestNoInlineFormatSwitch
 package cmd
@@ -111,7 +107,7 @@ func TestNoInlineFormatSwitch(t *testing.T) {
 		t.Errorf("inline format dispatch (switch / tagless-switch / if-encode) found outside a renderer*.go factory (%d):\n  %s\n\n"+
 			"Format dispatch must go through a NewRenderer factory in a renderer*.go file: one Renderer\n"+
 			"interface, one concrete type per format, one factory mapping the format once (unknown -> error).\n"+
-			"Reference: cmd/export/compliance/renderer.go. Background: docs/architecture/renderer-pattern-debt.md.\n"+
+			"Reference: cmd/export/compliance/renderer.go.\n"+
 			"If a flagged site is genuinely not render dispatch (a factory, a validation switch, or an\n"+
 			"out-of-scope surface), add its file to formatSwitchAllowlist with a reason.",
 			len(offences), strings.Join(offences, "\n  "))

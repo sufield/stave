@@ -141,7 +141,7 @@ func main() {
 		report string
 	)
 	flag.StringVar(&root, "controls", "controls", "path to controls root")
-	flag.StringVar(&report, "report", "docs/control-classification-proposal.md",
+	flag.StringVar(&report, "report", "../docs-internal/retrospectives/control-classification-proposal.md",
 		"path to write the proposal report (empty = stdout)")
 	flag.Parse()
 

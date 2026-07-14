@@ -19,7 +19,7 @@ Why they're required:
   (you can see it in every make build output: cp -R data/alternatives/* internal/adapters/coverage/embedded/). The values
   are baked into the binary so coverage works without a side-channel data file at runtime.
   5. Doc generation. internal/tools/genmethodologycoverage/main.go writes the per-tool methodology coverage docs from these
-  inventories — markdown tables under docs/coverage/ showing the join of Stave annotations against the upstream check list.
+  inventories — markdown tables showing the join of Stave annotations against the upstream check list.
   The tool emits Inventory: data/alternatives/<tool>-<domain>.yaml as a citation in the output so the source is traceable.
 
 When to update them: the file headers say it explicitly — "Update this list when Prowler adds, removes, or renames an IAM check." Source for both files is prowler-cloud/prowler/prowler/providers/aws/services/{iam,s3}/ on the upstream master branch. Adding more tools (Trivy, Checkov, cloudsploit) or more domains is a "add a new YAML following the same shape" exercise — the aggregator picks up new files automatically.

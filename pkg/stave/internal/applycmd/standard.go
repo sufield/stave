@@ -72,6 +72,8 @@ type StandardRequest struct {
 	ContextName        string
 	ControlsFlagSet    bool
 	AssertRecent       string    // --assert-recent: fail fast if newest snapshot older than this
+	FreshnessThreshold string    // --freshness-threshold: downgrade confidence when stale (default "24h")
+	SkipFreshness      bool      // --skip-freshness: disable confidence downgrade
 	Stdin              io.Reader // used only when ObservationsDir == "-" (stdin observations)
 	// ProjectConfigPath is the resolved stave.yaml path (from command-side
 	// projconfig discovery), or "" when no project config applies. The engine
@@ -203,6 +205,9 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 		return StandardResult{}, err
 	}
 	if err = annotateReachability(report, req.ObservationsDir); err != nil {
+		return StandardResult{}, err
+	}
+	if err = annotateFreshness(report, req.ObservationsDir, req.FreshnessThreshold, req.SkipFreshness, now); err != nil {
 		return StandardResult{}, err
 	}
 
@@ -419,6 +424,64 @@ func annotateReachability(report *evaluation.ComplianceReport, obsDir string) er
 	reachability.AnnotateFindings(remFindings, idx)
 	for i := range remFindings {
 		report.Findings[i].Reachability = remFindings[i].Reachability
+	}
+	return nil
+}
+
+// annotateFreshness runs the FM-034 post-eval freshness pass: if the
+// most recent snapshot is older than the threshold, downgrade every
+// finding's Confidence to LOW and record the reason. Verdicts, exit
+// codes, and SecurityState are unaffected.
+func annotateFreshness(report *evaluation.ComplianceReport, obsDir string, thresholdStr string, skip bool, now time.Time) error {
+	if skip || obsDir == "" || obsDir == "-" {
+		return nil
+	}
+	threshold, err := time.ParseDuration(thresholdStr)
+	if err != nil {
+		return fmt.Errorf("parse --freshness-threshold %q: %w: %w", thresholdStr, err, ErrInvalidInput)
+	}
+
+	loaded, err := observations.NewObservationLoader().LoadSnapshots(context.Background(), obsDir)
+	if err != nil {
+		slog.Warn("freshness check: could not load snapshots", "error", err)
+		return nil
+	}
+	if len(loaded.Snapshots) == 0 {
+		return nil
+	}
+
+	sr := staleness.Check(loaded.Snapshots, threshold, now)
+
+	staleCount := 0
+	if sr.Stale {
+		for i := range report.Findings {
+			report.Findings[i].Confidence = evaluation.ConfidenceLow
+			report.Findings[i].FreshnessReason = sr.Message
+		}
+		staleCount = len(report.Findings)
+		for i := range report.ChainFindings {
+			report.ChainFindings[i].Confidence = string(evaluation.ConfidenceLow)
+			report.ChainFindings[i].FreshnessReason = sr.Message
+		}
+	} else {
+		for i := range report.Findings {
+			if report.Findings[i].Confidence == "" {
+				report.Findings[i].Confidence = evaluation.ConfidenceHigh
+			}
+		}
+		for i := range report.ChainFindings {
+			if report.ChainFindings[i].Confidence == "" {
+				report.ChainFindings[i].Confidence = string(evaluation.ConfidenceHigh)
+			}
+		}
+	}
+
+	report.InputFreshness = &evaluation.InputFreshness{
+		MostRecent:     sr.MostRecent.Format(time.RFC3339),
+		AgeHours:       sr.StalenessHrs,
+		ThresholdHours: sr.ThresholdHrs,
+		Stale:          sr.Stale,
+		StaleFindings:  staleCount,
 	}
 	return nil
 }

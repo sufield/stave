@@ -49,6 +49,8 @@ type CompoundFinding struct {
 	Severity           policy.Severity      `json:"severity"`
 	Narrative          string               `json:"narrative"`
 	AttackStages       []kernel.AttackStage `json:"attack_stages,omitempty"`
+	Confidence         string               `json:"confidence,omitempty"`
+	FreshnessReason    string               `json:"freshness_reason,omitempty"`
 }
 
 // SeverityLabel returns the canonical lowercase severity string

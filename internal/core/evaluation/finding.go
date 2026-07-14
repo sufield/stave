@@ -81,6 +81,14 @@ type Finding struct {
 	// Reachability — populated when IAM data is in the snapshot.
 	Reachability *ReachabilityContext `json:"reachability,omitempty"`
 
+	// Confidence qualifies the certainty of this finding's verdict.
+	// HIGH (default) means the finding is based on fresh data.
+	// LOW means the input snapshot is stale — the verdict may no
+	// longer reflect reality. Populated by the freshness pass;
+	// omitted from JSON when empty (backward compat).
+	Confidence      ConfidenceLevel `json:"confidence,omitempty"`
+	FreshnessReason string          `json:"freshness_reason,omitempty"`
+
 	// ExposureScore is the priority score used to order findings. Populated
 	// by the enrichment pass (internal/app/eval/workflow.go) after chain
 	// membership is annotated. The zero value (kernel.ExposureScore(0))
