@@ -25,7 +25,7 @@ var (
 	ErrHintNoControls                = errors.New("hints: no controls")
 	ErrHintNoSnapshots               = errors.New("hints: no snapshots")
 	ErrHintSchemaValidation          = errors.New("hints: schema validation")
-	ErrHintProjectContext = errors.New("hints: project context resolution failed")
+	ErrHintProjectContext            = errors.New("hints: project context resolution failed")
 	ErrHintProjectConfig             = errors.New("hints: project config invalid")
 )
 

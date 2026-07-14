@@ -82,4 +82,3 @@ func matchesFilter(issue diagnosis.Insight, caseSet map[string]struct{}, needle 
 	}
 	return true
 }
-

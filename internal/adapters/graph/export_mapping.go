@@ -487,4 +487,3 @@ func stringProp(props map[string]any, key string) (string, bool) {
 	s, ok := v.(string)
 	return s, ok
 }
-

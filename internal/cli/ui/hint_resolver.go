@@ -103,4 +103,3 @@ func buildSearchQueryFromError(message string) string {
 	}
 	return strings.Join(fields, " ")
 }
-
