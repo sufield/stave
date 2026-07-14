@@ -25,8 +25,7 @@ var (
 	ErrHintNoControls                = errors.New("hints: no controls")
 	ErrHintNoSnapshots               = errors.New("hints: no snapshots")
 	ErrHintSchemaValidation          = errors.New("hints: schema validation")
-	ErrHintControlSourceConflict     = errors.New("hints: control source conflict")
-	ErrHintProjectContext            = errors.New("hints: project context resolution failed")
+	ErrHintProjectContext = errors.New("hints: project context resolution failed")
 	ErrHintProjectConfig             = errors.New("hints: project config invalid")
 )
 
@@ -93,7 +92,6 @@ var hintRegistry = []hintRule{
 		},
 	},
 	{
-		err:      ErrHintControlSourceConflict,
 		patterns: []string{"cannot combine explicit --controls with enabled_control_packs"},
 		hint: RemediationHint{
 			Reason:      "Two control sources were selected at once (CLI directory and project packs).",

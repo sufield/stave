@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/platform/metadata"
+	"github.com/sufield/stave/internal/util/strutil"
 )
 
 // EvaluateErrorWithHint is the primary hinting entry point for evaluation commands.
@@ -34,7 +35,7 @@ func SuggestForError(err error) RemediationHint {
 	errMsg := err.Error()
 	for _, entry := range hintRegistry {
 		for _, p := range entry.patterns {
-			if containsFold(errMsg, p) {
+			if strutil.ContainsFold(errMsg, p) {
 				return entry.hint
 			}
 		}
@@ -103,31 +104,3 @@ func buildSearchQueryFromError(message string) string {
 	return strings.Join(fields, " ")
 }
 
-func containsFold(s, substrLower string) bool {
-	if substrLower == "" {
-		return true
-	}
-	if len(s) < len(substrLower) {
-		return false
-	}
-	for i := 0; i <= len(s)-len(substrLower); i++ {
-		match := true
-		for j := 0; j < len(substrLower); j++ {
-			c1 := s[i+j]
-			c2 := substrLower[j]
-			if c1 != c2 {
-				if c1 >= 'A' && c1 <= 'Z' {
-					c1 += 'a' - 'A'
-				}
-				if c1 != c2 {
-					match = false
-					break
-				}
-			}
-		}
-		if match {
-			return true
-		}
-	}
-	return false
-}

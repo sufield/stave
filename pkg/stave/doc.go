@@ -191,38 +191,6 @@
 //     Result; orchestration operations (with I/O) accept a context
 //     for cancellation. Score is pure; Apply and Gate orchestrate.
 //
-// New use cases should land here in this order:
-//
-//   - Verify — re-evaluate a snapshot bundle against an existing
-//     evaluation artifact. Port: [usecase.Verify] (planned). App
-//     orchestration: [internal/app/eval]. Config carries
-//     EvaluationPath, BundlePath, and ControlsDir.
-//
-//   - Trace — produce a per-control / per-asset audit trail of which
-//     predicate clauses fired. Port: planned around the existing
-//     internal trace tooling. Config carries InputPath and a control
-//     filter.
-//
-//   - Fix — generate the canonical remediation diff for a finding
-//     set. Port: [usecase.Fix] over the existing remediation
-//     enricher. App orchestration: [internal/app/remediation].
-//     Config carries Findings (the *Assessment) and an OutputDir.
-//
-//   - Bisect — narrow the snapshot range that introduced a finding.
-//     Port: planned. Config carries HistoryDir, FindingID, and a
-//     time range.
-//
-//   - Compare — diff two assessments. Port: planned. Config carries
-//     two artifact paths.
-//
-//   - Diagnose — render the diagnostic side of evaluation (control
-//     loading errors, schema rejections, snapshot validation).
-//     Port: [usecase.Diagnose] (planned). Config carries the same
-//     directories as Apply but never errors on partial load.
-//
-//   - Monitor — long-running watch over an evaluation directory.
-//     Port: planned. Config carries Dir and an event handler.
-//
-// Every entry follows the same `Verb(ctx, cfg) (*Result, error)`
+// Every use case follows the same `Verb(ctx, cfg) (*Result, error)`
 // shape — consumer code that knows one knows them all.
 package stave

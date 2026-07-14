@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/util/strutil"
 )
 
 // SearchResult holds one matching control.
@@ -73,68 +74,18 @@ func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 }
 
 func matchesQuery(ctl *policy.ControlDefinition, queryLower string) bool {
-	return containsFold(string(ctl.ID), queryLower) ||
-		containsFold(ctl.Name, queryLower) ||
-		containsFold(ctl.Description, queryLower)
+	return strutil.ContainsFold(string(ctl.ID), queryLower) ||
+		strutil.ContainsFold(ctl.Name, queryLower) ||
+		strutil.ContainsFold(ctl.Description, queryLower)
 }
 
 func hasFramework(ctl *policy.ControlDefinition, profileLower string) bool {
 	for fw := range ctl.Compliance {
-		if containsFold(string(fw), profileLower) {
+		if strutil.ContainsFold(string(fw), profileLower) {
 			return true
 		}
 	}
 	return false
-}
-
-func containsFold(s, substr string) bool {
-	if substr == "" {
-		return true
-	}
-	if len(s) < len(substr) {
-		return false
-	}
-	isASCII := true
-	for i := 0; i < len(s); i++ {
-		if s[i] >= 128 {
-			isASCII = false
-			break
-		}
-	}
-	if isASCII {
-		for i := 0; i < len(substr); i++ {
-			if substr[i] >= 128 {
-				isASCII = false
-				break
-			}
-		}
-	}
-	if isASCII {
-		for i := 0; i <= len(s)-len(substr); i++ {
-			match := true
-			for j := 0; j < len(substr); j++ {
-				c1 := s[i+j]
-				c2 := substr[j]
-				if c1 != c2 {
-					if c1 >= 'A' && c1 <= 'Z' {
-						c1 += 'a' - 'A'
-					}
-					if c2 >= 'A' && c2 <= 'Z' {
-						c2 += 'a' - 'A'
-					}
-					if c1 != c2 {
-						match = false
-						break
-					}
-				}
-			}
-			if match {
-				return true
-			}
-		}
-		return false
-	}
-	return strings.Contains(toLower(s), toLower(substr))
 }
 
 func extractDomain(controlID string) string {

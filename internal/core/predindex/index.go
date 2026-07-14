@@ -97,14 +97,14 @@ func Build(controls []policy.ControlDefinition, chains []policy.ChainDefinition)
 		slices.SortFunc(ids, func(a, b kernel.ControlID) int {
 			return cmp.Compare(a, b)
 		})
-		idx.PathToControls[k] = dedupeControls(ids)
+		idx.PathToControls[k] = slices.Compact(ids)
 	}
 	for k := range idx.PathToChains {
 		ids := idx.PathToChains[k]
 		slices.SortFunc(ids, func(a, b kernel.ChainID) int {
 			return cmp.Compare(a, b)
 		})
-		idx.PathToChains[k] = dedupeChains(ids)
+		idx.PathToChains[k] = slices.Compact(ids)
 	}
 	for k := range idx.TypeToPaths {
 		paths := idx.TypeToPaths[k]
@@ -140,22 +140,3 @@ func appendUnique[T comparable](slice []T, v T) []T {
 	return append(slice, v)
 }
 
-func dedupeControls(ids []kernel.ControlID) []kernel.ControlID {
-	out := ids[:0]
-	for i, id := range ids {
-		if i == 0 || ids[i-1] != id {
-			out = append(out, id)
-		}
-	}
-	return out
-}
-
-func dedupeChains(ids []kernel.ChainID) []kernel.ChainID {
-	out := ids[:0]
-	for i, id := range ids {
-		if i == 0 || ids[i-1] != id {
-			out = append(out, id)
-		}
-	}
-	return out
-}

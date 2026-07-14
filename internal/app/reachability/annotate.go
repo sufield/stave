@@ -9,6 +9,8 @@ import (
 	"math"
 	"strings"
 
+	"github.com/sufield/stave/internal/util/strutil"
+
 	"github.com/sufield/stave/internal/core/access"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -79,37 +81,8 @@ func isPrivileged(e *access.ResourceAccessEntry) bool {
 		}
 		// Admin-like actions.
 		if strings.HasSuffix(action, ":*") ||
-			containsFold(action, "admin") ||
-			containsFold(action, "fullaccess") {
-			return true
-		}
-	}
-	return false
-}
-
-func containsFold(s, substrLower string) bool {
-	if substrLower == "" {
-		return true
-	}
-	if len(s) < len(substrLower) {
-		return false
-	}
-	for i := 0; i <= len(s)-len(substrLower); i++ {
-		match := true
-		for j := 0; j < len(substrLower); j++ {
-			c1 := s[i+j]
-			c2 := substrLower[j]
-			if c1 != c2 {
-				if c1 >= 'A' && c1 <= 'Z' {
-					c1 += 'a' - 'A'
-				}
-				if c1 != c2 {
-					match = false
-					break
-				}
-			}
-		}
-		if match {
+			strutil.ContainsFold(action, "admin") ||
+			strutil.ContainsFold(action, "fullaccess") {
 			return true
 		}
 	}
