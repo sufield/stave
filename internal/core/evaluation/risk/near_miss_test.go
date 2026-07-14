@@ -72,6 +72,27 @@ func TestDetectNearMisses(t *testing.T) {
 		}
 	})
 
+	t.Run("threshold-1 chain produces no near miss", func(t *testing.T) {
+		threshold1Chains := []policy.ChainDefinition{
+			{
+				ID:                  "single_gate",
+				Description:         "Single precondition",
+				ControlIDs:          []kernel.ControlID{"CTL.GATE.001"},
+				EscalationThreshold: 1,
+				CompoundSeverity:    policy.SeverityCritical,
+			},
+		}
+		// Zero failing: safe. No near miss expected because threshold-1
+		// has no intermediate state — it fires or it doesn't.
+		failures := failingControls("asset-1", "CTL.UNRELATED.001")
+		nearMisses := DetectNearMisses(failures, threshold1Chains, nil)
+		for _, nm := range nearMisses {
+			if nm.ChainID == "single_gate" {
+				t.Error("threshold-1 chain should never produce near miss")
+			}
+		}
+	})
+
 	t.Run("two controls short is not a near miss", func(t *testing.T) {
 		// phi_exposure has 3 controls, threshold 2. Zero failing = 2 short, not near miss
 		// (no failures at all → no near misses for phi_exposure)

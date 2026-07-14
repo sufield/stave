@@ -517,6 +517,34 @@ func annotateChainMembership(report *evaluation.ComplianceReport) {
 			}
 		}
 	}
+
+	// Graph-originating chain findings (from Soufflé) have empty
+	// ControlsFailing — the chain was detected by graph query, not
+	// CEL predicate evaluation. Match individual findings by AssetID:
+	// the graph chain identifies the asset at risk, so every finding
+	// on that asset becomes a chain member.
+	for i := range report.ChainFindings {
+		cf := &report.ChainFindings[i]
+		if len(cf.ControlsFailing) > 0 {
+			continue
+		}
+		membership := evaluation.ChainMembershipEntry{
+			ChainID:       cf.ChainID,
+			ChainSeverity: cf.Severity,
+			StageSpan:     risk.SortStagesByKillChain(cf.AttackStages),
+			Narrative:     cf.Description,
+		}
+		for j := range report.Findings {
+			if report.Findings[j].AssetID == cf.AssetID {
+				report.Findings[j].AddChainMembership(membership)
+			}
+		}
+		for j := range report.MarkerFindings {
+			if report.MarkerFindings[j].AssetID == cf.AssetID {
+				report.MarkerFindings[j].AddChainMembership(membership)
+			}
+		}
+	}
 }
 
 // annotateExploitability classifies each finding as exploitable, one_away,
@@ -542,24 +570,27 @@ func annotateExploitability(report *evaluation.ComplianceReport) {
 		})
 	}
 
-	for i := range report.Findings {
-		f := &report.Findings[i]
-		if f.IsChainMember() {
-			f.Exploitability = evaluation.ExploitabilityExploitable
-			continue
-		}
-		// Check near-miss chains.
-		for _, ne := range nmEntries {
-			if ne.controlIDs.Contains(f.ControlID) {
-				f.NearMissChains = append(f.NearMissChains, ne.nearMiss)
+	classifyFindings := func(fs []evaluation.Finding) {
+		for i := range fs {
+			f := &fs[i]
+			if f.IsChainMember() {
+				f.Exploitability = evaluation.ExploitabilityExploitable
+				continue
 			}
+			for _, ne := range nmEntries {
+				if ne.controlIDs.Contains(f.ControlID) {
+					f.NearMissChains = append(f.NearMissChains, ne.nearMiss)
+				}
+			}
+			if len(f.NearMissChains) > 0 {
+				f.Exploitability = evaluation.ExploitabilityOneAway
+				continue
+			}
+			f.Exploitability = evaluation.ExploitabilityReachable
 		}
-		if len(f.NearMissChains) > 0 {
-			f.Exploitability = evaluation.ExploitabilityOneAway
-			continue
-		}
-		f.Exploitability = evaluation.ExploitabilityReachable
 	}
+	classifyFindings(report.Findings)
+	classifyFindings(report.MarkerFindings)
 }
 
 // annotateDecidingLayer derives the responsible policy layer for each

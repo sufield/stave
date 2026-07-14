@@ -389,6 +389,13 @@ func DetectNearMisses(
 			continue
 		}
 		chain := &chains[i]
+		// Threshold-1 chains have no one-away state: they're either
+		// safe (0 failing) or exploitable (1 failing). The near-miss
+		// condition (len(failing) == threshold-1 AND len(failing) > 0)
+		// is contradictory for threshold=1.
+		if chain.EscalationThreshold <= 1 {
+			continue
+		}
 		for scope, scopeFailing := range b.byScope {
 			var failing, holding []kernel.ControlID
 			for _, cid := range chain.ControlIDs {
