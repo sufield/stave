@@ -18,6 +18,7 @@ import (
 type graphChainSpec struct {
 	ChainID   kernel.ChainID
 	Severity  policy.Severity
+	Columns   int
 	Stages    []kernel.AttackStage
 	Narrative func(cols []string) string
 	Resource  func(cols []string) asset.ID
@@ -29,6 +30,7 @@ var graphChainRegistry = map[string]graphChainSpec{
 	"bucket_hijack_path": {
 		ChainID:  "CHAIN.BUCKET.HIJACK.001",
 		Severity: policy.SeverityCritical,
+		Columns:  4,
 		Stages:   []kernel.AttackStage{"initial_access", "persistence", "impact"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Identity %q has s3:DeleteBucket on %q which is the destination for %s %q. No SCP data perimeter blocks cross-account writes.",
@@ -39,6 +41,7 @@ var graphChainRegistry = map[string]graphChainSpec{
 	"telemetry_hijack_path": {
 		ChainID:  "CHAIN.BUCKET.TELEMETRY_HIJACK.001",
 		Severity: policy.SeverityCritical,
+		Columns:  4,
 		Stages:   []kernel.AttackStage{"initial_access", "detection_evasion", "impact"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Identity %q has s3:DeleteBucket on security telemetry bucket %q (destination for %s %q). Bucket deletion blinds the telemetry pipeline.",
@@ -49,6 +52,7 @@ var graphChainRegistry = map[string]graphChainSpec{
 	"cross_account_data_destruction": {
 		ChainID:  "CHAIN.BUCKET.CROSS_ACCOUNT_DESTROY.001",
 		Severity: policy.SeverityCritical,
+		Columns:  5,
 		Stages:   []kernel.AttackStage{"initial_access", "impact"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("External principal %q has %s on stream destination %q (router %s %q). No SCP data perimeter blocks the grant.",
@@ -59,6 +63,7 @@ var graphChainRegistry = map[string]graphChainSpec{
 	"cross_account_policy_rewrite": {
 		ChainID:  "CHAIN.BUCKET.CROSS_ACCOUNT_REWRITE.001",
 		Severity: policy.SeverityHigh,
+		Columns:  3,
 		Stages:   []kernel.AttackStage{"privilege_escalation"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("External principal %q can rewrite the bucket policy on %q (grant type: %s), enabling arbitrary further access.",
@@ -69,6 +74,7 @@ var graphChainRegistry = map[string]graphChainSpec{
 	"permission_asymmetry": {
 		ChainID:  "CHAIN.BUCKET.PERMISSION_ASYMMETRY.001",
 		Severity: policy.SeverityHigh,
+		Columns:  5,
 		Stages:   []kernel.AttackStage{"initial_access", "impact"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Identity %q can delete stream destination %q but lacks %s on %s %q. Bucket deletion bypasses the intended permission boundary.",
@@ -79,6 +85,7 @@ var graphChainRegistry = map[string]graphChainSpec{
 	"dangling_destination": {
 		ChainID:  "CHAIN.BUCKET.DANGLING_DEST.001",
 		Severity: policy.SeverityHigh,
+		Columns:  3,
 		Stages:   []kernel.AttackStage{"initial_access"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Router %q (%s) references bucket %q which does not exist in the snapshot. An attacker could create this bucket to capture the data stream.",
@@ -89,6 +96,7 @@ var graphChainRegistry = map[string]graphChainSpec{
 	"cross_account_destination": {
 		ChainID:  "CHAIN.BUCKET.CROSS_ACCOUNT_DEST.001",
 		Severity: policy.SeverityMedium,
+		Columns:  5,
 		Stages:   []kernel.AttackStage{"collection"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Router %q (%s) sends data to bucket %q in account %s, different from source account %s.",
@@ -99,6 +107,7 @@ var graphChainRegistry = map[string]graphChainSpec{
 	"lateral_via_resource_policy": {
 		ChainID:  "CHAIN.LATERAL.RESOURCE_POLICY.001",
 		Severity: policy.SeverityHigh,
+		Columns:  5,
 		Stages:   []kernel.AttackStage{"lateral_movement", "collection"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Identity %q assumes role %q, which has resource-policy grant (%s, type %s) to %q. Cross-type lateral movement: role trust chain into resource policy grant.",
@@ -109,6 +118,7 @@ var graphChainRegistry = map[string]graphChainSpec{
 	"assume_cycle": {
 		ChainID:  "CHAIN.TRUST.CYCLE.001",
 		Severity: policy.SeverityHigh,
+		Columns:  3,
 		Stages:   []kernel.AttackStage{"privilege_escalation", "lateral_movement"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Trust cycle detected: %q ↔ %q (%s hops). A cycle in the role assumption graph enables privilege laundering — assume out, then assume back with different permissions.",
@@ -140,7 +150,13 @@ func ingestGraphFindings(dir string) ([]findings.CompoundFinding, error) {
 		if err != nil {
 			continue
 		}
-		for _, cols := range tuples {
+		for lineIdx, cols := range tuples {
+			if spec.Columns > 0 && len(cols) < spec.Columns {
+				slog.Warn("graph-findings: malformed Soufflé output line",
+					"relation", relation, "line", lineIdx+1,
+					"got", len(cols), "want", spec.Columns)
+				continue
+			}
 			cf := findings.CompoundFinding{
 				ChainID:       spec.ChainID,
 				AssetID:       spec.Resource(cols),

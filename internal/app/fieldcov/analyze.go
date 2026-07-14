@@ -158,7 +158,6 @@ func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]str
 		}
 	}
 
-
 	pred := &ctl.UnsafePredicate
 	if len(pred.Any) == 0 && len(pred.All) == 0 {
 		result.Classification = Evaluable

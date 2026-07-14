@@ -371,10 +371,6 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	graphFindingsDir string,
 	snapshots []asset.Snapshot,
 ) {
-	if len(report.Findings) == 0 && len(report.MarkerFindings) == 0 {
-		return
-	}
-
 	// Build per-asset failure list for asset-aware chain and
 	// attack-stage analysis. Marker findings join the failure list
 	// for chain detection — chains can compose marker findings
@@ -402,11 +398,12 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 		scopeResolver := risk.NewScopeResolverFromSnapshots(snapshots)
 		report.ChainFindings = risk.DetectChains(failures, chainDefs, controlLookup, scopeResolver)
 		report.NearMissChains = risk.DetectNearMisses(failures, chainDefs, scopeResolver)
-		annotateChainMembership(report)
-		annotateExploitability(report)
 	}
 
-	// Ingest pre-computed graph-based chain findings from Soufflé output.
+	// Ingest pre-computed graph-based chain findings from Soufflé
+	// output. This must happen BEFORE annotation so graph findings
+	// are visible to annotateChainMembership and
+	// annotateExploitability.
 	if graphFindingsDir != "" {
 		graphFindings, err := ingestGraphFindings(graphFindingsDir)
 		if err != nil && w.Logger != nil {
@@ -415,6 +412,8 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 		report.ChainFindings = append(report.ChainFindings, graphFindings...)
 	}
 
+	annotateChainMembership(report)
+	annotateExploitability(report)
 	annotateDecidingLayer(report)
 
 	// Build attack stage summary from violation failures only —

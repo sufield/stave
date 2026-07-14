@@ -263,10 +263,7 @@ func buildSummary(gaps []FieldGap, indet int, topN int) Summary {
 	s.ChainsBlockedTotal = len(chainSet)
 
 	if topN > 0 && len(gaps) > 0 {
-		n := topN
-		if n > len(gaps) {
-			n = len(gaps)
-		}
+		n := min(topN, len(gaps))
 		top := map[kernel.ChainID]struct{}{}
 		tagN := 0
 		for i := range n {
