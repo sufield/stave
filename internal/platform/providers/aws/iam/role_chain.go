@@ -373,13 +373,14 @@ func resolveServiceExecChains(input RoleChainInput) []RoleChain {
 func principalHasAnyAction(resolved *ResolvedPermissions, candidates []string) bool {
 	candidateSet := make(map[string]struct{}, len(candidates))
 	for _, c := range candidates {
-		candidateSet[c] = struct{}{}
+		candidateSet[strings.ToLower(c)] = struct{}{}
 	}
 	for _, grant := range resolved.EffectiveAllow {
-		if _, ok := candidateSet[grant.Action]; ok {
+		lower := strings.ToLower(grant.Action)
+		if _, ok := candidateSet[lower]; ok {
 			return true
 		}
-		if grant.Action == "*" {
+		if lower == "*" {
 			return true
 		}
 		if isWildcardServicePrefix(grant.Action, candidates) {
@@ -394,12 +395,13 @@ func principalHasAnyAction(resolved *ResolvedPermissions, candidates []string) b
 // candidates. Centralised here so the per-primitive trigger checks
 // don't reimplement the prefix dance.
 func isWildcardServicePrefix(grantAction string, candidates []string) bool {
-	if !strings.HasSuffix(grantAction, ":*") {
+	lowerGrant := strings.ToLower(grantAction)
+	if !strings.HasSuffix(lowerGrant, ":*") {
 		return false
 	}
-	prefix := strings.TrimSuffix(grantAction, ":*")
+	prefix := strings.TrimSuffix(lowerGrant, ":*")
 	for _, candidate := range candidates {
-		if strings.HasPrefix(candidate, prefix+":") {
+		if strings.HasPrefix(strings.ToLower(candidate), prefix+":") {
 			return true
 		}
 	}
@@ -407,7 +409,8 @@ func isWildcardServicePrefix(grantAction string, candidates []string) bool {
 }
 
 func isPassRoleAction(action string) bool {
-	return action == "iam:PassRole" || action == "iam:*" || action == "*"
+	lower := strings.ToLower(action)
+	return lower == "iam:passrole" || lower == "iam:*" || lower == "*"
 }
 
 func roleTrustsService(serviceTrusts map[string][]string, roleARN, servicePrincipal string) bool {
@@ -546,10 +549,13 @@ func resolveExistingResourceInvocations(input RoleChainInput) []RoleChain {
 // same matching as the create-and-pass walker without duplicating
 // the prefix dance.
 func triggerActionMatches(grantAction string, candidates []string) bool {
-	if slices.Contains(candidates, grantAction) {
-		return true
+	lower := strings.ToLower(grantAction)
+	for _, c := range candidates {
+		if strings.EqualFold(c, lower) {
+			return true
+		}
 	}
-	if grantAction == "*" {
+	if lower == "*" {
 		return true
 	}
 	return isWildcardServicePrefix(grantAction, candidates)
@@ -865,10 +871,10 @@ func resolveTagMutationChains(input RoleChainInput) []RoleChain {
 // these on a role is the necessary half of the ABAC privesc
 // primitive; the trust-policy half is checked separately.
 func isTagMutationAction(action string) bool {
-	switch action {
-	case "iam:TagRole", "iam:UntagRole",
-		"iam:TagUser", "iam:UntagUser",
-		"iam:TagPolicy", "iam:UntagPolicy",
+	switch strings.ToLower(action) {
+	case "iam:tagrole", "iam:untagrole",
+		"iam:taguser", "iam:untaguser",
+		"iam:tagpolicy", "iam:untagpolicy",
 		"iam:*", "*":
 		return true
 	}

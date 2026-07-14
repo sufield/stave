@@ -6,6 +6,7 @@ import "strings"
 type PrivilegeLevel string
 
 const (
+	PrivilegeLevelUnknown  PrivilegeLevel = "unknown"
 	PrivilegeLevelNone     PrivilegeLevel = "none"
 	PrivilegeLevelLimited  PrivilegeLevel = "limited"
 	PrivilegeLevelStandard PrivilegeLevel = "standard"
@@ -74,6 +75,8 @@ func (r *ResolvedPermissions) PrivilegeBucket() string {
 		return "standard"
 	case PrivilegeLevelLimited:
 		return "limited"
+	case PrivilegeLevelUnknown:
+		return "unknown"
 	default:
 		return "none"
 	}
@@ -124,6 +127,7 @@ func Resolve(input ResolutionInput) ResolvedPermissions {
 			"permission boundary policy document absent from snapshot")
 	}
 	if result.Incomplete {
+		result.PrivilegeLevel = PrivilegeLevelUnknown
 		return result
 	}
 
@@ -367,7 +371,9 @@ func intersectResource(r1, r2 string) (string, bool) {
 }
 
 // collectBoundaryCeiling extracts the allowed actions from the permission
-// boundary. nil boundary means no ceiling.
+// boundary. nil boundary means no ceiling. A non-nil boundary with zero
+// Allow statements returns emptyCeiling() (denies everything), matching
+// AWS semantics where effective = identity ∩ boundary.
 func collectBoundaryCeiling(boundary *PolicyDocument) []ActionGrant {
 	if boundary == nil {
 		return nil // nil means no ceiling
@@ -382,6 +388,9 @@ func collectBoundaryCeiling(boundary *PolicyDocument) []ActionGrant {
 				})
 			}
 		}
+	}
+	if len(ceiling) == 0 {
+		return emptyCeiling()
 	}
 	return ceiling
 }
