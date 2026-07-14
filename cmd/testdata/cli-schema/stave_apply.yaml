@@ -86,6 +86,10 @@ options:
       shorthand: f
       default_value: text
       usage: Output format (text, json, or sarif)
+    - name: freshness-threshold
+      default_value: 24h
+      usage: |
+        Snapshot age beyond which finding confidence is downgraded to LOW (e.g. 24h, 168h)
     - name: graph-findings
       usage: |
         Directory of pre-computed Soufflé .csv output for graph-based chain detection
@@ -142,6 +146,10 @@ options:
     - name: show-suppressed
       default_value: "false"
       usage: include overlay-suppressed controls in output
+    - name: skip-freshness
+      default_value: "false"
+      usage: |
+        Disable snapshot freshness qualification (all findings report original confidence)
     - name: sla-policy
       default_value: warn
       usage: 'SLA breach exit code behavior: warn, strict, critical-only'
