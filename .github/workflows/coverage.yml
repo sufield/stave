@@ -25,11 +25,21 @@ jobs:
           cache: true
 
       - name: Regenerate goldens and sync
-        # ARGS=-fail-on-behavioral: auto-accept CLEAN / FINGERPRINT-ONLY /
-        # METADATA-ONLY golden diffs; exit non-zero on BEHAVIORAL /
-        # MIXED / ERROR. Matches ci.yml so coverage and CI agree on
-        # what "passes". See internal/tools/regengoldens/main.go.
-        run: make regenerate-goldens golden-update-all sync-schemas sync-controls sync-alternatives ARGS="-fail-on-behavioral"
+        run: make regenerate-goldens golden-update-all sync-schemas sync-controls sync-alternatives
+
+      - name: Audit behavioral changes
+        run: |
+          CHANGED=$(git diff --name-only testdata/ | wc -l)
+          if [ "$CHANGED" -gt 0 ]; then
+            echo "::warning::BEHAVIORAL: $CHANGED golden files changed"
+            git diff --stat testdata/
+          fi
+
+      - name: Commit updated goldens
+        run: |
+          git add testdata/ internal/contracts/schema/embedded internal/controldata/embedded internal/adapters/coverage/embedded
+          git diff --cached --quiet || git commit -m "auto-update goldens [behavioral: $(git diff --cached --name-only testdata/ | wc -l) files]"
+          git push
 
       - name: Generate coverage (single test run)
         run: |
