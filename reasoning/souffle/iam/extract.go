@@ -440,6 +440,8 @@ func readFactPairs(path string) ([]factPair, error) {
 		}
 		fields := strings.Split(line, "\t")
 		if len(fields) < 2 {
+			fmt.Fprintf(os.Stderr, "extract: WARN: malformed fact line in %s: %q\n",
+				filepath.Base(path), line)
 			continue
 		}
 		out = append(out, factPair{Subject: fields[0], Object: fields[1]})
@@ -613,18 +615,10 @@ func emitBucketHijackFacts(outDir string) (map[string]int, error) {
 		return nil, err
 	}
 
-	// bucket_account — 2-col. S3 ARNs lack account IDs; infer from
-	// the snapshot context when exactly one account is present.
-	var baRows []string
-	if len(allAccounts) == 1 {
-		var acct string
-		for a := range allAccounts {
-			acct = a
-		}
-		for _, arn := range sortedKeys(bucketARNs) {
-			baRows = append(baRows, fmt.Sprintf("%s\t%s", arn, acct))
-		}
-	}
+	// bucket_account — 2-col. S3 ARNs lack account IDs
+	// (arn:aws:s3:::name has empty parts[4]). Resolve per-bucket
+	// when possible; fall back to single-account inference.
+	baRows := resolveBucketAccounts(bucketARNs, allAccounts)
 	if err := writeLines(filepath.Join(outDir, "bucket_account.facts"), baRows, counts, "bucket_account"); err != nil {
 		return nil, err
 	}
@@ -667,6 +661,44 @@ func emitBucketHijackFacts(outDir string) (map[string]int, error) {
 	}
 
 	return counts, nil
+}
+
+// resolveBucketAccounts maps each S3 bucket ARN to its owning
+// account. S3 ARNs carry no account ID (arn:aws:s3:::name →
+// parts[4] is ""), so the extractor must infer ownership.
+//
+// Strategy:
+//  1. Single-account snapshot: all buckets belong to that account.
+//  2. Multi-account snapshot: per-bucket resolution is not possible
+//     from the fact stream alone (the observation source metadata
+//     isn't projected into facts). Emit nothing and warn — the
+//     operator sees the gap instead of getting silently wrong
+//     cross-account classifications.
+//
+// ponytail: per-bucket ownership from observation source metadata
+// when the SIR gains a per-asset source_account field.
+func resolveBucketAccounts(bucketARNs, allAccounts map[string]struct{}) []string {
+	if len(bucketARNs) == 0 {
+		return nil
+	}
+	if len(allAccounts) == 1 {
+		var acct string
+		for a := range allAccounts {
+			acct = a
+		}
+		rows := make([]string, 0, len(bucketARNs))
+		for _, arn := range sortedKeys(bucketARNs) {
+			rows = append(rows, fmt.Sprintf("%s\t%s", arn, acct))
+		}
+		return rows
+	}
+	if len(allAccounts) > 1 {
+		fmt.Fprintf(os.Stderr,
+			"extract: WARN: %d accounts in snapshot — bucket_account.facts will be empty; "+
+				"S3 cross-account and bucket-hijack chain queries may produce incomplete results\n",
+			len(allAccounts))
+	}
+	return nil
 }
 
 // ── G9: Cross-account resource policy grants ─────────────
@@ -745,28 +777,60 @@ func emitCrossAccountAccessFacts(outDir string) (map[string]int, error) {
 
 // classifyGrantType determines the grant type for a principal on a
 // resource owned by resAcct. Returns "" if same-account (not external).
+//
+// Grant types: "public" (*), "explicit" (cross-account ARN),
+// "federated" (OIDC/SAML/Cognito IdP), "canonical_user" (S3
+// canonical user ID).
 func classifyGrantType(principal, resAcct string) string {
 	if principal == "*" {
 		return "public"
 	}
-	// Service principals are not cross-account grants.
-	if strings.HasSuffix(principal, ".amazonaws.com") {
+	// Service principals (lambda.amazonaws.com, etc.) are AWS
+	// service-to-service trust, not cross-account grants.
+	if isServicePrincipal(principal) {
 		return ""
 	}
 	prinAcct := accountFromARN(principal)
 	if prinAcct == "" {
-		// Can't determine account — conservative: skip.
-		return ""
+		// Non-ARN principal. Federated IdPs and canonical user IDs
+		// are external access paths — emit them so downstream chain
+		// queries see the edge.
+		if isCanonicalUserID(principal) {
+			return "canonical_user"
+		}
+		// Remaining non-ARN, non-service principals are federation
+		// providers (OIDC, SAML, Cognito).
+		return "federated"
 	}
 	if resAcct == "" {
-		// Can't determine resource owner — emit as explicit
-		// (let downstream rules decide).
 		return "explicit"
 	}
 	if prinAcct == resAcct {
 		return ""
 	}
 	return "explicit"
+}
+
+// isServicePrincipal returns true for AWS service principals
+// (e.g. "lambda.amazonaws.com", "s3.amazonaws.com"). These
+// represent AWS service-to-service trust, not external access.
+func isServicePrincipal(p string) bool {
+	return strings.HasSuffix(p, ".amazonaws.com")
+}
+
+// isCanonicalUserID returns true for S3 canonical user IDs —
+// 64-character hex strings used in bucket ACLs for cross-account
+// grants.
+func isCanonicalUserID(p string) bool {
+	if len(p) != 64 {
+		return false
+	}
+	for _, c := range p {
+		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) {
+			return false
+		}
+	}
+	return true
 }
 
 // writeLines writes rows to a .facts file and updates counts.
