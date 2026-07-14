@@ -1456,13 +1456,13 @@
         {
           "chain_id": "detection_blindness",
           "chain_severity": "critical",
-          "missing_control": "CTL.GUARDDUTY.ENABLED.001",
+          "missing_control": "CTL.CLOUDTRAIL.ENABLED.001",
           "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
         },
         {
           "chain_id": "detection_blindness",
           "chain_severity": "critical",
-          "missing_control": "CTL.CLOUDTRAIL.ENABLED.001",
+          "missing_control": "CTL.GUARDDUTY.ENABLED.001",
           "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
         },
         {
@@ -4712,7 +4712,7 @@
         {
           "chain_id": "redundancy_single_point",
           "chain_severity": "critical",
-          "missing_control": "CTL.VPC.NAT.SINGLEAZ.001",
+          "missing_control": "CTL.ELB.TARGET.SINGLEAZ.001",
           "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
         },
         {
@@ -4724,7 +4724,7 @@
         {
           "chain_id": "redundancy_single_point",
           "chain_severity": "critical",
-          "missing_control": "CTL.ELB.TARGET.SINGLEAZ.001",
+          "missing_control": "CTL.VPC.NAT.SINGLEAZ.001",
           "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
         },
         {
