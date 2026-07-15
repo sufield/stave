@@ -104,9 +104,5 @@ to minimize surface area for adoption.
 
 - [`Dockerfile`](./Dockerfile) — the workspace image (iteration 1).
 - [`motd.sh`](./motd.sh) — terminal banner shown on every shell.
-- [`docs/workflows/START-HERE.md`](../docs/workflows/START-HERE.md) —
-  what the agent prints on workspace launch.
-- [`docs/workflows/`](../docs/workflows/) — the six numbered
-  workflow guides.
 - [`cmd/mcp/README.md`](../cmd/mcp/README.md) — MCP
   server protocol, tool list, hosted-mode details.
