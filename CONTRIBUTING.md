@@ -370,7 +370,7 @@ All AWS account IDs, ARNs, and bucket names under `testdata/` and `case-studies/
 
 ## Reporting Bugs
 
-When filing a bug report, include a minimal, deterministic reproduction. See the [Bug Reproduction Guide](https://www.systeminvariant.dev/docs/how-to/bug-reports) for how to write one, and the [Bug Reproduction Template](docs/contrib/bug-repro-template.md) for a copy-paste starting point.
+When filing a bug report, include a minimal, deterministic reproduction. See the [Bug Reproduction Guide](https://www.systeminvariant.dev/docs/how-to/maintenance/bug-reports) for how to write one, and the [Bug Reproduction Template](docs/contrib/bug-repro-template.md) for a copy-paste starting point.
 
 ## Getting Help
 
@@ -378,18 +378,14 @@ When filing a bug report, include a minimal, deterministic reproduction. See the
 - Check existing issues before creating new ones
 - Provide minimal reproduction steps for bugs
 
-## Scope note
+## Scope
 
-Stave MVP scope is AWS S3 public exposure only.
+Stave evaluates AWS cloud configurations across 93 services, 3000+
+controls, and 630+ compound chains.
 
 ## Vocabulary
 
 Stave uses one canonical term per concept in user-facing surfaces
 (CLI help, docs, MCP descriptions, external articles): `control`,
 `finding`, `catalog`, `evaluation`, `verdict`, `chain`, `observation`.
-The canonical → deprecated mapping, the "why control not invariant"
-rationale, and the carve-outs where `invariant` deliberately stays
-(internal type names, the solver-import JSON contract, research and
-explanation docs) are in [`TERMINOLOGY.md`](./TERMINOLOGY.md). The
-Docs Drift CI check enforces the phrase-level renames on the
-user-facing surfaces.
+The Docs Drift CI check enforces these terms on user-facing surfaces.

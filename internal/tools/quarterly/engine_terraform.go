@@ -16,12 +16,12 @@ func (e *terraformEngine) Name() string { return "terraform" }
 func (e *terraformEngine) Run(ctx context.Context) (*EngineResult, error) {
 	start := time.Now()
 
-	script := "tools/tf-schema-diff/diff.py"
+	script := "../docs-internal/tools/tf-schema-diff/diff.py"
 	if _, err := os.Stat(script); err != nil {
 		return &EngineResult{
 			Engine:   "terraform",
 			Duration: time.Since(start),
-			Error:    "tools/tf-schema-diff/diff.py not found",
+			Error:    "../docs-internal/tools/tf-schema-diff/diff.py not found",
 		}, nil
 	}
 

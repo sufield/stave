@@ -198,5 +198,4 @@ comes to you.
 tool descriptions — Stave says **control** (the catalog entry the
 operator authors and edits). In this document, where the rationale
 is the point, it sometimes says **invariant** (the formal property
-each control encodes). The distinction is real and tracked in
-[`TERMINOLOGY.md`](./TERMINOLOGY.md).*
+each control encodes).*
