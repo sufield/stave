@@ -1,0 +1,18 @@
+# Stave Metrics — GENERATED, do not edit
+# Run: make metrics
+
+catalog:
+  controls: 3019
+  services: 93
+
+chains:
+  authored: 634
+
+frameworks:
+  count: 10
+
+proof_class:
+  trivial: 2071
+  compound: 947
+
+updated: 2026-07-15

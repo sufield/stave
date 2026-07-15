@@ -17,7 +17,7 @@ internal/
   app/               Application services. Orchestrates domain + adapters.
     contracts/       App-layer port interfaces (ObservationRepository, ControlRepository).
     eval/            Evaluation pipeline (BuildDependencies, EvaluateRun, OutputPipeline).
-    ...              One package per feature (diagnose, explain, fix, lint, prune, securityaudit).
+    ...              One package per feature (diagnose, explain, fix, lint, securityaudit).
   adapters/          Infrastructure implementations. Talks to filesystem, AWS, git, etc.
     controls/        Control loaders (builtin embedded YAML, filesystem YAML).
     observations/    Observation file loaders.

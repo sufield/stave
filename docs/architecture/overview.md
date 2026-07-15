@@ -32,7 +32,6 @@ stave/
 │       ├── enforce/        CI commands (baseline, cidiff, diff, fix, gate, graph)
 │       ├── inspect/        inspect command tree (policy, acl, exposure, risk, compliance, aliases)
 │       ├── initcmd/        init command (alias, config, context, env)
-│       ├── prune/          snapshot lifecycle (archive, cleanup, hygiene, upcoming, plan)
 │       ├── bugreport/      bug-report command
 │       └── cmdutil/        Shared CLI utilities
 │
@@ -58,16 +57,13 @@ stave/
 │   │   ├── capabilities/   Capabilities query
 │   │   ├── contracts/      Port interfaces (FindingMarshaler, EnrichFunc, SnapshotFile)
 │   │   ├── service/        Shared app services (evaluation, readiness)
-│   │   ├── workflow/       Envelope assembly
-│   │   ├── hygiene/        Snapshot lifecycle reporting
-│   │   └── prune/          Snapshot planning orchestration
+│   │   └── workflow/       Envelope assembly
 │   │
 │   ├── adapters/
 │   │   ├── controls/       Control loaders (builtin embedded, YAML filesystem)
 │   │   ├── observations/   JSON observation snapshot loaders
 │   │   ├── evaluation/     Evaluation result loaders
 │   │   ├── exemption/      Exemption config loaders
-│   │   ├── pruner/         Snapshot filesystem operations (archive, delete, plan apply)
 │   │   ├── output/         JSON/text/SARIF output marshalers, DTOs, report rendering
 │   │   └── gitinfo/        Git repository metadata
 │   │
@@ -144,9 +140,6 @@ All output is written with restricted permissions (`0700` dirs, `0600` files). S
 | `diagnose` | `cmd/diagnose/` | `app/diagnose/` | `internal/core/diag/` |
 | `verify` | `cmd/apply/verify/` | — | Before/after comparison |
 | `inspect *` | `cmd/inspect/` | — | `internal/core/s3/`, `evaluation/exposure/`, `evaluation/risk/` |
-| `snapshot plan` | `cmd/prune/snapshot/` | `app/prune/snapshot/` | `internal/core/snapplan/` |
-| `snapshot status` | `cmd/prune/hygiene/` | `app/hygiene/` | Snapshot health summary |
-| `snapshot risk` | `cmd/prune/hygiene/` | `app/hygiene/` | Snapshot risk report |
 | `ci fix-loop` | `cmd/enforce/fix/` | — | Apply before/after + verification |
 | `capabilities` | `cmd/commands_dev.go` | `app/capabilities/` | — |
 | `graph coverage` | `cmd/enforce/graph/` | — | Predicate matching |
