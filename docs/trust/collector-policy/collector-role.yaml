@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Stave read-only collector role. Every granted action is Get, List,
+  or Describe. No write, no modify, no delete. Verify with:
+  z3 docs/trust/collector-policy/verify-readonly.smt2
+
+Parameters:
+  ExternalId:
+    Type: String
+    Description: Shared secret for cross-account AssumeRole condition
+    MinLength: 8
+
+Resources:
+  StaveCollectorRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: StaveReadOnlyCollector
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId: !Ref ExternalId
+      Policies:
+        - PolicyName: StaveReadOnly
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: StaveReadOnlyCollector
+                Effect: Allow
+                Action:
+                  - cloudtrail:DescribeTrails
+                  - cloudtrail:GetEventSelectors
+                  - cloudwatch:DescribeAlarms
+                  - config:DescribeConfigurationRecorders
+                  - ec2:DescribeInstanceAttribute
+                  - ec2:DescribeInstances
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:DescribeSecurityGroups
+                  - ec2:DescribeVolumes
+                  - es:DescribeDomain
+                  - es:ListDomainNames
+                  - iam:GetAccountAuthorizationDetails
+                  - iam:GetAccountPasswordPolicy
+                  - iam:GetAccountSummary
+                  - iam:GetPolicy
+                  - iam:GetPolicyVersion
+                  - iam:GetRolePolicy
+                  - iam:GetUserPolicy
+                  - iam:GetGroupPolicy
+                  - iam:ListAccountAliases
+                  - iam:ListAttachedGroupPolicies
+                  - iam:ListAttachedRolePolicies
+                  - iam:ListAttachedUserPolicies
+                  - iam:ListGroupPolicies
+                  - iam:ListGroups
+                  - iam:ListGroupsForUser
+                  - iam:ListRolePolicies
+                  - iam:ListRoles
+                  - iam:ListRoleTags
+                  - iam:ListUserPolicies
+                  - iam:ListUsers
+                  - kms:GetKeyPolicy
+                  - kms:GetKeyRotationStatus
+                  - kms:ListKeys
+                  - organizations:DescribeOrganization
+                  - organizations:ListAccounts
+                  - s3:GetBucketEncryption
+                  - s3:GetBucketLogging
+                  - s3:GetBucketPolicy
+                  - s3:GetBucketTagging
+                  - s3:GetBucketVersioning
+                  - s3:GetPublicAccessBlock
+                  - s3:ListAllMyBuckets
+                  - ses:GetIdentityDkimAttributes
+                  - ses:ListIdentities
+                  - ses:ListIdentityPolicies
+                  - sts:GetCallerIdentity
+                Resource: '*'
+
+Outputs:
+  RoleArn:
+    Description: ARN for the Stave collector role
+    Value: !GetAtt StaveCollectorRole.Arn

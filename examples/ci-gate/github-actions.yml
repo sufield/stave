@@ -1,0 +1,76 @@
+# .github/workflows/stave-security-gate.yml
+#
+# Drop this file into your repo's .github/workflows/ directory.
+# Configure the secrets listed below and push to main.
+#
+# Exit codes: 0 = clean, 3 = violations found (gate fails),
+#             2 = input error, 4 = internal error.
+name: Stave Security Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly Monday 6 AM UTC
+
+permissions:
+  contents: read
+  security-events: write  # Required for SARIF upload
+
+jobs:
+  security-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Install Stave
+        run: go install github.com/sufield/stave/cmd/stave@latest
+
+      - name: Import snapshot
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.STAVE_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.STAVE_AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ vars.STAVE_AWS_REGION || 'us-east-1' }}
+        run: |
+          mkdir -p snapshot
+          aws s3 sync "s3://${CONFIG_BUCKET}/AWSLogs/" ./snapshot/
+          # Or use the Stave collector script:
+          # python3 examples/collectors/aws_minimal_collector.py \
+          #   --region "$AWS_REGION" --out ./snapshot
+
+      - name: Evaluate
+        id: evaluate
+        run: |
+          # --format sarif for GitHub Code Scanning integration
+          stave apply \
+            --observations ./snapshot/ \
+            --format sarif \
+            > stave-results.sarif || exit_code=$?
+
+          # Also generate text summary for the job log
+          stave apply \
+            --observations ./snapshot/ \
+            --format text \
+            2>/dev/null || true
+
+          exit ${exit_code:-0}
+
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: stave-results.sarif
+          category: stave-security
+
+      - name: Upload findings artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stave-findings-${{ github.sha }}
+          path: stave-results.sarif

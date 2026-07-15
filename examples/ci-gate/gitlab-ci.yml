@@ -1,0 +1,24 @@
+# Add this job to your .gitlab-ci.yml
+#
+# Required CI/CD variables:
+#   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY — read-only collector credentials
+#   CONFIG_BUCKET — S3 bucket with AWS Config snapshots
+#
+# Exit codes: 0 = clean, 3 = violations found (pipeline fails).
+
+stave-security-gate:
+  stage: test
+  image: golang:1.24
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq awscli > /dev/null
+    - go install github.com/sufield/stave/cmd/stave@latest
+  script:
+    - mkdir -p snapshot
+    - aws s3 sync "s3://${CONFIG_BUCKET}/AWSLogs/" ./snapshot/
+    - stave apply --observations ./snapshot/ --format json > stave-results.json
+  artifacts:
+    paths:
+      - stave-results.json
+    when: always
+    expire_in: 30 days
+  allow_failure: false

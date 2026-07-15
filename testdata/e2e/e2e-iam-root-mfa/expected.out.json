@@ -108,13 +108,13 @@
         {
           "chain_id": "root_compromise_path",
           "chain_severity": "critical",
-          "missing_control": "CTL.IAM.POLICY.ADMIN.001",
+          "missing_control": "CTL.IAM.ROOT.ACCESSKEY.001",
           "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
         },
         {
           "chain_id": "root_compromise_path",
           "chain_severity": "critical",
-          "missing_control": "CTL.IAM.ROOT.ACCESSKEY.001",
+          "missing_control": "CTL.IAM.POLICY.ADMIN.001",
           "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
         },
         {
@@ -217,38 +217,6 @@
         "7d8c16616d67"
       ],
       "deciding_layer": "identity_policy"
-    }
-  ],
-  "near_miss_chains": [
-    {
-      "chain": "root_compromise_path",
-      "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n",
-      "controls_failing": [
-        "CTL.IAM.ROOT.MFA.001"
-      ],
-      "missing_control": "CTL.IAM.POLICY.ADMIN.001",
-      "severity": "critical",
-      "scope_id": "aws-account-root"
-    },
-    {
-      "chain": "root_compromise_path",
-      "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n",
-      "controls_failing": [
-        "CTL.IAM.ROOT.MFA.001"
-      ],
-      "missing_control": "CTL.IAM.ROOT.ACCESSKEY.001",
-      "severity": "critical",
-      "scope_id": "aws-account-root"
-    },
-    {
-      "chain": "root_compromise_path",
-      "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n",
-      "controls_failing": [
-        "CTL.IAM.ROOT.MFA.001"
-      ],
-      "missing_control": "CTL.IAM.ROOT.HWMFA.001",
-      "severity": "critical",
-      "scope_id": "aws-account-root"
     }
   ],
   "issues": [

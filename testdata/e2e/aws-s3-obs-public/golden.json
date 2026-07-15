@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "24b16b358a2e82a2192945f08eac22b0b68d9b252b9a0d786fa0e21ade23d7a7",
+    "policy_fingerprint": "1a8807c7a247bbd73acc5bd819498220849e51592662f8abbf11fd4f6dd6be03",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -1972,38 +1972,6 @@
         "exfiltration",
         "initial_access"
       ]
-    }
-  ],
-  "near_miss_chains": [
-    {
-      "chain": "public_phi_exposure",
-      "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.001"
-      ],
-      "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
-      "severity": "critical",
-      "scope_id": "public-test-bucket"
-    },
-    {
-      "chain": "public_phi_exposure",
-      "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.001"
-      ],
-      "missing_control": "CTL.S3.ENCRYPT.001",
-      "severity": "critical",
-      "scope_id": "public-test-bucket"
-    },
-    {
-      "chain": "public_phi_exposure",
-      "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.001"
-      ],
-      "missing_control": "CTL.S3.LOG.001",
-      "severity": "critical",
-      "scope_id": "public-test-bucket"
     }
   ],
   "issues": [
