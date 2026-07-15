@@ -45,7 +45,10 @@ jobs:
 
       - name: Push updated goldens
         if: github.event_name == 'push'
-        run: git push
+        run: |
+          git fetch origin main
+          git rebase origin/main
+          git push
 
       - name: Generate coverage (single test run)
         run: |
