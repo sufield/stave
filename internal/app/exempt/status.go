@@ -64,7 +64,6 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 				DaysRemaining: daysRemaining,
 				Reason:        ack.Reason,
 			})
-			continue
 		case "expiring_soon":
 			report.ExpiringDays30++
 			report.ExpiringDays60++

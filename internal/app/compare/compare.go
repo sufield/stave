@@ -93,6 +93,10 @@ func Analyze(input Input) *Result {
 		if !exists {
 			c = &classified{finding: f, failing: true}
 			controlMap[cid] = c
+		} else {
+			if f.DwellHours() > c.finding.DwellHours() {
+				c.finding = f
+			}
 		}
 		if hasFramework(f.ControlCompliance, input.BaselineKey) {
 			c.inBaseline = true

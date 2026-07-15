@@ -148,7 +148,7 @@ func TestSeverityBump(t *testing.T) {
 		{policy.SeverityMedium, 2, policy.SeverityCritical},
 		{policy.SeverityHigh, 1, policy.SeverityCritical},
 		{policy.SeverityCritical, 1, policy.SeverityCritical}, // already max
-		{policy.SeverityInfo, 1, policy.SeverityInfo},         // not in escalation table
+		{policy.SeverityInfo, 1, policy.SeverityLow},         // Info is now in the escalation table
 	}
 	for _, tt := range tests {
 		got := tt.base.Bump(tt.tiers)

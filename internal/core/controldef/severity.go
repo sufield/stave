@@ -155,18 +155,18 @@ func (s Severity) Weight() int {
 }
 
 // Bump escalates this severity by n tiers along the
-// Low → Medium → High → Critical ladder, capped at Critical. Severities
-// outside the escalation ladder (None, Info) are returned unchanged so
+// Info → Low → Medium → High → Critical ladder, capped at Critical. Severities
+// outside the escalation ladder (None) are returned unchanged so
 // callers can call Bump unconditionally.
 //
 // Centralised here so the SLA engine and any future caller share a
-// single ladder instead of each open-coding the (low → medium → high
+// single ladder instead of each open-coding the (info → low → medium → high
 // → critical) progression.
 func (s Severity) Bump(n int) Severity {
 	if n <= 0 {
 		return s
 	}
-	ladder := []Severity{SeverityLow, SeverityMedium, SeverityHigh, SeverityCritical}
+	ladder := []Severity{SeverityInfo, SeverityLow, SeverityMedium, SeverityHigh, SeverityCritical}
 	idx := -1
 	for i, lvl := range ladder {
 		if lvl == s {
