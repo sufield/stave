@@ -1,0 +1,115 @@
+name: Monthly Catalog Sweep
+
+on:
+  schedule:
+    # First Monday of every month at 9 AM UTC
+    # Runs on days 1-7, but only on Monday (day 1)
+    - cron: '0 9 1-7 * 1'
+  workflow_dispatch: # manual trigger for testing
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run catalog sweep
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Fetch TrackIAM service list
+          curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/glassechidna/trackiam/contents/services" | \
+            jq -r '.[].name' | sed 's/\.yml$//' | sort > /tmp/trackiam-services.txt
+
+          TOTAL=$(wc -l < /tmp/trackiam-services.txt)
+
+          # Compare against last month
+          NEW_COUNT=0
+          if [ -f docs-internal/monthly-sweeps/last-services.txt ]; then
+            comm -23 /tmp/trackiam-services.txt docs-internal/monthly-sweeps/last-services.txt > /tmp/new-services.txt
+            NEW_COUNT=$(wc -l < /tmp/new-services.txt)
+          else
+            cp /tmp/trackiam-services.txt /tmp/new-services.txt
+            NEW_COUNT=$(wc -l < /tmp/new-services.txt)
+          fi
+
+          # Check new services for dangerous actions
+          DANGEROUS=""
+          while read svc; do
+            data=$(curl -s "https://raw.githubusercontent.com/glassechidna/trackiam/master/services/${svc}.yml" 2>/dev/null || echo "")
+            action_count=$(echo "$data" | grep -c '  - ' 2>/dev/null || echo "0")
+            has_dangerous=$(echo "$data" | grep -ciE 'Create|Delete|Purchase|PassRole|AssumeRole|Put.*Policy' 2>/dev/null || echo "0")
+            if [ "$action_count" -gt 5 ]; then
+              DANGEROUS="$DANGEROUS\n| $svc | $action_count | $has_dangerous |"
+            fi
+          done < /tmp/new-services.txt
+
+          # Compare against shadow service registry
+          UNREGISTERED=0
+          if [ -f shadow_services.yaml ]; then
+            grep 'prefix:' shadow_services.yaml | awk '{print $2}' | sort > /tmp/registry.txt
+            UNREGISTERED=$(comm -23 /tmp/trackiam-services.txt /tmp/registry.txt | wc -l)
+          fi
+
+          # Save snapshot for next month
+          mkdir -p docs-internal/monthly-sweeps
+          cp /tmp/trackiam-services.txt docs-internal/monthly-sweeps/last-services.txt
+
+          # Generate report
+          DATE=$(date +%Y-%m)
+          cat > docs-internal/monthly-sweeps/${DATE}.md << EOF
+          # Monthly Catalog Sweep — ${DATE}
+
+          ## Summary
+          - Total IAM service prefixes: ${TOTAL}
+          - New since last sweep: ${NEW_COUNT}
+          - Not in shadow registry: ${UNREGISTERED}
+
+          ## New Services (>5 actions)
+          | Service | Actions | Dangerous |
+          |---|---|---|
+          $(echo -e "$DANGEROUS")
+
+          ## Action Required
+          Review new services above. For each with dangerous actions:
+          1. Add to shadow_services.yaml if security-relevant
+          2. Add creation actions to classifyPrivilege if destructive
+          3. Add to denied_service_wildcards if appropriate
+          EOF
+
+          # Commit the snapshot and report
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs-internal/monthly-sweeps/
+          git diff --cached --quiet || git commit -m "Monthly catalog sweep: ${DATE}"
+          git push
+
+          # Save for issue body
+          echo "NEW_COUNT=$NEW_COUNT" >> $GITHUB_ENV
+          echo "TOTAL=$TOTAL" >> $GITHUB_ENV
+          echo "DATE=$DATE" >> $GITHUB_ENV
+
+      - name: Create issue
+        if: env.NEW_COUNT != '0'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "Monthly Catalog Sweep — ${{ env.DATE }}: ${{ env.NEW_COUNT }} new services" \
+            --body "The monthly catalog sweep found **${{ env.NEW_COUNT }}** new IAM service prefixes (of ${{ env.TOTAL }} total).
+
+          Full report: \`docs-internal/monthly-sweeps/${{ env.DATE }}.md\`
+
+          ## Action required
+          1. Review the report for new services with dangerous actions
+          2. Update shadow_services.yaml if needed
+          3. Update classifyPrivilege if needed
+          4. Close this issue when reviewed
+
+          Task definition: \`docs-internal/tasks/monthly-catalog-sweep.md\`" \
+            --label "catalog-sweep"
