@@ -81,7 +81,9 @@
                 "predicate_expr": "public eq true"
               }
             ],
-            "stave/classification": "aggregate_check"
+            "stave/classification": "aggregate_check",
+            "stave/exploitability": "reachable",
+            "stave/exposure_score": 10.273972602739727
           }
         }
       ]
