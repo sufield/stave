@@ -1,19 +1,19 @@
 === rhino-vulnerable (all 21 Rhino methods enabled) ===
-  status: NON_COMPLIANT   total_assets=4   violations=1
+  status: NON_COMPLIANT   total_assets=4   violations=111
   CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001 fired on 1 asset(s):
     - arn:aws:iam::111122223333:user/rhino-attacker   severity=high
 
 === partial-deny (deny covers Rhino's 21 actions) ===
-  status: NON_COMPLIANT   total_assets=2   violations=1
+  status: NON_COMPLIANT   total_assets=2   violations=55
   CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001 fired on 1 asset(s):
     - arn:aws:iam::111122223333:user/rhino-attacker   severity=high
 
 === remediated (least-privilege) ===
-  status: COMPLIANT   total_assets=2   violations=0
+  status: NON_COMPLIANT   total_assets=2   violations=54
   CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001: no findings
 
 === real-world-pattern3 (PassRole + RunInstances + compound network constraints) ===
-  status: COMPLIANT   total_assets=5   violations=0
+  status: NON_COMPLIANT   total_assets=5   violations=129
   CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001: no findings
 
 note: this CEL run is a foil — it scopes to one of Stave's

@@ -192,9 +192,7 @@ beat enumeration as the API surface grows."
 ```
 examples/iam-21-privesc-5-patterns/
 ├── README.md
-├── main.go # CEL foil
-├── controls/
-│ └── CTL.IAM.ESCALATE.PASSROLE.AUTOSCALING.001.yaml
+├── main.go # CEL foil (uses builtin controls/)
 ├── fixtures/
 │ ├── rhino-vulnerable/observations/{T1,T2}.json
 │ ├── partial-deny/observations/{T1,T2}.json

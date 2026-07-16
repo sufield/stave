@@ -67,7 +67,7 @@ func main() {
 		ok := runScenario(ctx, scenario{
 			label:       f.label,
 			dir:         f.dir,
-			controlsDir: filepath.Join(root, "controls"),
+			controlsDir: filepath.Join(root, "..", "..", "controls"),
 			evalTime:    evalTime,
 		})
 		allOK = allOK && ok
