@@ -13819,6 +13819,979 @@
       ]
     }
   ],
+  "near_miss_chains": [
+    {
+      "chain": "cloudtrail_data_access_blind",
+      "description": "No S3 data events for sensitive buckets plus either no Secrets Manager data events or no S3 bucket-policy change alarm. Data access is unaudited AND either credential access is unaudited or bucket access- control changes are unmonitored. The data access surface is blind: object reads invisible, credential reads invisible, and the API calls that would reconfigure access are unalarmed. Threshold of 2 fires when the bucket-data-events gap compounds with another audit-surface gap.\n",
+      "controls_failing": [
+        "CTL.SECRETS.AUDIT.DATAEVENTS.001"
+      ],
+      "missing_control": "CTL.CLOUDTRAIL.ALARM.S3POLICY.001",
+      "severity": "high",
+      "scope_id": "db-credentials"
+    },
+    {
+      "chain": "cloudtrail_data_access_blind",
+      "description": "No S3 data events for sensitive buckets plus either no Secrets Manager data events or no S3 bucket-policy change alarm. Data access is unaudited AND either credential access is unaudited or bucket access- control changes are unmonitored. The data access surface is blind: object reads invisible, credential reads invisible, and the API calls that would reconfigure access are unalarmed. Threshold of 2 fires when the bucket-data-events gap compounds with another audit-surface gap.\n",
+      "controls_failing": [
+        "CTL.SECRETS.AUDIT.DATAEVENTS.001"
+      ],
+      "missing_control": "CTL.CLOUDTRAIL.DATAEVENTS.S3.001",
+      "severity": "high",
+      "scope_id": "db-credentials"
+    },
+    {
+      "chain": "cloudwatch_log_ungoverned",
+      "description": "Log group governance failures stack: no retention policy plus either no CMK encryption or a public resource policy. Logs accumulate indefinitely while either the data is not encrypted with a controlled key or anyone can inject log entries. Any one of these in isolation is a governance gap; two together is a log group nobody owns the integrity of. Threshold of 2 because a log group missing every governance setting indicates the controls were never applied, not that one slipped.\n",
+      "controls_failing": [
+        "CTL.CLOUDWATCH.RETENTION.001"
+      ],
+      "missing_control": "CTL.CLOUDWATCH.LOGGROUP.ENCRYPT.CMK.001",
+      "severity": "high",
+      "scope_id": "app-logs"
+    },
+    {
+      "chain": "cloudwatch_log_ungoverned",
+      "description": "Log group governance failures stack: no retention policy plus either no CMK encryption or a public resource policy. Logs accumulate indefinitely while either the data is not encrypted with a controlled key or anyone can inject log entries. Any one of these in isolation is a governance gap; two together is a log group nobody owns the integrity of. Threshold of 2 because a log group missing every governance setting indicates the controls were never applied, not that one slipped.\n",
+      "controls_failing": [
+        "CTL.CLOUDWATCH.RETENTION.001"
+      ],
+      "missing_control": "CTL.CLOUDWATCH.LOGGROUP.POLICY.PUBLIC.001",
+      "severity": "high",
+      "scope_id": "app-logs"
+    },
+    {
+      "chain": "cognito_account_takeover",
+      "description": "Cognito user pool without MFA enforcement, missing compromised credentials detection, and no WAF protection. The authentication endpoint is vulnerable to credential stuffing — attackers use leaked credentials from other breaches without MFA blocking, compromised credential checks, or rate limiting.\n",
+      "controls_failing": [
+        "CTL.COGNITO.MFA.001"
+      ],
+      "missing_control": "CTL.COGNITO.COMPROMISED.CREDS.001",
+      "severity": "critical",
+      "scope_id": "patient-portal"
+    },
+    {
+      "chain": "cognito_account_takeover",
+      "description": "Cognito user pool without MFA enforcement, missing compromised credentials detection, and no WAF protection. The authentication endpoint is vulnerable to credential stuffing — attackers use leaked credentials from other breaches without MFA blocking, compromised credential checks, or rate limiting.\n",
+      "controls_failing": [
+        "CTL.COGNITO.MFA.001"
+      ],
+      "missing_control": "CTL.COGNITO.WAF.001",
+      "severity": "critical",
+      "scope_id": "patient-portal"
+    },
+    {
+      "chain": "cognito_recoverybypass",
+      "description": "MFA is enforced on the happy-path login AND the recovery flow doesn't require MFA AND the only second factor available is SMS. The MFA enforcement is theatre — an attacker uses the recovery path (email or SMS-driven) to bypass MFA entirely, and even if they faced MFA, SMS alone is defeatable via SIM swap. Threshold of 2 because the dangerous compound is when the recovery escape route stacks with a weak channel.\n",
+      "controls_failing": [
+        "CTL.COGNITO.MFA.001"
+      ],
+      "missing_control": "CTL.COGNITO.MFA.SMSONLY.001",
+      "severity": "high",
+      "scope_id": "patient-portal"
+    },
+    {
+      "chain": "cognito_recoverybypass",
+      "description": "MFA is enforced on the happy-path login AND the recovery flow doesn't require MFA AND the only second factor available is SMS. The MFA enforcement is theatre — an attacker uses the recovery path (email or SMS-driven) to bypass MFA entirely, and even if they faced MFA, SMS alone is defeatable via SIM swap. Threshold of 2 because the dangerous compound is when the recovery escape route stacks with a weak channel.\n",
+      "controls_failing": [
+        "CTL.COGNITO.MFA.001"
+      ],
+      "missing_control": "CTL.COGNITO.RECOVERY.NOMFA.001",
+      "severity": "high",
+      "scope_id": "patient-portal"
+    },
+    {
+      "chain": "compromised_secret_path",
+      "description": "Secret with wide read access provides credentials to sensitive data. Multiple principals can read the secret, the secret targets a PHI or PII resource, and rotation may be stale. Compromising any reader provides a direct path to the sensitive data, bypassing IAM least privilege on the data resource itself.\n",
+      "controls_failing": [
+        "CTL.SECRETSMANAGER.ACCESS.001"
+      ],
+      "missing_control": "CTL.SECRET.BLAST.001",
+      "severity": "critical",
+      "scope_id": "db-credentials"
+    },
+    {
+      "chain": "compromised_secret_path",
+      "description": "Secret with wide read access provides credentials to sensitive data. Multiple principals can read the secret, the secret targets a PHI or PII resource, and rotation may be stale. Compromising any reader provides a direct path to the sensitive data, bypassing IAM least privilege on the data resource itself.\n",
+      "controls_failing": [
+        "CTL.SECRETSMANAGER.ACCESS.001"
+      ],
+      "missing_control": "CTL.SECRET.BLAST.002",
+      "severity": "critical",
+      "scope_id": "db-credentials"
+    },
+    {
+      "chain": "confused_deputy_path",
+      "description": "Cross-account IAM role lacks ExternalId condition on its trust policy, the role has overprivileged permissions, and CloudTrail is not capturing STS AssumeRole events. An attacker who compromises any trusted third-party can assume the victim's role without knowing the account ID, operate with broad permissions, and leave no audit trail in the victim's account.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "missing_control": "CTL.IAM.TRUST.CONFUSEDDEPUTY.001",
+      "severity": "high",
+      "scope_id": "main-trail"
+    },
+    {
+      "chain": "confused_deputy_path",
+      "description": "Cross-account IAM role lacks ExternalId condition on its trust policy, the role has overprivileged permissions, and CloudTrail is not capturing STS AssumeRole events. An attacker who compromises any trusted third-party can assume the victim's role without knowing the account ID, operate with broad permissions, and leave no audit trail in the victim's account.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "missing_control": "CTL.IAM.TRUST.EXTERNALID.001",
+      "severity": "high",
+      "scope_id": "main-trail"
+    },
+    {
+      "chain": "data_exfiltration_path",
+      "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+      "severity": "critical",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "data_exfiltration_path",
+      "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.EXPOSURE.EXFIL.001",
+      "severity": "critical",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "data_exfiltration_path",
+      "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.EXPOSURE.EXFIL.002",
+      "severity": "critical",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "ddb_encryption_inconsistent",
+      "description": "Multiple encryption failures across the data and cache layers. The table is not encrypted with a customer-managed KMS key (CTL.DYNAMODB.ENCRYPT.001) AND either the DAX cluster is unencrypted at rest (CTL.DYNAMODB.DAX.ENCRYPT.REST.001) or the table and its DAX cluster have inconsistent encryption posture (CTL.DYNAMODB.ENCRYPT.DAX.MISMATCH.001). Threshold of 2 reflects that one encryption miss alone is a known posture concern; two together describe a workload whose data layer encryption story is broken at multiple points — the table doesn't have key-policy control and the cache layer doesn't have or doesn't match the table's protection.\n",
+      "controls_failing": [
+        "CTL.DYNAMODB.ENCRYPT.001"
+      ],
+      "missing_control": "CTL.DYNAMODB.DAX.ENCRYPT.REST.001",
+      "severity": "high",
+      "scope_id": "phi-events-table"
+    },
+    {
+      "chain": "ddb_encryption_inconsistent",
+      "description": "Multiple encryption failures across the data and cache layers. The table is not encrypted with a customer-managed KMS key (CTL.DYNAMODB.ENCRYPT.001) AND either the DAX cluster is unencrypted at rest (CTL.DYNAMODB.DAX.ENCRYPT.REST.001) or the table and its DAX cluster have inconsistent encryption posture (CTL.DYNAMODB.ENCRYPT.DAX.MISMATCH.001). Threshold of 2 reflects that one encryption miss alone is a known posture concern; two together describe a workload whose data layer encryption story is broken at multiple points — the table doesn't have key-policy control and the cache layer doesn't have or doesn't match the table's protection.\n",
+      "controls_failing": [
+        "CTL.DYNAMODB.ENCRYPT.001"
+      ],
+      "missing_control": "CTL.DYNAMODB.ENCRYPT.DAX.MISMATCH.001",
+      "severity": "high",
+      "scope_id": "phi-events-table"
+    },
+    {
+      "chain": "detection_blindness",
+      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
+      "controls_failing": [
+        "CTL.CONFIG.ENABLED.001"
+      ],
+      "missing_control": "CTL.CLOUDTRAIL.ENABLED.001",
+      "severity": "critical",
+      "scope_id": "config-recorder"
+    },
+    {
+      "chain": "detection_blindness",
+      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
+      "controls_failing": [
+        "CTL.CONFIG.ENABLED.001"
+      ],
+      "missing_control": "CTL.GUARDDUTY.ENABLED.001",
+      "severity": "critical",
+      "scope_id": "config-recorder"
+    },
+    {
+      "chain": "detection_blindness",
+      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
+      "controls_failing": [
+        "CTL.CONFIG.ENABLED.001"
+      ],
+      "missing_control": "CTL.VPC.FLOWLOG.001",
+      "severity": "critical",
+      "scope_id": "config-recorder"
+    },
+    {
+      "chain": "detection_blindness",
+      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "missing_control": "CTL.CONFIG.ENABLED.001",
+      "severity": "critical",
+      "scope_id": "main-trail"
+    },
+    {
+      "chain": "detection_blindness",
+      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "missing_control": "CTL.GUARDDUTY.ENABLED.001",
+      "severity": "critical",
+      "scope_id": "main-trail"
+    },
+    {
+      "chain": "detection_blindness",
+      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "missing_control": "CTL.VPC.FLOWLOG.001",
+      "severity": "critical",
+      "scope_id": "main-trail"
+    },
+    {
+      "chain": "detection_blindness",
+      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.CLOUDTRAIL.ENABLED.001",
+      "severity": "critical",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "detection_blindness",
+      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.CONFIG.ENABLED.001",
+      "severity": "critical",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "detection_blindness",
+      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.GUARDDUTY.ENABLED.001",
+      "severity": "critical",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "alb-phi-api"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "alb-phi-api"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "app-logs"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "app-logs"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "aws-account-root"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "aws-account-root"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "backup-phi-database"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "backup-phi-database"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "config-recorder"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "config-recorder"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "db-credentials"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "db-credentials"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "eks-prod-cluster"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "eks-prod-cluster"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "i-0abc123def"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "i-0abc123def"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "main-trail"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "main-trail"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "ns-phi-workloads"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "ns-phi-workloads"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "patient-portal"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "patient-portal"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "phi-alerts"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "phi-alerts"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "phi-api"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "phi-api"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "phi-cmk"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "phi-cmk"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "phi-database"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "phi-database"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "phi-events-table"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "phi-events-table"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "phi-notifications"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "phi-notifications"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "session-cache"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "session-cache"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "sg-default-vpc"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "sg-default-vpc"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.ADMIN.COUNT.001",
+      "severity": "critical",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "persistent_identity_creation",
+      "description": "No SCP restricts IAM user or AWS account creation and no restrictive SCPs limit what newly created accounts can do and admin account proliferation is not monitored. An attacker can create persistent identities without organizational guardrails.\n",
+      "controls_failing": [
+        "CTL.IAM.SCP.CREATEACCOUNT.001"
+      ],
+      "missing_control": "CTL.IAM.SCP.FULLACCESS.001",
+      "severity": "critical",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "rds_audit_blind",
+      "description": "Database audit logging is not enabled AND either logs are not exported to CloudWatch OR the instance is on the default parameter group. The data-access audit trail is missing in two reinforcing ways: the database itself is not recording statements (no log_statement, no general_log, no audit plugin), AND either the records that would have been generated are not reaching the centralized logging pipeline, or every parameter is at the AWS default and customizing security parameters requires creating a custom group first. Post-compromise investigation has no record of what data was accessed or modified.\n",
+      "controls_failing": [
+        "CTL.RDS.LOG.001"
+      ],
+      "missing_control": "CTL.RDS.PARAM.GROUP.001",
+      "severity": "high",
+      "scope_id": "phi-database"
+    },
+    {
+      "chain": "rds_audit_blind",
+      "description": "Database audit logging is not enabled AND either logs are not exported to CloudWatch OR the instance is on the default parameter group. The data-access audit trail is missing in two reinforcing ways: the database itself is not recording statements (no log_statement, no general_log, no audit plugin), AND either the records that would have been generated are not reaching the centralized logging pipeline, or every parameter is at the AWS default and customizing security parameters requires creating a custom group first. Post-compromise investigation has no record of what data was accessed or modified.\n",
+      "controls_failing": [
+        "CTL.RDS.LOG.001"
+      ],
+      "missing_control": "CTL.RDS.PARAM.LOGEXPORT.001",
+      "severity": "high",
+      "scope_id": "phi-database"
+    },
+    {
+      "chain": "rds_plaintext_database",
+      "description": "TLS is not enforced for client connections AND either the instance is not encrypted at rest OR the automated backup chain is unencrypted. Encryption fails at multiple layers simultaneously: in transit (an attacker on any segment between the application and the database reads credentials and queries), AND either at rest (the instance storage is plaintext) or in the backup service (a recoverable plaintext copy of the database exists). The intersection is a database whose data is reachable in cleartext through more than one channel; closing any one layer alone leaves the others.\n",
+      "controls_failing": [
+        "CTL.RDS.ENCRYPT.001"
+      ],
+      "missing_control": "CTL.RDS.ENCRYPT.BACKUP.001",
+      "severity": "high",
+      "scope_id": "phi-database"
+    },
+    {
+      "chain": "rds_plaintext_database",
+      "description": "TLS is not enforced for client connections AND either the instance is not encrypted at rest OR the automated backup chain is unencrypted. Encryption fails at multiple layers simultaneously: in transit (an attacker on any segment between the application and the database reads credentials and queries), AND either at rest (the instance storage is plaintext) or in the backup service (a recoverable plaintext copy of the database exists). The intersection is a database whose data is reachable in cleartext through more than one channel; closing any one layer alone leaves the others.\n",
+      "controls_failing": [
+        "CTL.RDS.ENCRYPT.001"
+      ],
+      "missing_control": "CTL.RDS.SSL.001",
+      "severity": "high",
+      "scope_id": "phi-database"
+    },
+    {
+      "chain": "rds_public_exposure_path",
+      "description": "RDS instance is publicly accessible, unencrypted at rest, and has no deletion protection. An attacker who discovers the endpoint can authenticate, read plaintext data, and destroy the database with no protection. This is the configuration pattern behind multiple healthcare and financial data breaches.\n",
+      "controls_failing": [
+        "CTL.RDS.PUBLIC.001",
+        "CTL.RDS.ENCRYPT.001"
+      ],
+      "missing_control": "CTL.RDS.DELETEPROT.001",
+      "severity": "critical",
+      "scope_id": "phi-database"
+    },
+    {
+      "chain": "recovery_integrity_failure",
+      "description": "Backup exists but recovery is structurally tied to the same fate as the source data. KMS key and backup reside in the same account as the source — a single account compromise (or ransomware attack) can destroy live data, delete the encryption key, and render backups unrecoverable. This is the \"Ransomware Path\" SPoF.\n",
+      "controls_failing": [
+        "CTL.BACKUP.EXISTS.001"
+      ],
+      "missing_control": "CTL.BACKUP.ENCRYPT.001",
+      "severity": "high",
+      "scope_id": "backup-phi-database"
+    },
+    {
+      "chain": "recovery_integrity_failure",
+      "description": "Backup exists but recovery is structurally tied to the same fate as the source data. KMS key and backup reside in the same account as the source — a single account compromise (or ransomware attack) can destroy live data, delete the encryption key, and render backups unrecoverable. This is the \"Ransomware Path\" SPoF.\n",
+      "controls_failing": [
+        "CTL.BACKUP.EXISTS.001"
+      ],
+      "missing_control": "CTL.BACKUP.RECOVERY.ISOLATION.001",
+      "severity": "high",
+      "scope_id": "backup-phi-database"
+    },
+    {
+      "chain": "recovery_integrity_failure",
+      "description": "Backup exists but recovery is structurally tied to the same fate as the source data. KMS key and backup reside in the same account as the source — a single account compromise (or ransomware attack) can destroy live data, delete the encryption key, and render backups unrecoverable. This is the \"Ransomware Path\" SPoF.\n",
+      "controls_failing": [
+        "CTL.BACKUP.EXISTS.001"
+      ],
+      "missing_control": "CTL.BACKUP.RECOVERY.ISOLATION.002",
+      "severity": "high",
+      "scope_id": "backup-phi-database"
+    },
+    {
+      "chain": "redundancy_single_point",
+      "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n",
+      "controls_failing": [
+        "CTL.RDS.MULTIAZ.001"
+      ],
+      "missing_control": "CTL.AUTOSCALING.MULTIAZ.001",
+      "severity": "critical",
+      "scope_id": "phi-database"
+    },
+    {
+      "chain": "redundancy_single_point",
+      "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n",
+      "controls_failing": [
+        "CTL.RDS.MULTIAZ.001"
+      ],
+      "missing_control": "CTL.EFS.MULTIAZ.001",
+      "severity": "critical",
+      "scope_id": "phi-database"
+    },
+    {
+      "chain": "redundancy_single_point",
+      "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n",
+      "controls_failing": [
+        "CTL.RDS.MULTIAZ.001"
+      ],
+      "missing_control": "CTL.ELB.NETWORK.SINGLEAZ.001",
+      "severity": "critical",
+      "scope_id": "phi-database"
+    },
+    {
+      "chain": "redundancy_single_point",
+      "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n",
+      "controls_failing": [
+        "CTL.RDS.MULTIAZ.001"
+      ],
+      "missing_control": "CTL.ELB.TARGET.SINGLEAZ.001",
+      "severity": "critical",
+      "scope_id": "phi-database"
+    },
+    {
+      "chain": "redundancy_single_point",
+      "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n",
+      "controls_failing": [
+        "CTL.RDS.MULTIAZ.001"
+      ],
+      "missing_control": "CTL.VPC.NAT.SINGLEAZ.001",
+      "severity": "critical",
+      "scope_id": "phi-database"
+    },
+    {
+      "chain": "secrets_access_blind",
+      "description": "No data events plus either no access failure alarm or no volume alarm. Credential access is unaudited AND either failed access attempts or high-frequency access is undetected. Who reads which credential is unknown AND anomalous access patterns are invisible. Threshold of 2 fires when both the audit trail and the real-time signal are missing — credential reads happen with no trace and no alerting.\n",
+      "controls_failing": [
+        "CTL.SECRETS.AUDIT.DATAEVENTS.001"
+      ],
+      "missing_control": "CTL.SECRETS.ALARM.ACCESS.FAILURE.001",
+      "severity": "high",
+      "scope_id": "db-credentials"
+    },
+    {
+      "chain": "secrets_access_blind",
+      "description": "No data events plus either no access failure alarm or no volume alarm. Credential access is unaudited AND either failed access attempts or high-frequency access is undetected. Who reads which credential is unknown AND anomalous access patterns are invisible. Threshold of 2 fires when both the audit trail and the real-time signal are missing — credential reads happen with no trace and no alerting.\n",
+      "controls_failing": [
+        "CTL.SECRETS.AUDIT.DATAEVENTS.001"
+      ],
+      "missing_control": "CTL.SECRETS.ALARM.ACCESS.VOLUME.001",
+      "severity": "high",
+      "scope_id": "db-credentials"
+    },
+    {
+      "chain": "secrets_destructive_undetected",
+      "description": "No delete alarm plus either no PutSecretValue alarm or secret already pending deletion. Destructive secret operations (deletion, value modification) are unmonitored AND either credential modification is invisible or a deletion is already in progress without detection. Threshold of 2 fires when both the alerting surface for destructive operations is missing AND the state already reflects an undetected destructive action.\n",
+      "controls_failing": [
+        "CTL.SECRETS.ALARM.PUTVALUE.001"
+      ],
+      "missing_control": "CTL.SECRETS.ALARM.DELETE.001",
+      "severity": "high",
+      "scope_id": "db-credentials"
+    },
+    {
+      "chain": "secrets_destructive_undetected",
+      "description": "No delete alarm plus either no PutSecretValue alarm or secret already pending deletion. Destructive secret operations (deletion, value modification) are unmonitored AND either credential modification is invisible or a deletion is already in progress without detection. Threshold of 2 fires when both the alerting surface for destructive operations is missing AND the state already reflects an undetected destructive action.\n",
+      "controls_failing": [
+        "CTL.SECRETS.ALARM.PUTVALUE.001"
+      ],
+      "missing_control": "CTL.SECRETS.GHOST.DELETION.REFERENCED.001",
+      "severity": "high",
+      "scope_id": "db-credentials"
+    },
+    {
+      "chain": "secrets_rotation_undetected",
+      "description": "No rotation failure alarm plus either ghost rotation Lambda or stale rotation. Rotation failures are undetected AND either the rotation mechanism is broken or rotation is already overdue. The credential is static with no detection of the failure — the worst combination at the rotation layer: state-broken plus event-blind. Threshold of 2 fires when rotation monitoring is missing AND the rotation pipeline is already in a failed state.\n",
+      "controls_failing": [
+        "CTL.SECRETS.ALARM.ROTATION.FAILURE.001"
+      ],
+      "missing_control": "CTL.SECRETS.GHOST.ROTATIONLAMBDA.001",
+      "severity": "critical",
+      "scope_id": "db-credentials"
+    },
+    {
+      "chain": "secrets_rotation_undetected",
+      "description": "No rotation failure alarm plus either ghost rotation Lambda or stale rotation. Rotation failures are undetected AND either the rotation mechanism is broken or rotation is already overdue. The credential is static with no detection of the failure — the worst combination at the rotation layer: state-broken plus event-blind. Threshold of 2 fires when rotation monitoring is missing AND the rotation pipeline is already in a failed state.\n",
+      "controls_failing": [
+        "CTL.SECRETS.ALARM.ROTATION.FAILURE.001"
+      ],
+      "missing_control": "CTL.SECRETS.ROTATION.STALE.001",
+      "severity": "critical",
+      "scope_id": "db-credentials"
+    },
+    {
+      "chain": "sqs_encryption_incomplete",
+      "description": "No CMK encryption plus either no transport enforcement or no encryption at all. Messages are either unencrypted at rest AND in transit, or encrypted with a key the organization cannot control AND transportable over plaintext HTTP. Threshold of 2 fires when at least two of the three SQS encryption gaps coexist on the same queue.\n",
+      "controls_failing": [
+        "CTL.SQS.ENCRYPT.001"
+      ],
+      "missing_control": "CTL.SQS.ENCRYPT.CMK.001",
+      "severity": "high",
+      "scope_id": "phi-notifications"
+    },
+    {
+      "chain": "sqs_encryption_incomplete",
+      "description": "No CMK encryption plus either no transport enforcement or no encryption at all. Messages are either unencrypted at rest AND in transit, or encrypted with a key the organization cannot control AND transportable over plaintext HTTP. Threshold of 2 fires when at least two of the three SQS encryption gaps coexist on the same queue.\n",
+      "controls_failing": [
+        "CTL.SQS.ENCRYPT.001"
+      ],
+      "missing_control": "CTL.SQS.ENCRYPT.TRANSPORT.001",
+      "severity": "high",
+      "scope_id": "phi-notifications"
+    },
+    {
+      "chain": "unmonitored_region_evasion",
+      "description": "No region restriction SCP exists and monitoring controls are not deployed in all regions. An attacker can operate in unmonitored regions with no detection. The defense evasion path requires no exploitation — only knowledge of which regions are unmonitored.\n",
+      "controls_failing": [
+        "CTL.CONFIG.ENABLED.001"
+      ],
+      "missing_control": "CTL.GUARDDUTY.ENABLED.001",
+      "severity": "high",
+      "scope_id": "config-recorder"
+    },
+    {
+      "chain": "unmonitored_region_evasion",
+      "description": "No region restriction SCP exists and monitoring controls are not deployed in all regions. An attacker can operate in unmonitored regions with no detection. The defense evasion path requires no exploitation — only knowledge of which regions are unmonitored.\n",
+      "controls_failing": [
+        "CTL.CONFIG.ENABLED.001"
+      ],
+      "missing_control": "CTL.ORG.REGION.SCP.001",
+      "severity": "high",
+      "scope_id": "config-recorder"
+    },
+    {
+      "chain": "vpc_dns_exfiltration",
+      "description": "VPC has no DNS Firewall AND either DNS egress is unrestricted (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS resolution is unfiltered at the resolver AND either the network permits DNS to arbitrary upstream resolvers or the network traffic is unrecorded. DNS tunneling — encoding exfiltrated data in query names to an attacker-controlled authoritative server — succeeds and leaves no forensic evidence that can be correlated to the originating workload.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.DNSFIREWALL.ENABLED.001",
+      "severity": "high",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "vpc_dns_exfiltration",
+      "description": "VPC has no DNS Firewall AND either DNS egress is unrestricted (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS resolution is unfiltered at the resolver AND either the network permits DNS to arbitrary upstream resolvers or the network traffic is unrecorded. DNS tunneling — encoding exfiltrated data in query names to an attacker-controlled authoritative server — succeeds and leaves no forensic evidence that can be correlated to the originating workload.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.SG.EGRESS.DNS.001",
+      "severity": "high",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "vpc_exfiltration_path",
+      "description": "Unrestricted egress plus either DNS tunneling possible or no flow logs. Data can leave via any protocol to any destination AND either DNS tunneling is available as a covert channel or the egress traffic is not logged.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.SG.EGRESS.001",
+      "severity": "critical",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "vpc_exfiltration_path",
+      "description": "Unrestricted egress plus either DNS tunneling possible or no flow logs. Data can leave via any protocol to any destination AND either DNS tunneling is available as a covert channel or the egress traffic is not logged.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.SG.EGRESS.DNS.001",
+      "severity": "critical",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "vpc_no_inspection",
+      "description": "VPC has no Network Firewall AND either flow logs are disabled or a security group permits unrestricted egress. There is no network inspection layer AND either no traffic visibility or no egress constraint. Traffic crosses the VPC boundary without being inspected, recorded, or restricted across multiple layers of control.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.NETWORK.FIREWALL.001",
+      "severity": "high",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "vpc_no_inspection",
+      "description": "VPC has no Network Firewall AND either flow logs are disabled or a security group permits unrestricted egress. There is no network inspection layer AND either no traffic visibility or no egress constraint. Traffic crosses the VPC boundary without being inspected, recorded, or restricted across multiple layers of control.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.SG.EGRESS.001",
+      "severity": "high",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "waf_blind_evasion",
+      "description": "WAF evasion observability is absent and detection layers are also failing. Evasion attempts using encoding or parser confusion succeed without generating any observable signal across any detection layer. The attack is invisible from detection through investigation.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "missing_control": "CTL.WAF.EVASION.OBSERVE.001",
+      "severity": "critical",
+      "scope_id": "main-trail"
+    },
+    {
+      "chain": "waf_blind_evasion",
+      "description": "WAF evasion observability is absent and detection layers are also failing. Evasion attempts using encoding or parser confusion succeed without generating any observable signal across any detection layer. The attack is invisible from detection through investigation.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "missing_control": "CTL.WAF.RULES.OWASP.001",
+      "severity": "critical",
+      "scope_id": "main-trail"
+    }
+  ],
   "issues": [
     {
       "issue_id": "sha256:7f0d60ced589c72d",
