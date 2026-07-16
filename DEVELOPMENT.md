@@ -419,7 +419,7 @@ testdata/e2e/<name>/
 
 ### Determinism
 
-Always use `--eval-time` (or `--now` internally) for deterministic
+Always use `--eval-time` for deterministic
 output in tests. Time-dependent tests must pin the clock:
 
 ```go

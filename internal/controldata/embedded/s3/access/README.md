@@ -12,7 +12,7 @@ Controls in this directory detect cross-account and over-permissive access patte
 | CTL.S3.AUTH.WRITE.001 | No Authenticated-Users Write Access | Write/delete access granted to all authenticated AWS users |
 | CTL.S3.POLICY.SCOPING.001 | Non-Narrow Bucket Policy Grants Must Carry a Scoping Condition | Non-narrow principal Allow statements (Principal `*` / `{"AWS":"*"}` / Principal-less) without any scoping Condition (`aws:PrincipalOrgID`, `aws:SourceVpc`, `aws:SourceIp`, `aws:SourceArn`) |
 
-## MVP 1.0 Notes
+## Notes
 
 - `CTL.S3.ACCESS.001` enforces `allowed_accounts` using extracted `external_account_ids` (12-digit IDs).
 - Leave `allowed_accounts: []` to fail closed (any external account access is a violation).

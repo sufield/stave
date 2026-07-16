@@ -22,7 +22,7 @@ report.json: baseline, killed, survived, mutation_score
 The framework is operator-pluggable; each operator lives in
 `mutations/<name>.py` and exposes a
 `mutations(observation: dict) -> Iterator[Mutation]` function.
-The MVP ships one operator:
+The framework ships one operator:
 
 | Operator | Behaviour |
 |---|---|
@@ -103,7 +103,7 @@ So **single-property mutation testing has a structural
 limit**: it cannot kill compound-predicate detail controls.
 Killing them needs multi-property mutations — the cross-product
 of {gate-flip} × {one detail flip}. That's exponential and
-deliberately out of scope for the MVP framework, but the
+deliberately out of scope for this framework, but the
 framework correctly surfaces the limit.
 
 For controls with non-compound predicates (e.g. the Iteration 6

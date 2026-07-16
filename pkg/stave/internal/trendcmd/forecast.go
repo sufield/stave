@@ -101,7 +101,12 @@ func buildMTTRHistory(assessments []*report.Assessment) map[string][]float64 {
 	}
 
 	open := make(map[fkey]*window)
-	sevTotals := make(map[string][]float64)
+	resolvedDurations := make(map[string][]float64)
+	
+	result := make(map[string][]float64)
+	for _, sev := range []string{"critical", "high", "medium", "low"} {
+		result[sev] = make([]float64, 0, len(assessments))
+	}
 
 	for _, a := range assessments {
 		currentKeys := make(map[fkey]struct{}, len(a.Findings))
@@ -118,13 +123,26 @@ func buildMTTRHistory(assessments []*report.Assessment) map[string][]float64 {
 		for k, w := range open {
 			if _, ok := currentKeys[k]; !ok {
 				hours := a.Run.EvalTime.Sub(w.openAt).Hours()
-				sevTotals[w.sev] = append(sevTotals[w.sev], hours)
+				resolvedDurations[w.sev] = append(resolvedDurations[w.sev], hours)
 				delete(open, k)
+			}
+		}
+
+		for _, sev := range []string{"critical", "high", "medium", "low"} {
+			durations := resolvedDurations[sev]
+			if len(durations) == 0 {
+				result[sev] = append(result[sev], 0.0)
+			} else {
+				var sum float64
+				for _, d := range durations {
+					sum += d
+				}
+				result[sev] = append(result[sev], sum/float64(len(durations)))
 			}
 		}
 	}
 
-	return sevTotals
+	return result
 }
 
 func writeForecastTable(w io.Writer, r *forecast.Result) {

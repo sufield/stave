@@ -2,11 +2,10 @@
 
 This directory contains control definitions organized by domain.
 
-## MVP 1.0 S3 Canonical Controls
+## S3 Controls
 
 The canonical S3 control set lives in **`s3/`** and its subdirectories. This is
-the directory tree loaded by `stave apply --profile aws-s3` and the recommended `--controls`
-path for S3 evaluation with `stave apply`.
+the recommended `--controls` path for S3 evaluation with `stave apply`.
 
 ```bash
 # Using apply --profile aws-s3 (loads s3/ automatically, recursively)
@@ -94,7 +93,7 @@ When absent, the loader falls through to recursive directory walking.
 
 ```
 controls/
-├── s3/                       # MVP1 canonical S3 controls (40 files, 15 subdirs)
+├── s3/                       # S3 controls (40 files, 15 subdirs)
 │   ├── access/               # External access + authenticated-users rules (5 files)
 │   ├── acl/                  # ACL privilege escalation rules (3 files)
 │   ├── public/               # Public exposure rules (11 files)

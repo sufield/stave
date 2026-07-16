@@ -52,24 +52,27 @@ func observed(snapshots []asset.Snapshot) (map[kernel.AssetType]int, int) {
 	if len(snapshots) == 0 {
 		return out, 0
 	}
-	// Sort snapshots chronologically by CapturedAt so that the last element
-	// is guaranteed to be the latest snapshot.
-	sorted := slices.Clone(snapshots)
-	slices.SortFunc(sorted, func(a, b asset.Snapshot) int {
-		return a.CapturedAt.Compare(b.CapturedAt)
-	})
-	// Per-asset-type unique-ID set keeps the count honest: we only walk the
-	// latest snapshot.
-	latest := &sorted[len(sorted)-1]
-	perTypeIDs := map[kernel.AssetType]map[asset.ID]struct{}{}
-	for j := range latest.Assets {
-		a := &latest.Assets[j]
-		ids, ok := perTypeIDs[a.Type]
-		if !ok {
-			ids = map[asset.ID]struct{}{}
-			perTypeIDs[a.Type] = ids
+	// Find the latest snapshot for each unique Source.
+	latestBySource := map[asset.SnapshotSource]*asset.Snapshot{}
+	for i := range snapshots {
+		s := &snapshots[i]
+		prev, ok := latestBySource[s.Source]
+		if !ok || s.CapturedAt.After(prev.CapturedAt) {
+			latestBySource[s.Source] = s
 		}
-		ids[a.ID] = struct{}{}
+	}
+
+	perTypeIDs := map[kernel.AssetType]map[asset.ID]struct{}{}
+	for _, snap := range latestBySource {
+		for j := range snap.Assets {
+			a := &snap.Assets[j]
+			ids, ok := perTypeIDs[a.Type]
+			if !ok {
+				ids = map[asset.ID]struct{}{}
+				perTypeIDs[a.Type] = ids
+			}
+			ids[a.ID] = struct{}{}
+		}
 	}
 	total := 0
 	for t, ids := range perTypeIDs {
@@ -78,7 +81,6 @@ func observed(snapshots []asset.Snapshot) (map[kernel.AssetType]int, int) {
 	}
 	return out, total
 }
-
 // catalogAssetTypes returns the union of every ApplicableAssetTypes
 // declaration across the control catalog. This is the universe of
 // asset types the analyzer knows how to track.

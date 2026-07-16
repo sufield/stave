@@ -46,7 +46,7 @@ These are **stable contracts**. Once a field appears in a contract it is bound b
 
 Producers should be permissive about unknown fields so additive changes don't require an integrator rebuild.
 
-For MVP 1.0, `obs.v0.1` is treated as stable for supported S3 fields.
+`obs.v0.1` is treated as stable for all supported fields.
 
 ---
 
@@ -107,7 +107,7 @@ Each entry in `identities[]` (optional, used by ACL/policy controls):
 
 ---
 
-## MVP 1.0 stability promise
+## Stability promise
 
 These property namespaces are the stability surface. Fields within these
 namespaces will not be removed or have their semantics changed without a

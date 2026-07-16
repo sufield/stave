@@ -1,5 +1,5 @@
 id: s3
-description: Default S3 built-in pack for MVP
+description: Default S3 built-in pack
 controls:
     - CTL.S3.ACCESS.001
     - CTL.S3.ACCESS.002

@@ -75,7 +75,9 @@ func OrderEntries(entries []PolicyEntry, orderBy string) error {
 	} else if strings.EqualFold(trimmed, "type") {
 		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.Type, b.Type) })
 	} else if strings.EqualFold(trimmed, "risk") {
-		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.Risk, b.Risk) })
+		slices.SortFunc(entries, func(a, b PolicyEntry) int {
+			return cmp.Compare(severityRank(b.Risk), severityRank(a.Risk))
+		})
 	} else if strings.EqualFold(trimmed, "domain") {
 		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.Domain, b.Domain) })
 	} else {
@@ -83,6 +85,23 @@ func OrderEntries(entries []PolicyEntry, orderBy string) error {
 	}
 
 	return nil
+}
+
+func severityRank(s string) int {
+	switch strings.ToLower(s) {
+	case "critical":
+		return 5
+	case "high":
+		return 4
+	case "medium":
+		return 3
+	case "low":
+		return 2
+	case "info":
+		return 1
+	default:
+		return 0
+	}
 }
 
 // SelectFields validates and returns the requested field names for display.
