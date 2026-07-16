@@ -137,7 +137,13 @@
         {
           "chain_id": "staging_endpoint_exposed",
           "chain_severity": "high",
-          "missing_control": "CTL.APIGATEWAY.NETWORK.PRIVATE.POLICY.001",
+          "missing_control": "CTL.LIFECYCLE.STAGING.STALE.001",
+          "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n"
+        },
+        {
+          "chain_id": "staging_endpoint_exposed",
+          "chain_severity": "high",
+          "missing_control": "CTL.S3.PUBLIC.005",
           "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n"
         },
         {
@@ -149,19 +155,13 @@
         {
           "chain_id": "staging_endpoint_exposed",
           "chain_severity": "high",
+          "missing_control": "CTL.APIGATEWAY.NETWORK.PRIVATE.POLICY.001",
+          "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n"
+        },
+        {
+          "chain_id": "staging_endpoint_exposed",
+          "chain_severity": "high",
           "missing_control": "CTL.ELB.NETWORK.INTERNAL.PUBLICSUBNET.001",
-          "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n"
-        },
-        {
-          "chain_id": "staging_endpoint_exposed",
-          "chain_severity": "high",
-          "missing_control": "CTL.LIFECYCLE.STAGING.STALE.001",
-          "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n"
-        },
-        {
-          "chain_id": "staging_endpoint_exposed",
-          "chain_severity": "high",
-          "missing_control": "CTL.S3.PUBLIC.005",
           "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n"
         }
       ],
@@ -313,58 +313,6 @@
         "759266e81e2a",
         "7e39547e61e6"
       ]
-    }
-  ],
-  "near_miss_chains": [
-    {
-      "chain": "staging_endpoint_exposed",
-      "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.LIST.002"
-      ],
-      "missing_control": "CTL.APIGATEWAY.NETWORK.PRIVATE.POLICY.001",
-      "severity": "high",
-      "scope_id": "shopify-public-assets"
-    },
-    {
-      "chain": "staging_endpoint_exposed",
-      "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.LIST.002"
-      ],
-      "missing_control": "CTL.EC2.SG.INGRESS.CIDR.001",
-      "severity": "high",
-      "scope_id": "shopify-public-assets"
-    },
-    {
-      "chain": "staging_endpoint_exposed",
-      "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.LIST.002"
-      ],
-      "missing_control": "CTL.ELB.NETWORK.INTERNAL.PUBLICSUBNET.001",
-      "severity": "high",
-      "scope_id": "shopify-public-assets"
-    },
-    {
-      "chain": "staging_endpoint_exposed",
-      "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.LIST.002"
-      ],
-      "missing_control": "CTL.LIFECYCLE.STAGING.STALE.001",
-      "severity": "high",
-      "scope_id": "shopify-public-assets"
-    },
-    {
-      "chain": "staging_endpoint_exposed",
-      "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.LIST.002"
-      ],
-      "missing_control": "CTL.S3.PUBLIC.005",
-      "severity": "high",
-      "scope_id": "shopify-public-assets"
     }
   ],
   "issues": [

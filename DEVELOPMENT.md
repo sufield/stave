@@ -378,7 +378,6 @@ testdata/e2e/           E2E test fixtures (2687 fixtures)
 examples/               Reference implementations and demos
 experiments/            Experimental scripts
 integrations/           Third-party integration configs (GitHub Actions, Atlantis, etc.)
-mappings/               Coverage gap analysis
 features/               Feature scope definitions
 reasoning/              Formal reasoning engines (Datalog)
 reasoning-specs/        Reasoning specifications

@@ -81,6 +81,7 @@ func observed(snapshots []asset.Snapshot) (map[kernel.AssetType]int, int) {
 	}
 	return out, total
 }
+
 // catalogAssetTypes returns the union of every ApplicableAssetTypes
 // declaration across the control catalog. This is the universe of
 // asset types the analyzer knows how to track.

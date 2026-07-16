@@ -102,7 +102,7 @@ func buildMTTRHistory(assessments []*report.Assessment) map[string][]float64 {
 
 	open := make(map[fkey]*window)
 	resolvedDurations := make(map[string][]float64)
-	
+
 	result := make(map[string][]float64)
 	for _, sev := range []string{"critical", "high", "medium", "low"} {
 		result[sev] = make([]float64, 0, len(assessments))
