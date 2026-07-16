@@ -62,6 +62,27 @@ func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]st
 		}
 	}
 
+	// Validate implicit dependencies.
+	for i, dep := range chain.ImplicitDependencies {
+		prefix := fmt.Sprintf("implicit_dependencies[%d]", i)
+		if dep.Source == "" {
+			result.Errors = append(result.Errors, prefix+": source is required")
+		}
+		switch dep.Fallback {
+		case policy.FallbackFailClosed, policy.FallbackCrossValidate:
+			if dep.Diagnostic == "" {
+				result.Errors = append(result.Errors, fmt.Sprintf(
+					"%s: diagnostic is required when fallback is %q", prefix, dep.Fallback))
+			}
+		case policy.FallbackFailOpen:
+			result.Warnings = append(result.Warnings, fmt.Sprintf(
+				"%s: fallback is fail_open (source %q) — verify this is intentional", prefix, dep.Source))
+		default:
+			result.Errors = append(result.Errors, fmt.Sprintf(
+				"%s: invalid fallback %q (must be fail_closed, fail_open, or cross_validate)", prefix, dep.Fallback))
+		}
+	}
+
 	// Warnings.
 	if len(chain.Preconditions) == 0 {
 		result.Warnings = append(result.Warnings, "no preconditions defined (chain will not produce attack path edges)")

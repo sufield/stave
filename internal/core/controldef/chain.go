@@ -35,7 +35,67 @@ type ChainDefinition struct {
 	// asset.ID, but the chain semantically lives at the user-pool
 	// level — scope_field reunites them.
 	ScopeField string `yaml:"scope_field,omitempty" json:"scope_field,omitempty"`
+
+	// ImplicitDependencies declares computations this chain's correctness
+	// depends on that are not member controls. The Fallback field on each
+	// entry determines evaluator behavior when the dependency has not run.
+	ImplicitDependencies []ImplicitDependency `yaml:"implicit_dependencies,omitempty" json:"implicit_dependencies,omitempty"`
 }
+
+// ImplicitDependency declares a computation this chain's correctness
+// depends on that is not a member control. The Fallback field
+// determines evaluator behavior when the dependency has not run.
+type ImplicitDependency struct {
+	// Source identifies the upstream computation.
+	// Convention: dot-separated path matching the internal package
+	// structure — e.g. "observation.sensitivity_classifier",
+	// "reasoning.souffle.reachable_resource".
+	Source string `yaml:"source" json:"source"`
+
+	// Fallback determines behavior when the dependency has not run
+	// or produced no output.
+	Fallback DependencyFallback `yaml:"fallback" json:"fallback"`
+
+	// Diagnostic is the human-readable message emitted when the
+	// fallback fires. Required for fail_closed and cross_validate.
+	Diagnostic string `yaml:"diagnostic" json:"diagnostic"`
+}
+
+// DependencyFallback controls what happens when an implicit dependency
+// has not run or produced no output.
+type DependencyFallback string
+
+const (
+	// FallbackFailClosed demotes exploitability to one_away and
+	// attaches the diagnostic.
+	FallbackFailClosed DependencyFallback = "fail_closed"
+
+	// FallbackFailOpen evaluates as if the dependency is satisfied.
+	// Exists so accidental fail-open can be declared rather than silent.
+	FallbackFailOpen DependencyFallback = "fail_open"
+
+	// FallbackCrossValidate fires the chain but emits a divergence
+	// diagnostic if two sources disagree.
+	FallbackCrossValidate DependencyFallback = "cross_validate"
+)
+
+// DependencyResolver answers whether an implicit dependency's upstream
+// computation has run and produced output for this evaluation.
+// Implementations live in the evaluation workflow; the chain engine
+// consumes the interface.
+type DependencyResolver interface {
+	Status(source string) DependencyStatus
+}
+
+// DependencyStatus represents the resolution state of an implicit dependency.
+type DependencyStatus int
+
+const (
+	DependencyUnknown  DependencyStatus = iota // resolver doesn't recognize the source
+	DependencyNotRun                           // recognized but has not executed
+	DependencyRanEmpty                         // executed but produced zero facts
+	DependencyRanOK                            // executed and produced facts
+)
 
 // CapabilityRegistry is the contract for resolving whether a capability
 // string belongs to the closed vocabulary the catalog has registered.

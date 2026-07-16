@@ -20,3 +20,10 @@ preconditions:
   - network_access_ec2
 postconditions:
   - data_access
+implicit_dependencies:
+  - source: reasoning.souffle.reachable_resource
+    fallback: fail_closed
+    diagnostic: >
+      Reachability analysis has not run — blast-radius control
+      CTL.IAM.IDENTITY.BLASTRADIUS.004 may over-report without
+      Datalog-verified resource reachability paths.

@@ -5,6 +5,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	findingsdata "github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -388,5 +389,136 @@ func TestScopeAdjustedBlast_NoBlastRadius(t *testing.T) {
 	// No blast_radius → BlastMultiplier() returns 1.0 → early exit.
 	if got != 1.0 {
 		t.Fatalf("no blast radius got %f, want 1.0", got)
+	}
+}
+
+// stubResolver implements DependencyResolver for tests.
+type stubResolver struct {
+	statuses map[string]policy.DependencyStatus
+}
+
+func (s *stubResolver) Status(source string) policy.DependencyStatus {
+	if v, ok := s.statuses[source]; ok {
+		return v
+	}
+	return policy.DependencyUnknown
+}
+
+func TestAnnotateDependencies_NilResolver(t *testing.T) {
+	findings := []findingsdata.CompoundFinding{
+		{ChainID: "c1", Narrative: "test"},
+	}
+	chains := []policy.ChainDefinition{
+		{
+			ID: "c1",
+			ImplicitDependencies: []policy.ImplicitDependency{
+				{Source: "x", Fallback: policy.FallbackFailClosed, Diagnostic: "should not appear"},
+			},
+		},
+	}
+	got := AnnotateDependencies(findings, chains, nil)
+	if len(got[0].DependencyDiagnostics) != 0 {
+		t.Errorf("nil resolver should produce no diagnostics, got %v", got[0].DependencyDiagnostics)
+	}
+}
+
+func TestAnnotateDependencies_FailClosed_NotRun(t *testing.T) {
+	findings := []findingsdata.CompoundFinding{
+		{ChainID: "c1"},
+	}
+	chains := []policy.ChainDefinition{
+		{
+			ID: "c1",
+			ImplicitDependencies: []policy.ImplicitDependency{
+				{Source: "reasoning.souffle", Fallback: policy.FallbackFailClosed, Diagnostic: "Datalog not run"},
+			},
+		},
+	}
+	resolver := &stubResolver{statuses: map[string]policy.DependencyStatus{
+		"reasoning.souffle": policy.DependencyNotRun,
+	}}
+	got := AnnotateDependencies(findings, chains, resolver)
+	if len(got[0].DependencyDiagnostics) != 1 {
+		t.Fatalf("expected 1 diagnostic, got %d", len(got[0].DependencyDiagnostics))
+	}
+	if got[0].DependencyDiagnostics[0] != "Datalog not run" {
+		t.Errorf("diagnostic = %q, want %q", got[0].DependencyDiagnostics[0], "Datalog not run")
+	}
+}
+
+func TestAnnotateDependencies_FailClosed_RanOK(t *testing.T) {
+	findings := []findingsdata.CompoundFinding{
+		{ChainID: "c1"},
+	}
+	chains := []policy.ChainDefinition{
+		{
+			ID: "c1",
+			ImplicitDependencies: []policy.ImplicitDependency{
+				{Source: "x", Fallback: policy.FallbackFailClosed, Diagnostic: "not attached"},
+			},
+		},
+	}
+	resolver := &stubResolver{statuses: map[string]policy.DependencyStatus{
+		"x": policy.DependencyRanOK,
+	}}
+	got := AnnotateDependencies(findings, chains, resolver)
+	if len(got[0].DependencyDiagnostics) != 0 {
+		t.Errorf("RanOK should not produce diagnostics, got %v", got[0].DependencyDiagnostics)
+	}
+}
+
+func TestAnnotateDependencies_FailOpen_NotRun(t *testing.T) {
+	findings := []findingsdata.CompoundFinding{
+		{ChainID: "c1"},
+	}
+	chains := []policy.ChainDefinition{
+		{
+			ID: "c1",
+			ImplicitDependencies: []policy.ImplicitDependency{
+				{Source: "x", Fallback: policy.FallbackFailOpen},
+			},
+		},
+	}
+	resolver := &stubResolver{statuses: map[string]policy.DependencyStatus{
+		"x": policy.DependencyNotRun,
+	}}
+	got := AnnotateDependencies(findings, chains, resolver)
+	if len(got[0].DependencyDiagnostics) != 0 {
+		t.Errorf("fail_open should never produce diagnostics, got %v", got[0].DependencyDiagnostics)
+	}
+}
+
+func TestAnnotateDependencies_CrossValidate_NotRun(t *testing.T) {
+	findings := []findingsdata.CompoundFinding{
+		{ChainID: "c1"},
+	}
+	chains := []policy.ChainDefinition{
+		{
+			ID: "c1",
+			ImplicitDependencies: []policy.ImplicitDependency{
+				{Source: "x", Fallback: policy.FallbackCrossValidate, Diagnostic: "divergence detected"},
+			},
+		},
+	}
+	resolver := &stubResolver{statuses: map[string]policy.DependencyStatus{
+		"x": policy.DependencyNotRun,
+	}}
+	got := AnnotateDependencies(findings, chains, resolver)
+	if len(got[0].DependencyDiagnostics) != 1 {
+		t.Fatalf("cross_validate with NotRun should produce 1 diagnostic, got %d", len(got[0].DependencyDiagnostics))
+	}
+}
+
+func TestAnnotateDependencies_NoDeps(t *testing.T) {
+	findings := []findingsdata.CompoundFinding{
+		{ChainID: "c1"},
+	}
+	chains := []policy.ChainDefinition{
+		{ID: "c1"},
+	}
+	resolver := &stubResolver{}
+	got := AnnotateDependencies(findings, chains, resolver)
+	if len(got[0].DependencyDiagnostics) != 0 {
+		t.Errorf("chain with no deps should produce no diagnostics, got %v", got[0].DependencyDiagnostics)
 	}
 }

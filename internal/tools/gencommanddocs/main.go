@@ -245,56 +245,169 @@ type entry struct {
 	short string
 }
 
-// additionalGroupID is the synthetic bucket for top-level commands that
-// carry no cobra GroupID (cobra renders them under "Additional Commands").
-const additionalGroupID = "__additional__"
+// categoryOrder controls the section display order in the output.
+var categoryOrder = []string{
+	"Getting Started",
+	"Control Engine",
+	"Workflow & CI",
+	"Security Analysis",
+	"Compliance & Evidence",
+	"Risk Acceptance",
+	"Control Authoring",
+	"Catalog & Coverage",
+	"Templates & Packs",
+	"Snapshot & Transform",
+	"Interop & Export",
+	"Environment & Config",
+	"Project Management",
+}
+
+// categoryPrefix maps a command path prefix to a category. Sorted by
+// prefix length descending at init time so longer (more specific)
+// prefixes match before shorter ones.
+var categoryPrefixes = []struct {
+	prefix   string
+	category string
+}{
+	{"forge chain", "Control Authoring"},
+	{"forge", "Control Authoring"},
+	{"controls", "Control Authoring"},
+	{"exempt", "Risk Acceptance"},
+	{"permissions", "Security Analysis"},
+	{"inspect", "Security Analysis"},
+	{"ci baseline", "Workflow & CI"},
+	{"ci fix", "Workflow & CI"},
+	{"ci gate", "Workflow & CI"},
+	{"ci diff", "Workflow & CI"},
+	{"ci", "Workflow & CI"},
+	{"snapshot", "Workflow & CI"},
+	{"catalog", "Catalog & Coverage"},
+	{"capabilities catalog", "Catalog & Coverage"},
+	{"capabilities", "Catalog & Coverage"},
+	{"template", "Templates & Packs"},
+	{"pack", "Templates & Packs"},
+	{"packs", "Templates & Packs"},
+	{"recommend", "Templates & Packs"},
+	{"profile", "Compliance & Evidence"},
+	{"compliance", "Compliance & Evidence"},
+	{"compare", "Compliance & Evidence"},
+	{"bundle", "Compliance & Evidence"},
+	{"trend", "Compliance & Evidence"},
+	{"report", "Compliance & Evidence"},
+	{"export compliance", "Compliance & Evidence"},
+	{"export ocsf", "Compliance & Evidence"},
+	{"export oscal", "Compliance & Evidence"},
+	{"export tickets", "Compliance & Evidence"},
+	{"export changes", "Compliance & Evidence"},
+	{"export-controls", "Interop & Export"},
+	{"export-sir", "Interop & Export"},
+	{"export", "Compliance & Evidence"},
+	{"graph", "Interop & Export"},
+	{"cel", "Interop & Export"},
+	{"render", "Interop & Export"},
+	{"metrics", "Interop & Export"},
+	{"telemetry", "Interop & Export"},
+	{"enforce", "Interop & Export"},
+	{"attest", "Snapshot & Transform"},
+	{"fingerprint", "Snapshot & Transform"},
+	{"transform", "Snapshot & Transform"},
+	{"sanitize", "Snapshot & Transform"},
+	{"diff", "Snapshot & Transform"},
+	{"validate-mapping", "Snapshot & Transform"},
+	{"config", "Environment & Config"},
+	{"completion", "Environment & Config"},
+	{"doctor", "Environment & Config"},
+	{"version", "Environment & Config"},
+	{"contract", "Environment & Config"},
+	{"schemas", "Environment & Config"},
+	{"features", "Environment & Config"},
+	{"generate", "Getting Started"},
+	{"apply", "Control Engine"},
+	{"diagnose", "Control Engine"},
+	{"expand", "Control Engine"},
+	{"explain", "Control Engine"},
+	{"validate", "Control Engine"},
+	{"prove", "Security Analysis"},
+	{"score", "Security Analysis"},
+	{"scorecard", "Security Analysis"},
+	{"search", "Security Analysis"},
+	{"path", "Security Analysis"},
+	{"bisect", "Workflow & CI"},
+	{"check", "Workflow & CI"},
+	{"status", "Workflow & CI"},
+	{"alias", "Project Management"},
+	{"lint", "Control Authoring"},
+	{"fmt", "Control Authoring"},
+	{"coverage", "Catalog & Coverage"},
+	{"gaps", "Catalog & Coverage"},
+	{"readiness", "Catalog & Coverage"},
+	{"map", "Catalog & Coverage"},
+	{"discover", "Catalog & Coverage"},
+	{"plan", "Catalog & Coverage"},
+	{"test", "Control Authoring"},
+}
+
+func init() {
+	slices.SortFunc(categoryPrefixes, func(a, b struct {
+		prefix   string
+		category string
+	}) int {
+		return cmp.Compare(len(b.prefix), len(a.prefix))
+	})
+}
+
+// categorize returns the category for a command path using longest-prefix match.
+func categorize(path string) string {
+	for _, cp := range categoryPrefixes {
+		if path == cp.prefix || strings.HasPrefix(path, cp.prefix+" ") {
+			return cp.category
+		}
+	}
+	return "Uncategorized"
+}
 
 // render walks the tree and produces the markdown reference plus the
-// total command count. Output is deterministic: groups follow the root's
-// declared group order (then the additional bucket), and commands within
-// a group are sorted by full path.
+// total command count. Output is deterministic: categories follow
+// categoryOrder, and commands within a category are sorted by full path.
 func render(root *cobra.Command) (*bytes.Buffer, int) {
-	// Collect entries per top-level group.
-	byGroup := map[string][]entry{}
+	byCategory := map[string][]entry{}
 	total := 0
-	for _, top := range root.Commands() {
-		if skip(top) {
-			continue
-		}
-		gid := top.GroupID
-		if gid == "" {
-			gid = additionalGroupID
-		}
-		var collect func(c *cobra.Command)
-		collect = func(c *cobra.Command) {
-			byGroup[gid] = append(byGroup[gid], entry{path: commandPath(c), short: c.Short})
-			total++
-			for _, sub := range c.Commands() {
-				if skip(sub) {
-					continue
-				}
-				collect(sub)
-			}
-		}
-		collect(top)
-	}
+	var uncategorized []string
 
-	// Group display order: declared groups first, then the additional bucket.
-	type groupHeader struct {
-		id    string
-		title string
+	var walk func(c *cobra.Command)
+	walk = func(c *cobra.Command) {
+		for _, sub := range c.Commands() {
+			if skip(sub) {
+				continue
+			}
+			p := commandPath(sub)
+			cat := categorize(p)
+			if cat == "Uncategorized" {
+				uncategorized = append(uncategorized, p)
+			}
+			byCategory[cat] = append(byCategory[cat], entry{path: p, short: sub.Short})
+			total++
+			walk(sub)
+		}
 	}
-	var order []groupHeader
-	for _, g := range root.Groups() {
-		order = append(order, groupHeader{id: g.ID, title: g.Title})
+	walk(root)
+
+	if len(uncategorized) > 0 {
+		slices.Sort(uncategorized)
+		fmt.Fprintf(os.Stderr, "WARNING: %d uncategorized commands (add to categoryPrefixes):\n", len(uncategorized))
+		for _, p := range uncategorized {
+			fmt.Fprintf(os.Stderr, "  %s\n", p)
+		}
 	}
-	order = append(order, groupHeader{id: additionalGroupID, title: "Additional Commands"})
 
 	groupCount := 0
-	for _, g := range order {
-		if len(byGroup[g.id]) > 0 {
+	for _, cat := range categoryOrder {
+		if len(byCategory[cat]) > 0 {
 			groupCount++
 		}
+	}
+	if len(byCategory["Uncategorized"]) > 0 {
+		groupCount++
 	}
 
 	var buf bytes.Buffer
@@ -307,13 +420,23 @@ func render(root *cobra.Command) (*bytes.Buffer, int) {
 	buf.WriteString("`stave <command> --help` for full usage, flags, and exit codes.\n\n")
 	fmt.Fprintf(&buf, "_%d commands across %d groups._\n", total, groupCount)
 
-	for _, g := range order {
-		entries := byGroup[g.id]
+	for _, cat := range categoryOrder {
+		entries := byCategory[cat]
 		if len(entries) == 0 {
 			continue
 		}
 		slices.SortFunc(entries, func(a, b entry) int { return cmp.Compare(a.path, b.path) })
-		fmt.Fprintf(&buf, "\n## %s\n\n", g.title)
+		fmt.Fprintf(&buf, "\n## %s\n\n", cat)
+		buf.WriteString("| Command | Description |\n|---|---|\n")
+		for _, e := range entries {
+			fmt.Fprintf(&buf, "| `%s` | %s |\n", e.path, escapePipes(e.short))
+		}
+	}
+
+	// Uncategorized at the end — should be empty if all commands are mapped.
+	if entries := byCategory["Uncategorized"]; len(entries) > 0 {
+		slices.SortFunc(entries, func(a, b entry) int { return cmp.Compare(a.path, b.path) })
+		fmt.Fprintf(&buf, "\n## Uncategorized\n\n")
 		buf.WriteString("| Command | Description |\n|---|---|\n")
 		for _, e := range entries {
 			fmt.Fprintf(&buf, "| `%s` | %s |\n", e.path, escapePipes(e.short))

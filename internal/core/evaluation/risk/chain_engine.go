@@ -440,3 +440,49 @@ func buildNarrative(chain *policy.ChainDefinition, failing []kernel.ControlID) s
 	}
 	return chain.Description + " Failing: " + strings.Join(ids, ", ") + "."
 }
+
+// AnnotateDependencies post-processes DetectChains output: for each
+// finding whose chain declares implicit_dependencies, resolve each
+// dependency via the supplied resolver and attach diagnostics. When
+// resolver is nil, all dependencies resolve as RanOK (backward-
+// compatible no-op).
+func AnnotateDependencies(
+	findings []findingsdata.CompoundFinding,
+	chains []policy.ChainDefinition,
+	resolver policy.DependencyResolver,
+) []findingsdata.CompoundFinding {
+	if resolver == nil || len(findings) == 0 {
+		return findings
+	}
+
+	chainByID := make(map[kernel.ChainID]*policy.ChainDefinition, len(chains))
+	for i := range chains {
+		chainByID[chains[i].ID] = &chains[i]
+	}
+
+	for i := range findings {
+		f := &findings[i]
+		chain := chainByID[f.ChainID]
+		if chain == nil || len(chain.ImplicitDependencies) == 0 {
+			continue
+		}
+		for _, dep := range chain.ImplicitDependencies {
+			status := resolver.Status(dep.Source)
+			switch dep.Fallback {
+			case policy.FallbackFailClosed:
+				if status == policy.DependencyNotRun || status == policy.DependencyRanEmpty || status == policy.DependencyUnknown {
+					if dep.Diagnostic != "" {
+						f.DependencyDiagnostics = append(f.DependencyDiagnostics, dep.Diagnostic)
+					}
+				}
+			case policy.FallbackCrossValidate:
+				if status != policy.DependencyRanOK && dep.Diagnostic != "" {
+					f.DependencyDiagnostics = append(f.DependencyDiagnostics, dep.Diagnostic)
+				}
+			case policy.FallbackFailOpen:
+				// Intentional: no annotation.
+			}
+		}
+	}
+	return findings
+}

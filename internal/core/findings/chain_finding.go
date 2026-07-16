@@ -37,20 +37,21 @@ import (
 // producer-side code in risk/ (DetectChains and sortFunc callbacks);
 // external consumers reach for findings.CompoundFinding directly.
 type CompoundFinding struct {
-	ChainID            kernel.ChainID       `json:"chain"`
-	AssetID            asset.ID             `json:"asset_id,omitempty"`
-	ScopeID            string               `json:"scope_id,omitempty"`
-	ScopeField         string               `json:"scope_field,omitempty"`
-	ContributingAssets []asset.ID           `json:"contributing_assets,omitempty"`
-	Description        string               `json:"description,omitempty"`
-	ControlsFailing    []kernel.ControlID   `json:"controls_failing"`
-	MissingSafeguards  []kernel.ControlID   `json:"missing_safeguards,omitempty"`
-	CompoundScore      float64              `json:"compound_score"`
-	Severity           policy.Severity      `json:"severity"`
-	Narrative          string               `json:"narrative"`
-	AttackStages       []kernel.AttackStage `json:"attack_stages,omitempty"`
-	Confidence         string               `json:"confidence,omitempty"`
-	FreshnessReason    string               `json:"freshness_reason,omitempty"`
+	ChainID               kernel.ChainID       `json:"chain"`
+	AssetID               asset.ID             `json:"asset_id,omitempty"`
+	ScopeID               string               `json:"scope_id,omitempty"`
+	ScopeField            string               `json:"scope_field,omitempty"`
+	ContributingAssets    []asset.ID           `json:"contributing_assets,omitempty"`
+	Description           string               `json:"description,omitempty"`
+	ControlsFailing       []kernel.ControlID   `json:"controls_failing"`
+	MissingSafeguards     []kernel.ControlID   `json:"missing_safeguards,omitempty"`
+	CompoundScore         float64              `json:"compound_score"`
+	Severity              policy.Severity      `json:"severity"`
+	Narrative             string               `json:"narrative"`
+	AttackStages          []kernel.AttackStage `json:"attack_stages,omitempty"`
+	Confidence            string               `json:"confidence,omitempty"`
+	FreshnessReason       string               `json:"freshness_reason,omitempty"`
+	DependencyDiagnostics []string             `json:"dependency_diagnostics,omitempty"`
 }
 
 // SeverityLabel returns the canonical lowercase severity string
