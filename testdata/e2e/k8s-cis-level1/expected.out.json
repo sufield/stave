@@ -2474,6 +2474,48 @@
       ]
     }
   ],
+  "near_miss_chains": [
+    {
+      "chain": "k8s_anonymous_access_path",
+      "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n",
+      "controls_failing": [
+        "CTL.K8S.KUBELET.ANON.001"
+      ],
+      "missing_control": "CTL.K8S.APISERVER.ANON.001",
+      "severity": "critical",
+      "scope_id": "kubelet-dev-node-01"
+    },
+    {
+      "chain": "k8s_anonymous_access_path",
+      "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n",
+      "controls_failing": [
+        "CTL.K8S.KUBELET.ANON.001"
+      ],
+      "missing_control": "CTL.K8S.APISERVER.AUDIT.001",
+      "severity": "critical",
+      "scope_id": "kubelet-dev-node-01"
+    },
+    {
+      "chain": "k8s_anonymous_access_path",
+      "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n",
+      "controls_failing": [
+        "CTL.K8S.KUBELET.ANON.001"
+      ],
+      "missing_control": "CTL.K8S.APISERVER.ANON.001",
+      "severity": "critical",
+      "scope_id": "kubelet-staging-node-01"
+    },
+    {
+      "chain": "k8s_anonymous_access_path",
+      "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n",
+      "controls_failing": [
+        "CTL.K8S.KUBELET.ANON.001"
+      ],
+      "missing_control": "CTL.K8S.APISERVER.AUDIT.001",
+      "severity": "critical",
+      "scope_id": "kubelet-staging-node-01"
+    }
+  ],
   "issues": [
     {
       "issue_id": "sha256:94fe179ee995fff5",
