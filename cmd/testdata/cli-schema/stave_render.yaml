@@ -19,9 +19,8 @@ description: |-
       2   Invalid input (missing flags, bad JSON, bad template)
       4   Internal error
 
-    Examples:
-      stave catalog --kind chain --format json | stave render --data - --template templates/chain-catalog.md.tmpl
-      stave render --data catalog.json --template templates/chain-catalog.md.tmpl > docs/chain-catalog.md
+    Use --data - to read from stdin (pipe from any stave --format json command)
+    or --data FILE for a saved JSON file.
 usage: stave render [flags]
 options:
     - name: data
@@ -91,5 +90,11 @@ inherited_options:
       default_value: "false"
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
+example: |4-
+      # Pipe chain catalog through a markdown template
+      stave catalog --kind chain --format json | stave render --data - --template templates/chain-catalog.md.tmpl
+
+      # Render a saved JSON file
+      stave render --data catalog.json --template templates/chain-catalog.md.tmpl > docs/chain-catalog.md
 see_also:
     - stave - Configuration safety evaluator
