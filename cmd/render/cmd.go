@@ -42,8 +42,12 @@ Exit codes:
   2   Invalid input (missing flags, bad JSON, bad template)
   4   Internal error
 
-Examples:
+Use --data - to read from stdin (pipe from any stave --format json command)
+or --data FILE for a saved JSON file.`,
+		Example: `  # Pipe chain catalog through a markdown template
   stave catalog --kind chain --format json | stave render --data - --template templates/chain-catalog.md.tmpl
+
+  # Render a saved JSON file
   stave render --data catalog.json --template templates/chain-catalog.md.tmpl > docs/chain-catalog.md`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
