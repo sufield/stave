@@ -27,7 +27,8 @@ func TestWireCommands_CommandCount(t *testing.T) {
 	// 64 after adding `prove` (Z3 SMT formal verification).
 	// 65 after adding `recommend` (template recommendation engine).
 	// 66 after adding `template` (init/new/verify/eject subcommands).
-	const want = 66
+	// 67 after adding `render` (JSON data + Go template = output).
+	const want = 67
 	if got != want {
 		t.Errorf("root command count = %d, want %d; update this constant if a command was added/removed", got, want)
 	}
