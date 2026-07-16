@@ -18,3 +18,4 @@ compound_severity: critical
 postconditions:
   - data_access
   - invisible_data_exfiltration
+implicit_dependencies: []

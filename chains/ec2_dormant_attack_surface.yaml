@@ -19,3 +19,4 @@ preconditions:
   - network_access_ec2
 postconditions:
   - audit_trail_destroyed
+implicit_dependencies: []

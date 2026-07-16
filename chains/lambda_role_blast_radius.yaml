@@ -20,3 +20,12 @@ preconditions:
 postconditions:
   - data_access
   - iam_credential_theft
+implicit_dependencies:
+  - source: reasoning.souffle.reachable_resource
+    fallback: cross_validate
+    diagnostic: >-
+      Datalog reachability engine output not available. Assessment uses observation-layer counts only, which may undercount transitive role assumptions.
+  - source: observation.sensitivity_classifier
+    fallback: fail_closed
+    diagnostic: >-
+      No sensitivity facts emitted for this account. Blast radius assessment cannot distinguish safe identities from unclassified ones. Finding may be a false negative.

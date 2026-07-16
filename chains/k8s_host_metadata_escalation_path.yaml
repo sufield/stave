@@ -17,3 +17,4 @@ preconditions:
   - k8s_service_account_token
 postconditions:
   - iam_credential_theft
+implicit_dependencies: []

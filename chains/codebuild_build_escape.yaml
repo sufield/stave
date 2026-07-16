@@ -13,3 +13,4 @@ preconditions:
   - ec2_code_execution
 postconditions:
   - iam_credential_theft
+implicit_dependencies: []

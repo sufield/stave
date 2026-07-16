@@ -18,3 +18,4 @@ preconditions:
   - network_access_vpc
 postconditions:
   - data_in_transit_exposure
+implicit_dependencies: []

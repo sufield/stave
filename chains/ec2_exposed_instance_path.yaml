@@ -19,3 +19,4 @@ preconditions:
   - network_access_ec2
 postconditions:
   - iam_credential_theft
+implicit_dependencies: []

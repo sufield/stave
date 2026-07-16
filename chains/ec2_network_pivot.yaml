@@ -18,3 +18,4 @@ preconditions:
   - network_access_ec2
 postconditions:
   - vpc_instance_compromise
+implicit_dependencies: []

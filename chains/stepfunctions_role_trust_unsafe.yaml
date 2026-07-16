@@ -18,3 +18,4 @@ preconditions:
   - cross_account_injection
 postconditions:
   - shadow_admin_access
+implicit_dependencies: []

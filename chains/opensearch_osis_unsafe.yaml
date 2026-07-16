@@ -22,3 +22,4 @@ preconditions:
   - ungoverned_operation
 postconditions:
   - data_in_transit_exposure
+implicit_dependencies: []

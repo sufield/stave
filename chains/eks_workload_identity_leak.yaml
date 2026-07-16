@@ -17,3 +17,4 @@ preconditions:
   - ungoverned_operation
 postconditions:
   - iam_credential_theft
+implicit_dependencies: []

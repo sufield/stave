@@ -18,3 +18,4 @@ preconditions:
   - kms_encryption_configured
 postconditions:
   - service_disruption
+implicit_dependencies: []

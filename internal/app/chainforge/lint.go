@@ -97,6 +97,18 @@ func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]st
 	return result
 }
 
+// LintChainRaw wraps LintChain and adds a raw-bytes check for the
+// implicit_dependencies field. The parsed struct can't distinguish
+// "field absent" from "field present but empty" (both are nil),
+// so the field-presence check operates on raw YAML bytes.
+func LintChainRaw(raw []byte, chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]struct{}, registry policy.CapabilityRegistry) LintResult {
+	result := LintChain(chain, controlIDs, registry)
+	if !strings.Contains(string(raw), "implicit_dependencies") {
+		result.Errors = append(result.Errors, "missing required field: implicit_dependencies (declare [] if none)")
+	}
+	return result
+}
+
 // FormatLint produces human-readable lint output.
 func FormatLint(r LintResult) string {
 	var b strings.Builder

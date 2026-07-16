@@ -13,3 +13,4 @@ preconditions:
   - cloudfront_origin_configured
 postconditions:
   - data_in_transit_exposure
+implicit_dependencies: []

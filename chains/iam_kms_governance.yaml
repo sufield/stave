@@ -15,3 +15,4 @@ preconditions:
   - iam_credential_theft
 postconditions:
   - kms_key_compromise
+implicit_dependencies: []

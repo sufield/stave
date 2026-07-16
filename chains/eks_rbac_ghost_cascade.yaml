@@ -20,3 +20,8 @@ preconditions:
   - ungoverned_operation
 postconditions:
   - shadow_admin_access
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

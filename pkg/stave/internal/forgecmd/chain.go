@@ -33,7 +33,7 @@ func ChainLint(chainPath, controlsDir string) ([]byte, error) {
 
 	controlIDs := loadControlIDs(controlsDir)
 
-	result := chainforge.LintChain(&chain, controlIDs, capabilities.Builtin())
+	result := chainforge.LintChainRaw(data, &chain, controlIDs, capabilities.Builtin())
 
 	var buf bytes.Buffer
 	_, _ = fmt.Fprint(&buf, chainforge.FormatLint(result))

@@ -19,3 +19,4 @@ preconditions:
   - kms_encryption_configured
 postconditions:
   - encryption_bypass
+implicit_dependencies: []

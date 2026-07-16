@@ -16,3 +16,4 @@ preconditions:
   - ungoverned_operation
 postconditions:
   - automation_hijack
+implicit_dependencies: []

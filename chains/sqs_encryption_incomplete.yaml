@@ -16,3 +16,4 @@ preconditions:
   - data_in_transit_exposure
 postconditions:
   - encryption_bypass
+implicit_dependencies: []

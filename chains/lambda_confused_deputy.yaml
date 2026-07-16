@@ -19,3 +19,4 @@ preconditions:
   - network_access_lambda
 postconditions:
   - resource_policy_escalation
+implicit_dependencies: []

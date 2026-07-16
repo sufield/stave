@@ -132,6 +132,51 @@ func TestLintChain_ImplicitDependency_FailClosedRequiresDiagnostic(t *testing.T)
 	}
 }
 
+func TestLintChainRaw_MissingField(t *testing.T) {
+	raw := []byte(`id: test_chain
+controls:
+  - CTL.A.001
+  - CTL.B.001
+escalation_threshold: 2
+`)
+	chain := &policy.ChainDefinition{
+		ID:                  "test_chain",
+		ControlIDs:          []kernel.ControlID{"CTL.A.001", "CTL.B.001"},
+		EscalationThreshold: 2,
+	}
+	result := LintChainRaw(raw, chain, nil, nil)
+	hasError := false
+	for _, e := range result.Errors {
+		if e == "missing required field: implicit_dependencies (declare [] if none)" {
+			hasError = true
+		}
+	}
+	if !hasError {
+		t.Errorf("should detect missing implicit_dependencies, errors: %v", result.Errors)
+	}
+}
+
+func TestLintChainRaw_EmptyListPresent(t *testing.T) {
+	raw := []byte(`id: test_chain
+controls:
+  - CTL.A.001
+  - CTL.B.001
+escalation_threshold: 2
+implicit_dependencies: []
+`)
+	chain := &policy.ChainDefinition{
+		ID:                  "test_chain",
+		ControlIDs:          []kernel.ControlID{"CTL.A.001", "CTL.B.001"},
+		EscalationThreshold: 2,
+	}
+	result := LintChainRaw(raw, chain, nil, nil)
+	for _, e := range result.Errors {
+		if e == "missing required field: implicit_dependencies (declare [] if none)" {
+			t.Errorf("should not error when implicit_dependencies is present (even if empty)")
+		}
+	}
+}
+
 func TestLintChain_ImplicitDependency_FailOpenWarns(t *testing.T) {
 	chain := &policy.ChainDefinition{
 		ID:                  "test_chain",

@@ -14,3 +14,4 @@ preconditions:
   - internet_access
 postconditions:
   - k8s_cluster_admin
+implicit_dependencies: []

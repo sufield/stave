@@ -21,3 +21,4 @@ preconditions:
   - ungoverned_operation
 postconditions:
   - data_destruction
+implicit_dependencies: []

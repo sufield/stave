@@ -19,3 +19,4 @@ preconditions:
   - resource_policy_escalation
 postconditions:
   - data_destruction
+implicit_dependencies: []

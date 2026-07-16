@@ -21,3 +21,4 @@ preconditions:
   - resource_policy_escalation
 postconditions:
   - audit_trail_destroyed
+implicit_dependencies: []

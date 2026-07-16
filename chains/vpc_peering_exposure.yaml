@@ -20,3 +20,8 @@ preconditions:
   - network_access_vpc
 postconditions:
   - network_access_ec2
+implicit_dependencies:
+  - source: observation.network_topology
+    fallback: fail_closed
+    diagnostic: >-
+      Network topology resolution not available. Routing-dependent controls cannot verify reachability between segments.

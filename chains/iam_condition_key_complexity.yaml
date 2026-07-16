@@ -22,3 +22,4 @@ preconditions:
   - iam_credential_theft
 postconditions:
   - resource_policy_escalation
+implicit_dependencies: []

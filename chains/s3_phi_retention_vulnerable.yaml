@@ -25,3 +25,4 @@ preconditions:
   - data_warehouse_compromise
 postconditions:
   - data_destruction
+implicit_dependencies: []

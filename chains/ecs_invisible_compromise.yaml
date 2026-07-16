@@ -12,3 +12,4 @@ preconditions:
   - container_code_execution
 postconditions:
   - secret_store_access
+implicit_dependencies: []

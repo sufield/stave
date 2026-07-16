@@ -28,3 +28,8 @@ preconditions:
   - bucket_name_available_for_registration
 postconditions:
   - data_stream_capture
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

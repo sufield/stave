@@ -18,3 +18,4 @@ preconditions:
   - kms_encryption_configured
 postconditions:
   - kms_key_compromise
+implicit_dependencies: []

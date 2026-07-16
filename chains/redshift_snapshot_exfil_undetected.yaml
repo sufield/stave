@@ -17,3 +17,4 @@ compound_severity: critical
 postconditions:
   - data_warehouse_compromise
   - invisible_data_exfiltration
+implicit_dependencies: []

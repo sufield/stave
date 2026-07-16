@@ -22,3 +22,4 @@ preconditions:
   - ungoverned_operation
 postconditions:
   - cross_account_injection
+implicit_dependencies: []

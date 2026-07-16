@@ -15,3 +15,4 @@ preconditions:
   - iam_credential_theft
 postconditions:
   - rds_data_access
+implicit_dependencies: []

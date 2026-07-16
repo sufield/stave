@@ -21,3 +21,4 @@ preconditions:
   - rds_data_access
 postconditions:
   - audit_trail_destroyed
+implicit_dependencies: []

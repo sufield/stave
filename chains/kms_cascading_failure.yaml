@@ -21,3 +21,4 @@ preconditions:
   - kms_encryption_configured
 postconditions:
   - data_destruction
+implicit_dependencies: []

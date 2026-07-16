@@ -33,3 +33,8 @@ preconditions:
   - iam_credential_theft
 postconditions:
   - data_access
+implicit_dependencies:
+  - source: reasoning.souffle.reachable_resource
+    fallback: cross_validate
+    diagnostic: >-
+      Datalog reachability engine output not available. Assessment uses observation-layer counts only, which may undercount transitive role assumptions.

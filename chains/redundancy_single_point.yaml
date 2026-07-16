@@ -19,3 +19,4 @@ preconditions:
   - az_failure
 postconditions:
   - service_disruption
+implicit_dependencies: []

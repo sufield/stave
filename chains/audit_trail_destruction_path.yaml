@@ -13,3 +13,4 @@ preconditions:
   - iam_credential_theft
 postconditions:
   - audit_trail_destroyed
+implicit_dependencies: []

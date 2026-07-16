@@ -22,3 +22,4 @@ preconditions:
   - ungoverned_operation
 postconditions:
   - audit_trail_destroyed
+implicit_dependencies: []

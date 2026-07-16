@@ -21,3 +21,8 @@ preconditions:
   - container_code_execution
 postconditions:
   - data_access
+implicit_dependencies:
+  - source: observation.sensitivity_classifier
+    fallback: fail_closed
+    diagnostic: >-
+      No sensitivity facts emitted for this account. Blast radius assessment cannot distinguish safe identities from unclassified ones. Finding may be a false negative.

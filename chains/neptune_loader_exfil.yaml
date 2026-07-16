@@ -18,3 +18,4 @@ compound_severity: high
 postconditions:
   - s3_data_access
   - invisible_data_exfiltration
+implicit_dependencies: []

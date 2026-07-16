@@ -22,3 +22,4 @@ preconditions:
   - ungoverned_operation
 postconditions:
   - shadow_admin_access
+implicit_dependencies: []

@@ -13,3 +13,4 @@ preconditions:
   - iam_credential_theft
 postconditions:
   - s3_data_access
+implicit_dependencies: []

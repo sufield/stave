@@ -20,3 +20,4 @@ preconditions:
   - kms_encryption_configured
 postconditions:
   - ungoverned_operation
+implicit_dependencies: []

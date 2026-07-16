@@ -21,3 +21,4 @@ preconditions:
   - network_access_lambda
 postconditions:
   - audit_trail_destroyed
+implicit_dependencies: []

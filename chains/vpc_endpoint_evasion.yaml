@@ -17,3 +17,4 @@ preconditions:
   - vpc_instance_compromise
 postconditions:
   - invisible_data_exfiltration
+implicit_dependencies: []
