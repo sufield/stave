@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_167 commands across 7 groups._
+_168 commands across 7 groups._
 
 ## Getting Started
 
@@ -192,6 +192,7 @@ _167 commands across 7 groups._
 | `prove` | Run Z3 SMT queries against a Stave assessment |
 | `readiness` | Report what Stave can/can't evaluate given the supplied observations |
 | `recommend` | Recommend templates for a snapshot |
+| `render` | Render JSON data through a Go text/template |
 | `sanitize` | Sanitize a snapshot for cross-boundary sharing |
 | `schemas` | List all contract schemas |
 | `score` | Compute security posture score (0-100) |

@@ -1,0 +1,19 @@
+---
+title: Chain Catalog
+---
+
+# Compound Chain Catalog
+
+{{ .total_capabilities }} compound-risk chains.
+
+{{ range .capabilities -}}
+## {{ .title }}
+
+**Severity:** {{ .severity }}
+
+{{ .description }}
+
+{{ end -}}
+
+---
+*Generated from catalog data. Do not edit manually.*

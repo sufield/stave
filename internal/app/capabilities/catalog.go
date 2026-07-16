@@ -139,6 +139,7 @@ func buildChainCaps(chains []policy.ChainDefinition) []Capability {
 			Kind:        "chain",
 			Title:       humaniseID(string(ch.ID)),
 			Description: summariseDescription(ch.Description),
+			Severity:    ch.CompoundSeverity.String(),
 			ChainIDs:    []string{string(ch.ID)},
 			Keywords:    extractKeywordsFromText(ch.Description, string(ch.ID)),
 			ExampleCmd:  "stave apply --controls controls --observations ./snapshots --max-unsafe 168h",

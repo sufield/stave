@@ -1,0 +1,148 @@
+name: Documentation Currency
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  docs-currency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 2
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Auto-regen generated docs
+        run: |
+          make docs-regen 2>/dev/null || true
+          if ! git diff --quiet docs/reference/; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add docs/reference/
+            git commit -m "auto-regen: docs from catalog data"
+            git push
+            echo "REGEN=true" >> $GITHUB_ENV
+          fi
+
+      - name: Check behavioral doc drift
+        run: |
+          python3 << 'PYEOF'
+          import yaml, fnmatch, subprocess, sys
+
+          with open("docs-deps.yaml") as f:
+              deps = yaml.safe_load(f)
+
+          changed = subprocess.check_output(
+              ["git", "diff", "--name-only", "HEAD~1..HEAD"]
+          ).decode().strip().split("\n")
+
+          stale = []
+
+          for dep in deps["dependencies"]:
+              if dep.get("auto_regen", False):
+                  continue
+
+              sources = dep["sources"]
+              source_hit = any(
+                  fnmatch.fnmatch(cf, pat)
+                  for cf in changed
+                  for pat in sources
+              )
+              if not source_hit:
+                  continue
+
+              for doc_entry in dep["docs"]:
+                  if isinstance(doc_entry, str):
+                      continue
+                  doc_path = doc_entry["path"]
+                  last_hash = doc_entry.get("last_audited", "")
+
+                  # Calculate drift since last audit
+                  if last_hash:
+                      try:
+                          diff_stat = subprocess.check_output(
+                              ["git", "diff", "--stat", f"{last_hash}..HEAD", "--"] + sources,
+                              stderr=subprocess.DEVNULL
+                          ).decode().strip()
+                          if diff_stat:
+                              lines = diff_stat.split("\n")
+                              summary = lines[-1] if lines else "unknown changes"
+                              stale.append({
+                                  "doc": doc_path,
+                                  "sources": sources,
+                                  "last_audited": last_hash,
+                                  "drift": summary
+                              })
+                      except subprocess.CalledProcessError:
+                          stale.append({
+                              "doc": doc_path,
+                              "sources": sources,
+                              "last_audited": last_hash or "never",
+                              "drift": "hash not found — doc may never have been audited"
+                          })
+                  else:
+                      stale.append({
+                          "doc": doc_path,
+                          "sources": sources,
+                          "last_audited": "never",
+                          "drift": "no audit recorded"
+                      })
+
+          if stale:
+              body = "Code changed that may affect these docs:\n\n"
+              for s in stale:
+                  body += f"### `{s['doc']}`\n"
+                  body += f"- **Triggered by:** `{', '.join(s['sources'])}`\n"
+                  body += f"- **Last audited:** `{s['last_audited']}`\n"
+                  body += f"- **Drift:** {s['drift']}\n\n"
+              body += "After reviewing, update `last_audited` in `docs-deps.yaml` to the current commit hash.\n"
+
+              with open("/tmp/stale-docs.md", "w") as f:
+                  f.write(body)
+
+              print(f"::warning::{len(stale)} docs may be stale")
+          else:
+              print("All behavioral docs are current.")
+
+          with open("/tmp/stale-count", "w") as f:
+              f.write(str(len(stale)))
+          PYEOF
+
+      - name: Open or update issue
+        run: |
+          STALE=$(cat /tmp/stale-count)
+          if [ "$STALE" -gt 0 ]; then
+            BODY=$(cat /tmp/stale-docs.md)
+
+            # Check if an open docs-drift issue already exists
+            EXISTING=$(gh issue list --label "docs-drift" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+
+            if [ -n "$EXISTING" ]; then
+              # Update existing issue body
+              gh issue edit "$EXISTING" --body "$BODY"
+              gh issue comment "$EXISTING" --body "Updated: $STALE docs flagged as potentially stale after $(git rev-parse --short HEAD)."
+            else
+              # Create new issue
+              gh issue create \
+                --title "Docs drift: $STALE documents may be stale" \
+                --body "$BODY" \
+                --label "docs-drift"
+            fi
+          else
+            # Close any open docs-drift issue
+            EXISTING=$(gh issue list --label "docs-drift" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+            if [ -n "$EXISTING" ]; then
+              gh issue close "$EXISTING" --comment "All docs are current as of $(git rev-parse --short HEAD)."
+            fi
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -768,6 +768,17 @@ gen-steampipe-mappings-validate:
 		--columns scripts/steampipe-columns.json \
 		--validate-against contracts/steampipe/
 
+## docs-regen: Regenerate all derived docs (control reference, command
+## reference, Datalog reference, methodology coverage). Used by CI
+## auto-regen — same generators as consistency-check but without the
+## drift assertion.
+.PHONY: docs-regen
+docs-regen: sync-schemas sync-controls sync-alternatives
+	@$(GOCMD) run ./internal/tools/gencontroldocs
+	@$(GOCMD) run ./internal/tools/genmethodologycoverage
+	@$(GOCMD) run ./internal/tools/gencommanddocs
+	@$(GOCMD) run ./internal/tools/gendatalogdocs
+
 ## docs-controls: Generate control reference from built-in catalog
 docs-controls: sync-controls
 	$(GOCMD) run ./internal/tools/gencontroldocs

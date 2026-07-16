@@ -136,6 +136,7 @@ var catalogAnnotations = []catalogAnnotation{
 	{Path: "attest keygen", Group: "Snapshot Integrity & Sharing", When: "One-time key setup for attestation"},
 	{Path: "attest sign", Group: "Snapshot Integrity & Sharing", When: "Producing a tamper-evident snapshot"},
 	{Path: "attest verify", Group: "Snapshot Integrity & Sharing", When: "Confirming a snapshot wasn't altered"},
+	{Path: "render", Group: "Snapshot Integrity & Sharing", When: "Rendering JSON data through a Go template"},
 	{Path: "sanitize", Group: "Snapshot Integrity & Sharing", When: "Removing identifiers before sharing"},
 	{Path: "cel eval", Group: "Snapshot Integrity & Sharing", When: "Ad-hoc CEL probing of a snapshot"},
 	{Path: "contract show", Group: "Snapshot Integrity & Sharing", When: "Understanding required fields for an asset type"},

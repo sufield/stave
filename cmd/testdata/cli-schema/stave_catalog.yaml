@@ -32,6 +32,8 @@ description: |
       --kind K         control_group | chain | operational
       --severity SEV   critical | high | medium | low | info (leaf controls)
       --leaf           Drill to individual leaf controls
+      --family NAME    Filter chains to one family (e.g. iam, s3, apigw); implies --kind chain
+      --verbose        Show full chain descriptions (default truncates to one phrase)
       --format F       auto (default; paged on a TTY) | text | wide | json
       --no-pager       Never page, even on a terminal
       --controls DIR   Control catalog directory (default: controls)
@@ -52,6 +54,8 @@ options:
       shorthand: i
       default_value: controls
       usage: control catalog directory
+    - name: family
+      usage: filter chains to one family (e.g. apigw, iam, s3)
     - name: format
       shorthand: f
       default_value: auto
@@ -76,6 +80,10 @@ options:
         show only leaf controls of this severity: critical | high | medium | low | info
     - name: taxonomy
       usage: filter by taxonomy category (comma-separated, OR-joined)
+    - name: verbose
+      default_value: "false"
+      usage: |
+        show full chain descriptions (default truncates to one phrase)
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -126,10 +134,6 @@ inherited_options:
       default_value: "false"
       usage: |
         Enable strict integrity checks for embedded registries and references
-    - name: verbose
-      shorthand: v
-      default_value: "0"
-      usage: Increase verbosity (-v=INFO, -vv=DEBUG)
     - name: "yes"
       shorthand: "y"
       default_value: "false"

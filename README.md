@@ -7,6 +7,7 @@ offline, credential-free.
 [![codecov](https://codecov.io/gh/sufield/stave/graph/badge.svg?token=OQ72PYGVPZ)](https://codecov.io/gh/sufield/stave)
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sufield/stave?quickstart=1)
 
+[Documentation](docs/README.md) ·
 [Control Reference](docs/controls/reference.md) ·
 [Command Reference](docs/command-reference.md)
 
@@ -159,6 +160,16 @@ source code. Supply-side: exhaustive API surface diffing against
 botocore response schemas, cross-cloud transposition from CIS
 Azure/GCP benchmarks, and formal policy-semantics analysis grounded
 in AWS's own Zelkova research.
+
+## Documentation
+
+[→ Full documentation](docs/README.md)
+
+[Get started](docs/getting-started/first-evaluation.md) ·
+[Control catalog](docs/controls/reference.md) ·
+[CLI reference](docs/command-reference.md) ·
+[How-to guides](docs/how-to/README.md) ·
+[Integrations](integrations/README.md)
 
 ## Contributing
 

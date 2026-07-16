@@ -190,6 +190,7 @@ see_also:
     - stave prove - Run Z3 SMT queries against a Stave assessment
     - stave readiness - Report what Stave can/can't evaluate given the supplied observations
     - stave recommend - Recommend templates for a snapshot
+    - stave render - Render JSON data through a Go text/template
     - stave report - Generate executive security posture report
     - stave sanitize - Sanitize a snapshot for cross-boundary sharing
     - stave schemas - List all contract schemas

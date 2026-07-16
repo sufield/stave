@@ -1,0 +1,77 @@
+dependencies:
+
+  # --- Auto-regen: CI fixes these automatically ---
+
+  - sources: ["controls/**/*.yaml"]
+    docs: ["docs/reference/control-catalog.md", "README.md"]
+    auto_regen: true
+
+  - sources: ["packs/*.yaml"]
+    docs: ["docs/how-to/use-packs.md"]
+    auto_regen: true
+
+  - sources: ["data/frameworks/*.yaml"]
+    docs: ["docs/reference/compliance-frameworks.md"]
+    auto_regen: true
+
+  - sources: ["cmd/**/*.go"]
+    docs: ["docs/reference/cli-commands.md"]
+    auto_regen: true
+
+  - sources: ["internal/appeval/graph_findings.go"]
+    docs: ["docs/reference/chain-catalog.md"]
+    auto_regen: true
+
+  # --- Manual review: CI opens an issue when drift exceeds threshold ---
+
+  - sources: ["internal/platform/providers/aws/iam/resolve.go"]
+    docs:
+      - path: docs/explanation/architecture.md
+        last_audited: "9dc62bf24"
+      - path: docs/explanation/exploitability.md
+        last_audited: "9dc62bf24"
+      - path: docs/reference/finding-schema.md
+        last_audited: "9dc62bf24"
+    auto_regen: false
+
+  - sources: ["internal/appeval/workflow.go"]
+    docs:
+      - path: docs/explanation/exploitability.md
+        last_audited: "0ef15519c"
+      - path: docs/explanation/compound-chains.md
+        last_audited: "0ef15519c"
+    auto_regen: false
+
+  - sources: ["internal/adapters/output/**/*.go"]
+    docs:
+      - path: docs/reference/output-formats.md
+        last_audited: "3121a19d8"
+      - path: docs/reference/finding-schema.md
+        last_audited: "3121a19d8"
+    auto_regen: false
+
+  - sources: ["internal/platform/providers/aws/organizations/scp.go",
+               "internal/platform/providers/aws/iam/policy.go"]
+    docs:
+      - path: docs/explanation/architecture.md
+        last_audited: "9ef41593b"
+    auto_regen: false
+
+  - sources: ["internal/platform/providers/aws/collector/**/*.go",
+               "scripts/aws-snapshot.sh"]
+    docs:
+      - path: docs/reference/collector-policy.md
+        last_audited: ""
+    auto_regen: false
+
+  - sources: ["shadow_services.yaml"]
+    docs: ["docs/reference/control-catalog.md"]
+    auto_regen: true
+
+  - sources: ["cmd/apply/*.go"]
+    docs:
+      - path: docs/getting-started/first-evaluation.md
+        last_audited: ""
+      - path: docs/how-to/use-templates.md
+        last_audited: ""
+    auto_regen: false

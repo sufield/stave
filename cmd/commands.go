@@ -49,6 +49,7 @@ import (
 	staveprove "github.com/sufield/stave/cmd/prove"
 	stavereadiness "github.com/sufield/stave/cmd/readiness"
 	staverecommend "github.com/sufield/stave/cmd/recommend"
+	staverender "github.com/sufield/stave/cmd/render"
 	stavereport "github.com/sufield/stave/cmd/report"
 	stavesanitize "github.com/sufield/stave/cmd/sanitize"
 	stavescore "github.com/sufield/stave/cmd/score"
@@ -266,6 +267,9 @@ func WireCommands(app *App) error {
 
 	// Standalone sanitization
 	root.AddCommand(stavesanitize.NewCmd())
+
+	// Template rendering (JSON data + Go template = output)
+	root.AddCommand(staverender.NewCmd())
 
 	// Prometheus metrics export
 	root.AddCommand(stavemetrics.NewCmd())

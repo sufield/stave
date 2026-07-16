@@ -28,6 +28,8 @@ type options struct {
 	Severity    string
 	Taxonomy    string
 	Leaf        bool
+	Verbose     bool
+	Family      string
 }
 
 // NewCmd constructs the `catalog` command. Registered both as a
@@ -74,6 +76,8 @@ Inputs:
   --kind K         control_group | chain | operational
   --severity SEV   critical | high | medium | low | info (leaf controls)
   --leaf           Drill to individual leaf controls
+  --family NAME    Filter chains to one family (e.g. iam, s3, apigw); implies --kind chain
+  --verbose        Show full chain descriptions (default truncates to one phrase)
   --format F       auto (default; paged on a TTY) | text | wide | json
   --no-pager       Never page, even on a terminal
   --controls DIR   Control catalog directory (default: controls)
@@ -124,6 +128,8 @@ Exit codes:
 	cmd.Flags().StringVar(&opts.Severity, "severity", "", "show only leaf controls of this severity: critical | high | medium | low | info")
 	cmd.Flags().StringVar(&opts.Taxonomy, "taxonomy", "", "filter by taxonomy category (comma-separated, OR-joined)")
 	cmd.Flags().BoolVar(&opts.Leaf, "leaf", false, "drill to leaf controls (the individual control IDs); pairs with a service")
+	cmd.Flags().BoolVar(&opts.Verbose, "verbose", false, "show full chain descriptions (default truncates to one phrase)")
+	cmd.Flags().StringVar(&opts.Family, "family", "", "filter chains to one family (e.g. apigw, iam, s3)")
 	cmd.AddCommand(newStatsCmd())
 	cmd.AddCommand(newInspectCmd())
 	cmd.AddCommand(newCoverageCmd())
@@ -151,6 +157,8 @@ func run(ctx context.Context, w io.Writer, opts *options) error {
 		Severity:    opts.Severity,
 		Taxonomy:    opts.Taxonomy,
 		Leaf:        opts.Leaf,
+		Verbose:     opts.Verbose,
+		Family:      opts.Family,
 	})
 	if err != nil {
 		if errors.Is(err, stave.ErrInvalidInput) {
