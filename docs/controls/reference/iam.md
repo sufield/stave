@@ -2417,6 +2417,21 @@ KMS actions (kms:Decrypt, kms:GenerateDataKey, kms:Encrypt) are allowed without 
 
 ---
 
+### CTL.IAM.POLICY.DEPRECATED.MANAGED.001
+
+**IAM Roles Must Not Use Deprecated AWS-Managed Policies**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SA-22; soc2: CC8.1;
+
+No IAM role should have a deprecated AWS-managed policy attached. AWS deprecates managed policies when they are superseded by updated versions or when the underlying service is discontinued. Roles using deprecated policies reference abandoned infrastructure that AWS no longer updates with new service actions or security fixes. Examples: AWSCloudTrailFullAccess (deprecated 2021, replaced by CloudTrailFullAccess), AWSLambdaFullAccess (deprecated 2021, overpermissive with no replacement), AnthropicInferenceAccess (deprecated May 2026). The authoritative list is maintained in data/deprecation-calendar.yaml under managed_policies.
+
+**Remediation:** Replace the deprecated managed policy with its documented replacement (see data/deprecation-calendar.yaml). If no replacement exists, create a scoped customer-managed policy granting only the actions the workload requires.
+
+---
+
 ### CTL.IAM.POLICY.DIRECT.001
 
 **No Direct Policy Attachment on IAM Users**

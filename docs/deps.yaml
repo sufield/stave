@@ -64,10 +64,6 @@ dependencies:
         last_audited: ""
     auto_regen: false
 
-  - sources: ["shadow_services.yaml"]
-    docs: ["docs/reference/control-catalog.md"]
-    auto_regen: true
-
   - sources: ["cmd/apply/*.go"]
     docs:
       - path: docs/getting-started/first-evaluation.md
