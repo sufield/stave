@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.SUSPENDED.001
+name: "Suspended OU Has No Restrictive SCP"
+description: >
+  A suspended OU exists but has no SCP that denies all actions
+  except billing visibility. Farris's scream test pattern:
+  accounts being decommissioned move to a suspended OU with a
+  restrictive SCP before closure. If the OU exists without the
+  SCP, accounts in the suspended state can still be used for
+  compute, data access, or lateral movement. The collector
+  identifies OU structures with a suspended/quarantine OU and
+  checks whether a deny-all SCP is attached.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.2"
+  ccm_v4: ["IAM-02"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - compliance-mapping
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - organization.kind
+  - organization.has_suspended_ou
+  - organization.suspended_ou_has_deny_all_scp
+remediation:
+  description: >
+    A suspended OU exists but has no restrictive SCP.
+    Accounts in the suspended OU can still be used.
+  action: >
+    Attach an SCP to the suspended OU that denies all
+    actions ("Effect": "Deny", "Action": "*", "Resource": "*")
+    except billing and support actions needed for account
+    closure visibility.
+  example: |
+    {
+      "organization": {
+        "kind": "org_config",
+        "has_suspended_ou": true,
+        "suspended_ou_has_deny_all_scp": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: org_config
+    - field: properties.organization.has_suspended_ou
+      op: eq
+      value: true
+    - field: properties.organization.suspended_ou_has_deny_all_scp
+      op: ne
+      value: true
+defect: >
+  Suspended OU exists without a deny-all SCP.
+infection: >
+  Accounts moved to the suspended OU for decommissioning retain
+  full permissions. The OU label suggests lockdown but no
+  organizational policy enforces it. Resources in suspended
+  accounts (EC2 instances, Lambda functions, IAM roles) remain
+  operational.
+failure: >
+  Attacker discovers a suspended account with stale credentials
+  or an unlocked root email. The account is unmonitored (assumed
+  decommissioned) but fully functional. Used as a pivot point
+  for lateral movement into active accounts.
+tests:
+  - name: "suspended OU without deny-all fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: org_config
+          has_suspended_ou: true
+          suspended_ou_has_deny_all_scp: false
+  - name: "suspended OU with deny-all passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: org_config
+          has_suspended_ou: true
+          suspended_ou_has_deny_all_scp: true
+  - name: "no suspended OU passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: org_config
+          has_suspended_ou: false
+          suspended_ou_has_deny_all_scp: false

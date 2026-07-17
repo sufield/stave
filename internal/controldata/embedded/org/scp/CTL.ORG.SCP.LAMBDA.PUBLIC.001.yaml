@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.LAMBDA.PUBLIC.001
+name: "SCP Does Not Prevent Public Lambda Invocability"
+description: >
+  No SCP prevents Lambda functions from being made publicly
+  invocable or using unauthenticated Function URLs. Existing
+  controls (CTL.LAMBDA.PUBLIC.001, CTL.LAMBDA.FUNCURL.AUTH.001)
+  detect public Lambda AFTER the fact; this SCP control prevents
+  the configuration from being created. The SCP should deny
+  lambda:AddPermission when lambda:Principal is "*" and deny
+  lambda:CreateFunctionUrlConfig when
+  lambda:FunctionUrlAuthType is not "AWS_IAM". Farris:
+  "prevents a builder from allowing any AWS customer to invoke
+  a function" and "prevents creating a Lambda Function URL with
+  authentication type other than AWS_IAM."
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - iam
+  - organizations
+  - lambda
+taxonomy:
+  - account-governance
+  - data-protection
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_lambda_public
+remediation:
+  description: >
+    Organization SCPs do not prevent Lambda functions from being
+    made publicly accessible.
+  action: >
+    Add an SCP with two deny statements: (1) deny
+    lambda:AddPermission with condition
+    "lambda:Principal": "*" to prevent public resource-based
+    policy grants; (2) deny lambda:CreateFunctionUrlConfig
+    with condition "lambda:FunctionUrlAuthType" != "AWS_IAM"
+    to prevent unauthenticated Function URLs.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_lambda_public": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_lambda_public
+      op: ne
+      value: true
+defect: >
+  No SCP prevents public Lambda function invocability.
+infection: >
+  Any identity can create a publicly invocable Lambda function
+  or unauthenticated Function URL. Resource-based Lambda policies
+  can grant invocation to "*" (any AWS customer). Function URLs
+  with NONE auth type are accessible from the public internet
+  without any authentication.
+failure: >
+  Developer creates a Lambda Function URL with auth type NONE
+  for a demo. The function has access to VPC resources, secrets,
+  or databases. Anyone with the URL can invoke the function.
+  Or a resource-based policy granting Principal "*" makes the
+  function invocable by any AWS account — used as a pivot for
+  data access or code execution.
+tests:
+  - name: "no public Lambda prevention fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_lambda_public: false
+  - name: "public Lambda prevention passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_lambda_public: true

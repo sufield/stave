@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.VPC.MANAGEMENT.001
+name: "SCP Does Not Restrict VPC Network Mutations"
+description: >
+  No SCP restricts VPC networking mutations to the network
+  engineering role. Without this restriction, any developer
+  can create VPCs, attach internet gateways, create transit
+  gateway attachments, modify route tables, and establish VPC
+  peering connections — bypassing network segmentation.
+  CTL.IAM.SCP.IGW.001 covers IGW creation specifically; this
+  control covers the broader VPC management surface including
+  CreateVpc, CreateTransitGateway, CreateVpcPeeringConnection,
+  CreateRoute, and ModifyVpcAttribute. Farris: "In an enterprise
+  setting, you typically want your network team to manage VPCs."
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-09", "IVS-06"]
+scope_tags:
+  - aws
+  - iam
+  - organizations
+  - vpc
+taxonomy:
+  - account-governance
+  - network-isolation
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_vpc_management
+remediation:
+  description: >
+    Organization SCPs do not restrict VPC networking mutations.
+    Any identity can create VPCs, transit gateways, peering
+    connections, and routes.
+  action: >
+    Add an SCP that denies ec2:CreateVpc,
+    ec2:AttachInternetGateway, ec2:CreateTransitGateway,
+    ec2:CreateTransitGatewayVpcAttachment,
+    ec2:CreateVpcPeeringConnection,
+    ec2:AcceptVpcPeeringConnection, ec2:CreateRoute,
+    ec2:ReplaceRoute, ec2:ModifyVpcAttribute,
+    ec2:CreateVpcEndpoint with an exception for the network
+    engineering role via aws:PrincipalArn.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_vpc_management": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_vpc_management
+      op: ne
+      value: true
+defect: >
+  No SCP restricts VPC management actions to the network team.
+infection: >
+  Any identity in any member account can create network
+  infrastructure: VPCs, transit gateways, peering connections,
+  route table entries. Network segmentation is advisory, not
+  enforced.
+failure: >
+  Developer creates a VPC with an internet gateway in a
+  production account, deploys an EC2 instance with a public IP,
+  and exposes an internal service. Or creates a VPC peering
+  connection to an external account, bypassing network perimeter
+  controls. The network team discovers the violation days later
+  in Config, not at creation time.
+tests:
+  - name: "no VPC management restriction fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_vpc_management: false
+  - name: "VPC management restriction passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_vpc_management: true

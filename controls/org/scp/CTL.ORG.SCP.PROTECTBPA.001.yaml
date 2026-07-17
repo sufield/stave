@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.PROTECTBPA.001
+name: "SCP Does Not Prevent Disabling Block Public Access"
+description: >
+  No SCP prevents disabling Block Public Access for S3, AMI
+  sharing, or EBS snapshots. Existing controls check whether
+  BPA is enabled; this control checks whether BPA is PROTECTED
+  from being disabled. The distinction matters: BPA enabled
+  without SCP protection is distance-one from BPA disabled —
+  one API call away. This is a META-INVARIANT. The SCP should
+  deny s3:PutBucketPublicAccessBlock,
+  s3:PutAccountPublicAccessBlock,
+  ec2:DisableImageBlockPublicAccess, and
+  ec2:DisableSnapshotBlockPublicAccess with a role-based
+  exception for cloud engineering.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-09", "DSP-01"]
+scope_tags:
+  - aws
+  - iam
+  - organizations
+taxonomy:
+  - account-governance
+  - data-protection
+  - compliance-mapping
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_bpa_disable
+remediation:
+  description: >
+    Organization SCPs do not prevent disabling Block Public Access.
+    Any admin in a member account can disable BPA for S3, AMIs,
+    or EBS snapshots.
+  action: >
+    Add an SCP that denies s3:PutBucketPublicAccessBlock,
+    s3:PutAccountPublicAccessBlock,
+    ec2:DisableImageBlockPublicAccess, and
+    ec2:DisableSnapshotBlockPublicAccess. Exempt a cloud
+    engineering role via aws:PrincipalArn condition for
+    legitimate BPA changes.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_bpa_disable": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_bpa_disable
+      op: ne
+      value: true
+defect: >
+  No SCP protects Block Public Access settings from being disabled.
+infection: >
+  BPA is enabled but unprotected. Any account admin can disable
+  S3 BPA, AMI sharing restrictions, or snapshot sharing restrictions
+  with a single API call. The organization believes it has public
+  access prevention but the prevention is held in place by convention,
+  not enforcement.
+failure: >
+  Attacker with admin access disables account-level S3 BPA, then
+  sets a bucket policy granting public read. Data exfiltration via
+  public S3 URL. Or disables AMI BPA and shares a backdoored AMI
+  publicly. The BPA controls (CTL.S3.BPA.001, CTL.EC2.BPA.001) fire
+  AFTER the fact — this control prevents the disable action itself.
+tests:
+  - name: "no BPA protection fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_bpa_disable: false
+  - name: "BPA protection passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_bpa_disable: true

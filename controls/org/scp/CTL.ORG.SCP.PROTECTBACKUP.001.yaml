@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.PROTECTBACKUP.001
+name: "SCP Does Not Prevent Backup Vault Deletion"
+description: >
+  No SCP prevents deletion of AWS Backup vaults and recovery
+  points. An attacker with admin access in a member account can
+  delete backup vaults and recovery points, eliminating the
+  recovery path for ransomware or destructive attacks. The SCP
+  should deny backup:DeleteBackupVault,
+  backup:DeleteRecoveryPoint, and backup:UpdateRecoveryPointLifecycle
+  with a role-based or tag-based exception. Farris's
+  implementation uses tag-based conditions
+  (aws:ResourceTag/aws_backup_bcp_tier). This is a
+  META-INVARIANT for the ransomware kill chain.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "CC6.1"
+  ccm_v4: ["BCR-01", "BCR-11"]
+scope_tags:
+  - aws
+  - iam
+  - organizations
+  - backup
+taxonomy:
+  - account-governance
+  - data-protection
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: impact
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_backup_vault_delete
+remediation:
+  description: >
+    Organization SCPs do not prevent backup vault or recovery
+    point deletion.
+  action: >
+    Add an SCP that denies backup:DeleteBackupVault,
+    backup:DeleteRecoveryPoint, and
+    backup:UpdateRecoveryPointLifecycle. Use a tag-based
+    condition (aws:ResourceTag) or role-based exception
+    for authorized backup management.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_backup_vault_delete": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_backup_vault_delete
+      op: ne
+      value: true
+defect: >
+  No SCP protects backup vaults from deletion.
+infection: >
+  AWS Backup recovery points are deletable by any admin in any
+  member account. The recovery path for ransomware or destructive
+  attacks is not organizationally protected — it is held in place
+  by Vault Lock configuration, which can also be modified by an
+  admin.
+failure: >
+  Attacker with admin access deletes recovery points across
+  backup vaults, then encrypts or deletes primary data. Without
+  recovery points, the organization cannot restore from backup.
+  Combined with KMS key deletion (CTL.IAM.SCP.KMS.KEYDELETION.001),
+  this eliminates both the encryption key and the backup copy.
+tests:
+  - name: "no backup vault protection fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_backup_vault_delete: false
+  - name: "backup vault protection passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_backup_vault_delete: true

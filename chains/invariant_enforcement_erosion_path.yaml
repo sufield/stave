@@ -1,0 +1,31 @@
+id: invariant_enforcement_erosion_path
+description: >
+  Meta-invariant failure: the protection that prevents
+  disabling of security controls is itself missing. BPA is
+  enabled but no SCP prevents disabling it. Critical IAM roles
+  exist but no SCP prevents modifying them. CloudTrail is
+  running but no SCP prevents stopping it. Backup vaults exist
+  but no SCP prevents deleting them. This compound detects the
+  state where an attacker with admin permissions in a member
+  account can dismantle the entire security posture in a
+  sequence of API calls, none of which are prevented. The
+  invariants are enforced by convention, not by organizational
+  policy — and convention does not survive an attacker with
+  admin access.
+controls:
+  - CTL.ORG.SCP.PROTECTROLES.001
+  - CTL.ORG.SCP.PROTECTBPA.001
+  - CTL.IAM.SCP.CLOUDTRAIL.001
+  - CTL.ORG.SCP.PROTECTBACKUP.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.scp_policy_parser
+    fallback: fail_closed
+    diagnostic: >
+      SCP policy documents not parsed. Cannot verify whether
+      meta-invariants (protection of protection) are enforced.

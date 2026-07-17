@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.DP.AMI.BLOCKPUBLIC.001
+name: "Declarative Policy Does Not Block Public AMI Sharing"
+description: >
+  No declarative policy blocks public AMI sharing at the
+  organizational level. The policy type is
+  ec2_attributes.image_block_public_access with state =
+  "block_new_sharing". Without this, any account admin can
+  share AMIs publicly, potentially exposing proprietary
+  software, credentials baked into images, or internal
+  architecture details.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-01"]
+scope_tags:
+  - aws
+  - organizations
+  - ec2
+taxonomy:
+  - account-governance
+  - data-protection
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - organization.kind
+  - organization.dp.blocks_public_ami_sharing
+remediation:
+  description: >
+    No declarative policy blocks public AMI sharing.
+  action: >
+    Create a declarative policy of type
+    ec2_attributes.image_block_public_access with state =
+    "block_new_sharing" at the organization root.
+  example: |
+    {
+      "organization": {
+        "kind": "declarative_policy_set",
+        "dp": {
+          "blocks_public_ami_sharing": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: declarative_policy_set
+    - field: properties.organization.dp.blocks_public_ami_sharing
+      op: ne
+      value: true
+defect: >
+  No declarative policy blocks public AMI sharing.
+infection: >
+  AMIs can be shared publicly by any account admin. Publicly
+  shared AMIs expose the instance filesystem, installed software,
+  and any credentials or keys embedded in the image.
+failure: >
+  Developer shares a staging AMI publicly for cross-account
+  testing. The AMI contains database connection strings, API
+  keys, or SSH private keys in /home/.ssh/. An external actor
+  discovers the public AMI, launches it, and extracts credentials.
+tests:
+  - name: "no public AMI block fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: declarative_policy_set
+          dp:
+            blocks_public_ami_sharing: false
+  - name: "public AMI block passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: declarative_policy_set
+          dp:
+            blocks_public_ami_sharing: true

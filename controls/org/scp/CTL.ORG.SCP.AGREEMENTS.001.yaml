@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.AGREEMENTS.001
+name: "SCP Does Not Restrict Marketplace and Service Agreements"
+description: >
+  No SCP restricts marketplace subscriptions, domain
+  registrations, or AI model agreements. Existing controls
+  cover reserved instances (CTL.IAM.SCP.RESERVEDINSTANCE.001)
+  and savings plans (CTL.IAM.SCP.SAVINGSPLAN.001); this control
+  covers the remaining agreement surface: aws-marketplace:Subscribe,
+  route53domains:RegisterDomain, route53domains:TransferDomain,
+  and bedrock:CreateFoundationModelAgreement. Unauthorized
+  subscriptions create recurring charges; domain registrations
+  create assets that can be used for phishing; AI model
+  agreements expose the organization to model-specific terms
+  and data processing risks.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SA-4"
+  soc2: "CC6.7"
+  ccm_v4: ["STA-01"]
+scope_tags:
+  - aws
+  - iam
+  - organizations
+taxonomy:
+  - account-governance
+  - compliance-mapping
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: impact
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_service_agreements
+remediation:
+  description: >
+    Organization SCPs do not restrict marketplace and service
+    agreements. Any identity can subscribe to marketplace
+    products, register domains, or accept AI model agreements.
+  action: >
+    Add an SCP that denies aws-marketplace:Subscribe,
+    aws-marketplace:CreateAgreement,
+    route53domains:RegisterDomain,
+    route53domains:TransferDomain, and
+    bedrock:CreateFoundationModelAgreement. Exempt a
+    procurement or cloud engineering role.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_service_agreements": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_service_agreements
+      op: ne
+      value: true
+defect: >
+  No SCP restricts marketplace subscriptions and service agreements.
+infection: >
+  Any identity can accept service agreements with financial and
+  contractual obligations. Marketplace subscriptions create
+  recurring charges. Domain registrations create phishing-capable
+  assets. AI model agreements accept data processing terms without
+  review.
+failure: >
+  Developer subscribes to a marketplace AMI with known
+  vulnerabilities. Or registers a domain similar to a competitor
+  for testing that becomes a brand liability. Or accepts a
+  Bedrock model agreement that permits model provider access to
+  prompts containing customer data.
+tests:
+  - name: "no agreement restriction fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_service_agreements: false
+  - name: "agreement restriction passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_service_agreements: true

@@ -50,6 +50,51 @@ AWS Control Tower is not enabled. Control Tower provides a governed landing zone
 
 ---
 
+### CTL.ORG.DP.AMI.BLOCKPUBLIC.001
+
+**Declarative Policy Does Not Block Public AMI Sharing**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+No declarative policy blocks public AMI sharing at the organizational level. The policy type is ec2_attributes.image_block_public_access with state = "block_new_sharing". Without this, any account admin can share AMIs publicly, potentially exposing proprietary software, credentials baked into images, or internal architecture details.
+
+**Remediation:** Create a declarative policy of type ec2_attributes.image_block_public_access with state = "block_new_sharing" at the organization root.
+
+---
+
+### CTL.ORG.DP.IMDSV2.001
+
+**Declarative Policy Does Not Enforce IMDSv2**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-6; soc2: CC6.1;
+
+No declarative policy enforces IMDSv2 at the organizational level. Existing controls check individual instances for IMDSv1 (CTL.EC2.IMDS.001); this control checks whether the organizational enforcement prevents IMDSv1 instances from being launched at all. Declarative policy enforcement is stronger than per-instance checks because it is preventive, not detective. The policy type is ec2_attributes.instance_metadata_defaults with http_tokens = "required". IMDSv2 is the Capital One chain's first member control — organizational enforcement closes the gap where a single instance launched without the flag reintroduces the SSRF-to-credential path.
+
+**Remediation:** Create a declarative policy of type ec2_attributes.instance_metadata_defaults with http_tokens = "required" at the organization root. This makes IMDSv2 the default for all new instances across all accounts and prevents overriding to IMDSv1.
+
+---
+
+### CTL.ORG.DP.SNAPSHOT.BLOCKPUBLIC.001
+
+**Declarative Policy Does Not Block Public EBS Snapshot Sharing**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+No declarative policy blocks public EBS snapshot sharing at the organizational level. The policy type is ec2_attributes.snapshot_block_public_access with state = "block_all_sharing". Without this, any account admin can share EBS snapshots publicly, exposing disk contents including databases, log files, and credentials.
+
+**Remediation:** Create a declarative policy of type ec2_attributes.snapshot_block_public_access with state = "block_all_sharing" at the organization root.
+
+---
+
 ### CTL.ORG.EXISTS.001
 
 **Account Must Be Member of an AWS Organization**
@@ -95,6 +140,36 @@ All organization member accounts are directly under the root — no Organization
 
 ---
 
+### CTL.ORG.RCP.KMSSECRETSPERIMETER.001
+
+**RCP Does Not Restrict KMS and Secrets Manager External Access**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+No RCP restricts KMS key usage and Secrets Manager access from principals outside the organization. Without this RCP, a KMS key policy or Secrets Manager resource policy that grants access to an external account is effective — the external principal can decrypt data or read secrets even if no identity policy in the org grants them access. RCPs are the only mechanism that overrides resource-based policies at the organizational level. The RCP should deny kms:* and secretsmanager:* when aws:PrincipalOrgID is not the organization's ID.
+
+**Remediation:** Create an RCP that denies kms:Decrypt, kms:Encrypt, kms:GenerateDataKey, kms:ReEncryptFrom, kms:ReEncryptTo, kms:CreateGrant, secretsmanager:GetSecretValue, secretsmanager:DescribeSecret when aws:PrincipalOrgID is not the organization's ID. Exempt AWS service principals that need cross-account key usage (e.g., for cross-account S3 replication with KMS).
+
+---
+
+### CTL.ORG.RCP.S3.ACLDISABLED.001
+
+**RCP Does Not Enforce S3 ACL Disabled on Bucket Creation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+No RCP enforces BucketOwnerEnforced object ownership on new S3 buckets. S3 ACLs are a legacy access control mechanism and a persistent source of public exposure. BucketOwnerEnforced disables ACLs entirely. Without this RCP, developers can create buckets with ACLs enabled and grant public access via ACL — bypassing bucket policies and BPA. The RCP should deny s3:CreateBucket when s3:x-amz-object-ownership is not BucketOwnerEnforced.
+
+**Remediation:** Create an RCP that denies s3:CreateBucket with condition "s3:x-amz-object-ownership" != "BucketOwnerEnforced". Attach to the organization root.
+
+---
+
 ### CTL.ORG.REGION.SCP.001
 
 **AWS Organizations Must Have an SCP Restricting Resource Creation to Approved Regions**
@@ -107,6 +182,21 @@ All organization member accounts are directly under the root — no Organization
 AWS Organizations must have a Service Control Policy that restricts resource creation to an approved set of AWS regions. Without a region restriction SCP, any IAM principal can create resources in any of 30+ regions — including regions where the organization has no CloudTrail, no GuardDuty, no Config recording, and no monitoring infrastructure. MITRE ATT&CK T1535 documents this as a defense evasion technique: attackers deliberately operate in unused regions to bypass cloud monitoring. A region restriction SCP closes all unmonitored regions simultaneously with a single organizational policy rather than requiring monitoring deployment to every region. This is the architectural complement to per-region monitoring controls — it eliminates the regions where monitoring is not deployed.
 
 **Remediation:** Attach an SCP to the organization root with a Deny statement conditioned on aws:RequestedRegion that restricts resource creation to the organization's approved operating regions. Example condition: StringNotEquals aws:RequestedRegion [us-east-1, us-west-2, eu-west-1]. Exclude global services (IAM, CloudFront, Route 53) from the restriction using a NotAction list.
+
+---
+
+### CTL.ORG.SCP.AGREEMENTS.001
+
+**SCP Does Not Restrict Marketplace and Service Agreements**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SA-4; soc2: CC6.7;
+
+No SCP restricts marketplace subscriptions, domain registrations, or AI model agreements. Existing controls cover reserved instances (CTL.IAM.SCP.RESERVEDINSTANCE.001) and savings plans (CTL.IAM.SCP.SAVINGSPLAN.001); this control covers the remaining agreement surface: aws-marketplace:Subscribe, route53domains:RegisterDomain, route53domains:TransferDomain, and bedrock:CreateFoundationModelAgreement. Unauthorized subscriptions create recurring charges; domain registrations create assets that can be used for phishing; AI model agreements expose the organization to model-specific terms and data processing risks.
+
+**Remediation:** Add an SCP that denies aws-marketplace:Subscribe, aws-marketplace:CreateAgreement, route53domains:RegisterDomain, route53domains:TransferDomain, and bedrock:CreateFoundationModelAgreement. Exempt a procurement or cloud engineering role.
 
 ---
 
@@ -230,6 +320,21 @@ Organization SCPs do not deny Elastic VMware Service (EVS) usage in member accou
 
 ---
 
+### CTL.ORG.SCP.LAMBDA.PUBLIC.001
+
+**SCP Does Not Prevent Public Lambda Invocability**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+No SCP prevents Lambda functions from being made publicly invocable or using unauthenticated Function URLs. Existing controls (CTL.LAMBDA.PUBLIC.001, CTL.LAMBDA.FUNCURL.AUTH.001) detect public Lambda AFTER the fact; this SCP control prevents the configuration from being created. The SCP should deny lambda:AddPermission when lambda:Principal is "*" and deny lambda:CreateFunctionUrlConfig when lambda:FunctionUrlAuthType is not "AWS_IAM". Farris: "prevents a builder from allowing any AWS customer to invoke a function" and "prevents creating a Lambda Function URL with authentication type other than AWS_IAM."
+
+**Remediation:** Add an SCP with two deny statements: (1) deny lambda:AddPermission with condition "lambda:Principal": "*" to prevent public resource-based policy grants; (2) deny lambda:CreateFunctionUrlConfig with condition "lambda:FunctionUrlAuthType" != "AWS_IAM" to prevent unauthenticated Function URLs.
+
+---
+
 ### CTL.ORG.SCP.LIGHTSAIL.DENY.001
 
 **SCP Does Not Deny Lightsail Usage**
@@ -275,6 +380,51 @@ AWS Organizations must have a Service Control Policy that restricts S3 Object Lo
 
 ---
 
+### CTL.ORG.SCP.PROTECTBACKUP.001
+
+**SCP Does Not Prevent Backup Vault Deletion**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: CP-9; soc2: CC6.1;
+
+No SCP prevents deletion of AWS Backup vaults and recovery points. An attacker with admin access in a member account can delete backup vaults and recovery points, eliminating the recovery path for ransomware or destructive attacks. The SCP should deny backup:DeleteBackupVault, backup:DeleteRecoveryPoint, and backup:UpdateRecoveryPointLifecycle with a role-based or tag-based exception. Farris's implementation uses tag-based conditions (aws:ResourceTag/aws_backup_bcp_tier). This is a META-INVARIANT for the ransomware kill chain.
+
+**Remediation:** Add an SCP that denies backup:DeleteBackupVault, backup:DeleteRecoveryPoint, and backup:UpdateRecoveryPointLifecycle. Use a tag-based condition (aws:ResourceTag) or role-based exception for authorized backup management.
+
+---
+
+### CTL.ORG.SCP.PROTECTBPA.001
+
+**SCP Does Not Prevent Disabling Block Public Access**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+No SCP prevents disabling Block Public Access for S3, AMI sharing, or EBS snapshots. Existing controls check whether BPA is enabled; this control checks whether BPA is PROTECTED from being disabled. The distinction matters: BPA enabled without SCP protection is distance-one from BPA disabled — one API call away. This is a META-INVARIANT. The SCP should deny s3:PutBucketPublicAccessBlock, s3:PutAccountPublicAccessBlock, ec2:DisableImageBlockPublicAccess, and ec2:DisableSnapshotBlockPublicAccess with a role-based exception for cloud engineering.
+
+**Remediation:** Add an SCP that denies s3:PutBucketPublicAccessBlock, s3:PutAccountPublicAccessBlock, ec2:DisableImageBlockPublicAccess, and ec2:DisableSnapshotBlockPublicAccess. Exempt a cloud engineering role via aws:PrincipalArn condition for legitimate BPA changes.
+
+---
+
+### CTL.ORG.SCP.PROTECTROLES.001
+
+**SCP Does Not Protect Critical Security Roles from Modification**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+No SCP prevents modification of critical security and governance IAM roles in member accounts. Without this protection, an attacker with admin access in a member account can modify CloudTrail roles, Config roles, SecurityHub roles, or GuardDuty service-linked roles — dismantling the enforcement infrastructure from within. This is a META-INVARIANT: it protects the roles that enforce all other invariants. Farris: "No one may alter the core security & governance IAM Roles." The SCP should deny iam:AttachRolePolicy, iam:DeleteRole, iam:DeleteRolePolicy, iam:DetachRolePolicy, iam:PutRolePolicy, iam:UpdateAssumeRolePolicy, and iam:UpdateRole with Resource matching critical role ARN patterns, with an exception for the governance automation role.
+
+**Remediation:** Add an SCP that denies iam:AttachRolePolicy, iam:DeleteRole, iam:DeleteRolePolicy, iam:DetachRolePolicy, iam:PutRolePolicy, iam:UpdateAssumeRolePolicy, and iam:UpdateRole when the resource ARN matches the critical role naming pattern (e.g., *SecurityAudit*, *CloudTrail*, *ConfigRole*, *GuardDutyRole*). Exempt the governance automation role via aws:PrincipalArn condition.
+
+---
+
 ### CTL.ORG.SCP.S3NAMESPACE.001
 
 **SCP Does Not Enforce S3 Account-Regional Namespace**
@@ -302,6 +452,36 @@ Organization SCPs do not enforce the S3 account-regional namespace for new bucke
 Organization SCPs do not deny SageMaker service usage in member accounts. SageMaker provisions EC2 instances, EBS volumes, EFS file systems, and IAM execution roles behind the SageMaker API surface. Notebook instances can have direct internet access, and execution roles may have broad S3 and KMS permissions for training data access. Without an SCP denying sagemaker:*, any IAM principal can provision compute with data access and potential internet exposure outside the standard EC2 governance pipeline.
 
 **Remediation:** Add an SCP denying sagemaker:* for all principals. Exclude specific accounts if SageMaker is intentionally used.
+
+---
+
+### CTL.ORG.SCP.SUSPENDED.001
+
+**Suspended OU Has No Restrictive SCP**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.2;
+
+A suspended OU exists but has no SCP that denies all actions except billing visibility. Farris's scream test pattern: accounts being decommissioned move to a suspended OU with a restrictive SCP before closure. If the OU exists without the SCP, accounts in the suspended state can still be used for compute, data access, or lateral movement. The collector identifies OU structures with a suspended/quarantine OU and checks whether a deny-all SCP is attached.
+
+**Remediation:** Attach an SCP to the suspended OU that denies all actions ("Effect": "Deny", "Action": "*", "Resource": "*") except billing and support actions needed for account closure visibility.
+
+---
+
+### CTL.ORG.SCP.VPC.MANAGEMENT.001
+
+**SCP Does Not Restrict VPC Network Mutations**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+No SCP restricts VPC networking mutations to the network engineering role. Without this restriction, any developer can create VPCs, attach internet gateways, create transit gateway attachments, modify route tables, and establish VPC peering connections — bypassing network segmentation. CTL.IAM.SCP.IGW.001 covers IGW creation specifically; this control covers the broader VPC management surface including CreateVpc, CreateTransitGateway, CreateVpcPeeringConnection, CreateRoute, and ModifyVpcAttribute. Farris: "In an enterprise setting, you typically want your network team to manage VPCs."
+
+**Remediation:** Add an SCP that denies ec2:CreateVpc, ec2:AttachInternetGateway, ec2:CreateTransitGateway, ec2:CreateTransitGatewayVpcAttachment, ec2:CreateVpcPeeringConnection, ec2:AcceptVpcPeeringConnection, ec2:CreateRoute, ec2:ReplaceRoute, ec2:ModifyVpcAttribute, ec2:CreateVpcEndpoint with an exception for the network engineering role via aws:PrincipalArn.
 
 ---
 

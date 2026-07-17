@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.PROTECTROLES.001
+name: "SCP Does Not Protect Critical Security Roles from Modification"
+description: >
+  No SCP prevents modification of critical security and governance
+  IAM roles in member accounts. Without this protection, an attacker
+  with admin access in a member account can modify CloudTrail roles,
+  Config roles, SecurityHub roles, or GuardDuty service-linked roles
+  — dismantling the enforcement infrastructure from within. This is
+  a META-INVARIANT: it protects the roles that enforce all other
+  invariants. Farris: "No one may alter the core security &
+  governance IAM Roles." The SCP should deny iam:AttachRolePolicy,
+  iam:DeleteRole, iam:DeleteRolePolicy, iam:DetachRolePolicy,
+  iam:PutRolePolicy, iam:UpdateAssumeRolePolicy, and
+  iam:UpdateRole with Resource matching critical role ARN patterns,
+  with an exception for the governance automation role.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05", "IAM-02"]
+scope_tags:
+  - aws
+  - iam
+  - organizations
+taxonomy:
+  - account-governance
+  - compliance-mapping
+  - detection-evasion
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_critical_role_modify
+remediation:
+  description: >
+    Organization SCPs do not prevent modification of critical
+    security roles. An admin in any member account can alter or
+    delete CloudTrail, Config, GuardDuty, or SecurityHub roles.
+  action: >
+    Add an SCP that denies iam:AttachRolePolicy,
+    iam:DeleteRole, iam:DeleteRolePolicy, iam:DetachRolePolicy,
+    iam:PutRolePolicy, iam:UpdateAssumeRolePolicy, and
+    iam:UpdateRole when the resource ARN matches the critical
+    role naming pattern (e.g., *SecurityAudit*, *CloudTrail*,
+    *ConfigRole*, *GuardDutyRole*). Exempt the governance
+    automation role via aws:PrincipalArn condition.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_critical_role_modify": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_critical_role_modify
+      op: ne
+      value: true
+defect: >
+  No SCP protects critical security roles from modification.
+infection: >
+  Security and governance roles are modifiable by any admin in any
+  member account. The roles that operate CloudTrail, Config,
+  GuardDuty, and SecurityHub are not immutable — they are protected
+  only by convention and IAM policy, not by organizational policy.
+failure: >
+  Attacker gains admin access in a member account and modifies the
+  CloudTrail role's trust policy to assume it, then stops logging.
+  Or deletes the Config role, disabling configuration recording.
+  All subsequent actions are invisible. The security infrastructure
+  that other invariants depend on is dismantled from within.
+tests:
+  - name: "no critical role protection fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_critical_role_modify: false
+  - name: "critical role protection passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_critical_role_modify: true

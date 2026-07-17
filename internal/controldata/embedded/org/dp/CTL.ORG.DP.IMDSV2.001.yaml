@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.DP.IMDSV2.001
+name: "Declarative Policy Does Not Enforce IMDSv2"
+description: >
+  No declarative policy enforces IMDSv2 at the organizational
+  level. Existing controls check individual instances for IMDSv1
+  (CTL.EC2.IMDS.001); this control checks whether the
+  organizational enforcement prevents IMDSv1 instances from
+  being launched at all. Declarative policy enforcement is
+  stronger than per-instance checks because it is preventive,
+  not detective. The policy type is
+  ec2_attributes.instance_metadata_defaults with
+  http_tokens = "required". IMDSv2 is the Capital One chain's
+  first member control — organizational enforcement closes the
+  gap where a single instance launched without the flag
+  reintroduces the SSRF-to-credential path.
+domain: governance
+severity: critical
+compliance:
+  nist_800_53_r5: "CM-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-04"]
+scope_tags:
+  - aws
+  - organizations
+  - ec2
+taxonomy:
+  - account-governance
+  - credential-lifecycle
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: credential_access
+observation_fields:
+  - organization.kind
+  - organization.dp.enforces_imdsv2
+remediation:
+  description: >
+    No declarative policy enforces IMDSv2 at the organizational
+    level. Individual instances can still be launched with IMDSv1.
+  action: >
+    Create a declarative policy of type
+    ec2_attributes.instance_metadata_defaults with
+    http_tokens = "required" at the organization root. This
+    makes IMDSv2 the default for all new instances across all
+    accounts and prevents overriding to IMDSv1.
+  example: |
+    {
+      "organization": {
+        "kind": "declarative_policy_set",
+        "dp": {
+          "enforces_imdsv2": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: declarative_policy_set
+    - field: properties.organization.dp.enforces_imdsv2
+      op: ne
+      value: true
+defect: >
+  No declarative policy enforces IMDSv2 org-wide.
+infection: >
+  EC2 instances can be launched with IMDSv1 enabled. IMDSv1
+  returns credentials via a simple HTTP GET without session
+  tokens — any SSRF vulnerability in an application on that
+  instance can retrieve IAM role credentials.
+failure: >
+  Developer launches an instance without the --metadata-options
+  HttpTokens=required flag. Application has an SSRF vulnerability.
+  Attacker crafts a request to http://169.254.169.254/latest/meta-data/iam/security-credentials/
+  and retrieves IAM credentials. This is the Capital One attack
+  vector. Declarative policy enforcement makes it impossible to
+  launch the vulnerable configuration.
+tests:
+  - name: "no IMDSv2 enforcement fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: declarative_policy_set
+          dp:
+            enforces_imdsv2: false
+  - name: "IMDSv2 enforcement passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: declarative_policy_set
+          dp:
+            enforces_imdsv2: true
