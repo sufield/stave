@@ -677,15 +677,6 @@ type RiskProfile struct {
 	ResourceExposure   int `json:"resource_exposure"`
 }
 
-// DataAccessScore returns a 0–1 ratio of data-access actions to
-// total effective actions. Used by blast radius controls.
-func (p RiskProfile) DataAccessScore(totalEffective int) float64 {
-	if totalEffective == 0 {
-		return 0
-	}
-	return float64(p.DataAccess) / float64(totalEffective)
-}
-
 var sensitiveActions = coreiam.DefaultRegistry()
 
 // classifyPrivilege determines the privilege level from the effective

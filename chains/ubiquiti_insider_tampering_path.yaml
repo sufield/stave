@@ -1,0 +1,20 @@
+id: ubiquiti_insider_tampering_path
+description: >
+  Ubiquiti incident shape (2020): employee cloned GitHub
+  via VPN, then altered AWS logs to hide presence and
+  evidence. After leaking false details to a security
+  blogger, Ubiquiti's stock lost $4B. Invariants:
+  CloudTrail must be protected from modification by SCP,
+  and log integrity must be verifiable. This chain fires
+  when CloudTrail protection SCPs are absent AND
+  critical role protection is missing.
+controls:
+  - CTL.IAM.SCP.CLOUDTRAIL.001
+  - CTL.ORG.SCP.PROTECTROLES.001
+  - CTL.CLOUDTRAIL.LOG.VALIDATION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - audit_trail_destroyed

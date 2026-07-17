@@ -264,6 +264,21 @@ A principal has a transitive role-assumption chain whose target is scheduled for
 
 ---
 
+### CTL.IAM.CICD.SCOPE.001
+
+**CI/CD IAM Role Has Overly Broad Permissions**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(1); soc2: CC6.1;
+
+IAM role assumed by a CI/CD system via OIDC federation has AdministratorAccess or permissions spanning more than five service namespaces. Even with OIDC federation eliminating long-lived credentials, an overpermissioned CI/CD role gives an attacker who compromises the pipeline everything they need. Drizly's attacker reconfigured AWS security settings — implying admin-level access from the CI/CD credential. CI/CD roles should have the minimum permissions needed for deployment.
+
+**Remediation:** Replace AdministratorAccess with a scoped policy that grants only the permissions the CI/CD pipeline needs. Typical CI/CD roles need: S3 for artifacts, ECR for container images, CloudFormation or CDK for deployments, and the specific services being deployed. Use separate roles for separate pipeline stages (build vs deploy).
+
+---
+
 ### CTL.IAM.CLOUD9.ADMIN.001
 
 **IAM Policy Grants Cloud9 Environment Creation**
@@ -1964,6 +1979,21 @@ An IAM identity has OAuth MCP Server permissions via a wildcard action (signin:*
 The wildcard grant is dangerous because the identity owner may not know they have OAuth permissions. Unlike explicit grants, wildcards are not reviewed when new actions are added to a namespace.
 
 **Remediation:** Replace the wildcard action with explicit action grants. If OAuth access is intended, grant signin:AuthorizeOAuth2Access and signin:CreateOAuth2Token explicitly with appropriate condition keys. If not intended, narrow the Action field to exclude the signin: namespace.
+
+---
+
+### CTL.IAM.OIDC.GITHUB.SUBJECT.001
+
+**GitHub Actions OIDC Trust Does Not Restrict Subject Claim**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+IAM role trusts the GitHub Actions OIDC provider (token.actions.githubusercontent.com) but does not restrict the subject claim to specific repositories and branches. Without a subject restriction, ANY GitHub repository — including attacker-controlled repos — can assume the role. The trust policy should restrict the sub claim to specific org/repo:ref patterns like "repo:myorg/myrepo:ref:refs/heads/main".
+
+**Remediation:** Add a StringLike condition on token.actions.githubusercontent.com:sub in the trust policy to restrict which repositories and branches can assume the role. Example condition value: "repo:myorg/myrepo:ref:refs/heads/main".
 
 ---
 

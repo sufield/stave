@@ -1,0 +1,25 @@
+id: ftx_governance_failure_path
+description: >
+  FTX incident shape (2022): total cloud governance
+  failure. No AWS Organizations, no MFA enforcement, no
+  credential rotation, no separation of environments,
+  shared secrets. During the bankruptcy transition,
+  $400M+ in assets were transferred from wallets. The
+  FTX trustee discovered many poor cloud practices.
+  This chain detects the absence of basic governance
+  infrastructure.
+controls:
+  - CTL.ORG.EXISTS.001
+  - CTL.ORG.IDENTITYCENTER.ENABLED.001
+  - CTL.IAM.CONSOLE.MFA.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - org_admin_access
+implicit_dependencies:
+  - source: observation.org_membership
+    fallback: fail_closed
+    diagnostic: >
+      Organization membership not determinable.

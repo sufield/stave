@@ -1,0 +1,16 @@
+id: vitagene_public_data_path
+description: >
+  Vitagene incident shape: public S3 buckets containing
+  sensitive customer data (DNA information) with no
+  CloudTrail logging to detect access. The FTC fined
+  the company. The compound: public S3 plus no logging
+  equals data exposure with no forensic trail.
+controls:
+  - CTL.S3.POLLUTION.PUBLIC.001
+  - CTL.CLOUDTRAIL.DATAEVENTS.S3.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_access
