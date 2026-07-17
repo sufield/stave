@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.KMS.DELETEKEYMATERIAL.001
+name: "SCP Does Not Deny kms:DeleteImportedKeyMaterial"
+description: >
+  No SCP in the hierarchy denies kms:DeleteImportedKeyMaterial.
+  This is the "rug pull" action in the BYOKM ransomware kill
+  chain — the attacker deletes the imported key material,
+  rendering all data encrypted under the key permanently
+  irrecoverable. Unlike ScheduleKeyDeletion (which has a 7-30
+  day waiting period), DeleteImportedKeyMaterial takes effect
+  immediately: the key transitions to PendingImport state and
+  all cryptographic operations fail instantly. Every EBS volume,
+  RDS database, S3 object, and Secrets Manager value encrypted
+  under that key becomes unreadable. There is no undo — the key
+  material was externally generated and never held by AWS.
+  Farris identifies this as the single most important action to
+  block: "kms:DeleteImportedKeyMaterial is what you need to look
+  for and block."
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-03", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - kms
+taxonomy:
+  - account-governance
+  - compliance-mapping
+  - key-management
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: impact
+  base_impact: 10
+  blast_radius:
+    type: destruction
+    scope: organization
+    multiplier: 3.0
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_kms_delete_key_material
+remediation:
+  description: >
+    Organization SCPs do not deny kms:DeleteImportedKeyMaterial.
+    Any principal can delete imported key material, permanently
+    destroying access to all data encrypted under that key.
+  action: >
+    Add an SCP that denies kms:DeleteImportedKeyMaterial for all
+    principals. This is the single highest-impact ransomware
+    prevention SCP. If the organization uses BYOKM keys
+    legitimately, restrict deletion to a specific approved role
+    via SCP condition.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_kms_delete_key_material": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_kms_delete_key_material
+      op: ne
+      value: true
+defect: >
+  Organization SCPs do not deny kms:DeleteImportedKeyMaterial.
+  The BYOKM ransomware rug-pull action is unrestricted.
+infection: >
+  An attacker who has imported key material into a BYOKM key and
+  re-encrypted data under it can delete the key material at any
+  time. The organization believes KMS encryption protects data,
+  but the key material is externally controlled and deletable.
+failure: >
+  Attacker deletes imported key material. Key transitions to
+  PendingImport immediately. All encrypted data — EBS volumes,
+  RDS databases, S3 objects — is permanently irrecoverable. AWS
+  cannot help because the key material was never AWS-managed.
+  The only recovery path is the attacker's 256-bit secret.
+tests:
+  - name: "organization without DeleteImportedKeyMaterial denial fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_kms_delete_key_material: false
+  - name: "organization with DeleteImportedKeyMaterial denial passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_kms_delete_key_material: true

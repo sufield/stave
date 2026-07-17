@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.KMS.REPLICATEKEY.001
+name: "SCP Does Not Deny kms:ReplicateKey"
+description: >
+  No SCP in the hierarchy denies kms:ReplicateKey. Key
+  replication copies a multi-region primary key to additional
+  regions. In the BYOKM ransomware kill chain, the attacker
+  replicates the externally-keyed KMS key to every region,
+  expanding the blast radius from one region to the entire
+  account. Once replicated, the attacker can set EBS default
+  encryption in every region to the BYOKM key replica. Denying
+  ReplicateKey by SCP limits the attack to the single region
+  where the key was created. Some organizations legitimately
+  replicate KMS keys for multi-region encryption — this control
+  is a blast-radius limiter, not a primary prevention.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.6"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - iam
+  - kms
+taxonomy:
+  - account-governance
+  - compliance-mapping
+  - key-management
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_kms_replicate_key
+remediation:
+  description: >
+    Organization SCPs do not deny kms:ReplicateKey. Any principal
+    can replicate KMS keys to additional regions.
+  action: >
+    Add an SCP that denies kms:ReplicateKey for all principals.
+    Exempt specific roles if multi-region key replication is a
+    documented requirement.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_kms_replicate_key": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_kms_replicate_key
+      op: ne
+      value: true
+tests:
+  - name: "organization without ReplicateKey denial fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_kms_replicate_key: false
+  - name: "organization with ReplicateKey denial passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_kms_replicate_key: true
