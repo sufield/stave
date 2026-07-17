@@ -1,0 +1,29 @@
+id: codespaces_destruction_path
+description: >
+  The Code Spaces incident shape (2014): console access without MFA
+  AND administrative permissions AND backup vaults accessible
+  cross-account without organizational boundary. The attacker gained
+  AWS console access via compromised credentials, then systematically
+  deleted EC2 instances, EBS snapshots, S3 buckets, and all backups.
+  Code Spaces ceased operations within 12 hours. The chain fires when
+  the three enabling conditions co-exist — MFA-less console is the
+  entry point, admin permissions are the capability, and unprotected
+  backup vaults mean there is no recovery path. Any two of three is a
+  posture concern; all three together are the exact pattern that
+  destroyed a company.
+controls:
+  - CTL.IAM.CONSOLE.MFA.001
+  - CTL.IAM.POLICY.ADMIN.001
+  - CTL.BACKUP.VAULT.POLICY.CROSSACCOUNT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - initial_access
+postconditions:
+  - data_destruction
+implicit_dependencies:
+  - source: observation.iam_console_access
+    fallback: fail_closed
+    diagnostic: >
+      Console access configuration not captured. Cannot determine
+      whether MFA is enforced for console login.

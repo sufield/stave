@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.CROSSENV.ELEVATION.001
+name: Cross-Environment Role Has Administrative Permissions
+description: >
+  IAM role has cross-environment production access AND administrative
+  permissions. This is the Midnight Blizzard compound: a role that
+  bridges environments is dangerous; a role that bridges environments
+  with admin permissions is catastrophic. The Microsoft breach (2024)
+  demonstrated this exact shape — a test OAuth application with
+  production-scope grants and elevated permissions enabled a
+  nation-state actor to read executive email across the organization.
+  Neither cross-env access alone (CTL.IAM.CROSS.ENV.001) nor admin
+  access alone (CTL.IAM.POLICY.ADMIN.001) captures the distinct risk
+  of an environment-crossing principal with unrestricted permissions.
+  The compound fires only when both conditions hold on the same role.
+domain: identity
+severity: critical
+scope: compound
+corpus_reference: MITRE:T1199
+compliance:
+  owasp_nhi: "NHI6"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-4"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - compliance-mapping
+  - trust-boundary
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: lateral_movement
+  base_impact: 10
+  blast_radius:
+    type: compromise
+    scope: organization
+    multiplier: 3.0
+observation_fields:
+  - identity.role.cross_env_prod_access
+  - identity.policies.has_admin_access
+remediation:
+  description: >
+    IAM role bridges non-production to production AND has
+    administrative permissions. A single compromise of the lower
+    environment yields unrestricted production access.
+  action: >
+    Remove administrative permissions from the cross-environment
+    role. If cross-environment access is required, scope permissions
+    to the minimum set needed. Prefer separate roles per environment
+    with no cross-account trust. Enforce least privilege via
+    permission boundaries.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "role": {
+          "cross_env_prod_access": false
+        },
+        "policies": {
+          "has_admin_access": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.role.cross_env_prod_access
+      op: eq
+      value: true
+    - field: properties.identity.policies.has_admin_access
+      op: eq
+      value: true
+defect: >
+  IAM role has cross-environment production access with
+  administrative permissions. Environment isolation is collapsed
+  and the role has unrestricted scope.
+infection: >
+  The cross-environment admin role exists as a standing bridge.
+  Any compromise of the lower environment immediately yields
+  full administrative access to production — no escalation
+  required.
+failure: >
+  Attacker compromises a non-production identity, assumes the
+  cross-environment admin role, and exercises full administrative
+  control over production resources. Data exfiltration, resource
+  destruction, and persistence establishment all happen in a
+  single session.
+tests:
+  - name: "cross-env role with admin fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/dev-to-prod-admin"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role:
+            cross_env_prod_access: true
+          policies:
+            has_admin_access: true
+  - name: "cross-env role without admin passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/dev-to-prod-readonly"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role:
+            cross_env_prod_access: true
+          policies:
+            has_admin_access: false
+  - name: "same-env role with admin passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/prod-admin"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role:
+            cross_env_prod_access: false
+          policies:
+            has_admin_access: true

@@ -3820,6 +3820,21 @@ IAM roles trusting a specific third-party role ARN (arn:aws:iam::X:role/Name fro
 
 ---
 
+### CTL.IAM.TRUST.CROSSENV.ELEVATION.001
+
+**Cross-Environment Role Has Administrative Permissions**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-4; owasp_nhi: NHI6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM role has cross-environment production access AND administrative permissions. This is the Midnight Blizzard compound: a role that bridges environments is dangerous; a role that bridges environments with admin permissions is catastrophic. The Microsoft breach (2024) demonstrated this exact shape — a test OAuth application with production-scope grants and elevated permissions enabled a nation-state actor to read executive email across the organization. Neither cross-env access alone (CTL.IAM.CROSS.ENV.001) nor admin access alone (CTL.IAM.POLICY.ADMIN.001) captures the distinct risk of an environment-crossing principal with unrestricted permissions. The compound fires only when both conditions hold on the same role.
+
+**Remediation:** Remove administrative permissions from the cross-environment role. If cross-environment access is required, scope permissions to the minimum set needed. Prefer separate roles per environment with no cross-account trust. Enforce least privilege via permission boundaries.
+
+---
+
 ### CTL.IAM.TRUST.DUAL.001
 
 **IAM Role Trust Must Not Combine Compute and Identity Federation Without Scoping**

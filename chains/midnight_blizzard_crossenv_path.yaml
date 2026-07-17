@@ -1,0 +1,31 @@
+id: midnight_blizzard_crossenv_path
+description: >
+  The Midnight Blizzard / Nobelium incident shape (Microsoft, 2024):
+  cross-environment access from non-production to production AND
+  transitive trust path reachable from lower environment AND
+  cross-environment role with administrative permissions. The Russian
+  SVR-linked actor compromised a test OAuth application that had
+  production-scope grants, then used that foothold to access executive
+  email across the organization. CTL.IAM.CROSS.ENV.001 detects the
+  direct cross-env grant. CTL.IAM.CROSS.ENV.PATH.001 detects
+  transitive trust chains. CTL.IAM.TRUST.CROSSENV.ELEVATION.001
+  detects the compound of cross-env access with admin permissions.
+  When all three fire, the environment boundary is collapsed via
+  multiple independent paths and the crossing principal has
+  unrestricted scope — the exact Midnight Blizzard shape.
+controls:
+  - CTL.IAM.CROSS.ENV.001
+  - CTL.IAM.CROSS.ENV.PATH.001
+  - CTL.IAM.TRUST.CROSSENV.ELEVATION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - data_access
+implicit_dependencies:
+  - source: observation.iam_role_trust_policy
+    fallback: fail_closed
+    diagnostic: >
+      IAM role trust policy not captured. Cannot determine
+      cross-environment trust relationships.
