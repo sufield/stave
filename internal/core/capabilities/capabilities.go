@@ -60,6 +60,7 @@ var builtinNames = []string{
 	"kms_key_compromise",
 	"network_access_ec2",
 	"network_access_eks",
+	"org_admin_access",
 	"network_access_lambda",
 	"network_access_rds",
 	"network_access_vpc",

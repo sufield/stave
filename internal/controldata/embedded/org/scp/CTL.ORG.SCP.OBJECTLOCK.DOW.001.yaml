@@ -23,6 +23,8 @@ scope_tags:
   - s3
 taxonomy:
   - account-governance
+payer_exempt: true
+payer_compensating_control: null
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -34,6 +34,9 @@ type yamlControlDefinition struct {
 
 	Taxonomy []kernel.CategoryID `yaml:"taxonomy,omitempty"`
 
+	PayerExempt              *bool   `yaml:"payer_exempt,omitempty"`
+	PayerCompensatingControl *string `yaml:"payer_compensating_control,omitempty"`
+
 	// Defect / Infection / Failure carry the authored triage
 	// chain from Andreas Zeller's Why Programs Fail, applied to
 	// cloud misconfigurations. All three are optional during

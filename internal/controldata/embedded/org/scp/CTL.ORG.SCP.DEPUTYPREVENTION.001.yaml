@@ -18,6 +18,8 @@ scope_tags:
   - organizations
 taxonomy:
   - account-governance
+payer_exempt: true
+payer_compensating_control: null
 type: unsafe_state
 classification: state_assertion
 params:

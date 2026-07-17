@@ -55,6 +55,9 @@ type ControlDefinition struct {
 
 	Taxonomy []kernel.CategoryID
 
+	PayerExempt              *bool   `yaml:"payer_exempt,omitempty" json:"payer_exempt,omitempty"`
+	PayerCompensatingControl *string `yaml:"payer_compensating_control,omitempty" json:"payer_compensating_control,omitempty"`
+
 	// Defect / Infection / Failure carry authored triage prose
 	// following Andreas Zeller's Why Programs Fail failure-theory
 	// chain. Optional; empty strings render as skipped sections.

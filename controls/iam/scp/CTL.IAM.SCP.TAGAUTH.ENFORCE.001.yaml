@@ -19,6 +19,8 @@ description: >
 domain: identity
 severity: high
 scope: atomic
+payer_exempt: true
+payer_compensating_control: null
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

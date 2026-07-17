@@ -155,6 +155,6 @@ Schema IDs use `urn:stave:schema:` (not HTTP URLs) to avoid implying network fet
 
 ## Further Reading
 
-- [Data Flow and I/O](../https://www.systeminvariant.dev/docs/explanation/data-flow) — per-command I/O model
-- [Execution Safety](../https://www.systeminvariant.dev/docs/explanation/execution-safety) — no-exec guarantees
-- [Security Guarantees](../https://www.systeminvariant.dev/docs/explanation/guarantees) — full guarantee inventory
+- [Data Flow and I/O](https://www.systeminvariant.dev/docs/explanation/data-flow) — per-command I/O model
+- [Execution Safety](https://www.systeminvariant.dev/docs/explanation/execution-safety) — no-exec guarantees
+- [Security Guarantees](https://www.systeminvariant.dev/docs/explanation/guarantees) — full guarantee inventory

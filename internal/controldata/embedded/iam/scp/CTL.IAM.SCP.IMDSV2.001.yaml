@@ -24,6 +24,8 @@ scope_tags:
 taxonomy:
   - account-governance
   - compute-hardening
+payer_exempt: true
+payer_compensating_control: null
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

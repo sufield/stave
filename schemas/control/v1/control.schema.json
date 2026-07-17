@@ -222,6 +222,19 @@
             "minLength": 1
           }
         },
+        "payer_exempt": {
+          "type": "boolean",
+          "title": "Payer Account Exempt",
+          "description": "When true, this SCP-based control does not protect the AWS management (payer) account. SCPs do not apply to the management account by AWS design."
+        },
+        "payer_compensating_control": {
+          "title": "Payer Compensating Control",
+          "description": "Control ID that compensates for the SCP gap in the management account. Null when no compensating control exists (observation layer gap).",
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "null" }
+          ]
+        },
         "applicable_asset_types": {
           "type": "array",
           "title": "Applicable Asset Types",

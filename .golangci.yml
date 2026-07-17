@@ -131,9 +131,9 @@ linters:
           # (isTriggered, checkUnsafe, computeAssetStates) DO take
           # the struct by pointer to skip the per-call copy — those
           # are narrower internal helpers, not signature-bound
-          # boundaries. Threshold set to 700 to give headroom for
-          # the next small addition without immediate re-bump.
-          sizeThreshold: 700
+          # boundaries. Bumped to 720 for PayerExempt +
+          # PayerCompensatingControl pointer fields (16 bytes).
+          sizeThreshold: 720
         rangeValCopy:
           sizeThreshold: 128
     govet:
