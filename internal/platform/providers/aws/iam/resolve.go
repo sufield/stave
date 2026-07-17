@@ -1,6 +1,10 @@
 package iam
 
-import "strings"
+import (
+	"strings"
+
+	coreiam "github.com/sufield/stave/internal/core/iam"
+)
 
 // PrivilegeLevel classifies the resolved effective permission set.
 type PrivilegeLevel string
@@ -49,6 +53,9 @@ type ResolvedPermissions struct {
 	BoundaryEffective bool // true if boundary meaningfully constrains
 	Incomplete        bool
 	IncompleteReasons []string
+
+	// Risk profile from sensitive action registry.
+	RiskProfile RiskProfile
 
 	// Iteration 2: resource-based policy grants
 	ResourcePolicyGrants []ResourcePolicyGrant
@@ -170,7 +177,7 @@ func Resolve(input ResolutionInput) ResolvedPermissions {
 	}
 
 	result.EffectiveAllow = effective
-	result.PrivilegeLevel = classifyPrivilege(effective)
+	result.PrivilegeLevel, result.RiskProfile = classifyPrivilege(effective)
 	result.IsAdmin = result.PrivilegeLevel == PrivilegeLevelAdmin
 
 	// Determine if boundary is effective (blocks at least one action).
@@ -661,42 +668,70 @@ func isTriviallyBroadBoundary(boundary *PolicyDocument) bool {
 	return false
 }
 
+// RiskProfile summarizes the sensitive action categories present
+// in a principal's effective permissions.
+type RiskProfile struct {
+	CredentialExposure int `json:"credential_exposure"`
+	DataAccess         int `json:"data_access"`
+	PrivEsc            int `json:"priv_esc"`
+	ResourceExposure   int `json:"resource_exposure"`
+}
+
+// DataAccessScore returns a 0–1 ratio of data-access actions to
+// total effective actions. Used by blast radius controls.
+func (p RiskProfile) DataAccessScore(totalEffective int) float64 {
+	if totalEffective == 0 {
+		return 0
+	}
+	return float64(p.DataAccess) / float64(totalEffective)
+}
+
+var sensitiveActions = coreiam.DefaultRegistry()
+
 // classifyPrivilege determines the privilege level from the effective
-// action set.
-func classifyPrivilege(effective []ActionGrant) PrivilegeLevel {
+// action set and computes the risk profile.
+func classifyPrivilege(effective []ActionGrant) (PrivilegeLevel, RiskProfile) {
 	if len(effective) == 0 {
-		return PrivilegeLevelNone
+		return PrivilegeLevelNone, RiskProfile{}
 	}
 
 	hasAdmin := false
 	hasElevated := false
 	serviceCount := make(map[string]struct{})
+	var profile RiskProfile
 
 	for _, grant := range effective {
-		// A grant influences classification when its resource is
-		// effectively broad: literal "*", "arn:aws:*", or a wildcard
-		// that covers a whole service / account. The previous
-		// (Resource != "*" → continue) shape silently dropped grants
-		// like "arn:aws:s3:::*" or "arn:aws:iam::123:role/*", which
-		// are functionally equivalent to "*" for privilege-
-		// escalation purposes — letting an effective-admin grant
-		// classify as no-privilege.
+		action := strings.ToLower(grant.Action)
+
+		// Count risk categories across all grants (not just broad ones).
+		for _, cat := range sensitiveActions.Classify(action) {
+			switch cat {
+			case coreiam.ActionCredentialExposure:
+				profile.CredentialExposure++
+			case coreiam.ActionDataAccess:
+				profile.DataAccess++
+			case coreiam.ActionPrivEsc:
+				profile.PrivEsc++
+			case coreiam.ActionResourceExposure:
+				profile.ResourceExposure++
+			}
+		}
+
 		if !isEffectivelyBroadResource(grant.Resource) {
 			continue
 		}
 
-		// IAM action names are case-insensitive in AWS, and actions are
-		// not case-normalized during resolution, so compare the indicator
-		// sets against the lowercased action.
-		action := strings.ToLower(grant.Action)
-		// Admin indicators
+		// Admin indicators: full wildcard or any PrivEsc action on
+		// the core IAM policy-mutation surface.
 		if action == "*" || action == "iam:*" ||
 			action == "iam:createpolicy" || action == "iam:putuserpolicy" ||
 			action == "iam:putrolepolicy" || action == "iam:attachuserpolicy" ||
 			action == "iam:attachrolepolicy" {
 			hasAdmin = true
 		}
-		// Elevated indicators
+		// Elevated indicators: PassRole, broad service wildcards,
+		// financial commitment actions, or any registry PrivEsc action
+		// on a broad resource.
 		if action == "iam:passrole" || action == "iam:createrole" ||
 			action == "ec2:*" || action == "s3:*" ||
 			action == "lambda:*" || action == "kms:*" ||
@@ -706,23 +741,27 @@ func classifyPrivilege(effective []ActionGrant) PrivilegeLevel {
 			action == "aws-marketplace:subscribe" {
 			hasElevated = true
 		}
+		if !hasElevated && sensitiveActions.HasCredentialExposure(action) {
+			hasElevated = true
+		}
 
-		// Track service breadth
 		if idx := indexByte(action, ':'); idx > 0 {
 			serviceCount[action[:idx]] = struct{}{}
 		}
 	}
 
+	var level PrivilegeLevel
 	switch {
 	case hasAdmin:
-		return PrivilegeLevelAdmin
+		level = PrivilegeLevelAdmin
 	case hasElevated:
-		return PrivilegeLevelElevated
+		level = PrivilegeLevelElevated
 	case len(serviceCount) > 2:
-		return PrivilegeLevelStandard
+		level = PrivilegeLevelStandard
 	default:
-		return PrivilegeLevelLimited
+		level = PrivilegeLevelLimited
 	}
+	return level, profile
 }
 
 func indexByte(s string, b byte) int {

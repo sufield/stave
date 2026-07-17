@@ -190,7 +190,7 @@ func TestResolve_NoBoundary(t *testing.T) {
 }
 
 func TestClassifyPrivilege_None(t *testing.T) {
-	level := classifyPrivilege(nil)
+	level, _ := classifyPrivilege(nil)
 	if level != PrivilegeLevelNone {
 		t.Fatalf("expected none, got %s", level)
 	}
@@ -200,7 +200,7 @@ func TestClassifyPrivilege_Admin(t *testing.T) {
 	grants := []ActionGrant{
 		{Action: "iam:CreatePolicy", Resource: "*"},
 	}
-	level := classifyPrivilege(grants)
+	level, _ := classifyPrivilege(grants)
 	if level != PrivilegeLevelAdmin {
 		t.Fatalf("expected admin, got %s", level)
 	}
@@ -210,7 +210,7 @@ func TestClassifyPrivilege_Elevated(t *testing.T) {
 	grants := []ActionGrant{
 		{Action: "iam:PassRole", Resource: "*"},
 	}
-	level := classifyPrivilege(grants)
+	level, _ := classifyPrivilege(grants)
 	if level != PrivilegeLevelElevated {
 		t.Fatalf("expected elevated, got %s", level)
 	}
