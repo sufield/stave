@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.S3EXPRESS.BPA.001
+name: No SCP Restricts Directory Bucket Policy Modification
+description: >
+  No SCP denies s3express:PutBucketPolicy or
+  s3express:DeleteBucketPolicy. S3 Block Public Access may not
+  cover Directory Buckets because BPA operates in the s3:
+  namespace. If BPA doesn't apply to s3express:, then SCP
+  restriction on policy modification is the only organizational
+  defense against public Directory Bucket policies.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - iam
+  - organizations
+  - s3express
+taxonomy:
+  - account-governance
+  - data-perimeter
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_s3express_policy_modification
+remediation:
+  description: >
+    Organization SCPs do not restrict Directory Bucket policy
+    modification via the s3express: namespace.
+  action: >
+    Add an SCP that denies s3express:PutBucketPolicy and
+    s3express:DeleteBucketPolicy. Exempt a cloud engineering
+    role via aws:PrincipalArn condition for legitimate policy
+    changes. This closes the namespace gap where s3: BPA does
+    not protect s3express: resources.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_s3express_policy_modification": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_s3express_policy_modification
+      op: ne
+      value: true
+defect: >
+  No SCP restricts s3express:PutBucketPolicy or
+  s3express:DeleteBucketPolicy.
+infection: >
+  Directory Bucket policy modification is unrestricted at the
+  organizational level. Any account admin can set a public or
+  cross-account policy on a Directory Bucket. The s3: BPA
+  controls (CTL.ORG.SCP.PROTECTBPA.001) only cover the s3:
+  namespace and do not prevent s3express: policy changes.
+failure: >
+  Attacker with admin access sets a wildcard-principal policy
+  on a Directory Bucket via s3express:PutBucketPolicy. Data
+  exfiltration via s3express:CreateSession from an external
+  account. The s3: data perimeter (RCP) does not block this
+  path because s3express: is a separate IAM namespace.
+tests:
+  - name: "no s3express policy restriction fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_s3express_policy_modification: false
+  - name: "s3express policy restriction passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_s3express_policy_modification: true

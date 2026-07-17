@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3124
-**Pack hash:** `166b53863917221d6a9a7dc93ad93f4624f8a349fa3ab852a5f419d643a3e0fd`
+**Total controls:** 3125
+**Pack hash:** `349fdd2a7b9b81b5849096d22d4e23666d9605f19ab6489da78673d7457ca0e1`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,7 +14,7 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 338 |
-| high | 1362 |
+| high | 1363 |
 | info | 18 |
 | low | 234 |
 | medium | 1172 |
@@ -30,7 +30,7 @@ GitHub. Pick a service below.
 | exposure | 1374 |
 | governance | 645 |
 | hygiene | 18 |
-| identity | 592 |
+| identity | 593 |
 | lifecycle | 31 |
 | network | 48 |
 | resilience | 36 |
@@ -120,7 +120,7 @@ GitHub. Pick a service below.
 | [NEPTUNE](reference/neptune.md) | 20 |
 | [NETFIREWALL](reference/netfirewall.md) | 13 |
 | [OPENSEARCH](reference/opensearch.md) | 132 |
-| [ORG](reference/org.md) | 50 |
+| [ORG](reference/org.md) | 51 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 72 |
 | [RECYCLEBIN](reference/recyclebin.md) | 1 |

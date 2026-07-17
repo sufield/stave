@@ -665,6 +665,21 @@ No SCP prevents modification of critical security and governance IAM roles in me
 
 ---
 
+### CTL.ORG.SCP.S3EXPRESS.BPA.001
+
+**No SCP Restricts Directory Bucket Policy Modification**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+No SCP denies s3express:PutBucketPolicy or s3express:DeleteBucketPolicy. S3 Block Public Access may not cover Directory Buckets because BPA operates in the s3: namespace. If BPA doesn't apply to s3express:, then SCP restriction on policy modification is the only organizational defense against public Directory Bucket policies.
+
+**Remediation:** Add an SCP that denies s3express:PutBucketPolicy and s3express:DeleteBucketPolicy. Exempt a cloud engineering role via aws:PrincipalArn condition for legitimate policy changes. This closes the namespace gap where s3: BPA does not protect s3express: resources.
+
+---
+
 ### CTL.ORG.SCP.S3NAMESPACE.001
 
 **SCP Does Not Enforce S3 Account-Regional Namespace**

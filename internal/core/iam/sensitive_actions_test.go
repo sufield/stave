@@ -138,6 +138,10 @@ func TestStaveGapAdditions(t *testing.T) {
 		"organizations:LeaveOrganization",
 		"verifiedpermissions:CreatePolicy",
 		"s3express:GetObject",
+		"s3tables:GetTableObject",
+		"s3vectors:SearchVectors",
+		"s3tables:PutTableBucketPolicy",
+		"s3vectors:DeleteVectorBucketPolicy",
 	}
 	for _, a := range staveActions {
 		if cats := r.Classify(a); cats == nil {
