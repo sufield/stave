@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.SERVERLESSREPO.POLICY.PUBLIC.001
+name: Serverless Application Repository Application Must Not Be Publicly Shared
+description: >
+  Serverless Application Repository (SAR) application has a
+  policy permitting public access. Public SAR applications
+  expose Lambda deployment packages — which may contain
+  embedded secrets, proprietary business logic, or internal
+  API endpoints. Scott Piper's aws_exposable_resources lists
+  serverlessrepo:PutApplicationPolicy as a public exposure
+  vector. API: serverlessrepo:GetApplicationPolicy.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17"]
+scope_tags:
+  - aws
+  - serverlessrepo
+taxonomy:
+  - identity-perimeter
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_serverlessrepo_application
+params:
+  attack_stage: collection
+observation_fields:
+  - compute.kind
+  - compute.serverlessrepo.application_policy_public
+remediation:
+  description: >
+    SAR application is publicly shared. Any AWS account
+    can deploy this application's Lambda code.
+  action: >
+    Remove the public sharing statement from the
+    application policy. To share with specific accounts,
+    use explicit account IDs or an aws:PrincipalOrgID
+    condition.
+  example: |
+    {
+      "compute": {
+        "kind": "serverlessrepo_application",
+        "serverlessrepo": {
+          "application_policy_public": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: serverlessrepo_application
+    - field: properties.compute.serverlessrepo.application_policy_public
+      op: eq
+      value: true
+tests:
+  - name: "public SAR application fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:serverlessrepo:us-east-1:111122223333:applications/data-processor"
+      asset_type: aws_serverlessrepo_application
+      vendor: aws
+      properties:
+        compute:
+          kind: serverlessrepo_application
+          serverlessrepo:
+            application_policy_public: true
+  - name: "private SAR application passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:serverlessrepo:us-east-1:111122223333:applications/data-processor"
+      asset_type: aws_serverlessrepo_application
+      vendor: aws
+      properties:
+        compute:
+          kind: serverlessrepo_application
+          serverlessrepo:
+            application_policy_public: false

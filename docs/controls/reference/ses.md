@@ -20,6 +20,21 @@ SES sending identities (domains and email addresses) must have DomainKeys Identi
 
 ---
 
+### CTL.SES.IDENTITY.POLICY.PUBLIC.001
+
+**SES Identity Sending Authorization Must Not Allow External Senders**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+SES identity has an authorization policy permitting ses:SendEmail or ses:SendRawEmail from external principals (Principal: * or accounts outside the organization). SES sending authorization policies control who can send email using your verified identity. A public policy lets any AWS account send phishing emails from your domain — degrading your domain's reputation and enabling social engineering attacks that appear to originate from your organization. Scott Piper's aws_exposable_resources lists ses:PutIdentityPolicy as a public exposure vector. API: ses:GetIdentityPolicies.
+
+**Remediation:** Remove the wildcard principal from the authorization policy. Replace with explicit account ARNs of authorized delegate senders. Add an aws:PrincipalOrgID condition if sharing within the organization.
+
+---
+
 ### CTL.SES.IDENTITY.VERIFIED.001
 
 **SES Verified Identities Must Use Organization-Owned Domains**

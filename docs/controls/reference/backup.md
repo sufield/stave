@@ -184,3 +184,18 @@ AWS Backup vault access policy grants actions to principals in external AWS acco
 
 ---
 
+### CTL.BACKUP.VAULT.POLICY.PUBLIC.001
+
+**Backup Vault Access Policy Must Not Allow Public Access**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-9, AC-3; soc2: CC6.1;
+
+Backup vault access policy grants actions to Principal "*" (any AWS account). Backup vaults contain recovery points — the last line of defense against ransomware. A public vault policy is strictly worse than cross-account access without an org condition: any AWS account on the internet can read recovery point metadata, copy recovery points out of the account, or (if actions allow) delete recovery points entirely. Scott Piper's aws_exposable_resources lists backup:PutBackupVaultAccessPolicy as a public exposure vector. API: backup:GetBackupVaultAccessPolicy.
+
+**Remediation:** Remove the wildcard principal from the vault access policy. Replace with explicit account ARNs and add an aws:PrincipalOrgID condition. Enable Backup Vault Lock to prevent modification of recovery points.
+
+---
+

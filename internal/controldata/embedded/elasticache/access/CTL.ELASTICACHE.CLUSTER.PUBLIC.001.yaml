@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.ELASTICACHE.CLUSTER.PUBLIC.001
+name: ElastiCache Cluster Must Not Be Publicly Accessible
+description: >
+  ElastiCache cluster or replication group is configured
+  as publicly accessible. ElastiCache Redis and Memcached
+  clusters should be VPC-internal only. A publicly
+  accessible cluster exposes cached data (session tokens,
+  API responses, user data) to the internet. Even with
+  AUTH enabled, public network exposure increases the
+  attack surface — brute-force attacks, protocol
+  vulnerabilities, and credential stuffing all become
+  possible. Scott Piper's aws_exposable_resources notes
+  ElastiCache as a network-exposable resource type.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3, SC-7"
+  soc2: "CC6.1, CC6.6"
+  ccm_v4: ["IVS-03", "IVS-09"]
+scope_tags:
+  - aws
+  - elasticache
+taxonomy:
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_elasticache_cluster
+  - aws_elasticache_replication_group
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: data
+    scope: network
+    multiplier: 2.5
+observation_fields:
+  - cache.kind
+  - cache.elasticache.publicly_accessible
+remediation:
+  description: >
+    ElastiCache cluster is publicly accessible. Cached
+    data is exposed to the internet.
+  action: >
+    Disable public accessibility on the cluster. Deploy
+    ElastiCache clusters in private subnets only and
+    access via VPC peering or VPN.
+  example: |
+    {
+      "cache": {
+        "kind": "elasticache_cluster",
+        "elasticache": {
+          "publicly_accessible": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cache.kind
+      op: in
+      value:
+        - elasticache_cluster
+        - elasticache_replication_group
+    - field: properties.cache.elasticache.publicly_accessible
+      op: eq
+      value: true
+tests:
+  - name: "public cluster fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticache:us-east-1:111122223333:cluster:session-cache"
+      asset_type: aws_elasticache_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: elasticache_cluster
+          elasticache:
+            publicly_accessible: true
+  - name: "VPC-only cluster passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticache:us-east-1:111122223333:cluster:session-cache"
+      asset_type: aws_elasticache_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: elasticache_cluster
+          elasticache:
+            publicly_accessible: false

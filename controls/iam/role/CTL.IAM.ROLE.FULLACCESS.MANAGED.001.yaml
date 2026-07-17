@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROLE.FULLACCESS.MANAGED.001
+name: IAM Roles Must Not Use AWS-Managed FullAccess Policies
+description: >
+  No IAM role should have an AWS-managed *FullAccess policy
+  attached (AmazonS3FullAccess, AmazonEC2FullAccess,
+  AdministratorAccess, etc.). These managed policies grant
+  blanket permissions across an entire service. When attached
+  to service roles, they create lateral movement paths — a
+  compromised SageMaker notebook with AmazonS3FullAccess
+  reaches every bucket in the account. Default service roles
+  created by SageMaker, Glue, EMR, and CloudFormation ship
+  with AmazonS3FullAccess attached.
+  Source: open-cvdb/aws-default-roles-service-takeover (Aqua
+  Security "Shadow Roles" research, April 2025). SageMaker,
+  Glue, EMR, and CloudFormation default roles all ship with
+  AmazonS3FullAccess. Customer mitigation: audit existing
+  IAM roles and replace overly permissive policies with
+  least-privilege scoped policies.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6(1)"
+  soc2: "CC6.3"
+  ccm_v4: ["IAM-04", "IAM-09"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.policies.has_fullaccess_managed_policy
+remediation:
+  description: >
+    IAM role has an AWS-managed *FullAccess policy attached.
+    This grants blanket permissions across an entire service,
+    enabling lateral movement from any workload using this role.
+  action: >
+    Replace the FullAccess managed policy with a scoped policy
+    granting only the actions and resources the workload
+    actually needs. For default service roles (SageMaker,
+    Glue, EMR), create custom roles with least-privilege
+    policies instead of using the service-created defaults.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "policies": {
+          "has_fullaccess_managed_policy": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.policies.has_fullaccess_managed_policy
+      op: eq
+      value: true
+tests:
+  - name: "role with FullAccess policy fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/AmazonSageMaker-ExecutionRole"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          policies:
+            has_fullaccess_managed_policy: true
+  - name: "role with scoped policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/custom-sagemaker-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          policies:
+            has_fullaccess_managed_policy: false

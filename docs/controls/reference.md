@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3086
-**Pack hash:** `0f4da99fdb25a46e17597719d4686db3110fba121e5da18f9564866c05f20cf2`
+**Total controls:** 3095
+**Pack hash:** `60a47488b12c83ccba2474ef4f4728349907810e2bc748bc4b3430d89b718496`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 328 |
-| high | 1343 |
+| critical | 330 |
+| high | 1348 |
 | info | 18 |
-| low | 233 |
-| medium | 1164 |
+| low | 234 |
+| medium | 1165 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,10 +27,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1355 |
-| governance | 641 |
+| exposure | 1362 |
+| governance | 642 |
 | hygiene | 18 |
-| identity | 581 |
+| identity | 582 |
 | lifecycle | 31 |
 | network | 45 |
 | resilience | 35 |
@@ -54,7 +54,7 @@ GitHub. Pick a service below.
 | [AUDITMANAGER](reference/auditmanager.md) | 1 |
 | [AUTOSCALING](reference/autoscaling.md) | 3 |
 | [AZURE](reference/azure.md) | 141 |
-| [BACKUP](reference/backup.md) | 12 |
+| [BACKUP](reference/backup.md) | 13 |
 | [BATCH](reference/batch.md) | 3 |
 | [BEANSTALK](reference/beanstalk.md) | 3 |
 | [BEDROCK](reference/bedrock.md) | 47 |
@@ -83,7 +83,7 @@ GitHub. Pick a service below.
 | [ECS](reference/ecs.md) | 52 |
 | [EFS](reference/efs.md) | 14 |
 | [EKS](reference/eks.md) | 115 |
-| [ELASTICACHE](reference/elasticache.md) | 7 |
+| [ELASTICACHE](reference/elasticache.md) | 8 |
 | [ELB](reference/elb.md) | 80 |
 | [EMR](reference/emr.md) | 6 |
 | [EVENTBRIDGE](reference/eventbridge.md) | 97 |
@@ -95,21 +95,23 @@ GitHub. Pick a service below.
 | [GCS](reference/gcs.md) | 7 |
 | [GHOST](reference/ghost.md) | 2 |
 | [GITHUB](reference/github.md) | 22 |
-| [GLACIER](reference/glacier.md) | 1 |
+| [GLACIER](reference/glacier.md) | 2 |
+| [GLOBALACCELERATOR](reference/globalaccelerator.md) | 1 |
 | [GLUE](reference/glue.md) | 13 |
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 18 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 285 |
+| [IAM](reference/iam.md) | 286 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |
 | [KMS](reference/kms.md) | 47 |
-| [LAMBDA](reference/lambda.md) | 88 |
+| [LAMBDA](reference/lambda.md) | 89 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
 | [LIGHTSAIL](reference/lightsail.md) | 5 |
 | [M365](reference/m365.md) | 73 |
 | [MACIE](reference/macie.md) | 4 |
+| [MEDIASTORE](reference/mediastore.md) | 1 |
 | [META](reference/meta.md) | 1 |
 | [MODEL](reference/model.md) | 2 |
 | [MQ](reference/mq.md) | 3 |
@@ -131,8 +133,9 @@ GitHub. Pick a service below.
 | [SECRETSMANAGER](reference/secretsmanager.md) | 5 |
 | [SECURITYHUB](reference/securityhub.md) | 7 |
 | [SECURITYLAKE](reference/securitylake.md) | 2 |
+| [SERVERLESSREPO](reference/serverlessrepo.md) | 1 |
 | [SERVICECATALOG](reference/servicecatalog.md) | 1 |
-| [SES](reference/ses.md) | 2 |
+| [SES](reference/ses.md) | 3 |
 | [SHIELD](reference/shield.md) | 6 |
 | [SNS](reference/sns.md) | 39 |
 | [SQS](reference/sqs.md) | 37 |

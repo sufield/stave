@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.SES.IDENTITY.POLICY.PUBLIC.001
+name: SES Identity Sending Authorization Must Not Allow External Senders
+description: >
+  SES identity has an authorization policy permitting
+  ses:SendEmail or ses:SendRawEmail from external principals
+  (Principal: * or accounts outside the organization). SES
+  sending authorization policies control who can send email
+  using your verified identity. A public policy lets any AWS
+  account send phishing emails from your domain — degrading
+  your domain's reputation and enabling social engineering
+  attacks that appear to originate from your organization.
+  Scott Piper's aws_exposable_resources lists
+  ses:PutIdentityPolicy as a public exposure vector.
+  API: ses:GetIdentityPolicies.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17"]
+scope_tags:
+  - aws
+  - ses
+taxonomy:
+  - identity-perimeter
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ses_identity
+params:
+  attack_stage: initial_access
+observation_fields:
+  - messaging.kind
+  - messaging.ses.authorization_policy_public
+remediation:
+  description: >
+    SES identity authorization policy allows external
+    accounts to send email as this identity. Domain
+    reputation is at risk.
+  action: >
+    Remove the wildcard principal from the authorization
+    policy. Replace with explicit account ARNs of
+    authorized delegate senders. Add an
+    aws:PrincipalOrgID condition if sharing within the
+    organization.
+  example: |
+    {
+      "messaging": {
+        "kind": "ses_identity",
+        "ses": {
+          "authorization_policy_public": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: ses_identity
+    - field: properties.messaging.ses.authorization_policy_public
+      op: eq
+      value: true
+tests:
+  - name: "public authorization policy fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ses:us-east-1:111122223333:identity/example.com"
+      asset_type: aws_ses_identity
+      vendor: aws
+      properties:
+        messaging:
+          kind: ses_identity
+          ses:
+            authorization_policy_public: true
+  - name: "restricted authorization policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ses:us-east-1:111122223333:identity/example.com"
+      asset_type: aws_ses_identity
+      vendor: aws
+      properties:
+        messaging:
+          kind: ses_identity
+          ses:
+            authorization_policy_public: false

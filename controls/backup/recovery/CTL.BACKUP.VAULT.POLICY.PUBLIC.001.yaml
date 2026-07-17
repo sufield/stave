@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.BACKUP.VAULT.POLICY.PUBLIC.001
+name: Backup Vault Access Policy Must Not Allow Public Access
+description: >
+  Backup vault access policy grants actions to Principal "*"
+  (any AWS account). Backup vaults contain recovery points —
+  the last line of defense against ransomware. A public vault
+  policy is strictly worse than cross-account access without
+  an org condition: any AWS account on the internet can read
+  recovery point metadata, copy recovery points out of the
+  account, or (if actions allow) delete recovery points
+  entirely. Scott Piper's aws_exposable_resources lists
+  backup:PutBackupVaultAccessPolicy as a public exposure
+  vector. API: backup:GetBackupVaultAccessPolicy.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "CP-9, AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["BCR-08", "DSP-17"]
+scope_tags:
+  - aws
+  - backup
+taxonomy:
+  - identity-perimeter
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_backup_vault
+params:
+  attack_stage: impact
+  base_impact: 10
+  blast_radius:
+    type: recovery
+    scope: account
+    multiplier: 3.0
+observation_fields:
+  - backup.kind
+  - backup.vault_policy.policy_public
+remediation:
+  description: >
+    Backup vault access policy grants public access
+    (Principal: *). Any AWS account can access recovery
+    points.
+  action: >
+    Remove the wildcard principal from the vault access
+    policy. Replace with explicit account ARNs and add
+    an aws:PrincipalOrgID condition. Enable Backup Vault
+    Lock to prevent modification of recovery points.
+  example: |
+    {
+      "backup": {
+        "kind": "vault",
+        "vault_policy": {
+          "policy_public": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.backup.kind
+      op: eq
+      value: vault
+    - field: properties.backup.vault_policy.policy_public
+      op: eq
+      value: true
+tests:
+  - name: "public vault policy fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:backup:us-east-1:111122223333:backup-vault:prod-backups"
+      asset_type: aws_backup_vault
+      vendor: aws
+      properties:
+        backup:
+          kind: vault
+          vault_policy:
+            policy_public: true
+  - name: "restricted vault policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:backup:us-east-1:111122223333:backup-vault:prod-backups"
+      asset_type: aws_backup_vault
+      vendor: aws
+      properties:
+        backup:
+          kind: vault
+          vault_policy:
+            policy_public: false

@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.GLOBALACCELERATOR.EXISTS.001
+name: Global Accelerator Existence Must Be Tracked and Approved
+description: >
+  Global Accelerator exists in the account without documented
+  approval. Global Accelerators create public entry points
+  with static anycast IP addresses that route traffic to
+  endpoints in AWS regions. Their existence should be
+  intentional and documented — an untracked accelerator is
+  an unmonitored public surface. Scott Piper's
+  aws_exposable_resources lists Global Accelerator as a
+  resource type that creates public network exposure.
+  API: globalaccelerator:ListAccelerators.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-8"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-01"]
+scope_tags:
+  - aws
+  - globalaccelerator
+taxonomy:
+  - network-perimeter
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_global_accelerator
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.global_accelerator.exists
+  - network.global_accelerator.approved
+remediation:
+  description: >
+    Global Accelerator exists without documented approval.
+    This is a public entry point with static IP addresses.
+  action: >
+    Document the accelerator's purpose and approve it via
+    your organization's change management process. If
+    unneeded, delete it to reduce public surface area.
+  example: |
+    {
+      "network": {
+        "kind": "global_accelerator",
+        "global_accelerator": {
+          "exists": true,
+          "approved": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: global_accelerator
+    - field: properties.network.global_accelerator.exists
+      op: eq
+      value: true
+    - field: properties.network.global_accelerator.approved
+      op: eq
+      value: false
+tests:
+  - name: "unapproved accelerator fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:globalaccelerator::111122223333:accelerator/abc-123"
+      asset_type: aws_global_accelerator
+      vendor: aws
+      properties:
+        network:
+          kind: global_accelerator
+          global_accelerator:
+            exists: true
+            approved: false
+  - name: "approved accelerator passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:globalaccelerator::111122223333:accelerator/abc-123"
+      asset_type: aws_global_accelerator
+      vendor: aws
+      properties:
+        network:
+          kind: global_accelerator
+          global_accelerator:
+            exists: true
+            approved: true

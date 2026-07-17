@@ -20,3 +20,18 @@ Glacier vault access policy grants actions to principals in external AWS account
 
 ---
 
+### CTL.GLACIER.VAULT.POLICY.PUBLIC.001
+
+**Glacier Vault Access Policy Must Not Allow Public Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Glacier vault access policy grants actions to Principal "*" (any AWS account). Glacier vaults store long-term archival data — backups, compliance records, audit logs. A public vault policy lets any AWS account initiate retrieval jobs, read archive contents, or delete archives. Scott Piper's aws_exposable_resources lists glacier:SetVaultAccessPolicy as a public exposure vector. API: glacier:GetVaultAccessPolicy.
+
+**Remediation:** Remove the wildcard principal from the vault access policy. Replace with explicit account ARNs and add an aws:PrincipalOrgID condition.
+
+---
+

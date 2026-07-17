@@ -2781,6 +2781,21 @@ Access Advisor data, permission policy inventory, or tag inventory is absent fro
 
 ---
 
+### CTL.IAM.ROLE.FULLACCESS.MANAGED.001
+
+**IAM Roles Must Not Use AWS-Managed FullAccess Policies**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(1); soc2: CC6.3;
+
+No IAM role should have an AWS-managed *FullAccess policy attached (AmazonS3FullAccess, AmazonEC2FullAccess, AdministratorAccess, etc.). These managed policies grant blanket permissions across an entire service. When attached to service roles, they create lateral movement paths — a compromised SageMaker notebook with AmazonS3FullAccess reaches every bucket in the account. Default service roles created by SageMaker, Glue, EMR, and CloudFormation ship with AmazonS3FullAccess attached. Source: open-cvdb/aws-default-roles-service-takeover (Aqua Security "Shadow Roles" research, April 2025). SageMaker, Glue, EMR, and CloudFormation default roles all ship with AmazonS3FullAccess. Customer mitigation: audit existing IAM roles and replace overly permissive policies with least-privilege scoped policies.
+
+**Remediation:** Replace the FullAccess managed policy with a scoped policy granting only the actions and resources the workload actually needs. For default service roles (SageMaker, Glue, EMR), create custom roles with least-privilege policies instead of using the service-created defaults.
+
+---
+
 ### CTL.IAM.ROLE.INTENTMISMATCH.001
 
 **Role Permissions Must Match Declared Purpose**

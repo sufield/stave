@@ -1,0 +1,34 @@
+id: public_resource_exposure_surface_path
+description: >
+  Multiple resource types in the account are publicly exposed via
+  resource policies or public endpoint configurations. Each
+  individually is a misconfiguration; together they indicate a
+  systemic lack of resource policy governance. Scott Piper's
+  aws_exposable_resources enumerated 40+ resource types that can
+  be made public. This chain fires when 3+ distinct resource types
+  are simultaneously exposed — indicating the account lacks
+  a resource control policy (RCP) or equivalent perimeter.
+controls:
+  - CTL.S3.PUBLIC.001
+  - CTL.CLOUDWATCH.LOGGROUP.POLICY.PUBLIC.001
+  - CTL.OPENSEARCH.PUBLIC.001
+  - CTL.BACKUP.VAULT.POLICY.PUBLIC.001
+  - CTL.ECR.PUBLIC.001
+  - CTL.EVENTBRIDGE.BUS.PUBLIC.001
+  - CTL.LAMBDA.LAYER.PUBLIC.001
+  - CTL.GLACIER.VAULT.POLICY.PUBLIC.001
+  - CTL.SES.IDENTITY.POLICY.PUBLIC.001
+  - CTL.MEDIASTORE.POLICY.PUBLIC.001
+  - CTL.SERVERLESSREPO.POLICY.PUBLIC.001
+  - CTL.SNS.POLICY.PUBLIC.001
+  - CTL.SQS.POLICY.PUBLIC.001
+  - CTL.SECRETSMANAGER.POLICY.PUBLIC.001
+  - CTL.DYNAMODB.POLICY.PUBLIC.001
+  - CTL.SSM.DOCUMENT.PUBLIC.001
+  - CTL.LAMBDA.INVOKE.PUBLIC.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - data_access

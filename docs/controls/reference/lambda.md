@@ -425,6 +425,21 @@ All Lambda layers referenced by a function must have ARNs whose account IDs are 
 
 ---
 
+### CTL.LAMBDA.LAYER.PUBLIC.001
+
+**Lambda Layer Version Must Not Be Publicly Shared**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Lambda layer version has a permission granting access to Principal "*" via lambda:AddLayerVersionPermission. A public layer can be used by any AWS account. If the layer contains proprietary code, embedded secrets, or internal API endpoints, this is a data exposure. Distinct from CTL.LAMBDA.LAYER.EXTERNAL.001 which checks whether a function USES an external layer — this control checks whether a layer IS externally shared. Scott Piper's aws_exposable_resources lists lambda:AddLayerVersionPermission as a public exposure vector.
+
+**Remediation:** Remove the public permission from the layer version. To share with specific accounts, use explicit account IDs via lambda:AddLayerVersionPermission with a specific principal.
+
+---
+
 ### CTL.LAMBDA.LAYER.SECRETS.001
 
 **Lambda Layers Must Not Contain Embedded Secrets**

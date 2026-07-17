@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.GLACIER.VAULT.POLICY.PUBLIC.001
+name: Glacier Vault Access Policy Must Not Allow Public Access
+description: >
+  Glacier vault access policy grants actions to Principal "*"
+  (any AWS account). Glacier vaults store long-term archival
+  data — backups, compliance records, audit logs. A public
+  vault policy lets any AWS account initiate retrieval jobs,
+  read archive contents, or delete archives. Scott Piper's
+  aws_exposable_resources lists glacier:SetVaultAccessPolicy
+  as a public exposure vector.
+  API: glacier:GetVaultAccessPolicy.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17", "IAM-16"]
+scope_tags:
+  - aws
+  - glacier
+taxonomy:
+  - identity-perimeter
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_glacier_vault
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - archive.kind
+  - archive.glacier.policy_public
+remediation:
+  description: >
+    Glacier vault access policy grants public access
+    (Principal: *). Any AWS account can read or delete
+    archived data.
+  action: >
+    Remove the wildcard principal from the vault access
+    policy. Replace with explicit account ARNs and add
+    an aws:PrincipalOrgID condition.
+  example: |
+    {
+      "archive": {
+        "kind": "vault",
+        "glacier": {
+          "policy_public": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.archive.kind
+      op: eq
+      value: vault
+    - field: properties.archive.glacier.policy_public
+      op: eq
+      value: true
+tests:
+  - name: "public vault policy fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:glacier:us-east-1:111122223333:vaults/compliance-archive"
+      asset_type: aws_glacier_vault
+      vendor: aws
+      properties:
+        archive:
+          kind: vault
+          glacier:
+            policy_public: true
+  - name: "restricted vault policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:glacier:us-east-1:111122223333:vaults/compliance-archive"
+      asset_type: aws_glacier_vault
+      vendor: aws
+      properties:
+        archive:
+          kind: vault
+          glacier:
+            policy_public: false
