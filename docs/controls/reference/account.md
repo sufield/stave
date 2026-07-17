@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.ACCOUNT.DEPRECATED.SERVICE.001
+
+**No Resources Must Exist for AWS-Deprecated Services**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-2, CM-8; soc2: CC6.1;
+
+Resources exist for an AWS service that has been deprecated or announced for end-of-life. Resources on deprecated services are abandoned infrastructure by definition — the service they depend on is shutting down. AWS deprecated 15+ services in 2024-2025 including CodeCommit, Cloud9, SimpleDB, S3 Select, Data Pipeline, QLDB, Forecast, App Mesh, Lookout for Vision/Equipment, MediaStore, Elastic Transcoder, Honeycode, DeepComposer, DeepLens, and DeepRacer. Resources on these services receive no security patches and have no migration path after shutdown. Source: AWS breaking_changes repo (github.com/SummitRoute/aws_breaking_changes).
+
+**Remediation:** Migrate resources off deprecated services before their end-of-support date. Decommission resources that are no longer needed. Inventory deprecated service resources via AWS Config or the service's own console.
+
+---
+
 ### CTL.ACCOUNT.ENCRYPT.DEFAULT.PARITY.001
 
 **Account Encryption Defaults Must Be Enabled Consistently**

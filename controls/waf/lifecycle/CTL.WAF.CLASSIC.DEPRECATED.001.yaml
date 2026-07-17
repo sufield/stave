@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.CLASSIC.DEPRECATED.001
+name: No Resource Must Use WAF Classic (Retired September 2025)
+description: >
+  A WAF Classic WebACL exists in the account. AWS retired WAF
+  Classic on September 30, 2025. Resources still associated
+  with WAF Classic WebACLs are running on unsupported
+  infrastructure that receives no rule updates, no new
+  features, and no security patches. WAF Classic resources
+  are invisible to the entire WAFv2 control family — every
+  existing WAF control in the catalog evaluates wafv2:
+  resources only. A WAF Classic WebACL is a SILENT_RISK: the
+  resource appears to have WAF protection but is excluded
+  from all WAF compliance checks.
+  Source: AWS breaking_changes repo, WAF Classic retirement
+  announcement (2024).
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-04"]
+scope_tags:
+  - aws
+  - waf
+taxonomy:
+  - network-perimeter
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_waf_classic_web_acl
+params:
+  attack_stage: initial_access
+observation_fields:
+  - waf.kind
+  - waf.is_classic
+remediation:
+  description: >
+    WAF Classic WebACL exists. WAF Classic was retired
+    September 30, 2025. This resource is unsupported and
+    invisible to all WAFv2 controls.
+  action: >
+    Migrate the WebACL to WAFv2 using the AWS WAF Classic
+    migration wizard or manual recreation. Associate the
+    new WAFv2 WebACL with the same resources (ALB,
+    CloudFront, API Gateway). Delete the Classic WebACL
+    after migration.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "is_classic": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.is_classic
+      op: eq
+      value: true
+tests:
+  - name: "WAF Classic WebACL fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:waf::111122223333:webacl/legacy-acl"
+      asset_type: aws_waf_classic_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          is_classic: true
+  - name: "WAFv2 WebACL passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/modern-acl/abc123"
+      asset_type: aws_wafv2_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          is_classic: false

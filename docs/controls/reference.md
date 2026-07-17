@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3109
-**Pack hash:** `d56ed631914ea749129848050806549f86916f49035b02b6ca7542ae084b66c0`
+**Total controls:** 3111
+**Pack hash:** `16ffe71fb1da0a07540f67bced9e8d997f434b701b1496ea3b586357e287151b`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 335 |
-| high | 1353 |
+| high | 1354 |
 | info | 18 |
 | low | 234 |
-| medium | 1169 |
+| medium | 1170 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,8 +27,8 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1362 |
-| governance | 644 |
+| exposure | 1363 |
+| governance | 645 |
 | hygiene | 18 |
 | identity | 591 |
 | lifecycle | 31 |
@@ -41,7 +41,7 @@ GitHub. Pick a service below.
 
 | Service | Controls |
 |---------|----------|
-| [ACCOUNT](reference/account.md) | 1 |
+| [ACCOUNT](reference/account.md) | 2 |
 | [ACM](reference/acm.md) | 8 |
 | [ACMPCA](reference/acmpca.md) | 1 |
 | [AD](reference/ad.md) | 40 |
@@ -145,5 +145,5 @@ GitHub. Pick a service below.
 | [TRANSFER](reference/transfer.md) | 2 |
 | [VPC](reference/vpc.md) | 95 |
 | [VSPHERE](reference/vsphere.md) | 35 |
-| [WAF](reference/waf.md) | 16 |
+| [WAF](reference/waf.md) | 17 |
 | [WORKSPACES](reference/workspaces.md) | 1 |
