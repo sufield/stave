@@ -260,7 +260,17 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove or constrain the policy statement granting write actions to Principal \"*\" or AWS: \"*\". If broad write access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public write."
       },
-      "exploitability": "reachable",
+      "chain_membership": [
+        {
+          "chain_id": "latimes_writable_bucket_path",
+          "chain_severity": "critical",
+          "stage_span": [
+            "initial_access"
+          ],
+          "narrative": "LA Times incident shape (2018): publicly writable S3 bucket served by a website. Attacker wrote cryptominer JavaScript to the bucket, which was served to all website visitors. The invariant: no S3 bucket permits public write access. This is a supply chain attack via content injection, not a data exfiltration.\n"
+        }
+      ],
+      "exploitability": "exploitable",
       "sla_deadline_hours": 72,
       "sla_breached": true,
       "sla_overdue_hours": 88968,
@@ -271,7 +281,7 @@
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "blind_multiplier": 5,
         "days_blind": 3710
       },
@@ -342,6 +352,25 @@
         "32d0109cc906",
         "cf999c825fc9",
         "31987c213b4a"
+      ]
+    }
+  ],
+  "chain_findings": [
+    {
+      "chain": "latimes_writable_bucket_path",
+      "asset_id": "shopify-internal-assets",
+      "description": "LA Times incident shape (2018): publicly writable S3 bucket served by a website. Attacker wrote cryptominer JavaScript to the bucket, which was served to all website visitors. The invariant: no S3 bucket permits public write access. This is a supply chain attack via content injection, not a data exfiltration.\n",
+      "controls_failing": [
+        "CTL.S3.POLICY.WRITE.001"
+      ],
+      "missing_safeguards": [
+        "CTL.S3.POLLUTION.PUBLIC.001"
+      ],
+      "compound_score": 90,
+      "severity": "critical",
+      "narrative": "LA Times incident shape (2018): publicly writable S3 bucket served by a website. Attacker wrote cryptominer JavaScript to the bucket, which was served to all website visitors. The invariant: no S3 bucket permits public write access. This is a supply chain attack via content injection, not a data exfiltration.\n Failing: CTL.S3.POLICY.WRITE.001.",
+      "attack_stages": [
+        "initial_access"
       ]
     }
   ],
@@ -451,7 +480,7 @@
         "duration_factor": 5,
         "blast_multiplier": 1,
         "exposure_multiplier": 2,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "blind_multiplier": 5,
         "days_blind": 3710
       },

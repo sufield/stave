@@ -1919,6 +1919,14 @@
       },
       "chain_membership": [
         {
+          "chain_id": "chegg_root_credential_path",
+          "chain_severity": "critical",
+          "stage_span": [
+            "credential_access"
+          ],
+          "narrative": "Chegg incident shape (2018): former contractor used shared ROOT credentials to exfiltrate 40M user records from S3. The FTC issued a consent order. Invariants: root credentials should not exist on member accounts (centralized root management), and root access should never be shared. This chain fires when centralized root management is not enabled AND root credentials exist AND root MFA is missing.\n"
+        },
+        {
           "chain_id": "root_compromise_path",
           "chain_severity": "critical",
           "stage_span": [
@@ -1934,7 +1942,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 1.5,
+        "chain_bonus": 2,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
@@ -2114,6 +2122,14 @@
       },
       "chain_membership": [
         {
+          "chain_id": "chegg_root_credential_path",
+          "chain_severity": "critical",
+          "stage_span": [
+            "credential_access"
+          ],
+          "narrative": "Chegg incident shape (2018): former contractor used shared ROOT credentials to exfiltrate 40M user records from S3. The FTC issued a consent order. Invariants: root credentials should not exist on member accounts (centralized root management), and root access should never be shared. This chain fires when centralized root management is not enabled AND root credentials exist AND root MFA is missing.\n"
+        },
+        {
           "chain_id": "root_compromise_path",
           "chain_severity": "critical",
           "stage_span": [
@@ -2129,7 +2145,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 1.5,
+        "chain_bonus": 2,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
@@ -13710,6 +13726,24 @@
   ],
   "chain_findings": [
     {
+      "chain": "chegg_root_credential_path",
+      "asset_id": "aws-account-root",
+      "description": "Chegg incident shape (2018): former contractor used shared ROOT credentials to exfiltrate 40M user records from S3. The FTC issued a consent order. Invariants: root credentials should not exist on member accounts (centralized root management), and root access should never be shared. This chain fires when centralized root management is not enabled AND root credentials exist AND root MFA is missing.\n",
+      "controls_failing": [
+        "CTL.IAM.ROOT.ACCESSKEY.001",
+        "CTL.IAM.ROOT.MFA.001"
+      ],
+      "missing_safeguards": [
+        "CTL.IAM.CRED.ROTATION.001"
+      ],
+      "compound_score": 100,
+      "severity": "critical",
+      "narrative": "Chegg incident shape (2018): former contractor used shared ROOT credentials to exfiltrate 40M user records from S3. The FTC issued a consent order. Invariants: root credentials should not exist on member accounts (centralized root management), and root access should never be shared. This chain fires when centralized root management is not enabled AND root credentials exist AND root MFA is missing.\n Failing: CTL.IAM.ROOT.ACCESSKEY.001, CTL.IAM.ROOT.MFA.001.",
+      "attack_stages": [
+        "credential_access"
+      ]
+    },
+    {
       "chain": "cognito_weakauth",
       "asset_id": "patient-portal",
       "description": "Authentication is brute-forceable in combination: the existing weak-password- policy detection plus the existing MFA- off detection plus the new lockout-absent detection. Each individually is a known weakness; together they describe a pool where credential-stuffing has no meaningful resistance — weak passwords, no second factor, no throttling. Threshold of 2 because the dangerous shape is when at least two layers are missing simultaneously.\n",
@@ -16491,7 +16525,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 1.5,
+        "chain_bonus": 2,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
@@ -16507,7 +16541,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 1.5,
+        "chain_bonus": 2,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
