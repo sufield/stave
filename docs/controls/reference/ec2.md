@@ -1489,6 +1489,21 @@ EC2 instances must be managed by SSM to enable patching, session management, and
 
 ---
 
+### CTL.EC2.SSM.ROLE.001
+
+**EC2 Instance Has No SSM Permissions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-2; soc2: CC7.1;
+
+Running EC2 instance has no instance profile or the instance profile role lacks the AmazonSSMManagedInstanceCore policy. Without SSM permissions, the SSM agent cannot communicate with the Systems Manager service even if installed, leaving the instance unmanageable for patching, inventory, and Session Manager access.
+
+**Remediation:** Attach an instance profile with the AmazonSSMManagedInstanceCore managed policy to the instance. If an instance profile exists, add the policy to its role.
+
+---
+
 ### CTL.EC2.SSM.SESSION.LOGGING.001
 
 **SSM Session Manager Must Log All Sessions to S3 or CloudWatch**

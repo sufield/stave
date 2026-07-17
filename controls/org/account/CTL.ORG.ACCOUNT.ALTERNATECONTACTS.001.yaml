@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.ACCOUNT.ALTERNATECONTACTS.001
+name: Account Has No Security Alternate Contact
+description: >
+  AWS account has no security alternate contact configured.
+  AWS sends security notifications to the alternate contacts.
+  Without a security contact, notifications go only to the
+  root email, which may not be monitored by the security team.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "IR-6"
+  soc2: "CC7.3"
+  ccm_v4: ["SEF-01"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account
+params:
+  attack_stage: resilience
+observation_fields:
+  - account.alternate_contacts.security_configured
+remediation:
+  description: >
+    No security alternate contact is configured.
+  action: >
+    Configure a security alternate contact via the AWS
+    console or account:PutAlternateContact API. Set it to
+    a distribution list monitored by the security team.
+  example: |
+    {
+      "account": {
+        "alternate_contacts": {
+          "security_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.account.alternate_contacts.security_configured
+      op: ne
+      value: true
+defect: >
+  No security alternate contact is configured on the account.
+infection: >
+  AWS security notifications are sent only to the root email.
+  If the root email is not monitored by the security team,
+  notifications about abuse reports, compromised credentials,
+  or policy violations are missed or delayed.
+failure: >
+  AWS detects suspicious activity and sends a notification to
+  the root email. The root email is an unmonitored shared
+  mailbox. The security team learns about the incident from
+  a customer or regulator, not from AWS.
+tests:
+  - name: "no security contact fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          alternate_contacts:
+            security_configured: false
+  - name: "security contact configured passes"
+    verdict: PASS
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          alternate_contacts:
+            security_configured: true

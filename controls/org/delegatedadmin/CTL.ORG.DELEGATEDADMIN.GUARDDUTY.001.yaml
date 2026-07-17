@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.DELEGATEDADMIN.GUARDDUTY.001
+name: No Delegated Admin for GuardDuty
+description: >
+  No delegated administrator account is registered for
+  GuardDuty in the organization. Without delegated admin,
+  GuardDuty must be managed per-account or from the
+  management account. Delegated admin allows a security
+  account to manage GuardDuty across the org without
+  accessing the payer.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["TVM-01"]
+scope_tags:
+  - aws
+  - organizations
+  - guardduty
+taxonomy:
+  - account-governance
+  - monitoring
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: resilience
+observation_fields:
+  - organization.delegated_admin.guardduty_configured
+remediation:
+  description: >
+    No delegated admin is registered for GuardDuty.
+  action: >
+    Register a security account as the delegated
+    administrator for GuardDuty using
+    organizations:RegisterDelegatedAdministrator with
+    service principal guardduty.amazonaws.com.
+  example: |
+    {
+      "organization": {
+        "delegated_admin": {
+          "guardduty_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.delegated_admin.guardduty_configured
+      op: ne
+      value: true
+defect: >
+  No delegated admin configured for GuardDuty.
+infection: >
+  GuardDuty is either unmanaged or managed from the
+  management account. Per-account management means
+  inconsistent coverage. Management account access for
+  security operations violates least-privilege for the
+  payer account.
+failure: >
+  GuardDuty is not enabled in several accounts because
+  there is no central management. An attacker operates
+  undetected in accounts without GuardDuty.
+tests:
+  - name: "no GuardDuty delegated admin fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          delegated_admin:
+            guardduty_configured: false
+  - name: "GuardDuty delegated admin passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          delegated_admin:
+            guardduty_configured: true

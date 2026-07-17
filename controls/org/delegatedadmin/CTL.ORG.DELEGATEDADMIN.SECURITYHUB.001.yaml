@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.DELEGATEDADMIN.SECURITYHUB.001
+name: No Delegated Admin for Security Hub
+description: >
+  No delegated administrator account is registered for
+  Security Hub. Without delegated admin, Security Hub
+  cannot centrally manage findings and standards across
+  the organization.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["TVM-01"]
+scope_tags:
+  - aws
+  - organizations
+  - securityhub
+taxonomy:
+  - account-governance
+  - monitoring
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: resilience
+observation_fields:
+  - organization.delegated_admin.securityhub_configured
+remediation:
+  description: >
+    No delegated admin for Security Hub.
+  action: >
+    Register a security account as the delegated
+    administrator for Security Hub using
+    organizations:RegisterDelegatedAdministrator with
+    service principal securityhub.amazonaws.com.
+  example: |
+    {
+      "organization": {
+        "delegated_admin": {
+          "securityhub_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.delegated_admin.securityhub_configured
+      op: ne
+      value: true
+defect: >
+  No delegated admin configured for Security Hub.
+infection: >
+  Security Hub findings are fragmented across accounts.
+  No central view of security posture exists. Standards
+  and automations cannot be managed centrally.
+failure: >
+  Critical finding is generated in a member account.
+  Without central Security Hub, the security team does
+  not see it. The finding ages without remediation.
+tests:
+  - name: "no Security Hub delegated admin fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          delegated_admin:
+            securityhub_configured: false
+  - name: "Security Hub delegated admin passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          delegated_admin:
+            securityhub_configured: true

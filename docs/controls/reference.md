@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3054
-**Pack hash:** `03cdbeb804f70257a74f22178b65eeaa3fe6df8dd7f84976a3bb167484ffe5ce`
+**Total controls:** 3060
+**Pack hash:** `f8f42cf9bbfb5680afcc945d6b8d39800720f457ace747813733efb0d0e3df65`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 319 |
-| high | 1330 |
+| high | 1331 |
 | info | 18 |
-| low | 232 |
-| medium | 1155 |
+| low | 233 |
+| medium | 1159 |
 
 | Domain | Count |
 |--------|-------|
@@ -28,7 +28,7 @@ GitHub. Pick a service below.
 | detection | 140 |
 | encryption | 119 |
 | exposure | 1343 |
-| governance | 635 |
+| governance | 641 |
 | hygiene | 18 |
 | identity | 568 |
 | lifecycle | 31 |
@@ -76,7 +76,7 @@ GitHub. Pick a service below.
 | [DNS](reference/dns.md) | 3 |
 | [DOCUMENTDB](reference/documentdb.md) | 18 |
 | [DYNAMODB](reference/dynamodb.md) | 38 |
-| [EC2](reference/ec2.md) | 107 |
+| [EC2](reference/ec2.md) | 108 |
 | [ECR](reference/ecr.md) | 10 |
 | [ECS](reference/ecs.md) | 52 |
 | [EFS](reference/efs.md) | 14 |
@@ -116,7 +116,7 @@ GitHub. Pick a service below.
 | [NEPTUNE](reference/neptune.md) | 20 |
 | [NETFIREWALL](reference/netfirewall.md) | 12 |
 | [OPENSEARCH](reference/opensearch.md) | 132 |
-| [ORG](reference/org.md) | 33 |
+| [ORG](reference/org.md) | 38 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 72 |
 | [REDSHIFT](reference/redshift.md) | 26 |

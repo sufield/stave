@@ -1,0 +1,101 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SSM.ROLE.001
+name: EC2 Instance Has No SSM Permissions
+description: >
+  Running EC2 instance has no instance profile or the
+  instance profile role lacks the AmazonSSMManagedInstanceCore
+  policy. Without SSM permissions, the SSM agent cannot
+  communicate with the Systems Manager service even if
+  installed, leaving the instance unmanageable for patching,
+  inventory, and Session Manager access.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "CC7.1"
+  ccm_v4: ["TVM-02"]
+scope_tags:
+  - aws
+  - ec2
+  - ssm
+taxonomy:
+  - compute-hardening
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_instance
+params:
+  attack_stage: resilience
+observation_fields:
+  - compute.instance_profile.has_ssm_policy
+  - compute.state
+remediation:
+  description: >
+    Running EC2 instance lacks SSM permissions.
+  action: >
+    Attach an instance profile with the
+    AmazonSSMManagedInstanceCore managed policy to the
+    instance. If an instance profile exists, add the
+    policy to its role.
+  example: |
+    {
+      "compute": {
+        "state": "running",
+        "instance_profile": {
+          "has_ssm_policy": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.state
+      op: eq
+      value: running
+    - field: properties.compute.instance_profile.has_ssm_policy
+      op: ne
+      value: true
+defect: >
+  Running EC2 instance does not have SSM permissions.
+infection: >
+  The instance cannot be managed by Systems Manager. It
+  is invisible to patch management, cannot be accessed
+  via Session Manager for incident response, and does not
+  appear in software inventory.
+failure: >
+  Critical vulnerability is announced. Patch management
+  via SSM cannot reach this instance. The instance remains
+  unpatched and is compromised through the vulnerability.
+tests:
+  - name: "running instance without SSM policy fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "i-0abc123def456"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          state: running
+          instance_profile:
+            has_ssm_policy: false
+  - name: "running instance with SSM policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "i-0abc123def456"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          state: running
+          instance_profile:
+            has_ssm_policy: true
+  - name: "stopped instance without SSM passes"
+    verdict: PASS
+    asset:
+      asset_id: "i-0abc123def789"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          state: stopped
+          instance_profile:
+            has_ssm_policy: false

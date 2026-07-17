@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.ACCOUNT.ALTERNATECONTACTS.BILLING.001
+name: Account Has No Billing Alternate Contact
+description: >
+  AWS account has no billing alternate contact configured.
+  Without a billing contact, cost alerts and billing
+  notifications go only to the root email.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "SA-9"
+  soc2: "CC7.3"
+  ccm_v4: ["SEF-01"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account
+params:
+  attack_stage: resilience
+observation_fields:
+  - account.alternate_contacts.billing_configured
+remediation:
+  description: >
+    No billing alternate contact is configured.
+  action: >
+    Configure a billing alternate contact via the AWS
+    console or account:PutAlternateContact API.
+  example: |
+    {
+      "account": {
+        "alternate_contacts": {
+          "billing_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.account.alternate_contacts.billing_configured
+      op: ne
+      value: true
+defect: >
+  No billing alternate contact is configured on the account.
+infection: >
+  Cost anomaly alerts and billing notifications reach only
+  the root email. Unexpected spend from compromised
+  credentials or resource sprawl is not surfaced to finance.
+failure: >
+  Attacker launches cryptomining instances. Billing alerts
+  go to the root email, which is unmonitored. The spend
+  accumulates for weeks before discovery.
+tests:
+  - name: "no billing contact fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          alternate_contacts:
+            billing_configured: false
+  - name: "billing contact configured passes"
+    verdict: PASS
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          alternate_contacts:
+            billing_configured: true

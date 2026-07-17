@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.DELEGATEDADMIN.ACCESSANALYZER.001
+name: No Delegated Admin for IAM Access Analyzer
+description: >
+  No delegated administrator account is registered for
+  IAM Access Analyzer. Without delegated admin, Access
+  Analyzer operates per-account and cannot detect
+  cross-account resource sharing at the org level.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - organizations
+  - iam
+taxonomy:
+  - account-governance
+  - least-privilege
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: resilience
+observation_fields:
+  - organization.delegated_admin.access_analyzer_configured
+remediation:
+  description: >
+    No delegated admin for IAM Access Analyzer.
+  action: >
+    Register a security account as the delegated
+    administrator for IAM Access Analyzer using
+    organizations:RegisterDelegatedAdministrator with
+    service principal access-analyzer.amazonaws.com.
+  example: |
+    {
+      "organization": {
+        "delegated_admin": {
+          "access_analyzer_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.delegated_admin.access_analyzer_configured
+      op: ne
+      value: true
+defect: >
+  No delegated admin configured for IAM Access Analyzer.
+infection: >
+  Access Analyzer cannot see cross-account resource sharing
+  at the organization level. External access findings are
+  limited to per-account scope.
+failure: >
+  S3 bucket in account A grants cross-account access to an
+  external account. Access Analyzer in account A does not
+  flag it because there is no organization-level analyzer.
+tests:
+  - name: "no Access Analyzer delegated admin fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          delegated_admin:
+            access_analyzer_configured: false
+  - name: "Access Analyzer delegated admin passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          delegated_admin:
+            access_analyzer_configured: true

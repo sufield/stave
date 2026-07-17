@@ -5,6 +5,36 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.ORG.ACCOUNT.ALTERNATECONTACTS.001
+
+**Account Has No Security Alternate Contact**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: IR-6; soc2: CC7.3;
+
+AWS account has no security alternate contact configured. AWS sends security notifications to the alternate contacts. Without a security contact, notifications go only to the root email, which may not be monitored by the security team.
+
+**Remediation:** Configure a security alternate contact via the AWS console or account:PutAlternateContact API. Set it to a distribution list monitored by the security team.
+
+---
+
+### CTL.ORG.ACCOUNT.ALTERNATECONTACTS.BILLING.001
+
+**Account Has No Billing Alternate Contact**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SA-9; soc2: CC7.3;
+
+AWS account has no billing alternate contact configured. Without a billing contact, cost alerts and billing notifications go only to the root email.
+
+**Remediation:** Configure a billing alternate contact via the AWS console or account:PutAlternateContact API.
+
+---
+
 ### CTL.ORG.ALLFEATURES.001
 
 **AWS Organizations Must Be in All Features Mode**
@@ -47,6 +77,51 @@ The Control Tower landing zone has detected configuration drift from its baselin
 AWS Control Tower is not enabled. Control Tower provides a governed landing zone with preventive and detective guardrails across member accounts. Without it, account provisioning and baseline security configuration must be managed manually, leading to configuration drift and inconsistent security posture across the organization.
 
 **Remediation:** Enable Control Tower from the management account. Select a home region, configure the log archive and audit accounts, and enable the default guardrails.
+
+---
+
+### CTL.ORG.DELEGATEDADMIN.ACCESSANALYZER.001
+
+**No Delegated Admin for IAM Access Analyzer**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+No delegated administrator account is registered for IAM Access Analyzer. Without delegated admin, Access Analyzer operates per-account and cannot detect cross-account resource sharing at the org level.
+
+**Remediation:** Register a security account as the delegated administrator for IAM Access Analyzer using organizations:RegisterDelegatedAdministrator with service principal access-analyzer.amazonaws.com.
+
+---
+
+### CTL.ORG.DELEGATEDADMIN.GUARDDUTY.001
+
+**No Delegated Admin for GuardDuty**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.2;
+
+No delegated administrator account is registered for GuardDuty in the organization. Without delegated admin, GuardDuty must be managed per-account or from the management account. Delegated admin allows a security account to manage GuardDuty across the org without accessing the payer.
+
+**Remediation:** Register a security account as the delegated administrator for GuardDuty using organizations:RegisterDelegatedAdministrator with service principal guardduty.amazonaws.com.
+
+---
+
+### CTL.ORG.DELEGATEDADMIN.SECURITYHUB.001
+
+**No Delegated Admin for Security Hub**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.2;
+
+No delegated administrator account is registered for Security Hub. Without delegated admin, Security Hub cannot centrally manage findings and standards across the organization.
+
+**Remediation:** Register a security account as the delegated administrator for Security Hub using organizations:RegisterDelegatedAdministrator with service principal securityhub.amazonaws.com.
 
 ---
 
