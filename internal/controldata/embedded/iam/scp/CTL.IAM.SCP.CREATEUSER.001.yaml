@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.CREATEUSER.001
+name: "SCP Does Not Deny iam:CreateUser"
+description: >
+  No SCP in the hierarchy denies iam:CreateUser. IAM Users have
+  permanent long-lived credentials (access keys) that persist
+  until explicitly rotated or deleted. In a mature organization
+  where all human and service access uses IAM Roles with session
+  credentials, CreateUser is a privilege escalation vector — an
+  attacker creates a new IAM User, generates access keys, and
+  establishes persistent access that survives role session
+  revocation. Denying CreateUser by SCP forces all new service
+  access through IAM Roles, which use short-lived session
+  credentials with automatic expiration. This is an aspirational
+  control for organizations that have fully adopted role-based
+  access — organizations that still legitimately use IAM Users
+  should treat this as a migration target, not a current
+  requirement.
+domain: identity
+severity: medium
+compliance:
+  owasp_nhi: "NHI4"
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05", "IAM-09"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - account-governance
+  - compliance-mapping
+  - credential-lifecycle
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: persistence
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_iam_create_user
+remediation:
+  description: >
+    Organization SCPs do not deny iam:CreateUser. Any principal
+    with IAM permissions can create IAM Users with permanent
+    credentials.
+  action: >
+    Add an SCP that denies iam:CreateUser for all principals.
+    Exempt specific automation accounts if legacy IAM User
+    creation is still required during migration. Plan to remove
+    the exemption once all services use IAM Roles.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_iam_create_user": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_iam_create_user
+      op: ne
+      value: true
+defect: >
+  Organization SCPs do not deny iam:CreateUser. IAM Users with
+  permanent credentials can be created in any member account.
+infection: >
+  New IAM Users are created with long-lived access keys. These
+  credentials do not expire automatically and persist through
+  role session revocations. The credential surface area grows
+  with each new user.
+failure: >
+  Attacker creates an IAM User with access keys in a compromised
+  account. The access keys survive incident response actions that
+  revoke active sessions and rotate role credentials. Persistent
+  access is maintained until the specific IAM User is discovered
+  and deleted.
+tests:
+  - name: "organization without CreateUser denial fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_iam_create_user: false
+  - name: "organization with CreateUser denial passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_iam_create_user: true

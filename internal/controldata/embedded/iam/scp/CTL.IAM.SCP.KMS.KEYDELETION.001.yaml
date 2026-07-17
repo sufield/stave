@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.KMS.KEYDELETION.001
+name: "SCP Does Not Deny kms:ScheduleKeyDeletion"
+description: >
+  No SCP in the hierarchy denies kms:ScheduleKeyDeletion. Key
+  deletion permanently destroys the key material — all data encrypted
+  under that key becomes irrecoverable after the waiting period
+  (minimum 7 days, default 30). An attacker who can schedule key
+  deletion can destroy all data encrypted under every customer-managed
+  KMS key in every member account. The waiting period provides a
+  detection window, but only if CloudTrail alarms are configured for
+  ScheduleKeyDeletion events (CTL.KMS.ALARM.KEYDELETION.001). Without
+  both the SCP deny and the alarm, key deletion is a low-noise,
+  high-impact destruction path. Denying ScheduleKeyDeletion by SCP
+  and requiring an approval workflow through the management account
+  ensures key deletion is a deliberate, audited process.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-03", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - kms
+taxonomy:
+  - account-governance
+  - compliance-mapping
+  - key-management
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: impact
+  base_impact: 9
+  blast_radius:
+    type: destruction
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_kms_schedule_key_deletion
+remediation:
+  description: >
+    Organization SCPs do not deny kms:ScheduleKeyDeletion. Any
+    principal with KMS permissions can schedule key deletion.
+  action: >
+    Add an SCP that denies kms:ScheduleKeyDeletion for all
+    principals. Require key deletion requests to go through a
+    management account workflow with approval from a security team
+    member.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_kms_schedule_key_deletion": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_kms_schedule_key_deletion
+      op: ne
+      value: true
+defect: >
+  Organization SCPs do not deny kms:ScheduleKeyDeletion. Key
+  deletion is unrestricted in member accounts.
+infection: >
+  Any principal with kms:ScheduleKeyDeletion can schedule deletion
+  of any customer-managed key. The 7-30 day waiting period provides
+  a narrow detection window, but without alarms the deletion proceeds
+  silently.
+failure: >
+  Attacker schedules deletion of all customer-managed KMS keys.
+  After the waiting period, all encrypted data — S3 objects, RDS
+  databases, EBS volumes, Secrets Manager values — is permanently
+  irrecoverable.
+tests:
+  - name: "organization without ScheduleKeyDeletion denial fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_kms_schedule_key_deletion: false
+  - name: "organization with ScheduleKeyDeletion denial passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_kms_schedule_key_deletion: true

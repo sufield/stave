@@ -1,0 +1,34 @@
+id: payer_unmonitored_workload_path
+description: >
+  Maximum-exposure payer configuration: the management account has
+  workload IAM principals beyond the break-glass minimum AND
+  GuardDuty is not enabled in all active regions. The management
+  account is exempt from all SCPs by AWS design, so detection
+  (GuardDuty) and permission boundaries are the only controls
+  available. When both are absent, an attacker who compromises a
+  management account workload principal has no detection, no
+  preventive invariants, and full organizational control —
+  including AssumeRoot, account closure, SCP modification, and
+  CloudTrail disruption.
+controls:
+  - CTL.IAM.ORG.MGMT.PRINCIPALS.001
+  - CTL.GUARDDUTY.REGION.COVERAGE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - org_admin_access
+implicit_dependencies:
+  - source: observation.management_account_classifier
+    fallback: fail_closed
+    diagnostic: >
+      Cannot determine whether this account is the organization
+      management account. Payer workload exposure controls cannot
+      be evaluated.
+  - source: observation.regional_resource_inventory
+    fallback: fail_closed
+    diagnostic: >
+      Regional resource inventory not available. Cannot determine
+      which regions have active resources for GuardDuty coverage
+      comparison.

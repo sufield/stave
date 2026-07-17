@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.KMS.IMPORTKEY.001
+name: "SCP Does Not Deny kms:ImportKeyMaterial"
+description: >
+  No SCP in the hierarchy denies kms:ImportKeyMaterial. An attacker
+  who can import key material into a KMS key controls the
+  cryptographic backing of that key. The attack sequence:
+  create a customer-managed KMS key with EXTERNAL origin, import
+  attacker-controlled key material, re-encrypt target data under
+  the new key, delete the original key. The data is now encrypted
+  with material only the attacker possesses. AWS cannot recover
+  the data — there is no AWS-managed backing key to fall back to.
+  This is the foundational enabler for KMS-based ransomware.
+  Most organizations never need ImportKeyMaterial (AWS-managed key
+  material is the correct default). Denying it by SCP eliminates
+  the attack surface entirely.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-03", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - kms
+taxonomy:
+  - account-governance
+  - compliance-mapping
+  - key-management
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: impact
+  base_impact: 10
+  blast_radius:
+    type: destruction
+    scope: organization
+    multiplier: 3.0
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_kms_import_key_material
+remediation:
+  description: >
+    Organization SCPs do not deny kms:ImportKeyMaterial. Any
+    principal can import externally-controlled key material into
+    KMS keys.
+  action: >
+    Add an SCP that denies kms:ImportKeyMaterial for all principals.
+    If a specific account legitimately needs to import key material
+    (hardware security module integration, regulatory requirement),
+    exclude that account with an SCP condition on aws:PrincipalAccount.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_kms_import_key_material": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_kms_import_key_material
+      op: ne
+      value: true
+defect: >
+  Organization SCPs do not deny kms:ImportKeyMaterial. External key
+  material import is unrestricted.
+infection: >
+  Any principal with kms:CreateKey and kms:ImportKeyMaterial can create
+  a KMS key with EXTERNAL origin and import their own key material.
+  Data re-encrypted under this key is controlled by the attacker. The
+  organization believes KMS encryption protects data, but the key
+  material is externally controlled.
+failure: >
+  Attacker creates KMS key with external origin, imports their key
+  material, re-encrypts critical data, deletes original keys. Data
+  is irrecoverable without the attacker's key material. AWS support
+  cannot help — the key material was never AWS-managed.
+tests:
+  - name: "organization without ImportKeyMaterial denial fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_kms_import_key_material: false
+  - name: "organization with ImportKeyMaterial denial passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_kms_import_key_material: true

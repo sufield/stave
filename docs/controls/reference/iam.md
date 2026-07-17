@@ -2961,6 +2961,21 @@ AWS Organizations must have an SCP restricting who can create IAM users (iam:Cre
 
 ---
 
+### CTL.IAM.SCP.CREATEUSER.001
+
+**SCP Does Not Deny iam:CreateUser**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5; owasp_nhi: NHI4; soc2: CC6.1;
+
+No SCP in the hierarchy denies iam:CreateUser. IAM Users have permanent long-lived credentials (access keys) that persist until explicitly rotated or deleted. In a mature organization where all human and service access uses IAM Roles with session credentials, CreateUser is a privilege escalation vector — an attacker creates a new IAM User, generates access keys, and establishes persistent access that survives role session revocation. Denying CreateUser by SCP forces all new service access through IAM Roles, which use short-lived session credentials with automatic expiration. This is an aspirational control for organizations that have fully adopted role-based access — organizations that still legitimately use IAM Users should treat this as a migration target, not a current requirement.
+
+**Remediation:** Add an SCP that denies iam:CreateUser for all principals. Exempt specific automation accounts if legacy IAM User creation is still required during migration. Plan to remove the exemption once all services use IAM Roles.
+
+---
+
 ### CTL.IAM.SCP.DANGEROUS.ALLOWS.001
 
 **SCPs Must Not Explicitly Allow Dangerous Administrative Actions**
@@ -3093,6 +3108,36 @@ SCP does not deny internet gateway creation in member accounts. Without this SCP
 SCP does not deny EC2 instance launches without IMDSv2 required. Without this SCP, any identity in the organization can launch instances with IMDSv1 enabled. IMDSv1 is the primary credential-theft vector via SSRF — an attacker who compromises a web application on an EC2 instance can query the metadata service at 169.254.169.254 to steal IAM role credentials. The SCP denies ec2:RunInstances when ec2:MetadataHttpTokens is not "required", preventing IMDSv1 instances at the organizational boundary.
 
 **Remediation:** Add an SCP that denies ec2:RunInstances with condition ec2:MetadataHttpTokens != "required". This prevents any identity from launching instances without IMDSv2 enforced. Optionally also deny ec2:ModifyInstanceMetadataOptions to prevent downgrade of existing instances, and deny all actions when ec2:RoleDelivery < 2.0 for defense in depth.
+
+---
+
+### CTL.IAM.SCP.KMS.IMPORTKEY.001
+
+**SCP Does Not Deny kms:ImportKeyMaterial**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SC-12; soc2: CC6.1;
+
+No SCP in the hierarchy denies kms:ImportKeyMaterial. An attacker who can import key material into a KMS key controls the cryptographic backing of that key. The attack sequence: create a customer-managed KMS key with EXTERNAL origin, import attacker-controlled key material, re-encrypt target data under the new key, delete the original key. The data is now encrypted with material only the attacker possesses. AWS cannot recover the data — there is no AWS-managed backing key to fall back to. This is the foundational enabler for KMS-based ransomware. Most organizations never need ImportKeyMaterial (AWS-managed key material is the correct default). Denying it by SCP eliminates the attack surface entirely.
+
+**Remediation:** Add an SCP that denies kms:ImportKeyMaterial for all principals. If a specific account legitimately needs to import key material (hardware security module integration, regulatory requirement), exclude that account with an SCP condition on aws:PrincipalAccount.
+
+---
+
+### CTL.IAM.SCP.KMS.KEYDELETION.001
+
+**SCP Does Not Deny kms:ScheduleKeyDeletion**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SC-12; soc2: CC6.1;
+
+No SCP in the hierarchy denies kms:ScheduleKeyDeletion. Key deletion permanently destroys the key material — all data encrypted under that key becomes irrecoverable after the waiting period (minimum 7 days, default 30). An attacker who can schedule key deletion can destroy all data encrypted under every customer-managed KMS key in every member account. The waiting period provides a detection window, but only if CloudTrail alarms are configured for ScheduleKeyDeletion events (CTL.KMS.ALARM.KEYDELETION.001). Without both the SCP deny and the alarm, key deletion is a low-noise, high-impact destruction path. Denying ScheduleKeyDeletion by SCP and requiring an approval workflow through the management account ensures key deletion is a deliberate, audited process.
+
+**Remediation:** Add an SCP that denies kms:ScheduleKeyDeletion for all principals. Require key deletion requests to go through a management account workflow with approval from a security team member.
 
 ---
 
