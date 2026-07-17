@@ -2946,6 +2946,21 @@ SCP does not deny IAM Access Analyzer deletion in member accounts. Access Analyz
 
 ---
 
+### CTL.IAM.SCP.ACCESSKEY.SOURCEIP.001
+
+**SCP Does Not Restrict Access Key Usage to Known Source IPs**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.3;
+
+SCP does not deny IAM User actions from unknown source IPs. Compensating control for organizations that cannot yet eliminate IAM Users with long-term access keys. Farris demonstrated this as his safety net when deliberately leaking eight access keys: an SCP-based source IP restriction limits key usability to known networks, so an attacker with a stolen key from a different IP gets denied. This is defense-in-depth, not primary prevention — the primary prevention is eliminating IAM Users with access keys (CTL.IAM.CRED.UNUSED.001, CTL.IAM.SCP.CREATEUSER.001). Use this control for organizations still migrating off access keys. Note: aws:SourceIp conditions do not apply to calls made through VPC endpoints or by AWS services on behalf of the principal.
+
+**Remediation:** Add an SCP that denies all actions for IAM User principals when aws:SourceIp is not in the organization's known CIDR list. Scope the Deny to principal types that use access keys (IAM Users), not roles (which are used by services and VPC endpoints where SourceIp doesn't apply).
+
+---
+
 ### CTL.IAM.SCP.ACTION.INVALID.001
 
 **SCP References Invalid IAM Actions**

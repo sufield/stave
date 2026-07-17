@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.ACCESSKEY.SOURCEIP.001
+name: "SCP Does Not Restrict Access Key Usage to Known Source IPs"
+description: >
+  SCP does not deny IAM User actions from unknown source IPs.
+  Compensating control for organizations that cannot yet eliminate
+  IAM Users with long-term access keys. Farris demonstrated this
+  as his safety net when deliberately leaking eight access keys:
+  an SCP-based source IP restriction limits key usability to known
+  networks, so an attacker with a stolen key from a different IP
+  gets denied. This is defense-in-depth, not primary prevention —
+  the primary prevention is eliminating IAM Users with access keys
+  (CTL.IAM.CRED.UNUSED.001, CTL.IAM.SCP.CREATEUSER.001). Use
+  this control for organizations still migrating off access keys.
+  Note: aws:SourceIp conditions do not apply to calls made through
+  VPC endpoints or by AWS services on behalf of the principal.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.3"
+  ccm_v4: ["IAM-05", "IVS-08"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - account-governance
+  - credential-lifecycle
+  - network-perimeter
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_accesskey_without_sourceip
+remediation:
+  description: >
+    Organization SCPs do not restrict IAM User access key usage
+    to known source IPs. Stolen access keys are usable from any
+    network.
+  action: >
+    Add an SCP that denies all actions for IAM User principals
+    when aws:SourceIp is not in the organization's known CIDR
+    list. Scope the Deny to principal types that use access keys
+    (IAM Users), not roles (which are used by services and VPC
+    endpoints where SourceIp doesn't apply).
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_accesskey_without_sourceip": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_accesskey_without_sourceip
+      op: ne
+      value: true
+defect: >
+  No SCP restricts IAM User access key usage by source IP.
+infection: >
+  Access keys are usable from any IP address. A stolen key
+  works identically from the attacker's infrastructure as from
+  the organization's network. No network-layer signal distinguishes
+  legitimate from malicious usage.
+failure: >
+  Attacker obtains an IAM User access key (leaked in code, phished,
+  exfiltrated from a compromised workstation) and uses it from
+  their own infrastructure. Without source IP restriction, the key
+  works without triggering any network-based detection. AWS's own
+  quarantine policy response is inconsistent — Farris demonstrated
+  seven different responses to eight identical leaked keys.
+tests:
+  - name: "no source IP restriction fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_accesskey_without_sourceip: false
+  - name: "source IP restriction passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_accesskey_without_sourceip: true
