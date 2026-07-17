@@ -1,6 +1,6 @@
 // Package taxonomy defines the ubiquitous vocabulary for security
 // concept categories. Go constants are the source of truth;
-// taxonomy.yaml is a serialization.
+// data/taxonomy.yaml is a serialization.
 package taxonomy
 
 import "github.com/sufield/stave/internal/core/kernel"

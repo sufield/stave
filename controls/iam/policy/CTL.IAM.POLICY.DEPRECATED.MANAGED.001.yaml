@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.DEPRECATED.MANAGED.001
+name: IAM Roles Must Not Use Deprecated AWS-Managed Policies
+description: >
+  No IAM role should have a deprecated AWS-managed policy attached.
+  AWS deprecates managed policies when they are superseded by
+  updated versions or when the underlying service is discontinued.
+  Roles using deprecated policies reference abandoned infrastructure
+  that AWS no longer updates with new service actions or security
+  fixes. Examples: AWSCloudTrailFullAccess (deprecated 2021,
+  replaced by CloudTrailFullAccess), AWSLambdaFullAccess (deprecated
+  2021, overpermissive with no replacement), AnthropicInferenceAccess
+  (deprecated May 2026). The authoritative list is maintained in
+  data/deprecation-calendar.yaml under managed_policies.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "SA-22"
+  soc2: "CC8.1"
+  ccm_v4: ["GRC-01"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - deprecation
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: persistence
+observation_fields:
+  - identity.kind
+  - identity.policies.has_deprecated_managed_policy
+remediation:
+  description: >
+    IAM role has a deprecated AWS-managed policy attached. The
+    policy is no longer maintained by AWS and may be missing
+    actions for new service features or security fixes.
+  action: >
+    Replace the deprecated managed policy with its documented
+    replacement (see data/deprecation-calendar.yaml). If no
+    replacement exists, create a scoped customer-managed policy
+    granting only the actions the workload requires.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "policies": {
+          "has_deprecated_managed_policy": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.policies.has_deprecated_managed_policy
+      op: eq
+      value: true
+tests:
+  - name: "role with deprecated managed policy fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/legacy-cloudtrail-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          policies:
+            has_deprecated_managed_policy: true
+  - name: "role with current managed policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/updated-cloudtrail-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          policies:
+            has_deprecated_managed_policy: false

@@ -117,8 +117,8 @@ var declaredInputs = []string{
 	"grants_cross_account_access",
 }
 
-// G3 default config — mirrors stave-authorization.yaml at the
-// repo root. The extractor uses these defaults unless -config
+// G3 default config — mirrors data/stave-authorization.yaml.
+// The extractor uses these defaults unless -config
 // points at a file the operator has tuned. YAML parsing is a
 // future enhancement; for now the defaults are hardcoded and
 // the -config flag exists as a forward-compatible placeholder.
@@ -168,7 +168,7 @@ func parseFlags() *options {
 	flag.StringVar(&opts.out, "out", "./facts",
 		"Output directory for the per-predicate .facts files.")
 	flag.StringVar(&opts.config, "config", "",
-		"Path to stave-authorization.yaml. Placeholder for first iteration — defaults are hardcoded; this flag exists for forward compatibility.")
+		"Path to data/stave-authorization.yaml. Placeholder for first iteration — defaults are hardcoded; this flag exists for forward compatibility.")
 	flag.Parse()
 
 	if opts.jsonl == "" && opts.snapshot == "" {

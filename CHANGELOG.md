@@ -65,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `reasoning/souffle/iam/` (schema.dl + rules.dl +
   action_classes.dl + Go extractor / validator / findings
   emitter). G3 added the authorization model
-  (`docs/authorization-model.md` + `stave-authorization.yaml`
+  (`docs/authorization-model.md` + `data/stave-authorization.yaml`
   default with Owner/Team + DataClassification PII/PHI/PCI).
   G4–G5 added `violation_c` and `violation_i` queries that
   emit PostureFindings with `control_id` =

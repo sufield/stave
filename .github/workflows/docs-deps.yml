@@ -38,7 +38,7 @@ jobs:
           python3 << 'PYEOF'
           import yaml, fnmatch, subprocess, sys
 
-          with open("docs-deps.yaml") as f:
+          with open("docs/deps.yaml") as f:
               deps = yaml.safe_load(f)
 
           changed = subprocess.check_output(
@@ -104,7 +104,7 @@ jobs:
                   body += f"- **Triggered by:** `{', '.join(s['sources'])}`\n"
                   body += f"- **Last audited:** `{s['last_audited']}`\n"
                   body += f"- **Drift:** {s['drift']}\n\n"
-              body += "After reviewing, update `last_audited` in `docs-deps.yaml` to the current commit hash.\n"
+              body += "After reviewing, update `last_audited` in `docs/deps.yaml` to the current commit hash.\n"
 
               with open("/tmp/stale-docs.md", "w") as f:
                   f.write(body)

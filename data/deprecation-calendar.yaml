@@ -53,3 +53,312 @@ superseded:
   - artifact: "Classic Load Balancer"
     replacement: "Application/Network Load Balancer"
     deprecated_date: "2022-08-15"
+
+# AWS-managed IAM policies deprecated by AWS. Roles still using these
+# reference abandoned infrastructure. Source: IAMTrail DEPRECATED.json
+# (76 entries, synced 2026-07-17). Quarterly refresh via make triage.
+managed_policies:
+  - name: AWSB9InternalServicePolicy
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWSBackupAdminPolicy
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWSBackupOperatorPolicy
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWSCloudTrailFullAccess
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWSCodeArtifactReadOnlyAccess.json
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWSLambdaFullAccess
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWSLambdaReadOnlyAccess
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWSLambdaReplicatorInternal
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWSOpsWorksFullAccess
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWSOpsWorksRegisterCLI
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWSOpsWorksRole
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWSRoboMakerFullAccess
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWSSchemasServiceRolePolicy
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWSServiceRoleForCodeGuruProfiler
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWSServiceRoleForGammaInternalAmazonEKSNodegroup
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWSServiceRoleForThorInternalDevPolicy
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWS_Config_Role
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AmazonApplicationWizardFullaccess
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AmazonConnectFullAccess
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AmazonEC2ContainerServiceFullAccess
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AmazonEC2ReportsAccess
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AmazonEC2RolePolicyForApplicationWizard
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AmazonEC2SpotFleetRole
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AmazonEverestServicePolicy
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AmazonLaunchWizardFullaccess
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AmazonMachineLearningRoleforRedshiftDataSource
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AmazonMachineLearningRoleforRedshiftDataSourceV2
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AmazonMechanicalTurkCrowdFullAccess
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AmazonMechanicalTurkCrowdReadOnlyAccess
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: CheesepuffsServiceRolePolicy
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: ServerMigrationServiceRole
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: ServiceCatalogAdminReadOnlyAccess
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: ServiceCatalogEndUserAccess
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: TagGovernancePolicy
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: TagPoliciesServiceRolePolicy
+    type: managed_policy
+    deprecated_date: "2021-04-02"
+    source: iamtrail
+  - name: AWSElasticBeanstalkFullAccess
+    type: managed_policy
+    deprecated_date: "2021-04-20"
+    source: iamtrail
+  - name: AWSElasticBeanstalkReadOnlyAccess
+    type: managed_policy
+    deprecated_date: "2021-04-20"
+    source: iamtrail
+  - name: AWSECRPullThroughCacheServiceRolePolicy
+    type: managed_policy
+    deprecated_date: "2021-11-25"
+    source: iamtrail
+  - name: AmazonLambdaRolePolicyForLaunchWizardSAP
+    type: managed_policy
+    deprecated_date: "2022-02-10"
+    source: iamtrail
+  - name: AmazonMacieSetupRole
+    type: managed_policy
+    deprecated_date: "2022-04-26"
+    source: iamtrail
+  - name: AWSBudgetsActionsRolePolicyForResourceAdministrationWithSSM
+    type: managed_policy
+    deprecated_date: "2022-06-16"
+    source: iamtrail
+  - name: AmazonWorkLinkFullAccess
+    type: managed_policy
+    deprecated_date: "2022-07-14"
+    source: iamtrail
+  - name: AmazonWorkLinkReadOnly
+    type: managed_policy
+    deprecated_date: "2022-07-14"
+    source: iamtrail
+  - name: AmazonWorkLinkServiceRolePolicy
+    type: managed_policy
+    deprecated_date: "2022-07-15"
+    source: iamtrail
+  - name: AWSCloudTrailReadOnlyAccess
+    type: managed_policy
+    deprecated_date: "2022-09-07"
+    source: iamtrail
+  - name: AWSDataPipelineRole
+    type: managed_policy
+    deprecated_date: "2022-10-04"
+    source: iamtrail
+  - name: AWSCodePipelineFullAccess
+    type: managed_policy
+    deprecated_date: "2022-11-17"
+    source: iamtrail
+  - name: AWSCodePipelineReadOnlyAccess
+    type: managed_policy
+    deprecated_date: "2022-11-17"
+    source: iamtrail
+  - name: AWSProtonServiceSyncServiceRolePolicy
+    type: managed_policy
+    deprecated_date: "2023-04-04"
+    source: iamtrail
+  - name: AmazonSumerianFullAccess
+    type: managed_policy
+    deprecated_date: "2023-04-10"
+    source: iamtrail
+  - name: AWSMobileHub_FullAccess
+    type: managed_policy
+    deprecated_date: "2023-09-12"
+    source: iamtrail
+  - name: AWSMobileHub_ReadOnly
+    type: managed_policy
+    deprecated_date: "2023-09-12"
+    source: iamtrail
+  - name: AmazonDataZonePortalFullAccessPolicy
+    type: managed_policy
+    deprecated_date: "2023-10-05"
+    source: iamtrail
+  - name: AmazonDataZonePreviewConsoleFullAccess
+    type: managed_policy
+    deprecated_date: "2023-10-05"
+    source: iamtrail
+  - name: AmazonDataZoneProjectDeploymentPermissionsBoundary
+    type: managed_policy
+    deprecated_date: "2023-12-04"
+    source: iamtrail
+  - name: AmazonDataZoneProjectRolePermissionsBoundary
+    type: managed_policy
+    deprecated_date: "2023-12-04"
+    source: iamtrail
+  - name: AmazonLaunchWizard_Fullaccess
+    type: managed_policy
+    deprecated_date: "2024-02-01"
+    source: iamtrail
+  - name: AWSIotRoboRunnerFullAccess
+    type: managed_policy
+    deprecated_date: "2024-04-10"
+    source: iamtrail
+  - name: AWSIotRoboRunnerReadOnly
+    type: managed_policy
+    deprecated_date: "2024-04-10"
+    source: iamtrail
+  - name: AWSIotRoboRunnerServiceRolePolicy
+    type: managed_policy
+    deprecated_date: "2024-04-10"
+    source: iamtrail
+  - name: ServerMigration_ServiceRole
+    type: managed_policy
+    deprecated_date: "2024-11-21"
+    source: iamtrail
+  - name: GroundTruthSyntheticConsoleFullAccess
+    type: managed_policy
+    deprecated_date: "2025-05-28"
+    source: iamtrail
+  - name: GroundTruthSyntheticConsoleReadOnlyAccess
+    type: managed_policy
+    deprecated_date: "2025-05-28"
+    source: iamtrail
+  - name: AWSMarketplaceImageBuildFullAccess
+    type: managed_policy
+    deprecated_date: "2025-05-29"
+    source: iamtrail
+  - name: AWSOpsWorksCMInstanceProfileRole
+    type: managed_policy
+    deprecated_date: "2025-08-14"
+    source: iamtrail
+  - name: AWSOpsWorksCMServiceRole
+    type: managed_policy
+    deprecated_date: "2025-08-14"
+    source: iamtrail
+  - name: AWSOpsWorksCloudWatchLogs
+    type: managed_policy
+    deprecated_date: "2025-08-14"
+    source: iamtrail
+  - name: AWSOpsWorksInstanceRegistration
+    type: managed_policy
+    deprecated_date: "2025-08-14"
+    source: iamtrail
+  - name: AWSOpsWorksRegisterCLI_EC2
+    type: managed_policy
+    deprecated_date: "2025-08-14"
+    source: iamtrail
+  - name: AWSOpsWorksRegisterCLI_OnPremises
+    type: managed_policy
+    deprecated_date: "2025-08-14"
+    source: iamtrail
+  - name: AWSOpsWorks_FullAccess
+    type: managed_policy
+    deprecated_date: "2025-08-14"
+    source: iamtrail
+  - name: AWSIoT1ClickFullAccess
+    type: managed_policy
+    deprecated_date: "2025-09-18"
+    source: iamtrail
+  - name: AWSIoT1ClickReadOnlyAccess
+    type: managed_policy
+    deprecated_date: "2025-09-18"
+    source: iamtrail
+  - name: AmazonGuardDutyFullAccess
+    type: managed_policy
+    deprecated_date: "2026-03-14"
+    source: iamtrail
+  - name: NAPSPropagatorIntegTestManagedPolicy07
+    type: managed_policy
+    deprecated_date: "2026-04-10"
+    source: iamtrail
+  - name: AnthropicInferenceAccess
+    type: managed_policy
+    deprecated_date: "2026-05-09"
+    source: iamtrail
