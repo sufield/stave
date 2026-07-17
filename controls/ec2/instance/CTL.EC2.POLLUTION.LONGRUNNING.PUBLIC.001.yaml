@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.POLLUTION.LONGRUNNING.PUBLIC.001
+name: Long-Running Instance on Stale AMI Has Public IP
+description: >
+  EC2 instance has been running longer than the age threshold AND
+  has a public IP address. This is the pollution compound: an old
+  instance (likely abandoned or forgotten), with accumulated
+  unpatched vulnerabilities from the stale AMI, directly exposed
+  to the internet. Farris: "EC2 instances that have been running
+  since Barack Obama was president." The compound of
+  CTL.EC2.INSTANCE.AGE.001 (instance age) and CTL.EC2.PUBLIC.001
+  (public IP) — neither alone captures the distinct risk of an
+  abandoned, exposed, unpatched instance.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-04", "IVS-03"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_instance
+params:
+  attack_stage: initial_access
+  base_impact: 8
+  blast_radius:
+    type: compromise
+    scope: instance
+    multiplier: 2.0
+observation_fields:
+  - compute.kind
+  - compute.instance_age.exceeds_threshold
+  - compute.network.has_public_ip
+remediation:
+  description: >
+    Long-running EC2 instance on a stale AMI has a public IP.
+    Abandoned, unpatched, and internet-exposed.
+  action: >
+    Terminate the instance and rebuild from a current AMI in a
+    private subnet. If the instance must remain running, update
+    the AMI, remove the public IP, and place behind a load
+    balancer or NAT gateway.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "instance_age": {
+          "exceeds_threshold": false
+        },
+        "network": {
+          "has_public_ip": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.instance_age.exceeds_threshold
+      op: eq
+      value: true
+    - field: properties.compute.network.has_public_ip
+      op: eq
+      value: true
+tests:
+  - name: "old instance with public IP fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:instance/i-old-public"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          instance_age:
+            exceeds_threshold: true
+          network:
+            has_public_ip: true
+  - name: "old instance without public IP passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:instance/i-old-private"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          instance_age:
+            exceeds_threshold: true
+          network:
+            has_public_ip: false
+  - name: "new instance with public IP passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:instance/i-new-public"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          instance_age:
+            exceeds_threshold: false
+          network:
+            has_public_ip: true

@@ -846,6 +846,21 @@ Route table entries for VPC peering connections must reference specific subnet C
 
 ---
 
+### CTL.VPC.POLLUTION.ORPHANEDSG.OPEN.001
+
+**Orphaned Security Group Has Unrestricted Ingress**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.6;
+
+Security group has no attached resources AND allows unrestricted ingress (0.0.0.0/0 or ::/0). An orphaned SG with open ingress is not currently exposing anything, but when reattached — which orphaned SGs often are, because developers search for existing SGs rather than creating new ones — the resource inherits the permissive rule immediately. This is a distance-one pattern: the risk is one attachment away. The compound of CTL.EC2.SG.UNUSED.001 (orphaned) and CTL.VPC.SG.UNRESTRICTED.001 (open ingress) — individually these are low and medium severity; together they represent a latent exposure waiting for a trigger.
+
+**Remediation:** Delete the unused security group. If it cannot be deleted (referenced by a launch template or other config), remove all ingress rules to eliminate the latent risk.
+
+---
+
 ### CTL.VPC.ROUTETABLE.MAIN.PUBLIC.001
 
 **Main Route Table Has Public Route**

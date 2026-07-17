@@ -1,0 +1,120 @@
+dsl_version: ctrl.v1
+id: CTL.S3.POLLUTION.PUBLIC.001
+name: Publicly Accessible S3 Bucket Has No Lifecycle Policy
+description: >
+  S3 bucket is publicly accessible AND has no lifecycle policy
+  configured. A public bucket that is actively maintained has an
+  owner who can justify the exposure and manages the data lifecycle.
+  A public bucket with no lifecycle policy has no evidence of active
+  management — it is likely abandoned, with data exposed to the
+  internet and no one responsible for its contents. This is the
+  pollution compound of CTL.S3.NETWORK.001 (public access) and
+  CTL.S3.LIFECYCLE.001 (missing lifecycle) — together they identify
+  the Farris "public buckets that no one knows how they're
+  referenced" pattern.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.6"
+  ccm_v4: ["DCS-07", "IVS-03"]
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - compliance-mapping
+  - identity-perimeter
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: exfiltration
+  base_impact: 8
+  blast_radius:
+    type: exposure
+    scope: bucket
+    multiplier: 2.0
+observation_fields:
+  - storage.access.effective_network_scope
+  - storage.lifecycle.rules_configured
+remediation:
+  description: >
+    S3 bucket is publicly accessible and has no lifecycle policy.
+    Likely abandoned with no active owner managing the exposure.
+  action: >
+    Determine whether the bucket is still needed. If not, delete
+    the bucket and its contents. If the public exposure is
+    intentional, add a lifecycle policy and tag the bucket with
+    an owner and data classification. If the exposure is
+    unintentional, block public access immediately.
+  example: |
+    {
+      "storage": {
+        "access": {
+          "effective_network_scope": "vpc"
+        },
+        "lifecycle": {
+          "rules_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.access.effective_network_scope
+      op: eq
+      value: "public"
+    - field: properties.storage.lifecycle.rules_configured
+      op: eq
+      value: false
+defect: >
+  S3 bucket is public and has no lifecycle policy. No evidence
+  of active management exists.
+infection: >
+  The bucket is exposed to the internet with no owner managing
+  its contents. Data accumulates without retention controls.
+  New objects are uploaded and never cleaned up. The bucket
+  grows in size and exposure without oversight.
+failure: >
+  Sensitive data in the abandoned public bucket is discovered
+  by an external party. The organization learns about the
+  exposure from a security researcher, a news article, or a
+  regulatory notification — not from internal monitoring.
+tests:
+  - name: "public bucket with no lifecycle fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::abandoned-public-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          access:
+            effective_network_scope: "public"
+          lifecycle:
+            rules_configured: false
+  - name: "public bucket with lifecycle passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::managed-public-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          access:
+            effective_network_scope: "public"
+          lifecycle:
+            rules_configured: true
+  - name: "private bucket with no lifecycle passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::private-no-lifecycle"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          access:
+            effective_network_scope: "vpc"
+          lifecycle:
+            rules_configured: false

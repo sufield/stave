@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3021
-**Pack hash:** `35f5b2061bd087b499b07463b86b80fb694d394544663b79759fe34d59bea55b`
+**Total controls:** 3029
+**Pack hash:** `cd12b7efbab64e25064037a9ae54f9ab2e93b948a3167964b112f181ab9c03c0`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 308 |
-| high | 1317 |
+| critical | 311 |
+| high | 1320 |
 | info | 18 |
 | low | 232 |
-| medium | 1146 |
+| medium | 1148 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,12 +27,12 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1341 |
+| exposure | 1343 |
 | governance | 626 |
 | hygiene | 18 |
-| identity | 547 |
+| identity | 552 |
 | lifecycle | 31 |
-| network | 43 |
+| network | 44 |
 | resilience | 35 |
 | secrets | 4 |
 | storage | 8 |
@@ -76,7 +76,7 @@ GitHub. Pick a service below.
 | [DNS](reference/dns.md) | 3 |
 | [DOCUMENTDB](reference/documentdb.md) | 18 |
 | [DYNAMODB](reference/dynamodb.md) | 38 |
-| [EC2](reference/ec2.md) | 106 |
+| [EC2](reference/ec2.md) | 107 |
 | [ECR](reference/ecr.md) | 10 |
 | [ECS](reference/ecs.md) | 52 |
 | [EFS](reference/efs.md) | 14 |
@@ -98,7 +98,7 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 18 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 264 |
+| [IAM](reference/iam.md) | 269 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |
@@ -121,7 +121,7 @@ GitHub. Pick a service below.
 | [RDS](reference/rds.md) | 72 |
 | [REDSHIFT](reference/redshift.md) | 26 |
 | [ROUTE53](reference/route53.md) | 50 |
-| [S3](reference/s3.md) | 143 |
+| [S3](reference/s3.md) | 144 |
 | [SAGEMAKER](reference/sagemaker.md) | 36 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
@@ -136,7 +136,7 @@ GitHub. Pick a service below.
 | [SSM](reference/ssm.md) | 13 |
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
 | [TRANSFER](reference/transfer.md) | 1 |
-| [VPC](reference/vpc.md) | 91 |
+| [VPC](reference/vpc.md) | 92 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 16 |
 | [WORKSPACES](reference/workspaces.md) | 1 |

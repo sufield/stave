@@ -2526,6 +2526,21 @@ A customer-managed IAM policy has non-default versions containing broader permis
 
 ---
 
+### CTL.IAM.POLLUTION.STALEADMIN.001
+
+**Stale IAM Credential Has Administrative Permissions**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2; owasp_nhi: NHI1; soc2: CC6.2;
+
+IAM user has credentials unused for 90+ days AND has administrative permissions. A stale credential with admin access is the highest-risk pollution pattern: the key has no active operational purpose (unused), maximum blast radius (admin), and is likely unmonitored (no one watches for its use because no one remembers it exists). This is the compound of CTL.IAM.CRED.UNUSED.001 (stale credential) and CTL.IAM.POLICY.ADMIN.001 (admin access) — neither alone captures the distinct risk class of an abandoned admin key. Farris: "access keys that are who knows where, waiting to be exposed."
+
+**Remediation:** Immediately disable or delete the stale credentials. Remove administrative permissions. If the user is no longer needed, delete the IAM user entirely.
+
+---
+
 ### CTL.IAM.RCP.DENY.EXTERNAL.001
 
 **RCP Must Restrict External Principal Access to Resources**
@@ -3021,6 +3036,21 @@ SCP does not deny disabling EBS default encryption. If EBS default encryption is
 
 ---
 
+### CTL.IAM.SCP.EC2.MODIFYEBSDEFAULTKEY.001
+
+**SCP Does Not Deny ec2:ModifyEbsDefaultKmsKeyId**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SC-12; soc2: CC6.1;
+
+No SCP in the hierarchy denies ec2:ModifyEbsDefaultKmsKeyId. This is the weaponization step in the BYOKM ransomware kill chain — the attacker changes the default EBS encryption key to their BYOKM key so all new volumes and snapshots in that region are encrypted under attacker-controlled material. Changing the default EBS encryption key is rarely needed after initial account setup. Denying it by SCP prevents an attacker from redirecting encryption to an attacker-controlled key without affecting normal EBS operations (which use whatever key is already set as default).
+
+**Remediation:** Add an SCP that denies ec2:ModifyEbsDefaultKmsKeyId for all principals. Exempt the infrastructure automation role if default key changes are part of account provisioning.
+
+---
+
 ### CTL.IAM.SCP.EVENTBRIDGE.001
 
 **SCP Does Not Protect EventBridge Rules**
@@ -3111,6 +3141,36 @@ SCP does not deny EC2 instance launches without IMDSv2 required. Without this SC
 
 ---
 
+### CTL.IAM.SCP.KMS.CREATEKEY.EXTERNAL.001
+
+**SCP Does Not Deny kms:CreateKey with EXTERNAL Origin**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SC-12; soc2: CC6.1;
+
+No SCP in the hierarchy denies creating KMS keys with origin=EXTERNAL. This is the earliest prevention point in the BYOKM ransomware kill chain — if the attacker cannot create a KMS key with EXTERNAL origin, no subsequent phase (import key material, replicate, re-encrypt, rug pull) is possible. The SCP should use a condition key (kms:KeyOrigin) to deny only EXTERNAL-origin key creation while permitting normal AWS_KMS-origin keys. If the kms:KeyOrigin condition key is not available in the SCP context, the broader approach is to deny kms:CreateKey entirely and grant it only to approved automation roles — but this blocks all key creation, not just BYOKM keys.
+
+**Remediation:** Add an SCP that denies kms:CreateKey with condition StringEquals kms:KeyOrigin EXTERNAL. This blocks BYOKM key creation while allowing normal AWS-generated keys. If the organization legitimately uses BYOKM keys, exempt specific approved accounts via condition.
+
+---
+
+### CTL.IAM.SCP.KMS.DELETEKEYMATERIAL.001
+
+**SCP Does Not Deny kms:DeleteImportedKeyMaterial**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SC-12; soc2: CC6.1;
+
+No SCP in the hierarchy denies kms:DeleteImportedKeyMaterial. This is the "rug pull" action in the BYOKM ransomware kill chain — the attacker deletes the imported key material, rendering all data encrypted under the key permanently irrecoverable. Unlike ScheduleKeyDeletion (which has a 7-30 day waiting period), DeleteImportedKeyMaterial takes effect immediately: the key transitions to PendingImport state and all cryptographic operations fail instantly. Every EBS volume, RDS database, S3 object, and Secrets Manager value encrypted under that key becomes unreadable. There is no undo — the key material was externally generated and never held by AWS. Farris identifies this as the single most important action to block: "kms:DeleteImportedKeyMaterial is what you need to look for and block."
+
+**Remediation:** Add an SCP that denies kms:DeleteImportedKeyMaterial for all principals. This is the single highest-impact ransomware prevention SCP. If the organization uses BYOKM keys legitimately, restrict deletion to a specific approved role via SCP condition.
+
+---
+
 ### CTL.IAM.SCP.KMS.IMPORTKEY.001
 
 **SCP Does Not Deny kms:ImportKeyMaterial**
@@ -3138,6 +3198,21 @@ No SCP in the hierarchy denies kms:ImportKeyMaterial. An attacker who can import
 No SCP in the hierarchy denies kms:ScheduleKeyDeletion. Key deletion permanently destroys the key material — all data encrypted under that key becomes irrecoverable after the waiting period (minimum 7 days, default 30). An attacker who can schedule key deletion can destroy all data encrypted under every customer-managed KMS key in every member account. The waiting period provides a detection window, but only if CloudTrail alarms are configured for ScheduleKeyDeletion events (CTL.KMS.ALARM.KEYDELETION.001). Without both the SCP deny and the alarm, key deletion is a low-noise, high-impact destruction path. Denying ScheduleKeyDeletion by SCP and requiring an approval workflow through the management account ensures key deletion is a deliberate, audited process.
 
 **Remediation:** Add an SCP that denies kms:ScheduleKeyDeletion for all principals. Require key deletion requests to go through a management account workflow with approval from a security team member.
+
+---
+
+### CTL.IAM.SCP.KMS.REPLICATEKEY.001
+
+**SCP Does Not Deny kms:ReplicateKey**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SC-12; soc2: CC6.6;
+
+No SCP in the hierarchy denies kms:ReplicateKey. Key replication copies a multi-region primary key to additional regions. In the BYOKM ransomware kill chain, the attacker replicates the externally-keyed KMS key to every region, expanding the blast radius from one region to the entire account. Once replicated, the attacker can set EBS default encryption in every region to the BYOKM key replica. Denying ReplicateKey by SCP limits the attack to the single region where the key was created. Some organizations legitimately replicate KMS keys for multi-region encryption — this control is a blast-radius limiter, not a primary prevention.
+
+**Remediation:** Add an SCP that denies kms:ReplicateKey for all principals. Exempt specific roles if multi-region key replication is a documented requirement.
 
 ---
 

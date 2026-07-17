@@ -1,0 +1,29 @@
+id: cloud_pollution_amplifier_path
+description: >
+  Cloud pollution amplifies attack surface: account has stale
+  credentials with administrative permissions AND long-running
+  instances on stale AMIs with public IPs AND IMDSv2 is not
+  enforced by SCP. Farris's thesis: abandoned resources accumulate
+  misconfigurations because nobody maintains them. This chain
+  detects the compound state where pollution across IAM and
+  compute creates an attack path — a stale admin key is the entry
+  point, a long-running public instance is the pivot, and IMDSv1
+  on the instance enables credential theft from the instance
+  metadata service. Neither alone is the highest priority;
+  together they are a named pattern.
+controls:
+  - CTL.IAM.POLLUTION.STALEADMIN.001
+  - CTL.EC2.POLLUTION.LONGRUNNING.PUBLIC.001
+  - CTL.IAM.SCP.IMDSV2.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies:
+  - source: observation.iam_access_key_last_used
+    fallback: fail_closed
+    diagnostic: >
+      IAM access key last-used date not captured. Cannot
+      determine whether credentials are stale.

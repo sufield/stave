@@ -1219,6 +1219,21 @@ SSM Patch Manager maintenance window has not executed in more than 30 days. The 
 
 ---
 
+### CTL.EC2.POLLUTION.LONGRUNNING.PUBLIC.001
+
+**Long-Running Instance on Stale AMI Has Public IP**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; soc2: CC7.1;
+
+EC2 instance has been running longer than the age threshold AND has a public IP address. This is the pollution compound: an old instance (likely abandoned or forgotten), with accumulated unpatched vulnerabilities from the stale AMI, directly exposed to the internet. Farris: "EC2 instances that have been running since Barack Obama was president." The compound of CTL.EC2.INSTANCE.AGE.001 (instance age) and CTL.EC2.PUBLIC.001 (public IP) — neither alone captures the distinct risk of an abandoned, exposed, unpatched instance.
+
+**Remediation:** Terminate the instance and rebuild from a current AMI in a private subnet. If the instance must remain running, update the AMI, remove the public IP, and place behind a load balancer or NAT gateway.
+
+---
+
 ### CTL.EC2.PROFILE.OVERBROAD.001
 
 **EC2 Instance Profile Must Follow Least Privilege**
