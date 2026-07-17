@@ -3,6 +3,7 @@ package cel
 import (
 	"fmt"
 	"log/slog"
+	"maps"
 	"math"
 	"slices"
 	"strconv"
@@ -476,11 +477,7 @@ func literal(v any) (string, error) {
 		return "[" + strings.Join(items, ", ") + "]", nil
 	case map[string]any:
 		// Emit as a CEL map literal with sorted keys for deterministic output.
-		keys := make([]string, 0, len(val))
-		for k := range val {
-			keys = append(keys, k)
-		}
-		slices.Sort(keys)
+		keys := slices.Sorted(maps.Keys(val))
 		entries := make([]string, len(keys))
 		for i, k := range keys {
 			lit, err := literal(val[k])

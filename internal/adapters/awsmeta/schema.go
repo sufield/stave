@@ -7,10 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
-	"sort"
 	"strings"
 )
 
@@ -81,11 +81,7 @@ func ExtractSchema(serviceName string) (*ServiceSchema, error) {
 		Available:   true,
 	}
 
-	opNames := make([]string, 0, len(model.Operations))
-	for name := range model.Operations {
-		opNames = append(opNames, name)
-	}
-	sort.Strings(opNames)
+	opNames := slices.Sorted(maps.Keys(model.Operations))
 
 	for _, name := range opNames {
 		op := model.Operations[name]
@@ -139,11 +135,7 @@ func flattenShape(model *serviceModel, shapeName, prefix string, depth int) []Fi
 		return nil
 	}
 
-	memberNames := make([]string, 0, len(shape.Members))
-	for name := range shape.Members {
-		memberNames = append(memberNames, name)
-	}
-	sort.Strings(memberNames)
+	memberNames := slices.Sorted(maps.Keys(shape.Members))
 
 	var fields []Field
 	for _, name := range memberNames {

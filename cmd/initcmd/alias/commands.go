@@ -23,11 +23,6 @@ import (
 
 var namePattern = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
-// CommandFinder checks if an alias name collides with an existing built-in command.
-type CommandFinder interface {
-	Exists(name string) bool
-}
-
 // Entry represents a single command alias.
 type Entry struct {
 	Name    string `json:"name"`
@@ -39,7 +34,7 @@ type Entry struct {
 // Runner orchestrates the management of command aliases in user configuration.
 type Runner struct {
 	Resolver *projconfig.Resolver
-	Finder   CommandFinder
+	Finder   *cobraFinder
 	Stdout   io.Writer
 	Stderr   io.Writer
 }

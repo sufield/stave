@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"slices"
 	"strings"
 
@@ -208,11 +209,7 @@ func WriteErrorText(w io.Writer, info *ErrorInfo) error {
 		// randomised in Go, so the previous shape produced
 		// flapping diagnostic output that broke goldens and made
 		// support transcripts hard to compare.
-		keys := make([]string, 0, len(info.Evidence))
-		for k := range info.Evidence {
-			keys = append(keys, k)
-		}
-		slices.Sort(keys)
+		keys := slices.Sorted(maps.Keys(info.Evidence))
 		for _, k := range keys {
 			sb.WriteString("    - ")
 			sb.WriteString(k)

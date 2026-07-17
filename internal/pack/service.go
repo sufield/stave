@@ -1,7 +1,8 @@
 package pack
 
 import (
-	"sort"
+	"maps"
+	"slices"
 	"strings"
 )
 
@@ -86,7 +87,7 @@ func MergeRequirements(packs []*Pack) Requirements {
 		}
 	}
 
-	sort.Strings(serviceOrder)
+	slices.Sort(serviceOrder)
 	merged := Requirements{ObservationSignals: sortedKeys(signals)}
 	for _, svc := range serviceOrder {
 		merged.AWSAPICalls = append(merged.AWSAPICalls, ServiceCalls{
@@ -112,10 +113,5 @@ func dedupAppend(dst, src []string) []string {
 }
 
 func sortedKeys(m map[string]bool) []string {
-	out := make([]string, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	sort.Strings(out)
-	return out
+	return slices.Sorted(maps.Keys(m))
 }

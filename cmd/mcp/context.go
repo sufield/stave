@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
+	"maps"
+	"slices"
 	"strings"
 	"unicode"
 
@@ -123,11 +124,7 @@ func contextChain(ctx context.Context, args contextArgs) (any, error) {
 			continue
 		}
 		_, assets := chainAssets(assess, c.ChainID)
-		assetList := make([]string, 0, len(assets))
-		for a := range assets {
-			assetList = append(assetList, a)
-		}
-		sort.Strings(assetList)
+		assetList := slices.Sorted(maps.Keys(assets))
 		controls := make([]string, len(c.ControlsFailing))
 		for j, cf := range c.ControlsFailing {
 			controls[j] = string(cf)

@@ -8,9 +8,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -174,12 +175,7 @@ func (r *ActionRegistry) Valid(action string) bool {
 
 // All returns all valid action names, sorted.
 func (r *ActionRegistry) All() []string {
-	out := make([]string, 0, len(r.actions))
-	for a := range r.actions {
-		out = append(out, a)
-	}
-	sort.Strings(out)
-	return out
+	return slices.Sorted(maps.Keys(r.actions))
 }
 
 // ConditionKeyRegistry provides condition key validation.
@@ -229,12 +225,7 @@ func (r *ConditionKeyRegistry) KeyType(key string) string {
 
 // All returns all condition key names, sorted.
 func (r *ConditionKeyRegistry) All() []string {
-	out := make([]string, 0, len(r.keys))
-	for k := range r.keys {
-		out = append(out, k)
-	}
-	sort.Strings(out)
-	return out
+	return slices.Sorted(maps.Keys(r.keys))
 }
 
 // ResourceTypeRegistry provides resource type and ARN validation.
@@ -272,12 +263,7 @@ func (r *ResourceTypeRegistry) ARNFormats(name string) []string {
 
 // All returns all resource type names, sorted.
 func (r *ResourceTypeRegistry) All() []string {
-	out := make([]string, 0, len(r.resources))
-	for name := range r.resources {
-		out = append(out, name)
-	}
-	sort.Strings(out)
-	return out
+	return slices.Sorted(maps.Keys(r.resources))
 }
 
 // ActionConditionKeys returns the condition keys applicable to a

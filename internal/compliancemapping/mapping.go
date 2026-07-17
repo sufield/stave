@@ -12,6 +12,7 @@ package compliancemapping
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 )
@@ -202,8 +203,8 @@ func (m *Mapping) Verify(catalogIDs map[string]bool) IntegrityReport {
 		}
 	}
 	rep.ReferencedControl = len(distinct)
-	sort.Strings(rep.DuplicateIDs)
-	sort.Strings(rep.PartialNoReason)
+	slices.Sort(rep.DuplicateIDs)
+	slices.Sort(rep.PartialNoReason)
 	sort.Slice(rep.DanglingRefs, func(i, j int) bool {
 		if rep.DanglingRefs[i].FrameworkID != rep.DanglingRefs[j].FrameworkID {
 			return rep.DanglingRefs[i].FrameworkID < rep.DanglingRefs[j].FrameworkID

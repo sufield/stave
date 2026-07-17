@@ -1,6 +1,8 @@
 package snapshot
 
 import (
+	"maps"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -60,10 +62,10 @@ func ExtractSummary(snapshots asset.Snapshots, evalTimeSet bool) Summary {
 		}
 	}
 
-	s.Services = keys(services)
-	s.AccountIDs = keys(accounts)
+	s.Services = slices.Sorted(maps.Keys(services))
+	s.AccountIDs = slices.Sorted(maps.Keys(accounts))
 	s.AccountCount = len(accounts)
-	s.Regions = keys(regions)
+	s.Regions = slices.Sorted(maps.Keys(regions))
 	s.RegionCount = len(regions)
 	s.ServiceCounts = serviceCounts
 
@@ -126,12 +128,4 @@ func extractRegion(a asset.Asset) string {
 		return r
 	}
 	return ""
-}
-
-func keys(m map[string]bool) []string {
-	out := make([]string, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	return out
 }

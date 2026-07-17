@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"crypto/sha256"
 	"encoding/hex"
+	"maps"
 	"slices"
 	"strings"
 
@@ -305,11 +306,7 @@ func buildIssue(assetID asset.ID, memberIndices []int, findings []Finding) Issue
 		}
 	}
 	slices.Sort(memberIDs)
-	sharedStrings := make([]string, 0, len(sharedSet))
-	for k := range sharedSet {
-		sharedStrings = append(sharedStrings, k)
-	}
-	slices.Sort(sharedStrings)
+	sharedStrings := slices.Sorted(maps.Keys(sharedSet))
 	shared := make([]kernel.ObservationKey, len(sharedStrings))
 	for i, s := range sharedStrings {
 		shared[i] = kernel.ObservationKey(s)

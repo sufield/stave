@@ -1,6 +1,7 @@
 package controldef
 
 import (
+	"maps"
 	"slices"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -27,12 +28,7 @@ func (p UnsafePredicate) MissingParamReferences(params ControlParams) []string {
 		return nil
 	}
 
-	keys := make([]string, 0, len(missingSet))
-	for k := range missingSet {
-		keys = append(keys, k)
-	}
-	slices.Sort(keys)
-	return keys
+	return slices.Sorted(maps.Keys(missingSet))
 }
 
 // CheckEffectiveness identifies controls that never triggered across the

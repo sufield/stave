@@ -4,27 +4,14 @@ import (
 	"bufio"
 	"bytes"
 	"cmp"
-	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
+	"maps"
 	"slices"
 )
-
-//go:embed ontology.ttl
-var embeddedOntology []byte
-
-// Ontology returns the embedded Stave ontology as Turtle bytes.
-// Callers that need to ship the ontology alongside an export use
-// this directly. Returns a defensive copy so a write through the
-// returned slice cannot corrupt the process-shared embedded bytes.
-func Ontology() []byte {
-	out := make([]byte, len(embeddedOntology))
-	copy(out, embeddedOntology)
-	return out
-}
 
 // MarshalJSONLD writes a JSON-LD document for the graph. The output
 // is one JSON object with @context (binding short names from the
@@ -189,11 +176,7 @@ func (enc *jsonldNodeEncoder) encodeNode(n *rdfNode, outgoing []rdfEdge) []byte 
 	// Object properties — group by predicate, sorted predicate order.
 	if len(outgoing) > 0 {
 		groups := groupEdges(outgoing)
-		predKeys := make([]string, 0, len(groups))
-		for k := range groups {
-			predKeys = append(predKeys, k)
-		}
-		slices.Sort(predKeys)
+		predKeys := slices.Sorted(maps.Keys(groups))
 		for _, k := range predKeys {
 			grp := groups[k]
 			enc.buf.WriteString(",\n      ")

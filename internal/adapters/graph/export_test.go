@@ -191,24 +191,6 @@ func TestInvariantIRI_SplitsControlID(t *testing.T) {
 	}
 }
 
-func TestOntology_Embedded(t *testing.T) {
-	t.Parallel()
-	ttl := Ontology()
-	if len(ttl) == 0 {
-		t.Fatal("Ontology() returned empty bytes")
-	}
-	s := string(ttl)
-	if !strings.Contains(s, "@prefix stave:") {
-		t.Error("ontology.ttl missing stave: prefix declaration")
-	}
-	if !strings.Contains(s, "stave:isAlgorithmShortcut") {
-		t.Error("ontology.ttl missing isAlgorithmShortcut annotation property")
-	}
-	if !strings.Contains(s, "stave:Bucket") {
-		t.Error("ontology.ttl missing stave:Bucket class")
-	}
-}
-
 func TestMapTordfGraph_MaterializesShortcutEdge(t *testing.T) {
 	t.Parallel()
 	g := buildFixtureGraph(t)

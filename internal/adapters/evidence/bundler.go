@@ -11,6 +11,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"slices"
 	"strconv"
 	"strings"
@@ -189,11 +190,7 @@ func buildManifest(files map[string][]byte, now string) bundleManifest {
 	var hashes []string
 
 	// Sort keys for deterministic output.
-	keys := make([]string, 0, len(files))
-	for k := range files {
-		keys = append(keys, k)
-	}
-	slices.Sort(keys)
+	keys := slices.Sorted(maps.Keys(files))
 
 	for _, name := range keys {
 		data := files[name]
@@ -258,11 +255,7 @@ func writeTarGz(files map[string][]byte) ([]byte, error) {
 	tw := tar.NewWriter(gw)
 
 	// Sort keys for deterministic archive.
-	keys := make([]string, 0, len(files))
-	for k := range files {
-		keys = append(keys, k)
-	}
-	slices.Sort(keys)
+	keys := slices.Sorted(maps.Keys(files))
 
 	for _, name := range keys {
 		data := files[name]

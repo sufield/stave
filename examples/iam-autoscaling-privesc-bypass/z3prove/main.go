@@ -272,7 +272,7 @@ func finding3CompoundPath(key string, state apiState) bool {
 		if !state.adminRole.hasAdmin {
 			continue
 		}
-		if !contains(state.adminRole.trustedServices, v.PassedToService) {
+		if !slices.Contains(state.adminRole.trustedServices, v.PassedToService) {
 			continue
 		}
 		if !passRoleAdmitsTrust(state.passRoleStmts, state.deny, []string{v.PassedToService}) {
@@ -501,15 +501,6 @@ func stringList(v any) []string {
 	default:
 		return nil
 	}
-}
-
-func contains(haystack []string, needle string) bool {
-	for _, s := range haystack {
-		if s == needle {
-			return true
-		}
-	}
-	return false
 }
 
 // loadState reads the snapshot dir, finds the principal

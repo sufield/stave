@@ -2,7 +2,7 @@ package stave
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 
 	"github.com/sufield/stave/internal/adapters/controls/builtin"
 	predicates "github.com/sufield/stave/internal/adapters/predicate"
@@ -37,6 +37,6 @@ func CatalogControlIDs(controlsDir string, useBuiltin bool) ([]string, error) {
 			ids = append(ids, string(controls[i].ID))
 		}
 	}
-	sort.Strings(ids)
+	slices.Sort(ids)
 	return ids, nil
 }

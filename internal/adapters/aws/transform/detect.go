@@ -1,8 +1,8 @@
 package transform
 
 import (
+	"maps"
 	"slices"
-	"sort"
 )
 
 // detect.go maps a raw AWS CLI document to the filter that converts it, keyed by
@@ -102,7 +102,7 @@ func referencedFilters() []string {
 		out = append(out, e.filter)
 	}
 	out = append(out, selfDescribingFilters...)
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }
 
@@ -117,11 +117,7 @@ type Supported struct {
 // top-level key. Enrichment inputs that need a join key are noted in the filter
 // name.
 func SupportedInputs() []Supported {
-	keys := make([]string, 0, len(topLevelKeyToFilter))
-	for k := range topLevelKeyToFilter {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	keys := slices.Sorted(maps.Keys(topLevelKeyToFilter))
 	out := make([]Supported, 0, len(keys)+len(enrichments))
 	for _, k := range keys {
 		out = append(out, Supported{TopLevelKey: k, Filter: topLevelKeyToFilter[k]})

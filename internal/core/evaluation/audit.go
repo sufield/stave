@@ -2,6 +2,7 @@ package evaluation
 
 import (
 	"cmp"
+	"maps"
 	"slices"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -230,11 +231,7 @@ func computeSuperFix(failingIDs sets.Set[kernel.ControlID], controlCompliance ma
 	// (the lexicographically-smallest control ID, via the strict > below)
 	// rather than chosen by Go map iteration order — identical inputs must
 	// yield identical "most impactful fix" recommendations.
-	sortedIDs := make([]kernel.ControlID, 0, len(failingIDs))
-	for ctlID := range failingIDs {
-		sortedIDs = append(sortedIDs, ctlID)
-	}
-	slices.Sort(sortedIDs)
+	sortedIDs := slices.Sorted(maps.Keys(failingIDs))
 
 	var best *SuperFix
 	for _, ctlID := range sortedIDs {

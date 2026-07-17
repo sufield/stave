@@ -12,6 +12,7 @@ package pack
 
 import (
 	"path"
+	"slices"
 	"sort"
 	"strings"
 )
@@ -104,7 +105,7 @@ func (p Pack) Resolve(catalog []ControlMeta) []string {
 	if p.Controls.Limit > 0 && len(out) > p.Controls.Limit {
 		out = out[:p.Controls.Limit]
 	}
-	sort.Strings(out)
+	slices.Sort(out)
 	return out
 }
 
@@ -120,6 +121,6 @@ func (p Pack) Missing(catalog []ControlMeta) []string {
 			miss = append(miss, id)
 		}
 	}
-	sort.Strings(miss)
+	slices.Sort(miss)
 	return miss
 }

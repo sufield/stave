@@ -1,6 +1,7 @@
 package kernel
 
 import (
+	"slices"
 	"strings"
 )
 
@@ -56,10 +57,7 @@ func (id ControlID) Classify() ControlClass {
 
 // containsAny is a helper to check if any of the provided substrings exist in s.
 func containsAny(s string, substrings ...string) bool {
-	for _, sub := range substrings {
-		if strings.Contains(s, sub) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(substrings, func(sub string) bool {
+		return strings.Contains(s, sub)
+	})
 }

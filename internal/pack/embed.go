@@ -3,7 +3,8 @@ package pack
 import (
 	"embed"
 	"fmt"
-	"sort"
+	"maps"
+	"slices"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -51,10 +52,5 @@ func LoadAll() (map[string]*Pack, error) {
 
 // Names returns the sorted pack names of a loaded set.
 func Names(all map[string]*Pack) []string {
-	names := make([]string, 0, len(all))
-	for n := range all {
-		names = append(names, n)
-	}
-	sort.Strings(names)
-	return names
+	return slices.Sorted(maps.Keys(all))
 }

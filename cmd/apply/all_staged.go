@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
+	"slices"
 	"sort"
 	"strings"
 )
@@ -86,11 +88,7 @@ func renderAllStaged(findingsJSON []byte, w io.Writer) error {
 		byService[svc] = append(byService[svc], f)
 	}
 
-	services := make([]string, 0, len(byService))
-	for s := range byService {
-		services = append(services, s)
-	}
-	sort.Strings(services)
+	services := slices.Sorted(maps.Keys(byService))
 
 	for _, svc := range services {
 		printStage(w, "["+svc+"]", byService[svc])

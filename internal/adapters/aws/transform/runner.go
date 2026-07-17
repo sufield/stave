@@ -16,6 +16,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"maps"
+	"slices"
 	"sort"
 
 	"github.com/itchyny/gojq"
@@ -54,11 +56,7 @@ func TransformFiles(files map[string][]byte, opts Options) ([]byte, Stats, error
 	var stats Stats
 	assets := []json.RawMessage{} // non-nil so an all-skipped run still marshals "assets": []
 
-	names := make([]string, 0, len(files))
-	for name := range files {
-		names = append(names, name)
-	}
-	sort.Strings(names)
+	names := slices.Sorted(maps.Keys(files))
 
 	// Phase 1: parse, derive a filename key if needed, detect the filter, and
 	// categorize. Skipped files (no matching filter) are counted, not fatal.

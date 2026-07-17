@@ -10,6 +10,11 @@
 // mutation is required. Reading from a zero-value Set is safe.
 package sets
 
+import (
+	"maps"
+	"slices"
+)
+
 // Set is a generic set.
 type Set[T comparable] map[T]struct{}
 
@@ -62,9 +67,5 @@ func (s Set[T]) Slice() []T {
 	if s == nil {
 		return nil
 	}
-	out := make([]T, 0, len(s))
-	for k := range s {
-		out = append(out, k)
-	}
-	return out
+	return slices.Collect(maps.Keys(s))
 }
