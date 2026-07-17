@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROLESANYWHERE.TRUSTANCHOR.001
+name: Roles Anywhere Trust Anchors Must Use Approved CAs
+description: >
+  IAM Roles Anywhere trust anchors must reference only approved
+  certificate authorities (ACM-PCA managed or on the approved CA
+  list). An attacker creates a trust anchor with their own CA,
+  then uses certificates from that CA to assume roles from outside
+  AWS. This bypasses all IAM access key controls because
+  authentication uses X.509 certificates, not access keys.
+  Extends CTL.IAM.ROLESANYWHERE.SELFSIGNED.001 (self-signed CA
+  detection) with explicit approved-CA-list enforcement.
+  Technique: hackingthe.cloud IAM Roles Anywhere persistence.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "IA-5(2)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-11", "IVS-03"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - trust-boundary
+  - credential-lifecycle
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_roles_anywhere_trust_anchor
+params:
+  attack_stage: persistence
+observation_fields:
+  - identity.kind
+  - identity.roles_anywhere.ca_approved
+  - identity.roles_anywhere.acm_pca_managed
+remediation:
+  description: >
+    Roles Anywhere trust anchor references a CA not on the
+    approved list and not managed by ACM-PCA.
+  action: >
+    Replace the trust anchor with one backed by ACM Private CA
+    or add the CA to the approved list after verification.
+    Review all profiles and roles associated with this trust
+    anchor.
+  example: |
+    {
+      "identity": {
+        "kind": "roles_anywhere_trust_anchor",
+        "roles_anywhere": {
+          "ca_approved": true,
+          "acm_pca_managed": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: roles_anywhere_trust_anchor
+    - field: properties.identity.roles_anywhere.ca_approved
+      op: ne
+      value: true
+    - field: properties.identity.roles_anywhere.acm_pca_managed
+      op: ne
+      value: true
+tests:
+  - name: "unapproved non-pca trust anchor fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:rolesanywhere:us-east-1:123456789012:trust-anchor/abc123"
+      asset_type: aws_iam_roles_anywhere_trust_anchor
+      vendor: aws
+      properties:
+        identity:
+          kind: roles_anywhere_trust_anchor
+          roles_anywhere:
+            ca_approved: false
+            acm_pca_managed: false
+  - name: "acm-pca managed trust anchor passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:rolesanywhere:us-east-1:123456789012:trust-anchor/abc123"
+      asset_type: aws_iam_roles_anywhere_trust_anchor
+      vendor: aws
+      properties:
+        identity:
+          kind: roles_anywhere_trust_anchor
+          roles_anywhere:
+            ca_approved: false
+            acm_pca_managed: true
+  - name: "approved ca trust anchor passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:rolesanywhere:us-east-1:123456789012:trust-anchor/abc123"
+      asset_type: aws_iam_roles_anywhere_trust_anchor
+      vendor: aws
+      properties:
+        identity:
+          kind: roles_anywhere_trust_anchor
+          roles_anywhere:
+            ca_approved: true
+            acm_pca_managed: false

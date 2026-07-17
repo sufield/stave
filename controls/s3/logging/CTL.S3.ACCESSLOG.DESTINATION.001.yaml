@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ACCESSLOG.DESTINATION.001
+name: S3 Access Log Destination Must Be in Same Account or Org
+description: >
+  When S3 server access logging is enabled, the log destination
+  bucket must be in the same account or organization. An attacker
+  can redirect access logs to their own bucket, capturing every
+  S3 request path — which may contain sensitive data in query
+  strings and object keys.
+  Technique: hackingthe.cloud S3 server access logs exfiltration.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AU-9"
+  soc2: "CC6.1"
+  ccm_v4: ["LOG-12", "DSP-17"]
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - logging
+  - data-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.logging.enabled
+  - storage.logging.destination_in_org
+remediation:
+  description: >
+    S3 access log destination is in an external account.
+    Request paths and metadata are being sent outside the
+    organization.
+  action: >
+    Change the access log destination to a bucket in the same
+    account or organization. Investigate whether the external
+    destination was intentionally configured.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "logging": {
+          "enabled": true,
+          "destination_in_org": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.logging.enabled
+      op: eq
+      value: true
+    - field: properties.storage.logging.destination_in_org
+      op: ne
+      value: true
+tests:
+  - name: "external log destination fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::prod-data-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          logging:
+            enabled: true
+            destination_in_org: false
+  - name: "internal log destination passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::prod-data-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          logging:
+            enabled: true
+            destination_in_org: true
+  - name: "logging disabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::prod-data-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          logging:
+            enabled: false
+            destination_in_org: false

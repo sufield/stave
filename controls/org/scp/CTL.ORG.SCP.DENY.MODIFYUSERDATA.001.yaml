@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.DENY.MODIFYUSERDATA.001
+name: SCP Must Restrict EC2 User Data Modification
+description: >
+  An SCP must deny ec2:ModifyInstanceAttribute for user data
+  modification. An attacker stops an instance, modifies its
+  user data to include a reverse shell or credential harvester,
+  then starts it. The cloud-init script runs with root
+  privileges on boot.
+  Technique: hackingthe.cloud EC2 privilege escalation through
+  user data.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-09", "IVS-06"]
+scope_tags:
+  - aws
+  - iam
+  - organizations
+  - ec2
+taxonomy:
+  - account-governance
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_modify_userdata
+remediation:
+  description: >
+    No SCP restricts EC2 user data modification. Instances can
+    have their boot scripts replaced by any principal with
+    ec2:ModifyInstanceAttribute.
+  action: >
+    Add an SCP denying ec2:ModifyInstanceAttribute with a
+    condition on the attribute type for userData. Use a
+    role-based exception for authorized instance management.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_modify_userdata": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_modify_userdata
+      op: ne
+      value: true
+tests:
+  - name: "no userdata scp fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_modify_userdata: false
+  - name: "userdata scp passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_modify_userdata: true

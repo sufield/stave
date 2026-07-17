@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3064
-**Pack hash:** `8cdc727af3662e6d280c1a2b30effae3f3bc5ae658fd789a59fae5e98e8a4477`
+**Total controls:** 3078
+**Pack hash:** `88b3d35c36ffd310cb488ef75de8d4041641b492836c13c9574ad5fb3e87ff2b`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 321 |
-| high | 1333 |
+| critical | 327 |
+| high | 1340 |
 | info | 18 |
 | low | 233 |
-| medium | 1159 |
+| medium | 1160 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,12 +27,12 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1345 |
+| exposure | 1349 |
 | governance | 641 |
 | hygiene | 18 |
-| identity | 570 |
+| identity | 579 |
 | lifecycle | 31 |
-| network | 44 |
+| network | 45 |
 | resilience | 35 |
 | secrets | 4 |
 | storage | 8 |
@@ -43,6 +43,7 @@ GitHub. Pick a service below.
 |---------|----------|
 | [ACCOUNT](reference/account.md) | 1 |
 | [ACM](reference/acm.md) | 8 |
+| [ACMPCA](reference/acmpca.md) | 1 |
 | [AD](reference/ad.md) | 40 |
 | [AMPLIFY](reference/amplify.md) | 1 |
 | [APIGATEWAY](reference/apigateway.md) | 105 |
@@ -65,7 +66,7 @@ GitHub. Pick a service below.
 | [CLOUDFRONT](reference/cloudfront.md) | 72 |
 | [CLOUDTRAIL](reference/cloudtrail.md) | 57 |
 | [CLOUDWATCH](reference/cloudwatch.md) | 67 |
-| [CODEBUILD](reference/codebuild.md) | 12 |
+| [CODEBUILD](reference/codebuild.md) | 13 |
 | [CODECOMMIT](reference/codecommit.md) | 2 |
 | [CODEPIPELINE](reference/codepipeline.md) | 5 |
 | [COGNITO](reference/cognito.md) | 113 |
@@ -98,7 +99,7 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 18 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 279 |
+| [IAM](reference/iam.md) | 285 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |
@@ -114,15 +115,15 @@ GitHub. Pick a service below.
 | [MSK](reference/msk.md) | 9 |
 | [MWAA](reference/mwaa.md) | 2 |
 | [NEPTUNE](reference/neptune.md) | 20 |
-| [NETFIREWALL](reference/netfirewall.md) | 12 |
+| [NETFIREWALL](reference/netfirewall.md) | 13 |
 | [OPENSEARCH](reference/opensearch.md) | 132 |
-| [ORG](reference/org.md) | 40 |
+| [ORG](reference/org.md) | 43 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 72 |
 | [RECYCLEBIN](reference/recyclebin.md) | 1 |
 | [REDSHIFT](reference/redshift.md) | 26 |
 | [ROUTE53](reference/route53.md) | 50 |
-| [S3](reference/s3.md) | 145 |
+| [S3](reference/s3.md) | 147 |
 | [SAGEMAKER](reference/sagemaker.md) | 36 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |

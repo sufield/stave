@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.OIDC.ROGUE.001
+name: No Unapproved OIDC Identity Providers
+description: >
+  Every OIDC identity provider in the account must have a provider
+  URL on the approved list. Rogue OIDC providers are a persistence
+  mechanism: an attacker creates a provider pointing to
+  infrastructure they control, then creates a role trusting that
+  provider. The provider appears legitimate because the trust is
+  via standard OIDC federation. Extends
+  CTL.IAM.OIDC.PROVIDER.AUDIT.001 with explicit focus on
+  persistence detection.
+  Technique: hackingthe.cloud IAM rogue OIDC identity provider.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-09", "IVS-03"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - trust-boundary
+  - identity-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_oidc_provider
+params:
+  attack_stage: persistence
+observation_fields:
+  - identity.kind
+  - identity.oidc.provider_url_approved
+remediation:
+  description: >
+    OIDC identity provider URL is not on the approved list.
+    This may indicate attacker-created persistence infrastructure.
+  action: >
+    Review the OIDC provider. If it was not intentionally created,
+    delete it and revoke any roles that trust it. If legitimate,
+    add the provider URL to the approved list.
+  example: |
+    {
+      "identity": {
+        "kind": "oidc_provider",
+        "oidc": {
+          "provider_url_approved": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: oidc_provider
+    - field: properties.identity.oidc.provider_url_approved
+      op: ne
+      value: true
+tests:
+  - name: "unapproved oidc provider fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123456789012:oidc-provider/evil.example.com"
+      asset_type: aws_iam_oidc_provider
+      vendor: aws
+      properties:
+        identity:
+          kind: oidc_provider
+          oidc:
+            provider_url_approved: false
+  - name: "approved oidc provider passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+      asset_type: aws_iam_oidc_provider
+      vendor: aws
+      properties:
+        identity:
+          kind: oidc_provider
+          oidc:
+            provider_url_approved: true

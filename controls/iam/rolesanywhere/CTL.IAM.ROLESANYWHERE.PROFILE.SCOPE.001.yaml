@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROLESANYWHERE.PROFILE.SCOPE.001
+name: Roles Anywhere Profiles Must Map to Least-Privilege Roles
+description: >
+  IAM Roles Anywhere profiles must map to roles with scoped
+  permissions, not roles with AdministratorAccess or permissions
+  spanning more than 5 service namespaces. Overprivileged Roles
+  Anywhere profiles amplify the blast radius of certificate
+  compromise — a stolen certificate grants the full privileges
+  of the mapped role from outside AWS.
+  Technique: hackingthe.cloud IAM Roles Anywhere persistence.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05", "IAM-09"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - least-privilege
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_roles_anywhere_profile
+params:
+  attack_stage: persistence
+observation_fields:
+  - identity.kind
+  - identity.roles_anywhere.mapped_role_has_admin
+  - identity.roles_anywhere.mapped_role_service_count
+remediation:
+  description: >
+    Roles Anywhere profile maps to a role with broad permissions.
+  action: >
+    Scope the mapped role to the minimum permissions required.
+    Use session policies in the profile to further restrict
+    effective permissions.
+  example: |
+    {
+      "identity": {
+        "kind": "roles_anywhere_profile",
+        "roles_anywhere": {
+          "mapped_role_has_admin": false,
+          "mapped_role_service_count": 3
+        }
+      }
+    }
+unsafe_predicate:
+  any:
+    - field: properties.identity.roles_anywhere.mapped_role_has_admin
+      op: eq
+      value: true
+    - field: properties.identity.roles_anywhere.mapped_role_service_count
+      op: gt
+      value: 5
+tests:
+  - name: "admin mapped role fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:rolesanywhere:us-east-1:123456789012:profile/abc123"
+      asset_type: aws_iam_roles_anywhere_profile
+      vendor: aws
+      properties:
+        identity:
+          kind: roles_anywhere_profile
+          roles_anywhere:
+            mapped_role_has_admin: true
+            mapped_role_service_count: 200
+  - name: "scoped role passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:rolesanywhere:us-east-1:123456789012:profile/abc123"
+      asset_type: aws_iam_roles_anywhere_profile
+      vendor: aws
+      properties:
+        identity:
+          kind: roles_anywhere_profile
+          roles_anywhere:
+            mapped_role_has_admin: false
+            mapped_role_service_count: 3

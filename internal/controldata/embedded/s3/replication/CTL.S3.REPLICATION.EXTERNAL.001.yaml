@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.S3.REPLICATION.EXTERNAL.001
+name: S3 Replication Must Not Target External Accounts
+description: >
+  No S3 bucket should have replication configured to a destination
+  outside the organization. An attacker with
+  s3:PutReplicationConfiguration creates a replication rule to an
+  external bucket, and all new objects are automatically copied to
+  the attacker's bucket. This is a data exfiltration technique
+  that operates continuously and silently after initial setup.
+  Technique: hackingthe.cloud S3 bucket replication exfiltration.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-01", "DSP-17"]
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - data-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.replication.enabled
+  - storage.replication.destination_in_org
+remediation:
+  description: >
+    S3 bucket replication destination is in an account outside the
+    organization. Objects are being replicated to an external
+    account.
+  action: >
+    Verify the replication destination account is legitimate. If
+    not, delete the replication configuration immediately. Add an
+    SCP denying s3:PutReplicationConfiguration to external
+    destinations using aws:PrincipalOrgID conditions.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "replication": {
+          "enabled": true,
+          "destination_in_org": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.replication.enabled
+      op: eq
+      value: true
+    - field: properties.storage.replication.destination_in_org
+      op: ne
+      value: true
+tests:
+  - name: "replication to external account fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::prod-data-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          replication:
+            enabled: true
+            destination_in_org: false
+  - name: "replication within org passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::prod-data-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          replication:
+            enabled: true
+            destination_in_org: true
+  - name: "no replication passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::prod-data-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          replication:
+            enabled: false
+            destination_in_org: false

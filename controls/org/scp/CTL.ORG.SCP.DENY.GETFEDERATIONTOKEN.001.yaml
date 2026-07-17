@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.DENY.GETFEDERATIONTOKEN.001
+name: SCP Must Deny sts:GetFederationToken
+description: >
+  An SCP must deny sts:GetFederationToken unless explicitly
+  needed. If an attacker calls GetFederationToken before their
+  access key is revoked, the resulting session token remains
+  valid even after the key is deleted. SCP-denying this action
+  prevents the persistence mechanism.
+  Technique: hackingthe.cloud survive access key deletion with
+  sts:GetFederationToken.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - iam
+  - organizations
+taxonomy:
+  - account-governance
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: persistence
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_get_federation_token
+remediation:
+  description: >
+    No SCP denies sts:GetFederationToken. Compromised access keys
+    can generate persistent session tokens before revocation.
+  action: >
+    Add an SCP denying sts:GetFederationToken with a role-based
+    exception for any workloads that legitimately require it.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_get_federation_token": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_get_federation_token
+      op: ne
+      value: true
+tests:
+  - name: "no scp for getfederationtoken fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_get_federation_token: false
+  - name: "scp denies getfederationtoken passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_get_federation_token: true

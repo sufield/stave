@@ -7,16 +7,26 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "6cbe2a44db82e574127bc9fbe0aa8378e0e2b081f2d063789ac83e99087192cc",
+    "policy_fingerprint": "4567fff8b40aedbd2770885cf3041d46907159fc98202a14573315a4fe82d5a8",
     "evaluated_state": "deployed"
   },
   "summary": {
     "total_assets": 1,
     "exposed_resources": 1,
-    "violations": 12
+    "violations": 13
   },
   "status": "NON_COMPLIANT",
   "risk_signals": [
+    {
+      "control_id": "CTL.S3.ACCESSLOG.DESTINATION.001",
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "status": "UPCOMING",
+      "due_at": "2026-01-17T00:00:00Z",
+      "remaining_hours": 48,
+      "first_unsafe_at": "2026-01-10T00:00:00Z",
+      "threshold_hours": 168
+    },
     {
       "control_id": "CTL.S3.ACCOUNT.PAB.001",
       "asset_id": "public-test-bucket",
@@ -677,6 +687,174 @@
           "property_path": "storage.encryption.ssec_disabled",
           "current_value": "",
           "fix_action": "set to true"
+        }
+      ]
+    },
+    {
+      "finding_id": "sha256:e49090ac630ed983",
+      "control_id": "CTL.S3.ACCESSLOG.DESTINATION.001",
+      "control_name": "S3 Access Log Destination Must Be in Same Account or Org",
+      "control_description": "When S3 server access logging is enabled, the log destination bucket must be in the same account or organization. An attacker can redirect access logs to their own bucket, capturing every S3 request path — which may contain sensitive data in query strings and object keys. Technique: hackingthe.cloud S3 server access logs exfiltration.\n",
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-10T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-14T00:00:00Z",
+        "unsafe_duration_hours": 120,
+        "misconfigurations": [
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.logging.destination_in_org",
+            "actual_value": null,
+            "operator": "ne",
+            "unsafe_value": true
+          },
+          {
+            "property": "storage.logging.enabled",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 120 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "AU-9",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "LOG-12",
+        "DSP-17"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "S3 access log destination is in an external account. Request paths and metadata are being sent outside the organization.",
+        "action": "Change the access log destination to a bucket in the same account or organization. Investigate whether the external destination was intentionally configured.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"logging\": {\n      \"enabled\": true,\n      \"destination_in_org\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Change the access log destination to a bucket in the same account or organization. Investigate whether the external destination was intentionally configured."
+      },
+      "exploitability": "reachable",
+      "exposure_score": 76.02739726027397,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
+        "days_blind": 5
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        },
+        {
+          "predicate_expr": "storage.logging.destination_in_org ne true",
+          "observation_key": "storage.logging.destination_in_org",
+          "operator": "ne",
+          "expected_value": true
+        },
+        {
+          "predicate_expr": "storage.logging.enabled eq true",
+          "observation_key": "storage.logging.enabled",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "public-test-bucket",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.ACCESSLOG.DESTINATION.001",
+          "control_name": "S3 Access Log Destination Must Be in Same Account or Org",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "storage.logging.destination_in_org not equal true (observed: not set)",
+              "observation_key": "storage.logging.destination_in_org"
+            },
+            {
+              "clause": "access logging is enabled = true",
+              "observation_key": "storage.logging.enabled",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          },
+          {
+            "path": "storage.logging.destination_in_org",
+            "current_value": "",
+            "required_value": "true",
+            "has_safe_default": false,
+            "description": "Set storage.logging.destination_in_org to true"
+          },
+          {
+            "path": "storage.logging.enabled",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set storage.logging.enabled to false"
+          }
+        ],
+        "action": "Change the access log destination to a bucket in the same account or organization. Investigate whether the external destination was intentionally configured."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "delta": [
+        {
+          "property_label": "logging destination in org",
+          "property_path": "storage.logging.destination_in_org",
+          "current_value": "",
+          "fix_action": "set to true"
+        },
+        {
+          "property_label": "access logging",
+          "property_path": "storage.logging.enabled",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
         }
       ]
     },
@@ -2278,6 +2456,21 @@
       "consolidated_blast_radius": 1
     },
     {
+      "issue_id": "sha256:ff26735d3d382731",
+      "asset_id": "public-test-bucket",
+      "shared_keys": [
+        "storage.logging",
+        "storage.logging.destination_in_org",
+        "storage.logging.enabled"
+      ],
+      "headline_finding_id": "sha256:e49090ac630ed983",
+      "member_finding_ids": [
+        "sha256:e49090ac630ed983"
+      ],
+      "consolidated_score": 76.02739726027397,
+      "consolidated_blast_radius": 1
+    },
+    {
       "issue_id": "sha256:8e25d91d9cfbdfcd",
       "asset_id": "public-test-bucket",
       "shared_keys": [
@@ -2350,6 +2543,22 @@
       },
       "contributing_controls": [
         "CTL.S3.SSEC.DISABLED.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-6c6bf4529bfb9ec9",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Change the access log destination to a bucket in the same account or organization. Investigate whether the external destination was intentionally configured."
+      },
+      "contributing_controls": [
+        "CTL.S3.ACCESSLOG.DESTINATION.001"
       ],
       "finding_count": 1
     },
@@ -2500,7 +2709,7 @@
   ],
   "top_exposures": [
     {
-      "finding_index": 1,
+      "finding_index": 2,
       "control_id": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 100,
@@ -2516,7 +2725,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 10,
+      "finding_index": 11,
       "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 100,
@@ -2532,7 +2741,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 11,
+      "finding_index": 12,
       "control_id": "CTL.S3.SSEC.DISABLED.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 100,
@@ -2549,6 +2758,22 @@
     },
     {
       "finding_index": 0,
+      "control_id": "CTL.S3.ACCESSLOG.DESTINATION.001",
+      "asset_id": "public-test-bucket",
+      "exposure_score": 76.02739726027397,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0136986301369864,
+        "days_blind": 5
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 1,
       "control_id": "CTL.S3.ACCOUNT.PAB.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 76.02739726027397,
@@ -2564,7 +2789,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 3,
+      "finding_index": 4,
       "control_id": "CTL.S3.MFADELETE.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 76.02739726027397,
@@ -2580,7 +2805,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 4,
+      "finding_index": 5,
       "control_id": "CTL.S3.NETWORK.VPC.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 76.02739726027397,
@@ -2596,7 +2821,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 5,
+      "finding_index": 6,
       "control_id": "CTL.S3.OWNERSHIP.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 76.02739726027397,
@@ -2612,7 +2837,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 6,
+      "finding_index": 7,
       "control_id": "CTL.S3.PAB.BLOCKPUBLICACLS.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 76.02739726027397,
@@ -2628,7 +2853,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 7,
+      "finding_index": 8,
       "control_id": "CTL.S3.PAB.BLOCKPUBLICPOLICY.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 76.02739726027397,
@@ -2644,7 +2869,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 8,
+      "finding_index": 9,
       "control_id": "CTL.S3.PAB.IGNOREPUBLICACLS.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 76.02739726027397,
@@ -2660,7 +2885,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 9,
+      "finding_index": 10,
       "control_id": "CTL.S3.PAB.RESTRICTPUBLICBUCKETS.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 76.02739726027397,
@@ -2676,7 +2901,7 @@
       "silent_killer": false
     },
     {
-      "finding_index": 2,
+      "finding_index": 3,
       "control_id": "CTL.S3.LIFECYCLE.MULTIPART.001",
       "asset_id": "public-test-bucket",
       "exposure_score": 50.68493150684932,

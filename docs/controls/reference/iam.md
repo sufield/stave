@@ -1997,6 +1997,21 @@ IAM role trusts the GitHub Actions OIDC provider (token.actions.githubuserconten
 
 ---
 
+### CTL.IAM.OIDC.GITLAB.SUBJECT.001
+
+**GitLab OIDC Roles Must Restrict Subject Claim**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+IAM roles trusting GitLab OIDC must restrict the sub claim to specific projects and branches. Without a subject restriction, ANY GitLab project — including attacker-controlled — can assume the role. The AWS Console creates this misconfiguration by default. The trust policy says "I trust GitLab" when it should say "I trust myorg/myproject on the main branch." Technique: hackingthe.cloud exploiting misconfigured GitLab OIDC AWS IAM roles.
+
+**Remediation:** Add a StringLike condition on gitlab.com:sub in the trust policy restricting to specific project paths and ref types. Example: "project_path:myorg/myproject:ref_type:branch:ref:main"
+
+---
+
 ### CTL.IAM.OIDC.PROVIDER.AUDIENCE.001
 
 **OIDC Provider Audience Must Be Scoped**
@@ -2024,6 +2039,36 @@ IAM OIDC provider has an overly broad or unrecognized audience (client ID list).
 IAM OIDC provider references an identity provider URL that is not in the recognized provider list. Farris describes shadow cloud usage where engineers unknowingly create cross-cloud federation. An OIDC provider pointing to an unknown URL is either forgotten federation (pollution) or an attacker-controlled IdP (compromise). Both warrant investigation. Default recognized providers: accounts.google.com, login.microsoftonline.com, token.actions.githubusercontent.com. Organization-specific IdPs must be added to the collector allowlist.
 
 **Remediation:** Verify the OIDC provider URL is intentional and from a trusted identity source. If the provider is legitimate, add it to the recognized provider allowlist. If not, delete the OIDC provider and audit all roles that reference it.
+
+---
+
+### CTL.IAM.OIDC.ROGUE.001
+
+**No Unapproved OIDC Identity Providers**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Every OIDC identity provider in the account must have a provider URL on the approved list. Rogue OIDC providers are a persistence mechanism: an attacker creates a provider pointing to infrastructure they control, then creates a role trusting that provider. The provider appears legitimate because the trust is via standard OIDC federation. Extends CTL.IAM.OIDC.PROVIDER.AUDIT.001 with explicit focus on persistence detection. Technique: hackingthe.cloud IAM rogue OIDC identity provider.
+
+**Remediation:** Review the OIDC provider. If it was not intentionally created, delete it and revoke any roles that trust it. If legitimate, add the provider URL to the approved list.
+
+---
+
+### CTL.IAM.OIDC.TFC.SUBJECT.001
+
+**Terraform Cloud OIDC Roles Must Restrict Subject Claim**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+IAM roles trusting Terraform Cloud OIDC must restrict the sub claim to specific organizations and workspaces. Without a subject restriction, any Terraform Cloud workspace can assume the role. Same pattern as GitLab OIDC misconfiguration. Technique: hackingthe.cloud exploiting misconfigured Terraform Cloud OIDC.
+
+**Remediation:** Add a StringLike condition on app.terraform.io:sub in the trust policy restricting to specific org:workspace patterns.
 
 ---
 
@@ -2462,6 +2507,21 @@ IAM policies governing destructive operations (s3:DeleteBucket, iam:CreateUser, 
 
 ---
 
+### CTL.IAM.POLICY.OBFUSCATED.ADMIN.001
+
+**No IAM Policy Grants Admin via Wildcard Obfuscation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+IAM policies must not grant effective administrative access via wildcard obfuscation patterns. Instead of "Action": "*" or "iam:*", an attacker uses patterns like "iam:Creat*" which match CreateAccessKey, CreateUser, etc. via IAM wildcard matching rules but evade string-comparison detection. The control must evaluate the EXPANDED action set against the sensitive action registry. Implementation requires wildcard expansion against the IAM action namespace. Technique: hackingthe.cloud obfuscated admin policy.
+
+**Remediation:** Review the policy's Action patterns by expanding wildcards against the IAM action namespace. Replace broad wildcard patterns with explicit action lists. Use the IAM Access Analyzer to identify effective permissions.
+
+---
+
 ### CTL.IAM.POLICY.PASSROLE.001
 
 **PassRole Must Be Scoped to Specific Roles**
@@ -2811,6 +2871,21 @@ An IAM Roles Anywhere trust anchor has no Certificate Revocation List (CRL) conf
 
 ---
 
+### CTL.IAM.ROLESANYWHERE.PROFILE.SCOPE.001
+
+**Roles Anywhere Profiles Must Map to Least-Privilege Roles**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+IAM Roles Anywhere profiles must map to roles with scoped permissions, not roles with AdministratorAccess or permissions spanning more than 5 service namespaces. Overprivileged Roles Anywhere profiles amplify the blast radius of certificate compromise — a stolen certificate grants the full privileges of the mapped role from outside AWS. Technique: hackingthe.cloud IAM Roles Anywhere persistence.
+
+**Remediation:** Scope the mapped role to the minimum permissions required. Use session policies in the profile to further restrict effective permissions.
+
+---
+
 ### CTL.IAM.ROLESANYWHERE.SELFSIGNED.001
 
 **IAM Roles Anywhere Trust Anchor Uses Self-Signed Certificate**
@@ -2823,6 +2898,21 @@ An IAM Roles Anywhere trust anchor has no Certificate Revocation List (CRL) conf
 An IAM Roles Anywhere trust anchor uses a self-signed certificate authority rather than AWS Private CA or an established PKI. Self-signed CAs lack the revocation infrastructure, audit trail, and lifecycle management of a proper PKI. The CA private key is managed outside AWS, increasing the risk of key compromise and making certificate lifecycle tracking difficult.
 
 **Remediation:** Replace with an AWS Private CA trust anchor for integrated revocation, audit logging, and certificate lifecycle management.
+
+---
+
+### CTL.IAM.ROLESANYWHERE.TRUSTANCHOR.001
+
+**Roles Anywhere Trust Anchors Must Use Approved CAs**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5(2); soc2: CC6.1;
+
+IAM Roles Anywhere trust anchors must reference only approved certificate authorities (ACM-PCA managed or on the approved CA list). An attacker creates a trust anchor with their own CA, then uses certificates from that CA to assume roles from outside AWS. This bypasses all IAM access key controls because authentication uses X.509 certificates, not access keys. Extends CTL.IAM.ROLESANYWHERE.SELFSIGNED.001 (self-signed CA detection) with explicit approved-CA-list enforcement. Technique: hackingthe.cloud IAM Roles Anywhere persistence.
+
+**Remediation:** Replace the trust anchor with one backed by ACM Private CA or add the CA to the approved list after verification. Review all profiles and roles associated with this trust anchor.
 
 ---
 

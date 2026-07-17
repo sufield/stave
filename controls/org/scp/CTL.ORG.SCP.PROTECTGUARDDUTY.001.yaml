@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.PROTECTGUARDDUTY.001
+name: SCP Protects GuardDuty from Member Account Modification
+description: >
+  An SCP must deny guardduty:DeleteDetector,
+  guardduty:UpdateDetector, and
+  guardduty:DisassociateFromMasterAccount to prevent GuardDuty
+  from being disabled or modified from within member accounts.
+  This is a META-INVARIANT that protects detection
+  infrastructure. Without it, an attacker with admin access in
+  a member account can disable GuardDuty before conducting
+  further operations.
+  Technique: hackingthe.cloud modify GuardDuty configuration.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+  ccm_v4: ["TVM-01", "IVS-06"]
+scope_tags:
+  - aws
+  - iam
+  - organizations
+  - guardduty
+taxonomy:
+  - account-governance
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_guardduty_modify
+remediation:
+  description: >
+    No SCP prevents GuardDuty modification from member accounts.
+    Detection infrastructure can be disabled by an attacker.
+  action: >
+    Add an SCP denying guardduty:DeleteDetector,
+    guardduty:UpdateDetector, and
+    guardduty:DisassociateFromMasterAccount across all member
+    accounts. Use a role-based exception for the delegated
+    admin account.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_guardduty_modify": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_guardduty_modify
+      op: ne
+      value: true
+defect: >
+  No SCP protects GuardDuty from member account modification.
+infection: >
+  GuardDuty detectors are modifiable by any admin in any member
+  account. An attacker can disable detection before conducting
+  lateral movement or data exfiltration.
+failure: >
+  Attacker disables GuardDuty in the compromised account, then
+  operates undetected. Cryptocurrency mining, data exfiltration,
+  and lateral movement proceed without triggering findings.
+tests:
+  - name: "no guardduty protection fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_guardduty_modify: false
+  - name: "guardduty protection passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_guardduty_modify: true

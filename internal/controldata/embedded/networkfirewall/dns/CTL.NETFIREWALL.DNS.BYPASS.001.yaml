@@ -1,0 +1,101 @@
+dsl_version: ctrl.v1
+id: CTL.NETFIREWALL.DNS.BYPASS.001
+name: Network Firewall DNS Filtering Must Cover All Resolution Paths
+description: >
+  When Network Firewall uses domain-based filtering, all DNS
+  resolution paths must route through the firewall. If instances
+  can resolve via external DNS servers (e.g., 8.8.8.8), the
+  firewall's domain rules don't apply. The VPC must either use
+  Route 53 Resolver DNS Firewall or restrict outbound UDP/53 to
+  only AWS-provided DNS.
+  Technique: hackingthe.cloud Network Firewall egress filtering
+  bypass.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-09", "IVS-12"]
+scope_tags:
+  - aws
+  - networkfirewall
+taxonomy:
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_network_firewall
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - network.kind
+  - network.firewall.has_domain_rules
+  - network.firewall.dns_bypass_possible
+remediation:
+  description: >
+    Network Firewall has domain-based rules but DNS resolution
+    can bypass the firewall via external resolvers.
+  action: >
+    Deploy Route 53 Resolver DNS Firewall to enforce DNS
+    filtering regardless of which resolver instances use.
+    Alternatively, restrict security groups to allow outbound
+    UDP/53 only to the VPC-provided DNS resolver
+    (169.254.169.253).
+  example: |
+    {
+      "network": {
+        "kind": "network_firewall",
+        "firewall": {
+          "has_domain_rules": true,
+          "dns_bypass_possible": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_firewall
+    - field: properties.network.firewall.has_domain_rules
+      op: eq
+      value: true
+    - field: properties.network.firewall.dns_bypass_possible
+      op: eq
+      value: true
+tests:
+  - name: "dns bypass possible fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:network-firewall:us-east-1:123456789012:firewall/main"
+      asset_type: aws_network_firewall
+      vendor: aws
+      properties:
+        network:
+          kind: network_firewall
+          firewall:
+            has_domain_rules: true
+            dns_bypass_possible: true
+  - name: "dns bypass blocked passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:network-firewall:us-east-1:123456789012:firewall/main"
+      asset_type: aws_network_firewall
+      vendor: aws
+      properties:
+        network:
+          kind: network_firewall
+          firewall:
+            has_domain_rules: true
+            dns_bypass_possible: false
+  - name: "no domain rules passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:network-firewall:us-east-1:123456789012:firewall/main"
+      asset_type: aws_network_firewall
+      vendor: aws
+      properties:
+        network:
+          kind: network_firewall
+          firewall:
+            has_domain_rules: false
+            dns_bypass_possible: true

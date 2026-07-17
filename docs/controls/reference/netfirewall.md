@@ -50,6 +50,21 @@ Network Firewalls must enable deletion protection to prevent accidental or malic
 
 ---
 
+### CTL.NETFIREWALL.DNS.BYPASS.001
+
+**Network Firewall DNS Filtering Must Cover All Resolution Paths**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+When Network Firewall uses domain-based filtering, all DNS resolution paths must route through the firewall. If instances can resolve via external DNS servers (e.g., 8.8.8.8), the firewall's domain rules don't apply. The VPC must either use Route 53 Resolver DNS Firewall or restrict outbound UDP/53 to only AWS-provided DNS. Technique: hackingthe.cloud Network Firewall egress filtering bypass.
+
+**Remediation:** Deploy Route 53 Resolver DNS Firewall to enforce DNS filtering regardless of which resolver instances use. Alternatively, restrict security groups to allow outbound UDP/53 only to the VPC-provided DNS resolver (169.254.169.253).
+
+---
+
 ### CTL.NETFIREWALL.LOG.001
 
 **Network Firewall Must Have Logging Enabled**

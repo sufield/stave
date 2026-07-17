@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.ACMPCA.CROSSACCOUNT.001
+name: ACM-PCA Must Not Issue Certificates to External Accounts
+description: >
+  ACM Private CA resource policies must not permit
+  acm-pca:IssueCertificate from principals outside the
+  organization. An attacker with Route53 modification
+  permissions plus ACM-PCA access can issue certificates for
+  internal domains and intercept API traffic.
+  Technique: hackingthe.cloud Route53 modification privilege
+  escalation via ACM-PCA.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-03", "IVS-03"]
+scope_tags:
+  - aws
+  - acmpca
+taxonomy:
+  - trust-boundary
+  - encryption-in-transit
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_acmpca_certificate_authority
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - security.kind
+  - security.acmpca.allows_external_issuance
+remediation:
+  description: >
+    ACM-PCA allows certificate issuance from accounts outside
+    the organization.
+  action: >
+    Restrict the resource policy to allow acm-pca:IssueCertificate
+    only from principals within the organization. Use
+    aws:PrincipalOrgID conditions.
+  example: |
+    {
+      "security": {
+        "kind": "certificate_authority",
+        "acmpca": {
+          "allows_external_issuance": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.security.kind
+      op: eq
+      value: certificate_authority
+    - field: properties.security.acmpca.allows_external_issuance
+      op: eq
+      value: true
+tests:
+  - name: "external issuance allowed fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/abc123"
+      asset_type: aws_acmpca_certificate_authority
+      vendor: aws
+      properties:
+        security:
+          kind: certificate_authority
+          acmpca:
+            allows_external_issuance: true
+  - name: "org-restricted issuance passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/abc123"
+      asset_type: aws_acmpca_certificate_authority
+      vendor: aws
+      properties:
+        security:
+          kind: certificate_authority
+          acmpca:
+            allows_external_issuance: false

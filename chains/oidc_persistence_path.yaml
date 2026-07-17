@@ -1,0 +1,27 @@
+id: oidc_persistence_path
+description: >
+  OIDC-based persistence: attacker creates a rogue OIDC provider
+  or exploits misconfigured GitLab/TFC/GitHub OIDC trust to
+  maintain access. Prerequisites: an OIDC provider exists with
+  an unrecognized URL, or a role trusts an OIDC provider without
+  subject restrictions. Three hackingthe.cloud techniques share
+  this pattern. Threshold of 1 because ANY single misconfigured
+  OIDC trust is a complete initial access or persistence vector.
+controls:
+  - CTL.IAM.OIDC.ROGUE.001
+  - CTL.IAM.OIDC.GITLAB.SUBJECT.001
+  - CTL.IAM.OIDC.TFC.SUBJECT.001
+  - CTL.IAM.OIDC.GITHUB.SUBJECT.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies:
+  - source: observation.iam_oidc_provider_inventory
+    fallback: fail_closed
+    diagnostic: >
+      OIDC provider inventory not captured. Cannot determine
+      whether rogue providers exist or whether trust policies
+      restrict subject claims.

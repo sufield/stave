@@ -50,6 +50,21 @@ CodeBuild projects delivering logs to S3 must encrypt log objects at rest. Unenc
 
 ---
 
+### CTL.CODEBUILD.GITHUB.TRUST.001
+
+**CodeBuild GitHub Source Must Not Allow Untrusted PR Triggers**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SA-12; soc2: CC8.1;
+
+CodeBuild projects with GitHub source must not allow builds triggered by pull requests from any contributor without an approval gate. An attacker creates a pull request that triggers a CodeBuild run, gaining access to the build environment's IAM role and any secrets in environment variables. Extends CTL.CODEBUILD.WEBHOOK.ANCHORED.001 (regex anchoring) and CTL.CODEBUILD.BUILDSPEC.USERCONTROLLED.001 (buildspec source) with explicit PR trigger trust validation. Technique: hackingthe.cloud CodeBuild GitHub runner persistence.
+
+**Remediation:** Configure webhook filters to restrict PULL_REQUEST_CREATED events to trusted actors. Use ACTOR_ACCOUNT_ID filters with anchored patterns. Enable build approval for external contributions.
+
+---
+
 ### CTL.CODEBUILD.INACTIVE.001
 
 **CodeBuild Projects Must Not Be Inactive for Over 90 Days**

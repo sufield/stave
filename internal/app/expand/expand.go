@@ -108,7 +108,7 @@ func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 		if readErr != nil {
 			continue
 		}
-		
+
 		var snap struct {
 			Assets []struct {
 				Type string `json:"type"`
@@ -119,11 +119,11 @@ func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 				} `json:"assets"`
 			} `json:"snapshots"`
 		}
-		
+
 		if err := json.Unmarshal(data, &snap); err != nil {
 			continue
 		}
-		
+
 		for _, a := range snap.Assets {
 			for _, svc := range services {
 				if _, ok := have[svc]; ok {
@@ -138,7 +138,7 @@ func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 				}
 			}
 		}
-		
+
 		for _, s := range snap.Snapshots {
 			for _, a := range s.Assets {
 				for _, svc := range services {

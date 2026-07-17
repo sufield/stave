@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.OBFUSCATED.ADMIN.001
+name: No IAM Policy Grants Admin via Wildcard Obfuscation
+description: >
+  IAM policies must not grant effective administrative access via
+  wildcard obfuscation patterns. Instead of "Action": "*" or
+  "iam:*", an attacker uses patterns like "iam:Creat*" which
+  match CreateAccessKey, CreateUser, etc. via IAM wildcard
+  matching rules but evade string-comparison detection. The
+  control must evaluate the EXPANDED action set against the
+  sensitive action registry. Implementation requires wildcard
+  expansion against the IAM action namespace.
+  Technique: hackingthe.cloud obfuscated admin policy.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05", "IVS-03"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - least-privilege
+  - detection-evasion
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_policy
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.policy.expanded_action_covers_admin
+remediation:
+  description: >
+    IAM policy uses wildcard patterns that expand to administrative
+    permission sets while evading literal string detection.
+  action: >
+    Review the policy's Action patterns by expanding wildcards
+    against the IAM action namespace. Replace broad wildcard
+    patterns with explicit action lists. Use the IAM Access
+    Analyzer to identify effective permissions.
+  example: |
+    {
+      "identity": {
+        "kind": "policy",
+        "policy": {
+          "expanded_action_covers_admin": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: policy
+    - field: properties.identity.policy.expanded_action_covers_admin
+      op: eq
+      value: true
+tests:
+  - name: "obfuscated admin policy fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123456789012:policy/sneaky-admin"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            expanded_action_covers_admin: true
+  - name: "clean policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:policy/readonly"
+      asset_type: aws_iam_policy
+      vendor: aws
+      properties:
+        identity:
+          kind: policy
+          policy:
+            expanded_action_covers_admin: false

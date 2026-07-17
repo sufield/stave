@@ -365,6 +365,36 @@ Organization SCPs do not deny Cloud9 service usage in member accounts. Cloud9 cr
 
 ---
 
+### CTL.ORG.SCP.DENY.GETFEDERATIONTOKEN.001
+
+**SCP Must Deny sts:GetFederationToken**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.1;
+
+An SCP must deny sts:GetFederationToken unless explicitly needed. If an attacker calls GetFederationToken before their access key is revoked, the resulting session token remains valid even after the key is deleted. SCP-denying this action prevents the persistence mechanism. Technique: hackingthe.cloud survive access key deletion with sts:GetFederationToken.
+
+**Remediation:** Add an SCP denying sts:GetFederationToken with a role-based exception for any workloads that legitimately require it.
+
+---
+
+### CTL.ORG.SCP.DENY.MODIFYUSERDATA.001
+
+**SCP Must Restrict EC2 User Data Modification**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+An SCP must deny ec2:ModifyInstanceAttribute for user data modification. An attacker stops an instance, modifies its user data to include a reverse shell or credential harvester, then starts it. The cloud-init script runs with root privileges on boot. Technique: hackingthe.cloud EC2 privilege escalation through user data.
+
+**Remediation:** Add an SCP denying ec2:ModifyInstanceAttribute with a condition on the attribute type for userData. Use a role-based exception for authorized instance management.
+
+---
+
 ### CTL.ORG.SCP.DEPUTYPREVENTION.001
 
 **AWS Organizations Must Have an SCP Preventing Confused Deputy Attacks**
@@ -497,6 +527,21 @@ No SCP prevents deletion of AWS Backup vaults and recovery points. An attacker w
 No SCP prevents disabling Block Public Access for S3, AMI sharing, or EBS snapshots. Existing controls check whether BPA is enabled; this control checks whether BPA is PROTECTED from being disabled. The distinction matters: BPA enabled without SCP protection is distance-one from BPA disabled — one API call away. This is a META-INVARIANT. The SCP should deny s3:PutBucketPublicAccessBlock, s3:PutAccountPublicAccessBlock, ec2:DisableImageBlockPublicAccess, and ec2:DisableSnapshotBlockPublicAccess with a role-based exception for cloud engineering.
 
 **Remediation:** Add an SCP that denies s3:PutBucketPublicAccessBlock, s3:PutAccountPublicAccessBlock, ec2:DisableImageBlockPublicAccess, and ec2:DisableSnapshotBlockPublicAccess. Exempt a cloud engineering role via aws:PrincipalArn condition for legitimate BPA changes.
+
+---
+
+### CTL.ORG.SCP.PROTECTGUARDDUTY.001
+
+**SCP Protects GuardDuty from Member Account Modification**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.2;
+
+An SCP must deny guardduty:DeleteDetector, guardduty:UpdateDetector, and guardduty:DisassociateFromMasterAccount to prevent GuardDuty from being disabled or modified from within member accounts. This is a META-INVARIANT that protects detection infrastructure. Without it, an attacker with admin access in a member account can disable GuardDuty before conducting further operations. Technique: hackingthe.cloud modify GuardDuty configuration.
+
+**Remediation:** Add an SCP denying guardduty:DeleteDetector, guardduty:UpdateDetector, and guardduty:DisassociateFromMasterAccount across all member accounts. Use a role-based exception for the delegated admin account.
 
 ---
 
