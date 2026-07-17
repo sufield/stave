@@ -10,6 +10,10 @@ description: >
   preventive invariants, and full organizational control —
   including AssumeRoot, account closure, SCP modification, and
   CloudTrail disruption.
+  Linked incidents: Wiz "management account compromise" analysis
+  (2025, SCP bypass via payer account in 4 documented incidents),
+  AWS re:Invent 2024 guidance on management account hardening
+  as the single highest-impact control for Organizations.
 controls:
   - CTL.IAM.ORG.MGMT.PRINCIPALS.001
   - CTL.GUARDDUTY.REGION.COVERAGE.001

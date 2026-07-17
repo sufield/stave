@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.SES.RESTRICT.001
+name: SCP Must Restrict SES Send Actions to Approved Roles
+description: >
+  An SCP must restrict ses:SendEmail and ses:SendRawEmail to
+  approved messaging roles. Compromised credentials used to
+  send phishing emails via SES has been documented in multiple
+  campaigns. If SES is not in use, the SCP should deny all SES
+  actions entirely.
+  Technique: Wiz "SES abuse for spam or phishing".
+  Linked incidents: JavaGhost (Feb 2025), DangerDev, Attack
+  abusing Amazon SES (Dec 2024), TruffleNet (Oct 2025),
+  Cloud-Native Phishing via AWS WorkMail (Jan 2026).
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - iam
+  - organizations
+  - ses
+taxonomy:
+  - account-governance
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: impact
+observation_fields:
+  - identity.kind
+  - identity.scp.restricts_ses_send
+remediation:
+  description: >
+    No SCP restricts SES send actions. Any compromised
+    credential can send emails via SES.
+  action: >
+    Add an SCP denying ses:SendEmail and ses:SendRawEmail
+    with a role-based exception for approved messaging
+    workloads. If SES is not used in the organization,
+    deny all SES actions.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "restricts_ses_send": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.restricts_ses_send
+      op: ne
+      value: true
+tests:
+  - name: "no ses restriction fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            restricts_ses_send: false
+  - name: "ses restriction passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            restricts_ses_send: true

@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.DATASYNC.EXTERNAL.DESTINATION.001
+name: DataSync Tasks Must Not Target External Destinations
+description: >
+  No DataSync task should target a location outside the
+  organization. DataSync can move terabytes per hour — it is
+  the fastest exfiltration path in AWS. An attacker with
+  datasync:CreateTask can configure a task to copy S3/EFS/FSx
+  data to an external location. Linked to Muddled Libra
+  campaigns (2024) documented by Wiz.
+  Technique: Wiz "Exfiltration via AWS DataSync".
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-01", "DSP-17"]
+scope_tags:
+  - aws
+  - datasync
+taxonomy:
+  - data-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_datasync_task
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - data_movement.kind
+  - data_movement.destination_in_org
+remediation:
+  description: >
+    DataSync task targets a destination outside the organization.
+    Data is being moved to an external location.
+  action: >
+    Verify the destination is legitimate. If not, delete the
+    task immediately. Add an SCP denying datasync:CreateTask
+    or restricting destination locations via conditions.
+  example: |
+    {
+      "data_movement": {
+        "kind": "datasync_task",
+        "destination_in_org": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.data_movement.kind
+      op: eq
+      value: datasync_task
+    - field: properties.data_movement.destination_in_org
+      op: ne
+      value: true
+tests:
+  - name: "external destination fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:datasync:us-east-1:123456789012:task/task-abc123"
+      asset_type: aws_datasync_task
+      vendor: aws
+      properties:
+        data_movement:
+          kind: datasync_task
+          destination_in_org: false
+  - name: "internal destination passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:datasync:us-east-1:123456789012:task/task-abc123"
+      asset_type: aws_datasync_task
+      vendor: aws
+      properties:
+        data_movement:
+          kind: datasync_task
+          destination_in_org: true

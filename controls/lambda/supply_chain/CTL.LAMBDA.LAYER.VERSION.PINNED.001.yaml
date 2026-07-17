@@ -1,0 +1,79 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.LAYER.VERSION.PINNED.001
+name: Lambda Functions Must Pin Layer Versions
+description: >
+  Lambda functions must reference layers with a pinned version
+  number rather than using the latest. An unpinned layer
+  reference means the function automatically gets the latest
+  version published by the layer owner. If the layer owner's
+  account is compromised, a malicious layer version is silently
+  picked up by all referencing functions.
+  Technique: Wiz "Backdoor Lambda Layer" supply chain vector.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-7"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-04"]
+scope_tags:
+  - aws
+  - lambda
+taxonomy:
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lambda_function
+params:
+  attack_stage: execution
+observation_fields:
+  - compute.kind
+  - compute.lambda.has_unpinned_layer
+remediation:
+  description: >
+    Lambda function references a layer without a pinned version.
+    Layer updates are automatically inherited.
+  action: >
+    Pin each layer reference to a specific version number. Update
+    layer versions through a controlled change process rather than
+    automatic inheritance.
+  example: |
+    {
+      "compute": {
+        "kind": "lambda_function",
+        "lambda": {
+          "has_unpinned_layer": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: lambda_function
+    - field: properties.compute.lambda.has_unpinned_layer
+      op: eq
+      value: true
+tests:
+  - name: "unpinned layer fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:123456789012:function:processor"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: lambda_function
+          lambda:
+            has_unpinned_layer: true
+  - name: "pinned layers passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:123456789012:function:processor"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: lambda_function
+          lambda:
+            has_unpinned_layer: false

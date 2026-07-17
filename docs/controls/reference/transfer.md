@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.TRANSFER.EXTERNAL.DESTINATION.001
+
+**Transfer Family Must Not Send Data to External Endpoints**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+No Transfer Family server should have workflow steps that target S3 buckets or EFS in external accounts, or SFTP/FTP destinations at external hosts. Transfer Family provides managed file transfer — an attacker can configure it to deliver files to an external SFTP server. Linked to Muddled Libra campaigns (2024) documented by Wiz. Technique: Wiz "Exfiltration via AWS Transfer".
+
+**Remediation:** Verify the destination is legitimate. If not, remove the workflow step immediately. Restrict transfer:CreateWorkflow via SCP.
+
+---
+
 ### CTL.TRANSFER.SECPOLICY.LEGACY.001
 
 **Transfer Family Server Must Not Use Legacy Security Policy**

@@ -1,0 +1,25 @@
+id: managed_exfiltration_service_path
+description: >
+  Data exfiltration via legitimate AWS managed services. An attacker
+  with sufficient permissions uses DataSync, AWS Transfer Family, or
+  S3 cross-account replication to move data to an external
+  destination under their control. These services are designed for
+  bulk data movement and operate within AWS's own network — the
+  traffic never hits a VPC endpoint or NAT gateway that network
+  controls could intercept. Each independently enables exfiltration
+  at scale with no custom tooling.
+  Technique: Wiz "Exfiltration via managed transfer services".
+  Linked incidents: Multiple APT campaigns using S3 replication
+  for persistent data siphoning (2024–2025), DataSync abuse for
+  bulk EFS/S3 exfiltration documented by Permiso (2024).
+controls:
+  - CTL.DATASYNC.EXTERNAL.DESTINATION.001
+  - CTL.TRANSFER.EXTERNAL.DESTINATION.001
+  - CTL.S3.REPLICATION.EXTERNAL.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - data_access
+postconditions:
+  - data_exfiltration
+implicit_dependencies: []

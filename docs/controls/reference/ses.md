@@ -20,3 +20,18 @@ SES sending identities (domains and email addresses) must have DomainKeys Identi
 
 ---
 
+### CTL.SES.IDENTITY.VERIFIED.001
+
+**SES Verified Identities Must Use Organization-Owned Domains**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+SES verified identities should be organization-owned domains, not personal or consumer email addresses (gmail.com, yahoo.com, outlook.com). Verified personal email addresses indicate ad-hoc SES usage outside organizational control.
+
+**Remediation:** Verify organization-owned domains instead. Remove personal email verified identities.
+
+---
+

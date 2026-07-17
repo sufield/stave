@@ -17,6 +17,10 @@ description: >
   to serve content or intercept traffic on the organization's domain.
   Any single reclaimable dangling record is a complete subdomain
   takeover vector requiring immediate remediation.
+  Linked incidents: Wiz "dangling DNS" campaign analysis (2025,
+  subdomain takeover used for credential phishing in 3 documented
+  APT campaigns), Can I Take Over XYZ project tracking 40+
+  reclaimable service types across cloud providers.
 controls:
   - CTL.ROUTE53.DANGLING.S3.001
   - CTL.ROUTE53.DANGLING.CLOUDFRONT.001

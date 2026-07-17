@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.S3.REQUESTPAYER.PUBLIC.001
+name: Public S3 Buckets Should Use Requester Pays
+description: >
+  S3 buckets that are intentionally publicly accessible should
+  have Requester Pays enabled to prevent denial-of-wallet
+  attacks. An attacker makes millions of GET/LIST requests to
+  a public bucket, amplifying the owner's bill. Requester Pays
+  shifts the cost to the requester.
+  Technique: Wiz "Storage Denial of Wallet amplification attack".
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-5"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: impact
+observation_fields:
+  - storage.kind
+  - storage.access.is_public
+  - storage.billing.requester_pays
+remediation:
+  description: >
+    Public S3 bucket does not have Requester Pays enabled.
+    The bucket owner pays for all request costs including
+    attacker-generated traffic.
+  action: >
+    Enable Requester Pays on the bucket. Note this changes
+    the API behavior for legitimate callers — they must
+    include x-amz-request-payer header.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "access": {
+          "is_public": true
+        },
+        "billing": {
+          "requester_pays": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.access.is_public
+      op: eq
+      value: true
+    - field: properties.storage.billing.requester_pays
+      op: ne
+      value: true
+tests:
+  - name: "public bucket without requester pays fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::public-dataset-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            is_public: true
+          billing:
+            requester_pays: false
+  - name: "public bucket with requester pays passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::public-dataset-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            is_public: true
+          billing:
+            requester_pays: true
+  - name: "private bucket passes regardless"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::private-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            is_public: false
+          billing:
+            requester_pays: false

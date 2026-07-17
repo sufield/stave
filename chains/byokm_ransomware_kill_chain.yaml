@@ -12,6 +12,11 @@ description: >
   root credentials, BYOKM key material was never held by AWS.
   The only recovery path is the attacker's 256-bit secret.
   Technique documented by Chris Farris (November 2024).
+  Linked incidents: Halcyon Codefinger (Jan 2025, SSE-C
+  ransomware — attacker re-encrypts S3 objects with their own
+  SSE-C key, sets lifecycle delete), Wiz "cloud-native
+  ransomware" analysis (2025, BYOKM + SSE-C as the two
+  irrecoverable encryption vectors in AWS).
 controls:
   - CTL.KMS.ENTROPY.EXTERNAL.ORIGIN.001
   - CTL.IAM.SCP.KMS.CREATEKEY.EXTERNAL.001

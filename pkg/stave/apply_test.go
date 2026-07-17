@@ -42,8 +42,8 @@ var frozenNow = time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
 //     surface chains/violations that were previously invisible due
 //     to case mismatch and silent privilege-level defaults.
 func TestApply_LordofheavenBuiltinControls(t *testing.T) {
-	const wantFindings = 142
-	const wantIssues = 114
+	const wantFindings = 146
+	const wantIssues = 118
 
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,

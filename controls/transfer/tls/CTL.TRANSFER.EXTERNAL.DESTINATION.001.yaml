@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.TRANSFER.EXTERNAL.DESTINATION.001
+name: Transfer Family Must Not Send Data to External Endpoints
+description: >
+  No Transfer Family server should have workflow steps that
+  target S3 buckets or EFS in external accounts, or SFTP/FTP
+  destinations at external hosts. Transfer Family provides
+  managed file transfer — an attacker can configure it to
+  deliver files to an external SFTP server. Linked to Muddled
+  Libra campaigns (2024) documented by Wiz.
+  Technique: Wiz "Exfiltration via AWS Transfer".
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-01", "DSP-17"]
+scope_tags:
+  - aws
+  - transfer
+taxonomy:
+  - data-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_transfer_server
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - data_movement.kind
+  - data_movement.has_external_destination
+remediation:
+  description: >
+    Transfer Family workflow targets an external destination.
+    Files are being sent outside the organization.
+  action: >
+    Verify the destination is legitimate. If not, remove the
+    workflow step immediately. Restrict transfer:CreateWorkflow
+    via SCP.
+  example: |
+    {
+      "data_movement": {
+        "kind": "transfer_server",
+        "has_external_destination": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.data_movement.kind
+      op: eq
+      value: transfer_server
+    - field: properties.data_movement.has_external_destination
+      op: eq
+      value: true
+tests:
+  - name: "external destination fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:transfer:us-east-1:123456789012:server/s-abc123"
+      asset_type: aws_transfer_server
+      vendor: aws
+      properties:
+        data_movement:
+          kind: transfer_server
+          has_external_destination: true
+  - name: "internal destination passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:transfer:us-east-1:123456789012:server/s-abc123"
+      asset_type: aws_transfer_server
+      vendor: aws
+      properties:
+        data_movement:
+          kind: transfer_server
+          has_external_destination: false

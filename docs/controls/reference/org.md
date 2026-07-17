@@ -365,6 +365,21 @@ Organization SCPs do not deny Cloud9 service usage in member accounts. Cloud9 cr
 
 ---
 
+### CTL.ORG.SCP.CLOUDFORMATION.MACRO.001
+
+**SCP Must Restrict CloudFormation Macro Usage**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: SA-12; soc2: CC8.1;
+
+An SCP must restrict CloudFormation macro usage to prevent resource injection via external macros. CloudFormation macros are Lambda-backed and can transform templates at deploy time. A macro from an external account can inject arbitrary resources into a stack. Technique: Wiz "Resource injection in CloudFormation template".
+
+**Remediation:** Add an SCP restricting cloudformation:CreateStack and cloudformation:CreateChangeSet with conditions limiting macro sources to trusted accounts.
+
+---
+
 ### CTL.ORG.SCP.DENY.GETFEDERATIONTOKEN.001
 
 **SCP Must Deny sts:GetFederationToken**
@@ -602,6 +617,21 @@ Organization SCPs do not enforce the S3 account-regional namespace for new bucke
 Organization SCPs do not deny SageMaker service usage in member accounts. SageMaker provisions EC2 instances, EBS volumes, EFS file systems, and IAM execution roles behind the SageMaker API surface. Notebook instances can have direct internet access, and execution roles may have broad S3 and KMS permissions for training data access. Without an SCP denying sagemaker:*, any IAM principal can provision compute with data access and potential internet exposure outside the standard EC2 governance pipeline.
 
 **Remediation:** Add an SCP denying sagemaker:* for all principals. Exclude specific accounts if SageMaker is intentionally used.
+
+---
+
+### CTL.ORG.SCP.SES.RESTRICT.001
+
+**SCP Must Restrict SES Send Actions to Approved Roles**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+An SCP must restrict ses:SendEmail and ses:SendRawEmail to approved messaging roles. Compromised credentials used to send phishing emails via SES has been documented in multiple campaigns. If SES is not in use, the SCP should deny all SES actions entirely. Technique: Wiz "SES abuse for spam or phishing". Linked incidents: JavaGhost (Feb 2025), DangerDev, Attack abusing Amazon SES (Dec 2024), TruffleNet (Oct 2025), Cloud-Native Phishing via AWS WorkMail (Jan 2026).
+
+**Remediation:** Add an SCP denying ses:SendEmail and ses:SendRawEmail with a role-based exception for approved messaging workloads. If SES is not used in the organization, deny all SES actions.
 
 ---
 

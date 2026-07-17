@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3078
-**Pack hash:** `88b3d35c36ffd310cb488ef75de8d4041641b492836c13c9574ad5fb3e87ff2b`
+**Total controls:** 3086
+**Pack hash:** `0f4da99fdb25a46e17597719d4686db3110fba121e5da18f9564866c05f20cf2`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 327 |
-| high | 1340 |
+| critical | 328 |
+| high | 1343 |
 | info | 18 |
 | low | 233 |
-| medium | 1160 |
+| medium | 1164 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,10 +27,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 140 |
 | encryption | 119 |
-| exposure | 1349 |
+| exposure | 1355 |
 | governance | 641 |
 | hygiene | 18 |
-| identity | 579 |
+| identity | 581 |
 | lifecycle | 31 |
 | network | 45 |
 | resilience | 35 |
@@ -73,6 +73,7 @@ GitHub. Pick a service below.
 | [COMPLIANCE](reference/compliance.md) | 1 |
 | [CONFIG](reference/config.md) | 51 |
 | [DATACLASS](reference/dataclass.md) | 5 |
+| [DATASYNC](reference/datasync.md) | 1 |
 | [DMS](reference/dms.md) | 7 |
 | [DNS](reference/dns.md) | 3 |
 | [DOCUMENTDB](reference/documentdb.md) | 18 |
@@ -104,7 +105,7 @@ GitHub. Pick a service below.
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |
 | [KMS](reference/kms.md) | 47 |
-| [LAMBDA](reference/lambda.md) | 87 |
+| [LAMBDA](reference/lambda.md) | 88 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
 | [LIGHTSAIL](reference/lightsail.md) | 5 |
 | [M365](reference/m365.md) | 73 |
@@ -117,13 +118,13 @@ GitHub. Pick a service below.
 | [NEPTUNE](reference/neptune.md) | 20 |
 | [NETFIREWALL](reference/netfirewall.md) | 13 |
 | [OPENSEARCH](reference/opensearch.md) | 132 |
-| [ORG](reference/org.md) | 43 |
+| [ORG](reference/org.md) | 45 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 72 |
 | [RECYCLEBIN](reference/recyclebin.md) | 1 |
 | [REDSHIFT](reference/redshift.md) | 26 |
 | [ROUTE53](reference/route53.md) | 50 |
-| [S3](reference/s3.md) | 147 |
+| [S3](reference/s3.md) | 148 |
 | [SAGEMAKER](reference/sagemaker.md) | 36 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
@@ -131,13 +132,14 @@ GitHub. Pick a service below.
 | [SECURITYHUB](reference/securityhub.md) | 7 |
 | [SECURITYLAKE](reference/securitylake.md) | 2 |
 | [SERVICECATALOG](reference/servicecatalog.md) | 1 |
-| [SES](reference/ses.md) | 1 |
+| [SES](reference/ses.md) | 2 |
 | [SHIELD](reference/shield.md) | 6 |
 | [SNS](reference/sns.md) | 39 |
 | [SQS](reference/sqs.md) | 37 |
 | [SSM](reference/ssm.md) | 13 |
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
-| [TRANSFER](reference/transfer.md) | 1 |
+| [TAGS](reference/tags.md) | 1 |
+| [TRANSFER](reference/transfer.md) | 2 |
 | [VPC](reference/vpc.md) | 92 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 16 |

@@ -440,6 +440,21 @@ Lambda layers must not contain embedded secrets (API keys, database credentials,
 
 ---
 
+### CTL.LAMBDA.LAYER.VERSION.PINNED.001
+
+**Lambda Functions Must Pin Layer Versions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-7; soc2: CC7.1;
+
+Lambda functions must reference layers with a pinned version number rather than using the latest. An unpinned layer reference means the function automatically gets the latest version published by the layer owner. If the layer owner's account is compromised, a malicious layer version is silently picked up by all referencing functions. Technique: Wiz "Backdoor Lambda Layer" supply chain vector.
+
+**Remediation:** Pin each layer reference to a specific version number. Update layer versions through a controlled change process rather than automatic inheritance.
+
+---
+
 ### CTL.LAMBDA.LIFECYCLE.DORMANT.001
 
 **Lambda Function Not Invoked in 90+ Days**
