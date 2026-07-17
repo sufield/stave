@@ -1,0 +1,94 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.IDENTITYCENTER.ENABLED.001
+name: Organization Must Use Identity Center for Human Access
+description: >
+  Organization does not use Identity Center (or an equivalent
+  federated identity mechanism) for human access management.
+  Farris describes per-account IAM Users as the AWS identity
+  anti-pattern. Identity Center provides centralized, role-based,
+  session-credential human access across all accounts. Its
+  absence means human access uses long-term IAM User credentials,
+  per-account. The collector sets identity_center_enabled on the
+  organization asset; this field is true if Identity Center is
+  configured OR if SAML providers exist in member accounts
+  (indicating an equivalent external IdP federation).
+domain: governance
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.1"
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-02", "IAM-05"]
+scope_tags:
+  - aws
+  - organizations
+  - iam
+taxonomy:
+  - compliance-mapping
+  - account-governance
+  - credential-lifecycle
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: credential_access
+observation_fields:
+  - organization.kind
+  - organization.identity_center_enabled
+remediation:
+  description: >
+    Organization has no centralized human access mechanism.
+    Human users access accounts via per-account IAM Users.
+  action: >
+    Enable Identity Center in the management account and configure
+    permission sets for human access. Migrate existing IAM User
+    access to Identity Center roles. If using an external IdP
+    (Okta, Azure AD), configure SAML federation per account.
+  example: |
+    {
+      "organization": {
+        "kind": "org_config",
+        "identity_center_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: org_config
+    - field: properties.organization.identity_center_enabled
+      op: ne
+      value: true
+defect: >
+  No centralized identity mechanism for human access.
+infection: >
+  Human users authenticate with long-term IAM credentials
+  per-account. Credential sprawl across accounts multiplies
+  the attack surface. No single sign-on means no single
+  revocation point.
+failure: >
+  Credential compromise in any account grants persistent access.
+  Without centralized identity, detecting and revoking
+  compromised human credentials requires per-account response.
+tests:
+  - name: "org without identity center fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: org_config
+          identity_center_enabled: false
+  - name: "org with identity center passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: org_config
+          identity_center_enabled: true

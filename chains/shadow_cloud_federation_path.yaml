@@ -1,0 +1,34 @@
+id: shadow_cloud_federation_path
+description: >
+  Shadow cloud federation risk: unknown OIDC or SAML providers
+  exist AND IAM roles trust external cloud provider principals
+  AND Identity Center is not the primary human access mechanism.
+  This combination suggests unmanaged cross-cloud federation —
+  engineers using personal or team cloud accounts with trust
+  relationships into the AWS environment. Farris: "You are
+  multi-cloud whether you like it or not." The chain fires when
+  any two of the three member controls fire, reflecting the
+  compound risk: a single unrecognized provider is worth
+  investigating; an unrecognized provider combined with external
+  cloud trust or no centralized identity is a pattern.
+controls:
+  - CTL.IAM.OIDC.PROVIDER.AUDIT.001
+  - CTL.IAM.TRUST.EXTERNAL.CLOUD.001
+  - CTL.ORG.IDENTITYCENTER.ENABLED.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies:
+  - source: observation.oidc_provider_config
+    fallback: fail_closed
+    diagnostic: >
+      OIDC provider configuration not captured. Cannot audit
+      cross-cloud federation trust.
+  - source: observation.trust_policy_principal_analysis
+    fallback: fail_closed
+    diagnostic: >
+      Trust policy principal pattern analysis not available.
+      Cannot detect external cloud provider principals.

@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.EXTERNAL.CLOUD.001
+name: No Unapproved External Cloud Provider Principals in Trust Policy
+description: >
+  IAM role trust policy references a principal from an external
+  cloud provider (GCP service account, Azure managed identity,
+  or unrecognized external account). Cross-cloud trust is
+  legitimate when intentional (cross-cloud pipeline) and
+  dangerous when accidental (developer's personal GCP project).
+  Farris: "You are multi-cloud whether you like it or not."
+  The collector identifies external cloud principals by matching
+  trust policy principal patterns against known GCP, Azure,
+  and non-org AWS account formats.
+domain: identity
+severity: high
+corpus_reference: MITRE:T1199
+compliance:
+  owasp_nhi: "NHI6"
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-4"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - multicloud
+taxonomy:
+  - compliance-mapping
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: initial_access
+  base_impact: 8
+observation_fields:
+  - identity.kind
+  - identity.trust.has_external_cloud_principal
+remediation:
+  description: >
+    IAM role trusts a principal from an external cloud provider.
+    This creates a cross-cloud attack path.
+  action: >
+    Verify the cross-cloud trust is intentional and approved.
+    If legitimate, document the trust relationship and ensure
+    the external principal follows least privilege. If not,
+    remove the external principal from the trust policy.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "trust": {
+          "has_external_cloud_principal": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.trust.has_external_cloud_principal
+      op: eq
+      value: true
+defect: >
+  Role trust policy references an external cloud provider principal.
+infection: >
+  An external cloud provider principal can assume this role. If
+  the external cloud account is compromised, the attacker gains
+  access to this AWS account without any AWS credential theft.
+  The blast radius spans both cloud environments.
+failure: >
+  Attacker compromises the external cloud identity (GCP service
+  account, Azure managed identity) and uses it to assume the
+  AWS role. The cross-cloud trust becomes a lateral movement
+  path that bypasses all AWS-native credential protections.
+tests:
+  - name: "role trusting external cloud principal fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/gcp-pipeline-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust:
+            has_external_cloud_principal: true
+  - name: "role trusting only org principals passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/internal-service-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust:
+            has_external_cloud_principal: false

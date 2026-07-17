@@ -50,6 +50,51 @@ AWS Control Tower is not enabled. Control Tower provides a governed landing zone
 
 ---
 
+### CTL.ORG.EXISTS.001
+
+**Account Must Be Member of an AWS Organization**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 1.1; nist_800_53_r5: AC-6(5); soc2: CC6.6;
+
+AWS account is standalone — not a member of an AWS Organization. Farris traces the multi-account strategy back to the CodeSpaces incident. A standalone account has no SCPs, no RCPs, no centralized root management, no organizational CloudTrail, and no service-linked roles for cross-account governance. It is the pre-2017 security posture. The collector sets the in_organization flag on the account summary asset.
+
+**Remediation:** Create an AWS Organization and add this account as a member, or join an existing Organization. Enable all features to get access to SCPs, consolidated billing, and centralized governance.
+
+---
+
+### CTL.ORG.IDENTITYCENTER.ENABLED.001
+
+**Organization Must Use Identity Center for Human Access**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 1.1; nist_800_53_r5: AC-2; soc2: CC6.1;
+
+Organization does not use Identity Center (or an equivalent federated identity mechanism) for human access management. Farris describes per-account IAM Users as the AWS identity anti-pattern. Identity Center provides centralized, role-based, session-credential human access across all accounts. Its absence means human access uses long-term IAM User credentials, per-account. The collector sets identity_center_enabled on the organization asset; this field is true if Identity Center is configured OR if SAML providers exist in member accounts (indicating an equivalent external IdP federation).
+
+**Remediation:** Enable Identity Center in the management account and configure permission sets for human access. Migrate existing IAM User access to Identity Center roles. If using an external IdP (Okta, Azure AD), configure SAML federation per account.
+
+---
+
+### CTL.ORG.OU.STRUCTURE.001
+
+**Organization Must Have OU Structure**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.6;
+
+All organization member accounts are directly under the root — no Organizational Unit structure exists. Without OUs, SCPs and RCPs can only be applied to all accounts or individual accounts. OU structure enables environment separation (prod/dev/staging), policy tiering, and the cross-environment isolation controls. The collector counts OUs with member accounts and sets has_ou_structure accordingly.
+
+**Remediation:** Create OUs for environment separation (Production, Development, Staging, Sandbox) and workload type (Security, Infrastructure, Workloads). Move accounts into appropriate OUs and attach SCPs per OU.
+
+---
+
 ### CTL.ORG.REGION.SCP.001
 
 **AWS Organizations Must Have an SCP Restricting Resource Creation to Approved Regions**

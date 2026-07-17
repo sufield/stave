@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.OIDC.PROVIDER.AUDIENCE.001
+name: OIDC Provider Audience Must Be Scoped
+description: >
+  IAM OIDC provider has an overly broad or unrecognized audience
+  (client ID list). A scoped audience restricts which applications
+  from the identity provider can assume roles in the account. An
+  unscoped or wildcard audience allows any application authenticated
+  by the IdP to request tokens, expanding the trust surface beyond
+  what was intended.
+domain: identity
+severity: medium
+corpus_reference: MITRE:T1078.004
+compliance:
+  owasp_nhi: "NHI3"
+  soc2: "CC6.1"
+  nist_800_53_r5: "IA-8"
+  ccm_v4: ["IAM-14"]
+scope_tags:
+  - aws
+  - iam
+  - multicloud
+taxonomy:
+  - compliance-mapping
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_oidc_provider
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.kind
+  - identity.oidc.audience_scoped
+remediation:
+  description: >
+    OIDC provider audience is not scoped to known applications.
+  action: >
+    Restrict the client ID list to only the specific application
+    IDs that should be able to assume roles via this OIDC provider.
+    Remove any wildcard or overly broad client IDs.
+  example: |
+    {
+      "identity": {
+        "kind": "oidc_provider",
+        "oidc": {
+          "audience_scoped": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: oidc_provider
+    - field: properties.identity.oidc.audience_scoped
+      op: ne
+      value: true
+defect: >
+  OIDC provider audience is not scoped to known application IDs.
+infection: >
+  Any application authenticated by the identity provider can
+  request tokens for roles trusting this OIDC provider. The trust
+  surface extends to every application in the IdP tenant.
+failure: >
+  Attacker compromises or controls any application in the IdP
+  tenant and uses it to assume roles in the AWS account. The
+  unscoped audience means the attacker's application is
+  indistinguishable from a legitimate one.
+tests:
+  - name: "unscoped audience fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:oidc-provider/login.microsoftonline.com/tenant123"
+      asset_type: aws_iam_oidc_provider
+      vendor: aws
+      properties:
+        identity:
+          kind: oidc_provider
+          oidc:
+            audience_scoped: false
+  - name: "scoped audience passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:oidc-provider/token.actions.githubusercontent.com"
+      asset_type: aws_iam_oidc_provider
+      vendor: aws
+      properties:
+        identity:
+          kind: oidc_provider
+          oidc:
+            audience_scoped: true

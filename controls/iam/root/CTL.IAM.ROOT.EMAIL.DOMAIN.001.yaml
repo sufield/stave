@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROOT.EMAIL.DOMAIN.001
+name: Root Email Must Use Organization-Controlled Domain
+description: >
+  Account root email uses a consumer or personal email domain.
+  Farris: "the account is owned by the root email address,
+  regardless of the organization or who pays for it." A root
+  email on a consumer domain (gmail.com, outlook.com, etc.)
+  means the organization does not control the email inbox,
+  cannot enforce MFA on the email provider, and cannot recover
+  the account if the email holder leaves. The collector extracts
+  the domain portion of the root email and checks it against a
+  consumer domain list. Only the domain is evaluated — the full
+  email address is not stored in the observation to avoid PII
+  exposure.
+domain: identity
+severity: high
+compliance:
+  cis_aws_v3.0: "1.1"
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-02"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - compliance-mapping
+  - account-governance
+  - credential-lifecycle
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account_summary
+params:
+  attack_stage: initial_access
+observation_fields:
+  - account.root_email_uses_corporate_domain
+remediation:
+  description: >
+    Account root email uses a consumer or unrecognized domain.
+    The organization does not control the inbox that owns this
+    account.
+  action: >
+    Change the root email to an organization-controlled domain
+    (e.g., aws-root+accountid@company.com). Use a distribution
+    list or shared mailbox so the email is not tied to a single
+    person. Enable MFA on the email provider.
+  example: |
+    {
+      "account": {
+        "root_email_uses_corporate_domain": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.account.root_email_uses_corporate_domain
+      op: ne
+      value: true
+defect: >
+  Root email is on a consumer or uncontrolled domain.
+infection: >
+  The account is ultimately owned by whoever controls the root
+  email inbox. If that inbox is on a consumer provider, the
+  organization cannot enforce password policy, MFA, or access
+  controls on the email account. A departing employee retains
+  account ownership.
+failure: >
+  Former employee or attacker gains access to the consumer email
+  inbox (password reset, SIM swap, email provider compromise)
+  and uses it to reset the AWS root password. Root access
+  bypasses all IAM, SCPs, and organizational controls.
+tests:
+  - name: "consumer email domain fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "111122223333"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        account:
+          root_email_uses_corporate_domain: false
+  - name: "corporate email domain passes"
+    verdict: PASS
+    asset:
+      asset_id: "444455556666"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        account:
+          root_email_uses_corporate_domain: true

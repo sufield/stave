@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3030
-**Pack hash:** `c963a96f1ecbf63f94467b5379e16a72add62e5bb3ba3371263992ba1c5dabc8`
+**Total controls:** 3039
+**Pack hash:** `40bfe61c267ef35196a915be4bfc47c8719931cf98494e14d24a0494cf0c716b`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 312 |
-| high | 1320 |
+| high | 1325 |
 | info | 18 |
 | low | 232 |
-| medium | 1148 |
+| medium | 1152 |
 
 | Domain | Count |
 |--------|-------|
@@ -28,9 +28,9 @@ GitHub. Pick a service below.
 | detection | 140 |
 | encryption | 119 |
 | exposure | 1343 |
-| governance | 626 |
+| governance | 629 |
 | hygiene | 18 |
-| identity | 553 |
+| identity | 559 |
 | lifecycle | 31 |
 | network | 44 |
 | resilience | 35 |
@@ -98,7 +98,7 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 18 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 270 |
+| [IAM](reference/iam.md) | 276 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |
@@ -116,7 +116,7 @@ GitHub. Pick a service below.
 | [NEPTUNE](reference/neptune.md) | 20 |
 | [NETFIREWALL](reference/netfirewall.md) | 12 |
 | [OPENSEARCH](reference/opensearch.md) | 132 |
-| [ORG](reference/org.md) | 18 |
+| [ORG](reference/org.md) | 21 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 72 |
 | [REDSHIFT](reference/redshift.md) | 26 |

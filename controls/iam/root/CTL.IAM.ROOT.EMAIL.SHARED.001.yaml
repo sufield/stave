@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROOT.EMAIL.SHARED.001
+name: Root Email Must Not Be Shared Across Accounts
+description: >
+  Multiple accounts share the same root email address. A shared
+  root email means a single email compromise affects multiple
+  accounts. Each account should have a unique root email,
+  typically using plus-addressing (admin+accountid@company.com)
+  or per-account distribution lists. The collector flags accounts
+  whose root email domain+local part match another account in the
+  organization.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-02"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - compliance-mapping
+  - account-governance
+  - credential-lifecycle
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account_summary
+params:
+  attack_stage: initial_access
+observation_fields:
+  - account.root_email_is_unique
+remediation:
+  description: >
+    Root email is shared with one or more other accounts in the
+    organization. A single email compromise affects all accounts
+    using this email.
+  action: >
+    Change the root email to a unique address per account. Use
+    plus-addressing (aws-root+111122223333@company.com) or
+    per-account distribution lists. Ensure each account's root
+    email resolves to a distinct inbox or alias.
+  example: |
+    {
+      "account": {
+        "root_email_is_unique": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.account.root_email_is_unique
+      op: ne
+      value: true
+defect: >
+  Root email is shared across multiple accounts.
+infection: >
+  A single email inbox controls root access to multiple AWS
+  accounts. Compromise of the email provider yields root
+  password reset capability across all sharing accounts.
+failure: >
+  Attacker compromises the shared email and resets root
+  credentials on multiple accounts simultaneously. The blast
+  radius of a single email compromise multiplies with each
+  sharing account.
+tests:
+  - name: "shared root email fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "111122223333"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        account:
+          root_email_is_unique: false
+  - name: "unique root email passes"
+    verdict: PASS
+    asset:
+      asset_id: "444455556666"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        account:
+          root_email_is_unique: true

@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.OIDC.PROVIDER.AUDIT.001
+name: OIDC Provider Must Be From Recognized Identity Source
+description: >
+  IAM OIDC provider references an identity provider URL that is
+  not in the recognized provider list. Farris describes shadow
+  cloud usage where engineers unknowingly create cross-cloud
+  federation. An OIDC provider pointing to an unknown URL is
+  either forgotten federation (pollution) or an attacker-controlled
+  IdP (compromise). Both warrant investigation. Default recognized
+  providers: accounts.google.com, login.microsoftonline.com,
+  token.actions.githubusercontent.com. Organization-specific IdPs
+  must be added to the collector allowlist.
+domain: identity
+severity: high
+corpus_reference: MITRE:T1078.004
+compliance:
+  owasp_nhi: "NHI3"
+  soc2: "CC6.1"
+  nist_800_53_r5: "IA-8"
+  ccm_v4: ["IAM-05", "IAM-14"]
+scope_tags:
+  - aws
+  - iam
+  - multicloud
+taxonomy:
+  - compliance-mapping
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_oidc_provider
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.kind
+  - identity.oidc.is_recognized_provider
+remediation:
+  description: >
+    OIDC provider references an unrecognized identity provider URL.
+    This may indicate shadow cloud usage or an attacker-controlled
+    IdP.
+  action: >
+    Verify the OIDC provider URL is intentional and from a trusted
+    identity source. If the provider is legitimate, add it to the
+    recognized provider allowlist. If not, delete the OIDC provider
+    and audit all roles that reference it.
+  example: |
+    {
+      "identity": {
+        "kind": "oidc_provider",
+        "oidc": {
+          "is_recognized_provider": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: oidc_provider
+    - field: properties.identity.oidc.is_recognized_provider
+      op: ne
+      value: true
+defect: >
+  OIDC provider URL is not in the recognized provider list.
+infection: >
+  An unrecognized OIDC provider federates identity from an unknown
+  source. Any role trusting this provider grants access to principals
+  authenticated by an IdP the organization may not control.
+failure: >
+  Attacker operates the unrecognized IdP or compromises it. All
+  roles trusting the OIDC provider are now attacker-accessible
+  without any credential theft in the AWS account.
+tests:
+  - name: "unrecognized OIDC provider fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:oidc-provider/unknown.example.com"
+      asset_type: aws_iam_oidc_provider
+      vendor: aws
+      properties:
+        identity:
+          kind: oidc_provider
+          oidc:
+            is_recognized_provider: false
+  - name: "recognized OIDC provider passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:oidc-provider/accounts.google.com"
+      asset_type: aws_iam_oidc_provider
+      vendor: aws
+      properties:
+        identity:
+          kind: oidc_provider
+          oidc:
+            is_recognized_provider: true

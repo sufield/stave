@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.OU.STRUCTURE.001
+name: Organization Must Have OU Structure
+description: >
+  All organization member accounts are directly under the root —
+  no Organizational Unit structure exists. Without OUs, SCPs and
+  RCPs can only be applied to all accounts or individual accounts.
+  OU structure enables environment separation (prod/dev/staging),
+  policy tiering, and the cross-environment isolation controls.
+  The collector counts OUs with member accounts and sets
+  has_ou_structure accordingly.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+  ccm_v4: ["IAM-02"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - compliance-mapping
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - organization.kind
+  - organization.has_ou_structure
+remediation:
+  description: >
+    Organization has no OU structure. All accounts are at the
+    root with no policy tiering.
+  action: >
+    Create OUs for environment separation (Production,
+    Development, Staging, Sandbox) and workload type (Security,
+    Infrastructure, Workloads). Move accounts into appropriate
+    OUs and attach SCPs per OU.
+  example: |
+    {
+      "organization": {
+        "kind": "org_config",
+        "has_ou_structure": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: org_config
+    - field: properties.organization.has_ou_structure
+      op: ne
+      value: true
+defect: >
+  No OU structure for policy tiering.
+infection: >
+  SCPs apply uniformly or not at all. A permissive SCP needed
+  by one workload applies to every account. Environment isolation
+  (the defense that would have contained Capital One) cannot be
+  enforced at the organizational level.
+failure: >
+  Lateral movement between environments is unrestricted by
+  organizational policy. An attacker who compromises any account
+  faces the same (or no) SCP restrictions as every other account.
+tests:
+  - name: "org with no OU structure fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: org_config
+          has_ou_structure: false
+  - name: "org with OU structure passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: org_config
+          has_ou_structure: true

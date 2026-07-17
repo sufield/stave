@@ -1465,6 +1465,21 @@ SAML provider certificate is older than 365 days. The certificate authenticates 
 
 ---
 
+### CTL.IAM.FEDERATION.SAML.SOURCE.001
+
+**SAML Provider Must Be From Recognized Identity Source**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-8; owasp_nhi: NHI3; soc2: CC6.1;
+
+IAM SAML provider's metadata references an identity provider that is not in the recognized provider list. Same risk as unrecognized OIDC providers: a SAML provider from an unknown source is either shadow federation or compromise. The collector parses the entityID from the SAML metadata document and checks it against the approved IdP list.
+
+**Remediation:** Verify the SAML provider entityID is intentional and from a trusted identity source. If the provider is legitimate, add it to the recognized provider list. If not, delete the provider and audit all roles that reference it.
+
+---
+
 ### CTL.IAM.FEDERATION.SESSION.DURATION.001
 
 **Federated Role Session Duration Must Not Exceed 4 Hours**
@@ -1949,6 +1964,36 @@ An IAM identity has OAuth MCP Server permissions via a wildcard action (signin:*
 The wildcard grant is dangerous because the identity owner may not know they have OAuth permissions. Unlike explicit grants, wildcards are not reviewed when new actions are added to a namespace.
 
 **Remediation:** Replace the wildcard action with explicit action grants. If OAuth access is intended, grant signin:AuthorizeOAuth2Access and signin:CreateOAuth2Token explicitly with appropriate condition keys. If not intended, narrow the Action field to exclude the signin: namespace.
+
+---
+
+### CTL.IAM.OIDC.PROVIDER.AUDIENCE.001
+
+**OIDC Provider Audience Must Be Scoped**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-8; owasp_nhi: NHI3; soc2: CC6.1;
+
+IAM OIDC provider has an overly broad or unrecognized audience (client ID list). A scoped audience restricts which applications from the identity provider can assume roles in the account. An unscoped or wildcard audience allows any application authenticated by the IdP to request tokens, expanding the trust surface beyond what was intended.
+
+**Remediation:** Restrict the client ID list to only the specific application IDs that should be able to assume roles via this OIDC provider. Remove any wildcard or overly broad client IDs.
+
+---
+
+### CTL.IAM.OIDC.PROVIDER.AUDIT.001
+
+**OIDC Provider Must Be From Recognized Identity Source**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-8; owasp_nhi: NHI3; soc2: CC6.1;
+
+IAM OIDC provider references an identity provider URL that is not in the recognized provider list. Farris describes shadow cloud usage where engineers unknowingly create cross-cloud federation. An OIDC provider pointing to an unknown URL is either forgotten federation (pollution) or an attacker-controlled IdP (compromise). Both warrant investigation. Default recognized providers: accounts.google.com, login.microsoftonline.com, token.actions.githubusercontent.com. Organization-specific IdPs must be added to the collector allowlist.
+
+**Remediation:** Verify the OIDC provider URL is intentional and from a trusted identity source. If the provider is legitimate, add it to the recognized provider allowlist. If not, delete the OIDC provider and audit all roles that reference it.
 
 ---
 
@@ -2763,6 +2808,36 @@ An IAM Roles Anywhere trust anchor uses a self-signed certificate authority rath
 The AWS root account must not have active access keys. Root access keys provide unrestricted programmatic access. Use IAM users or roles for programmatic access instead.
 
 **Remediation:** Delete the root access keys. Create IAM users or roles with least-privilege policies for programmatic access.
+
+---
+
+### CTL.IAM.ROOT.EMAIL.DOMAIN.001
+
+**Root Email Must Use Organization-Controlled Domain**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** cis_aws_v3.0: 1.1; nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+Account root email uses a consumer or personal email domain. Farris: "the account is owned by the root email address, regardless of the organization or who pays for it." A root email on a consumer domain (gmail.com, outlook.com, etc.) means the organization does not control the email inbox, cannot enforce MFA on the email provider, and cannot recover the account if the email holder leaves. The collector extracts the domain portion of the root email and checks it against a consumer domain list. Only the domain is evaluated — the full email address is not stored in the observation to avoid PII exposure.
+
+**Remediation:** Change the root email to an organization-controlled domain (e.g., aws-root+accountid@company.com). Use a distribution list or shared mailbox so the email is not tied to a single person. Enable MFA on the email provider.
+
+---
+
+### CTL.IAM.ROOT.EMAIL.SHARED.001
+
+**Root Email Must Not Be Shared Across Accounts**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+Multiple accounts share the same root email address. A shared root email means a single email compromise affects multiple accounts. Each account should have a unique root email, typically using plus-addressing (admin+accountid@company.com) or per-account distribution lists. The collector flags accounts whose root email domain+local part match another account in the organization.
+
+**Remediation:** Change the root email to a unique address per account. Use plus-addressing (aws-root+111122223333@company.com) or per-account distribution lists. Ensure each account's root email resolves to a distinct inbox or alias.
 
 ---
 
@@ -3847,6 +3922,21 @@ IAM role has cross-environment production access AND administrative permissions.
 IAM roles must not simultaneously trust a compute service principal (lambda.amazonaws.com, ec2.amazonaws.com, ecs-tasks.amazonaws.com, apigateway.amazonaws.com) AND an identity federation principal (cognito-identity.amazonaws.com, sts.amazonaws.com via SAML/OIDC, accounts.google.com) when the identity federation trust carries no condition restricting which identity pool, audience, or external ID can assume the role. The dual-trust pattern is the Capital One pre-condition: the role exists for a Lambda integration; a Cognito trust gets added later for a mobile app and the developer forgets to scope it to the specific identity pool. Any identity pool in the account — including pools that allow unauthenticated access — can obtain credentials for a role intended for a single backend service.
 
 **Remediation:** Either (a) remove the identity federation principal from the trust policy if the role only needs the compute service, or (b) add a Condition that scopes the identity federation trust to the specific pool: for Cognito, "cognito-identity.amazonaws.com:aud" = "<region>:<pool-id>"; for SAML, "saml:aud" = "<application-id>"; for OIDC, "oidc:aud" = "<client-id>". Wildcard audience values provide no protection.
+
+---
+
+### CTL.IAM.TRUST.EXTERNAL.CLOUD.001
+
+**No Unapproved External Cloud Provider Principals in Trust Policy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-4; owasp_nhi: NHI6; soc2: CC6.1;
+
+IAM role trust policy references a principal from an external cloud provider (GCP service account, Azure managed identity, or unrecognized external account). Cross-cloud trust is legitimate when intentional (cross-cloud pipeline) and dangerous when accidental (developer's personal GCP project). Farris: "You are multi-cloud whether you like it or not." The collector identifies external cloud principals by matching trust policy principal patterns against known GCP, Azure, and non-org AWS account formats.
+
+**Remediation:** Verify the cross-cloud trust is intentional and approved. If legitimate, document the trust relationship and ensure the external principal follows least privilege. If not, remove the external principal from the trust policy.
 
 ---
 
