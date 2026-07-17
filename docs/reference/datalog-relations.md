@@ -507,7 +507,7 @@ Input relations — verbatim SIR-facts vocabulary.
 G3 — Authorization + sensitivity model.
 
 These three relations are emitted by the G0 extractor
-after consulting data/stave-authorization.yaml (or its
+after consulting stave-authorization.yaml (or its
 hardcoded default). They are .input — base facts the
 extractor materialises — because the tag-equality
 computation is one-pass over has_tag and fits naturally
