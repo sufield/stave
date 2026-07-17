@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.BOUNDARY.PAYER.ORGMUTATION.001
+name: Payer Permission Boundary Must Deny Organization Mutation Actions
+description: >
+  Permission boundary in the management account does not
+  deny organizations mutation actions (organizations:Create*,
+  organizations:Delete*, organizations:Update*,
+  organizations:Move*, organizations:Leave*). If the
+  management account is compromised, the attacker can
+  restructure the organization — moving accounts between
+  OUs to escape SCPs, removing accounts from the org, or
+  creating new OUs without governance.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-6(1)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - least-privilege
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: detection_evasion
+  base_impact: 10
+  blast_radius:
+    type: governance
+    scope: organization
+    multiplier: 5.0
+observation_fields:
+  - identity.kind
+  - identity.account.is_management
+  - identity.role.has_boundary
+  - identity.role.boundary_denies_org_mutation
+remediation:
+  description: >
+    Permission boundary in management account does not
+    deny organization mutation actions.
+  action: >
+    Add an explicit Deny for organizations:Create*,
+    organizations:Delete*, organizations:Update*,
+    organizations:Move*, organizations:Leave* to the
+    permission boundary. Only the org-admin break-glass
+    role should have these permissions.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "account": {"is_management": true},
+        "role": {
+          "has_boundary": true,
+          "boundary_denies_org_mutation": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.account.is_management
+      op: eq
+      value: true
+    - field: properties.identity.role.has_boundary
+      op: eq
+      value: true
+    - field: properties.identity.role.boundary_denies_org_mutation
+      op: eq
+      value: false
+tests:
+  - name: "boundary without org mutation deny fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::999988887777:role/payer-developer"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          account:
+            is_management: true
+          role:
+            has_boundary: true
+            boundary_denies_org_mutation: false
+  - name: "boundary with org mutation deny passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::999988887777:role/payer-developer"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          account:
+            is_management: true
+          role:
+            has_boundary: true
+            boundary_denies_org_mutation: true

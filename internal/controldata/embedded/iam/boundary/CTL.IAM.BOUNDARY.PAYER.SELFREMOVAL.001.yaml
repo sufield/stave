@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.BOUNDARY.PAYER.SELFREMOVAL.001
+name: Payer Permission Boundary Must Deny Its Own Removal
+description: >
+  Permission boundary in the management account does not
+  deny iam:DeleteRolePermissionsBoundary and
+  iam:PutRolePermissionsBoundary on its own role. A
+  boundary that doesn't prevent self-removal is advisory —
+  the bounded principal can remove the boundary and
+  instantly gain all permissions granted by its identity
+  policies. This is the boundary escape vector specific to
+  management account roles where the blast radius is the
+  entire organization.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-6(1)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - least-privilege
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: privilege_escalation
+  base_impact: 10
+  blast_radius:
+    type: prevention
+    scope: organization
+    multiplier: 5.0
+observation_fields:
+  - identity.kind
+  - identity.account.is_management
+  - identity.role.has_boundary
+  - identity.role.boundary_denies_self_removal
+remediation:
+  description: >
+    Permission boundary in management account does not
+    deny its own removal or replacement.
+  action: >
+    Add an explicit Deny for
+    iam:DeleteRolePermissionsBoundary and
+    iam:PutRolePermissionsBoundary to the boundary
+    policy, scoped to the role's own ARN.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "account": {"is_management": true},
+        "role": {
+          "has_boundary": true,
+          "boundary_denies_self_removal": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.account.is_management
+      op: eq
+      value: true
+    - field: properties.identity.role.has_boundary
+      op: eq
+      value: true
+    - field: properties.identity.role.boundary_denies_self_removal
+      op: eq
+      value: false
+tests:
+  - name: "boundary without self-removal deny fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::999988887777:role/payer-admin"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          account:
+            is_management: true
+          role:
+            has_boundary: true
+            boundary_denies_self_removal: false
+  - name: "boundary with self-removal deny passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::999988887777:role/payer-admin"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          account:
+            is_management: true
+          role:
+            has_boundary: true
+            boundary_denies_self_removal: true

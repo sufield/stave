@@ -170,6 +170,21 @@ No declarative policy blocks public EBS snapshot sharing at the organizational l
 
 ---
 
+### CTL.ORG.DP.VPC.BPA.001
+
+**Declarative Policy Does Not Enforce VPC BPA Organization-Wide**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+No declarative policy enforces VPC Block Public Access across the organization. Without an org-level declarative policy, each account must enable BPA independently — and new accounts default to BPA disabled. A declarative policy ensures BPA is enforced everywhere, including accounts added in the future.
+
+**Remediation:** Create a declarative policy for VPC BPA via AWS Organizations and attach to the organization root. This ensures BPA is enabled for all current and future accounts.
+
+---
+
 ### CTL.ORG.EXISTS.001
 
 **Account Must Be Member of an AWS Organization**
@@ -230,6 +245,51 @@ An S3 Block Public Access organizational policy must be enabled at the organizat
 
 ---
 
+### CTL.ORG.RCP.ASSUMEROLE.001
+
+**RCP Does Not Restrict External sts:AssumeRole**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3, AC-17; soc2: CC6.1;
+
+No RCP restricts sts:AssumeRole from principals outside the organization. Without this RCP, any role with a trust policy allowing an external account can be assumed — even if SCPs restrict the action for internal principals. RCPs are the only mechanism that restricts who can assume roles FROM outside the organization (the resource-based trust policy side, not the identity-based side).
+
+**Remediation:** Create an RCP that denies sts:AssumeRole when aws:PrincipalOrgID is not the organization's ID. Exempt specific roles that legitimately need external assume (e.g., SAML federation roles, CI/CD roles).
+
+---
+
+### CTL.ORG.RCP.CONFUSEDDEPUTY.001
+
+**RCP Does Not Enforce Source Conditions Against Confused Deputy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+No RCP enforces aws:SourceOrgID or aws:SourceAccount conditions on resource-facing actions. Without this RCP, resources can be accessed via confused deputy attacks — an AWS service acting on behalf of an external principal accesses resources in the organization because the resource policy trusts the service principal without verifying the source account. The RCP should deny resource actions when aws:SourceOrgID is not the organization's ID (for service-to-service calls).
+
+**Remediation:** Create an RCP that denies resource-facing actions when aws:SourceOrgID is not the organization's ID. This complements the PrincipalOrgID RCP by covering service-to-service call paths.
+
+---
+
+### CTL.ORG.RCP.ENABLED.001
+
+**Resource Control Policies Must Be Enabled as Organization Policy Type**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Resource Control Policies (RCPs) are not enabled as a policy type in the organization. RCPs are the only mechanism that restricts resource-based policy grants at the organizational level — SCPs restrict identity-based policies but do not affect resource-based policies. Without RCPs enabled, a resource policy granting Principal: * or an external account is effective even if SCPs deny the action.
+
+**Remediation:** Enable RCPs in AWS Organizations via aws organizations enable-policy-type --root-id <root-id> --policy-type RESOURCE_CONTROL_POLICY.
+
+---
+
 ### CTL.ORG.RCP.KMSSECRETSPERIMETER.001
 
 **RCP Does Not Restrict KMS and Secrets Manager External Access**
@@ -242,6 +302,21 @@ An S3 Block Public Access organizational policy must be enabled at the organizat
 No RCP restricts KMS key usage and Secrets Manager access from principals outside the organization. Without this RCP, a KMS key policy or Secrets Manager resource policy that grants access to an external account is effective — the external principal can decrypt data or read secrets even if no identity policy in the org grants them access. RCPs are the only mechanism that overrides resource-based policies at the organizational level. The RCP should deny kms:* and secretsmanager:* when aws:PrincipalOrgID is not the organization's ID.
 
 **Remediation:** Create an RCP that denies kms:Decrypt, kms:Encrypt, kms:GenerateDataKey, kms:ReEncryptFrom, kms:ReEncryptTo, kms:CreateGrant, secretsmanager:GetSecretValue, secretsmanager:DescribeSecret when aws:PrincipalOrgID is not the organization's ID. Exempt AWS service principals that need cross-account key usage (e.g., for cross-account S3 replication with KMS).
+
+---
+
+### CTL.ORG.RCP.PRINCIPALORGID.001
+
+**RCP Does Not Enforce PrincipalOrgID on Resource Access**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+No RCP restricts resource access to principals within the organization using aws:PrincipalOrgID. Without this RCP, resource-based policies that grant access to external principals are effective — the resource perimeter is open. This is the foundational RCP for the data perimeter: deny all resource-facing actions when aws:PrincipalOrgID is not the organization's ID.
+
+**Remediation:** Create an RCP that denies resource-facing actions when aws:PrincipalOrgID is not the organization's ID. Exempt AWS service principals that legitimately need cross-account resource access.
 
 ---
 

@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3095
-**Pack hash:** `60a47488b12c83ccba2474ef4f4728349907810e2bc748bc4b3430d89b718496`
+**Total controls:** 3109
+**Pack hash:** `d56ed631914ea749129848050806549f86916f49035b02b6ca7542ae084b66c0`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 330 |
-| high | 1348 |
+| critical | 335 |
+| high | 1353 |
 | info | 18 |
 | low | 234 |
-| medium | 1165 |
+| medium | 1169 |
 
 | Domain | Count |
 |--------|-------|
@@ -28,11 +28,11 @@ GitHub. Pick a service below.
 | detection | 140 |
 | encryption | 119 |
 | exposure | 1362 |
-| governance | 642 |
+| governance | 644 |
 | hygiene | 18 |
-| identity | 582 |
+| identity | 591 |
 | lifecycle | 31 |
-| network | 45 |
+| network | 48 |
 | resilience | 35 |
 | secrets | 4 |
 | storage | 8 |
@@ -101,7 +101,7 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 18 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 286 |
+| [IAM](reference/iam.md) | 292 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |
@@ -120,7 +120,7 @@ GitHub. Pick a service below.
 | [NEPTUNE](reference/neptune.md) | 20 |
 | [NETFIREWALL](reference/netfirewall.md) | 13 |
 | [OPENSEARCH](reference/opensearch.md) | 132 |
-| [ORG](reference/org.md) | 45 |
+| [ORG](reference/org.md) | 50 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 72 |
 | [RECYCLEBIN](reference/recyclebin.md) | 1 |
@@ -143,7 +143,7 @@ GitHub. Pick a service below.
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
 | [TAGS](reference/tags.md) | 1 |
 | [TRANSFER](reference/transfer.md) | 2 |
-| [VPC](reference/vpc.md) | 92 |
+| [VPC](reference/vpc.md) | 95 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 16 |
 | [WORKSPACES](reference/workspaces.md) | 1 |

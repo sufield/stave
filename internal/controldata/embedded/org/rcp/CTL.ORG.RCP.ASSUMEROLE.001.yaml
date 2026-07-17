@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.RCP.ASSUMEROLE.001
+name: "RCP Does Not Restrict External sts:AssumeRole"
+description: >
+  No RCP restricts sts:AssumeRole from principals outside the
+  organization. Without this RCP, any role with a trust policy
+  allowing an external account can be assumed — even if SCPs
+  restrict the action for internal principals. RCPs are the
+  only mechanism that restricts who can assume roles FROM
+  outside the organization (the resource-based trust policy
+  side, not the identity-based side).
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3, AC-17"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-10", "IAM-05"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - identity-perimeter
+  - trust-boundary
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+observation_fields:
+  - organization.kind
+  - organization.rcp.restricts_external_assume_role
+remediation:
+  description: >
+    No RCP restricts sts:AssumeRole from external principals.
+  action: >
+    Create an RCP that denies sts:AssumeRole when
+    aws:PrincipalOrgID is not the organization's ID.
+    Exempt specific roles that legitimately need external
+    assume (e.g., SAML federation roles, CI/CD roles).
+  example: |
+    {
+      "organization": {
+        "kind": "rcp_policy_set",
+        "rcp": {
+          "restricts_external_assume_role": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: rcp_policy_set
+    - field: properties.organization.rcp.restricts_external_assume_role
+      op: ne
+      value: true
+tests:
+  - name: "no AssumeRole restriction fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: rcp_policy_set
+          rcp:
+            restricts_external_assume_role: false
+  - name: "AssumeRole restriction passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: rcp_policy_set
+          rcp:
+            restricts_external_assume_role: true

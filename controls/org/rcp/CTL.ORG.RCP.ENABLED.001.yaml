@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.RCP.ENABLED.001
+name: "Resource Control Policies Must Be Enabled as Organization Policy Type"
+description: >
+  Resource Control Policies (RCPs) are not enabled as a policy
+  type in the organization. RCPs are the only mechanism that
+  restricts resource-based policy grants at the organizational
+  level — SCPs restrict identity-based policies but do not
+  affect resource-based policies. Without RCPs enabled, a
+  resource policy granting Principal: * or an external account
+  is effective even if SCPs deny the action.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-10"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - identity-perimeter
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+observation_fields:
+  - organization.kind
+  - organization.rcp.enabled
+remediation:
+  description: >
+    RCPs are not enabled as an organization policy type.
+  action: >
+    Enable RCPs in AWS Organizations via
+    aws organizations enable-policy-type
+    --root-id <root-id>
+    --policy-type RESOURCE_CONTROL_POLICY.
+  example: |
+    {
+      "organization": {
+        "kind": "rcp_policy_set",
+        "rcp": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: rcp_policy_set
+    - field: properties.organization.rcp.enabled
+      op: ne
+      value: true
+tests:
+  - name: "RCP not enabled fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: rcp_policy_set
+          rcp:
+            enabled: false
+  - name: "RCP enabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: rcp_policy_set
+          rcp:
+            enabled: true

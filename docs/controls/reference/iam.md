@@ -219,6 +219,51 @@ An IAM role with iam:CreateRole or iam:CreateUser permission does not have a per
 
 ---
 
+### CTL.IAM.BOUNDARY.PAYER.ASSUMEROOT.001
+
+**Payer Permission Boundary Must Deny sts:AssumeRoot**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(1); soc2: CC6.1;
+
+Permission boundary in the management account does not deny sts:AssumeRoot for non-admin principals. AssumeRoot allows a principal to obtain temporary credentials with root-level privileges in a member account. If the management account is compromised and the boundary doesn't deny AssumeRoot, the attacker can escalate to root in any member account.
+
+**Remediation:** Add an explicit Deny for sts:AssumeRoot to the permission boundary policy. Only the break-glass admin role should be exempt.
+
+---
+
+### CTL.IAM.BOUNDARY.PAYER.ORGMUTATION.001
+
+**Payer Permission Boundary Must Deny Organization Mutation Actions**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(1); soc2: CC6.1;
+
+Permission boundary in the management account does not deny organizations mutation actions (organizations:Create*, organizations:Delete*, organizations:Update*, organizations:Move*, organizations:Leave*). If the management account is compromised, the attacker can restructure the organization — moving accounts between OUs to escape SCPs, removing accounts from the org, or creating new OUs without governance.
+
+**Remediation:** Add an explicit Deny for organizations:Create*, organizations:Delete*, organizations:Update*, organizations:Move*, organizations:Leave* to the permission boundary. Only the org-admin break-glass role should have these permissions.
+
+---
+
+### CTL.IAM.BOUNDARY.PAYER.SELFREMOVAL.001
+
+**Payer Permission Boundary Must Deny Its Own Removal**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(1); soc2: CC6.1;
+
+Permission boundary in the management account does not deny iam:DeleteRolePermissionsBoundary and iam:PutRolePermissionsBoundary on its own role. A boundary that doesn't prevent self-removal is advisory — the bounded principal can remove the boundary and instantly gain all permissions granted by its identity policies. This is the boundary escape vector specific to management account roles where the blast radius is the entire organization.
+
+**Remediation:** Add an explicit Deny for iam:DeleteRolePermissionsBoundary and iam:PutRolePermissionsBoundary to the boundary policy, scoped to the role's own ARN.
+
+---
+
 ### CTL.IAM.BOUNDARY.WILDCARD.001
 
 **Permission Boundary Uses Wildcard Actions**
@@ -2752,6 +2797,36 @@ IAM roles must not combine permissions from structurally incompatible categories
 
 ---
 
+### CTL.IAM.ROLE.CREDENTIALEXPOSURE.001
+
+**Non-Security Roles Must Not Have CredentialExposure Actions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(1); soc2: CC6.3;
+
+IAM role outside the security admin set has CredentialExposure-classified actions (sts:GetFederationToken, iam:CreateAccessKey, iam:CreateLoginProfile, sts:AssumeRole on *, iam:UpdateAccessKey, etc.). These actions create or modify credentials — they should be restricted to security admin roles and automated credential rotation tooling. The sensitive action registry classifies these as CredentialExposure; any non-security role with them is an escalation vector.
+
+**Remediation:** Remove CredentialExposure actions from the role's permissions. If the role needs iam:CreateAccessKey for service account rotation, scope it to the specific user ARN and add a condition key.
+
+---
+
+### CTL.IAM.ROLE.CROSSACCOUNT.READONLYACCESS.001
+
+**Cross-Account Roles Must Not Use ReadOnlyAccess Managed Policy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(1); soc2: CC6.3;
+
+IAM role that allows external account assume has the AWS-managed ReadOnlyAccess policy attached. ReadOnlyAccess includes DataAccess actions — s3:GetObject, dynamodb:GetItem, secretsmanager:GetSecretValue, and others that read sensitive data. On a cross-account role, ReadOnlyAccess means the external account can read all data in the account. Use a scoped policy that grants only the specific read actions the external party needs.
+
+**Remediation:** Replace ReadOnlyAccess with a scoped policy granting only the specific read actions the external party needs. Use resource-level permissions to limit which resources they can access.
+
+---
+
 ### CTL.IAM.ROLE.CROSSSERVICE.001
 
 **IAM Role Must Not Be Shared Across Multiple Compute Service Types**
@@ -2853,6 +2928,21 @@ Lambda execution role trust policy allows lambda.amazonaws.com without a conditi
 IAM roles must not retain access to services that have never been used or were last used more than 90 days ago, when the role itself has been active for more than 90 days. A role with 30 accessible services where 25 are never used has accumulated permissions far beyond its operational scope. An attacker who compromises this role has access to 30 services but the legitimate owner only uses 5. The unused 25 are the hidden blast radius. Access Advisor data from AWS provides exact timestamps of last permission use — this is an operational fact, not a security assertion.
 
 **Remediation:** Review the unused service namespaces listed in this finding. Remove permissions for services that are no longer needed. For services that are intentionally retained for emergency use, set the stave/permission-drift-threshold tag on the role to document the justified exception (e.g., stave/permission-drift-threshold=0.40).
+
+---
+
+### CTL.IAM.ROLE.THIRDPARTY.DATAACCESS.001
+
+**Third-Party Roles Must Not Have DataAccess Actions Without Explicit Deny**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(1); soc2: CC6.3;
+
+IAM role assumed by external parties has effective permissions that include DataAccess-classified actions (s3:GetObject, dynamodb:GetItem, rds:DownloadDBLogFile, etc.) without an explicit deny. Third-party access roles should not have blanket data-read permissions — they should be restricted to the specific API actions and resources the third party needs. The sensitive action registry classifies actions by risk; DataAccess is the category for actions that read customer data.
+
+**Remediation:** Add explicit Deny statements for DataAccess-classified actions to the role's identity policy, or replace broad read permissions with specific actions scoped to the resources the third party needs.
 
 ---
 

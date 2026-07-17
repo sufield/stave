@@ -5,6 +5,51 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.VPC.BPA.BIDIRECTIONAL.001
+
+**VPC Block Public Access Must Block Both Ingress and Egress**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+VPC Block Public Access is enabled but in ingress-only mode. Ingress-only mode blocks inbound traffic from the internet but still allows outbound internet access via internet gateways. An attacker with code execution can still exfiltrate data or establish reverse shells. Bidirectional mode blocks both directions.
+
+**Remediation:** Switch to bidirectional mode via aws ec2 modify-vpc-block-public-access-options --internet-gateway-block-mode block-bidirectional. Create subnet-level exclusions for subnets that genuinely need outbound internet access.
+
+---
+
+### CTL.VPC.BPA.ENABLED.001
+
+**VPC Block Public Access Must Be Enabled at Account Level**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+VPC Block Public Access (BPA) is not enabled at the account level. BPA shipped November 2024 as the network-perimeter equivalent of S3 Block Public Access — it prevents internet gateways and egress-only internet gateways from providing public connectivity. Without BPA, any VPC with an internet gateway can have public-facing resources. API: ec2:DescribeVpcBlockPublicAccessOptions.
+
+**Remediation:** Enable VPC BPA at the account level via aws ec2 modify-vpc-block-public-access-options --internet-gateway-block-mode block-bidirectional.
+
+---
+
+### CTL.VPC.BPA.EXCLUSION.SUBNET.001
+
+**VPC BPA Exclusions Must Target Subnets Not VPCs**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+VPC Block Public Access exclusion is scoped to an entire VPC rather than a specific subnet. VPC-level exclusions disable BPA for ALL subnets in the VPC — including subnets that should remain private. Subnet-level exclusions are more precise: only the specific subnet gets public access, and new subnets added to the VPC inherit the BPA block. API: ec2:DescribeVpcBlockPublicAccessExclusions.
+
+**Remediation:** Replace the VPC-level exclusion with subnet-level exclusions targeting only the specific subnets that need public connectivity (e.g., public ALB subnets).
+
+---
+
 ### CTL.VPC.CLIENTVPN.AUTH.001
 
 **Client VPN Allows All Traffic Without Authorization Rules**

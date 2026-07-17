@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.RCP.PRINCIPALORGID.001
+name: "RCP Does Not Enforce PrincipalOrgID on Resource Access"
+description: >
+  No RCP restricts resource access to principals within the
+  organization using aws:PrincipalOrgID. Without this RCP,
+  resource-based policies that grant access to external
+  principals are effective — the resource perimeter is open.
+  This is the foundational RCP for the data perimeter: deny
+  all resource-facing actions when aws:PrincipalOrgID is not
+  the organization's ID.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-10", "DSP-04"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - identity-perimeter
+  - data-perimeter
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+observation_fields:
+  - organization.kind
+  - organization.rcp.denies_external_principal
+remediation:
+  description: >
+    No RCP enforces PrincipalOrgID on resource-facing actions.
+  action: >
+    Create an RCP that denies resource-facing actions when
+    aws:PrincipalOrgID is not the organization's ID.
+    Exempt AWS service principals that legitimately need
+    cross-account resource access.
+  example: |
+    {
+      "organization": {
+        "kind": "rcp_policy_set",
+        "rcp": {
+          "denies_external_principal": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: rcp_policy_set
+    - field: properties.organization.rcp.denies_external_principal
+      op: ne
+      value: true
+tests:
+  - name: "no PrincipalOrgID enforcement fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: rcp_policy_set
+          rcp:
+            denies_external_principal: false
+  - name: "PrincipalOrgID enforcement passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: rcp_policy_set
+          rcp:
+            denies_external_principal: true

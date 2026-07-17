@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.DP.VPC.BPA.001
+name: "Declarative Policy Does Not Enforce VPC BPA Organization-Wide"
+description: >
+  No declarative policy enforces VPC Block Public Access
+  across the organization. Without an org-level declarative
+  policy, each account must enable BPA independently — and
+  new accounts default to BPA disabled. A declarative policy
+  ensures BPA is enforced everywhere, including accounts
+  added in the future.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - organizations
+  - vpc
+taxonomy:
+  - account-governance
+  - network-perimeter
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+observation_fields:
+  - organization.kind
+  - organization.declarative_policies.vpc_bpa_enforced
+remediation:
+  description: >
+    No declarative policy enforces VPC BPA organization-wide.
+  action: >
+    Create a declarative policy for VPC BPA via
+    AWS Organizations and attach to the organization root.
+    This ensures BPA is enabled for all current and future
+    accounts.
+  example: |
+    {
+      "organization": {
+        "kind": "declarative_policy_set",
+        "declarative_policies": {
+          "vpc_bpa_enforced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: declarative_policy_set
+    - field: properties.organization.declarative_policies.vpc_bpa_enforced
+      op: ne
+      value: true
+tests:
+  - name: "no VPC BPA declarative policy fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: declarative_policy_set
+          declarative_policies:
+            vpc_bpa_enforced: false
+  - name: "VPC BPA declarative policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: declarative_policy_set
+          declarative_policies:
+            vpc_bpa_enforced: true

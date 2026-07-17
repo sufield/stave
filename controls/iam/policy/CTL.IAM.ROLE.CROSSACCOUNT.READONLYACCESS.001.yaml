@@ -1,0 +1,89 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROLE.CROSSACCOUNT.READONLYACCESS.001
+name: Cross-Account Roles Must Not Use ReadOnlyAccess Managed Policy
+description: >
+  IAM role that allows external account assume has the
+  AWS-managed ReadOnlyAccess policy attached. ReadOnlyAccess
+  includes DataAccess actions — s3:GetObject, dynamodb:GetItem,
+  secretsmanager:GetSecretValue, and others that read sensitive
+  data. On a cross-account role, ReadOnlyAccess means the
+  external account can read all data in the account. Use a
+  scoped policy that grants only the specific read actions the
+  external party needs.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6(1)"
+  soc2: "CC6.3"
+  ccm_v4: ["IAM-04", "IAM-09"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - least-privilege
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: collection
+observation_fields:
+  - identity.kind
+  - identity.trust.allows_external_assume
+  - identity.policies.has_readonly_access_managed
+remediation:
+  description: >
+    Cross-account role has ReadOnlyAccess managed policy.
+    External account can read all data.
+  action: >
+    Replace ReadOnlyAccess with a scoped policy granting
+    only the specific read actions the external party
+    needs. Use resource-level permissions to limit which
+    resources they can access.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "trust": {"allows_external_assume": true},
+        "policies": {"has_readonly_access_managed": false}
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.trust.allows_external_assume
+      op: eq
+      value: true
+    - field: properties.identity.policies.has_readonly_access_managed
+      op: eq
+      value: true
+tests:
+  - name: "cross-account role with ReadOnlyAccess fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/vendor-audit"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust:
+            allows_external_assume: true
+          policies:
+            has_readonly_access_managed: true
+  - name: "cross-account role with scoped policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/vendor-audit"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust:
+            allows_external_assume: true
+          policies:
+            has_readonly_access_managed: false

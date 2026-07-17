@@ -1,0 +1,79 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.BPA.EXCLUSION.SUBNET.001
+name: VPC BPA Exclusions Must Target Subnets Not VPCs
+description: >
+  VPC Block Public Access exclusion is scoped to an entire
+  VPC rather than a specific subnet. VPC-level exclusions
+  disable BPA for ALL subnets in the VPC — including subnets
+  that should remain private. Subnet-level exclusions are
+  more precise: only the specific subnet gets public access,
+  and new subnets added to the VPC inherit the BPA block.
+  API: ec2:DescribeVpcBlockPublicAccessExclusions.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_bpa_exclusion
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.vpc_bpa_exclusion.resource_type
+remediation:
+  description: >
+    VPC BPA exclusion targets an entire VPC. All subnets
+    in the VPC can have public access.
+  action: >
+    Replace the VPC-level exclusion with subnet-level
+    exclusions targeting only the specific subnets that
+    need public connectivity (e.g., public ALB subnets).
+  example: |
+    {
+      "network": {
+        "kind": "vpc_bpa_exclusion",
+        "vpc_bpa_exclusion": {
+          "resource_type": "subnet"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_bpa_exclusion
+    - field: properties.network.vpc_bpa_exclusion.resource_type
+      op: eq
+      value: vpc
+tests:
+  - name: "VPC-level exclusion fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpcbpa-excl-abc123"
+      asset_type: aws_vpc_bpa_exclusion
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_bpa_exclusion
+          vpc_bpa_exclusion:
+            resource_type: vpc
+  - name: "subnet-level exclusion passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpcbpa-excl-def456"
+      asset_type: aws_vpc_bpa_exclusion
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_bpa_exclusion
+          vpc_bpa_exclusion:
+            resource_type: subnet

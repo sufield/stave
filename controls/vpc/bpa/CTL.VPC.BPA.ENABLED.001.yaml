@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.BPA.ENABLED.001
+name: VPC Block Public Access Must Be Enabled at Account Level
+description: >
+  VPC Block Public Access (BPA) is not enabled at the account
+  level. BPA shipped November 2024 as the network-perimeter
+  equivalent of S3 Block Public Access — it prevents internet
+  gateways and egress-only internet gateways from providing
+  public connectivity. Without BPA, any VPC with an internet
+  gateway can have public-facing resources.
+  API: ec2:DescribeVpcBlockPublicAccessOptions.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-09"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.vpc_bpa.enabled
+remediation:
+  description: >
+    VPC Block Public Access is not enabled. VPCs can
+    have public-facing resources via internet gateways.
+  action: >
+    Enable VPC BPA at the account level via
+    aws ec2 modify-vpc-block-public-access-options
+    --internet-gateway-block-mode block-bidirectional.
+  example: |
+    {
+      "network": {
+        "kind": "vpc_bpa_settings",
+        "vpc_bpa": {
+          "enabled": true,
+          "mode": "block-bidirectional"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_bpa_settings
+    - field: properties.network.vpc_bpa.enabled
+      op: ne
+      value: true
+tests:
+  - name: "BPA not enabled fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "111122223333:vpc-bpa"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_bpa_settings
+          vpc_bpa:
+            enabled: false
+  - name: "BPA enabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "111122223333:vpc-bpa"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_bpa_settings
+          vpc_bpa:
+            enabled: true
+            mode: block-bidirectional
